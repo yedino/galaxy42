@@ -1,0 +1,87 @@
+
+
+=== Real Node Logic ===
+
+
+
+
+The Group Shuffle state
+other info
+
+Meta-data
+- veto
+- publish the main list
+- restart
+- publish the finall signed list
+
+AI_Events
+
+
+
+#define _info(X) cerr<<X....
+
+
+
+=== MAIN PHASE ===
+
+
+
+use WoT, use encr/sign, use signed-message class
+MAIN PHASE: add route-around troll: try all other nodes, restart protocol
+detect logical errors: if error: vote: meta-message and go to Court-phase
+
++test cases +debug
+
+=== Logic Transport Troll: (like the api_tr) ===
+- save hash etc
+- reject on invalid hash
+- tell the main phase to route around
+(or replace later)
+
+Tick()
+
++test cases +debug
+
+=== LAP easy ===
+- show all: initial
+- show all: finall
+
++test cases +debug
+
+=== Court-phase ===
+
+meta-message to collect all data
+get priv data
+check them with hashes+salts
+meta-message "I kick this guy out", kick a guy out, stat new WoT
+re-establish ring
+restart operation
+
++test cases +debug
+
+=== API TR ===
+
+
+real API: in-memory (write to other nodes variables)
+
+real API: boost ASIO on TCP (configurable port number). you are given the IP of other nodes along with their pubkey, or add method to WoT pubkey2transport
+
+
++test cases +debug
+
+=== API crypto ===
+
+
+real API: crypto: RSA encr, Ed sign, NTru sign, Geport sign
+
++test cases +debug
+
+=== API WoT ===
+
+
+real API: wot: use crypto
+
++test cases +debug
+
+
+
