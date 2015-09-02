@@ -1,0 +1,72 @@
+
+
+
+*** THIS IS WORK IN PROGRESS, obviously will contain mistakes and typos for now. ****
+
+------------------------------------------------
+
+RSA
+
+secret: p,q - prime number
+
+n = p*q 
+φ(n)=f. Eulera( n ) <--- hard
+φ(n)=(p-1)*(q-1)    <--- easy
+
+secret: d = e^-1 mod φ(n) <--- quite easy when we know phi(n)! 
+public: e    1<e<φ(n) , gcd(e,φ(n))==1
+
+encrypt: c=m^e ( mod n )
+decrypt: c^d = m ( mod n ), because c^d = (m^e)^d = m^(e*d) = m  because e*d=1
+
+sign:   s=m^d ( mod n )
+verify: s^e = m ( mod n ) also because d*e = e*d = 1 ( mod n )
+
+
+normal <---> mod n     - [???] because this is a ring. 
+mod n  <---> mod φ(n)  - because Fermat's theorem
+
+------------------------------------------------
+
+Blinded RSA
+A Alice gets B Bank/Bob to sign.
+
+Alice: m - a message to be signed (in secret)
+Alice: r - secret blinding factor of Alice (generated as random number)
+Alice: can know r^-1
+
+e - Bob (bank) public key
+d - Bob (bank) private key
+n - Bob (bank) public n number
+
+Alice: blind: m * r^e 
+
+Bob: gets:  [number_a1] that he will sign as number_a1^d, so it will have value of:
+
+Bob: sign:  (m * r^e)^d 
+(Bob does not know the numbers m, nor r nor e that created the number_a1)
+
+Alice: unblind:    * r^-1 
+(m*r^e)^d          * r^-1 =
+(m*(r^e))^d        * r^-1 =
+( m^d * (r^e)^d  ) * r^-1 = 
+( m^d * (r^(e*d) ) * r^-1 =   [  e*d=1  ]
+( m^d *  r       ) * r^-1 =
+  m^d * r * r^-1          = 
+  m^d * 1                 =  
+  m^d
+Alice: has m signed by d = m^d , but server never seen the "m", only saw blinded m*r^e,  r is secret
+Server can not correlate m to m*r^e
+...
+Allice: returns m^d,  server knows m was signed by him, but can not correlate to m, because m has no relation to m*r^e
+
+------------------------------------------------
+Anonymous Blinded RSA
+(same/not distinguishable signatures for all signed messages)
+
+If GCD(e,phi(n))==1 and GCD(m, n)==1 then there is exactly one possible signature for each plaintext.
+problem: phi(n) is secret.
+
+e - prime
+
+
