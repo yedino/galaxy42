@@ -1,0 +1,5 @@
+Files here could be based on the project named in the comments insie this files.
+This files maybe are under different Licence.
+
+You should read the proper Licences to know how to proceed with this code.
+
