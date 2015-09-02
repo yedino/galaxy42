@@ -9,4 +9,4 @@ add ring signature
 [ABANDONED] remove boost library
 [DONE] make geport time attack resistant
 add windows/mac OS support
-implement geport in fucking ANSI C
+implement geport in the ANSI C :)
