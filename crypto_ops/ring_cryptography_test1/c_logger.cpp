@@ -8,3 +8,4 @@ void c_logger::send (c_user &a, c_user &b, const vector<public_key<c_crypto_RSA<
 	for (auto &v : msgs)
 		b.inbox.push_back(v);
 }
+

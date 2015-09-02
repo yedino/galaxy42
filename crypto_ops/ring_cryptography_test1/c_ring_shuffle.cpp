@@ -38,13 +38,13 @@ void c_ring_shuffle::shift () {
 void c_ring_shuffle::start_shuffle () {
 	if (*center_user == current_user) {
 		for (auto &user : ring) {
-			current_user.inbox.push_back(network_driver.recieve(current_user, user)); // TODO implement func recieve()
+//			current_user.inbox.push_back(network_driver.recieve(current_user, user)); // TODO implement func recieve()
 		}
 		shift();
 	}
 
 	else {
-		network_driver.send(current_user, *center_user, {encrypt_msg(current_user.pub_key)}); // TODO public_key structure
+//		network_driver.send(current_user, *center_user, {encrypt_msg(current_user.pub_key)}); // TODO public_key structure
 	}
 }
 
@@ -64,7 +64,7 @@ c_crypto_RSA<256>::long_type c_ring_shuffle::encrypt_msg (const string &msg) {
 	auto it = this->next(center_user);
 	auto backup = it;
 	do {
-		encryption_driver.encrypt(encrypted, it->pub_key); // TODO
+//		encryption_driver.encrypt(encrypted, it->pub_key); // TODO
 	} while (it != backup);
 
 	return encrypted;
