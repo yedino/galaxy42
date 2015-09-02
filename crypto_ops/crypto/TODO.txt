@@ -1,0 +1,12 @@
+Add also SHA-3 / Keccak
+(designed by Guido Bertoni, Joan Daemen, Michaël Peeters, and Gilles Van Assche, building upon RadioGatún).
+
+Bacause it is result of an open competition, unlike the designed by NSA hash SHA-2 (SHA256, SHA512).
+
+[DONE] move sha to /sha_src
+[ABANDONED] implement template<> sha
+add ring signature
+[ABANDONED] remove boost library
+[DONE] make geport time attack resistant
+add windows/mac OS support
+implement geport in fucking ANSI C

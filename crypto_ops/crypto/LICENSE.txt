@@ -1,0 +1,6 @@
+All this code here (except for code taken from: Ed25519 implementation, SHA256/SHA512 implementation or other SHA types)
+is Copyrighted (C) 2015 by author(s) of this code:
+and has licence: GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.
+
+Copy of the licence text should be here (or in parent directories, inside this project) in file gplv3.txt
+
