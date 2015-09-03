@@ -12,7 +12,7 @@ public:
 
 struct c_token {
 		const size_t id;
-        std::vector<std::pair<std::string, std::string>> m_chainsign;
+        std::vector<std::pair<const std::string, const std::string>> m_chainsign;
 		c_token ();
 };
 

@@ -19,7 +19,7 @@ public:
         c_user();
         void send_token (c_user &, size_t);
 		void emit_tokens (size_t);
-        void recieve_token (string pubkey, c_token, size_t);
+        void recieve_token (std::string pub_key, c_token &token, size_t amount);
 };
 
 
