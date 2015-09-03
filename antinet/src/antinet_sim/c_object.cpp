@@ -45,26 +45,28 @@ void c_entity::draw (const c_drawtarget &drawtarget, c_layer_opengl &layer, int 
 
 void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	BITMAP *frame = layer.m_frame;
+	const auto & gui = * drawtarget.m_gui;
+	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
 	if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
-		auto selected_object = drawtarget.m_gui->m_selected_object.lock();
-		auto target_object = drawtarget.m_gui->m_target;
-		auto source_object = drawtarget.m_gui->m_source;
+		auto selected_object = gui.m_selected_object.lock();
+		auto target_object = gui.m_target;
+		auto source_object = gui.m_source;
 
 		if (this == selected_object.get()) { // if I am the selected object
-			circle(frame, m_x, m_y, 50 - 5, makecol(255, 128, 32));
+			circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
 		}
 
 		if (this == target_object.get()) { // if I am the target object
-			circle(frame, m_x, m_y, 50 - 15, makecol(104, 71, 79));
+			circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
 		}
 
 		if (this == source_object.get()) {
-			circle(frame, m_x, m_y, 50 - 15, makecol(246, 83, 86));
+			circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
 		}
 	}
 	if (layer.m_layer_nr == e_layer_nr_gui) {
-		auto selected_object = drawtarget.m_gui->m_selected_object.lock();
+		auto selected_object = gui.m_selected_object.lock();
 		if (this == selected_object.get()) { // if I am the selected object
 			const int r1 = 50 - 8, r2 = 50;
 			const auto col1 = makecol(192, 192, 192), col2 = makecol(255, 128, 32);
@@ -72,18 +74,18 @@ void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 			for (double angle = 0; angle < M_PI * 2; angle += (M_PI * 2) / 16) {
 				++nr;
 				line(frame,
-				     m_x + sin(angle) * r1,
-				     m_y + cos(angle) * r1, m_x + sin(angle) * r2, m_y + cos(angle) * r2, (nr % 2 ? col1 : col2));
+				     vx + sin(angle) * r1,
+				     vy + cos(angle) * r1, vx + sin(angle) * r2, vy + cos(angle) * r2, (nr % 2 ? col1 : col2));
 			}
 		}
 	}
 	if (layer.m_layer_nr == e_layer_nr_object) {
-		line(frame, m_x - 2, m_y - 2, m_x + 2, m_y + 2, color);
-		line(frame, m_x - 2, m_y + 2, m_x + 2, m_y - 2, color);
-		circle(frame, m_x, m_y, 10, color);
+		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
+		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
+		circle(frame, vx, vy, 10, color);
 	}
 	if (layer.m_layer_nr == e_layer_nr_object_extra) {
-		textout_ex(frame, font, m_name.c_str(), m_x - 20, m_y - 35, color, -1);
+		textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
 	}
 }
 
@@ -185,9 +187,11 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 
 void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	BITMAP *frame = layer.m_frame;
+	const auto & gui = * drawtarget.m_gui;
+	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
 	c_entity::draw(drawtarget, layer, color);
-	textout_ex(frame, font, std::to_string(m_my_address).c_str(), m_x - 20, m_y - 45, color, -1);
+	textout_ex(frame, font, std::to_string(m_my_address).c_str(), vx - 20, vy - 45, color, -1);
 
 	////////////////////////////////////////////////////////////////////
 	if (layer.m_layer_nr == e_layer_nr_object) {
@@ -199,9 +203,9 @@ void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 
 		set_alpha_blender();
 		draw_trans_sprite(frame, c_bitmaps::get_instance().m_node,
-		                  m_x - c_bitmaps::get_instance().m_node->w / 2, m_y - c_bitmaps::get_instance().m_node->h / 2);
+		                  vx - c_bitmaps::get_instance().m_node->w / 2, vy - c_bitmaps::get_instance().m_node->h / 2);
 		if (!m_routing_table.empty()) {
-			circle(frame, m_x, m_y, 10, color);
+			circle(frame, vx, vy, 10, color);
 		}
 	}
 	////////////////////////////////////////////////////////////////////
@@ -219,7 +223,7 @@ void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 			if (layer.m_layer_nr == e_layer_nr_route) { // draw the links
 
 				// the main link line
-				//			line(frame, m_x, m_y, neighbor_ptr->m_x, neighbor_ptr->m_y, color);
+				//			line(frame, vx, vy, neighbor_ptr->vx, neighbor_ptr->vy, color);
 				int price = m_neighbors_prices.at(neighbor.first);
 				int thick = 1;
 				if (price >= 10) thick = 2;
@@ -229,16 +233,16 @@ void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 				if (price >= 100) thick = 6;
 				if (price >= 500) thick = 7;
 				if (price >= 1000) thick = 8;
-				alex_thick_line(frame, m_x, m_y, neighbor_ptr->m_x, neighbor_ptr->m_y, thick - 1, color);
+				alex_thick_line(frame, vx, vy, gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y), thick - 1, color);
 
 				if (print_send_message) {
-					//line(frame, m_x, m_y, neighbor_ptr->m_x, neighbor_ptr->m_y, makecol(255, 0, 0));
+					//line(frame, vx, vy, neighbor_ptr->vx, neighbor_ptr->vy, makecol(255, 0, 0));
 					t_geo_point send_piont, receive_point, msg_circle;
-					send_piont.x = m_x;
-					send_piont.y = m_y;
+					send_piont.x = vx;
+					send_piont.y = vy;
 
-					receive_point.x = neighbor_ptr->m_x;
-					receive_point.y = neighbor_ptr->m_y;
+					receive_point.x = gui.view_x(neighbor_ptr->m_x);
+					receive_point.y = gui.view_y(neighbor_ptr->m_y);
 					msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point,
 					                                                    static_cast<double>(m_animframe) /
 					                                                    static_cast<double>(g_max_anim_frame));
@@ -285,7 +289,11 @@ void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 
 			// draw the link prices
 			if ((layer.m_layer_nr == e_layer_nr_route_extra)) {
-				t_geo_point text_pos = c_geometry::point_on_line_between_distance(t_geo_point(m_x, m_y), t_geo_point(neighbor_ptr->m_x, neighbor_ptr->m_y), 40);
+				t_geo_point text_pos = c_geometry::point_on_line_between_distance(
+					t_geo_point(vx, vy), 
+					t_geo_point( gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y)), 
+					40
+				);
 				string price = "$" + std::to_string(m_neighbors_prices.at(neighbor.first));
 				textout_ex(frame, font, price.c_str(), text_pos.x, text_pos.y - 10, color, -1);
 			}
@@ -589,11 +597,15 @@ c_tnetdev::c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c
 }
 
 void c_tnetdev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
+	BITMAP *frame = layer.m_frame;
+	const auto & gui = * drawtarget.m_gui;
+	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+
 	c_cjddev::draw(drawtarget, layer, color);
 	assert(!m_wallet.m_currency.empty());// return;
 
 	auto color_wallet = makecol(64,240,255);
-	m_wallet.draw(layer.m_frame, color_wallet, m_x - 20, m_y - 55);
+	m_wallet.draw(frame, color_wallet, vx - 20, vy - 55);
 }
 
 // ==================================================================

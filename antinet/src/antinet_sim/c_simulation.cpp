@@ -59,9 +59,11 @@ void c_simulation::main_loop () {
 
 	while (!m_goodbye && !close_button_pressed) {
 		std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
-		// process the keyboard/GUI
+
+		// --- process the keyboard/inputs ---
 		poll_keyboard();
 		auto allegro_keys = key;
+		auto allegro_shifts = key_shifts;
 		//		bool allegro_keys_any_is=false;
 		//		for (size_t i=0; i<sizeof(allegro_keys)/sizeof(allegro_keys[0]); ++i) allegro_keys_any_is=true;
 		int allegro_mouse_x, allegro_mouse_y, allegro_mouse_b;
@@ -74,9 +76,15 @@ void c_simulation::main_loop () {
 		int gui_mouse_b = allegro_mouse_b;
 
 		int allegro_char = 0;
-		if (keypressed())
+		if (keypressed()) {
 			allegro_char = readkey();
+		}
 
+		// background
+		clear_to_color(m_frame, makecol(0, 128, 0));
+		blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
+
+		// main controll keys
 		if ((allegro_char & 0xff) == 'n' && !start_simulation) {
 			std::cout << "ADD" << std::endl;
 			m_world->m_objects.push_back(make_shared<c_cjddev>(cjddev_detail_random_name(), gui_mouse_x, gui_mouse_y, cjddev_detail_random_addr()));
@@ -86,12 +94,28 @@ void c_simulation::main_loop () {
 			m_goodbye = true;
 		}
 
-		clear_to_color(m_frame, makecol(0, 128, 0));
-		blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
 
+		// animation & tick
 		if (m_frame_number % g_max_anim_frame == 0 && !simulation_pause) {
 			frame_checkpoint = m_frame_number;
 			m_world->tick(); // <===
+		}
+
+
+		// === main user interface ===
+
+		// the mode
+		typedef enum { e_mode_node, e_mode_camera } t_mode;
+		t_mode mode;
+		mode = e_mode_node; // by default we will move/edit etc the node (or entityt)
+		if (allegro_shifts & KB_SHIFT_FLAG) mode = e_mode_camera; // with key SHIFT we move camera instea
+
+		// mode: camera movement etc
+		if (mode == e_mode_camera) {
+			if (allegro_keys[KEY_LEFT]) m_gui->camera_x -= 10;
+			if (allegro_keys[KEY_RIGHT]) m_gui->camera_x += 10;
+			if (allegro_keys[KEY_UP]) m_gui->camera_y -= 10;
+			if (allegro_keys[KEY_DOWN]) m_gui->camera_y += 10;
 		}
 
 		string mouse_pos_str = std::to_string(gui_mouse_x) + " " + std::to_string(gui_mouse_y);
@@ -120,6 +144,7 @@ void c_simulation::main_loop () {
 		textout_ex(m_frame, font, "enter/esc - exit", 1140, 75, makecol(0, 0, 255), -1);
 
 
+		// find out which object is selected:
 		m_gui->m_selected_object = get_move_object(gui_mouse_x, gui_mouse_y);
 
 		{ // working with selected object
@@ -140,17 +165,19 @@ void c_simulation::main_loop () {
 					print_connect_line = false;
 				}
 
-				if (!print_connect_line) {
-					int speed = 5;
-					if (allegro_keys[KEY_LEFT])
-						selected_object->m_x += -speed;
-					if (allegro_keys[KEY_RIGHT])
-						selected_object->m_x += speed;
-					if (allegro_keys[KEY_DOWN])
-						selected_object->m_y += speed;
-					if (allegro_keys[KEY_UP])
-						selected_object->m_y += -speed;
-				}
+				if (mode == e_mode_node) { // working with selected object - moving
+					if (!print_connect_line) {
+						int speed = 5;
+						if (allegro_keys[KEY_LEFT])
+							selected_object->m_x += -speed;
+						if (allegro_keys[KEY_RIGHT])
+							selected_object->m_x += speed;
+						if (allegro_keys[KEY_DOWN])
+							selected_object->m_y += speed;
+						if (allegro_keys[KEY_UP])
+							selected_object->m_y += -speed;
+					}
+				} // moving selected object
 			}
 
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
@@ -252,15 +279,17 @@ void c_simulation::main_loop () {
 }
 
 shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
+	const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position
+
 	double max_distance = 150;
 	shared_ptr<c_entity> ret_ptr;
 	for (auto node : m_world->m_objects) {
 		shared_ptr<c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
 		int x1, x2, y1, y2;
-		x1 = std::max(mouse_x, node_ptr->m_x);
-		x2 = std::min(mouse_x, node_ptr->m_x);
-		y1 = std::max(mouse_y, node_ptr->m_y);
-		y2 = std::min(mouse_y, node_ptr->m_y);
+		x1 = std::max(vx, node_ptr->m_x);
+		x2 = std::min(vx, node_ptr->m_x);
+		y1 = std::max(vy, node_ptr->m_y);
+		y2 = std::min(vy, node_ptr->m_y);
 		double current_dist = sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2, 2));
 		if (current_dist < max_distance) {
 			max_distance = current_dist;
