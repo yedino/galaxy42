@@ -46,31 +46,11 @@ void c_net_node::do_accept() {
 	//_info("end do_accept");
 }
 
-/*
-void c_net_node::do_read() {
-	_info("start do read");
-	m_socket.async_read_some(buffer(m_recv_data, MAX_RECV_DATA_SIZE), [this](boost::system::error_code ec, std::size_t length) {
-		if (!ec) {
-			_info("do read data");
-			s_message message;
-			message.m_data.assign(m_recv_data, length);
-			m_inbox.emplace_back(message);
-			_info(m_recv_data);
-			_info("size of data: " << length);
-		}
-		else {
-			_info("do_read error: " << ec.message());
-		}
-	}); // lambda
-	_info("end do read");
-}
-*/
-
 void c_net_node::add_to_inbox (char *data, size_t size, const ip::address &source_address) {
 	_info("add_to_inbox");
 	std::lock_guard<std::mutex> lg(m_inbox_mutex);
 	s_message message;
-	message.m_data.assign(m_recv_data, size);
+	message.m_data.assign(data, size);
 	message.m_source_id = source_address.to_string();
 	m_inbox.emplace_back(std::move(message));
 }

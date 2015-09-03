@@ -26,22 +26,26 @@ enum e_packet_type {
 // yyyy = length of data
 // zzzz.. = data
 
+// TODO singleton?
 class c_protocol {
 	public:
 		c_protocol();
-		void send_packet(const t_nym_id &destination, const e_packet_type &packet_type);
-		void recv_packet();
+		void send_packet(const t_nym_id &destination, const e_packet_type &packet_type, const std::string &data = "");
+		void tick();
 	private:
+		struct s_packet {
+			std::string m_data; // raw data
+			e_packet_type m_packet_type;
+			t_nym_id m_address = "null_address"; // input address for input packet, destination address for output
+		};
 		std::unique_ptr<c_api_tr> m_network_device;
 		std::vector<t_nym_id> m_addressbook;
+		std::vector<s_packet> m_inbox;
+		std::vector<s_packet> m_outbox;
 		
-		struct s_packet {
-			std::string m_data;
-			e_packet_type m_packet_type;
-		};
-		
+		void recv_packets(); // get all input packets from m_network_device
 		s_packet deserialize_bin_data(const std::string &data);
-		void process_packet(const s_packet &packet);
+		void process_input_packet(const s_packet &packet);
 };
 
 #endif // C_PROTOCOL_HPP

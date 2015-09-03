@@ -10,8 +10,8 @@
 #include <c_api_tr.hpp>
 #include "c_session.hpp"
 
-#define _info(X) std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
-#define _note(X) std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
+#define _info(X) //std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
+#define _note(X) //std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
 
 #define MAX_RECV_DATA_SIZE 1024
 

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <memory>
 #include "c_net_node.hpp"
+#include "c_protocol.hpp"
 
 // argv[0] = remote ipv6
 int main(int argc, char* argv[]) {
@@ -10,7 +11,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Usage: asio-test <ipv6>" << std::endl;
 		return 1;
 	}
-	_info("strat main");
+	/*_info("strat main");
 	std::unique_ptr<c_api_tr> transmission_api(new c_net_node);
 	for (int i = 0; i < 5; ++i) {
 		transmission_api->write_to_nym(std::string(argv[1]), std::string("1234567890"));
@@ -27,8 +28,16 @@ int main(int argc, char* argv[]) {
 	_info("chunks_size = " << chunks_size);
 	for (auto &a : inbox) {
 		std::cout << a.m_source_id << "   " << a.m_data << std::endl;
+	}*/
+	
+	c_protocol protocol;
+	for (int i = 0; i < 10; ++i) {
+		std::cout << "tick" << std::endl;
+		protocol.send_packet(argv[1], e_packet_type::PING);
+		protocol.tick();
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-
+	
 	_info("end of main");
 	return 0;
 }
