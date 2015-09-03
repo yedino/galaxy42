@@ -4,7 +4,7 @@
 #include "../../crypto_ops/crypto/ed25519_src/ed25519.h"
 #include "../../crypto_ops/crypto/c_crypto_RSA.hpp"
 
-#include "../../crypto_ops/crypto/ed25519_src/ed25519.h"
+//#include "../../crypto_ops/crypto/ed25519_src/ed25519.h"
 #include "../../crypto_ops/crypto/ed25519_src/ge.h"
 #include "../../crypto_ops/crypto/ed25519_src/sc.h"
 

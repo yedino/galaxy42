@@ -102,7 +102,7 @@ int main () {
 	c_crypto_ed25519 ed, ed2;
 	ed.generate_key();
 	unsigned char Signature[64];
-	ed.sign("hello, ed25519 signature, you ulgy bitch", Signature);
-	cout << ed2.verify_sign("hello, ed25519 signature, you ulgy bitch", Signature, ed.get_public_key());
+    ed.sign("hello, ed25519 signature, test sign", Signature);
+    cout << ed2.verify_sign("hello, ed25519 signature, test sign", Signature, ed.get_public_key());
 	return 0;
 }

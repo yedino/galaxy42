@@ -91,8 +91,3 @@ void c_ed25519::key_exchange(unsigned char *shared_secret, const unsigned char *
 	
 	ed25519_key_exchange(shared_secret, public_key, private_key);
 }*/
-
-
-
-
-

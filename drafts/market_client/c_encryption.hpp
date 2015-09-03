@@ -4,7 +4,6 @@
 #include "../ed25519/src/ed25519.h"
 #include "../../antinet/src/c_crypto.hpp"
 
-#include "../ed25519/src/ed25519.h"
 #include "../ed25519/src/ge.h"
 #include "../ed25519/src/sc.h"
 
