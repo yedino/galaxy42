@@ -16,9 +16,9 @@ class c_object { // something in the simulation
 public:
 	virtual void tick (); ///< execute a tick of the animation
 	virtual void draw (const c_drawtarget &drawtarget,
-		c_allegro_layer &layer,
+		c_layer_allegro &layer,
 		int color) const; ///< draw the object (draw one layer of it, for allegro)
-	virtual void draw (const c_drawtarget &drawtarget, c_allegro_layer &layer, int color, unsigned int anim_frame);
+	virtual void draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color, unsigned int anim_frame);
 
 	c_object (string name);
 
@@ -34,7 +34,7 @@ protected:
 class c_entity : public c_object { // object in the world, in the diagram
 protected:
 	virtual void draw (const c_drawtarget &drawtarget,
-		c_allegro_layer &layer,
+		c_layer_allegro &layer,
 		int color) const; ///< draw the object (draw one layer of it, for allegro)
 
 public:
@@ -213,7 +213,7 @@ public:
 	virtual ~c_cjddev () = default;
 
 	virtual void draw (const c_drawtarget &drawtarget,
-		c_allegro_layer &layer,
+		c_layer_allegro &layer,
 		int color) const; ///< draw the object (draw one layer of it, for allegro)
 
 	void add_neighbor (shared_ptr<c_cjddev> neighbor);
@@ -246,7 +246,7 @@ public:
 	c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
 
 	virtual void draw (const c_drawtarget &drawtarget,
-		c_allegro_layer &layer,
+		c_layer_allegro &layer,
 		int color) const; ///< draw the object (draw one layer of it, for allegro)
 	virtual ~c_tnetdev () = default;
 

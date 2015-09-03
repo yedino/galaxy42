@@ -9,9 +9,9 @@ c_object::c_object (string name) : m_name(name), m_animframe(0) { }
 
 void c_object::tick () { }
 
-void c_object::draw (const c_drawtarget &drawtarget, c_allegro_layer &layer, int color) const { }
+void c_object::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const { }
 
-void c_object::draw (const c_drawtarget &drawtarget, c_allegro_layer &layer, int color, unsigned int anim_frame) {
+void c_object::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color, unsigned int anim_frame) {
 	m_animframe = anim_frame;
 	draw(drawtarget, layer, color);
 }
@@ -31,7 +31,7 @@ void c_wallet::draw (BITMAP *frame, int color, t_pos x, t_pos y) const {
 
 c_entity::c_entity (string name, t_pos x, t_pos y) : c_object(name), m_x(x), m_y(y) { }
 
-void c_entity::draw (const c_drawtarget &drawtarget, c_allegro_layer &layer, int color) const {
+void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	BITMAP *frame = layer.m_frame;
 
 	if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
@@ -171,7 +171,7 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 }
 
 
-void c_cjddev::draw (const c_drawtarget &drawtarget, c_allegro_layer &layer, int color) const {
+void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	BITMAP *frame = layer.m_frame;
 
 	c_entity::draw(drawtarget, layer, color);
@@ -576,7 +576,7 @@ c_tnetdev::c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c
 	m_wallet.m_currency.insert(pair<std::string, unsigned int>("TOKEN_B", 1000 - a_tokens));
 }
 
-void c_tnetdev::draw (const c_drawtarget &drawtarget, c_allegro_layer &layer, int color) const {
+void c_tnetdev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	c_cjddev::draw(drawtarget, layer, color);
 	assert(!m_wallet.m_currency.empty());// return;
 

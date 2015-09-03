@@ -46,20 +46,20 @@ public:
 	virtual ~c_drawtarget () = default;
 };
 
-class c_allegro_layer { ///< a single layer of allegro drawing target
+class c_layer_allegro { ///< a single layer of allegro drawing target
 public:
 	BITMAP *const m_frame; ///< pointer-only, owned by someone else. usually a pointer to the frame
 	const t_layer_nr m_layer_nr; ///< number of this layer
 
-	c_allegro_layer (BITMAP *frame, t_layer_nr layer_nr);
+	c_layer_allegro (BITMAP *frame, t_layer_nr layer_nr);
 
-	virtual ~c_allegro_layer () = default;
+	virtual ~c_layer_allegro () = default;
 };
 
 
 class c_drawtarget_allegro : public c_drawtarget { ///< allegro library draw target (with layers)
 public:
-	vector<c_allegro_layer> m_layer; ///< layers. the index is the layer number: e.g.: .at(e_layer_top).m_layer == e_layer_top
+	vector<c_layer_allegro> m_layer; ///< layers. the index is the layer number: e.g.: .at(e_layer_top).m_layer == e_layer_top
 	c_drawtarget_allegro (BITMAP *frame);
 
 	virtual ~c_drawtarget_allegro () = default;
