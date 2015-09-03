@@ -10,6 +10,9 @@
 using std::vector;
 using std::shared_ptr;
 
+/***
+The logical world of the simulation, includes simulated entities.
+*/
 class c_world {
 public:
 	vector<shared_ptr<c_object> > m_objects;

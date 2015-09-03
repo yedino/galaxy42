@@ -13,5 +13,10 @@
 #define _check(X) do { if (!(X)) { ::std::cerr<<"Assertation failed (_assert) at " << __FILE__ << "+" << __LINE__ << ::std::endl; ::std::abort(); }  } while(0)
 
 
+/// This macros will be moved later to glorious-cpp library or other
+
+#define _info(X) do { ::std::cerr<<"info: " << __FILE__ << "+" << __LINE__ << X << ::std::endl; } while(0)
+
+
 #endif // include guard
 

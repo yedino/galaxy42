@@ -82,8 +82,9 @@ void c_simulation::main_loop () {
 			m_world->m_objects.push_back(make_shared<c_cjddev>(cjddev_detail_random_name(), gui_mouse_x, gui_mouse_y, cjddev_detail_random_addr()));
 		}
 
-		if (allegro_keys[KEY_ESC] || allegro_keys[KEY_ENTER])
+		if (allegro_keys[KEY_ESC] || allegro_keys[KEY_ENTER]) {
 			m_goodbye = true;
+		}
 
 		clear_to_color(m_frame, makecol(0, 128, 0));
 		blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);

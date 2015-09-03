@@ -31,6 +31,18 @@ void c_wallet::draw (BITMAP *frame, int color, t_pos x, t_pos y) const {
 
 c_entity::c_entity (string name, t_pos x, t_pos y) : c_object(name), m_x(x), m_y(y) { }
 
+/*
+void c_entity::draw (const c_drawtarget &drawtarget, c_layer_opengl &layer, int color) const {
+{
+	m_x , m_y ...
+	if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
+		triangles ...
+		glQuad
+	}
+	...
+}
+*/
+
 void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	BITMAP *frame = layer.m_frame;
 
