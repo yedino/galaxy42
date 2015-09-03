@@ -4,15 +4,21 @@
 #include "c_token.hpp"
 #include "../../crypto_ops/crypto/c_random_generator.hpp"
 #include <map>
+#include <string>
+
+using std::string;
 
 class c_mint {
 public:
-		c_mint ();
+		c_mint () = default;
 
 		c_token emit_token ();
 
 private:
-		std::map<c_token, long> m_emited_tokens;
+		std::map<c_token, long long> m_emited_tokens;
+		c_random_generator<long long> random_generator;
+
+		long long generate_password ();
 };
 
 #endif // C_MINT_H

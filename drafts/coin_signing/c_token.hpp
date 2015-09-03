@@ -14,5 +14,8 @@ struct c_token {
 		c_token ();
 };
 
+bool operator== (const c_token &, const c_token &);
+
+bool operator< (const c_token &, const c_token &);
 
 #endif //COIN_SIGNING_C_TOKEN_HPP

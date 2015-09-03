@@ -14,7 +14,11 @@ private:
 		string username;
 		string public_key;
 public:
-		void send_token (const c_user &user);
+		void send_token (const c_user &, size_t);
+
+		void emit_tokens (size_t);
+
+		void recieve_token (size_t);
 };
 
 

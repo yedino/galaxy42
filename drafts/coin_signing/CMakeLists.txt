@@ -8,5 +8,6 @@ set(SOURCE_FILES main.cpp
         c_wallet.cpp c_wallet.hpp
         c_user.cpp c_user.hpp
         c_mint.cpp c_mint.hpp
+        ../../crypto_ops/crypto/c_random_generator.hpp
 )
 add_executable(coin_signing ${SOURCE_FILES})
