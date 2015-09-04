@@ -116,6 +116,10 @@ void c_simulation::main_loop () {
 			if (allegro_keys[KEY_RIGHT]) m_gui->camera_x += 10;
 			if (allegro_keys[KEY_UP]) m_gui->camera_y -= 10;
 			if (allegro_keys[KEY_DOWN]) m_gui->camera_y += 10;
+
+			const double zoom_speed = 1.1;
+			if (allegro_keys[KEY_PGUP]) m_gui->camera_zoom *= zoom_speed;
+			if (allegro_keys[KEY_PGDN]) m_gui->camera_zoom /= zoom_speed;
 		}
 
 		string mouse_pos_str = std::to_string(gui_mouse_x) + " " + std::to_string(gui_mouse_y);
@@ -134,14 +138,22 @@ void c_simulation::main_loop () {
 		                           std::to_string(m_frame_number)).c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 
 		textout_ex(m_frame, font, pck_speed_str.c_str(), 100, 10, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "s - start", 1140, 5, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "p - pause", 1140, 15, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "f - send FTP", 1140, 25, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "t - select target", 1140, 35, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "r - select source", 1140, 45, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "d - remove node", 1140, 55, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "n - add node", 1140, 65, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, "enter/esc - exit", 1140, 75, makecol(0, 0, 255), -1);
+
+		{
+			int tex_y = 10;
+			int lineh = 10;
+			textout_ex(m_frame, font, "s - start", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "p - pause", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "f - send FTP", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "t - select target", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "r - select source", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "d - remove node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "n - add node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "enter/esc - exit", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "Arrows: move selected node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "SHIFT-Arrows: move the camera", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+		}
 
 
 		// find out which object is selected:

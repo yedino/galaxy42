@@ -15,7 +15,8 @@ public:
 
 	shared_ptr<c_cjddev> m_target, m_source; ///< objects selected as Source and Target in simulation
 
-	int camera_x, camera_y, camera_z; // position of the camera. Z is probably going to be used in some 3D rendereres
+	int camera_x, camera_y, camera_z; //< position of the camera. Z is probably going to be used in some 3D rendereres
+	double camera_zoom; ///< camera "position": the zoom-in (1.0 is no zoom)
 
 	c_gui();
 	void move_to_home(); ///< sets the camera position to home
