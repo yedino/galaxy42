@@ -341,6 +341,7 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 	}
 }
 
+/// [netlogic] sends packets
 bool c_tnetdev::send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data) {
 	std::cout << "routing table (host => next hop)" << std::endl;
 	for (auto &host : m_routing_table) {
@@ -405,28 +406,50 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 // ==================================================================
 
 void c_tnetdev::tick () {
+	bool dbg=0;
+
 	c_cjddev::tick();
 
-	if (!m_outbox.empty()) { // sned outgoing messages to our peers
-		//std::cout << "send message from " << m_outbox.at(0)->m_msg->m_from << " to " << m_outbox.at(0)->m_msg->m_to << std::endl;
-		shared_ptr<c_cjddev> neighbor_ptr;
-		if (m_neighbors.find(m_outbox.at(0)->m_msg->m_to) != m_neighbors.end()) {
+	// this should be in a loop to send faster - many packets at once (once full algorithm is implemented)
+
+	// THIS IS JUST A SIMPLE TEST!!! with very expensive full search.
+	// we will be implementing a DHT layer next :)
+
+	// process outbox
+	// there is something to send in the network from us
+	// so send it.
+	if (!m_outbox.empty()) { // send outgoing messages to our peers
+		if (dbg) { std::cout << "send message from " << m_outbox.at(0)->m_msg->m_from << " to " << m_outbox.at(0)->m_msg->m_to << std::endl; }
+
+		auto &msg = m_outbox.at(0); // the message (processed now)
+		auto &msg_recipient = msg->m_msg->m_to; // the recipint address
+
+		shared_ptr<c_cjddev> neighbor_ptr; // to whom should we *directly* send the packet now
+		// make decision to whom send now directly:
+		if (m_neighbors.find(msg_recipient) != m_neighbors.end()) { // if this recipint is our direct peer then:
 			std::cout << "send packet to neighbor" << std::endl;
-			neighbor_ptr = m_neighbors.at(m_outbox.at(0)->m_msg->m_to).lock();
+			neighbor_ptr = m_neighbors.at( msg_recipient  ).lock(); // send to him obviously
 		} else if (m_routing_table.find(m_outbox.at(0)->m_msg->m_to) != m_routing_table.end()) {
 			std::cout << "send packet using routing table" << std::endl;
 			std::cout << "packet to = " << m_outbox.at(0)->m_msg->m_to << std::endl;
 			std::cout << "packet dest = " << m_outbox.at(0)->m_msg->m_destination << std::endl;
-			neighbor_ptr = m_neighbors.at(m_routing_table.at(m_outbox.at(0)->m_msg->m_to).m_address).lock();
+
+			auto &nexthop_addr = m_routing_table.at(msg_recipient).m_address; // the next hop that we think is a good path there
+			neighbor_ptr = m_neighbors.at(next_hop_address).lock();
 		}
-		neighbor_ptr->receive_message(std::move(m_outbox.at(0)));
-		m_outbox.erase(m_outbox.begin());
+		neighbor_ptr->receive_message(std::move(m_outbox.at(0))); // push the message to the selected hop
+		m_outbox.erase(m_outbox.begin()); // remove this message
 	}
 
+	// process inbox
 	if (!m_inbox.empty()) {
+
+		auto &msg = m_inbox.at(0)->m_msg->m_ttl
+
 		if (m_inbox.at(0)->m_msg->m_ttl == 0) {
 			// TODO
 		}
+
 		--m_inbox.at(0)->m_msg->m_ttl;
 		if (m_inbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) { // e_msgkind_buy_net_inq in inbox
 			//std::cout << "(" << m_my_address << ") " << "recv msg_buy_inq"  << std::endl;
@@ -480,7 +503,6 @@ void c_tnetdev::tick () {
 					unique_ptr<c_msgtx> message_resp(new c_msgtx);
 					message_resp->m_msg = message_content_ptr;
 					m_outbox.emplace_back(std::move(message_resp));
-
 				}
 			}
 		} else if (m_inbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_menu) {

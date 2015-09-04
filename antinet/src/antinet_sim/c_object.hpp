@@ -201,11 +201,11 @@ struct s_remote_host {
 class c_cjddev : public c_netdev { // a cjdns-networked device. has ipv6 address from cjdns
 protected:
 	t_cjdaddr m_my_address;
-	map<t_cjdaddr, weak_ptr<c_cjddev >> m_neighbors; // addr => peer ptr
-	map<t_cjdaddr, unsigned int> m_neighbors_prices; // addr => price
-	map<t_cjdaddr, s_remote_host> m_routing_table; // remote host => next hop (neighbor)
-	unordered_set<t_cjdaddr> m_wait_hosts; // I'm waiting for ...
-	map<t_ID, t_cjdaddr> m_response_nodes; // ID => addr
+	map<t_cjdaddr, weak_ptr<c_cjddev >> m_neighbors; ///< addr => peer ptr
+	map<t_cjdaddr, unsigned int> m_neighbors_prices; ///< addr => price
+	map<t_cjdaddr, s_remote_host> m_routing_table; ///< remote host => next hop (neighbor). Which peer is the correct way to go there
+	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
+	map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
 
 public:
 	c_cjddev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);

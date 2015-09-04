@@ -252,6 +252,7 @@ void c_simulation::main_loop () {
 				last_click_time = std::chrono::steady_clock::now();
 			}
 		}
+
 		if ((m_frame_number - frame_checkpoint) < g_max_anim_frame) {
 			m_world->draw(*m_drawtarget.get(), (m_frame_number - frame_checkpoint) % g_max_anim_frame); // <==
 		} else {
