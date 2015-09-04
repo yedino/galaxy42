@@ -11,9 +11,9 @@ struct c_wallet {
 		list<c_token> tokens;
 		const string tokens_type;
 
-        c_wallet (const string & = "bla");
+		c_wallet (const string & = "bla");
 
-        c_wallet (string &&);
+		c_wallet (string &&);
 
 		size_t amount ();
 

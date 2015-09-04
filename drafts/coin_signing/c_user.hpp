@@ -10,16 +10,19 @@ using std::string;
 
 class c_user {
 private:
-        c_mint m_mint;
-        c_wallet m_wallet;
-        string m_username;
-        string m_public_key;
-        c_ed25519 m_edsigner;
+		c_mint m_mint;
+		c_wallet m_wallet;
+		string m_username;
+		string m_public_key;
+		c_ed25519 m_edsigner;
 public:
-        c_user(std::string username = "test");
-        void send_token (c_user &, size_t amount = 1);
+		c_user (std::string username = "test");
+
+		void send_token (c_user &, size_t amount = 1);
+
 		void emit_tokens (size_t);
-        void recieve_token (c_token &token, size_t amount = 1);
+
+		void recieve_token (c_token &token, size_t amount = 1);
 };
 
 

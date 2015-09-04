@@ -11,8 +11,11 @@ using std::string;
 class c_mint {
 public:
 		c_mint () = default;
+
 		c_token emit_token ();
-        bool check_isEmited(c_token&);
+
+		bool check_isEmited (c_token &);
+
 private:
 		std::map<c_token, long long> m_emited_tokens;
 		c_random_generator<long long> random_generator;
