@@ -5,8 +5,10 @@
 #include <string>
 #include "c_mint.hpp"
 #include "c_encryption.hpp"
+#include <vector>
 
 using std::string;
+using std::vector;
 
 class c_user {
 private:
@@ -15,14 +17,18 @@ private:
 		string m_username;
 		string m_public_key;
 		c_ed25519 m_edsigner;
-public:
-		c_user (std::string username = "test");
+		vector<c_token> used_tokens;
 
-		void send_token (c_user &, size_t amount = 1);
+		void find_the_cheater (const c_token &, const c_token &);
+
+public:
+		c_user (std::string);
+
+		void send_token (c_user &, size_t = 1);
 
 		void emit_tokens (size_t);
 
-		void recieve_token (c_token &token, size_t amount = 1);
+		bool recieve_token (c_token &token, size_t = 1);
 };
 
 

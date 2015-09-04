@@ -18,18 +18,38 @@ void c_user::send_token (c_user &user, size_t amount) {
 	user.recieve_token(tok, amount);
 }
 
-void c_user::recieve_token (c_token &token, size_t amount) {
-	m_mint.check_isEmited(token);
-	if (m_edsigner.verify(token.m_chainsign.back().m_signed_msg, token.m_chainsign.back().m_msg, token.m_chainsign.back().m_msg.length(), token.m_chainsign.back().m_signer_pubkey)) {
-
-		std::cout << "token validate : OK" << std::endl;
-		m_wallet.tokens.push_back(token);
-	} else {
-		std::cout << "token validate : BAD_SIGN !!!" << std::endl;
+bool c_user::recieve_token (c_token &token, size_t amount) {
+	if (m_mint.check_isEmited(token)) { // is this token emitted by me?
+		for (auto &in : used_tokens) { // is this token used?
+			if (in == token) {
+				std::cout << "token validate : TOKEN_USED !!!" << std::endl;
+				find_the_cheater(token, in);
+				return false;
+			}
+		}
+		used_tokens.push_back(token);
 	}
+
+	for (auto &current_signature : token.m_chainsign) {
+		if (!m_edsigner.verify(current_signature.m_signed_msg, current_signature.m_msg, current_signature.m_msg.length(), current_signature.m_signer_pubkey)) {
+
+			std::cout << "token validate : BAD_SIGN !!!" << std::endl;
+			return false;
+		} else {
+			cout << current_signature.m_msg << '\n'; // TODO m_msg is '11' almost always. what is that?!
+		}
+	}
+
+	m_wallet.tokens.push_back(token);
+	std::cout << "token validate : OK" << std::endl;
+	return true;
 }
 
-void c_user::emit_tokens (size_t t) {
+void c_user::emit_tokens (size_t amount) {
 	c_token emitted_token = m_mint.emit_token();
 	m_wallet.add_token(emitted_token);
+}
+
+void c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
+//	for ()
 }

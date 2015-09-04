@@ -6,8 +6,8 @@ using namespace std;
 
 bool test_user_sending () {
 
-	c_user test_userA;
-	c_user test_userB;
+	c_user test_userA("userA");
+	c_user test_userB("userB");
 
 	test_userA.emit_tokens(1);
 	test_userA.send_token(test_userB, 1);
@@ -17,13 +17,14 @@ bool test_user_sending () {
 
 bool test_many_users () {
 
-	c_user A, B, C, D;
+	c_user A("userA"), B("userB"), C("userC"), D("userD");
 
 	A.emit_tokens(1);
 	A.send_token(B);
 	B.send_token(C);
 	C.send_token(D);
 	D.send_token(A);
+	return false;
 }
 
 int main () {

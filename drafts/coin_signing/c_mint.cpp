@@ -7,8 +7,8 @@ c_token c_mint::emit_token () {
 	return token;
 }
 
-bool c_mint::check_isEmited (c_token &tok) {
-	if (m_emited_tokens.find(tok) != m_emited_tokens.end() && tok.check_ps(m_emited_tokens[tok])) {
+bool c_mint::check_isEmited (c_token &token) {
+	if (m_emited_tokens.find(token) != m_emited_tokens.end() && token.check_ps(m_emited_tokens[token])) {
 		std::cout << "Token emited here!" << std::endl;
 		return true;
 	}
