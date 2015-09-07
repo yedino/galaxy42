@@ -4,12 +4,17 @@
 #include "c_random_generator.hpp"
 #include "c_crypto_ed25519.hpp"
 #include <list>
+#include "sha_src/sha256.hpp"
+#include "sha_src/sha512.hpp"
 
 using std::cout;
 using std::cin;
 using std::string;
 using std::endl;
 using std::list;
+
+typedef number<cpp_int_backend<512 * 2, 512 * 2, unsigned_magnitude, unchecked, void>> long_type; // TODO
+typedef c_crypto_geport <512, 9, sha512<long_type>> c_crypto_geport_def;
 
 string generate_random_string (size_t length) {
 	auto generate_random_char = [] () -> char {
@@ -41,8 +46,8 @@ string generate_different_string (const string &msg) {
 	return ret;
 }
 
-signed_msg generate_different_signature (const signed_msg &signature) {
-	signed_msg ret = signature;
+signed_msg<long_type> generate_different_signature (const signed_msg<long_type> &signature) {
+	signed_msg<long_type> ret = signature;
 	if (rand() % 2)
 		ret.public_key += (rand() % 10000000L) + 1;
 	else
@@ -52,8 +57,8 @@ signed_msg generate_different_signature (const signed_msg &signature) {
 }
 
 void random_generator_test (size_t size) {
-	c_random_generator<c_crypto_geport::long_type> generator;
-	list <c_crypto_geport::long_type> set;
+	c_random_generator<long_type> generator;
+	list <long_type> set;
 
 	for (size_t i = 0; i < size; ++i)
 		set.push_back(generator.get_random(33));
@@ -65,12 +70,12 @@ void random_generator_test (size_t size) {
 
 void correctness_test (size_t size) {
 	size_t jump = 100;
-	c_crypto_geport geport;
-	c_crypto_geport::long_type Private_key[256 + 8];
+	c_crypto_geport_def geport;
+	c_crypto_geport_def::long_type Private_key[256 + 8];
 	geport.generate_private_key(Private_key);
 
 	string message, different_message;
-	signed_msg signature, different_signature;
+	signed_msg<long_type> signature, different_signature;
 
 	for (size_t i = 0; i < size; ++i) {
 		message = generate_random_string((size_t)(rand() % 50) + 5);
@@ -98,11 +103,5 @@ void correctness_test (size_t size) {
 int main () {
 	ios_base::sync_with_stdio(false);
 	correctness_test(100000);
-//	typedef c_crypto_geport::long_type long_type;
-//
-//	long_type a = sha256<long_type>("isiema siema"), b = 1;
-//	b <<= 256;
-//	b -= 1;
-//	cout << c_crypto_geport::bits_counter(b) << '\n' << b;
 	return 0;
 }
