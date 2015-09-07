@@ -5,7 +5,7 @@
 using namespace std;
 
 bool test_user_sending () {
-
+    std::cout << "RUNNING TEST01 USER_SENDING" << std::endl;
 	c_user test_userA("userA");
 	c_user test_userB("userB");
 
@@ -16,8 +16,8 @@ bool test_user_sending () {
 }
 
 bool test_many_users () {
-
-	c_user A("userA"), B("userB"), C("userC"), D("userD");
+    std::cout << "RUNNING TEST02 MANY_USER" << std::endl;
+    c_user A("userA"), B("userB"), C("userC"), D("userD");
 
 	A.emit_tokens(1);
 	A.send_token(B);

@@ -3,24 +3,31 @@
 c_user::c_user (std::string username) : m_username(username) {
 	m_public_key = m_edsigner.get_public_key();
 }
+string c_user::get_username() {
+    return m_username;
+}
 
 void c_user::send_token (c_user &user, size_t amount) {
 	if (amount > 1) {
 		std::cout << "error! : test version allow to send only 1 token" << std::endl;
 		return;
 	}
+    if (m_wallet.tokens.empty()) {
+        std::cout << "empty wallet! : no tokens to send" << std::endl;
+        return;
+    }
 
-	c_token tok = m_wallet.tokens.back(); // take any token for now [TODO]
-	// TODO assert if any [UB]
-
+    c_token tok = m_wallet.tokens.back(); // take any token for now [TODO]
 	m_wallet.tokens.pop_back();
 
-	std::string msg = std::to_string(tok.id) + "|" + user.publickey;
+    std::string msg = std::to_string(tok.id) + "|" + user.m_public_key;
 	// + std::to_string(amount) ; // the nominal is token's dependent
 	std::string signed_tok = m_edsigner.sign(msg);
 
-	tok.m_chainsign.push_back(c_chainsign_element(signed_tok, msg, m_public_key));
-	user.recieve_token(tok, amount); // push this coin to the target user
+    tok.m_chainsign.push_back(c_chainsign_element(signed_tok, msg, m_public_key));
+    std::cout << "sending token: " << m_username << " => " << user.get_username() << std::endl;
+    user.recieve_token(tok, amount); // push this coin to the target user
+
 }
 
 bool c_user::recieve_token (c_token &token, size_t amount) {
@@ -33,10 +40,9 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 			}
 		}
 		used_tokens.push_back(token);
-	}
+    }
 
 	// check validity of the signatures chain
-
 	std::string expected_sender; // publickey
 	bool expected_sender_any=false; // do we expecected sender
 
@@ -46,15 +52,21 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 		//		expected_sender_any = true;
 	}
 
-	// [A->B]   [B->C]   [C->D]
+    // [A->B]   [B->C]   [C->D]
 	for (auto &current_signature : token.m_chainsign) {
 
 		// [B->C]
 		bool ok_sign = m_edsigner.verify(current_signature.m_signed_msg, current_signature.m_msg, 
 			current_signature.m_msg.length(), current_signature.m_signer_pubkey);
 
-		auto current_sender_in_coin = current_signature.m_signer_pubkey;
-		auto current_recipient_in_coin = "A"; // TODO strpos substr - by delimiter
+        auto current_sender_in_coin = current_signature.m_signer_pubkey;
+
+        auto current_recipient_in_coin = "";
+        std::string delimeter = "|";
+        std::size_t found = current_signature.m_msg.find(delimeter);
+        if (found!=std::string::npos) {
+            current_recipient_in_coin = current_signature.m_msg.substr(found + 1).c_str();
+        }
 
 		// [B->C] is the current sender B allowed to send,  check for error:
 		if ( (expected_sender_any) && current_sender_in_coin != expected_sender) {
@@ -70,7 +82,7 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 		expected_sender = current_recipient_in_coin;
 		expected_sender_any = true;
 
-		cout << current_signature.m_msg << '\n'; // TODO info
+        cout << "chainsign: " << current_signature.m_msg << " was signed by " << current_signature.m_signer_pubkey << '\n'; // TODO info
 	}
 
 	m_wallet.tokens.push_back(token);
@@ -78,14 +90,18 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 	return true;
 }
 
-void c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
+bool c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 
-	auto len = token_a.m_chainsign;
+    auto len = token_a.m_chainsign.size();
 
 	// [A->B]   [B->C]   [C->D] token_a
 	// [A->B]   [B->C]   [C->X] token_b if he cheated at end
 
-	for (auto pos=0; pos<len; ++pos) {
+    // check validity of the signatures chain
+    std::string expected_sender; // publickey
+    bool expected_sender_any=false; // do we expecected sender
+
+    for (auto pos=0; pos<len; ++pos) {
 		auto &current_signature_a = token_a.m_chainsign[pos];
 		auto &current_signature_b = token_b.m_chainsign[pos];
 
@@ -95,8 +111,8 @@ void c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 		if (!ok_sign_a) {
 			std::cout << "token validate : BAD_SIGN !!!" << std::endl;
 			return false;
-		} 
-		
+        }
+
 		// TODO deduplicate  for + const auto& = ? .. : ...
 		// [B->C]
 		bool ok_sign_b = m_edsigner.verify(current_signature_b.m_signed_msg, current_signature_b.m_msg, 
@@ -104,7 +120,7 @@ void c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 		if (!ok_sign_b) {
 			std::cout << "token validate : BAD_SIGN !!!" << std::endl;
 			return false;
-		} 
+        }
 
 		auto current_sender_in_coin_a = current_signature_a.m_signer_pubkey;
 		auto current_recipient_in_coin_a = "A"; // TODO strpos substr - by delimiter
@@ -124,9 +140,12 @@ void c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 			std::cout << "DOUBLE SPENDING detected: " << std::endl; // TODO details here
 		}
 
-		cout << current_signature.m_msg << '\n'; // TODO info
-	}
+        expected_sender = current_recipient_in_coin;
+        expected_sender_any = true;
 
+		cout << current_signature.m_msg << '\n'; // TODO info
+    }
+    return true;
 }
 
 

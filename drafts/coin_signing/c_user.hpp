@@ -19,11 +19,12 @@ private:
 		c_ed25519 m_edsigner;
 		vector<c_token> used_tokens;
 
-		void find_the_cheater (const c_token &, const c_token &);
+        bool find_the_cheater (const c_token &, const c_token &);
 
 public:
 		c_user (std::string);
 
+        string get_username();
 		void send_token (c_user &, size_t = 1);
 
 		void emit_tokens (size_t);
