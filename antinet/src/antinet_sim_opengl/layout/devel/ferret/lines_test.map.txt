@@ -1,0 +1,15 @@
+add cjddev {
+x 330
+y 163
+name NODE_A
+IP 11111111
+}
+add tnetdev {
+x 329
+y 426
+name NODE_T_B
+IP 22222222
+}
+connections
+11111111 => 22222222 5
+
