@@ -11,6 +11,9 @@
 #include <vector>
 #include <sstream>
 
+//#undef _info(X) // TODO rm
+//#undef _note(X)
+
 #define _info(X) std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
 #define _note(X) std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
 
@@ -34,7 +37,7 @@ class c_protocol {
 		void tick();
 	private:
 		struct s_packet {
-			std::string m_data; // raw data
+			std::string m_data;
 			e_packet_type m_packet_type;
 			t_nym_id m_address = "null_address"; // input address for input packet, destination address for output
 		};

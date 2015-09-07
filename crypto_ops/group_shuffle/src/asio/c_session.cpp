@@ -30,7 +30,7 @@ void c_session::do_read() {
 		if (!ec) {
 			_info("do read data");
 			m_net_node_ptr->add_to_inbox(m_recv_data, length, m_socket.remote_endpoint().address());
-			do_read();
+			//do_read();
 			_info("read data size: " << length);
 		}
 		else {

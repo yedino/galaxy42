@@ -43,6 +43,8 @@ void c_protocol::tick() {
 		_info("send packet to " << output_packet.m_address);
 		m_network_device->write_to_nym(output_packet.m_address, output_packet.m_data);
 	}
+	_info("m_inbox size: " << m_inbox.size());
+	_info("m_outbox size: " << m_outbox.size());
 	m_outbox.clear();
 	m_inbox.clear();
 }
@@ -69,9 +71,10 @@ void c_protocol::process_input_packet(const c_protocol::s_packet &packet) {
 	_info(packet.m_packet_type);
 	_info("**************************");
 	if (packet.m_packet_type == e_packet_type::PING) {
-		send_packet(packet.m_address, e_packet_type::PONG);
+		_info("send PONG to " << packet.m_address);
+		send_packet(packet.m_address, e_packet_type::PONG); // send to source address
 	}
 	else if (packet.m_packet_type == e_packet_type::PONG) {
-		std::cout << "***********************get pong msg from " << packet.m_address << std::endl;
+		std::cout << "***********************get PONG msg from " << packet.m_address << std::endl;
 	}
 }

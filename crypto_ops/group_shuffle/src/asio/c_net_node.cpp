@@ -63,13 +63,17 @@ void c_net_node::add_to_inbox (char *data, size_t size, const ip::address &sourc
 void c_net_node::write_to_nym (t_nym_id guy, const string &data) {
 	_note("start connect to " << guy);
 	m_client_socket.async_connect(ip::tcp::endpoint(ip::address::from_string(guy.c_str()), m_port), [this, data](const boost::system::error_code &ec) {
-		if(!ec) {
-			_note("async_connect handler");
-            std::make_shared<c_session>(std::move(m_client_socket), data)->do_write();
-		}
-		else {
-			_note("connect error: " << ec.message());
-		}
+		for(int i = 0; i < 10; ++i) {
+			if(!ec) {
+				_note("async_connect handler");
+				std::make_shared<c_session>(std::move(m_client_socket), data)->do_write();
+				break;
+			}
+			else {
+				_note("connect error: " << ec.message());
+				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+			}
+		} 
 	}); // lambda
 }
 

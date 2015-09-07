@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 	}*/
 	
 	c_protocol protocol;
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		std::cout << "tick" << std::endl;
 		protocol.send_packet(argv[1], e_packet_type::PING);
 		protocol.tick();

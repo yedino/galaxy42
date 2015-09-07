@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 #include <thread>
 #include <mutex>
 #include <boost/asio.hpp>
@@ -10,10 +11,12 @@
 #include <c_api_tr.hpp>
 #include "c_session.hpp"
 
-#define _info(X) //std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
-#define _note(X) //std::cout << __FILE__ << ":" << __LINE__ << " " << X << std::endl
+#define _info(X) std::cout << std::this_thread::get_id() << " " << __FILE__ << ":" << __LINE__ << " " << X << std::endl
+#define _note(X) std::cout << std::this_thread::get_id() << " " << __FILE__ << ":" << __LINE__ << " " << X << std::endl
 
 #define MAX_RECV_DATA_SIZE 1024
+
+class c_session;
 
 class c_net_node : public c_api_tr {
 	public:
@@ -21,7 +24,7 @@ class c_net_node : public c_api_tr {
 		~c_net_node();
 		void run();
 		virtual void write_to_nym(t_nym_id guy, const std::string & data) override; // guy = ipv6, thread unsafe
-		virtual vector<s_message> read_or_wait_for_data() override; // thread safe, clear buffer
+		virtual vector < s_message > read_or_wait_for_data() override; // thread safe, clear buffer
 		void add_to_inbox(char *data, size_t size, const boost::asio::ip::address &source_address); // thread safe
 	private:
 		const unsigned short m_port = 4000; // port for server
@@ -33,8 +36,10 @@ class c_net_node : public c_api_tr {
 		boost::asio::deadline_timer m_timer;
 		const unsigned int m_number_of_threads = 5;
 		char m_recv_data[MAX_RECV_DATA_SIZE];
-		std::vector<s_message> m_inbox;
+		std::vector < s_message > m_inbox;
 		std::mutex m_inbox_mutex;
+		std::map <t_nym_id, std::shared_ptr < c_session > > m_session_map; // nymID => session
+		std::mutex m_session_map_mutex;
 		void do_accept();
 };
 
