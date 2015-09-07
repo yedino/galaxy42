@@ -27,9 +27,23 @@ bool test_many_users () {
 	return false;
 }
 
+bool test_cheater() {
+
+    std::cout << "RUNNING TEST03 CHEATER" << std::endl;
+    c_user A("userA"), B("userB"), C("userC"), X("userX");
+    A.emit_tokens(1);
+    A.send_token(B);
+    B.send_fake_token(C);
+    B.send_token(X);
+    C.send_token(A);
+    X.send_token(A); // should detect cheater
+    return false;
+}
+
 int main () {
 
-	test_user_sending();
-	test_many_users();
+    test_user_sending();
+    test_many_users();
+    test_cheater();
 	return 0;
 }

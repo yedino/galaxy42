@@ -26,7 +26,7 @@ public:
 
         string get_username();
 		void send_token (c_user &, size_t = 1);
-
+        void send_fake_token(c_user &, size_t = 1);
 		void emit_tokens (size_t);
 
 		bool recieve_token (c_token &token, size_t = 1);

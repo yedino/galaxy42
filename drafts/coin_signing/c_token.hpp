@@ -11,10 +11,12 @@ public:
 };
 
 struct c_chainsign_element {
-		c_chainsign_element (const std::string, const std::string, const std::string);
+        c_chainsign_element (const std::string, const std::string, const std::string, const std::string);
 
-		const std::string m_signed_msg;
-		const std::string m_msg;
+        bool operator !=(const c_chainsign_element &c_el) const;
+        const std::string m_msg;
+        const std::string m_signed_msg;
+        const std::string m_signer;
 		const std::string m_signer_pubkey;
 };
 
