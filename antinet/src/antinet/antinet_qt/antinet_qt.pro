@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = antinet_qt
 TEMPLATE = app
 
-CONFIG += c++11
+CONFIG += -std=c++11
 
 SOURCES += main.cpp\
         c_antinet_agent_api.cpp \

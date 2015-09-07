@@ -12,6 +12,14 @@ typedef int t_pos; ///< position (one coordinate)
 typedef unsigned long int t_cjdaddr; // cjdns address example
 typedef unsigned long long int t_ID;
 
+
+/**
+ *\class c_object
+ *
+ * \brief class to prepare simulation
+ * every next step is done in next tick();
+ *
+ */
 class c_object { // something in the simulation
 public:
 	virtual void tick (); ///< execute a tick of the animation
@@ -26,38 +34,64 @@ public:
 
 	virtual ~c_object () = default;
 
+    virtual t_pos get_x() = 0;
+    virtual t_pos get_y() = 0;
 protected:
 	string m_name;
 	unsigned int m_animframe;
 };
 
+/**
+ * \class c_entity
+ * \brief object in the world, in the diagram
+ *
+ */
 class c_entity : public c_object { // object in the world, in the diagram
 protected:
 	virtual void draw (const c_drawtarget &drawtarget,
 		c_layer_allegro &layer,
 		int color) const; ///< draw the object (draw one layer of it, for allegro)
 
+
+
 public:
 	t_pos m_x, m_y; ///< position in the world
-	c_entity (string name, t_pos x, t_pos y);
+    c_entity (string name, t_pos x, t_pos y);
+
+        t_pos get_x();
+        t_pos get_y();
 
 	virtual ~c_entity () = default;
 };
 
 
+/**
+ * \struct msg
+ * \brief a general message.
+ *
+ * a general message. e.g.: a direct message, something that is sent over a network direct link
+ * sender and recipient fields are known from the cointainer that has this object
+ *
+ */
 struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
 	// sender and recipient fields are known from the cointainer that has this object
 	virtual ~msg () = default;
 };
 
+/**
+ * \enum t_msgkind
+ *	\brief kind of message
+ *
+ */
 typedef enum {
-	e_msgkind_default, e_msgkind_error, // some error? please restart? operation not possible
+    e_msgkind_default,
+    e_msgkind_error, /// some error? please restart? operation not possible
 
-	e_msgkind_buy_net_inq, // inquery, tell me prices
-	e_msgkind_buy_net_menu, // this are my prices
-	e_msgkind_buy_net_buying, // ok I buy
-	e_msgkind_buy_net_agreed, // agreed, you bought it
-	e_msgkind_buy_net_final, // agreed, you bought it - ok see you
+    e_msgkind_buy_net_inq, /// inquery, tell me prices
+    e_msgkind_buy_net_menu, /// this are my prices
+    e_msgkind_buy_net_buying, /// ok I buy
+    e_msgkind_buy_net_agreed, /// agreed, you bought it
+    e_msgkind_buy_net_final, /// agreed, you bought it - ok see you
 
 	e_msgkind_data,
 	e_msgkind_ping,
@@ -65,12 +99,22 @@ typedef enum {
 	e_msgkind_buy_currency
 } t_msgkind;
 
+/**
+ *\class c_wallet
+ *\brief wallet to pay for connection
+ *
+ *
+*/
 class c_wallet {
 public:
 	map<std::string, unsigned int> m_currency; // cuttency => number of currency
 	void draw (BITMAP *frame, int color, t_pos x, t_pos y) const;
 };
 
+/**
+ * \class msgcjd
+ *	\brief a message targetted at cjdns node
+*/
 struct msgcjd : public msg { // a message targetted at cjdns node
 	virtual ~msgcjd () = default;
 
@@ -92,8 +136,16 @@ public:
 	virtual ~msg_buy () = default;
 };
 
+/**
+ * @brief The e_currency enum
+ */
 enum class e_currency { USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
 
+
+/**
+ * @struct item_netaccess
+ * @brief The item_netaccess struct
+ */
 struct item_netaccess {
 	unsigned int min_amount;
 	unsigned int price;
@@ -107,11 +159,21 @@ public:
 	T object; // the "hashed" object
 };
 
+
+/**
+ * @struct msg_buy_inq
+ * @brief The msg_buy_inq struct
+ */
 struct msg_buy_inq : public msg_buy {
 public:
 	msg_buy_inq ();
 };
 
+
+/**
+ * @struct msg_buy_menu
+ * @brief The msg_buy_menu struct
+ */
 struct msg_buy_menu : public msg_buy {
 public:
 	//vector< item_netaccess > offer;
@@ -120,6 +182,11 @@ public:
 	unsigned int m_my_price;
 };
 
+
+/**
+  *@class msg_buy_buying
+ * @brief The msg_buy_buying struct
+ */
 struct msg_buy_buying : public msg_buy {
 	item_netaccess my_pick; // I picked this option
 	unsigned int amount; // how much I buy 
@@ -152,6 +219,13 @@ public:
 		msg_buy_currency_menu();
 };
 
+/**
+ * \struct msg_use
+ * \brief we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
+ *
+ *
+ *
+ */
 struct msg_use
 	: public msgcjd { // we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
 	uint8_t m_type; // type of protocol TODO
@@ -170,6 +244,13 @@ public:
 
 class c_cjddev;
 
+/**
+ * \struct c_msgtx
+ * \brief a message in transfer in direct transfer over direct link
+ *
+ *
+ *
+ */
 struct c_msgtx { // a message in transfer in direct transfer over direct link
 	shared_ptr<msgcjd> m_msg; // <--- different kinds of messages
 	weak_ptr<c_cjddev> m_otherside; // <--- PTR to the other side of connection (recipient or sender). Could be nullptr if we do not know him (yet)
@@ -178,6 +259,13 @@ struct c_msgtx { // a message in transfer in direct transfer over direct link
 };
 
 
+/**
+ * \class c_netdev
+ *
+ * \brief a networked (e.g. connected somewhere) device
+ *
+ *
+ */
 class c_netdev : public c_entity { // a networked (e.g. connected somewhere) device
 protected:
 	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
@@ -198,6 +286,30 @@ struct s_remote_host {
 	unsigned int m_price = 0;
 };
 
+
+/**
+ * \class c_routing_package
+ * \brief package to store information about trace
+ *
+ * package of storing information how to trace to the target node
+ * and about trace how get back;
+ *
+ */
+struct c_routing_package
+{
+    pair<t_ID, t_cjdaddr> home_addr;
+    pair<t_ID, t_cjdaddr> target_addr;
+    vector<t_cjdaddr> home_to_target_trace;
+    vector<t_cjdaddr> target_to_home_trace;
+
+    bool direction;	//if false dircetion is home to target
+};
+
+/**
+ * \class c_cjddev
+ *
+ * \brief a cjdns-networked device. has ipv6 address from cjdns
+*/
 class c_cjddev : public c_netdev { // a cjdns-networked device. has ipv6 address from cjdns
 protected:
 	t_cjdaddr m_my_address;
@@ -205,7 +317,21 @@ protected:
 	map<t_cjdaddr, unsigned int> m_neighbors_prices; ///< addr => price
 	map<t_cjdaddr, s_remote_host> m_routing_table; ///< remote host => next hop (neighbor). Which peer is the correct way to go there
 	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
-	map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
+    map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
+
+
+
+    //m.zychowski finding dht tracing
+    void add_known_trace(t_ID,vector<t_cjdaddr>);
+    map<t_ID,vector<t_cjdaddr> > known_traces;
+    t_ID find_nearest_to_target(t_ID target);
+    void send_hello_package(t_ID target,c_routing_package package);
+    void send_package(t_ID target);
+    void send_by_route(t_ID target,vector<t_cjdaddr> trace_to_nearest_node);
+
+
+    //
+
 
 public:
 	c_cjddev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
@@ -238,9 +364,30 @@ public:
 
 	virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
+/**
+ *THIS IS JUST A SIMPLE TEST!!! with very expensive full search.
+ *
+ * this should be in a loop to send faster - many packets at once (once full algorithm is implemented)
+ *
+ *	process outbox
+ *	 there is something to send in the network from us
+    * so send it.
+ *
+ *
+ *
+*/
 	virtual void tick ();
 };
 
+/**
+ * \class c_tnetdev
+ *
+ * \brief class with wallet
+ *
+ * klasa przedstawiajaca platne polaczenie
+ *
+ *
+ */
 class c_tnetdev : public c_cjddev {
 public:
 	c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
@@ -252,7 +399,9 @@ public:
 
 	virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
-	virtual void tick ();
+    virtual void tick ();
+
+
 
 protected:
 	c_wallet m_wallet;

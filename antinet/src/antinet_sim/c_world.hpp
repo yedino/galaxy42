@@ -28,7 +28,8 @@ public:
 
 	void load (const string &filename);
 
-	friend ostream &operator<< (ostream &stream, const c_world &world);
+    friend ostream &operator<< (ostream &stream, const c_world &world);
+
 };
 
 ostream &operator<< (ostream &stream, const c_world &world);

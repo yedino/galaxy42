@@ -43,6 +43,10 @@ void c_entity::draw (const c_drawtarget &drawtarget, c_layer_opengl &layer, int 
 }
 */
 
+
+t_pos c_entity::get_x(){return m_x;}
+t_pos c_entity::get_y(){return m_y;}
+
 void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
 	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
@@ -434,7 +438,7 @@ void c_tnetdev::tick () {
 			std::cout << "packet to = " << m_outbox.at(0)->m_msg->m_to << std::endl;
 			std::cout << "packet dest = " << m_outbox.at(0)->m_msg->m_destination << std::endl;
 
-			auto &nexthop_addr = m_routing_table.at(msg_recipient).m_address; // the next hop that we think is a good path there
+            auto &next_hop_address = m_routing_table.at(msg_recipient).m_address; // the next hop that we think is a good path there
 			neighbor_ptr = m_neighbors.at(next_hop_address).lock();
 		}
 		neighbor_ptr->receive_message(std::move(m_outbox.at(0))); // push the message to the selected hop
@@ -444,7 +448,7 @@ void c_tnetdev::tick () {
 	// process inbox
 	if (!m_inbox.empty()) {
 
-		auto &msg = m_inbox.at(0)->m_msg->m_ttl
+//        auto &msg = m_inbox.at(0)->m_msg->m_ttl;
 
 		if (m_inbox.at(0)->m_msg->m_ttl == 0) {
 			// TODO

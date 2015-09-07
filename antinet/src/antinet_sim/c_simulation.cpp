@@ -92,7 +92,43 @@ void c_simulation::main_loop () {
 
 		if (allegro_keys[KEY_ESC] || allegro_keys[KEY_ENTER]) {
 			m_goodbye = true;
-		}
+        }
+
+        if(allegro_keys[KEY_F1]){
+            auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
+            textout_ex(m_frame, font, ptr->get_name().c_str(), 1140, 10, makecol(0, 0, 255), -1);
+            std::cout<<ptr->get_name().c_str()<<std::endl;
+        }
+
+        if(allegro_keys[KEY_F2]){
+//            BITMAP* screen = gui_get_screen();
+          int m_x =0;
+          int m_y =0;
+          static unsigned int num =0;
+            if(num>=m_world->m_objects.size()){
+                num=0;
+            }
+           try{
+
+//                auto obj = m_world->m_objects.at(0);
+//                m_x = m_world->m_objects.at(num)->get_x() - (screen->w/2);
+//                m_y = m_world->m_objects.at(num)->get_y() - (screen->h/2);
+                    m_x = m_world->m_objects.at(num)->get_x() - (allegro_mouse_x);
+                    m_y = m_world->m_objects.at(num)->get_y() - (allegro_mouse_y);
+
+
+                //    std::cout<< screen->w<<" "<<screen->h<<" "<<screen->x_ofs<<" "<<screen->y_ofs<<std::endl;
+
+                    m_gui->camera_x = m_x ;
+                    m_gui->camera_y = m_y;
+
+                    num++;
+            }catch(...)
+            {
+
+            }
+
+        }
 
 
 		// animation & tick
@@ -294,7 +330,7 @@ void c_simulation::main_loop () {
 shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 	const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position
 
-	double max_distance = 150;
+    double max_distance = 150;
 	shared_ptr<c_entity> ret_ptr;
 	for (auto node : m_world->m_objects) {
 		shared_ptr<c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
@@ -306,8 +342,8 @@ shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 		double current_dist = sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2, 2));
 		if (current_dist < max_distance) {
 			max_distance = current_dist;
-			ret_ptr = node_ptr;
-		}
+            ret_ptr = node_ptr;
+        }
 	}
 	return ret_ptr;
 }
