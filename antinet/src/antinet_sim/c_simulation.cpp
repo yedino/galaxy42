@@ -96,8 +96,13 @@ void c_simulation::main_loop () {
 
         if(allegro_keys[KEY_F1]){
             auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
-            textout_ex(m_frame, font, ptr->get_name().c_str(), 1140, 10, makecol(0, 0, 255), -1);
-            std::cout<<ptr->get_name().c_str()<<std::endl;
+            try{
+                if(ptr != NULL){
+                    textout_ex(m_frame, font, ptr->get_name().c_str(), 1140, 10, makecol(0, 0, 255), -1);
+                }
+            }catch(...)
+            {}
+//            std::cout<<ptr->get_name().c_str()<<std::endl;
         }
 
         if(allegro_keys[KEY_F2]){
