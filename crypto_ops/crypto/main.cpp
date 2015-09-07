@@ -77,8 +77,11 @@ void correctness_test (size_t size) {
 		signature = geport.sign(message, Private_key);
 		different_signature = generate_different_signature(signature);
 		different_message = generate_different_string(message);
-		if (!geport.verify_sign(message, signature) || geport.verify_sign(different_message, signature) ||
-				geport.verify_sign(message, different_signature)) {
+		if (
+			!geport.verify_sign(message, signature)
+			|| geport.verify_sign(different_message, signature)
+			|| geport.verify_sign(message, different_signature)
+			) {
 			cout << "there is a problem, please report it" << endl;
 			return;
 		}
@@ -94,15 +97,12 @@ void correctness_test (size_t size) {
 
 int main () {
 	ios_base::sync_with_stdio(false);
-//	cout << "starting random generator test" << endl;
-////	random_generator_test(1000000);
-//	cout << "starting correctness test" << endl;
-//	correctness_test(10000);
-
-	c_crypto_ed25519 ed, ed2;
-	ed.generate_key();
-	unsigned char Signature[64];
-    ed.sign("hello, ed25519 signature, test sign", Signature);
-    cout << ed2.verify_sign("hello, ed25519 signature, test sign", Signature, ed.get_public_key());
+	correctness_test(100000);
+//	typedef c_crypto_geport::long_type long_type;
+//
+//	long_type a = sha256<long_type>("isiema siema"), b = 1;
+//	b <<= 256;
+//	b -= 1;
+//	cout << c_crypto_geport::bits_counter(b) << '\n' << b;
 	return 0;
 }

@@ -13,10 +13,12 @@ using std::string;
 struct signed_msg {
 		typedef number<cpp_int_backend<512, 512, unsigned_magnitude, unchecked, void>> long_type;
 		long_type public_key;
+		size_t pop_count;
 		long_type Signature[256 + 8];
 };
 
 
+//template <>
 class c_crypto_geport {
 public:
 		typedef number<cpp_int_backend<512, 512, unsigned_magnitude, unchecked, void>> long_type;
@@ -25,6 +27,8 @@ private:
 		mutable c_random_generator<long_type> rd_gen;
 
 		static void join_hash (long_type &, const long_type &);
+
+		static size_t bits_counter(long_type);
 
 public:
 		c_crypto_geport () = default;
