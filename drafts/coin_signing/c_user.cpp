@@ -1,4 +1,5 @@
 #include "c_user.hpp"
+void print_strBytes(const std::string& str);
 
 c_user::c_user (std::string username) : m_username(username) {
 	m_public_key = m_edsigner.get_public_key();
@@ -9,7 +10,7 @@ string c_user::get_username() {
 
 void c_user::send_token (c_user &user, size_t amount) {
 	if (amount > 1) {
-		std::cout << "error! : test version allow to send only 1 token" << std::endl;
+        std::cout << "error! : test version allows to send only 1 token" << std::endl;
 		return;
 	}
     if (m_wallet.tokens.empty()) {
@@ -32,7 +33,7 @@ void c_user::send_token (c_user &user, size_t amount) {
 
 void c_user::send_fake_token (c_user &user, size_t amount) {
     if (amount > 1) {
-        std::cout << "error! : test version allow to send only 1 token" << std::endl;
+        std::cout << "error! : test version allows to send only 1 token" << std::endl;
         return;
     }
     if (m_wallet.tokens.empty()) {
@@ -84,10 +85,11 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 
         auto current_recipient_in_coin = "";
         std::string delimeter = "|";
-        std::size_t found = current_signature.m_msg.find(delimeter);
+        std::size_t found = current_signature.m_msg.find(delimeter)+1;
         if (found != std::string::npos) {
-            current_recipient_in_coin = current_signature.m_msg.substr(found + 1,32).c_str();
+            current_recipient_in_coin = current_signature.m_msg.substr(found + 1).c_str();
             std::cout << "check!!!" << current_signature.m_msg << "!!!" << std::endl; //TODO substr bad working
+            print_strBytes(current_signature.m_msg);
         }
 
 		// [B->C] is the current sender B allowed to send,  check for error:
@@ -162,5 +164,9 @@ void c_user::emit_tokens (size_t amount) {
 	m_wallet.add_token(emitted_token);
 }
 
-
-
+void print_strBytes(const std::string& str) {
+    for(size_t i = 0; i < str.length(); ++i) {
+        std::cout << static_cast<int>(str[i]) << ":";
+    }
+    std::cout << std::endl;
+}

@@ -1,8 +1,26 @@
 #include <iostream>
 #include <list>
 #include "c_user.hpp"
+#include "c_encryption.hpp"
 
 using namespace std;
+
+bool test_readableEd () {
+    std::cout << "RUNNING TEST00 READABLE_CRYPTO_ED" << std::endl;
+    c_ed25519 edtest;
+    std::string str_pubkey = edtest.get_public_key();
+    unsigned char *utab_pubkey;
+    utab_pubkey = edtest.get_public_key_C();
+    std::cout << "ed: original utab pubkey = " << utab_pubkey << std::endl;
+    std::cout << "ed: string format pubkey = " << str_pubkey << std::endl;
+    unsigned char *utab_pubkey_afttrans;
+    utab_pubkey_afttrans = readable_toUchar(str_pubkey);
+
+    delete[] utab_pubkey;
+    delete[] utab_pubkey_afttrans;
+
+    return false;
+}
 
 bool test_user_sending () {
     std::cout << "RUNNING TEST01 USER_SENDING" << std::endl;
@@ -12,7 +30,7 @@ bool test_user_sending () {
 	test_userA.emit_tokens(1);
 	test_userA.send_token(test_userB, 1);
 
-	return 0;
+    return false;
 }
 
 bool test_many_users () {
@@ -42,8 +60,9 @@ bool test_cheater() {
 
 int main () {
 
-    test_user_sending();
-    test_many_users();
-    test_cheater();
+    test_readableEd();
+   // test_user_sending();
+   // test_many_users();
+   // test_cheater();
 	return 0;
 }

@@ -4,9 +4,11 @@
 #include "../../crypto_ops/crypto/ed25519_src/ed25519.h"
 #include "../../crypto_ops/crypto/c_crypto_RSA.hpp"
 
-//#include "../../crypto_ops/crypto/ed25519_src/ed25519.h"
 #include "../../crypto_ops/crypto/ed25519_src/ge.h"
 #include "../../crypto_ops/crypto/ed25519_src/sc.h"
+
+#include <memory>
+#include <cstdlib>
 
 constexpr unsigned int key_size = 512;
 typedef enum {
@@ -17,14 +19,12 @@ class c_encryption {
 public:
 		c_encryption () : m_crypto_method(no_crypt) { }
 
-		//virtual std::string sign(std::string& msg);
 		virtual std::string get_public_key () = 0;
-
 		virtual std::string sign (const std::string &msg) = 0;
 
 		virtual ~c_encryption () = default;
 
-		cryptosign_method getCrypto_method () { return m_crypto_method; };
+        cryptosign_method getCrypto_method () { return m_crypto_method; }
 protected:
 		cryptosign_method m_crypto_method;
 };
@@ -41,10 +41,13 @@ private:
 		std::unique_ptr<c_crypto_RSA<key_size>> m_crypto;
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////ED25519/////////////////////////////////////////////////////////////
 typedef enum {
 		seed_size = 32, pub_key_size = 32, prv_key_size = 64, sign_size = 64
 } ed25519_sizes;
+
+std::string uchar_toReadable(unsigned char* utab, ed25519_sizes size);
+unsigned char* readable_toUchar(const std::string &str);
 
 /**
  * C++ class based on orlp/ed25orlp/ed25519 implemantation

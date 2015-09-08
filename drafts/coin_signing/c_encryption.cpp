@@ -1,6 +1,4 @@
-#include <memory>
 #include "c_encryption.hpp"
-
 
 c_RSA::c_RSA () : m_crypto(new c_crypto_RSA<key_size>()) {
 	m_crypto_method = RSA;
@@ -66,8 +64,10 @@ int c_ed25519::verify_C (const unsigned char *signature,
 ////////////////////////////////////////////////////////// CPP INTERFACE ///////////////////////////////////////////////////////
 std::string c_ed25519::get_public_key () {
 
-	char *pub_key = reinterpret_cast<char *>(m_public_key);
-	return std::string(pub_key, pub_key_size);
+    std::string pubkey = uchar_toReadable(m_public_key, pub_key_size);
+    //char *pub_key = reinterpret_cast<char *>(m_public_key);
+    //return std::string(pub_key, pub_key_size);
+    return pubkey;
 }
 
 string c_ed25519::sign (const string &msg) {
@@ -83,7 +83,11 @@ int c_ed25519::verify (const std::string signature,
 	size_t message_len,
 	std::string public_key) {
 
-	return this->verify_C(reinterpret_cast<const unsigned char *>(signature.c_str()), reinterpret_cast<const unsigned char *>(message.c_str()), message_len, reinterpret_cast<const unsigned char *>(public_key.c_str()));
+    return this->verify_C(reinterpret_cast<const unsigned char *>(signature.c_str()),
+                          reinterpret_cast<const unsigned char *>(message.c_str()),
+                          message_len,
+                          reinterpret_cast<const unsigned char *>(public_key.c_str())
+                          );
 }
 /*
 void c_ed25519::add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar) {
@@ -95,3 +99,35 @@ void c_ed25519::key_exchange(unsigned char *shared_secret, const unsigned char *
 	
 	ed25519_key_exchange(shared_secret, public_key, private_key);
 }*/
+
+/////////////////////////////////////////////////////////////////////////////SUPPORT_FUNCTIONS////////////////////////////////////////////////////////////////////////////////////
+
+// constructing ed string format : ed23ff05.. where all 2 bytes after "ed" is one byte in oryginal C unsigned char tab
+std::string uchar_toReadable(unsigned char* utab, ed25519_sizes size) {
+    size_t length = 0;
+    std::stringstream ss;
+    ss << "ed";
+    for(size_t i = 0; i < size; ++i) {
+        static_cast<int>(utab[i]) > 15 ? 	// need for keep constant lenght
+            ss << std::hex << static_cast<int>(utab[i]) 	:
+            ss << "0" << std::hex << static_cast<int>(utab[i]);	// 4 == 04
+        length++;
+    }
+    std::cout << std::endl;
+    std::cout << "Test: lenght of uchar = " << length << std::endl;
+    std::string str = ss.str();
+    return str;
+}
+unsigned char* readable_toUchar(const std::string &str) {
+    unsigned char *utab;
+    utab = new unsigned char[str.length()];
+    size_t bufsize = 2;
+    for(size_t i = 0; i < str.length(); i+=bufsize) {
+        char buffer[bufsize];
+        str.copy(buffer, bufsize, i);
+        int num = std::stoi(buffer,nullptr,16);
+        std::cout << num << ":";
+    }
+    std::cout << std::endl;
+    return utab;
+}
