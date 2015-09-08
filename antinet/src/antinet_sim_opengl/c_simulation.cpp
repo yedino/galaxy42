@@ -99,8 +99,7 @@ void c_simulation::main_loop () {
 		if (m_frame_number % g_max_anim_frame == 0 && !simulation_pause) {
 			frame_checkpoint = m_frame_number;
 			m_world->tick(); // <===
-		}
-
+        }
 
 		// === main user interface ===
 
@@ -128,7 +127,7 @@ void c_simulation::main_loop () {
 		int txt_x = 10, txt_y = 10; // starting position of text
 
 		string pck_speed_str = "sending packets speed - " + std::to_string(450 - g_max_anim_frame);
-		textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+        textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 		textout_ex(m_frame, font, fps.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 		textout_ex(m_frame, font, ("Frame nr.: " +
 		                           std::to_string(m_frame_number)).c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
