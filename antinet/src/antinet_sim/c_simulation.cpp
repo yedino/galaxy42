@@ -1,5 +1,6 @@
 #include "c_simulation.hpp"
 #include "c_gui.hpp"
+#include <stdlib.h>
 
 unsigned int g_max_anim_frame = 10;
 
@@ -8,13 +9,18 @@ c_simulation::c_simulation () : m_goodbye(false), m_frame_number(0), m_frame(nul
 c_simulation::~c_simulation () {
 	if (m_frame)
 		destroy_bitmap(m_frame);
-	m_frame = nullptr;
+    m_frame = nullptr;
+    if(smallWindow){
+        destroy_bitmap (smallWindow);
+    }
+    smallWindow = nullptr;
 }
 
 void c_simulation::init () {
 	//this->close_button_pressed = false;
 	m_screen = screen;
-	m_frame = create_bitmap(m_screen->w, m_screen->h);
+    m_frame = create_bitmap(m_screen->w, m_screen->h);
+    smallWindow = create_bitmap(m_screen->w,m_screen->h);
 	m_world = make_unique<c_world>();
 	m_world->add_test();
 	//m_world->add_i_objects(100);
@@ -53,6 +59,8 @@ void c_simulation::main_loop () {
 	m_drawtarget = make_shared<c_drawtarget_allegro>(m_frame); // prepare drawtarget surface to draw to
 	m_drawtarget->m_gui = m_gui;
 
+
+
 	//	bool allegro_keys_any_was=false; // is any key pressed right now (for key press/release)
 	long loop_miliseconds = 0;
 	long unsigned int frame_checkpoint = 0; /// needed for speed control (without world_draw manipulate in spacetime!)
@@ -84,6 +92,9 @@ void c_simulation::main_loop () {
 		clear_to_color(m_frame, makecol(0, 128, 0));
 		blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
 
+        clear_to_color(smallWindow, makecol(128, 128, 128));
+
+
 		// main controll keys
 		if ((allegro_char & 0xff) == 'n' && !start_simulation) {
 			std::cout << "ADD" << std::endl;
@@ -98,8 +109,23 @@ void c_simulation::main_loop () {
             auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
             try{
                 if(ptr != NULL){
-                    textout_ex(m_frame, font, ptr->get_name().c_str(), 1140, 10, makecol(0, 0, 255), -1);
-                }
+                    int col_num =0;
+                    textout_ex(smallWindow, font, ptr->get_name().c_str(), 0, 0, makecol(0, 0, 255), -1);
+
+                        if(c_cjddev* tmp = dynamic_cast<c_cjddev *>(ptr.get()) ){
+                            char* addr =(char *) malloc(45);
+                             sprintf(addr,"address: %ld",tmp->get_address());
+                             textout_ex(smallWindow, font,addr , 10, col_num+=10, makecol(0, 0, 255), -1);
+                             sprintf(addr,"neighbors: %d",(int)tmp->get_neighbors().size());
+                             textout_ex(smallWindow, font,addr , 10, col_num+=10, makecol(0, 0, 255), -1);
+                             sprintf(addr,"waitng: %d",(int)tmp->num_of_wating());
+                             textout_ex(smallWindow, font,addr , 10, col_num+=10, makecol(0, 0, 255), -1);
+
+//                    		textout_ex(smallWindow, font, ptr->get_name().c_str(), 0, 0, makecol(0, 0, 255), -1);{
+                            free (addr);
+                        }
+                        blit (smallWindow,m_frame,0,0,m_frame->w-200,m_frame->h-200,screen->w/8, screen->h/4);
+                    }
             }catch(...)
             {}
 //            std::cout<<ptr->get_name().c_str()<<std::endl;
@@ -118,8 +144,8 @@ void c_simulation::main_loop () {
 //                auto obj = m_world->m_objects.at(0);
 //                m_x = m_world->m_objects.at(num)->get_x() - (screen->w/2);
 //                m_y = m_world->m_objects.at(num)->get_y() - (screen->h/2);
-                    m_x = m_world->m_objects.at(num)->get_x() - (allegro_mouse_x);
-                    m_y = m_world->m_objects.at(num)->get_y() - (allegro_mouse_y);
+                  m_x =  m_world->m_objects.at(num)->get_x()*m_gui->camera_zoom - (allegro_mouse_x);
+                  m_y =  m_world->m_objects.at(num)->get_y()*m_gui->camera_zoom - (allegro_mouse_y);
 
 
                 //    std::cout<< screen->w<<" "<<screen->h<<" "<<screen->x_ofs<<" "<<screen->y_ofs<<std::endl;
@@ -127,6 +153,8 @@ void c_simulation::main_loop () {
                     m_gui->camera_x = m_x ;
                     m_gui->camera_y = m_y;
 
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     num++;
             }catch(...)
             {
@@ -180,6 +208,7 @@ void c_simulation::main_loop () {
 
 		textout_ex(m_frame, font, pck_speed_str.c_str(), 100, 10, makecol(0, 0, 255), -1);
 
+        if(allegro_keys[KEY_H])
 		{
 			int tex_y = 10;
 			int lineh = 10;
@@ -193,8 +222,13 @@ void c_simulation::main_loop () {
 			textout_ex(m_frame, font, "enter/esc - exit", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
 			textout_ex(m_frame, font, "Arrows: move selected node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
 			textout_ex(m_frame, font, "SHIFT-Arrows: move the camera", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-		}
+            textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+            textout_ex(m_frame, font, "F1: info about node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+            textout_ex(m_frame, font, "F2: next node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+        }else{
+
+            textout_ex(m_frame, font, "h - help", 1140, 30, makecol(0, 0, 255), -1);
+        }
 
 
 		// find out which object is selected:

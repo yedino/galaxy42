@@ -358,11 +358,15 @@ public:
 
 	vector<shared_ptr<c_cjddev >> get_neighbors () const;
 
-	unsigned int get_price (t_cjdaddr address) const;
+    unsigned int get_price (t_cjdaddr address) const;
+
+//    unsigned int get_my_price() const;
 
 	void buy_net (const t_cjdaddr &destination_addr);
 
-	virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
+    virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
+
+    int num_of_wating();
 
 /**
  *THIS IS JUST A SIMPLE TEST!!! with very expensive full search.
@@ -393,9 +397,12 @@ public:
 	c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
 
 	virtual void draw (const c_drawtarget &drawtarget,
-		c_layer_allegro &layer,
-		int color) const; ///< draw the object (draw one layer of it, for allegro)
-	virtual ~c_tnetdev () = default;
+
+     c_layer_allegro &layer,
+
+    int color) const; ///< draw the object (draw one layer of it, for allegro)
+
+    virtual ~c_tnetdev () = default;
 
 	virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 

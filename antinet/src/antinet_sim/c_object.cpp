@@ -331,6 +331,12 @@ unsigned int c_cjddev::get_price (t_cjdaddr address) const {
 	}
 }
 
+
+int c_cjddev::num_of_wating()
+{
+   return m_wait_hosts.size();
+}
+
 void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 	m_wait_hosts.insert(destination_addr);
 	for (auto neighbor : m_neighbors) {
