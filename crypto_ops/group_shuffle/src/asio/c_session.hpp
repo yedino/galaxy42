@@ -13,10 +13,11 @@ class c_session : public std::enable_shared_from_this <c_session> {
 	public:
 		c_session() = delete;
 		c_session(boost::asio::ip::tcp::socket socket, c_net_node *net_node_ptr);
-        c_session(boost::asio::ip::tcp::socket socket, std::string m_buffer);
+        c_session(boost::asio::ip::tcp::socket socket, std::string m_buffer); // TODO rm
 		~c_session();
 		void start();
-        void do_write();
+        void do_write(); // TODO rm
+		void do_write(const std::string &data);
 	private:
 		boost::asio::ip::tcp::socket m_socket;
 		char m_recv_data[MAX_RECV_DATA_SIZE];

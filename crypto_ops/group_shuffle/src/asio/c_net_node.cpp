@@ -36,7 +36,12 @@ void c_net_node::do_accept() {
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code ec) {
 		if (!ec) {
 			_info("accept OK");
-			std::make_shared<c_session>(std::move(m_socket), this)->start();
+			t_nym_id remote_nym(std::move(m_socket.remote_endpoint().address().to_string()));
+			std::lock_guard<std::mutex> lg(m_session_map_mutex);
+			if (m_session_map.find(remote_nym) != m_session_map.end()) {
+				m_session_map[remote_nym] = std::make_shared<c_session>(std::move(m_socket), this);
+			}
+			m_session_map[remote_nym]->start();
 		}
 		else {
 			_info("do_accept error: " << ec.message());
@@ -62,19 +67,22 @@ void c_net_node::add_to_inbox (char *data, size_t size, const ip::address &sourc
 
 void c_net_node::write_to_nym (t_nym_id guy, const string &data) {
 	_note("start connect to " << guy);
-	m_client_socket.async_connect(ip::tcp::endpoint(ip::address::from_string(guy.c_str()), m_port), [this, data](const boost::system::error_code &ec) {
-		for(int i = 0; i < 10; ++i) {
+	std::lock_guard<std::mutex> lg(m_session_map_mutex);
+	if (m_session_map.find(guy) != m_session_map.end()) {
+		m_client_socket.async_connect(ip::tcp::endpoint(ip::address::from_string(guy.c_str()), m_port), [this, data, &guy](const boost::system::error_code &ec) {
 			if(!ec) {
 				_note("async_connect handler");
-				std::make_shared<c_session>(std::move(m_client_socket), data)->do_write();
-				break;
+				m_session_map[guy] = std::make_shared<c_session>(std::move(m_client_socket), this); // XXX data => this
+				m_session_map[guy]->do_write(data);
 			}
 			else {
 				_note("connect error: " << ec.message());
-				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 			}
-		} 
-	}); // lambda
+		}); // lambda
+	}
+	else {
+		m_session_map[guy]->do_write(data);
+	}
 }
 
 vector< s_message > c_net_node::read_or_wait_for_data() {

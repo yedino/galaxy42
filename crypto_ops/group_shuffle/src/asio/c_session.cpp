@@ -57,5 +57,21 @@ void c_session::do_write () {
 	);
 }
 
+void c_session::do_write (const string &data) {
+	_note("start do_write(data)");
+	//auto self(shared_from_this());
+    m_socket.async_write_some(buffer(data.data(), data.size()),
+		[this] (boost::system::error_code ec, std::size_t length) { // XXX [this, self]
+			if(!ec) {
+				_note("data write OK");
+				_note("length = " << length);
+				//_note("data write size " << data.size());
+			}
+			else {
+				_note("data write error: " << ec.message());
+			}
+		}
+	);	
+}
 
 
