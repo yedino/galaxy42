@@ -1,0 +1,19 @@
+
+
+We always support Allegro (later this will be option).
+We use it in version Allegro 4.4 for now.
+It uses flat layers.
+For all layers: draw each object using ::draw() and it will draw the current layer e.g. just the highlight or the object or the labels etc.
+
+
+We can support OpenGL. 
+We use it with AllegroGL (4.4) and Allegro 4.4 for the toolkit (window creation, and input keyboard/mouse, and loading textures, fonts).
+It uses flat layers for now, like in pure Allegro.
+For all layers: draw each object using ::draw() and it will draw the current layer e.g. just the highlight or the object or the labels etc.
+
+
+
+
+
+In future we might use full objects, with Z-testing etc. And Z-sorting for transparency.
+

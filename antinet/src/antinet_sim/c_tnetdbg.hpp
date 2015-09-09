@@ -15,7 +15,9 @@
 
 /// This macros will be moved later to glorious-cpp library or other
 
-#define _info(X) do { ::std::cerr<<"info: " << __FILE__ << "+" << __LINE__ << X << ::std::endl; } while(0)
+// _dbg3 _dbg2 _dbg1 _info _note _warn _erro _mark
+#define _info(X) do { ::std::cerr<<"info: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _note(X) do { ::std::cerr<<"note: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 
 
 #endif // include guard

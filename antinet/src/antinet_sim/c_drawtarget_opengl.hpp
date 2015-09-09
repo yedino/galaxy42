@@ -5,6 +5,11 @@
 #include "c_geometry.hpp"
 
 /***
+@file OpenGL rendering support. See doc/rendering.txt
+*/
+
+
+/***
 OpenGL layer, contains the layer number.
 It must be generic/compatible enough to compile even when OpenGL library is missing or disabled.
 If you need any details, e.g. some OGL specific variables here, then e.g. add a PIMPL here.
@@ -24,7 +29,7 @@ OpenGL layer, contains the layer number.
 It must be generic/compatible enough to compile even when OpenGL library is missing or disabled.
 If you need any details, e.g. some OGL specific variables here, then e.g. add a PIMPL here.
 */
-class c_drawtarget_opengl : public c_drawtarget { ///< allegro library draw target (with layers)
+class c_drawtarget_opengl : public c_drawtarget { ///< OpenGL library draw target (with layers, usually? e.g. in the flat 3d layers mode - see doc/rendering.txt)
 public:
 	c_drawtarget_opengl();
 

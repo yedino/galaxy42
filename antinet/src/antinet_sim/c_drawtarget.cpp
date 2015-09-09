@@ -1,5 +1,18 @@
 #include "c_drawtarget.hpp"
 
+
+// ==================================================================
+
+string t_drawtarget_type_to_string( t_drawtarget_type x) { ///< name of the enum type as string (e.g. for debug), not for real use!!
+	switch(x) {
+		case e_drawtarget_type_allegro: return "Allegro";
+		case e_drawtarget_type_opengl: return "OpenGL";
+		// null "(null)" @TODO --eve
+		default: return "(unknown!)"; // <== return
+	};
+}
+
+
 // ==================================================================
 
 c_drawtarget::c_drawtarget (t_drawtarget_type p_drawtarget_type) : m_drawtarget_type(p_drawtarget_type) {

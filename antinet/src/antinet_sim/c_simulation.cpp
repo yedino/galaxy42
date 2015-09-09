@@ -4,7 +4,16 @@
 
 unsigned int g_max_anim_frame = 10;
 
-c_simulation::c_simulation () : m_goodbye(false), m_frame_number(0), m_frame(nullptr), m_screen(screen) { }
+c_simulation::c_simulation (t_drawtarget_type drawtarget_type) 
+: 
+	m_goodbye(false), m_frame_number(0), 
+	m_drawtarget_type( drawtarget_type ),
+	m_frame(nullptr), 
+	m_screen( m_drawtarget_type == e_drawtarget_type_allegro ? screen : nullptr),
+	m_drawtarget(nullptr)
+{
+	_note("Creating simulation, mode: " << t_drawtarget_type_to_string( m_drawtarget_type ) << ". The allegro screen is at " << (void*)m_screen );
+}
 
 c_simulation::~c_simulation () {
 	if (m_frame)

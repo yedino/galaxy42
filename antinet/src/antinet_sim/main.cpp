@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <set>
 
 #include "c_simulation.hpp"
 #include "c_world.hpp"
@@ -51,9 +52,18 @@ void stop_the_gui() {
 int main(int argc, char *argv[]) {
 	try {
 		start_the_gui();
+	
+		std::set< std::string > args;
+		for (int i=1; i<argc; ++i) args.insert( argv[i] );  // get arguments into args
+
+		t_drawtarget_type drawtarget_type = e_drawtarget_type_allegro;
+		int drawtarget_type_count=0; // set to true if user specified too many (e.g. more then 1) draw target. E.g. to warn him
+		if (args.count("--gl")==1 || args.count("--opengl")) { drawtarget_type = e_drawtarget_type_opengl;  ++drawtarget_type_count; }
+		if (args.count("--alleg")==1 || args.count("--allegro")) { drawtarget_type = e_drawtarget_type_allegro;  ++drawtarget_type_count; }
+		if (drawtarget_type_count>1) std::cerr<<"Warning: you specified few conflicting drawing engines in the program command line options. (will ignore some)"<<std::endl;
 
 		try {
-			auto simulation = make_shared<c_simulation>();
+			auto simulation = make_shared<c_simulation>(  drawtarget_type  );
 			simulation->init();
 			simulation->main_loop();
 		}

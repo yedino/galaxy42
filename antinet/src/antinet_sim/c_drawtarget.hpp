@@ -5,6 +5,11 @@
 #include "c_geometry.hpp"
 
 /***
+@file Allegro (simple 2d) rendering support. See doc/rendering.txt
+*/
+
+
+/***
 number the possible layers to be drawn e.g. for 2D view. 0 is the bottom/lowest. Should end with e_layer_top
 WARNING numbers must be continous, and must start from 0.
 And must begin with e_layer_nr_bgr and end with e_layer_nr_top
@@ -31,7 +36,11 @@ typedef enum {
 typedef enum { ///< enum 
 	e_drawtarget_type_null, ///< not drawing
 	e_drawtarget_type_allegro, ///< the allegro layered drawing
+	e_drawtarget_type_opengl, ///< use OpenGL
 } t_drawtarget_type;
+
+string t_drawtarget_type_to_string( t_drawtarget_type x); ///< name of the enum type as string (e.g. for debug), not for real use!!
+
 
 class c_gui;
 
@@ -45,6 +54,9 @@ public:
 
 	virtual ~c_drawtarget () = default;
 };
+
+
+// TODO: move this later into _allegro drawtarget and layer, like the opengl engine is separated out
 
 class c_layer_allegro { ///< a single layer of allegro drawing target
 public:
