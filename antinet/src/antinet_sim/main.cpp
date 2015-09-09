@@ -1,3 +1,7 @@
+/***
+@file This is the file with entry point main() of the application in this sub project.
+*/
+
 #include <allegro.h>
 #include <memory>
 #include <vector>
@@ -123,6 +127,14 @@ void stop_the_gui() {
 
 
 int main(int argc, char *argv[]) {
+	std::cerr << "============================================" << std::endl;
+	std::cerr << "The simulation program - part of AntiNet.org project" << std::endl;
+	std::cerr << "============================================" << std::endl;
+	std::cerr << "WARNING: This is a very early pre-alpha, do not use this!" << std::endl;
+	std::cerr << "Do not even run this at any real user, it likely contains errors, UBs, or exploits!" << std::endl;
+	std::cerr << "Test on separate user/environment until we have a tested version." << std::endl;
+	std::cerr << "============================================" << "\n" << std::endl;
+
 	try {
 	
 		std::set< std::string > args;
