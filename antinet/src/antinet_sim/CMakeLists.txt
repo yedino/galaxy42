@@ -24,10 +24,11 @@ target_link_libraries(antinet.elf
 	png
 	crypto
 	cryptopp
-	agl
+	alleggl
 	GLU
 	GL
 	)
 
  
+# agl was here.
   
