@@ -302,6 +302,7 @@ void c_simulation::main_loop () {
 		}
 		if (use_draw_opengl) {
 			// TODO @opengl
+            //textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 		}
 
 

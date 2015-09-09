@@ -50,27 +50,6 @@ t_pos c_entity::get_x(){return m_x;}
 t_pos c_entity::get_y(){return m_y;}
 
 void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
-
-    std::cerr << __FUNCTION__ << std::endl;
-
-
-
-    /* Move Left 1.5 Units And Into The Screen 6.0 */
-    glLoadIdentity();
-    float rnd = (rand()%1000)/1000. ;
-
-    glTranslatef( -0.1f * rnd, 0.0f, 0.0f );
-    glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
-      glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-      glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
-      glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-      glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
-      glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-      glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
-    glEnd( );                            /* Finished Drawing The Triangle */
-
-
-
 	return ;
 
 
@@ -216,6 +195,28 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 
 
 void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
+
+
+    //std::cerr << __FUNCTION__ << std::endl;
+
+
+
+    /* Move Left 1.5 Units And Into The Screen 6.0 */
+    glLoadIdentity();
+     glScalef(0.03,0.03,0.03);
+     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
+
+    glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
+      glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+      glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
+      glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+      glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
+      glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+      glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
+    glEnd( );                            /* Finished Drawing The Triangle */
+
+
+
 
 	return; // TODO @opengl
 
