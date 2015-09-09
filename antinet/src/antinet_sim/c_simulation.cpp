@@ -11,19 +11,23 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 	m_drawtarget_type( drawtarget_type ),
 	m_frame(nullptr), 
 	m_screen( m_drawtarget_type == e_drawtarget_type_allegro ? screen : nullptr),
+	smallWindow(nullptr),
 	m_drawtarget(nullptr)
 {
 	_note("Creating simulation, mode: " << t_drawtarget_type_to_string( m_drawtarget_type ) << ". The allegro screen is at " << (void*)m_screen );
 }
 
 c_simulation::~c_simulation () {
-	if (m_frame)
+	if (m_frame) {
 		destroy_bitmap(m_frame);
-    m_frame = nullptr;
-    if(smallWindow){
-        destroy_bitmap (smallWindow);
-    }
+		m_frame = nullptr;
+	}
+	
+	if (smallWindow) {
+		destroy_bitmap (smallWindow);
     smallWindow = nullptr;
+	}
+
 }
 
 void c_simulation::init () {
@@ -35,9 +39,10 @@ void c_simulation::init () {
 		_note("Screen size is: " << m_screen->w << "*" << m_screen->h );
 		m_frame = create_bitmap(m_screen->w, m_screen->h);
 		_note("Done, the m_frame="<<m_frame);
+
+		smallWindow = create_bitmap(m_screen->w,m_screen->h); 
 	}
 	
-	smallWindow = create_bitmap(m_screen->w,m_screen->h); 
 
 	_note("Simulation will create the world");
 	m_world = make_unique<c_world>();
@@ -154,6 +159,10 @@ void c_simulation::main_loop () {
 
         if(allegro_keys[KEY_F1]){
             auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
+
+
+						//  TODO  -in allegro?   -not entire screen?    
+						/*
             try{
                 if(ptr != NULL){
                     int col_num =0;
@@ -178,10 +187,13 @@ void c_simulation::main_loop () {
 												}
 
                     }
-            }catch(...)
-            {}
+            }
+						catch(...) {}
+						*/
+
 //            std::cout<<ptr->get_name().c_str()<<std::endl;
         }
+				
 
         if(allegro_keys[KEY_F2]){
 //            BITMAP* screen = gui_get_screen();
@@ -399,8 +411,13 @@ void c_simulation::main_loop () {
 		} else {
 			m_world->draw(*m_drawtarget.get(), g_max_anim_frame);
 		}
+
 		if (print_connect_line) { // the line the creates new connections
-			line(m_frame, connect_node->m_x, connect_node->m_y, allegro_mouse_x, allegro_mouse_y, makecol(0, 255, 255));
+			if (use_draw_allegro) {
+				line(m_frame, connect_node->m_x, connect_node->m_y, allegro_mouse_x, allegro_mouse_y, makecol(0, 255, 255));
+			}
+			// TODO @opengl
+
 		}
 		if (allegro_mouse_b == 2) { // end/stop the line that creates new connections
 			print_connect_line = false;
@@ -408,9 +425,14 @@ void c_simulation::main_loop () {
 		{
 			auto x = allegro_mouse_x, y = allegro_mouse_y;
 			int r = 5, rr = 4;
-			line(m_frame, x - rr, y, x + rr, y, makecol(0, 0, 0));
-			line(m_frame, x, y - rr, x, y + rr, makecol(0, 0, 0));
-			circle(m_frame, x, y, r, makecol(255, 255, 255));
+
+			if (use_draw_allegro) {
+				line(m_frame, x - rr, y, x + rr, y, makecol(0, 0, 0));
+				line(m_frame, x, y - rr, x, y + rr, makecol(0, 0, 0));
+				circle(m_frame, x, y, r, makecol(255, 255, 255));
+			}
+			// TODO @opengl
+
 		}
 
 

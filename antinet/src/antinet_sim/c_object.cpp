@@ -5,6 +5,8 @@
 #include "c_allegromisc.hpp"
 #include <stdexcept>
 
+#include "use_opengl.hpp"
+
 c_object::c_object (string name) : m_name(name), m_animframe(0) { }
 
 void c_object::tick () { }
@@ -48,6 +50,30 @@ t_pos c_entity::get_x(){return m_x;}
 t_pos c_entity::get_y(){return m_y;}
 
 void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
+
+    std::cerr << __FUNCTION__ << std::endl;
+
+
+
+    /* Move Left 1.5 Units And Into The Screen 6.0 */
+    glLoadIdentity();
+    float rnd = (rand()%1000)/1000. ;
+
+    glTranslatef( -0.1f * rnd, 0.0f, 0.0f );
+    glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
+      glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+      glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
+      glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+      glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
+      glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+      glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
+    glEnd( );                            /* Finished Drawing The Triangle */
+
+
+
+	return ;
+
+
 	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
@@ -190,6 +216,9 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 
 
 void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
+
+	return; // TODO @opengl
+
 	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
@@ -629,6 +658,8 @@ c_tnetdev::c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c
 }
 
 void c_tnetdev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
+	return; // TODO @opengl
+
 	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
