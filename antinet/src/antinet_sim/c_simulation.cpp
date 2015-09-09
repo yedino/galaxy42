@@ -1,6 +1,7 @@
 #include "c_simulation.hpp"
 #include "c_gui.hpp"
 #include <stdlib.h>
+#include "use_opengl.hpp"
 
 unsigned int g_max_anim_frame = 10;
 
@@ -27,12 +28,24 @@ c_simulation::~c_simulation () {
 
 void c_simulation::init () {
 	//this->close_button_pressed = false;
-	m_screen = screen;
-    m_frame = create_bitmap(m_screen->w, m_screen->h);
-    smallWindow = create_bitmap(m_screen->w,m_screen->h);
+	_note("We are using m_screen=" << m_screen);
+
+	if (m_drawtarget_type == e_drawtarget_type_allegro) {
+		_note("Creating the allegro frame buffer for m_screen="<<m_screen);
+		_note("Screen size is: " << m_screen->w << "*" << m_screen->h );
+		m_frame = create_bitmap(m_screen->w, m_screen->h);
+		_note("Done, the m_frame="<<m_frame);
+	}
+	
+	smallWindow = create_bitmap(m_screen->w,m_screen->h); 
+
+	_note("Simulation will create the world");
 	m_world = make_unique<c_world>();
 	m_world->add_test();
 	//m_world->add_i_objects(100);
+
+	_note("Simulation created m_world=" << m_world.get());
+	_note("Simulation is ready");
 }
 
 std::string cjddev_detail_random_name () {
@@ -74,45 +87,70 @@ void c_simulation::main_loop () {
 	long loop_miliseconds = 0;
 	long unsigned int frame_checkpoint = 0; /// needed for speed control (without world_draw manipulate in spacetime!)
 
-	while (!m_goodbye && !close_button_pressed) {
+	bool use_input_allegro = true; // always for now.  input from Allegro
+	bool use_draw_allegro = m_drawtarget_type == e_drawtarget_type_allegro; // draw in allegro
+	bool use_draw_opengl = m_drawtarget_type == e_drawtarget_type_opengl; // draw in opengl
+
+
+	_note("Entering main simulation loop");
+
+	// === main loop ===
+	while (!m_goodbye && !close_button_pressed) { 
 		std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
 
 		// --- process the keyboard/inputs ---
-		poll_keyboard();
-		auto allegro_keys = key;
-		auto allegro_shifts = key_shifts;
-		//		bool allegro_keys_any_is=false;
-		//		for (size_t i=0; i<sizeof(allegro_keys)/sizeof(allegro_keys[0]); ++i) allegro_keys_any_is=true;
-		int allegro_mouse_x, allegro_mouse_y, allegro_mouse_b;
-		allegro_mouse_x = mouse_x;
-		allegro_mouse_y = mouse_y;
-		allegro_mouse_b = mouse_b;
-
-		int gui_mouse_x = allegro_mouse_x;
-		int gui_mouse_y = allegro_mouse_y;
-		int gui_mouse_b = allegro_mouse_b;
-
-		int allegro_char = 0;
-		if (keypressed()) {
-			allegro_char = readkey();
+		if (use_input_allegro) {
+				// TODO move this code here, but leave the variables in higher scope
 		}
 
-		// background
-		clear_to_color(m_frame, makecol(0, 128, 0));
-		blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
+			poll_keyboard();
+			auto allegro_keys = key;
+			auto allegro_shifts = key_shifts;
+			//		bool allegro_keys_any_is=false;
+			//		for (size_t i=0; i<sizeof(allegro_keys)/sizeof(allegro_keys[0]); ++i) allegro_keys_any_is=true;
+			int allegro_mouse_x, allegro_mouse_y, allegro_mouse_b;
+			allegro_mouse_x = mouse_x;
+			allegro_mouse_y = mouse_y;
+			allegro_mouse_b = mouse_b;
 
-        clear_to_color(smallWindow, makecol(128, 128, 128));
+			int gui_mouse_x = allegro_mouse_x;
+			int gui_mouse_y = allegro_mouse_y;
+			int gui_mouse_b = allegro_mouse_b;
+
+			int allegro_char = 0;
+			if (keypressed()) {
+				allegro_char = readkey();
+			}
+		// end of input
+		
+
+		// background frame
+		if (use_draw_allegro) {
+			clear_to_color(m_frame, makecol(0, 128, 0));
+			blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
+		}
+		if  (use_draw_opengl) {
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		}
+		
+
+		// clear additional things
+		if (use_draw_allegro) {
+		        clear_to_color(smallWindow, makecol(128, 128, 128));
+		}
 
 
 		// main controll keys
+		if (allegro_keys[KEY_ESC]) {
+			_note("User exits the simulation from user interface");
+			m_goodbye = true;
+		}
+
 		if ((allegro_char & 0xff) == 'n' && !start_simulation) {
 			std::cout << "ADD" << std::endl;
 			m_world->m_objects.push_back(make_shared<c_cjddev>(cjddev_detail_random_name(), gui_mouse_x, gui_mouse_y, cjddev_detail_random_addr()));
 		}
 
-		if (allegro_keys[KEY_ESC] || allegro_keys[KEY_ENTER]) {
-			m_goodbye = true;
-        }
 
         if(allegro_keys[KEY_F1]){
             auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
@@ -133,7 +171,12 @@ void c_simulation::main_loop () {
 //                    		textout_ex(smallWindow, font, ptr->get_name().c_str(), 0, 0, makecol(0, 0, 255), -1);{
                             free (addr);
                         }
-                        blit (smallWindow,m_frame,0,0,m_frame->w-200,m_frame->h-200,screen->w/8, screen->h/4);
+
+												if (use_draw_allegro) { 
+													// draw the information window
+                        	blit (smallWindow,m_frame,0,0,m_frame->w-200,m_frame->h-200,screen->w/8, screen->h/4);
+												}
+
                     }
             }catch(...)
             {}
@@ -200,6 +243,10 @@ void c_simulation::main_loop () {
 			if (allegro_keys[KEY_PGDN]) m_gui->camera_zoom /= zoom_speed;
 		}
 
+
+
+		// === text debug on screen ===
+
 		string mouse_pos_str = std::to_string(gui_mouse_x) + " " + std::to_string(gui_mouse_y);
 		string fps = "fps ???";
 		if (loop_miliseconds != 0) {
@@ -209,35 +256,41 @@ void c_simulation::main_loop () {
 		const int txt_h = 12; // line height (separation between lines)
 		int txt_x = 10, txt_y = 10; // starting position of text
 
-		string pck_speed_str = "sending packets speed - " + std::to_string(450 - g_max_anim_frame);
-		textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, fps.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
-		textout_ex(m_frame, font, ("Frame nr.: " +
-		                           std::to_string(m_frame_number)).c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+		if (use_draw_allegro) {
 
-		textout_ex(m_frame, font, pck_speed_str.c_str(), 100, 10, makecol(0, 0, 255), -1);
+			string pck_speed_str = "sending packets speed - " + std::to_string(450 - g_max_anim_frame);
+			textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, fps.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, ("Frame nr.: " +
+																 std::to_string(m_frame_number)).c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 
-        if(allegro_keys[KEY_H])
-		{
-			int tex_y = 10;
-			int lineh = 10;
-			textout_ex(m_frame, font, "s - start", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "p - pause", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "f - send FTP", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "t - select target", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "r - select source", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "d - remove node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "n - add node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "enter/esc - exit", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "Arrows: move selected node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, "SHIFT-Arrows: move the camera", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-            textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-            textout_ex(m_frame, font, "F1: info about node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-            textout_ex(m_frame, font, "F2: next node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-        }else{
+			textout_ex(m_frame, font, pck_speed_str.c_str(), 100, 10, makecol(0, 0, 255), -1);
 
-            textout_ex(m_frame, font, "h - help", 1140, 30, makecol(0, 0, 255), -1);
-        }
+					if(allegro_keys[KEY_H])
+			{
+				int tex_y = 10;
+				int lineh = 10;
+				textout_ex(m_frame, font, "s - start", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "p - pause", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "f - send FTP", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "t - select target", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "r - select source", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "d - remove node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "n - add node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "enter/esc - exit", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "Arrows: move selected node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+				textout_ex(m_frame, font, "SHIFT-Arrows: move the camera", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+							textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+							textout_ex(m_frame, font, "F1: info about node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+							textout_ex(m_frame, font, "F2: next node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
+					} else{
+
+							textout_ex(m_frame, font, "h - help", 1140, 30, makecol(0, 0, 255), -1);
+					}
+		}
+		if (use_draw_opengl) {
+			// TODO @opengl
+		}
 
 
 		// find out which object is selected:
@@ -317,6 +370,8 @@ void c_simulation::main_loop () {
 				}
 			}
 
+
+			// === animation clock controll ===
 			if ((allegro_char & 0xff) == 'p') {
 				simulation_pause = !simulation_pause;
 				last_click_time = std::chrono::steady_clock::now();
@@ -337,6 +392,8 @@ void c_simulation::main_loop () {
 			}
 		}
 
+		// === animation clock operations ===
+
 		if ((m_frame_number - frame_checkpoint) < g_max_anim_frame) {
 			m_world->draw(*m_drawtarget.get(), (m_frame_number - frame_checkpoint) % g_max_anim_frame); // <==
 		} else {
@@ -356,13 +413,19 @@ void c_simulation::main_loop () {
 			circle(m_frame, x, y, r, makecol(255, 255, 255));
 		}
 
-		{
+
+		// === show frame ===
+
+		if (use_draw_allegro) {
 			scare_mouse();
 			blit(m_frame, m_screen, 0, 0, 0, 0, m_frame->w, m_frame->h);
 			unscare_mouse();
 			if (!simulation_pause) {
 				++m_frame_number;
 			}
+		}
+		if (use_draw_opengl) {
+			 allegro_gl_flip();
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -374,6 +437,10 @@ void c_simulation::main_loop () {
 	std::ofstream out_file("../layout/current/out.map.txt");
 	out_file << *m_world << std::endl;
 }
+
+
+
+
 
 shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 	const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position

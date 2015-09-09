@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project (antinet)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 -Wall -pedantic -Werror -Waddress")
+set(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 -Wall -pedantic -Werror -Waddress -Wno-error=cpp")
+#-Wno-error=undefined-variable ")
+
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR})
 
 file(GLOB SOURCE_FILES "*.cpp" # All files in directory:
@@ -22,6 +24,10 @@ target_link_libraries(antinet.elf
 	png
 	crypto
 	cryptopp
+	agl
+	GLU
+	GL
 	)
+
  
   
