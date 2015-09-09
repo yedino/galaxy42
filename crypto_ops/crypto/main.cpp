@@ -258,6 +258,14 @@ void test () {
 }
 
 int main (int argc, char *argv[]) {
+	std::cerr << "============================================" << std::endl;
+	std::cerr << "The geport testing program - part of AntiNet.org project" << std::endl;
+	std::cerr << "============================================" << std::endl;
+	std::cerr << "WARNING: This is a very early pre-alpha, do not use this!" << std::endl;
+	std::cerr << "Do not even run this at any real user, it likely contains errors, UBs, or exploits!" << std::endl;
+	std::cerr << "Test on separate user/environment until we have a tested version." << std::endl;
+	std::cerr << "============================================" << "\n" << std::endl;
+
 	ios_base::sync_with_stdio(false);
 
 	if (argc <= 1) {
