@@ -1,9 +1,10 @@
 
-TNET
+Antinet
 
 by
 
-TNET Team
+TNET Team,
+Antinet Team
 
 including:
 
@@ -17,9 +18,13 @@ description.
 
 === BUILD ===
 
+Dependencies (tested on Debian 7, Debian 8, Debian 9 testing):
+
+apt-get install  liballegro4-dev   liballeggl4-dev  libz-dev libpng12-dev   libcrypto++-dev   libboost-all-dev
+
 In the top directory of this project, execute:
 
-make run
+cmake . && make run
 
 
 

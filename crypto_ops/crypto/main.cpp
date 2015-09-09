@@ -241,7 +241,7 @@ void correctness_test (size_t size) {
 
 int main () {
 	ios_base::sync_with_stdio(false);
-	random_generator_test(10000);
-	correctness_test(10000);
+//	random_generator_test(10000);
+	correctness_test(100);
 	return 0;
 }
