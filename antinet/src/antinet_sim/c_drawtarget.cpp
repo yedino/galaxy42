@@ -21,6 +21,12 @@ c_drawtarget::c_drawtarget (t_drawtarget_type p_drawtarget_type) : m_drawtarget_
 // ==================================================================
 
 
+
+// ==================================================================
+// ALLEGRO
+// ==================================================================
+
+
 c_layer_allegro::c_layer_allegro (BITMAP *frame, t_layer_nr layer_nr) : m_frame(frame), m_layer_nr(layer_nr) { }
 
 // ==================================================================

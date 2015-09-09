@@ -44,11 +44,29 @@ string t_drawtarget_type_to_string( t_drawtarget_type x); ///< name of the enum 
 
 class c_gui;
 
+
+/***
+General class of layer of something to draw on.
+Usually it will be dynamic_cast and then used.
+*/
+class c_layer { 
+	public:
+};
+
 class c_drawtarget { ///< something we can draw on to
 public:
 	const t_drawtarget_type m_drawtarget_type; ///< what type of drawing surface is stored in me (hint for dynamic cast)
 
-	shared_ptr<c_gui> m_gui; // a GUI with various information
+	shared_ptr<c_gui> m_gui; ///< a GUI with various information
+
+	/***
+	Layers. the index is the layer number: e.g.: .at(e_layer_top).m_layer == e_layer_top
+	This can depend on the drawing engine.
+	This will probably contain some inherited class like c_drawtarget_allegro.
+	Owner: The container holds new-allocated objects that are OWNED by this object, this object must clean them up on destruction.
+	Speed: we can assume there are no NULL here (after construction and init, during normal life time)
+	*/
+	vector<*c_layer> m_layer;
 
 	c_drawtarget (t_drawtarget_type drawtarget_type);
 
@@ -71,7 +89,6 @@ public:
 
 class c_drawtarget_allegro : public c_drawtarget { ///< allegro library draw target (with layers)
 public:
-	vector<c_layer_allegro> m_layer; ///< layers. the index is the layer number: e.g.: .at(e_layer_top).m_layer == e_layer_top
 	c_drawtarget_allegro (BITMAP *frame);
 
 	virtual ~c_drawtarget_allegro () = default;

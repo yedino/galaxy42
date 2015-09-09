@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include "use_opengl.hpp"
 
+#include "c_drawtarget_opengl.hpp"
+
+
 unsigned int g_max_anim_frame = 10;
 
 c_simulation::c_simulation (t_drawtarget_type drawtarget_type) 
@@ -18,6 +21,8 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 }
 
 c_simulation::~c_simulation () {
+	_note("Destructing the simulation");
+
 	if (m_frame) {
 		destroy_bitmap(m_frame);
 		m_frame = nullptr;
@@ -28,11 +33,12 @@ c_simulation::~c_simulation () {
     smallWindow = nullptr;
 	}
 
+	_note("Destructing the simulation - done");
 }
 
 void c_simulation::init () {
 	//this->close_button_pressed = false;
-	_note("We are using m_screen=" << m_screen);
+	_note("Init. We are using m_screen=" << m_screen);
 
 	if (m_drawtarget_type == e_drawtarget_type_allegro) {
 		_note("Creating the allegro frame buffer for m_screen="<<m_screen);
@@ -42,7 +48,10 @@ void c_simulation::init () {
 
 		smallWindow = create_bitmap(m_screen->w,m_screen->h); 
 	}
-	
+	if (m_drawtarget_type == e_drawtarget_type_opengl) {
+		_note("Using the opengl in simulation");
+		// TODO @opengl load here some textures and other general things
+	}
 
 	_note("Simulation will create the world");
 	m_world = make_unique<c_world>();
@@ -83,7 +92,20 @@ void c_simulation::main_loop () {
 		std::chrono::steady_clock::now() - std::chrono::milliseconds(1000);
 
 	m_gui = make_shared<c_gui>();
-	m_drawtarget = make_shared<c_drawtarget_allegro>(m_frame); // prepare drawtarget surface to draw to
+
+
+	// prepare drawtarget surface to draw to
+	switch (m_drawtarget_type) {
+		case e_drawtarget_type_allegro:
+			m_drawtarget = make_shared<c_drawtarget_allegro>(m_frame); 
+		break;
+		case e_drawtarget_type_opengl:
+			m_drawtarget = make_shared<c_drawtarget_opengl>(); 
+		break;
+		default:
+			_erro("Warning: unsupported drawtarget");
+	}
+
 	m_drawtarget->m_gui = m_gui;
 
 

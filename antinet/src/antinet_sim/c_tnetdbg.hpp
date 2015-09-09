@@ -18,6 +18,8 @@
 // _dbg3 _dbg2 _dbg1 _info _note _warn _erro _mark
 #define _info(X) do { ::std::cerr<<"info: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _note(X) do { ::std::cerr<<"note: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _warn(X) do { ::std::cerr<<"Warn! " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _erro(X) do { ::std::cerr<<"ERRO! " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 
 
 #endif // include guard

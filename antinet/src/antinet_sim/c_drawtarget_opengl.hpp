@@ -1,8 +1,10 @@
-#ifndef C_DRAWTARGET_HPP
-#define C_DRAWTARGET_HPP
+#ifndef C_DRAWTARGET_opengl_HPP
+#define C_DRAWTARGET_opengl_HPP
 
 #include "libs1.hpp"
 #include "c_geometry.hpp"
+
+#include "c_drawtarget.hpp"
 
 /***
 @file OpenGL rendering support. See doc/rendering.txt
@@ -33,7 +35,7 @@ class c_drawtarget_opengl : public c_drawtarget { ///< OpenGL library draw targe
 public:
 	c_drawtarget_opengl();
 
-	virtual ~c_drawtarget_allegro () = default;
+	virtual ~c_drawtarget_opengl () = default;
 };
 
 

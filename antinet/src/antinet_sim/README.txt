@@ -9,6 +9,7 @@ Antinet Team
 including:
 
 - crypto_ferret <ferret@crypto.localhost> gpg: 0x645CFB4F138023BD
+- people listed in git history
 
 === HACKING ===
 
