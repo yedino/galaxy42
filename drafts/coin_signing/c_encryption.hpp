@@ -10,6 +10,8 @@
 #include <memory>
 #include <cstdlib>
 
+using std::unique_ptr;
+
 constexpr unsigned int key_size = 512;
 typedef enum {
 		no_crypt, RSA, ed25519
@@ -34,7 +36,9 @@ public:
 		c_RSA ();
 
 		std::string get_public_key ();
+
 		std::string sign (const std::string &msg);
+
 private:
 		std::unique_ptr<c_crypto_RSA<key_size>> m_crypto;
 };
@@ -44,8 +48,10 @@ typedef enum {
 		seed_size = 32, pub_key_size = 32, prv_key_size = 64, sign_size = 64
 } ed25519_sizes;
 
+
+unique_ptr<unsigned char[]> string_to_uniqueUtab(const std::string &str);
 std::string uchar_toReadable(const unsigned char* utab, ed25519_sizes size);
-unsigned char* readable_toUchar(const std::string &str, ed25519_sizes size);
+unique_ptr<unsigned char[]> readable_toUchar(const std::string &str, ed25519_sizes size);
 
 /**
  * C++ class based on orlp/ed25orlp/ed25519 implemantation
@@ -59,13 +65,13 @@ public:
 
 		int verify (const std::string signature, const std::string message, size_t message_len, std::string public_key);
 
-		unsigned char *get_public_key_C ();
+        unique_ptr<unsigned char[]> get_public_key_C ();
 
-		unsigned char *sign_C (const unsigned char *message, size_t message_len);  ///< faster C sign way
-		int verify_C (const unsigned char *signature,
-			const unsigned char *message,
-			size_t message_len,
-			const unsigned char *public_key);
+        unique_ptr<unsigned char[]> sign_C (unique_ptr<const unsigned char[]> message, size_t message_len);  ///< faster C sign way
+        int verify_C (unique_ptr<const unsigned char[]> &signature,
+                      unique_ptr<const unsigned char[]> &message,
+                      size_t message_len,
+                      unique_ptr<const unsigned char[]> &public_key);
 		//void add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar);
 		//void key_exchange(unsigned char *shared_secret, const unsigned char *public_key, const unsigned char *private_key);
 
@@ -74,7 +80,7 @@ public:
 private:
         unsigned char m_signature[sign_size];
 		void create_keypair ();
-		unsigned char m_public_key[pub_key_size], m_private_key[prv_key_size], m_seed[seed_size];
+        unsigned char m_public_key[pub_key_size], m_private_key[prv_key_size], m_seed[seed_size];
 		//unsigned char m_scalar[32];
 		//unsigned char m_other_public_key[32], m_other_private_key[64];
 		//unsigned char m_shared_secret[32], m_other_shared_secret[32];

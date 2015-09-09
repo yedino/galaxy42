@@ -9,11 +9,11 @@ bool test_readableEd () {
     std::cout << "RUNNING TEST00 READABLE_CRYPTO_ED" << std::endl;
     c_ed25519 edtest;
     std::string str_pubkey = edtest.get_public_key();
-    unsigned char *utab_pubkey = edtest.get_public_key_C();
-    std::cout << "ed: original utab pubkey = " << utab_pubkey << std::endl;
+    unique_ptr<unsigned char[]> utab_pubkey = edtest.get_public_key_C();
+    std::cout << "ed: original utab pubkey = " << utab_pubkey.get() << std::endl;
     std::cout << "ed: string format pubkey = " << str_pubkey << std::endl;
-    unsigned char *utab_pubkey_afttrans;
-    utab_pubkey_afttrans = readable_toUchar(str_pubkey, pub_key_size);
+    unique_ptr<unsigned char[]> utab_pubkey_afttrans (readable_toUchar(str_pubkey, pub_key_size));
+    std::cout << "ed: back to short format = " << utab_pubkey_afttrans.get() << std::endl;
 
     const std::string message = "3fd30542fe3f61b24bd3a4b2dc0b6fb37fa6f63ebce52dd1778baa8c4dc02cff";
     const int message_len = message.length();
@@ -26,9 +26,6 @@ bool test_readableEd () {
         std::cout << "invalid signature\n" << std::endl;
         return true;
     }
-
-    delete[] utab_pubkey;
-    delete[] utab_pubkey_afttrans;
 
     return false;
 }
