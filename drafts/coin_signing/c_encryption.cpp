@@ -36,20 +36,22 @@ void c_ed25519::create_keypair () {
 
 unsigned char *c_ed25519::get_public_key_C () {
 
-	unsigned char *pub_key = new unsigned char[pub_key_size];
+    unsigned char *pub_key = new unsigned char[pub_key_size+1];
 	for (int i = 0; i < pub_key_size; ++i) {
 		pub_key[i] = m_public_key[i];
-	}
+    }
+    pub_key[pub_key_size] = '\0';
 	return pub_key;
 }
 
 unsigned char *c_ed25519::sign_C (const unsigned char *message, size_t message_len) {
 
 	ed25519_sign(m_signature, message, message_len, m_public_key, m_private_key);
-	unsigned char *sign = new unsigned char[sign_size];
+    unsigned char *sign = new unsigned char[sign_size+1];
 	for (int i = 0; i < sign_size; ++i) {
 		sign[i] = m_signature[i];
-	}
+    }
+    sign[sign_size] = '\0';
 	return sign;
 }
 
@@ -65,15 +67,13 @@ int c_ed25519::verify_C (const unsigned char *signature,
 std::string c_ed25519::get_public_key () {
 
     std::string pubkey = uchar_toReadable(m_public_key, pub_key_size);
-    //char *pub_key = reinterpret_cast<char *>(m_public_key);
-    //return std::string(pub_key, pub_key_size);
     return pubkey;
 }
 
 string c_ed25519::sign (const string &msg) {
 
 	unsigned char *sign_ustr = this->sign_C(reinterpret_cast<const unsigned char *>(msg.c_str()), msg.length());
-	std::string sign_str(reinterpret_cast<char *>(sign_ustr), sign_size);
+    std::string sign_str = uchar_toReadable(sign_ustr, sign_size);
 	delete[] sign_ustr;
 	return sign_str;
 }
@@ -83,11 +83,18 @@ int c_ed25519::verify (const std::string signature,
 	size_t message_len,
 	std::string public_key) {
 
-    return this->verify_C(reinterpret_cast<const unsigned char *>(signature.c_str()),
+    const unsigned char *sign_u = readable_toUchar(signature, sign_size);
+    const unsigned char *pubkey_u = readable_toUchar(public_key, pub_key_size);
+	
+    bool is_valid = verify_C(sign_u,
                           reinterpret_cast<const unsigned char *>(message.c_str()),
                           message_len,
-                          reinterpret_cast<const unsigned char *>(public_key.c_str())
+                          pubkey_u
                           );
+    delete [] sign_u;
+    delete [] pubkey_u;
+
+    return is_valid;
 }
 /*
 void c_ed25519::add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar) {
@@ -102,32 +109,40 @@ void c_ed25519::key_exchange(unsigned char *shared_secret, const unsigned char *
 
 /////////////////////////////////////////////////////////////////////////////SUPPORT_FUNCTIONS////////////////////////////////////////////////////////////////////////////////////
 
-// constructing ed string format : ed23ff05.. where all 2 bytes after "ed" is one byte in oryginal C unsigned char tab
-std::string uchar_toReadable(unsigned char* utab, ed25519_sizes size) {
+// constructing ed string format : ed23ff05.. where all 2 bytes after "ed" is one byte in original C unsigned char tab
+std::string uchar_toReadable(const unsigned char* utab, ed25519_sizes size) {
     size_t length = 0;
     std::stringstream ss;
     ss << "ed";
     for(size_t i = 0; i < size; ++i) {
-        static_cast<int>(utab[i]) > 15 ? 	// need for keep constant lenght
+        static_cast<int>(utab[i]) > 15 ? 	// need for keep constant length
             ss << std::hex << static_cast<int>(utab[i]) 	:
             ss << "0" << std::hex << static_cast<int>(utab[i]);	// 4 == 04
         length++;
     }
-    std::cout << std::endl;
-    std::cout << "Test: lenght of uchar = " << length << std::endl;
     std::string str = ss.str();
     return str;
 }
-unsigned char* readable_toUchar(const std::string &str) {
-    unsigned char *utab;
-    utab = new unsigned char[str.length()];
-    size_t bufsize = 2;
-    for(size_t i = 0; i < str.length(); i+=bufsize) {
-        char buffer[bufsize];
-        str.copy(buffer, bufsize, i);
-        int num = std::stoi(buffer,nullptr,16);
-        std::cout << num << ":";
+unsigned char* readable_toUchar(const std::string &str, ed25519_sizes size) {
+    unsigned char *utab = new unsigned char[size+1];
+    utab[size] = '\0';
+    const size_t bufsize = 2;
+    if(size == ((str.size()-2)/2)) {		// -2 because 2 first bytes is "ed"
+        //std::cout << "sizes ok" << std::endl;	// dbg
     }
-    std::cout << std::endl;
+    else {
+        std::cout << "ed: error! bad string in readable_toUchar" << std::endl;
+        delete [] utab;
+        return nullptr;
+    }
+    for(size_t i = 0; i < size; ++i) {
+        char buffer[bufsize+1];
+        if(str.copy(buffer, bufsize, i*2+2) != bufsize) {
+            std::cout << "ed: str.copy error" << std::endl;
+        }
+        buffer[bufsize] = '\0';
+        int num = std::stoi(buffer,nullptr,16);
+        utab[i] = num;
+    }
     return utab;
 }

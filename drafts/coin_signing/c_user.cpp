@@ -76,20 +76,17 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 
     // [A->B]   [B->C]   [C->D]
 	for (auto &current_signature : token.m_chainsign) {
-
-		// [B->C]
 		bool ok_sign = m_edsigner.verify(current_signature.m_signed_msg, current_signature.m_msg, 
 			current_signature.m_msg.length(), current_signature.m_signer_pubkey);
 
-        auto current_sender_in_coin = current_signature.m_signer_pubkey;
+        std::string current_sender_in_coin = current_signature.m_signer_pubkey;
+        std::string current_recipient_in_coin;
 
-        auto current_recipient_in_coin = "";
         std::string delimeter = "|";
-        std::size_t found = current_signature.m_msg.find(delimeter)+1;
+        std::size_t found = current_signature.m_msg.find(delimeter)+1; // +1 to avoid delimeter
         if (found != std::string::npos) {
-            current_recipient_in_coin = current_signature.m_msg.substr(found + 1).c_str();
-            std::cout << "check!!!" << current_signature.m_msg << "!!!" << std::endl; //TODO substr bad working
-            print_strBytes(current_signature.m_msg);
+            current_recipient_in_coin = current_signature.m_msg.substr(found).c_str();
+            //print_strBytes(current_signature.m_msg);
         }
 
 		// [B->C] is the current sender B allowed to send,  check for error:
@@ -106,7 +103,9 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 		expected_sender = current_recipient_in_coin;
 		expected_sender_any = true;
 
-        cout << "chainsign: " << current_signature.m_msg << " was signed by " << current_signature.m_signer_pubkey << '\n'; // TODO info
+        cout << "INFO\n"
+             << "chainsign: " << current_signature.m_msg << "\nwas signed by " << current_signature.m_signer
+             << " with public key: " << current_signature.m_signer_pubkey << std::endl;
 	}
 
 	m_wallet.tokens.push_back(token);
@@ -141,8 +140,6 @@ bool c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 			return false;
         }
 
-		// TODO deduplicate  for + const auto& = ? .. : ...
-
         std::cout << "[" << current_signature_a.m_signer << "]" << "\t[" << current_signature_b.m_signer << "]\n"
                   << "   |\t   |\n   V\t   V" << std::endl;
         if (current_signature_a != current_signature_b && !is_dbspend) {
@@ -150,14 +147,11 @@ bool c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
             std::cout << "*** !!! the CHEATER is: " << current_signature_a.m_signer << std::endl;
             is_dbspend = true;
         }
-
-        // std::cout << "Compare: " << current_signature_a.m_msg << " =?= " << current_signature_b.m_msg << '\n'; // TODO info
     }
     std::cout << "[" << token_a.m_chainsign[0].m_signer << "]\t["
                      << token_b.m_chainsign[0].m_signer << "]" << std::endl;
     return true;
 }
-
 
 void c_user::emit_tokens (size_t amount) {
 	c_token emitted_token = m_mint.emit_token();

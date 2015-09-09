@@ -9,12 +9,23 @@ bool test_readableEd () {
     std::cout << "RUNNING TEST00 READABLE_CRYPTO_ED" << std::endl;
     c_ed25519 edtest;
     std::string str_pubkey = edtest.get_public_key();
-    unsigned char *utab_pubkey;
-    utab_pubkey = edtest.get_public_key_C();
+    unsigned char *utab_pubkey = edtest.get_public_key_C();
     std::cout << "ed: original utab pubkey = " << utab_pubkey << std::endl;
     std::cout << "ed: string format pubkey = " << str_pubkey << std::endl;
     unsigned char *utab_pubkey_afttrans;
-    utab_pubkey_afttrans = readable_toUchar(str_pubkey);
+    utab_pubkey_afttrans = readable_toUchar(str_pubkey, pub_key_size);
+
+    const std::string message = "3fd30542fe3f61b24bd3a4b2dc0b6fb37fa6f63ebce52dd1778baa8c4dc02cff";
+    const int message_len = message.length();
+    std::string sign = edtest.sign(message);
+
+    /* verify the signature */
+    if (edtest.verify(sign, message, message_len, str_pubkey)) {
+        std::cout << "valid signature\n" << std::endl;
+    } else {
+        std::cout << "invalid signature\n" << std::endl;
+        return true;
+    }
 
     delete[] utab_pubkey;
     delete[] utab_pubkey_afttrans;
@@ -61,8 +72,8 @@ bool test_cheater() {
 int main () {
 
     test_readableEd();
-   // test_user_sending();
-   // test_many_users();
-   // test_cheater();
+    test_user_sending();
+    test_many_users();
+    test_cheater();
 	return 0;
 }

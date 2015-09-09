@@ -34,9 +34,7 @@ public:
 		c_RSA ();
 
 		std::string get_public_key ();
-
 		std::string sign (const std::string &msg);
-
 private:
 		std::unique_ptr<c_crypto_RSA<key_size>> m_crypto;
 };
@@ -46,8 +44,8 @@ typedef enum {
 		seed_size = 32, pub_key_size = 32, prv_key_size = 64, sign_size = 64
 } ed25519_sizes;
 
-std::string uchar_toReadable(unsigned char* utab, ed25519_sizes size);
-unsigned char* readable_toUchar(const std::string &str);
+std::string uchar_toReadable(const unsigned char* utab, ed25519_sizes size);
+unsigned char* readable_toUchar(const std::string &str, ed25519_sizes size);
 
 /**
  * C++ class based on orlp/ed25orlp/ed25519 implemantation
@@ -74,10 +72,8 @@ public:
 		int create_seed ();
 
 private:
-		unsigned char m_signature[sign_size];
-
+        unsigned char m_signature[sign_size];
 		void create_keypair ();
-
 		unsigned char m_public_key[pub_key_size], m_private_key[prv_key_size], m_seed[seed_size];
 		//unsigned char m_scalar[32];
 		//unsigned char m_other_public_key[32], m_other_private_key[64];
