@@ -9,6 +9,14 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR})
 file(GLOB SOURCE_FILES "*.cpp" # All files in directory:
 )
 
+option(USE_OPENGL "Enable/Disable opengl" ON)
+if(USE_OPENGL)
+       add_definitions(-DUSE_OPENGL=1)
+else()
+       add_definitions(-DUSE_OPENGL=0)
+endif()
+
+
 source_group(SRC_FILES FILES ${SOURCE_FILES})
 
 add_executable(antinet.elf
