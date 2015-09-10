@@ -9,9 +9,9 @@ Write in doxygen style.
 
 === Tabs, spaces, binary ===
 
-Edit the files style_*cpp and write identical code in them and confirm with program:
+Edit the file style_tab2.cpp and write identical code in them and confirm with program:
 ./check_style.sh that their binary content (and spaces/tabs) are identical as expected.
-
+Read style_tab.cpp to learn how we ident.
 Recommended vim settings are in file vimrc here (maybe copy to ~/.vimrc after checking it).
 
 Use unix \n line endings.
