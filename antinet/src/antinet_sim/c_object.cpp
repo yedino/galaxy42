@@ -204,31 +204,27 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 
 void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+	
+	// _info("OpenGL draw");
+	
+	/* Move Left 1.5 Units And Into The Screen 6.0 */
+	glLoadIdentity();
+	glScalef(0.03,0.03,0.03);
+	glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
+	
+	glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
+	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
+	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+	glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
+	glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+	glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
+	glEnd( );                            /* Finished Drawing The Triangle */
 }
 
 void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	auto layer = dynamic_cast<c_layer_allegro&>(layer_any);
 	BITMAP *frame = layer.m_frame;
-
-  
-    //std::cerr << __FUNCTION__ << std::endl;
-
-    /* Move Left 1.5 Units And Into The Screen 6.0 */
-    glLoadIdentity();
-     glScalef(0.03,0.03,0.03);
-     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
-
-    glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
-      glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-      glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
-      glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-      glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
-      glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-      glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
-    glEnd( );                            /* Finished Drawing The Triangle */
-
-
-
 
 	return; // TODO @opengl
 

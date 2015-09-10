@@ -22,14 +22,23 @@ using std::unique_ptr;
 using std::vector;
 using std::string;
 
-void start_gui_allegro_simple() {
-	_note("Starting GUI - for simple Allegro");
-	int bpp = -1; // bits per pixel
 
+
+void start_gui_part_allegro() {
+	_note("Loading the Allegro library (general)");
+	
 	if (0 != allegro_init()) {
 		std::string errmsg("Error: Can not start allegro graphics library");		std::cerr<<errmsg<<std::endl;
 		throw std::runtime_error(errmsg);
 	}
+}
+
+void start_gui_allegro_simple() {
+	_note("Starting GUI - for simple Allegro");
+	
+	start_gui_part_allegro();
+	
+	int bpp = -1; // bits per pixel
 
 	install_keyboard();
 	install_mouse();
@@ -50,64 +59,61 @@ void start_gui_allegro_simple() {
 
 void start_gui_allegro_opengl() {
     //int bpp = -1; // bits per pixel
-	_note("Starting GUI - for OpenGL and Allegro and AllegroGL");
+	_note("Starting GUI - for OpenGL and AllegroGL");
+	
+	start_gui_part_allegro();
 
-	if (0 != allegro_init()) {
-		std::string errmsg("Error: Can not start allegro graphics library");		std::cerr<<errmsg<<std::endl;
-		throw std::runtime_error(errmsg);
-	}
-    install_allegro_gl();
+	install_allegro_gl();
 	install_keyboard();
 	install_mouse();
 	install_timer();
-
-
-    allegro_gl_clear_settings();
-    allegro_gl_set(AGL_COLOR_DEPTH, 32);
-    allegro_gl_set(AGL_Z_DEPTH, 24);
-    allegro_gl_set(AGL_WINDOWED, TRUE);
-    allegro_gl_set(AGL_DOUBLEBUFFER, 1);
-    allegro_gl_set(AGL_RENDERMETHOD, 1);
-    allegro_gl_set(AGL_SUGGEST, AGL_COLOR_DEPTH | AGL_DOUBLEBUFFER
-                 | AGL_RENDERMETHOD | AGL_Z_DEPTH | AGL_WINDOWED);
-
-    if (set_gfx_mode(GFX_OPENGL, 1280, 720, 0, 0)) {
-        allegro_message("Error setting OpenGL graphics mode:\n%s\n"
-                        "Allegro GL error : %s\n",
-                        allegro_error, allegro_gl_error);
-        //return -1;
-    }
-
-    //allegro_gl_convert_allegro_font(font, AGL_FONT_TYPE_TEXTURED, 16.0);
-
-
-    // --- scene ---
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-
-    glViewport(0, 0, SCREEN_W, SCREEN_H);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    // glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
-    glFrustum(-1.0, 1.0, -1.0, 1.0, 1, 60.0); // good position
-
-
-    /* Set culling mode - not that we have anything to cull */
-    // glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CW); // ?? GL_CCW
-
-    glMatrixMode(GL_MODELVIEW);
-
-  //  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // <=======
-
-
-    glLoadIdentity();
-
-    if (1) { // TODO why???
-        allegro_gl_set_allegro_mode(); // <=== in allegro simple mode ! ??? why
-
-       // allegro_gl_unset_allegro_mode(); // <=== in opengl mode !
-    }
+	
+	allegro_gl_clear_settings();
+	allegro_gl_set(AGL_COLOR_DEPTH, 32);
+	allegro_gl_set(AGL_Z_DEPTH, 24);
+	allegro_gl_set(AGL_WINDOWED, TRUE);
+	allegro_gl_set(AGL_DOUBLEBUFFER, 1);
+	allegro_gl_set(AGL_RENDERMETHOD, 1);
+	allegro_gl_set(AGL_SUGGEST, AGL_COLOR_DEPTH | AGL_DOUBLEBUFFER
+								 | AGL_RENDERMETHOD | AGL_Z_DEPTH | AGL_WINDOWED);
+	
+	if (set_gfx_mode(GFX_OPENGL, 1280, 720, 0, 0)) {
+		allegro_message("Error setting OpenGL graphics mode:\n%s\n"
+										"Allegro GL error : %s\n",
+										allegro_error, allegro_gl_error);
+		//return -1;
+	}
+	
+	//allegro_gl_convert_allegro_font(font, AGL_FONT_TYPE_TEXTURED, 16.0);
+	
+	
+	// --- scene ---
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	
+	glViewport(0, 0, SCREEN_W, SCREEN_H);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	// glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
+	glFrustum(-1.0, 1.0, -1.0, 1.0, 1, 60.0); // good position
+	
+	
+	/* Set culling mode - not that we have anything to cull */
+	// glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW); // ?? GL_CCW
+	
+	glMatrixMode(GL_MODELVIEW);
+	
+	//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // <=======
+	
+	
+	glLoadIdentity();
+	
+	if (1) { // TODO why???
+		allegro_gl_set_allegro_mode(); // <=== in allegro simple mode ! ??? why
+		
+		// allegro_gl_unset_allegro_mode(); // <=== in opengl mode !
+	}
 }
 
 

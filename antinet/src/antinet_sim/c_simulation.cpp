@@ -127,7 +127,7 @@ void c_simulation::main_loop () {
 
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) { 
-		std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
+		auto start_time = std::chrono::high_resolution_clock::now();
 
 		// --- process the keyboard/inputs ---
 		if (use_input_allegro) {
@@ -155,21 +155,21 @@ void c_simulation::main_loop () {
 		// end of input
 		
 
-		// background frame
+
+		// draw background of frame
 		if (use_draw_allegro) {
 			clear_to_color(m_frame, makecol(0, 128, 0));
 			blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
 		}
-		if  (use_draw_opengl) {
+		if (use_draw_opengl) {
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		}
 		
 
 		// clear additional things
 		if (use_draw_allegro) {
-		        clear_to_color(smallWindow, makecol(128, 128, 128));
+			clear_to_color(smallWindow, makecol(128, 128, 128));
 		}
-
 
 		// main controll keys
 		if (allegro_keys[KEY_ESC]) {
@@ -286,9 +286,9 @@ void c_simulation::main_loop () {
 		// === text debug on screen ===
 
 		string mouse_pos_str = std::to_string(gui_mouse_x) + " " + std::to_string(gui_mouse_y);
-		string fps = "fps ???";
+		string fps_str = "fps ???";
 		if (loop_miliseconds != 0) {
-			fps = "fps: " + std::to_string(1000 / loop_miliseconds);
+			fps_str = "fps: " + std::to_string(1000 / loop_miliseconds);
 		}
 
 		const int txt_h = 12; // line height (separation between lines)
@@ -298,7 +298,7 @@ void c_simulation::main_loop () {
 
 			string pck_speed_str = "sending packets speed - " + std::to_string(450 - g_max_anim_frame);
 			textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
-			textout_ex(m_frame, font, fps.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+			textout_ex(m_frame, font, fps_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 			textout_ex(m_frame, font, ("Frame nr.: " +
 																 std::to_string(m_frame_number)).c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
 
@@ -470,6 +470,7 @@ void c_simulation::main_loop () {
 		// === show frame ===
 
 		if (use_draw_allegro) {
+			_dbg1("Allegro: frame done. fps = " << fps_str);
 			scare_mouse();
 			blit(m_frame, m_screen, 0, 0, 0, 0, m_frame->w, m_frame->h);
 			unscare_mouse();
@@ -478,12 +479,13 @@ void c_simulation::main_loop () {
 			}
 		}
 		if (use_draw_opengl) {
-			 allegro_gl_flip();
+			_dbg1("OpenGL: frame flip. fps = " << fps_str);
+			allegro_gl_flip();
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		std::chrono::time_point<std::chrono::steady_clock> stop_time = std::chrono::steady_clock::now();
-		std::chrono::steady_clock::duration diff = stop_time - start_time;
+//		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		auto stop_time = std::chrono::high_resolution_clock::now();
+		auto diff = stop_time - start_time;
 		loop_miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
 	}
 
@@ -494,11 +496,10 @@ void c_simulation::main_loop () {
 
 
 
-
 shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 	const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position
 
-    double max_distance = 150;
+	double max_distance = 150;
 	shared_ptr<c_entity> ret_ptr;
 	for (auto node : m_world->m_objects) {
 		shared_ptr<c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
@@ -510,8 +511,8 @@ shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 		double current_dist = sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2, 2));
 		if (current_dist < max_distance) {
 			max_distance = current_dist;
-            ret_ptr = node_ptr;
-        }
+			ret_ptr = node_ptr;
+		}
 	}
 	return ret_ptr;
 }
