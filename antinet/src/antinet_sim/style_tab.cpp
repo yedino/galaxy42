@@ -1,10 +1,10 @@
 #include <algorithm>
-#include <set>
+#include <list>
 
 namespace test {
 
 int foo(int a, int b) {
-    std::set<int> t;
+    std::list<int> t;
 
     if (a>b) { // 1 tab
         int x = a+b;
@@ -12,21 +12,22 @@ int foo(int a, int b) {
               + a // 2 tab, plus 6 space to align
               + b
               + 42
-              + std::count(
+              + std::count_if(
                 t.begin(), // 2 tab, 6 space, again 1 tab
                 t.end(),
-                [](int p) -> bool {
-                    if (a<0) { // 2 tab, 6 space, again 2 tab
-                        return a%2; // 2 tab, 6 space, again 3 tab
+                [](int p) {
+                    if (p<0) { // 2 tab, 6 space, again 2 tab
+                        return p%2; // 2 tab, 6 space, again 3 tab
                     }
-                    return a%4;
+                    return p%4;
                 } // lambda
               ) // count
               +1000;
         int z=x+y;
+        if (z) return z;
     } // a>b
 
-    return a,b;
+    return a+b;
 }
 
 }
