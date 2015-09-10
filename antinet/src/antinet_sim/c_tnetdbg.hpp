@@ -15,11 +15,14 @@
 
 /// This macros will be moved later to glorious-cpp library or other
 
-// _dbg3 _dbg2 _dbg1 _info _note _warn _erro _mark
+#define _dbg3(X) do { ::std::cerr<<"dbg3: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg2(X) do { ::std::cerr<<"dbg2: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg1(X) do { ::std::cerr<<"dbg1: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _info(X) do { ::std::cerr<<"info: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _note(X) do { ::std::cerr<<"note: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _warn(X) do { ::std::cerr<<"Warn! " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _erro(X) do { ::std::cerr<<"ERRO! " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _mark(X) do { ::std::cerr<<"MARK* " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 
 
 #endif // include guard

@@ -1,5 +1,7 @@
 
 
+=== Rendering ===
+
 We always support Allegro (later this will be option).
 We use it in version Allegro 4.4 for now.
 It uses flat layers.
@@ -11,9 +13,35 @@ We use it with AllegroGL (4.4) and Allegro 4.4 for the toolkit (window creation,
 It uses flat layers for now, like in pure Allegro.
 For all layers: draw each object using ::draw() and it will draw the current layer e.g. just the highlight or the object or the labels etc.
 
-
-
-
-
 In future we might use full objects, with Z-testing etc. And Z-sorting for transparency.
+
+=== Classes ===
+
+c_drawtarget - engine, has vector of c_layer*
+child classes:
+- c_drawtarget_allegro
+- c_drawtarget_opengl
+
+c_layer - one layer, has number m_layer_nr
+child classes:
+- c_layer_allegro that contains BITMAP* etc
+- c_layer_opengl
+
+c_object - provides overloaded ::draw methods:
+- one that is for allegro: draw_allegro
+- and other that is for opengl: draw_opengl
+and has various child classes,
+the child classes can implement own ::draw of allegro, opengl, etc
+and can use parent_class::draw(...) in them.
+
+Drawing of objects is done by c_world::draw, it is given
+a draw target. 
+It knows the drawtarget type Allegro/OpenGL
+so it can properly upcast and call proper Allegro or OpenGL 
+c_object::draw()
+
+[[drawing_main]]
+Main drawing (frame clear, setup, GUI, show/flip) is done
+inside c_simulation.
+
 

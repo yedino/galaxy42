@@ -11,16 +11,20 @@ c_object::c_object (string name) : m_name(name), m_animframe(0) { }
 
 void c_object::tick () { }
 
-void c_object::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const { }
-
-void c_object::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color, unsigned int anim_frame) {
-	m_animframe = anim_frame;
-	draw(drawtarget, layer, color);
-}
-
 string c_object::get_name () const { return m_name; }
 
 
+void c_object::draw_allegro(c_drawtarget &drawtarget, c_layer &layer) {
+	_dbg3("Drawing (allegro) object (base method used)");
+}
+
+void c_object::draw_opengl(c_drawtarget &drawtarget, c_layer &layer) {
+	_dbg3("Drawing (opengl) object (base method used)");
+}
+
+// ==================================================================
+
+// @TODO rename to draw_allegro?
 void c_wallet::draw (BITMAP *frame, int color, t_pos x, t_pos y) const {
 	for (const auto &currency: m_currency) {
 		std::string text(currency.first + " " + std::to_string(currency.second));
@@ -49,10 +53,12 @@ void c_entity::draw (const c_drawtarget &drawtarget, c_layer_opengl &layer, int 
 t_pos c_entity::get_x(){return m_x;}
 t_pos c_entity::get_y(){return m_y;}
 
-void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
-	return ;
+void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
+	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+}
 
-
+void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
+	auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
 	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
@@ -88,6 +94,8 @@ void c_entity::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 			}
 		}
 	}
+	
+	int color = makecol(255,0,255); // TODO why? it was a parameter previously
 	if (layer.m_layer_nr == e_layer_nr_object) {
 		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
 		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
@@ -194,12 +202,16 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 }
 
 
-void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
+void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
+	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+}
 
+void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
+	auto layer = dynamic_cast<c_layer_allegro&>(layer_any);
+	BITMAP *frame = layer.m_frame;
 
+  
     //std::cerr << __FUNCTION__ << std::endl;
-
-
 
     /* Move Left 1.5 Units And Into The Screen 6.0 */
     glLoadIdentity();
@@ -220,11 +232,11 @@ void c_cjddev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int
 
 	return; // TODO @opengl
 
-	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
-	c_entity::draw(drawtarget, layer, color);
+	c_entity::draw_allegro(drawtarget, layer);
+	int color = makecol(255,0,255); // TODO is this ok?
 	textout_ex(frame, font, std::to_string(m_my_address).c_str(), vx - 20, vy - 45, color, -1);
 
 	////////////////////////////////////////////////////////////////////
@@ -658,22 +670,24 @@ c_tnetdev::c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c
 	m_wallet.m_currency.insert(pair<std::string, unsigned int>("TOKEN_B", 1000 - a_tokens));
 }
 
-void c_tnetdev::draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color) const {
-	return; // TODO @opengl
 
+void c_tnetdev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
+	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+}
+
+void c_tnetdev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
+	auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
 	BITMAP *frame = layer.m_frame;
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
-
-	c_cjddev::draw(drawtarget, layer, color);
+	
+	
+	int color = makecol(255,0,255);
+	c_cjddev::draw_allegro(drawtarget, layer);
 	assert(!m_wallet.m_currency.empty());// return;
 
 	auto color_wallet = makecol(64,240,255);
 	m_wallet.draw(frame, color_wallet, vx - 20, vy - 55);
-}
-
-// ==================================================================
-c_userdev::c_userdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c_tnetdev(name, x, y, address_ipv6) {
 }
 
 void c_cjddev::remove_neighbor (shared_ptr<c_cjddev> neighbor) {
@@ -692,3 +706,12 @@ vector<shared_ptr<c_cjddev>> c_cjddev::get_neighbors () const {
 	}
 	return ret_vector;
 }
+
+
+// ==================================================================
+
+c_userdev::c_userdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c_tnetdev(name, x, y, address_ipv6) {
+}
+
+// ==================================================================
+

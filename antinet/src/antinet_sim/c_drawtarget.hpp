@@ -51,6 +51,10 @@ Usually it will be dynamic_cast and then used.
 */
 class c_layer { 
 	public:
+		const t_layer_nr m_layer_nr; ///< number of this layer
+		
+		c_layer(t_layer_nr nr);
+		virtual ~c_layer()=default;
 };
 
 class c_drawtarget { ///< something we can draw on to
@@ -66,32 +70,28 @@ public:
 	Owner: The container holds new-allocated objects that are OWNED by this object, this object must clean them up on destruction.
 	Speed: we can assume there are no NULL here (after construction and init, during normal life time)
 	*/
-	vector<*c_layer> m_layer;
+	vector<c_layer*> m_layer;
 
 	c_drawtarget (t_drawtarget_type drawtarget_type);
 
 	virtual ~c_drawtarget () = default;
 };
 
+// ======================================================================================================
 
 // TODO: move this later into _allegro drawtarget and layer, like the opengl engine is separated out
 
-class c_layer_allegro { ///< a single layer of allegro drawing target
+class c_layer_allegro : public c_layer { ///< a single layer of allegro drawing target
 public:
 	BITMAP *const m_frame; ///< pointer-only, owned by someone else. usually a pointer to the frame
-	const t_layer_nr m_layer_nr; ///< number of this layer
 
-	c_layer_allegro (BITMAP *frame, t_layer_nr layer_nr);
-
-	virtual ~c_layer_allegro () = default;
+	c_layer_allegro (t_layer_nr layer_nr, BITMAP *frame);
 };
 
 
 class c_drawtarget_allegro : public c_drawtarget { ///< allegro library draw target (with layers)
 public:
 	c_drawtarget_allegro (BITMAP *frame);
-
-	virtual ~c_drawtarget_allegro () = default;
 };
 
 

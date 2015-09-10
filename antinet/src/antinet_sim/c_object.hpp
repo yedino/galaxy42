@@ -23,10 +23,9 @@ typedef unsigned long long int t_ID;
 class c_object { // something in the simulation
 public:
 	virtual void tick (); ///< execute a tick of the animation
-	virtual void draw (const c_drawtarget &drawtarget,
-		c_layer_allegro &layer,
-		int color) const; ///< draw the object (draw one layer of it, for allegro)
-	virtual void draw (const c_drawtarget &drawtarget, c_layer_allegro &layer, int color, unsigned int anim_frame);
+	
+	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any);
+	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any);
 
 	c_object (string name);
 
@@ -48,11 +47,8 @@ protected:
  */
 class c_entity : public c_object { // object in the world, in the diagram
 protected:
-	virtual void draw (const c_drawtarget &drawtarget,
-		c_layer_allegro &layer,
-		int color) const; ///< draw the object (draw one layer of it, for allegro)
-
-
+	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any);
+	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any);
 
 public:
 	t_pos m_x, m_y; ///< position in the world
@@ -338,9 +334,8 @@ public:
 
 	virtual ~c_cjddev () = default;
 
-	virtual void draw (const c_drawtarget &drawtarget,
-		c_layer_allegro &layer,
-		int color) const; ///< draw the object (draw one layer of it, for allegro)
+	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any);
+	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any);
 
 	void add_neighbor (shared_ptr<c_cjddev> neighbor);
 
@@ -395,20 +390,16 @@ public:
 class c_tnetdev : public c_cjddev {
 public:
 	c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
+	
+	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer);
+	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer);
+	
 
-	virtual void draw (const c_drawtarget &drawtarget,
-
-     c_layer_allegro &layer,
-
-    int color) const; ///< draw the object (draw one layer of it, for allegro)
-
-    virtual ~c_tnetdev () = default;
+	virtual ~c_tnetdev () = default;
 
 	virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
-    virtual void tick ();
-
-
+	virtual void tick ();
 
 protected:
 	c_wallet m_wallet;

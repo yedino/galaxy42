@@ -121,6 +121,10 @@ void c_simulation::main_loop () {
 
 	_note("Entering main simulation loop");
 
+	// The main drawing is done inside this loop.
+	
+	///@see rendering.txt/[[drawing_main]]
+
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) { 
 		std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
@@ -428,12 +432,16 @@ void c_simulation::main_loop () {
 		}
 
 		// === animation clock operations ===
+		
+		m_world->draw(*m_drawtarget.get());
 
+		/*
 		if ((m_frame_number - frame_checkpoint) < g_max_anim_frame) {
 			m_world->draw(*m_drawtarget.get(), (m_frame_number - frame_checkpoint) % g_max_anim_frame); // <==
 		} else {
 			m_world->draw(*m_drawtarget.get(), g_max_anim_frame);
 		}
+		*/
 
 		if (print_connect_line) { // the line the creates new connections
 			if (use_draw_allegro) {

@@ -1,5 +1,7 @@
 #include "c_world.hpp"
 
+#include "c_drawtarget_opengl.hpp"
+
 
 void c_world::add_test () {
 	/*m_objects.push_back( make_shared<c_cjddev>("NODE_A", 200, 200, 11111111));
@@ -33,17 +35,28 @@ void c_world::tick () {
 	std::cout << "****************END OF TICK****************" << std::endl;
 }
 
-void c_world::draw (c_drawtarget &drawtarget, unsigned int anim_frame) {
+void c_world::draw (c_drawtarget &drawtarget) {
+	
+	
 	if (drawtarget.m_drawtarget_type == e_drawtarget_type_null) {
-	} else if (drawtarget.m_drawtarget_type == e_drawtarget_type_allegro) {
+	} 
+	else if (drawtarget.m_drawtarget_type == e_drawtarget_type_allegro) {
 		auto &draw_allegro = dynamic_cast<c_drawtarget_allegro &>( drawtarget ); // get the drawtarget as ALLEGRO surface
 
 		for (auto &layer : draw_allegro.m_layer) { // get each layer
 			for (auto &obj : m_objects) { // draw elements to this layer
-				obj->draw(drawtarget, layer, makecol(20, 20, 20), anim_frame);
+				obj->draw_allegro(draw_allegro, *layer);
 			}
 		}
 	} // ALLEGRO implementation
+	else if (drawtarget.m_drawtarget_type == e_drawtarget_type_opengl) {
+		auto &draw_opengl = dynamic_cast<c_drawtarget &>( drawtarget );
+		for (auto &layer : draw_opengl.m_layer) { // get each layer
+			for (auto &obj : m_objects) { // draw elements to this layer
+				obj->draw_opengl(draw_opengl, *layer);
+			}
+		}
+	}
 }
 
 void c_world::connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> second) {

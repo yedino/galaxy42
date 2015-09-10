@@ -29,11 +29,11 @@ private:
 	// TODO disable if disabled allegro support
 	// allegro details:
 	BITMAP *m_frame; ///< allegro frame buffer
-    BITMAP *m_screen; ///< reference to the allegro's SCREEN
-    BITMAP *smallWindow; ///< allegro window for display text info
+	BITMAP *m_screen; ///< reference to the allegro's SCREEN
+	BITMAP *smallWindow; ///< allegro window for display text info
 
 	shared_ptr<c_drawtarget> m_drawtarget; ///< drawing will be send to this
-    shared_ptr<c_gui> m_gui; ///< the current GUI
+	shared_ptr<c_gui> m_gui; ///< the current GUI
 
 	volatile static bool close_button_pressed;
 
