@@ -1,0 +1,25 @@
+:syntax on
+
+":set autoindent
+:set smartindent
+
+:set hlsearch
+
+""" tabs
+
+:set noexpandtab
+:set copyindent
+":set preserveindent
+
+:set smarttab
+
+" a combination of spaces and tabs are used to simulate tab stops at a width
+" other than the (hard)tabstop
+:set softtabstop=0
+
+" size of an "indent"
+:set shiftwidth=2
+
+" size of a hard tabstop
+:set tabstop=2
+

@@ -2,10 +2,28 @@
 Read all of this in order to properly edit code,
 using our Coding Style.
 
+=== Comments ===
+
 Comments are in English.
+Write in doxygen style.
+
+=== Tabs, spaces, binary ===
+
+Edit the files style_*cpp and write identical code in them and confirm with program:
+./check_style.sh that their binary content (and spaces/tabs) are identical as expected.
+
+Recommended vim settings are in file vimrc here (maybe copy to ~/.vimrc after checking it).
+
+Use unix \n line endings.
+Do not put in BOM markers.
+
+=== Allegro ===
+
 
 Use the allegro helper/wrapper functions from c_allegromisc.hpp ; e.g. alex_* functions.
 For singletons use std::call_once and std::once_flag.
+
+=== Variables scope ===
 
 Do not use global objects, instead very limited special cases like debugging maybe;
 Instead allow objects to store references/pointers to needed tools,
