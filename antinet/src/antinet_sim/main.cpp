@@ -92,26 +92,26 @@ void start_gui_allegro_opengl() {
 	glEnable(GL_BLEND);
 	
 	glViewport(0, 0, SCREEN_W, SCREEN_H);
+	
+	// the PROJTECTION matrix
+	// do not change this, e.g. do NOT move "camera" here https://www.opengl.org/archives/resources/faq/technical/projection_abuse.php
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	// glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
 	glFrustum(-1.0, 1.0, -1.0, 1.0, 1, 60.0); // good position
 	
 	
-	/* Set culling mode - not that we have anything to cull */
 	// glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CW); // ?? GL_CCW
+	// glFrontFace(GL_CCW);
 	
 	glMatrixMode(GL_MODELVIEW);
-	
-	//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // <=======
-	
-	
 	glLoadIdentity();
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear it once
+	allegro_gl_flip(); // show the sreen
 	
 	if (1) { // TODO why???
 		allegro_gl_set_allegro_mode(); // <=== in allegro simple mode ! ??? why
-		
 		// allegro_gl_unset_allegro_mode(); // <=== in opengl mode !
 	}
 }

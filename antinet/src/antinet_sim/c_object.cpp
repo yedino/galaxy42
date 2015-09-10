@@ -95,7 +95,7 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 		}
 	}
 	
-	int color = makecol(255,0,255); // TODO why? it was a parameter previously
+	int color = makecol(255,128,0); // color1
 	if (layer.m_layer_nr == e_layer_nr_object) {
 		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
 		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
@@ -226,13 +226,11 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	auto layer = dynamic_cast<c_layer_allegro&>(layer_any);
 	BITMAP *frame = layer.m_frame;
 
-	return; // TODO @opengl
-
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
 	c_entity::draw_allegro(drawtarget, layer);
-	int color = makecol(255,0,255); // TODO is this ok?
+	int color = makecol(0,0,64); // TODO is this ok?
 	textout_ex(frame, font, std::to_string(m_my_address).c_str(), vx - 20, vy - 45, color, -1);
 
 	////////////////////////////////////////////////////////////////////

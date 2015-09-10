@@ -139,14 +139,20 @@ void c_simulation::main_loop () {
 			auto allegro_shifts = key_shifts;
 			//		bool allegro_keys_any_is=false;
 			//		for (size_t i=0; i<sizeof(allegro_keys)/sizeof(allegro_keys[0]); ++i) allegro_keys_any_is=true;
-			int allegro_mouse_x, allegro_mouse_y, allegro_mouse_b;
-			allegro_mouse_x = mouse_x;
-			allegro_mouse_y = mouse_y;
-			allegro_mouse_b = mouse_b;
+			// the direct raw position
+			const int allegro_mouse_x = mouse_x;
+			const int allegro_mouse_y = mouse_y;
+			const int allegro_mouse_b = mouse_b; // buttons
 
-			int gui_mouse_x = allegro_mouse_x;
-			int gui_mouse_y = allegro_mouse_y;
-			int gui_mouse_b = allegro_mouse_b;
+			// the position in display port GUI
+			const int gui_mouse_x = allegro_mouse_x; 
+			const int gui_mouse_y = allegro_mouse_y;
+			const int gui_mouse_b = allegro_mouse_b; // buttons
+			
+			// the position in the world coordinates
+			const int gui_cursor_x = m_gui->view_x_rev(gui_mouse_x);
+			const int gui_cursor_y = m_gui->view_y_rev(gui_mouse_y);
+			const int gui_cursor_z = 0; // m_gui->view_z_rev(gui_mouse_z);
 
 			int allegro_char = 0;
 			if (keypressed()) {
@@ -178,8 +184,13 @@ void c_simulation::main_loop () {
 		}
 
 		if ((allegro_char & 0xff) == 'n' && !start_simulation) {
-			std::cout << "ADD" << std::endl;
-			m_world->m_objects.push_back(make_shared<c_cjddev>(cjddev_detail_random_name(), gui_mouse_x, gui_mouse_y, cjddev_detail_random_addr()));
+			std::cout << "ADD " << std::endl;
+			m_world->m_objects.push_back(
+				make_shared<c_cjddev>(
+					cjddev_detail_random_name(), 
+					// gui_mouse_x, gui_mouse_y,
+					gui_cursor_x, gui_cursor_y,
+					cjddev_detail_random_addr()));
 		}
 
 
