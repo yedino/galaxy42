@@ -34,6 +34,8 @@ public:
 	/// Allegro 4.4 -- calculate points for octagon with given side and draw it
 	///
 	static void draw_octagon (BITMAP *bmp, int a, int x, int y, int color, int border = 1);
+	
+	// TODO @opengl - here add new stuff
 };
 
 

@@ -10,6 +10,8 @@
 using std::vector;
 using std::shared_ptr;
 
+typedef long double t_simclock;
+
 /***
 The logical world of the simulation, includes simulated entities.
 */
@@ -19,6 +21,11 @@ public:
 	
 	// additional situation in this world:
 	shared_ptr<c_tnetdev> m_target, m_source; ///< current source and target used in tests
+	
+	/***
+	 * clock that dictates flow of the simulated events
+	 */
+	t_simclock m_simclock; ///< @TODO wos
 
 	void add_test ();
 

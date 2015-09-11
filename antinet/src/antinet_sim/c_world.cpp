@@ -29,6 +29,8 @@ void c_world::add_test () {
 
 
 void c_world::tick () {
+	m_simclock += 0.1; // @TODO move the 0.1 speed to a (const?) variable
+	
 	for (auto &obj : m_objects) {
 		obj->tick();
 	}

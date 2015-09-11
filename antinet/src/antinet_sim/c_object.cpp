@@ -254,13 +254,16 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 		for (auto neighbor : m_neighbors) {
 			bool print_send_message = false;
 			if (!m_outbox.empty()) {
+				
+				// auto const & = at(0) // @TODO wos
+				
 				if (m_outbox.at(0)->m_msg->m_to == neighbor.first) {
 					print_send_message = true;
 				}
 			}
 			shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
-			if (layer.m_layer_nr == e_layer_nr_route) { // draw the links
+			if (layer.m_layer_nr == e_layer_m_outbox.at(0)->m_msg-nr_route) { // draw the links
 
 				// the main link line
 				//			line(frame, vx, vy, neighbor_ptr->vx, neighbor_ptr->vy, color);
@@ -283,9 +286,11 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 
 					receive_point.x = gui.view_x(neighbor_ptr->m_x);
 					receive_point.y = gui.view_y(neighbor_ptr->m_y);
-					msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point,
-					                                                    static_cast<double>(m_animframe) /
-					                                                    static_cast<double>(g_max_anim_frame));
+					
+					auto complete =  static_cast<double>(m_animframe) / static_cast<double>(g_max_anim_frame); // 0.0 - 1.0
+					// ( m_outbox.at(0)->m_starttime   -   gui.... world... get_simclock() ) / sendingtime
+					// sending time - constant for this card, e.g. 2.0
+					msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
 
 					if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) {
 						draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,

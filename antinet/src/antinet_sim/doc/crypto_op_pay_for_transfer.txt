@@ -1,0 +1,50 @@
+
+For AntiNet
+
+U --- A --- B ---> C ---> T
+
+U asks A: what is the price (of you making sure packet p reaches node T)
+A asks B: what is the price (of same)
+B asks C: what is the price (of same)
+
+C offers to B: price 10
+B offers to A: price 20
+A offers to U: price 30
+
+U chooses A
+
+signatures can be published and are a proof for everyone.
+
+U signs (to A): I will pay you 30 if I get confirmation form T that he got packet p
+A signs (to B): I will pay you 20 if I get confirmation form T ...
+B signs (to C): I will pay you 10 if I get confirmation form T ...
+
+(T signs to C: that it will sign confirmations of received packets)
+
+U sends p to A
+A sends p to B
+B sends p to C
+C sends p to T
+
+T signs recipient "w" that it got the packet p, sends to C
+what if not: C can use arbiters to deliver p to T while getting back confirmation w or to have them as witness that T does not sign
+
+C sends the w to B
+therefore B should pay now.
+if B does not pay then we can call extra arbiters.
+With chainsigned-tokens as the payment system,
+arbiber can not do anything to harm the security of the token
+(e.g. can not steal it to double spend it).
+The coin is already signed by B as a coin that is given by B to C.
+(or B is bad guy and we now get witnesses of that).
+B has ballance -30
+
+B sends the w to A,
+A pays 20 to B (as above).
+A has ballance -20
+
+A sends to U,
+U pays to A 30.
+So A ends up with -20+30 = 10 profit as he wanted.
+
+

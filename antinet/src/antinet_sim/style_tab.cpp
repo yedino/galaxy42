@@ -22,7 +22,10 @@ int foo (int a, int b) {
 	if (a.has_warning2()) return 5;
 	if (a.has_warning3(plus1)) return 5;
 	
-	if ( (a==b)   ||    (   (a>b) && (b<a) && ((a|b) > 5)   )) { }
+	if ( (a==b)   ||    (   (a>b) && (b<a) && ((a|b) > 5)   )) { } ;
+	if ( (a==b)   ||    (   (a>b) && (b<a) && ((a|b) > 5)   )) { } ;
+	if ( (a==b)   ||    (   (a>b) && (b<a) && ((a|b) > 5)   )) { } ;
+	if ( (a==b)   ||    (   (a>b) && (b<a) && ((a|b) > 5)   )) { } ;
 	
 	if (a>b) { // 1 tab
 
