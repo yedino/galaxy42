@@ -103,7 +103,7 @@ typedef enum {
 */
 class c_wallet {
 public:
-	map<std::string, unsigned int> m_currency; // cuttency => number of currency
+	map<std::string, unsigned int> m_currency; ///< currency => number of currency
 	void draw (BITMAP *frame, int color, t_pos x, t_pos y) const;
 };
 
@@ -134,9 +134,10 @@ public:
 
 /**
  * @brief The e_currency enum
+ * @TODO just a test, replace later
+ * enum class e_currency { e_currency_USD  USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
  */
-enum class e_currency { USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
-
+enum class e_currency { USD  USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
 
 /**
  * @struct item_netaccess
@@ -215,12 +216,9 @@ public:
 		msg_buy_currency_menu();
 };
 
-/**
- * \struct msg_use
- * \brief we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
- *
- *
- *
+/***
+ * @struct msg_use
+ * @brief we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
  */
 struct msg_use
 	: public msgcjd { // we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
@@ -240,12 +238,9 @@ public:
 
 class c_cjddev;
 
-/**
- * \struct c_msgtx
- * \brief a message in transfer in direct transfer over direct link
- *
- *
- *
+/***
+ @struct c_msgtx
+ @brief a message in transfer in direct transfer over direct link
  */
 struct c_msgtx { // a message in transfer in direct transfer over direct link
 	shared_ptr<msgcjd> m_msg; // <--- different kinds of messages
@@ -315,8 +310,8 @@ protected:
 	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
     map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
 
-
-
+    
+    
     //m.zychowski finding dht tracing
     void add_known_trace(t_ID,vector<t_cjdaddr>);
     map<t_ID,vector<t_cjdaddr> > known_traces;
@@ -324,8 +319,8 @@ protected:
     void send_hello_package(t_ID target,c_routing_package package);
     void send_package(t_ID target);
     void send_by_route(t_ID target,vector<t_cjdaddr> trace_to_nearest_node);
-
-
+    
+    
     //
 
 

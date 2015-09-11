@@ -54,6 +54,8 @@ using std::ostream;
 using std::ifstream;
 using std::istringstream;
 
+#include "c_tnetdbg.hpp"
+
 // http://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique (Args &&... args) {

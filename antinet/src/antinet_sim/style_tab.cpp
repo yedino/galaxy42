@@ -2,19 +2,29 @@
 #include <list>
 #include <iostream>
 
-namespace test
-{
+namespace test {
 
-int foo(int a, int b)
-{
+int bar (int x) {
+	return 42;
+}
+
+int foo (int a, int b) {
+	int a = bar();
+	
 	std::list<int> t;
+	
+	if (a) {
+		// ...
+	}
+	
+	if (a.has_erro()) return 4;
+	if (a.has_warning()) return 5;
+	if (a.has_warning2()) return 5;
+	if (a.has_warning3(plus1)) return 5;
+	
+	if ( (a==b)   ||    (   (a>b) && (b<a) && ((a|b) > 5)   )) { }
+	
 	if (a>b) { // 1 tab
-
-		std::cout << "This is "
-			<< "a test "
-			<< "variable is: "
-			<< a
-		;
 
 		// rare problems:
 
