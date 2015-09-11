@@ -7,7 +7,7 @@
 
 
 struct s_message {
-	t_nym_id m_source_id;
+	t_nym_id m_remote_id;
 	std::string m_data;
 };
 
@@ -29,7 +29,7 @@ class c_api_tr {
 		@param guy - the guy to whom we will send.
 		@param data - the string of data to send. It can hold null bytes \0 there, it will be correctly handled.
 		*/
-		virtual void write_to_nym(t_nym_id guy, const std::string & data)=0;
+		virtual void write_to_nym(t_nym_id guy, std::string && data)=0;
 
 		/**
 		Return all data that we received (e.g. in background).
