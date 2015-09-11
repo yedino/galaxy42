@@ -187,6 +187,7 @@ void random_generator_test (size_t size) {
 		set.push_back(generator.get_random(33));
 
 	size_t counter = set.size();
+	set.sort();
 	set.unique();
 	cout << "there was " << (counter - set.size()) << " collisions on " << size << " tests" << endl;
 }
