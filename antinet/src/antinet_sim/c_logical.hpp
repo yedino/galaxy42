@@ -21,10 +21,10 @@ class c_logical_ppp_task : public c_logical {
 
 class c_logical_ppp_user : public c_logical {
 	public:
-		void handle_command_price_request()=0;
-		void handle_command_price_reply()=0;
+		virtual void handle_command_price_request()=0;
+		virtual void handle_command_price_reply()=0;
 
-		void handle_command_price_agreed_price()=0;
+		virtual void handle_command_price_agreed_price()=0;
 };
 
 #endif // include guard

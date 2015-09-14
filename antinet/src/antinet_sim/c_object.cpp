@@ -263,7 +263,8 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 			}
 			shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
-			if (layer.m_layer_nr == e_layer_m_outbox.at(0)->m_msg-nr_route) { // draw the links
+			//if (layer.m_layer_nr == e_layer_m_outbox.at(0)->m_msg-nr_route) { // draw the links
+			if (layer.m_layer_nr == e_layer_nr_route) { // draw the links // XXX
 
 				// the main link line
 				//			line(frame, vx, vy, neighbor_ptr->vx, neighbor_ptr->vy, color);

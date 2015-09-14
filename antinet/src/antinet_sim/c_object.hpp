@@ -137,7 +137,7 @@ public:
  * @TODO just a test, replace later
  * enum class e_currency { e_currency_USD  USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
  */
-enum class e_currency { USD  USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
+enum class e_currency { USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
 
 /**
  * @struct item_netaccess

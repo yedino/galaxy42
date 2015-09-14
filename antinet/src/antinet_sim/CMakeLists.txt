@@ -9,6 +9,11 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR})
 file(GLOB SOURCE_FILES "*.cpp" # All files in directory:
 )
 
+set(SIM_SOURCES ${SOURCE_FILES})
+list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style_tab.cpp)
+list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style_tab2.cpp)
+list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style.cpp)
+
 option(USE_OPENGL "Enable/Disable opengl" ON)
 if(USE_OPENGL)
        add_definitions(-DUSE_OPENGL=1)
@@ -17,10 +22,8 @@ else()
 endif()
 
 
-source_group(SRC_FILES FILES ${SOURCE_FILES})
-
 add_executable(antinet.elf
-	${SOURCE_FILES})
+	${SIM_SOURCES})
 
 add_custom_target(run
 				COMMAND ./antinet.elf
