@@ -71,10 +71,11 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
         auto target_object = gui.m_target;
         auto source_object = gui.m_source;
         //std::cout << "DEBUG3" << std::endl;
+
         if (this == selected_object.get()) { // if I am the selected object
             //circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
-            glLineWidth(2.5);  //size of line
-            glColor3f(0.0, 1.0, 0.0);
+            glLineWidth(2.0);  //size of line
+            glColor3f(1.0, 1.0, 0.0);
             glBegin(GL_LINES);
             glVertex3f(0.0, 0.0, 0.0);
             glVertex3f(-1, 0, 0);
@@ -83,21 +84,37 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
         if (this == target_object.get()) { // if I am the target object
             //circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
-            glLineWidth(2.5);  //size of line
+            glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
-            glBegin(GL_LINES);
-            glVertex3f(0.0, 0.0, 0.0);
-            glVertex3f(-1, 0, 0);
+//            glBegin(GL_LINES);
+//            glVertex3f(0.0, 0.0, 0.0);
+//            glVertex3f(-1, 0, 0);
+//            glEnd();
+
+            const float DEG2RAD = 3.14159/180;
+            glBegin(GL_LINE_LOOP);
+            for (int i=0; i<360; i++) {
+                float degInRad = i*DEG2RAD;
+                glVertex3f(cos(degInRad)*0.04,sin(degInRad)*0.08,0.0f);
+            }
             glEnd();
         }
 
         if (this == source_object.get()) {
             //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
-            glLineWidth(2.5);  //size of line
+            glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
-            glBegin(GL_LINES);
-            glVertex3f(0.0, 0.0, 0.0);
-            glVertex3f(-1, 0, 0);
+//            glBegin(GL_LINES);
+//            glVertex3f(0.0, 0.0, 0.0);
+//            glVertex3f(-1, 0, 0);
+//            glEnd();
+
+            const float DEG2RAD = 3.14159/180;
+            glBegin(GL_LINE_LOOP);
+            for (int i=0; i<360; i++) {
+                float degInRad = i*DEG2RAD;
+                glVertex3f(cos(degInRad)*0.04,sin(degInRad)*0.08,0.0f);
+            }
             glEnd();
         }
     }
@@ -105,25 +122,26 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
         // std::cout << "DEBUG4" << std::endl;
         auto selected_object = gui.m_selected_object.lock();
         if (this == selected_object.get()) { // if I am the selected object
-            const int r1 = 50 - 8, r2 = 50;
-            const auto col1 = makecol(192, 192, 192), col2 = makecol(255, 128, 32);
-            int nr = 0;
-            for (double angle = 0; angle < M_PI * 2; angle += (M_PI * 2) / 16) {
-                ++nr;
-//				line(frame,
-//				     vx + sin(angle) * r1,
-//				     vy + cos(angle) * r1, vx + sin(angle) * r2, vy + cos(angle) * r2, (nr % 2 ? col1 : col2));
-                glLineWidth(2.5);  //size of line
-                glColor3f(0.0, 1.0, 1.0);
-                glBegin(GL_LINES);
-                glVertex3f(0.0, 0.0, 0.0);
-                glVertex3f(-1, 0, 0);
-                glEnd();
-            }
+
+//          glLineWidth(2.5);  //size of line
+            glLineWidth(1.0);
+            glColor3f(0.0, 1.0, 1.0);
+//                glBegin(GL_LINES);
+//                glVertex3f(0.0, 0.0, 0.0);
+//                glVertex3f(-1, 0, 0);
+//                glEnd();
+
+             const float DEG2RAD = 3.14159/180;
+             glBegin(GL_LINE_LOOP);
+             for (int i=0; i<360; i++) {
+                 float degInRad = i*DEG2RAD;
+                 glVertex3f(cos(degInRad)*0.05,sin(degInRad)*0.1,0.0f);
+             }
+             glEnd();
         }
     }
     if (layer.m_layer_nr == e_layer_nr_object) {
-         //std::cout << "DEBUG5" << std::endl;
+        //std::cout << "DEBUG5" << std::endl;
 //		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
 //		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
 //		circle(frame, vx, vy, 10, color);
@@ -324,7 +342,7 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
     glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
 
-    float m_size = 0.1;
+    float m_size = 0.03;
 
     glBindTexture (GL_TEXTURE_2D, tex);   //init a texture
     glBegin( GL_QUADS );             /* Drawing Using Quads       */

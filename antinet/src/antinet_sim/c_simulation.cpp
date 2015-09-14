@@ -462,6 +462,26 @@ void c_simulation::main_loop () {
 			}
 			// TODO @opengl
 
+            if (use_draw_opengl) {
+                glColor3f(0.0f,0.0f,0.0f);
+                glLineWidth(1.0);
+                glScalef(1.0f,1.0f,1.0f);
+                float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                float start_line_y = -((connect_node->m_y)-0.5*SCREEN_H)/(0.5*SCREEN_H);
+                float end_line_x = (allegro_mouse_x-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                float end_line_y = -(allegro_mouse_y-0.5*SCREEN_H)/(0.5*SCREEN_H);
+
+                //_dbg1("connect_node: " << connect_node->m_x << " " << connect_node->m_y);
+                //_dbg1("allegro_mouse: " << allegro_mouse_x << " " << allegro_mouse_y);
+                //_dbg1("start_line: " << start_line_x << " " << start_line_y);
+                //_dbg1("end_line: " << end_line_x << " " << end_line_y);
+
+                glLoadIdentity();
+                glBegin(GL_LINES);
+                glVertex3f(start_line_x,start_line_y,0.0f);
+                glVertex3f(end_line_x,end_line_y,0.0f);
+                glEnd();
+            }
 		}
 		if (allegro_mouse_b == 2) { // end/stop the line that creates new connections
 			print_connect_line = false;
@@ -517,7 +537,7 @@ void c_simulation::main_loop () {
 			}
 		}
 		if (use_draw_opengl) {
-			_dbg1("OpenGL: frame flip. fps = " << fps_str);
+            //_dbg1("OpenGL: frame flip. fps = " << fps_str);
 			allegro_gl_flip();
 		}
 
