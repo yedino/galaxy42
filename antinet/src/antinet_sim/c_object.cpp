@@ -4,6 +4,7 @@
 #include "c_world.hpp"
 #include "c_allegromisc.hpp"
 #include <stdexcept>
+#include "c_drawtarget_opengl.hpp"
 
 #include "use_opengl.hpp"
 
@@ -54,7 +55,94 @@ t_pos c_entity::get_x(){return m_x;}
 t_pos c_entity::get_y(){return m_y;}
 
 void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
-	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+
+
+    auto layer =
+            dynamic_cast<c_layer_opengl &>
+            (layer_any);
+
+
+    const auto & gui = * drawtarget.m_gui;
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+
+    if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
+        auto selected_object = gui.m_selected_object.lock();
+        auto target_object = gui.m_target;
+        auto source_object = gui.m_source;
+        //std::cout << "DEBUG3" << std::endl;
+        if (this == selected_object.get()) { // if I am the selected object
+            //circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
+            glLineWidth(2.5);  //size of line
+            glColor3f(0.0, 1.0, 0.0);
+            glBegin(GL_LINES);
+            glVertex3f(0.0, 0.0, 0.0);
+            glVertex3f(-1, 0, 0);
+            glEnd();
+        }
+
+        if (this == target_object.get()) { // if I am the target object
+            //circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
+            glLineWidth(2.5);  //size of line
+            glColor3f(0.0, 1.0, 0.0);
+            glBegin(GL_LINES);
+            glVertex3f(0.0, 0.0, 0.0);
+            glVertex3f(-1, 0, 0);
+            glEnd();
+        }
+
+        if (this == source_object.get()) {
+            //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
+            glLineWidth(2.5);  //size of line
+            glColor3f(0.0, 1.0, 0.0);
+            glBegin(GL_LINES);
+            glVertex3f(0.0, 0.0, 0.0);
+            glVertex3f(-1, 0, 0);
+            glEnd();
+        }
+    }
+    if (layer.m_layer_nr == e_layer_nr_gui) {
+        // std::cout << "DEBUG4" << std::endl;
+        auto selected_object = gui.m_selected_object.lock();
+        if (this == selected_object.get()) { // if I am the selected object
+            const int r1 = 50 - 8, r2 = 50;
+            const auto col1 = makecol(192, 192, 192), col2 = makecol(255, 128, 32);
+            int nr = 0;
+            for (double angle = 0; angle < M_PI * 2; angle += (M_PI * 2) / 16) {
+                ++nr;
+//				line(frame,
+//				     vx + sin(angle) * r1,
+//				     vy + cos(angle) * r1, vx + sin(angle) * r2, vy + cos(angle) * r2, (nr % 2 ? col1 : col2));
+                glLineWidth(2.5);  //size of line
+                glColor3f(0.0, 1.0, 1.0);
+                glBegin(GL_LINES);
+                glVertex3f(0.0, 0.0, 0.0);
+                glVertex3f(-1, 0, 0);
+                glEnd();
+            }
+        }
+    }
+    if (layer.m_layer_nr == e_layer_nr_object) {
+         //std::cout << "DEBUG5" << std::endl;
+//		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
+//		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
+//		circle(frame, vx, vy, 10, color);
+        glLineWidth(2.5);  //size of line
+        glColor3f(0.0, 0.0, 1.0);
+        glBegin(GL_LINES);
+        glVertex3f(0.0, 0.0, 0.0);
+        glVertex3f(-1, 0, 0);
+        glEnd();
+    }
+    if (layer.m_layer_nr == e_layer_nr_object_extra) {
+         //std::cout << "DEBUG6" << std::endl;
+        //textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
+        glLineWidth(2.5);  //size of line
+        glColor3f(0.0, 0.0, 1.0);
+        glBegin(GL_LINES);
+        glVertex3f(0.0, 0.0, 0.0);
+        glVertex3f(-1, 0, 0);
+        glEnd();
+    }
 }
 
 void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -206,21 +294,64 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
 	
 	// _info("OpenGL draw");
-	
-	/* Move Left 1.5 Units And Into The Screen 6.0 */
+    float h = SCREEN_H*0.04;
+    float w = SCREEN_W*0.024;
 
-	glLoadIdentity();
-	glScalef(0.03,0.03,0.03);
-	glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
-	
-	glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
-	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
-	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-	glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
-	glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-	glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
-	glEnd( );                            /* Finished Drawing The Triangle */
+    int tex;
+    bool booltemorary = false;
+    if(!booltemorary){
+       // tex = setup_texture();
+        booltemorary = true;
+    }
+    /* Move Left 1.5 Units And Into The Screen 6.0 */
+//    glLoadIdentity();
+//     glScalef(0.03,0.03,0.03);
+//     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
+
+//    glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
+//      glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+//      glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
+//      glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+//      glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
+//      glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+//      glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
+//    glEnd( );                            /* Finished Drawing The Triangle */
+
+    glLoadIdentity();
+    //glScalef(0.03,0.03,0.03);
+    glScalef(1,1,1);
+    //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
+    glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
+
+    float m_size = 0.1;
+
+    glBindTexture (GL_TEXTURE_2D, tex);   //init a texture
+    glBegin( GL_QUADS );             /* Drawing Using Quads       */
+    // glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+    glTexCoord2f (0, 0);
+    glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f ); /* Top Of Triangle               */
+    //glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+    glTexCoord2f (1, 0);
+    glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f ); /* Left Of Triangle              */
+    //glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+    glTexCoord2f (1, 1);
+    glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f ); /* Right Of Triangle             */
+    glTexCoord2f (0, 1);
+    glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
+    glEnd( );                            /* Finished Drawing The Quads */
+    glBindTexture(GL_TEXTURE_2D, 0);   // texture
+
+
+
+    glLineWidth(2.5);  //size of line
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINES);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(1*m_size, 0, 0);
+    glEnd();
+
+    c_entity::draw_opengl(drawtarget, layer_any);
+
 }
 
 void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -228,7 +359,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	BITMAP *frame = layer.m_frame;
 
 	const auto & gui = * drawtarget.m_gui;
-	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
 	c_entity::draw_allegro(drawtarget, layer);
 	int color = makecol(0,0,64); // TODO is this ok?

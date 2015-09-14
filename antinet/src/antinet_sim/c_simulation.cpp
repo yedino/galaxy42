@@ -154,6 +154,8 @@ void c_simulation::main_loop () {
 			const int gui_cursor_y = m_gui->view_y_rev(gui_mouse_y);
 			const int gui_cursor_z = 0; // m_gui->view_z_rev(gui_mouse_z);
 
+            //_dbg1("mouse_x mouse_y: " << gui_mouse_x << " " << gui_mouse_y);
+
 			int allegro_char = 0;
 			if (keypressed()) {
 				allegro_char = readkey();
@@ -464,6 +466,10 @@ void c_simulation::main_loop () {
 		if (allegro_mouse_b == 2) { // end/stop the line that creates new connections
 			print_connect_line = false;
 		}
+
+
+
+
 		{
 			auto x = allegro_mouse_x, y = allegro_mouse_y;
 			int r = 5, rr = 4;
@@ -484,6 +490,8 @@ void c_simulation::main_loop () {
                 glLoadIdentity();
                 glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
+
+                glColor3f(0.0, 0.0, 0.0);
 
                 glBegin(GL_LINES);
                 glVertex2f(-1.0f*cursor_size,0.0f);

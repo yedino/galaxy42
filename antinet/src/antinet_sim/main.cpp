@@ -98,7 +98,7 @@ void start_gui_allegro_opengl() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	// glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
-	glFrustum(-1.0, 1.0, -1.0, 1.0, 1, 60.0); // good position
+    glFrustum(0.0, 10.0, -1.0, 1.0, 1, 60.0); // good position
 	
 	
 	// glEnable(GL_CULL_FACE);
@@ -107,7 +107,8 @@ void start_gui_allegro_opengl() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear it once
+    glClearColor(255,255,255,0);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear it once
 	allegro_gl_flip(); // show the sreen
 	
 	if (1) { // TODO why???

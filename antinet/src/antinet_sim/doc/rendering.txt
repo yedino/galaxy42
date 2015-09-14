@@ -44,4 +44,103 @@ c_object::draw()
 Main drawing (frame clear, setup, GUI, show/flip) is done
 inside c_simulation.
 
+=== TODO ===
+
+[ ] OGL load mouse texture \
+[ ] OGL draw cursor	-- 1h
+
+( ) OGL model_view, camera_movement
+( ) OGL camera, coordinates, etc
+
+
+( ) can we use GLU ?	\
+( ) works on Linux	|
+( ) works on FreeBSD? 	--- 3,5h
+( ) works on HURD?	|
+( ) works on Windows?	|
+( ) works on Mac?	/
+
+[ ] OGL move "camera" (one translate first, before any drawing - ofc in glMatrixMode(GL_MODELVIEW) or gluLookAt...)
+[ ] shift+arrows works fully moves camera
+
+[ ] pgup zooms in/out (frustrum)
+
+( ) texture from file	-- 1h
+( ) texture from font / for text out	-- 3h
+( ) texture from allegro BITMAP* ?   for wallet, debug windows.   create_bitmap()  
+ 
+[ ] draw highlight		\
+[ ] draw computer object	|
+[ ] draw all links		--- 8h
+[ ] draw packets in travel	|
+[ ] draw packets content	|
+[ ] draw wallet information	/
+
+[ ] debug text: std::string text --> BITMAP* --> texture OpenGL
+[ ] draw debug text on..
+[ ] draw node information {from other parts of code}  - on zoom in (LOD setting)
+[ ] draw mode node debug on zoom in {from other code} dump current routing, prices, etc logical variables
+
+[ ] draw new layer on top: logical links (test)
+[ ] draw the DHT links on that layer
+[ ] new layer: contracts 
+[ ] new layer: end-user usage of network
+
+[ ] camera 3-D view (not flat top-down) - needs Z testing and correct order
+( ) ... no editing here at first (like weapon aiming in FPS?)
+( ) ... later editing (cursor world position)
+[ ] maybe needs Z-sorting
+
+
+
+[ ] LOD: skip rendering (preparing) details
+[ ] camera view area:   object (x,y,z, radius),  camera (x,y,z, aim_x,aim_y,aim_z, viewing_angle) ----> bool if this is visible
+[ ] camera distance (view size)     c_device....::draw_opengl(...)  { ...    if (distance < 100) draw_packet_info()..   if (distance < 10) draw_node_debug()  else  draw_node_title()   ... }
+
+---> decide on GUI buttons etc <---
+( ) camera movement: acceleration, fast/slow movement (ctrl? shift?) 
+( ) camera movement, free-look in full 3D
+
+
+( ) GUI editing connecting lines
+( ) GUI text input to ask options - gives string, integer etc
+( ) GUI adding object groups
+
+[ ] opengl and allegro - disable layers drawing, toggle
+[ ] keyboard input
+[ ] skip drawing of layers
+[ ] info: which layers are visible
+
+--> logical of adding group of nodes <---
+[ ] do any
+[ ] connect them together
+
+( ) city markers
+( ) node colors?
+
+[ ] ground textures, layer textures
+[ ] nice look
+[ ] sky?
+[ ] map
+
+
+( ) various packet types - collors
+( ) errors, warnings, events - icons etc? highlight
+
+{ } gfx on packet travel, particles etc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
