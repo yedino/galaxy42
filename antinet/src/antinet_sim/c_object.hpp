@@ -5,6 +5,7 @@
 #include "c_drawtarget.hpp"
 #include "loadpng.hpp"
 #include "c_bitmaps.hpp"
+#include "c_api_tr.hpp"
 
 extern unsigned int g_max_anim_frame;
 
@@ -257,7 +258,7 @@ struct c_msgtx { // a message in transfer in direct transfer over direct link
  *
  *
  */
-class c_netdev : public c_entity { // a networked (e.g. connected somewhere) device
+class c_netdev : public c_entity, public c_api_tr { // a networked (e.g. connected somewhere) device
 protected:
 	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
 	vector<unique_ptr<c_msgtx> > m_inbox;  // general box with messages that are received somehow
@@ -270,6 +271,13 @@ public:
 
 	virtual void receive_message (unique_ptr<c_msgtx> &&message); // TODO ttl
 	virtual unique_ptr<c_msgtx> send_message (); // TODO ttl
+	
+protected:
+	// c_api_tr
+	virtual void write_to_nym(t_nym_id guy, std::string && data) override;
+	virtual vector<s_message> read_or_wait_for_data() override;
+	std::vector<s_message> m_raw_outbox;
+	std::vector<s_message> m_raw_inbox;
 };
 
 struct s_remote_host {

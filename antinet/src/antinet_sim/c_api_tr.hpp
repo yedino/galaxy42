@@ -1,10 +1,8 @@
 #ifndef C_API_TR_HPP
 #define C_API_TR_HPP
 
-#include "libs1.hpp"
 
-#include "c_api_wot.hpp"
-
+typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
 struct s_message {
 	t_nym_id m_remote_id;
