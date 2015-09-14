@@ -4,7 +4,7 @@
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
-struct s_message {
+struct t_message {
 	t_nym_id m_remote_id;
 	std::string m_data;
 };
@@ -27,14 +27,16 @@ class c_api_tr {
 		@param guy - the guy to whom we will send.
 		@param data - the string of data to send. It can hold null bytes \0 there, it will be correctly handled.
 		*/
-		virtual void write_to_nym(t_nym_id guy, std::string && data)=0;
+		virtual void write_message(t_message&& msg) = 0;
 
 		/**
 		Return all data that we received (e.g. in background).
 		Wait untill there was at least some data.
 		Can implement a timeout.
 		*/
-		virtual vector<s_message> read_or_wait_for_data()=0;
+
+		virtual void read_message(std::function<void (t_message &&)> handler) = 0; /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
+
 
 		c_api_tr() = default;
 		virtual ~c_api_tr() = default;

@@ -258,7 +258,7 @@ struct c_msgtx { // a message in transfer in direct transfer over direct link
  *
  *
  */
-class c_netdev : public c_entity, public c_api_tr { // a networked (e.g. connected somewhere) device
+class c_netdev : public c_entity/*, public c_api_tr*/ { // a networked (e.g. connected somewhere) device
 protected:
 	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
 	vector<unique_ptr<c_msgtx> > m_inbox;  // general box with messages that are received somehow
@@ -274,10 +274,12 @@ public:
 	
 protected:
 	// c_api_tr
+	/*
 	virtual void write_to_nym(t_nym_id guy, std::string && data) override;
 	virtual vector<s_message> read_or_wait_for_data() override;
 	std::vector<s_message> m_raw_outbox;
 	std::vector<s_message> m_raw_inbox;
+	*/
 };
 
 struct s_remote_host {
