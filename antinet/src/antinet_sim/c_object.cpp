@@ -5,6 +5,7 @@
 #include "c_allegromisc.hpp"
 #include <stdexcept>
 #include "c_drawtarget_opengl.hpp"
+#include "c_api_tr.hpp"
 
 #include "use_opengl.hpp"
 

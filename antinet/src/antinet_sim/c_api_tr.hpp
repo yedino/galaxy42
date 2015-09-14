@@ -9,6 +9,12 @@ struct t_message {
 	std::string m_data;
 };
 
+
+struct t_hw_message{
+	t_message msg;
+	enum type;
+};
+
 /* 
 The class for transmission
 */
