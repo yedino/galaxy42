@@ -76,7 +76,7 @@ private: // TODO
 
 		long_type generate_prime_number () const {
 			long_type random = generate_random();
-			size_t dots = 0;
+			// size_t dots = 0; // unused variable
 			if (!(random & 1))
 				random -= 1;
 

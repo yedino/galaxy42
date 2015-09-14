@@ -37,7 +37,7 @@ T sha512 (const std::string &input) {
 	ctx.final(digest);
 
 	T dec = 0;
-	for (int i = 0; i < SHA512::DIGEST_SIZE; ++i) {
+	for (size_t i = 0; i < SHA512::DIGEST_SIZE; ++i) {
 		dec <<= 8;
 		dec += (short)digest[i];
 	}

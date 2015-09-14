@@ -2,7 +2,7 @@
 #define C_CLIENT_HPP
 
 #include "c_threadguard.hpp"
-#include "c_encryption.hpp"
+#include "../../crypto_ops/crypto/c_encryption.hpp"
 #include "c_connect.hpp"
 
 #include <cstdlib>

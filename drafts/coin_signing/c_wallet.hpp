@@ -8,19 +8,20 @@ using std::string;
 using std::list;
 
 struct c_wallet {
-		list<c_token> tokens;
-		const string tokens_type;
+	list<c_token> tokens;
+	const string tokens_type;
 
-		c_wallet (const string & = "bla");
+	c_wallet (const string & = "bla");
 
-		c_wallet (string &&);
+	c_wallet (string &&);
 
-		size_t amount ();
+	size_t amount ();
 
-		void add_token (const c_token &);
+	void add_token (const c_token &);
 
-		void remove_token (const c_token &);
+	void remove_token (const c_token &);
 };
 
 
 #endif //COIN_SIGNING_C_WALLET_HPP
+

@@ -15,4 +15,7 @@ bool c_mint::check_isEmited (c_token &token) {
 	return false;
 }
 
-long long c_mint::generate_password () { return random_generator.get_random(sizeof(long long)); }
+long long c_mint::generate_password () {
+	return random_generator.get_random(sizeof(long long));
+}
+

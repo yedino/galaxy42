@@ -20,12 +20,13 @@ std::string c_udp_link::send_msg(std::string &msg) {
 
 	std::cerr << "(udp) Sending:\n" << msg << std::endl;		//dbg
 	s.send_to(boost::asio::buffer(msg.c_str(), msg.size()), endpoint);
-	char reply[max_length];
+	char reply[max_length-1];
+	reply[max_length] = '\0';
 	udp::endpoint sender_endpoint;
 	size_t reply_length = s.receive_from(
 		boost::asio::buffer(reply, max_length), sender_endpoint);
 	std::cerr << "(udp) Reply:\n" << reply << std::endl;		//dbg
-	std::string(reply,reply_length);
+	return std::string(reply,reply_length);
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +38,7 @@ c_tcp_link::c_tcp_link(std::string host, std::string port, protocol_type ptype) 
     tcp::resolver resolver(io_service);
     boost::asio::connect(s, resolver.resolve({host, port}));
 }
-	
+
 std::string c_tcp_link::send_msg(std::string &msg) {
 	
 	std::cerr << "(tcp) Sending:\n" << msg << std::endl;		//dbg
