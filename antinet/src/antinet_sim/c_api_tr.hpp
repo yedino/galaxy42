@@ -1,6 +1,6 @@
 #ifndef C_API_TR_HPP
 #define C_API_TR_HPP
-
+#include "c_object.hpp"
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
@@ -12,7 +12,7 @@ struct t_message {
 
 struct t_hw_message{
 	t_message msg;
-	enum type;
+	uint8_t type;
 };
 
 /* 
