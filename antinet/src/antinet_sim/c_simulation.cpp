@@ -474,6 +474,25 @@ void c_simulation::main_loop () {
 				circle(m_frame, x, y, r, makecol(255, 255, 255));
 			}
 			// TODO @opengl
+            if(use_draw_opengl) {
+                float opengl_mouse_x = (mouse_x-SCREEN_W*0.5)/(0.5*SCREEN_W);
+                float opengl_mouse_y = -(mouse_y-SCREEN_H*0.5)/(0.5*SCREEN_H);
+                float cursor_size=0.01;
+
+                //_dbg1("mouse_x mouse_y: " << mouse_x << " " << mouse_y);
+                //_dbg1("screenW screenH: " << SCREEN_W << " " << SCREEN_H);
+                glLoadIdentity();
+                glScalef(1.0f,1.0f,1.0f);
+                glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
+
+                glBegin(GL_LINES);
+                glVertex2f(-1.0f*cursor_size,0.0f);
+                glVertex2f(1.0f*cursor_size,0.0f);
+
+                glVertex2f(0.0f,-1.0f*cursor_size);
+                glVertex2f(0.0f,1.0f*cursor_size);
+                glEnd();
+            }
 
 		}
 

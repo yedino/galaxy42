@@ -208,6 +208,7 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 	// _info("OpenGL draw");
 	
 	/* Move Left 1.5 Units And Into The Screen 6.0 */
+
 	glLoadIdentity();
 	glScalef(0.03,0.03,0.03);
 	glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
