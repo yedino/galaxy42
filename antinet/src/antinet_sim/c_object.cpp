@@ -592,7 +592,9 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 
 void c_tnetdev::tick () {
 	bool dbg=0;
-
+#if defined USE_API_TR
+	/***************************************************************/
+#else
 	c_cjddev::tick();
 
 	// this should be in a loop to send faster - many packets at once (once full algorithm is implemented)
@@ -792,6 +794,7 @@ void c_tnetdev::tick () {
 			}
 		}
 	}
+#endif // defined USE_API_TR
 }
 // ==================================================================
 

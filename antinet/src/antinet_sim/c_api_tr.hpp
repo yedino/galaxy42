@@ -10,7 +10,7 @@ struct t_message {
 };
 
 
-struct t_hw_message{
+struct t_hw_message {
 	t_message msg;
 	uint8_t type;
 };

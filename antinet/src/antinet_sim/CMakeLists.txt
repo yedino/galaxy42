@@ -21,6 +21,10 @@ else()
        add_definitions(-DUSE_OPENGL=0)
 endif()
 
+option(USE_API_TR "Enable/Disable API_TR" OFF)
+if(USE_API_TR)
+	add_definitions(-DUSE_API_TR=1)
+endif()
 
 add_executable(antinet.elf
 	${SIM_SOURCES})
