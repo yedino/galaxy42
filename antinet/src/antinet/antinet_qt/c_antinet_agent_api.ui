@@ -6,219 +6,150 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>519</width>
-    <height>478</height>
+    <width>539</width>
+    <height>505</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>c_antinet_agent_api</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QGroupBox" name="groupBox">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>251</width>
-      <height>121</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Emit tokens</string>
-    </property>
-    <widget class="QLineEdit" name="emitValue">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>113</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="emitToken">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>30</y>
-       <width>101</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="buttonEmit">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>80</y>
-       <width>101</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Emit</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="groupBox_2">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>150</y>
-      <width>481</width>
-      <height>161</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Send</string>
-    </property>
-    <widget class="QPushButton" name="buttonXfer">
-     <property name="geometry">
-      <rect>
-       <x>360</x>
-       <y>120</y>
-       <width>101</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Xfer</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="sendToken">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>40</y>
-       <width>72</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="sendValue">
-     <property name="geometry">
-      <rect>
-       <x>50</x>
-       <y>40</y>
-       <width>113</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>40</y>
-       <width>31</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Send</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_2">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>40</y>
-       <width>16</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>of</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_3">
-     <property name="geometry">
-      <rect>
-       <x>270</x>
-       <y>40</y>
-       <width>16</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>to</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="receiver">
-     <property name="geometry">
-      <rect>
-       <x>290</x>
-       <y>40</y>
-       <width>113</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_4">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>100</y>
-       <width>21</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>for</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="receivedValue">
-     <property name="geometry">
-      <rect>
-       <x>50</x>
-       <y>100</y>
-       <width>113</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_5">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>100</y>
-       <width>16</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>of</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="receivedTokens">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>100</y>
-       <width>72</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QTextEdit" name="msgView">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>320</y>
-      <width>481</width>
-      <height>91</height>
-     </rect>
-    </property>
-   </widget>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Emit tokens</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>All emited tokens</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLineEdit" name="emitValue"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="emitToken"/>
+       </item>
+       <item row="1" column="2" rowspan="2">
+        <widget class="QListWidget" name="lw_emited"/>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="buttonEmit">
+         <property name="text">
+          <string>Emit</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string>Send</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0" rowspan="2">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Send</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>for</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4" rowspan="5">
+        <widget class="QListWidget" name="lw_wallet"/>
+       </item>
+       <item row="3" column="3">
+        <widget class="QComboBox" name="receivedTokens"/>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="receivedValue"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>to</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>of</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" rowspan="2">
+        <widget class="QLineEdit" name="sendValue"/>
+       </item>
+       <item row="0" column="4">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Your wallet</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" rowspan="2">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>of</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" rowspan="2">
+        <widget class="QComboBox" name="sendToken"/>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="receiver"/>
+       </item>
+       <item row="4" column="1" rowspan="2" colspan="3">
+        <widget class="QPushButton" name="buttonXfer">
+         <property name="text">
+          <string>Xfer</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="title">
+       <string>Logs</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QTextEdit" name="te_msgView"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>519</width>
-     <height>19</height>
+     <width>539</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -1,5 +1,9 @@
-#include "c_antinet_agent_api_msg_success.h"
+#include "c_antinet_agent_api_msg_success.hpp"
 
-c_antinet_agent_api_msg_success::c_antinet_agent_api_msg_success()
-{
+using namespace std;
+
+c_antinet_agent_api_msg_success::c_antinet_agent_api_msg_success(const std::string &text) :
+    c_antinet_agent_api_msg(text) {
 }
+
+
