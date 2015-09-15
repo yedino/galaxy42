@@ -530,6 +530,12 @@ int c_cjddev::num_of_wating()
    return m_wait_hosts.size();
 }
 
+#if defined USE_API_TR
+void c_cjddev::set_network(std::shared_ptr<c_network> network_ptr) {
+	m_network = network_ptr;
+}
+#endif
+
 void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 	m_wait_hosts.insert(destination_addr);
 	for (auto neighbor : m_neighbors) {
@@ -611,7 +617,7 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 void c_tnetdev::tick () {
 	bool dbg=0;
 #if defined USE_API_TR
-	/***************************************************************/
+	// TODO !!!!!!!!!!!!!!
 #else
 	c_cjddev::tick();
 

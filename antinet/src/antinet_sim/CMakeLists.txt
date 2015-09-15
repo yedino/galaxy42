@@ -9,6 +9,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR})
 file(GLOB SOURCE_FILES "*.cpp" # All files in directory:
 )
 
+# remove style files
 set(SIM_SOURCES ${SOURCE_FILES})
 list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style_tab.cpp)
 list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style_tab2.cpp)

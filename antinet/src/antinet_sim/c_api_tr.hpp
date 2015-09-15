@@ -1,6 +1,7 @@
 #ifndef C_API_TR_HPP
 #define C_API_TR_HPP
 #include "c_object.hpp"
+#include "c_network.hpp"
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
@@ -11,8 +12,8 @@ struct t_message {
 
 
 struct t_hw_message {
-	t_message msg;
-	uint8_t type;
+	t_message m_msg;
+	uint8_t m_type;
 };
 
 /* 

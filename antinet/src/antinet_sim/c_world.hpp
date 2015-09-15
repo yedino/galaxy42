@@ -6,6 +6,7 @@
 
 #include "c_drawtarget.hpp"
 #include "c_object.hpp"
+#include "c_network.hpp"
 
 using std::vector;
 using std::shared_ptr;
@@ -26,6 +27,8 @@ public:
 	 * clock that dictates flow of the simulated events
 	 */
 	t_simclock m_simclock; ///< @TODO wos
+	
+	c_network m_network;
 
 	void add_test ();
 

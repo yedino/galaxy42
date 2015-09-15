@@ -132,6 +132,9 @@ void c_world::load (const string &filename) {
 			}
 		}
 	}
+	for (auto &object: m_objects) {
+		m_network.add_node(std::dynamic_pointer_cast<c_cjddev>(object));
+	}
 }
 
 ostream &operator<< (ostream &stream, const c_world &world) {

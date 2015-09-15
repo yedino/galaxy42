@@ -6,6 +6,7 @@
 #include "loadpng.hpp"
 #include "c_bitmaps.hpp"
 #include "c_api_tr.hpp"
+#include "c_network.hpp"
 
 extern unsigned int g_max_anim_frame;
 
@@ -259,6 +260,9 @@ struct c_msgtx { // a message in transfer in direct transfer over direct link
  *
  */
 #if defined USE_API_TR
+struct t_message;
+class c_network;
+class c_api_tr;
 class c_netdev : public c_entity, public c_api_tr { // a networked (e.g. connected somewhere) device
 #else
 class c_netdev : public c_entity { // a networked (e.g. connected somewhere) device
@@ -275,11 +279,11 @@ public:
 
 	virtual void receive_message (unique_ptr<c_msgtx> &&message); // TODO ttl
 	virtual unique_ptr<c_msgtx> send_message (); // TODO ttl
-#if defined USE_API_TR	
+#if defined USE_API_TR
 protected:
 	// c_api_tr
-	virtual void write_message(t_message&& msg) override;
-	virtual void read_message(std::function<void (t_message &&)> handler) override;
+	//virtual void write_message(t_message&& msg) override;
+	//virtual void read_message(std::function<void (t_message &&)> handler) override;
 	std::vector<t_message> m_raw_outbox; // general box with messages to be sent somehow
 	std::vector<t_message> m_raw_inbox; // general box with messages that are received somehow
 #endif
@@ -322,7 +326,9 @@ protected:
 	map<t_cjdaddr, s_remote_host> m_routing_table; ///< remote host => next hop (neighbor). Which peer is the correct way to go there
 	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
     map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
-
+#if defined USE_API_TR
+	std::weak_ptr<c_network> m_network;
+#endif
     
     
     //m.zychowski finding dht tracing
@@ -370,6 +376,10 @@ public:
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
     int num_of_wating();
+	
+#if defined USE_API_TR
+	void set_network(std::shared_ptr<c_network> network_ptr);
+#endif
 
 /**
  *THIS IS JUST A SIMPLE TEST!!! with very expensive full search.
