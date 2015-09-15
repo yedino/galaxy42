@@ -1,6 +1,10 @@
 #ifndef C_API_TR_HPP
 #define C_API_TR_HPP
 
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
 struct t_message {
@@ -12,6 +16,10 @@ struct t_message {
 struct t_hw_message {
 	t_message m_msg;
 	uint8_t m_type;
+
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version);
+
 };
 
 /* 
@@ -40,7 +48,7 @@ class c_api_tr {
 		Can implement a timeout.
 		*/
 
-		virtual void read_message(std::function<void (t_message &&)> handler) = 0; /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
+		virtual void read_message(std::function<void (t_message &&)> handler); /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
 
 
 		c_api_tr() = default;
