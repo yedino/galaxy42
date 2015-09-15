@@ -1,0 +1,190 @@
+#ifndef C_MSG_HPP
+#define C_MSG_HPP
+
+#include "c_object.hpp"
+
+typedef int t_pos; ///< position (one coordinate)
+typedef unsigned long int t_cjdaddr; // cjdns address example
+typedef unsigned long long int t_ID;
+
+template <class T>
+class crypto_hash {
+public:
+	T object; // the "hashed" object
+};
+
+/**
+ * @brief The e_currency enum
+ * @TODO just a test, replace later
+ * enum class e_currency { e_currency_USD  USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
+ */
+enum class e_currency { USD, BTC, TOKEN_A, TOKEN_B, TOKEN_C };
+
+/**
+ * @struct item_netaccess
+ * @brief The item_netaccess struct
+ */
+struct item_netaccess {
+	unsigned int min_amount;
+	unsigned int price;
+	unsigned int quality_speed; // KB/s
+	e_currency curr;
+};
+
+/**
+ * \struct msg
+ * \brief a general message.
+ *
+ * a general message. e.g.: a direct message, something that is sent over a network direct link
+ * sender and recipient fields are known from the cointainer that has this object
+ *
+ */
+struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
+	// sender and recipient fields are known from the cointainer that has this object
+	virtual std::string serialize() = 0;
+	virtual void deserialize(std::string &&binary) = 0;
+	virtual ~msg () = default;
+};
+
+/**
+ * \enum t_msgkind
+ *	\brief kind of message
+ *
+ */
+typedef enum {
+    e_msgkind_default,
+    e_msgkind_error, /// some error? please restart? operation not possible
+
+    e_msgkind_buy_net_inq, /// inquery, tell me prices
+    e_msgkind_buy_net_menu, /// this are my prices
+    e_msgkind_buy_net_buying, /// ok I buy
+    e_msgkind_buy_net_agreed, /// agreed, you bought it
+    e_msgkind_buy_net_final, /// agreed, you bought it - ok see you
+
+	e_msgkind_data,
+	e_msgkind_ping,
+	
+	e_msgkind_buy_currency
+} t_msgkind;
+
+/**
+ * \class msgcjd
+ *	\brief a message targetted at cjdns node
+*/
+struct msgcjd : public msg { // a message targetted at cjdns node
+	virtual ~msgcjd () = default;
+
+public:
+	unsigned int m_ttl = 100; // time to live
+	t_cjdaddr m_to, m_from;
+	const t_msgkind m_logic;
+	t_cjdaddr m_destination;
+	t_ID m_ID;
+
+	msgcjd (const t_msgkind &logic);
+};
+
+
+struct msg_buy : public msgcjd {
+public:
+	msg_buy (const t_msgkind &logic);
+
+	virtual ~msg_buy () = default;
+};
+
+
+
+/**
+ * @struct msg_buy_inq
+ * @brief The msg_buy_inq struct
+ */
+struct msg_buy_inq : public msg_buy {
+public:
+	msg_buy_inq ();
+};
+
+
+/**
+ * @struct msg_buy_menu
+ * @brief The msg_buy_menu struct
+ */
+struct msg_buy_menu : public msg_buy {
+public:
+	//vector< item_netaccess > offer;
+	msg_buy_menu ();
+
+	unsigned int m_my_price;
+};
+
+
+/**
+  *@class msg_buy_buying
+ * @brief The msg_buy_buying struct
+ */
+struct msg_buy_buying : public msg_buy {
+	item_netaccess my_pick; // I picked this option
+	unsigned int amount; // how much I buy 
+public:
+	msg_buy_buying ();
+};
+
+struct msg_buy_agreed : public msg_buy {
+	crypto_hash<msg_buy_buying> our_agreement; // we repeat our agreement
+public:
+	msg_buy_agreed ();
+};
+
+struct msg_buy_final : public msg_buy {
+	crypto_hash<msg_buy_buying> our_agreement; // we repeat our agreement
+public:
+	msg_buy_final ();
+};
+
+struct msg_buy_currency_inq : public msg_buy {
+	string bid_currency;
+	string ask_currency;
+	unsigned int number_of_bid_currency;
+public:
+	msg_buy_currency_inq ();
+};
+
+struct msg_buy_currency_menu : public msg_buy {
+public:
+		msg_buy_currency_menu();
+};
+
+/***
+ * @struct msg_use
+ * @brief we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
+ */
+struct msg_use
+	: public msgcjd { // we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
+	uint8_t m_type; // type of protocol TODO
+	string m_data; // example data to store	
+	pair<string, unsigned int> m_payment;
+
+public:
+	msg_use ();
+};
+
+struct msg_use_ftp : public msg_use {
+public:
+	msg_use_ftp ();
+};
+
+
+class c_cjddev;
+
+/***
+ @struct c_msgtx
+ @brief a message in transfer in direct transfer over direct link
+ */
+struct c_msgtx { // a message in transfer in direct transfer over direct link
+	shared_ptr<msgcjd> m_msg; // <--- different kinds of messages
+	weak_ptr<c_cjddev> m_otherside; // <--- PTR to the other side of connection (recipient or sender). Could be nullptr if we do not know him (yet)
+
+	int m_animframe; // animation frame number/time
+};
+
+
+#endif // C_MSG_HPP
