@@ -76,8 +76,9 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 
 	// [A->B]   [B->C]   [C->D]
 	for (auto &current_signature : token.m_chainsign) {
-		bool ok_sign = m_edsigner.verify(current_signature.m_signed_msg, current_signature.m_msg,
-										 current_signature.m_msg.length(), current_signature.m_signer_pubkey);
+		bool ok_sign = m_edsigner.verify(current_signature.m_signed_msg,
+										 current_signature.m_msg,
+										 current_signature.m_signer_pubkey);
 
 		std::string current_sender_in_coin = current_signature.m_signer_pubkey;
 		std::string current_recipient_in_coin;
@@ -133,8 +134,9 @@ bool c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 		auto &current_signature_b = token_b.m_chainsign[pos];
 
 		// we need to verify only new token A
-		bool ok_sign_a = m_edsigner.verify(current_signature_a.m_signed_msg, current_signature_a.m_msg,
-										   current_signature_a.m_msg.length(), current_signature_a.m_signer_pubkey);
+		bool ok_sign_a = m_edsigner.verify(current_signature_a.m_signed_msg,
+										   current_signature_a.m_msg,
+										   current_signature_a.m_signer_pubkey);
 		if (!ok_sign_a) {
 			std::cout << "token in validate : BAD_SIGN !!!" << std::endl;
 			return false;

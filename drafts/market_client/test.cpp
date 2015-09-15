@@ -75,7 +75,7 @@ int TEST_cpp_ed25519(bool verbouse) {
 		std::cout << std::endl;
 	}
 	/* verify the signature */
-	if (ed25519_obj.verify(sign, message, message_len, pub_key)) {
+	if (ed25519_obj.verify(sign, message, pub_key)) {
 		verbouse ? std::printf("valid signature\n"): verbouse = false ;
 	} else {
 		std::printf("invalid signature\n");
@@ -122,12 +122,12 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 
-		TEST_loop(5000,false);
+		TEST_loop(500,false);
 
 		//c_RSAconnect rsa_link( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])));
 		//rsa_link.init();
 		c_market_client market_client( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])) );
-		market_client.encrypt_client(RSA);
+		market_client.encrypt_client(ed25519);
 		market_client.start_market_session();
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << "\n";

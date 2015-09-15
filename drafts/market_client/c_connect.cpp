@@ -20,7 +20,7 @@ std::string c_udp_link::send_msg(std::string &msg) {
 
 	std::cerr << "(udp) Sending:\n" << msg << std::endl;		//dbg
 	s.send_to(boost::asio::buffer(msg.c_str(), msg.size()), endpoint);
-	char reply[max_length-1];
+	char reply[max_length];
 	reply[max_length] = '\0';
 	udp::endpoint sender_endpoint;
 	size_t reply_length = s.receive_from(
