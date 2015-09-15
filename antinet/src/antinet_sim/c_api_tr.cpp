@@ -2,9 +2,6 @@
 #include<sstream>
 
 
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-
 
 template<class Archive>
 void t_hw_message::serialize(Archive & ar, const unsigned int version){			//all struct t_hw_message should be in separate file - to avoid recompilation of template
@@ -43,7 +40,7 @@ void c_api_tr::write_message(t_message &&msg) {
 	//hw_send(str.str())
 }
 
-void c_api_tr::hw_recived(std::__cxx11::string &&serialized_msg) {
+void c_api_tr::hw_recived(std::string &&serialized_msg) {
 
 
 }

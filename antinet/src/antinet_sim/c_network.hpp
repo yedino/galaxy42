@@ -13,14 +13,14 @@ class c_api_tr;
 struct t_message;
 struct t_hw_message;
 
+// "network lib"
 class c_network : public std::enable_shared_from_this<c_network> {
 	private:
-		std::vector<t_hw_message> m_message_vector;
+		std::vector<std::string> m_message_vector;
 		std::map<t_nym_id, std::shared_ptr<c_cjddev>> m_node_map;
 	public:
 		void add_node(std::shared_ptr<c_cjddev> node); ///< add new node to m_node_map
-		void send_message(t_message &&message); ///< add message to m_message_vector
-		// TODO tick
+		void send_message(std::string &&message); ///< add message to m_message_vector
 		void tick(); ///< process all messages
 		
 };

@@ -271,6 +271,9 @@ protected:
 	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
 	vector<unique_ptr<c_msgtx> > m_inbox;  // general box with messages that are received somehow
 	vector<unique_ptr<c_msgtx> > m_oldbox; // for unreplied messages from inbox
+#if defined USE_API_TR
+	std::weak_ptr<c_network> m_network;
+#endif
 
 public:
 	c_netdev (string name, t_pos x, t_pos y);
@@ -284,8 +287,11 @@ protected:
 	// c_api_tr
 	//virtual void write_message(t_message&& msg) override;
 	//virtual void read_message(std::function<void (t_message &&)> handler) override;
+	virtual void hw_send (std::string &&serialized_msg) override; ///< send to remote node
 	std::vector<t_message> m_raw_outbox; // general box with messages to be sent somehow
 	std::vector<t_message> m_raw_inbox; // general box with messages that are received somehow
+public:
+	void set_network(std::shared_ptr<c_network> network_ptr);
 #endif
 };
 
@@ -326,9 +332,6 @@ protected:
 	map<t_cjdaddr, s_remote_host> m_routing_table; ///< remote host => next hop (neighbor). Which peer is the correct way to go there
 	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
     map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
-#if defined USE_API_TR
-	std::weak_ptr<c_network> m_network;
-#endif
     
     
     //m.zychowski finding dht tracing
@@ -376,10 +379,7 @@ public:
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
     int num_of_wating();
-	
-#if defined USE_API_TR
-	void set_network(std::shared_ptr<c_network> network_ptr);
-#endif
+
 
 /**
  *THIS IS JUST A SIMPLE TEST!!! with very expensive full search.

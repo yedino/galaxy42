@@ -531,9 +531,14 @@ int c_cjddev::num_of_wating()
 }
 
 #if defined USE_API_TR
-void c_cjddev::set_network(std::shared_ptr<c_network> network_ptr) {
+void c_netdev::set_network(std::shared_ptr<c_network> network_ptr) {
 	m_network = network_ptr;
 }
+
+void c_netdev::hw_send(std::string &&serialized_msg) {
+	m_network.lock()->send_message(std::move(serialized_msg));
+}
+
 #endif
 
 void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {

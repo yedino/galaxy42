@@ -3,6 +3,8 @@
 #include<string>
 #include <functional>
 #include <queue>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
@@ -44,7 +46,7 @@ class c_api_tr {
 		@param guy - the guy to whom we will send.
 		@param data - the string of data to send. It can hold null bytes \0 there, it will be correctly handled.
 		*/
-		virtual void write_message(t_message&& msg) = 0;
+		virtual void write_message(t_message&& msg);
 
 		/**
 		Return all data that we received (e.g. in background).
