@@ -37,15 +37,37 @@ void c_api_tr::write_message(t_message &&msg) {
 	boost::archive::binary_oarchive oa(str);
 	oa<<m_hw_message;
 
-	//hw_send(str.str())
+	hw_send(str.str());
 }
 
 void c_api_tr::hw_recived(std::string &&serialized_msg) {
 
+	m_incomming_msgs.push(std::move(serialized_msg));
+	/*
+	std::stringstream str(serialized_msg);		//sprawdzic
+
+	boost::archive::binary_iarchive oia(str);
+	t_hw_message
+	*/
 
 }
 
 void c_api_tr::read_message(std::function<void (t_message &&)> handler) {
-	t_message msg;
+	while(!m_incomming_msgs.empty()){
+		std::string serialized_msg = m_incomming_msgs.front();
+		m_incomming_msgs.pop();
+
+		std::stringstream str;
+		str.str(serialized_msg);		//check it!!
+		boost::archive::binary_iarchive oia(str);
+		t_hw_message m_hw_message;
+		oia>>m_hw_message;
+		//if(m_hw_message.type ==  sometype)
+		handler(std::move(m_hw_message.m_msg));
+		//
+	}
+
+	/*	t_message msg;
 	handler (std::move(msg));
+*/
 }
