@@ -63,7 +63,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
-   // const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
         auto selected_object = gui.m_selected_object.lock();

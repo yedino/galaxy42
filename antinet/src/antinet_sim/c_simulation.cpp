@@ -466,8 +466,13 @@ void c_simulation::main_loop () {
                 glColor3f(0.0f,0.0f,0.0f);
                 glLineWidth(1.0);
                 glScalef(1.0f,1.0f,1.0f);
-                float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
-                float start_line_y = -((connect_node->m_y)-0.5*SCREEN_H)/(0.5*SCREEN_H);
+
+
+                const int vx = m_gui->view_x(connect_node->m_x), vy = m_gui->view_y(connect_node->m_y); // position in viewport - because camera position
+                //float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                //float start_line_y = -((connect_node->m_y)-0.5*SCREEN_H)/(0.5*SCREEN_H);
+                float start_line_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                float start_line_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float end_line_x = (allegro_mouse_x-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float end_line_y = -(allegro_mouse_y-0.5*SCREEN_H)/(0.5*SCREEN_H);
 
@@ -475,9 +480,6 @@ void c_simulation::main_loop () {
                 //_dbg1("allegro_mouse: " << allegro_mouse_x << " " << allegro_mouse_y);
                 //_dbg1("start_line: " << start_line_x << " " << start_line_y);
                 //_dbg1("end_line: " << end_line_x << " " << end_line_y);
-
-               // const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position
-
 
                 glLoadIdentity();
                 glBegin(GL_LINES);
