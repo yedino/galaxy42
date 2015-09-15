@@ -1,9 +1,8 @@
 #ifndef C_API_TR_HPP
 #define C_API_TR_HPP
-
-
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+#include<string>
+#include <functional>
+#include <queue>
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
@@ -27,6 +26,11 @@ The class for transmission
 */
 
 class c_api_tr {
+	protected:
+	virtual void hw_send(std::string &&serialized_msg) =0;
+	void hw_recived(std::string && serialized_msg);
+
+	std::queue <std::string> m_incomming_msgs;
 
 	public:
 

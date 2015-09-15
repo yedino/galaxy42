@@ -1,5 +1,9 @@
 #include "c_api_tr.hpp"
+#include<sstream>
 
+
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 
 
 template<class Archive>
@@ -27,8 +31,24 @@ void t_hw_message::serialize(Archive & ar, const unsigned int version){			//all 
 }
 
 
-void c_api_tr::read_message(std::function<void (t_message &&)> handler)
-{
+void c_api_tr::write_message(t_message &&msg) {
+	t_hw_message m_hw_message;
+	m_hw_message.m_type = 0;
+	m_hw_message.m_msg = std::move(msg);
+
+	std::stringstream str;
+	boost::archive::binary_oarchive oa(str);
+	oa<<m_hw_message;
+
+	//hw_send(str.str())
+}
+
+void c_api_tr::hw_recived(std::__cxx11::string &&serialized_msg) {
+
+
+}
+
+void c_api_tr::read_message(std::function<void (t_message &&)> handler) {
 	t_message msg;
 	handler (std::move(msg));
 }

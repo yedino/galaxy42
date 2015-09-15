@@ -47,6 +47,7 @@ target_link_libraries(antinet.elf
 	alleggl
 	GLU
 	GL
+	boost_serialization
 	)
 
  
