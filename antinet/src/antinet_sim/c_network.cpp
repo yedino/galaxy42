@@ -1,5 +1,5 @@
 #include "c_network.hpp"
-
+#if defined USE_API_TR
 void c_network::add_node (std::shared_ptr<c_cjddev> node) {
 	node->set_network(shared_from_this());
 	t_nym_id node_address = std::to_string(node->get_address());
@@ -16,3 +16,4 @@ void c_network::tick() {
 		//m_node_map.at(msg.m_msg.m_remote_id)->write_message(std::move(msg.m_msg));
 	}*/
 }
+#endif
