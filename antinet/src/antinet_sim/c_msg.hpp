@@ -41,8 +41,8 @@ struct item_netaccess {
  */
 struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
 	// sender and recipient fields are known from the cointainer that has this object
-	virtual std::string serialize(){} //= 0;
-	virtual void deserialize(std::string &&binary){} //= 0;
+	virtual std::string serialize() = 0;
+	virtual void deserialize(std::string) = 0;
 	virtual ~msg () = default;
 };
 
@@ -73,22 +73,19 @@ typedef enum {
 */
 struct msgcjd : public msg { // a message targetted at cjdns node
 	virtual ~msgcjd () = default;
-
+	msgcjd() = default;
 public:
 	unsigned int m_ttl = 100; // time to live
 	t_cjdaddr m_to, m_from;
-//	const t_msgkind m_logic;
-	 t_msgkind m_logic;
+	t_msgkind m_logic;
 	t_cjdaddr m_destination;
 	t_ID m_ID;
 
-	msgcjd() = default;
 	msgcjd (const t_msgkind &logic);
 	virtual std::string serialize();
-	virtual void deserialize(std::string serialized_obj);
-
-
-	template<class Archive> void serialize(Archive & ar, const unsigned int version);
+	virtual void deserialize(std::string binary);
+	template <class Archive >
+	void serialize(Archive &ar, const unsigned int version);
 };
 
 
@@ -186,6 +183,7 @@ class c_cjddev;
  @struct c_msgtx
  @brief a message in transfer in direct transfer over direct link
  */
+// TODO rm
 struct c_msgtx { // a message in transfer in direct transfer over direct link
 	shared_ptr<msgcjd> m_msg; // <--- different kinds of messages
 	weak_ptr<c_cjddev> m_otherside; // <--- PTR to the other side of connection (recipient or sender). Could be nullptr if we do not know him (yet)

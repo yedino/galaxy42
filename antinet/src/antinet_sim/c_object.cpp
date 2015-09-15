@@ -649,9 +649,9 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 
 void c_tnetdev::tick () {
 	bool dbg=0;
-#if defined USE_API_TR
 	c_cjddev::tick();
-	
+#if defined USE_API_TR
+	m_network.lock()->tick();
 	// process outbox
 	if (!m_raw_outbox.empty()) {
 		write_message(std::move(m_raw_outbox.at(0))); // send message using c_network
@@ -660,12 +660,11 @@ void c_tnetdev::tick () {
 	
 	// process inbox
 	if (!m_raw_inbox.empty()) {
-		// deserialize message
 		msgcjd input_msg;
-		input_msg.de
+
+		m_raw_inbox.erase(m_raw_inbox.begin());
 	}
 #else
-	c_cjddev::tick();
 
 	// this should be in a loop to send faster - many packets at once (once full algorithm is implemented)
 

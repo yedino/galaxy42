@@ -10,16 +10,14 @@ msgcjd::msgcjd (const t_msgkind &logic) : m_logic(logic), m_ID(std::rand()) // T
 }
 
 std::string msgcjd::serialize() {
-
+	std::stringstream str;
 	try{
-		std::stringstream str;
 		boost::archive::text_oarchive oa(str);
 		oa<<*this;
-		return str.str();
 	}catch(...){
 
 	}
-
+	return str.str();
 }
 void msgcjd::deserialize(std::string serialized_obj) {
 	try{
