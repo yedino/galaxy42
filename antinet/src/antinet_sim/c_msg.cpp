@@ -1,8 +1,36 @@
 #include "c_msg.hpp"
+#include <sstream>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 
 msgcjd::msgcjd (const t_msgkind &logic) : m_logic(logic), m_ID(std::rand()) // TODO
 {
+}
+
+std::string msgcjd::serialize() {
+
+	try{
+		std::stringstream str;
+		boost::archive::text_oarchive oa(str);
+		oa<<*this;
+		return str.str();
+	}catch(...){
+
+	}
+
+}
+void msgcjd::deserialize(std::string serialized_obj) {
+	try{
+	msgcjd tmp_msg;
+	std::stringstream str(serialized_obj);
+	boost::archive::text_iarchive ia(str);
+
+	ia>>tmp_msg;
+	}catch(...){
+
+	}
 }
 
 msg_buy::msg_buy (const t_msgkind &logic) : msgcjd(logic) {
@@ -31,3 +59,15 @@ msg_use::msg_use () : msgcjd(e_msgkind_data) {
 
 msg_use_ftp::msg_use_ftp () {
 }
+
+
+template <class Archive >void msgcjd::serialize(Archive &ar, const unsigned int version){
+	ar & m_ttl;
+	ar & m_to;
+	ar & m_from;
+	ar & m_logic;
+	ar & m_destination;
+	ar &  m_ID;
+//	ar & t_msgkind;
+}
+

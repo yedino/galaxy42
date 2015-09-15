@@ -15,6 +15,10 @@ typedef int t_pos; ///< position (one coordinate)
 typedef unsigned long int t_cjdaddr; // cjdns address example
 typedef unsigned long long int t_ID;
 
+
+//typedef int t_cjdaddr; // cjdns address example
+//typedef int t_ID;
+
 struct c_msgtx;
 
 /**

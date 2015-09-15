@@ -41,8 +41,8 @@ struct item_netaccess {
  */
 struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
 	// sender and recipient fields are known from the cointainer that has this object
-	//virtual std::string serialize() {} // XXX
-	//virtual void deserialize(std::string &&binary) {} // XXX
+	virtual std::string serialize(){} //= 0;
+	virtual void deserialize(std::string &&binary){} //= 0;
 	virtual ~msg () = default;
 };
 
@@ -77,11 +77,18 @@ struct msgcjd : public msg { // a message targetted at cjdns node
 public:
 	unsigned int m_ttl = 100; // time to live
 	t_cjdaddr m_to, m_from;
-	const t_msgkind m_logic;
+//	const t_msgkind m_logic;
+	 t_msgkind m_logic;
 	t_cjdaddr m_destination;
 	t_ID m_ID;
 
+	msgcjd() = default;
 	msgcjd (const t_msgkind &logic);
+	virtual std::string serialize();
+	virtual void deserialize(std::string serialized_obj);
+
+
+	template<class Archive> void serialize(Archive & ar, const unsigned int version);
 };
 
 
@@ -129,13 +136,13 @@ public:
 };
 
 struct msg_buy_agreed : public msg_buy {
-	crypto_hash<msg_buy_buying> our_agreement; // we repeat our agreement
+//	crypto_hash<msg_buy_buying> our_agreement; // we repeat our agreement
 public:
 	msg_buy_agreed ();
 };
 
 struct msg_buy_final : public msg_buy {
-	crypto_hash<msg_buy_buying> our_agreement; // we repeat our agreement
+//	crypto_hash<msg_buy_buying> our_agreement; // we repeat our agreement
 public:
 	msg_buy_final ();
 };
