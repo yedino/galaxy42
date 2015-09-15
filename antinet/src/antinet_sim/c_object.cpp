@@ -62,9 +62,8 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             dynamic_cast<c_layer_opengl &>
             (layer_any);
 
-
     const auto & gui = * drawtarget.m_gui;
-    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+   // const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
         auto selected_object = gui.m_selected_object.lock();
@@ -76,10 +75,10 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             //circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
             glLineWidth(2.0);  //size of line
             glColor3f(1.0, 1.0, 0.0);
-            glBegin(GL_LINES);
-            glVertex3f(0.0, 0.0, 0.0);
-            glVertex3f(-1, 0, 0);
-            glEnd();
+//            glBegin(GL_LINES);
+//            glVertex3f(0.0, 0.0, 0.0);
+//            glVertex3f(-1, 0, 0);
+//            glEnd();
         }
 
         if (this == target_object.get()) { // if I am the target object
@@ -91,11 +90,12 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //            glVertex3f(-1, 0, 0);
 //            glEnd();
 
-            const float DEG2RAD = 3.14159/180;
             glBegin(GL_LINE_LOOP);
-            for (int i=0; i<360; i++) {
-                float degInRad = i*DEG2RAD;
-                glVertex3f(cos(degInRad)*0.04,sin(degInRad)*0.08,0.0f);
+            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+                float x = 0.05*cos(angle);
+                float y = 0.1*sin(angle);
+
+                glVertex3f(x,y,0.0f);
             }
             glEnd();
         }
@@ -104,16 +104,13 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
             glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
-//            glBegin(GL_LINES);
-//            glVertex3f(0.0, 0.0, 0.0);
-//            glVertex3f(-1, 0, 0);
-//            glEnd();
 
-            const float DEG2RAD = 3.14159/180;
             glBegin(GL_LINE_LOOP);
-            for (int i=0; i<360; i++) {
-                float degInRad = i*DEG2RAD;
-                glVertex3f(cos(degInRad)*0.04,sin(degInRad)*0.08,0.0f);
+            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+                float x = 0.05*cos(angle);
+                float y = 0.1*sin(angle);
+
+                glVertex3f(x,y,0.0f);
             }
             glEnd();
         }
@@ -126,18 +123,15 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //          glLineWidth(2.5);  //size of line
             glLineWidth(1.0);
             glColor3f(0.0, 1.0, 1.0);
-//                glBegin(GL_LINES);
-//                glVertex3f(0.0, 0.0, 0.0);
-//                glVertex3f(-1, 0, 0);
-//                glEnd();
 
-             const float DEG2RAD = 3.14159/180;
-             glBegin(GL_LINE_LOOP);
-             for (int i=0; i<360; i++) {
-                 float degInRad = i*DEG2RAD;
-                 glVertex3f(cos(degInRad)*0.05,sin(degInRad)*0.1,0.0f);
-             }
-             glEnd();
+            glBegin(GL_LINE_LOOP);
+            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+                float x = 0.07*cos(angle);
+                float y = 0.14*sin(angle);
+
+                glVertex3f(x,y,0.0f);
+            }
+            glEnd();
         }
     }
     if (layer.m_layer_nr == e_layer_nr_object) {
@@ -145,22 +139,24 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
 //		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
 //		circle(frame, vx, vy, 10, color);
-        glLineWidth(2.5);  //size of line
-        glColor3f(0.0, 0.0, 1.0);
-        glBegin(GL_LINES);
-        glVertex3f(0.0, 0.0, 0.0);
-        glVertex3f(-1, 0, 0);
-        glEnd();
+
+
+//        glLineWidth(2.5);  //size of line
+//        glColor3f(0.0, 0.0, 1.0);
+//        glBegin(GL_LINES);
+//        glVertex3f(0.0, 0.0, 0.0);
+//        glVertex3f(-1, 0, 0);
+//        glEnd();
     }
     if (layer.m_layer_nr == e_layer_nr_object_extra) {
          //std::cout << "DEBUG6" << std::endl;
         //textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
         glLineWidth(2.5);  //size of line
         glColor3f(0.0, 0.0, 1.0);
-        glBegin(GL_LINES);
-        glVertex3f(0.0, 0.0, 0.0);
-        glVertex3f(-1, 0, 0);
-        glEnd();
+//        glBegin(GL_LINES);
+//        glVertex3f(0.0, 0.0, 0.0);
+//        glVertex3f(-1, 0, 0);
+//        glEnd();
     }
 }
 
@@ -279,12 +275,12 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 
 
 void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
-	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+     //auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+    auto layer = dynamic_cast<c_layer_opengl&>(layer_any);
+    const auto & gui = * drawtarget.m_gui;
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	
 	// _info("OpenGL draw");
-    float h = SCREEN_H*0.04;
-    float w = SCREEN_W*0.024;
-
     int tex;
     bool booltemorary = false;
     if(!booltemorary){
@@ -309,10 +305,14 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     //glScalef(0.03,0.03,0.03);
     glScalef(1,1,1);
     //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
-    glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
+
+    float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
+    float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
+    glTranslatef(opengl_x,opengl_y,0.0f);
+   // glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
 
     float m_size = 0.03;
-
+    glColor3f(1.0,0.0,0.0);
     glBindTexture (GL_TEXTURE_2D, tex);   //init a texture
     glBegin( GL_QUADS );             /* Drawing Using Quads       */
     // glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
@@ -331,15 +331,74 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
 
 
-    glLineWidth(2.5);  //size of line
-    glColor3f(1.0, 0.0, 0.0);
-    glBegin(GL_LINES);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(1*m_size, 0, 0);
-    glEnd();
+//    glLineWidth(2.5);  //size of line
+//    glColor3f(1.0, 0.0, 0.0);
+//    glBegin(GL_LINES);
+//    glVertex3f(0.0, 0.0, 0.0);
+//    glVertex3f(1*m_size, 0, 0);
+//    glEnd();
 
-    c_entity::draw_opengl(drawtarget, layer_any);
+    //c_entity::draw_opengl(drawtarget, layer_any);
+    c_entity::draw_opengl(drawtarget, layer);
 
+////////////////////////////////////////////////////////////////////////////////
+    if (layer.m_layer_nr == e_layer_nr_object) {
+        //BITMAP *fg1;
+        //const char *file1;
+        //file1 = "dat/server_48x48.png";
+        //set_color_conversion(COLORCONV_NONE);
+        //fg1 = load_png(file1, NULL); // TODO: optmize/cache and share across objects
+
+//        set_alpha_blender();
+//        draw_trans_sprite(frame, c_bitmaps::get_instance().m_node,
+//                          vx - c_bitmaps::get_instance().m_node->w / 2, vy - c_bitmaps::get_instance().m_node->h / 2);
+//        if (!m_routing_table.empty()) {
+//            circle(frame, vx, vy, 10, color);
+//        }
+
+        glLoadIdentity();
+        glColor3f(0.0,1.0,0.0);
+        glScalef(1,1,1);
+        glPointSize(5);
+        glTranslatef((vx-0.5*SCREEN_W),-(vy-0.5*SCREEN_H),0.0f);
+        glBegin(GL_POINTS);
+        glVertex3f(0.0f,0.0f,0.0f);
+        glEnd();
+    }
+ ////////////////////////////////////////////////////////////////////////////////
+
+    if ((layer.m_layer_nr == e_layer_nr_route) || (layer.m_layer_nr == e_layer_nr_route_extra)) {
+
+        for (auto neighbor : m_neighbors) {
+            bool print_send_message = false;
+            if (!m_outbox.empty()) {
+
+                // auto const & = at(0) // @TODO wos
+
+                if (m_outbox.at(0)->m_msg->m_to == neighbor.first) {
+                    print_send_message = true;
+                }
+            }
+
+            shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
+
+            if (layer.m_layer_nr == e_layer_nr_route) { // draw the links // XXX
+                //alex_thick_line(frame, vx, vy, gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y), thick - 1, color);
+                float start_connect_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                float start_connect_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
+                float end_connect_x = ((gui.view_x(neighbor_ptr->m_x))-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                float end_connect_y = -((gui.view_y(neighbor_ptr->m_y))-0.5*SCREEN_H)/(0.5*SCREEN_H);
+
+                glLineWidth(1.5);
+                glColor3f(0.5,0.5,0.5);
+                glLoadIdentity();
+                glBegin(GL_LINES);
+                glVertex3f(start_connect_x,start_connect_y,0.0f);
+                glVertex3f(end_connect_x,end_connect_y,0.0f);
+                glEnd();
+            }
+        }
+    }
 }
 
 void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -361,12 +420,12 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 		//set_color_conversion(COLORCONV_NONE);
 		//fg1 = load_png(file1, NULL); // TODO: optmize/cache and share across objects
 
-		set_alpha_blender();
-		draw_trans_sprite(frame, c_bitmaps::get_instance().m_node,
-		                  vx - c_bitmaps::get_instance().m_node->w / 2, vy - c_bitmaps::get_instance().m_node->h / 2);
-		if (!m_routing_table.empty()) {
-			circle(frame, vx, vy, 10, color);
-		}
+        set_alpha_blender();
+        draw_trans_sprite(frame, c_bitmaps::get_instance().m_node,
+                          vx - c_bitmaps::get_instance().m_node->w / 2, vy - c_bitmaps::get_instance().m_node->h / 2);
+        if (!m_routing_table.empty()) {
+            circle(frame, vx, vy, 10, color);
+        }
 	}
 	////////////////////////////////////////////////////////////////////
 

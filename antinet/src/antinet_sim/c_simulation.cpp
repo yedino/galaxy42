@@ -460,7 +460,7 @@ void c_simulation::main_loop () {
 			if (use_draw_allegro) {
 				line(m_frame, connect_node->m_x, connect_node->m_y, allegro_mouse_x, allegro_mouse_y, makecol(0, 255, 255));
 			}
-			// TODO @opengl
+            // TODO @opengl
 
             if (use_draw_opengl) {
                 glColor3f(0.0f,0.0f,0.0f);
@@ -475,6 +475,9 @@ void c_simulation::main_loop () {
                 //_dbg1("allegro_mouse: " << allegro_mouse_x << " " << allegro_mouse_y);
                 //_dbg1("start_line: " << start_line_x << " " << start_line_y);
                 //_dbg1("end_line: " << end_line_x << " " << end_line_y);
+
+               // const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position
+
 
                 glLoadIdentity();
                 glBegin(GL_LINES);
@@ -501,8 +504,8 @@ void c_simulation::main_loop () {
 			}
 			// TODO @opengl
             if(use_draw_opengl) {
-                float opengl_mouse_x = (mouse_x-SCREEN_W*0.5)/(0.5*SCREEN_W);
-                float opengl_mouse_y = -(mouse_y-SCREEN_H*0.5)/(0.5*SCREEN_H);
+                float opengl_mouse_x = (x-SCREEN_W*0.5)/(0.5*SCREEN_W);
+                float opengl_mouse_y = -(y-SCREEN_H*0.5)/(0.5*SCREEN_H);
                 float cursor_size=0.01;
 
                 //_dbg1("mouse_x mouse_y: " << mouse_x << " " << mouse_y);
@@ -510,6 +513,7 @@ void c_simulation::main_loop () {
                 glLoadIdentity();
                 glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
+                //glTranslatef(m_gui->view_x_rev(mouse_x),m_gui->view_y_rev(mouse_y),0.0f);
 
                 glColor3f(0.0, 0.0, 0.0);
 

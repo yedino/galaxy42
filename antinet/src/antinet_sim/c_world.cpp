@@ -52,7 +52,7 @@ void c_world::draw (c_drawtarget &drawtarget) {
 		}
 	} // ALLEGRO implementation
 	else if (drawtarget.m_drawtarget_type == e_drawtarget_type_opengl) {
-		auto &draw_opengl = dynamic_cast<c_drawtarget &>( drawtarget );
+        auto &draw_opengl = dynamic_cast<c_drawtarget &>( drawtarget );
 		for (auto &layer : draw_opengl.m_layer) { // get each layer
 			for (auto &obj : m_objects) { // draw elements to this layer
 				obj->draw_opengl(draw_opengl, *layer);
