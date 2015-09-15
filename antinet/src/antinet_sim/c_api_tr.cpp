@@ -41,11 +41,19 @@ void c_api_tr::write_message(t_message &&msg) {
 }
 
 void c_api_tr::hw_recived(std::string &&serialized_msg) {
+<<<<<<< Updated upstream
 
 	m_incomming_msgs.push(std::move(serialized_msg));
 	/*
 	std::stringstream str(serialized_msg);		//sprawdzic
 
+=======
+
+	m_incomming_msgs.push(std::move(serialized_msg));
+	/*
+	std::stringstream str(serialized_msg);		//sprawdzic
+
+>>>>>>> Stashed changes
 	boost::archive::binary_iarchive oia(str);
 	t_hw_message
 	*/
