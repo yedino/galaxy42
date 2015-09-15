@@ -591,7 +591,20 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 void c_tnetdev::tick () {
 	bool dbg=0;
 #if defined USE_API_TR
-	// TODO !!!!!!!!!!!!!!
+	c_cjddev::tick();
+	
+	// process outbox
+	if (!m_raw_outbox.empty()) {
+		write_message(std::move(m_raw_outbox.at(0))); // send message using c_network
+		m_raw_outbox.erase(m_raw_outbox.begin());
+	}
+	
+	// process inbox
+	if (!m_raw_inbox.empty()) {
+		// deserialize message
+		msgcjd input_msg;
+		input_msg.de
+	}
 #else
 	c_cjddev::tick();
 

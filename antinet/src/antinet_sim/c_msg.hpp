@@ -41,8 +41,8 @@ struct item_netaccess {
  */
 struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
 	// sender and recipient fields are known from the cointainer that has this object
-	virtual std::string serialize() = 0;
-	virtual void deserialize(std::string &&binary) = 0;
+	//virtual std::string serialize() {} // XXX
+	//virtual void deserialize(std::string &&binary) {} // XXX
 	virtual ~msg () = default;
 };
 
