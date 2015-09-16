@@ -17,18 +17,24 @@ typedef long double t_simclock;
 The logical world of the simulation, includes simulated entities.
 */
 class c_world {
+
+
+	/***
+	 * clock that dictates flow of the simulated events
+	 */
+	 t_simclock m_simclock; ///< @TODO wos
+
+
 public:
 	vector<shared_ptr<c_object> > m_objects; ///< all the objects in simulation!
 	
 	// additional situation in this world:
 	shared_ptr<c_tnetdev> m_target, m_source; ///< current source and target used in tests
 	
-	/***
-	 * clock that dictates flow of the simulated events
-	 */
-	t_simclock m_simclock; ///< @TODO wos
-	
-	std::shared_ptr<c_network> m_network;
+	static inline t_simclock get_time();
+	static const inline t_simclock get_chronon(){return 0.1;}
+
+	std::shared_ptr <c_network> m_network;
 
 	c_world();
 	
