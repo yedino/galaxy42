@@ -171,7 +171,7 @@ void dht_node::recive_hello_pkg(hello_trace_packet pkg){
 
 	}else{
 
-		my_dht_address = pkg.home_address;
+		my_dht_address = pkg.home_dht_address;
 		for (auto it : pkg.known_nodes){
 			known_dht_addresses.insert(it);
 		}
@@ -183,5 +183,7 @@ void dht_node::hello_ping()
 {
 	hello_trace_packet pkg;
 	pkg.home_address = my_phisical_address;
+
+	//send hellopkg to nighbour
 //	pkg.
 }
