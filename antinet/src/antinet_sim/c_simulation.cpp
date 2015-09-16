@@ -66,11 +66,11 @@ std::string cjddev_detail_random_name () {
 	return "newnode";
 }
 
-int cjddev_detail_random_addr () {
+std::string cjddev_detail_random_addr () {
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator(seed);
 	std::uniform_int_distribution<int> distribution(0, std::numeric_limits<int>::max());
-	return distribution(generator);
+	return std::to_string(distribution(generator));
 }
 
 

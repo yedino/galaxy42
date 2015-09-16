@@ -389,7 +389,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 
 	c_entity::draw_allegro(drawtarget, layer);
 	int color = makecol(0,0,64); // TODO is this ok?
-	textout_ex(frame, font, std::to_string(m_my_address).c_str(), vx - 20, vy - 45, color, -1);
+	textout_ex(frame, font, m_my_address.c_str(), vx - 20, vy - 45, color, -1);
 
 	////////////////////////////////////////////////////////////////////
 	if (layer.m_layer_nr == e_layer_nr_object) {
@@ -455,7 +455,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 						draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
 						                  msg_circle.x - c_bitmaps::get_instance().m_package_green->w / 2,
 						                  msg_circle.y - c_bitmaps::get_instance().m_package_green->h / 2);
-						std::string text("looking for " + std::to_string(m_outbox.at(0)->m_msg->m_destination));
+						std::string text("looking for " + m_outbox.at(0)->m_msg->m_destination);
 						textout_ex(frame, font, text.c_str(), msg_circle.x - 70, msg_circle.y - 15, color, -1);
 					} else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_menu) {
 						std::shared_ptr<msg_buy_menu> menu_msg(std::dynamic_pointer_cast<msg_buy_menu>(m_outbox.at(0)->m_msg));
@@ -474,14 +474,14 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 						std::cout << menu_msg->m_ttl << std::endl;
 						std::cout << "end of data from menu_msg" << std::endl;*/
 						std::string text(
-							std::to_string(menu_msg->m_destination) + " found, price = " + std::to_string(menu_msg->m_my_price));
+							menu_msg->m_destination + " found, price = " + std::to_string(menu_msg->m_my_price));
 						textout_ex(frame, font, text.c_str(), msg_circle.x - 70, msg_circle.y - 15, color, -1);
 					} else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_data) {
 						std::shared_ptr<msg_buy_menu> menu_msg(std::dynamic_pointer_cast<msg_buy_menu>(m_outbox.at(0)->m_msg));
 						draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_red,
 						                  msg_circle.x - c_bitmaps::get_instance().m_package_blue->w / 2,
 						                  msg_circle.y - c_bitmaps::get_instance().m_package_blue->h / 2);
-						std::string text("send FTP to " + std::to_string(m_outbox.at(0)->m_msg->m_destination));
+						std::string text("send FTP to " + m_outbox.at(0)->m_msg->m_destination);
 						textout_ex(frame, font, text.c_str(), msg_circle.x - 70, msg_circle.y - 15, color, -1);
 						std::string price_text(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.first);
 						price_text += " ";

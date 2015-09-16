@@ -92,7 +92,7 @@ void c_world::load (const string &filename) {
 		} else if (str_line.find("name") != std::string::npos) {
 			name = std::move(str_line.substr(5));
 		} else if (str_line.find("IP") != std::string::npos) {
-			address = stol(str_line.substr(3));
+			address = str_line.substr(3);
 		} else if (str_line.find('}') != std::string::npos) { // save to vector
 			if (type == "cjddev")
 				m_objects.push_back(make_shared<c_cjddev>(name, x, y, address));

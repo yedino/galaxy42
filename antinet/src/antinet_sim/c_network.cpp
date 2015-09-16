@@ -3,7 +3,7 @@
 void c_network::add_node (std::shared_ptr<c_cjddev> node) {
 #if defined USE_API_TR
 	node->set_network(shared_from_this());
-	t_nym_id node_address = std::to_string(node->get_address());
+	t_nym_id node_address = node->get_address();
 	m_node_map.emplace(node_address, std::move(node));
 #endif
 }

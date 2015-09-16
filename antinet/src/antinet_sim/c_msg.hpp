@@ -10,7 +10,7 @@
 
 
 typedef int t_pos; ///< position (one coordinate)
-typedef unsigned long int t_cjdaddr; // cjdns address example
+typedef std::string t_cjdaddr; // cjdns address example
 typedef unsigned long long int t_ID;
 
 template <class T>
