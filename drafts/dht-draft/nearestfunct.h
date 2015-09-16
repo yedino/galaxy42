@@ -7,7 +7,7 @@
 class nearestFunct2 {
   private:
 
-	ID_addr address;
+	dht_addr address;
 	unsigned int popcount64(unsigned long long x);
 
   public:
@@ -15,35 +15,35 @@ class nearestFunct2 {
 	nearestFunct2():address(0) {
 		;
 	}
-	nearestFunct2(ID_addr addr):address(addr) {
+	nearestFunct2(dht_addr addr):address(addr) {
 		;
 	}
-	void set_Params(ID_addr addr);
+	void set_Params(dht_addr addr);
 
-	bool operator ()(const std::pair<ID_addr,list <phisical_addr> > &left,const std::pair<ID_addr,list <phisical_addr> > &right);
+	bool operator ()(const std::pair<dht_addr,list <phisical_addr> > &left,const std::pair<dht_addr,list <phisical_addr> > &right);
 
-    bool operator ()(const ID_addr left, const ID_addr);
+    bool operator ()(const dht_addr left, const dht_addr);
 };
 
 
 class nearestFunct {
   private:
 
-	ID_addr Address;
+	dht_addr Address;
 
   public:
 
 	nearestFunct(): Address(0) {
 		;
 	}
-	nearestFunct(ID_addr addr):Address(addr) {
+	nearestFunct(dht_addr addr):Address(addr) {
 		;
 	}
-	void setParams(ID_addr addr) {
+	void setParams(dht_addr addr) {
 		Address = addr;
 	}
 
-	bool operator ()(const std::pair<ID_addr,list <phisical_addr> > &left,const std::pair<ID_addr,list <phisical_addr> > &right);
+	bool operator ()(const std::pair<dht_addr,list <phisical_addr> > &left,const std::pair<dht_addr,list <phisical_addr> > &right);
 
 };
 

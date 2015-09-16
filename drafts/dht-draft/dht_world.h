@@ -7,9 +7,9 @@
 class dht_node;
 
 class dht_world {
-	map <ID_addr,dht_node> world_of_nodes;
+	map <dht_addr,dht_node> world_of_nodes;
 
-	ID_addr calculate_hash(phisical_addr addr);
+	dht_addr calculate_hash(phisical_addr addr);
 
   public:
 	dht_world();

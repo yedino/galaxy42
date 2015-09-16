@@ -9,16 +9,16 @@
 
 using namespace std;
 
-typedef long long int ID_addr;				///hashed addres
+typedef long long int dht_addr;				///hashed addres
 typedef std::string phisical_addr;
-typedef pair <ID_addr,phisical_addr> node_address;		///hashed address , node phisical address
+typedef pair <dht_addr,phisical_addr> node_address;		///hashed address , node phisical address
 
 struct trace{
     bool direction;					//null -direction home/else target
 
-	ID_addr home_address;
-	ID_addr target_address;
-	ID_addr next_dht_address;
+	dht_addr home_address;
+	dht_addr target_address;
+	dht_addr next_dht_address;
 
 	list<phisical_addr> trace_to_next_dht;
 
@@ -29,9 +29,19 @@ struct trace{
 
 };
 
+struct hello_trace_packet
+{
+	bool direction;
+	phisical_addr target_addres;
+	phisical_addr home_address;
+	dht_addr target_dht_addres;
+	dht_addr home_dht_address;		//value to set
+	map<dht_addr ,list<phisical_addr> > known_nodes;
+};
+
 struct : public trace{
 
-    ID_addr destination;
+	dht_addr destination;
     list<phisical_addr> path_to_asked_node;
 
 

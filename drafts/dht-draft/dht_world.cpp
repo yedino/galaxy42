@@ -7,11 +7,11 @@ dht_world::dht_world() {
 
 }
 
-ID_addr dht_world::calculate_hash(phisical_addr addr) {
+dht_addr dht_world::calculate_hash(phisical_addr addr) {
 
 	std::stringstream str;
 	str<<addr;
-	ID_addr tmp;
+	dht_addr tmp;
 	str>>tmp;
 	return tmp;
 }
@@ -84,11 +84,11 @@ void dht_world::create_world(size_t size) {
 
 
 
-	world_of_nodes.insert(pair<ID_addr,dht_node>(node1.get_ID() ,node1));
-	world_of_nodes.insert(pair<ID_addr,dht_node>(node2.get_ID(),node2));
-	world_of_nodes.insert(pair<ID_addr,dht_node>(node3.get_ID(),node3));
-	world_of_nodes.insert(pair<ID_addr,dht_node>(node4.get_ID(),node4));
-	world_of_nodes.insert(pair<ID_addr,dht_node>(node5.get_ID(),node5));
+	world_of_nodes.insert(pair<dht_addr,dht_node>(node1.get_dht_addr() ,node1));
+	world_of_nodes.insert(pair<dht_addr,dht_node>(node2.get_dht_addr(),node2));
+	world_of_nodes.insert(pair<dht_addr,dht_node>(node3.get_dht_addr(),node3));
+	world_of_nodes.insert(pair<dht_addr,dht_node>(node4.get_dht_addr(),node4));
+	world_of_nodes.insert(pair<dht_addr,dht_node>(node5.get_dht_addr(),node5));
 
 
     node1.start_tracking(5);
