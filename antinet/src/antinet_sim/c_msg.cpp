@@ -27,6 +27,12 @@ void msgcjd::deserialize(std::string serialized_obj) {
 	}
 }
 
+msg_ping::msg_ping () : msgcjd (e_msgkind_ping_request) {
+}
+
+msg_ping_response::msg_ping_response () : msgcjd (e_msgkind_ping_response) {
+}
+
 msg_buy::msg_buy (const t_msgkind &logic) : msgcjd(logic) {
 }
 
@@ -78,7 +84,14 @@ void msg_use::serialize (Archive &ar, const unsigned int version) {
 	ar & m_payment;
 }
 
+template <class Archive >
+void msg_ping_response::serialize (Archive &ar, const unsigned int version) {
+	ar & boost::serialization::base_object<msgcjd>(*this);
+	ar & m_ping_time;
+}
+
 
 BOOST_CLASS_EXPORT(msgcjd)
 BOOST_CLASS_EXPORT(msg_buy_menu)
 BOOST_CLASS_EXPORT(msg_use)
+BOOST_CLASS_EXPORT(msg_ping_response)

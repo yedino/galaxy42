@@ -53,7 +53,8 @@ typedef enum : uint8_t {
     e_msgkind_buy_net_final, /// agreed, you bought it - ok see you
 
 	e_msgkind_data,
-	e_msgkind_ping,
+	e_msgkind_ping_request,
+	e_msgkind_ping_response,
 	
 	e_msgkind_buy_currency
 } t_msgkind;
@@ -103,7 +104,30 @@ public:
 	virtual ~msg_buy () = default;
 };
 
+/**
+ * @struct msg_ping
+ * @brief send only to neighbor
+ */
+struct msg_ping : msgcjd {
+public:
+	msg_ping();
+	virtual ~msg_ping() = default;
+};
 
+/**
+ * @struct msg_ping_response
+ * @brief recv only from neighbor
+ */
+struct msg_ping_response : public msgcjd {
+public:
+	msg_ping_response();
+	unsigned int m_ping_time;
+	virtual ~msg_ping_response() = default;
+private:
+	friend class boost::serialization::access;
+	template <class Archive >
+	void serialize(Archive &ar, const unsigned int version);
+};
 
 /**
  * @struct msg_buy_inq
