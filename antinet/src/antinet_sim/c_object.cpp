@@ -630,6 +630,7 @@ void c_tnetdev::tick () {
 	bool dbg=0;
 	c_cjddev::tick();
 #if defined USE_API_TR
+	std::cout << "tick()" << std::endl;
 	m_network.lock()->tick();
 	// process outbox
 	if (!m_raw_outbox.empty()) {

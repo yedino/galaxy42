@@ -68,6 +68,7 @@ void c_world::connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> se
 }
 
 void c_world::load (const string &filename) {
+	_note("start load nodes from " << filename);
 	ifstream input_file(filename);
 
 	const int line_max_size = 8192;
@@ -133,8 +134,17 @@ void c_world::load (const string &filename) {
 		}
 	}
 	for (auto &object: m_objects) {
-		m_network.add_node(std::dynamic_pointer_cast<c_cjddev>(object));
+		try {
+			m_network.add_node(std::dynamic_pointer_cast<c_cjddev>(object));
+		}
+		catch(std::bad_cast& bc) {
+			_note("exception: " << bc.what());
+		}
+		catch(...) {
+			_note("exception");
+		}
 	}
+	_note("end of load");
 }
 
 ostream &operator<< (ostream &stream, const c_world &world) {
