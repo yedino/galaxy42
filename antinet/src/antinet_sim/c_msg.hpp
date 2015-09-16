@@ -1,7 +1,13 @@
 #ifndef C_MSG_HPP
 #define C_MSG_HPP
 
+#include <sstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/map.hpp>
 #include "c_object.hpp"
+
 
 typedef int t_pos; ///< position (one coordinate)
 typedef unsigned long int t_cjdaddr; // cjdns address example
@@ -32,26 +38,11 @@ struct item_netaccess {
 };
 
 /**
- * \struct msg
- * \brief a general message.
- *
- * a general message. e.g.: a direct message, something that is sent over a network direct link
- * sender and recipient fields are known from the cointainer that has this object
- *
- */
-struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
-	// sender and recipient fields are known from the cointainer that has this object
-	virtual std::string serialize() = 0;
-	virtual void deserialize(std::string) = 0;
-	virtual ~msg () = default;
-};
-
-/**
  * \enum t_msgkind
  *	\brief kind of message
  *
  */
-typedef enum {
+typedef enum : uint8_t {
     e_msgkind_default,
     e_msgkind_error, /// some error? please restart? operation not possible
 
@@ -66,6 +57,21 @@ typedef enum {
 	
 	e_msgkind_buy_currency
 } t_msgkind;
+
+/**
+ * \struct msg
+ * \brief a general message.
+ *
+ * a general message. e.g.: a direct message, something that is sent over a network direct link
+ * sender and recipient fields are known from the cointainer that has this object
+ *
+ */
+struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
+	// sender and recipient fields are known from the cointainer that has this object
+	virtual std::string serialize() = 0;
+	virtual void deserialize(std::string binary) = 0;
+	virtual ~msg () = default;
+};
 
 /**
  * \class msgcjd
@@ -84,10 +90,11 @@ public:
 	msgcjd (const t_msgkind &logic);
 	virtual std::string serialize();
 	virtual void deserialize(std::string binary);
+private:
+	friend class boost::serialization::access;
 	template <class Archive >
 	void serialize(Archive &ar, const unsigned int version);
 };
-
 
 struct msg_buy : public msgcjd {
 public:
@@ -118,6 +125,10 @@ public:
 	msg_buy_menu ();
 
 	unsigned int m_my_price;
+private:
+	friend class boost::serialization::access;
+	template <class Archive >
+	void serialize(Archive &ar, const unsigned int version);
 };
 
 
@@ -164,8 +175,12 @@ public:
 struct msg_use
 	: public msgcjd { // we somehow use the data, e.g. we use the cjdns traffic (that we paid for) to reach some service
 	uint8_t m_type; // type of protocol TODO
-	string m_data; // example data to store	
+	string m_data; // example data to store
 	pair<string, unsigned int> m_payment;
+private:
+	friend class boost::serialization::access;
+	template <class Archive >
+	void serialize(Archive &ar, const unsigned int version);
 
 public:
 	msg_use ();

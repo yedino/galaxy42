@@ -1,9 +1,4 @@
 #include "c_msg.hpp"
-#include <sstream>
-
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-
 
 msgcjd::msgcjd (const t_msgkind &logic) : m_logic(logic), m_ID(std::rand()) // TODO
 {
@@ -25,7 +20,8 @@ void msgcjd::deserialize(std::string serialized_obj) {
 	std::stringstream str(serialized_obj);
 	boost::archive::text_iarchive ia(str);
 
-	ia>>tmp_msg;
+	//ia>>tmp_msg;
+	ia >> *this;
 	}catch(...){
 
 	}
@@ -66,6 +62,23 @@ template <class Archive >void msgcjd::serialize(Archive &ar, const unsigned int 
 	ar & m_logic;
 	ar & m_destination;
 	ar &  m_ID;
-//	ar & t_msgkind;
 }
 
+template <class Archive >
+void msg_buy_menu::serialize (Archive &ar, const unsigned int version) {
+	ar & boost::serialization::base_object<msgcjd>(*this);
+	ar & m_my_price;
+}
+
+template <class Archive >
+void msg_use::serialize (Archive &ar, const unsigned int version) {
+	ar & boost::serialization::base_object<msgcjd>(*this);
+	ar & m_type;
+	ar & m_data;
+	ar & m_payment;
+}
+
+
+BOOST_CLASS_EXPORT(msgcjd)
+BOOST_CLASS_EXPORT(msg_buy_menu)
+BOOST_CLASS_EXPORT(msg_use)

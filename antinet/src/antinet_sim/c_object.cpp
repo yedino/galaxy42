@@ -657,12 +657,14 @@ void c_tnetdev::tick () {
 		write_message(std::move(m_raw_outbox.at(0))); // send message using c_network
 		m_raw_outbox.erase(m_raw_outbox.begin());
 	}
-	
+
 	// process inbox
 	if (!m_raw_inbox.empty()) {
-		msgcjd input_msg;
-
+		msgcjd input_msg; ///< message from inbox
+		input_msg.deserialize(m_raw_inbox.at(0).m_data);
 		m_raw_inbox.erase(m_raw_inbox.begin());
+		
+		//if () // TODO
 	}
 #else
 
