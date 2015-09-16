@@ -47,6 +47,7 @@ class dht_node {		//add checkpoint againce to long path
 	ID_addr get_nearest_node(ID_addr);									// finding nearest node
 	void recive(trace m_trace);											// recives route package
 
+	ID_addr get_ID(){return my_dht_address;}
     ID_addr get_farest_node(ID_addr);
 
 	phisical_addr get_phisical_addr() {

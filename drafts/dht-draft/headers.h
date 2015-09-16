@@ -10,7 +10,7 @@
 using namespace std;
 
 typedef long long int ID_addr;				///hashed addres
-typedef unsigned long int phisical_addr;
+typedef std::string phisical_addr;
 typedef pair <ID_addr,phisical_addr> node_address;		///hashed address , node phisical address
 
 struct trace{
