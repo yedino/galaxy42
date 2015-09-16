@@ -356,14 +356,14 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //            circle(frame, vx, vy, 10, color);
 //        }
 
-        glLoadIdentity();
-        glColor3f(0.0,1.0,0.0);
-        glScalef(1,1,1);
-        glPointSize(5);
-        glTranslatef((vx-0.5*SCREEN_W),-(vy-0.5*SCREEN_H),0.0f);
-        glBegin(GL_POINTS);
-        glVertex3f(0.0f,0.0f,0.0f);
-        glEnd();
+//        glLoadIdentity();
+//        glColor3f(0.0,1.0,0.0);
+//        glScalef(1,1,1);
+//        glPointSize(5);
+//        glTranslatef((vx-0.5*SCREEN_W),-(vy-0.5*SCREEN_H),0.0f);
+//        glBegin(GL_POINTS);
+//        glVertex3f(0.0f,0.0f,0.0f);
+//        glEnd();
     }
  ////////////////////////////////////////////////////////////////////////////////
 
@@ -878,6 +878,11 @@ c_tnetdev::c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c
 
 void c_tnetdev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
+    auto layer = dynamic_cast<c_layer_opengl &>(layer_any);
+    const auto & gui = * drawtarget.m_gui;
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+
+    c_cjddev::draw_opengl(drawtarget, layer);
 }
 
 void c_tnetdev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
