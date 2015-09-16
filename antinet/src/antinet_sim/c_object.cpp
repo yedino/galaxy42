@@ -55,6 +55,13 @@ void c_entity::draw (const c_drawtarget &drawtarget, c_layer_opengl &layer, int 
 t_pos c_entity::get_x(){return m_x;}
 t_pos c_entity::get_y(){return m_y;}
 
+double c_entity::get_distance (const c_entity &entity) {
+	t_geo_point my_point(m_x, m_y);
+	t_geo_point remote_point(entity.m_x, entity.m_y);
+	return c_geometry::distance(my_point, remote_point);
+}
+
+
 void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
 
@@ -627,10 +634,10 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 // ==================================================================
 
 void c_tnetdev::tick () {
-	bool dbg=0;
+	bool dbg = 1;
 	c_cjddev::tick();
 #if defined USE_API_TR
-	std::cout << "tick()" << std::endl;
+	if(dbg) std::cout << "tick()" << std::endl;
 	m_network.lock()->tick();
 	// process outbox
 	if (!m_raw_outbox.empty()) {
@@ -640,11 +647,26 @@ void c_tnetdev::tick () {
 
 	// process inbox
 	if (!m_raw_inbox.empty()) {
-		msgcjd input_msg; ///< message from inbox
-		input_msg.deserialize(m_raw_inbox.at(0).m_data);
+		std::shared_ptr<msgcjd> input_msg; ///< message from inbox
+		input_msg->deserialize(m_raw_inbox.at(0).m_data);
 		m_raw_inbox.erase(m_raw_inbox.begin());
 		
-		//if () // TODO
+		if (input_msg->m_logic == e_msgkind_ping_request) {
+			if(dbg) _note("send response ping to " << input_msg->m_from);
+			std::shared_ptr<msg_ping> ping_msg(std::dynamic_pointer_cast<msg_ping>(input_msg));
+			msg_ping_response response;
+			response.m_ttl = ping_msg->m_ttl;
+			response.m_to = ping_msg->m_from;
+			response.m_from = ping_msg->m_to;
+			response.m_logic = e_msgkind_ping_response;
+			response.m_ID = ping_msg->m_ID;
+			response.m_ping_time = get_distance(*std::dynamic_pointer_cast<c_entity>(m_neighbors.at(ping_msg->m_from).lock())); ///< get distance to ping source
+			
+			t_message out_message;
+			out_message.m_remote_id = response.m_to;
+			out_message.m_data = response.serialize();
+			m_raw_outbox.emplace_back(std::move(out_message));
+		}
 	}
 #else
 

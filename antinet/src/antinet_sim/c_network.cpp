@@ -13,6 +13,7 @@ void c_network::send_message (std::string &&message) {
 }
 
 void c_network::tick() {
+	_note("c_network::tick()");
 	/*for (auto &msg : m_message_vector) {
 		
 		//m_node_map.at(msg.m_msg.m_remote_id)->write_message(std::move(msg.m_msg));

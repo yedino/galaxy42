@@ -61,6 +61,11 @@ msg_use_ftp::msg_use_ftp () {
 }
 
 
+string msg_ping_response::serialize() {
+	return msgcjd::serialize();
+}
+
+
 template <class Archive >void msgcjd::serialize(Archive &ar, const unsigned int version){
 	ar & m_ttl;
 	ar & m_to;

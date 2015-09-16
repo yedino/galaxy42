@@ -64,7 +64,9 @@ public:
 
         t_pos get_x();
         t_pos get_y();
-
+		
+	double get_distance(const c_entity &entity);
+	
 	virtual ~c_entity () = default;
 };
 

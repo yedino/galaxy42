@@ -121,6 +121,7 @@ public:
 struct msg_ping_response : public msgcjd {
 public:
 	msg_ping_response();
+	virtual std::string serialize();
 	unsigned int m_ping_time;
 	virtual ~msg_ping_response() = default;
 private:
