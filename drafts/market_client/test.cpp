@@ -55,7 +55,6 @@ int TEST_c_ed25519(bool verbouse) {
 int TEST_cpp_ed25519(bool verbouse) {
 
 	const std::string message = "3fd30542fe3f61b14bd3a4b2dc0b6fb37fa6f63ebce52dd1778baa8c4dc02cff";
-	const int message_len = message.length();
 	/* create a random seed, and a keypair out of seed */
 	c_ed25519 ed25519_obj;
 
@@ -84,11 +83,44 @@ int TEST_cpp_ed25519(bool verbouse) {
 
 	return 0;
 }
-void TEST_loop(int test_loop, bool verbouse) {
+
+/////////////////////////////////////////////////// RSA TEST ///////////////////////////////////////////////////
+
+string generate_random_string (size_t length) {
+	auto generate_random_char = [] () -> char {
+		const char Charset[] = "0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
+		const size_t max_index = (sizeof(Charset) - 1);
+		return Charset[rand() % max_index];
+	};
+	string str(length, 0);
+	generate_n(str.begin(), length, generate_random_char);
+	return str;
+}
+
+bool TEST_rsaSign(size_t loop_num) {
+
+	c_RSA testRSA;
+
+	for(size_t i = 0; i < loop_num; ++i) {
+		std::string msg = "er234jv ejk46 elrkfl 00wef";
+		std::string pub_key = testRSA.get_public_key();
+		std::string sign = testRSA.sign(msg);
+
+		if(! testRSA.verify(sign,msg,pub_key)) {
+			std::cerr << "error: RSA sign verify fail!" << std::endl;
+			return true;
+		}
+	}
+	return false;
+}
+
+void TEST_all(int loop_num, bool verbouse) {
 
 	std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
 
-	for(int i = 0; i < test_loop; ++i) {
+	for(int i = 0; i < loop_num; ++i) {
 		if(TEST_c_ed25519(verbouse)) {
 			std::cerr << "signing and validate ed25519 loop test : FAIL" << std::endl;
 			return;
@@ -97,11 +129,11 @@ void TEST_loop(int test_loop, bool verbouse) {
 
 	std::chrono::time_point<std::chrono::steady_clock> stop_time = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::duration diff = stop_time - start_time;
-	std::cerr << "TEST_loop (" << test_loop << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
 			  << " ms" << std::endl;
 
 	start_time = std::chrono::steady_clock::now();
-	for(int i = 0; i < test_loop; ++i) {
+	for(int i = 0; i < loop_num; ++i) {
 		if(TEST_cpp_ed25519(verbouse)) {
 			std::cerr << "signing and validate ed25519 loop test : FAIL" << std::endl;
 			return;
@@ -109,8 +141,15 @@ void TEST_loop(int test_loop, bool verbouse) {
 	}
 	stop_time = std::chrono::steady_clock::now();
 	diff = stop_time - start_time;
-	std::cerr << "TEST_loop (" << test_loop << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
 			  << " ms for c++ ed25519 members" << std::endl;
+
+	start_time = std::chrono::steady_clock::now();
+	TEST_rsaSign(loop_num);
+	stop_time = std::chrono::steady_clock::now();
+	diff = stop_time - start_time;
+	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+			  << " ms for rsa " << key_size << " signing and validate test" << std::endl;
 }
 ///
 /// Example
@@ -118,14 +157,12 @@ void TEST_loop(int test_loop, bool verbouse) {
 int main(int argc, char* argv[]) {
 	try {
 		if (argc != 4) {
-			std::cerr << "Usage: blocking_tcp_echo_client <host> <port> <protocol>\n";
+			std::cerr << "Usage: market_client <host> <port> <protocol>\n";
 			return 1;
 		}
 
-		TEST_loop(500,false);
+		TEST_all(500,false);
 
-		//c_RSAconnect rsa_link( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])));
-		//rsa_link.init();
 		c_market_client market_client( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])) );
 		market_client.encrypt_client(ed25519);
 		market_client.start_market_session();

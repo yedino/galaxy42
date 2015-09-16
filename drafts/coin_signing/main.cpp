@@ -56,7 +56,7 @@ bool test_manyEdSigning(size_t signs_num, size_t message_len) {
 	c_ed25519 edtest;
 	std::string str_pubkey = edtest.get_public_key();
 
-	for(size_t i = 0; i < signs_num; ++i) {
+	for(size_t i = 1; i < signs_num; ++i) {
 		const std::string message = generate_random_string(message_len);
 		std::string sign = edtest.sign(message);
 
@@ -138,6 +138,7 @@ bool test_all() {
 	}
 }
 
+
 int main (int argc, char *argv[]) {
 	try {
 		ios_base::sync_with_stdio(false);
@@ -154,7 +155,16 @@ int main (int argc, char *argv[]) {
 			return 1;
 		}
 
-		test_all();
+		//test_all();
+
+		unsigned char *crypto = new unsigned char[64];
+		const char *data = "ed728b7ed933b6a2e7869696a6b60113aa2d93a43eec7824bece841c51b67401df01e498cd68b3951db278152a6cb606a0b433af74b8f3aa20cdef69dfefd3c40b:help";
+
+		//parse_crypto_data(data, crypto);
+		cout << '\n';
+		for (size_t i = 0; i < 64; ++i)
+			cout << (int)crypto[i] << ' ';
+
 
 		return 0;
 

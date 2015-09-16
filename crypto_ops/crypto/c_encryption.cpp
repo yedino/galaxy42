@@ -4,20 +4,26 @@ c_RSA::c_RSA () : m_crypto(new c_crypto_RSA<key_size>()) {
 	m_crypto_method = RSA;
 	// Generate RSA key
 	m_crypto->generate_key();
+	m_pub_key = m_crypto->get_public_key();
 }
 
 std::string c_RSA::get_public_key () {
-	auto pub_key = m_crypto->get_public_key();
-	std::string n = pub_key.n.str();
-	std::string e = pub_key.e.str();
+	std::string n = m_pub_key.n.str();
+	std::string e = m_pub_key.e.str();
 	return e + '|' + n;
 }
 
 std::string c_RSA::sign (const std::string &msg) {
-	return m_crypto->sign(msg).str();
+	m_last_sign = m_crypto->sign(msg);
+	return m_last_sign.str();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool c_RSA::verify(const std::string &signature, const std::string &message, const std::string &public_key) {
+	rsa_public_key<long_type> pb(public_key);
+	return (power_modulo(long_type(signature), pb.e, pb.n) == sha512<long_type>(message));
+}
+
+//////////////////////////////////////////////////////////  ED  ///////////////////////////////////////////////////////////////
 c_ed25519::c_ed25519 () {
 	m_crypto_method = ed25519;
 	create_seed();
@@ -25,19 +31,16 @@ c_ed25519::c_ed25519 () {
 }
 
 int c_ed25519::create_seed () {
-
 	return ed25519_create_seed(m_seed);
 }
 
 void c_ed25519::create_keypair () {
-
 	ed25519_create_keypair(m_public_key, m_private_key, m_seed);
 }
 
 ////////////////////////////////////////////////////////// C WITH UNIQUE PTR ///////////////////////////////////////////////////
 
 unique_ptr<unsigned char[]> c_ed25519::get_public_key_uC () {
-
 	unique_ptr<unsigned char[]> pub_key (new unsigned char[pub_key_size+1]);
 	for (int i = 0; i < pub_key_size; ++i) {
 		pub_key[i] = m_public_key[i];
@@ -47,7 +50,6 @@ unique_ptr<unsigned char[]> c_ed25519::get_public_key_uC () {
 }
 
 unique_ptr<unsigned char[]> c_ed25519::sign_uC (unique_ptr<const unsigned char[]> message, size_t message_len) {
-
 	ed25519_sign(m_signature, message.get(), message_len, m_public_key, m_private_key);
 	unique_ptr <unsigned char[]> sign (new unsigned char[sign_size+1]);
 	for (int i = 0; i < sign_size; ++i) {
@@ -57,33 +59,32 @@ unique_ptr<unsigned char[]> c_ed25519::sign_uC (unique_ptr<const unsigned char[]
 	return sign;
 }
 
-int c_ed25519::verify_uC (unique_ptr<const unsigned char[]> &signature,
-						  unique_ptr<const unsigned char[]> &message,
-						  size_t message_len,
-						  unique_ptr<const unsigned char[]> &public_key) {
+bool c_ed25519::verify_uC (unique_ptr<const unsigned char[]> &signature,
+						   unique_ptr<const unsigned char[]> &message,
+						   size_t message_len,
+						   unique_ptr<const unsigned char[]> &public_key) {
 
-	return ed25519_verify(signature.get(), message.get(), message_len, public_key.get());
+	return ed25519_verify(signature.get(), message.get(), message_len, public_key.get()) != 0;
 }
 
 ////////////////////////////////////////////////////////// CPP INTERFACE ///////////////////////////////////////////////////////
 std::string c_ed25519::get_public_key () {
-
 	std::string pubkey = uchar_toReadable(m_public_key, pub_key_size);
 	return pubkey;
 }
 
 string c_ed25519::sign (const string &msg) {
-
 	unique_ptr<unsigned char []> umsg (string_to_uniqueUtab(msg));
 
 	unique_ptr<unsigned char[]> sign_ustr = sign_uC(std::move(umsg), msg.length());
 	std::string sign_str = uchar_toReadable(sign_ustr.get(), sign_size);
+
 	return sign_str;
 }
 
-int c_ed25519::verify (const std::string signature,
-					   const std::string message,
-					   std::string public_key) {
+bool c_ed25519::verify (const std::string &signature,
+						const std::string &message,
+						const std::string &public_key) {
 	size_t message_len = message.length();
 	unique_ptr<const unsigned char[]> sign_u (readable_toUchar(signature, sign_size));
 	unique_ptr<const unsigned char[]> msg_u (string_to_uniqueUtab(message));
@@ -105,7 +106,7 @@ unsigned char* c_ed25519::get_public_key_C() {
 	return pub_key;
 }
 
-unsigned char* c_ed25519::sign_C(const unsigned char *message, size_t message_len) {
+unsigned char* c_ed25519::sign_C (const unsigned char *message, size_t message_len) {
 
 	ed25519_sign(m_signature, message, message_len, m_public_key, m_private_key);
 	unsigned char* sign = new unsigned char[sign_size];
@@ -132,6 +133,19 @@ void c_ed25519::key_exchange(unsigned char *shared_secret, const unsigned char *
 }*/
 
 /////////////////////////////////////////////////////////////////////////////SUPPORT_FUNCTIONS////////////////////////////////////////////////////////////////////////////////////
+
+void parse_crypto_data (const char *data, unsigned char *crypto_input) {
+	const size_t bufsize = 2;
+
+	for (size_t i = 1; (data + i) != nullptr && data[i * 2] != ':'; ++i) {
+		char buffer[bufsize + 1];
+		std::strncpy(buffer, data + i * 2, bufsize);
+		buffer[bufsize] = '\0';
+
+		int num = std::stoi(std::string(buffer), nullptr, 16);
+		crypto_input[i-1] = (unsigned char)num;
+	}
+}
 
 unique_ptr<unsigned char[]> string_to_uniqueUtab(const std::string &str) {
 	size_t str_length = str.length();

@@ -38,6 +38,10 @@ void c_market_client::encrypt_client(cryptosign_method crypt_m) {
 	}
 }
 
+bool verify_sign (const string &msg, const unsigned char *signature, const unsigned char *public_key) {
+	return ed25519_verify(signature, reinterpret_cast<const unsigned char *>(msg.c_str()), msg.length(), public_key) != 0;
+}
+
 void c_market_client::start_market_session() {
 
 	bool isover = false;
@@ -47,21 +51,40 @@ void c_market_client::start_market_session() {
 		std::cin.getline(request, max_length);
 		//cin.clear(); cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
 		size_t request_length = std::strlen(request);
-		
+
+		std::cout << "request__" << std::endl;
+		for(size_t i = 0; i < request_length; ++i) {
+			std::cout << request[i] << std::endl;
+		}
+		//std::cerr << "request length :" << request_length
+		//		  << "last char in request: " << (int)request[request_length] << std::endl;
+
 		if(std::string(request, request_length) == "quit") {
 			isover = true;
 			break;
 		}	
 		std::string command;
 		if(check_cmd("register",request,request_length)) {
-			if(cl_crypto->getCrypto_method() == ed25519) {
-				command += "ed25519|";
-			}
+			//if(cl_crypto->getCrypto_method() == ed25519) {
+			//	command += "ed25519|";
+			//}
 			command += cl_crypto->get_public_key() + ':' + std::string(request,request_length);
 		}
-		else {
-			command = cl_crypto->sign(std::string(request,request_length)) + ':' + request;
+		else if (check_cmd("logout", request,request_length)) {
+			std::string pubkey = cl_crypto->get_public_key();
+			std::string msg(request,request_length);
+			std::string sign = cl_crypto->sign(std::string(request,request_length));
+			//bool is_ok = cl_crypto->verify(sign,msg,pubkey);	//dbg
+			//std::cout << "isok : " << is_ok << std::endl;
+			//is_ok = verify_sign(msg,readable_toUchar(sign,sign_size).get() ,readable_toUchar(pubkey,pub_key_size).get());
+			//std::cout << "isok(kb) : " << is_ok << std::endl;
+
+			command = cl_crypto->sign(std::string(request,request_length)) + ':' + std::string(request, request_length);
 		}
+		else {
+			command = cl_crypto->sign(std::string(request,request_length)) + ':' + std::string(request, request_length);
+		}
+
 		//std::cout << command << std::endl;		//dbg
 		std::string reply =  m_market_link->send_msg(command);
 		std:: cout <<  "Reply is:\n" << reply << std::endl;

@@ -28,7 +28,7 @@ protected:
 	c_connect (c_connect &&) = delete;
 	void operator= (c_connect &&) = delete;
 	void operator= (c_connect const &) = delete;
-	
+
 	protocol_type m_ip;
 	std::string m_host;
 	std::string m_port;
@@ -43,7 +43,6 @@ private:
 	boost::asio::io_service io_service;	
 	udp::socket s;
 	udp::endpoint endpoint;
-	
 };
 
 using boost::asio::ip::tcp;
@@ -54,7 +53,6 @@ public:
 private:
     boost::asio::io_service io_service;
 	tcp::socket s;
-
 };
 
 #endif // C_CONNECT_HPP
