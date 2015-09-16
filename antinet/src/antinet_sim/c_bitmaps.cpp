@@ -1,6 +1,7 @@
 #include "c_bitmaps.hpp"
 
 #include "c_allegromisc.hpp"
+#include "use_opengl.hpp"
 
 std::unique_ptr<c_bitmaps> c_bitmaps::m_instance;
 std::once_flag c_bitmaps::m_onceFlag;
@@ -33,6 +34,7 @@ c_bitmaps::~c_bitmaps () {
 void c_bitmaps::init () {
 	init_find_path();
 	init_load_all();
+    bitmap_to_int();
 }
 
 void c_bitmaps::init_find_path () {
@@ -55,7 +57,12 @@ void c_bitmaps::init_load_all () {
 	m_package_green = alex_load_png(m_path_to_data + "letter_21x11_green.png", NULL);
 	m_package_blue = alex_load_png(m_path_to_data + "letter_21x11_blue.png", NULL);
 	m_package_red = alex_load_png(m_path_to_data + "letter_21x11_red.png", NULL);
-	m_package_white = alex_load_png(m_path_to_data + "letter_21x11.png", NULL);
+    m_package_white = alex_load_png(m_path_to_data + "letter_21x11.png", NULL);
+}
+
+void c_bitmaps::bitmap_to_int() {
+    m_background_opengl = allegro_gl_make_texture(m_background);
+    m_node_opengl = allegro_gl_make_texture(m_node);
 }
 
 bool c_bitmaps::test_dir_as_datadir (string dir) const {

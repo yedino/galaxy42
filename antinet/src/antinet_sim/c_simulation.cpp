@@ -167,13 +167,22 @@ void c_simulation::main_loop () {
 		// draw background of frame
 		if (use_draw_allegro) {
 			clear_to_color(m_frame, makecol(0, 128, 0));
-			blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
+            blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
 		}
 		if (use_draw_opengl) {
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
+            glLoadIdentity();
+            glBegin(GL_QUADS);
+            glTexCoord2f(0,1); glVertex3f(-1.0f,1.0f,0.0f);
+            glTexCoord2f(1,1); glVertex3f(1.0f,1.0f,0.0f);
+            glTexCoord2f(1,0); glVertex3f(1.0f,-1.0f,0.0f);
+            glTexCoord2f(0,0); glVertex3f(-1.0f,-1.0f,0.0f);
+            glEnd();
+
+            glBindTexture(GL_TEXTURE_2D, 0);   // texture
 		}
 		
-
 		// clear additional things
 		if (use_draw_allegro) {
 			clear_to_color(smallWindow, makecol(128, 128, 128));

@@ -63,7 +63,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
-    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+    //const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
         auto selected_object = gui.m_selected_object.lock();
@@ -292,51 +292,30 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //     glScalef(0.03,0.03,0.03);
 //     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
 
-//    glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
-//      glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-//      glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle               */
-//      glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-//      glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle              */
-//      glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-//      glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle             */
-//    glEnd( );                            /* Finished Drawing The Triangle */
-
+    float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
+    float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
+    float m_size = 0.03;
     glLoadIdentity();
     //glScalef(0.03,0.03,0.03);
     glScalef(1,1,1);
     //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
 
-    float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
-    float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
     glTranslatef(opengl_x,opengl_y,0.0f);
    // glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
 
-    float m_size = 0.03;
     glColor3f(1.0,0.0,0.0);
-    glBindTexture (GL_TEXTURE_2D, tex);   //init a texture
-    glBegin( GL_QUADS );             /* Drawing Using Quads       */
-    // glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-    glTexCoord2f (0, 0);
-    glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f ); /* Top Of Triangle               */
-    //glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-    glTexCoord2f (1, 0);
-    glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f ); /* Left Of Triangle              */
-    //glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-    glTexCoord2f (1, 1);
-    glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f ); /* Right Of Triangle             */
+    glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
+    glBegin( GL_QUADS );                                /* Drawing Using Quads       */
     glTexCoord2f (0, 1);
-    glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
-    glEnd( );                            /* Finished Drawing The Quads */
+    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
+    glTexCoord2f (1, 1);
+    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
+    glTexCoord2f (1, 0);
+    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
+    glTexCoord2f (0, 0);
+    glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
+    glEnd( );                                           /* Finished Drawing The Quads */
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
-
-
-
-//    glLineWidth(2.5);  //size of line
-//    glColor3f(1.0, 0.0, 0.0);
-//    glBegin(GL_LINES);
-//    glVertex3f(0.0, 0.0, 0.0);
-//    glVertex3f(1*m_size, 0, 0);
-//    glEnd();
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
@@ -881,8 +860,8 @@ c_tnetdev::c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6) : c
 void c_tnetdev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 	// auto layer = dynamic_cast<c_layer_opengl>(layer_any);
     auto layer = dynamic_cast<c_layer_opengl &>(layer_any);
-    const auto & gui = * drawtarget.m_gui;
-    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+    //const auto & gui = * drawtarget.m_gui;
+    //const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
     c_cjddev::draw_opengl(drawtarget, layer);
 }
