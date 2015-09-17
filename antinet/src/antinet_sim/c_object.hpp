@@ -14,6 +14,7 @@ extern unsigned int g_max_anim_frame;
 typedef int t_pos; ///< position (one coordinate)
 typedef std::string t_cjdaddr; // cjdns address example
 typedef unsigned long long int t_ID;
+typedef long long t_dht_addr;
 
 
 //typedef int t_cjdaddr; // cjdns address example
@@ -165,14 +166,14 @@ protected:
 	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
     map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
     
-    
-    //m.zychowski finding dht tracing
-    void add_known_trace(t_ID,vector<t_cjdaddr>);
-    map<t_ID,vector<t_cjdaddr> > known_traces;
-    t_ID find_nearest_to_target(t_ID target);
-    void send_hello_package(t_ID target,c_routing_package package);
-    void send_package(t_ID target);
-    void send_by_route(t_ID target,vector<t_cjdaddr> trace_to_nearest_node);
+	//////////////////////////////////////////////////////////////////////////
+	/////////////////dht section///////////////////////////////////
+
+	t_dht_addr m_dht_addr;
+
+
+	map<t_dht_addr,list < t_cjdaddr> > m_known_nodes;
+
     
     
     //

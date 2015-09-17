@@ -6,12 +6,16 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/list.hpp>
+
 #include "c_object.hpp"
 
 
 typedef int t_pos; ///< position (one coordinate)
 typedef std::string t_cjdaddr; // cjdns address example
 typedef unsigned long long int t_ID;
+typedef long long int t_dht_addr;
+
 
 template <class T>
 class crypto_hash {
@@ -55,6 +59,8 @@ typedef enum : uint8_t {
 	e_msgkind_data,
 	e_msgkind_ping_request,
 	e_msgkind_ping_response,
+
+	e_msgkind_dht_hello,
 	
 	e_msgkind_buy_currency
 } t_msgkind;
@@ -95,6 +101,21 @@ private:
 	friend class boost::serialization::access;
 	template <class Archive >
 	void serialize(Archive &ar, const unsigned int version);
+};
+
+
+struct msg_dht_hello :public msgcjd {
+	msg_dht_hello();
+	bool direction;
+	t_dht_addr m_target_dht_address;
+	t_dht_addr m_home_dht_address;
+	map<t_dht_addr,list < t_cjdaddr> > m_known_nodes;
+
+	virtual std::string serialize() override;
+
+	template <class Archive >
+	void serialize(Archive &ar, const unsigned int version);
+
 };
 
 struct msg_buy : public msgcjd {

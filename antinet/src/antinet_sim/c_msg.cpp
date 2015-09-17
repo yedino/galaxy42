@@ -4,6 +4,7 @@ msgcjd::msgcjd (const t_msgkind &logic) : m_logic(logic), m_ID(std::rand()) // T
 {
 }
 
+
 std::string msgcjd::serialize() {
 	std::stringstream str;
 	try{
@@ -28,6 +29,16 @@ void msgcjd::deserialize(std::string serialized_obj) {
 }
 
 msg_ping::msg_ping () : msgcjd (e_msgkind_ping_request) {
+}
+
+
+msg_dht_hello::msg_dht_hello():msgcjd(e_msgkind_dht_hello) {
+
+}
+
+std::string msg_dht_hello::serialize()
+{
+	return msgcjd::serialize();
 }
 
 msg_ping_response::msg_ping_response () : msgcjd (e_msgkind_ping_response) {
@@ -96,7 +107,21 @@ void msg_ping_response::serialize (Archive &ar, const unsigned int version) {
 }
 
 
+
+template<class Archive>
+void msg_dht_hello::serialize(Archive &ar, const unsigned int version) {
+	ar & boost::serialization::base_object<msgcjd>(*this);
+	ar &  m_target_dht_address;
+	ar & m_home_dht_address;
+	ar & m_known_nodes;
+
+}
+
+
+
+
 BOOST_CLASS_EXPORT(msgcjd)
 BOOST_CLASS_EXPORT(msg_buy_menu)
 BOOST_CLASS_EXPORT(msg_use)
 BOOST_CLASS_EXPORT(msg_ping_response)
+BOOST_CLASS_EXPORT(msg_dht_hello)

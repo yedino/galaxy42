@@ -16,7 +16,7 @@ void c_network::send_message (t_nym_id addr,std::string &&message) {
 
 void c_network::tick() {
 #if defined USE_API_TR
-	_note("c_network::tick()");
+//	_note("c_network::tick()");
 	for (auto &msg : m_message_vector) {
 		if(!m_node_map.empty()){
 			m_node_map.at(msg.first)->hw_recived(std::move(msg.second));

@@ -239,6 +239,13 @@ c_cjddev::c_cjddev (string name,
 	t_pos x,
 	t_pos y,
 	t_cjdaddr address_ipv6) : c_netdev(name, x, y), m_my_address(address_ipv6) {
+
+	std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<long long> dis(1,LONG_LONG_MAX);
+
+		m_dht_addr = dis(gen);			//geting random dht address
+
 }
 
 unsigned int cjddev_detail_next_price (unsigned int current) {
@@ -567,7 +574,7 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		m_outbox.emplace_back(std::move(inq_msg));
 #if defined USE_API_TR
 		// XXX test sending pings, rm this
-		_info("test send ping to " << neighbor.first);
+		/*_info("test send ping to " << neighbor.first);
 		msg_ping ping_request;
 		ping_request.m_from = m_my_address;
 		ping_request.m_to = neighbor.first;
@@ -576,6 +583,24 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		message.m_remote_id = ping_request.m_to;
 		message.m_data = ping_request.serialize();
 		m_raw_outbox.emplace_back(std::move(message));
+		*/
+		msg_dht_hello m_hello;
+		//wylosowac adres
+		m_hello.m_home_dht_address = m_dht_addr;
+		m_hello.m_from = m_my_address;
+		m_hello.m_to = neighbor.first;
+		m_hello.m_destination = neighbor.first;
+
+
+		t_message message;
+		message.m_remote_id = m_hello.m_to;
+		message.m_data = m_hello.serialize();
+		m_raw_outbox.emplace_back(std::move(message));
+
+
+		//dokonczyc;
+
+
 #endif
 	}
 }
@@ -648,7 +673,7 @@ void c_tnetdev::tick () {
 	bool dbg = 1;
 	c_cjddev::tick();
 #if defined USE_API_TR
-	if(dbg) std::cout << "tick()" << std::endl;
+//	if(dbg) std::cout << "tick()" << std::endl;
 	m_network.lock()->tick();
 	// process outbox
 	if (!m_raw_outbox.empty()) {
