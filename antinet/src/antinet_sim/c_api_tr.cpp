@@ -28,6 +28,7 @@ void t_message::serialize(Archive & ar, const unsigned int version){			//all str
 
 
 void c_api_tr::write_message(t_message &&msg) {
+	try {
 	t_message m_message;
 	m_message = std::move(msg);
 
@@ -36,11 +37,28 @@ void c_api_tr::write_message(t_message &&msg) {
 	oa<<m_message;
 
 	hw_send(m_message.m_remote_id ,std::move(str.str()));
+	} catch(...) {
+		std::cout<<"c_api_tr::hw_recived in boost deserialization exeption"<<std::endl;
+
+	}
 }
 
 void c_api_tr::hw_recived(std::string &&serialized_msg) {
 
-	m_incomming_msgs.push(std::move(serialized_msg));
+	std::string tmp_string (serialized_msg);
+	try{
+		std::stringstream str;
+		str.str(tmp_string);		//check it!!
+		boost::archive::binary_iarchive oia(str);
+		t_message m_message;
+		oia>>m_message;
+
+		std::cout <<std::string ("c_api_tr::hw_recived")<<m_message.m_remote_id<<" " <<m_message.m_data;
+	}catch(...){
+		std::cout<<"c_api_tr::hw_recived in boost deserialization exeption"<<std::endl;
+	}
+
+	m_incomming_msgs.push(tmp_string);
 
 }
 

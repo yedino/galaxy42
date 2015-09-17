@@ -18,7 +18,11 @@ void c_network::tick() {
 #if defined USE_API_TR
 	_note("c_network::tick()");
 	for (auto &msg : m_message_vector) {
-        m_node_map.at(msg.first)->hw_recived(std::move(msg.second));
+		if(!m_node_map.empty()){
+			m_node_map.at(msg.first)->hw_recived(std::move(msg.second));
+
+		}
+	m_message_vector.clear();
 //m_node_map.at(msg.m_msg.m_remote_id)->write_message(std::move(msg.m_msg));
 	}
 #endif

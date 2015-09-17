@@ -38,7 +38,13 @@ void c_world::tick () {
 	m_simclock += get_chronon(); // @TODO move the 0.1 speed to a (const?) variable
 	
 	for (auto &obj : m_objects) {
-		obj->tick();
+		try{
+			obj->tick();
+		}catch(...){
+			std::cout<<"something goes wrong ..."<<std::endl;
+		}
+
+
 	}
 	std::cout << "****************END OF TICK (" << tick_number << ")****************" << std::endl;
 	std::this_thread::sleep_for(std::chrono::seconds(2)); // XXX
