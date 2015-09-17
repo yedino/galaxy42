@@ -8,10 +8,10 @@ void c_network::add_node (std::shared_ptr<c_cjddev> node) {
 #endif
 }
 
-void c_network::send_message (std::string &&message) {
+void c_network::send_message (t_nym_id addr,std::string &&message) {
 	_note("c_network::send_message()");
 	_note("message size: " << message.size());
-	m_message_vector.emplace_back(message);
+//	m_message_vector.emplace_back(message);
 }
 
 void c_network::tick() {

@@ -4,10 +4,9 @@
 
 
 template<class Archive>
-void t_hw_message::serialize(Archive & ar, const unsigned int version){			//all struct t_hw_message should be in separate file - to avoid recompilation of template
-	ar & m_msg.m_data;
-	ar & m_msg.m_remote_id;
-	ar & m_type;
+void t_message::serialize(Archive & ar, const unsigned int version){			//all struct t_hw_message should be in separate file - to avoid recompilation of template
+	ar & m_data;
+	ar & m_remote_id;
 	/*
 	 *	example use:
 	 *
@@ -29,15 +28,14 @@ void t_hw_message::serialize(Archive & ar, const unsigned int version){			//all 
 
 
 void c_api_tr::write_message(t_message &&msg) {
-	t_hw_message m_hw_message;
-	m_hw_message.m_type = 0;
-	m_hw_message.m_msg = std::move(msg);
+	t_message m_message;
+	m_message = std::move(msg);
 
 	std::stringstream str;
 	boost::archive::binary_oarchive oa(str);
-	oa<<m_hw_message;
+	oa<<m_message;
 
-	hw_send(std::move(str.str()));
+	hw_send(m_message.m_remote_id ,std::move(str.str()));
 }
 
 void c_api_tr::hw_recived(std::string &&serialized_msg) {
@@ -54,10 +52,10 @@ void c_api_tr::read_message(std::function<void (t_message &&)> handler) {
 		std::stringstream str;
 		str.str(serialized_msg);		//check it!!
 		boost::archive::binary_iarchive oia(str);
-		t_hw_message m_hw_message;
-		oia>>m_hw_message;
+		t_message m_message;
+		oia>>m_message;
 		//if(m_hw_message.type ==  sometype)
-		handler(std::move(m_hw_message.m_msg));
+		handler(std::move(m_message));
 		//
 	}
 

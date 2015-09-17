@@ -119,7 +119,7 @@ protected:
 	// c_api_tr
 	//virtual void write_message(t_message&& msg) override;
 	//virtual void read_message(std::function<void (t_message &&)> handler) override;
-	virtual void hw_send (std::string &&serialized_msg) override; ///< send to remote node
+	virtual void hw_send (t_nym_id addr,std::string &&serialized_msg) override; ///< send to remote node
 	std::vector<t_message> m_raw_outbox; // general box with messages to be sent somehow
 	std::vector<t_message> m_raw_inbox; // general box with messages that are received somehow
 public:

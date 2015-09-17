@@ -11,17 +11,14 @@ typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID ins
 struct t_message {
 	t_nym_id m_remote_id;
 	std::string m_data;
-};
-
-
-struct t_hw_message {
-	t_message m_msg;
-	uint8_t m_type;
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version);
 
 };
+
+
+
 
 /* 
 The class for transmission
@@ -29,7 +26,7 @@ The class for transmission
 
 class c_api_tr {
 	protected:
-	virtual void hw_send(std::string &&serialized_msg) =0;
+	virtual void hw_send(t_nym_id addr,std::string &&serialized_msg) =0;
 	void hw_recived(std::string && serialized_msg);
 
 	std::queue <std::string> m_incomming_msgs;

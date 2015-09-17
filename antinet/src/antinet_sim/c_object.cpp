@@ -549,10 +549,10 @@ void c_netdev::set_network(std::shared_ptr<c_network> network_ptr) {
 	m_network = network_ptr;
 }
 
-void c_netdev::hw_send(std::string &&serialized_msg) {
+void c_netdev::hw_send(t_nym_id addr,std::string &&serialized_msg) {
 	_info("c_netdev::hw_send()");
 	_info("serialized_msg size: " << serialized_msg.size());
-	m_network.lock()->send_message(std::move(serialized_msg));
+	m_network.lock()->send_message(addr,std::move(serialized_msg));
 }
 
 #endif

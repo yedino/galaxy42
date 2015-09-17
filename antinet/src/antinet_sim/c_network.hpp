@@ -20,7 +20,7 @@ class c_network : public std::enable_shared_from_this<c_network> {
 		std::map<t_nym_id, std::shared_ptr<c_cjddev>> m_node_map;
 	public:
 		void add_node(std::shared_ptr<c_cjddev> node); ///< add new node to m_node_map
-		void send_message(std::string &&message); ///< add message to m_message_vector
+		void send_message(t_nym_id addr, std::string &&message); ///< add message to m_message_vector
 		void tick(); ///< process all messages
 		
 };
