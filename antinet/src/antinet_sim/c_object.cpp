@@ -70,6 +70,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
         auto selected_object = gui.m_selected_object.lock();
@@ -98,8 +99,8 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
             glBegin(GL_LINE_LOOP);
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.05*cos(angle);
-                float y = 0.1*sin(angle);
+                float x = 0.05*cos(angle)*gui.camera_zoom;
+                float y = 0.1*sin(angle)*gui.camera_zoom;
 
                 glVertex3f(x,y,0.0f);
             }
@@ -107,13 +108,14 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
         }
 
         if (this == source_object.get()) {
+            //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
             glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
 
             glBegin(GL_LINE_LOOP);
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.05*cos(angle);
-                float y = 0.1*sin(angle);
+                float x = 0.05*cos(angle)*gui.camera_zoom;
+                float y = 0.1*sin(angle)*gui.camera_zoom;
 
                 glVertex3f(x,y,0.0f);
             }
@@ -124,13 +126,15 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
         // std::cout << "DEBUG4" << std::endl;
         auto selected_object = gui.m_selected_object.lock();
         if (this == selected_object.get()) { // if I am the selected object
+
+//          glLineWidth(2.5);  //size of line
             glLineWidth(1.0);
             glColor3f(0.0, 1.0, 1.0);
 
             glBegin(GL_LINE_LOOP);
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.07*cos(angle);
-                float y = 0.14*sin(angle);
+                float x = 0.07*cos(angle)*gui.camera_zoom;
+                float y = 0.14*sin(angle)*gui.camera_zoom;
 
                 glVertex3f(x,y,0.0f);
             }
@@ -280,33 +284,68 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	
 	// _info("OpenGL draw");
+    int tex;
+    bool booltemorary = false;
+    if(!booltemorary){
+       // tex = setup_texture();
+        booltemorary = true;
+    }
     /* Move Left 1.5 Units And Into The Screen 6.0 */
+//    glLoadIdentity();
+//     glScalef(0.03,0.03,0.03);
+//     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
+
     float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
     float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
-    float m_size = 0.03;
+    //float m_size = 0.03;
     glLoadIdentity();
+    //glScalef(0.03,0.03,0.03);
     glScalef(1,1,1);
-    glTranslatef(opengl_x,opengl_y,0.0f);
+    //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    //glColor3f(1.0,0.0,0.0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glTranslatef(opengl_x,opengl_y,0.0f);
+   // glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
+    //_dbg3("*(gui.camera_zoom*0.01):" << gui.camera_zoom);
+    float m_size = 0.03*gui.camera_zoom;
+    glColor3f(1.0,0.0,0.0);
     glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
     glBegin( GL_QUADS );                                /* Drawing Using Quads       */
-    glTexCoord2f (0, 0);
-    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
-    glTexCoord2f (1, 0);
-    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
-    glTexCoord2f (1, 1);
-    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
     glTexCoord2f (0, 1);
+    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
+    glTexCoord2f (1, 1);
+    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
+    glTexCoord2f (1, 0);
+    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
+    glTexCoord2f (0, 0);
     glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
     glEnd( );                                           /* Finished Drawing The Quads */
-
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
-    glDisable(GL_BLEND);
+
+/*
+    char* title_font = "FreeMono";
+    FONT *font;
+
+//    if(font = allegro_gl_load_system_font_ex(title_font , -1, 1, 10, 10, 0.0f, 32,256)){
+
+//        _dbg1("RUBUBU!");
+
+//    }
+
+    font = allegro_gl_load_system_font(title_font, 1, 100, 100);
+    if(font){
+        _dbg1("Load the font");
+    }
+    //lucidia_fnt = allegro_gl_convert_allegro_font((FONT*)dat[0].dat, AGL_FONT_TYPE_TEXTURED, 16.0);
+    allegro_gl_printf(font, opengl_x, opengl_y, 0.0f, 1, "test");
+
+    */
+
+    glLineWidth(2.5);  //size of line
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINES);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(1*m_size, 0, 0);
+    glEnd();
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
@@ -355,28 +394,68 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
             if (layer.m_layer_nr == e_layer_nr_route) { // draw the links // XXX
-                int price = m_neighbors_prices.at(neighbor.first);
-                int thick = 1;
-                if (price >= 10) thick = 2;
-                if (price >= 20) thick = 3;
-                if (price >= 50) thick = 4;
-                if (price >= 80) thick = 5;
-                if (price >= 100) thick = 6;
-                if (price >= 500) thick = 7;
-                if (price >= 1000) thick = 8;
-
+                //alex_thick_line(frame, vx, vy, gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y), thick - 1, color);
                 float start_connect_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float start_connect_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float end_connect_x = ((gui.view_x(neighbor_ptr->m_x))-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float end_connect_y = -((gui.view_y(neighbor_ptr->m_y))-0.5*SCREEN_H)/(0.5*SCREEN_H);
 
-                glLineWidth(thick);
+                glLineWidth(1.5);
                 glColor3f(0.5,0.5,0.5);
                 glLoadIdentity();
                 glBegin(GL_LINES);
                 glVertex3f(start_connect_x,start_connect_y,0.0f);
                 glVertex3f(end_connect_x,end_connect_y,0.0f);
                 glEnd();
+
+                if (print_send_message) {;
+                    t_geo_point send_piont, receive_point, msg_circle;
+                    send_piont.x = vx;
+                    send_piont.y = vy;
+
+                    receive_point.x = gui.view_x(neighbor_ptr->m_x);
+                    receive_point.y = gui.view_y(neighbor_ptr->m_y);
+
+                    auto complete =  static_cast<double>(m_animframe) / static_cast<double>(g_max_anim_frame); // 0.0 - 1.0
+                    msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
+                    // ( m_outbox.at(0)->m_starttime   -   gui.... world... get_simclock() ) / sendingtime
+                    // sending time - constant for this card, e.g. 2.0
+
+                    if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) { // green
+                         float m_size = (0.03*gui.camera_zoom)+0.003;
+                         glTranslatef((msg_circle.x-0.5*SCREEN_W) / (0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H) / (0.5*SCREEN_H)), 0.0f);
+                         glColor3f(0.0,0.0,1.0);
+                         glBegin( GL_QUADS );
+                         glVertex3f(1.0f*m_size,1.0f*m_size,0.0f);
+                         glVertex3f(-1.0f*m_size,1.0f*m_size,0.0f);
+                         glVertex3f(-1.0f*m_size,-1.0f*m_size,0.0f);
+                         glVertex3f(1.0f*m_size,-1.0f*m_size,0.0f);
+                         glEnd( );
+                    } else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_menu) { //blue
+
+                         float m_size = (0.03*gui.camera_zoom)+0.003;
+                         glTranslatef((msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W),-((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)),0.0f);
+                         glColor3f(0.0,1.0,1.0);
+                         glBegin( GL_QUADS );
+                         glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f );
+                         glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f );
+                         glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f );
+                         glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
+                         glEnd( );
+                    }
+                    else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_data) { //red
+                        float m_size = (0.03*gui.camera_zoom)+0.003;
+                        glTranslatef((msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W),-((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)),0.0f);
+                        glColor3f(1.0,0.0,1.0);
+                        glBegin( GL_QUADS );
+                        glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f );
+                        glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f );
+                        glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f );
+                        glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
+                        glEnd( );
+                    }
+                }
+
             }
         }
     }

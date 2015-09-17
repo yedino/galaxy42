@@ -109,10 +109,10 @@ void c_world::load (const string &filename) {
 		} else if (str_line.find("IP") != std::string::npos) {
 			address = str_line.substr(3);
 		} else if (str_line.find('}') != std::string::npos) { // save to vector
-			if (type == "cjddev")
-				m_objects.push_back(make_shared<c_cjddev>(name, x, y, address));
-			else if (type == "tnetdev")
-				m_objects.push_back(make_shared<c_tnetdev>(name, x, y, address));
+            if (type == "cjddev")
+                m_objects.push_back(make_shared<c_cjddev>(name, x, y, address));
+            else if (type == "tnetdev")
+                m_objects.push_back(make_shared<c_tnetdev>(name, x, y, address));
 			else if (type == "userdev")
 				m_objects.push_back(make_shared<c_userdev>(name, x, y, address));
 		} else if (str_line.find("connections") != std::string::npos) {
@@ -140,7 +140,7 @@ void c_world::load (const string &filename) {
 						if (node_1 && node_2) {
 							node_1->add_neighbor(node_2, price);
 							node_1.reset();
-							node_2.reset();
+                            node_2.reset();
 						}
 					}
 				}
