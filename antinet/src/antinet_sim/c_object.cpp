@@ -70,7 +70,6 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
-    //const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
         auto selected_object = gui.m_selected_object.lock();
@@ -108,7 +107,6 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
         }
 
         if (this == source_object.get()) {
-            //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
             glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
 
@@ -126,8 +124,6 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
         // std::cout << "DEBUG4" << std::endl;
         auto selected_object = gui.m_selected_object.lock();
         if (this == selected_object.get()) { // if I am the selected object
-
-//          glLineWidth(2.5);  //size of line
             glLineWidth(1.0);
             glColor3f(0.0, 1.0, 1.0);
 
@@ -288,41 +284,33 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	
 	// _info("OpenGL draw");
-    int tex;
-    bool booltemorary = false;
-    if(!booltemorary){
-       // tex = setup_texture();
-        booltemorary = true;
-    }
     /* Move Left 1.5 Units And Into The Screen 6.0 */
-//    glLoadIdentity();
-//     glScalef(0.03,0.03,0.03);
-//     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
-
     float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
     float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
     float m_size = 0.03;
     glLoadIdentity();
-    //glScalef(0.03,0.03,0.03);
     glScalef(1,1,1);
-    //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
-
     glTranslatef(opengl_x,opengl_y,0.0f);
-   // glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
 
-    glColor3f(1.0,0.0,0.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    //glColor3f(1.0,0.0,0.0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
     glBegin( GL_QUADS );                                /* Drawing Using Quads       */
-    glTexCoord2f (0, 1);
-    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
-    glTexCoord2f (1, 1);
-    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
-    glTexCoord2f (1, 0);
-    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
     glTexCoord2f (0, 0);
+    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
+    glTexCoord2f (1, 0);
+    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
+    glTexCoord2f (1, 1);
+    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
+    glTexCoord2f (0, 1);
     glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
     glEnd( );                                           /* Finished Drawing The Quads */
+
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
+    glDisable(GL_BLEND);
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
@@ -369,13 +357,22 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
             if (layer.m_layer_nr == e_layer_nr_route) { // draw the links // XXX
-                //alex_thick_line(frame, vx, vy, gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y), thick - 1, color);
+                int price = m_neighbors_prices.at(neighbor.first);
+                int thick = 1;
+                if (price >= 10) thick = 2;
+                if (price >= 20) thick = 3;
+                if (price >= 50) thick = 4;
+                if (price >= 80) thick = 5;
+                if (price >= 100) thick = 6;
+                if (price >= 500) thick = 7;
+                if (price >= 1000) thick = 8;
+
                 float start_connect_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float start_connect_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float end_connect_x = ((gui.view_x(neighbor_ptr->m_x))-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float end_connect_y = -((gui.view_y(neighbor_ptr->m_y))-0.5*SCREEN_H)/(0.5*SCREEN_H);
 
-                glLineWidth(1.5);
+                glLineWidth(thick);
                 glColor3f(0.5,0.5,0.5);
                 glLoadIdentity();
                 glBegin(GL_LINES);

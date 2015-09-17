@@ -62,7 +62,7 @@ void c_bitmaps::init_load_all () {
 
 void c_bitmaps::bitmap_to_int() {
     m_background_opengl = allegro_gl_make_texture(m_background);
-    m_node_opengl = allegro_gl_make_texture(m_node);
+    m_node_opengl = allegro_gl_make_texture_ex(AGL_TEXTURE_HAS_ALPHA, m_node, -1);
 }
 
 bool c_bitmaps::test_dir_as_datadir (string dir) const {
