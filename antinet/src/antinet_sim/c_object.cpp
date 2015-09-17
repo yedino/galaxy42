@@ -241,11 +241,13 @@ c_cjddev::c_cjddev (string name,
 	t_cjdaddr address_ipv6) : c_netdev(name, x, y), m_my_address(address_ipv6) {
 
 	std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<long long> dis(1,LONG_LONG_MAX);
-
-		m_dht_addr = dis(gen);			//geting random dht address
-
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<long long> dis(1,LONG_LONG_MAX);
+	m_dht_addr = dis(gen);			//geting random dht address
+	
+	std::list<t_cjdaddr> tmp_list;
+	tmp_list.push_back(m_my_address);
+	m_known_nodes[m_dht_addr] = tmp_list;
 }
 
 unsigned int cjddev_detail_next_price (unsigned int current) {
@@ -702,6 +704,34 @@ void c_tnetdev::tick () {
 			out_message.m_remote_id = response.m_to;
 			out_message.m_data = response.serialize();
 			m_raw_outbox.emplace_back(std::move(out_message));
+		}
+		else if (input_msg->m_logic == e_msgkind_dht_hello) { ///< response for dht hello
+			std::shared_ptr<msg_dht_hello> dht_msg(std::dynamic_pointer_cast<msg_dht_hello>(input_msg));
+			if (dht_msg->m_direction == true) {
+				if(dbg) _note("get msg hello from " << input_msg->m_from);
+				for (auto &tmp : m_known_nodes) {
+					std::list<t_cjdaddr> tmp_list;
+					tmp_list.push_back(m_my_address);
+					tmp_list.insert(tmp_list.end(), tmp.second.begin(), tmp.second.end());
+					//m_known_nodes[tmp.first] = dht_msg->m_known_nodes.second; ///< get list from packet
+				}
+				msg_dht_hello response;
+				response.m_home_dht_address = m_dht_addr;
+				response.m_from = m_my_address;
+				response.m_to = dht_msg->m_from;
+				response.m_destination = dht_msg->m_from;
+				response.m_known_nodes = m_known_nodes;
+				response.m_direction = false;
+				
+				t_message message;
+				message.m_remote_id = response.m_to;
+				message.m_data = response.serialize();
+				m_raw_outbox.emplace_back(std::move(message));
+			}
+			else { ///< dht_msg == response fir hello
+				if(dbg) _note("get response for dht hello from " << input_msg->m_from);
+			}
+			
 		}
 	}
 #else

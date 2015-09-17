@@ -106,7 +106,7 @@ private:
 
 struct msg_dht_hello :public msgcjd {
 	msg_dht_hello();
-	bool direction;
+	bool m_direction;
 	t_dht_addr m_target_dht_address;
 	t_dht_addr m_home_dht_address;
 	map<t_dht_addr,list < t_cjdaddr> > m_known_nodes;
