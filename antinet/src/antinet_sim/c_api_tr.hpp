@@ -25,9 +25,10 @@ The class for transmission
 */
 
 class c_api_tr {
+	friend class c_network;
 	protected:
 	virtual void hw_send(t_nym_id addr,std::string &&serialized_msg) =0;
-	void hw_recived(std::string && serialized_msg);
+	virtual void hw_recived(std::string && serialized_msg);
 
 	std::queue <std::string> m_incomming_msgs;
 
@@ -41,7 +42,7 @@ class c_api_tr {
 		It will throw on technical error (we discovered that we are unable to send).
 		
 		@param guy - the guy to whom we will send.
-		@param data - the string of data to send. It can hold null bytes \0 there, it will be correctly handled.
+		@param data - the string of data to send. It can hold null bytes \0 there,pit will be correctly handled.
 		*/
 		virtual void write_message(t_message&& msg);
 
