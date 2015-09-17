@@ -108,7 +108,7 @@ public:
  * @struct msg_ping
  * @brief send only to neighbor
  */
-struct msg_ping : msgcjd {
+struct msg_ping : public msgcjd {
 public:
 	msg_ping();
 	virtual ~msg_ping() = default;

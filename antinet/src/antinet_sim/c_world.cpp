@@ -2,6 +2,11 @@
 
 #include "c_drawtarget_opengl.hpp"
 
+c_world::c_world() :
+	m_network(std::make_shared<c_network>())
+{
+}
+
 
 void c_world::add_test () {
 	/*m_objects.push_back( make_shared<c_cjddev>("NODE_A", 200, 200, 11111111));
@@ -29,12 +34,15 @@ void c_world::add_test () {
 
 
 void c_world::tick () {
+	static unsigned int tick_number = 0; // XXX
 	m_simclock += 0.1; // @TODO move the 0.1 speed to a (const?) variable
 	
 	for (auto &obj : m_objects) {
 		obj->tick();
 	}
-	std::cout << "****************END OF TICK****************" << std::endl;
+	std::cout << "****************END OF TICK (" << tick_number << ")****************" << std::endl;
+	std::this_thread::sleep_for(std::chrono::seconds(2)); // XXX
+	++tick_number;
 }
 
 void c_world::draw (c_drawtarget &drawtarget) {
@@ -135,7 +143,7 @@ void c_world::load (const string &filename) {
 	}
 	for (auto &object: m_objects) {
 		try {
-			m_network.add_node(std::dynamic_pointer_cast<c_cjddev>(object));
+			m_network->add_node(std::dynamic_pointer_cast<c_cjddev>(object));
 		}
 		catch(std::bad_cast& bc) {
 			_note("exception: " << bc.what());

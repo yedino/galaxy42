@@ -9,6 +9,8 @@ void c_network::add_node (std::shared_ptr<c_cjddev> node) {
 }
 
 void c_network::send_message (std::string &&message) {
+	_note("c_network::send_message()");
+	_note("message size: " << message.size());
 	m_message_vector.emplace_back(message);
 }
 

@@ -28,8 +28,10 @@ public:
 	 */
 	t_simclock m_simclock; ///< @TODO wos
 	
-	c_network m_network;
+	std::shared_ptr<c_network> m_network;
 
+	c_world();
+	
 	void add_test ();
 
 	void tick ();

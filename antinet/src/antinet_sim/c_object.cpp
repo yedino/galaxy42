@@ -550,6 +550,8 @@ void c_netdev::set_network(std::shared_ptr<c_network> network_ptr) {
 }
 
 void c_netdev::hw_send(std::string &&serialized_msg) {
+	_info("c_netdev::hw_send()");
+	_info("serialized_msg size: " << serialized_msg.size());
 	m_network.lock()->send_message(std::move(serialized_msg));
 }
 
@@ -566,6 +568,18 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		inq_msg->m_msg->m_destination = destination_addr;
 		std::cout << m_my_address << " buy net to " << destination_addr << std::endl;
 		m_outbox.emplace_back(std::move(inq_msg));
+#if defined USE_API_TR
+		// XXX test sending pings, rm this
+		_info("test send ping to " << neighbor.first);
+		msg_ping ping_request;
+		ping_request.m_from = m_my_address;
+		ping_request.m_to = neighbor.first;
+		ping_request.m_destination = neighbor.first;
+		t_message message;
+		message.m_remote_id = ping_request.m_to;
+		message.m_data = ping_request.serialize();
+		m_raw_outbox.emplace_back(std::move(message));
+#endif
 	}
 }
 
@@ -641,7 +655,7 @@ void c_tnetdev::tick () {
 	m_network.lock()->tick();
 	// process outbox
 	if (!m_raw_outbox.empty()) {
-		write_message(std::move(m_raw_outbox.at(0))); // send message using c_network
+		c_api_tr::write_message(std::move(m_raw_outbox.at(0))); // send message using c_network
 		m_raw_outbox.erase(m_raw_outbox.begin());
 	}
 

@@ -37,7 +37,7 @@ void c_api_tr::write_message(t_message &&msg) {
 	boost::archive::binary_oarchive oa(str);
 	oa<<m_hw_message;
 
-	hw_send(str.str());
+	hw_send(std::move(str.str()));
 }
 
 void c_api_tr::hw_recived(std::string &&serialized_msg) {

@@ -543,7 +543,7 @@ void c_simulation::main_loop () {
 		// === show frame ===
 
 		if (use_draw_allegro) {
-			_dbg1("Allegro: frame done. fps = " << fps_str);
+			//_dbg1("Allegro: frame done. fps = " << fps_str);
 			scare_mouse();
 			blit(m_frame, m_screen, 0, 0, 0, 0, m_frame->w, m_frame->h);
 			unscare_mouse();
