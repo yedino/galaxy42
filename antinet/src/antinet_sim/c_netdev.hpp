@@ -4,9 +4,13 @@
 #include "c_api_tr.hpp"
 #include "c_msg.hpp"
 #include "c_network.hpp"
+
 #if defined USE_API_TR
 class c_network;
 struct c_msgtx;
+
+#include "c_api_tr.hpp"
+struct t_message;
 
 class c_netdev
 {

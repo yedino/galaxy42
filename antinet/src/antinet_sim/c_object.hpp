@@ -160,15 +160,23 @@ struct c_routing_package
  *
  * \brief a cjdns-networked device. has ipv6 address from cjdns
 */
+
+
 #if defined USE_API_TR
-class c_cjddev : public c_entity { // a cjdns-networked device. has ipv6 address from cjdns
+	class c_netdev;
+
+#include "c_api_tr.hpp"
+#include"c_msg.hpp"
+
+class c_cjddev : public c_entity{ // a cjdns-networked device. has ipv6 address from cjdns
 #else
 class c_cjddev : public c_netdev { // a cjdns-networked device. has ipv6 address from cjdns
 #endif
 protected:
 #if defined USE_API_TR
 	friend class c_network;
-	c_netdev m_netdev;
+	shared_ptr <c_netdev>m_netdev;
+	void hw_send(t_message p_msg);
 #endif
 	t_cjdaddr m_my_address;
 	map<t_cjdaddr, weak_ptr<c_cjddev >> m_neighbors; ///< addr => peer ptr
@@ -192,6 +200,12 @@ protected:
 	void hw_recived(t_message);
 
 public:
+#ifdef USE_API_TR
+	void write_message(msgcjd aa);// override;
+	void read_message(std::function <void (msgcjd)> handler);// override;
+
+#endif //USE_API_TR
+
 	c_cjddev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
 
 	virtual ~c_cjddev () = default;

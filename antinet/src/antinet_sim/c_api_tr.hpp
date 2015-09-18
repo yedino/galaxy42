@@ -9,6 +9,9 @@
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include "c_msg.hpp"
+
+
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
@@ -28,6 +31,8 @@ struct t_message {
 The class for transmission
 */
 
+class cjdmsg;
+
 class c_api_tr {
 
 	public:
@@ -42,7 +47,7 @@ class c_api_tr {
 		@param guy - the guy to whom we will send.
 		@param data - the string of data to send. It can hold null bytes \0 there,pit will be correctly handled.
 		*/
-		virtual void write_message(t_message&& msg)=0;
+		virtual void write_message(msgcjd p_msg)=0;
 
 		/**
 		Return all data that we received (e.g. in background).
@@ -50,7 +55,7 @@ class c_api_tr {
 		Can implement a timeout.
 		*/
 
-		virtual void read_message(std::function<void (t_message &&)> handler)=0; /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
+		virtual void read_message(std::function<void (msgcjd)> handler)=0; /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
 
 
 		c_api_tr() = default;

@@ -257,11 +257,18 @@ void c_cjddev::hw_recived(t_message msg) {
 
 }
 
+void c_cjddev::write_message(msgcjd p_msg ){
+	t_message m_msg;
+	m_msg.m_remote_id =  p_msg
+
+}
+
 c_cjddev::c_cjddev (string name,
 	t_pos x,
 	t_pos y,
 #if defined USE_API_TR
 	t_cjdaddr address_ipv6) : c_entity(name, x, y), m_my_address(address_ipv6) {
+	m_netdev.reset( new c_netdev);
 #else
 	t_cjdaddr address_ipv6) : c_netdev(name, x, y), m_my_address(address_ipv6) {
 #endif
@@ -697,9 +704,9 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		m_hello.m_destination = neighbor.first;
 
 
-		t_message message;
-		message.m_remote_id = m_hello.m_to;
-		message.m_data = m_hello.serialize();
+//		t_message message;
+//		message.m_remote_id = m_hello.m_to;
+//		message.m_data = m_hello.serialize();
 		//m_raw_outbox.emplace_back(std::move(message));
 
 
@@ -776,12 +783,13 @@ bool c_tnetdev::send_ftp_packet (const t_cjdaddr &destination_addr, const std::s
 
 void c_cjddev::tick () {
 	c_object::tick();
-//	auto m_msgs = hw_recived;
-//	for(auto m_msg:m_msgs){
+	auto m_msgs = m_netdev->hw_recived();
+	for(auto m_msg:m_msgs){
 
+		hw_recived(m_msg);
 //		msg tmp_msg<<m_msg;
 //		 = m_msg.m_data;
-//	}
+	}
 }
 
 bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string &data) {

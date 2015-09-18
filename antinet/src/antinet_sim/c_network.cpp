@@ -16,9 +16,9 @@ void c_network::send_message (t_nym_id addr,std::string &&message) {
 void c_network::tick() {
 //	_note("c_network::tick()");
 	for(auto node : m_node_map){
-		auto messages = node.second->m_netdev.m_outbox;
+		auto messages = node.second->m_netdev->m_outbox;
 		for (auto msg :messages){
-			m_node_map.at(msg.m_remote_id)->m_netdev.m_inbox.push_back(msg);
+			m_node_map.at(msg.m_remote_id)->m_netdev->m_inbox.push_back(msg);
 		}
 	}
 /*
