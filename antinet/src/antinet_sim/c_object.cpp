@@ -241,6 +241,22 @@ c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
 // ==================================================================
 #endif
 
+void c_cjddev::hw_recived(t_message msg) {
+
+		msgcjd m_msg;
+		m_msg.deserialize(msg.m_data);
+		switch (m_msg.m_logic){
+			case e_msgkind_dht_hello:
+				std::cout<<"dht_hello income"<<std::endl;
+			break;
+
+
+		default:
+			break;
+		}
+
+}
+
 c_cjddev::c_cjddev (string name,
 	t_pos x,
 	t_pos y,

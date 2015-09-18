@@ -189,6 +189,7 @@ protected:
     
     //
 
+	void hw_recived(t_message);
 
 public:
 	c_cjddev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
@@ -222,7 +223,8 @@ public:
 
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
-    int num_of_wating();
+	int num_of_wating();
+
 
 
 /**
