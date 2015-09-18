@@ -238,7 +238,11 @@ c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
 c_cjddev::c_cjddev (string name,
 	t_pos x,
 	t_pos y,
+#if defined USE_API_TR
+	t_cjdaddr address_ipv6) : c_entity(name, x, y), m_my_address(address_ipv6) {
+#else
 	t_cjdaddr address_ipv6) : c_netdev(name, x, y), m_my_address(address_ipv6) {
+#endif
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -354,6 +358,8 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
         for (auto neighbor : m_neighbors) {
             bool print_send_message = false;
+#if defined USE_API_TR
+#else
             if (!m_outbox.empty()) {
 
                 // auto const & = at(0) // @TODO wos
@@ -362,7 +368,7 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                     print_send_message = true;
                 }
             }
-
+#endif
             shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
             if (layer.m_layer_nr == e_layer_nr_route) { // draw the links // XXX
@@ -424,6 +430,8 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	if ((layer.m_layer_nr == e_layer_nr_route) || (layer.m_layer_nr == e_layer_nr_route_extra)) {
 		for (auto neighbor : m_neighbors) {
 			bool print_send_message = false;
+#if defined USE_API_TR
+#else
 			if (!m_outbox.empty()) {
 				
 				// auto const & = at(0) // @TODO wos
@@ -432,6 +440,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 					print_send_message = true;
 				}
 			}
+#endif
 			shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
 			//if (layer.m_layer_nr == e_layer_m_outbox.at(0)->m_msg-nr_route) { // draw the links
@@ -463,7 +472,8 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 					// ( m_outbox.at(0)->m_starttime   -   gui.... world... get_simclock() ) / sendingtime
 					// sending time - constant for this card, e.g. 2.0
 					msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
-
+#if defined USE_API_TR
+#else
 					if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) {
 						draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
 						                  msg_circle.x - c_bitmaps::get_instance().m_package_green->w / 2,
@@ -501,6 +511,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 						price_text += std::to_string(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.second);
 						textout_ex(frame, font, price_text.c_str(), msg_circle.x - 70, msg_circle.y - 25, color, -1);
 					}
+#endif
 				}
 			}
 
@@ -522,7 +533,10 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 }
 
 void c_cjddev::receive_message (unique_ptr<c_msgtx> &&message) {
+#if defined USE_API_TR
+#else
 	c_netdev::receive_message(std::move(message));
+#endif
 }
 
 t_cjdaddr c_cjddev::get_address () const { return m_my_address; }
@@ -566,14 +580,7 @@ void c_netdev::hw_send(t_nym_id addr,std::string &&serialized_msg) {
 void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 	m_wait_hosts.insert(destination_addr);
 	for (auto neighbor : m_neighbors) {
-		shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
-		unique_ptr<c_msgtx> inq_msg(new c_msgtx);
-		inq_msg->m_msg.reset(new msg_buy_inq);
-		inq_msg->m_msg->m_from = m_my_address;
-		inq_msg->m_msg->m_to = neighbor.first;
-		inq_msg->m_msg->m_destination = destination_addr;
-		std::cout << m_my_address << " buy net to " << destination_addr << std::endl;
-		m_outbox.emplace_back(std::move(inq_msg));
+
 #if defined USE_API_TR
 		// XXX test sending pings, rm this
 		/*_info("test send ping to " << neighbor.first);
@@ -597,11 +604,19 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		t_message message;
 		message.m_remote_id = m_hello.m_to;
 		message.m_data = m_hello.serialize();
-		m_raw_outbox.emplace_back(std::move(message));
+		//m_raw_outbox.emplace_back(std::move(message));
 
 
 		//dokonczyc;
-
+#else
+		shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
+		unique_ptr<c_msgtx> inq_msg(new c_msgtx);
+		inq_msg->m_msg.reset(new msg_buy_inq);
+		inq_msg->m_msg->m_from = m_my_address;
+		inq_msg->m_msg->m_to = neighbor.first;
+		inq_msg->m_msg->m_destination = destination_addr;
+		std::cout << m_my_address << " buy net to " << destination_addr << std::endl;
+		m_outbox.emplace_back(std::move(inq_msg));
 
 #endif
 	}
@@ -656,8 +671,10 @@ bool c_tnetdev::send_ftp_packet (const t_cjdaddr &destination_addr, const std::s
 	std::cout << "tokens: " << msg_content->m_payment.first << std::endl;
 	std::cout << "price = " << msg_content->m_payment.second << std::endl;
 	std::cout << "**********" << std::endl;
-
+#if defined USE_API_TR
+#else
 	m_outbox.emplace_back(std::move(ftp_packet));
+#endif
 	return true;
 }
 
@@ -676,7 +693,7 @@ void c_tnetdev::tick () {
 	c_cjddev::tick();
 #if defined USE_API_TR
 //	if(dbg) std::cout << "tick()" << std::endl;
-	m_network.lock()->tick();
+	/*m_network.lock()->tick();
 	// process outbox
 	if (!m_raw_outbox.empty()) {
 		c_api_tr::write_message(std::move(m_raw_outbox.at(0))); // send message using c_network
@@ -733,7 +750,7 @@ void c_tnetdev::tick () {
 			}
 			
 		}
-	}
+	}*/
 #else
 
 	// this should be in a loop to send faster - many packets at once (once full algorithm is implemented)
