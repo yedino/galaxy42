@@ -321,24 +321,28 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     glEnd( );                                           /* Finished Drawing The Quads */
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
 
-/*
-    char* title_font = "FreeMono";
-    FONT *font;
 
-//    if(font = allegro_gl_load_system_font_ex(title_font , -1, 1, 10, 10, 0.0f, 32,256)){
+    //char* title_font = "FreeMono";
+    char title_font[] = "FreeSans.ttf";
+
+    //font = allegro_gl_load_system_font_ex(title_font , AGL_FONT_TYPE_DONT_CARE, AGL_FONT_STYLE_BOLD, 5, 5, 0.0f, 32,256);
+//    if(f){
 
 //        _dbg1("RUBUBU!");
 
 //    }
 
-    font = allegro_gl_load_system_font(title_font, 1, 100, 100);
-    if(font){
-        _dbg1("Load the font");
-    }
+//    font = allegro_gl_load_system_font(title_font, AGL_FONT_STYLE_BOLD, 10, 10);
+//    if (font) {
+//        _dbg1("Load the font");
+//    }
+//    else {
+//        _dbg1("Error - load the font");
+//    }
     //lucidia_fnt = allegro_gl_convert_allegro_font((FONT*)dat[0].dat, AGL_FONT_TYPE_TEXTURED, 16.0);
-    allegro_gl_printf(font, opengl_x, opengl_y, 0.0f, 1, "test");
+    //allegro_gl_printf(f, opengl_x+10, opengl_y+10, 0.0f, 1, "test");
 
-    */
+
 
     glLineWidth(2.5);  //size of line
     glColor3f(1.0, 0.0, 0.0);
@@ -770,7 +774,7 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 // ==================================================================
 
 void c_tnetdev::tick () {
-	bool dbg = 1;
+    bool dbg = 1;
 	c_cjddev::tick();
 #if defined USE_API_TR
 //	if(dbg) std::cout << "tick()" << std::endl;

@@ -125,6 +125,9 @@ void c_simulation::main_loop () {
 	
 	///@see rendering.txt/[[drawing_main]]
 
+    FONT *f;
+    f = allegro_gl_convert_allegro_font(font, AGL_FONT_TYPE_TEXTURED, 500.0);
+
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) { 
 		auto start_time = std::chrono::high_resolution_clock::now();
@@ -351,6 +354,18 @@ void c_simulation::main_loop () {
 		if (use_draw_opengl) {
 			// TODO @opengl
             //textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+
+            auto x = allegro_mouse_x, y = allegro_mouse_y;
+            float opengl_mouse_x = (x-SCREEN_W*0.5)/(0.5*SCREEN_W);
+            float opengl_mouse_y = -(y-SCREEN_H*0.5)/(0.5*SCREEN_H);
+
+            if(font) _dbg1("FONT");
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            allegro_gl_printf(f, 0.7, 0.9, 0.0f, 0xFF0000, "test");
+
+            glBlendFunc(GL_ONE, GL_ZERO);
+           // _dbg1("print: ");
+
 		}
 
 
