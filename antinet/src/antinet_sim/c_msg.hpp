@@ -99,6 +99,7 @@ public:
 	virtual void deserialize(std::string binary);
 private:
 	friend class boost::serialization::access;
+
 	template <class Archive >
 	void serialize(Archive &ar, const unsigned int version);
 };
@@ -133,6 +134,7 @@ struct msg_ping_request : public msgcjd {
 public:
 	msg_ping_request();
 	virtual ~msg_ping_request() = default;
+	virtual std::string serialize() override;
 
 private:
 	friend class boost::serialization::access;

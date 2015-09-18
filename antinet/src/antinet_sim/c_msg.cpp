@@ -1,22 +1,39 @@
 #include "c_msg.hpp"
 
+#define SERIALIZE std::stringstream str;\
+	try{\
+		boost::archive::text_oarchive oa(str);\
+		oa<<*this;\
+	}catch(...){\
+	}\
+	std::cout<<"output"<<str.str()<<std::endl; \
+	return str.str()
+
+
+
 msgcjd::msgcjd (const t_msgkind &logic) : m_logic(logic), m_ID(std::rand()) // TODO
 {
 }
 
 
 std::string msgcjd::serialize() {
-	std::stringstream str;
+
+	/*std::stringstream str;
 	try{
 		boost::archive::text_oarchive oa(str);
 		oa<<*this;
 	}catch(...){
 
 	}
+
 	return str.str();
+	*/
+	SERIALIZE;
 }
-void msgcjd::deserialize(std::string serialized_obj) {
-	try{
+
+void msgcjd::deserialize(std::string serialized_obj) { //don't even think about &&
+		std::cout<<"input:"<<serialized_obj;
+		try{
 	msgcjd tmp_msg;
 	std::stringstream str(serialized_obj);
 	boost::archive::text_iarchive ia(str);
@@ -31,6 +48,12 @@ void msgcjd::deserialize(std::string serialized_obj) {
 msg_ping_request::msg_ping_request () : msgcjd (e_msgkind_ping_request) {
 }
 
+std::string msg_ping_request::serialize() {
+//	return serialize();
+	SERIALIZE;
+
+}
+
 
 msg_dht_hello::msg_dht_hello():msgcjd(e_msgkind_dht_hello) {
 
@@ -38,7 +61,9 @@ msg_dht_hello::msg_dht_hello():msgcjd(e_msgkind_dht_hello) {
 
 std::string msg_dht_hello::serialize()
 {
-	return msgcjd::serialize();
+//	return msgcjd::serialize();
+	SERIALIZE;
+
 }
 
 msg_ping_response::msg_ping_response () : msgcjd (e_msgkind_ping_response) {
@@ -73,7 +98,7 @@ msg_use_ftp::msg_use_ftp () {
 
 
 string msg_ping_response::serialize() {
-	return msgcjd::serialize();
+	SERIALIZE;
 }
 
 

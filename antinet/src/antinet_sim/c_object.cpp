@@ -245,6 +245,8 @@ void c_cjddev::hw_recived(t_message msg) {
 
 		std::shared_ptr < msgcjd> msg_ptr(new msgcjd);
 		msg_ptr->deserialize(msg.m_data);
+
+
 		switch (msg_ptr->m_logic){
 			case e_msgkind_dht_hello:
 				std::cout<<"dht_hello income"<<std::endl;
@@ -253,8 +255,11 @@ void c_cjddev::hw_recived(t_message msg) {
 			case e_msgkind_data:
 				std::cout<<"data"<<std::endl;
 				break;
-			case e_msgkind_ping_response:
-				ping_responce(std::dynamic_pointer_cast<msg_ping_response>(msg_ptr));
+			case e_msgkind_ping_response:{
+				std::shared_ptr<msg_ping_response> tmp_msg2(new msg_ping_response);
+				tmp_msg2->deserialize(msg.m_data);
+				ping_responce(tmp_msg2);
+		}
 				break;
 			case e_msgkind_ping_request:
 				ping_request(std::dynamic_pointer_cast<msg_ping_request>(msg_ptr));
