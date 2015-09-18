@@ -243,7 +243,7 @@ c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
 #endif
 
 void c_cjddev::hw_recived(t_message msg) {
-
+#if defined USE_API_TR
 		std::shared_ptr < msgcjd> msg_ptr(new msgcjd);
 		msg_ptr->deserialize(msg.m_data);
 
@@ -268,10 +268,10 @@ void c_cjddev::hw_recived(t_message msg) {
 		default:
 			break;
 		}
-
+#endif
 
 }
-
+#if defined USE_API_TR
 void c_cjddev::write_message(std::shared_ptr<msgcjd> p_msg ){
 	t_message m_msg;
 	m_msg.m_remote_id =  p_msg->m_to;
@@ -279,7 +279,7 @@ void c_cjddev::write_message(std::shared_ptr<msgcjd> p_msg ){
 	m_netdev->hw_send(m_msg);
 
 }
-
+#endif
 c_cjddev::c_cjddev (string name,
 	t_pos x,
 	t_pos y,
@@ -752,6 +752,7 @@ int c_cjddev::num_of_wating()
 	return m_wait_hosts.size();
 }
 
+#if defined USE_API_TR
 void c_cjddev::ping_responce(shared_ptr <msg_ping_response> p_msg) {
 
 				std::cout<<"ping responce"<<std::endl;
@@ -759,7 +760,6 @@ void c_cjddev::ping_responce(shared_ptr <msg_ping_response> p_msg) {
 }
 
 void c_cjddev::ping_request(shared_ptr <msg_ping_request> input_msg) {
-
 	if(!input_msg){
 		std::cout<<"no ping - i 'do no  what to do. chlip chlip"<<std::endl;
 		return;
@@ -774,8 +774,8 @@ void c_cjddev::ping_request(shared_ptr <msg_ping_request> input_msg) {
 //	response.m_ping_time = get_distance(*std::dynamic_pointer_cast<c_entity>(m_neighbors.at(ping_msg->m_from).lock())); ///< get distance to ping source
 	write_message(ping_response_ptr);
 
-
 }
+#endif
 
 #if defined USE_API_TR
 /*
@@ -894,13 +894,16 @@ bool c_tnetdev::send_ftp_packet (const t_cjdaddr &destination_addr, const std::s
 
 void c_cjddev::tick () {
 	c_object::tick();
+#if defined USE_API_TR
 	auto m_msgs = m_netdev->hw_recived();
+
 	for(auto m_msg:m_msgs){
 
 		hw_recived(m_msg);
 //		msg tmp_msg<<m_msg;
 //		 = m_msg.m_data;
 	}
+#endif
 }
 
 bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string &data) {

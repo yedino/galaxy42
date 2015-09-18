@@ -8,6 +8,7 @@
 #include "c_api_tr.hpp"
 #include "c_network.hpp"
 #include "c_msg.hpp"
+
 #if defined USE_API_TR
 #include "c_netdev.hpp"
 #endif
@@ -25,6 +26,7 @@ typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID ins
 //typedef int t_ID;
 
 struct c_msgtx;
+struct t_message;
 
 /**
  *\class c_object
@@ -241,10 +243,10 @@ public:
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
 	int num_of_wating();
-
+#if defined USE_API_TR
 	void ping_responce(shared_ptr <msg_ping_response>);
 	void ping_request(shared_ptr <msg_ping_request>);
-
+#endif
 
 
 /**
