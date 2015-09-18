@@ -133,8 +133,8 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
             glBegin(GL_LINE_LOOP);
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.07*cos(angle)*gui.camera_zoom;
-                float y = 0.14*sin(angle)*gui.camera_zoom;
+                float x = 0.07*cos(angle);
+                float y = 0.14*sin(angle);
 
                 glVertex3f(x,y,0.0f);
             }
@@ -219,8 +219,27 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 // ==================================================================
 
 // ==================================================================
+#if defined USE_API_TR
+/*void c_netdev::receive_message (unique_ptr<c_msgtx> &&message) {
+	m_inbox.emplace_back(std::move(message));
+}
+
+unique_ptr<c_msgtx> c_netdev::send_message () {
+	if (m_outbox.empty()) {
+		return nullptr;
+	}
+	unique_ptr<c_msgtx> ret_value = std::move(m_outbox.at(0));
+	m_outbox.erase(m_outbox.begin());
+	return ret_value;
+}
 
 // ==================================================================
+
+c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
+}
+*/
+// ==================================================================
+#endif
 
 c_cjddev::c_cjddev (string name,
 	t_pos x,
@@ -284,72 +303,37 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	
 	// _info("OpenGL draw");
-    int tex;
-    bool booltemorary = false;
-    if(!booltemorary){
-       // tex = setup_texture();
-        booltemorary = true;
-    }
     /* Move Left 1.5 Units And Into The Screen 6.0 */
-//    glLoadIdentity();
-//     glScalef(0.03,0.03,0.03);
-//     glTranslatef(m_x*0.03, m_y*0.03, 0.0f );
-
     float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
     float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
     //float m_size = 0.03;
     glLoadIdentity();
-    //glScalef(0.03,0.03,0.03);
     glScalef(1,1,1);
-    //glTranslatef(m_x*0.04-w, -m_y*0.08+h, 0.0f );
-
     glTranslatef(opengl_x,opengl_y,0.0f);
    // glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
     //_dbg3("*(gui.camera_zoom*0.01):" << gui.camera_zoom);
     float m_size = 0.03*gui.camera_zoom;
     glColor3f(1.0,0.0,0.0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    //glColor3f(1.0,0.0,0.0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
     glBegin( GL_QUADS );                                /* Drawing Using Quads       */
-    glTexCoord2f (0, 1);
-    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
-    glTexCoord2f (1, 1);
-    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
-    glTexCoord2f (1, 0);
-    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
     glTexCoord2f (0, 0);
+    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
+    glTexCoord2f (1, 0);
+    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
+    glTexCoord2f (1, 1);
+    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
+    glTexCoord2f (0, 1);
     glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
     glEnd( );                                           /* Finished Drawing The Quads */
+
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
-
-
-    //char* title_font = "FreeMono";
-    char title_font[] = "FreeSans.ttf";
-
-    //font = allegro_gl_load_system_font_ex(title_font , AGL_FONT_TYPE_DONT_CARE, AGL_FONT_STYLE_BOLD, 5, 5, 0.0f, 32,256);
-//    if(f){
-
-//        _dbg1("RUBUBU!");
-
-//    }
-
-//    font = allegro_gl_load_system_font(title_font, AGL_FONT_STYLE_BOLD, 10, 10);
-//    if (font) {
-//        _dbg1("Load the font");
-//    }
-//    else {
-//        _dbg1("Error - load the font");
-//    }
-    //lucidia_fnt = allegro_gl_convert_allegro_font((FONT*)dat[0].dat, AGL_FONT_TYPE_TEXTURED, 16.0);
-    //allegro_gl_printf(f, opengl_x+10, opengl_y+10, 0.0f, 1, "test");
-
-
-
-    glLineWidth(2.5);  //size of line
-    glColor3f(1.0, 0.0, 0.0);
-    glBegin(GL_LINES);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(1*m_size, 0, 0);
-    glEnd();
+    glDisable(GL_BLEND);
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
@@ -398,13 +382,22 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
 
             if (layer.m_layer_nr == e_layer_nr_route) { // draw the links // XXX
-                //alex_thick_line(frame, vx, vy, gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y), thick - 1, color);
+                int price = m_neighbors_prices.at(neighbor.first);
+                int thick = 1;
+                if (price >= 10) thick = 2;
+                if (price >= 20) thick = 3;
+                if (price >= 50) thick = 4;
+                if (price >= 80) thick = 5;
+                if (price >= 100) thick = 6;
+                if (price >= 500) thick = 7;
+                if (price >= 1000) thick = 8;
+
                 float start_connect_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float start_connect_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float end_connect_x = ((gui.view_x(neighbor_ptr->m_x))-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float end_connect_y = -((gui.view_y(neighbor_ptr->m_y))-0.5*SCREEN_H)/(0.5*SCREEN_H);
 
-                glLineWidth(1.5);
+                glLineWidth(thick);
                 glColor3f(0.5,0.5,0.5);
                 glLoadIdentity();
                 glBegin(GL_LINES);
@@ -776,7 +769,7 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 // ==================================================================
 
 void c_tnetdev::tick () {
-    bool dbg = 1;
+	bool dbg = 1;
 	c_cjddev::tick();
 #if defined USE_API_TR
 //	if(dbg) std::cout << "tick()" << std::endl;

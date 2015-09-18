@@ -45,6 +45,12 @@ public:
 
     virtual t_pos get_x() = 0;
     virtual t_pos get_y() = 0;
+
+    void set_font(std::shared_ptr<FONT> f) {
+        s_font_allegl=f;
+    }
+
+    std::shared_ptr<FONT> s_font_allegl;
 protected:
 	string m_name;
 	unsigned int m_animframe;
@@ -68,6 +74,7 @@ public:
         t_pos get_y();
 		
 	double get_distance(const c_entity &entity);
+
 	
 	virtual ~c_entity () = default;
 };

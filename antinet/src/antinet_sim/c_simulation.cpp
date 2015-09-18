@@ -77,7 +77,10 @@ std::string cjddev_detail_random_addr () {
 void c_simulation::main_loop () {
 	//	PALETTE palette;
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
-
+    s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
+    for(auto obj : m_world->m_objects) {
+        obj->set_font(s_font_allegl);
+    }
 	int viewport_x = 0, viewport_y = 0;
 
 	//show_mouse(m_screen);
@@ -124,9 +127,6 @@ void c_simulation::main_loop () {
 	// The main drawing is done inside this loop.
 	
 	///@see rendering.txt/[[drawing_main]]
-
-    FONT *f;
-    f = allegro_gl_convert_allegro_font(font, AGL_FONT_TYPE_TEXTURED, 500.0);
 
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) { 
@@ -354,18 +354,28 @@ void c_simulation::main_loop () {
 		if (use_draw_opengl) {
 			// TODO @opengl
             //textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
+           // FONT* font2;
+            //font2 = allegro_gl_convert_allegro_font(font, AGL_FONT_TYPE_TEXTURED,500.0);
+    //static std::unique_ptr<FONT> s_font_allegl (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
+//            glLoadIdentity();
+//            glEnable(GL_BLEND);
+//            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+//            glColor3f(0.0,0.0,1.0);
+//            allegro_gl_printf_ex(font2, 0.5, 0.5, 0.0,"TEXT TEXT TEXT");
+//            glDisable(GL_BLEND);
+//           allegro_gl_destroy_font(font2);
 
-            auto x = allegro_mouse_x, y = allegro_mouse_y;
-            float opengl_mouse_x = (x-SCREEN_W*0.5)/(0.5*SCREEN_W);
-            float opengl_mouse_y = -(y-SCREEN_H*0.5)/(0.5*SCREEN_H);
-
-            if(font) _dbg1("FONT");
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            allegro_gl_printf(f, 0.7, 0.9, 0.0f, 0xFF0000, "test");
-
-            glBlendFunc(GL_ONE, GL_ZERO);
-           // _dbg1("print: ");
-
+            if(allegro_keys[KEY_H]) {
+                _dbg1("KEY_H - opengl");
+            } else {
+                glLoadIdentity();
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                //glColor4f(1.0,0.0,1.0,1.0);
+                allegro_gl_printf(s_font_allegl.get(), 0.7, 0.9, 0.0,0xFF0000,"h - help");
+                glDisable(GL_BLEND);
+                //allegro_gl_destroy_font(font2);
+            }
 		}
 
 

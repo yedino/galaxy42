@@ -15,7 +15,7 @@ public:
 
 	c_simulation(t_drawtarget_type drawtarget_type); ///< create the simulation. choose the drawtarget type (drawing engine e.g. Allegro or OpenGL)
 //c_simulation(); // t_drawtarget_type drawtarget_type); ///< create the simulation. choose the drawtarget type (drawing engine e.g. Allegro or OpenGL)
-
+    std::shared_ptr <FONT> s_font_allegl;
 	virtual ~c_simulation ();
 
 	void init ();
