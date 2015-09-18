@@ -13,7 +13,7 @@ class c_netdev
 public:
 
     shared_ptr <c_network> m_network;
-    c_netdev();
+    c_netdev(){;}
 //    unique_ptr<c_msgtx> send_message();
 //    void receive_message(unique_ptr<c_msgtx> &&message);
 	std::vector<t_message> m_outbox;

@@ -164,6 +164,8 @@ class c_cjddev : public c_entity { // a cjdns-networked device. has ipv6 address
 class c_cjddev : public c_netdev { // a cjdns-networked device. has ipv6 address from cjdns
 #endif
 protected:
+	friend class c_network;
+	c_netdev m_netdev;
 	t_cjdaddr m_my_address;
 	map<t_cjdaddr, weak_ptr<c_cjddev >> m_neighbors; ///< addr => peer ptr
 	map<t_cjdaddr, unsigned int> m_neighbors_prices; ///< addr => price

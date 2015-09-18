@@ -15,14 +15,27 @@ void c_network::send_message (t_nym_id addr,std::string &&message) {
 
 void c_network::tick() {
 //	_note("c_network::tick()");
+	for(auto node : m_node_map){
+		auto messages = node.second->m_netdev.m_outbox;
+		for (auto msg :messages){
+			m_node_map.at(msg.m_remote_id)->m_netdev.m_inbox.push_back(msg);
+		}
+	}
+/*
+	for(auto node : m_node_map){
+		node.second->tick();
+	}
+*/
+	/*
 	for (auto &msg : m_message_vector) {
 		if(!m_node_map.empty()){
 			//m_node_map.at(msg.first)->hw_recived(std::move(msg.second));
 
 		}
-	m_message_vector.clear();
+	*/
+//	m_message_vector.clear();
 //m_node_map.at(msg.m_msg.m_remote_id)->write_message(std::move(msg.m_msg));
-	}
+//	}
 
 }
 #endif
