@@ -424,7 +424,8 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                     msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
                     // ( m_outbox.at(0)->m_starttime   -   gui.... world... get_simclock() ) / sendingtime
                     // sending time - constant for this card, e.g. 2.0
-
+#if defined USE_API_TR
+#else
                     if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) { // green
                          float m_size = (0.03*gui.camera_zoom)+0.003;
                          glTranslatef((msg_circle.x-0.5*SCREEN_W) / (0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H) / (0.5*SCREEN_H)), 0.0f);
@@ -458,6 +459,7 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                         glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
                         glEnd( );
                     }
+#endif
                 }
 
             }

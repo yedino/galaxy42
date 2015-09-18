@@ -29,12 +29,6 @@ The class for transmission
 */
 
 class c_api_tr {
-	friend class c_network;
-	protected:
-	virtual void hw_send(t_nym_id addr,std::string &&serialized_msg) =0;
-	virtual void hw_recived(std::string && serialized_msg);
-
-	std::queue <std::string> m_incomming_msgs;
 
 	public:
 
@@ -48,7 +42,7 @@ class c_api_tr {
 		@param guy - the guy to whom we will send.
 		@param data - the string of data to send. It can hold null bytes \0 there,pit will be correctly handled.
 		*/
-		virtual void write_message(t_message&& msg);
+		virtual void write_message(t_message&& msg)=0;
 
 		/**
 		Return all data that we received (e.g. in background).
@@ -56,7 +50,7 @@ class c_api_tr {
 		Can implement a timeout.
 		*/
 
-		virtual void read_message(std::function<void (t_message &&)> handler); /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
+		virtual void read_message(std::function<void (t_message &&)> handler)=0; /*{s_message msg; handler(std::move(msg));};*/ // handler have to be thread safe!! msg is created heare and is given to another thread by handler - handler is executed heare
 
 
 		c_api_tr() = default;

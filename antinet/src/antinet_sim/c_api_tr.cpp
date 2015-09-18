@@ -36,13 +36,13 @@ void c_api_tr::write_message(t_message &&msg) {
 	boost::archive::binary_oarchive oa(str);
 	oa<<m_message;
 
-	hw_send(m_message.m_remote_id ,std::move(str.str()));
+	//hw_send(m_message.m_remote_id ,std::move(str.str()));
 	} catch(...) {
 		std::cout<<"c_api_tr::hw_recived in boost deserialization exeption"<<std::endl;
 
 	}
 }
-
+/*
 void c_api_tr::hw_recived(std::string &&serialized_msg) {
 
 	std::string tmp_string (serialized_msg);
@@ -61,7 +61,8 @@ void c_api_tr::hw_recived(std::string &&serialized_msg) {
 	m_incomming_msgs.push(tmp_string);
 
 }
-
+*/
+/*
 void c_api_tr::read_message(std::function<void (t_message &&)> handler) {
 	while(!m_incomming_msgs.empty()){
 		std::string serialized_msg = m_incomming_msgs.front();
@@ -77,7 +78,8 @@ void c_api_tr::read_message(std::function<void (t_message &&)> handler) {
 		//
 	}
 
-	/*	t_message msg;
-	handler (std::move(msg));
-*/
-}
+//		t_message msg;
+//	handler (std::move(msg));
+
+
+}*/
