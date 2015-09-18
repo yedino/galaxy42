@@ -158,12 +158,13 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     if (layer.m_layer_nr == e_layer_nr_object_extra) {
          //std::cout << "DEBUG6" << std::endl;
         //textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
-        glLineWidth(2.5);  //size of line
-        glColor3f(0.0, 0.0, 1.0);
-//        glBegin(GL_LINES);
-//        glVertex3f(0.0, 0.0, 0.0);
-//        glVertex3f(-1, 0, 0);
-//        glEnd();
+        glColor4f(1.0, 0.0, 0.0, 0.0);
+        glLoadIdentity();
+        glEnable(GL_BLEND);
+        //allegro_gl_printf_ex(s_font_allegl.get(), (vx-0.5*SCREEN_W)/(0.5*SCREEN_W), -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H), 0.0, m_name.c_str());
+        allegro_gl_printf_ex(s_font_allegl.get(), (vx-0.5*SCREEN_W)/(0.5*SCREEN_W)-0.05, -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H)+0.1, 0.0, m_name.c_str());
+        glDisable(GL_BLEND);
+
     }
 }
 
@@ -345,11 +346,9 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     /* Move Left 1.5 Units And Into The Screen 6.0 */
     float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
     float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
-    //float m_size = 0.03;
     glLoadIdentity();
     glScalef(1,1,1);
     glTranslatef(opengl_x,opengl_y,0.0f);
-   // glTranslatef((m_x-SCREEN_W*0.5)/(0.5*SCREEN_W), -(m_y-SCREEN_H*0.5)/(0.5*SCREEN_H), 0.0f );
     //_dbg3("*(gui.camera_zoom*0.01):" << gui.camera_zoom);
     float m_size = 0.03*gui.camera_zoom;
     glColor3f(1.0,0.0,0.0);
@@ -357,8 +356,7 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    //glColor3f(1.0,0.0,0.0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
     glBegin( GL_QUADS );                                /* Drawing Using Quads       */
     glTexCoord2f (0, 0);
@@ -376,6 +374,13 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
+
+    //textout_ex(frame, font, m_my_address.c_str(), vx - 20, vy - 45, color, -1);
+
+    glLoadIdentity();
+    glEnable(GL_BLEND);
+    allegro_gl_printf_ex(s_font_allegl.get(), opengl_x-0.05, opengl_y+0.15, 0.0, m_my_address.c_str());
+    glDisable(GL_BLEND);
 
 ////////////////////////////////////////////////////////////////////////////////
     if (layer.m_layer_nr == e_layer_nr_object) {
@@ -437,14 +442,14 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                 float end_connect_y = -((gui.view_y(neighbor_ptr->m_y))-0.5*SCREEN_H)/(0.5*SCREEN_H);
 
                 glLineWidth(thick);
-                glColor3f(0.5,0.5,0.5);
+                glColor3f(0.1,0.1,1.0);
                 glLoadIdentity();
                 glBegin(GL_LINES);
                 glVertex3f(start_connect_x,start_connect_y,0.0f);
                 glVertex3f(end_connect_x,end_connect_y,0.0f);
                 glEnd();
 
-                if (print_send_message) {;
+                if (print_send_message) {
                     t_geo_point send_piont, receive_point, msg_circle;
                     send_piont.x = vx;
                     send_piont.y = vy;
@@ -460,40 +465,102 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 #else
                     if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) { // green
                          float m_size = (0.03*gui.camera_zoom)+0.003;
+                         glLoadIdentity();
                          glTranslatef((msg_circle.x-0.5*SCREEN_W) / (0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H) / (0.5*SCREEN_H)), 0.0f);
                          glColor3f(0.0,0.0,1.0);
+                         glEnable(GL_BLEND);
+                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+                         glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_pack_green_opengl);   //init a texture
                          glBegin( GL_QUADS );
-                         glVertex3f(1.0f*m_size,1.0f*m_size,0.0f);
-                         glVertex3f(-1.0f*m_size,1.0f*m_size,0.0f);
-                         glVertex3f(-1.0f*m_size,-1.0f*m_size,0.0f);
-                         glVertex3f(1.0f*m_size,-1.0f*m_size,0.0f);
+                         glTexCoord2d(1,0); glVertex3f(1.0f*m_size,1.0f*m_size,-0.1f);
+                         glTexCoord2d(0,0); glVertex3f(-1.0f*m_size,1.0f*m_size,-0.1f);
+                         glTexCoord2d(0,1); glVertex3f(-1.0f*m_size,-1.0f*m_size,-0.1f);
+                         glTexCoord2d(1,1); glVertex3f(1.0f*m_size,-1.0f*m_size,-0.1f);
                          glEnd( );
-                    } else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_menu) { //blue
+                         glBindTexture(GL_TEXTURE_2D, 0);
+                         glDisable(GL_BLEND);
 
+                         std::string text("looking for " + m_outbox.at(0)->m_msg->m_destination);
+                         glLoadIdentity();
+                         glEnable(GL_BLEND);
+                         allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
+                         glDisable(GL_BLEND);
+
+                    } else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_menu) { //blue
+                        std::shared_ptr<msg_buy_menu> menu_msg(std::dynamic_pointer_cast<msg_buy_menu>(m_outbox.at(0)->m_msg));
                          float m_size = (0.03*gui.camera_zoom)+0.003;
+                         glLoadIdentity();
                          glTranslatef((msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W),-((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)),0.0f);
                          glColor3f(0.0,1.0,1.0);
+                         glEnable(GL_BLEND);
+                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+                         glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_pack_blue_opengl);   //init a texture
                          glBegin( GL_QUADS );
                          glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f );
                          glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f );
                          glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f );
                          glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
                          glEnd( );
+                         glBindTexture(GL_TEXTURE_2D, 0);
+                         glDisable(GL_BLEND);
+
+                         std::string text(
+                             menu_msg->m_destination + " found, price = " + std::to_string(menu_msg->m_my_price));
+                         glLoadIdentity();
+                         glEnable(GL_BLEND);
+                         allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
+                         glDisable(GL_BLEND);
                     }
                     else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_data) { //red
+                        std::shared_ptr<msg_buy_menu> menu_msg(std::dynamic_pointer_cast<msg_buy_menu>(m_outbox.at(0)->m_msg));
                         float m_size = (0.03*gui.camera_zoom)+0.003;
+                        glLoadIdentity();
                         glTranslatef((msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W),-((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)),0.0f);
                         glColor3f(1.0,0.0,1.0);
+                        glEnable(GL_BLEND);
+                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+                        glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_pack_red_opengl);   //init a texture
                         glBegin( GL_QUADS );
                         glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f );
                         glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f );
                         glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f );
                         glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
                         glEnd( );
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                        glDisable(GL_BLEND);
+
+                        std::string text("send FTP to " + m_outbox.at(0)->m_msg->m_destination);
+                        glLoadIdentity();
+                        glEnable(GL_BLEND);
+                        allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
+
+                        std::string price_text(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.first);
+                        price_text += " ";
+                        price_text += std::to_string(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.second);
+                        allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, price_text.c_str());
+                        glDisable(GL_BLEND);
                     }
 #endif
                 }
 
+            }
+
+            // draw the link prices
+            if ((layer.m_layer_nr == e_layer_nr_route_extra)) {
+              t_geo_point text_pos = c_geometry::point_on_line_between_distance(
+                t_geo_point(vx, vy),
+                t_geo_point( gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y)),
+                40
+              );
+              string price = "$" + std::to_string(m_neighbors_prices.at(neighbor.first));
+              //textout_ex(frame, font, price.c_str(), text_pos.x, text_pos.y - 10, color, -1);
+              glLoadIdentity();
+              glEnable(GL_BLEND);
+              allegro_gl_printf_ex(s_font_allegl.get(), (text_pos.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((text_pos.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, price.c_str());
+              glDisable(GL_BLEND);
             }
         }
     }

@@ -77,7 +77,8 @@ std::string cjddev_detail_random_addr () {
 void c_simulation::main_loop () {
 	//	PALETTE palette;
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
-    s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
+		//s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,450.0), [](FONT *f){allegro_gl_destroy_font(f);});
+		s_font_allegl.reset (allegro_gl_convert_allegro_font_ex(font,AGL_FONT_TYPE_TEXTURED,450.0, GL_ALPHA8), [](FONT *f){allegro_gl_destroy_font(f);});
     for(auto obj : m_world->m_objects) {
         obj->set_font(s_font_allegl);
     }
@@ -176,13 +177,14 @@ void c_simulation::main_loop () {
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
             glLoadIdentity();
+            glEnable(GL_BLEND);
             glBegin(GL_QUADS);
             glTexCoord2f(0,1); glVertex3f(-1.0f,1.0f,0.0f);
             glTexCoord2f(1,1); glVertex3f(1.0f,1.0f,0.0f);
             glTexCoord2f(1,0); glVertex3f(1.0f,-1.0f,0.0f);
             glTexCoord2f(0,0); glVertex3f(-1.0f,-1.0f,0.0f);
             glEnd();
-
+            glDisable(GL_BLEND);
             glBindTexture(GL_TEXTURE_2D, 0);   // texture
 		}
 		
@@ -354,27 +356,46 @@ void c_simulation::main_loop () {
 		if (use_draw_opengl) {
 			// TODO @opengl
             //textout_ex(m_frame, font, mouse_pos_str.c_str(), txt_x, txt_y += txt_h, makecol(0, 0, 255), -1);
-           // FONT* font2;
-            //font2 = allegro_gl_convert_allegro_font(font, AGL_FONT_TYPE_TEXTURED,500.0);
-    //static std::unique_ptr<FONT> s_font_allegl (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
-//            glLoadIdentity();
-//            glEnable(GL_BLEND);
-//            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-//            glColor3f(0.0,0.0,1.0);
-//            allegro_gl_printf_ex(font2, 0.5, 0.5, 0.0,"TEXT TEXT TEXT");
-//            glDisable(GL_BLEND);
-//           allegro_gl_destroy_font(font2);
+            float offset = 0.03;
+            float tex_y = 0.9;
+            float tex_x = 0.7;
+            string pck_speed_str = "sending packets speed - " + std::to_string(450 - g_max_anim_frame);
+            glColor4f(0.0,0.0,1.0,0.0);
+            //glScalef(0.2f,0.2f,0.2f);
+            glLoadIdentity();
+            glEnable(GL_BLEND);
+            allegro_gl_printf_ex(s_font_allegl.get(), -0.9, tex_y, 0.0, mouse_pos_str.c_str());
+            allegro_gl_printf_ex(s_font_allegl.get(), -0.9, tex_y-=offset, 0.0, fps_str.c_str());
+            allegro_gl_printf_ex(s_font_allegl.get(), -0.9, tex_y-=offset, 0.0, ("Frame nr.: " + std::to_string(m_frame_number)).c_str());
+            allegro_gl_printf_ex(s_font_allegl.get(), -0.7, 0.97, 0.0, pck_speed_str.c_str());
+            glDisable(GL_BLEND);
 
             if(allegro_keys[KEY_H]) {
                 _dbg1("KEY_H - opengl");
+                glLoadIdentity();
+                glEnable(GL_BLEND);
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y, 0.0,"s - start");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"p - pause");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"f - send FTP");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"t - select target");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"r - select source");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"d - remove node");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"n - add node");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"enter/esc - exit");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"Arrows: move selected node");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"SHIFT-Arrows: move the camera");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"SHIFT-PageUp/Down: zoom in/out");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"F1: info about node");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"F2: next node");
+                glDisable(GL_BLEND);
+
             } else {
                 glLoadIdentity();
                 glEnable(GL_BLEND);
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-                //glColor4f(1.0,0.0,1.0,1.0);
-                allegro_gl_printf(s_font_allegl.get(), 0.7, 0.9, 0.0,0xFF0000,"h - help");
+                //allegro_gl_printf(s_font_allegl.get(), 0.8, 0.9, 0.0,0xFF0000,"h - help");
+                allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y, 0.0,"h - help");
+                //glBlendFunc(GL_ONE, GL_ZERO);
                 glDisable(GL_BLEND);
-                //allegro_gl_destroy_font(font2);
             }
 		}
 
@@ -501,10 +522,7 @@ void c_simulation::main_loop () {
                 glLineWidth(1.0);
                 glScalef(1.0f,1.0f,1.0f);
 
-
                 const int vx = m_gui->view_x(connect_node->m_x), vy = m_gui->view_y(connect_node->m_y); // position in viewport - because camera position
-                //float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
-                //float start_line_y = -((connect_node->m_y)-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float start_line_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float start_line_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float end_line_x = (allegro_mouse_x-0.5*SCREEN_W)/(0.5*SCREEN_W);
@@ -550,7 +568,6 @@ void c_simulation::main_loop () {
                 glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
                 //glTranslatef(m_gui->view_x_rev(mouse_x),m_gui->view_y_rev(mouse_y),0.0f);
-
                 glColor3f(0.0, 0.0, 0.0);
 
                 glBegin(GL_LINES);

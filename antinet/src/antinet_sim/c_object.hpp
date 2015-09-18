@@ -133,7 +133,7 @@ public:
 };
 #endif
 struct s_remote_host {
-	t_cjdaddr m_address = 0;
+	t_cjdaddr m_address = "";
 	unsigned int m_price = 0;
 };
 
