@@ -250,6 +250,14 @@ void c_cjddev::hw_recived(t_message msg) {
 				std::cout<<"dht_hello income"<<std::endl;
 			break;
 
+			case e_msgkind_data:
+				std::cout<<"data"<<std::endl;
+				break;
+			case e_msgkind_ping_response:
+
+				std::cout<<"ping responce"<<std::endl;
+				break;
+
 
 		default:
 			break;
@@ -260,6 +268,8 @@ void c_cjddev::hw_recived(t_message msg) {
 void c_cjddev::write_message(msgcjd p_msg ){
 	t_message m_msg;
 	m_msg.m_remote_id =  p_msg.m_to;
+	m_msg.m_data = p_msg.serialize();
+	m_netdev->hw_send(m_msg);
 
 }
 
@@ -702,7 +712,7 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		m_hello.m_from = m_my_address;
 		m_hello.m_to = neighbor.first;
 		m_hello.m_destination = neighbor.first;
-
+		write_message(m_hello);
 
 //		t_message message;
 //		message.m_remote_id = m_hello.m_to;

@@ -36,7 +36,9 @@ void c_world::add_test () {
 void c_world::tick () {
 	static unsigned int tick_number = 0;
 	m_simclock += get_chronon(); // @TODO move the 0.1 speed to a (const?) variable
-	
+
+	m_network->tick();
+
 	for (auto &obj : m_objects) {
 		try{
 			obj->tick();
