@@ -204,7 +204,7 @@ protected:
 
 public:
 #if defined USE_API_TR
-	void write_message(msgcjd p_msg);// override;
+	void write_message(std::shared_ptr<msgcjd> p_msg);// override;
 	void read_message(std::function <void (msgcjd)> handler);// override;
 
 #endif //USE_API_TR

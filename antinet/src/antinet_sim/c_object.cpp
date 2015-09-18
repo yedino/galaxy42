@@ -266,10 +266,10 @@ void c_cjddev::hw_recived(t_message msg) {
 
 }
 
-void c_cjddev::write_message(msgcjd p_msg ){
+void c_cjddev::write_message(std::shared_ptr<msgcjd> p_msg ){
 	t_message m_msg;
-	m_msg.m_remote_id =  p_msg.m_to;
-	m_msg.m_data = p_msg.serialize();
+	m_msg.m_remote_id =  p_msg->m_to;
+	m_msg.m_data = p_msg->serialize();
 	m_netdev->hw_send(m_msg);
 
 }
@@ -693,14 +693,14 @@ void c_cjddev::ping_request(shared_ptr <msg_ping_request> input_msg) {
 		return;
 	}
 
-	msg_ping_response response;
-	response.m_ttl = input_msg->m_ttl;
-	response.m_to = input_msg->m_from;
-	response.m_from = input_msg->m_to;
-	response.m_logic = e_msgkind_ping_response;
-	response.m_ID = input_msg->m_ID;
+	std::shared_ptr<msg_ping_response> ping_response_ptr(new msg_ping_response);
+	ping_response_ptr->m_ttl = input_msg->m_ttl;
+	ping_response_ptr->m_to = input_msg->m_from;
+	ping_response_ptr->m_from = input_msg->m_to;
+	ping_response_ptr->m_logic = e_msgkind_ping_response;
+	ping_response_ptr->m_ID = input_msg->m_ID;
 //	response.m_ping_time = get_distance(*std::dynamic_pointer_cast<c_entity>(m_neighbors.at(ping_msg->m_from).lock())); ///< get distance to ping source
-	write_message(response);
+	write_message(ping_response_ptr);
 
 
 }
@@ -723,12 +723,12 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 #if defined USE_API_TR
 		// XXX test sending pings, rm this
 		_info("test send ping to " << neighbor.first);
-		msg_ping_request ping_request;
-		ping_request.m_from = m_my_address;
-		ping_request.m_to = neighbor.first;
-		ping_request.m_destination = neighbor.first;
+		std::shared_ptr<msg_ping_request> ping_request_ptr(new msg_ping_request);
+		ping_request_ptr->m_from = m_my_address;
+		ping_request_ptr->m_to = neighbor.first;
+		ping_request_ptr->m_destination = neighbor.first;
 
-		write_message(ping_request);
+		write_message(std::dynamic_pointer_cast<msgcjd>(ping_request_ptr));
 		/*t_message message;
 		message.m_remote_id = ping_request.m_to;
 		message.m_data = ping_request.serialize();
