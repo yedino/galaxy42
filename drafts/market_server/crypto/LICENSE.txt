@@ -1,7 +1,0 @@
-
-This subproject might include some opensource code of SHA implementation, see the files here for details.
-
-Other then that, our code is on the same licence as rest of Antinet project.
-
-
-
