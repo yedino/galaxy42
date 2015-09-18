@@ -18,6 +18,7 @@ typedef int t_pos; ///< position (one coordinate)
 typedef std::string t_cjdaddr; // cjdns address example
 typedef unsigned long long int t_ID;
 typedef long long t_dht_addr;
+typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
 
 //typedef int t_cjdaddr; // cjdns address example
@@ -164,7 +165,7 @@ struct c_routing_package
 
 #if defined USE_API_TR
 	class c_netdev;
-
+	struct msgcjd;
 #include "c_api_tr.hpp"
 #include"c_msg.hpp"
 
@@ -200,8 +201,8 @@ protected:
 	void hw_recived(t_message);
 
 public:
-#ifdef USE_API_TR
-	void write_message(msgcjd aa);// override;
+#if defined USE_API_TR
+	void write_message(msgcjd p_msg);// override;
 	void read_message(std::function <void (msgcjd)> handler);// override;
 
 #endif //USE_API_TR

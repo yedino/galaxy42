@@ -26,7 +26,7 @@ void t_message::serialize(Archive & ar, const unsigned int version){			//all str
 	 */
 }
 
-
+/*
 void c_api_tr::write_message(t_message &&msg) {
 	try {
 	t_message m_message;
@@ -41,7 +41,7 @@ void c_api_tr::write_message(t_message &&msg) {
 		std::cout<<"c_api_tr::hw_recived in boost deserialization exeption"<<std::endl;
 
 	}
-}
+}*/
 /*
 void c_api_tr::hw_recived(std::string &&serialized_msg) {
 

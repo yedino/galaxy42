@@ -259,7 +259,7 @@ void c_cjddev::hw_recived(t_message msg) {
 
 void c_cjddev::write_message(msgcjd p_msg ){
 	t_message m_msg;
-	m_msg.m_remote_id =  p_msg
+	m_msg.m_remote_id =  p_msg.m_to;
 
 }
 

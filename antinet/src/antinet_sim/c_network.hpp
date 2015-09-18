@@ -9,6 +9,8 @@
 #include "c_api_tr.hpp"
 #include "c_object.hpp"
 
+typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
+
 class c_cjddev;
 class c_api_tr;
 struct t_message;

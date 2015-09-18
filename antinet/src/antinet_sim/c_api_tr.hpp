@@ -11,7 +11,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include "c_msg.hpp"
 
-
+struct msgcjd;
 
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
