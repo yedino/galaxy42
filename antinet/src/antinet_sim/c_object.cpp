@@ -522,6 +522,27 @@ void c_cjddev::receive_message (unique_ptr<c_msgtx> &&message) {
 #endif
 }
 
+#if defined USE_API_TR
+#else
+void c_netdev::receive_message (unique_ptr<c_msgtx> &&message) {
+	m_inbox.emplace_back(std::move(message));
+}
+
+unique_ptr<c_msgtx> c_netdev::send_message () {
+	if (m_outbox.empty()) {
+		return nullptr;
+	}
+	unique_ptr<c_msgtx> ret_value = std::move(m_outbox.at(0));
+	m_outbox.erase(m_outbox.begin());
+	return ret_value;
+}
+// ==================================================================
+
+c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
+}
+#endif
+
+
 t_cjdaddr c_cjddev::get_address () const { return m_my_address; }
 
 vector<t_cjdaddr> c_cjddev::get_neighbors_addresses () const {

@@ -4,7 +4,7 @@
 #include "c_api_tr.hpp"
 #include "c_msg.hpp"
 #include "c_network.hpp"
-
+#if defined USE_API_TR
 class c_network;
 struct c_msgtx;
 
@@ -30,5 +30,5 @@ public:
 	virtual ~c_netdev () = default;
 
 };
-
+#endif // USE_API_TR
 #endif // C_NETDEV_H

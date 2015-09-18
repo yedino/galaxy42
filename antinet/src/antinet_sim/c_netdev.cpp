@@ -1,6 +1,6 @@
 #include "c_netdev.hpp"
 #include "libs1.hpp"
-#
+#if defined USE_API_TR
 /*
 void c_netdev::receive_message (unique_ptr<c_msgtx> &&message) {
 	m_inbox.emplace_back(std::move(message));
@@ -47,3 +47,4 @@ void c_netdev::tick()
 }
 */
 
+#endif

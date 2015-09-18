@@ -93,22 +93,14 @@ public:
  *
  *
  */
-/*
+
 #if defined USE_API_TR
-struct t_message;
-class c_network;
-class c_api_tr;
-class c_netdev : public c_entity, public c_api_tr { // a networked (e.g. connected somewhere) device
 #else
 class c_netdev : public c_entity { // a networked (e.g. connected somewhere) device
-#endif
 protected:
 	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
 	vector<unique_ptr<c_msgtx> > m_inbox;  // general box with messages that are received somehow
 	vector<unique_ptr<c_msgtx> > m_oldbox; // for unreplied messages from inbox
-#if defined USE_API_TR
-	std::weak_ptr<c_network> m_network;
-#endif
 
 public:
 	c_netdev (string name, t_pos x, t_pos y);
@@ -117,7 +109,7 @@ public:
 
 	virtual void receive_message (unique_ptr<c_msgtx> &&message); // TODO ttl
 	virtual unique_ptr<c_msgtx> send_message (); // TODO ttl
-#if defined USE_API_TR
+/*#if defined USE_API_TR
 protected:
 	// c_api_tr
 	//virtual void write_message(t_message&& msg) override;
@@ -127,9 +119,9 @@ protected:
 	std::vector<t_message> m_raw_inbox; // general box with messages that are received somehow
 public:
 	void set_network(std::shared_ptr<c_network> network_ptr);
-#endif
+#endif*/
 };
-*/
+#endif
 struct s_remote_host {
 	t_cjdaddr m_address = 0;
 	unsigned int m_price = 0;
