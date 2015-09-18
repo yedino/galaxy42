@@ -166,6 +166,8 @@ struct c_routing_package
 #if defined USE_API_TR
 	class c_netdev;
 	struct msgcjd;
+	struct msg_ping_request;
+	struct msg_ping_response;
 #include "c_api_tr.hpp"
 #include"c_msg.hpp"
 
@@ -239,6 +241,9 @@ public:
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
 	int num_of_wating();
+
+	void ping_responce(shared_ptr <msg_ping_response>);
+	void ping_request(shared_ptr <msg_ping_request>);
 
 
 

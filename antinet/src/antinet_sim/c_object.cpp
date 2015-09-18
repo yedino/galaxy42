@@ -243,9 +243,9 @@ c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
 
 void c_cjddev::hw_recived(t_message msg) {
 
-		msgcjd m_msg;
-		m_msg.deserialize(msg.m_data);
-		switch (m_msg.m_logic){
+		std::shared_ptr < msgcjd> msg_ptr(new msgcjd);
+		msg_ptr->deserialize(msg.m_data);
+		switch (msg_ptr->m_logic){
 			case e_msgkind_dht_hello:
 				std::cout<<"dht_hello income"<<std::endl;
 			break;
@@ -254,14 +254,15 @@ void c_cjddev::hw_recived(t_message msg) {
 				std::cout<<"data"<<std::endl;
 				break;
 			case e_msgkind_ping_response:
-
-				std::cout<<"ping responce"<<std::endl;
+				ping_responce(std::dynamic_pointer_cast<msg_ping_response>(msg_ptr));
 				break;
-
-
+			case e_msgkind_ping_request:
+				ping_request(std::dynamic_pointer_cast<msg_ping_request>(msg_ptr));
+			break;
 		default:
 			break;
 		}
+
 
 }
 
@@ -676,7 +677,32 @@ unsigned int c_cjddev::get_price (t_cjdaddr address) const {
 
 int c_cjddev::num_of_wating()
 {
-   return m_wait_hosts.size();
+	return m_wait_hosts.size();
+}
+
+void c_cjddev::ping_responce(shared_ptr <msg_ping_response> p_msg) {
+
+				std::cout<<"ping responce"<<std::endl;
+
+}
+
+void c_cjddev::ping_request(shared_ptr <msg_ping_request> input_msg) {
+
+	if(!input_msg){
+		std::cout<<"no ping - i 'do no  what to do. chlip chlip"<<std::endl;
+		return;
+	}
+
+	msg_ping_response response;
+	response.m_ttl = input_msg->m_ttl;
+	response.m_to = input_msg->m_from;
+	response.m_from = input_msg->m_to;
+	response.m_logic = e_msgkind_ping_response;
+	response.m_ID = input_msg->m_ID;
+//	response.m_ping_time = get_distance(*std::dynamic_pointer_cast<c_entity>(m_neighbors.at(ping_msg->m_from).lock())); ///< get distance to ping source
+	write_message(response);
+
+
 }
 
 #if defined USE_API_TR
@@ -696,16 +722,19 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 
 #if defined USE_API_TR
 		// XXX test sending pings, rm this
-		/*_info("test send ping to " << neighbor.first);
-		msg_ping ping_request;
+		_info("test send ping to " << neighbor.first);
+		msg_ping_request ping_request;
 		ping_request.m_from = m_my_address;
 		ping_request.m_to = neighbor.first;
 		ping_request.m_destination = neighbor.first;
-		t_message message;
+
+		write_message(ping_request);
+		/*t_message message;
 		message.m_remote_id = ping_request.m_to;
 		message.m_data = ping_request.serialize();
 		m_raw_outbox.emplace_back(std::move(message));
 		*/
+		/*
 		msg_dht_hello m_hello;
 		//wylosowac adres
 		m_hello.m_home_dht_address = m_dht_addr;
@@ -713,7 +742,7 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		m_hello.m_to = neighbor.first;
 		m_hello.m_destination = neighbor.first;
 		write_message(m_hello);
-
+		*/
 //		t_message message;
 //		message.m_remote_id = m_hello.m_to;
 //		message.m_data = m_hello.serialize();

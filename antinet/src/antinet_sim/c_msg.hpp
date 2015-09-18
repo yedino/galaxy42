@@ -129,10 +129,15 @@ public:
  * @struct msg_ping
  * @brief send only to neighbor
  */
-struct msg_ping : public msgcjd {
+struct msg_ping_request : public msgcjd {
 public:
-	msg_ping();
-	virtual ~msg_ping() = default;
+	msg_ping_request();
+	virtual ~msg_ping_request() = default;
+
+private:
+	friend class boost::serialization::access;
+	template <class Archive >
+	void serialize(Archive &ar, const unsigned int version);
 };
 
 /**
