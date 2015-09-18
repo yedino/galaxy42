@@ -8,6 +8,7 @@
 #include "c_api_tr.hpp"
 #include "c_network.hpp"
 #include "c_msg.hpp"
+#include "c_netdev.hpp"
 
 extern unsigned int g_max_anim_frame;
 
@@ -92,6 +93,7 @@ public:
  *
  *
  */
+/*
 #if defined USE_API_TR
 struct t_message;
 class c_network;
@@ -127,7 +129,7 @@ public:
 	void set_network(std::shared_ptr<c_network> network_ptr);
 #endif
 };
-
+*/
 struct s_remote_host {
 	t_cjdaddr m_address = 0;
 	unsigned int m_price = 0;

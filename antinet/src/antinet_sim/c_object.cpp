@@ -215,23 +215,6 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 // ==================================================================
 
 // ==================================================================
-void c_netdev::receive_message (unique_ptr<c_msgtx> &&message) {
-	m_inbox.emplace_back(std::move(message));
-}
-
-unique_ptr<c_msgtx> c_netdev::send_message () {
-	if (m_outbox.empty()) {
-		return nullptr;
-	}
-	unique_ptr<c_msgtx> ret_value = std::move(m_outbox.at(0));
-	m_outbox.erase(m_outbox.begin());
-	return ret_value;
-}
-
-// ==================================================================
-
-c_netdev::c_netdev (string name, t_pos x, t_pos y) : c_entity(name, x, y) {
-}
 
 // ==================================================================
 
@@ -565,16 +548,14 @@ int c_cjddev::num_of_wating()
 }
 
 #if defined USE_API_TR
-void c_netdev::set_network(std::shared_ptr<c_network> network_ptr) {
-	m_network = network_ptr;
-}
+/*
 
 void c_netdev::hw_send(t_nym_id addr,std::string &&serialized_msg) {
 	_info("c_netdev::hw_send()");
 	_info("serialized_msg size: " << serialized_msg.size());
 	m_network.lock()->send_message(addr,std::move(serialized_msg));
 }
-
+*/
 #endif
 
 void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
