@@ -10,5 +10,8 @@ set(SOURCE_FILES main.cpp
         c_random_generator.hpp
         ed25519_src/add_scalar.c ed25519_src/fe.c ed25519_src/ge.c ed25519_src/key_exchange.c #ed25519 libs #1
         ed25519_src/sc ed25519_src/seed ed25519_src/sign.c ed25519_src/verify.c ed25519_src/keypair.c ed25519_src/sha512 #ed25519 libs #2
+        c_wallet.cpp c_wallet.hpp
+        c_token.cpp c_token.hpp
+        c_mint.hpp c_mint.cpp
 )
 add_executable(contract_signature ${SOURCE_FILES})

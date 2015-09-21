@@ -56,10 +56,11 @@ vector<c_user> generate_random_route (size_t hops = 100) {
 	return route;
 }
 
-vector<c_contract> generate_contracts (const vector<c_user> &route, size_t data_size = 155) {
+vector<c_contract> generate_token_contracts (vector<c_user> &route, size_t data_size, size_t amount) {
 	vector<c_contract> contracts;
 	for (size_t i = 1; i < route.size(); ++i) {
 		contracts.emplace_back(route.at(i - 1), route.at(i), data_size);
+		route.at(i - 1).send_token(route.at(i), amount);
 	}
 
 	for (c_contract &c : contracts) {
@@ -91,13 +92,14 @@ void simulation () {
 
 	cout << "\n end node  : " << prev(route.end())->nickname << "\n\n";
 
-	auto contracts = generate_contracts(route);
+	route.at(0).emit_tokens(10);
+
+	auto contracts = generate_token_contracts(route, 155, 1);
 	cout << (verify_contracts(contracts) ? "verifying OK\n" : "verifying gone WRONG\n");
 }
 
 
 int main () {
-//	simple_test();
-	serialization_test();
+	simulation();
 	return 0;
 }
