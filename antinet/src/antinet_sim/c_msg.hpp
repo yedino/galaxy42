@@ -75,8 +75,6 @@ typedef enum : uint8_t {
  */
 struct msg { // a general message. e.g.: a direct message, something that is sent over a network direct link
 	// sender and recipient fields are known from the cointainer that has this object
-	virtual std::string serialize() = 0;
-	virtual void deserialize(std::string binary) = 0;
 	virtual ~msg () = default;
 };
 
@@ -95,8 +93,6 @@ public:
 	t_ID m_ID;
 
 	msgcjd (const t_msgkind &logic);
-	virtual std::string serialize();
-	virtual void deserialize(std::string binary);
 private:
 	friend class boost::serialization::access;
 
@@ -111,9 +107,8 @@ struct msg_dht_hello :public msgcjd {
 	t_dht_addr m_target_dht_address;
 	t_dht_addr m_home_dht_address;
 	map<t_dht_addr,list < t_cjdaddr> > m_known_nodes;
-
-	virtual std::string serialize() override;
-
+private:
+	friend class boost::serialization::access;
 	template <class Archive >
 	void serialize(Archive &ar, const unsigned int version);
 
@@ -134,7 +129,6 @@ struct msg_ping_request : public msgcjd {
 public:
 	msg_ping_request();
 	virtual ~msg_ping_request() = default;
-	virtual std::string serialize() override;
 
 private:
 	friend class boost::serialization::access;
@@ -149,7 +143,6 @@ private:
 struct msg_ping_response : public msgcjd {
 public:
 	msg_ping_response();
-	virtual std::string serialize();
 	unsigned int m_ping_time;
 	virtual ~msg_ping_response() = default;
 private:

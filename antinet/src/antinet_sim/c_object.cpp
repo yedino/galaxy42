@@ -258,9 +258,9 @@ void c_cjddev::hw_recived(t_message msg) {
 				std::cout<<"data"<<std::endl;
 				break;
 			case e_msgkind_ping_response:{
-				std::shared_ptr<msg_ping_response> tmp_msg2(new msg_ping_response);
-				tmp_msg2->deserialize(msg.m_data);
-				ping_responce(tmp_msg2);
+				//std::shared_ptr<msg_ping_response> tmp_msg2(new msg_ping_response);
+				//tmp_msg2->deserialize(msg.m_data);
+				ping_responce(std::dynamic_pointer_cast<msg_ping_response>(msg_ptr));
 		}
 				break;
 			case e_msgkind_ping_request:
