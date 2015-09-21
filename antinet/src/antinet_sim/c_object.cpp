@@ -30,7 +30,7 @@ void c_object::draw_opengl(c_drawtarget &drawtarget, c_layer &layer) {
 void c_wallet::draw (BITMAP *frame, int color, t_pos x, t_pos y) const {
 	for (const auto &currency: m_currency) {
 		std::string text(currency.first + " " + std::to_string(currency.second));
-		textout_ex(frame, font, text.c_str(), x, y, color, 255);
+        textout_ex(frame, font, text.c_str(), x, y, color, 255);
 		y -= 10;
 	}
 }
@@ -133,8 +133,8 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
             glBegin(GL_LINE_LOOP);
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.07*cos(angle);
-                float y = 0.14*sin(angle);
+                float x = 0.07*cos(angle)*gui.camera_zoom;
+                float y = 0.14*sin(angle)*gui.camera_zoom;
 
                 glVertex3f(x,y,0.0f);
             }
@@ -352,6 +352,13 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     //_dbg3("*(gui.camera_zoom*0.01):" << gui.camera_zoom);
     float m_size = 0.03*gui.camera_zoom;
     glColor3f(1.0,0.0,0.0);
+
+    //textout_ex(frame, font, m_my_address.c_str(), vx - 20, vy - 45, color, -1);
+
+    glEnable(GL_BLEND);
+    //allegro_gl_printf_ex(s_font_allegl.get(), opengl_x+20, opengl_y+20, 0.0, m_name.c_str());
+    allegro_gl_printf_ex(s_font_allegl.get(), 0.01, 0.1, 0.0, m_name.c_str());
+    glDisable(GL_BLEND);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -672,7 +679,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 						                  msg_circle.x - c_bitmaps::get_instance().m_package_blue->w / 2,
 						                  msg_circle.y - c_bitmaps::get_instance().m_package_blue->h / 2);
 						std::string text("send FTP to " + m_outbox.at(0)->m_msg->m_destination);
-						textout_ex(frame, font, text.c_str(), msg_circle.x - 70, msg_circle.y - 15, color, -1);
+                        textout_ex(frame, font, text.c_str(), msg_circle.x - 70, msg_circle.y - 15, color, -1);
 						std::string price_text(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.first);
 						price_text += " ";
 						price_text += std::to_string(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.second);

@@ -77,8 +77,7 @@ std::string cjddev_detail_random_addr () {
 void c_simulation::main_loop () {
 	//	PALETTE palette;
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
-		//s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,450.0), [](FONT *f){allegro_gl_destroy_font(f);});
-		s_font_allegl.reset (allegro_gl_convert_allegro_font_ex(font,AGL_FONT_TYPE_TEXTURED,450.0, GL_ALPHA8), [](FONT *f){allegro_gl_destroy_font(f);});
+    s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
     for(auto obj : m_world->m_objects) {
         obj->set_font(s_font_allegl);
     }
@@ -522,7 +521,10 @@ void c_simulation::main_loop () {
                 glLineWidth(1.0);
                 glScalef(1.0f,1.0f,1.0f);
 
+
                 const int vx = m_gui->view_x(connect_node->m_x), vy = m_gui->view_y(connect_node->m_y); // position in viewport - because camera position
+                //float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
+                //float start_line_y = -((connect_node->m_y)-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float start_line_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 float start_line_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float end_line_x = (allegro_mouse_x-0.5*SCREEN_W)/(0.5*SCREEN_W);
@@ -568,6 +570,7 @@ void c_simulation::main_loop () {
                 glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
                 //glTranslatef(m_gui->view_x_rev(mouse_x),m_gui->view_y_rev(mouse_y),0.0f);
+
                 glColor3f(0.0, 0.0, 0.0);
 
                 glBegin(GL_LINES);
