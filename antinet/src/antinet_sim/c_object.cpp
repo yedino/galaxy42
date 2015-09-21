@@ -275,7 +275,7 @@ void c_cjddev::hw_recived(t_message msg) {
 #endif
 
 }
-
+#if defined USE_API_TR
 void c_cjddev::dht_hello(shared_ptr<msg_dht_hello> msg){
 
 //	std::random_device rd;
@@ -325,7 +325,6 @@ void c_cjddev::dht_hello(shared_ptr<msg_dht_hello> msg){
 
 			tmp_lst.push_back(msg->m_from);
 			m_known_nodes.insert(std::make_pair(msg->m_home_dht_address,tmp_lst));
-
 			write_message(msg);
 //			known_nodes.insert(std::make_pair( ));
 
@@ -339,7 +338,7 @@ void c_cjddev::dht_hello(shared_ptr<msg_dht_hello> msg){
 
 
 }
-
+#endif
 
 
 
@@ -1004,7 +1003,9 @@ void c_cjddev::start_dht() {
 		m_hello->m_to = neighbor.first;
 		m_hello->m_destination = neighbor.first;
 		_info("send hello packet from " << m_hello->m_from << " to " << m_hello->m_to);
+#if defined USE_API_TR
 		write_message(m_hello);
+#endif
 	}
 }
 

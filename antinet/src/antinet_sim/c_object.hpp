@@ -204,8 +204,9 @@ protected:
     //
 
 	void hw_recived(t_message);
-
+#if defined USE_API_TR
 	void dht_hello(shared_ptr <msg_dht_hello>);
+#endif
 	void dht_routing();
 
 public:
