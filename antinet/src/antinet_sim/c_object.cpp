@@ -995,7 +995,6 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 }
 
 void c_cjddev::start_dht() {
-
 	for (auto neighbor : m_neighbors) {
 		std::shared_ptr<msg_dht_hello>  m_hello (new msg_dht_hello);
 		//wylosowac adres
@@ -1004,6 +1003,7 @@ void c_cjddev::start_dht() {
 		m_hello->m_from = m_my_address;
 		m_hello->m_to = neighbor.first;
 		m_hello->m_destination = neighbor.first;
+		_info("send hello packet from " << m_hello->m_from << " to " << m_hello->m_to);
 		write_message(m_hello);
 	}
 }

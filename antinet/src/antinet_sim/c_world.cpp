@@ -161,6 +161,11 @@ void c_world::load (const string &filename) {
 			_note("exception");
 		}
 	}
+	
+	for (auto &object: m_objects) {
+		std::dynamic_pointer_cast<c_cjddev>(object)->start_dht();
+	}
+	
 	_note("end of load");
 }
 
