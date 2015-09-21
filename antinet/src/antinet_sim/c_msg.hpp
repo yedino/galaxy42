@@ -244,6 +244,8 @@ public:
 	msg_use_ftp ();
 };
 
+std::string serialize_message(msgcjd *message);
+shared_ptr<msgcjd> deserialize_message(std::string serialized_msg);
 
 class c_cjddev;
 

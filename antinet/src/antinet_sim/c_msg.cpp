@@ -148,6 +148,23 @@ void msg_ping_request::serialize(Archive &ar, const unsigned int version) {
 	ar & boost::serialization::base_object<msgcjd>(*this);
 }
 
+std::string serialize_message (msgcjd *message) {
+	std::stringstream ss;
+	boost::archive::text_oarchive oa{ss};
+	oa << message;
+	return ss.str();
+}
+
+std::shared_ptr<msgcjd> deserialize_message (std::string serialized_msg) {
+	std::stringstream ss(serialized_msg);
+	boost::archive::text_iarchive ia{ss};
+	msgcjd *message;
+	ia >> message;
+	std::shared_ptr<msgcjd> ret(message);
+	return ret;
+}
+
+
 BOOST_CLASS_EXPORT(msgcjd)
 BOOST_CLASS_EXPORT(msg_buy_menu)
 BOOST_CLASS_EXPORT(msg_use)
