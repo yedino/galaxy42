@@ -246,7 +246,7 @@ void c_cjddev::hw_recived(t_message msg) {
 #if defined USE_API_TR
 		//std::shared_ptr < msgcjd> msg_ptr(new msgcjd);
 		//msg_ptr->deserialize(msg.m_data);
-		std::shared_ptr < msgcjd> msg_ptr = deserialize_message(msg.m_data);
+		std::shared_ptr < msgcjd> msg_ptr = msg_serialization::deserialize_message(msg.m_data);
 
 		switch (msg_ptr->m_logic){
 			case e_msgkind_dht_hello:
@@ -276,7 +276,7 @@ void c_cjddev::write_message(std::shared_ptr<msgcjd> p_msg ){
 	t_message m_msg;
 	m_msg.m_remote_id =  p_msg->m_to;
 	//m_msg.m_data = p_msg->serialize();
-	m_msg.m_data = serialize_message(p_msg.get());
+	m_msg.m_data = msg_serialization::serialize_message(p_msg.get());
 	m_netdev->hw_send(m_msg);
 
 }

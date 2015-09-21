@@ -244,8 +244,6 @@ public:
 	msg_use_ftp ();
 };
 
-std::string serialize_message(msgcjd *message);
-shared_ptr<msgcjd> deserialize_message(std::string serialized_msg);
 
 class c_cjddev;
 
@@ -260,6 +258,12 @@ struct c_msgtx { // a message in transfer in direct transfer over direct link
 
 	int m_animframe; // animation frame number/time
 };
+
+namespace msg_serialization {
+	std::string serialize_message(msgcjd *message);
+	shared_ptr<msgcjd> deserialize_message(std::string serialized_msg);
+
+}
 
 
 #endif // C_MSG_HPP
