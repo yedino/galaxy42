@@ -994,6 +994,67 @@ bool c_cjddev::send_ftp_packet (const t_cjdaddr &destination_addr, const string 
 	return true;
 }
 
+void c_cjddev::start_dht() {
+
+	for (auto neighbor : m_neighbors) {
+		std::shared_ptr<msg_dht_hello>  m_hello (new msg_dht_hello);
+		//wylosowac adres
+		m_hello->m_direction = true;
+		m_hello->m_home_dht_address = m_dht_addr;
+		m_hello->m_from = m_my_address;
+		m_hello->m_to = neighbor.first;
+		m_hello->m_destination = neighbor.first;
+		write_message(m_hello);
+	}
+}
+
+void c_cjddev::dht_routing(/*shared_ptr<msg_dht_route>*/) {
+/*
+	if(m_trace.home_to_target_path.size()>100 ||m_trace.target_to_home_path.size()>100){
+		//ubij -ewentualnie poinformuj noda ze sciezka zbyt dluga
+	}
+
+	//obsluzyc sytuacje gdy nikt nie zna noda!!!
+	cout<<"dht_node::reciva"<<" "<<my_dht_address <<" "<<my_phisical_address <<endl;
+	if(m_trace.home_address == my_dht_address) {
+
+		list<phisical_addr> tmp_list;
+		m_trace.target_to_home_path.size() < m_trace.home_to_target_path.size() ?
+		std::copy(m_trace.target_to_home_path.begin(),m_trace.target_to_home_path.end(),std::back_inserter(tmp_list)):
+		std::copy(m_trace.home_to_target_path.begin(),m_trace.home_to_target_path.end(),std::back_inserter(tmp_list));
+		known_dht_addresses.insert(pair<dht_addr,list<phisical_addr> >(m_trace.target_address,tmp_list));
+
+		cout<<"dht_node::reciva"<<" "<<my_dht_address <<" "<<my_phisical_address<<"get tracing packet" <<endl;
+		//rote found - adding shortes of home_to_target /target_to_home
+	} else if(m_trace.target_address == my_dht_address) {
+		m_trace.direction = false;
+		send_to_dht_node(m_trace.home_address,m_trace);
+		//someone calls - respond to home_address
+	} else if(my_dht_address == m_trace.next_dht_address) {
+		dht_addr looking_for_address = m_trace.direction? m_trace.target_address:m_trace.home_address;
+
+		// if distance of  my_dht_address < looking_for_address my address is nearst - something goes wrong
+			nearestFunct2 func(m_trace.home_address);
+			if(func(my_dht_address,looking_for_address)){
+				std::cout<<"went wrong"<<endl;
+				return;
+
+
+			}
+		send_to_dht_node( looking_for_address,m_trace);
+	} else {
+		//go ahed by physical trace
+		try{
+			phisical_addr next_p_adress = m_trace.trace_to_next_dht.front();
+			m_trace.trace_to_next_dht.pop_front();
+			send_to_phisical_addr(next_p_adress,m_trace);
+		}catch(...){
+		}
+	}
+	*/
+
+}
+
 // ==================================================================
 
 void c_tnetdev::tick () {

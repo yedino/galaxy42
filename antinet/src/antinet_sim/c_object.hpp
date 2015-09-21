@@ -206,6 +206,7 @@ protected:
 	void hw_recived(t_message);
 
 	void dht_hello(shared_ptr <msg_dht_hello>);
+	void dht_routing();
 
 public:
 #if defined USE_API_TR
@@ -245,7 +246,7 @@ public:
 
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
-	virtual void start_dht(){};					///function must be started when node is added to network;
+	virtual void start_dht();					///function must be started when node is added to network;
 
 	int num_of_wating();
 #if defined USE_API_TR
