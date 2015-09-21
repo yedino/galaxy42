@@ -8,8 +8,8 @@ Again network simualtion refactoring, after all it's crucial thing of this proje
 Yo Dawg I herd you like refactoring?
 
 Network simulation:
-- ISO_2: switches with direct links in LAN, switch congestion
-- ISO_3: routing direct data in LAN and over ICANN Internet
+- OSI_2: switches with direct links in LAN, switch congestion
+- OSI_3: routing direct data in LAN and over ICANN Internet
 - CJDNS: build DHT, find CJDNS path with directors (using ISO_3)
 
 */
@@ -20,6 +20,7 @@ Network simulation:
 
 class c_osi2_switch;
 class c_osi2_cable_direct;
+class c_osi2_nic;
 class c_network;
 class c_node;
 
@@ -41,6 +42,16 @@ class c_osi2_cable_direct {
 // Classical switch in OSI layer 2
 class c_osi2_switch {
 	private:
+	public:
+};
+
+/***
+ * @brief The network card for OSI layer 2.
+ * It can store data that is being sent in outbox[]
+ */
+class c_osi2_nic {
+	private:
+		
 	public:
 };
 
