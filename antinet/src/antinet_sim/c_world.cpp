@@ -50,7 +50,7 @@ void c_world::tick () {
 
 	}
 	std::cout << "****************END OF TICK (" << tick_number << ")****************" << std::endl;
-	std::this_thread::sleep_for(std::chrono::seconds(2)); // XXX
+	//std::this_thread::sleep_for(std::chrono::seconds(2)); // XXX
 	++tick_number;
 }
 
