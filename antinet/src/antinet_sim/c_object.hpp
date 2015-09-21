@@ -245,7 +245,7 @@ public:
 
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
 
-	virutal void start_dht();					///function must be started when node is added to network;
+	virtual void start_dht(){};					///function must be started when node is added to network;
 
 	int num_of_wating();
 #if defined USE_API_TR
