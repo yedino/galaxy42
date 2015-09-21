@@ -132,6 +132,9 @@ void stop_the_gui() {
 		clear_keybuf();
 }
 
+/// (should be defined e.g. in draft_main_rafal.cpp)
+void draft_main_rafal();
+
 
 int main(int argc, char *argv[]) {
 	std::cerr << "============================================" << std::endl;
@@ -141,17 +144,35 @@ int main(int argc, char *argv[]) {
 	std::cerr << "Do not even run this at any real user, it likely contains errors, UBs, or exploits!" << std::endl;
 	std::cerr << "Test on separate user/environment until we have a tested version." << std::endl;
 	std::cerr << "============================================" << "\n" << std::endl;
-
-	try {
 	
-		std::set< std::string > args;
-		for (int i=1; i<argc; ++i) args.insert( argv[i] );  // get arguments into args
+	bool had_error = 0;
 
+	try {	
+		
+		// baic settings (can be changed by options)
 		t_drawtarget_type drawtarget_type = e_drawtarget_type_allegro;
-		int drawtarget_type_count=0; // set to true if user specified too many (e.g. more then 1) draw target. E.g. to warn him
-		if (args.count("--gl")==1 || args.count("--opengl")) { drawtarget_type = e_drawtarget_type_opengl;  ++drawtarget_type_count; }
-		if (args.count("--alleg")==1 || args.count("--allegro")) { drawtarget_type = e_drawtarget_type_allegro;  ++drawtarget_type_count; }
-		if (drawtarget_type_count>1) std::cerr<<"Warning: you specified few conflicting drawing engines in the program command line options. (will ignore some)"<<std::endl;
+		
+		{ // parse the arguments
+			std::set< std::string > args;
+			for (int i=1; i<argc; ++i) args.insert( argv[i] );  // get arguments into argv[]
+	
+			int drawtarget_type_count=0; // set to true if user specified too many (e.g. more then 1) draw target. E.g. to warn him
+			if (args.count("--gl")==1 || args.count("--opengl")) { drawtarget_type = e_drawtarget_type_opengl;  ++drawtarget_type_count; }
+			if (args.count("--alleg")==1 || args.count("--allegro")) { drawtarget_type = e_drawtarget_type_allegro;  ++drawtarget_type_count; }
+			if (drawtarget_type_count>1) std::cerr<<"Warning: you specified few conflicting drawing engines in the program command line options. (will ignore some)"<<std::endl;
+			
+			{ // react to some arguments-commands
+				if (args.count("--draftr")) {
+					std::cerr << "Running draft program (by Rafal)" << std::endl;
+					draft_main_rafal(); // run the current main draft for Rafal
+					std::cerr << "Running draft program (by Rafal) - all done, exiting" << std::endl;
+					return 0;
+				}
+			} // react to arguments
+			
+		} // parse the arguments
+		
+		// normal program execution, after handling commandline options:
 
 		start_the_gui( drawtarget_type );
 
@@ -160,13 +181,33 @@ int main(int argc, char *argv[]) {
 			simulation->init();
 			simulation->main_loop();
 		}
-		catch(std::runtime_error &e) { std::cerr<<std::endl<<"The main simulation caused exception: " << e.what() << std::endl; }
-		catch(...) { }
+		catch(std::runtime_error &e) { 
+			std::cerr<<std::endl<<"The main simulation caused exception: " << e.what() << std::endl; 
+			had_error=1;
+		}
+		catch(...) { 
+			std::cerr<<std::endl<<"The main simulation caused exception (of unknown type)" << std::endl; 
+			had_error=1;
+		}
 
 		c_bitmaps::deinit();
 		stop_the_gui();
 	}
-	catch(...) { }
+	catch(std::exception &e) { 
+		std::cerr << "Program had an exception: " << e.what() << std::endl;
+		had_error=1;
+	}
+	catch(...) { 
+		std::cerr << "Program had an exception (of unknown type)" << std::endl;
+		had_error=1;
+	}
+	
+	if (had_error) {	
+		std::cerr << "Program exits with error." << std::endl;
+		return 1;
+	}
+		
+	std::cerr << "Program exits normally." << std::endl;
 	return 0;
 }
 
