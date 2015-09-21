@@ -41,7 +41,7 @@ class c_RSA : public c_encryption {
 	struct rsa_public_key {
 		rsa_public_key(std::string str) {
 			std::string delimeter = "|";
-			std::size_t found = str.find(delimeter); // +1 to avoid delimeter
+			std::size_t found = str.find(delimeter);
 			if (found != std::string::npos) {
 				//std::cout << "e: " << str.substr(0,found) << std::endl;	//dbg
 				//std::cout << "n: " << str.substr(found+1) << std::endl;	//dbg
@@ -98,7 +98,7 @@ class c_ed25519 : public c_encryption {
 	unsigned char* get_public_key_C();
 	unsigned char* sign_C(const unsigned char *message, size_t message_len);	///< faster C sign way
 	int verify_C(const unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key);
-	//void add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar);
+	//void add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar);			//
 	//void key_exchange(unsigned char *shared_secret, const unsigned char *public_key, const unsigned char *private_key);
 
 	int create_seed ();

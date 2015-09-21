@@ -18,6 +18,7 @@ class c_user {
 	string m_public_key;
 	c_ed25519 m_edsigner;
 	vector<c_token> used_tokens;
+	double m_reputation;
 
 	bool find_the_cheater (const c_token &, const c_token &);
 
@@ -25,6 +26,8 @@ class c_user {
 	c_user (std::string);
 
 	string get_username();
+	double get_rep();
+
 	void send_token (c_user &, size_t = 1);
 	void send_fake_token(c_user &, size_t = 1);
 	void emit_tokens (size_t);

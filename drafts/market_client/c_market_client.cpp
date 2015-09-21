@@ -2,6 +2,8 @@
 
 bool check_cmd(const char* cmd, const char* request, size_t request_length);
 bool check_cmd(const std::string cmd, const std::string request);
+std::string get_request_usr(std::string req);
+bool is_login_success(std::string reply);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 c_market_client::c_market_client(string host, string port,string ptype) {
@@ -43,51 +45,58 @@ bool verify_sign (const string &msg, const unsigned char *signature, const unsig
 }
 
 void c_market_client::start_market_session() {
-
 	bool isover = false;
+	bool islogged = false;
+	bool login_req = false;
+	c_active_user user;
+
+
 	while(!isover) {
 		std::cout << "Enter message: ";
-		char request[max_length];
-		std::cin.getline(request, max_length);
-		//cin.clear(); cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-		size_t request_length = std::strlen(request);
 
-		std::cout << "request__" << std::endl;
-		for(size_t i = 0; i < request_length; ++i) {
-			std::cout << request[i] << std::endl;
-		}
-		//std::cerr << "request length :" << request_length
-		//		  << "last char in request: " << (int)request[request_length] << std::endl;
+		std::string request;
+		std::getline(std::cin,request);
 
-		if(std::string(request, request_length) == "quit") {
+
+		if(request == "quit") {
 			isover = true;
 			break;
 		}	
 		std::string command;
-		if(check_cmd("register",request,request_length)) {
-			//if(cl_crypto->getCrypto_method() == ed25519) {
-			//	command += "ed25519|";
-			//}
-			command += cl_crypto->get_public_key() + ':' + std::string(request,request_length);
+
+		if(check_cmd("register",request)) {
+			command += cl_crypto->get_public_key() + ':' + request;
 		}
-		else if (check_cmd("logout", request,request_length)) {
-			std::string pubkey = cl_crypto->get_public_key();
-			std::string msg(request,request_length);
-			std::string sign = cl_crypto->sign(std::string(request,request_length));
+		else if (check_cmd("login",request)) {
+			login_req = true;
+			command += cl_crypto->sign(request) +  ':' + request;
+		}
+		//else if (check_cmd("logout", request)) {
+			//std::string pubkey = cl_crypto->get_public_key();
+			//std::string sign = cl_crypto->sign(request);
 			//bool is_ok = cl_crypto->verify(sign,msg,pubkey);	//dbg
 			//std::cout << "isok : " << is_ok << std::endl;
 			//is_ok = verify_sign(msg,readable_toUchar(sign,sign_size).get() ,readable_toUchar(pubkey,pub_key_size).get());
 			//std::cout << "isok(kb) : " << is_ok << std::endl;
-
-			command = cl_crypto->sign(std::string(request,request_length)) + ':' + std::string(request, request_length);
-		}
+			//command = cl_crypto->sign(request) + ':' + request;
+		//}
 		else {
-			command = cl_crypto->sign(std::string(request,request_length)) + ':' + std::string(request, request_length);
+			if(islogged) {
+				command = cl_crypto->sign(request) + ':' + request + user.get_username();
+			} else {
+				command = cl_crypto->sign(request) + ':' + request;
+			}
 		}
 
 		//std::cout << command << std::endl;		//dbg
 		std::string reply =  m_market_link->send_msg(command);
 		std:: cout <<  "Reply is:\n" << reply << std::endl;
+
+		if(login_req == true && is_login_success(reply)) {
+			std::cout << "is login succes" << is_login_success(reply);
+			islogged = true;
+			user.set_username(get_request_usr(request));
+		}
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,4 +128,30 @@ bool check_cmd(const char* cmd,const char* request, size_t request_length) {
 bool check_cmd(const std::string cmd, const std::string request) {
 	std::string subrequest = request.substr(0, request.find(' ', 0));
 		return (subrequest == string(cmd));
+}
+
+bool is_login_success(std::string reply) {
+	std::string correct = "veryfication OK: logged on";
+	size_t found = reply.find(correct);
+	if (found!=std::string::npos) {
+		return true;
+	}
+	return false;
+}
+
+std::string get_request_usr(std::string req) {
+
+	std::string user;
+	std::string delimeter = " ";	// srv format: "sign:login user pass"
+	std::size_t found = req.find(delimeter);
+	if (found != std::string::npos) {
+		user = req.substr(found);
+		found = user.find(delimeter);
+		if(found != std::string::npos) {
+			user = user.substr(0,found);
+			std::cout << "USER :: " << std::endl;
+			return user;
+		}
+	}
+	return "";
 }

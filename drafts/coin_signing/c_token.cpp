@@ -28,6 +28,19 @@ bool c_token::check_ps (long long ps) {
 	return false;
 }
 
+long long c_token::get_size() {
+	long long size = 0;
+	size += sizeof(c_token);
+	for(size_t i = 0; i < m_chainsign.size(); ++i) {
+		size += sizeof(c_chainsign_element);
+		size += m_chainsign[i].m_msg.size();
+		size += m_chainsign[i].m_signed_msg.size();
+		size += m_chainsign[i].m_signer.size();
+		size += m_chainsign[i].m_signer_pubkey.size();
+	}
+	return size;
+}
+
 size_t token_id_generator::generate_id () {
 	return id++;
 }

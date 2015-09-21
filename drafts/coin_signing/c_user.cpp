@@ -3,32 +3,35 @@ void print_strBytes(const std::string& str);
 
 c_user::c_user (std::string username) : m_username(username) {
 	m_public_key = m_edsigner.get_public_key();
+	m_reputation = 50;		//TODO do normalize fun to max 100
 }
 string c_user::get_username() {
 	return m_username;
 }
 
+double c_user::get_rep() {
+	return m_reputation;
+}
+
 void c_user::send_token (c_user &user, size_t amount) {
-	if (amount > 1) {
-		std::cout << "error! : test version allows to send only 1 token" << std::endl;
-		return;
-	}
+	std::cout << "----send---------------------------------------------------------" << std::endl;
 	if (m_wallet.tokens.empty()) {
 		std::cout << "empty wallet! : no tokens to send" << std::endl;
 		return;
 	}
+	for(size_t i = 0; i < amount; ++i) {
+		c_token tok = m_wallet.tokens.back(); // take any token for now [TODO]
+		m_wallet.tokens.pop_back();
 
-	c_token tok = m_wallet.tokens.back(); // take any token for now [TODO]
-	m_wallet.tokens.pop_back();
+		std::string msg = std::to_string(tok.id) + "|" + user.m_public_key;
+		// + std::to_string(amount) ; // the nominal is token's dependent
+		std::string signed_tok = m_edsigner.sign(msg);
 
-	std::string msg = std::to_string(tok.id) + "|" + user.m_public_key;
-	// + std::to_string(amount) ; // the nominal is token's dependent
-	std::string signed_tok = m_edsigner.sign(msg);
-
-	tok.m_chainsign.push_back(c_chainsign_element(signed_tok, msg, m_username, m_public_key));
-	std::cout << "sending token: " << m_username << " => " << user.get_username() << std::endl;
-	user.recieve_token(tok, amount); // push this coin to the target user
-
+		tok.m_chainsign.push_back(c_chainsign_element(signed_tok, msg, m_username, m_public_key));
+		std::cout << "sending token: " << m_username << " => " << user.get_username() << std::endl;
+		user.recieve_token(tok, amount); // push this coin to the target user
+	}
+	std::cout << "----send-end-----------------------------------------------------" << std::endl;
 }
 
 void c_user::send_fake_token (c_user &user, size_t amount) {
@@ -111,6 +114,7 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 
 	m_wallet.tokens.push_back(token);
 	std::cout << "token validate : OK" << std::endl;
+	std::cout << "size of this token : " << token.get_size() << std::endl;
 	return true;
 }
 
@@ -156,8 +160,10 @@ bool c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 }
 
 void c_user::emit_tokens (size_t amount) {
-	c_token emitted_token = m_mint.emit_token();
-	m_wallet.add_token(emitted_token);
+	for(size_t i = 0; i < amount; ++i) {
+		c_token emitted_token = m_mint.emit_token();
+		m_wallet.add_token(emitted_token);
+	}
 }
 
 void print_strBytes(const std::string& str) {

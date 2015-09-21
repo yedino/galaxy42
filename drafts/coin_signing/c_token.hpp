@@ -25,7 +25,7 @@ struct c_token {
 	std::vector<c_chainsign_element> m_chainsign;
 
 	c_token (long long);
-
+	long long get_size();
 	bool check_ps (long long);
 
   private:

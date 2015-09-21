@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <chrono>
 #include "c_market_client.hpp"
-#include "c_encryption.hpp"
+#include "../../crypto_ops/crypto/c_encryption.hpp"
 
 /////////////////////////////////////////////////// ED 25519 TEST ///////////////////////////////////////////////////
 
@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 
-		TEST_all(500,false);
+	//	TEST_all(500,false);
 
 		c_market_client market_client( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])) );
 		market_client.encrypt_client(ed25519);

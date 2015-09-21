@@ -92,11 +92,11 @@ bool test_many_users () {
 	std::cout << "RUNNING TEST02 MANY_USER" << std::endl;
 	c_user A("userA"), B("userB"), C("userC"), D("userD");
 
-	A.emit_tokens(1);
-	A.send_token(B);
-	B.send_token(C);
-	C.send_token(D);
-	D.send_token(A);
+	A.emit_tokens(2);
+	A.send_token(B,2);
+	B.send_token(C,2);
+	C.send_token(D,2);
+	D.send_token(A,2);
 	return false;
 }
 
@@ -118,10 +118,10 @@ bool test_all() {
 
 	list<thread> Threads;
 
-	int a = 2000, b = 64;
+	int test_loop = 500, msg_length = 64;
 	std::cout << "RUNNING TEST MANY_ED_SIGNING IN " << number_of_threads << " THREADS" << std::endl;
 	for (int i = 0; i < number_of_threads; ++i) {
-		Threads.emplace_back([&a, &b](){test_manyEdSigning(a,b);});
+		Threads.emplace_back([&test_loop, &msg_length](){test_manyEdSigning(test_loop,msg_length);});
 	}
 
 	for (auto &t : Threads) {
@@ -155,16 +155,7 @@ int main (int argc, char *argv[]) {
 			return 1;
 		}
 
-		//test_all();
-
-		unsigned char *crypto = new unsigned char[64];
-		const char *data = "ed728b7ed933b6a2e7869696a6b60113aa2d93a43eec7824bece841c51b67401df01e498cd68b3951db278152a6cb606a0b433af74b8f3aa20cdef69dfefd3c40b:help";
-
-		//parse_crypto_data(data, crypto);
-		cout << '\n';
-		for (size_t i = 0; i < 64; ++i)
-			cout << (int)crypto[i] << ' ';
-
+		test_all();
 
 		return 0;
 
