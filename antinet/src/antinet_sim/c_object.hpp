@@ -170,6 +170,7 @@ struct c_routing_package
 	struct msgcjd;
 	struct msg_ping_request;
 	struct msg_ping_response;
+	struct msg_dht_hello;
 #include "c_api_tr.hpp"
 #include"c_msg.hpp"
 
@@ -203,6 +204,8 @@ protected:
     //
 
 	void hw_recived(t_message);
+
+	void dht_hello(shared_ptr <msg_dht_hello>);
 
 public:
 #if defined USE_API_TR
@@ -241,6 +244,8 @@ public:
 	void buy_net (const t_cjdaddr &destination_addr);
 
     virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
+
+	virutal void start_dht();					///function must be started when node is added to network;
 
 	int num_of_wating();
 #if defined USE_API_TR

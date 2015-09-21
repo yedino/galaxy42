@@ -251,6 +251,7 @@ void c_cjddev::hw_recived(t_message msg) {
 		switch (msg_ptr->m_logic){
 			case e_msgkind_dht_hello:
 				std::cout<<"dht_hello income"<<std::endl;
+				dht_hello(std::dynamic_pointer_cast<msg_dht_hello>(msg_ptr));
 			break;
 
 			case e_msgkind_data:
@@ -264,6 +265,9 @@ void c_cjddev::hw_recived(t_message msg) {
 				break;
 			case e_msgkind_ping_request:
 				ping_request(std::dynamic_pointer_cast<msg_ping_request>(msg_ptr));
+
+
+
 			break;
 		default:
 			break;
@@ -271,6 +275,75 @@ void c_cjddev::hw_recived(t_message msg) {
 #endif
 
 }
+
+void c_cjddev::dht_hello(shared_ptr<msg_dht_hello> msg){
+
+//	std::random_device rd;
+//		std::mt19937 gen(rd());
+//		std::uniform_int_distribution<> dis(0,LONG_LONG_MAX);
+/*
+		pkg.direction = false;
+		pkg.home_dht_address = dis(gen);			//geting random dht address
+		pkg.target_dht_addres = get_dht_addr();
+		list<phisical_addr> tmp_node_list;
+		tmp_node_list.push_back(my_phisical_address);
+
+		std::pair<dht_addr , list <phisical_addr> >record;
+		record.first = my_dht_address;
+		record.second = tmp_node_list;
+		pkg.known_nodes.insert(record);
+
+		dht_addr nearest_node = get_nearest_node(pkg.home_dht_address);
+		pkg.known_nodes.insert(std::pair <dht_addr , list <phisical_addr> >(nearest_node,known_dht_addresses.at(nearest_node)));
+		dht_addr farest_node = get_farest_node(pkg.home_dht_address);
+		pkg.known_nodes.insert(std::pair <dht_addr , list <phisical_addr> >(farest_node,known_dht_addresses.at(farest_node)));
+
+		tmp_node_list.clear();
+		tmp_node_list.push_back(pkg.home_address);
+		known_dht_addresses.insert(std::pair <dht_addr , list <phisical_addr> >(pkg.home_dht_address , tmp_node_list));
+
+	}else{
+
+		my_dht_address = pkg.home_dht_address;
+		for (auto it : pkg.known_nodes){
+			known_dht_addresses.insert(it);
+		}
+		// obsluz tablice dostarczona przez
+	}
+*/
+		if (msg->m_direction){
+			msg->m_direction = false;
+			for (auto node:m_known_nodes){				//TODO : later send only the farest and the nearest
+				node.second.push_front(m_my_address);
+				msg->m_known_nodes.insert(node);
+			}
+
+			std::list <t_cjdaddr>tmp_lst;
+			tmp_lst.push_back(m_my_address);
+			msg->m_known_nodes.insert(std::make_pair(m_dht_addr,tmp_lst));
+			tmp_lst.clear();
+
+			tmp_lst.push_back(msg->m_from);
+			m_known_nodes.insert(std::make_pair(msg->m_home_dht_address,tmp_lst));
+
+			write_message(msg);
+//			known_nodes.insert(std::make_pair( ));
+
+
+		}else{
+			for(auto &node : msg->m_known_nodes){
+				m_known_nodes.insert(node);
+			}
+//			m_known_nodes = msg->m_known_nodes;
+		}
+
+
+}
+
+
+
+
+
 #if defined USE_API_TR
 void c_cjddev::write_message(std::shared_ptr<msgcjd> p_msg ){
 	t_message m_msg;
@@ -802,7 +875,7 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 
 #if defined USE_API_TR
 		// XXX test sending pings, rm this
-		_info("test send ping to " << neighbor.first);
+/*		_info("test send ping to " << neighbor.first);
 		std::shared_ptr<msg_ping_request> ping_request_ptr(new msg_ping_request);
 		ping_request_ptr->m_from = m_my_address;
 		ping_request_ptr->m_to = neighbor.first;
@@ -814,15 +887,18 @@ void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
 		message.m_data = ping_request.serialize();
 		m_raw_outbox.emplace_back(std::move(message));
 		*/
-		/*
-		msg_dht_hello m_hello;
+
+
+
+		std::shared_ptr<msg_dht_hello>  m_hello (new msg_dht_hello);
 		//wylosowac adres
-		m_hello.m_home_dht_address = m_dht_addr;
-		m_hello.m_from = m_my_address;
-		m_hello.m_to = neighbor.first;
-		m_hello.m_destination = neighbor.first;
+		m_hello->m_direction = true;
+		m_hello->m_home_dht_address = m_dht_addr;
+		m_hello->m_from = m_my_address;
+		m_hello->m_to = neighbor.first;
+		m_hello->m_destination = neighbor.first;
 		write_message(m_hello);
-		*/
+
 //		t_message message;
 //		message.m_remote_id = m_hello.m_to;
 //		message.m_data = m_hello.serialize();
