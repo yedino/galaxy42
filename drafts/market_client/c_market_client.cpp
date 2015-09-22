@@ -25,7 +25,6 @@ c_market_client::~c_market_client() {
 	//delete cle_crypto;
 }
 
-
 void c_market_client::encrypt_client(cryptosign_method crypt_m) {
 
 	switch(crypt_m) {
@@ -46,9 +45,10 @@ bool verify_sign (const string &msg, const unsigned char *signature, const unsig
 
 void c_market_client::start_market_session() {
 	bool isover = false;
-	bool islogged = false;
-	bool login_req = false;
-	c_active_user user;
+	std::string usr;
+	std::cout << "Set your username for this session: ";	// TODO in future it will be nice to load your users from database.
+	std::getline(std::cin,usr);
+	c_client_user user(usr);
 
 
 	while(!isover) {
@@ -61,42 +61,26 @@ void c_market_client::start_market_session() {
 		if(request == "quit") {
 			isover = true;
 			break;
-		}	
+		}
 		std::string command;
 
 		if(check_cmd("register",request)) {
-			command += cl_crypto->get_public_key() + ':' + request;
+			command += cl_crypto->get_public_key() + ':' + request + ':' + user.get_username();
 		}
-		else if (check_cmd("login",request)) {
-			login_req = true;
-			command += cl_crypto->sign(request) +  ':' + request;
+		else if(check_cmd("best_sell_offer",request) ||
+				check_cmd("best_buy_offer",request) ||
+				check_cmd("help",request)) {
+			command += request;
 		}
-		//else if (check_cmd("logout", request)) {
-			//std::string pubkey = cl_crypto->get_public_key();
-			//std::string sign = cl_crypto->sign(request);
-			//bool is_ok = cl_crypto->verify(sign,msg,pubkey);	//dbg
-			//std::cout << "isok : " << is_ok << std::endl;
-			//is_ok = verify_sign(msg,readable_toUchar(sign,sign_size).get() ,readable_toUchar(pubkey,pub_key_size).get());
-			//std::cout << "isok(kb) : " << is_ok << std::endl;
-			//command = cl_crypto->sign(request) + ':' + request;
-		//}
 		else {
-			if(islogged) {
-				command = cl_crypto->sign(request) + ':' + request + user.get_username();
-			} else {
-				command = cl_crypto->sign(request) + ':' + request;
-			}
+			std::string to_sign = request + ':' + user.get_username();
+			command += cl_crypto->sign(to_sign) + ':' + request + ':' + user.get_username();
 		}
 
 		//std::cout << command << std::endl;		//dbg
 		std::string reply =  m_market_link->send_msg(command);
 		std:: cout <<  "Reply is:\n" << reply << std::endl;
 
-		if(login_req == true && is_login_success(reply)) {
-			std::cout << "is login succes" << is_login_success(reply);
-			islogged = true;
-			user.set_username(get_request_usr(request));
-		}
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

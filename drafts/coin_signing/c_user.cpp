@@ -1,16 +1,26 @@
 #include "c_user.hpp"
 void print_strBytes(const std::string& str);
 
-c_user::c_user (std::string username) : m_username(username) {
+c_user::c_user (std::string& username) : m_username(username) {
 	m_public_key = m_edsigner.get_public_key();
-	m_reputation = 50;		//TODO do normalize fun to max 100
+	m_reputation = 1;
 }
-string c_user::get_username() {
+
+c_user::c_user (string &&nick) {
+	m_username.swap(nick);
+	if (m_username.find('|') != string::npos) {
+		throw runtime_error("nickname is not allowed to contain '|' character");
+	}
+	m_public_key = m_edsigner.get_public_key();
+	m_reputation = 1;
+}
+
+string c_user::get_username() const {
 	return m_username;
 }
 
 double c_user::get_rep() {
-	return m_reputation;
+	return atan(m_reputation)*100*(2/M_PI);
 }
 
 void c_user::send_token (c_user &user, size_t amount) {
@@ -90,7 +100,6 @@ bool c_user::recieve_token (c_token &token, size_t amount) {
 		std::size_t found = current_signature.m_msg.find(delimeter)+1; // +1 to avoid delimeter
 		if (found != std::string::npos) {
 			current_recipient_in_coin = current_signature.m_msg.substr(found).c_str();
-			//print_strBytes(current_signature.m_msg);
 		}
 
 		// [B->C] is the current sender B allowed to send,  check for error:
@@ -173,4 +182,6 @@ void print_strBytes(const std::string& str) {
 	std::cout << std::endl;
 }
 
-
+std::string c_user::get_public_key() const {
+	return m_public_key;
+}

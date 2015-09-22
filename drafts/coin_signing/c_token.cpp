@@ -8,16 +8,6 @@ c_chainsign_element::c_chainsign_element (const std::string signed_msg,
 		const std::string signer_pubkey) : m_msg(msg), m_signed_msg(signed_msg), m_signer(signer), m_signer_pubkey(signer_pubkey) {
 }
 
-bool c_chainsign_element::operator !=(const c_chainsign_element &c_ele) const {
-	if(	(m_signed_msg == c_ele.m_signed_msg) &&
-			(m_msg == c_ele.m_msg) &&
-			(m_signer == c_ele.m_signer) &&
-			(m_signer_pubkey == c_ele.m_signer_pubkey) ) {
-		return false;
-	} else {
-		return true;
-	}
-}
 
 c_token::c_token (long long pss) : m_password(pss), id(token_id_generator::generate_id()) { }
 
@@ -43,6 +33,17 @@ long long c_token::get_size() {
 
 size_t token_id_generator::generate_id () {
 	return id++;
+}
+
+bool operator !=(const c_chainsign_element &l_ele, const c_chainsign_element &r_ele) {
+	if(	(l_ele.m_signed_msg == r_ele.m_signed_msg) &&
+		(l_ele.m_msg == r_ele.m_msg) &&
+		(l_ele.m_signer == r_ele.m_signer) &&
+		(l_ele.m_signer_pubkey == r_ele.m_signer_pubkey) ) {
+		return false;
+	} else {
+		return true;
+	}
 }
 
 bool operator== (const c_token &lhs, const c_token &rhs) {

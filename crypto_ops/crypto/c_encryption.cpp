@@ -13,12 +13,11 @@ std::string c_RSA::get_public_key () {
 	return e + '|' + n;
 }
 
-std::string c_RSA::sign (const std::string &msg) {
-	m_last_sign = m_crypto->sign(msg);
-	return m_last_sign.str();
+std::string c_RSA::sign (const std::string &msg) const {
+	return m_crypto->sign(msg).str();
 }
 
-bool c_RSA::verify(const std::string &signature, const std::string &message, const std::string &public_key) {
+bool c_RSA::verify(const std::string &signature, const std::string &message, const std::string &public_key) const {
 	rsa_public_key<long_type> pb(public_key);
 	return (power_modulo(long_type(signature), pb.e, pb.n) == sha512<long_type>(message));
 }
@@ -38,42 +37,13 @@ void c_ed25519::create_keypair () {
 	ed25519_create_keypair(m_public_key, m_private_key, m_seed);
 }
 
-////////////////////////////////////////////////////////// C WITH UNIQUE PTR ///////////////////////////////////////////////////
-
-unique_ptr<unsigned char[]> c_ed25519::get_public_key_uC () {
-	unique_ptr<unsigned char[]> pub_key (new unsigned char[pub_key_size+1]);
-	for (int i = 0; i < pub_key_size; ++i) {
-		pub_key[i] = m_public_key[i];
-	}
-	pub_key[pub_key_size] = '\0';
-	return pub_key;
-}
-
-unique_ptr<unsigned char[]> c_ed25519::sign_uC (unique_ptr<const unsigned char[]> message, size_t message_len) {
-	ed25519_sign(m_signature, message.get(), message_len, m_public_key, m_private_key);
-	unique_ptr <unsigned char[]> sign (new unsigned char[sign_size+1]);
-	for (int i = 0; i < sign_size; ++i) {
-		sign[i] = m_signature[i];
-	}
-	sign[sign_size] = '\0';
-	return sign;
-}
-
-bool c_ed25519::verify_uC (unique_ptr<const unsigned char[]> &signature,
-						   unique_ptr<const unsigned char[]> &message,
-						   size_t message_len,
-						   unique_ptr<const unsigned char[]> &public_key) {
-
-	return ed25519_verify(signature.get(), message.get(), message_len, public_key.get()) != 0;
-}
-
 ////////////////////////////////////////////////////////// CPP INTERFACE ///////////////////////////////////////////////////////
 std::string c_ed25519::get_public_key () {
 	std::string pubkey = uchar_toReadable(m_public_key, pub_key_size);
 	return pubkey;
 }
 
-string c_ed25519::sign (const string &msg) {
+string c_ed25519::sign (const string &msg) const {
 	unique_ptr<unsigned char []> umsg (string_to_uniqueUtab(msg));
 
 	unique_ptr<unsigned char[]> sign_ustr = sign_uC(std::move(umsg), msg.length());
@@ -84,7 +54,7 @@ string c_ed25519::sign (const string &msg) {
 
 bool c_ed25519::verify (const std::string &signature,
 						const std::string &message,
-						const std::string &public_key) {
+						const std::string &public_key) const {
 	size_t message_len = message.length();
 	unique_ptr<const unsigned char[]> sign_u (readable_toUchar(signature, sign_size));
 	unique_ptr<const unsigned char[]> msg_u (string_to_uniqueUtab(message));
@@ -96,29 +66,64 @@ bool c_ed25519::verify (const std::string &signature,
 							  pubkey_u );
 	return is_valid;
 }
-////////////////////////////////////////////////////////// C INTERFACE /////////////////////////////////////////////////////////
-unsigned char* c_ed25519::get_public_key_C() {
+////////////////////////////////////////////////////////// C WITH UNIQUE PTR ///////////////////////////////////////////////////
 
-	unsigned char* pub_key = new unsigned char[pub_key_size];
-	for(int i = 0; i < pub_key_size; ++i) {
+unique_ptr<unsigned char[]> c_ed25519::get_public_key_uC () {
+	unique_ptr<unsigned char[]> pub_key (new unsigned char[pub_key_size+1]);
+	for (int i = 0; i < pub_key_size; ++i) {
 		pub_key[i] = m_public_key[i];
 	}
+	pub_key[pub_key_size] = '\0';
 	return pub_key;
 }
 
-unsigned char* c_ed25519::sign_C (const unsigned char *message, size_t message_len) {
-
-	ed25519_sign(m_signature, message, message_len, m_public_key, m_private_key);
-	unsigned char* sign = new unsigned char[sign_size];
-	for(int i = 0; i < sign_size; ++i) {
-		sign[i] = m_signature[i];
-	}
+unique_ptr<unsigned char[]> c_ed25519::sign_uC (unique_ptr<const unsigned char[]> message, size_t message_len) const {
+	unique_ptr <unsigned char[]> sign (new unsigned char[sign_size+1]);
+	sign_C(message.get(), message_len, sign.get());
+	//sign_C(m_signature, message.get(), message_len, m_public_key, m_private_key);
+	//for (int i = 0; i < sign_size; ++i) {
+	//	sign[i] = m_signature[i];
+	//}
+	sign[sign_size] = '\0';
 	return sign;
 }
 
-int c_ed25519::verify_C(const unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key) {
+bool c_ed25519::verify_uC (unique_ptr<const unsigned char[]> &signature,
+						   unique_ptr<const unsigned char[]> &message,
+						   size_t message_len,
+						   unique_ptr<const unsigned char[]> &public_key) const {
 
-	return ed25519_verify(signature, message, message_len, public_key);
+	return ed25519_verify(signature.get(), message.get(), message_len, public_key.get()) != 0;
+}
+////////////////////////////////////////////////////////// C INTERFACE /////////////////////////////////////////////////////////
+void c_ed25519::get_public_key_C(unsigned char* pub_key) const {
+
+	//unsigned char* pub_key = new unsigned char[pub_key_size];
+	for(int i = 0; i < pub_key_size; ++i) {
+		pub_key[i] = m_public_key[i];
+	}
+//	return pub_key;
+}
+
+//unsigned char* c_ed25519::sign_C (const unsigned char *message, size_t message_len) const{
+//	ed25519_sign(m_signature, message, message_len, m_public_key, m_private_key);
+//	unsigned char* sign = new unsigned char[sign_size];
+//	for(int i = 0; i < sign_size; ++i) {
+//		sign[i] = m_signature[i];
+//	}
+//	return sign;
+//}
+
+//int c_ed25519::verify_C(const unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key) const{
+//	return ed25519_verify(signature, message, message_len, public_key);
+//}
+
+void c_ed25519::sign_C (const unsigned char *msg, size_t msg_length, unsigned char *signature) const {
+	ed25519_sign(signature, msg, msg_length, m_public_key, m_private_key);
+}
+
+bool c_ed25519::verify_C (const unsigned char *signature, const unsigned char *msg, size_t msg_length, const unsigned char *public_key) const {
+	return ed25519_verify(signature, msg, msg_length, public_key) != 0;
 }
 
 /*

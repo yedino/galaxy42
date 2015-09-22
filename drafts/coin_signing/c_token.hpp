@@ -13,7 +13,6 @@ class token_id_generator {
 struct c_chainsign_element {
 	c_chainsign_element (const std::string, const std::string, const std::string, const std::string);
 
-	bool operator !=(const c_chainsign_element &c_el) const;
 	const std::string m_msg;
 	const std::string m_signed_msg;
 	const std::string m_signer;
@@ -32,9 +31,11 @@ struct c_token {
 	long long m_password;
 };
 
-bool operator== (const c_token &, const c_token &);
+bool operator != (const c_chainsign_element &,const c_chainsign_element &);
 
-bool operator< (const c_token &, const c_token &);
+bool operator == (const c_token &, const c_token &);
+
+bool operator < (const c_token &, const c_token &);
 
 #endif //COIN_SIGNING_C_TOKEN_HPP
 

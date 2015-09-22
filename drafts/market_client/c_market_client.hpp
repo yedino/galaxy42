@@ -27,11 +27,11 @@ private:
 
 #endif // C_OBJECT_HPP
 
-class c_active_user {
+class c_client_user {
 public:
-	c_active_user() : m_username("non")
+	c_client_user() : m_username("non")
 	{}
-	c_active_user(std::string usr) : m_username(usr)
+	c_client_user(std::string usr) : m_username(usr)
 	{}
 
 	void set_username(std::string usr) {

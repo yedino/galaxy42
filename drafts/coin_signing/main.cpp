@@ -4,6 +4,7 @@
 #include <mutex>
 #include <atomic>
 #include "c_user.hpp"
+#include "c_contract.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
 
 using std::thread;
@@ -105,6 +106,8 @@ bool test_cheater() {
 	std::cout << "RUNNING TEST03 CHEATER" << std::endl;
 	c_user A("userA"), B("userB"), C("userC"), X("userX");
 	A.emit_tokens(1);
+
+
 	A.send_token(B);
 	B.send_fake_token(C);
 	B.send_token(X);
@@ -118,7 +121,7 @@ bool test_all() {
 
 	list<thread> Threads;
 
-	int test_loop = 500, msg_length = 64;
+	int test_loop = 100, msg_length = 64;
 	std::cout << "RUNNING TEST MANY_ED_SIGNING IN " << number_of_threads << " THREADS" << std::endl;
 	for (int i = 0; i < number_of_threads; ++i) {
 		Threads.emplace_back([&test_loop, &msg_length](){test_manyEdSigning(test_loop,msg_length);});
@@ -138,6 +141,18 @@ bool test_all() {
 	}
 }
 
+vector<c_contract> generate_contracts (const vector<c_user> &route, size_t data_size = 155) {
+	vector<c_contract> contracts;
+	for (size_t i = 1; i < route.size(); ++i) {
+		contracts.emplace_back(route.at(i - 1), route.at(i), data_size);
+	}
+	for (c_contract &c : contracts) {
+		c.create_msg();
+		c.create_signature();
+	}
+
+	return contracts;
+}
 
 int main (int argc, char *argv[]) {
 	try {

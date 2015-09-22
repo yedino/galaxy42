@@ -22,8 +22,8 @@ class c_encryption {
 	c_encryption () : m_crypto_method(no_crypt) { }
 
 	virtual std::string get_public_key () = 0;
-	virtual std::string sign (const std::string &msg) = 0;
-	virtual bool verify(const std::string &signature, const std::string &message, const std::string &public_key) = 0;
+	virtual std::string sign (const std::string &msg) const = 0;
+	virtual bool verify(const std::string &signature, const std::string &message, const std::string &public_key) const = 0;
 
 	virtual ~c_encryption () = default;
 
@@ -57,13 +57,12 @@ class c_RSA : public c_encryption {
 	c_RSA ();
 
 	std::string get_public_key ();
-	std::string sign (const std::string &msg);
-	bool verify(const std::string &signature, const std::string &message, const std::string &public_key);
+	std::string sign (const std::string &msg) const;
+	bool verify(const std::string &signature, const std::string &message, const std::string &public_key) const;
 
   private:
 	std::unique_ptr<c_crypto_RSA<key_size>> m_crypto;
 	public_key<long_type> m_pub_key;
-	long_type m_last_sign;
 };
 
 //////////////////////////////////////////////  ED25519  ///////////////////////////////////////////////////////////
@@ -84,20 +83,21 @@ class c_ed25519 : public c_encryption {
 	c_ed25519 ();
 
 	std::string get_public_key (); ///< C++ sign way
-	std::string sign (const std::string &msg);
-
-	bool verify (const std::string &signature, const std::string &message, const std::string &public_key);
+	std::string sign (const std::string &msg) const;
+	bool verify (const std::string &signature, const std::string &message, const std::string &public_key) const;
 
 	unique_ptr<unsigned char[]> get_public_key_uC ();
-	unique_ptr<unsigned char[]> sign_uC (unique_ptr<const unsigned char[]> message, size_t message_len);
+	unique_ptr<unsigned char[]> sign_uC (unique_ptr<const unsigned char[]> message, size_t message_len) const;
 	bool verify_uC (unique_ptr<const unsigned char[]> &signature,
 				   unique_ptr<const unsigned char[]> &message,
 				   size_t message_len,
-				   unique_ptr<const unsigned char[]> &public_key);
+				   unique_ptr<const unsigned char[]> &public_key) const;
 
-	unsigned char* get_public_key_C();
-	unsigned char* sign_C(const unsigned char *message, size_t message_len);	///< faster C sign way
-	int verify_C(const unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key);
+	void get_public_key_C(unsigned char* pub_key) const;
+	void sign_C (const unsigned char *, size_t, unsigned char *) const; // signature is unsigned char [64]
+	bool verify_C (const unsigned char *, const unsigned char *, size_t, const unsigned char *) const;
+	//unsigned char* sign_C(const unsigned char *message, size_t message_len) const;	///< faster C sign way
+	//int verify_C(const unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key) const;
 	//void add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar);			//
 	//void key_exchange(unsigned char *shared_secret, const unsigned char *public_key, const unsigned char *private_key);
 
