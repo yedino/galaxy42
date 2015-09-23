@@ -80,7 +80,16 @@ class c_node {
 	private:
 		vector<c_osi2_nic> m_nic; ///< my network cards
 		
+		c_networld &m_networld; ///< my netwok world in which I exist
+		
+		// TODO add s_nr m_nr print and operator<< like in others
+		
 	public:
+		c_node(c_networld &networld);
+		
+		void create_nic(); ///< adds one more NIC card
+		c_osi2_nic & get_nic(int nr); ///< gets NIC with this number, throws if it does not exist
+		c_osi2_nic & use_nic(int nr); ///< gets NIC with this number, can create it (and all other up to that number)
 };
 
 /*** 
@@ -184,13 +193,14 @@ long int c_networld::s_nr = 0;
 int draft_net2() { // the main function for test
 	c_networld world;
 	
-	c_node
+	vector<c_node> node;
+	node.push_back( c_node(world) );
 	
-//	vector<c_osi2_switch> sw;
-//	sw1.connect_with(nic1, world);
+	vector<c_osi2_switch> sw;
+	sw.push_back( c_osi2_switch() );
+	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
 	
-	_dbg2( sw1 );
-	_dbg2( sw2 );
+	_dbg2( sw.at(0) );
 	
 	return 0;
 }
@@ -299,3 +309,29 @@ c_osi2_cable_direct_plug::c_osi2_cable_direct_plug(c_osi2_cable_direct &cable)
 {
 	
 }
+
+c_node::c_node(c_networld &networld)
+  : m_networld( networld )
+{
+	
+}
+
+void c_node::create_nic()
+{
+	m_nic.push_back( c_osi2_nic(m_networld) );
+	_info("Creted new NIC card for my node: " << m_nic.back());
+}
+
+c_osi2_nic &c_node::get_nic(int nr)
+{
+	return m_nic.at(nr);
+}
+
+c_osi2_nic &c_node::use_nic(int nr)
+{
+	while (! ( nr < m_nic.size() ) ) create_nic();
+	if (nr < m_nic.size()) return m_nic[nr];
+	throw std::runtime_error("Internal error in creating nodes in use_nic"); // assert
+}
+
+
