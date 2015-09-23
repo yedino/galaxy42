@@ -8,19 +8,23 @@ Again network simualtion refactoring, after all it's crucial thing of this proje
 Yo Dawg I herd you like refactoring?
 
 Network simulation:
-- OSI_2: switches with direct links in LAN, switch congestion
-- OSI_3: routing direct data in LAN and over ICANN Internet
+- We have "switches" that are actually also routers, that always route data to destination UUID address (that is
+like an IP address abstraction).
+- OSI_2: switches/routers with direct links in LAN, switch congestion
+- OSI_3: routing data to the UUID destination (over LAN/ICANN internet) - routing the CJDNS peers
 - CJDNS: build DHT, find CJDNS path with directors (using ISO_3)
 
 Implement:
 - switches/NIC buffers can fill up and slow down or drop packets
 - switches have speed limit of how many packets they can transport in a tick
 
-
 Skip:
+- We skip IP/MAC addressing, we just emulate it with giving NIC cards UUID addresses that are some kind of IP,
+to not have to implement NAT and all
+
 - We skip BGP simulation, we just assume data can get from any main ISP to any other main ISP node
 (adding some speed limits on each ISP).
-- We skip NAT simulation for now, we assume each station has a public IP (even if closely connected in one LAN)
+- We skip NAT simulation, we assume each station has a public IP (even if closely connected in one LAN)
 
 */
 
@@ -37,6 +41,7 @@ typedef union {
 
 
 
+// Not doing this after all, too much details - using instead the t_osi3_uuid as "address"
 #if 0
 
 /***
