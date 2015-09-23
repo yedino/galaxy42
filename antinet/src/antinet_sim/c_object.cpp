@@ -409,12 +409,50 @@ void c_cjddev::add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price) 
 }
 
 
+void draw_string(string tmp_string, c_drawtarget &drawtarget, c_layer &layer_any) {
+
+    const auto & gui = * drawtarget.m_gui;
+    float m_size = 0.005*gui.camera_zoom;
+    float offset = 0.01*gui.camera_zoom;
+    for(unsigned int i=0; i<tmp_string.length(); i++){
+    //_dbg1("ASCII A: " << (int)A );
+    float x_position = ((((int)tmp_string[i]-32)%10)/10.);
+    float y_position = 1-((((int)tmp_string[i]-32)-(((int)tmp_string[i]-32)%10))/100.);
+
+//    _dbg1("x_position: " << x_position);
+//    _dbg1("y_position: " << y_position);
+
+    glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_bitmap_font1_opengl);   //init a texture
+        glBegin( GL_QUADS );                                /* Drawing Using Quads       */
+
+        glTexCoord2f (x_position, y_position);
+        glVertex3f(  -1.0f*m_size+0.01+(i*offset),  2.0f*m_size-0.1,  0.0f );   /* Left top       */
+        glTexCoord2f (x_position+0.09, y_position);
+        glVertex3f( 1.0f*m_size+0.01+(i*offset), 2.0f*m_size-0.1,  0.0f );      /* Right top      */
+        glTexCoord2f (x_position+0.09, y_position-0.09);
+        glVertex3f(  1.0f*m_size+0.01+(i*offset), -2.0f*m_size-0.1,  0.0f );    /* Right bottom   */
+        glTexCoord2f (x_position, y_position-0.09);
+        glVertex3f( -1.0f*m_size+0.01+(i*offset), -2.0f*m_size-0.1, 0.0f);      /* Left bottom    */
+
+        glEnd( );                                           /* Finished Drawing The Quads */
+
+        glBindTexture(GL_TEXTURE_2D, 0);   // texture
+        glDisable(GL_BLEND);
+    }
+}
+
 void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
+
+
      //auto layer = dynamic_cast<c_layer_opengl>(layer_any);
     auto layer = dynamic_cast<c_layer_opengl&>(layer_any);
     const auto & gui = * drawtarget.m_gui;
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
-	
+
 	// _info("OpenGL draw");
     /* Move Left 1.5 Units And Into The Screen 6.0 */
     float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
@@ -451,6 +489,10 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
     glDisable(GL_BLEND);
+
+
+    draw_string(m_name.c_str(), drawtarget, layer); // Drawing string
+
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);

@@ -28,6 +28,7 @@ c_bitmaps::~c_bitmaps () {
 	destroy_bitmap(m_package_blue);
 	destroy_bitmap(m_package_red);
 	destroy_bitmap(m_package_white);
+    destroy_bitmap(m_bitmap_font1);
 }
 
 
@@ -58,6 +59,7 @@ void c_bitmaps::init_load_all () {
 	m_package_blue = alex_load_png(m_path_to_data + "letter_21x11_blue.png", NULL);
 	m_package_red = alex_load_png(m_path_to_data + "letter_21x11_red.png", NULL);
     m_package_white = alex_load_png(m_path_to_data + "letter_21x11.png", NULL);
+    m_bitmap_font1 = alex_load_png(m_path_to_data + "font1.png", NULL);
 }
 
 void c_bitmaps::bitmap_to_int() {
@@ -67,6 +69,7 @@ void c_bitmaps::bitmap_to_int() {
     m_pack_blue_opengl = allegro_gl_make_texture_ex(AGL_TEXTURE_HAS_ALPHA, m_package_blue, -1);
     m_pack_red_opengl = allegro_gl_make_texture_ex(AGL_TEXTURE_HAS_ALPHA, m_package_red, -1);
     m_pack_white_opengl = allegro_gl_make_texture_ex(AGL_TEXTURE_HAS_ALPHA, m_package_white, -1);
+    m_bitmap_font1_opengl = allegro_gl_make_texture(m_bitmap_font1);
 }
 
 bool c_bitmaps::test_dir_as_datadir (string dir) const {

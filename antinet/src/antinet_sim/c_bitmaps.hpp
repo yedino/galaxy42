@@ -15,6 +15,7 @@ public:
 	BITMAP *m_package_blue;
 	BITMAP *m_package_red;
 	BITMAP *m_package_white;
+    BITMAP *m_bitmap_font1;
 
     int m_background_opengl;
     int m_node_opengl;
@@ -22,6 +23,7 @@ public:
     int m_pack_blue_opengl;
     int m_pack_red_opengl;
     int m_pack_white_opengl;
+    int m_bitmap_font1_opengl;
 
 	~c_bitmaps ();
 
