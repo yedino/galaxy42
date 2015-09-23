@@ -133,7 +133,7 @@ void stop_the_gui() {
 }
 
 /// (should be defined e.g. in draft_main_rafal.cpp)
-void draft_main_rafal();
+//void draft_main_rafal();
 
 
 int main(int argc, char *argv[]) {
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 			{ // react to some arguments-commands
 				if (args.count("--draftr")) {
 					std::cerr << "Running draft program (by Rafal)" << std::endl;
-					draft_main_rafal(); // run the current main draft for Rafal
+                    //draft_main_rafal(); // run the current main draft for Rafal
 					std::cerr << "Running draft program (by Rafal) - all done, exiting" << std::endl;
 					return 0;
 				}

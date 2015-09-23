@@ -64,13 +64,11 @@ double c_entity::get_distance (const c_entity &entity) {
 
 void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
-
-    auto layer =
-            dynamic_cast<c_layer_opengl &>
-            (layer_any);
+    auto layer = dynamic_cast<c_layer_opengl &> (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+    glPushMatrix();
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
         auto selected_object = gui.m_selected_object.lock();
@@ -129,7 +127,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
 //          glLineWidth(2.5);  //size of line
             glLineWidth(1.0);
-            glColor3f(0.0, 1.0, 1.0);
+            glColor3f(1.0, 0.0, 0.0);
 
             glBegin(GL_LINE_LOOP);
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
@@ -155,17 +153,20 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //        glVertex3f(-1, 0, 0);
 //        glEnd();
     }
+    //glPopMatrix();
     if (layer.m_layer_nr == e_layer_nr_object_extra) {
          //std::cout << "DEBUG6" << std::endl;
         //textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
         glColor4f(1.0, 0.0, 0.0, 0.0);
         glLoadIdentity();
+        //glPushMatrix();
         glEnable(GL_BLEND);
         //allegro_gl_printf_ex(s_font_allegl.get(), (vx-0.5*SCREEN_W)/(0.5*SCREEN_W), -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H), 0.0, m_name.c_str());
         allegro_gl_printf_ex(s_font_allegl.get(), (vx-0.5*SCREEN_W)/(0.5*SCREEN_W)-0.05, -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H)+0.1, 0.0, m_name.c_str());
         glDisable(GL_BLEND);
-
+        //glPopMatrix();
     }
+    glPopMatrix();
 }
 
 void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -446,18 +447,17 @@ void draw_string(string tmp_string, c_drawtarget &drawtarget, c_layer &layer_any
 }
 
 void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
-
-
      //auto layer = dynamic_cast<c_layer_opengl>(layer_any);
     auto layer = dynamic_cast<c_layer_opengl&>(layer_any);
     const auto & gui = * drawtarget.m_gui;
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
-
+	
 	// _info("OpenGL draw");
     /* Move Left 1.5 Units And Into The Screen 6.0 */
     float opengl_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
     float opengl_y = -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H);
-    glLoadIdentity();
+    //glLoadIdentity();
+    glPushMatrix();
     glScalef(1,1,1);
     glTranslatef(opengl_x,opengl_y,0.0f);
     //_dbg3("*(gui.camera_zoom*0.01):" << gui.camera_zoom);
@@ -477,14 +477,10 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
     glBegin( GL_QUADS );                                /* Drawing Using Quads       */
-    glTexCoord2f (0, 0);
-    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
-    glTexCoord2f (1, 0);
-    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
-    glTexCoord2f (1, 1);
-    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
-    glTexCoord2f (0, 1);
-    glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
+    glTexCoord2f (0, 0); glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
+    glTexCoord2f (1, 0); glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
+    glTexCoord2f (1, 1); glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
+    glTexCoord2f (0, 1); glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
     glEnd( );                                           /* Finished Drawing The Quads */
 
     glBindTexture(GL_TEXTURE_2D, 0);   // texture
@@ -497,12 +493,15 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
 
+    glPopMatrix();
     //textout_ex(frame, font, m_my_address.c_str(), vx - 20, vy - 45, color, -1);
 
-    glLoadIdentity();
+    //glLoadIdentity();
+    glPushMatrix();
     glEnable(GL_BLEND);
     allegro_gl_printf_ex(s_font_allegl.get(), opengl_x-0.05, opengl_y+0.15, 0.0, m_my_address.c_str());
     glDisable(GL_BLEND);
+    glPopMatrix();
 
 ////////////////////////////////////////////////////////////////////////////////
     if (layer.m_layer_nr == e_layer_nr_object) {
@@ -564,12 +563,14 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                 float end_connect_y = -((gui.view_y(neighbor_ptr->m_y))-0.5*SCREEN_H)/(0.5*SCREEN_H);
 
                 glLineWidth(thick);
-                glColor3f(0.1,0.1,1.0);
-                glLoadIdentity();
+                glColor3f(0.0,0.0,0.0);
+                //glLoadIdentity();
+                glPushMatrix();
                 glBegin(GL_LINES);
                 glVertex3f(start_connect_x,start_connect_y,0.0f);
                 glVertex3f(end_connect_x,end_connect_y,0.0f);
                 glEnd();
+                glPopMatrix();
 
                 if (print_send_message) {
                     t_geo_point send_piont, receive_point, msg_circle;
@@ -587,7 +588,8 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 #else
                     if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) { // green
                          float m_size = (0.03*gui.camera_zoom)+0.003;
-                         glLoadIdentity();
+                         //glLoadIdentity();
+                         glPushMatrix();
                          glTranslatef((msg_circle.x-0.5*SCREEN_W) / (0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H) / (0.5*SCREEN_H)), 0.0f);
                          glColor3f(0.0,0.0,1.0);
                          glEnable(GL_BLEND);
@@ -602,17 +604,21 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                          glEnd( );
                          glBindTexture(GL_TEXTURE_2D, 0);
                          glDisable(GL_BLEND);
+                         glPopMatrix();
 
                          std::string text("looking for " + m_outbox.at(0)->m_msg->m_destination);
-                         glLoadIdentity();
+                         //glLoadIdentity();
+                         glPushMatrix();
                          glEnable(GL_BLEND);
                          allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
                          glDisable(GL_BLEND);
+                         glPopMatrix();
 
                     } else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_menu) { //blue
                         std::shared_ptr<msg_buy_menu> menu_msg(std::dynamic_pointer_cast<msg_buy_menu>(m_outbox.at(0)->m_msg));
                          float m_size = (0.03*gui.camera_zoom)+0.003;
-                         glLoadIdentity();
+                         //glLoadIdentity();
+                         glPushMatrix();
                          glTranslatef((msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W),-((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)),0.0f);
                          glColor3f(0.0,1.0,1.0);
                          glEnable(GL_BLEND);
@@ -620,25 +626,29 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                          glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
                          glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_pack_blue_opengl);   //init a texture
                          glBegin( GL_QUADS );
-                         glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f );
-                         glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f );
-                         glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f );
-                         glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
+                         glTexCoord2d(1,0); glVertex3f(  1.0f*m_size,  1.0f*m_size,  0.0f );
+                         glTexCoord2d(0,0); glVertex3f( -1.0f*m_size, 1.0f*m_size,  0.0f );
+                         glTexCoord2d(0,1); glVertex3f(  -1.0f*m_size, -1.0f*m_size,  0.0f );
+                         glTexCoord2d(1,1); glVertex3f( 1.0f*m_size, -1.0f*m_size, 0.0f);
                          glEnd( );
                          glBindTexture(GL_TEXTURE_2D, 0);
                          glDisable(GL_BLEND);
+                         glPopMatrix();
 
                          std::string text(
                              menu_msg->m_destination + " found, price = " + std::to_string(menu_msg->m_my_price));
-                         glLoadIdentity();
+                         //glLoadIdentity();
+                         glPushMatrix();
                          glEnable(GL_BLEND);
                          allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
                          glDisable(GL_BLEND);
+                         glPopMatrix();
                     }
                     else if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_data) { //red
                         std::shared_ptr<msg_buy_menu> menu_msg(std::dynamic_pointer_cast<msg_buy_menu>(m_outbox.at(0)->m_msg));
                         float m_size = (0.03*gui.camera_zoom)+0.003;
-                        glLoadIdentity();
+                        //glLoadIdentity();
+                        glPushMatrix();
                         glTranslatef((msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W),-((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)),0.0f);
                         glColor3f(1.0,0.0,1.0);
                         glEnable(GL_BLEND);
@@ -653,9 +663,11 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                         glEnd( );
                         glBindTexture(GL_TEXTURE_2D, 0);
                         glDisable(GL_BLEND);
+                        glPopMatrix();
 
                         std::string text("send FTP to " + m_outbox.at(0)->m_msg->m_destination);
-                        glLoadIdentity();
+                        //glLoadIdentity();
+                        glPushMatrix();
                         glEnable(GL_BLEND);
                         allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
 
@@ -664,6 +676,7 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                         price_text += std::to_string(std::dynamic_pointer_cast<msg_use>(m_outbox.at(0)->m_msg)->m_payment.second);
                         allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, price_text.c_str());
                         glDisable(GL_BLEND);
+                        glPopMatrix();
                     }
 #endif
                 }

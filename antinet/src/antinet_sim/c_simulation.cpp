@@ -175,7 +175,8 @@ void c_simulation::main_loop () {
 		if (use_draw_opengl) {
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
-            glLoadIdentity();
+            //glLoadIdentity();
+            glPushMatrix();
             glEnable(GL_BLEND);
             glBegin(GL_QUADS);
             glTexCoord2f(0,1); glVertex3f(-1.0f,1.0f,0.0f);
@@ -185,6 +186,7 @@ void c_simulation::main_loop () {
             glEnd();
             glDisable(GL_BLEND);
             glBindTexture(GL_TEXTURE_2D, 0);   // texture
+            glPopMatrix();
 		}
 		
 		// clear additional things
@@ -361,17 +363,20 @@ void c_simulation::main_loop () {
             string pck_speed_str = "sending packets speed - " + std::to_string(450 - g_max_anim_frame);
             glColor4f(0.0,0.0,1.0,0.0);
             //glScalef(0.2f,0.2f,0.2f);
-            glLoadIdentity();
+            //glLoadIdentity();
+            glPushMatrix();
             glEnable(GL_BLEND);
             allegro_gl_printf_ex(s_font_allegl.get(), -0.9, tex_y, 0.0, mouse_pos_str.c_str());
             allegro_gl_printf_ex(s_font_allegl.get(), -0.9, tex_y-=offset, 0.0, fps_str.c_str());
             allegro_gl_printf_ex(s_font_allegl.get(), -0.9, tex_y-=offset, 0.0, ("Frame nr.: " + std::to_string(m_frame_number)).c_str());
             allegro_gl_printf_ex(s_font_allegl.get(), -0.7, 0.97, 0.0, pck_speed_str.c_str());
             glDisable(GL_BLEND);
+            glPopMatrix();
 
             if(allegro_keys[KEY_H]) {
                 _dbg1("KEY_H - opengl");
-                glLoadIdentity();
+                //glLoadIdentity();
+                glPushMatrix();
                 glEnable(GL_BLEND);
                 allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y, 0.0,"s - start");
                 allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"p - pause");
@@ -387,14 +392,17 @@ void c_simulation::main_loop () {
                 allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"F1: info about node");
                 allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y-=offset, 0.0,"F2: next node");
                 glDisable(GL_BLEND);
+                glPopMatrix();
 
             } else {
-                glLoadIdentity();
+                //glLoadIdentity();
+                glPushMatrix();
                 glEnable(GL_BLEND);
                 //allegro_gl_printf(s_font_allegl.get(), 0.8, 0.9, 0.0,0xFF0000,"h - help");
                 allegro_gl_printf_ex(s_font_allegl.get(), tex_x, tex_y, 0.0,"h - help");
                 //glBlendFunc(GL_ONE, GL_ZERO);
                 glDisable(GL_BLEND);
+                glPopMatrix();
             }
 		}
 
@@ -517,7 +525,7 @@ void c_simulation::main_loop () {
             // TODO @opengl
 
             if (use_draw_opengl) {
-                glColor3f(0.0f,0.0f,0.0f);
+                glColor3f(0.0f,1.0f,1.0f);
                 glLineWidth(1.0);
                 glScalef(1.0f,1.0f,1.0f);
 
@@ -535,11 +543,13 @@ void c_simulation::main_loop () {
                 //_dbg1("start_line: " << start_line_x << " " << start_line_y);
                 //_dbg1("end_line: " << end_line_x << " " << end_line_y);
 
-                glLoadIdentity();
+                //glLoadIdentity();
+                glPushMatrix();
                 glBegin(GL_LINES);
                 glVertex3f(start_line_x,start_line_y,0.0f);
                 glVertex3f(end_line_x,end_line_y,0.0f);
                 glEnd();
+                glPopMatrix();
             }
 		}
 		if (allegro_mouse_b == 2) { // end/stop the line that creates new connections
@@ -566,20 +576,20 @@ void c_simulation::main_loop () {
 
                 //_dbg1("mouse_x mouse_y: " << mouse_x << " " << mouse_y);
                 //_dbg1("screenW screenH: " << SCREEN_W << " " << SCREEN_H);
-                glLoadIdentity();
+                //glLoadIdentity();
+                glPushMatrix();
                 glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
                 //glTranslatef(m_gui->view_x_rev(mouse_x),m_gui->view_y_rev(mouse_y),0.0f);
-
                 glColor3f(0.0, 0.0, 0.0);
 
                 glBegin(GL_LINES);
                 glVertex2f(-1.0f*cursor_size,0.0f);
                 glVertex2f(1.0f*cursor_size,0.0f);
-
                 glVertex2f(0.0f,-1.0f*cursor_size);
                 glVertex2f(0.0f,1.0f*cursor_size);
                 glEnd();
+                glPopMatrix();
             }
 
 		}
