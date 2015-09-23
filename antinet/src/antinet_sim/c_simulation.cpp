@@ -78,6 +78,7 @@ void c_simulation::main_loop () {
 	//	PALETTE palette;
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
     s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
+
     for(auto obj : m_world->m_objects) {
         obj->set_font(s_font_allegl);
     }
@@ -127,9 +128,11 @@ void c_simulation::main_loop () {
 	// The main drawing is done inside this loop.
 	
 	///@see rendering.txt/[[drawing_main]]
-
+    float camera_offset = 0.0;
 	// === main loop ===
-	while (!m_goodbye && !close_button_pressed) { 
+    while (!m_goodbye && !close_button_pressed) {
+
+
 		auto start_time = std::chrono::high_resolution_clock::now();
 
 		// --- process the keyboard/inputs ---
@@ -164,24 +167,41 @@ void c_simulation::main_loop () {
 				allegro_char = readkey();
 			}
 		// end of input
-		
-
 
 		// draw background of frame
 		if (use_draw_allegro) {
 			clear_to_color(m_frame, makecol(0, 128, 0));
             blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
 		}
-		if (use_draw_opengl) {
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-            glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
+        if (use_draw_opengl) {
+
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+            //glDisable(GL_DEPTH_TEST);      // ??? Enables Depth Testing
+            //glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Testing To Do
+            //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+            glLoadIdentity();
+
+            // glTranslatef(m_gui->camera_x, m_gui->camera_y,camera_offset);
+            glTranslatef( 0 , 0 , 0);
+            glRotatef(camera_offset*10, 0,1,0);
+
             //glLoadIdentity();
+
+            // drawing backgound
             glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
+            //glTranslatef(0,0,0);
+            glScalef(2,2,2);
             glEnable(GL_BLEND);
+
+
             glBegin(GL_QUADS);
-            glTexCoord2f(0,1); glVertex3f(-1.0f,1.0f,0.0f);
-            glTexCoord2f(1,1); glVertex3f(1.0f,1.0f,0.0f);
-            glTexCoord2f(1,0); glVertex3f(1.0f,-1.0f,0.0f);
+
+            float q=10;
+            glTexCoord2f(0,q); glVertex3f(-1.0f,1.0f, 0.0f);
+            glTexCoord2f(q,q); glVertex3f(1.0f,1.0f, 0.0f);
+            glTexCoord2f(q,0); glVertex3f(1.0f,-1.0f,0.0f);
             glTexCoord2f(0,0); glVertex3f(-1.0f,-1.0f,0.0f);
             glEnd();
             glDisable(GL_BLEND);
@@ -301,7 +321,7 @@ void c_simulation::main_loop () {
 		if (mode == e_mode_camera) {
 			if (allegro_keys[KEY_LEFT]) m_gui->camera_x -= 10;
 			if (allegro_keys[KEY_RIGHT]) m_gui->camera_x += 10;
-			if (allegro_keys[KEY_UP]) m_gui->camera_y -= 10;
+            if (allegro_keys[KEY_UP]) m_gui->camera_y -= 10;
 			if (allegro_keys[KEY_DOWN]) m_gui->camera_y += 10;
 
 			const double zoom_speed = 1.1;
@@ -309,7 +329,10 @@ void c_simulation::main_loop () {
 			if (allegro_keys[KEY_PGDN]) m_gui->camera_zoom /= zoom_speed;
 		}
 
-
+        if(allegro_keys[KEY_G]) {
+            camera_offset+=0.1;
+            _dbg1("camera_offset: " << camera_offset);
+        }
 
 		// === text debug on screen ===
 
@@ -508,7 +531,7 @@ void c_simulation::main_loop () {
 
 		// === animation clock operations ===
 		
-		m_world->draw(*m_drawtarget.get());
+        m_world->draw(*m_drawtarget.get()); // <===== DRAW THE WORLD
 
 		/*
 		if ((m_frame_number - frame_checkpoint) < g_max_anim_frame) {

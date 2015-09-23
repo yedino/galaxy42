@@ -64,109 +64,98 @@ double c_entity::get_distance (const c_entity &entity) {
 
 void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 
-    auto layer = dynamic_cast<c_layer_opengl &> (layer_any);
+//    auto layer = dynamic_cast<c_layer_opengl &> (layer_any);
 
-    const auto & gui = * drawtarget.m_gui;
-    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
-    glPushMatrix();
+//    const auto & gui = * drawtarget.m_gui;
+//    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+//    glPushMatrix();
 
-    if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
-        auto selected_object = gui.m_selected_object.lock();
-        auto target_object = gui.m_target;
-        auto source_object = gui.m_source;
-        //std::cout << "DEBUG3" << std::endl;
+//    if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
+//        auto selected_object = gui.m_selected_object.lock();
+//        auto target_object = gui.m_target;
+//        auto source_object = gui.m_source;
+//        //std::cout << "DEBUG3" << std::endl;
 
-        if (this == selected_object.get()) { // if I am the selected object
-            //circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
-            glLineWidth(2.0);  //size of line
-            glColor3f(1.0, 1.0, 0.0);
-//            glBegin(GL_LINES);
-//            glVertex3f(0.0, 0.0, 0.0);
-//            glVertex3f(-1, 0, 0);
+//        if (this == selected_object.get()) { // if I am the selected object
+//            //circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
+//            glLineWidth(2.0);  //size of line
+//            glColor3f(1.0, 1.0, 0.0);
+////            glBegin(GL_LINES);
+////            glVertex3f(0.0, 0.0, 0.0);
+////            glVertex3f(-1, 0, 0);
+////            glEnd();
+//        }
+
+//        if (this == target_object.get()) { // if I am the target object
+//            //circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
+//            glLineWidth(1.5);  //size of line
+//            glColor3f(0.0, 1.0, 0.0);
+////            glBegin(GL_LINES);
+////            glVertex3f(0.0, 0.0, 0.0);
+////            glVertex3f(-1, 0, 0);
+////            glEnd();
+
+//            glBegin(GL_LINE_LOOP);
+//            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+//                float x = 0.05*cos(angle)*gui.camera_zoom;
+//                float y = 0.1*sin(angle)*gui.camera_zoom;
+
+//                glVertex3f(x,y,0.0f);
+//            }
 //            glEnd();
-        }
+//        }
 
-        if (this == target_object.get()) { // if I am the target object
-            //circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
-            glLineWidth(1.5);  //size of line
-            glColor3f(0.0, 1.0, 0.0);
-//            glBegin(GL_LINES);
-//            glVertex3f(0.0, 0.0, 0.0);
-//            glVertex3f(-1, 0, 0);
+//        if (this == source_object.get()) {
+//            //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
+//            glLineWidth(1.5);  //size of line
+//            glColor3f(0.0, 1.0, 0.0);
+
+//            glBegin(GL_LINE_LOOP);
+//            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+//                float x = 0.05*cos(angle)*gui.camera_zoom;
+//                float y = 0.1*sin(angle)*gui.camera_zoom;
+
+//                glVertex3f(x,y,0.0f);
+//            }
 //            glEnd();
+//        }
+//    }
+//    if (layer.m_layer_nr == e_layer_nr_gui) {
+//        // std::cout << "DEBUG4" << std::endl;
+//        auto selected_object = gui.m_selected_object.lock();
+//        if (this == selected_object.get()) { // if I am the selected object
 
-            glBegin(GL_LINE_LOOP);
-            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.05*cos(angle)*gui.camera_zoom;
-                float y = 0.1*sin(angle)*gui.camera_zoom;
+////          glLineWidth(2.5);  //size of line
+//            glLineWidth(1.0);
+//            glColor3f(1.0, 0.0, 0.0);
 
-                glVertex3f(x,y,0.0f);
-            }
-            glEnd();
-        }
+//            glBegin(GL_LINE_LOOP);
+//            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+//                float x = 0.07*cos(angle)*gui.camera_zoom;
+//                float y = 0.14*sin(angle)*gui.camera_zoom;
 
-        if (this == source_object.get()) {
-            //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
-            glLineWidth(1.5);  //size of line
-            glColor3f(0.0, 1.0, 0.0);
-
-            glBegin(GL_LINE_LOOP);
-            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.05*cos(angle)*gui.camera_zoom;
-                float y = 0.1*sin(angle)*gui.camera_zoom;
-
-                glVertex3f(x,y,0.0f);
-            }
-            glEnd();
-        }
-    }
-    if (layer.m_layer_nr == e_layer_nr_gui) {
-        // std::cout << "DEBUG4" << std::endl;
-        auto selected_object = gui.m_selected_object.lock();
-        if (this == selected_object.get()) { // if I am the selected object
-
-//          glLineWidth(2.5);  //size of line
-            glLineWidth(1.0);
-            glColor3f(1.0, 0.0, 0.0);
-
-            glBegin(GL_LINE_LOOP);
-            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
-                float x = 0.07*cos(angle)*gui.camera_zoom;
-                float y = 0.14*sin(angle)*gui.camera_zoom;
-
-                glVertex3f(x,y,0.0f);
-            }
-            glEnd();
-        }
-    }
-    if (layer.m_layer_nr == e_layer_nr_object) {
-        //std::cout << "DEBUG5" << std::endl;
-//		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
-//		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
-//		circle(frame, vx, vy, 10, color);
+//                glVertex3f(x,y,0.0f);
+//            }
+//            glEnd();
+//        }
+//    }
+//    if (layer.m_layer_nr == e_layer_nr_object) {
+//        //std::cout << "DEBUG5" << std::endl;
+////		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
+////		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
+////		circle(frame, vx, vy, 10, color);
 
 
-//        glLineWidth(2.5);  //size of line
-//        glColor3f(0.0, 0.0, 1.0);
-//        glBegin(GL_LINES);
-//        glVertex3f(0.0, 0.0, 0.0);
-//        glVertex3f(-1, 0, 0);
-//        glEnd();
-    }
-    //glPopMatrix();
-    if (layer.m_layer_nr == e_layer_nr_object_extra) {
-         //std::cout << "DEBUG6" << std::endl;
-        //textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
-        glColor4f(1.0, 0.0, 0.0, 0.0);
-        glLoadIdentity();
-        //glPushMatrix();
-        glEnable(GL_BLEND);
-        //allegro_gl_printf_ex(s_font_allegl.get(), (vx-0.5*SCREEN_W)/(0.5*SCREEN_W), -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H), 0.0, m_name.c_str());
-        allegro_gl_printf_ex(s_font_allegl.get(), (vx-0.5*SCREEN_W)/(0.5*SCREEN_W)-0.05, -(vy-0.5*SCREEN_H)/(0.5*SCREEN_H)+0.1, 0.0, m_name.c_str());
-        glDisable(GL_BLEND);
-        //glPopMatrix();
-    }
-    glPopMatrix();
+////        glLineWidth(2.5);  //size of line
+////        glColor3f(0.0, 0.0, 1.0);
+////        glBegin(GL_LINES);
+////        glVertex3f(0.0, 0.0, 0.0);
+////        glVertex3f(-1, 0, 0);
+////        glEnd();
+//    }
+//    //glPopMatrix();
+
+//    glPopMatrix();
 }
 
 void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -447,7 +436,6 @@ void draw_string(string tmp_string, c_drawtarget &drawtarget, c_layer &layer_any
 }
 
 void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
-     //auto layer = dynamic_cast<c_layer_opengl>(layer_any);
     auto layer = dynamic_cast<c_layer_opengl&>(layer_any);
     const auto & gui = * drawtarget.m_gui;
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
@@ -460,48 +448,26 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     glPushMatrix();
     glScalef(1,1,1);
     glTranslatef(opengl_x,opengl_y,0.0f);
+    //glTranslatef(m_x,m_y,0.0f);
+    //_dbg1("m_x m_y = " << m_x << " " << m_y);
     //_dbg3("*(gui.camera_zoom*0.01):" << gui.camera_zoom);
     float m_size = 0.03*gui.camera_zoom;
     glColor3f(1.0,0.0,0.0);
 
-    //textout_ex(frame, font, m_my_address.c_str(), vx - 20, vy - 45, color, -1);
-
-    glEnable(GL_BLEND);
-    //allegro_gl_printf_ex(s_font_allegl.get(), opengl_x+20, opengl_y+20, 0.0, m_name.c_str());
-    allegro_gl_printf_ex(s_font_allegl.get(), 0.01, 0.1, 0.0, m_name.c_str());
-    glDisable(GL_BLEND);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, c_bitmaps::get_instance().m_node->w, c_bitmaps::get_instance().m_node->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_node_opengl);   //init a texture
     glBegin( GL_QUADS );                                /* Drawing Using Quads       */
-    glTexCoord2f (0, 0); glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
-    glTexCoord2f (1, 0); glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
-    glTexCoord2f (1, 1); glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
-    glTexCoord2f (0, 1); glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
+    glVertex3f(  -1.0f*m_size,  2.0f*m_size,  0.0f );   /* Left top       */
+    glVertex3f( 1.0f*m_size, 2.0f*m_size,  0.0f );      /* Right top      */
+    glVertex3f(  1.0f*m_size, -2.0f*m_size,  0.0f );    /* Right bottom   */
+    glVertex3f( -1.0f*m_size, -2.0f*m_size, 0.0f);      /* Left bottom    */
     glEnd( );                                           /* Finished Drawing The Quads */
 
-    glBindTexture(GL_TEXTURE_2D, 0);   // texture
-    glDisable(GL_BLEND);
-
-
-    draw_string(m_name.c_str(), drawtarget, layer); // Drawing string
-
+    //draw_string(m_name.c_str(), drawtarget, layer); // Drawing string
 
     //c_entity::draw_opengl(drawtarget, layer_any);
     c_entity::draw_opengl(drawtarget, layer);
 
     glPopMatrix();
-    //textout_ex(frame, font, m_my_address.c_str(), vx - 20, vy - 45, color, -1);
 
-    //glLoadIdentity();
-    glPushMatrix();
-    glEnable(GL_BLEND);
-    allegro_gl_printf_ex(s_font_allegl.get(), opengl_x-0.05, opengl_y+0.15, 0.0, m_my_address.c_str());
-    glDisable(GL_BLEND);
-    glPopMatrix();
 
 ////////////////////////////////////////////////////////////////////////////////
     if (layer.m_layer_nr == e_layer_nr_object) {
@@ -517,15 +483,6 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //        if (!m_routing_table.empty()) {
 //            circle(frame, vx, vy, 10, color);
 //        }
-
-//        glLoadIdentity();
-//        glColor3f(0.0,1.0,0.0);
-//        glScalef(1,1,1);
-//        glPointSize(5);
-//        glTranslatef((vx-0.5*SCREEN_W),-(vy-0.5*SCREEN_H),0.0f);
-//        glBegin(GL_POINTS);
-//        glVertex3f(0.0f,0.0f,0.0f);
-//        glEnd();
     }
  ////////////////////////////////////////////////////////////////////////////////
 
@@ -663,11 +620,11 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
                         glEnd( );
                         glBindTexture(GL_TEXTURE_2D, 0);
                         glDisable(GL_BLEND);
-                        glPopMatrix();
+                        //glPopMatrix();
 
                         std::string text("send FTP to " + m_outbox.at(0)->m_msg->m_destination);
                         //glLoadIdentity();
-                        glPushMatrix();
+                        //glPushMatrix();
                         glEnable(GL_BLEND);
                         allegro_gl_printf_ex(s_font_allegl.get(), (msg_circle.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((msg_circle.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, text.c_str());
 
@@ -692,10 +649,23 @@ void c_cjddev::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
               );
               string price = "$" + std::to_string(m_neighbors_prices.at(neighbor.first));
               //textout_ex(frame, font, price.c_str(), text_pos.x, text_pos.y - 10, color, -1);
-              glLoadIdentity();
+
+
+
+//               glLoadIdentity(); // ????
+
+/*
+              glPushMatrix();
+
+
+
               glEnable(GL_BLEND);
               allegro_gl_printf_ex(s_font_allegl.get(), (text_pos.x-0.5*SCREEN_W)/(0.5*SCREEN_W), -((text_pos.y-0.5*SCREEN_H)/(0.5*SCREEN_H)), 0.0, price.c_str());
               glDisable(GL_BLEND);
+              glPopMatrix();
+*/
+
+
             }
         }
     }

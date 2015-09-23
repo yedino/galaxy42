@@ -53,7 +53,7 @@ void c_bitmaps::init_find_path () {
 }
 
 void c_bitmaps::init_load_all () {
-	m_background = alex_load_png(m_path_to_data + "bgr-bright.png", NULL);
+    m_background = alex_load_png(m_path_to_data + "bgr.png", NULL); /// "bgr-bright.png"
     m_node = alex_load_png(m_path_to_data + "server_48x48.png", NULL);
 	m_package_green = alex_load_png(m_path_to_data + "letter_21x11_green.png", NULL);
 	m_package_blue = alex_load_png(m_path_to_data + "letter_21x11_blue.png", NULL);

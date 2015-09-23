@@ -90,6 +90,7 @@ void start_gui_allegro_opengl() {
 	// --- scene ---
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
+    //glEnable(GL_DEPTH_TEST);
 	
 	glViewport(0, 0, SCREEN_W, SCREEN_H);
 	
@@ -97,14 +98,13 @@ void start_gui_allegro_opengl() {
 	// do not change this, e.g. do NOT move "camera" here https://www.opengl.org/archives/resources/faq/technical/projection_abuse.php
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	// glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
+    //glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
     glFrustum(0.0, 10.0, -1.0, 1.0, 1, 60.0); // good position
-	
 	
 	// glEnable(GL_CULL_FACE);
 	// glFrontFace(GL_CCW);
 	
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
     glClearColor(255,255,255,0);
