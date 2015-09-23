@@ -12,7 +12,7 @@ c_udp_link::c_udp_link(std::string host, std::string port,protocol_type ptype) :
 	c_connect(host,port),
 	s(io_service, udp::endpoint(udp::v6(), 0)) {
 	m_ip = ptype;
-    udp::resolver resolver(io_service);
+	udp::resolver resolver(io_service);
 	endpoint = *resolver.resolve({udp::v6(), m_host, m_port});
 	std::string ping = "ping";
 	send_msg(ping);
@@ -24,11 +24,12 @@ std::string c_udp_link::send_msg(std::string &msg) {
 	std::cerr << "(udp) Sending:\n" << msg << std::endl;		//dbg
 	s.send_to(boost::asio::buffer(msg.c_str(), msg.size()), endpoint);
 	char reply[max_length];
-	size_t reply_length = 5;
 	udp::endpoint sender_endpoint;
-	size_t reply_length = s.receive_from(
+	size_t reply_length;
+
+	reply_length = s.receive_from(
 		boost::asio::buffer(reply, max_length), sender_endpoint);
-	std::cerr << "(udp) Reply:\n" << reply << std::endl;		//dbg
+	//std::cerr << "(udp) Reply:\n" << reply << std::endl;		//dbg
 	return std::string(reply,reply_length);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

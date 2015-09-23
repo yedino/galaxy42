@@ -11,6 +11,8 @@ file(GLOB SOURCE_ED "../../crypto_ops/crypto/ed25519_src/*.c" # All files in dir
 )
 
 add_executable(market_client test.cpp c_market_client.cpp c_connect.cpp
+	       c_UDPasync.cpp
+	       c_statistics.cpp
 	       ../../crypto_ops/crypto/c_encryption.cpp
 	       ../../crypto_ops/crypto/sha_src/sha512.cpp
 	       ../../crypto_ops/crypto/c_crypto_ed25519.cpp

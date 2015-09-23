@@ -33,7 +33,7 @@ class c_user {
 	c_user (string &&);
 
 	string get_username() const;
-	double get_rep();		/// normalize reputation to 0-100 value, approximated by atan()
+	double get_rep();		///< normalize reputation to 0-100 value, approximated by atan()
 
 	c_ed25519 m_edsigner;
 	void send_token (c_user &, size_t = 1);

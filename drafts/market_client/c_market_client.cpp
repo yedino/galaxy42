@@ -69,6 +69,8 @@ void c_market_client::start_market_session() {
 		}
 		else if(check_cmd("best_sell_offer",request) ||
 				check_cmd("best_buy_offer",request) ||
+				check_cmd("ping",request) ||
+				check_cmd("moo",request) ||
 				check_cmd("help",request)) {
 			command += request;
 		}
@@ -83,6 +85,79 @@ void c_market_client::start_market_session() {
 
 	}
 }
+////////////////////////////////////////////////////////ASYNC VERSION//////////////////////////////////////////////////////////////////////////
+
+c_UDPasync_client::c_UDPasync_client(std::string host, std::string server_port, unsigned short local_port) {
+	m_market_link = std::shared_ptr<c_UDPasync>(new c_UDPasync(host, server_port, local_port));
+}
+
+c_UDPasync_client::~c_UDPasync_client() { }
+
+
+//TODO this code shouldn't be doubled
+void c_UDPasync_client::encrypt_client(cryptosign_method crypt_m) {
+
+	switch(crypt_m) {
+		case RSA:
+			cl_crypto = std::shared_ptr<c_RSA>(new c_RSA);
+			break;
+		case ed25519:
+			cl_crypto =  std::shared_ptr<c_ed25519>(new c_ed25519);
+			break;
+		default:
+			std::cerr << "client encryption fail : bad crypto method" << std::endl;
+	}
+}
+
+void c_UDPasync_client::start_async_session() {
+
+	bool isover = false;
+	std::string usr;
+	std::string reply;
+	std::cout << "Set your username for this session: ";	// TODO in future it will be nice to load your users from database.
+	std::getline(std::cin,usr);
+	c_client_user user(usr);
+
+	while(!isover) {
+		std::cout << "Enter message: ";
+
+		std::string request;
+		std::getline(std::cin,request);
+
+
+		if(request == "quit") {
+			isover = true;
+			break;
+		}
+		std::string command;
+
+		if(check_cmd("register",request)) {
+			command += cl_crypto->get_public_key() + ':' + request + ':' + user.get_username();
+		}
+		else if(check_cmd("best_sell_offer",request) ||
+				check_cmd("best_buy_offer",request) ||
+				check_cmd("ping",request) ||
+				check_cmd("moo",request) ||
+				check_cmd("help",request)) {
+			command += request;
+		}
+		else {
+			std::string to_sign = request + ':' + user.get_username();
+			command += cl_crypto->sign(to_sign) + ':' + request + ':' + user.get_username();
+		}
+
+		std::cout << "Send :\n" << command << std::endl;		//dbg
+		m_market_link->Send(command);
+		sleep(2);	//TODO change this to std
+		if(m_market_link->HasMessages()) {
+			reply = m_market_link->PopMessage();
+			std::cout <<  "Reply :\n" << reply << std::endl;
+		} else {
+			std::cout << "No reply yet" << std::endl;
+		}
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // C way
 bool check_cmd(const char* cmd,const char* request, size_t request_length) {
@@ -93,7 +168,7 @@ bool check_cmd(const char* cmd,const char* request, size_t request_length) {
 				continue;
 			}
 			else if(request[i] == cmd[0]) {
-				char cmd_test[cmd_length+1] = {};		//+1 for null at the end
+				char cmd_test[cmd_length+1];		//+1 for null at the end
 				strncpy ( cmd_test, request+i, (request_length-i >= cmd_length) ? cmd_length : 0 );
 				//std::cout << "Ch - cmd : " << cmd << std::endl;		//dbg
 				//std::cout << "Ch - cmd_test : " << cmd_test << std::endl;		//dbg

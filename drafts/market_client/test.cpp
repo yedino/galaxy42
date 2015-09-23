@@ -13,7 +13,7 @@ string generate_random_string (size_t length);
 using std::thread;
 using std::mutex;
 
-int number_of_threads;
+size_t number_of_threads;
 std::atomic<size_t> tests_counter(0);
 mutex mtx;
 
@@ -216,6 +216,7 @@ void TEST_all(int loop_num, bool verbouse) {
 
 	std::chrono::time_point<std::chrono::steady_clock> start_time, stop_time;
 	std::chrono::steady_clock::duration diff;
+	std::list<thread> Threads;
 
 	start_time = std::chrono::steady_clock::now();
 	for(int i = 0; i < loop_num; ++i) {
@@ -226,7 +227,6 @@ void TEST_all(int loop_num, bool verbouse) {
 	}
 	stop_time = std::chrono::steady_clock::now();
 	diff = stop_time - start_time;
-
 	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
 			  << " ms" << std::endl;
 
@@ -243,61 +243,80 @@ void TEST_all(int loop_num, bool verbouse) {
 			  << " ms for c++ ed25519 members" << std::endl;
 
 	start_time = std::chrono::steady_clock::now();
-	TEST_speedtest02_ed25519(loop_num);
+	for (size_t i = 0; i < number_of_threads; ++i) {
+		Threads.emplace_back([&loop_num](){TEST_speedtest02_ed25519(loop_num/number_of_threads);});
+	}
+	for (auto &t : Threads) {
+		t.join();
+	}
 	stop_time = std::chrono::steady_clock::now();
 	diff = stop_time - start_time;
 	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
 			  << " ms for kuba shit lib, only signing" << std::endl;
+	Threads.clear();
 
 	start_time = std::chrono::steady_clock::now();
-	TEST_speedtest01_ed25519(loop_num);
+	for (size_t i = 0; i < number_of_threads; ++i) {
+		Threads.emplace_back([&loop_num](){TEST_speedtest01_ed25519(loop_num/number_of_threads);});
+	}
+	for (auto &t : Threads) {
+		t.join();
+	}
 	stop_time = std::chrono::steady_clock::now();
 	diff = stop_time - start_time;
 	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
 			  << " ms for damian master lib, only signing" << std::endl;
+	Threads.clear();
 
 	start_time = std::chrono::steady_clock::now();
-	TEST_speedtest03c_ed25519(loop_num);
+	for (size_t i = 0; i < number_of_threads; ++i) {
+		Threads.emplace_back([&loop_num](){TEST_speedtest03c_ed25519(loop_num/number_of_threads);});
+	}
+	for (auto &t : Threads) {
+		t.join();
+	}
 	stop_time = std::chrono::steady_clock::now();
 	diff = stop_time - start_time;
 	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-			  << " ms for damian master lib, only signing" << std::endl;
+			  << " ms for damian C lib, only signing" << std::endl;
+	Threads.clear();
 
 	start_time = std::chrono::steady_clock::now();
-	TEST_rsaSign(loop_num);
+	for (size_t i = 0; i < number_of_threads; ++i) {
+		Threads.emplace_back([&loop_num](){TEST_rsaSign(loop_num/number_of_threads);});
+	}
+	for (auto &t : Threads) {
+		t.join();
+	}
 	stop_time = std::chrono::steady_clock::now();
 	diff = stop_time - start_time;
 	std::cout << "TEST_loop (" << loop_num << ") PASSED in " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-			  << " ms for rsa " << key_size << " signing and validate test" << std::endl;
+			  << " ms for RSA " << key_size << " signing and validate test" << std::endl;
+	Threads.clear();
 }
 ///
 /// Example
 ///
 int main(int argc, char* argv[]) {
 	try {
-		ios_base::sync_with_stdio(false);
-		number_of_threads = 1;
-
 		if (argc != 4) {
 			std::cerr << "Usage: market_client <host> <port> <protocol>\n";
 			return 1;
 		}
+		ios_base::sync_with_stdio(false);
+		number_of_threads = 2;
+		std::cout << "RUNNING TESTS WITH " << number_of_threads << " THREADS" << std::endl;
 
-		std::list<thread> Threads;
 		size_t test_loop = 100;
 		bool verbouse = false;
-		std::cout << "RUNNING TESTS WITH " << number_of_threads << " THREADS" << std::endl;
-		for (int i = 0; i < number_of_threads; ++i) {
-			Threads.emplace_back([&test_loop, &verbouse](){TEST_all(test_loop,verbouse);});
-		}
+		TEST_all(test_loop,verbouse);
 
-	for (auto &t : Threads) {
-		t.join();
-	}
-
-		c_market_client market_client( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])) );
+		//c_market_client market_client( (std::string(argv[1])), (std::string(argv[2])), (std::string(argv[3])) );
+		c_UDPasync_client market_client( (std::string(argv[1])), (std::string(argv[2])), (atoi(argv[3])) );
 		market_client.encrypt_client(ed25519);
-		market_client.start_market_session();
+		//market_client.start_market_session();
+		market_client.start_async_session();
+
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << "\n";
 	}

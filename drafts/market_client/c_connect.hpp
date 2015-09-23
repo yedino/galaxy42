@@ -2,6 +2,11 @@
 #define C_CONNECT_HPP
 #include <iostream>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
+
+
+/// simple blocked udp and tcp api
+/// to server-client connections
 
 using namespace boost::asio;
 
