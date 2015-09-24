@@ -36,10 +36,14 @@ std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj) {
 	return os;
 }
 
-void c_osi2_nic::add_to_outbox (t_osi2_data &&data) {
-	m_outbox.emplace_back(data);
+void c_osi2_nic::add_to_outbox (t_osi3_uuid dst, t_osi2_data &&data) {
+	t_osi3_packet packet;
+	packet.m_data = data; // TODO move, swap?
+	packet.m_dst = dst; 
+	packet.m_src = m_osi3_uuid; // I am the sender
+	
+	m_outbox.emplace_back( packet );
 }
-
 
 ////////////////////////////////////////////////////////////////////
 

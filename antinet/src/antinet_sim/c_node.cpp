@@ -29,7 +29,5 @@ c_osi2_nic &c_node::use_nic(int nr)
 
 void c_node::send_packet (t_osi3_uuid remote_address, std::string &&data) {
 	t_osi2_data out_data;
-	out_data.append(reinterpret_cast<const char *>(&remote_address), sizeof(t_osi3_uuid));
-	out_data += data; // TODO move data
-	use_nic(0).add_to_outbox(std::move(data)); // TODO m_nic index
+	use_nic(0).add_to_outbox(remote_address , std::move(data)); // TODO m_nic index
 }

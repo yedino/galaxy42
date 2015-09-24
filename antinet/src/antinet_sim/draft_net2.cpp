@@ -77,6 +77,23 @@ int draft_net2() { // the main function for test
 	node.push_back( c_node(world) );
 	node.push_back( c_node(world) );
 	
+	/***
+	 * 
+	 * 
+	 *  Node#0          Switch#0        Switch#1
+	 *   nic#0 -------> nic#0 --------> nic#0 ---------> Switch#3
+	 *   nic#1 ---,     nic#1 --,       nic#1 ---------> Node#1
+	 *            |             |
+	 *            |             |
+	 *            |             |       Switch#2
+	 *            '--> Node#6   `-----> nic#0 -----> Node#2
+	 *                                  nic#1 -----> Node#3
+	 *                                  nic#2 -----> Node#4
+	 *                                  nic#3 -----> Node#5
+	 * 
+	 * 
+	 */
+	
 	vector<c_osi2_switch> sw;
 	sw.push_back( c_osi2_switch() );
 	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
