@@ -79,15 +79,17 @@ class c_osi2_nic {
 
 // Classical switch in OSI layer 2
 class c_osi2_switch {
-	private:
+	protected:
 		std::vector<c_osi2_nic> m_nic; ///< all my NIC cards, for all my ports
 		
 		static long int s_nr; ///< serial number of this object - the static counter
 		long int m_nr; ///< serial number of this object
+		const unsigned int m_connect_cost = 1;
 	public:
 		c_osi2_switch();
 		
 		void connect_with(c_osi2_nic &target, c_networld &networld); ///< add port, connect to target, inside networld
+		unsigned int get_cost();
 		
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_switch &obj);

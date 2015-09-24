@@ -10,9 +10,8 @@ class c_osi2_nic;
 
 class c_networld;
 
-class c_node {
+class c_node : public c_osi2_switch {
 	private:
-		vector<c_osi2_nic> m_nic; ///< my network cards
 		
 		c_networld &m_networld; ///< my netwok world in which I exist
 		

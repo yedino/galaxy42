@@ -20,6 +20,17 @@ t_osi3_uuid c_networld::generate_osi3_uuid()
 	return m_uuid_generator.generate();
 }
 
+void c_networld::generate_next_hop_map() {
+
+}
+
+
+t_osi3_uuid c_networld::get_next_hop (const t_osi3_uuid &source, const t_osi3_uuid &destination) {
+	std::pair < t_osi3_uuid, t_osi3_uuid > path_pair = std::make_pair(source, destination);
+	return m_next_hop_map.at(path_pair);
+}
+
+
 void c_networld::print(std::ostream &os) const
 {
 	os << "World(#"<<m_nr<<")";

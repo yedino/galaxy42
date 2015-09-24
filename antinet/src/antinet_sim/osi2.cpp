@@ -61,6 +61,11 @@ void c_osi2_switch::connect_with(c_osi2_nic &target, c_networld &networld)
 	_dbg2("In " << networld << " connected the target " << target << " to my port " << my_new_port );
 }
 
+unsigned int c_osi2_switch::get_cost() {
+	return m_connect_cost;
+}
+
+
 void c_osi2_switch::print(std::ostream &os) const
 {
 	os << "[ SWITCH(#"<<m_nr<<")";
