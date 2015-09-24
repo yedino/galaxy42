@@ -52,7 +52,7 @@ long int c_osi2_switch::s_nr = 0;
 
 
 c_osi2_switch::c_osi2_switch(c_world &world)
-  : m_nr( s_nr ++ ), m_world(world)
+  : c_entity(name, x, y), m_nr( s_nr ++ ), m_world(world)
 {
 	
 }

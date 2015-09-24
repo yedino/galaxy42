@@ -14,6 +14,7 @@ using std::shared_ptr;
 typedef long double t_simclock;
 
 /***
+The logical world of the simulation, includes simulated entities.
 */
 #include "osi2.hpp"
 #include "c_osi3_uuid_generator.hpp"
@@ -77,5 +78,7 @@ class c_world {
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_world &obj);
 };
+
+ostream &operator<< (ostream &stream, const c_world &world);
 
 #endif // C_WORLD_HPP

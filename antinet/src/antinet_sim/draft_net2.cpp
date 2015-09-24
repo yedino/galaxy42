@@ -74,8 +74,8 @@ int draft_net2() { // the main function for test
 	c_world world;
 	
 	vector<c_node> node;
-	node.push_back( c_node(world) );
-	node.push_back( c_node(world) );
+	node.push_back( c_node(world, "node_1", 10, 10) );
+	node.push_back( c_node(world, "node_2", 20, 20) );
 	
 	/***
 	 * 
@@ -95,7 +95,7 @@ int draft_net2() { // the main function for test
 	 */
 	
 	vector<c_osi2_switch> sw;
-	sw.push_back( c_osi2_switch( world  ));
+	sw.push_back( c_osi2_switch( world, "switch_1", 30, 30 ));
 	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
 	sw.at(0).connect_with( node.at(1).use_nic(0) , world );
 	

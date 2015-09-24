@@ -16,6 +16,12 @@ class c_node : public c_osi2_switch {
 		
 	public:
 		c_node(c_world &world);
+		c_node(c_world &world, const string &name, t_pos x, t_pos y);
+		c_node(const c_node &) = delete; ///< copy constructor
+		c_node& operator = (const c_node &)  = delete;
+		c_node(c_node &&) = default; ///< move constructor
+		c_node& operator = (c_node &&)  = default;
+		
 		
 		void send_packet(t_osi3_uuid remote_address, std::string &&data);
 };

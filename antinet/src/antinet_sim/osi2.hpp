@@ -78,6 +78,12 @@ class c_osi2_nic {
 		c_osi2_nic(c_osi2_switch & my_switch); ///< create me as card in this switch
 		/// (you still have to put this object into the switch)
 		
+		c_osi2_nic(const c_osi2_nic &) = delete; ///< copy constructor
+		c_osi2_nic& operator = (const c_osi2_nic &)  = delete;
+		
+		c_osi2_nic(c_osi2_nic &&) = default; ///< move constructor
+		c_osi2_nic& operator = (c_osi2_nic &&)  = default;
+		
 		void plug_in_cable(c_osi2_cable_direct & cable); ///< attach this cable to me
 		
 		void add_to_outbox(t_osi3_uuid dst, t_osi2_data &&data); ///< sends the packet over network
@@ -89,7 +95,7 @@ class c_osi2_nic {
 
 
 // Classical switch in OSI layer 2
-class c_osi2_switch {
+class c_osi2_switch : public c_entity {
 	protected:
 		static long int s_nr; ///< serial number of this object - the static counter
 		long int m_nr; ///< serial number of this object
@@ -100,7 +106,12 @@ class c_osi2_switch {
 		
 		const unsigned int m_connect_cost = 1;
 	public:
-		c_osi2_switch(c_world &world);
+		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
+		
+		c_osi2_switch(const c_osi2_switch &) = delete; ///< copy constructor
+		c_osi2_switch& operator = (const c_osi2_switch &)  = delete;
+		c_osi2_switch(c_osi2_switch &&) = default; ///< move constructor
+		c_osi2_switch& operator = (c_osi2_switch &&)  = default;
 		
 		void create_nic(); ///< adds one more NIC card
 		c_osi2_nic & get_nic(int nr); ///< gets NIC with this number, throws if it does not exist
