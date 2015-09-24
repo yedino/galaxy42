@@ -913,54 +913,7 @@ void c_netdev::hw_send(t_nym_id addr,std::string &&serialized_msg) {
 #endif
 
 void c_cjddev::buy_net (const t_cjdaddr &destination_addr) {
-	m_wait_hosts.insert(destination_addr);
-	for (auto neighbor : m_neighbors) {
-
-#if defined USE_API_TR
-		// XXX test sending pings, rm this
-/*		_info("test send ping to " << neighbor.first);
-		std::shared_ptr<msg_ping_request> ping_request_ptr(new msg_ping_request);
-		ping_request_ptr->m_from = m_my_address;
-		ping_request_ptr->m_to = neighbor.first;
-		ping_request_ptr->m_destination = neighbor.first;
-
-		write_message(std::dynamic_pointer_cast<msgcjd>(ping_request_ptr));
-		/*t_message message;
-		message.m_remote_id = ping_request.m_to;
-		message.m_data = ping_request.serialize();
-		m_raw_outbox.emplace_back(std::move(message));
-		*/
-
-
-
-		std::shared_ptr<msg_dht_hello>  m_hello (new msg_dht_hello);
-		//wylosowac adres
-		m_hello->m_direction = true;
-		m_hello->m_home_dht_address = m_dht_addr;
-		m_hello->m_from = m_my_address;
-		m_hello->m_to = neighbor.first;
-		m_hello->m_destination = neighbor.first;
-		write_message(m_hello);
-
-//		t_message message;
-//		message.m_remote_id = m_hello.m_to;
-//		message.m_data = m_hello.serialize();
-		//m_raw_outbox.emplace_back(std::move(message));
-
-
-		//dokonczyc;
-#else
-		shared_ptr<c_cjddev> neighbor_ptr(neighbor.second.lock());
-		unique_ptr<c_msgtx> inq_msg(new c_msgtx);
-		inq_msg->m_msg.reset(new msg_buy_inq);
-		inq_msg->m_msg->m_from = m_my_address;
-		inq_msg->m_msg->m_to = neighbor.first;
-		inq_msg->m_msg->m_destination = destination_addr;
-		std::cout << m_my_address << " buy net to " << destination_addr << std::endl;
-		m_outbox.emplace_back(std::move(inq_msg));
-
-#endif
-	}
+	// @TODO rafal (deleted old code)
 }
 
 /// [netlogic] sends packets

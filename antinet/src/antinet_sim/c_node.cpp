@@ -1,8 +1,8 @@
 #include "c_node.hpp"
 #include "libs1.hpp"
 
-c_node::c_node(c_networld &networld)
-  : c_osi2_switch( networld )
+c_node::c_node(c_world &world)
+  : c_osi2_switch( world )
 {
 	
 }

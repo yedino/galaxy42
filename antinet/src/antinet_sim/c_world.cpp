@@ -2,10 +2,40 @@
 
 #include "c_drawtarget_opengl.hpp"
 
-c_world::c_world() :
-	m_network(std::make_shared<c_network>())
+
+
+long int c_world::s_nr = 0;
+
+
+c_world::c_world()
+	: m_nr( s_nr++ )
 {
+	
 }
+
+c_osi2_cable_direct & c_world::new_cable_between(c_osi2_nic &a, c_osi2_nic &b)
+{
+	m_cable_direct.emplace_back( a,b );
+	return m_cable_direct.back();
+}
+
+t_osi3_uuid c_world::generate_osi3_uuid()
+{
+	return m_uuid_generator.generate();
+}
+
+void c_world::print(std::ostream &os) const
+	{
+	os << "World(#"<<m_nr<<")";
+}
+
+std::ostream & operator<<(std::ostream &os, const c_world &obj)
+{
+	obj.print(os);
+	return os;
+}
+
+
 
 
 void c_world::add_test () {
@@ -36,7 +66,9 @@ void c_world::add_test () {
 void c_world::tick () {
 	static unsigned int tick_number = 0;
 	m_simclock += get_chronon(); // @TODO move the 0.1 speed to a (const?) variable
+	
 #if defined USE_API_TR
+	// @TODO remove deprecated?
 	m_network->tick();
 #endif
 	
@@ -85,6 +117,10 @@ void c_world::connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> se
 }
 
 void c_world::load (const string &filename) {
+	// @TODO broken untill rewrite for net2
+	_warn("LOAD code is now DISABLED in this version");
+
+/*	
 	_note("start load nodes from " << filename);
 	ifstream input_file(filename);
 
@@ -152,7 +188,8 @@ void c_world::load (const string &filename) {
 	}
 	for (auto &object: m_objects) {
 		try {
-			m_network->add_node(std::dynamic_pointer_cast<c_cjddev>(object));
+	// @TODO remove deprecated?
+	//		m_network->add_node(std::dynamic_pointer_cast<c_cjddev>(object));
 		}
 		catch(std::bad_cast& bc) {
 			_note("exception: " << bc.what());
@@ -165,11 +202,16 @@ void c_world::load (const string &filename) {
 	for (auto &object: m_objects) {
 		std::dynamic_pointer_cast<c_cjddev>(object)->start_dht();
 	}
+	*/
 	
 	_note("end of load");
 }
 
-ostream &operator<< (ostream &stream, const c_world &world) {
+void c_world::serialize(ostream &stream) const {
+	// @TODO broken untill rewrite for net2
+	_warn("serialize code is now DISABLED in this version");
+	
+	/*
 	for (auto object : world.m_objects) {
 		if (typeid(*object) == typeid(c_cjddev)) {
 			stream << "add cjddev {" << std::endl;
@@ -199,6 +241,5 @@ ostream &operator<< (ostream &stream, const c_world &world) {
 	}
 
 	stream << "}" << std::endl;
-
-	return stream;
+	*/
 }

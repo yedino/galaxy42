@@ -1,3 +1,8 @@
+
+// @TODO deprecated - remove
+
+#if 0
+
 #ifndef C_NETWORLD_HPP
 #define C_NETWORLD_HPP
 
@@ -29,11 +34,10 @@ class c_networld {
 		
 		t_osi3_uuid generate_osi3_uuid();
 		
-		void generate_next_hop_map();
-		t_osi3_uuid get_next_hop(const t_osi3_uuid &source, const t_osi3_uuid &destination);
-		
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_networld &obj);
 };
 
 #endif // C_NETWORLD_HPP
+
+#endif

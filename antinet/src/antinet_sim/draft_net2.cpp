@@ -71,7 +71,7 @@ class c_node;
 
 /// @brief This function tests the code from this file.
 int draft_net2() { // the main function for test
-	c_networld world;
+	c_world world;
 	
 	vector<c_node> node;
 	node.push_back( c_node(world) );

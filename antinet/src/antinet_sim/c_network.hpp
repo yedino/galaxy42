@@ -9,6 +9,11 @@
 #include "c_api_tr.hpp"
 #include "c_object.hpp"
 
+///
+/// DEPRECATED
+/// @todo remove this 
+/// 
+
 typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID inside my program
 
 class c_cjddev;

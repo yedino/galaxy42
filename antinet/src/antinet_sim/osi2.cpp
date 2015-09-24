@@ -19,7 +19,7 @@ long int c_osi2_nic::s_nr = 0;
 c_osi2_nic::c_osi2_nic(c_osi2_switch &my_switch)
   :	m_nr( s_nr++ ), m_switch(my_switch)
 {
-	m_osi3_uuid = my_switch.get_networld().generate_osi3_uuid();
+	m_osi3_uuid = my_switch.get_world().generate_osi3_uuid();
 	
 }
 
@@ -51,8 +51,8 @@ void c_osi2_nic::add_to_outbox (t_osi3_uuid dst, t_osi2_data &&data) {
 long int c_osi2_switch::s_nr = 0;
 
 
-c_osi2_switch::c_osi2_switch(c_networld &networld)
-  : m_nr( s_nr ++ ), m_networld(networld)
+c_osi2_switch::c_osi2_switch(c_world &world)
+  : m_nr( s_nr ++ ), m_world(world)
 {
 	
 }
@@ -76,13 +76,13 @@ c_osi2_nic &c_osi2_switch::use_nic(int nr)
 }
 
 
-void c_osi2_switch::connect_with(c_osi2_nic &target, c_networld &networld)
+void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world)
 {
 	create_nic(); // create a new NIC card (it will be at end)
 	c_osi2_nic & my_new_port = m_nic.back(); // get this new card
 	
-	// create the cable (it will be owned by the network world) that connects this target to my new port
-	c_osi2_cable_direct cable = networld.get_new_cable_between( target , my_new_port );
+	// create the cable (it will be owned by the networld world) that connects this target to my new port
+	c_osi2_cable_direct cable = world.new_cable_between( target , my_new_port );
 	
 	// actually plug in the created table to both ends:
 	my_new_port.plug_in_cable(cable); 
@@ -90,7 +90,7 @@ void c_osi2_switch::connect_with(c_osi2_nic &target, c_networld &networld)
 	
 	// as result, the target NIC has access to our NIC and to us, and vice-versa
 	
-	_dbg2("In " << networld << " connected the target " << target << " to my port " << my_new_port );
+	_dbg2("In " << world << " connected the target " << target << " to my port " << my_new_port );
 }
 
 unsigned int c_osi2_switch::get_cost() {
@@ -105,9 +105,9 @@ void c_osi2_switch::print(std::ostream &os) const
 	os << " ]";
 }
 
-c_networld &c_osi2_switch::get_networld() const
+c_world &c_osi2_switch::get_world() const
 {
-	return m_networld;
+	return m_world;
 }
 
 std::ostream & operator<<(std::ostream &os, const c_osi2_switch &obj)
