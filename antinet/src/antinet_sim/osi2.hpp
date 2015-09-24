@@ -4,13 +4,14 @@
 #include "libs1.hpp"
 #include "c_world.hpp"
 #include "c_osi3_uuid_generator.hpp"
+#include "c_object.hpp"
 
 class c_world; // world for simulation
 
 class c_osi2_switch;
 class c_osi2_cable_direct;
 class c_osi2_nic;
-class c_osi2_switch;
+class c_entity;
 
 typedef std::string t_osi2_data; ///< some kind of packet of data sent over OSI2 (the same is used for OSI3)
 

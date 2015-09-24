@@ -51,7 +51,7 @@ void c_osi2_nic::add_to_outbox (t_osi3_uuid dst, t_osi2_data &&data) {
 long int c_osi2_switch::s_nr = 0;
 
 
-c_osi2_switch::c_osi2_switch(c_world &world)
+c_osi2_switch::c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y)
   : c_entity(name, x, y), m_nr( s_nr ++ ), m_world(world)
 {
 	

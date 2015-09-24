@@ -27,6 +27,7 @@ typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID ins
 
 struct c_msgtx;
 struct t_message;
+class c_node;
 
 /**
  *\class c_object

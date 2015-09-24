@@ -1,5 +1,4 @@
 #include "c_node.hpp"
-#include "libs1.hpp"
 
 c_node::c_node(c_world &world, const string &name, t_pos x, t_pos y)
   : c_osi2_switch( world, name, x, y)

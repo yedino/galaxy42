@@ -61,8 +61,8 @@ void c_world::add_test () {
 	connect_nodes(m_objects.at(6), m_objects.at(7));*/
 	//load("layout/current/default.map.txt");
 	
-	m_objects.push_back( make_shared<c_node>(m_networld, "NODE_1", 200, 200));
-	m_objects.push_back( make_shared<c_node>(m_networld, "NODE_2", 250, 100));
+	//m_objects.push_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
+	//m_objects.push_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
 }
 
 

@@ -3,11 +3,13 @@
 
 #include "libs1.hpp"
 #include "osi2.hpp"
+#include "c_osi3_uuid_generator.hpp"
+#include "c_world.hpp"
 
 class c_osi2_switch;
-class c_osi2_cable_direct; 
+/*class c_osi2_cable_direct; 
 class c_osi2_nic;
-
+*/
 class c_world;
 
 class c_node : public c_osi2_switch {
@@ -15,7 +17,6 @@ class c_node : public c_osi2_switch {
 		// TODO add s_nr m_nr print and operator<< like in others
 		
 	public:
-		c_node(c_world &world);
 		c_node(c_world &world, const string &name, t_pos x, t_pos y);
 		c_node(const c_node &) = delete; ///< copy constructor
 		c_node& operator = (const c_node &)  = delete;
