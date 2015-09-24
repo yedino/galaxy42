@@ -75,10 +75,12 @@ int draft_net2() { // the main function for test
 	
 	vector<c_node> node;
 	node.push_back( c_node(world) );
+	node.push_back( c_node(world) );
 	
 	vector<c_osi2_switch> sw;
 	sw.push_back( c_osi2_switch() );
 	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
+	sw.at(0).connect_with( node.at(1).use_nic(0) , world );
 	
 	_dbg2( sw.at(0) );
 	node.at(0).send_packet(1024, std::string("abcd"));
