@@ -5,7 +5,6 @@
 
 #include "c_drawtarget_opengl.hpp"
 
-
 unsigned int g_max_anim_frame = 10;
 
 c_simulation::c_simulation (t_drawtarget_type drawtarget_type) 
@@ -128,10 +127,10 @@ void c_simulation::main_loop () {
 	// The main drawing is done inside this loop.
 	
 	///@see rendering.txt/[[drawing_main]]
-    float camera_offset = 0.0;
+    float view_angle = 0.0;
+    float camera_offset = 1.0;
 	// === main loop ===
     while (!m_goodbye && !close_button_pressed) {
-
 
 		auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -174,35 +173,33 @@ void c_simulation::main_loop () {
             blit(c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
 		}
         if (use_draw_opengl) {
-
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
             //glDisable(GL_DEPTH_TEST);      // ??? Enables Depth Testing
             //glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Testing To Do
             //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
             glLoadIdentity();
-
             // glTranslatef(m_gui->camera_x, m_gui->camera_y,camera_offset);
-            glTranslatef( 0 , 0 , 0);
-            glRotatef(camera_offset*10, 0,1,0);
 
-            //glLoadIdentity();
+            // minimum and maximum value for zoom in/out and rotate the scene
+            if (camera_offset >= 10.0) camera_offset = 10.0;
+            if (camera_offset <= 0.5) camera_offset = 0.5;
+            if (view_angle >= 70) view_angle = 70;
+            if(view_angle <= 0) view_angle = 0;
+
+            glRotatef(view_angle, 1,0,0);
+            glScalef(camera_offset,camera_offset,1);
 
             // drawing backgound
             glPushMatrix();
             glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
-            //glTranslatef(0,0,0);
-            glScalef(2,2,2);
             glEnable(GL_BLEND);
-
-
+            //float q=1.0/camera_offset;
+            float q=1.0;
             glBegin(GL_QUADS);
-
-            float q=10;
-            glTexCoord2f(0,q); glVertex3f(-1.0f,1.0f, 0.0f);
-            glTexCoord2f(q,q); glVertex3f(1.0f,1.0f, 0.0f);
-            glTexCoord2f(q,0); glVertex3f(1.0f,-1.0f,0.0f);
-            glTexCoord2f(0,0); glVertex3f(-1.0f,-1.0f,0.0f);
+                glTexCoord2f(0,q); glVertex3f(-1.0f,1.0f, 0.0f);
+                glTexCoord2f(q,q); glVertex3f(1.0f,1.0f, 0.0f);
+                glTexCoord2f(q,0); glVertex3f(1.0f,-1.0f,0.0f);
+                glTexCoord2f(0,0); glVertex3f(-1.0f,-1.0f,0.0f);
             glEnd();
             glDisable(GL_BLEND);
             glBindTexture(GL_TEXTURE_2D, 0);   // texture
@@ -325,14 +322,30 @@ void c_simulation::main_loop () {
 			if (allegro_keys[KEY_DOWN]) m_gui->camera_y += 10;
 
 			const double zoom_speed = 1.1;
-			if (allegro_keys[KEY_PGUP]) m_gui->camera_zoom *= zoom_speed;
+            if (allegro_keys[KEY_PGUP]) m_gui->camera_zoom *= zoom_speed;
 			if (allegro_keys[KEY_PGDN]) m_gui->camera_zoom /= zoom_speed;
 		}
 
-        if(allegro_keys[KEY_G]) {
+        // rotate and zoom in/out the scene
+        if(allegro_keys[KEY_Z]) {
             camera_offset+=0.1;
             _dbg1("camera_offset: " << camera_offset);
         }
+
+        if(allegro_keys[KEY_X]) {
+            camera_offset-=0.1;
+            _dbg1("camera_offset: " << camera_offset);
+        }
+        if(allegro_keys[KEY_C]) {
+            view_angle+=1.0;
+            _dbg1("view_angle: " << view_angle);
+        }
+        if(allegro_keys[KEY_V]) {
+            view_angle-=1.0;
+            _dbg1("view_angle: " << view_angle);
+        }
+
+
 
 		// === text debug on screen ===
 
@@ -546,12 +559,10 @@ void c_simulation::main_loop () {
 				line(m_frame, connect_node->m_x, connect_node->m_y, allegro_mouse_x, allegro_mouse_y, makecol(0, 255, 255));
 			}
             // TODO @opengl
-
             if (use_draw_opengl) {
                 glColor3f(0.0f,1.0f,1.0f);
                 glLineWidth(1.0);
                 glScalef(1.0f,1.0f,1.0f);
-
 
                 const int vx = m_gui->view_x(connect_node->m_x), vy = m_gui->view_y(connect_node->m_y); // position in viewport - because camera position
                 //float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
@@ -600,12 +611,14 @@ void c_simulation::main_loop () {
                 //_dbg1("mouse_x mouse_y: " << mouse_x << " " << mouse_y);
                 //_dbg1("screenW screenH: " << SCREEN_W << " " << SCREEN_H);
                 //glLoadIdentity();
+                glScalef(1/camera_offset, 1/camera_offset, 1.0);
                 glPushMatrix();
-                glScalef(1.0f,1.0f,1.0f);
+                //glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
                 //glTranslatef(m_gui->view_x_rev(mouse_x),m_gui->view_y_rev(mouse_y),0.0f);
                 glColor3f(0.0, 0.0, 0.0);
 
+                // draw cursor
                 glBegin(GL_LINES);
                 glVertex2f(-1.0f*cursor_size,0.0f);
                 glVertex2f(1.0f*cursor_size,0.0f);
