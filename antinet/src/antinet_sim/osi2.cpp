@@ -36,6 +36,11 @@ std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj) {
 	return os;
 }
 
+void c_osi2_nic::add_to_outbox (t_osi2_data &&data) {
+	m_outbox.emplace_back(data);
+}
+
+
 ////////////////////////////////////////////////////////////////////
 
 long int c_osi2_switch::s_nr = 0;

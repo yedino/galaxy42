@@ -24,6 +24,8 @@ class c_node {
 		void create_nic(); ///< adds one more NIC card
 		c_osi2_nic & get_nic(int nr); ///< gets NIC with this number, throws if it does not exist
 		c_osi2_nic & use_nic(int nr); ///< gets NIC with this number, can create it (and all other up to that number)
+		
+		void send_packet(t_osi3_uuid remote_address, std::string &&data);
 };
 
 #endif // C_NODE_HPP

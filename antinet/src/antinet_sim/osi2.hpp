@@ -70,6 +70,7 @@ class c_osi2_nic {
 		
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj);
+		void add_to_outbox(t_osi2_data &&data);
 };
 
 

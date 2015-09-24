@@ -1,7 +1,7 @@
 #ifndef C_OSI3_UUID_GENERATOR_HPP
 #define C_OSI3_UUID_GENERATOR_HPP
 
-typedef int t_osi3_uuid; ///< unique address that pretends to be some IP and works in "LAN" and over Internet etc.
+typedef unsigned int t_osi3_uuid; ///< unique address that pretends to be some IP and works in "LAN" and over Internet etc.
 
 /***
  * @brief Use this class to generate the unique UUIDs. E.g. a c_networld could have one of them, then the UUIDs

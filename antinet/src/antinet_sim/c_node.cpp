@@ -25,3 +25,11 @@ c_osi2_nic &c_node::use_nic(int nr)
 	if (nr < m_nic.size()) return m_nic[nr];
 	throw std::runtime_error("Internal error in creating nodes in use_nic"); // assert
 }
+
+
+void c_node::send_packet (t_osi3_uuid remote_address, std::string &&data) {
+	t_osi2_data out_data;
+	out_data.append(reinterpret_cast<const char *>(&remote_address), sizeof(t_osi3_uuid));
+	out_data += data; // TODO move data
+	use_nic(0).add_to_outbox(std::move(data)); // TODO m_nic index
+}

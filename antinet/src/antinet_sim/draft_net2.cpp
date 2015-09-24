@@ -81,6 +81,7 @@ int draft_net2() { // the main function for test
 	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
 	
 	_dbg2( sw.at(0) );
+	node.at(0).send_packet(1024, std::string("abcd"));
 	
 	return 0;
 }
