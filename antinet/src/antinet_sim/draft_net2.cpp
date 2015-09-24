@@ -95,7 +95,7 @@ int draft_net2() { // the main function for test
 	 */
 	
 	vector<c_osi2_switch> sw;
-	sw.push_back( c_osi2_switch() );
+	sw.push_back( c_osi2_switch( world  ));
 	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
 	sw.at(0).connect_with( node.at(1).use_nic(0) , world );
 	
