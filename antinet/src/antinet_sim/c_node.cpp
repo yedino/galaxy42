@@ -18,12 +18,12 @@ void c_osi2_switch::create_nic()
 	_info("Creted new NIC card for my node: " << m_nic.back());
 }
 
-c_osi2_nic &c_osi2_switch::get_nic(int nr)
+c_osi2_nic &c_osi2_switch::get_nic(unsigned int nr)
 {
 	return m_nic.at(nr);
 }
 
-c_osi2_nic &c_osi2_switch::use_nic(int nr)
+c_osi2_nic &c_osi2_switch::use_nic(unsigned int nr)
 {
 	while (! ( nr < m_nic.size() ) ) create_nic();
 	if (nr < m_nic.size()) return m_nic[nr];
@@ -87,4 +87,27 @@ c_node::c_node(c_world &world, const string &name, t_pos x, t_pos y)
 void c_node::send_packet (t_osi3_uuid remote_address, std::string &&data) {
 	t_osi2_data out_data;
 	use_nic(0).add_to_outbox(remote_address , std::move(data)); // TODO m_nic index
+}
+
+void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
+	auto layer = dynamic_cast<c_layer_allegro&>(layer_any);
+	BITMAP *frame = layer.m_frame;
+
+	const auto & gui = * drawtarget.m_gui;
+    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+	c_entity::draw_allegro (drawtarget, layer_any);
+	int color = makecol(0,0,64); // TODO is this ok?
+	////////////////////////////////////////////////////////////////////
+	if (layer.m_layer_nr == e_layer_nr_object) {
+		//BITMAP *fg1;
+		//const char *file1;
+		//file1 = "dat/server_48x48.png";
+		//set_color_conversion(COLORCONV_NONE);
+		//fg1 = load_png(file1, NULL); // TODO: optmize/cache and share across objects
+
+        set_alpha_blender();
+        draw_trans_sprite(frame, c_bitmaps::get_instance().m_node,
+                          vx - c_bitmaps::get_instance().m_node->w / 2, vy - c_bitmaps::get_instance().m_node->h / 2);
+	}
+	////////////////////////////////////////////////////////////////////
 }

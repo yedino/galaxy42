@@ -6,6 +6,7 @@
 #include "c_osi3_uuid_generator.hpp"
 #include "c_world.hpp"
 #include "c_msg.hpp"
+#include "c_gui.hpp"
 
 class c_osi2_switch;
 class c_osi2_cable_direct; 
@@ -32,8 +33,8 @@ class c_osi2_switch : public c_entity {
 		c_osi2_switch& operator = (c_osi2_switch &&)  = default;
 		
 		void create_nic(); ///< adds one more NIC card
-		c_osi2_nic & get_nic(int nr); ///< gets NIC with this number, throws if it does not exist
-		c_osi2_nic & use_nic(int nr); ///< gets NIC with this number, can create it (and all other up to that number)
+		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
+		c_osi2_nic & use_nic(unsigned int nr); ///< gets NIC with this number, can create it (and all other up to that number)
 		
 		void connect_with(c_osi2_nic &target, c_world &world); ///< add port, connect to target, inside world
 		
@@ -56,8 +57,8 @@ class c_node : public c_osi2_switch {
 		c_node(c_node &&) = default; ///< move constructor
 		c_node& operator = (c_node &&)  = default;
 		
-		
 		void send_packet(t_osi3_uuid remote_address, std::string &&data);
+		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
 };
 
 #endif // C_NODE_HPP
