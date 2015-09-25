@@ -11,7 +11,7 @@
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Printing took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "us.\n";
+              << " ms.\n";
 */
 
 
@@ -67,9 +67,9 @@ struct animal {
 
 	animal& operator=(animal && obj) {/* _info(this<<" op= move")*/; 
 		age=obj.age; 
-		std::swap(age, obj.age);
-		std::swap(mana, obj.mana);
-		std::swap(m_name, obj.m_name);
+		this->age = obj.age;
+		this->mana = obj.mana;
+		this->m_name = std::move(obj.m_name);
 		return *this; 
 	}
 
@@ -122,7 +122,7 @@ int main_test() {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "add_ptr took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "us.\n";
+              << " ms.\n";
 
 //	_mark("add_ptr: ");
 
@@ -141,7 +141,7 @@ int main_test() {
      end = std::chrono::steady_clock::now();
     std::cout << "add_obj took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "us.\n";
+              << " ms.\n";
 
 //	_mark("add_obj: ");
 
@@ -158,7 +158,7 @@ int main_test() {
      end = std::chrono::steady_clock::now();
     std::cout << "new_obj took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "us.\n";
+              << " ms.\n";
 //	_mark("new_obj: ");
 
 
@@ -175,7 +175,7 @@ int main_test() {
      end = std::chrono::steady_clock::now();
     std::cout << "new_ptr took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "us.\n";
+              << " ms.\n";
 
 //	_mark("new_ptr: ");
 
