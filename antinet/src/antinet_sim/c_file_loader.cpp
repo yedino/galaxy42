@@ -120,8 +120,9 @@ void c_file_loader::read_connection(std::vector<std::string>p_input) {
 			break;
 		}
 
-		m_world->connect_nodes(first,second);
+//		m_world->connect_nodes(first,second);
 
+		m_world->connect_nodes(unique_cast_ref<c_object &>(first), unique_cast_ref<c_object &>(first));
 
 //		bool m_found_first = false;
 //		bool do_break= false;

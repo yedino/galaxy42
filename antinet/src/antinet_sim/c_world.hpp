@@ -23,6 +23,7 @@ The logical world of the simulation, includes simulated entities.
 //class c_osi2_switch;
 class c_osi2_cable_direct;
 class c_osi2_nic;
+class c_file_loader;
 
 /***
  * @brief The logical world of the simulation, includes simulated entities,
@@ -35,6 +36,7 @@ class c_osi2_nic;
  */
 class c_world {
 	private:
+		friend class c_file_loader;
 		std::vector< c_osi2_cable_direct > m_cable_direct; ///< all the cables that are hold by this world
 		
 		static long int s_nr; ///< serial number of this object - the static counter
