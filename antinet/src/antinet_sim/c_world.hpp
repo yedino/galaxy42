@@ -41,7 +41,6 @@ class c_world {
 		long int m_nr; ///< serial number of this object
 		
 		c_osi3_uuid_generator m_uuid_generator; ///< to generate UUIDs (addresses) in my context
-		std::map < std::pair < t_osi3_uuid, t_osi3_uuid >, t_osi3_uuid > m_next_hop_map;
 		
 		
 	public: // TODO?

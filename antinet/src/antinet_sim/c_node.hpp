@@ -45,6 +45,8 @@ class c_osi2_switch : public c_entity {
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_switch &obj);
 		
 		c_world & get_world() const;
+		
+		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
 };
 
 class c_node : public c_osi2_switch {

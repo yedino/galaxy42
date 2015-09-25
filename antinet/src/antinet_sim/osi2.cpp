@@ -46,5 +46,10 @@ void c_osi2_nic::add_to_outbox (t_osi3_uuid dst, t_osi2_data &&data) {
 	m_outbox.emplace_back( packet );
 }
 
+long int c_osi2_nic::get_serial_number() const {
+	return m_nr;
+}
+
+
 ////////////////////////////////////////////////////////////////////
 

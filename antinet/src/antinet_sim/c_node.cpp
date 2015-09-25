@@ -76,6 +76,9 @@ std::ostream & operator<<(std::ostream &os, const c_osi2_switch &obj)
 }
 
 
+void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
+	c_entity::draw_allegro (drawtarget, layer_any);
+}
 
 
 
@@ -99,7 +102,7 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 
 	const auto & gui = * drawtarget.m_gui;
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
-	c_entity::draw_allegro (drawtarget, layer_any);
+	c_osi2_switch::draw_allegro (drawtarget, layer_any);
 	int color = makecol(0,0,64); // TODO is this ok?
 	////////////////////////////////////////////////////////////////////
 	if (layer.m_layer_nr == e_layer_nr_object) {
