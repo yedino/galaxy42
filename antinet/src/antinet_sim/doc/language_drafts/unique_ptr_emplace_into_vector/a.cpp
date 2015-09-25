@@ -10,7 +10,7 @@
 //		stringEater3(std::move(tmpString));
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Printing took "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "us.\n";
 */
 
@@ -140,7 +140,7 @@ int main_test() {
 
      end = std::chrono::steady_clock::now();
     std::cout << "add_obj took "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "us.\n";
 
 //	_mark("add_obj: ");
@@ -157,7 +157,7 @@ int main_test() {
 	}
      end = std::chrono::steady_clock::now();
     std::cout << "new_obj took "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "us.\n";
 //	_mark("new_obj: ");
 
@@ -174,7 +174,7 @@ int main_test() {
 	}
      end = std::chrono::steady_clock::now();
     std::cout << "new_ptr took "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "us.\n";
 
 //	_mark("new_ptr: ");
