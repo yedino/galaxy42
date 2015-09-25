@@ -78,7 +78,7 @@ void c_simulation::main_loop () {
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
     s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
 
-    for(auto obj : m_world->m_objects) {
+    for(auto &obj : m_world->m_objects) {
         obj->set_font(s_font_allegl);
     }
 	int viewport_x = 0, viewport_y = 0;
@@ -234,12 +234,15 @@ void c_simulation::main_loop () {
 
 		if ((allegro_char & 0xff) == 'n' && !start_simulation) {
 			std::cout << "ADD " << std::endl;
+			_warn("THIS CODE IS NOT IMPLEMENTED NOW");
+			/*
 			m_world->m_objects.push_back(
 				make_shared<c_cjddev>(
 					cjddev_detail_random_name(), 
 					// gui_mouse_x, gui_mouse_y,
 					gui_cursor_x, gui_cursor_y,
 					cjddev_detail_random_addr()));
+					*/
 		}
 
         if(allegro_keys[KEY_F1]){
@@ -689,8 +692,11 @@ shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 
 	double max_distance = 150;
 	shared_ptr<c_entity> ret_ptr;
-	for (auto node : m_world->m_objects) {
-		shared_ptr<c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
+	
+	for (auto & node : m_world->m_objects) {
+		// unique_ptr<c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
+		/* @TODO rafal wip
+		c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
 		int x1, x2, y1, y2;
 		x1 = std::max(vx, node_ptr->m_x);
 		x2 = std::min(vx, node_ptr->m_x);
@@ -701,6 +707,7 @@ shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
 			max_distance = current_dist;
 			ret_ptr = node_ptr;
 		}
+		*/
 	}
 	return ret_ptr;
 }

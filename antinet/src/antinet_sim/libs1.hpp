@@ -57,11 +57,40 @@ using std::istringstream;
 
 #include "c_tnetdbg.hpp"
 
+
+
+// extending the std with helpfull tools
+namespace std {
+
+// this is due to enter C++14
 // http://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique (Args &&... args) {
 	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+}
+
+using std::make_unique;
+
+
+// extending the std with helpfull tools - by own idea
+namespace stdplus {
+
+template <typename T, typename U>
+T& unique_cast_ref(std::unique_ptr<U> & u) noexcept {
+	return dynamic_cast<T&>( * u.get() );
+}
+
+template <typename T, typename U>
+T* unique_cast_ptr(std::unique_ptr<U> & u) noexcept {
+	return dynamic_cast<T*>( u.get() );
+}
+
+}
+
+using namespace stdplus;
+
 
 #endif
 

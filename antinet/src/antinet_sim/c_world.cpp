@@ -39,6 +39,7 @@ std::ostream & operator<<(std::ostream &os, const c_world &obj)
 
 
 void c_world::add_test () {
+
 	/*m_objects.push_back( make_shared<c_cjddev>("NODE_A", 200, 200, 11111111));
 	m_objects.push_back( make_shared<c_tnetdev>("NODE_T_B", 250, 100, 22222222));
 	m_objects.push_back( make_shared<c_cjddev>("NODE_C", 150, 90, 33333333));
@@ -61,12 +62,15 @@ void c_world::add_test () {
 	connect_nodes(m_objects.at(6), m_objects.at(7));*/
     //load("layout/current/default.map.txt");
 	
+
+	/*
+
 	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
 	m_objects.emplace_back( make_shared<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
 	
-	connect_nodes(m_objects.at(0), m_objects.at(2));
 	connect_nodes(m_objects.at(1), m_objects.at(2));
+	*/
 }
 
 
@@ -120,18 +124,11 @@ void c_world::draw (c_drawtarget &drawtarget) {
 	}
 }
 
-void c_world::connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> second) {
-	shared_ptr<c_osi2_switch> node_a = std::dynamic_pointer_cast<c_osi2_switch>(first);
-	shared_ptr<c_osi2_switch> node_b = std::dynamic_pointer_cast<c_osi2_switch>(second);
-	//sw.at(0).connect_with( node.at(0).use_nic(0) , world );
-	node_a->connect_with(node_b->use_nic(node_b->get_last_nic_index() + 1), *this);
-}
-
 void c_world::load (const string &filename) {
 	// @TODO broken untill rewrite for net2
 	_warn("LOAD code is now DISABLED in this version");
 
-
+/*	
 	_note("start load nodes from " << filename);
 	ifstream input_file(filename);
 
@@ -213,7 +210,7 @@ void c_world::load (const string &filename) {
 	for (auto &object: m_objects) {
 		std::dynamic_pointer_cast<c_cjddev>(object)->start_dht();
 	}
-
+	*/
 	
 	_note("end of load");
 }

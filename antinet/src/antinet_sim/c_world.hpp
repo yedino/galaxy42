@@ -44,7 +44,7 @@ class c_world {
 		
 		
 	public: // TODO?
-		vector<shared_ptr<c_object> > m_objects; ///< all the objects in simulation! @TODO implement support
+		vector<unique_ptr<c_object> > m_objects; ///< all the objects in simulation! @TODO implement support
 		
 		/***
 		 * clock that dictates flow of the simulated events
@@ -70,7 +70,7 @@ class c_world {
 		void add_test ();
 		void tick ();
 		void draw(c_drawtarget &drawtarget); ///< tells the world to draw all it's objects
-		void connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> second);
+//		void connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> second); // @TODO rafal removes this
 		void load (const string &filename);
 		void serialize(ostream &stream) const;
 		
