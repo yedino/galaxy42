@@ -21,6 +21,7 @@
 #include <exception>
 #include <mutex>
 #include <cassert>
+#include <array>
 
 //for libpng
 #include <unistd.h>
