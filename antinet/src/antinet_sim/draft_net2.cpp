@@ -74,8 +74,8 @@ int draft_net2() { // the main function for test
 	c_world world;
 	
 	vector<c_node> node;
-	node.push_back( c_node(world, "node_1", 10, 10) );
-	node.push_back( c_node(world, "node_2", 20, 20) );
+	node.push_back( c_node(world, "nodeA", 100, 100) );
+	node.push_back( c_node(world, "nodeB", 200, 200) );
 	
 	/***
 	 * 

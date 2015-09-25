@@ -44,9 +44,9 @@ class c_world {
 		
 		
 	public: // TODO?
-		vector<unique_ptr<c_object> > m_objects; ///< all the objects in simulation! @TODO implement support
+		vector<unique_ptr<c_object> > m_objects; ///< all the objects in simulation
 		
-		/***
+		/***	
 		 * clock that dictates flow of the simulated events
 		 */
 		 t_simclock m_simclock; ///< @TODO wos
@@ -58,9 +58,12 @@ class c_world {
 	public:
 		c_world();
 		
+		// building the world:
+		void connect_nodes(c_object &first, c_object &second); ///< connect the two objects together in network
 		c_osi2_cable_direct& new_cable_between(c_osi2_nic &a, c_osi2_nic &b); ///< create a new cable, own it
 		
-		t_osi3_uuid generate_osi3_uuid();
+		// misc functions of the world:
+		t_osi3_uuid generate_osi3_uuid(); ///< generate a new UUID address inside our world
 		
 		
 		static inline t_simclock get_time();
@@ -70,7 +73,6 @@ class c_world {
 		void add_test ();
 		void tick ();
 		void draw(c_drawtarget &drawtarget); ///< tells the world to draw all it's objects
-		void connect_nodes (c_object &first, c_object &second); // @TODO rafal removes this
 		void load (const string &filename);
 		void serialize(ostream &stream) const;
 		

@@ -124,10 +124,12 @@ void c_world::draw (c_drawtarget &drawtarget) {
 }
 
 void c_world::connect_nodes (c_object &first, c_object &second) {
-	c_osi2_switch &node_a = dynamic_cast<c_osi2_switch &>(first);
-	c_osi2_switch &node_b = dynamic_cast<c_osi2_switch &>(second);
-	//sw.at(0).connect_with( node.at(0).use_nic(0) , world );
-	node_a.connect_with(node_b.use_nic(node_b.get_last_nic_index() + 1), *this);
+	try {
+		c_osi2_switch &node_a = dynamic_cast<c_osi2_switch &>(first);
+		c_osi2_switch &node_b = dynamic_cast<c_osi2_switch &>(second);
+		node_a.connect_with(node_b.use_nic(node_b.get_last_nic_index() + 1), *this);
+	}
+	catch(std::bad_cast) { _erro("Can not use the two objects together as network objects!"); }
 }
 
 
