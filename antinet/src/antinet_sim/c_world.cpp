@@ -13,9 +13,14 @@ c_world::c_world()
 	
 }
 
-void c_world::add_object(c_object &&obj)
+size_t c_world::add_osi2_switch(const std::string &name, int x, int y)
 {
-	m_objects.emplace_back(obj);
+	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, name,x,y)  );
+}
+
+size_t c_world::add_node(const std::string &name, int x, int y)
+{
+	m_objects.emplace_back( make_unique<c_node>(*this, name,x,y)  );
 }
 
 c_osi2_cable_direct & c_world::new_cable_between(c_osi2_nic &a, c_osi2_nic &b)
@@ -128,7 +133,7 @@ void c_world::draw (c_drawtarget &drawtarget) {
 	}
 }
 
-void c_world::connect_nodes (c_object &first, c_object &second) {
+void c_world::connect_network_devices(c_object &first, c_object &second) {
 	try {
 		c_osi2_switch &node_a = dynamic_cast<c_osi2_switch &>(first);
 		c_osi2_switch &node_b = dynamic_cast<c_osi2_switch &>(second);
@@ -137,6 +142,19 @@ void c_world::connect_nodes (c_object &first, c_object &second) {
 	catch(std::bad_cast) { _erro("Can not use the two objects together as network objects!"); }
 }
 
+void c_world::connect_network_devices(size_t nr_a, size_t nr_b) {
+	connect_network_devices( * m_objects.at(nr_a) , * m_objects.at(nr_b) );
+}
+
+void c_world::connect_network_devices(const std::string &nr_a, const std::string &nr_b)
+{
+	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) );
+}
+
+size_t c_world::find_object_by_name_as_index(const std::string &name) const {
+	for (size_t ix=0; ix<m_objects.size(); ++ix) if (m_objects[ix]->get_name() == name) return ix;
+	throw std::out_of_range( string("Can not find object with name=") + name);
+}
 
 void c_world::load (const string &filename) {
 	// @TODO broken untill rewrite for net2

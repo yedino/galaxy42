@@ -45,8 +45,8 @@ public:
 
 	c_object (string name);
 
-	string get_name () const;
-
+	const string& get_name() const; ///< get the name
+	
 	virtual ~c_object () = default;
 
     virtual t_pos get_x() = 0;

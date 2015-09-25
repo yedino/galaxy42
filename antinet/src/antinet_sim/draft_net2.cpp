@@ -73,34 +73,54 @@ class c_node;
 int draft_net2() { // the main function for test
 	c_world world;
 	
-	vector<c_node> node;
-	node.push_back( c_node(world, "nodeA", 100, 100) );
-	node.push_back( c_node(world, "nodeB", 200, 200) );
+	
+	world.add_node("nodeA",100,100);
+	world.add_node("nodeB",300,100);
+	world.add_node("nodeC1",300,300);
+	world.add_node("nodeC2",300,320);
+	world.add_node("nodeC3",300,340);
+	world.add_node("nodeC4",300,360);
+	world.add_node("nodeD",150,200);
+	
+	world.add_osi2_switch("swA", 200,100);
+	world.add_osi2_switch("swB", 300,100);
+	world.add_osi2_switch("swC", 200,300);
+	world.add_osi2_switch("swD", 300,100);
+	
+	world.connect_network_devices("nodeA","swA");
+	world.connect_network_devices("swA","swB");
+	world.connect_network_devices("swB","swD");
+	world.connect_network_devices("nodeA","nodeD");
+	world.connect_network_devices("swA","swC");
+	world.connect_network_devices("swC","nodeC1");
+	world.connect_network_devices("swC","nodeC2");
+	world.connect_network_devices("swC","nodeC3");
+	world.connect_network_devices("swC","nodeC4");
+	
+#if 0
+	world.connect_network_devices("","");
+#endif
+	
+	world.serialize(std::cout);
+	
 	
 	/***
 	 * 
 	 * 
-	 *  Node#0          Switch#0        Switch#1
-	 *   nic#0 -------> nic#0 --------> nic#0 ---------> Switch#3
-	 *   nic#1 ---,     nic#1 --,       nic#1 ---------> Node#1
+	 *  NodeA           SwitchA         SwitchB 
+	 *   nic#0 -------> nic#0 --------> nic#0 ---------> SwitchD 
+	 *   nic#1 ---,     nic#1 --,       nic#1 ---------> NodeB 
 	 *            |             |
 	 *            |             |
-	 *            |             |       Switch#2
-	 *            '--> Node#6   `-----> nic#0 -----> Node#2
-	 *                                  nic#1 -----> Node#3
-	 *                                  nic#2 -----> Node#4
-	 *                                  nic#3 -----> Node#5
+	 *            |             |       SwitchC 
+	 *            '--> NodeD    `-----> nic#0 -----> NodeC1
+	 *                                  nic#1 -----> NodeC2
+	 *                                  nic#2 -----> NodeC3
+	 *                                  nic#3 -----> NodeC4
 	 * 
 	 * 
 	 */
 	
-	vector<c_osi2_switch> sw;
-	sw.push_back( c_osi2_switch( world, "switch_1", 30, 30 ));
-	sw.at(0).connect_with( node.at(0).use_nic(0) , world );
-	sw.at(0).connect_with( node.at(1).use_nic(0) , world );
-	
-	_dbg2( sw.at(0) );
-	node.at(0).send_packet(1024, std::string("abcd"));
 	
 	return 0;
 }

@@ -13,7 +13,7 @@ c_object::c_object (string name) : m_name(name), m_animframe(0) { }
 
 void c_object::tick () { }
 
-string c_object::get_name () const { return m_name; }
+const string & c_object::get_name () const { return m_name; }
 
 
 void c_object::draw_allegro(c_drawtarget &drawtarget, c_layer &layer) {
