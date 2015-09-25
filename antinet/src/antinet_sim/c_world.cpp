@@ -59,7 +59,7 @@ void c_world::add_test () {
 	
 	connect_nodes(m_objects.at(1), m_objects.at(2));
 	connect_nodes(m_objects.at(6), m_objects.at(7));*/
-    load("layout/current/default.map.txt");
+    //load("layout/current/default.map.txt");
 	
 	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
@@ -104,8 +104,12 @@ void c_world::draw (c_drawtarget &drawtarget) {
 			for (auto &obj : m_objects) { // draw elements to this layer
 				obj->draw_allegro(draw_allegro, *layer);
 			}
+			for (auto &cable : m_cable_direct) {
+				cable.draw_allegro(draw_allegro, *layer);
+			}
 		}
 	} // ALLEGRO implementation
+	
 	else if (drawtarget.m_drawtarget_type == e_drawtarget_type_opengl) {
         auto &draw_opengl = dynamic_cast<c_drawtarget &>( drawtarget );
 		for (auto &layer : draw_opengl.m_layer) { // get each layer

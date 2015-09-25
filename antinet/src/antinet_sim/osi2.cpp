@@ -4,6 +4,18 @@ c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b)
   : m_endpoint( {a,b} )
 {
 }
+
+void c_osi2_cable_direct::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) const {
+	auto layer = dynamic_cast<c_layer_allegro&>(layer_any);
+	BITMAP *frame = layer.m_frame;
+	int color = makecol(255,128,0);
+	t_pos x1 = m_endpoint.at(0).get().get_my_switch().get_x();
+	t_pos y1 = m_endpoint.at(0).get().get_my_switch().get_y();
+	t_pos x2 = m_endpoint.at(1).get().get_my_switch().get_x();
+	t_pos y2 = m_endpoint.at(1).get().get_my_switch().get_y();
+	line(frame, x1, y1, x2, y2, color);
+}
+
 ////////////////////////////////////////////////////////////////////
 
 c_osi2_cable_direct_plug::c_osi2_cable_direct_plug(c_osi2_cable_direct &cable)

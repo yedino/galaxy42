@@ -34,6 +34,7 @@ class c_osi2_cable_direct {
 		// c_osi2_cable_direct(c_osi2_nic *a, c_osi2_nic *b);
 		c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b);
 		std::array< std::reference_wrapper<c_osi2_nic>, 2 > get_endpoints() const;
+		void draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) const;
 };
 
 
