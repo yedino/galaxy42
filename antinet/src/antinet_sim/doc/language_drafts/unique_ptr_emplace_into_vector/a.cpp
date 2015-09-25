@@ -49,13 +49,13 @@ struct animal {
 
 
 	animal(const std::string & name): m_name(name)  { /*   _info(this<<" T("<<m_name<<")");*/ } 
-	animal(std::string && name): m_name(name)  { /* _info(this<<" T("<<m_name<<")");*/ } 
+	animal(std::string && name): m_name(std::move(name))  { /* _info(this<<" T("<<m_name<<")");*/ } 
 
 	animal(const animal & obj) : age(obj.age), mana(obj.mana), m_name(obj.m_name) { /*_info(this<<" T() copy")*/; }
 	animal(animal && obj) { // _info(this<<" T() move"); 
-		std::swap(age, obj.age);
-		std::swap(mana, obj.mana);
-		std::swap(m_name, obj.m_name);
+		this->age = obj.age;
+		this->mana = obj.mana;
+		this->m_name = std::move(obj.m_name);
 	} 
 
 	animal& operator=(const animal & obj) { /*  _info(this<<" op= copy")*/; 
