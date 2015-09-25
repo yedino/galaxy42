@@ -9,9 +9,9 @@
 class c_world; // world for simulation
 
 class c_osi2_switch;
-class c_osi2_cable_direct;
+//class c_osi2_cable_direct;
 class c_osi2_nic;
-class c_entity;
+//class c_entity;
 
 typedef std::string t_osi2_data; ///< some kind of packet of data sent over OSI2 (the same is used for OSI3)
 
@@ -93,39 +93,5 @@ class c_osi2_nic {
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj);
 };
 
-
-
-// Classical switch in OSI layer 2
-class c_osi2_switch : public c_entity {
-	protected:
-		static long int s_nr; ///< serial number of this object - the static counter
-		long int m_nr; ///< serial number of this object
-		
-		c_world &m_world; ///< my netwok world in which I exist
-		
-		std::vector<c_osi2_nic> m_nic; ///< all my NIC cards, for all my ports
-		
-		const unsigned int m_connect_cost = 1;
-	public:
-		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
-		
-		c_osi2_switch(const c_osi2_switch &) = delete; ///< copy constructor
-		c_osi2_switch& operator = (const c_osi2_switch &)  = delete;
-		c_osi2_switch(c_osi2_switch &&) = default; ///< move constructor
-		c_osi2_switch& operator = (c_osi2_switch &&)  = default;
-		
-		void create_nic(); ///< adds one more NIC card
-		c_osi2_nic & get_nic(int nr); ///< gets NIC with this number, throws if it does not exist
-		c_osi2_nic & use_nic(int nr); ///< gets NIC with this number, can create it (and all other up to that number)
-		
-		void connect_with(c_osi2_nic &target, c_world &world); ///< add port, connect to target, inside world
-		
-		unsigned int get_cost();
-		
-		void print(std::ostream &os) const;
-		friend std::ostream& operator<<(std::ostream &os, const c_osi2_switch &obj);
-		
-		c_world & get_world() const;
-};
 
 #endif // OSI2_HPP

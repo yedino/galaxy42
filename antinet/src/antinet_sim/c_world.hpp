@@ -4,6 +4,9 @@
 #include <vector>
 #include <memory>
 
+#include "c_osi3_uuid_generator.hpp"
+#include "osi2.hpp"
+#include "c_node.hpp"
 #include "c_drawtarget.hpp"
 #include "c_object.hpp"
 #include "c_network.hpp"
@@ -16,13 +19,10 @@ typedef long double t_simclock;
 /***
 The logical world of the simulation, includes simulated entities.
 */
-#include "osi2.hpp"
-#include "c_osi3_uuid_generator.hpp"
 
-class c_osi2_switch;
+//class c_osi2_switch;
 class c_osi2_cable_direct;
 class c_osi2_nic;
-class c_osi2_switch;
 
 /***
  * @brief The logical world of the simulation, includes simulated entities,
