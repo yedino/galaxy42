@@ -128,8 +128,11 @@ void c_simulation::main_loop () {
 	
 	///@see rendering.txt/[[drawing_main]]
     float view_angle = 0.0;
-    float camera_offset = 1.0;
-	// === main loop ===
+    //float camera_offset = 1.0;
+
+    float zoom = 1.0;
+    float camera_step_z=-11.0;
+    // === main loop ===
     while (!m_goodbye && !close_button_pressed) {
 
 		auto start_time = std::chrono::high_resolution_clock::now();
@@ -175,25 +178,37 @@ void c_simulation::main_loop () {
         if (use_draw_opengl) {
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             //glDisable(GL_DEPTH_TEST);      // ??? Enables Depth Testing
+            //glEnable(GL_DEPTH_TEST);
             //glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Testing To Do
             //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-            glLoadIdentity();
+             //glLoadIdentity();
             // glTranslatef(m_gui->camera_x, m_gui->camera_y,camera_offset);
 
             // minimum and maximum value for zoom in/out and rotate the scene
-            if (camera_offset >= 10.0) camera_offset = 10.0;
-            if (camera_offset <= 0.5) camera_offset = 0.5;
+//            if (camera_offset >= 10.0) camera_offset = 10.0;
+//            if (camera_offset <= 0.5) camera_offset = 0.5;
             if (view_angle >= 70) view_angle = 70;
             if(view_angle <= 0) view_angle = 0;
 
-            glRotatef(view_angle, 1,0,0);
-            glScalef(camera_offset,camera_offset,1);
+            if( zoom <= 0.1 ) zoom = 0.1;  //because of glFrustum -> when left=right, or bottom=top there's error GL_INVALID_VALUE, so we can't multiply e.g left,right by 0
+
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glFrustum(-1.0*zoom, 1.0*zoom, -1.0*zoom, 1.0*zoom, 1.0,60.0);
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            //glTranslatef(0.0f,0.0f,-11.0);
+            glTranslatef(0.0f,0.0f,camera_step_z);
+            glRotatef(-view_angle, 1,0,0);
+            glScalef(10,10,10);
 
             // drawing backgound
             glPushMatrix();
+            //glScalef(1,1,1);
             glBindTexture(GL_TEXTURE_2D,c_bitmaps::get_instance().m_background_opengl);
             glEnable(GL_BLEND);
-            //float q=1.0/camera_offset;
+            //float q=1.0/zoom;
             float q=1.0;
             glBegin(GL_QUADS);
                 glTexCoord2f(0,q); glVertex3f(-1.0f,1.0f, 0.0f);
@@ -226,7 +241,6 @@ void c_simulation::main_loop () {
 					gui_cursor_x, gui_cursor_y,
 					cjddev_detail_random_addr()));
 		}
-
 
         if(allegro_keys[KEY_F1]){
             auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
@@ -328,24 +342,33 @@ void c_simulation::main_loop () {
 
         // rotate and zoom in/out the scene
         if(allegro_keys[KEY_Z]) {
-            camera_offset+=0.1;
-            _dbg1("camera_offset: " << camera_offset);
+            //camera_offset+=0.1;
+            zoom+=0.1;
+            _dbg1("zoom: " << zoom);
         }
 
         if(allegro_keys[KEY_X]) {
-            camera_offset-=0.1;
-            _dbg1("camera_offset: " << camera_offset);
+            //camera_offset-=0.1;
+            zoom-=0.1;
+            _dbg1("zoom: " << zoom);
         }
         if(allegro_keys[KEY_C]) {
             view_angle+=1.0;
+            //farVal+=10;
             _dbg1("view_angle: " << view_angle);
         }
         if(allegro_keys[KEY_V]) {
             view_angle-=1.0;
             _dbg1("view_angle: " << view_angle);
         }
+        if(allegro_keys[KEY_Q]) {
+            camera_step_z+=0.1;
+        }
+        if(allegro_keys[KEY_W]) {
+            camera_step_z -= 0.1;
 
-
+            if(camera_step_z <= -11.0) camera_step_z=-11.0;
+        }
 
 		// === text debug on screen ===
 
@@ -611,9 +634,10 @@ void c_simulation::main_loop () {
                 //_dbg1("mouse_x mouse_y: " << mouse_x << " " << mouse_y);
                 //_dbg1("screenW screenH: " << SCREEN_W << " " << SCREEN_H);
                 //glLoadIdentity();
-                glScalef(1/camera_offset, 1/camera_offset, 1.0);
+                //glScalef(1/camera_offset, 1/camera_offset, 1.0);
+                //glScalef(1.0*zoom, 1.0*zoom, 1.0*zoom);
                 glPushMatrix();
-                //glScalef(1.0f,1.0f,1.0f);
+                glScalef(1.0f,1.0f,1.0f);
                 glTranslatef(opengl_mouse_x,opengl_mouse_y,0.0f);
                 //glTranslatef(m_gui->view_x_rev(mouse_x),m_gui->view_y_rev(mouse_y),0.0f);
                 glColor3f(0.0, 0.0, 0.0);

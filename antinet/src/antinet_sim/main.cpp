@@ -96,16 +96,18 @@ void start_gui_allegro_opengl() {
 	
 	// the PROJTECTION matrix
 	// do not change this, e.g. do NOT move "camera" here https://www.opengl.org/archives/resources/faq/technical/projection_abuse.php
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
     //glFrustum(-1.0, -1.0, -1.0, -1.0, 1, 60.0);
-    glFrustum(0.0, 10.0, -1.0, 1.0, 1, 60.0); // good position
+    //glFrustum(0.0, 10.0, -1.0, 1.0, 1, 60.0); // good position
+    //glFrustum(-1.0,1.0,-1.0, 1.0, 1,60);
+    //glTranslatef(0,0,-5);
 	
 	// glEnable(GL_CULL_FACE);
 	// glFrontFace(GL_CCW);
 	
-    glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+//    glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
 	
     glClearColor(255,255,255,0);
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear it once

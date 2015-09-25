@@ -59,7 +59,7 @@ void c_world::add_test () {
 	
 	connect_nodes(m_objects.at(1), m_objects.at(2));
 	connect_nodes(m_objects.at(6), m_objects.at(7));*/
-	//load("layout/current/default.map.txt");
+    load("layout/current/default.map.txt");
 	
 	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
@@ -127,7 +127,7 @@ void c_world::load (const string &filename) {
 	// @TODO broken untill rewrite for net2
 	_warn("LOAD code is now DISABLED in this version");
 
-/*	
+
 	_note("start load nodes from " << filename);
 	ifstream input_file(filename);
 
@@ -209,7 +209,7 @@ void c_world::load (const string &filename) {
 	for (auto &object: m_objects) {
 		std::dynamic_pointer_cast<c_cjddev>(object)->start_dht();
 	}
-	*/
+
 	
 	_note("end of load");
 }

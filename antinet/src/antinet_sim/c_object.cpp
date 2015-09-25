@@ -413,7 +413,6 @@ void draw_string(string tmp_string, c_drawtarget &drawtarget, c_layer &layer_any
         glVertex3f( -1.0f*m_size+0.01+(i*offset), -2.0f*m_size-0.1, 0.0f);      /* Left bottom    */
 
         glEnd( );                                           /* Finished Drawing The Quads */
-
         glBindTexture(GL_TEXTURE_2D, 0);   // texture
         glDisable(GL_BLEND);
     }
