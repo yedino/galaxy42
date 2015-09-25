@@ -13,6 +13,11 @@ c_world::c_world()
 	
 }
 
+void c_world::add_object(c_object &&obj)
+{
+	m_objects.emplace_back(obj);
+}
+
 c_osi2_cable_direct & c_world::new_cable_between(c_osi2_nic &a, c_osi2_nic &b)
 {
 	m_cable_direct.emplace_back( a,b );

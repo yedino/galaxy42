@@ -60,8 +60,11 @@ class c_world {
 	public:
 		c_world();
 		
-		// building the world:
+		// building the world - main
+		void add_object(c_object &&obj);
 		void connect_nodes(c_object &first, c_object &second); ///< connect the two objects together in network
+		
+		// building the world - details:
 		c_osi2_cable_direct& new_cable_between(c_osi2_nic &a, c_osi2_nic &b); ///< create a new cable, own it
 		
 		// misc functions of the world:

@@ -62,6 +62,7 @@ using std::istringstream;
 // extending the std with helpfull tools
 namespace std {
 
+
 // this is due to enter C++14
 // http://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
 template <typename T, typename... Args>
