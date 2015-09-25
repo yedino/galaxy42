@@ -12,6 +12,11 @@ c_osi2_cable_direct_plug::c_osi2_cable_direct_plug(c_osi2_cable_direct &cable)
 	
 }
 
+std::array< std::reference_wrapper<c_osi2_nic>, 2 > c_osi2_cable_direct::get_endpoints() const {
+	return m_endpoint;
+}
+
+
 ////////////////////////////////////////////////////////////////////
 
 long int c_osi2_nic::s_nr = 0;
@@ -48,6 +53,10 @@ void c_osi2_nic::add_to_outbox (t_osi3_uuid dst, t_osi2_data &&data) {
 
 long int c_osi2_nic::get_serial_number() const {
 	return m_nr;
+}
+
+c_osi2_switch &c_osi2_nic::get_my_switch() const {
+	return m_switch;
 }
 
 

@@ -33,6 +33,7 @@ class c_osi2_cable_direct {
 		// 
 		// c_osi2_cable_direct(c_osi2_nic *a, c_osi2_nic *b);
 		c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b);
+		std::array< std::reference_wrapper<c_osi2_nic>, 2 > get_endpoints() const;
 };
 
 
@@ -94,6 +95,8 @@ class c_osi2_nic {
 		long int get_serial_number() const;
 		
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj);
+		
+		c_osi2_switch &get_my_switch() const;
 };
 
 
