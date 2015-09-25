@@ -78,12 +78,12 @@ using std::make_unique;
 namespace stdplus {
 
 template <typename T, typename U>
-T& unique_cast_ref(std::unique_ptr<U> & u) noexcept {
+T& unique_cast_ref(std::unique_ptr<U> & u) {
 	return dynamic_cast<T&>( * u.get() );
 }
 
 template <typename T, typename U>
-T* unique_cast_ptr(std::unique_ptr<U> & u) noexcept {
+T* unique_cast_ptr(std::unique_ptr<U> & u) {
 	return dynamic_cast<T*>( u.get() );
 }
 
