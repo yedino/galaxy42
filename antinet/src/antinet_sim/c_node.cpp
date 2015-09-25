@@ -30,6 +30,10 @@ c_osi2_nic &c_osi2_switch::use_nic(unsigned int nr)
 	throw std::runtime_error("Internal error in creating nodes in use_nic"); // assert
 }
 
+size_t c_osi2_switch::get_last_nic_index() const {
+	return m_nic.size() - 1;
+}
+
 
 void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world)
 {

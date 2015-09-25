@@ -35,6 +35,7 @@ class c_osi2_switch : public c_entity {
 		void create_nic(); ///< adds one more NIC card
 		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
 		c_osi2_nic & use_nic(unsigned int nr); ///< gets NIC with this number, can create it (and all other up to that number)
+		size_t get_last_nic_index() const; ///< gets number of last NIC
 		
 		void connect_with(c_osi2_nic &target, c_world &world); ///< add port, connect to target, inside world
 		

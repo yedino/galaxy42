@@ -61,8 +61,12 @@ void c_world::add_test () {
 	connect_nodes(m_objects.at(6), m_objects.at(7));*/
 	//load("layout/current/default.map.txt");
 	
-	m_objects.push_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
-	m_objects.push_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
+	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
+	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
+	m_objects.emplace_back( make_shared<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
+	
+	connect_nodes(m_objects.at(0), m_objects.at(2));
+	connect_nodes(m_objects.at(1), m_objects.at(2));
 }
 
 
@@ -114,9 +118,10 @@ void c_world::draw (c_drawtarget &drawtarget) {
 }
 
 void c_world::connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> second) {
-	shared_ptr<c_cjddev> node_a = std::dynamic_pointer_cast<c_cjddev>(first);
-	shared_ptr<c_cjddev> node_b = std::dynamic_pointer_cast<c_cjddev>(second);
-	node_a->add_neighbor(node_b);
+	shared_ptr<c_osi2_switch> node_a = std::dynamic_pointer_cast<c_osi2_switch>(first);
+	shared_ptr<c_osi2_switch> node_b = std::dynamic_pointer_cast<c_osi2_switch>(second);
+	//sw.at(0).connect_with( node.at(0).use_nic(0) , world );
+	node_a->connect_with(node_b->use_nic(node_b->get_last_nic_index() + 1), *this);
 }
 
 void c_world::load (const string &filename) {
