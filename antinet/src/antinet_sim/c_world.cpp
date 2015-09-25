@@ -63,13 +63,12 @@ void c_world::add_test () {
     //load("layout/current/default.map.txt");
 	
 
-	/*
-
-	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_1", 200, 200));
-	m_objects.emplace_back( make_shared<c_node>(*this, "NODE_2", 250, 100));
-	m_objects.emplace_back( make_shared<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
+/*
+	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
+	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_2", 250, 100));
+	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
 	
-	connect_nodes(m_objects.at(1), m_objects.at(2));
+	connect_nodes(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));
 	*/
 }
 
@@ -123,6 +122,14 @@ void c_world::draw (c_drawtarget &drawtarget) {
 		}
 	}
 }
+
+void c_world::connect_nodes (c_object &first, c_object &second) {
+	c_osi2_switch &node_a = dynamic_cast<c_osi2_switch &>(first);
+	c_osi2_switch &node_b = dynamic_cast<c_osi2_switch &>(second);
+	//sw.at(0).connect_with( node.at(0).use_nic(0) , world );
+	node_a.connect_with(node_b.use_nic(node_b.get_last_nic_index() + 1), *this);
+}
+
 
 void c_world::load (const string &filename) {
 	// @TODO broken untill rewrite for net2

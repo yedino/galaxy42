@@ -70,7 +70,7 @@ class c_world {
 		void add_test ();
 		void tick ();
 		void draw(c_drawtarget &drawtarget); ///< tells the world to draw all it's objects
-//		void connect_nodes (shared_ptr<c_object> first, shared_ptr<c_object> second); // @TODO rafal removes this
+		void connect_nodes (c_object &first, c_object &second); // @TODO rafal removes this
 		void load (const string &filename);
 		void serialize(ostream &stream) const;
 		
