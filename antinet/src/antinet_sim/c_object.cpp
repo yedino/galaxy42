@@ -63,7 +63,8 @@ double c_entity::get_distance (const c_entity &entity) {
 
 
 void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
-
+	std::cout << "TODO: c_entity::draw_opengl" << std::endl;
+/*
     auto layer = dynamic_cast<c_layer_opengl &> (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
@@ -71,9 +72,10 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     glPushMatrix();
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
-        auto selected_object = gui.m_selected_object.lock();
-        auto target_object = gui.m_target;
-        auto source_object = gui.m_source;
+        auto selected_object = gui.m_selected_object;
+		// TODO
+        //auto target_object = gui.m_target;
+        //auto source_object = gui.m_source;
         //std::cout << "DEBUG3" << std::endl;
 
         if (this == selected_object.get()) { // if I am the selected object
@@ -140,6 +142,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //		circle(frame, vx, vy, 10, color);
     }
     glPopMatrix();
+*/
 }
 
 void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -149,25 +152,26 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 
 	if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
-		auto selected_object = gui.m_selected_object.lock();
-		auto target_object = gui.m_target;
-		auto source_object = gui.m_source;
+		auto selected_object = gui.m_selected_object; // iterator
+		//auto target_object = gui.m_target;
+		//auto source_object = gui.m_source;
 
-		if (this == selected_object.get()) { // if I am the selected object
+		if (m_selected) { // if I am the selected object
 			circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
 		}
 
-		if (this == target_object.get()) { // if I am the target object
+		/*if (this == target_object.get()) { // if I am the target object
 			circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
 		}
 
 		if (this == source_object.get()) {
 			circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
-		}
+		}*/
 	}
 	if (layer.m_layer_nr == e_layer_nr_gui) {
-		auto selected_object = gui.m_selected_object.lock();
-		if (this == selected_object.get()) { // if I am the selected object
+		//auto selected_object = gui.m_selected_object;
+		if (m_selected) { // if I am the selected object
+			//_dbg3("draw select");
 			const int r1 = 50 - 8, r2 = 50;
 			const auto col1 = makecol(192, 192, 192), col2 = makecol(255, 128, 32);
 			int nr = 0;

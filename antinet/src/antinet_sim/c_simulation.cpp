@@ -246,7 +246,7 @@ void c_simulation::main_loop () {
 		}
 
         if(allegro_keys[KEY_F1]){
-            auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
+            //auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
 
 
 						//  TODO  -in allegro?   -not entire screen?    
@@ -469,14 +469,20 @@ void c_simulation::main_loop () {
 		}
 
 
-		// find out which object is selected:
-		m_gui->m_selected_object = get_move_object(gui_mouse_x, gui_mouse_y);
+		//_dbg3("m_world->m_objects.size(): " << m_world->m_objects.size());
+		//_dbg3("get_move_object ret: " << get_move_object(gui_mouse_x, gui_mouse_y));
+		int move_object_index = get_move_object(gui_mouse_x, gui_mouse_y); ///< -1 if 'empty'
 
-		{ // working with selected object
-			shared_ptr<c_entity> selected_object = m_gui->m_selected_object.lock();
-			shared_ptr<c_cjddev> selected_device = std::dynamic_pointer_cast<c_cjddev>(selected_object);
-			if (selected_object) { // editing the selected object
-				if (gui_mouse_b == 1 && !print_connect_line) {
+		if (move_object_index != -1) { // working with selected object
+			m_gui->m_selected_object = m_world->m_objects.begin();
+			std::advance(m_gui->m_selected_object, move_object_index);
+			auto selected_object = m_gui->m_selected_object;
+			(*selected_object)->m_selected = true;
+			c_entity *selected_object_raw = dynamic_cast<c_entity *>((*selected_object).get());
+			//shared_ptr<c_cjddev> selected_device = std::dynamic_pointer_cast<c_cjddev>(selected_object);
+			if (selected_object != m_world->m_objects.end()) { // editing the selected object
+				// TODO: add connect
+				/*if (gui_mouse_b == 1 && !print_connect_line) {
 					print_connect_line = true;
 					connect_node = std::dynamic_pointer_cast<c_cjddev>(selected_object);
 					last_click_time = std::chrono::steady_clock::now();
@@ -488,23 +494,23 @@ void c_simulation::main_loop () {
 					connect_node->add_neighbor(std::dynamic_pointer_cast<c_cjddev>(selected_object));
 					(std::dynamic_pointer_cast<c_cjddev>(selected_object))->add_neighbor(std::dynamic_pointer_cast<c_cjddev>(connect_node));
 					print_connect_line = false;
-				}
+				}*/
 
 				if (mode == e_mode_node) { // working with selected object - moving
 					if (!print_connect_line) {
 						int speed = 5;
 						if (allegro_keys[KEY_LEFT])
-							selected_object->m_x += -speed;
+							selected_object_raw->m_x += -speed;
 						if (allegro_keys[KEY_RIGHT])
-							selected_object->m_x += speed;
+							selected_object_raw->m_x += speed;
 						if (allegro_keys[KEY_DOWN])
-							selected_object->m_y += speed;
+							selected_object_raw->m_y += speed;
 						if (allegro_keys[KEY_UP])
-							selected_object->m_y += -speed;
+							selected_object_raw->m_y += -speed;
 					}
 				} // moving selected object
 			}
-
+/*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
 				if (!m_gui->m_source || !m_gui->m_target) {
 					std::cout << "please choose target and source node\n";
@@ -545,7 +551,7 @@ void c_simulation::main_loop () {
 					last_click_time = std::chrono::steady_clock::now();
 				}
 			}
-
+*/
 
 			// === animation clock controll ===
 			if ((allegro_char & 0xff) == 'p') {
@@ -566,6 +572,7 @@ void c_simulation::main_loop () {
 				g_max_anim_frame -= 1;
 				last_click_time = std::chrono::steady_clock::now();
 			}
+			
 		}
 
 		// === animation clock operations ===
@@ -674,6 +681,10 @@ void c_simulation::main_loop () {
 			allegro_gl_flip();
 		}
 
+		for (auto &object : m_world->m_objects) {
+			object->m_selected = false;
+		}
+		
 //		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		auto stop_time = std::chrono::high_resolution_clock::now();
 		auto diff = stop_time - start_time;
@@ -687,29 +698,25 @@ void c_simulation::main_loop () {
 
 
 
-shared_ptr<c_entity> c_simulation::get_move_object (int mouse_x, int mouse_y) {
+int c_simulation::get_move_object (int mouse_x, int mouse_y) {
 	const int vx = m_gui->view_x_rev(mouse_x), vy = m_gui->view_y_rev(mouse_y); // position in viewport - because camera position
 
 	double max_distance = 150;
-	shared_ptr<c_entity> ret_ptr;
 	
-	for (auto & node : m_world->m_objects) {
-		// unique_ptr<c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
-		/* @TODO rafal wip
-		c_entity> node_ptr = std::dynamic_pointer_cast<c_entity>(node);
+	int move_index = -1;
+	for (size_t i = 0; i < m_world->m_objects.size(); ++i) {
 		int x1, x2, y1, y2;
-		x1 = std::max(vx, node_ptr->m_x);
-		x2 = std::min(vx, node_ptr->m_x);
-		y1 = std::max(vy, node_ptr->m_y);
-		y2 = std::min(vy, node_ptr->m_y);
+		x1 = std::max(vx, m_world->m_objects.at(i)->get_x());
+		x2 = std::min(vx, m_world->m_objects.at(i)->get_x());
+		y1 = std::max(vy, m_world->m_objects.at(i)->get_y());
+		y2 = std::min(vy, m_world->m_objects.at(i)->get_y());
 		double current_dist = sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2, 2));
 		if (current_dist < max_distance) {
 			max_distance = current_dist;
-			ret_ptr = node_ptr;
+			move_index = i;
 		}
-		*/
 	}
-	return ret_ptr;
+	return move_index;
 }
 
 

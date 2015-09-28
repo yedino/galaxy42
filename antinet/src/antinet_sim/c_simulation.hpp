@@ -42,7 +42,7 @@ private:
 		close_button_pressed = true;
 	}
 
-	shared_ptr<c_entity> get_move_object (int mouse_x, int mouse_y);
+	int get_move_object (int mouse_x, int mouse_y); ///< return index of element in m_world->m_objects vector, -1 if not found 
 };
 
 #endif // C_SIMULATION_HPP

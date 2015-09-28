@@ -57,6 +57,8 @@ public:
     }
 
     std::shared_ptr<FONT> s_font_allegl;
+	
+	bool m_selected = false;
 protected:
 	string m_name;
 	unsigned int m_animframe;

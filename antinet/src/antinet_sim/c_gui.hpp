@@ -6,14 +6,14 @@
 
 #include "c_object.hpp"
 #include "use_opengl.hpp"
-#include <memory>
 
 /***
 The state of user interface
 */
 class c_gui {
 public:
-	weak_ptr<c_entity> m_selected_object; ///< current object (e.g. selected for editing)
+	//weak_ptr<c_entity> m_selected_object; 
+	std::vector<unique_ptr<c_object>>::iterator m_selected_object; ///< current object (e.g. selected for editing)
 
 	shared_ptr<c_cjddev> m_target, m_source; ///< objects selected as Source and Target in simulation
 
