@@ -8,7 +8,7 @@ c_file_loader::c_file_loader(c_world  *world):m_world(world)
 
 }
 
-void c_file_loader::load(string p_filename){
+void c_file_loader::load(const string &p_filename){
 
 	std::string str_line;
 
@@ -35,7 +35,7 @@ void c_file_loader::load(string p_filename){
 
 
 
-void c_file_loader::read_cobject(std::vector <std::string > p_input) {
+void c_file_loader::read_cobject(const std::vector <std::string >& p_input) {
 
 //	c_object tmp_object;
 	int tmp_x;
@@ -71,16 +71,20 @@ void c_file_loader::read_cobject(std::vector <std::string > p_input) {
 		read_connection(p_input);
 	}else if(p_input.at(0).find("switch")!= string::npos){
 //		tmp_obj = tworzenie nowego switcha i podlaczanie go do swiata
-			m_world->m_objects.push_back(unique_ptr <c_osi2_switch> (new c_osi2_switch(*m_world,tmp_name,tmp_x,tmp_y)));
+//			m_world->m_objects.push_back(unique_ptr <c_osi2_switch> (new c_osi2_switch(*m_world,tmp_name,tmp_x,tmp_y)));
+			m_world->m_objects.emplace_back(make_unique <c_osi2_switch> (*m_world,tmp_name,tmp_x,tmp_y));
 	}else if(p_input.at(0).find("node") !=  string::npos){
-			m_world->m_objects.push_back(unique_ptr <c_node> (new c_node(*m_world,tmp_name,tmp_x,tmp_y)));
+//			m_world->m_objects.push_back(unique_ptr <c_node> (new c_node(*m_world,tmp_name,tmp_x,tmp_y)));
+			m_world->m_objects.emplace_back(make_unique <c_node> (*m_world,tmp_name,tmp_x,tmp_y));
+
+
 	}else{
 		//something goes wrong
 	}
 }
 
 
-void c_file_loader::read_connection(std::vector<std::string>p_input) {
+void c_file_loader::read_connection(const std::vector<std::string>& p_input) {
 
 	for (auto str_line:p_input){
 
@@ -100,29 +104,55 @@ void c_file_loader::read_connection(std::vector<std::string>p_input) {
 		ss >> price;
 //		c_osi2_nic* nic1;
 //		c_osi2_nic* nic_2;
-		unique_ptr<c_object> first = nullptr;
-		unique_ptr<c_object> second = nullptr;
+//		unique_ptr<c_object> first = nullptr;
+//		unique_ptr<c_object> second = nullptr;
 
 		bool found_first =false;
+
+
+
+		/*
 		for(auto & node:m_world->m_objects){
 			if(node->get_name() == name1 || node->get_name() == name2 ){
 				if(!found_first){
-					first =std::move(node);
+					first = std::move(node);
 					found_first = true;
 				}else{
-					second =std::move( node);
+					second = std::move( node);
 					break;
 				}
 			}
 		}
+		*/
 
+		size_t first_index = SIZE_MAX;
+		size_t second_index = SIZE_MAX;
+		for (size_t i=0 ; i<m_world->m_objects.size() ; i++) {
+
+			if(m_world->m_objects.at(i)->get_name() == name1 || m_world->m_objects.at(i)->get_name() == name2 ) {
+				if(!found_first){
+					first_index = i;
+					found_first = true;
+				}else{
+					second_index = i;
+					break;
+				}
+
+			}
+		}
+
+		if(first_index == SIZE_MAX||second_index == SIZE_MAX){
+			break;
+		}
+/*
 		if(first == nullptr || second == nullptr){
 			break;
 		}
-
+*/
 //		m_world->connect_nodes(first,second);
 
-		m_world->connect_network_devices(unique_cast_ref<c_object &>(first), unique_cast_ref<c_object &>(first));
+		m_world->connect_network_devices(unique_cast_ref<c_object &>(m_world->m_objects.at(first_index)), unique_cast_ref<c_object &>(m_world->m_objects.at(second_index)));
+
 
 //		bool m_found_first = false;
 //		bool do_break= false;
@@ -154,9 +184,54 @@ void c_file_loader::read_connection(std::vector<std::string>p_input) {
 	}
 }
 
-void c_file_loader::save(string p_filename)
+void c_file_loader::save(const string& p_filename)
 {
 	std::ofstream stream(p_filename);
+	for (auto & object : m_world->m_objects) {
+
+		if (typeid(*object) == typeid(c_cjddev)) {
+			stream << "add cjddev {" << std::endl;
+		} else if (typeid(*object) == typeid(c_node)) {
+			stream << "add node {" << std::endl;
+		} else if (typeid(*object) == typeid(c_osi2_switch)) {
+			stream << "add switch {" << std::endl;
+		} else{
+
+		}
+		//	return stream;
+
+//		unique_ptr_ptr<c_cjddev> cjddev_ptr = std::dynamic_pointer_cast<c_cjddev>(object);
+		stream << "x " << object->get_x() << std::endl;
+		stream << "y " << object->get_y() << std::endl;
+		stream << "name " << object->get_name() << std::endl;
+		stream << "}" << std::endl;
+	}
+
+
+	stream << "connections {" << std::endl;
+
+	for (auto & object : m_world->m_cable_direct) {
+//		stream<<object->endpoint;
+		stream<<object.get_endpoints().at(0).get().get_serial_number();
+		stream<<"=>"<<std::endl;
+		stream<<object.get_endpoints().at(1).get().get_serial_number();
+
+//		shared_ptr<c_> cjddev_ptr = std::dynamic_pointer_cast<c_cjddev>(object);
+//		for (auto neighbor_address : cjddev_ptr->get_neighbors_addresses()) {
+//			stream << cjddev_ptr->get_address() << " => " << neighbor_address << " " <<
+//			cjddev_ptr->get_price(neighbor_address) << std::endl;
+//		}
+
+	}
+
+	stream<<"}"<<std::endl;
+
+
+}
+
+void c_file_loader::save(std::ostream &stream){
+
+
 	for (auto & object : m_world->m_objects) {
 
 		if (typeid(*object) == typeid(c_cjddev)) {

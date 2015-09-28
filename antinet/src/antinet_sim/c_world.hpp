@@ -85,7 +85,7 @@ class c_world {
 		void tick ();
 		void draw(c_drawtarget &drawtarget); ///< tells the world to draw all it's objects
 		void load (const string &filename);
-		void serialize(ostream &stream) const;
+		void serialize(ostream &stream);
 		
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_world &obj);

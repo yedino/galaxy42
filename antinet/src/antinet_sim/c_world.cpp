@@ -1,7 +1,7 @@
 #include "c_world.hpp"
 
 #include "c_drawtarget_opengl.hpp"
-
+#include "c_file_loader.hpp"
 
 
 long int c_world::s_nr = 0;
@@ -73,13 +73,15 @@ void c_world::add_test () {
     //load("layout/current/default.map.txt");
 	
 
-
+/*
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_2", 250, 100));
 	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
 	
 	connect_network_devices(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));
-	
+*/
+	load("layout/current/map2.txt");
+
 }
 
 
@@ -158,7 +160,10 @@ size_t c_world::find_object_by_name_as_index(const std::string &name) const {
 
 void c_world::load (const string &filename) {
 	// @TODO broken untill rewrite for net2
-	_warn("LOAD code is now DISABLED in this version");
+//	_warn("LOAD code is now DISABLED in this version");
+
+	c_file_loader loader(this);
+	loader.load(filename);
 
 /*	
 	_note("start load nodes from " << filename);
@@ -247,10 +252,12 @@ void c_world::load (const string &filename) {
 	_note("end of load");
 }
 
-void c_world::serialize(ostream &stream) const {
+void c_world::serialize(ostream &stream) {
 	// @TODO broken untill rewrite for net2
-	_warn("serialize code is now DISABLED in this version");
-	
+//	_warn("serialize code is now DISABLED in this version");
+	c_file_loader(this).save(stream);
+
+
 	/*
 	for (auto object : world.m_objects) {
 		if (typeid(*object) == typeid(c_cjddev)) {
