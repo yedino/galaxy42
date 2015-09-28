@@ -114,4 +114,50 @@ antinet_cli - most code should be compilable. entire project could build with di
 GNU Hurd - should work on default GCC compiler
 
 
+=== Tested elements ===
+
+If not noted otherwise, then this is about testing on x86_64 PC. And Debian = Debian Linux.
+
+OpenGL
+* Debian 7 - works, tested in antinet_sim
+* Debian 8 - works, tested in antinet_sim
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ...
+
+LibGlu
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ...
+
+Allegro 4.x, with AllegroGL
+* Debian 7 - works, tested in antinet_sim
+* Debian 8 - works, tested in antinet_sim
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ...
+
+Lib to load PNG (for Allegro, it uses libz)
+* Debian 7 - works, tested in antinet_sim
+* Debian 8 - works, tested in antinet_sim
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ...
+
+Boost ASIO:
+Debian 7 - works
+Debian 8 - works
+Windows - works
+OpenBSD: TODO
+FreeBSD: TODO
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ... <--- SIM does NOT use this yet!
+
+Boost Graph Library:
+Linux: TODO (will work obviusly)
+Windows: TODO
+FreeBSD: TODO
+OpenBSD: TODO
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ... <--- SIM does NOT use this yet!
+
+
+Boost Serialize:
+Linux: TODO (will work obviusly)
+Windows: TODO
+FreeBSD: TODO
+OpenBSD: TODO
+* Arm Cortex A9 Wonder Board, Debian 7, crosscompiled from Debian 9-testing - TODO, ... <--- SIM does NOT use this yet!
+
+
 

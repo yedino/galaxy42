@@ -7,6 +7,9 @@
 #include "c_networld.hpp"
 #include "c_object.hpp"
 
+/***
+ * @author mz-dev@tigusoft.pl
+ */
 class c_file_loader
 {
 

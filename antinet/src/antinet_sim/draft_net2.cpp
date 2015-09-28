@@ -101,7 +101,7 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("","");
 #endif
 	
-	world.serialize(std::cout);
+//	world.serialize(std::cout);
 	
 	
 	/***

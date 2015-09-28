@@ -26,6 +26,7 @@ class c_osi2_nic;
 class c_file_loader;
 
 /***
+ * @author dev-rf@tigusoft.pl
  * @brief The logical world of the simulation, includes simulated entities,
  * also includes the world of the networking (e.g. with UUID/unique global IP addresses space)
  * holds (and usually owns) some objects:
