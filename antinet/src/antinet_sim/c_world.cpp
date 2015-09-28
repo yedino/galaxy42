@@ -74,11 +74,11 @@ void c_world::add_test () {
 	
 
 
-	/*m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
+	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_2", 250, 100));
 	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
 	
-	connect_network_devices(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));*/
+	connect_network_devices(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));
 	
 }
 
