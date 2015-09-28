@@ -23,6 +23,8 @@ class c_osi2_switch : public c_entity {
 		
 		std::vector<c_osi2_nic> m_nic; ///< all my NIC cards, for all my ports
 		
+		std::vector<t_osi3_packet> m_outbox; ///< data that I will wish to send (over some NIC)
+		
 		const unsigned int m_connect_cost = 1;
 	public:
 		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
@@ -31,11 +33,16 @@ class c_osi2_switch : public c_entity {
 		c_osi2_switch& operator = (const c_osi2_switch &)  = delete;
 		c_osi2_switch(c_osi2_switch &&) = default; ///< move constructor
 		c_osi2_switch& operator = (c_osi2_switch &&)  = default;
-		
+
+		// work on my NICs:		
 		void create_nic(); ///< adds one more NIC card
 		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
 		c_osi2_nic & use_nic(unsigned int nr); ///< gets NIC with this number, can create it (and all other up to that number)
 		size_t get_last_nic_index() const; ///< gets number of last NIC
+		
+		// work on my network data:
+		void send_data(t_osi3_uuid dst, const t_osi2_data &data);
+		t_osi3_uuid get_uuid_any(); ///< get some kind of UUID address that is mine (e.g. from first NIC, or make one, etc)
 		
 		void connect_with(c_osi2_nic &target, c_world &world); ///< add port, connect to target, inside world
 		

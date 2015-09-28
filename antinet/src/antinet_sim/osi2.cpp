@@ -1,10 +1,12 @@
 #include "osi2.hpp"
+#include "c_node.hpp"
 
 c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b) 
   : m_endpoint( {a,b} )
 {
 }
 
+/*
 void c_osi2_cable_direct::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) const {
 	auto layer = dynamic_cast<c_layer_allegro&>(layer_any);
 	BITMAP *frame = layer.m_frame;
@@ -15,6 +17,7 @@ void c_osi2_cable_direct::draw_allegro (c_drawtarget &drawtarget, c_layer &layer
 	t_pos y2 = m_endpoint.at(1).get().get_my_switch().get_y();
 	line(frame, x1, y1, x2, y2, color);
 }
+*/
 
 ////////////////////////////////////////////////////////////////////
 
@@ -76,6 +79,25 @@ c_osi2_switch &c_osi2_nic::get_my_switch() const {
 	return m_switch;
 }
 
+t_osi3_uuid c_osi2_nic::get_uuid() const
+{
+	return m_osi3_uuid;
+}
+
 
 ////////////////////////////////////////////////////////////////////
 
+
+
+std::ostream &operator<<(std::ostream &os, const t_osi3_packet &pck)
+{
+	const size_t preview_size = 20;
+	const auto data_len = pck.m_data.size();
+	os << "[src=" << pck.m_src
+	   <<" to dst=" << pck.m_dst
+	   << " data size=" << data_len
+	   << " '"<<pck.m_data.substr(0,preview_size)  // start the data
+	   << ( data_len>preview_size ? "'... " : "'"  )  // end, mark if was truncated
+	   << "]";
+	return os;
+}

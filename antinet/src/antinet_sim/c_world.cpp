@@ -13,12 +13,12 @@ c_world::c_world()
 	
 }
 
-size_t c_world::add_osi2_switch(const std::string &name, int x, int y)
+void c_world::add_osi2_switch(const std::string &name, int x, int y)
 {
 	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, name,x,y)  );
 }
 
-size_t c_world::add_node(const std::string &name, int x, int y)
+void c_world::add_node(const std::string &name, int x, int y)
 {
 	m_objects.emplace_back( make_unique<c_node>(*this, name,x,y)  );
 }
@@ -120,7 +120,7 @@ void c_world::draw (c_drawtarget &drawtarget) {
 				obj->draw_allegro(draw_allegro, *layer);
 			}
 			for (auto &cable : m_cable_direct) {
-				cable.draw_allegro(draw_allegro, *layer);
+	//			cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
 			}
 		}
 	} // ALLEGRO implementation
@@ -157,6 +157,25 @@ size_t c_world::find_object_by_name_as_index(const std::string &name) const {
 	for (size_t ix=0; ix<m_objects.size(); ++ix) if (m_objects[ix]->get_name() == name) return ix;
 	throw std::out_of_range( string("Can not find object with name=") + name);
 }
+
+c_object &c_world::find_object_by_name_as_object(const std::string &name)
+{
+	for (size_t ix=0; ix<m_objects.size(); ++ix) if (m_objects[ix]->get_name() == name) return m_objects[ix];
+	throw std::out_of_range( string("Can not find object with name=") + name);
+}
+
+c_osi2_switch & c_world::find_object_by_name_as_switch(const std::string &name)
+{
+	const string name_of_type("c_osi2_switch"); // match our return type!
+	try {
+		return dynamic_cast<c_osi2_switch &>( find_object_by_name_as_object(name) );
+	} catch(...) { }
+	
+	throw std::out_of_range(
+		string("Can not find object (of type ")
+		+ name_of_type + string(") with name=") + name);
+}
+
 
 void c_world::load (const string &filename) {
 	// @TODO broken untill rewrite for net2

@@ -97,6 +97,12 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("swC","nodeC3");
 	world.connect_network_devices("swC","nodeC4");
 	
+	t_osi2_data data( std::string("HELLOWORLD") );
+	
+	world.find_object_by_name_as_switch("nodeA").send_data(
+		world.find_object_by_name_as_switch("nodeB").get_uuid_any(), 
+		data);
+	
 #if 0
 	world.connect_network_devices("","");
 #endif

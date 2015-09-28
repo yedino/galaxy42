@@ -2,9 +2,9 @@
 #define OSI2_HPP
 
 #include "libs1.hpp"
-#include "c_world.hpp"
+//a#include "c_world.hpp"
 #include "c_osi3_uuid_generator.hpp"
-#include "c_object.hpp"
+//#include "c_object.hpp"
 
 class c_world; // world for simulation
 
@@ -16,10 +16,12 @@ class c_osi2_nic;
 typedef std::string t_osi2_data; ///< some kind of packet of data sent over OSI2 (the same is used for OSI3)
 
 struct t_osi3_packet { ///< some packet with data that is travelig over OSI2
+	t_osi2_data m_data; ///< the data
 	t_osi3_uuid m_dst; ///< the destination of this packet
 	t_osi3_uuid m_src; ///< the source of this packet
-	t_osi2_data m_data; ///< the data
 };
+
+std::ostream & operator<<(std::ostream & os, const t_osi3_packet & pck);
 
 /*** 
  * @brief Classical cable in OSI layer 2, connecting 2 end point stations (e.g. computer to computer 
@@ -34,7 +36,7 @@ class c_osi2_cable_direct {
 		// c_osi2_cable_direct(c_osi2_nic *a, c_osi2_nic *b);
 		c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b);
 		std::array< std::reference_wrapper<c_osi2_nic>, 2 > get_endpoints() const;
-		void draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) const;
+	//	void draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) const;
 };
 
 
@@ -100,6 +102,7 @@ class c_osi2_nic {
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj);
 		
 		c_osi2_switch &get_my_switch() const;
+		t_osi3_uuid get_uuid() const;
 };
 
 

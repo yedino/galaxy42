@@ -34,6 +34,21 @@ size_t c_osi2_switch::get_last_nic_index() const {
 	return m_nic.size() - 1;
 }
 
+void c_osi2_switch::send_data(t_osi3_uuid dst, const t_osi2_data &data)
+{
+	t_osi3_packet pck;
+	pck.m_data = data;
+	pck.m_dst = dst;
+	pck.m_src = 0; // ! unknown yet (will decide when picking the NIC to send through)
+	m_outbox.push_back( pck );
+	_dbg3("Added to outbox a pck:" << pck << " my outbox size = " << m_outbox.size());
+}
+
+t_osi3_uuid c_osi2_switch::get_uuid_any()
+{
+	return this->use_nic(0).get_uuid(); // take (or first make) my first NIC card, and return it's UUID as mine
+}
+
 
 void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world)
 {
@@ -112,7 +127,7 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 	const auto & gui = * drawtarget.m_gui;
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	c_osi2_switch::draw_allegro (drawtarget, layer_any);
-	int color = makecol(0,0,64); // TODO is this ok?
+	auto color = makecol(0,0,64); // TODO is this ok?
 	////////////////////////////////////////////////////////////////////
 	if (layer.m_layer_nr == e_layer_nr_object) {
 		//BITMAP *fg1;
