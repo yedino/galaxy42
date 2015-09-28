@@ -73,13 +73,13 @@ void c_world::add_test () {
     //load("layout/current/default.map.txt");
 	
 
-/*
-	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
+
+	/*m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_2", 250, 100));
 	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
 	
-	connect_nodes(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));
-	*/
+	connect_network_devices(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));*/
+	
 }
 
 
@@ -133,7 +133,7 @@ void c_world::draw (c_drawtarget &drawtarget) {
 	}
 }
 
-void c_world::connect_network_devices(c_object &first, c_object &second) {
+void c_world::connect_network_devices (c_object &first, c_object &second) {
 	try {
 		c_osi2_switch &node_a = dynamic_cast<c_osi2_switch &>(first);
 		c_osi2_switch &node_b = dynamic_cast<c_osi2_switch &>(second);

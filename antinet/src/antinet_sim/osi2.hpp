@@ -91,6 +91,8 @@ class c_osi2_nic {
 		
 		void add_to_outbox(t_osi3_uuid dst, t_osi2_data &&data); ///< sends the packet over network
 		
+		bool empty_outbox() const;
+		
 		void print(std::ostream &os) const;
 		
 		long int get_serial_number() const;

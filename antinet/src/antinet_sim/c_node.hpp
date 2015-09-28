@@ -47,6 +47,7 @@ class c_osi2_switch : public c_entity {
 		c_world & get_world() const;
 		
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
+		virtual void draw_messages() const;
 };
 
 class c_node : public c_osi2_switch {

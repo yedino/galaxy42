@@ -78,8 +78,17 @@ std::ostream & operator<<(std::ostream &os, const c_osi2_switch &obj)
 
 void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 	c_entity::draw_allegro (drawtarget, layer_any);
+	draw_messages();
 }
 
+void c_osi2_switch::draw_messages() const {
+	t_geo_point send_piont, receive_point, msg_circle;
+	for (auto &nic : m_nic) {
+		if (!nic.empty_outbox()) {
+			
+		}
+	}
+}
 
 
 
