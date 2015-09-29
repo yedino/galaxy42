@@ -10,9 +10,9 @@
 
 float angle = 0.0;
 float zoom = 1.0;
-float step_z = -5.0;
+float step_z=-5.0;
 float camera_x = 0.0;
-float camera_z = 0.0;
+float camera_z = -5.0;
 float view_angle = 3.0;
  
 void InitAllegro() {
@@ -46,26 +46,26 @@ void RenderScene() {
     glLoadIdentity();
     // set up camera, coords of eye point, coords of reference point
     gluPerspective(45.0f, SCREEN_W/SCREEN_H, 1.0, 150.0);
-    gluLookAt(camera_x-1,0,camera_z+3, camera_x+1,0,camera_z-3, 0,1,0);
+    gluLookAt (camera_x - 1*sin(angle),0,camera_z + 1*cos(angle),camera_x + 5*sin(angle),0,camera_z - 5*cos(angle),0,1,0);
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
 
-    glTranslatef(camera_x,-1,camera_z);
-    glRotatef(angle,0.0,1.0,0.0);
-    glTranslatef(-camera_x,1, -camera_z);
+    glTranslatef(camera_x,0,camera_z);
+    glRotatef(angle,0,1,0);
+   // glTranslatef(-camera_x,1, -camera_z);
 
     // draw wireSphere in place of camera
-    glPushMatrix();
-    glTranslatef(camera_x,-1,camera_z);
-    glColor3f(0,0,1);
-    glutWireSphere(0.2,30,30);
-    glTranslatef(-camera_x,1,-camera_z);
-    glPopMatrix();
+//    glPushMatrix();
+//    glTranslatef(0,-1,camera_z);
+//    glColor3f(0,0,1);
+//    glutWireSphere(0.2,30,30);
+//    glTranslatef(0,1,-camera_z);
+//    glPopMatrix();
 
     //glTranslatef( 0.0f, 0.0f, step_z );
 
     glPushMatrix();
-    glTranslatef( 0.0f, 0.0f, step_z );
+    glTranslatef( camera_x, 0.0f, camera_z );
     // draw quads
     glBegin( GL_QUADS );
         glColor3f( 1.0f, 0.0f, 0.0f );
@@ -86,7 +86,7 @@ void RenderScene() {
 
 
     glPushMatrix();
-    glTranslatef(-30,0.0f,step_z);
+    glTranslatef( camera_x-3, 0.0f, camera_z+10 );
     glBegin( GL_TRIANGLES);
         glColor3f(1,1,0);
         glVertex3f(-1,-1,0);
@@ -96,7 +96,7 @@ void RenderScene() {
     glPopMatrix();
 
     glPushMatrix();
-    glTranslatef(20,0.0f,step_z+90);
+    glTranslatef(camera_x+7,0.0f,camera_z+9);
     glBegin( GL_TRIANGLES);
         glColor3f(0,1,1);
         glVertex3f(-1,-1,0);
@@ -106,7 +106,7 @@ void RenderScene() {
     glPopMatrix();
 
     glPushMatrix();
-    glTranslatef(30,0.0f,step_z+30);
+    glTranslatef(camera_x-15,0.0f,camera_z-3);
     glBegin( GL_TRIANGLES);
         glColor3f(0.5,0.5,0.5);
         glVertex3f(-1,-1,0);
@@ -118,28 +118,27 @@ void RenderScene() {
     glFlush();
     allegro_gl_flip();
 }
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	InitAllegro();
 	InitGL();
     glutInit(&argc, argv);
 
 	int i=0;
-    while(i<10000)
-	{
-		if(key[KEY_Q]) angle+=0.1;
-        if(key[KEY_E]) angle-=0.1;
-        if(key[KEY_W]) step_z+=0.1;
-        if(key[KEY_S]) step_z-=0.1;
-        if(key[KEY_Z]) zoom+=0.1;
-        if(key[KEY_X]) zoom-=0.1;
-        if(key[KEY_UP]) camera_z-=0.1;
-        if(key[KEY_DOWN]) camera_z+=0.1;
-        if(key[KEY_RIGHT]) { camera_x+=0.1; view_angle*=0.3; std::cout << "camera_x " << camera_x << std::endl; }
-        if(key[KEY_LEFT]) camera_x-=0.1;
+    while(i<10000) {
+        if(key[KEY_UP]) {
+            camera_z+=cos(angle)*0.1;
+            camera_x-=sin(angle)*0.1;
+        }
+        if(key[KEY_DOWN]) {
+            camera_z-=cos(angle)*0.1;
+            camera_x+=sin(angle)*0.1;
+        }
+        if(key[KEY_RIGHT]) angle+=0.01;
+        if(key[KEY_LEFT]) angle-=0.01;
+
 		if(key[KEY_ESC]) exit(0);
 
-		RenderScene();
+        RenderScene();
 		i++;
 	}
 	allegro_exit();
