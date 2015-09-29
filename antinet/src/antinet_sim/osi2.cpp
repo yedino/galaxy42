@@ -1,8 +1,8 @@
 #include "osi2.hpp"
 #include "c_node.hpp"
 
-c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b) 
-  : m_endpoint( {a,b} )
+c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost) 
+  : m_endpoint( {a,b} ), m_cost(cost)
 {
 }
 
@@ -31,6 +31,25 @@ std::array< std::reference_wrapper<c_osi2_nic>, 2 > c_osi2_cable_direct::get_end
 	return m_endpoint;
 }
 
+t_osi2_cost c_osi2_cable_direct::get_cost() const
+{
+	return m_cost;	
+}
+
+c_osi2_nic &c_osi2_cable_direct::get_other_end(const c_osi2_nic &other_then_me)
+{
+	// is this exactly this one object (not just other one that is the same)
+	// compare addresses of references objects
+	
+	c_osi2_nic & endA = m_endpoint[0];
+	c_osi2_nic & endB = m_endpoint[1];
+	
+	if ( & endA == & other_then_me) {
+		if ( & endB == & other_then_me) throw std::runtime_error("Invalid cable, both ends are me"); // assert
+		return endB;
+	}
+	return endA;
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -73,6 +92,17 @@ bool c_osi2_nic::empty_outbox() const {
 
 long int c_osi2_nic::get_serial_number() const {
 	return m_nr;
+}
+
+c_osi2_nic * c_osi2_nic::get_connected_card_or_null(t_osi2_cost &cost) const
+{
+	if (!m_plug) return nullptr;
+	c_osi2_cable_direct & cable = m_plug->m_cable;
+	
+	cost = cable.get_cost();
+	c_osi2_nic * other_nic = & cable.get_other_end(*this);
+	
+	return other_nic;
 }
 
 c_osi2_switch &c_osi2_nic::get_my_switch() const {

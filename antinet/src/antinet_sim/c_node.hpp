@@ -25,7 +25,7 @@ class c_osi2_switch : public c_entity {
 		
 		std::vector<t_osi3_packet> m_outbox; ///< data that I will wish to send (over some NIC)
 		
-		const unsigned int m_connect_cost = 1;
+		const unsigned int m_connect_cost = 1; ///< TODO delete?
 	public:
 		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
 		
@@ -44,9 +44,9 @@ class c_osi2_switch : public c_entity {
 		void send_data(t_osi3_uuid dst, const t_osi2_data &data);
 		t_osi3_uuid get_uuid_any(); ///< get some kind of UUID address that is mine (e.g. from first NIC, or make one, etc)
 		
-		void connect_with(c_osi2_nic &target, c_world &world); ///< add port, connect to target, inside world
+		void connect_with(c_osi2_nic &target, c_world &world, t_osi2_cost cost); ///< add port, connect to target, inside world
 		
-		unsigned int get_cost();
+		unsigned int get_cost(); ///< TODO delete?
 		
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_switch &obj);

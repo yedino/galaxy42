@@ -13,6 +13,8 @@ class c_osi2_switch;
 class c_osi2_nic;
 //class c_entity;
 
+typedef int t_osi2_cost; ///< cost of OSI2 route
+
 typedef std::string t_osi2_data; ///< some kind of packet of data sent over OSI2 (the same is used for OSI3)
 
 struct t_osi3_packet { ///< some packet with data that is travelig over OSI2
@@ -30,12 +32,17 @@ std::ostream & operator<<(std::ostream & os, const t_osi3_packet & pck);
 class c_osi2_cable_direct {
 	private:
 		std::array< std::reference_wrapper<c_osi2_nic>, 2 > m_endpoint; ///< array of the 2 endpoints; as reference
-//		std::array< c_osi2_nic*, 2 > m_endpoint; ///< array of the 2 endpoints; as reference
+		
+		int m_cost; ///< cost/weight of connection for finding OSI2 routes e.g. for Dijkstra, see [osi2_sim]
+		
 	public:
-		// 
-		// c_osi2_cable_direct(c_osi2_nic *a, c_osi2_nic *b);
-		c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b);
+		c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost);
+		
 		std::array< std::reference_wrapper<c_osi2_nic>, 2 > get_endpoints() const;
+		
+		t_osi2_cost get_cost() const; ///< gets the cost of connection for finding OSI2 routes e.g. for Dijkstra
+		c_osi2_nic& get_other_end(const c_osi2_nic & other_then_me);
+		
 	//	void draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) const;
 };
 
@@ -100,6 +107,8 @@ class c_osi2_nic {
 		long int get_serial_number() const;
 		
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj);
+		
+		c_osi2_nic * get_connected_card_or_null(t_osi2_cost & cost) const;
 		
 		c_osi2_switch &get_my_switch() const;
 		t_osi3_uuid get_uuid() const;

@@ -50,13 +50,13 @@ t_osi3_uuid c_osi2_switch::get_uuid_any()
 }
 
 
-void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world)
+void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world, t_osi2_cost cost)
 {
 	create_nic(); // create a new NIC card (it will be at end)
 	c_osi2_nic & my_new_port = m_nic.back(); // get this new card
 	
 	// create the cable (it will be owned by the networld world) that connects this target to my new port
-	c_osi2_cable_direct cable = world.new_cable_between( target , my_new_port );
+	c_osi2_cable_direct cable = world.new_cable_between( target , my_new_port , cost );
 	
 	// actually plug in the created table to both ends:
 	my_new_port.plug_in_cable(cable); 
@@ -75,7 +75,16 @@ unsigned int c_osi2_switch::get_cost() {
 void c_osi2_switch::print(std::ostream &os) const
 {
 	os << "[ SWITCH(#"<<m_nr<<")";
-	os << " with " << m_nic.size() << " ports";
+	os << " with " << m_nic.size() << " ports:";
+
+	for (const c_osi2_nic & nic : m_nic) {
+		t_osi2_cost cost;
+		c_osi2_nic * nic_ptr = nic.get_connected_card_or_null( cost );
+		if (nic_ptr) {
+			os << " ---(cost=" << cost <<")--> " << *nic_ptr << std::endl;
+		}
+	}
+	
 	os << " ]";
 }
 

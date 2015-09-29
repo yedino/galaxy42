@@ -17,6 +17,11 @@ like an IP address abstraction).
 - OSI_3: routing data to the UUID destination (over LAN/ICANN internet) - routing the CJDNS peers
 - CJDNS: build DHT, find CJDNS path with directors (using ISO_3)
 
+OSI_2 routing simulation, uses:
+- e.g. simple Dijkstra
+- is NOT guaranteed to work if there are OSI 2 cables paralell connections (two 
+direct connections exist between switch A and switch B) - TODO add detection of this
+
 Implement:
 - switches/NIC buffers can fill up and slow down or drop packets
 - switches have speed limit of how many packets they can transport in a tick
@@ -87,21 +92,23 @@ int draft_net2() { // the main function for test
 	world.add_osi2_switch("swC", 200,300);
 	world.add_osi2_switch("swD", 300,100);
 	
-	world.connect_network_devices("nodeA","swA");
-	world.connect_network_devices("swA","swB");
-	world.connect_network_devices("swB","swD");
-	world.connect_network_devices("nodeA","nodeD");
-	world.connect_network_devices("swA","swC");
-	world.connect_network_devices("swC","nodeC1");
-	world.connect_network_devices("swC","nodeC2");
-	world.connect_network_devices("swC","nodeC3");
-	world.connect_network_devices("swC","nodeC4");
+	world.connect_network_devices("nodeA","swA", 1);
+	world.connect_network_devices("swA","swB", 1);
+	world.connect_network_devices("swB","swD", 1);
+	world.connect_network_devices("nodeA","nodeD", 1);
+	world.connect_network_devices("swA","swC", 1);
+	world.connect_network_devices("swC","nodeC1", 1);
+	world.connect_network_devices("swC","nodeC2", 1);
+	world.connect_network_devices("swC","nodeC3", 1);
+	world.connect_network_devices("swC","nodeC4", 1);
 	
 	t_osi2_data data( std::string("HELLOWORLD") );
 	
 	world.find_object_by_name_as_switch("nodeA").send_data(
 		world.find_object_by_name_as_switch("nodeB").get_uuid_any(), 
 		data);
+	
+	_info( world.find_object_by_name_as_switch("swA") );
 	
 #if 0
 	world.connect_network_devices("","");

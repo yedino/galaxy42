@@ -23,9 +23,9 @@ void c_world::add_node(const std::string &name, int x, int y)
 	m_objects.emplace_back( make_unique<c_node>(*this, name,x,y)  );
 }
 
-c_osi2_cable_direct & c_world::new_cable_between(c_osi2_nic &a, c_osi2_nic &b)
+c_osi2_cable_direct & c_world::new_cable_between(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost)
 {
-	m_cable_direct.emplace_back( a,b );
+	m_cable_direct.emplace_back( a, b, cost );
 	return m_cable_direct.back();
 }
 
@@ -78,7 +78,11 @@ void c_world::add_test () {
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_2", 250, 100));
 	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
 	
-	connect_network_devices(unique_cast_ref<c_object &>(m_objects.at(1)), unique_cast_ref<c_object &>(m_objects.at(2)));
+	connect_network_devices(
+	      	unique_cast_ref<c_object &>(m_objects.at(1)), 
+	      	unique_cast_ref<c_object &>(m_objects.at(2)),
+	      	1
+	      );
 
 //	load("layout/current/map2.txt");
 
@@ -135,22 +139,22 @@ void c_world::draw (c_drawtarget &drawtarget) {
 	}
 }
 
-void c_world::connect_network_devices (c_object &first, c_object &second) {
+void c_world::connect_network_devices (c_object &first, c_object &second, t_osi2_cost cost) {
 	try {
 		c_osi2_switch &node_a = dynamic_cast<c_osi2_switch &>(first);
 		c_osi2_switch &node_b = dynamic_cast<c_osi2_switch &>(second);
-		node_a.connect_with(node_b.use_nic(node_b.get_last_nic_index() + 1), *this);
+		node_a.connect_with(node_b.use_nic(node_b.get_last_nic_index() + 1), *this, cost);
 	}
 	catch(std::bad_cast) { _erro("Can not use the two objects together as network objects!"); }
 }
 
-void c_world::connect_network_devices(size_t nr_a, size_t nr_b) {
-	connect_network_devices( * m_objects.at(nr_a) , * m_objects.at(nr_b) );
+void c_world::connect_network_devices(size_t nr_a, size_t nr_b, t_osi2_cost cost) {
+	connect_network_devices( * m_objects.at(nr_a) , * m_objects.at(nr_b) , cost);
 }
 
-void c_world::connect_network_devices(const std::string &nr_a, const std::string &nr_b)
+void c_world::connect_network_devices(const std::string &nr_a, const std::string &nr_b, t_osi2_cost cost)
 {
-	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) );
+	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) , cost);
 }
 
 size_t c_world::find_object_by_name_as_index(const std::string &name) const {

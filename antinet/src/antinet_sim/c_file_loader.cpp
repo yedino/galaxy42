@@ -151,7 +151,11 @@ void c_file_loader::read_connection(const std::vector<std::string>& p_input) {
 */
 //		m_world->connect_nodes(first,second);
 
-		m_world->connect_network_devices(unique_cast_ref<c_object &>(m_world->m_objects.at(first_index)), unique_cast_ref<c_object &>(m_world->m_objects.at(second_index)));
+		m_world->connect_network_devices(
+		      	unique_cast_ref<c_object &>(m_world->m_objects.at(first_index)), 
+		      	unique_cast_ref<c_object &>(m_world->m_objects.at(second_index)),
+		      	1 // TODO - load/save the cost of cable connection
+		      );
 
 
 //		bool m_found_first = false;
