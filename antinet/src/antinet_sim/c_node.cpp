@@ -74,14 +74,17 @@ unsigned int c_osi2_switch::get_cost() {
 
 void c_osi2_switch::print(std::ostream &os) const
 {
-	os << "[ SWITCH(#"<<m_nr<<")";
-	os << " with " << m_nic.size() << " ports:";
-
-	for (const c_osi2_nic & nic : m_nic) {
-		t_osi2_cost cost;
-		c_osi2_nic * nic_ptr = nic.get_connected_card_or_null( cost );
-		if (nic_ptr) {
-			os << " ---(cost=" << cost <<")--> " << *nic_ptr << std::endl;
+	os << "[" <<this <<" SWITCH(#"<<m_nr<<")";
+	os << " with " << m_nic.size() << " ports";
+	
+	if (m_nic.size()) { // if ther are ports connected to list
+		os << ":" << std::endl;
+		for (const c_osi2_nic & nic : m_nic) {
+			t_osi2_cost cost;
+			c_osi2_nic * nic_ptr = nic.get_connected_card_or_null( cost );
+			if (nic_ptr) {
+				os << " ---(cost=" << cost <<")--> " << *nic_ptr << std::endl;
+			}
 		}
 	}
 	

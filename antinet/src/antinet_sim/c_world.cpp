@@ -123,9 +123,11 @@ void c_world::draw (c_drawtarget &drawtarget) {
 			for (auto &obj : m_objects) { // draw elements to this layer
 				obj->draw_allegro(draw_allegro, *layer);
 			}
-			for (auto &cable : m_cable_direct) {
-	//			cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
-			}
+			
+//			for (auto &cable : m_cable_direct) {
+//				cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
+//			}
+			
 		}
 	} // ALLEGRO implementation
 	
