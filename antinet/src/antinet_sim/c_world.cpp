@@ -160,7 +160,7 @@ size_t c_world::find_object_by_name_as_index(const std::string &name) const {
 
 c_object &c_world::find_object_by_name_as_object(const std::string &name)
 {
-	for (size_t ix=0; ix<m_objects.size(); ++ix) if (m_objects[ix]->get_name() == name) return m_objects[ix];
+	for (size_t ix=0; ix<m_objects.size(); ++ix) if (m_objects[ix]->get_name() == name) return * m_objects[ix];
 	throw std::out_of_range( string("Can not find object with name=") + name);
 }
 
