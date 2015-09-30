@@ -159,6 +159,13 @@ void c_world::connect_network_devices(const std::string &nr_a, const std::string
 	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) , cost);
 }
 
+void c_world::print_route_between(c_object &first, c_object &second) {
+	_mark("WORLD ROUTE");
+	
+	
+	
+}
+
 size_t c_world::find_object_by_name_as_index(const std::string &name) const {
 	for (size_t ix=0; ix<m_objects.size(); ++ix) if (m_objects[ix]->get_name() == name) return ix;
 	throw std::out_of_range( string("Can not find object with name=") + name);

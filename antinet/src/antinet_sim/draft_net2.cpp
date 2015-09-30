@@ -121,6 +121,11 @@ int draft_net2() { // the main function for test
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
 	
+	world.print_route_between(
+		world.find_object_by_name_as_switch("nodeA"),
+		world.find_object_by_name_as_switch("nodeD")
+	);
+	
 #if 0
 	world.connect_network_devices("","");
 #endif
