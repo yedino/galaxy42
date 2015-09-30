@@ -4,7 +4,7 @@
 c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost) 
   : m_endpoint( {a,b} ), m_cost(cost)
 {
-	_info("NEW cable, in "<<this<<" I am referencing endpoints: " << &a << " and " << &b << " at cost");
+	_info("NEW cable, in "<<this<<" I am referencing endpoints: " << &a << " and " << &b << " at cost " << cost);
 	_info("NEW cable, in "<<this<<" my endpoints are: " << endl << a << endl << " and: " << endl << b );
 }
 
@@ -25,7 +25,7 @@ void c_osi2_cable_direct::draw_allegro (c_drawtarget &drawtarget, c_layer &layer
 
 c_osi2_cable_direct_plug::c_osi2_cable_direct_plug(c_osi2_cable_direct &cable)
   : m_cable(cable)
-{
+{	
 	_info("NEW cable PLUG, in "<<this<<" I will connect cable: " << &cable);
 }
 
@@ -109,13 +109,14 @@ long int c_osi2_nic::get_serial_number() const {
 
 c_osi2_nic * c_osi2_nic::get_connected_card_or_null(t_osi2_cost &cost) const
 {
-	_info("Getting connected card, of me = " << (*this));
+	_info("Getting connected card, of me = " << (*this) << " first getting the cable");
 	if (!m_plug) {
 		_dbg2("... I have no connected card (no plug)");
 		return nullptr;
 	}
 	c_osi2_cable_direct & cable = m_plug->m_cable;
 	_dbg2("My plug points to cable " << &cable);
+	_dbg2("Checking cost of my cable:");
 	
 	cost = cable.get_cost();
 	_dbg2("This cable has cost="<<cost);

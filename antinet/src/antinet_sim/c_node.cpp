@@ -14,19 +14,19 @@ c_osi2_switch::c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos 
 
 void c_osi2_switch::create_nic()
 {
-	m_nic.push_back( c_osi2_nic(*this) ); // new card, it is plugged into me and added to me
-	_info("Creted new NIC card for my node: " << m_nic.back());
+	m_nic.push_back( make_unique<c_osi2_nic>(*this) ); // new card, it is plugged into me and added to me
+	_info("Creted new NIC card for my node: " << (* m_nic.back()) );
 }
 
 c_osi2_nic &c_osi2_switch::get_nic(unsigned int nr)
 {
-	return m_nic.at(nr);
+	return * m_nic.at(nr);
 }
 
 c_osi2_nic &c_osi2_switch::use_nic(unsigned int nr)
 {
 	while (! ( nr < m_nic.size() ) ) create_nic();
-	if (nr < m_nic.size()) return m_nic[nr];
+	if (nr < m_nic.size()) return * m_nic[nr];
 	throw std::runtime_error("Internal error in creating nodes in use_nic"); // assert
 }
 
@@ -53,7 +53,7 @@ t_osi3_uuid c_osi2_switch::get_uuid_any()
 void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world, t_osi2_cost cost)
 {
 	create_nic(); // create a new NIC card (it will be at end)
-	c_osi2_nic & my_new_port = m_nic.back(); // get this new card
+	c_osi2_nic & my_new_port = * m_nic.back(); // get this new card
 	
 	// create the cable (it will be owned by the networld world) that connects this target to my new port
 	c_osi2_cable_direct & cable = world.new_cable_between( target , my_new_port , cost );
@@ -79,11 +79,12 @@ void c_osi2_switch::print(std::ostream &os) const
 	
 	if (m_nic.size()) { // if ther are ports connected to list
 		os << ":" << std::endl;
-		for (const c_osi2_nic & nic : m_nic) {
+		for (const unique_ptr<c_osi2_nic> & nic_ptr : m_nic) { // TODO nicer syntax?
+			c_osi2_nic & nic = * nic_ptr;
 			t_osi2_cost cost;
-			c_osi2_nic * nic_ptr = nic.get_connected_card_or_null( cost );
-			if (nic_ptr) {
-				os << " ---(cost=" << cost <<")--> " << *nic_ptr << std::endl;
+			c_osi2_nic * othernic_ptr = nic.get_connected_card_or_null( cost );
+			if (othernic_ptr) {
+				os << " ---(cost=" << cost <<")--> " << *othernic_ptr << std::endl;
 			}
 		}
 	}
@@ -110,8 +111,8 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 
 void c_osi2_switch::draw_messages() const {
 	t_geo_point send_piont, receive_point, msg_circle;
-	for (auto &nic : m_nic) {
-		if (!nic.empty_outbox()) {
+	for (auto &nic_ptr : m_nic) {
+		if (! (*nic_ptr).empty_outbox()) {
 			
 		}
 	}

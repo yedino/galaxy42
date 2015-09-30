@@ -29,4 +29,50 @@ Do not use global objects, instead very limited special cases like debugging may
 Instead allow objects to store references/pointers to needed tools,
 or pass around a variable "contaxt" meta object with needed tools like GUI etc.
 
+=== Memory allocation and ownership ===
+
+For long-living objects that will be "pointed" to, use following:
+
+c_world has vector<unique_ptr< T >> tab;
+and has creators that push_back the object and return  T&
+
+objects that need to "point" to other such objects, will hold T&
+with the rule that:
+they must stop using the "pointers" before the pointed objects-die
+
+So the big objects (like switch, computer, cable) will "point" to other big objects
+using  T&  that they got from the c_world,
+these  T&  are valid as long as the world exits,
+  (except for removing - see below)
+do not use  T&  objects in destructors (because some could be already deleted first, when world ends)
+
+Removing:
+the c_world will carefully remove the objects,
+and will carefully find who could point to them (who could reference them) and will
+make sure all is in correct state,
+e.g. will "set pointers to NULL" or will "delete references" (e.g. delete the plug object that cointains refernce)
+to the removed objects.
+
+Do not create any of these objects outside of the world, because only world can properly manage the objects.
+
+Also objects from different worlds can not be connected or interact together in any way (they must not
+find out, store, etc each-other addresses, of their objects).
+
+=== Memory access ===
+
+in main code, use & when possible if you just want to select object:
+c_foo & best = tab[ best_index ];
+
+in main code, use CONSTANT (const &) when possible if you just want to select object and you will not
+modify it:
+const c_foo & obj = tab[ show_index ];
+obj.show();
+
+use const-reference, or reference, also in the auto-for-loop:
+
+for (auto & object_ptr : m_world->m_cable_direct) {
+	c_osi2_cable_direct & object = * object_ptr;
+
+for (const auto & object_ptr : m_world->m_cable_direct) {
+	const c_osi2_cable_direct & object = * object_ptr;
 

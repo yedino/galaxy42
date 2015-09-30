@@ -38,7 +38,7 @@ class c_file_loader;
 class c_world {
 	private:
 		friend class c_file_loader;
-		std::vector< c_osi2_cable_direct > m_cable_direct; ///< all the cables that are hold by this world
+		std::vector< std::unique_ptr<c_osi2_cable_direct> > m_cable_direct; ///< all the cables that are hold by this world
 		
 		static long int s_nr; ///< serial number of this object - the static counter
 		long int m_nr; ///< serial number of this object

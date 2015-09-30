@@ -214,7 +214,8 @@ void c_file_loader::save(const string& p_filename)
 
 	stream << "connections {" << std::endl;
 
-	for (auto & object : m_world->m_cable_direct) {
+	for (auto & object_ptr : m_world->m_cable_direct) {
+		c_osi2_cable_direct & object = * object_ptr;
 //		stream<<object->endpoint;
 		stream<<object.get_endpoints().at(0).get().get_serial_number();
 		stream<<"=>"<<std::endl;
@@ -259,8 +260,10 @@ void c_file_loader::save(std::ostream &stream){
 
 	stream << "connections {" << std::endl;
 
-	for (auto & object : m_world->m_cable_direct) {
-//		stream<<object->endpoint;
+	for (auto & object_ptr : m_world->m_cable_direct) {
+		c_osi2_cable_direct & object = * object_ptr;
+		// stream<<object_ptr->get_endpoints().at(0).get().get_serial_number();
+		
 		stream<<object.get_endpoints().at(0).get().get_serial_number();
 		stream<<"=>"<<std::endl;
 		stream<<object.get_endpoints().at(1).get().get_serial_number();
