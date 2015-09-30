@@ -115,18 +115,28 @@ int draft_net2() { // the main function for test
 	
 	t_osi2_data data( std::string("HELLOWORLD") );
 	
-	_mark("Testing - send data:");
+	mark("Testing - send data:");
 	world.find_object_by_name_as_switch("nodeA").send_data(
-		world.find_object_by_name_as_switch("nodeB").get_uuid_any(), 
+		world.find_object_by_name_as_switch("nodeE").get_uuid_any(), 
 		data);
+	
+	
+	world.tick(); 
+	world.tick(); 
+	world.tick(); 
+	world.tick(); 
+	world.tick(); 
 	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
 	
+	/*
 	world.print_route_between(
 		world.find_object_by_name_as_switch("nodeA"),
 		world.find_object_by_name_as_switch("nodeE")
 	);
+	*/
+	
 	
 #if 0
 	world.connect_network_devices("","");
