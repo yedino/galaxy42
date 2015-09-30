@@ -37,7 +37,6 @@
 #include "c_tnetdbg.hpp"
 
 using std::string;
-
 using std::shared_ptr;
 using std::weak_ptr;
 using std::unique_ptr;
@@ -54,6 +53,8 @@ using std::unordered_set;
 using std::ostream;
 using std::ifstream;
 using std::istringstream;
+
+using std::endl;
 
 #include "c_tnetdbg.hpp"
 

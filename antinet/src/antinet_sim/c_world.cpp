@@ -25,8 +25,8 @@ void c_world::add_node(const std::string &name, int x, int y)
 
 c_osi2_cable_direct & c_world::new_cable_between(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost)
 {
-	m_cable_direct.emplace_back( a, b, cost );
-	return m_cable_direct.back();
+	m_cable_direct.emplace_back( make_unique<c_osi2_cable_direct>( a, b, cost ));
+	return * m_cable_direct.back();
 }
 
 t_osi3_uuid c_world::generate_osi3_uuid()
@@ -123,9 +123,11 @@ void c_world::draw (c_drawtarget &drawtarget) {
 			for (auto &obj : m_objects) { // draw elements to this layer
 				obj->draw_allegro(draw_allegro, *layer);
 			}
-			for (auto &cable : m_cable_direct) {
-	//			cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
-			}
+			
+//			for (auto &cable : m_cable_direct) {
+//				cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
+//			}
+			
 		}
 	} // ALLEGRO implementation
 	

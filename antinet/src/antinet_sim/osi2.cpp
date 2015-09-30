@@ -4,6 +4,8 @@
 c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost) 
   : m_endpoint( {a,b} ), m_cost(cost)
 {
+	_info("NEW cable, in "<<this<<" I am referencing endpoints: " << &a << " and " << &b << " at cost " << cost);
+	_info("NEW cable, in "<<this<<" my endpoints are: " << endl << a << endl << " and: " << endl << b );
 }
 
 /*
@@ -23,8 +25,8 @@ void c_osi2_cable_direct::draw_allegro (c_drawtarget &drawtarget, c_layer &layer
 
 c_osi2_cable_direct_plug::c_osi2_cable_direct_plug(c_osi2_cable_direct &cable)
   : m_cable(cable)
-{
-	
+{	
+	_info("NEW cable PLUG, in "<<this<<" I will connect cable: " << &cable);
 }
 
 std::array< std::reference_wrapper<c_osi2_nic>, 2 > c_osi2_cable_direct::get_endpoints() const {
@@ -41,8 +43,18 @@ c_osi2_nic &c_osi2_cable_direct::get_other_end(const c_osi2_nic &other_then_me)
 	// is this exactly this one object (not just other one that is the same)
 	// compare addresses of references objects
 	
+	_info("I am the cable in "<<this);
+	_info("endpoint 0 address: " << & m_endpoint[0]);
+	_info("endpoint 1 address: " << & m_endpoint[1]);
+	
+	_info("endpoint 0 object: " << m_endpoint[0]);
+	_info("endpoint 1 object: " << m_endpoint[1]);
+	
 	c_osi2_nic & endA = m_endpoint[0];
 	c_osi2_nic & endB = m_endpoint[1];
+	
+	_info("endpoint A object: " << endA);
+	_info("endpoint B object: " << endB);
 	
 	if ( & endA == & other_then_me) {
 		if ( & endB == & other_then_me) throw std::runtime_error("Invalid cable, both ends are me"); // assert
@@ -64,11 +76,12 @@ c_osi2_nic::c_osi2_nic(c_osi2_switch &my_switch)
 
 void c_osi2_nic::plug_in_cable(c_osi2_cable_direct &cable)
 {
+	_info("nic card "<<this<<" is plugging in cable "<<&cable);
 	m_plug.reset( new c_osi2_cable_direct_plug( cable ) );
 }
 
 void c_osi2_nic::print(std::ostream &os) const {
-	os << "NIC(#"<<m_nr<<", addr="<<m_osi3_uuid<<")";
+	os << "NIC(" << this << " #"<<m_nr<<", addr="<<m_osi3_uuid<<")";
 }
 
 std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj) {
@@ -96,11 +109,19 @@ long int c_osi2_nic::get_serial_number() const {
 
 c_osi2_nic * c_osi2_nic::get_connected_card_or_null(t_osi2_cost &cost) const
 {
-	if (!m_plug) return nullptr;
+	_info("Getting connected card, of me = " << (*this) << " first getting the cable");
+	if (!m_plug) {
+		_dbg2("... I have no connected card (no plug)");
+		return nullptr;
+	}
 	c_osi2_cable_direct & cable = m_plug->m_cable;
+	_dbg2("My plug points to cable " << &cable);
+	_dbg2("Checking cost of my cable:");
 	
 	cost = cable.get_cost();
+	_dbg2("This cable has cost="<<cost);
 	c_osi2_nic * other_nic = & cable.get_other_end(*this);
+	_dbg2("This cable shows other_nic = " << other_nic);
 	
 	return other_nic;
 }
