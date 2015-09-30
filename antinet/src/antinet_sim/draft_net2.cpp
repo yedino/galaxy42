@@ -81,13 +81,14 @@ int draft_net2() { // the main function for test
 	c_world world;
 	
 	
-	world.add_node("nodeA",100,100);
+	world.add_node("nodeA",100,100); // ***
 	world.add_node("nodeB",300,100);
 	world.add_node("nodeC1",300,300);
 	world.add_node("nodeC2",300,320);
 	world.add_node("nodeC3",300,340);
 	world.add_node("nodeC4",300,360);
 	world.add_node("nodeD",150,200);
+	world.add_node("nodeE",400,100); // ***
 	
 	world.add_osi2_switch("swA", 200,100);
 	world.add_osi2_switch("swB", 300,100);
@@ -104,6 +105,7 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("swC","nodeC2", 1);
 	world.connect_network_devices("swC","nodeC3", 1);
 	world.connect_network_devices("swC","nodeC4", 1);
+	world.connect_network_devices("swD","nodeE", 1); // ***
 	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
@@ -123,7 +125,7 @@ int draft_net2() { // the main function for test
 	
 	world.print_route_between(
 		world.find_object_by_name_as_switch("nodeA"),
-		world.find_object_by_name_as_switch("nodeD")
+		world.find_object_by_name_as_switch("nodeE")
 	);
 	
 #if 0
@@ -137,8 +139,8 @@ int draft_net2() { // the main function for test
 	 * 
 	 * 
 	 *  NodeA           SwitchA         SwitchB 
-	 *   nic#0 -------> nic#0 --------> nic#0 ---------> SwitchD 
-	 *   nic#1 ---,     nic#1 --,       nic#1 ---------> NodeB 
+	 *   nic#0 -------> nic#0 --------> nic#0 ----------------> SwitchD 
+	 *   nic#1 ---,     nic#1 --,       nic#1 ---------> NodeB  nic#0 -----> NodeE
 	 *            |             |
 	 *            |             |
 	 *            |             |       SwitchC 
