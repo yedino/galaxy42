@@ -56,7 +56,7 @@ void c_osi2_switch::connect_with(c_osi2_nic &target, c_world &world, t_osi2_cost
 	c_osi2_nic & my_new_port = m_nic.back(); // get this new card
 	
 	// create the cable (it will be owned by the networld world) that connects this target to my new port
-	c_osi2_cable_direct cable = world.new_cable_between( target , my_new_port , cost );
+	c_osi2_cable_direct & cable = world.new_cable_between( target , my_new_port , cost );
 	
 	// actually plug in the created table to both ends:
 	my_new_port.plug_in_cable(cable); 
