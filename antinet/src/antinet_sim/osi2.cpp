@@ -110,11 +110,17 @@ long int c_osi2_nic::get_serial_number() const {
 c_osi2_nic * c_osi2_nic::get_connected_card_or_null(t_osi2_cost &cost) const
 {
 	_info("Getting connected card, of me = " << (*this));
-	if (!m_plug) return nullptr;
+	if (!m_plug) {
+		_dbg2("... I have no connected card (no plug)");
+		return nullptr;
+	}
 	c_osi2_cable_direct & cable = m_plug->m_cable;
+	_dbg2("My plug points to cable " << &cable);
 	
 	cost = cable.get_cost();
+	_dbg2("This cable has cost="<<cost);
 	c_osi2_nic * other_nic = & cable.get_other_end(*this);
+	_dbg2("This cable shows other_nic = " << other_nic);
 	
 	return other_nic;
 }

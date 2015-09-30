@@ -76,6 +76,8 @@ class c_node;
 
 /// @brief This function tests the code from this file.
 int draft_net2() { // the main function for test
+	_mark("Starting test " <<__FUNCTION__);
+	
 	c_world world;
 	
 	
@@ -92,6 +94,7 @@ int draft_net2() { // the main function for test
 	world.add_osi2_switch("swC", 200,300);
 	world.add_osi2_switch("swD", 300,100);
 	
+	_mark("Connecting devices");
 	world.connect_network_devices("nodeA","swA", 1);
 	world.connect_network_devices("swA","swB", 1);
 	world.connect_network_devices("swB","swD", 1);
@@ -102,12 +105,20 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("swC","nodeC3", 1);
 	world.connect_network_devices("swC","nodeC4", 1);
 	
+	_mark("Testing - show object:");
+	_info( world.find_object_by_name_as_switch("swA") );
+	
+	_mark("Testing - show object:");
+	_info( world.find_object_by_name_as_switch("nodeA") );
+	
 	t_osi2_data data( std::string("HELLOWORLD") );
 	
+	_mark("Testing - send data:");
 	world.find_object_by_name_as_switch("nodeA").send_data(
 		world.find_object_by_name_as_switch("nodeB").get_uuid_any(), 
 		data);
 	
+	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
 	
 #if 0
