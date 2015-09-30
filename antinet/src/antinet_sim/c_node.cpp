@@ -72,24 +72,37 @@ unsigned int c_osi2_switch::get_cost() {
 }
 
 
-void c_osi2_switch::print(std::ostream &os) const
+void c_osi2_switch::print(std::ostream &os, int level) const
 {
-	os << "[" <<this <<" SWITCH(#"<<m_nr<<")";
-	os << " with " << m_nic.size() << " ports";
+	os << "[" <<this <<" SWITCH(#"<<m_nr<<" '"<<m_name<<"')";
 	
-	if (m_nic.size()) { // if ther are ports connected to list
-		os << ":" << std::endl;
-		for (const unique_ptr<c_osi2_nic> & nic_ptr : m_nic) { // TODO nicer syntax?
-			c_osi2_nic & nic = * nic_ptr;
-			t_osi2_cost cost;
-			c_osi2_nic * othernic_ptr = nic.get_connected_card_or_null( cost );
-			if (othernic_ptr) {
-				os << " ---(cost=" << cost <<")--> " << *othernic_ptr << std::endl;
-			}
-		}
-	}
+	if (level>=-1) {
+		os << " with " << m_nic.size() << " ports";
+		
+		if (level>=0) {
+			if (m_nic.size()) { // if ther are ports connected to list
+				os << ":" << std::endl;
+				for (const unique_ptr<c_osi2_nic> & nic_ptr : m_nic) { // TODO nicer syntax?
+					c_osi2_nic & nic = * nic_ptr;
+					t_osi2_cost cost;
+					c_osi2_nic * othernic_ptr = nic.get_connected_card_or_null( cost );
+					if (othernic_ptr) {
+						os << " ---(cost=" << cost <<")--> " << *othernic_ptr << std::endl;
+					}
+				} // show NIC cards
+			} // any NIC cards?
+		} // level>=0
+		
+	} // level>=-1
 	
 	os << " ]";
+}
+
+std::string c_osi2_switch::print_str(int level) const
+{
+	std::ostringstream oss;
+	print(oss,level);
+	return oss.str();
 }
 
 c_world &c_osi2_switch::get_world() const

@@ -48,7 +48,8 @@ class c_osi2_switch : public c_entity {
 		
 		unsigned int get_cost(); ///< TODO delete?
 		
-		void print(std::ostream &os) const;
+		void print(std::ostream &os, int level=0) const;
+		std::string print_str(int level=0) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_switch &obj);
 		
 		c_world & get_world() const;

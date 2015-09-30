@@ -15,7 +15,9 @@
 
 /// This macros will be moved later to glorious-cpp library or other
 
-#define _dbg3(X) do { ::std::cerr<<"dbg3: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg3(X) do{}while(0)
+// do { ::std::cerr<<"dbg3: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+
 #define _dbg2(X) do { ::std::cerr<<"dbg2: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _dbg1(X) do { ::std::cerr<<"dbg1: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _info(X) do { ::std::cerr<<"info: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
