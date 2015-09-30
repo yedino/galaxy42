@@ -192,7 +192,7 @@ void c_world::print_route_between(c_object &first, c_object &second) {
 	int cycle=0; // dbg
 	while (true) {
 		_info("\n\ncycle="<<cycle);
-		++cycle;	if (cycle>20) break; // dbg
+		++cycle;	//if (cycle>20) break; // dbg
 		
 		_info("---visits---");
 		for (auto & pair : visits) {
