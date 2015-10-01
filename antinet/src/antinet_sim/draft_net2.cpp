@@ -115,7 +115,7 @@ int draft_net2() { // the main function for test
 	
 	t_osi2_data data( std::string("HELLOWORLD") );
 	
-	mark("Testing - send data:");
+	_mark("Testing - send data:");
 	world.find_object_by_name_as_switch("nodeA").send_data(
 		world.find_object_by_name_as_switch("nodeE").get_uuid_any(), 
 		data);

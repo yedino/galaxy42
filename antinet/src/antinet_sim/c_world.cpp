@@ -72,7 +72,7 @@ void c_world::add_test () {
     //load("layout/current/default.map.txt");
 	
 
-
+/*
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_1", 200, 200));
 	m_objects.emplace_back( make_unique<c_node>(*this, "NODE_2", 250, 100));
 	m_objects.emplace_back( make_unique<c_osi2_switch>(*this, "SWITCH_1", 400, 150));
@@ -82,8 +82,35 @@ void c_world::add_test () {
 	      	unique_cast_ref<c_object &>(m_objects.at(2)),
 	      	1
 	      );
+*/
 
 //	load("layout/current/map2.txt");
+
+	add_node("nodeA",100,100); // ***
+	add_node("nodeB",300,100);
+	add_node("nodeC1",300,300);
+	add_node("nodeC2",300,320);
+	add_node("nodeC3",300,340);
+	add_node("nodeC4",300,360);
+	add_node("nodeD",150,200);
+	add_node("nodeE",400,100); // ***
+	
+	add_osi2_switch("swA", 200,100);
+	add_osi2_switch("swB", 300,100);
+	add_osi2_switch("swC", 200,300);
+	add_osi2_switch("swD", 300,100);
+	
+	_mark("Connecting devices");
+	connect_network_devices("nodeA","swA", 1);
+	connect_network_devices("swA","swB", 1);
+	connect_network_devices("swB","swD", 1);
+	connect_network_devices("nodeA","nodeD", 1);
+	connect_network_devices("swA","swC", 1);
+	connect_network_devices("swC","nodeC1", 1);
+	connect_network_devices("swC","nodeC2", 1);
+	connect_network_devices("swC","nodeC3", 1);
+	connect_network_devices("swC","nodeC4", 1);
+	connect_network_devices("swD","nodeE", 1); // ***
 
 }
 
