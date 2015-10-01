@@ -144,6 +144,29 @@ void c_osi2_switch::draw_messages() const {
 	}
 }
 
+void c_osi2_switch::logic_tick() {
+	for (auto &input_packet : m_inbox) {
+		_dbg1(m_name << " get packet from " << input_packet.m_src);
+		_dbg1(m_name << " input data: " << input_packet.m_data);
+	}
+	/// send test hello packet to all neighbors
+	for (auto &nic : m_nic) {
+		t_osi2_cost cost;
+		c_osi2_nic * remote_nic = nic->get_connected_card_or_null(cost);
+		if (remote_nic == nullptr) continue;
+		t_osi3_uuid dest_addr = remote_nic->get_uuid(); /// addres of my neighbor
+		nic->add_to_outbox(dest_addr, std::string("HELLO"));
+	}
+}
+
+void c_osi2_switch::recv_tick() {
+	for (auto &nic : m_nic) {
+		t_osi2_cost cost;
+		c_osi2_nic * remote_nic = nic->get_connected_card_or_null(cost);
+		if (remote_nic == nullptr) continue;
+		remote_nic->insert_outbox_to_vector(m_inbox); /// get all packets from remote nic and insert to inbox
+	}
+}
 
 
 /////////////////////////////////////

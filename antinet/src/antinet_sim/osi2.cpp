@@ -105,6 +105,13 @@ bool c_osi2_nic::empty_outbox() const {
 	return m_outbox.empty();
 }
 
+void c_osi2_nic::insert_outbox_to_vector (std::vector< t_osi3_packet >& out_vector) {
+	for (auto &packet : m_outbox) {
+		out_vector.push_back(std::move(packet));
+	}
+	m_outbox.clear();
+}
+
 
 long int c_osi2_nic::get_serial_number() const {
 	return m_nr;

@@ -108,6 +108,8 @@ class c_osi2_nic {
 		
 		bool empty_outbox() const;
 		
+		void insert_outbox_to_vector(std::vector< t_osi3_packet > &out_vector); ///< insert all packets from m_outbox to out_vector and clear m_outbox
+		
 		void print(std::ostream &os) const;
 		
 		long int get_serial_number() const;

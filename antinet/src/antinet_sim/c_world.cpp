@@ -126,7 +126,15 @@ void c_world::tick () {
 	
 	for (auto &obj : m_objects) {
 		try{
-			obj->tick();
+			obj->logic_tick();
+		}catch(...){
+			std::cout<<"something goes wrong ..."<<std::endl;
+		}
+	}
+	
+	for (auto &obj : m_objects) {
+		try{
+			obj->recv_tick();
 		}catch(...){
 			std::cout<<"something goes wrong ..."<<std::endl;
 		}

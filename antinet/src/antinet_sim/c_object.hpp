@@ -39,6 +39,9 @@ class c_node;
 class c_object { // something in the simulation
 public:
 	virtual void tick (); ///< execute a tick of the animation
+	virtual void logic_tick() = 0;
+	virtual void recv_tick() = 0;
+	
 	
 	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any);
 	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any);
