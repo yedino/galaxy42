@@ -60,6 +60,8 @@ class c_osi2_switch : public c_entity {
 		
 		virtual void logic_tick() override;
 		virtual void recv_tick() override;
+		
+		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
 };
 
 class c_node : public c_osi2_switch {
