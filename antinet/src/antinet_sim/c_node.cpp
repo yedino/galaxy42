@@ -12,6 +12,15 @@ c_osi2_switch::c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos 
 	
 }
 
+bool c_osi2_switch::operator== (const c_osi2_switch &switch_) {
+	return switch_.m_nr == this->m_nr;
+}
+
+bool c_osi2_switch::operator!= (const c_osi2_switch &switch_) {
+	return switch_.m_nr != this->m_nr;
+}
+
+
 void c_osi2_switch::create_nic()
 {
 	m_nic.push_back( make_unique<c_osi2_nic>(*this) ); // new card, it is plugged into me and added to me

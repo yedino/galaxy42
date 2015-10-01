@@ -27,6 +27,7 @@ class c_osi2_switch : public c_entity {
 		std::vector<t_osi3_packet> m_inbox;
 		
 		const unsigned int m_connect_cost = 1; ///< TODO delete?
+		
 	public:
 		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
 		
@@ -35,6 +36,9 @@ class c_osi2_switch : public c_entity {
 		c_osi2_switch(c_osi2_switch &&) = default; ///< move constructor
 		c_osi2_switch& operator = (c_osi2_switch &&)  = default;
 
+		bool operator == (const c_osi2_switch &switch_);
+		bool operator != (const c_osi2_switch &switch_);
+		
 		// work on my NICs:		
 		void create_nic(); ///< adds one more NIC card
 		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
