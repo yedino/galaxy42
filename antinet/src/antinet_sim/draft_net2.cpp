@@ -73,46 +73,97 @@ class c_node;
 */
 
 
+typedef long int t_netspeed_bps;
+typedef float t_netsize_fraction; // fraction of packet in transfer
 
-/// @brief This function tests the code from this file.
-int draft_net2() { // the main function for test
+size_t draft_net2_testsend(t_clock use_tdelta, t_netspeed_bps use_speed, size_t use_size, t_clock sim_length, int dbg) { 
+	_mark("Test with use_tdelta"<<use_tdelta<<" use_speed="<<use_speed<<" use_size="<<use_size);
 	
-	t_netspeed m_net_bussy=0; // bit
-	t_netspeed m_net_maxspeed=100; // bit/second
+	t_netspeed_bps m_net_maxspeed = use_speed;
+	t_netsize_fraction m_in_progress=0;
 	
 	size_t totall_sent=0;
 	
-	t_clock clock = 0;	
-	for (int c=0; c<100000000; ++c) {
-		if (clock>=5) break;
+	t_clock clock = 0;	 // world clock in simulation
+	
+	size_t c=0; // cycle number
+	while (true) { // simulation
+		++c;
+		if (clock>=sim_length) break; // end
 		
-		// tick_net_recive( tdelta )
-		t_clock tdelta = 1 / 1000.;
+		t_clock tdelta = use_tdelta;
 		clock += tdelta;
 		
-		size_t data_size = 5000000;
+		size_t data_size = use_size;
 		
-		m_net_bussy -= m_net_maxspeed / 1000; // TODO overflow  <0
-		m_net_bussy = std::max(0 , m_net_bussy);
-		
-		size_t now_send = std::min(
-			data_size,
-			static_cast<size_t>( m_net_maxspeed*tdelta )
+		t_netsize_fraction now_send_fraction = std::min(
+			static_cast<t_netsize_fraction>( data_size ),
+			m_net_maxspeed*tdelta
 		);
-		m_net_bussy += data_size;
 		
-		totall_sent += now_send;
-		
-		_info("T clock="<<clock<<", cycle="<<c<<", busy=" << m_net_bussy<<" now_send="<<now_send<<" totall_sent="<<totall_sent);
+		if (now_send_fraction < data_size - m_in_progress) {
+	//		_info("can not send yet fraction="<<now_send_fraction<<" < data="<<data_size);
+			m_in_progress += now_send_fraction;
+		} else {
+			size_t now_send = data_size; // must transpot it all at once
+			
+			auto time_spent_sendig_actually = now_send / ((t_netsize_fraction) m_net_maxspeed);
+			auto remaining_time = tdelta - time_spent_sendig_actually;
+			m_in_progress = 0; 
+			//if (remaining_time>0) m_in_progress += m_net_maxspeed * remaining_time; // start "sending" next packet for future
+			
+			if (dbg) _info("T clock="<<clock<<", cycle="<<c<<", m_in_progress=" << m_in_progress
+				<<" sending now: now_send="<<now_send<<" totall_sent="<<totall_sent
+				<<" time_spent_sendig_actually="<<time_spent_sendig_actually
+				);
+			
+			totall_sent += now_send;
+			
+		}
+		// TODO account for in progress the reminder of time in this cycle
 		
 		
 	}
-	return 1;
+	return totall_sent;
+}
 	
 	
 	
-	
+/// @brief This function tests the code from this file.
+int draft_net2() { // the main function for test
 	_mark("Starting test " <<__FUNCTION__);
+	
+	t_clock tab_tdelta[] = { 1/10. , 1/100., 1/1000. };
+	t_netspeed_bps tab_speed[] = { 100, 500, 600, 610, 800, 1000, 10*1000, 100*1000 };
+	size_t tab_size[] = { 1, 500, 600, 1000, 9000 };
+	
+	vector<string> error_tab;
+	
+	std::ostringstream oss_main;
+	for(auto use_tdelta : tab_tdelta) {
+		for(auto use_speed : tab_speed) {
+			for(auto use_size : tab_size) {
+				t_clock sim_length = 10.0; // second
+				size_t total = draft_net2_testsend(use_tdelta, use_speed, use_size, sim_length, 0);
+				std::ostringstream oss;
+				oss << "tdelta="<<use_tdelta<<" use_speed="<<use_speed<<" use_size="<<use_size<<" : ";
+				double avg_speed = total / sim_length;
+				double error = std::fabs( (avg_speed - use_speed) / use_speed );
+				oss << " avg="<<avg_speed<<" bps, error="<<error;
+				string msg = oss.str();
+				
+				if (error > 0.03) error_tab.push_back(msg);
+				
+				oss_main << msg << "\n";
+			}
+		}
+	}
+	_info("Sim results:\n" << oss_main.str());
+	
+	for (const auto & e : error_tab) _info("Error was: " << e);
+	if (error_tab.size()) _info("Found " << error_tab.size() << " errors."); else _info("All in norm :)");
+	
+	return 1; // XXX
 	
 	c_world world;
 	
