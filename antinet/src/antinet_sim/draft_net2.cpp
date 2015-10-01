@@ -76,6 +76,42 @@ class c_node;
 
 /// @brief This function tests the code from this file.
 int draft_net2() { // the main function for test
+	
+	t_netspeed m_net_bussy=0; // bit
+	t_netspeed m_net_maxspeed=100; // bit/second
+	
+	size_t totall_sent=0;
+	
+	t_clock clock = 0;	
+	for (int c=0; c<100000000; ++c) {
+		if (clock>=5) break;
+		
+		// tick_net_recive( tdelta )
+		t_clock tdelta = 1 / 1000.;
+		clock += tdelta;
+		
+		size_t data_size = 5000000;
+		
+		m_net_bussy -= m_net_maxspeed / 1000; // TODO overflow  <0
+		m_net_bussy = std::max(0 , m_net_bussy);
+		
+		size_t now_send = std::min(
+			data_size,
+			static_cast<size_t>( m_net_maxspeed*tdelta )
+		);
+		m_net_bussy += data_size;
+		
+		totall_sent += now_send;
+		
+		_info("T clock="<<clock<<", cycle="<<c<<", busy=" << m_net_bussy<<" now_send="<<now_send<<" totall_sent="<<totall_sent);
+		
+		
+	}
+	return 1;
+	
+	
+	
+	
 	_mark("Starting test " <<__FUNCTION__);
 	
 	c_world world;
