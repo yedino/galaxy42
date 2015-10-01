@@ -73,17 +73,16 @@ class c_node;
 */
 
 
-typedef long int t_netspeed_bps;
+typedef float t_netspeed_bps;
 typedef float t_netsize_fraction; // fraction of packet in transfer
 
 size_t draft_net2_testsend(t_clock use_tdelta, t_netspeed_bps use_speed, size_t use_size, t_clock sim_length, int dbg) { 
-	_mark("Test with use_tdelta"<<use_tdelta<<" use_speed="<<use_speed<<" use_size="<<use_size);
+	_mark("Test with use_tdelta="<<use_tdelta<<" use_speed="<<use_speed<<" use_size="<<use_size);
 	
-	t_netspeed_bps m_net_maxspeed = use_speed;
-	t_netsize_fraction m_in_progress=0;
+	t_netspeed_bps m_net_speed = use_speed;
+	t_netsize_fraction m_net_reminder = 0; // bytes that remain partially accumulated from previous iterations
 	
 	size_t totall_sent=0;
-	
 	t_clock clock = 0;	 // world clock in simulation
 	
 	size_t c=0; // cycle number
@@ -93,49 +92,39 @@ size_t draft_net2_testsend(t_clock use_tdelta, t_netspeed_bps use_speed, size_t 
 		
 		t_clock tdelta = use_tdelta;
 		clock += tdelta;
+		size_t packet_size = use_size;
 		
-		size_t data_size = use_size;
+		t_netsize_fraction bytes_now_part = tdelta * m_net_speed ; // bytes we transfer just now 
+		t_netsize_fraction bytes_now_all = bytes_now_part + m_net_reminder; // bytes we can now transfer with reminder
 		
-		t_netsize_fraction now_send_fraction = std::min(
-			static_cast<t_netsize_fraction>( data_size ),
-			m_net_maxspeed*tdelta
-		);
+		t_netsize_fraction send_bytes = bytes_now_all;
 		
-		if (now_send_fraction < data_size - m_in_progress) {
-	//		_info("can not send yet fraction="<<now_send_fraction<<" < data="<<data_size);
-			m_in_progress += now_send_fraction;
-		} else {
-			size_t now_send = data_size; // must transpot it all at once
-			
-			auto time_spent_sendig_actually = now_send / ((t_netsize_fraction) m_net_maxspeed);
-			auto remaining_time = tdelta - time_spent_sendig_actually;
-			m_in_progress = 0; 
-			//if (remaining_time>0) m_in_progress += m_net_maxspeed * remaining_time; // start "sending" next packet for future
-			
-			if (dbg) _info("T clock="<<clock<<", cycle="<<c<<", m_in_progress=" << m_in_progress
-				<<" sending now: now_send="<<now_send<<" totall_sent="<<totall_sent
-				<<" time_spent_sendig_actually="<<time_spent_sendig_actually
-				);
-			
-			totall_sent += now_send;
-			
+		if (dbg) _info("=== clock="<<clock<<", cycle="<<c<<", m_net_reminder=" << m_net_reminder
+		               << " bytes_now_all=" << bytes_now_all );
+		while (send_bytes > packet_size) { // send a packet
+			if (dbg) _info("*** SENDING at clock="<<clock<<", cycle="<<c<<", m_net_reminder=" << m_net_reminder);
+			totall_sent += packet_size;
+			send_bytes -= packet_size;
 		}
+		
+		if (1) { // there is any more data waiting to be sent
+			if (dbg) _info("Will send reminder to send_bytes="<<send_bytes);
+			m_net_reminder = send_bytes; // "start" sending remaining data - in future
+		}
+		
 		// TODO account for in progress the reminder of time in this cycle
-		
-		
 	}
 	return totall_sent;
 }
 	
 	
 	
-/// @brief This function tests the code from this file.
-int draft_net2() { // the main function for test
+bool draft_net2_testsend_speeds(
+		vector<t_clock> tab_tdelta, vector<t_netspeed_bps> tab_speed, vector<size_t> tab_size, int dbg
+		,t_clock sim_length
+	)
+{ 
 	_mark("Starting test " <<__FUNCTION__);
-	
-	t_clock tab_tdelta[] = { 1/10. , 1/100., 1/1000. };
-	t_netspeed_bps tab_speed[] = { 100, 500, 600, 610, 800, 1000, 10*1000, 100*1000 };
-	size_t tab_size[] = { 1, 500, 600, 1000, 9000 };
 	
 	vector<string> error_tab;
 	
@@ -143,8 +132,7 @@ int draft_net2() { // the main function for test
 	for(auto use_tdelta : tab_tdelta) {
 		for(auto use_speed : tab_speed) {
 			for(auto use_size : tab_size) {
-				t_clock sim_length = 10.0; // second
-				size_t total = draft_net2_testsend(use_tdelta, use_speed, use_size, sim_length, 0);
+				size_t total = draft_net2_testsend(use_tdelta, use_speed, use_size, sim_length, dbg>=2);
 				std::ostringstream oss;
 				oss << "tdelta="<<use_tdelta<<" use_speed="<<use_speed<<" use_size="<<use_size<<" : ";
 				double avg_speed = total / sim_length;
@@ -155,16 +143,49 @@ int draft_net2() { // the main function for test
 				if (error > 0.03) error_tab.push_back(msg);
 				
 				oss_main << msg << "\n";
+				if (dbg >= 2) _info( msg );
 			}
 		}
 	}
 	_info("Sim results:\n" << oss_main.str());
 	
 	for (const auto & e : error_tab) _info("Error was: " << e);
-	if (error_tab.size()) _info("Found " << error_tab.size() << " errors."); else _info("All in norm :)");
+	if (error_tab.size()) {
+		_info("Found " << error_tab.size() << " errors."); 
+		return false;
+	} else _info("All in norm :)");
+	return true;
+}
+
+bool draft_net2_testsend_alltests() {
+	vector<t_clock> td_slow( { 1./5,  1./10, 1./20 } ); // time delta for slow networks
+	vector<t_clock> td_fast( {        1./10, 1./20, 1./1000 } ); // time delta for fast networks
 	
-	return 1; // XXX
+	vector<size_t> mtu_normal( { 500, 576, 1304, 1500 } );
 	
+	if (! draft_net2_testsend_speeds( td_slow , { 10, 11, 100, 500, 1000, }, { 1, 2, 3, 4, 5, }, 0	 , 30 ) ) return false;
+	if (! draft_net2_testsend_speeds( td_slow , { 1, 2, 3, 4, 5 }, { 1, 2, 3, 4, 5, }, 0, 200 ) ) return false;
+	if (! draft_net2_testsend_speeds( td_slow , { 1, 2, 3, 4, 5 }, { 1, 10, 30, 50, 51, 100 }, 0, 10000 ) ) return false;
+	
+	if (! draft_net2_testsend_speeds( td_fast , { 2*1000, 5*1000, 10*1000, 100*1000 }, mtu_normal, 0 , 30 ) ) return false;
+	
+	if (! draft_net2_testsend_speeds( td_fast , { 150*1000, 200*1000, 1000*1000 }, mtu_normal, 0 , 30 ) ) return false;
+	
+
+	return true;
+}
+	
+	
+/// @brief This function tests the code from this file.
+int draft_net2() { // the main function for test
+	
+	if (! draft_net2_testsend_alltests()) {
+		_erro("Unit test failed!");
+		return 0;
+	}
+	return 0; // !
+	
+	_mark("Starting test " <<__FUNCTION__);
 	c_world world;
 	
 	
