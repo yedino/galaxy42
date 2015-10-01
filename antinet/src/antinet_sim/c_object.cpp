@@ -153,6 +153,7 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 
 	if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
 		auto selected_object = gui.m_selected_object; // iterator
+		_UNUSED(selected_object);
 		//auto target_object = gui.m_target;
 		//auto source_object = gui.m_source;
 
@@ -1326,6 +1327,7 @@ void c_tnetdev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	
 	
 	int color = makecol(255,0,255);
+	_UNUSED(color);
 	c_cjddev::draw_allegro(drawtarget, layer);
 	assert(!m_wallet.m_currency.empty());// return;
 

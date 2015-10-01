@@ -116,6 +116,7 @@ void c_simulation::main_loop () {
 	//	bool allegro_keys_any_was=false; // is any key pressed right now (for key press/release)
 	long loop_miliseconds = 0;
 	long unsigned int frame_checkpoint = 0; /// needed for speed control (without world_draw manipulate in spacetime!)
+	_UNUSED(frame_checkpoint);
 
 	bool use_input_allegro = true; // always for now.  input from Allegro
 	bool use_draw_allegro = m_drawtarget_type == e_drawtarget_type_allegro; // draw in allegro
@@ -161,6 +162,11 @@ void c_simulation::main_loop () {
 			const int gui_cursor_x = m_gui->view_x_rev(gui_mouse_x);
 			const int gui_cursor_y = m_gui->view_y_rev(gui_mouse_y);
 			const int gui_cursor_z = 0; // m_gui->view_z_rev(gui_mouse_z);
+			
+			_UNUSED(gui_mouse_b);
+			_UNUSED(gui_cursor_x);
+			_UNUSED(gui_cursor_y);
+			_UNUSED(gui_cursor_z);
 
             //_dbg1("mouse_x mouse_y: " << gui_mouse_x << " " << gui_mouse_y);
 

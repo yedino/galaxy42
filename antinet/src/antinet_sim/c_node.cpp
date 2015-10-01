@@ -167,6 +167,7 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
     const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	c_osi2_switch::draw_allegro (drawtarget, layer_any);
 	auto color = makecol(0,0,64); // TODO is this ok?
+	_UNUSED(color);
 	////////////////////////////////////////////////////////////////////
 	if (layer.m_layer_nr == e_layer_nr_object) {
 		//BITMAP *fg1;

@@ -30,5 +30,7 @@
 	::std::cerr<<"\n\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
 	} while(0)
 
+#define _UNUSED(x) (void)(x)
+	
 #endif // include guard
 
