@@ -118,17 +118,19 @@ std::ostream & operator<<(std::ostream &os, const c_osi2_switch &obj)
 
 
 void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
+	c_entity::draw_allegro (drawtarget, layer_any);
 	auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
 	BITMAP *frame = layer.m_frame;
-	c_entity::draw_allegro (drawtarget, layer_any);
+	const auto & gui = * drawtarget.m_gui;
+	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	/// draw connections
 	for (auto &nic : m_nic) {
 		t_osi2_cost cost;
 		c_osi2_nic *remote_nic = nic->get_connected_card_or_null(cost);
 		if (remote_nic == nullptr) continue;
-		t_pos x2 = remote_nic->get_my_switch().get_x();
-		t_pos y2 = remote_nic->get_my_switch().get_y();
-		line(frame, m_x, m_y, x2, y2, makecol(255, 128, 32));
+		t_pos x2 = gui.view_x(remote_nic->get_my_switch().get_x());
+		t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
+		line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
 	}
 	//draw_messages();
 }
