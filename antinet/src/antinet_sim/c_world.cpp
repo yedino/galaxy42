@@ -195,7 +195,7 @@ void c_world::connect_network_devices(const std::string &nr_a, const std::string
 	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) , cost);
 }
 
-void c_world::print_route_between(c_object &first, c_object &second) {
+c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 	_mark("WORLD ROUTE");
 	c_osi2_switch & swA = dynamic_cast<c_osi2_switch&>(first);
 	c_osi2_switch & swB = dynamic_cast<c_osi2_switch&>(second);
@@ -300,14 +300,18 @@ void c_world::print_route_between(c_object &first, c_object &second) {
 	_info("Algorithm is done.");
 	// print all hops that we need to take:
 	c_osi2_switch * hop_ptr = cost_of_sw[ & swB ].m_parent;
+	c_osi2_switch * ret;
 	
 	while (hop_ptr != nullptr) {
+		if (cost_of_sw[ hop_ptr ].m_parent != nullptr)
+			ret = hop_ptr;
 		_info("We go through " << hop_ptr << " that is: " << hop_ptr->print_str(-2));
 		hop_ptr = cost_of_sw[ hop_ptr ].m_parent;
 	}
 	_info("That is all.");
 	
 	// print the result
+	return ret;
 }
 
 size_t c_world::find_object_by_name_as_index(const std::string &name) const {

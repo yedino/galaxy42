@@ -70,7 +70,7 @@ class c_world {
 		void connect_network_devices(size_t nr_a, size_t nr_b, t_osi2_cost cost); ///< connect by index
 		void connect_network_devices(const string & nr_a, const string & nr_b, t_osi2_cost cost); ///< connect by name
 		
-		void print_route_between(c_object &first, c_object &second); ///< prints/debug the OSI2 route between
+		c_osi2_switch *print_route_between(c_object &first, c_object &second); ///< prints/debug the OSI2 route between
 		
 		size_t find_object_by_name_as_index(const string & name) const;
 		c_object& find_object_by_name_as_object(const string & name);
