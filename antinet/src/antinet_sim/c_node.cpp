@@ -242,9 +242,13 @@ void c_node::send_packet (const std::string &dest_name, std::string &&data) {
 		_erro("Next hop not foud");
 		return;
 	}
+	t_osi2_cost cost;
 	for (auto &nic : m_nic) { /// find NIC for next hop
-		if (nic->get_my_switch() == *next_hop) {
+		_dbg2("compatre " << nic->get_connected_card_or_null(cost)->get_my_switch().get_name() << " and " << (*next_hop).get_name());
+		//if (nic->get_my_switch() == *next_hop) {
+		if (nic->get_connected_card_or_null(cost)->get_my_switch() == *next_hop) {
 			nic->add_to_outbox(dynamic_cast<c_osi2_switch&>(dest_switch).get_uuid_any(), std::move(data));
+			break;
 		}
 	}
 	//use_nic(0).add_to_outbox(remote_address , std::move(data)); // TODO m_nic index
@@ -276,8 +280,8 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 
 void c_node::process_packet (t_osi3_packet &&packet) {
 	// TODO!!!
-	_dbg1("get apcket from " << packet.m_src);
-	_dbg1("data: " << packet.m_data);
+	_dbg1("***************************get apcket from " << packet.m_src);
+	_dbg1("***************************data: " << packet.m_data);
 }
 
 void c_node::logic_tick() {
