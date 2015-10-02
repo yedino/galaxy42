@@ -41,7 +41,7 @@ public:
 	virtual void tick (); ///< execute a tick of the animation
 	virtual void logic_tick() = 0;
 	virtual void recv_tick() = 0;
-	
+	virtual void send_tick() = 0;
 	
 	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any);
 	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any);
@@ -49,11 +49,15 @@ public:
 	c_object (string name);
 
 	const string& get_name() const; ///< get the name
+//	virtual const t_uuid get_uuid() = 0;
 	
 	virtual ~c_object () = default;
 
     virtual t_pos get_x() = 0;
     virtual t_pos get_y() = 0;
+
+
+
 
     void set_font(std::shared_ptr<FONT> f) {
         s_font_allegl=f;

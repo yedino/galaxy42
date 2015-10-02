@@ -75,6 +75,12 @@ class c_world {
 		size_t find_object_by_name_as_index(const string & name) const;
 		c_object& find_object_by_name_as_object(const string & name);
 		c_osi2_switch& find_object_by_name_as_switch(const string & name);
+
+
+		c_osi2_switch &find_object_by_uuid_as_switch(const t_osi3_uuid);
+		c_object& find_object_by_uuid_as_object(const t_osi3_uuid);
+		size_t find_object_by_uuid_as_index(const t_osi3_uuid);
+
 		
 		// building the world - details:
 		c_osi2_cable_direct& new_cable_between(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost); ///< create a new cable, own it

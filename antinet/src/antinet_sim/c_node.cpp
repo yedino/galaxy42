@@ -171,6 +171,38 @@ void c_osi2_switch::recv_tick() {
 	}
 }
 
+void c_osi2_switch::send_tick() {
+/*
+	c_object &dest_switch = m_world.find_object_by_name_as_object(dest_name);
+	c_osi2_switch *next_hop = m_world.print_route_between(dynamic_cast<c_object&>(*this), dest_switch);
+	if (next_hop == nullptr) {
+		_erro("Next hop not foud");
+		return;
+	}
+	for (auto &nic : m_nic) { /// find NIC for next hop
+		if (nic->get_my_switch() == *next_hop) {
+			nic->add_to_outbox(dynamic_cast<c_osi2_switch&>(dest_switch).get_uuid_any(), std::move(data));
+		}
+	}
+	//use_nic(0).add_to_outbox(remote_address , std::move(data)); // TODO m_nic index
+*/
+	for (auto && pcg:m_outbox){
+		auto dest = pcg.m_dst;
+		auto data = pcg.m_data;
+
+		c_object &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
+		c_osi2_switch *next_hop = m_world.print_route_between(dynamic_cast<c_object&>(*this), dest_switch );		//TODO somehow cash route
+
+		for (auto &nic : m_nic) { /// find NIC for next hop
+			if (nic->get_my_switch() == *next_hop) {
+				nic->add_to_outbox(dynamic_cast<c_osi2_switch&>(dest_switch).get_uuid_any(), std::move(data));
+			}
+		}
+	}
+	m_outbox.clear();
+
+}
+
 void c_osi2_switch::send_hello_to_neighbors() {
 	_dbg2("send test hello packet to all neighbors");
 	/// send test hello packet to all neighbors
@@ -182,6 +214,7 @@ void c_osi2_switch::send_hello_to_neighbors() {
 		nic->add_to_outbox(dest_addr, std::string("HELLO"));
 	}
 }
+
 
 
 /////////////////////////////////////

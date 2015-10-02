@@ -334,7 +334,44 @@ c_osi2_switch & c_world::find_object_by_name_as_switch(const std::string &name)
 	
 	throw std::out_of_range(
 		string("Can not find object (of type ")
-		+ name_of_type + string(") with name=") + name);
+				+ name_of_type + string(") with name=") + name);
+}
+
+c_osi2_switch &c_world::find_object_by_uuid_as_switch(const t_osi3_uuid id)
+{
+	const string name_of_type("c_osi2_switch"); // match our return type!
+	try {
+		return dynamic_cast<c_osi2_switch &>( find_object_by_uuid_as_object(id) );
+	} catch(...) { }
+
+//	throw std::out_of_range(
+//		string("Can not find object (of type ")
+//				+ name_of_type + string(") with uuid=")+std::num_put(id) );
+
+}
+
+
+c_object& c_world::find_object_by_uuid_as_object(const t_osi3_uuid id) {
+
+	for (size_t ix=0; ix<m_objects.size(); ++ix){
+		 c_osi2_switch & tmp_obj = unique_cast_ref<c_osi2_switch&>(m_objects.at(ix));		//check if tmp_obj isn't stolen
+		for(auto & nic :tmp_obj.m_nic ){
+				if (nic->get_uuid() == id) return * m_objects[ix];
+			}
+		}
+	throw std::out_of_range( string("Can not find object with id=") + std::to_string(id));
+}
+
+size_t c_world::find_object_by_uuid_as_index(const t_osi3_uuid id) {
+
+
+	for (size_t ix=0; ix<m_objects.size(); ++ix){
+		 c_osi2_switch & tmp_obj = unique_cast_ref<c_osi2_switch&>(m_objects.at(ix));		//check if tmp_obj isn't stolen
+		for(auto & nic :tmp_obj.m_nic ){
+				if (nic->get_uuid() == id) return ix;
+			}
+		}
+	throw std::out_of_range( string("Can not find object with id=") + std::to_string(id));
 }
 
 

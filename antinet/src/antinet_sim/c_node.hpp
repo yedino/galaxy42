@@ -18,7 +18,9 @@ class c_osi2_switch : public c_entity {
 	protected:
 		static long int s_nr; ///< serial number of this object - the static counter
 		long int m_nr; ///< serial number of this object
-		
+
+		friend class c_world;
+
 		c_world &m_world; ///< my netwok world in which I exist
 		
 		std::vector<std::unique_ptr<c_osi2_nic>> m_nic; ///< all my NIC cards, for all my ports
@@ -29,6 +31,7 @@ class c_osi2_switch : public c_entity {
 		const unsigned int m_connect_cost = 1; ///< TODO delete?
 		
 	public:
+
 		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
 		
 		c_osi2_switch(const c_osi2_switch &) = delete; ///< copy constructor
@@ -64,6 +67,7 @@ class c_osi2_switch : public c_entity {
 		
 		virtual void logic_tick() override;
 		virtual void recv_tick() override;
+		virtual void send_tick() override;
 		
 		// TODO mv to node
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
