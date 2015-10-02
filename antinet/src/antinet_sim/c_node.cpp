@@ -195,7 +195,7 @@ void c_osi2_switch::send_tick() {
 
 		for (auto &nic : m_nic) { /// find NIC for next hop
 			if (nic->get_my_switch() == *next_hop) {
-				nic->add_to_outbox(dynamic_cast<c_osi2_switch&>(dest_switch).get_uuid_any(), std::move(data));
+				nic->add_to_outbox(dest, std::move(data));
 			}
 		}
 	}
