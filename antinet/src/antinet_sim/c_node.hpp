@@ -65,7 +65,9 @@ class c_osi2_switch : public c_entity {
 		virtual void logic_tick() override;
 		virtual void recv_tick() override;
 		
+		// TODO mv to node
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
+		
 };
 
 class c_node : public c_osi2_switch {
@@ -79,7 +81,10 @@ class c_node : public c_osi2_switch {
 		c_node(c_node &&) = default; ///< move constructor
 		c_node& operator = (c_node &&)  = default;
 		
-		void send_packet(t_osi3_uuid remote_address, std::string &&data);
+		bool operator == (const c_node &node);
+		bool operator != (const c_node &node);
+		
+		void send_packet(const std::string &dest_name, std::string &&data);
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
 };
 

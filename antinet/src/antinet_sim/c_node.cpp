@@ -192,9 +192,28 @@ c_node::c_node(c_world &world, const string &name, t_pos x, t_pos y)
 	
 }
 
-void c_node::send_packet (t_osi3_uuid remote_address, std::string &&data) {
-	t_osi2_data out_data;
-	use_nic(0).add_to_outbox(remote_address , std::move(data)); // TODO m_nic index
+bool c_node::operator== (const c_node &node) {
+	return node.m_nr == m_nr;
+}
+
+bool c_node::operator!= (const c_node &node) {
+	return node.m_nr != m_nr;
+}
+
+
+void c_node::send_packet (const std::string &dest_name, std::string &&data) {
+	c_object &dest_switch = m_world.find_object_by_name_as_object(dest_name);
+	c_osi2_switch *next_hop = m_world.print_route_between(dynamic_cast<c_object&>(*this), dest_switch);
+	if (next_hop == nullptr) {
+		_erro("Next hop not foud");
+		return;
+	}
+	for (auto &nic : m_nic) { /// find NIC for next hop
+		if (nic->get_my_switch() == *next_hop) {
+			nic->add_to_outbox(dynamic_cast<c_osi2_switch&>(dest_switch).get_uuid_any(), std::move(data));
+		}
+	}
+	//use_nic(0).add_to_outbox(remote_address , std::move(data)); // TODO m_nic index
 }
 
 void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
