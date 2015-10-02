@@ -58,6 +58,7 @@ size_t_maybe c_osi2_switch::find_which_nic_goes_to_switch_or_invalid(const c_osi
 				return ix; // <---
 			}
 		}
+
 	}
 	return size_t_invalid(); // not found
 }
@@ -201,7 +202,7 @@ void c_osi2_switch::send_tick() {
 
 }
 
-void c_node::send_hello_to_neighbors() {
+void c_osi2_switch::send_hello_to_neighbors() {
 	_dbg2("send test hello packet to all neighbors");
 	/// send test hello packet to all neighbors
 	for (auto &nic : m_nic) {
@@ -209,7 +210,6 @@ void c_node::send_hello_to_neighbors() {
 		c_osi2_nic * remote_nic = nic->get_connected_card_or_null(cost);
 		if (remote_nic == nullptr) continue;
 		t_osi3_uuid dest_addr = remote_nic->get_uuid(); /// addres of my neighbor
-		this->send_osi3_data_to_dst(dest_addr, std::string("HELLO"));
 	}
 }
 

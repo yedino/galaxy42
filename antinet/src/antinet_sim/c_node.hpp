@@ -51,6 +51,7 @@ class c_osi2_switch : public c_entity {
 		bool operator != (const c_osi2_switch &switch_);
 		
 		// work on my NICs:
+		// work on my NICs:		
 		void create_nic(); ///< adds one more NIC card
 		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
 		c_osi2_nic & use_nic(unsigned int nr); ///< gets NIC with this number, can create it (and all other up to that number)
@@ -87,6 +88,9 @@ class c_osi2_switch : public c_entity {
 		
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
 		virtual void draw_messages() const;
+		// TODO mv to node
+		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
+		
 };
 
 class c_node : public c_osi2_switch {
@@ -128,15 +132,18 @@ class c_node : public c_osi2_switch {
 		 * @param data is the payload data
 		 */
 		void send_osi3_data_to_name(const std::string &dest_name, std::string &&data);
-		
+
+
+		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
+
 		// === tests ===
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
-		
+
 		// === tick ===
 		virtual void logic_tick() override;
+
 		void process_packet(t_osi3_packet &&packet);
-		
-		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
+		//		virtual void logic_tick() override;
 };
 
 #endif // C_NODE_HPP
