@@ -178,13 +178,13 @@ bool draft_net2_testsend_alltests() {
 	
 /// @brief This function tests the code from this file.
 int draft_net2() { // the main function for test
-	
+/*	
 	if (! draft_net2_testsend_alltests()) {
 		_erro("Unit test failed!");
 		return 0;
 	}
 	return 0; // !
-	
+*/	
 	_mark("Starting test " <<__FUNCTION__);
 	c_world world;
 	
@@ -214,20 +214,23 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("swC","nodeC3", 1);
 	world.connect_network_devices("swC","nodeC4", 1);
 	world.connect_network_devices("swD","nodeE", 1); // ***
-	
+/*	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
 	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("nodeA") );
-	
+	*/
 	t_osi2_data data( std::string("HELLOWORLD") );
-	
+	/*
 	_mark("Testing - send data:");
 	world.find_object_by_name_as_switch("nodeA").send_data(
 		world.find_object_by_name_as_switch("nodeE").get_uuid_any(), 
 		data);
+	*/
 	
+	c_node &source_node = dynamic_cast<c_node&> (world.find_object_by_name_as_switch("nodeA"));
+	source_node.send_packet("nodeE", std::move(data));
 	
 	world.tick(); 
 	world.tick(); 
@@ -235,8 +238,8 @@ int draft_net2() { // the main function for test
 	world.tick(); 
 	world.tick(); 
 	
-	_mark("Testing - show object:");
-	_info( world.find_object_by_name_as_switch("swA") );
+	//_mark("Testing - show object:");
+// 	_info( world.find_object_by_name_as_switch("swA") );
 	
 	/*
 	world.print_route_between(

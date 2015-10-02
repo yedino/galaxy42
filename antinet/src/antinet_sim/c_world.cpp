@@ -142,6 +142,15 @@ void c_world::tick () {
 		}
 	}
 	
+	for (auto &obj : m_objects) {
+		try {
+			obj->send_tick();
+		}
+		catch(...) {
+			std::cout<<"something goes wrong ..."<<std::endl;
+		}
+	}
+	
 	std::cout << "****************END OF TICK (" << tick_number << ")****************" << std::endl;
     //std::this_thread::sleep_for(std::chrono::seconds(1)); // XXX
 	++tick_number;
