@@ -13,6 +13,11 @@ class c_osi2_cable_direct;
 class c_osi2_nic;
 class c_world;
 
+typedef enum {
+	e_switch,
+	e_node
+} t_device_type;
+
 // Classical switch in OSI layer 2
 class c_osi2_switch : public c_entity {
 	protected:
@@ -29,6 +34,8 @@ class c_osi2_switch : public c_entity {
 		std::vector<t_osi3_packet> m_inbox;
 		
 		const unsigned int m_connect_cost = 1; ///< TODO delete?
+		
+		t_device_type m_type;
 		
 	public:
 

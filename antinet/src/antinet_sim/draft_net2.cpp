@@ -232,11 +232,9 @@ int draft_net2() { // the main function for test
 	c_node &source_node = dynamic_cast<c_node&> (world.find_object_by_name_as_switch("nodeA"));
 	source_node.send_packet("nodeE", std::move(data));
 	
-	world.tick(); 
-	world.tick(); 
-	world.tick(); 
-	world.tick(); 
-	world.tick(); 
+	for (int i = 0; i < 10; ++i)
+		world.tick();
+	
 	
 	//_mark("Testing - show object:");
 // 	_info( world.find_object_by_name_as_switch("swA") );

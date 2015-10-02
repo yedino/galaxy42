@@ -7,16 +7,18 @@ long int c_osi2_switch::s_nr = 0;
 
 
 c_osi2_switch::c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y)
-  : c_entity(name, x, y), m_nr( s_nr ++ ), m_world(world)
+  : c_entity(name, x, y), m_nr( s_nr ++ ), m_world(world), m_type(e_switch)
 {
 	
 }
 
 bool c_osi2_switch::operator== (const c_osi2_switch &switch_) {
+	if (m_type != switch_.m_type) return true;
 	return switch_.m_nr == this->m_nr;
 }
 
 bool c_osi2_switch::operator!= (const c_osi2_switch &switch_) {
+	if (m_type != switch_.m_type) return false;
 	return switch_.m_nr != this->m_nr;
 }
 
@@ -224,14 +226,16 @@ void c_osi2_switch::send_hello_to_neighbors() {
 c_node::c_node(c_world &world, const string &name, t_pos x, t_pos y)
   : c_osi2_switch( world, name, x, y)
 {
-	
+	m_type = e_node;
 }
 
 bool c_node::operator== (const c_node &node) {
+	if (m_type != node.m_type) return false;
 	return node.m_nr == m_nr;
 }
 
 bool c_node::operator!= (const c_node &node) {
+	if (m_type != node.m_type) return true;
 	return node.m_nr != m_nr;
 }
 
