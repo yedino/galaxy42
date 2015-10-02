@@ -193,9 +193,10 @@ void c_osi2_switch::send_tick() {
 
 		c_object &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
 		c_osi2_switch *next_hop = m_world.print_route_between(dynamic_cast<c_object&>(*this), dest_switch );		//TODO somehow cash route
-
+		t_osi2_cost cost;
 		for (auto &nic : m_nic) { /// find NIC for next hop
-			if (nic->get_my_switch() == *next_hop) {
+//			if (nic->get_my_switch() == *next_hop) {
+			if (nic->get_connected_card_or_null(cost)->get_my_switch() == *next_hop) {
 				nic->add_to_outbox(dest, std::move(data));
 			}
 		}
