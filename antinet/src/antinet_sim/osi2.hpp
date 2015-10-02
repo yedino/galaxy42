@@ -105,7 +105,11 @@ class c_osi2_nic {
 		
 		void plug_in_cable(c_osi2_cable_direct & cable); ///< attach this cable to me
 		
-		void add_to_outbox(t_osi3_uuid dst, t_osi2_data &&data); ///< sends the packet over network
+		/***
+		 * @brief Sends ready packet (that is MOVED), send it through me (there was a routing decission 
+		 * made probably before, that said I am the correct card to handle this destination in packet.m_dst)
+		 */
+		void add_to_nic_outbox(t_osi3_packet && packet);
 		
 		bool empty_outbox() const;
 		

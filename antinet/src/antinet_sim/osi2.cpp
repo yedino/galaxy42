@@ -99,13 +99,8 @@ std::ostream& operator<<(std::ostream &os, const c_osi2_nic &obj) {
 	return os;
 }
 
-void c_osi2_nic::add_to_outbox (t_osi3_uuid dst, t_osi2_data &&data) {
-	t_osi3_packet packet;
-	packet.m_data = data; // TODO move, swap?
-	packet.m_dst = dst; 
-	packet.m_src = m_osi3_uuid; // I am the sender
-	
-	m_outbox.emplace_back( packet );
+void c_osi2_nic::add_to_nic_outbox(t_osi3_packet &&packet) {
+	m_outbox.emplace_back( std::move(packet) );
 }
 
 bool c_osi2_nic::empty_outbox() const {
@@ -118,7 +113,6 @@ void c_osi2_nic::insert_outbox_to_vector (std::vector< t_osi3_packet >& out_vect
 	}
 	m_outbox.clear();
 }
-
 
 long int c_osi2_nic::get_serial_number() const {
 	return m_nr;

@@ -129,7 +129,8 @@ void c_world::tick () {
 			obj->logic_tick();
 		}
 		catch(...) {
-			std::cout<<"something goes wrong ..."<<std::endl;
+			_erro("Error in logic ticks");
+			throw ;
 		}
 	}
 	
@@ -138,7 +139,8 @@ void c_world::tick () {
 			obj->recv_tick();
 		}
 		catch(...) {
-			std::cout<<"something goes wrong ..."<<std::endl;
+			_erro("Error in recv ticks ticks");
+			throw ;
 		}
 	}
 	
@@ -147,7 +149,8 @@ void c_world::tick () {
 			obj->send_tick();
 		}
 		catch(...) {
-			std::cout<<"something goes wrong ..."<<std::endl;
+			_erro("Error in recv send ticks");
+			throw ;
 		}
 	}
 	
@@ -204,7 +207,15 @@ void c_world::connect_network_devices(const std::string &nr_a, const std::string
 	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) , cost);
 }
 
-c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
+size_t c_world::route_next_hop_nic_ix(c_object &first, c_object &second)
+{
+	c_osi2_switch * next_switch = this->route_find_route_between_or_null(first,second);
+	if (next_switch == nullptr) return size_t_invalid();
+	
+	return dynamic_cast<c_osi2_switch&>(first).find_which_nic_goes_to_switch_or_invalid(next_switch);
+}
+
+c_osi2_switch *c_world::route_find_route_between_or_null(c_object &first, c_object &second) {
 	_mark("WORLD ROUTE");
 	c_osi2_switch & swA = dynamic_cast<c_osi2_switch&>(first);
 	c_osi2_switch & swB = dynamic_cast<c_osi2_switch&>(second);
@@ -309,18 +320,18 @@ c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 //	_info("Algorithm is done.");
 	// print all hops that we need to take:
 	c_osi2_switch * hop_ptr = cost_of_sw[ & swB ].m_parent;
-	c_osi2_switch * ret;
+	c_osi2_switch * next_hop = nullptr; // to return
 	
 	while (hop_ptr != nullptr) {
 		if (cost_of_sw[ hop_ptr ].m_parent != nullptr)
-			ret = hop_ptr;
+			next_hop = hop_ptr;
 //		_info("We go through " << hop_ptr << " that is: " << hop_ptr->print_str(-2));
-		hop_ptr = cost_of_sw[ hop_ptr ].m_parent;
+		hop_ptr = cost_of_sw[ hop_ptr ].m_parent; // go to parent
 	}
-	_info("That is all.");
+	_info("Found route, next hop is "<<next_hop);
 	
 	// print the result
-	return ret;
+	return next_hop;
 }
 
 size_t c_world::find_object_by_name_as_index(const std::string &name) const {

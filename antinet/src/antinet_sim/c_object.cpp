@@ -15,6 +15,17 @@ void c_object::tick () { }
 
 const string & c_object::get_name () const { return m_name; }
 
+void c_object::print(std::ostream &oss) const
+{
+	oss << "[obj "<<m_name<<"]";
+}
+
+std::ostream& operator<<(std::ostream &oss, const c_object &obj) 
+{
+	obj.print(oss);
+	return oss;
+}
+
 
 void c_object::draw_allegro(c_drawtarget &drawtarget, c_layer &layer) {
 	_dbg3("Drawing (allegro) object (base method used)");

@@ -66,6 +66,10 @@ public:
     std::shared_ptr<FONT> s_font_allegl;
 	
 	bool m_selected = false;
+	
+	virtual void print(std::ostream & oss) const;
+	friend std::ostream& operator<<(std::ostream & oss, const c_object & obj);
+	
 protected:
 	string m_name;
 	unsigned int m_animframe;

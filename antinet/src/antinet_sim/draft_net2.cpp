@@ -34,7 +34,16 @@ to not have to implement NAT and all
 (adding some speed limits on each ISP).
 - We skip NAT simulation, we assume each station has a public IP (even if closely connected in one LAN)
 
+=== Network Use ===
+Send data:
+c_osi2_nic::add_to_nic_outbox() is a low-level send of a t_osi3_packet (src, dst, data) 
+c_node::send_osi3_data_to_dst() is the high level send of data, to selected dst
+c_node::send_osi3_data_to_name() is the high level send of data, where dst is given by object name
+
 */
+
+
+
 
 /*** 
 @brief the entire world of networking
@@ -230,10 +239,11 @@ int draft_net2() { // the main function for test
 	*/
 	
 	c_node &source_node = dynamic_cast<c_node&> (world.find_object_by_name_as_switch("nodeA"));
-	source_node.send_packet("nodeE", std::move(data));
+	source_node.send_osi3_data_to_name("nodeE", std::move(data));
 	
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 10; ++i) {
 		world.tick();
+	}
 	
 	
 	//_mark("Testing - show object:");

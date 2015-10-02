@@ -70,7 +70,14 @@ class c_world {
 		void connect_network_devices(size_t nr_a, size_t nr_b, t_osi2_cost cost); ///< connect by index
 		void connect_network_devices(const string & nr_a, const string & nr_b, t_osi2_cost cost); ///< connect by name
 		
-		c_osi2_switch *print_route_between(c_object &first, c_object &second); ///< prints/debug the OSI2 route between
+		/***
+		 * @return: the ix of card in first to use to route to reach second. first.m_nic[ix] is the card
+		 * that will lead to second.
+		 */
+		size_t route_next_hop_nic_ix(c_object &first, c_object &second);
+
+		
+		c_osi2_switch & object_to_switch(c_object &object) const; ///< try to convert object to switch, throw if not
 		
 		size_t find_object_by_name_as_index(const string & name) const;
 		c_object& find_object_by_name_as_object(const string & name);
@@ -101,6 +108,14 @@ class c_world {
 		
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_world &obj);
+		
+		private:
+			/***
+			 * prints/debug the OSI2 route between
+			 * @return pointer to switch (that is inside m_objects - just pointer! - will be invalidated soon, 
+			 * e.g. when world changes!!!
+			 */
+			c_osi2_switch * route_find_route_between_or_null(c_object &first, c_object &second);
 };
 
 ostream &operator<< (ostream &stream, const c_world &world);

@@ -486,7 +486,9 @@ void c_simulation::main_loop () {
 			(*selected_object)->m_selected = true;
 			c_entity *selected_object_raw = dynamic_cast<c_entity *>((*selected_object).get());
 			c_osi2_switch *selected_switch = dynamic_cast<c_osi2_switch *>((*selected_object).get());
-			selected_switch->send_hello_to_neighbors();
+			
+		//	selected_switch->send_hello_to_neighbors(); // TODO
+			
 			//shared_ptr<c_cjddev> selected_device = std::dynamic_pointer_cast<c_cjddev>(selected_object);
 			if (selected_object != m_world->m_objects.end()) { // editing the selected object
 				// TODO: add connect

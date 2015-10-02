@@ -30,7 +30,11 @@
 	::std::cerr<<"\n\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
 	} while(0)
 
+// TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)
+
+#define _NOTREADY() do { _erro("This code is not implemented yet! in "<<__FUNCTION__);\
+	throw std::runtime_error("Code not implemented yet! In: " + string(__FUNCTION__)); } while(0)
 	
 #endif // include guard
 
