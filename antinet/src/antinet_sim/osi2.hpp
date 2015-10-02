@@ -21,6 +21,7 @@ struct t_osi3_packet { ///< some packet with data that is travelig over OSI2
 	t_osi2_data m_data; ///< the data
 	t_osi3_uuid m_dst; ///< the destination of this packet
 	t_osi3_uuid m_src; ///< the source of this packet
+	size_t size();
 };
 
 std::ostream & operator<<(std::ostream & os, const t_osi3_packet & pck);

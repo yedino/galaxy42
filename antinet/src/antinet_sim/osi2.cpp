@@ -1,6 +1,13 @@
 #include "osi2.hpp"
 #include "c_node.hpp"
 
+size_t t_osi3_packet::size() {
+	return sizeof(m_dst) + sizeof(m_src) + m_data.size();
+}
+
+
+////////////////////////////////////////////////////////////////////
+
 c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost) 
   : m_endpoint( {a,b} ), m_cost(cost)
 {

@@ -156,8 +156,9 @@ void c_osi2_switch::draw_messages() const {
 void c_osi2_switch::logic_tick() {
 	/// process all packets
 	for (auto &input_packet : m_inbox) {
-		_dbg1(m_name << " get packet from " << input_packet.m_src);
-		_dbg1(m_name << " input data: " << input_packet.m_data);
+		//_dbg1(m_name << " get packet from " << input_packet.m_src);
+		//_dbg1(m_name << " input data: " << input_packet.m_data);
+		m_outbox.push_back(std::move(input_packet));
 	}
 	m_inbox.clear();
 }
@@ -271,4 +272,25 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
                           vx - c_bitmaps::get_instance().m_node->w / 2, vy - c_bitmaps::get_instance().m_node->h / 2);
 	}
 	////////////////////////////////////////////////////////////////////
+}
+
+void c_node::process_packet (t_osi3_packet &&packet) {
+	// TODO!!!
+	_dbg1("get apcket from " << packet.m_src);
+	_dbg1("data: " << packet.m_data);
+}
+
+void c_node::logic_tick() {
+	for (auto &input_packet : m_inbox) {
+		bool packet_to_me = false;
+		for (auto &nic : m_nic) {
+			if (nic->get_uuid() == input_packet.m_dst) {
+				packet_to_me = true;
+				break;
+			}
+		}
+		if (packet_to_me) process_packet(std::move(input_packet));
+		else m_outbox.push_back(std::move(input_packet));
+	}
+	m_inbox.clear();
 }

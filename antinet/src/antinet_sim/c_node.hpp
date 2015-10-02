@@ -38,6 +38,7 @@ class c_osi2_switch : public c_entity {
 		c_osi2_switch& operator = (const c_osi2_switch &)  = delete;
 		c_osi2_switch(c_osi2_switch &&) = default; ///< move constructor
 		c_osi2_switch& operator = (c_osi2_switch &&)  = default;
+		~c_osi2_switch() = default;
 
 		bool operator == (const c_osi2_switch &switch_);
 		bool operator != (const c_osi2_switch &switch_);
@@ -65,7 +66,7 @@ class c_osi2_switch : public c_entity {
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
 		virtual void draw_messages() const;
 		
-		virtual void logic_tick() override;
+		virtual void logic_tick() override; ///< move packets from inbox to outbox
 		virtual void recv_tick() override;
 		virtual void send_tick() override;
 		
@@ -84,12 +85,16 @@ class c_node : public c_osi2_switch {
 		c_node& operator = (const c_node &)  = delete;
 		c_node(c_node &&) = default; ///< move constructor
 		c_node& operator = (c_node &&)  = default;
+		~c_node() = default;
 		
 		bool operator == (const c_node &node);
 		bool operator != (const c_node &node);
 		
 		void send_packet(const std::string &dest_name, std::string &&data);
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
+		
+		void process_packet(t_osi3_packet &&packet);
+		virtual void logic_tick() override;
 };
 
 #endif // C_NODE_HPP
