@@ -210,6 +210,8 @@ void c_osi2_switch::send_hello_to_neighbors() {
 		c_osi2_nic * remote_nic = nic->get_connected_card_or_null(cost);
 		if (remote_nic == nullptr) continue;
 		t_osi3_uuid dest_addr = remote_nic->get_uuid(); /// addres of my neighbor
+		// TODO: send it here.
+		_NOTREADY_warn();
 	}
 }
 
@@ -249,7 +251,9 @@ void c_node::send_osi3_data_to_node(const c_node &dst, std::string &&data)
 	
 void c_node::send_osi3_data_to_name(const std::string &dest_name, std::string &&data)
 {
-	// this->m_world.find_object_by_name_as_switch(dest_name).get_uuid_any();
+	_note("Sending OSI3 data, to dest_name="<<dest_name<<" data="<<data);
+	
+	// TODO: this->m_world.find_object_by_name_as_switch(dest_name).get_uuid_reachable_from( this );
 	_NOTREADY();
 }
 

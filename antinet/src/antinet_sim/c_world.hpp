@@ -25,6 +25,19 @@ class c_osi2_cable_direct;
 class c_osi2_nic;
 class c_file_loader;
 
+struct t_osi2_route_result {
+		bool valid; ///< all the data is valid. else, data is not valid (route can not be found)
+		
+		// only if m_valid==1 then you can use this fields:
+		
+		size_t first_hop_nic_ix; ///< NIC card used at begin: the index of first.m_nic[] on the route
+		size_t target_nic_ix; ///< NIC card used at end: the index of second.m_nic[] on the route
+		t_osi2_cost cost; ///< totall cost of the route
+		
+		vector< t_osi3_uuid > hops_uuid; ///< the route as "list" of UUIDs of NIC cards.
+};
+
+
 /***
  * @author dev-rf@tigusoft.pl
  * @brief The logical world of the simulation, includes simulated entities,
@@ -70,12 +83,14 @@ class c_world {
 		void connect_network_devices(size_t nr_a, size_t nr_b, t_osi2_cost cost); ///< connect by index
 		void connect_network_devices(const string & nr_a, const string & nr_b, t_osi2_cost cost); ///< connect by name
 		
+		
+		t_osi2_route_result route_find_route_between(c_object &first, c_object &second);
+		
 		/***
 		 * @return: the ix of card in first to use to route to reach second. first.m_nic[ix] is the card
 		 * that will lead to second.
 		 */
-		size_t route_next_hop_nic_ix(c_object &first, c_object &second);
-
+		size_t_maybe route_next_hop_nic_ix(c_object &first, c_object &second);
 		
 		c_osi2_switch & object_to_switch(c_object &object) const; ///< try to convert object to switch, throw if not
 		
@@ -109,13 +124,6 @@ class c_world {
 		void print(std::ostream &os) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_world &obj);
 		
-		private:
-			/***
-			 * prints/debug the OSI2 route between
-			 * @return pointer to switch (that is inside m_objects - just pointer! - will be invalidated soon, 
-			 * e.g. when world changes!!!
-			 */
-			c_osi2_switch * route_find_route_between_or_null(c_object &first, c_object &second);
 };
 
 ostream &operator<< (ostream &stream, const c_world &world);

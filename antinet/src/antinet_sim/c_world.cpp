@@ -207,15 +207,20 @@ void c_world::connect_network_devices(const std::string &nr_a, const std::string
 	connect_network_devices( find_object_by_name_as_index(nr_a) , find_object_by_name_as_index(nr_b) , cost);
 }
 
-size_t c_world::route_next_hop_nic_ix(c_object &first, c_object &second)
+size_t_maybe c_world::route_next_hop_nic_ix(c_object &first, c_object &second)
 {
-	c_osi2_switch * next_switch = this->route_find_route_between_or_null(first,second);
+	/* @TODO delete
+	 * c_osi2_switch * next_switch = this->route_find_route_between_or_null(first,second);
 	if (next_switch == nullptr) return size_t_invalid();
-	
 	return dynamic_cast<c_osi2_switch&>(first).find_which_nic_goes_to_switch_or_invalid(next_switch);
+	*/
+	_NOTREADY();
 }
 
-c_osi2_switch *c_world::route_find_route_between_or_null(c_object &first, c_object &second) {
+t_osi2_route_result c_world::route_find_route_between(c_object &first, c_object &second) {
+	t_osi2_route_result result;
+	result.valid=false;
+	
 	_mark("WORLD ROUTE");
 	c_osi2_switch & swA = dynamic_cast<c_osi2_switch&>(first);
 	c_osi2_switch & swB = dynamic_cast<c_osi2_switch&>(second);
@@ -322,16 +327,41 @@ c_osi2_switch *c_world::route_find_route_between_or_null(c_object &first, c_obje
 	c_osi2_switch * hop_ptr = cost_of_sw[ & swB ].m_parent;
 	c_osi2_switch * next_hop = nullptr; // to return
 	
+	
+	// calculated info about the finall route:
+	t_osi2_cost cost=0; 
+	result.first_hop_nic_ix = size_t_invalid();
+	result.target_nic_ix = size_t_invalid();
+	bool first_iteration=true;
 	while (hop_ptr != nullptr) {
-		if (cost_of_sw[ hop_ptr ].m_parent != nullptr)
+		_info("ROUTE IS: " << *hop_ptr);
+		
+		if (first_iteration) {
+			result.target_nic_ix = hop_ptr->find_which_nic_goes_to_switch_or_invalid( & swB );
+		}
+		
+		auto our_parent = cost_of_sw[ hop_ptr ].m_parent; // this is another parent to go to
+		if (our_parent != nullptr) { // first node on path after starting node
+			size_t nic_ix = our_parent->find_which_nic_goes_to_switch_or_invalid(hop_ptr);
+			_info("nic_ix="<<nic_ix);
+//			result.hops_uuid= // get UUID of that nic ix
 			next_hop = hop_ptr;
-//		_info("We go through " << hop_ptr << " that is: " << hop_ptr->print_str(-2));
-		hop_ptr = cost_of_sw[ hop_ptr ].m_parent; // go to parent
+		}
+		hop_ptr = our_parent; // go to our parent
+		
+		first_iteration=false;
 	}
+	// TODO cost
+	// TODO uuid
+	
+	result.first_hop_nic_ix = swA.find_which_nic_goes_to_switch_or_invalid(next_hop);
 	_info("Found route, next hop is "<<next_hop);
+	_info("result: A.ix="<<result.first_hop_nic_ix<<" B.ix="<<result.target_nic_ix);
+	result.valid=true;
+	
 	
 	// print the result
-	return next_hop;
+	return result;
 }
 
 size_t c_world::find_object_by_name_as_index(const std::string &name) const {

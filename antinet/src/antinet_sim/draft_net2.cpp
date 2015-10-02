@@ -223,13 +223,20 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("swC","nodeC3", 1);
 	world.connect_network_devices("swC","nodeC4", 1);
 	world.connect_network_devices("swD","nodeE", 1); // ***
-/*	
+	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
 	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("nodeA") );
-	*/
+	
+	_mark("Find route:");
+	t_osi2_route_result route = world.route_find_route_between(
+		world.find_object_by_name_as_switch("nodeA"),
+		world.find_object_by_name_as_switch("nodeE")
+	);
+	
+
 	t_osi2_data data( std::string("HELLOWORLD") );
 	/*
 	_mark("Testing - send data:");
