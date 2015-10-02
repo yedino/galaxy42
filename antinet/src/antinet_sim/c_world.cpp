@@ -231,23 +231,23 @@ c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 	std::map< c_osi2_switch* , dijkstra_info > cost_of_sw; // map to add property of current-dijkstra-cost to the
 	// discovered nodes
 	
-	_info("Adding the starting point:");
+//	_info("Adding the starting point:");
 	cost_of_sw[ & swA ].m_cost = 0;
 	visits.insert(t_visit(0, & swA));
 	
 	int cycle=0; // dbg
 	while (true) {
-		_info("\n\ncycle="<<cycle);
+//		_info("\n\ncycle="<<cycle);
 		++cycle;	//if (cycle>20) break; // dbg
 		
-		_info("---visits---");
+//		_info("---visits---");
 		for (auto & pair : visits) {
-			_info("At COST="<<pair.first<<" we have: "<<pair.second<<" "<<pair.second->print_str(-2));
+//			_info("At COST="<<pair.first<<" we have: "<<pair.second<<" "<<pair.second->print_str(-2));
 		}
-		_info("---visits---");
+//		_info("---visits---");
 		
-		_info("---costs---");
-		for (auto & pair : cost_of_sw) {
+//		_info("---costs---");
+/*		for (auto & pair : cost_of_sw) {
 			const c_osi2_switch & sw = * pair.first;
 			_info("For sw="<<pair.first<<" that is "<<sw.print_str(-2)
 				<<"we have: cost="<<pair.second.m_cost
@@ -261,7 +261,7 @@ c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 			);
 		}
 		_info("---costs---");
-	
+*/
 		{
 			if (visits.begin() == visits.end()) break; // <--- all
 			
@@ -269,8 +269,8 @@ c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 			
 			const t_osi2_cost & best_cost = visits.begin()->first;
 			c_osi2_switch & best_sw       = * visits.begin()->second;
-			_info("Discovering, from best_sw:"<<best_sw.print_str(-2)<<" at cost best_cost="<<best_cost);
-			_info("Best_sw is:" << best_sw);
+//			_info("Discovering, from best_sw:"<<best_sw.print_str(-2)<<" at cost best_cost="<<best_cost);
+//			_info("Best_sw is:" << best_sw);
 			for (size_t ix=0; ix<=best_sw.get_last_nic_index(); ++ix) {
 				c_osi2_nic & child_nic = best_sw.get_nic(ix); // child nic
 				
@@ -279,34 +279,34 @@ c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 				
 				if (child_nic_B) { // if there is a NIC card connected at end of this NIC
 					c_osi2_switch & child_sw_B = child_nic_B->get_my_switch();
-					_info("At ix="<<ix<<" we have connected other side: "
+/*					_info("At ix="<<ix<<" we have connected other side: "
 					      <<" at cost="<<child_cost
 					      <<" switch: "<<child_sw_B.print_str(-2)
 					      <<" via it's card NIC_B="<<child_nic_B);
-
+*/
 					t_osi2_cost child_cost_full = child_cost + best_cost;
 					
 					if (cost_of_sw[ & child_sw_B	 ].m_cost <= child_cost_full) {
-						_info("But we already had as good or better route, NOT ADDING");
+//						_info("But we already had as good or better route, NOT ADDING");
 					}
 					else {
 						cost_of_sw[ & child_sw_B ].m_cost = child_cost_full;
 						cost_of_sw[ & child_sw_B ].m_parent = & best_sw; // the current best sw is the parent
-						_note("Adding this child to visits as: COST=" << child_cost_full << " " << child_sw_B.print_str(-2));
+//						_note("Adding this child to visits as: COST=" << child_cost_full << " " << child_sw_B.print_str(-2));
 						visits.insert(t_visit(child_cost_full, & child_sw_B));
 					}
 				} // connected end
 				
 			}	 // all children
 			
-			_note("Removing the current best");
+//			_note("Removing the current best");
 			visits.erase( best_as_iterator ); // we're done discovering this one
 			// !!! --- warning this invalidated any other iterators now!
 		} // the best switch currently
 		
 	} // entire algorithm main loop
 	
-	_info("Algorithm is done.");
+//	_info("Algorithm is done.");
 	// print all hops that we need to take:
 	c_osi2_switch * hop_ptr = cost_of_sw[ & swB ].m_parent;
 	c_osi2_switch * ret;
@@ -314,7 +314,7 @@ c_osi2_switch *c_world::print_route_between(c_object &first, c_object &second) {
 	while (hop_ptr != nullptr) {
 		if (cost_of_sw[ hop_ptr ].m_parent != nullptr)
 			ret = hop_ptr;
-		_info("We go through " << hop_ptr << " that is: " << hop_ptr->print_str(-2));
+//		_info("We go through " << hop_ptr << " that is: " << hop_ptr->print_str(-2));
 		hop_ptr = cost_of_sw[ hop_ptr ].m_parent;
 	}
 	_info("That is all.");
