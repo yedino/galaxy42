@@ -41,6 +41,11 @@ c_osi2_nic &c_osi2_switch::use_nic(unsigned int nr)
 	throw std::runtime_error("Internal error in creating nodes in use_nic"); // assert
 }
 
+t_device_type c_osi2_switch::get_type() {
+	return m_type;
+}
+
+
 size_t_maybe c_osi2_switch::get_last_nic_index() const {
 	auto size = m_nic.size();
 	if (size) return m_nic.size() - 1;
@@ -151,15 +156,19 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 		t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
 		line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
 	}
-	//draw_messages();
+	draw_messages(drawtarget, layer_any);
 }
 
-void c_osi2_switch::draw_messages() const {
+void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const {
+	_dbg3("draw message");
+	auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
+	BITMAP *frame = layer.m_frame;
+	const auto & gui = * drawtarget.m_gui;
+	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	t_geo_point send_piont, receive_point, msg_circle;
 	for (auto &nic_ptr : m_nic) {
-		if (! (*nic_ptr).empty_outbox()) {
-			
-		}
+		std::stringstream ss;
+		ss << *nic_ptr << std::endl;
 	}
 }
 
@@ -236,7 +245,8 @@ bool c_node::operator!= (const c_node &node) {
 }
 
 
-void c_node::send_osi3_data_to_dst(t_osi3_uuid dst, const t_osi2_data &data) {
+void c_node::send_osi3_data_to_dst(t_osi3_uuid dst, t_osi2_data &&data) {
+	_info("send_osi3_data_to_dst(), send data to " << dst);
 	t_osi3_packet packet;
 	packet.m_data = std::move(data); // move the data here
 	packet.m_dst = dst; 

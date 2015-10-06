@@ -56,6 +56,8 @@ class c_osi2_switch : public c_entity {
 		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
 		c_osi2_nic & use_nic(unsigned int nr); ///< gets NIC with this number, can create it (and all other up to that number)
 		
+		t_device_type get_type();
+		
 		/**
 		 * @brief returns the last valid index in our m_nic card list
 		 * @return the index, or invalid size_t
@@ -87,7 +89,7 @@ class c_osi2_switch : public c_entity {
 		virtual void send_tick() override;
 		
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
-		virtual void draw_messages() const;
+		virtual void draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const;
 		// TODO mv to node
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
 		
@@ -112,7 +114,7 @@ class c_node : public c_osi2_switch {
 		/***
 		 * @brief Send network data to given UUID (IP) destination, anywhere in same world
 		 */
-		void send_osi3_data_to_dst(t_osi3_uuid dst, const t_osi2_data &data);
+		void send_osi3_data_to_dst(t_osi3_uuid dst, t_osi2_data &&data);
 		
 		/***
 		 * @brief Send network data to given UUID (IP) destination, anywhere in same world

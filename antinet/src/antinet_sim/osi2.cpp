@@ -150,7 +150,6 @@ t_osi3_uuid c_osi2_nic::get_uuid() const
 ////////////////////////////////////////////////////////////////////
 
 
-
 std::ostream &operator<<(std::ostream &os, const t_osi3_packet &pck)
 {
 	const size_t preview_size = 20;
