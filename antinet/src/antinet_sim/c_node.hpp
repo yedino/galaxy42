@@ -13,11 +13,6 @@ class c_osi2_cable_direct;
 class c_osi2_nic;
 class c_world;
 
-typedef enum {
-	e_switch,
-	e_node
-} t_device_type;
-
 // Classical switch in OSI layer 2
 class c_osi2_switch : public c_entity {
 	protected:
@@ -56,7 +51,7 @@ class c_osi2_switch : public c_entity {
 		c_osi2_nic & get_nic(unsigned int nr); ///< gets NIC with this number, throws if it does not exist
 		c_osi2_nic & use_nic(unsigned int nr); ///< gets NIC with this number, can create it (and all other up to that number)
 		
-		t_device_type get_type();
+		t_device_type get_type() override;
 		
 		/**
 		 * @brief returns the last valid index in our m_nic card list

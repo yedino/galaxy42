@@ -489,12 +489,13 @@ void c_simulation::main_loop () {
 			
 			if (allegro_keys[KEY_K]) {
 				
-				c_node &node = unique_cast_ref<c_node &>(*m_gui->m_selected_object);
-				if (node.get_type() != e_node) {
+				if ((*m_gui->m_selected_object)->get_type() != e_node) {
 					_info("selected object is not node");
 				}
-				else
+				else {
+					c_node &node = unique_cast_ref<c_node &>(*m_gui->m_selected_object);
 					node.send_osi3_data_to_dst(10020, std::string("example data")); // TODO !!! address
+				}
 			}
 			
 		//	selected_switch->send_hello_to_neighbors(); // TODO

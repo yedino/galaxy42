@@ -25,6 +25,11 @@ typedef std::string t_nym_id; ///< a simple ID that allows to identify an ID ins
 //typedef int t_cjdaddr; // cjdns address example
 //typedef int t_ID;
 
+typedef enum {
+	e_switch,
+	e_node
+} t_device_type;
+
 struct c_msgtx;
 struct t_message;
 class c_node;
@@ -56,7 +61,7 @@ public:
     virtual t_pos get_x() = 0;
     virtual t_pos get_y() = 0;
 
-
+	virtual t_device_type get_type() = 0;
 
 
     void set_font(std::shared_ptr<FONT> f) {
