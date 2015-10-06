@@ -192,7 +192,6 @@ void c_osi2_switch::recv_tick() {
 }
 
 void c_osi2_switch::send_tick() {
-	// for (auto && pcg : m_outbox){
 	for (auto & pcg : m_outbox){
 		auto const & dest = pcg.m_dst;
 
