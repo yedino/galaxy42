@@ -500,7 +500,7 @@ void c_simulation::main_loop () {
 			
 		//	selected_switch->send_hello_to_neighbors(); // TODO
 			
-			//shared_ptr<c_cjddev> selected_device = std::dynamic_pointer_cast<c_cjddev>(selected_object);
+            //shared_ptr<c_cjddev> selected_device = std::dynamic_pointer_cast<c_cjddev>(selected_object);
 			if (selected_object != m_world->m_objects.end()) { // editing the selected object
 				// TODO: add connect
 				/*if (gui_mouse_b == 1 && !print_connect_line) {
@@ -530,6 +530,11 @@ void c_simulation::main_loop () {
 							selected_object_raw->m_y += -speed;
 					}
 				} // moving selected object
+
+                if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
+                    _info("RUBU");
+                    m_gui->m_target = selected_object_raw;
+                }
 			}
 			if ((allegro_char & 0xff) == 't' && selected_object_raw && !start_simulation) {
 				m_gui->m_target = selected_object_raw;
