@@ -530,18 +530,15 @@ void c_simulation::main_loop () {
 							selected_object_raw->m_y += -speed;
 					}
 				} // moving selected object
-
-                if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
-                    _info("RUBU");
-                    m_gui->m_target = selected_object_raw;
-                }
 			}
-			if ((allegro_char & 0xff) == 't' && selected_object_raw && !start_simulation) {
-				m_gui->m_target = selected_object_raw;
+            if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
+                _dbg1("badger T");
+                m_gui->m_target_switch = selected_switch;
 			}
 
-			if ((allegro_char & 0xff) == 'r' && selected_object_raw && !start_simulation) {
-				m_gui->m_source = selected_object_raw;
+            if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
+                _dbg1("badger R");
+                m_gui->m_source_switch = selected_switch;
 			}
 /*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
