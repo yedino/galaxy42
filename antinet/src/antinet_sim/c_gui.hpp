@@ -5,6 +5,7 @@
 #include "c_gui.hpp"
 
 #include "c_object.hpp"
+#include "c_node.hpp"
 #include "use_opengl.hpp"
 
 /***
@@ -16,7 +17,7 @@ public:
 	std::vector<unique_ptr<c_object>>::iterator m_selected_object; ///< current object (e.g. selected for editing)
 
 	shared_ptr<c_cjddev> m_target, m_source; ///< objects selected as Source and Target in simulation
-
+	shared_ptr<c_osi2_switch> m_target_switch, m_source_switch;	///< switches selected as Source and Target in simulation
     //    std::shared_ptr <FONT> s_font_allegl (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
 
 	int camera_x, camera_y, camera_z; //< position of the camera. Z is probably going to be used in some 3D rendereres

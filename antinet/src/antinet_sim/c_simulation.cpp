@@ -531,6 +531,13 @@ void c_simulation::main_loop () {
 					}
 				} // moving selected object
 			}
+			if ((allegro_char & 0xff) == 't' && selected_object_raw && !start_simulation) {
+				m_gui->m_target = selected_object_raw;
+			}
+
+			if ((allegro_char & 0xff) == 'r' && selected_object_raw && !start_simulation) {
+				m_gui->m_source = selected_object_raw;
+			}
 /*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
 				if (!m_gui->m_source || !m_gui->m_target) {
