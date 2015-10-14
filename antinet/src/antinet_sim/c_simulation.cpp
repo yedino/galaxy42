@@ -538,7 +538,6 @@ void c_simulation::main_loop () {
                     object->m_target = false;
                 }
 					m_gui->m_target_switch = m_gui->m_selected_object;
-                    (*selected_object)->m_target = true; // <- Dimitr WIP
 					m_gui->m_target_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
 
@@ -548,30 +547,27 @@ void c_simulation::main_loop () {
                     object->m_source = false;
                 }
 					m_gui->m_source_switch = m_gui->m_selected_object;
-                    (*selected_object)->m_source = true; // <- Dimitr WIP
 					m_gui->m_source_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
 
 			// start simulation for switches
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
 
-                _dbg1("==================Debug START!");
 				if (!m_gui->m_target_ok || !m_gui->m_source_ok) {
 					_info("please choose target and source switch");
 				} else {
-					auto source = m_gui->m_source_switch;
-					auto target = m_gui->m_target_switch;
-					c_osi2_switch *source_switch = dynamic_cast<c_osi2_switch *>((*source).get());
-					c_osi2_switch *target_switch = dynamic_cast<c_osi2_switch *>((*target).get());
-					std::cout << "UUID SOUCE:" << source_switch->get_uuid_any() << std::endl;
-					std::cout << "UUID TARGET:" << target_switch->get_uuid_any() << std::endl;
+					auto source = m_gui->m_source_node;
+					auto target = m_gui->m_target_node;
+					c_node *source_node = dynamic_cast<c_node*>((*source).get());
+					c_node *target_node = dynamic_cast<c_node*>((*target).get());
+					std::cout << "UUID SOURCE:" << source_node->get_uuid_any() << std::endl;
+					std::cout << "UUID TARGET:" << target_node->get_uuid_any() << std::endl;
 					t_osi3_packet pckg {"go go dijkstry",
-										source_switch->get_uuid_any(),
-										target_switch->get_uuid_any()};
-					source_switch->snd_pgk_test(pckg);
+										target_node->get_uuid_any(),
+										source_node->get_uuid_any()};
+					source_node->process_packet(std::move(pckg));
 					start_simulation = true;
 					simulation_pause = false;
-                    _dbg1("==================Debug STOP!");
 				}
 			}
 /*

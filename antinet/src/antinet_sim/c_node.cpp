@@ -196,16 +196,24 @@ void c_osi2_switch::send_tick() {
 	for (auto & pcg : m_outbox){
 		auto const & dest = pcg.m_dst;
 
-		c_object &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
+		c_osi2_switch &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
 		
 		size_t nic_ix = m_world.route_next_hop_nic_ix( dynamic_cast<c_object&>(*this), dest_switch );
-        _dbg1(">>>>>>>>> DEBUG - NIC_IX: " << nic_ix);
+		
+		_dbg1("*this sw: " << get_uuid_any() <<"\ndest sw:" << dest_switch.get_uuid_any());
+
+
 		if (size_t_is_ok(nic_ix)) {
 			c_osi2_nic & nic = * m_nic.at(nic_ix); // send through this nic
 			nic.add_to_nic_outbox(std::move( pcg )); // move this packet there
+		} else if(get_uuid_any() == dest_switch.get_uuid_any()) {
+
+			_dbg1("Packet hit detination: ok");
 		}
-		else _warn("Can not find the route between from me " << (*this) << " to dest_switch=" << dest_switch);
-		
+		else {
+			_warn("Can not find the route between from me " << (*this) << " to dest_switch=" << dest_switch);
+			_dbg1("nic_ix = " << nic_ix);
+		}
 	}
 	m_outbox.clear();
 
@@ -224,11 +232,10 @@ void c_osi2_switch::send_hello_to_neighbors() {
 	}
 }
 
-void c_osi2_switch::snd_pgk_test(t_osi3_packet &packet) {
+void c_osi2_switch::snd_pgk_test(t_osi3_packet &&packet) {
 	m_outbox.push_back(packet);
-	_dbg1("*****************only testing************* ");
-	_dbg1("***************************get apcket from " << packet.m_src);
-	_dbg1("***************************data: " << packet.m_data);
+	_dbg1("******snd_pkg*******only testing**************** ");
+	_dbg1("***************************get apcket to " << packet.m_dst);
 
 }
 
@@ -300,6 +307,7 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 
 void c_node::process_packet (t_osi3_packet &&packet) {
 	// TODO!!!
+	snd_pgk_test(std::move(packet));
 	_dbg1("***************************get apcket from " << packet.m_src);
 	_dbg1("***************************data: " << packet.m_data);
 }

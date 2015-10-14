@@ -31,7 +31,8 @@ class c_osi2_switch : public c_entity {
 		const unsigned int m_connect_cost = 1; ///< TODO delete?
 		
 		t_device_type m_type;
-		
+		void snd_pgk_test(t_osi3_packet &&);
+
 	public:
 
 		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
@@ -87,7 +88,6 @@ class c_osi2_switch : public c_entity {
 		virtual void draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const;
 		// TODO mv to node
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
-		void snd_pgk_test(t_osi3_packet&);
 };
 
 class c_node : public c_osi2_switch {
