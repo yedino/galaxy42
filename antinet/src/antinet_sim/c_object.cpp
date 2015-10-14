@@ -172,10 +172,10 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 			circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
 		}
 
-		/*if (this == target_object.get()) { // if I am the target object
+        if (m_target) { // if I am the target object
 			circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
 		}
-
+        /*
 		if (this == source_object.get()) {
 			circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
 		}*/
