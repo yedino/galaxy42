@@ -165,20 +165,34 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 	if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
 		auto selected_object = gui.m_selected_object; // iterator
 		_UNUSED(selected_object);
-		//auto target_object = gui.m_target;
-		//auto source_object = gui.m_source;
+        auto target_object = gui.m_target;
+        auto source_object = gui.m_source;
 
-		if (m_selected) { // if I am the selected object
+
+
+        if (m_selected) { // if I am the selected object
 			circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
 		}
+
+//        if (target_object) { // if I am the target object
+//            circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
+//        }
+
+//        if (source_object) {
+//            circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
+//        }
+
 
         if (m_target) { // if I am the target object
 			circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
 		}
-        /*
-		if (this == source_object.get()) {
-			circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
-		}*/
+
+        if (m_source) {
+            circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
+        }
+//		if (this == source_object.get()) {
+//			circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
+//		}
 	}
 	if (layer.m_layer_nr == e_layer_nr_gui) {
 		//auto selected_object = gui.m_selected_object;

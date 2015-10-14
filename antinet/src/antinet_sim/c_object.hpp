@@ -72,6 +72,7 @@ public:
 	
 	bool m_selected = false;
     bool m_target = false;
+    bool m_source = false;
 	
 	virtual void print(std::ostream & oss) const;
 	friend std::ostream& operator<<(std::ostream & oss, const c_object & obj);

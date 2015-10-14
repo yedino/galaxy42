@@ -533,13 +533,22 @@ void c_simulation::main_loop () {
 			}
             if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
 				_dbg1("badger T");
+
+                for (auto &object : m_world->m_objects) {
+                    object->m_target = false;
+                }
 					m_gui->m_target_switch = m_gui->m_selected_object;
+                    (*selected_object)->m_target = true; // <- Dimitr WIP
 					m_gui->m_target_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
 
 			if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
 				_dbg1("badger R");
+                for (auto &object : m_world->m_objects) {
+                    object->m_source = false;
+                }
 					m_gui->m_source_switch = m_gui->m_selected_object;
+                    (*selected_object)->m_source = true; // <- Dimitr WIP
 					m_gui->m_source_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
 
