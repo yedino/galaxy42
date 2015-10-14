@@ -1,6 +1,8 @@
 #include "c_gui.hpp"
 
-c_gui::c_gui() {
+c_gui::c_gui() :
+		m_target_ok(false),
+		m_source_ok(false) {
 	move_to_home();
 }
 

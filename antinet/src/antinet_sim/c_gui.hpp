@@ -17,6 +17,8 @@ public:
 	std::vector<unique_ptr<c_object>>::iterator m_selected_object; ///< current object (e.g. selected for editing)
 
 	shared_ptr<c_cjddev> m_target, m_source; ///< objects selected as Source and Target in simulation
+	bool m_target_ok;		///< easy way to check, if target iterator is correctly initialized
+	bool m_source_ok;		///< easy way to check, if source iterator is correctly initialized
 	std::vector<unique_ptr<c_object>>::iterator m_target_switch;
 	std::vector<unique_ptr<c_object>>::iterator m_source_switch;
     //    std::shared_ptr <FONT> s_font_allegl (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});

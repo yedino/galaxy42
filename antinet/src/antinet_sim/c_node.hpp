@@ -87,7 +87,7 @@ class c_osi2_switch : public c_entity {
 		virtual void draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const;
 		// TODO mv to node
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
-		
+		void snd_pgk_test(t_osi3_packet&);
 };
 
 class c_node : public c_osi2_switch {

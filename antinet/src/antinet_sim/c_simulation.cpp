@@ -534,13 +534,34 @@ void c_simulation::main_loop () {
             if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
 				_dbg1("badger T");
 					m_gui->m_target_switch = m_gui->m_selected_object;
-                    (*selected_object)->m_target = true;
+					m_gui->m_target_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
 
 			if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
 				_dbg1("badger R");
-                m_gui->m_source_switch = m_gui->m_selected_object;
-			//	m_gui->m_source_switch.swap(static_cast<shared_ptr<c_osi2_switch>>(selected_switch));
+					m_gui->m_source_switch = m_gui->m_selected_object;
+					m_gui->m_source_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
+			}
+
+			// start simulation for switches
+			if ((allegro_char & 0xff) == 's' && !start_simulation) {
+
+				if (!m_gui->m_target_ok || !m_gui->m_source_ok) {
+					_info("please choose target and source switch");
+				} else {
+					auto source = m_gui->m_source_switch;
+					auto target = m_gui->m_target_switch;
+					c_osi2_switch *source_switch = dynamic_cast<c_osi2_switch *>((*source).get());
+					c_osi2_switch *target_switch = dynamic_cast<c_osi2_switch *>((*target).get());
+					std::cout << "UUID SOUCE:" << source_switch->get_uuid_any() << std::endl;
+					std::cout << "UUID TARGET:" << target_switch->get_uuid_any() << std::endl;
+					t_osi3_packet pckg {"go go dijkstry",
+										source_switch->get_uuid_any(),
+										target_switch->get_uuid_any()};
+					source_switch->snd_pgk_test(pckg);
+					start_simulation = true;
+					simulation_pause = false;
+				}
 			}
 /*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {

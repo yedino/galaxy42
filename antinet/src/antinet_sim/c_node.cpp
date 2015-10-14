@@ -223,7 +223,13 @@ void c_osi2_switch::send_hello_to_neighbors() {
 	}
 }
 
+void c_osi2_switch::snd_pgk_test(t_osi3_packet &packet) {
+	m_outbox.push_back(packet);
+	_dbg1("*****************only testing************* ");
+	_dbg1("***************************get apcket from " << packet.m_src);
+	_dbg1("***************************data: " << packet.m_data);
 
+}
 
 /////////////////////////////////////
 
