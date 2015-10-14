@@ -532,13 +532,14 @@ void c_simulation::main_loop () {
 				} // moving selected object
 			}
             if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
-                _dbg1("badger T");
-                m_gui->m_target_switch = selected_switch;
+				_dbg1("badger T");
+					m_gui->m_target_switch = m_gui->m_selected_object;
 			}
 
-            if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
-                _dbg1("badger R");
-                m_gui->m_source_switch = selected_switch;
+			if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
+				_dbg1("badger R");
+
+			//	m_gui->m_source_switch.swap(static_cast<shared_ptr<c_osi2_switch>>(selected_switch));
 			}
 /*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
