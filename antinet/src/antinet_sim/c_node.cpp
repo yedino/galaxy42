@@ -1,8 +1,5 @@
 #include "c_node.hpp"
 
-
-
-
 long int c_osi2_switch::s_nr = 0;
 
 

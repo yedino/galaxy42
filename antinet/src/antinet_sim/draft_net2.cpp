@@ -2,7 +2,7 @@
 #include "c_node.hpp"
 #include "osi2.hpp"
 #include "c_networld.hpp"
-
+#include "c_dijkstry.hpp"
 /***
 
 @file Draft for new network simulation system
@@ -245,25 +245,12 @@ int draft_net2() { // the main function for test
 		data);
 	*/
 	
-	c_node &source_node = dynamic_cast<c_node&> (world.find_object_by_name_as_switch("nodeA"));
-	source_node.send_osi3_data_to_name("nodeE", std::move(data));
-	
-	for (int i = 0; i < 10; ++i) {
-		world.tick();
-	}
-	
-	
-	//_mark("Testing - show object:");
-// 	_info( world.find_object_by_name_as_switch("swA") );
-	
-	/*
-	world.print_route_between(
-		world.find_object_by_name_as_switch("nodeA"),
-		world.find_object_by_name_as_switch("nodeE")
-	);
-	*/
-	
-	
+	_mark("Testing - show object:");
+	_info( world.find_object_by_name_as_switch("swA") );
+
+	c_dijkstry01 ( world.find_object_by_name_as_switch("nodeA") ,
+			  world.find_object_by_name_as_switch("nodeE") );
+
 #if 0
 	world.connect_network_devices("","");
 #endif

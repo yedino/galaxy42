@@ -2,6 +2,7 @@
 
 #include "c_drawtarget_opengl.hpp"
 #include "c_file_loader.hpp"
+#include "c_dijkstry.hpp"
 
 long int c_world::s_nr = 0;
 
@@ -210,7 +211,10 @@ size_t_maybe c_world::route_next_hop_nic_ix(c_object &first, c_object &second)
 	return dynamic_cast<c_osi2_switch&>(first).find_which_nic_goes_to_switch_or_invalid(next_switch);
 	*/
 	//_dbg1("route_next_hop_nic_ix");
+
+
 	t_osi2_route_result route = route_find_route_between(first, second);
+	c_dijkstry01(dynamic_cast<c_osi2_switch&>(first),dynamic_cast<c_osi2_switch&>(second),*this);
 	if (!route.valid) return size_t_invalid(); /// error
 	_dbg1("next hop nic index: " << route.first_hop_nic_ix);
 	return route.first_hop_nic_ix;
