@@ -555,6 +555,7 @@ void c_simulation::main_loop () {
 			// start simulation for switches
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
 
+                _dbg1("==================Debug START!");
 				if (!m_gui->m_target_ok || !m_gui->m_source_ok) {
 					_info("please choose target and source switch");
 				} else {
@@ -570,6 +571,7 @@ void c_simulation::main_loop () {
 					source_switch->snd_pgk_test(pckg);
 					start_simulation = true;
 					simulation_pause = false;
+                    _dbg1("==================Debug STOP!");
 				}
 			}
 /*

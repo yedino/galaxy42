@@ -199,7 +199,7 @@ void c_osi2_switch::send_tick() {
 		c_object &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
 		
 		size_t nic_ix = m_world.route_next_hop_nic_ix( dynamic_cast<c_object&>(*this), dest_switch );
-		
+        _dbg1(">>>>>>>>> DEBUG - NIC_IX: " << nic_ix);
 		if (size_t_is_ok(nic_ix)) {
 			c_osi2_nic & nic = * m_nic.at(nic_ix); // send through this nic
 			nic.add_to_nic_outbox(std::move( pcg )); // move this packet there

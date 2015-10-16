@@ -216,8 +216,9 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
 		circle(frame, vx, vy, 10, color);
 	}
-	if (layer.m_layer_nr == e_layer_nr_object_extra) {
+    if (layer.m_layer_nr == e_layer_nr_object_extra) {
 		textout_ex(frame, font, m_name.c_str(), vx - 20, vy - 35, color, -1);
+
 	}
 }
 
