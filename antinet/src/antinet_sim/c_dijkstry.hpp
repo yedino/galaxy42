@@ -26,6 +26,8 @@ class c_dijkstry01 {
 		print_uuid_route();
 	}
 	void find_route();
+	c_osi2_nic& get_next_nic();
+	std::list<t_osi3_uuid>& get_last_routeList();
 	void print_all();
 	void print_uuid_route();
 	void print_name_route(c_world&);
@@ -36,12 +38,15 @@ class c_dijkstry01 {
 	c_osi2_switch & m_start;
 	c_osi2_switch & m_target;
 
+	void calc_route_as_uuidList();
+
 	std::multimap<unsigned int, std::pair<c_osi2_nic&,c_osi2_nic&>> m_map_ofRoute;
 	std::multimap<unsigned int, std::pair<c_osi2_nic&,c_osi2_nic&>>::iterator m_map_it;
 	std::set<t_osi3_uuid> m_nodes_routed;
+	std::list<t_osi3_uuid> m_last_routeList;
 
-	t_osi3_uuid getID(c_osi2_nic& nic) { return nic.get_my_switch().get_uuid_any(); }
-	t_osi3_uuid getID(c_osi2_switch& sw) { return sw.get_uuid_any(); }
+	t_osi3_uuid getID(c_osi2_nic& nic);
+	t_osi3_uuid getID(c_osi2_switch& sw);
 };
 
 #endif // C_DIJKSTRY_HPP

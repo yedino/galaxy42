@@ -205,22 +205,28 @@ void c_osi2_switch::send_tick() {
 
 		c_osi2_switch &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
 		
-		size_t nic_ix = m_world.route_next_hop_nic_ix( dynamic_cast<c_object&>(*this), dest_switch );
-		
-		_dbg1("*this sw: " << get_uuid_any() <<"\ndest sw:" << dest_switch.get_uuid_any());
-
-
-		if (size_t_is_ok(nic_ix)) {
-			c_osi2_nic & nic = * m_nic.at(nic_ix); // send through this nic
+		c_dijkstry01 dij(*this,dest_switch,m_world);
+		if(dij.get_last_routeList().size() >= 2) {
+			c_osi2_nic & nic = dij.get_next_nic();
 			nic.add_to_nic_outbox(std::move( pcg )); // move this packet there
-		} else if(get_uuid_any() == dest_switch.get_uuid_any()) {
-
+		} else {
 			_dbg1("Packet hit detination: ok");
 		}
-		else {
-			_warn("Can not find the route between from me " << (*this) << " to dest_switch=" << dest_switch);
-			_dbg1("nic_ix = " << nic_ix);
-		}
+
+//		size_t nic_ix = m_world.route_next_hop_nic_ix( dynamic_cast<c_object&>(*this), dest_switch );
+//		_dbg1("*this sw: " << get_uuid_any() <<"\ndest sw:" << dest_switch.get_uuid_any());
+
+//		if (size_t_is_ok(nic_ix)) {
+//			c_osi2_nic & nic = * m_nic.at(nic_ix); // send through this nic
+//			std::cout << "old nic adrr: " << &nic << std::endl;
+//			nic4.add_to_nic_outbox(std::move( pcg )); // move this packet there
+//		} else if(get_uuid_any() == dest_switch.get_uuid_any()) {
+
+//		}
+//		else {
+//			_warn("Can not find the route between from me " << (*this) << " to dest_switch=" << dest_switch);
+//			_dbg1("nic_ix = " << nic_ix);
+//		}
 	}
 	m_outbox.clear();
 

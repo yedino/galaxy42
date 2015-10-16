@@ -15,11 +15,11 @@ void c_dijkstry01::find_route() {
 		empl_nics_toMap(next_switch,m_map_it->first);
 		m_nodes_routed.insert(getID(next_switch));
 	}
+	calc_route_as_uuidList();
 }
 
 void c_dijkstry01::empl_nics_toMap(c_osi2_switch &sw, t_osi2_cost cost_to) {
 	for(size_t i = 0; i <= sw.get_last_nic_index(); ++i) {
-
 		c_osi2_nic &nic = sw.get_nic(i);
 		t_osi2_cost cost;
 		c_osi2_nic * nic2 = nic.get_connected_card_or_null(cost);
@@ -50,64 +50,68 @@ void c_dijkstry01::print_all() {
 	}
 }
 
-void c_dijkstry01::print_uuid_route() {
-	std::list<t_osi3_uuid> route;
+void c_dijkstry01::calc_route_as_uuidList() {
 	if(!m_map_ofRoute.empty()) {
-	m_map_it = --m_map_ofRoute.end();
-	route.emplace_front(getID(m_map_it->second.second));
-	t_osi3_uuid searched = getID(m_map_it->second.first);
-	while(m_map_it != m_map_ofRoute.begin()) {
-		if(searched == getID(m_map_it->second.second)) {
-			route.emplace_front(getID(m_map_it->second.second));
-			searched = getID(m_map_it->second.first);
-		}
-		m_map_it--;
-	}
-	if(searched == getID(m_map_it->second.first)) {
-		route.emplace_front(searched);
+		m_map_it = --m_map_ofRoute.end();
+		m_last_routeList.emplace_front(getID(m_map_it->second.second));
+		t_osi3_uuid searched = getID(m_map_it->second.first);
+		while(m_map_it != m_map_ofRoute.begin()) {
+				if(searched == getID(m_map_it->second.second)) {
+					m_last_routeList.emplace_front(getID(m_map_it->second.second));
+					searched = getID(m_map_it->second.first);
+				}
+				m_map_it--;
+			}
+			if(searched == getID(m_map_it->second.first)) {
+				m_last_routeList.emplace_front(searched);
+			} else {
+				m_last_routeList.emplace_front(searched);
+				m_last_routeList.emplace_front(getID(m_map_it->second.first));
+			}
 	} else {
-		route.emplace_front(searched);
-		route.emplace_front(getID(m_map_it->second.first));
+		m_last_routeList.emplace_front(getID(m_start));
 	}
-	} else {
-		route.emplace_front(getID(m_start));
-	}
+}
 
+std::list<t_osi3_uuid>& c_dijkstry01::get_last_routeList() {
+	return m_last_routeList;
+}
+
+c_osi2_nic& c_dijkstry01::get_next_nic() {
+	if(m_last_routeList.size() < 2) {
+		std::cout << "There are no next nic: target has been reached!" << std::endl;
+		return m_map_ofRoute.begin()->second.first;
+	} else {
+		for(auto &obj : m_map_ofRoute) {
+			if(obj.second.second.get_my_switch().get_uuid_any() == *(++(m_last_routeList.begin()))) { // *(++(... get second list element
+				return obj.second.first;
+			}
+		}
+		std::cout << "Something went wrong: return source nic" << std::endl;
+		return m_map_ofRoute.begin()->second.first;
+	}
+}
+
+void c_dijkstry01::print_uuid_route() {
 	std::cout << "route by switch uuid: " << std::endl;
-	for(auto &id : route) {
+	for(auto &id : m_last_routeList) {
 		std::cout << id << " --> ";
 	}
 	std::cout << "the_end" << std::endl;
-
 }
 
 void c_dijkstry01::print_name_route(c_world &world) {
-	std::list<t_osi3_uuid> route;
-	if(!m_map_ofRoute.empty()) {
-		m_map_it = --m_map_ofRoute.end();
-		route.emplace_front(getID(m_map_it->second.second));
-		t_osi3_uuid searched = getID(m_map_it->second.first);
-		while(m_map_it != m_map_ofRoute.begin()) {
-			if(searched == getID(m_map_it->second.second)) {
-				route.emplace_front(getID(m_map_it->second.second));
-				searched = getID(m_map_it->second.first);
-			}
-				m_map_it--;
-		}
-		if(searched == getID(m_map_it->second.first)) {
-			route.emplace_front(searched);
-		} else {
-			route.emplace_front(searched);
-			route.emplace_front(getID(m_map_it->second.first));
-		}
-	} else {
-		route.emplace_front(getID(m_start));
-	}
 	std::cout << "route by switch name: " << std::endl;
-	for(auto &id : route) {
+	for(auto &id : m_last_routeList) {
 		std::cout << world.find_object_by_uuid_as_object(id).get_name() << " --> ";
 	}
 	std::cout << "the_end" << std::endl;
-
 }
 
+t_osi3_uuid c_dijkstry01::getID(c_osi2_nic &nic) {
+	return nic.get_my_switch().get_uuid_any();
+}
+
+t_osi3_uuid c_dijkstry01::getID(c_osi2_switch &sw) {
+	return sw.get_uuid_any();
+}

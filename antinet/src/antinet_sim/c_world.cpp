@@ -214,7 +214,6 @@ size_t_maybe c_world::route_next_hop_nic_ix(c_object &first, c_object &second)
 
 
 	t_osi2_route_result route = route_find_route_between(first, second);
-	c_dijkstry01(dynamic_cast<c_osi2_switch&>(first),dynamic_cast<c_osi2_switch&>(second),*this);
 	if (!route.valid) return size_t_invalid(); /// error
 	_dbg1("next hop nic index: " << route.first_hop_nic_ix);
 	return route.first_hop_nic_ix;

@@ -7,6 +7,7 @@
 #include "c_world.hpp"
 #include "c_msg.hpp"
 #include "c_gui.hpp"
+#include "c_dijkstry.hpp"
 
 class c_osi2_switch;
 class c_osi2_cable_direct; 
