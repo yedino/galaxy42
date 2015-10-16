@@ -537,6 +537,7 @@ void c_simulation::main_loop () {
                 for (auto &object : m_world->m_objects) {
                     object->m_target = false;
                 }
+                (*selected_object)->m_target = true;
                     m_gui->m_target_node = m_gui->m_selected_object;
 					m_gui->m_target_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
@@ -546,6 +547,7 @@ void c_simulation::main_loop () {
                 for (auto &object : m_world->m_objects) {
                     object->m_source = false;
                 }
+                (*selected_object)->m_source = true;
                     m_gui->m_source_node = m_gui->m_selected_object;
 					m_gui->m_source_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}

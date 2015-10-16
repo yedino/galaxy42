@@ -768,7 +768,7 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 					auto complete =  static_cast<double>(m_animframe) / static_cast<double>(g_max_anim_frame); // 0.0 - 1.0
 					// ( m_outbox.at(0)->m_starttime   -   gui.... world... get_simclock() ) / sendingtime
 					// sending time - constant for this card, e.g. 2.0
-					msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
+                    msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
 #if defined USE_API_TR
 #else
 					if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) {
