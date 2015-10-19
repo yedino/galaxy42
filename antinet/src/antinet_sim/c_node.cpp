@@ -195,13 +195,13 @@ void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
         const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
 		t_geo_point A(this_vx,this_vy);
 		t_geo_point B(next_vx,next_vy);
-		t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.back().second);
+        t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.back().second);
 		_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
         //textout_ex(frame, font, "Rububu", between.x, between.y, makecol(255,0,0), -1);
         draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
                           between.x - c_bitmaps::get_instance().m_package_green->w / 2,
                           between.y - c_bitmaps::get_instance().m_package_green->h / 2);
-        sleep(0.5);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		if(m_draw_outbox.back().second < 1.) {
             m_draw_outbox.back().second += draw_step;
 		} else {
