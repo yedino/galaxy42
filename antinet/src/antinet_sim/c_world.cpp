@@ -88,18 +88,18 @@ void c_world::add_test () {
 //	load("layout/current/map2.txt");
 
 	add_node("nodeA",100,100); // ***
-	add_node("nodeB",300,100);
-	add_node("nodeC1",300,300);
-	add_node("nodeC2",300,320);
-	add_node("nodeC3",300,340);
-	add_node("nodeC4",300,360);
+    //add_node("nodeB",300,100);
+    add_node("nodeC1",300,250);
+    add_node("nodeC2",380,280);
+    add_node("nodeC3",370,370);
+    add_node("nodeC4",300,450);
 	add_node("nodeD",150,200);
 	add_node("nodeE",400,100); // ***
 	
 	add_osi2_switch("swA", 200,100);
-	add_osi2_switch("swB", 300,100);
+    add_osi2_switch("swB", 300,50);
 	add_osi2_switch("swC", 200,300);
-	add_osi2_switch("swD", 300,100);
+    add_osi2_switch("swD", 300,150);
 	
 	_mark("Connecting devices");
 	connect_network_devices("nodeA","swA", 1);
