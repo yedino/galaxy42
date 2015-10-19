@@ -153,11 +153,12 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 		t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
 		line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
         textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
+        if(!m_draw_outbox.empty()) {
+            draw_packet(drawtarget,layer_any);
+        }
 	}
 	draw_messages(drawtarget, layer_any);
-	if(!m_draw_outbox.empty()) {
-		draw_packet(drawtarget,layer_any);
-	}
+
 }
 
 void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const {
@@ -184,7 +185,19 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 }
 
 void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
-
+    const auto & gui = * drawtarget.m_gui;
+    auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
+    BITMAP *frame = layer.m_frame;
+    while(!m_draw_outbox.empty()){
+        c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.back());
+        const int this_vx = gui.view_x(m_x), this_vy = gui.view_y(m_y);
+        const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
+        _dbg1("DEBUG<<<<: " << vx << "  " << vy);
+        sleep(2);
+        textout_ex(frame, font, "Rububu", vx-10, vy-10, makecol(255,0,0), -1);
+        sleep(2);
+        m_draw_outbox.pop_back();
+    }
 }
 
 void c_osi2_switch::logic_tick() {
