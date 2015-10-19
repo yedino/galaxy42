@@ -43,6 +43,7 @@ void c_dijkstry01::empl_nics_toMap(c_osi2_switch &sw, t_osi2_cost cost_to) {
 void c_dijkstry01::print_all() {
 	std::cout << "check all map:" << std::endl;
 	for(auto &ptr_object : m_map_ofRoute) {
+        _dbg1("DEBUG1: " << ptr_object.second.first);
 		std::cout << "cost: " << ptr_object.first
 			  << " for switch: " << getID(ptr_object.second.first) << " -> " << getID(ptr_object.second.second)
 			  << "\n\tfor nic: " << ptr_object.second.first << " -> " << ptr_object.second.second << std::endl;

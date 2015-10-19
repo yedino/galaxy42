@@ -164,10 +164,20 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	t_geo_point send_piont, receive_point, msg_circle;
+    //_dbg1(".................VX: " << vx << " ................VY: " << vy);
 	for (auto &nic_ptr : m_nic) {
 		std::stringstream ss;
 		ss << *nic_ptr << std::endl;
+        if(m_outbox.size()!=0){
+            _dbg1(".................VX: " << vx << " ................VY: " << vy << " <<<<<<<<");
+           //sleep(1);
+            _dbg1("...................m_outbox.at(0).m_data: " << m_outbox.at(0).m_data);
+        textout_ex(frame, font, (m_outbox.at(0).m_data).c_str(), vx+10, vy, makecol(255,0,0), -1);
+        textout_ex(frame, font, (std::to_string(m_outbox.at(0).m_dst)).c_str(), vx+10, vy+10, makecol(255,0,0), -1);
+        textout_ex(frame, font, (std::to_string(m_outbox.at(0).m_src)).c_str(), vx+10, vy+20, makecol(255,0,0), -1);
+        //sleep(1);
 	}
+    }
 }
 
 void c_osi2_switch::logic_tick() {

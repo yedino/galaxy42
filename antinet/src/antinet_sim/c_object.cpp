@@ -756,12 +756,12 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 				if (price >= 1000) thick = 8;
 				alex_thick_line(frame, vx, vy, gui.view_x(neighbor_ptr->m_x), gui.view_y(neighbor_ptr->m_y), thick - 1, color);
 
-				if (print_send_message) {
+                if (print_send_message) {
+                    _mark("PRINT_SEND_MESSAGE");
 					//line(frame, vx, vy, neighbor_ptr->vx, neighbor_ptr->vy, makecol(255, 0, 0));
 					t_geo_point send_piont, receive_point, msg_circle;
 					send_piont.x = vx;
 					send_piont.y = vy;
-
 					receive_point.x = gui.view_x(neighbor_ptr->m_x);
 					receive_point.y = gui.view_y(neighbor_ptr->m_y);
 					
@@ -771,7 +771,9 @@ void c_cjddev::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
                     msg_circle = c_geometry::point_on_line_between_part(send_piont, receive_point, complete);
 #if defined USE_API_TR
 #else
-					if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) {
+                    //if (m_outbox.at(0)->m_msg->m_logic == e_msgkind_buy_net_inq) {
+                    if (true) {
+                        _mark("Draw a packiet");
 						draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
 						                  msg_circle.x - c_bitmaps::get_instance().m_package_green->w / 2,
 						                  msg_circle.y - c_bitmaps::get_instance().m_package_green->h / 2);
