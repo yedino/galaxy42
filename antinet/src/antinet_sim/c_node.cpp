@@ -185,7 +185,7 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 }
 
 void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
-	double draw_step = 0.02;
+    double draw_step = 0.02;
     const auto & gui = * drawtarget.m_gui;
     auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
     BITMAP *frame = layer.m_frame;
@@ -197,9 +197,13 @@ void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
 		t_geo_point B(next_vx,next_vy);
 		t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.back().second);
 		_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
-		textout_ex(frame, font, "Rububu", between.x, between.y, makecol(255,0,0), -1);
+        //textout_ex(frame, font, "Rububu", between.x, between.y, makecol(255,0,0), -1);
+        draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
+                          between.x - c_bitmaps::get_instance().m_package_green->w / 2,
+                          between.y - c_bitmaps::get_instance().m_package_green->h / 2);
+        sleep(0.5);
 		if(m_draw_outbox.back().second < 1.) {
-			m_draw_outbox.back().second += draw_step;
+            m_draw_outbox.back().second += draw_step;
 		} else {
 			m_draw_outbox.pop_back();
 		}
