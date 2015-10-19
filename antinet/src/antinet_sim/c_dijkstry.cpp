@@ -16,6 +16,8 @@ void c_dijkstry01::find_route() {
 		m_nodes_routed.insert(getID(next_switch));
 	}
 	calc_route_as_uuidList();
+
+	std::cout << "targetID : " << getID(m_target) << std::endl;
 }
 
 void c_dijkstry01::empl_nics_toMap(c_osi2_switch &sw, t_osi2_cost cost_to) {
@@ -35,7 +37,7 @@ void c_dijkstry01::empl_nics_toMap(c_osi2_switch &sw, t_osi2_cost cost_to) {
 		if (getID(*nic2) == getID(m_target)) {
 			std::cout << "Found route!" << std::endl;
 			m_route_ok = true;
-			continue;
+			break;
 		}
 	}
 }
@@ -78,7 +80,9 @@ std::list<t_osi3_uuid>& c_dijkstry01::get_last_routeList() {
 }
 
 t_osi3_uuid c_dijkstry01::get_next_uuid() {
-	return *(++(m_last_routeList.begin()));
+	std::list<t_osi3_uuid>::iterator it_ls = m_last_routeList.begin();
+	it_ls++;
+	return *it_ls;
 }
 
 c_osi2_nic& c_dijkstry01::get_next_nic() {
