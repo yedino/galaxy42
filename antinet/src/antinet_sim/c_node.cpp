@@ -170,9 +170,12 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 		std::stringstream ss;
 		ss << *nic_ptr << std::endl;
 		if(m_inbox.size()!=0){
-			textout_ex(frame, font, (m_inbox.at(0).m_data).c_str(), vx+10, vy, makecol(255,0,0), -1);
-			textout_ex(frame, font, (std::to_string(m_inbox.at(0).m_dst)).c_str(), vx+10, vy+10, makecol(255,0,0), -1);
-			textout_ex(frame, font, (std::to_string(m_inbox.at(0).m_src)).c_str(), vx+10, vy+20, makecol(255,0,0), -1);
+            textout_ex(frame, font, ((std::string)("Data: ")).c_str(), vx+10, vy-20, makecol(255,0,0), -1);
+            textout_ex(frame, font, (m_inbox.at(0).m_data).c_str(), vx+10, vy-10, makecol(0,150,255), -1);
+            textout_ex(frame, font, ((std::string)("Dest addr: ")).c_str(), vx+10, vy, makecol(255,0,0), -1);
+            textout_ex(frame, font, (std::to_string(m_inbox.at(0).m_dst)).c_str(), vx+10, vy+10, makecol(0,150,255), -1);
+            textout_ex(frame, font, ((std::string)("Dest src: ")).c_str(), vx+10, vy+20, makecol(255,0,0), -1);
+            textout_ex(frame, font, (std::to_string(m_inbox.at(0).m_src)).c_str(), vx+10, vy+30, makecol(0,150,255), -1);
 	}
     }
 }
