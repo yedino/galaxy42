@@ -155,6 +155,9 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
         textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
 	}
 	draw_messages(drawtarget, layer_any);
+	if(!m_draw_outbox.empty()) {
+		draw_packet(drawtarget,layer_any);
+	}
 }
 
 void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const {
@@ -178,6 +181,10 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
         //sleep(1);
 	}
     }
+}
+
+void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
+
 }
 
 void c_osi2_switch::logic_tick() {
@@ -206,8 +213,10 @@ void c_osi2_switch::send_tick() {
 		c_osi2_switch &dest_switch = m_world.find_object_by_uuid_as_switch(dest);
 		
 		c_dijkstry01 dij(*this,dest_switch,m_world);
-		if(dij.get_last_routeList().size() >= 2) {
+		std::list<t_osi3_uuid> route_list = dij.get_last_routeList();
+		if(route_list.size() >= 2) {
 			c_osi2_nic & nic = dij.get_next_nic();
+			m_draw_outbox.push_back(*(++(route_list.begin())));
 			nic.add_to_nic_outbox(std::move( pcg )); // move this packet there
 		} else {
 			_dbg1("Packet hit detination: ok");
@@ -231,6 +240,7 @@ void c_osi2_switch::send_tick() {
 	m_outbox.clear();
 
 }
+
 
 void c_osi2_switch::send_hello_to_neighbors() {
 	_dbg2("send test hello packet to all neighbors");

@@ -25,6 +25,7 @@ class c_osi2_switch : public c_entity {
 		c_world &m_world; ///< my netwok world in which I exist
 		
 		std::vector<std::unique_ptr<c_osi2_nic>> m_nic; ///< all my NIC cards, for all my ports
+		std::vector<t_osi3_uuid> m_draw_outbox; ///< vector of nic index in this switch for draw to packet.
 		
 		std::vector<t_osi3_packet> m_outbox; ///< data that I will wish to send (over some NIC)
 		std::vector<t_osi3_packet> m_inbox;
@@ -87,6 +88,7 @@ class c_osi2_switch : public c_entity {
 		
 		virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) override;
 		virtual void draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const;
+		virtual void draw_packet(c_drawtarget &drawtarget, c_layer &layer_any);
 		// TODO mv to node
 		void send_hello_to_neighbors(); ///< send HELLO packet to all neighbors
 };
