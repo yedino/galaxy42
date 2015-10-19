@@ -40,14 +40,15 @@ class c_dijkstry01 {
 	c_osi2_switch & m_target;
 
 	void calc_route_as_uuidList();
+	void draw_packet(c_osi2_switch &,c_osi2_switch &);
 
-	std::multimap<unsigned int, std::pair<c_osi2_nic&,c_osi2_nic&>> m_map_ofRoute;
-	std::multimap<unsigned int, std::pair<c_osi2_nic&,c_osi2_nic&>>::iterator m_map_it;
+	std::multimap<unsigned int, std::pair<c_osi2_nic &,c_osi2_nic &>> m_map_ofRoute;
+	std::multimap<unsigned int, std::pair<c_osi2_nic &,c_osi2_nic &>>::iterator m_map_it;
 	std::set<t_osi3_uuid> m_nodes_routed;
 	std::list<t_osi3_uuid> m_last_routeList;
 
-	t_osi3_uuid getID(c_osi2_nic& nic);
-	t_osi3_uuid getID(c_osi2_switch& sw);
+	t_osi3_uuid getID(c_osi2_nic &nic);
+	t_osi3_uuid getID(c_osi2_switch &sw);
 };
 
 #endif // C_DIJKSTRY_HPP

@@ -560,14 +560,14 @@ void c_simulation::main_loop () {
 				} else {
 					auto source = m_gui->m_source_node;
 					auto target = m_gui->m_target_node;
-					c_node *source_node = dynamic_cast<c_node*>((*source).get());
-					c_node *target_node = dynamic_cast<c_node*>((*target).get());
+					c_osi2_switch *source_node = dynamic_cast<c_osi2_switch*>((*source).get());
+					c_osi2_switch *target_node = dynamic_cast<c_osi2_switch*>((*target).get());
 					std::cout << "UUID SOURCE:" << source_node->get_uuid_any() << std::endl;
 					std::cout << "UUID TARGET:" << target_node->get_uuid_any() << std::endl;
 					t_osi3_packet pckg {"go go dijkstry",
 										target_node->get_uuid_any(),
 										source_node->get_uuid_any()};
-					source_node->process_packet(std::move(pckg));
+					source_node->snd_pgk_test(std::move(pckg));
 					start_simulation = true;
 					simulation_pause = false;
 				}
