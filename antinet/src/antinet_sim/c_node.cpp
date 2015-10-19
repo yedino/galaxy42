@@ -19,7 +19,6 @@ bool c_osi2_switch::operator!= (const c_osi2_switch &switch_) {
 	return switch_.m_nr != this->m_nr;
 }
 
-
 void c_osi2_switch::create_nic()
 {
 	m_nic.push_back( make_unique<c_osi2_nic>(*this) ); // new card, it is plugged into me and added to me
@@ -41,7 +40,6 @@ c_osi2_nic &c_osi2_switch::use_nic(unsigned int nr)
 t_device_type c_osi2_switch::get_type() {
 	return m_type;
 }
-
 
 size_t_maybe c_osi2_switch::get_last_nic_index() const {
 	auto size = m_nic.size();
@@ -153,12 +151,11 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 		t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
 		line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
         textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
-		if(!m_draw_outbox.empty()) {
-			draw_packet(drawtarget,layer_any);
-        }
 	}
 	draw_messages(drawtarget, layer_any);
-
+	if(!m_draw_outbox.empty()) {
+		draw_packet(drawtarget,layer_any);
+	}
 }
 
 void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const {
@@ -172,14 +169,10 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 	for (auto &nic_ptr : m_nic) {
 		std::stringstream ss;
 		ss << *nic_ptr << std::endl;
-        if(m_outbox.size()!=0){
-            _dbg1(".................VX: " << vx << " ................VY: " << vy << " <<<<<<<<");
-           //sleep(1);
-            _dbg1("...................m_outbox.at(0).m_data: " << m_outbox.at(0).m_data);
-        textout_ex(frame, font, (m_outbox.at(0).m_data).c_str(), vx+10, vy, makecol(255,0,0), -1);
-        textout_ex(frame, font, (std::to_string(m_outbox.at(0).m_dst)).c_str(), vx+10, vy+10, makecol(255,0,0), -1);
-        textout_ex(frame, font, (std::to_string(m_outbox.at(0).m_src)).c_str(), vx+10, vy+20, makecol(255,0,0), -1);
-        //sleep(1);
+		if(m_inbox.size()!=0){
+			textout_ex(frame, font, (m_inbox.at(0).m_data).c_str(), vx+10, vy, makecol(255,0,0), -1);
+			textout_ex(frame, font, (std::to_string(m_inbox.at(0).m_dst)).c_str(), vx+10, vy+10, makecol(255,0,0), -1);
+			textout_ex(frame, font, (std::to_string(m_inbox.at(0).m_src)).c_str(), vx+10, vy+20, makecol(255,0,0), -1);
 	}
     }
 }
@@ -189,25 +182,24 @@ void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
     const auto & gui = * drawtarget.m_gui;
     auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
     BITMAP *frame = layer.m_frame;
-  //  while(!m_draw_outbox.empty()){
-		c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.back().first);
-        const int this_vx = gui.view_x(m_x), this_vy = gui.view_y(m_y);
-        const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
-		t_geo_point A(this_vx,this_vy);
-		t_geo_point B(next_vx,next_vy);
-        t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.back().second);
-		_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
-        //textout_ex(frame, font, "Rububu", between.x, between.y, makecol(255,0,0), -1);
-        draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
-                          between.x - c_bitmaps::get_instance().m_package_green->w / 2,
-                          between.y - c_bitmaps::get_instance().m_package_green->h / 2);
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		if(m_draw_outbox.back().second < 1.) {
-            m_draw_outbox.back().second += draw_step;
-		} else {
-			m_draw_outbox.pop_back();
-		}
-	//}
+	c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.back().first);
+	const int this_vx = gui.view_x(m_x), this_vy = gui.view_y(m_y);
+	const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
+	t_geo_point A(this_vx,this_vy);
+	t_geo_point B(next_vx,next_vy);
+	t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.back().second);
+	_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
+	//textout_ex(frame, font, "Rububu", between.x, between.y, makecol(255,0,0), -1);
+	draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
+					  between.x - c_bitmaps::get_instance().m_package_green->w / 2,
+					  between.y - c_bitmaps::get_instance().m_package_green->h / 2);
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	if(m_draw_outbox.back().second < 1.) {
+	   m_draw_outbox.back().second += draw_step;
+	} else {
+		m_draw_outbox.pop_back();
+	}
+
 }
 
 void c_osi2_switch::logic_tick() {
@@ -261,7 +253,6 @@ void c_osi2_switch::send_tick() {
 //		}
 	}
 	m_outbox.clear();
-
 }
 
 
