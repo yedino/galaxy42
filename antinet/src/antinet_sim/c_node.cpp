@@ -153,8 +153,8 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 		t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
 		line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
         textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
-        if(!m_draw_outbox.empty()) {
-            draw_packet(drawtarget,layer_any);
+		if(!m_draw_outbox.empty()) {
+			draw_packet(drawtarget,layer_any);
         }
 	}
 	draw_messages(drawtarget, layer_any);
@@ -185,19 +185,25 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 }
 
 void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
+	double draw_step = 0.02;
     const auto & gui = * drawtarget.m_gui;
     auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
     BITMAP *frame = layer.m_frame;
-    while(!m_draw_outbox.empty()){
-        c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.back());
+  //  while(!m_draw_outbox.empty()){
+		c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.back().first);
         const int this_vx = gui.view_x(m_x), this_vy = gui.view_y(m_y);
         const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
-        _dbg1("DEBUG<<<<: " << vx << "  " << vy);
-        sleep(2);
-        textout_ex(frame, font, "Rububu", vx-10, vy-10, makecol(255,0,0), -1);
-        sleep(2);
-        m_draw_outbox.pop_back();
-    }
+		t_geo_point A(this_vx,this_vy);
+		t_geo_point B(next_vx,next_vy);
+		t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.back().second);
+		_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
+		textout_ex(frame, font, "Rububu", between.x, between.y, makecol(255,0,0), -1);
+		if(m_draw_outbox.back().second < 1.) {
+			m_draw_outbox.back().second += draw_step;
+		} else {
+			m_draw_outbox.pop_back();
+		}
+	//}
 }
 
 void c_osi2_switch::logic_tick() {
@@ -229,7 +235,7 @@ void c_osi2_switch::send_tick() {
 		std::list<t_osi3_uuid> route_list = dij.get_last_routeList();
 		if(route_list.size() >= 2) {
 			c_osi2_nic & nic = dij.get_next_nic();
-			m_draw_outbox.push_back(*(++(route_list.begin())));
+			m_draw_outbox.push_back(std::make_pair<t_osi3_uuid,double>(dij.get_next_uuid(),0));
 			nic.add_to_nic_outbox(std::move( pcg )); // move this packet there
 		} else {
 			_dbg1("Packet hit detination: ok");

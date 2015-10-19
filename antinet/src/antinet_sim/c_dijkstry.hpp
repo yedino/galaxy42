@@ -26,8 +26,9 @@ class c_dijkstry01 {
 		print_uuid_route();
 	}
 	void find_route();
-	c_osi2_nic& get_next_nic();
 	std::list<t_osi3_uuid>& get_last_routeList();
+	t_osi3_uuid get_next_uuid();
+	c_osi2_nic& get_next_nic();
 	void print_all();
 	void print_uuid_route();
 	void print_name_route(c_world&);

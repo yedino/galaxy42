@@ -77,13 +77,17 @@ std::list<t_osi3_uuid>& c_dijkstry01::get_last_routeList() {
 	return m_last_routeList;
 }
 
+t_osi3_uuid c_dijkstry01::get_next_uuid() {
+	return *(++(m_last_routeList.begin()));
+}
+
 c_osi2_nic& c_dijkstry01::get_next_nic() {
 	if(m_last_routeList.size() < 2) {
 		std::cout << "There are no next nic: target has been reached!" << std::endl;
 		return m_map_ofRoute.begin()->second.first;
 	} else {
 		for(auto &obj : m_map_ofRoute) {
-			if(obj.second.second.get_my_switch().get_uuid_any() == *(++(m_last_routeList.begin()))) { // *(++(... get second list element
+			if(obj.second.second.get_my_switch().get_uuid_any() == get_next_uuid()) { // *(++(... get second list element
 				return obj.second.first;
 			}
 		}
