@@ -4,6 +4,7 @@
 #include "libs1.hpp"
 #include "c_geometry.hpp"
 #include "c_world.hpp"
+#include "c_file_loader.hpp"
 
 extern unsigned int g_max_anim_frame;
 
