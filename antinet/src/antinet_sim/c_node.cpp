@@ -192,18 +192,18 @@ void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
 	t_geo_point A(this_vx,this_vy);
 	t_geo_point B(next_vx,next_vy);
 	t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.front().second);
-	_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
-	_dbg1("Layer_allegro nr: " << layer.m_layer_nr);
+	//_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
+	//_dbg1("Layer_allegro nr: " << layer.m_layer_nr);
 	draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
 					  between.x - c_bitmaps::get_instance().m_package_green->w / 2,
 					  between.y - c_bitmaps::get_instance().m_package_green->h / 2);
-	textout_ex(frame, font, (std::to_string(m_draw_outbox.front().second)).c_str(), between.x, between.y-10, makecol(0,15,25), -1);
+	std::string send_percent = std::to_string(static_cast<int>(100*m_draw_outbox.front().second)) + "%";
+	textout_ex(frame, font, send_percent.c_str(), between.x+15, between.y, makecol(0,15,25), -1);
 	if(m_draw_outbox.front().second < 1.) {
 		m_draw_outbox.front().second += draw_step;
 	} else {
 		m_draw_outbox.pop();
 	}
-
 }
 
 void c_osi2_switch::logic_tick() {

@@ -5,7 +5,8 @@
 
 #include "c_drawtarget_opengl.hpp"
 
-unsigned int g_max_anim_frame = 1000;
+unsigned int g_max_anim_frame = 250;
+unsigned int g_max_frameRate = 60;
 
 c_simulation::c_simulation (t_drawtarget_type drawtarget_type) 
 : 
@@ -114,6 +115,7 @@ void c_simulation::main_loop () {
 
 	//	bool allegro_keys_any_was=false; // is any key pressed right now (for key press/release)
 	long loop_miliseconds = 0;
+	long loop_sleeptime = 0;
 	long unsigned int frame_checkpoint = 0; /// needed for speed control (without world_draw manipulate in spacetime!)
 	_UNUSED(frame_checkpoint);
 
@@ -382,7 +384,7 @@ void c_simulation::main_loop () {
 		string mouse_pos_str = std::to_string(gui_mouse_x) + " " + std::to_string(gui_mouse_y);
 		string fps_str = "fps ???";
 		if (loop_miliseconds != 0) {
-			fps_str = "fps: " + std::to_string(1000 / loop_miliseconds);
+			fps_str = "fps: " + std::to_string(1000 / (loop_miliseconds+loop_sleeptime));
 		}
 
 		const int txt_h = 12; // line height (separation between lines)
@@ -530,7 +532,7 @@ void c_simulation::main_loop () {
 				} // moving selected object
 			}
             if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
-				_dbg1("badger T");
+				_dbg1("Target selected");
 
                 for (auto &object : m_world->m_objects) {
                     object->m_target = false;
@@ -541,7 +543,7 @@ void c_simulation::main_loop () {
 			}
 
 			if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
-				_dbg1("badger R");
+				_dbg1("Source selected");
                 for (auto &object : m_world->m_objects) {
                     object->m_source = false;
                 }
@@ -744,6 +746,11 @@ void c_simulation::main_loop () {
 		auto stop_time = std::chrono::high_resolution_clock::now();
 		auto diff = stop_time - start_time;
 		loop_miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
+		if(loop_miliseconds < 1000/g_max_frameRate) {
+			loop_sleeptime = (1000/g_max_frameRate) - loop_miliseconds;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(loop_sleeptime));
+		//_dbg1("Loop sleeptime : " << loop_sleeptime);
 	}
 
 	std::ofstream out_file("../layout/current/out.map.txt");
