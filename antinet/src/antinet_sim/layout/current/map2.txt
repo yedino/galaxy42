@@ -1,0 +1,67 @@
+add node {
+x 100
+y 100
+name nodeA
+}
+add node {
+x 300
+y 250
+name nodeC1
+}
+add node {
+x 380
+y 280
+name nodeC2
+}
+add node {
+x 370
+y 370
+name nodeC3
+}
+add node {
+x 300
+y 450
+name nodeC4
+}
+add node {
+x 150
+y 200
+name nodeD
+}
+add node {
+x 400
+y 100
+name nodeE
+}
+add switch {
+x 200
+y 100
+name swA
+}
+add switch {
+x 300
+y 50
+name swB
+}
+add switch {
+x 200
+y 300
+name swC
+}
+add switch {
+x 300
+y 150
+name swD
+}
+connections {
+swA => nodeA
+swB => swA
+swD => swB
+nodeD => nodeA
+swC => swA
+nodeC1 => swC
+nodeC2 => swC
+nodeC3 => swC
+nodeC4 => swC
+nodeE => swD
+}
