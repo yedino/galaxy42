@@ -31,7 +31,8 @@ void c_dijkstry01::empl_nics_toMap(c_osi2_switch &sw, t_osi2_cost cost_to) {
 		std::pair<c_osi2_nic&,c_osi2_nic&>local_pair(nic,*nic2);
 		if(std::find(m_nodes_routed.begin(),m_nodes_routed.end(),getID(nic2->get_my_switch())) == m_nodes_routed.end()) {
 
-		//	draw_packet(nic.get_my_switch(), nic2->get_my_switch());
+			//draw_packet(nic.get_my_switch(), nic.get_my_switch());
+
 			m_map_ofRoute.emplace(cost+cost_to,local_pair);
 			m_nodes_routed.insert(getID(nic2->get_my_switch()));
 			//std::cout << "adding2 " << getID(nic2->get_my_switch()) << std::endl; // dbg

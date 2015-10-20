@@ -203,6 +203,7 @@ void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
 	} else {
 		m_draw_outbox.pop();
 	}
+
 }
 
 void c_osi2_switch::logic_tick() {
@@ -276,6 +277,7 @@ void c_osi2_switch::snd_pgk_test(t_osi3_packet &&packet) {
 	m_outbox.push_back(packet);
 	_dbg1("******snd_pkg*******only testing**************** ");
 	_dbg1("***************************get apcket to " << packet.m_dst);
+
 }
 
 /////////////////////////////////////
@@ -346,6 +348,7 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 
 void c_node::process_packet (t_osi3_packet &&packet) {
 	// TODO!!!
+	snd_pgk_test(std::move(packet));
 	_dbg1("***************************get apcket from " << packet.m_src);
 	_dbg1("***************************data: " << packet.m_data);
 }
