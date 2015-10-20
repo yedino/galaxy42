@@ -217,9 +217,11 @@ void c_file_loader::save(const string& p_filename)
 	for (auto & object_ptr : m_world->m_cable_direct) {
 		c_osi2_cable_direct & object = * object_ptr;
 //		stream<<object->endpoint;
-		stream<<object.get_endpoints().at(0).get().get_serial_number();
-		stream<<"=>"<<std::endl;
-		stream<<object.get_endpoints().at(1).get().get_serial_number();
+
+        stream<<(m_world->find_object_by_uuid_as_object(object.get_endpoints().at(0).get().get_uuid())).get_name();
+        stream<<" => ";
+        stream<<(m_world->find_object_by_uuid_as_object(object.get_endpoints().at(1).get().get_uuid())).get_name();
+        stream<<std::endl;
 
 //		shared_ptr<c_> cjddev_ptr = std::dynamic_pointer_cast<c_cjddev>(object);
 //		for (auto neighbor_address : cjddev_ptr->get_neighbors_addresses()) {
@@ -264,9 +266,10 @@ void c_file_loader::save(std::ostream &stream){
 		c_osi2_cable_direct & object = * object_ptr;
 		// stream<<object_ptr->get_endpoints().at(0).get().get_serial_number();
 		
-		stream<<object.get_endpoints().at(0).get().get_serial_number();
-		stream<<"=>"<<std::endl;
-		stream<<object.get_endpoints().at(1).get().get_serial_number();
+        stream<<(m_world->find_object_by_uuid_as_object(object.get_endpoints().at(0).get().get_uuid())).get_name();
+        stream<<" => ";
+        stream<<(m_world->find_object_by_uuid_as_object(object.get_endpoints().at(1).get().get_uuid())).get_name();
+        stream<<std::endl;
 
 //		shared_ptr<c_> cjddev_ptr = std::dynamic_pointer_cast<c_cjddev>(object);
 //		for (auto neighbor_address : cjddev_ptr->get_neighbors_addresses()) {

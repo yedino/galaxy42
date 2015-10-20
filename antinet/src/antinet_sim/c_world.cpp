@@ -6,7 +6,6 @@
 
 long int c_world::s_nr = 0;
 
-
 c_world::c_world()
 	: m_nr( s_nr++ )
 {
@@ -85,33 +84,40 @@ void c_world::add_test () {
 	      );
 */
 
-//	load("layout/current/map2.txt");
 
-	add_node("nodeA",100,100); // ***
-    //add_node("nodeB",300,100);
-    add_node("nodeC1",300,250);
-    add_node("nodeC2",380,280);
-    add_node("nodeC3",370,370);
-    add_node("nodeC4",300,450);
-	add_node("nodeD",150,200);
-	add_node("nodeE",400,100); // ***
-	
-	add_osi2_switch("swA", 200,100);
-    add_osi2_switch("swB", 300,50);
-	add_osi2_switch("swC", 200,300);
-    add_osi2_switch("swD", 300,150);
-	
-	_mark("Connecting devices");
-	connect_network_devices("nodeA","swA", 1);
-	connect_network_devices("swA","swB", 1);
-	connect_network_devices("swB","swD", 1);
-	connect_network_devices("nodeA","nodeD", 1);
-	connect_network_devices("swA","swC", 1);
-	connect_network_devices("swC","nodeC1", 1);
-	connect_network_devices("swC","nodeC2", 1);
-	connect_network_devices("swC","nodeC3", 1);
-	connect_network_devices("swC","nodeC4", 1);
-	connect_network_devices("swD","nodeE", 1); // ***
+    c_file_loader o_file_loader(this);
+//	load("layout/current/map2.txt");
+//  load("layout/current/default.map.txt");
+    o_file_loader.load("layout/current/map2.txt");
+
+//        add_node("nodeA",100,100); // ***
+//        //add_node("nodeB",300,100);
+//        add_node("nodeC1",300,250);
+//        add_node("nodeC2",380,280);
+//        add_node("nodeC3",370,370);
+//        add_node("nodeC4",300,450);
+//        add_node("nodeD",150,200);
+//        add_node("nodeE",400,100); // ***
+
+//        add_osi2_switch("swA", 200,100);
+//        add_osi2_switch("swB", 300,50);
+//        add_osi2_switch("swC", 200,300);
+//        add_osi2_switch("swD", 300,150);
+
+//        _mark("Connecting devices");
+//        connect_network_devices("nodeA","swA", 1);
+//        connect_network_devices("swA","swB", 1);
+//        connect_network_devices("swB","swD", 1);
+//        connect_network_devices("nodeA","nodeD", 1);
+//        connect_network_devices("swA","swC", 1);
+//        connect_network_devices("swC","nodeC1", 1);
+//        connect_network_devices("swC","nodeC2", 1);
+//        connect_network_devices("swC","nodeC3", 1);
+//        connect_network_devices("swC","nodeC4", 1);
+//        connect_network_devices("swD","nodeE", 1); // ***
+
+
+//        o_file_loader.save("layout/current/map2.txt");
 
 }
 
