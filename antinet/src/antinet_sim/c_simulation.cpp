@@ -5,7 +5,7 @@
 
 #include "c_drawtarget_opengl.hpp"
 
-unsigned int g_max_anim_frame = 10;
+unsigned int g_max_anim_frame = 1000;
 
 c_simulation::c_simulation (t_drawtarget_type drawtarget_type) 
 : 
@@ -74,7 +74,6 @@ std::string cjddev_detail_random_addr () {
 
 
 void c_simulation::main_loop () {
-	//	PALETTE palette;
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
     s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
 
@@ -121,7 +120,6 @@ void c_simulation::main_loop () {
 	bool use_input_allegro = true; // always for now.  input from Allegro
 	bool use_draw_allegro = m_drawtarget_type == e_drawtarget_type_allegro; // draw in allegro
 	bool use_draw_opengl = m_drawtarget_type == e_drawtarget_type_opengl; // draw in opengl
-
 
 	_note("Entering main simulation loop");
 
@@ -638,7 +636,6 @@ void c_simulation::main_loop () {
 		}
 
 		// === animation clock operations ===
-		
         m_world->draw(*m_drawtarget.get()); // <===== DRAW THE WORLD
 
 		/*
@@ -686,8 +683,6 @@ void c_simulation::main_loop () {
 		}
 
 
-
-
 		{
 			auto x = allegro_mouse_x, y = allegro_mouse_y;
 			int r = 5, rr = 4;
@@ -723,14 +718,13 @@ void c_simulation::main_loop () {
                 glEnd();
                 glPopMatrix();
             }
-
 		}
-
 
 		// === show frame ===
 
 		if (use_draw_allegro) {
-			//_dbg1("Allegro: frame done. fps = " << fps_str);
+			// _dbg1("Allegro: frame done. fps = " << fps_str);
+			// _dbg1("Allegro: frame nr = " << m_frame_number);
 			scare_mouse();
 			blit(m_frame, m_screen, 0, 0, 0, 0, m_frame->w, m_frame->h);
 			unscare_mouse();
@@ -747,7 +741,6 @@ void c_simulation::main_loop () {
 			object->m_selected = false;
 		}
 		
-//		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		auto stop_time = std::chrono::high_resolution_clock::now();
 		auto diff = stop_time - start_time;
 		loop_miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();

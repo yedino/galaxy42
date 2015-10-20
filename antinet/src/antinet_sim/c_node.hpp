@@ -26,7 +26,7 @@ class c_osi2_switch : public c_entity {
 		c_world &m_world; ///< my netwok world in which I exist
 		
 		std::vector<std::unique_ptr<c_osi2_nic>> m_nic; ///< all my NIC cards, for all my ports
-		std::vector<std::pair<t_osi3_uuid,double>> m_draw_outbox; ///< vector of packet destination to draw with drew part.
+		std::queue<std::pair<t_osi3_uuid,double>> m_draw_outbox; ///< vector of packet destination to draw with drew part.
 		
 		std::vector<t_osi3_packet> m_outbox; ///< data that I will wish to send (over some NIC)
 		std::vector<t_osi3_packet> m_inbox;

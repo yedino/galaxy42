@@ -92,6 +92,7 @@ public:
 class c_drawtarget_allegro : public c_drawtarget { ///< allegro library draw target (with layers)
 public:
 	c_drawtarget_allegro (BITMAP *frame);
+	~c_drawtarget_allegro();
 };
 
 

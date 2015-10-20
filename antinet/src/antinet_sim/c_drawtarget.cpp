@@ -45,4 +45,8 @@ c_drawtarget_allegro::c_drawtarget_allegro (BITMAP *frame) : c_drawtarget(e_draw
 		m_layer.push_back(new c_layer_allegro( static_cast<t_layer_nr>(nr) , frame));
 	}
 }
-
+c_drawtarget_allegro::~c_drawtarget_allegro() {
+	for(auto lay : m_layer) {
+		delete lay;
+	}
+}

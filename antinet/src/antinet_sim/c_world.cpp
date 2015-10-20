@@ -151,7 +151,6 @@ void c_world::tick () {
 	}
 	
 	std::cout << "****************END OF TICK (" << tick_number << ")****************" << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1)); // XXX
 	++tick_number;
 }
 
@@ -167,11 +166,9 @@ void c_world::draw (c_drawtarget &drawtarget) {
 			for (auto &obj : m_objects) { // draw elements to this layer
 				obj->draw_allegro(draw_allegro, *layer);
 			}
-			
 //			for (auto &cable : m_cable_direct) {
 //				cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
 //			}
-			
 		}
 	} // ALLEGRO implementation
 	
