@@ -18,11 +18,11 @@ typedef enum {
 	e_layer_nr_bgr = 0, // the background
 	e_layer_nr_gui_bgr, // GUI parts that are "under" all objects
 
-	e_layer_nr_object, ///< objects e.g. routers 
-	e_layer_nr_object_extra, ///< and their labels etc
-
 	e_layer_nr_route, ///< the links
 	e_layer_nr_route_extra, ///< and their labels etc
+
+	e_layer_nr_object, ///< objects e.g. routers
+	e_layer_nr_object_extra, ///< and their labels etc
 
 	e_layer_nr_object_activity, ///< related sub-objects, e.g. packets in them
 	e_layer_nr_route_activity, ///< related sub-objects, e.g. packets in them

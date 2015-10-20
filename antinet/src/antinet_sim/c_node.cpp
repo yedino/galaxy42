@@ -143,14 +143,16 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 	const auto & gui = * drawtarget.m_gui;
 	const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
 	/// draw connections
-	for (auto &nic : m_nic) {
-		t_osi2_cost cost;
-		c_osi2_nic *remote_nic = nic->get_connected_card_or_null(cost);
-		if (remote_nic == nullptr) continue;
-		t_pos x2 = gui.view_x(remote_nic->get_my_switch().get_x());
-		t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
-		line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
-        textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
+	if(layer.m_layer_nr == e_layer_nr_route) {
+		for (auto &nic : m_nic) {
+			t_osi2_cost cost;
+			c_osi2_nic *remote_nic = nic->get_connected_card_or_null(cost);
+			if (remote_nic == nullptr) continue;
+			t_pos x2 = gui.view_x(remote_nic->get_my_switch().get_x());
+			t_pos y2 = gui.view_y(remote_nic->get_my_switch().get_y());
+			line(frame, vx, vy, x2, y2, makecol(255, 128, 32));
+			textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
+		}
 	}
 	draw_messages(drawtarget, layer_any);
 	if(!m_draw_outbox.empty() &&
