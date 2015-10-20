@@ -88,7 +88,7 @@ void c_world::add_test () {
     c_file_loader o_file_loader(this);
 //	load("layout/current/map2.txt");
 //  load("layout/current/default.map.txt");
-    o_file_loader.load("layout/current/map2.txt");
+    o_file_loader.load("layout/current/map3.txt");
 
 //        add_node("nodeA",100,100); // ***
 //        //add_node("nodeB",300,100);

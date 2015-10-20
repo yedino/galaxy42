@@ -753,9 +753,7 @@ void c_simulation::main_loop () {
 		//_dbg1("Loop sleeptime : " << loop_sleeptime);
 	}
 
-	std::ofstream out_file("../layout/current/out.map.txt");
-	out_file << *m_world << std::endl;
-    c_file_loader o_file_loader(m_world);
+    c_file_loader o_file_loader(m_world.get());
     o_file_loader.save("layout/current/map3.txt");
 }
 
