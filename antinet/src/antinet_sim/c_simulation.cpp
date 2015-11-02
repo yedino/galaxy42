@@ -78,6 +78,7 @@ void c_simulation::main_loop () {
 	//BITMAP *img_bgr = load_bitmap("dat/bgr-bright.tga", NULL); // TODO:
     s_font_allegl.reset (allegro_gl_convert_allegro_font(font,AGL_FONT_TYPE_TEXTURED,500.0), [](FONT *f){allegro_gl_destroy_font(f);});
 
+	m_world->load("layout/current/map2.txt");
     for(auto &obj : m_world->m_objects) {
         obj->set_font(s_font_allegl);
     }
@@ -754,7 +755,7 @@ void c_simulation::main_loop () {
 	}
 
     c_file_loader o_file_loader(m_world.get());
-    o_file_loader.save("layout/current/map3.txt");
+    o_file_loader.save("layout/current/out.txt");
 }
 
 
