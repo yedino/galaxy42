@@ -49,7 +49,7 @@ void c_dijkstry01::draw_packet(c_osi2_switch& source, c_osi2_switch& target) {
 t_osi3_packet pckg {"loking for target!",
 					target.get_uuid_any(),
 					source.get_uuid_any()};
-source.snd_pgk_test(std::move(pckg));
+source.send_package(std::move(pckg));
 }
 
 void c_dijkstry01::print_all() {

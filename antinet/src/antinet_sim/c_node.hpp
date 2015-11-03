@@ -37,7 +37,7 @@ class c_osi2_switch : public c_entity {
 
 	public:
 
-		void snd_pgk_test(t_osi3_packet &&);
+		void send_package(t_osi3_packet &&);
 		c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y);
 		
 		c_osi2_switch(const c_osi2_switch &) = delete; ///< copy constructor

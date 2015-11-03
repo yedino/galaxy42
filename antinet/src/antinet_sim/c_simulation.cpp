@@ -636,7 +636,7 @@ void c_simulation::main_loop () {
 				t_osi3_packet pckg {"go go dijkstry",
 									target_node->get_uuid_any(),
 									source_node->get_uuid_any()};
-				source_node->snd_pgk_test(std::move(pckg));
+				source_node->send_package(std::move(pckg));
 				start_simulation = true;
 				simulation_pause = false;
 			}

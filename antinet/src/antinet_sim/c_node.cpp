@@ -275,8 +275,8 @@ void c_osi2_switch::send_hello_to_neighbors() {
 	}
 }
 
-void c_osi2_switch::snd_pgk_test(t_osi3_packet &&packet) {
-	m_outbox.push_back(packet);
+void c_osi2_switch::send_package(t_osi3_packet &&packet) {
+	m_outbox.push_back(std::move(packet));
 	_dbg1("******snd_pkg*******only testing**************** ");
 	_dbg1("***************************get apcket to " << packet.m_dst);
 
@@ -350,7 +350,7 @@ void c_node::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) {
 
 void c_node::process_packet (t_osi3_packet &&packet) {
 	// TODO!!!
-	snd_pgk_test(std::move(packet));
+	send_package(std::move(packet));
 	_dbg1("***************************get apcket from " << packet.m_src);
 	_dbg1("***************************data: " << packet.m_data);
 }
