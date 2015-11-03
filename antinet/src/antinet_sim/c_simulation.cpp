@@ -532,18 +532,19 @@ void c_simulation::main_loop () {
 					}
 				} // moving selected object
 			}
-            if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) {
+            if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) { // KEY_T
 				_dbg1("Target selected");
 
                 for (auto &object : m_world->m_objects) {
                     object->m_target = false;
                 }
+				
                 (*selected_object)->m_target = true;
                     m_gui->m_target_node = m_gui->m_selected_object;
 					m_gui->m_target_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 			}
 
-			if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) {
+			if ((allegro_char & 0xff) == 'r' && selected_switch && !start_simulation) { // KEY_R
 				_dbg1("Source selected");
                 for (auto &object : m_world->m_objects) {
                     object->m_source = false;
@@ -551,27 +552,6 @@ void c_simulation::main_loop () {
                 (*selected_object)->m_source = true;
                     m_gui->m_source_node = m_gui->m_selected_object;
 					m_gui->m_source_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
-			}
-
-			// start simulation for switches
-			if ((allegro_char & 0xff) == 's' && !start_simulation) {
-
-				if (!m_gui->m_target_ok || !m_gui->m_source_ok) {
-					_info("please choose target and source switch");
-				} else {
-					auto source = m_gui->m_source_node;
-					auto target = m_gui->m_target_node;
-					c_osi2_switch *source_node = dynamic_cast<c_osi2_switch*>((*source).get());
-					c_osi2_switch *target_node = dynamic_cast<c_osi2_switch*>((*target).get());
-					std::cout << "UUID SOURCE:" << source_node->get_uuid_any() << std::endl;
-					std::cout << "UUID TARGET:" << target_node->get_uuid_any() << std::endl;
-					t_osi3_packet pckg {"go go dijkstry",
-										target_node->get_uuid_any(),
-										source_node->get_uuid_any()};
-					source_node->snd_pgk_test(std::move(pckg));
-					start_simulation = true;
-					simulation_pause = false;
-				}
 			}
 /*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
@@ -636,6 +616,27 @@ void c_simulation::main_loop () {
 				last_click_time = std::chrono::steady_clock::now();
 			}
 			
+		}
+		
+		// start simulation for switches
+		if ((allegro_char & 0xff) == 's' && !start_simulation) { // KEY_S
+			_dbg1("start_simulation");
+			if (!m_gui->m_target_ok || !m_gui->m_source_ok) {
+				_info("please choose target and source switch");
+			} else {
+				auto source = m_gui->m_source_node;
+				auto target = m_gui->m_target_node;
+				c_osi2_switch *source_node = dynamic_cast<c_osi2_switch*>((*source).get());
+				c_osi2_switch *target_node = dynamic_cast<c_osi2_switch*>((*target).get());
+				std::cout << "UUID SOURCE:" << source_node->get_uuid_any() << std::endl;
+				std::cout << "UUID TARGET:" << target_node->get_uuid_any() << std::endl;
+				t_osi3_packet pckg {"go go dijkstry",
+									target_node->get_uuid_any(),
+									source_node->get_uuid_any()};
+				source_node->snd_pgk_test(std::move(pckg));
+				start_simulation = true;
+				simulation_pause = false;
+			}
 		}
 
 		// === animation clock operations ===
