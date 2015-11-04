@@ -22,6 +22,7 @@
 #include <mutex>
 #include <cassert>
 #include <array>
+#include <set>
 
 //for libpng
 #include <unistd.h>
