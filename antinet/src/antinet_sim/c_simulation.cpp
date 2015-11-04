@@ -610,6 +610,24 @@ void c_simulation::main_loop () {
 			
 		}
 		
+		if ((allegro_char & 0xff) == 'f' && !start_simulation) { ///< send ftp packet
+			_dbg1("send ftp packet");
+			if (!m_gui->m_target_ok || !m_gui->m_source_ok) {
+				_info("please choose target and source switch");
+			}
+			else {
+				auto source = m_gui->m_source_node;
+				auto target = m_gui->m_target_node;
+				c_osi2_switch *source_node = dynamic_cast<c_node*>((*source).get());
+				c_osi2_switch *target_node = dynamic_cast<c_node*>((*target).get());
+				t_osi3_packet pckg {"go go dijkstry",
+                                   target_node->get_uuid_any(),
+                                   source_node->get_uuid_any()};
+				_dbg1("send FTP packet from " << target_node->get_uuid_any() << " to " << source_node->get_uuid_any());
+				source_node->send_package(std::move(pckg));
+			}
+		}
+		
 		// start simulation for switches
 		if ((allegro_char & 0xff) == 's' && !start_simulation) { // KEY_S
 			_dbg1("start_simulation");
