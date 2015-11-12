@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project (antinet)
 
+add_subdirectory(test)
+
 set(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 -Wall -pedantic")
 #-Wno-error=undefined-variable ")
 
@@ -39,6 +41,11 @@ add_executable(antinet.elf
 add_custom_target(run
 				COMMAND ./antinet.elf
 				DEPENDS antinet.elf
+				WORKING_DIRECTORY ./)
+
+add_custom_target(test
+				COMMAND ./test/run_tests
+				DEPENDS ./test/run_tests
 				WORKING_DIRECTORY ./)
 	
 target_link_libraries(antinet.elf

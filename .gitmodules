@@ -1,0 +1,3 @@
+[submodule "antinet/src/antinet_sim/test/googletest"]
+	path = antinet/src/antinet_sim/test/googletest
+	url = https://github.com/google/googletest.git
