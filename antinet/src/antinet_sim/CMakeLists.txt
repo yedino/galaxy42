@@ -35,9 +35,11 @@ if(USE_API_TR)
 	add_definitions(-DUSE_API_TR=1)
 endif()
 
-add_executable(antinet.elf
-	main.cpp
+add_library(antinet
 	${SIM_SOURCES})
+
+add_executable(antinet.elf
+	main.cpp)
 
 add_custom_target(run
 	COMMAND ./antinet.elf
@@ -50,6 +52,7 @@ add_custom_target(unit_test
 	WORKING_DIRECTORY ./)
 
 target_link_libraries(antinet.elf
+	antinet
 	alleg
 	png
 	crypto

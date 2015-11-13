@@ -12,7 +12,6 @@ file(GLOB TEST_SOURCE_FILES "*.cpp" # All files in directory:
 
 add_executable(run_tests
 #	Main_TestAll.cpp
-	${SIM_SOURCES}
 	${TEST_SOURCE_FILES})
 
 set_target_properties(run_tests
@@ -21,6 +20,7 @@ set_target_properties(run_tests
 	
 target_link_libraries(run_tests
 	gtest gtest_main
+	antinet
 	alleg
 	png
 	crypto
