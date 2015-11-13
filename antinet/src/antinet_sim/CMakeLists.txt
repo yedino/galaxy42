@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project (antinet)
 
-add_subdirectory(test)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 -Wall -pedantic")
 #-Wno-error=undefined-variable ")
@@ -17,6 +16,7 @@ file(GLOB HEADERS_FILES "*.hpp" # All files in directory:
 
 # remove style files
 set(SIM_SOURCES ${SOURCE_FILES})
+list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style_tab.cpp)
 list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style_tab2.cpp)
 list(REMOVE_ITEM SIM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/style.cpp)
@@ -36,6 +36,7 @@ if(USE_API_TR)
 endif()
 
 add_executable(antinet.elf
+        main.cpp
 	${SIM_SOURCES})
 
 add_custom_target(run
@@ -43,9 +44,9 @@ add_custom_target(run
 				DEPENDS antinet.elf
 				WORKING_DIRECTORY ./)
 
-add_custom_target(test
-				COMMAND ./test/run_tests
-				DEPENDS ./test/run_tests
+add_custom_target(unit_test
+                                COMMAND ./run_tests
+                                DEPENDS run_tests
 				WORKING_DIRECTORY ./)
 	
 target_link_libraries(antinet.elf
@@ -59,6 +60,7 @@ target_link_libraries(antinet.elf
 	boost_serialization
 	)
 
- 
+add_subdirectory(test)
+
 # agl was here.
   
