@@ -36,19 +36,19 @@ if(USE_API_TR)
 endif()
 
 add_executable(antinet.elf
-        main.cpp
+	main.cpp
 	${SIM_SOURCES})
 
 add_custom_target(run
-				COMMAND ./antinet.elf
-				DEPENDS antinet.elf
-				WORKING_DIRECTORY ./)
+	COMMAND ./antinet.elf
+	DEPENDS antinet.elf
+	WORKING_DIRECTORY ./)
 
 add_custom_target(unit_test
-                                COMMAND ./run_tests
-                                DEPENDS run_tests
-				WORKING_DIRECTORY ./)
-	
+	COMMAND ./test/run_tests
+	DEPENDS test/run_tests
+	WORKING_DIRECTORY ./)
+
 target_link_libraries(antinet.elf
 	alleg
 	png
@@ -57,10 +57,9 @@ target_link_libraries(antinet.elf
 	alleggl
 	GLU
 	GL
-	boost_serialization
-	)
+	boost_serialization)
 
 add_subdirectory(test)
 
 # agl was here.
-  
+
