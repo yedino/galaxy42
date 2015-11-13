@@ -46,7 +46,7 @@ add_custom_target(run
 
 add_custom_target(unit_test
 	COMMAND ./test/run_tests
-	DEPENDS test/run_tests
+	DEPENDS test/run_tests antinet.elf
 	WORKING_DIRECTORY ./)
 
 target_link_libraries(antinet.elf
