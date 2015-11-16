@@ -238,8 +238,6 @@ public:
 };
 
 
-class c_cjddev;
-
 /***
  @struct c_msgtx
  @brief a message in transfer in direct transfer over direct link
@@ -247,7 +245,6 @@ class c_cjddev;
 // TODO rm
 struct c_msgtx { // a message in transfer in direct transfer over direct link
 	shared_ptr<msgcjd> m_msg; // <--- different kinds of messages
-	weak_ptr<c_cjddev> m_otherside; // <--- PTR to the other side of connection (recipient or sender). Could be nullptr if we do not know him (yet)
 
 	int m_animframe; // animation frame number/time
 };

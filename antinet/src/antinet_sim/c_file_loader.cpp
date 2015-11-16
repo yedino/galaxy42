@@ -193,9 +193,7 @@ void c_file_loader::save(const string& p_filename)
 	std::ofstream stream(p_filename);
 	for (auto & object : m_world->m_objects) {
 
-		if (typeid(*object) == typeid(c_cjddev)) {
-			stream << "add cjddev {" << std::endl;
-		} else if (typeid(*object) == typeid(c_node)) {
+		if (typeid(*object) == typeid(c_node)) {
 			stream << "add node {" << std::endl;
 		} else if (typeid(*object) == typeid(c_osi2_switch)) {
 			stream << "add switch {" << std::endl;
@@ -241,9 +239,7 @@ void c_file_loader::save(std::ostream &stream){
 
 	for (auto & object : m_world->m_objects) {
 
-		if (typeid(*object) == typeid(c_cjddev)) {
-			stream << "add cjddev {" << std::endl;
-		} else if (typeid(*object) == typeid(c_node)) {
+		if (typeid(*object) == typeid(c_node)) {
 			stream << "add node {" << std::endl;
 		} else if (typeid(*object) == typeid(c_osi2_switch)) {
 			stream << "add switch {" << std::endl;

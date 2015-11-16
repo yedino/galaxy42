@@ -9,7 +9,6 @@
 #include "c_node.hpp"
 #include "c_drawtarget.hpp"
 #include "c_object.hpp"
-#include "c_network.hpp"
 
 using std::vector;
 using std::shared_ptr;
@@ -67,9 +66,6 @@ class c_world {
 		 */
 		 t_simclock m_simclock; ///< @TODO wos
 		 
-		 
-		// additional situation in this world:
-		shared_ptr<c_tnetdev> m_target, m_source; ///< current source and target used in tests
 		
 	public:
 		c_world();

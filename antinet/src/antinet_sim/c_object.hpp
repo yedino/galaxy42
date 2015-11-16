@@ -6,7 +6,6 @@
 #include "loadpng.hpp"
 #include "c_bitmaps.hpp"
 #include "c_api_tr.hpp"
-#include "c_network.hpp"
 #include "c_msg.hpp"
 
 extern unsigned int g_max_anim_frame;
@@ -115,30 +114,6 @@ public:
 };
 
 
-/**
- * \class c_netdev
- *
- * \brief a networked (e.g. connected somewhere) device
- *
- *
- */
-
-
-class c_netdev : public c_entity { // a networked (e.g. connected somewhere) device
-protected:
-	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
-	vector<unique_ptr<c_msgtx> > m_inbox;  // general box with messages that are received somehow
-	vector<unique_ptr<c_msgtx> > m_oldbox; // for unreplied messages from inbox
-
-public:
-	c_netdev (string name, t_pos x, t_pos y);
-
-	virtual ~c_netdev () = default;
-
-	virtual void receive_message (unique_ptr<c_msgtx> &&message); // TODO ttl
-	virtual unique_ptr<c_msgtx> send_message (); // TODO ttl
-};
-
 struct s_remote_host {
 	t_cjdaddr m_address = "";
 	unsigned int m_price = 0;
@@ -163,120 +138,5 @@ struct c_routing_package
     bool direction;	//if false dircetion is home to target
 };
 
-/**
- * \class c_cjddev
- *
- * \brief a cjdns-networked device. has ipv6 address from cjdns
-*/
-
-
-class c_cjddev : public c_netdev { // a cjdns-networked device. has ipv6 address from cjdns
-protected:
-	t_cjdaddr m_my_address;
-	map<t_cjdaddr, weak_ptr<c_cjddev >> m_neighbors; ///< addr => peer ptr
-	map<t_cjdaddr, unsigned int> m_neighbors_prices; ///< addr => price
-	map<t_cjdaddr, s_remote_host> m_routing_table; ///< remote host => next hop (neighbor). Which peer is the correct way to go there
-	unordered_set<t_cjdaddr> m_wait_hosts; ///< I'm waiting for ...
-    map<t_ID, t_cjdaddr> m_response_nodes; ///< ID => addr
-    
-	//////////////////////////////////////////////////////////////////////////
-	/////////////////dht section///////////////////////////////////
-
-	t_dht_addr m_dht_addr;
-
-
-	map<t_dht_addr,list < t_cjdaddr> > m_known_nodes;
-
-    
-    
-    //
-
-	void hw_recived(t_message);
-	void dht_routing();
-
-public:
-
-	c_cjddev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
-
-	virtual ~c_cjddev () = default;
-
-	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any);
-	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any);
-
-	void add_neighbor (shared_ptr<c_cjddev> neighbor);
-
-	void add_neighbor (shared_ptr<c_cjddev> neighbor, unsigned int price);
-
-	void remove_neighbor (shared_ptr<c_cjddev> neighbor);
-
-	void remove_neighbor (t_cjdaddr address);
-
-	virtual void receive_message (unique_ptr<c_msgtx> &&message);
-
-	t_cjdaddr get_address () const;
-
-	vector<t_cjdaddr> get_neighbors_addresses () const;
-
-	vector<shared_ptr<c_cjddev >> get_neighbors () const;
-
-    unsigned int get_price (t_cjdaddr address) const;
-
-//    unsigned int get_my_price() const;
-
-	void buy_net (const t_cjdaddr &destination_addr);
-
-    virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
-
-	virtual void start_dht();					///function must be started when node is added to network;
-
-	int num_of_wating();
-
-
-/**
- *THIS IS JUST A SIMPLE TEST!!! with very expensive full search.
- *
- * this should be in a loop to send faster - many packets at once (once full algorithm is implemented)
- *
- *	process outbox
- *	 there is something to send in the network from us
-    * so send it.
- *
- *
- *
-*/
-	virtual void tick ();
-};
-
-/**
- * \class c_tnetdev
- *
- * \brief class with wallet
- *
- * klasa przedstawiajaca platne polaczenie
- *
- *
- */
-class c_tnetdev : public c_cjddev {
-public:
-	c_tnetdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
-	
-	virtual void draw_allegro(c_drawtarget &drawtarget, c_layer &layer);
-	virtual void draw_opengl(c_drawtarget &drawtarget, c_layer &layer);
-	
-
-	virtual ~c_tnetdev () = default;
-
-	virtual bool send_ftp_packet (const t_cjdaddr &destination_addr, const std::string &data);
-
-	virtual void tick ();
-
-protected:
-	c_wallet m_wallet;
-};
-
-class c_userdev : public c_tnetdev {
-public:
-	c_userdev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
-};
 
 #endif // C_OBJECT_HPP

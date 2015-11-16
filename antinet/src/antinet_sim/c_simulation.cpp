@@ -91,7 +91,6 @@ void c_simulation::main_loop () {
 	bool print_connect_line = false;
 	bool start_simulation = false;
 	bool simulation_pause = true;
-	shared_ptr<c_cjddev> connect_node;
 	std::chrono::steady_clock::time_point last_click_time =
 		std::chrono::steady_clock::now() - std::chrono::milliseconds(1000);
 
@@ -662,15 +661,16 @@ void c_simulation::main_loop () {
 
 		if (print_connect_line) { // the line the creates new connections
 			if (use_draw_allegro) {
-				line(m_frame, connect_node->m_x, connect_node->m_y, allegro_mouse_x, allegro_mouse_y, makecol(0, 255, 255));
+				// TODO remove
+				//line(m_frame, connect_node->m_x, connect_node->m_y, allegro_mouse_x, allegro_mouse_y, makecol(0, 255, 255));
 			}
             // TODO @opengl
             if (use_draw_opengl) {
-                glColor3f(0.0f,1.0f,1.0f);
+                /*glColor3f(0.0f,1.0f,1.0f);
                 glLineWidth(1.0);
                 glScalef(1.0f,1.0f,1.0f);
 
-                const int vx = m_gui->view_x(connect_node->m_x), vy = m_gui->view_y(connect_node->m_y); // position in viewport - because camera position
+                //const int vx = m_gui->view_x(connect_node->m_x), vy = m_gui->view_y(connect_node->m_y); // position in viewport - because camera position
                 //float start_line_x = ((connect_node->m_x)-0.5*SCREEN_W)/(0.5*SCREEN_W);
                 //float start_line_y = -((connect_node->m_y)-0.5*SCREEN_H)/(0.5*SCREEN_H);
                 float start_line_x = (vx-0.5*SCREEN_W)/(0.5*SCREEN_W);
@@ -689,7 +689,7 @@ void c_simulation::main_loop () {
                 glVertex3f(start_line_x,start_line_y,0.0f);
                 glVertex3f(end_line_x,end_line_y,0.0f);
                 glEnd();
-                glPopMatrix();
+                glPopMatrix();*/
             }
 		}
 		if (allegro_mouse_b == 2) { // end/stop the line that creates new connections

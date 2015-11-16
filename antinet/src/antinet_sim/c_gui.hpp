@@ -16,7 +16,6 @@ public:
 	//weak_ptr<c_entity> m_selected_object; 
 	std::vector<unique_ptr<c_object>>::iterator m_selected_object; ///< current object (e.g. selected for editing)
 
-	shared_ptr<c_cjddev> m_target, m_source; ///< objects selected as Source and Target in simulation
 	bool m_target_ok;		///< easy way to check, if target iterator is correctly initialized
 	bool m_source_ok;		///< easy way to check, if source iterator is correctly initialized
 	std::vector<unique_ptr<c_object>>::iterator m_target_node;
