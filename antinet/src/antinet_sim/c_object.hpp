@@ -9,10 +9,6 @@
 #include "c_network.hpp"
 #include "c_msg.hpp"
 
-#if defined USE_API_TR
-#include "c_netdev.hpp"
-#endif
-
 extern unsigned int g_max_anim_frame;
 
 typedef int t_pos; ///< position (one coordinate)
@@ -127,8 +123,7 @@ public:
  *
  */
 
-#if defined USE_API_TR
-#else
+
 class c_netdev : public c_entity { // a networked (e.g. connected somewhere) device
 protected:
 	vector<unique_ptr<c_msgtx> > m_outbox; // general box with messages to be sent somehow
@@ -142,19 +137,8 @@ public:
 
 	virtual void receive_message (unique_ptr<c_msgtx> &&message); // TODO ttl
 	virtual unique_ptr<c_msgtx> send_message (); // TODO ttl
-/*#if defined USE_API_TR
-protected:
-	// c_api_tr
-	//virtual void write_message(t_message&& msg) override;
-	//virtual void read_message(std::function<void (t_message &&)> handler) override;
-	virtual void hw_send (t_nym_id addr,std::string &&serialized_msg) override; ///< send to remote node
-	std::vector<t_message> m_raw_outbox; // general box with messages to be sent somehow
-	std::vector<t_message> m_raw_inbox; // general box with messages that are received somehow
-public:
-	void set_network(std::shared_ptr<c_network> network_ptr);
-#endif*/
 };
-#endif
+
 struct s_remote_host {
 	t_cjdaddr m_address = "";
 	unsigned int m_price = 0;
@@ -186,25 +170,8 @@ struct c_routing_package
 */
 
 
-#if defined USE_API_TR
-	class c_netdev;
-	struct msgcjd;
-	struct msg_ping_request;
-	struct msg_ping_response;
-	struct msg_dht_hello;
-#include "c_api_tr.hpp"
-#include"c_msg.hpp"
-
-class c_cjddev : public c_entity{ // a cjdns-networked device. has ipv6 address from cjdns
-#else
 class c_cjddev : public c_netdev { // a cjdns-networked device. has ipv6 address from cjdns
-#endif
 protected:
-#if defined USE_API_TR
-	friend class c_network;
-	shared_ptr <c_netdev>m_netdev;
-	void hw_send(t_message p_msg);
-#endif
 	t_cjdaddr m_my_address;
 	map<t_cjdaddr, weak_ptr<c_cjddev >> m_neighbors; ///< addr => peer ptr
 	map<t_cjdaddr, unsigned int> m_neighbors_prices; ///< addr => price
@@ -225,17 +192,9 @@ protected:
     //
 
 	void hw_recived(t_message);
-#if defined USE_API_TR
-	void dht_hello(shared_ptr <msg_dht_hello>);
-#endif
 	void dht_routing();
 
 public:
-#if defined USE_API_TR
-	void write_message(std::shared_ptr<msgcjd> p_msg);// override;
-	void read_message(std::function <void (msgcjd)> handler);// override;
-
-#endif //USE_API_TR
 
 	c_cjddev (string name, t_pos x, t_pos y, t_cjdaddr address_ipv6);
 
@@ -271,10 +230,6 @@ public:
 	virtual void start_dht();					///function must be started when node is added to network;
 
 	int num_of_wating();
-#if defined USE_API_TR
-	void ping_responce(shared_ptr <msg_ping_response>);
-	void ping_request(shared_ptr <msg_ping_request>);
-#endif
 
 
 /**
