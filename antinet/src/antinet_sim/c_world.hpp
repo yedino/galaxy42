@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include "c_simulation.hpp"
 #include "c_osi3_uuid_generator.hpp"
 #include "osi2.hpp"
 #include "c_node.hpp"
@@ -47,6 +48,8 @@ struct t_osi2_route_result {
  * Could also hold:
  * - switches and other network devices (that are part of simulation)
  */
+class c_simulation;
+
 class c_world {
 	private:
 		friend class c_file_loader;
@@ -56,19 +59,21 @@ class c_world {
 		long int m_nr; ///< serial number of this object
 		
 		c_osi3_uuid_generator m_uuid_generator; ///< to generate UUIDs (addresses) in my context
-		
+        c_simulation &m_simulation;
+
 		
 	public: // TODO?
 		vector<unique_ptr<c_object> > m_objects; ///< all the objects in simulation
-		
-		/***	
+        bool get_is_pause();
+        /***
 		 * clock that dictates flow of the simulated events
 		 */
 		 t_simclock m_simclock; ///< @TODO wos
 		 
 		
-	public:
-		c_world();
+    public:
+        c_world() = delete;
+        c_world(c_simulation&);
 		
 		// building the world - main
 		void add_osi2_switch(const std::string & name, int x, int y); ///< add switch, returns it's index

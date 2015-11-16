@@ -6,10 +6,16 @@
 
 long int c_world::s_nr = 0;
 
-c_world::c_world()
-	: m_nr( s_nr++ )
+c_world::c_world(c_simulation &s)
+    : m_simulation(s),
+      m_nr( s_nr++ )
 {
 	
+}
+
+bool c_world::get_is_pause()
+{
+    return m_simulation.get_is_pause();
 }
 
 void c_world::add_osi2_switch(const std::string &name, int x, int y)
@@ -161,8 +167,7 @@ void c_world::tick () {
 }
 
 void c_world::draw (c_drawtarget &drawtarget) {
-	
-	
+
 	if (drawtarget.m_drawtarget_type == e_drawtarget_type_null) {
 	} 
 	else if (drawtarget.m_drawtarget_type == e_drawtarget_type_allegro) {
@@ -170,12 +175,18 @@ void c_world::draw (c_drawtarget &drawtarget) {
 
 		for (auto &layer : draw_allegro.m_layer) { // get each layer
 			for (auto &obj : m_objects) { // draw elements to this layer
-				obj->draw_allegro(draw_allegro, *layer);
-			}
+                obj->draw_allegro(draw_allegro, *layer);
+            }
 //			for (auto &cable : m_cable_direct) {
 //				cable.draw_allegro(draw_allegro, *layer); // TODO add some drawing for the cable
 //			}
-		}
+        }
+        //if (draw_allegro.m_layer == e_layer_nr_route_activity) {
+        //    for (auto &obj : m_objects) { // draw elements to this layer
+        //        obj->draw_packet(draw_allegro, draw_allegro.m_layer);
+        //    }
+        //}
+
 	} // ALLEGRO implementation
 	
 	else if (drawtarget.m_drawtarget_type == e_drawtarget_type_opengl) {

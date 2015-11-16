@@ -3,10 +3,11 @@
 
 #include "libs1.hpp"
 #include "c_geometry.hpp"
-#include "c_world.hpp"
 #include "c_file_loader.hpp"
+#include "c_drawtarget.hpp"
 
 extern unsigned int g_max_anim_frame;
+class c_world;
 
 class c_simulation {
 public:
@@ -21,7 +22,8 @@ public:
 
 	void init ();
 
-	void main_loop ();
+    void main_loop ();
+    bool get_is_pause();
 
 private:
 
@@ -44,6 +46,7 @@ private:
 	}
 
 	int get_move_object (int mouse_x, int mouse_y); ///< return index of element in m_world->m_objects vector, -1 if not found 
+    bool simulation_pause;
 };
 
 #endif // C_SIMULATION_HPP

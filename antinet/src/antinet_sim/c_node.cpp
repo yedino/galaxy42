@@ -154,11 +154,11 @@ void c_osi2_switch::draw_allegro (c_drawtarget &drawtarget, c_layer &layer_any) 
 			textout_ex(frame, font, (std::to_string(get_uuid_any())).c_str(), vx - 20, vy + 35, makecol(0,0,64), -1);
 		}
 	}
-	draw_messages(drawtarget, layer_any);
-	if(!m_draw_outbox.empty() &&
-	   layer.m_layer_nr == e_layer_nr_route_activity) {
-		draw_packet(drawtarget,layer_any);
-	}
+    draw_messages(drawtarget, layer_any);
+    if(!m_draw_outbox.empty()
+       && layer.m_layer_nr == e_layer_nr_route_activity) {
+        draw_packet(drawtarget,layer_any);
+    }
 }
 
 void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) const {
@@ -184,28 +184,29 @@ void c_osi2_switch::draw_messages(c_drawtarget &drawtarget, c_layer &layer_any) 
 }
 
 void c_osi2_switch::draw_packet(c_drawtarget &drawtarget, c_layer &layer_any) {
-	double draw_step = 1./static_cast<double>(g_max_anim_frame);
-	const auto & gui = * drawtarget.m_gui;
-	auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
-	BITMAP *frame = layer.m_frame;
-	c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.front().first);
-	const int this_vx = gui.view_x(m_x), this_vy = gui.view_y(m_y);
-	const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
-	t_geo_point A(this_vx,this_vy);
-	t_geo_point B(next_vx,next_vy);
-	t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.front().second);
-	//_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
-	//_dbg1("Layer_allegro nr: " << layer.m_layer_nr);
-	draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
-					  between.x - c_bitmaps::get_instance().m_package_green->w / 2,
-					  between.y - c_bitmaps::get_instance().m_package_green->h / 2);
-	std::string send_percent = std::to_string(static_cast<int>(100*m_draw_outbox.front().second)) + "%";
-	textout_ex(frame, font, send_percent.c_str(), between.x+15, between.y, makecol(0,15,25), -1);
-	if(m_draw_outbox.front().second < 1.) {
-		m_draw_outbox.front().second += draw_step;
-	} else {
-		m_draw_outbox.pop();
-	}
+    double draw_step = 1./static_cast<double>(g_max_anim_frame);
+    const auto & gui = * drawtarget.m_gui;
+    auto layer = dynamic_cast<c_layer_allegro &>(layer_any);
+    BITMAP *frame = layer.m_frame;
+    c_osi2_switch &tmp_osi2_switch = m_world.find_object_by_uuid_as_switch(m_draw_outbox.front().first);
+    const int this_vx = gui.view_x(m_x), this_vy = gui.view_y(m_y);
+    const int next_vx = gui.view_x(tmp_osi2_switch.m_x), next_vy = gui.view_y(tmp_osi2_switch.m_y);
+    t_geo_point A(this_vx,this_vy);
+    t_geo_point B(next_vx,next_vy);
+    t_geo_point between = c_geometry::point_on_line_between_part(A,B,m_draw_outbox.front().second);
+    //_dbg1("DEBUG<<<<: " << between.x << "  " << between.y);
+    //_dbg1("Layer_allegro nr: " << layer.m_layer_nr);
+    draw_trans_sprite(frame, c_bitmaps::get_instance().m_package_green,
+                      between.x - c_bitmaps::get_instance().m_package_green->w / 2,
+                      between.y - c_bitmaps::get_instance().m_package_green->h / 2);
+    std::string send_percent = std::to_string(static_cast<int>(100*m_draw_outbox.front().second)) + "%";
+    textout_ex(frame, font, send_percent.c_str(), between.x+15, between.y, makecol(0,15,25), -1);
+    if(m_draw_outbox.front().second < 1.
+       && !m_world.get_is_pause()) {
+        m_draw_outbox.front().second += draw_step;
+    } else {
+        m_draw_outbox.pop();
+    }
 }
 
 void c_osi2_switch::logic_tick() {

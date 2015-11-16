@@ -54,12 +54,16 @@ void c_simulation::init () {
 	}
 
 	_note("Simulation will create the world");
-	m_world = make_unique<c_world>();
+    m_world = make_unique<c_world>(*this);
 	m_world->add_test();
 	//m_world->add_i_objects(100);
 
 	_note("Simulation created m_world=" << m_world.get());
 	_note("Simulation is ready");
+}
+
+bool c_simulation::get_is_pause() {
+    return simulation_pause;
 }
 
 std::string cjddev_detail_random_name () {
@@ -88,9 +92,9 @@ void c_simulation::main_loop () {
 
 	set_close_button_callback(c_close_button_handler);
 
-	bool print_connect_line = false;
+    simulation_pause = true;
+    bool print_connect_line = false;
 	bool start_simulation = false;
-	bool simulation_pause = true;
 	std::chrono::steady_clock::time_point last_click_time =
 		std::chrono::steady_clock::now() - std::chrono::milliseconds(1000);
 
@@ -400,27 +404,26 @@ void c_simulation::main_loop () {
 
 			textout_ex(m_frame, font, pck_speed_str.c_str(), 100, 10, makecol(0, 0, 255), -1);
 
-					if(allegro_keys[KEY_H])
-			{
-				int tex_y = 10;
-				int lineh = 10;
-				textout_ex(m_frame, font, "s - start", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "p - pause", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "f - send FTP", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "t - select target", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "r - select source", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "d - remove node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "n - add node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "enter/esc - exit", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "Arrows: move selected node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-				textout_ex(m_frame, font, "SHIFT-Arrows: move the camera", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-							textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-							textout_ex(m_frame, font, "F1: info about node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-							textout_ex(m_frame, font, "F2: next node", 1140, tex_y+=lineh, makecol(0, 0, 255), -1);
-					} else{
-
-							textout_ex(m_frame, font, "h - help", 1140, 30, makecol(0, 0, 255), -1);
-					}
+            if (allegro_keys[KEY_H]) {
+                const int tex_x = 1000;
+                int tex_y = 10;
+                const int lineh = 10;
+                textout_ex(m_frame, font, "s - start", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "p - pause", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "f - send FTP", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "t - select target", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "r - select source", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "d - remove node", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "n - add node", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "enter/esc - exit", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "Arrows: move selected node", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "SHIFT-Arrows: move the camera", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "SHIFT-PageUp/Down: zimm in/out", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "F1: info about node", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+                textout_ex(m_frame, font, "F2: next node", tex_x, tex_y+=lineh, makecol(0, 0, 255), -1);
+            } else {
+                textout_ex(m_frame, font, "h - help", 1140, 30, makecol(0, 0, 255), -1);
+            }
 		}
 		if (use_draw_opengl) {
 			// TODO @opengl
@@ -519,7 +522,8 @@ void c_simulation::main_loop () {
 							selected_object_raw->m_y += -speed;
 					}
 				} // moving selected object
-			}
+            }
+
             if ((allegro_char & 0xff) == 't' && selected_switch && !start_simulation) { // KEY_T
 				_dbg1("Target selected");
 
@@ -543,7 +547,8 @@ void c_simulation::main_loop () {
 					m_gui->m_source_node = m_gui->m_selected_object;
 					m_gui->m_source_ok = true; // mayby we should checking if m_gui->m_selected_object is switch?
 				}
-			}
+            }
+        }
 /*
 			if ((allegro_char & 0xff) == 's' && !start_simulation) {
 				if (!m_gui->m_source || !m_gui->m_target) {
@@ -607,7 +612,7 @@ void c_simulation::main_loop () {
 				last_click_time = std::chrono::steady_clock::now();
 			}
 			
-		}
+        //} // OK>?
 		
 		if ((allegro_char & 0xff) == 'f' && !start_simulation) { ///< send ftp packet
 			_dbg1("send ftp packet");
@@ -650,7 +655,6 @@ void c_simulation::main_loop () {
 
 		// === animation clock operations ===
         m_world->draw(*m_drawtarget.get()); // <===== DRAW THE WORLD
-
 		/*
 		if ((m_frame_number - frame_checkpoint) < g_max_anim_frame) {
 			m_world->draw(*m_drawtarget.get(), (m_frame_number - frame_checkpoint) % g_max_anim_frame); // <==

@@ -7,6 +7,7 @@
 #include "c_networld.hpp"
 #include "c_object.hpp"
 
+class c_world;
 /***
  * @author mz-dev@tigusoft.pl
  */

@@ -194,8 +194,12 @@ int draft_net2() { // the main function for test
 	}
 	return 0; // !
 */	
-	_mark("Starting test " <<__FUNCTION__);
-	c_world world;
+    _mark("Starting test " <<__FUNCTION__);
+
+    t_drawtarget_type drawtarget_type = e_drawtarget_type_allegro;
+    c_simulation simulation(drawtarget_type);
+
+    c_world world(simulation);
 	
 	
 	world.add_node("nodeA",100,100); // ***

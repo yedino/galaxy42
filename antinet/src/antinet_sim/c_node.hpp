@@ -79,7 +79,7 @@ class c_osi2_switch : public c_entity {
 		virtual void print(std::ostream &os, int level=0) const;
 		std::string print_str(int level=0) const;
 		friend std::ostream& operator<<(std::ostream &os, const c_osi2_switch &obj);
-		
+
 		c_world & get_world() const;
 		
 		// === tick ===
