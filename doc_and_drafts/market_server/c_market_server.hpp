@@ -8,10 +8,10 @@
 #include <unordered_map>
 #include <vector>
 #include <unordered_set>
-#include "../market/c_market.hpp"
+#include "c_market.hpp"
 #include "c_server_msg_parser.hpp"
 #include "c_market_user.hpp"
-#include "sha_src/sha512.hpp"
+#include "../../crypto_ops/crypto/sha_src/sha512.hpp"
 #include "c_users_database.hpp"
 
 using boost::asio::ip::udp;

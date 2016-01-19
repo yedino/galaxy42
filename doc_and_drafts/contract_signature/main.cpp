@@ -1,5 +1,5 @@
 #include <iostream>
-#include "c_crypto_ed25519.hpp"
+#include "../../crypto_ops/crypto/c_crypto_ed25519.hpp"
 #include "c_user.hpp"
 #include "c_contract.hpp"
 #include <list>

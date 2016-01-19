@@ -4,7 +4,6 @@
 #include <mutex>
 #include <atomic>
 #include "c_user.hpp"
-#include "c_contract.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
 
 using std::thread;
@@ -139,19 +138,6 @@ bool test_all() {
 	} else {
 		return 1;
 	}
-}
-
-vector<c_contract> generate_contracts (const vector<c_user> &route, size_t data_size = 155) {
-	vector<c_contract> contracts;
-	for (size_t i = 1; i < route.size(); ++i) {
-		contracts.emplace_back(route.at(i - 1), route.at(i), data_size);
-	}
-	for (c_contract &c : contracts) {
-		c.create_msg();
-		c.create_signature();
-	}
-
-	return contracts;
 }
 
 int main (int argc, char *argv[]) {

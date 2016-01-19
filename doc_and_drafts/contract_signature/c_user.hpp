@@ -1,7 +1,7 @@
 #ifndef CONTRACT_SIGNATURE_C_USER_HPP
 #define CONTRACT_SIGNATURE_C_USER_HPP
 #include <string>
-#include "c_crypto_ed25519.hpp"
+#include "../../crypto_ops/crypto/c_crypto_ed25519.hpp"
 #include <list>
 #include <stdexcept>
 #include <vector>

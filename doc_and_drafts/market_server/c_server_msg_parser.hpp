@@ -2,7 +2,7 @@
 #define SERVER_C_SERVER_MSG_PARSER_H
 #include <string>
 #include <iostream>
-#include "c_crypto_ed25519.hpp"
+#include "../../crypto_ops/crypto/c_crypto_ed25519.hpp"
 #include "c_market_user.hpp"
 #include <boost/asio.hpp>
 
