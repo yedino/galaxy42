@@ -21,7 +21,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
 	message("Release build")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -pedantic")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -pedantic -DNDEBUG")
 endif()
 
 file(GLOB SOURCE_FILES "*.cpp" # All files in directory:
