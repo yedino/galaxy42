@@ -7,8 +7,8 @@
 long int c_world::s_nr = 0;
 
 c_world::c_world(c_simulation &s)
-    : m_simulation(s),
-      m_nr( s_nr++ )
+    : m_nr( s_nr++ ),
+      m_simulation(s)
 {
 	
 }
@@ -410,9 +410,9 @@ c_osi2_switch &c_world::find_object_by_uuid_as_switch(const t_osi3_uuid id)
 		return dynamic_cast<c_osi2_switch &>( find_object_by_uuid_as_object(id) );
 	} catch(...) { }
 
-//	throw std::out_of_range(
-//		string("Can not find object (of type ")
-//				+ name_of_type + string(") with uuid=")+std::num_put(id) );
+	throw std::out_of_range(
+		string("Can not find object (of type ")
+				+ name_of_type + string(") with uuid=") + std::to_string(id) );
 
 }
 

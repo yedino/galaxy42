@@ -235,7 +235,7 @@ unsigned int cjddev_detail_next_price (unsigned int current) {
 	}
 	if (next_i == tab_size)
 		next_i = 0;
-	_assert((next_i >= 0) && (next_i < tab_size));
+	_assert(next_i < tab_size);
 	return prices[next_i];
 }
 

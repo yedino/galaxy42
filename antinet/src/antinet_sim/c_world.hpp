@@ -113,7 +113,7 @@ class c_world {
 		
 		
 		static inline t_simclock get_time();
-		static const inline t_simclock get_chronon(){return 0.1;}
+		static inline t_simclock get_chronon(){return 0.1;}
 	
 		// old code, needs reimplementing: @TODO
 		void add_test ();
