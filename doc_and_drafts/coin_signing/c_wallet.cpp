@@ -12,6 +12,15 @@ void c_wallet::add_token (const c_token &token) {
 	tokens.push_back(token);
 }
 
+bool c_wallet::process_token() const {
+    if (tokens.empty()) {
+        std::cerr << "empty wallet! : no token to process" << std::endl;
+        return true;
+    }
+    return false;
+}
+
+
 void c_wallet::remove_token (const c_token &token) {
 	tokens.remove(token);
 }

@@ -83,7 +83,7 @@ bool test_user_sending () {
 	c_user test_userB("userB");
 
 	test_userA.emit_tokens(1);
-	test_userA.send_token(test_userB, 1);
+    test_userA.send_token_bymethod(test_userB);
 
 	return false;
 }
@@ -92,11 +92,11 @@ bool test_many_users () {
 	std::cout << "RUNNING TEST02 MANY_USER" << std::endl;
 	c_user A("userA"), B("userB"), C("userC"), D("userD");
 
-	A.emit_tokens(2);
-	A.send_token(B,2);
-	B.send_token(C,2);
-	C.send_token(D,2);
-	D.send_token(A,2);
+    A.emit_tokens(1);
+    A.send_token_bymethod(B);
+    B.send_token_bymethod(C);
+    C.send_token_bymethod(D);
+    D.send_token_bymethod(A);
 	return false;
 }
 
@@ -104,15 +104,62 @@ bool test_cheater() {
 
 	std::cout << "RUNNING TEST03 CHEATER" << std::endl;
 	c_user A("userA"), B("userB"), C("userC"), X("userX");
-	A.emit_tokens(1);
+    A.emit_tokens(1);
 
 
-	A.send_token(B);
-	B.send_fake_token(C);
-	B.send_token(X);
-	C.send_token(A);
-	X.send_token(A); // should detect cheater
-	return false;
+    A.send_token_bymethod(B);
+    B.send_token_bymethod(C,1);
+    B.send_token_bymethod(X);
+    C.send_token_bymethod(A);
+    X.send_token_bymethod(A); // should detect cheater
+
+    A.send_token_bymethod(B);
+
+    return false;
+}
+
+bool test_bad_chainsign() {
+    int errors = 2;
+ try{
+    c_token("$23|aaaaa$123|sbbbbbf#pass");	// bad ids
+ } catch(std::string &message) {
+    std::cout << message << " -- OK" << std::endl;
+    errors--;
+ }
+ try {
+    c_token("$23|aaaaa$sbbbbbf#pass");		// no ids
+ } catch(std::string &message) {
+    std::cout << message << " -- OK" << std::endl;
+    errors--;
+ }
+    if(errors == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool test_convrt_tokenpacket() {
+
+    std::cout << "RUNNING TEST04 CONVERTING BETWEEN TOKEN<-->PACKET" << std::endl;
+    c_user A("userA"), B("userB"), C("userC"), D("userD");
+    A.emit_tokens(1);
+
+    A.send_token_bymethod(B);
+    B.send_token_bymethod(C);
+    C.send_token_bymethod(D);
+    D.send_token_bymethod(A);
+
+
+ try {
+    std::string packet = A.send_token_bypacket(B);
+    c_token test_tok(packet);
+ } catch(std::string &message) {
+    std::cerr << message << std::endl;
+    return true; // error
+ }
+
+    return false;
 }
 
 
@@ -130,10 +177,12 @@ bool test_all() {
 		t.join();
 	}
 
-	if(     !test_readableEd() &&
-			!test_user_sending() &&
-			!test_many_users() &&
-			!test_cheater() ) {
+    if(   	!test_readableEd() &&
+            !test_user_sending() &&
+            !test_many_users() &&
+            !test_cheater() &&
+            !test_bad_chainsign() &&
+            !test_convrt_tokenpacket()) {
 		return 0;
 	} else {
 		return 1;

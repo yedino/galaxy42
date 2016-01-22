@@ -24,6 +24,8 @@ class c_user {
 	vector<c_token> used_tokens;
 	double m_reputation;
 
+    c_token process_token_tosend(c_user &, bool fake = 0);
+
 	list<string> inbox;
 
 	bool find_the_cheater (const c_token &, const c_token &);
@@ -35,13 +37,19 @@ class c_user {
 	string get_username() const;
 	double get_rep();		///< normalize reputation to 0-100 value, approximated by atan()
 
-	c_ed25519 m_edsigner;
-	void send_token (c_user &, size_t = 1);
+    c_ed25519 m_edsigner;
+
+    void send_token_bymethod(c_user &, bool fake = 0);
+    std::string send_token_bypacket(c_user &, bool fake = 0);
+
+    std::string get_token_tosend();
+
 	void send_fake_token(c_user &, size_t = 1);
-	void emit_tokens (size_t);
+
+    void emit_tokens (size_t);
 	std::string get_public_key () const;
 
-	bool recieve_token (c_token &token, size_t = 1);
+    bool recieve_token (c_token &token);
 };
 
 #endif // COIN_SIGNING_C_USER_HPP

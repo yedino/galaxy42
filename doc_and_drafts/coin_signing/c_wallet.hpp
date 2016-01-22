@@ -11,14 +11,14 @@ struct c_wallet {
 	list<c_token> tokens;
 	const string tokens_type;
 
-	c_wallet (const string & = "bla");
+    c_wallet (const string & = "no named");
 
 	c_wallet (string &&);
 
 	size_t amount ();
 
 	void add_token (const c_token &);
-
+    bool process_token() const;
 	void remove_token (const c_token &);
 };
 
