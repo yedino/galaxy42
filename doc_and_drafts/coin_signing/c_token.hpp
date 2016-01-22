@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <algorithm>
+
 class token_id_generator {
 	static size_t id;
   public:
@@ -12,11 +14,12 @@ class token_id_generator {
 
 struct c_chainsign_element {
 	c_chainsign_element (const std::string, const std::string, const std::string, const std::string);
+    c_chainsign_element (const std::string &);	// deserialize chainelement from packet
 
-	const std::string m_msg;
-    const std::string m_msg_sign;
-	const std::string m_signer;
-	const std::string m_signer_pubkey;
+    std::string m_msg;
+    std::string m_msg_sign;
+    std::string m_signer;
+    std::string m_signer_pubkey;
 };
 
 struct c_token {

@@ -40,11 +40,11 @@ class c_user {
     c_ed25519 m_edsigner;
 
     void send_token_bymethod(c_user &, bool fake = 0);
-    std::string send_token_bypacket(c_user &, bool fake = 0);
 
-    std::string get_token_tosend();
+    std::string get_token_packet(c_user &, bool fake = 0);
+    void recieve_from_packet(std::string &);
 
-	void send_fake_token(c_user &, size_t = 1);
+    void send_fake_token(c_user &, size_t = 1);
 
     void emit_tokens (size_t);
 	std::string get_public_key () const;

@@ -119,15 +119,43 @@ bool test_cheater() {
 }
 
 bool test_bad_chainsign() {
-    int errors = 2;
+    int errors = 3;
  try{
-    c_token("$23|aaaaa$123|sbbbbbf#pass");	// bad ids
+    c_token("$0|ed5c06c0577e0bf8a22e5f2c09f471e2c288bedfe255882d265661bf382e784232"
+            "&ed1efe422eb7e56eb77d86efdac68b24da0ec4667ec44e45cd9db54389effb533"
+            "a2a7f26496e630e8e0877eb96dae7a6d2ee2b6aaa84a0a755f645239597f25e02"
+            "&userA&eda1da39fb7fe9b34013f26b20a6b6550c31ef4452c8f2602b5be19be289840204"
+            "$12|ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea"
+            "&ed61ccfae983e6660505443ef89e1749c1e9007920793c7c935737822d26c8e70"
+            "ba433fa25bb19abf5e3d4fe57f466ea001711d369d4505a10d868278db86b200b"
+            "&userB&ed5c06c0577e0bf8a22e5f2c09f471e2c288bedfe255882d265661bf382e784232"
+            "$234|edb1fdafc96abac26c52dae3be8b68e3b8e479ebdcc3dbf97e81bf1f47d0472bcf"
+            "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
+            "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
+            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea"); // bad ids
  } catch(std::string &message) {
     std::cout << message << " -- OK" << std::endl;
     errors--;
  }
  try {
-    c_token("$23|aaaaa$sbbbbbf#pass");		// no ids
+    c_token("$|ed5c06c0577e0bf8a22e5f2c09f471e2c288bedfe255882d265661bf382e784232"
+            "&ed1efe422eb7e56eb77d86efdac68b24da0ec4667ec44e45cd9db54389effb533"
+            "a2a7f26496e630e8e0877eb96dae7a6d2ee2b6aaa84a0a755f645239597f25e02"
+            "&userA&eda1da39fb7fe9b34013f26b20a6b6550c31ef4452c8f2602b5be19be289840204"
+            "$ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea"
+            "&ed61ccfae983e6660505443ef89e1749c1e9007920793c7c935737822d26c8e70"
+            "ba433fa25bb19abf5e3d4fe57f466ea001711d369d4505a10d868278db86b200b"
+            "&userB&ed5c06c0577e0bf8a22e5f2c09f471e2c288bedfe255882d265661bf382e784232"
+            "$0|edb1fdafc96abac26c52dae3be8b68e3b8e479ebdcc3dbf97e81bf1f47d0472bcf"
+            "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
+            "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
+            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea"); // no ids
+ } catch(std::string &message) {
+    std::cout << message << " -- OK" << std::endl;
+    errors--;
+ }
+ try{
+    c_token("$23|aaaaa$123|sbbbbbf#pass");	// bad format
  } catch(std::string &message) {
     std::cout << message << " -- OK" << std::endl;
     errors--;
@@ -152,8 +180,17 @@ bool test_convrt_tokenpacket() {
 
 
  try {
-    std::string packet = A.send_token_bypacket(B);
+    std::string packet = A.get_token_packet(B);
     c_token test_tok(packet);
+    std::string packet_two = test_tok.to_packet();
+
+    if(packet == packet_two) {
+        return false;
+    }
+    else {
+        throw(std::string("error: after converting token<->packet tokens doesn't match"));
+    }
+
  } catch(std::string &message) {
     std::cerr << message << std::endl;
     return true; // error

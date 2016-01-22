@@ -7,7 +7,27 @@ c_chainsign_element::c_chainsign_element (const std::string msg,
 		const std::string signer,
         const std::string signer_pubkey) : m_msg(msg), m_msg_sign(msg_sign), m_signer(signer), m_signer_pubkey(signer_pubkey) {
 }
+c_chainsign_element::c_chainsign_element (const std::string &packet) {
 
+    char chain_dl = '&';		// chain element delimeter
+    if(std::count(packet.begin(), packet.end(), chain_dl) != 3) {
+        throw(std::string("abort: invalid token -- bad chainsign element format!"));
+    }
+
+    std::vector<std::string> parsed;
+    size_t pos_in_begin = 0;		// begin positon of component in chainelement
+    size_t pos_in_end = 0;  			// end positon of component in chainelement
+    int i;
+    for(i = 0; (pos_in_end = packet.find(chain_dl,pos_in_begin)) != std::string::npos; i++) {
+        parsed.push_back(packet.substr(pos_in_begin,pos_in_end - pos_in_begin));
+        pos_in_begin = pos_in_end+1;
+    }
+    parsed.push_back(packet.substr(pos_in_begin,pos_in_end- pos_in_begin));
+    m_msg 			= parsed.at(0);
+    m_msg_sign 		= parsed.at(1);
+    m_signer 		= parsed.at(2);
+    m_signer_pubkey = parsed.at(3);
+}
 
 c_token::c_token (long long pss) : m_password(pss), id(token_id_generator::generate_id()) { }
 
@@ -33,17 +53,13 @@ long long c_token::get_size() {
 
 c_token::c_token(std::string packet){
 
-
-    std::cout << "deserialization: [" << packet << "]" << std::endl;
+    // std::cout << "deserialization: [" << packet << "]" << std::endl; //dbg
     char token_dl = '$';		// token delimenter
     char id_dl = '|';		// id deleimeter
-    char chain_dl = '&';		// chain element delimeter
     char pass_dl = '#';	// password delimeter
     size_t chain_el_begin = 0;		// chain element begin
     size_t chain_el_end = 0;		// chain element end
     id = std::numeric_limits<size_t>::max();
-    int i;
-    std::cout << "sizeofpacket: " << packet.size() << std::endl;
     while((chain_el_begin = packet.find(token_dl)) != std::string::npos) {
         std::string chain_element;
         chain_el_end = packet.find(token_dl,chain_el_begin+1);
@@ -57,27 +73,20 @@ c_token::c_token(std::string packet){
             packet = packet.substr(chain_el_end);
         }
         std::size_t id_block_pos = chain_element.find(id_dl); // +1 to avoid delimeter
-        if (id_block_pos != std::string::npos) {
+        if (id_block_pos != std::string::npos && id_block_pos != 0) {
             size_t next_id;
             sscanf(chain_element.substr(0,id_block_pos).c_str(), "%zu", &next_id);
             if(id != std::numeric_limits<size_t>::max() && id != next_id) {
                 throw(std::string("bad chainsigns -- invaild token ids"));
             }
             id = next_id;
-            chain_element = chain_element.substr(id_block_pos+1);
         }
         else {
-            throw(std::string("bad chainsigns -- tokens with no ids"));
+            throw(std::string("bad chainsigns -- tokens with missing id"));
         }
-
-
-        std::cout << chain_el_begin << " - " << chain_el_end << " pss= " << pass_block_pos << std::endl;
-        std::cout << "\n*** ele " << i << " ** : [" << chain_element << "]" << std::endl;
-        std::cout << "\n*** pack next " << i << " ** : [" << packet << "]" << std::endl;
-        std::cout << "sizeofpacket [" << i << "] : " << packet.size() << std::endl;
-        i++;
-
+        m_chainsign.push_back(chain_element);
     }
+    m_password = atoll(packet.substr(1).c_str());
 }
 
 std::string c_token::to_packet() {
@@ -90,9 +99,9 @@ std::string c_token::to_packet() {
         packet += chain_el.m_signer + '&';
         packet += chain_el.m_signer_pubkey;
     }
-    // adding password TODO sould be encrypted!
+    //TODO adding password should be encrypted!
     packet += "#";
-    packet += m_password;
+    packet += std::to_string(m_password);
     return packet;
 }
 
@@ -112,7 +121,7 @@ bool operator !=(const c_chainsign_element &l_ele, const c_chainsign_element &r_
 }
 
 bool operator== (const c_token &lhs, const c_token &rhs) {
-	return lhs.id == rhs.id;
+    return lhs.id == rhs.id;
 }
 
 bool operator< (const c_token &lhs, const c_token &rhs) {

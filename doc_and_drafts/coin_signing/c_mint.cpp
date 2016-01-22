@@ -1,7 +1,8 @@
 #include "c_mint.hpp"
 
 c_token c_mint::emit_token () {
-	long long token_pss = generate_password();
+    long long token_pss = generate_password();
+
 	c_token token(token_pss);
 	m_emited_tokens.insert({token, token_pss});
 	return token;

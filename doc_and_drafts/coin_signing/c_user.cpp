@@ -32,7 +32,6 @@ c_token c_user::process_token_tosend(c_user &user, bool fake) {
     if(!fake) {
         m_wallet.tokens.pop_back();
     }
-   // std::unique_ptr<c_token> tok_ptr(&tok);
     std::string msg = std::to_string(tok.id) + "|" + user.m_public_key;
     std::string msg_sign = m_edsigner.sign(msg);
 
@@ -54,19 +53,22 @@ void c_user::send_token_bymethod(c_user &user, bool fake) {
   }
 }
 
-std::string c_user::send_token_bypacket(c_user &user, bool fake) {
-    std::cout << "----send-start-by -packet---------------------------------------------------" << std::endl;
+std::string c_user::get_token_packet(c_user &user, bool fake) {
+
   try {
     c_token tok = process_token_tosend(user,fake);
     std::string packet = tok.to_packet();
 
-    std::cout << "sending token packet [" << packet << "]" << std::endl;		// dbg
-
-    std::cout << "----send-end-----------------------------------------------------" << std::endl;
     return packet;
-  } catch(std::string &message) {
+
+    } catch(std::string &message) {
     std::cerr << message << std::endl;
+  }
 }
+
+void c_user::recieve_from_packet(std::string &packet) {
+    c_token tok(packet);
+    recieve_token(tok);
 }
 
 bool c_user::recieve_token (c_token &token) {
