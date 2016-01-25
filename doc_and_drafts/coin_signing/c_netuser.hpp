@@ -15,10 +15,11 @@ class c_netuser : public c_user {
     void send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey);
     ~c_netuser();
   private:
-    const int server_port = 55555;
+    const int server_port = 30000;
     io_service m_io_service;
     ip::tcp::socket client_socket;
     ip::tcp::socket server_socket;
+	ip::tcp::acceptor m_acceptor;
     void create_server();
     void do_read(ip::tcp::socket);
 

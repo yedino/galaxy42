@@ -1,15 +1,18 @@
 #include "c_netuser.hpp"
+#include <iostream>
 
 c_netuser::c_netuser(std::string& username) : c_user(username),
                                               client_socket(m_io_service),
-                                              server_socket(m_io_service) {
+                                              server_socket(m_io_service),
+                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)) {
     threads_maker(2);
     create_server();
 }
 
 c_netuser::c_netuser(std::string&& username) : c_user(username),
                                               client_socket(m_io_service),
-                                              server_socket(m_io_service) {
+                                              server_socket(m_io_service),
+                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)) {
     threads_maker(2);
     create_server();
 }
@@ -44,13 +47,17 @@ void c_netuser::send_token_bynet(const std::string &ip_address, const std::strin
 }
 
 void c_netuser::create_server() {
-
-    ip::tcp::acceptor my_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port));
-    my_acceptor.async_accept(server_socket,
+	std::cout << "accept on port " << server_port << std::endl;
+    //ip::tcp::acceptor my_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port));
+    m_acceptor.async_accept(server_socket,
                             [this](boost::system::error_code ec) {
+								std::cout << "async lambda" << std::endl;
                                 if(!ec) {
+									std::cout << "accepted" << std::endl;
                                     this->do_read(std::move(server_socket));
                                 }
+                                else
+									std::cout << "accept error " << ec.message() << std::endl;
                                 this->create_server();
                             });
 
@@ -58,7 +65,7 @@ void c_netuser::create_server() {
 }
 
 void c_netuser::do_read(ip::tcp::socket socket_) {
-
+	std::cout << "do read" << std::endl;
     boost::system::error_code ec;
     char tok_s[4];						// first 4 bytes always is lenght of token
     memset(tok_s,0,4);
