@@ -204,7 +204,7 @@ bool test_all() {
 
 	list<thread> Threads;
 
-	int test_loop = 100, msg_length = 64;
+    int test_loop = 10, msg_length = 64;
 	std::cout << "RUNNING TEST MANY_ED_SIGNING IN " << number_of_threads << " THREADS" << std::endl;
 	for (int i = 0; i < number_of_threads; ++i) {
 		Threads.emplace_back([&test_loop, &msg_length](){test_manyEdSigning(test_loop,msg_length);});

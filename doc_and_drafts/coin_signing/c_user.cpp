@@ -35,7 +35,7 @@ c_token c_user::process_token_tosend(c_user &user, bool fake) {
     std::string msg = std::to_string(tok.id) + "|" + user.m_public_key;
     std::string msg_sign = m_edsigner.sign(msg);
 
-    tok.m_chainsign.push_back(std::move(c_chainsign_element(msg, msg_sign, m_username, m_public_key)));
+    tok.m_chainsign.emplace_back(std::move(c_chainsign_element(msg, msg_sign, m_username, m_public_key)));
     return tok;
 }
 

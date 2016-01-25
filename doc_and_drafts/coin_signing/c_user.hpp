@@ -16,8 +16,8 @@ using std::list;
 using std::runtime_error;
 
 class c_user {
-  private:
-	c_mint m_mint;
+  protected:
+    c_mint m_mint;
 	c_wallet m_wallet;
 	string m_username;
 	string m_public_key;
@@ -31,7 +31,8 @@ class c_user {
 	bool find_the_cheater (const c_token &, const c_token &);
 
   public:
-	c_user (std::string&);
+    c_user () = delete;
+    c_user (std::string&);
 	c_user (string &&);
 
 	string get_username() const;
@@ -51,5 +52,6 @@ class c_user {
 
     bool recieve_token (c_token &token);
 };
+
 
 #endif // COIN_SIGNING_C_USER_HPP
