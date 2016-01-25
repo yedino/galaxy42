@@ -19,11 +19,15 @@ string c_user::get_username() const {
 	return m_username;
 }
 
+string c_user::get_public_key() const{
+    return m_public_key;
+}
+
 double c_user::get_rep() {
 	return atan(m_reputation)*100*(2/M_PI);
 }
 
-c_token c_user::process_token_tosend(c_user &user, bool fake) {
+c_token c_user::process_token_tosend(const std::string &user_pubkey, bool fake) {
     if(m_wallet.process_token()) {
         std::string msg = m_username + " can't send token -- transaction abort";
         throw(msg);
@@ -32,7 +36,7 @@ c_token c_user::process_token_tosend(c_user &user, bool fake) {
     if(!fake) {
         m_wallet.tokens.pop_back();
     }
-    std::string msg = std::to_string(tok.id) + "|" + user.m_public_key;
+    std::string msg = std::to_string(tok.id) + "|" + user_pubkey;
     std::string msg_sign = m_edsigner.sign(msg);
 
     tok.m_chainsign.emplace_back(std::move(c_chainsign_element(msg, msg_sign, m_username, m_public_key)));
@@ -43,7 +47,7 @@ void c_user::send_token_bymethod(c_user &user, bool fake) {
     std::cout << "----send-start-by-method---------------------------------------------------" << std::endl;
 
   try {
-    c_token tok = process_token_tosend(user,fake);
+    c_token tok = process_token_tosend(user.get_public_key(),fake);
 
     std::cout << "sending token: " << m_username << " => " << user.get_username() << std::endl;		// dbg
     user.recieve_token(tok); // push this coin to the target user
@@ -53,10 +57,10 @@ void c_user::send_token_bymethod(c_user &user, bool fake) {
   }
 }
 
-std::string c_user::get_token_packet(c_user &user, bool fake) {
+std::string c_user::get_token_packet(const std::string &user_pubkey, bool fake) {
 
   try {
-    c_token tok = process_token_tosend(user,fake);
+    c_token tok = process_token_tosend(user_pubkey,fake);
     std::string packet = tok.to_packet();
 
     return packet;
@@ -186,8 +190,4 @@ void print_strBytes(const std::string& str) {
 		std::cout << static_cast<int>(str[i]) << ":";
 	}
 	std::cout << std::endl;
-}
-
-std::string c_user::get_public_key() const {
-	return m_public_key;
 }

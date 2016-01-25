@@ -3,7 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
-#include "c_user.hpp"
+#include "c_netuser.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
 
 using std::thread;
@@ -180,7 +180,7 @@ bool test_convrt_tokenpacket() {
 
 
  try {
-    std::string packet = A.get_token_packet(B);
+    std::string packet = A.get_token_packet(B.get_public_key());
     c_token test_tok(packet);
     std::string packet_two = test_tok.to_packet();
 
@@ -199,12 +199,20 @@ bool test_convrt_tokenpacket() {
     return false;
 }
 
+bool test_netuser() {
+
+    c_netuser A("netUserA");
+
+
+    return 1;
+}
+
 
 bool test_all() {
 
 	list<thread> Threads;
 
-    int test_loop = 10, msg_length = 64;
+    int test_loop = 100, msg_length = 64;
 	std::cout << "RUNNING TEST MANY_ED_SIGNING IN " << number_of_threads << " THREADS" << std::endl;
 	for (int i = 0; i < number_of_threads; ++i) {
 		Threads.emplace_back([&test_loop, &msg_length](){test_manyEdSigning(test_loop,msg_length);});
@@ -214,12 +222,13 @@ bool test_all() {
 		t.join();
 	}
 
-    if(   	!test_readableEd() &&
-            !test_user_sending() &&
-            !test_many_users() &&
-            !test_cheater() &&
-            !test_bad_chainsign() &&
-            !test_convrt_tokenpacket()) {
+    if(   //	!test_readableEd() &&
+          //  !test_user_sending() &&
+          //  !test_many_users() &&
+          //  !test_cheater() &&
+          //  !test_bad_chainsign() &&
+          //  !test_convrt_tokenpacket() &&
+            !test_netuser())  {
 		return 0;
 	} else {
 		return 1;

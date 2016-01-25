@@ -12,13 +12,19 @@ class c_netuser : public c_user {
   public:
     c_netuser(std::string& username);
     c_netuser(std::string&& username);
-    void send_token_bynet(const std::string &ip_address);
+    void send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey);
     ~c_netuser();
   private:
     const int server_port = 55555;
     io_service m_io_service;
     ip::tcp::socket client_socket;
     ip::tcp::socket server_socket;
+    void create_server();
+    void do_read(ip::tcp::socket);
+
+    enum { max_length = 1024 };
+    char data_[max_length];
+
     vector<std::thread> m_threads;
     void threads_maker(unsigned);
 
