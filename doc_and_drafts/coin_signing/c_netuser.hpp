@@ -1,5 +1,6 @@
 #ifndef C_NETUSER_H
 #define C_NETUSER_H
+#define DBG_MTX(X,Y) do{X.lock();std::cout<<Y<<std::endl;X.unlock();}while(0)
 
 #include "c_user.hpp"
 #include <atomic>
@@ -13,6 +14,7 @@ class c_netuser : public c_user {
   public:
     c_netuser(std::string& username);
     c_netuser(std::string&& username);
+    void send_pubkey_request(const std::string &ip_address);
     void send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey);
     ~c_netuser();
   private:
@@ -22,15 +24,18 @@ class c_netuser : public c_user {
     ip::tcp::socket server_socket;
 	ip::tcp::acceptor m_acceptor;
     void create_server();
-    void do_read(ip::tcp::socket);
-	std::atomic<bool> m_stop_flag;
+    void do_read(ip::tcp::socket socket_);
+    void read_pubkey(ip::tcp::socket socket_);
+    void read_token(ip::tcp::socket socket_);
+
+    std::atomic<bool> m_stop_flag;
 
     enum { max_length = 1024 };
     char data_[max_length];
 
     vector<std::thread> m_threads;
     void threads_maker(unsigned);
-
+    std::mutex dbg_mtx;
 };
 
 #endif // C_NETUSER_H

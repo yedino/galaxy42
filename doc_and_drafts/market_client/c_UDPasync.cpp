@@ -55,5 +55,3 @@ void c_UDPasync::run_service() {
 		}
 	}
 }
-
-

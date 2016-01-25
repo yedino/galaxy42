@@ -2,13 +2,14 @@
 #define COIN_SIGNING_C_USER_HPP
 #include "c_token.hpp"
 #include "c_wallet.hpp"
-#include <string>
 #include "c_mint.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
+#include <string>
 #include <vector>
 #include <list>
 #include <stdexcept>
 #include <cmath>
+#include <mutex>
 
 using std::string;
 using std::vector;
@@ -50,6 +51,8 @@ class c_user {
 
     void emit_tokens (size_t);
     bool recieve_token (c_token &token);
+
+    std::mutex m_mtx;
 };
 
 

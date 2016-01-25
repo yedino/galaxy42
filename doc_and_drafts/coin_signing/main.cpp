@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 #include "c_netuser.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
 
@@ -113,7 +114,6 @@ bool test_cheater() {
     C.send_token_bymethod(A);
     X.send_token_bymethod(A); // should detect cheater
 
-    A.send_token_bymethod(B);
 
     return false;
 }
@@ -201,10 +201,43 @@ bool test_convrt_tokenpacket() {
 
 bool test_netuser() {
 
-    c_netuser A("netUserA");
+    c_netuser A("DamianCoin");
+    bool isover = false;
+    using namespace std::literals;
+    //robert
+    //std::string target_ip_addr = "192.168.0.57";
+    //std::string target_pubkey = "ed5ea262180d88dd8ea31a458358513d52819d3fa09e541e2f96a5e5858920293e";
+    //my
+    std::string target_ip_addr = "127.0.0.1";
+    std::string target_pubkey = A.get_public_key();
 
+    std::cout << "Your target is " << target_ip_addr << " with pubkey " << target_pubkey << std::endl;
 
-    return 1;
+    std::cout << "For exit type <quit>\n";
+    std::cout << "emit token <emit>\n";
+    std::cout << "send token <send>\n";
+    while(!isover) {
+        std::cout << "Enter message: ";
+        std::string request;
+        std::getline(std::cin,request);
+
+        if(request == "quit") {
+            isover = true;
+            break;
+        }
+        else if(request == "emit") {
+            A.emit_tokens(1);
+        }
+        else if(request == "send") {
+            A.send_token_bynet(target_ip_addr,target_pubkey);
+        }
+        else {
+            std::cout << "bad command! -- try again" << std::endl;
+        }
+        std::this_thread::sleep_for(2s);
+    }
+
+    return 0;
 }
 
 
@@ -225,7 +258,7 @@ bool test_all() {
     if(   //	!test_readableEd() &&
           //  !test_user_sending() &&
           //  !test_many_users() &&
-          //  !test_cheater() &&
+            !test_cheater() &&
           //  !test_bad_chainsign() &&
           //  !test_convrt_tokenpacket() &&
             !test_netuser())  {

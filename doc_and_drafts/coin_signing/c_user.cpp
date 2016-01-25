@@ -28,6 +28,7 @@ double c_user::get_rep() {
 }
 
 c_token c_user::process_token_tosend(const std::string &user_pubkey, bool fake) {
+    std::lock_guard<std::mutex> lck (m_mtx);
     if(m_wallet.process_token()) {
         std::string msg = m_username + " can't send token -- transaction abort";
         throw(msg);
@@ -36,7 +37,7 @@ c_token c_user::process_token_tosend(const std::string &user_pubkey, bool fake) 
     if(!fake) {
         m_wallet.tokens.pop_back();
     }
-    std::string msg = std::to_string(tok.id) + "|" + user_pubkey;
+    std::string msg = std::to_string(tok.get_id()) + "|" + user_pubkey;
     std::string msg_sign = m_edsigner.sign(msg);
 
     tok.m_chainsign.emplace_back(std::move(c_chainsign_element(msg, msg_sign, m_username, m_public_key)));
@@ -61,12 +62,16 @@ std::string c_user::get_token_packet(const std::string &user_pubkey, bool fake) 
 
   try {
     c_token tok = process_token_tosend(user_pubkey,fake);
+    m_mtx.lock();
     std::string packet = tok.to_packet();
+    m_mtx.unlock();
 
     return packet;
 
     } catch(std::string &message) {
     std::cerr << message << std::endl;
+    std::string fail = "fail";
+    return fail;
   }
 }
 
@@ -80,8 +85,11 @@ bool c_user::recieve_token (c_token &token) {
 		for (auto &in : used_tokens) { // is this token used?
 			if (in == token) {
 				std::cout << "token validate : TOKEN_USED !!!" << std::endl;
-				find_the_cheater(token, in);
-				return false;
+                if(!find_the_cheater(token, in)) {
+                    std::cout << "can't find cheater" << std::endl;
+                } else {
+                    return false;
+                }
 			}
 		}
 		used_tokens.push_back(token);
@@ -146,8 +154,8 @@ bool c_user::find_the_cheater (const c_token &token_a, const c_token &token_b) {
 
 	// fast check by size of chainsigns
 	if(len != token_b.m_chainsign.size()) {
-		std::cout << "bad token : comprared tokend have different size!" << std::endl;
-		return false;
+        std::cout << "bad token : comprared tokend have different size!" << std::endl;	//TODO finding cheater for token with different chainsing size
+        return false;
 	}
 	bool is_dbspend = false;
 	std::cout << "[TOKEN A]" << "\t[TOKEN B]\n";
@@ -182,7 +190,8 @@ void c_user::emit_tokens (size_t amount) {
 	for(size_t i = 0; i < amount; ++i) {
 		c_token emitted_token = m_mint.emit_token();
 		m_wallet.add_token(emitted_token);
-	}
+        std::cout << m_username << " emited token with id: "  << emitted_token.get_id() << std::endl;
+    }
 }
 
 void print_strBytes(const std::string& str) {

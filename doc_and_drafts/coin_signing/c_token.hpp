@@ -23,7 +23,6 @@ struct c_chainsign_element {
 };
 
 struct c_token {
-    size_t id;
 	std::vector<c_chainsign_element> m_chainsign;
 
 	c_token (long long);
@@ -31,11 +30,13 @@ struct c_token {
 
     std::string to_packet();	///< serialize token
 
-    long long get_size();
+    long long get_size() const;
+    size_t get_id() const;
     bool check_ps (long long);
 
   private:
 	long long m_password;
+    size_t id;
 };
 
 bool operator != (const c_chainsign_element &,const c_chainsign_element &);
