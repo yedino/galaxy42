@@ -2,6 +2,7 @@
 #define C_NETUSER_H
 
 #include "c_user.hpp"
+#include <atomic>
 #include <boost/asio.hpp>
 #include <thread>
 #include <vector>
@@ -22,6 +23,7 @@ class c_netuser : public c_user {
 	ip::tcp::acceptor m_acceptor;
     void create_server();
     void do_read(ip::tcp::socket);
+	std::atomic<bool> m_stop_flag;
 
     enum { max_length = 1024 };
     char data_[max_length];

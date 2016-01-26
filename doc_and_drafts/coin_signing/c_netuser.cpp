@@ -4,7 +4,9 @@
 c_netuser::c_netuser(std::string& username) : c_user(username),
                                               client_socket(m_io_service),
                                               server_socket(m_io_service),
-                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)) {
+                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)),
+                                              m_stop_flag(false)
+{
     threads_maker(2);
     create_server();
 }
@@ -12,7 +14,9 @@ c_netuser::c_netuser(std::string& username) : c_user(username),
 c_netuser::c_netuser(std::string&& username) : c_user(username),
                                               client_socket(m_io_service),
                                               server_socket(m_io_service),
-                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)) {
+                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)),
+                                              m_stop_flag(false)
+{
     threads_maker(2);
     create_server();
 }
@@ -62,7 +66,7 @@ void c_netuser::create_server() {
 									std::cout << "accept error " << ec.message() << std::endl;
                                 this->create_server();
                             });
-
+	std::cout << "end of async accept" << std::endl;
 
 }
 
@@ -93,7 +97,7 @@ void c_netuser::do_read(ip::tcp::socket socket_) {
 
 
 c_netuser::~c_netuser() {
-
+	m_stop_flag = true;
     m_io_service.stop();
     for(auto &t : m_threads){
         t.join();
@@ -104,6 +108,9 @@ void c_netuser::threads_maker(unsigned num) {
 
     m_threads.reserve(num);
     for(int i = 0; i < num; ++i) {
-        m_threads.emplace_back([this](){this->m_io_service.run();});
+        m_threads.emplace_back([this](){
+			while (!m_stop_flag)
+				this->m_io_service.run();
+		});
     }
 }
