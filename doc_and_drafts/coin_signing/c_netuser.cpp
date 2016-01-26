@@ -20,7 +20,7 @@ c_netuser::c_netuser(std::string&& username) : c_user(username),
 
 
 void c_netuser::send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey) {
-    
+
     boost::system::error_code ec;
     ip::address addr = ip::address::from_string(ip_address, ec );
     if(ec) { ///< boost error - not needed
@@ -40,10 +40,12 @@ void c_netuser::send_token_bynet(const std::string &ip_address, const std::strin
 
     std::string packet = get_token_packet(reciever_pubkey);
     uint32_t packet_size = packet.size();
+	std::cout << "send coin size" << std::endl;
     client_socket.write_some(boost::asio::buffer(&packet_size, 4),ec);
 
+	std::cout << "send coin data" << std::endl;
     client_socket.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
-
+	std::cout << "end of sending token" << std::endl;
 }
 
 void c_netuser::create_server() {
@@ -75,11 +77,13 @@ void c_netuser::do_read(ip::tcp::socket socket_) {
     recieved_bytes = local_socket.read_some(buffer(tok_s,4),ec);
     assert(recieved_bytes == 4);
     uint32_t* tok_size = reinterpret_cast<uint32_t*>(tok_s);
+	std::cout << "token size: " << *tok_size << std::endl;
 
     std::string packet;
     recieved_bytes = 0;
     while(recieved_bytes < *tok_size) {
         size_t loop_data_size = local_socket.read_some(buffer(data_,max_length),ec);
+		std::cout << "rec " << loop_data_size << " bytes" << std::endl;
         packet.assign(data_,loop_data_size);
 
         recieved_bytes += loop_data_size;
