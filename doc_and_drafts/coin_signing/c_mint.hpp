@@ -15,7 +15,7 @@ class c_mint {
 	c_token emit_token ();
 
 	bool check_isEmited (c_token &);
-
+    void print_mint_status(std::ostream &os);
   private:
 	std::map<c_token, long long> m_emited_tokens;
 	c_random_generator<long long> random_generator;

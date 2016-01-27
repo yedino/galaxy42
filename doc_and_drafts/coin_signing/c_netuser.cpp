@@ -74,8 +74,7 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
     DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
     socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size), ec);
     DBG_MTX(dbg_mtx,"end of sending public key");
-}https://www.google.pl/search?q=agregacja+czy+dziedziczenia&gws_rd=cr,ssl&ei=U9KoVuqbD4X6ygOUxrjYAQ#q=agregacja+czy+dziedziczenia&start=10
-
+}
 
 void c_netuser::send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey) {
 

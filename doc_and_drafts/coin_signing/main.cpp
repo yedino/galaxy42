@@ -111,9 +111,17 @@ bool test_cheater() {
     A.send_token_bymethod(B);
     B.send_token_bymethod(C,1);
     B.send_token_bymethod(X);
-    C.send_token_bymethod(A);
+    X.send_token_bymethod(B);
+    B.send_token_bymethod(X);
+    X.send_token_bymethod(B);
+    B.send_token_bymethod(A);
+    C.send_token_bymethod(X);
     X.send_token_bymethod(A); // should detect cheater
 
+    A.emit_tokens(2);
+    B.emit_tokens(1);
+    B.send_token_bymethod(A);
+    A.print_status(std::cout);
 
     return false;
 }
@@ -176,11 +184,10 @@ bool test_convrt_tokenpacket() {
     A.send_token_bymethod(B);
     B.send_token_bymethod(C);
     C.send_token_bymethod(D);
-    D.send_token_bymethod(A);
 
 
  try {
-    std::string packet = A.get_token_packet(B.get_public_key());
+    std::string packet = D.get_token_packet(A.get_public_key());
     c_token test_tok(packet);
     std::string packet_two = test_tok.to_packet();
 
@@ -255,13 +262,13 @@ bool test_all() {
 		t.join();
 	}
 
-    if(   //	!test_readableEd() &&
-          //  !test_user_sending() &&
-          //  !test_many_users() &&
-            !test_cheater() &&
+    if(   	!test_readableEd() &&
+            !test_user_sending() &&
+            !test_many_users() &&
+            !test_cheater()) {
           //  !test_bad_chainsign() &&
-          //  !test_convrt_tokenpacket() &&
-            !test_netuser())  {
+          //  !test_convrt_tokenpacket()) {
+          //  !test_netuser())  {
 		return 0;
 	} else {
 		return 1;

@@ -30,10 +30,11 @@ struct c_token {
 
     std::string to_packet();	///< serialize token
 
-    long long get_size() const;
+    std::string get_emiter_name();
     size_t get_id() const;
-    bool check_ps (long long);
 
+    long long get_size() const;
+    bool check_ps (long long);
   private:
 	long long m_password;
     size_t id;

@@ -16,7 +16,7 @@ struct c_wallet {
 	c_wallet (string &&);
 
 	size_t amount ();
-
+    void print_wallet_status(std::ostream &, std::string &my_username);
 	void add_token (const c_token &);
     bool process_token() const;
 	void remove_token (const c_token &);
@@ -24,4 +24,3 @@ struct c_wallet {
 
 
 #endif //COIN_SIGNING_C_WALLET_HPP
-

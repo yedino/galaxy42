@@ -16,7 +16,14 @@ bool c_mint::check_isEmited (c_token &token) {
 	return false;
 }
 
+void c_mint::print_mint_status(std::ostream &os) {
+
+    os << "Tokens emited by mint: " << m_emited_tokens.size() << std::endl;
+    for(auto &el : m_emited_tokens) {
+        os << "Id: [" << el.first.get_id() << "]" << std::endl;
+    }
+}
+
 long long c_mint::generate_password () {
 	return random_generator.get_random(sizeof(long long));
 }
-

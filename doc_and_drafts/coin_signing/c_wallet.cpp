@@ -7,6 +7,15 @@ c_wallet::c_wallet (string &&name) : tokens_type(name) { }
 size_t c_wallet::amount () {
 	return tokens.size();
 }
+void c_wallet::print_wallet_status(std::ostream &os, std::string &my_username) {
+    os << "Amount of tokens in wallet: " << amount() << std::endl;
+
+    for(c_token &tok : tokens) {
+        std::string emiter;
+        (tok.get_emiter_name() != "unknown") ? emiter = tok.get_emiter_name() : emiter = my_username;
+        os << "Emiter: [" << emiter << "], Id: ["  << tok.get_id() << "], Size: [" << tok.get_size() << " B]" << std::endl;
+    }
+}
 
 void c_wallet::add_token (const c_token &token) {
 	tokens.push_back(token);

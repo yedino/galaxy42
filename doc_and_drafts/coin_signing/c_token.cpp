@@ -108,6 +108,16 @@ std::string c_token::to_packet() {
     return packet;
 }
 
+std::string c_token::get_emiter_name() {
+
+    if(!m_chainsign.empty()) {
+        return m_chainsign[0].m_signer;
+    } else {
+        return std::string("unknown");
+    }
+
+}
+
 size_t token_id_generator::generate_id () {
 	return id++;
 }

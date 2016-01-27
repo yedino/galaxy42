@@ -23,6 +23,7 @@ class c_user {
 	string m_username;
     string m_public_key;
     vector<c_token> used_tokens;
+    void print_used_status(std::ostream &);
 	double m_reputation;
 
     c_token process_token_tosend(const std::string &, bool fake = 0);
@@ -51,6 +52,8 @@ class c_user {
 
     void emit_tokens (size_t);
     bool recieve_token (c_token &token);
+
+    void print_status(std::ostream &);
 
     std::mutex m_mtx;
 };
