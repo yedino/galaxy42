@@ -24,35 +24,66 @@ c_netuser::c_netuser(std::string&& username) : c_user(username),
 }
 
 
-std::string c_netuser::get_remote_public_key(ip::tcp::socket &socket_) {
+std::string c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
+	assert(socket_.is_open());
+	boost::system::error_code ec;
+	DBG_MTX(dbg_mtx, "wait for response");
+	char header[2];
+	size_t recieved_bytes;
+	recieved_bytes = socket_.read_some(buffer(header, 2), ec);
+	assert(recieved_bytes == 2);
+	assert(header[0] == 'p');
+	assert(header[1] == 'k');
+
+	DBG_MTX(dbg_mtx, "read public key size");
+	char pub_key_size[4];
+	recieved_bytes = socket_.read_some(buffer(pub_key_size, 4), ec);
+	assert(recieved_bytes == 4);
+
+	uint32_t *key_size = reinterpret_cast<uint32_t *>(pub_key_size);
+	const std::unique_ptr<char[]> pub_key_data(new char[*key_size]);
+
+	DBG_MTX(dbg_mtx, "read public key data");
+    recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), *key_size), ec);
+	assert(recieved_bytes == *key_size);
+
+	std::string pub_key(pub_key_data.get(), *key_size);
+	return pub_key;
+}
+
+void c_netuser::send_public_key_req(ip::tcp::socket &socket_) {
+	assert(socket_.is_open());
     boost::system::error_code ec;
     char pubkey_send_req[2] = {'p','k'};
-    uint32_t packet_size = ed25519_sizes::pub_key_size;
-    std::string packet = get_public_key();
 
 	socket_.write_some(boost::asio::buffer(pubkey_send_req, request_type_size),ec);
 
-    DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
+/*    DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
     socket_.write_some(boost::asio::buffer(&packet_size, 4),ec);
 
     DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
     socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
     DBG_MTX(dbg_mtx,"end of sending public key");
-
-	DBG_MTX(dbg_mtx, "wait for response");
-	char pub_key_size[2];
-	socket_.read_some(buffer(pub_key_size, 2), ec);
-	uint16_t *key_size = reinterpret_cast<uint16_t *>(pub_key_size);
-	const std::unique_ptr<char[]> pub_key_data(new char[*key_size]);
-
-	size_t recieved_bytes;
-    recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), *key_size), ec);
-	assert(recieved_bytes == *key_size);
-
-	std::string pub_key(pub_key_data.get(), *key_size);
-
-	return pub_key;
+*/
 }
+
+void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
+	assert(socket_.is_open());
+	boost::system::error_code ec;
+	char header[2] = {'p', 'k'};
+	DBG_MTX(dbg_mtx, "send header");
+	socket_.write_some(buffer(header, 2), ec);
+	uint32_t packet_size = ed25519_sizes::pub_key_size;
+	std::string packet = get_public_key();
+
+	DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
+    socket_.write_some(boost::asio::buffer(&packet_size, 4),ec);
+
+    DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
+    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
+    DBG_MTX(dbg_mtx,"end of sending public key");
+}
+
 
 void c_netuser::send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey) {
 

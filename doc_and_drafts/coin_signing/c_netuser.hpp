@@ -23,7 +23,9 @@ class c_netuser : public c_user {
     ip::tcp::socket server_socket;
 	ip::tcp::acceptor m_acceptor;
     void create_server();
-    std::string get_remote_public_key(ip::tcp::socket &socket_); ///< get open socket
+    std::string get_public_key_resp(ip::tcp::socket &socket_); ///< @param socket is connected socket
+	void send_public_key_req(ip::tcp::socket &socket_); ///< @param socket is connected socket
+	void send_public_key_resp(ip::tcp::socket &socket_); ///< @param socket is connected socket
     void do_read(ip::tcp::socket socket_);
     void read_pubkey(ip::tcp::socket socket_);
     void read_token(ip::tcp::socket socket_);
