@@ -52,19 +52,11 @@ std::string c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 }
 
 void c_netuser::send_public_key_req(ip::tcp::socket &socket_) {
+	DBG_MTX(dbg_mtx, "send public key request");
 	assert(socket_.is_open());
     boost::system::error_code ec;
     char pubkey_send_req[2] = {'p','k'};
-
 	socket_.write_some(boost::asio::buffer(pubkey_send_req, request_type_size),ec);
-
-/*    DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
-    socket_.write_some(boost::asio::buffer(&packet_size, 4),ec);
-
-    DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
-    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
-    DBG_MTX(dbg_mtx,"end of sending public key");
-*/
 }
 
 void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
@@ -77,12 +69,12 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
 	std::string packet = get_public_key();
 
 	DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
-    socket_.write_some(boost::asio::buffer(&packet_size, 4),ec);
+    socket_.write_some(boost::asio::buffer(&packet_size, 4), ec);
 
     DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
-    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
+    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size), ec);
     DBG_MTX(dbg_mtx,"end of sending public key");
-}
+}https://www.google.pl/search?q=agregacja+czy+dziedziczenia&gws_rd=cr,ssl&ei=U9KoVuqbD4X6ygOUxrjYAQ#q=agregacja+czy+dziedziczenia&start=10
 
 
 void c_netuser::send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey) {
@@ -99,8 +91,18 @@ void c_netuser::send_token_bynet(const std::string &ip_address, const std::strin
     }
     ip::tcp::endpoint server_endpoint(addr, server_port);
 
+	ip::tcp::socket socket_(m_io_service);
+    socket_.connect(server_endpoint, ec);
+    if(ec) {
+        DBG_MTX(dbg_mtx,"EC = " << ec);
+        throw std::runtime_error("send_token_bynet -- fail to connect");
+    }
 
-    std::string packet = get_token_packet(reciever_pubkey);
+	DBG_MTX(dbg_mtx, "getting remote public key");
+	send_public_key_req(socket_);
+	std::string remote_public_key(get_public_key_resp(socket_));
+
+    std::string packet = get_token_packet(remote_public_key);
     if(packet == "fail") {
         DBG_MTX(dbg_mtx,"stop sending token -- empty wallet");
         return;
@@ -108,22 +110,15 @@ void c_netuser::send_token_bynet(const std::string &ip_address, const std::strin
     uint32_t packet_size = packet.size();
     char tok_send_req[2] = {'$','t'};
 
-
-    client_socket.connect(server_endpoint,ec);
-    if(ec) {
-        DBG_MTX(dbg_mtx,"EC = " << ec);
-        throw std::runtime_error("send_token_bynet -- fail to connect");
-    }
-
-    client_socket.write_some(boost::asio::buffer(tok_send_req, request_type_size),ec);
+/*    client_socket.write_some(boost::asio::buffer(tok_send_req, request_type_size),ec);
 
     DBG_MTX(dbg_mtx,"send coin size" << "[" << packet_size << "]");
     client_socket.write_some(boost::asio::buffer(&packet_size, 4),ec);
 
     DBG_MTX(dbg_mtx,"send coin data" << "[" << packet << "]");
     client_socket.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
-    DBG_MTX(dbg_mtx,"end of sending token");
-    client_socket.close();
+    DBG_MTX(dbg_mtx,"end of sending token");*/
+    socket_.close();
 }
 
 void c_netuser::create_server() {
