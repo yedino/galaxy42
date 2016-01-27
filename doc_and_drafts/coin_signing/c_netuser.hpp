@@ -14,7 +14,6 @@ class c_netuser : public c_user {
   public:
     c_netuser(std::string& username);
     c_netuser(std::string&& username);
-    void send_pubkey_request(const std::string &ip_address);
     void send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey);
     ~c_netuser();
   private:
@@ -24,6 +23,7 @@ class c_netuser : public c_user {
     ip::tcp::socket server_socket;
 	ip::tcp::acceptor m_acceptor;
     void create_server();
+    std::string get_remote_public_key(ip::tcp::socket &socket_); ///< get open socket
     void do_read(ip::tcp::socket socket_);
     void read_pubkey(ip::tcp::socket socket_);
     void read_token(ip::tcp::socket socket_);

@@ -23,39 +23,35 @@ c_netuser::c_netuser(std::string&& username) : c_user(username),
     create_server();
 }
 
-void c_netuser::send_pubkey_request(const std::string &ip_address) {
 
+std::string c_netuser::get_remote_public_key(ip::tcp::socket &socket_) {
     boost::system::error_code ec;
-    ip::address addr = ip::address::from_string(ip_address, ec );
-    if(ec) { ///< boost error - not needed
-        throw std::runtime_error("bad ip");
-    }
-    if(!addr.is_v4()) {
-        std::string msg = addr.to_string();
-        msg += " is not valid IPv4 address";
-        throw std::exception(std::invalid_argument(msg));
-    }
-    ip::tcp::endpoint server_endpoint(addr, server_port);
-
     char pubkey_send_req[2] = {'p','k'};
     uint32_t packet_size = ed25519_sizes::pub_key_size;
     std::string packet = get_public_key();
 
-    client_socket.connect(server_endpoint,ec);
-    if(ec) {
-        DBG_MTX(dbg_mtx,"EC = " << ec);
-        throw std::runtime_error("get_pubkey_for_transactions -- fail to connect");
-    }
-
-    client_socket.write_some(boost::asio::buffer(pubkey_send_req, request_type_size),ec);
+	socket_.write_some(boost::asio::buffer(pubkey_send_req, request_type_size),ec);
 
     DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
-    client_socket.write_some(boost::asio::buffer(&packet_size, 4),ec);
+    socket_.write_some(boost::asio::buffer(&packet_size, 4),ec);
 
     DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
-    client_socket.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
+    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
     DBG_MTX(dbg_mtx,"end of sending public key");
-    client_socket.close();
+
+	DBG_MTX(dbg_mtx, "wait for response");
+	char pub_key_size[2];
+	socket_.read_some(buffer(pub_key_size, 2), ec);
+	uint16_t *key_size = reinterpret_cast<uint16_t *>(pub_key_size);
+	const std::unique_ptr<char[]> pub_key_data(new char[*key_size]);
+
+	size_t recieved_bytes;
+    recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), *key_size), ec);
+	assert(recieved_bytes == *key_size);
+
+	std::string pub_key(pub_key_data.get(), *key_size);
+
+	return pub_key;
 }
 
 void c_netuser::send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey) {
