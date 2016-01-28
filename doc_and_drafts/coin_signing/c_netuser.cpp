@@ -18,17 +18,10 @@ c_netuser::c_netuser(std::string &username, int port) : c_user(username),
 std::string c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 	assert(socket_.is_open());
 	boost::system::error_code ec;
-	DBG_MTX(dbg_mtx, "wait for response");
-	char header[2];
-	size_t recieved_bytes;
-	recieved_bytes = socket_.read_some(buffer(header, 2), ec);
-	assert(recieved_bytes == 2);
-	assert(header[0] == 'p');
-	assert(header[1] == 'k');
 
 	DBG_MTX(dbg_mtx, "read public key size");
 	char pub_key_size[4];
-	recieved_bytes = socket_.read_some(buffer(pub_key_size, 4), ec);
+	size_t recieved_bytes = socket_.read_some(buffer(pub_key_size, 4), ec);
 	assert(recieved_bytes == 4);
 
 	uint32_t *key_size = reinterpret_cast<uint32_t *>(pub_key_size);
@@ -82,11 +75,8 @@ void c_netuser::send_coin(ip::tcp::socket &socket_, const std::string &coin_data
 string c_netuser::recv_coin(ip::tcp::socket &socket_) {
 	assert(socket_.is_open());
 	boost::system::error_code ec;
-	char header[2];
 
     size_t recieved_bytes = 0;
-	recieved_bytes = socket_.read_some(buffer(header, 2), ec);
-	assert(recieved_bytes == 2);
 
 	uint32_t coin_size = 0;
 	recieved_bytes = socket_.read_some(buffer(&coin_size, 4), ec);
@@ -138,13 +128,12 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
 
 void c_netuser::create_server() {
     DBG_MTX(dbg_mtx,"accept on port " << server_port);
-    //ip::tcp::acceptor my_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port));
     m_acceptor.async_accept(server_socket,
                             [this](boost::system::error_code ec) {
                                 DBG_MTX(dbg_mtx,"async lambda");
                                 if(!ec) {
                                     DBG_MTX(dbg_mtx,"do read start");
-                                    this->do_read(std::move(server_socket));
+                                    this->server_read(std::move(server_socket));
                                 } else {
                                     DBG_MTX(dbg_mtx,"EC = " << ec);
                                 }
@@ -153,24 +142,20 @@ void c_netuser::create_server() {
     DBG_MTX(dbg_mtx,"end of async accept");
 }
 
-void c_netuser::do_read(ip::tcp::socket socket_) {
-    DBG_MTX(dbg_mtx,"do read");
+void c_netuser::server_read(ip::tcp::socket socket_) {
+	assert(socket_.is_open());
     boost::system::error_code ec;
-    char msg_type[2];						// first 2 bytes always is type of message
-    memset(msg_type,0,2);
-
-    ip::tcp::socket local_socket(std::move(socket_));
-    size_t recieved_bytes;
-    recieved_bytes = local_socket.read_some(buffer(msg_type,2),ec);
-    assert(recieved_bytes == 2);
-
-    if(strcmp(msg_type,"pk") != 0) {
-        read_pubkey(std::move(local_socket));
-    } else if(strcmp(msg_type,"$t") != 0) {
-        read_token(std::move(local_socket));
-    } else {
-        DBG_MTX(dbg_mtx,"Cant't recognize type of msg: " << msg_type);
-    }
+    DBG_MTX(dbg_mtx,"server read");
+	char header[2];
+	socket_.read_some(buffer(header, 2), ec);
+	if (header[0] == 'p' && header[1] == 'k') {
+		send_public_key_resp(socket_);
+	}
+	else if (header[0] == '$' && header[1] == 't') {
+		std::string coin_data = recv_coin(socket_);
+		recieve_from_packet(coin_data);
+	}
+	socket_.close();
 }
 
 void c_netuser::read_pubkey(ip::tcp::socket socket_) {

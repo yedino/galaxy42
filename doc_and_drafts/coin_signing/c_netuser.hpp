@@ -30,7 +30,7 @@ class c_netuser : public c_user {
 	void send_coin(ip::tcp::socket &socket_, const std::string &coin_data); ///< send one coin via connected @param socket_
 	std::string recv_coin(ip::tcp::socket &socket_); ///< @return coin data from @param socket_
 
-    void do_read(ip::tcp::socket socket_);
+    void server_read(ip::tcp::socket socket_);
     void read_pubkey(ip::tcp::socket socket_);
     void read_token(ip::tcp::socket socket_);
 
