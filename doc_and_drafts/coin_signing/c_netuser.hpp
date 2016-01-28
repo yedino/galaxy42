@@ -14,7 +14,7 @@ class c_netuser : public c_user {
   public:
     c_netuser(std::string& username);
     c_netuser(std::string&& username);
-    void send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey);
+    void send_token_bynet(const std::string &ip_address);
     ~c_netuser();
   private:
     const int server_port = 30000;
@@ -28,7 +28,7 @@ class c_netuser : public c_user {
 	std::string get_public_key_resp(ip::tcp::socket &socket_); ///< @param socket_ is connected socket, @return remote public key
 	void send_public_key_req(ip::tcp::socket &socket_); ///< @param socket_ is connected socket
 	void send_public_key_resp(ip::tcp::socket &socket_); ///< @param socket_ is connected socket
-	void send_coin(ip::tcp::socket socket_); ///< send one coin via connected @param socket_
+	void send_coin(ip::tcp::socket socket_, const std::string &coin_data); ///< send one coin via connected @param socket_
 	std::string recv_coin(ip::tcp::socket socket_); ///< @return coin data from @param socket_
 
     void do_read(ip::tcp::socket socket_);

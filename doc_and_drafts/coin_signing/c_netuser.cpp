@@ -76,14 +76,46 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
     DBG_MTX(dbg_mtx,"end of sending public key");
 }
 
-void c_netuser::send_token_bynet(const std::string &ip_address, const std::string &reciever_pubkey) {
-
+void c_netuser::send_coin(ip::tcp::socket socket_, const std::string &coin_data) {
+	assert(socket_.is_open());
     boost::system::error_code ec;
-    ip::address addr = ip::address::from_string(ip_address, ec );
+	char header[2] = {'$', 't'};
+	socket_.write_some(buffer(header, 2), ec);
+
+	uint32_t coin_data_size = coin_data.size();
+	socket_.write_some(buffer(&coin_data_size, 4), ec);
+
+	socket_.write_some(buffer(coin_data), ec);
+}
+
+string c_netuser::recv_coin(ip::tcp::socket socket_) {
+	assert(socket_.is_open());
+	boost::system::error_code ec;
+	char header[2];
+
+    size_t recieved_bytes = 0;
+	recieved_bytes = socket_.read_some(buffer(header, 2), ec);
+	assert(recieved_bytes == 2);
+
+	uint32_t coin_size = 0;
+	recieved_bytes = socket_.read_some(buffer(&coin_size, 4), ec);
+	assert(recieved_bytes == 4);
+
+	const std::unique_ptr<char[]> coin_data(new char[coin_size]);
+
+	recieved_bytes = socket_.read_some(buffer(coin_data.get(), coin_size), ec);
+	assert(recieved_bytes == coin_size);
+	return std::string(coin_data.get(), coin_size);
+}
+
+
+void c_netuser::send_token_bynet(const std::string &ip_address) {
+    boost::system::error_code ec;
+    ip::address addr = ip::address::from_string(ip_address, ec);
     if(ec) { ///< boost error - not needed
         throw std::runtime_error("bad ip");
     }
-    if(!addr.is_v4()) {
+    if (!addr.is_v4()) {
         std::string msg = addr.to_string();
         msg += " is not valid IPv4 address";
         throw std::exception(std::invalid_argument(msg));
@@ -92,7 +124,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address, const std::strin
 
 	ip::tcp::socket socket_(m_io_service);
     socket_.connect(server_endpoint, ec);
-    if(ec) {
+    if (ec) {
         DBG_MTX(dbg_mtx,"EC = " << ec);
         throw std::runtime_error("send_token_bynet -- fail to connect");
     }
@@ -102,7 +134,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address, const std::strin
 	std::string remote_public_key(get_public_key_resp(socket_));
 
     std::string packet = get_token_packet(remote_public_key);
-    if(packet == "fail") {
+    if (packet == "fail") {
         DBG_MTX(dbg_mtx,"stop sending token -- empty wallet");
         return;
     }
