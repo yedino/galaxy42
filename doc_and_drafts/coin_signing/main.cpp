@@ -184,6 +184,7 @@ bool test_convrt_tokenpacket() {
     A.send_token_bymethod(B);
     B.send_token_bymethod(C);
     C.send_token_bymethod(D);
+    D.send_token_bymethod(A);
 
 
  try {
@@ -207,15 +208,26 @@ bool test_convrt_tokenpacket() {
 }
 
 bool test_netuser() {
+	std::string userA_name("userA");
+	std::string userB_name("userB");
+    c_netuser A(userA_name, 30000);
+	c_netuser B(userB_name, 30001);
+    //bool isover = false;
 
-    c_netuser A("DamianCoin");
-    bool isover = false;
-    using namespace std::literals;
+	A.emit_tokens(3);
+	//A.print_status(std::cout);
+	A.send_token_bynet("127.0.0.1", 30001);
+	//B.print_status(std::cout);
+
+	B.send_token_bynet("127.0.0.1", 30000);
+	//A.print_status(std::cout);
+
+
     //robert
     //std::string target_ip_addr = "192.168.0.57";
     //std::string target_pubkey = "ed5ea262180d88dd8ea31a458358513d52819d3fa09e541e2f96a5e5858920293e";
     //my
-    std::string target_ip_addr = "127.0.0.1";
+    /*std::string target_ip_addr = "127.0.0.1";
     std::string target_pubkey = A.get_public_key();
 
     std::cout << "Your target is " << target_ip_addr << " with pubkey " << target_pubkey << std::endl;
@@ -236,14 +248,14 @@ bool test_netuser() {
             A.emit_tokens(1);
         }
         else if(request == "send") {
-            A.send_token_bynet(target_ip_addr,target_pubkey);
+            A.send_token_bynet(target_ip_addr);
         }
         else {
             std::cout << "bad command! -- try again" << std::endl;
         }
-        std::this_thread::sleep_for(2s);
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
-
+*/
     return 0;
 }
 
@@ -262,13 +274,13 @@ bool test_all() {
 		t.join();
 	}
 
-    if(   	!test_readableEd() &&
-            !test_user_sending() &&
-            !test_many_users() &&
-            !test_cheater()) {
+    if(   //	!test_readableEd() &&
+          //  !test_user_sending() &&
+          //  !test_many_users() &&
+          //  !test_cheater() &&
           //  !test_bad_chainsign() &&
-          //  !test_convrt_tokenpacket()) {
-          //  !test_netuser())  {
+          //  !test_convrt_tokenpacket() &&
+            !test_netuser())  {
 		return 0;
 	} else {
 		return 1;

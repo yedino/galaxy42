@@ -1,6 +1,6 @@
 #ifndef C_NETUSER_H
 #define C_NETUSER_H
-#define DBG_MTX(X,Y) do{X.lock();std::cout<<Y<<std::endl;X.unlock();}while(0)
+#define DBG_MTX(X,Y) do{X.lock();std::cout<< __func__<<":\t\t "<<Y<<std::endl;X.unlock();}while(0)
 
 #include "c_user.hpp"
 #include <atomic>

@@ -19,6 +19,10 @@ std::string c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 	assert(socket_.is_open());
 	boost::system::error_code ec;
 
+	char header[2] = {'p', 'k'};
+	DBG_MTX(dbg_mtx, "read header");
+	socket_.read_some(buffer(header, 2), ec);
+
 	DBG_MTX(dbg_mtx, "read public key size");
 	char pub_key_size[4];
 	size_t recieved_bytes = socket_.read_some(buffer(pub_key_size, 4), ec);
