@@ -12,12 +12,11 @@ using namespace boost::asio;
 
 class c_netuser : public c_user {
   public:
-    c_netuser(std::string& username);
-    c_netuser(std::string&& username);
+    c_netuser(std::string& username, int port = 30000);
     void send_token_bynet(const std::string &ip_address);
     ~c_netuser();
   private:
-    const int server_port = 30000;
+    const int server_port;
     io_service m_io_service;
     ip::tcp::socket client_socket;
     ip::tcp::socket server_socket;

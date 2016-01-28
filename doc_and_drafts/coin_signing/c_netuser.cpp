@@ -3,17 +3,8 @@
 
 const unsigned request_type_size = 2;
 
-c_netuser::c_netuser(std::string& username) : c_user(username),
-                                              client_socket(m_io_service),
-                                              server_socket(m_io_service),
-                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)),
-                                              m_stop_flag(false)
-{
-    threads_maker(2);
-    create_server();
-}
-
-c_netuser::c_netuser(std::string&& username) : c_user(username),
+c_netuser::c_netuser(std::string &username, int port) : c_user(username),
+                                              server_port(port),
                                               client_socket(m_io_service),
                                               server_socket(m_io_service),
                                               m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)),
