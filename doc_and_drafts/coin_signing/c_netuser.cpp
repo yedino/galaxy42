@@ -56,9 +56,10 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
 	char header[2] = {'p', 'k'};
 	DBG_MTX(dbg_mtx, "send header");
 	socket_.write_some(buffer(header, 2), ec);
-	uint32_t packet_size = ed25519_sizes::pub_key_size;
+	//uint32_t packet_size = ed25519_sizes::pub_key_size;
 	std::string packet = get_public_key();
-
+	uint32_t packet_size = packet.size();
+	// TODO send binary data
 	DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
     socket_.write_some(boost::asio::buffer(&packet_size, 4), ec);
 
@@ -238,6 +239,7 @@ void c_netuser::threads_maker(unsigned num) {
         m_threads.emplace_back([this](){
 			while (!m_stop_flag)
 				this->m_io_service.run();
+			DBG_MTX(dbg_mtx, "end of thread");
 		});
     }
 }
