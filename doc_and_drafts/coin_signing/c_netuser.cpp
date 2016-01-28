@@ -22,19 +22,23 @@ std::string c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 
 	char header[2];
 	DBG_MTX(dbg_mtx, "read header");
-	socket_.read_some(buffer(header, 2), ec);
+    size_t pkresp = socket_.read_some(buffer(header, 2), ec);
+    DBG_MTX(dbg_mtx, "pk: " << pkresp << ":[" <<header[0] << header[1] << "]");
 
 	DBG_MTX(dbg_mtx, "read public key size");
 	char pub_key_size[4];
-	uint32_t key_size = 0;
+    uint32_t key_size = 0;
 	size_t recieved_bytes = socket_.read_some(buffer(&key_size, 4), ec);
-	assert(recieved_bytes == 4);
+    DBG_MTX(dbg_mtx, "size:" << recieved_bytes << ":[" <<key_size << "]");
+
+    assert(recieved_bytes == 4);
 
 	const std::unique_ptr<char[]> pub_key_data(new char[key_size]);
 
 	DBG_MTX(dbg_mtx, "read public key data");
     recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), key_size), ec);
-	assert(recieved_bytes == key_size);
+    DBG_MTX(dbg_mtx, "data:" << recieved_bytes << ":[" << std::string(pub_key_data.get(),recieved_bytes) << "]");
+    assert(recieved_bytes == key_size);
 
 	std::string pub_key(pub_key_data.get(), key_size);
 	DBG_MTX(dbg_mtx, "END");
@@ -46,7 +50,9 @@ void c_netuser::send_public_key_req(ip::tcp::socket &socket_) {
 	assert(socket_.is_open());
     boost::system::error_code ec;
     char pubkey_send_req[2] = {'p','k'};
-	socket_.write_some(boost::asio::buffer(pubkey_send_req, request_type_size),ec);
+    size_t sendbytes = socket_.write_some(boost::asio::buffer(pubkey_send_req, request_type_size),ec);
+    DBG_MTX(dbg_mtx, "pk: " << sendbytes << ":[" << pubkey_send_req[0] <<  pubkey_send_req[1] << "]");
+
 }
 
 void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
@@ -229,8 +235,6 @@ void c_netuser::read_token(ip::tcp::socket socket_) {
     recieve_from_packet(packet);
 }
 
-
-
 c_netuser::~c_netuser() {
 	m_stop_flag = true;
     m_io_service.stop();
@@ -240,11 +244,10 @@ c_netuser::~c_netuser() {
 }
 
 void c_netuser::threads_maker(unsigned num) {
-
     m_threads.reserve(num);
     for(int i = 0; i < num; ++i) {
-        m_threads.emplace_back([this]() {
-			DBG_MTX(dbg_mtx, "start thread");
+        DBG_MTX(dbg_mtx,"make " << i << " thread");
+        m_threads.emplace_back([this](){
 			while (!m_stop_flag)
 				this->m_io_service.run();
 			DBG_MTX(dbg_mtx, "end of thread");
