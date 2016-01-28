@@ -10,8 +10,8 @@ c_netuser::c_netuser(std::string &username, int port) : c_user(username),
                                               m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)),
                                               m_stop_flag(false)
 {
-    threads_maker(2);
     create_server();
+    threads_maker(2);
 }
 
 
@@ -146,8 +146,13 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
 
 void c_netuser::create_server() {
     DBG_MTX(dbg_mtx,"accept on port " << server_port);
-	while (m_io_service.stopped()) {
+	while (m_io_service.stopped() && !m_stop_flag) {
+		//std::cout << "loop " << std::this_thread::get_id() << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	if (m_stop_flag) {
+		DBG_MTX(dbg_mtx, "stop flag, return");
+		return;
 	}
 	assert(m_io_service.stopped() == false);
     m_acceptor.async_accept(server_socket,
@@ -169,7 +174,7 @@ void c_netuser::server_read(ip::tcp::socket socket_) {
 	assert(socket_.is_open());
     boost::system::error_code ec;
     DBG_MTX(dbg_mtx,"server read");
-	while (!ec) {
+	while (!ec && !m_stop_flag) {
 		char header[2] = {0, 0};
 		socket_.read_some(buffer(header, 2), ec);
 		if (header[0] == 'p' && header[1] == 'k') {
@@ -249,7 +254,10 @@ void c_netuser::threads_maker(unsigned num) {
         DBG_MTX(dbg_mtx,"make " << i << " thread");
         m_threads.emplace_back([this](){
 			while (!m_stop_flag)
+			{
+				this->m_io_service.reset();
 				this->m_io_service.run();
+			}
 			DBG_MTX(dbg_mtx, "end of thread");
 		});
     }

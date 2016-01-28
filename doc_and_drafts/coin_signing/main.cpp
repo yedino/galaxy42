@@ -231,7 +231,7 @@ bool test_netuser() {
 
 bool test_all() {
 
-	list<thread> Threads;
+/*	list<thread> Threads;
 
     int test_loop = 100, msg_length = 64;
 	std::cout << "RUNNING TEST MANY_ED_SIGNING IN " << number_of_threads << " THREADS" << std::endl;
@@ -242,7 +242,7 @@ bool test_all() {
 	for (auto &t : Threads) {
 		t.join();
 	}
-
+*/
     if(   //	!test_readableEd() &&
           //  !test_user_sending() &&
           //  !test_many_users() &&
