@@ -67,7 +67,7 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
     DBG_MTX(dbg_mtx,"end of sending public key");
 }
 
-void c_netuser::send_coin(ip::tcp::socket socket_, const std::string &coin_data) {
+void c_netuser::send_coin(ip::tcp::socket &socket_, const std::string &coin_data) {
 	assert(socket_.is_open());
     boost::system::error_code ec;
 	char header[2] = {'$', 't'};
@@ -79,7 +79,7 @@ void c_netuser::send_coin(ip::tcp::socket socket_, const std::string &coin_data)
 	socket_.write_some(buffer(coin_data), ec);
 }
 
-string c_netuser::recv_coin(ip::tcp::socket socket_) {
+string c_netuser::recv_coin(ip::tcp::socket &socket_) {
 	assert(socket_.is_open());
 	boost::system::error_code ec;
 	char header[2];
@@ -100,7 +100,7 @@ string c_netuser::recv_coin(ip::tcp::socket socket_) {
 }
 
 
-void c_netuser::send_token_bynet(const std::string &ip_address) {
+void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
     boost::system::error_code ec;
     ip::address addr = ip::address::from_string(ip_address, ec);
     if(ec) { ///< boost error - not needed
@@ -111,7 +111,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address) {
         msg += " is not valid IPv4 address";
         throw std::exception(std::invalid_argument(msg));
     }
-    ip::tcp::endpoint server_endpoint(addr, server_port);
+    ip::tcp::endpoint server_endpoint(addr, port);
 
 	ip::tcp::socket socket_(m_io_service);
     socket_.connect(server_endpoint, ec);
@@ -123,23 +123,16 @@ void c_netuser::send_token_bynet(const std::string &ip_address) {
 	DBG_MTX(dbg_mtx, "getting remote public key");
 	send_public_key_req(socket_);
 	std::string remote_public_key(get_public_key_resp(socket_));
+	DBG_MTX(dbg_mtx, "remote public key " << remote_public_key);
 
     std::string packet = get_token_packet(remote_public_key);
     if (packet == "fail") {
         DBG_MTX(dbg_mtx,"stop sending token -- empty wallet");
         return;
     }
-    uint32_t packet_size = packet.size();
-    char tok_send_req[2] = {'$','t'};
 
-/*    client_socket.write_some(boost::asio::buffer(tok_send_req, request_type_size),ec);
+    send_coin(socket_, packet);
 
-    DBG_MTX(dbg_mtx,"send coin size" << "[" << packet_size << "]");
-    client_socket.write_some(boost::asio::buffer(&packet_size, 4),ec);
-
-    DBG_MTX(dbg_mtx,"send coin data" << "[" << packet << "]");
-    client_socket.write_some(boost::asio::buffer(packet.c_str(), packet_size),ec);
-    DBG_MTX(dbg_mtx,"end of sending token");*/
     socket_.close();
 }
 
