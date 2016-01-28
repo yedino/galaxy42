@@ -139,6 +139,10 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
 
 void c_netuser::create_server() {
     DBG_MTX(dbg_mtx,"accept on port " << server_port);
+	while (m_io_service.stopped()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	assert(m_io_service.stopped() == false);
     m_acceptor.async_accept(server_socket,
                             [this](boost::system::error_code ec) {
                                 DBG_MTX(dbg_mtx,"async lambda");
@@ -236,7 +240,8 @@ void c_netuser::threads_maker(unsigned num) {
 
     m_threads.reserve(num);
     for(int i = 0; i < num; ++i) {
-        m_threads.emplace_back([this](){
+        m_threads.emplace_back([this]() {
+			DBG_MTX(dbg_mtx, "start thread");
 			while (!m_stop_flag)
 				this->m_io_service.run();
 			DBG_MTX(dbg_mtx, "end of thread");
