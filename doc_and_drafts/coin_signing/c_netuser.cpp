@@ -90,6 +90,7 @@ string c_netuser::recv_coin(ip::tcp::socket &socket_) {
 
 	uint32_t coin_size = 0;
 	recieved_bytes = socket_.read_some(buffer(&coin_size, 4), ec);
+	DBG_MTX(dbg_mtx, "get " << recieved_bytes << " bytes");
 	assert(recieved_bytes == 4);
 
 	const std::unique_ptr<char[]> coin_data(new char[coin_size]);
@@ -162,14 +163,16 @@ void c_netuser::server_read(ip::tcp::socket socket_) {
 	assert(socket_.is_open());
     boost::system::error_code ec;
     DBG_MTX(dbg_mtx,"server read");
-	char header[2];
-	socket_.read_some(buffer(header, 2), ec);
-	if (header[0] == 'p' && header[1] == 'k') {
-		send_public_key_resp(socket_);
-	}
-	else if (header[0] == '$' && header[1] == 't') {
-		std::string coin_data = recv_coin(socket_);
-		recieve_from_packet(coin_data);
+	while (!ec) {
+		char header[2] = {0, 0};
+		socket_.read_some(buffer(header, 2), ec);
+		if (header[0] == 'p' && header[1] == 'k') {
+			send_public_key_resp(socket_);
+		}
+		else if (header[0] == '$' && header[1] == 't') {
+			std::string coin_data = recv_coin(socket_);
+			recieve_from_packet(coin_data);
+		}
 	}
 	socket_.close();
 }
