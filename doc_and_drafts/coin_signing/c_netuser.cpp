@@ -16,26 +16,28 @@ c_netuser::c_netuser(std::string &username, int port) : c_user(username),
 
 
 std::string c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
+	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
 	boost::system::error_code ec;
 
-	char header[2] = {'p', 'k'};
+	char header[2];
 	DBG_MTX(dbg_mtx, "read header");
 	socket_.read_some(buffer(header, 2), ec);
 
 	DBG_MTX(dbg_mtx, "read public key size");
 	char pub_key_size[4];
-	size_t recieved_bytes = socket_.read_some(buffer(pub_key_size, 4), ec);
+	uint32_t key_size = 0;
+	size_t recieved_bytes = socket_.read_some(buffer(&key_size, 4), ec);
 	assert(recieved_bytes == 4);
 
-	uint32_t *key_size = reinterpret_cast<uint32_t *>(pub_key_size);
-	const std::unique_ptr<char[]> pub_key_data(new char[*key_size]);
+	const std::unique_ptr<char[]> pub_key_data(new char[key_size]);
 
 	DBG_MTX(dbg_mtx, "read public key data");
-    recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), *key_size), ec);
-	assert(recieved_bytes == *key_size);
+    recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), key_size), ec);
+	assert(recieved_bytes == key_size);
 
-	std::string pub_key(pub_key_data.get(), *key_size);
+	std::string pub_key(pub_key_data.get(), key_size);
+	DBG_MTX(dbg_mtx, "END");
 	return pub_key;
 }
 
@@ -48,6 +50,7 @@ void c_netuser::send_public_key_req(ip::tcp::socket &socket_) {
 }
 
 void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
+	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
 	boost::system::error_code ec;
 	char header[2] = {'p', 'k'};
@@ -65,6 +68,7 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
 }
 
 void c_netuser::send_coin(ip::tcp::socket &socket_, const std::string &coin_data) {
+	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
     boost::system::error_code ec;
 	char header[2] = {'$', 't'};
@@ -77,6 +81,7 @@ void c_netuser::send_coin(ip::tcp::socket &socket_, const std::string &coin_data
 }
 
 string c_netuser::recv_coin(ip::tcp::socket &socket_) {
+	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
 	boost::system::error_code ec;
 
@@ -95,6 +100,7 @@ string c_netuser::recv_coin(ip::tcp::socket &socket_) {
 
 
 void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
+	DBG_MTX(dbg_mtx, "START");
     boost::system::error_code ec;
     ip::address addr = ip::address::from_string(ip_address, ec);
     if(ec) { ///< boost error - not needed
@@ -147,6 +153,7 @@ void c_netuser::create_server() {
 }
 
 void c_netuser::server_read(ip::tcp::socket socket_) {
+	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
     boost::system::error_code ec;
     DBG_MTX(dbg_mtx,"server read");
