@@ -117,7 +117,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
     if (!addr.is_v4()) {
         std::string msg = addr.to_string();
         msg += " is not valid IPv4 address";
-        throw std::exception(std::invalid_argument(msg));
+        throw std::invalid_argument(msg);
     }
     ip::tcp::endpoint server_endpoint(addr, port);
 

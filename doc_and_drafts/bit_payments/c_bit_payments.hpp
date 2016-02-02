@@ -2,8 +2,8 @@
 #ifndef C_BIT_PAYMENTS_HPP
 #define C_BIT_PAYMENTS_HPP
 
-#include <bitcoinapi/bitcoinapi.h>
 /// bitcoinapi: github.com/minium/bitcoin-api-cpp
+#include <bitcoinapi/bitcoinapi.h>
 #include <iostream>
 #include <memory>
 #include <map>

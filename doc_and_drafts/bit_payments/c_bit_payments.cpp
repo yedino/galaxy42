@@ -1,4 +1,4 @@
-#include "c_bit_payments.h"
+#include "c_bit_payments.hpp"
 
 c_bit_payments::c_bit_payments(std::string username, std::string password, std::string address, int port) :
 	btc (new BitcoinAPI(username, password, address, port)) {
