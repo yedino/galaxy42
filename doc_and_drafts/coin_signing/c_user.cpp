@@ -256,3 +256,17 @@ void print_strBytes(const std::string& str) {
 	}
 	std::cout << std::endl;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////// bitwallet
+
+bool c_user::check_bitwallet() {
+    return m_bitwallet.is_set();
+}
+
+void c_user::set_bitwallet(std::string rpc_username, std::string rpc_password, std::string rpc_address, int rpc_port) {
+
+    m_bitwallet.set_wallet(rpc_username, rpc_password, rpc_address, rpc_port);
+}
+double c_user::get_bitwallet_balance() {
+    return get_bitwallet_balance();
+}

@@ -2,6 +2,8 @@
 #define COIN_SIGNING_C_USER_HPP
 #include "c_token.hpp"
 #include "c_wallet.hpp"
+#include "c_rpc_bitwallet.hpp"
+
 #include "c_mint.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
 #include <string>
@@ -20,7 +22,8 @@ class c_user {
   protected:
     c_mint m_mint;
 	c_wallet m_wallet;
-	string m_username;
+    c_rpc_bitwallet m_bitwallet;
+    string m_username;
     string m_public_key;
     vector<c_token> used_tokens;
     void print_used_status(std::ostream &);
@@ -31,6 +34,7 @@ class c_user {
 	list<string> inbox;
 
 	bool find_the_cheater (const c_token &, const c_token &);
+
 
   public:
     c_user () = delete;
@@ -54,6 +58,11 @@ class c_user {
     bool recieve_token (c_token &token);
 
     void print_status(std::ostream &);
+
+    // bitwallet part
+    bool check_bitwallet();
+    void set_bitwallet(std::string username, std::string password, std::string address, int port);
+    double get_bitwallet_balance();
 
     std::mutex m_mtx;
 };

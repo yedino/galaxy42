@@ -2,6 +2,7 @@
 
 new_test_suite(many_ed_signing);
 new_test_suite(base_tests);
+new_test_suite(bitwallet);
 
 using std::thread;
 using std::mutex;
@@ -14,7 +15,7 @@ mutex mtx;
 bool test_all(int number_of_threads) {
 
     ptest::general_suite.config.print_passed_tests = true;
-
+    /*
     int test_loop = 1000, msg_length = 64;
 
     ptest::call_test(number_of_threads,
@@ -22,17 +23,20 @@ bool test_all(int number_of_threads) {
                                 run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
                             }
                     );
+    */
+    //run_suite_test(base_tests,test_readableEd, 0, pequal);
+    //run_suite_test(base_tests,test_user_sending , 0, pequal);
+    //run_suite_test(base_tests,test_many_users , 0, pequal);
+    //run_suite_test(base_tests,test_cheater , 0, pequal);
+    //run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+    //run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
+    //run_suite_test(base_tests,test_netuser, 0, pequal);
 
-    run_suite_test(base_tests,test_readableEd, 0, pequal);
-    run_suite_test(base_tests,test_user_sending , 0, pequal);
-    run_suite_test(base_tests,test_many_users , 0, pequal);
-    run_suite_test(base_tests,test_cheater , 0, pequal);
-    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
-    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-    run_suite_test(base_tests,test_netuser, 0, pequal);
+    run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
-    print_final_suite_result(many_ed_signing);
-    print_final_suite_result(base_tests);
+    //print_final_suite_result(many_ed_signing);
+    //print_final_suite_result(base_tests);
+    print_final_suite_result(bitwallet);
 
     print_final_test_result();
 }
@@ -246,4 +250,41 @@ bool test_netuser() {
     std::string is_walletempty = B.get_token_packet(A.get_public_key());
 
     return 0;
+}
+
+bool test_rpcwallet() {
+  try {
+    c_user BitUser("namecoin_user");
+    if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == false, "wallet should be unset here!") == pfailed) return true;
+
+    /***
+     * I use my own Xcoin client for this test
+     * If you want to correct use bitwallet look at your .Xcoin/Xcoin.conf for:
+     * 		rpcuser
+     *      rpcpassword
+     *		rpcport
+     *
+     * Be sure you have Xcoind running before start using bitwallet
+     */
+
+    std::string rpc_usr = "nmc_testadmin";
+    std::string rpc_passwd = "dontworrybehappy";
+    std::string rpc_host = "127.0.0.1";
+    int rpc_port = 8336;
+
+    BitUser.set_bitwallet(rpc_usr,rpc_passwd,rpc_host,rpc_port);
+
+    if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == true, "wallet should be correctly set here!") == pfailed) return true;
+
+    std::cout << "Your namecoin balance is: " << std::fixed << std::setprecision(8) <<
+                 BitUser.get_bitwallet_balance() << std::endl;
+
+  } catch(BitcoinException &btc_ec) {
+        std::cout << btc_ec.getCode() << ": " << btc_ec.getMessage() << std::endl;
+        std::cout << btc_ec.what() << std::endl;
+        return 1;
+  }
+
+    return 0;
+
 }
