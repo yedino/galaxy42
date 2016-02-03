@@ -37,8 +37,6 @@ bool test_all(int number_of_threads) {
     print_final_test_result();
 }
 
-
-
 std::string generate_random_string (size_t length) {
     auto generate_random_char = [] () -> char {
         const char Charset[] = "0123456789"

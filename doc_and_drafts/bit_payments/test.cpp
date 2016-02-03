@@ -14,23 +14,29 @@
 
   try {
     /* Constructor to connect to the bitcoin daemon */
-    c_bit_payments test_wallet(username, password, address, port);
-   // test_wallet.show_general_info();
-    std::string res = test_wallet.get_account_address("bitanti_acc");
-    std::cout << res << std::endl;
+    c_bit_payments test_wallet_sender(username, password, address, port);
+    c_bit_payments test_wallet_receiver(username, password, address, port);
+
+    test_wallet_sender.show_general_info();
+    std::string client_acc_name = "client";
+
+    std::string sender_address = test_wallet_sender.get_account_address(client_acc_name);
+    std::string reciever_address = test_wallet_receiver.get_account_address("payment_destination");
+    std::cout << "client address:" << sender_address << std::endl;
+    std::cout << "payment_destination address: " << reciever_address << std::endl;
+
     int confirmations = 0; bool include_empty = true;
-    test_wallet.show_status(confirmations, include_empty);
+    test_wallet_sender.show_status(confirmations, include_empty);
 
-//    std::string addr_from;
-//    std::string addr_to;
-//    double send_amount = 0.007;
 
-//    std::cout << "Address \"from\" : " << (addr_from = test_wallet.get_account_address("from")) << std::endl;
-//    std::cout << "Address \"to\" : " << (addr_to = test_wallet.get_account_address("to")) << std::endl;
+    std::string destination_addr = reciever_address;
+    double send_amount = 0.01; 		// antinet_cost
 
-//    std::cout << "New transaction : " << test_wallet.sendfrom("from",addr_to, send_amount) << std::endl;
+    std::cout << "New transaction : " << test_wallet_sender.sendfrom(client_acc_name,destination_addr, send_amount) << std::endl;
 
-//    test_wallet.show_status(confirmations,include_empty);
+    test_wallet_sender.show_status(confirmations,include_empty);
+
+
   } catch (BitcoinException &btc_ec) {
         std::cout << btc_ec.what() << std::endl;
         std::cout << btc_ec.getCode() << ": " << btc_ec.getMessage() << std::endl;

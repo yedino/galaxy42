@@ -3,7 +3,8 @@
 #define C_BIT_PAYMENTS_HPP
 
 /// bitcoinapi: github.com/minium/bitcoin-api-cpp
-#include <bitcoinapi/bitcoinapi.h>
+//#include <bitcoinapi/bitcoinapi.h>
+#include "bitcoin-api-cpp/src/api/bitcoinapi.h"
 #include <iostream>
 #include <memory>
 #include <map>
@@ -32,7 +33,10 @@ class c_bit_payments {
 		 * accounts which have received a payment. Any account which has received a payment will be displayed even if its current balance is 0
 		 ********************************************************************************************************************************/
 		void show_status(int confirmations = 1, bool include_empty = 0);
-		
+
+
+
+
 	private:
 		std::unique_ptr<BitcoinAPI> btc;
 };
