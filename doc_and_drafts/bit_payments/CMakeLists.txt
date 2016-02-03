@@ -9,7 +9,7 @@ ExternalProject_Add(libbitcoin-api-cpp SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/bi
                     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-api-cpp 
 		    BUILD_COMMAND cmake . && make
 		    # Disable install step
-		    INSTALL_COMMAND ""
+		    INSTALL_COMMAND sudo make install
 )
 
 #add_subdirectory(bitcoin-api-cpp)
@@ -20,9 +20,9 @@ add_executable(bit_payments test.cpp c_bit_payments.cpp
 
 add_dependencies(bit_payments libbitcoin-api-cpp)
 
-
 target_link_libraries(bit_payments
-			${CMAKE_CURRENT_BINARY_DIR}/bitcoin-api-cpp/src/api/libbitcoinapi.a 
+			#${CMAKE_CURRENT_BINARY_DIR}/bitcoin-api-cpp/src/api/libbitcoinapi.a 
+			bitcoinapi
                         jsonrpccpp-common
                         jsonrpccpp-client
 )
