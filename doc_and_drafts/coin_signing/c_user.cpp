@@ -263,7 +263,7 @@ bool c_user::check_bitwallet() {
     return m_bitwallet.is_set();
 }
 
-void c_user::set_bitwallet(std::string rpc_username, std::string rpc_password, std::string rpc_address, int rpc_port) {
+void c_user::set_bitwallet(const std::string &rpc_username, const std::string &rpc_password, const std::string &rpc_address, int rpc_port) {
 
     m_bitwallet.set_wallet(rpc_username, rpc_password, rpc_address, rpc_port);
 }

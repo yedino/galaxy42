@@ -24,19 +24,19 @@ bool test_all(int number_of_threads) {
                             }
                     );
     */
-    //run_suite_test(base_tests,test_readableEd, 0, pequal);
-    //run_suite_test(base_tests,test_user_sending , 0, pequal);
-    //run_suite_test(base_tests,test_many_users , 0, pequal);
-    //run_suite_test(base_tests,test_cheater , 0, pequal);
-    //run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
-    //run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-    //run_suite_test(base_tests,test_netuser, 0, pequal);
+    run_suite_test(base_tests,test_readableEd, 0, pequal);
+    run_suite_test(base_tests,test_user_sending , 0, pequal);
+    run_suite_test(base_tests,test_many_users , 0, pequal);
+    run_suite_test(base_tests,test_cheater , 0, pequal);
+    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
+    run_suite_test(base_tests,test_netuser, 0, pequal);
 
-    run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
+    //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
-    //print_final_suite_result(many_ed_signing);
-    //print_final_suite_result(base_tests);
-    print_final_suite_result(bitwallet);
+    print_final_suite_result(many_ed_signing);
+    print_final_suite_result(base_tests);
+    //print_final_suite_result(bitwallet);
 
     print_final_test_result();
 }
@@ -284,7 +284,5 @@ bool test_rpcwallet() {
         std::cout << btc_ec.what() << std::endl;
         return 1;
   }
-
     return 0;
-
 }

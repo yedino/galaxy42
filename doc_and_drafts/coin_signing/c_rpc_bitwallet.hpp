@@ -10,7 +10,7 @@ class c_rpc_bitwallet
 public:
     c_rpc_bitwallet();
     bool is_set();
-    void set_wallet (std::string username, std::string password, std::string address,int port);
+    void set_wallet (const std::string &username, const std::string &password, const std::string &address,int port);
     double get_balance();
     std::string get_account_address(const std::string& account_name = "");
     std::string sendfrom(const std::string& fromaccount, const std::string& tocoinaddress, double amount);

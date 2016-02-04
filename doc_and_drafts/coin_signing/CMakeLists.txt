@@ -16,6 +16,7 @@ set(SOURCE_FILES main.cpp tests.cpp c_token.cpp c_wallet.cpp c_mint.cpp c_user.c
 add_executable(coin_signing ${SOURCE_FILES})
 
 find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost 1.58 REQUIRED system serialization)
 
 TARGET_LINK_LIBRARIES(coin_signing ${Boost_LIBRARIES} bitcoinapi
                         jsoncpp

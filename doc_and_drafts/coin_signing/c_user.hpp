@@ -61,7 +61,7 @@ class c_user {
 
     // bitwallet part
     bool check_bitwallet();
-    void set_bitwallet(std::string username, std::string password, std::string address, int port);
+    void set_bitwallet(const std::string &username, const std::string &password, const std::string &address, int port);
     double get_bitwallet_balance();
 
     std::mutex m_mtx;
