@@ -3,6 +3,7 @@
 #include "c_token.hpp"
 #include "c_wallet.hpp"
 #include "c_rpc_bitwallet.hpp"
+#include "c_evidences.hpp"
 
 #include "c_mint.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
@@ -31,10 +32,10 @@ class c_user {
 
     c_token process_token_tosend(const std::string &, bool fake = 0);
 
+    c_ed25519 m_edsigner;
+    c_evidences m_evidences;
+
 	list<string> inbox;
-
-	bool find_the_cheater (const c_token &, const c_token &);
-
 
   public:
     c_user () = delete;
@@ -45,7 +46,6 @@ class c_user {
     string get_public_key() const;
     double get_rep();		///< normalize reputation to 0-100 value, approximated by atan()
 
-    c_ed25519 m_edsigner;
 
     void send_token_bymethod(c_user &, bool fake = 0);
 

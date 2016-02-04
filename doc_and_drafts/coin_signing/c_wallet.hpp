@@ -1,8 +1,10 @@
 #ifndef COIN_SIGNING_C_WALLET_HPP
 #define COIN_SIGNING_C_WALLET_HPP
 #include <string>
-#include "c_token.hpp"
+#include <ctime>
 #include <list>
+#include "c_token.hpp"
+
 
 using std::string;
 using std::list;

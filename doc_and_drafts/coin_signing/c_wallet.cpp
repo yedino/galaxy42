@@ -12,8 +12,13 @@ void c_wallet::print_wallet_status(std::ostream &os, std::string &my_username) {
 
     for(c_token &tok : tokens) {
         std::string emiter;
+        std::time_t t = std::chrono::system_clock::to_time_t(tok.get_expiration_date());
         (tok.get_emiter_name() != "unknown") ? emiter = tok.get_emiter_name() : emiter = my_username;
-        os << "Emiter: [" << emiter << "], Id: ["  << tok.get_id() << "], Size: [" << tok.get_size() << " B]" << std::endl;
+        os << "Emiter: [" << emiter
+           << "], Id: ["  << tok.get_id()
+           << "], Expiration date: [" << std::ctime(&t)
+           << "], Size: [" << tok.get_size()
+           << " B]" << std::endl;
     }
 }
 

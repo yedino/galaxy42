@@ -7,7 +7,7 @@ file(GLOB SOURCE_ED "../../crypto_ops/crypto/ed25519_src/*.c" # All files in dir
     )
 
 set(SOURCE_FILES main.cpp tests.cpp c_token.cpp c_wallet.cpp c_mint.cpp c_user.cpp c_netuser.cpp
-        c_rpc_bitwallet.cpp
+        c_rpc_bitwallet.cpp c_evidences.cpp
         ../../crypto_ops/crypto/c_encryption.cpp
         ../../crypto_ops/crypto/sha_src/sha512.cpp
         ptest/ptest.cpp

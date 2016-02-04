@@ -14,7 +14,11 @@ c_chainsign_element::c_chainsign_element (const std::string &packet) {
     sa >> *this;
 }
 
-c_token::c_token (long long pss) : m_password(pss), m_id(token_id_generator::generate_id()) { }
+c_token::c_token (long long pss, std::chrono::time_point<std::chrono::system_clock> emit_date, std::chrono::hours exp_time) :
+                                        m_id(token_id_generator::generate_id()),
+                                        m_expiration_date(emit_date + exp_time),
+                                        m_password(pss)
+{ }
 
 bool c_token::check_ps (long long ps) {
 	if (ps == m_password) {
@@ -38,11 +42,16 @@ long long c_token::get_size() const {
 size_t c_token::get_id() const {
     return m_id;
 }
+std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() {
+    return m_expiration_date;
+}
 
 c_token::c_token(std::string packet) {
 
+    // std::cout << "Serialized recieved token :" << packet << std::endl; //dbg
     std::stringstream ss(packet);
     boost::archive::text_iarchive sa(ss);
+
     sa >> *this;
 }
 

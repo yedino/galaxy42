@@ -1,9 +1,14 @@
 #include "c_mint.hpp"
 
+c_mint::c_mint (std::chrono::hours exp_time) : t_expiration_time(exp_time)
+{ }
+
 c_token c_mint::emit_token () {
     long long token_pss = generate_password();
 
-	c_token token(token_pss);
+    std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+
+    c_token token(token_pss, start, t_expiration_time);
     m_emited_tokens.insert({token, token_pss});
 	return token;
 }

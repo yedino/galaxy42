@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <chrono>
+#include <exception>
 
 #include "c_netuser.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"

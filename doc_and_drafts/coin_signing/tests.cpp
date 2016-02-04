@@ -15,7 +15,7 @@ mutex mtx;
 bool test_all(int number_of_threads) {
 
     ptest::general_suite.config.print_passed_tests = true;
-    /*
+
     int test_loop = 1000, msg_length = 64;
 
     ptest::call_test(number_of_threads,
@@ -23,7 +23,7 @@ bool test_all(int number_of_threads) {
                                 run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
                             }
                     );
-    */
+
     run_suite_test(base_tests,test_readableEd, 0, pequal);
     run_suite_test(base_tests,test_user_sending , 0, pequal);
     run_suite_test(base_tests,test_many_users , 0, pequal);
@@ -166,8 +166,8 @@ bool test_bad_chainsign() {
             "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
             "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
             "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea"); // bad ids
- } catch(std::string &message) {
-    std::cout << message << " -- OK" << std::endl;
+ } catch(std::exception &message) {
+    std::cout << message.what() << " -- OK" << std::endl;
     errors--;
  }
  try {
@@ -183,14 +183,14 @@ bool test_bad_chainsign() {
             "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
             "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
             "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea"); // no ids
- } catch(std::string &message) {
-    std::cout << message << " -- OK" << std::endl;
+ } catch(std::exception &message) {
+    std::cout << message.what() << " -- OK" << std::endl;
     errors--;
  }
  try{
     c_token("$23|aaaaa$123|sbbbbbf#pass");	// bad format
- } catch(std::string &message) {
-    std::cout << message << " -- OK" << std::endl;
+ } catch(std::exception &message) {
+    std::cout << message.what() << " -- OK" << std::endl;
     errors--;
  }
     if(errors == 0) {
@@ -221,11 +221,12 @@ bool test_convrt_tokenpacket() {
     else {
         std::cout << "packet1:/n" << packet << std::endl;
         std::cout << "packet2:/n" << packet_two << std::endl;
-        throw(std::string("error: after converting token<->packet tokens doesn't match"));
+        std::string error("error: after converting token<->packet tokens doesn't match");
+        throw std::logic_error(error);
     }
 
- } catch(std::string &message) {
-    std::cerr << message << std::endl;
+ } catch(std::exception &message) {
+    std::cerr << message.what() << std::endl;
     return true; // error
  }
 
@@ -242,12 +243,12 @@ bool test_netuser() {
     A.emit_tokens(2);
     A.send_token_bynet("127.0.0.1", 30001);
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     A.print_status(std::cout);
     B.print_status(std::cout);
 
-    std::string is_walletempty = B.get_token_packet(A.get_public_key());
+    B.get_token_packet(A.get_public_key());	// is wallet empty?
 
     return 0;
 }
