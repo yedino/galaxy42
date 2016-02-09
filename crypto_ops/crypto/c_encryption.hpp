@@ -21,7 +21,7 @@ class c_encryption {
   public:
 	c_encryption () : m_crypto_method(no_crypt) { }
 
-	virtual std::string get_public_key () = 0;
+    virtual std::string get_public_key () const = 0;
 	virtual std::string sign (const std::string &msg) const = 0;
 	virtual bool verify(const std::string &signature, const std::string &message, const std::string &public_key) const = 0;
 
@@ -82,7 +82,7 @@ class c_ed25519 : public c_encryption {
   public:
 	c_ed25519 ();
 
-	std::string get_public_key (); ///< C++ sign way
+    std::string get_public_key () const; ///< C++ sign way
 	std::string sign (const std::string &msg) const;
 	bool verify (const std::string &signature, const std::string &message, const std::string &public_key) const;
 

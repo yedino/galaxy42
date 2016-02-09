@@ -5,12 +5,15 @@ c_evidences::c_evidences(c_ed25519 &ed) : m_edsigner(ed)
 
 bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &token_b) {
 
-    auto len_max = std::max(token_a.m_chainsign.size(),token_b.m_chainsign.size());
-    auto len_min = std::min(token_a.m_chainsign.size(),token_b.m_chainsign.size());
+    size_t tok_a_chain_size = token_a.get_chainsign_size();
+    size_t tok_b_chain_size = token_b.get_chainsign_size();
+
+    auto len_max = std::max(tok_a_chain_size, tok_b_chain_size);
+    auto len_min = std::min(tok_a_chain_size, tok_b_chain_size);
     bool different_size = (len_max != len_min);
     char bigger = '\0';
     if(different_size) {
-        if(token_a.m_chainsign.size() == len_max) {
+        if(tok_a_chain_size == len_max) {
             bigger = 'a';
         } else {
             bigger = 'b';
@@ -22,9 +25,12 @@ bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &tok
     bool is_dbspend = false;
     std::cout << "[TOKEN A]" << "\t[TOKEN B]\n";
 
+    auto tok_a_chain = token_a.get_chainsign();
+    auto tok_b_chain = token_b.get_chainsign();
+
     for (auto pos=0; pos<len_min; ++pos) {
-        auto &current_signature_a = token_a.m_chainsign[pos];
-        auto &current_signature_b = token_b.m_chainsign[pos];
+        auto &current_signature_a = tok_a_chain[pos];
+        auto &current_signature_b = tok_b_chain[pos];
 
         // we need to verify only new token A
         bool ok_sign_a = m_edsigner.verify(current_signature_a.m_msg_sign,
@@ -44,13 +50,13 @@ bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &tok
         }
     }
     if(different_size == false) {
-        std::cout << "[" << token_a.m_chainsign[0].m_signer << "]\t["
-                  << token_b.m_chainsign[0].m_signer << "]" << std::endl;
+        std::cout << "[" << tok_a_chain[0].m_signer << "]\t["
+                  << tok_b_chain[0].m_signer << "]" << std::endl;
         return true;
     } else if(bigger == 'a') {
-        std::cout << "   V\t" << token_b.m_chainsign[0].m_signer << "]" << std::endl;
+        std::cout << "   V\t" << tok_b_chain[0].m_signer << "]" << std::endl;
         for (auto pos=len_min; pos<len_max; ++pos) {
-            auto &current_signature_a = token_a.m_chainsign[pos];
+            auto &current_signature_a = tok_a_chain[pos];
 
 
             // we need to verify only new token A
@@ -64,21 +70,47 @@ bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &tok
             std::cout << "[" << current_signature_a.m_signer << "]\t" << "\t" << "\n"
                       << "   |\t    \n   V\t    " << std::endl;
         }
-        std::cout << "[" << token_a.m_chainsign[0].m_signer << "]\t"
+        std::cout << "[" << tok_a_chain[0].m_signer << "]\t"
                   << "\t" << std::endl;
         return true;
     } else if(bigger == 'b') {
-        std::cout << "[" << token_a.m_chainsign[0].m_signer << "]\t"
+        std::cout << "[" << tok_a_chain[0].m_signer << "]\t"
                   << "   V" <<  std::endl;
         for (auto pos=len_min; pos<len_max; ++pos) {
-            auto &current_signature_b = token_b.m_chainsign[pos];
+            auto &current_signature_b = tok_b_chain[pos];
 
             std::cout << "\t[" << current_signature_b.m_signer << "]\n"
                       << "   \t   |\n    \t   V" << std::endl;
         }
-        std::cout << "\t[" << token_b.m_chainsign[0].m_signer << "]" << std::endl;
+        std::cout << "\t[" << tok_b_chain[0].m_signer << "]" << std::endl;
         return true;
     } else {
         throw std::runtime_error("find_the_cheater: unexpected error");
     }
+}
+
+bool c_evidences::mint_check(const c_token &tok) {
+
+  try {
+    std::string expecting_mintname = tok.get_emiter_name();
+    std::string expecting_mint_pubkey = tok.get_emiter_pubkey();
+
+    std::string inchain_mintname = tok.get_chainsign().at(0).m_signer;
+    std::string inchain_mint_pubkey = tok.get_chainsign().at(0).m_signer_pubkey;
+
+    if(expecting_mint_pubkey != inchain_mint_pubkey) {
+        std::cout << "MINT_CHECK FAIL : bad mint pubkey" << std::endl;
+        return 1;
+    }
+    else if(expecting_mintname != inchain_mintname) {
+        std::cout << "MINT_CHECK FAIL : bad mint name" << std::endl;
+        return 1;
+    }
+  } catch (std::out_of_range &ec) {
+        std::cout << ec.what() << std::endl;
+        std::cout << "You can't check mint with never used token" << std::endl;
+        return 0;
+  }
+    std::cout << "MINT_CHECK : ok" << std::endl;
+    return 0;
 }

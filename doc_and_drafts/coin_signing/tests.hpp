@@ -2,6 +2,7 @@
 #define TESTS_HPP
 
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -25,6 +26,9 @@ bool test_cheater();
 bool test_bad_chainsign();
 bool test_convrt_tokenpacket();
 bool test_netuser();
+
+bool test_wallet_expected_sender();
+bool test_wallet_mint_check();
 
 bool test_rpcwallet();
 

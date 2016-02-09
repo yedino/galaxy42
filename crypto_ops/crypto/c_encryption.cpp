@@ -38,7 +38,7 @@ void c_ed25519::create_keypair () {
 }
 
 ////////////////////////////////////////////////////////// CPP INTERFACE ///////////////////////////////////////////////////////
-std::string c_ed25519::get_public_key () {
+std::string c_ed25519::get_public_key () const {
 	std::string pubkey = uchar_toReadable(m_public_key, pub_key_size);
 	return pubkey;
 }

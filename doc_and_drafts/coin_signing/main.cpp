@@ -67,7 +67,6 @@ int main (int argc, char *argv[]) {
 
         //run_interactive_protocol("127.0.0.1",30000);
 
-        cout << std::is_same<decltype("bleble"), const char [7]>::value;
         return 0;
 
 	} catch (std::exception& e) {

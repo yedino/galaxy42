@@ -3,6 +3,7 @@
 new_test_suite(many_ed_signing);
 new_test_suite(base_tests);
 new_test_suite(bitwallet);
+new_test_suite(wallet_io);
 
 using std::thread;
 using std::mutex;
@@ -14,29 +15,43 @@ mutex mtx;
 
 bool test_all(int number_of_threads) {
 
-    ptest::general_suite.config.print_passed_tests = true;
+    ptest::config_t config_default;
+    std::fstream file("./test.log", ios_base::out | ios_base::trunc);
+    config_default.set_all_output_to(file);
+    config_default.print_passed_tests = true;
+
+    many_ed_signing.config = config_default;
+    base_tests.config = config_default;
+    //bitwallet.config = config_default;
+    wallet_io.config = config_default;
+
+    //ptest::general_suite.config = config_default;
 
     int test_loop = 1000, msg_length = 64;
 
-    ptest::call_test(number_of_threads,
-                            [&number_of_threads, &test_loop, &msg_length] () {
-                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
-                            }
-                    );
+//    ptest::call_test(number_of_threads,
+//                            [&number_of_threads, &test_loop, &msg_length] () {
+//                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
+//                            }
+//                    );
 
-    run_suite_test(base_tests,test_readableEd, 0, pequal);
-    run_suite_test(base_tests,test_user_sending , 0, pequal);
-    run_suite_test(base_tests,test_many_users , 0, pequal);
-    run_suite_test(base_tests,test_cheater , 0, pequal);
-    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
-    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-    run_suite_test(base_tests,test_netuser, 0, pequal);
+//    run_suite_test(base_tests,test_readableEd, 0, pequal);
+//    run_suite_test(base_tests,test_user_sending , 0, pequal);
+//    run_suite_test(base_tests,test_many_users , 0, pequal);
+//    run_suite_test(base_tests,test_cheater , 0, pequal);
+//    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+//    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
+//    run_suite_test(base_tests,test_netuser, 0, pequal);
+
+    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
+    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
 
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
-    print_final_suite_result(many_ed_signing);
-    print_final_suite_result(base_tests);
-    //print_final_suite_result(bitwallet);
+//    print_final_suite_result(many_ed_signing);
+//    print_final_suite_result(base_tests);
+//    print_final_suite_result(bitwallet);
+    print_final_suite_result(wallet_io);
 
     print_final_test_result();
 }
@@ -234,6 +249,8 @@ bool test_convrt_tokenpacket() {
 }
 
 bool test_netuser() {
+    std::cout << "RUNNING_NETUSER_TEST" << std::endl;
+  try {
     std::string userA_name("testUser1");
     std::string userB_name("testUser2");
 
@@ -249,11 +266,15 @@ bool test_netuser() {
     B.print_status(std::cout);
 
     B.get_token_packet(A.get_public_key());	// is wallet empty?
-
+  } catch(std::exception &ec) {
+        std::cout << ec.what() << std::endl;
+        return 1;
+  }
     return 0;
 }
 
 bool test_rpcwallet() {
+    std::cout << "RUNNING_RPCWALLET_TEST" << std::endl;
   try {
     c_user BitUser("namecoin_user");
     if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == false, "wallet should be unset here!") == pfailed) return true;
@@ -283,6 +304,58 @@ bool test_rpcwallet() {
   } catch(BitcoinException &btc_ec) {
         std::cout << btc_ec.getCode() << ": " << btc_ec.getMessage() << std::endl;
         std::cout << btc_ec.what() << std::endl;
+        return 1;
+  }
+    return 0;
+}
+//////////////////////////////////////////////////////////////////////////////// WALLET_IO SUITE //////////////////////////////////////////////////////////////////////////
+
+bool test_wallet_expected_sender() {
+    std::cout << "RUNNING_WALLET_EXPECTED_SENDER_TEST" << std::endl;
+
+  try {
+    std::string userA_name("MintWallet");
+    std::string userB_name("thiefUser");
+    std::string userC_name("WalletUser02");
+    c_user A(userA_name);
+    c_user B(userB_name);
+    c_user C(userC_name);
+    A.emit_tokens(2);
+
+    A.send_token_bymethod(C);
+
+    C.save_coinwallet("./wallet.dat");
+    B.load_coinwallet("./wallet.dat");
+
+    // should detect bad expected sender
+    B.send_token_bymethod(A);
+    C.send_token_bymethod(A);
+  } catch(std::exception &ec) {
+        std::cerr << ec.what() << std::endl;
+        return 1;
+  }
+    return 0;
+}
+
+bool test_wallet_mint_check() {
+    std::cout << "RUNNING_WALLET_MINT_CHECK_TEST" << std::endl;
+
+  try {
+    std::string userA_name("MintWallet");
+    std::string userB_name("thiefUser");
+    c_user A(userA_name);
+    c_user B(userB_name);
+    A.emit_tokens(2);
+
+    A.print_status(std::cout);
+
+    A.save_coinwallet("./wallet.dat");
+    B.load_coinwallet("./wallet.dat");
+
+    // should detect stolen wallet database
+    B.send_token_bymethod(A);
+  } catch(std::exception &ec) {
+        std::cerr << ec.what() << std::endl;
         return 1;
   }
     return 0;

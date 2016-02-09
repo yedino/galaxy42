@@ -11,20 +11,21 @@ using std::string;
 
 class c_mint {
   public:
-    c_mint (std::chrono::hours exp_time = std::chrono::hours(72));
+    c_mint (std::string mintname, std::string pubkey, std::chrono::hours exp_time = std::chrono::hours(72));
+    std::string m_mintname;
+    std::string m_pubkey;
 
 	c_token emit_token ();
 
 	bool check_isEmited (c_token &);
-    void print_mint_status(std::ostream &os);
+    void print_mint_status(std::ostream &os) const;
   private:
 	std::map<c_token, long long> m_emited_tokens;
 	c_random_generator<long long> random_generator;
     std::chrono::hours t_expiration_time;		/// expitarion_time of token
                                                 /// all token emited by this mint should have the same expiration time
                                                 /// This helps in the subsequent token verification
-	long long generate_password ();
+    long long generate_password ();
 };
 
 #endif // C_MINT_H
-

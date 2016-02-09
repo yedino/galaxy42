@@ -21,21 +21,20 @@ using std::runtime_error;
 
 class c_user {
   protected:
+    c_ed25519 m_edsigner;
     c_mint m_mint;
 	c_wallet m_wallet;
     c_rpc_bitwallet m_bitwallet;
     string m_username;
-    string m_public_key;
     vector<c_token> used_tokens;
-    void print_used_status(std::ostream &);
+    void print_used_status(std::ostream &) const;
 	double m_reputation;
 
     c_token process_token_tosend(const std::string &, bool fake = 0);
 
-    c_ed25519 m_edsigner;
     c_evidences m_evidences;
 
-	list<string> inbox;
+    list<string> inbox;
 
   public:
     c_user () = delete;
@@ -46,18 +45,23 @@ class c_user {
     string get_public_key() const;
     double get_rep();		///< normalize reputation to 0-100 value, approximated by atan()
 
+    void send_token_bymethod(c_user &, bool keep_in_wallet = 0); ///< keep_in_wallet = 1 means double spending try
+                                                                 /// should be used only in tests!
 
-    void send_token_bymethod(c_user &, bool fake = 0);
-
-    std::string get_token_packet(const std::string &user_pubkey, bool fake = 0);
+    std::string get_token_packet(const std::string &user_pubkey, bool keep_in_wallet = 0); ///< keep_in_wallet = 1 means double spending try
+                                                                                           /// should be used only in tests!
     void recieve_from_packet(std::string &);
 
-    void send_fake_token(c_user &, size_t = 1);
+    void double_spend_token(c_user &, size_t = 1);
 
     void emit_tokens (size_t);
     bool recieve_token (c_token &token);
 
-    void print_status(std::ostream &);
+    void print_status(std::ostream &) const;
+
+    // coin wallet
+    void load_coinwallet(const std::string &filename);
+    void save_coinwallet(const std::string &filename);
 
     // bitwallet part
     bool check_bitwallet();

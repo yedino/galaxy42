@@ -1,6 +1,6 @@
 #include "c_token.hpp"
 
-size_t token_id_generator::id = 0;
+////////////////////////////////////////// CHAINSIGN_ELEMENT //////////////////////////////////////////////////////
 
 c_chainsign_element::c_chainsign_element (const std::string msg,
         const std::string msg_sign,
@@ -14,11 +14,39 @@ c_chainsign_element::c_chainsign_element (const std::string &packet) {
     sa >> *this;
 }
 
-c_token::c_token (long long pss, std::chrono::time_point<std::chrono::system_clock> emit_date, std::chrono::hours exp_time) :
-                                        m_id(token_id_generator::generate_id()),
+void c_chainsign_element::print(std::ostream &os) const{
+
+    os << '[' << m_msg << '|' << m_msg_sign <<  '|'
+       << m_signer << '|' << m_signer_pubkey << ']' << std::endl;
+}
+
+/////////////////////////////////////////////// TOKEN /////////////////////////////////////////////////////////////
+
+size_t token_id_generator::id = 0;
+
+c_token::c_token (const std::string &mintname,const std::string &mint_pubkey, long long password, std::chrono::time_point<std::chrono::system_clock> emit_date, std::chrono::hours exp_time) :
+                                        m_mintname(mintname),
+                                        m_mint_pubkey(mint_pubkey),
+                                        m_password(password),
                                         m_expiration_date(emit_date + exp_time),
-                                        m_password(pss)
+                                        m_id(token_id_generator::generate_id())
 { }
+
+void c_token::add_chain_element(const c_chainsign_element &ch) {
+    m_chainsign.emplace_back(ch);
+}
+
+void c_token::add_chain_element(c_chainsign_element &&ch) noexcept {
+    m_chainsign.emplace_back(std::move(ch));
+}
+
+const std::vector<c_chainsign_element>& c_token::get_chainsign() const {
+    return m_chainsign;
+}
+
+const size_t c_token::get_chainsign_size() const {
+    return m_chainsign.size();
+}
 
 bool c_token::check_ps (long long ps) {
 	if (ps == m_password) {
@@ -27,6 +55,26 @@ bool c_token::check_ps (long long ps) {
 	return false;
 }
 
+void c_token::print(std::ostream &os, bool verbouse) const {
+
+    std::time_t t = std::chrono::system_clock::to_time_t(m_expiration_date);
+    os << "Emiter: [" << m_mintname
+       << "], Id: ["  << m_id
+       << "], Expiration date: [" << std::ctime(&t)
+       << "], Size: [" << get_size()
+       << " B]" << std::endl;
+    if(verbouse) {
+        for(auto &chain_el : m_chainsign)
+            chain_el.print(os);
+    }
+}
+
+size_t c_token::get_id() const {
+    return m_id;
+}
+std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
+    return m_expiration_date;
+}
 long long c_token::get_size() const {
     long long size = 0;
 	size += sizeof(c_token);
@@ -38,12 +86,6 @@ long long c_token::get_size() const {
 		size += m_chainsign[i].m_signer_pubkey.size();
 	}
 	return size;
-}
-size_t c_token::get_id() const {
-    return m_id;
-}
-std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() {
-    return m_expiration_date;
 }
 
 c_token::c_token(std::string packet) {
@@ -66,14 +108,12 @@ std::string c_token::to_packet() {
     return packet;
 }
 
-std::string c_token::get_emiter_name() {
+std::string c_token::get_emiter_name() const {
+    return m_mintname;
+}
 
-    if(!m_chainsign.empty()) {
-        return m_chainsign[0].m_signer;
-    } else {
-        return std::string("unknown");
-    }
-
+std::string c_token::get_emiter_pubkey() const {
+    return m_mint_pubkey;
 }
 
 size_t token_id_generator::generate_id () {

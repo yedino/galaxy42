@@ -1,33 +1,32 @@
 #include "c_wallet.hpp"
 
-c_wallet::c_wallet (const string &name) : tokens_type(name) { }
+c_wallet::c_wallet ()  { }
 
-c_wallet::c_wallet (string &&name) : tokens_type(name) { }
-
-size_t c_wallet::amount () {
-	return tokens.size();
+c_wallet::c_wallet (const string &filename)  {
+    load_from_file(filename);
 }
-void c_wallet::print_wallet_status(std::ostream &os, std::string &my_username) {
+
+c_wallet::c_wallet (string &&filename) noexcept {
+    load_from_file(std::move(filename));
+}
+size_t c_wallet::amount () const {
+    return m_tokens.size();
+}
+
+void c_wallet::print_wallet_status(std::ostream &os, bool verbouse) const {
     os << "Amount of tokens in wallet: " << amount() << std::endl;
 
-    for(c_token &tok : tokens) {
-        std::string emiter;
-        std::time_t t = std::chrono::system_clock::to_time_t(tok.get_expiration_date());
-        (tok.get_emiter_name() != "unknown") ? emiter = tok.get_emiter_name() : emiter = my_username;
-        os << "Emiter: [" << emiter
-           << "], Id: ["  << tok.get_id()
-           << "], Expiration date: [" << std::ctime(&t)
-           << "], Size: [" << tok.get_size()
-           << " B]" << std::endl;
+    for(auto &tok : m_tokens) {
+        tok.print(os,verbouse);
     }
 }
 
 void c_wallet::add_token (const c_token &token) {
-	tokens.push_back(token);
+    m_tokens.push_back(token);
 }
 
 bool c_wallet::process_token() const {
-    if (tokens.empty()) {
+    if (m_tokens.empty()) {
         std::cerr << "empty wallet! : no token to process" << std::endl;
         return true;
     }
@@ -36,6 +35,23 @@ bool c_wallet::process_token() const {
 
 
 void c_wallet::remove_token (const c_token &token) {
-	tokens.remove(token);
+    m_tokens.remove(token);
 }
 
+void c_wallet::save_to_file(const std::string &filename) {
+
+    std::ofstream ofs(filename);
+    boost::archive::text_oarchive oa(ofs);
+    oa << *this;
+}
+
+void c_wallet::load_from_file(const std::string &filename) {
+  try {
+    std::ifstream ifs(filename);
+
+    boost::archive::text_iarchive ia(ifs);
+    ia >> *this;
+  } catch (std::exception &ec) {
+        std::cerr << "Exception opening/reading/closing file :" << ec.what() << std::endl;
+  }
+}
