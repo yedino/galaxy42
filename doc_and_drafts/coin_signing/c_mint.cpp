@@ -1,22 +1,37 @@
 #include "c_mint.hpp"
 
-c_mint::c_mint (std::string mintname, std::string pubkey, std::chrono::hours exp_time) :
-                                                    m_pubkey(pubkey),
-                                                    m_mintname(mintname),
-                                                    t_expiration_time(exp_time)
+////////////////////////////////////////////////////////////////////////////////////////////// ID GENERATOR
+
+token_id_generator::token_id_generator () : id(0)
 { }
 
-c_token c_mint::emit_token () {
-    long long token_pss = generate_password();
+size_t token_id_generator::generate_id() {
+    return id++;
+}
 
-    std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+////////////////////////////////////////////////////////////////////////////////////////////// MINT
 
-    c_token token(m_mintname, m_pubkey, token_pss, start, t_expiration_time);
-    m_emited_tokens.insert({token, token_pss});
+c_mint::c_mint (std::string mintname,
+                std::string pubkey,
+                std::chrono::seconds exp_time) :	m_pubkey(pubkey),
+                                                    m_mintname(mintname),
+                                                    t_expiration_time(exp_time),
+                                                    m_last_expired_id(-1)
+{ }
+
+c_token c_mint::emit_token() {
+    size_t t_id = m_id_generator.generate_id();
+    long long t_password = generate_password();
+
+    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> t_expiration_date = now+t_expiration_time;
+
+    c_token token(c_token_header(m_mintname, m_pubkey, t_id, t_password, t_expiration_date));
+    m_emited_tokens.insert({token, t_password});
 	return token;
 }
 
-bool c_mint::check_isEmited (c_token &token) {
+bool c_mint::check_isEmited(c_token &token) {
     if (m_emited_tokens.find(token) != m_emited_tokens.end()) {
 		std::cout << "Token emited here!" << std::endl;
 		return true;
@@ -32,6 +47,29 @@ void c_mint::print_mint_status(std::ostream &os) const {
     }
 }
 
-long long c_mint::generate_password () {
+long long c_mint::generate_password() {
 	return random_generator.get_random(sizeof(long long));
+}
+
+size_t c_mint::clean_expired_tokens() {
+
+    size_t expired_amount = 0;
+    for(auto it = m_emited_tokens.begin(); it != m_emited_tokens.end();) {
+        if(it->first.get_expiration_date() < std::chrono::system_clock::now()) {
+            expired_amount++;
+            m_last_expired_id = std::max(static_cast<long>(it->first.get_id()),m_last_expired_id);
+            std::cout << "Mint: removing deprecated token: ";
+            it->first.print(std::cout);
+
+            it = m_emited_tokens.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+    return expired_amount;
+}
+
+long c_mint::get_last_expired_id() const {
+    return m_last_expired_id;
 }

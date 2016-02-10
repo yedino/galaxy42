@@ -102,6 +102,9 @@ void c_user::recieve_from_packet(std::string &packet) {
 
 bool c_user::recieve_token (c_token &token) {
 
+    std::cout << "Refreshing local tokens status before recieving new" << std::endl;
+    tokens_refresh();
+
     if(m_evidences.mint_check(token)) {
         // mint in token header and chainsign disagree
         return false;
@@ -171,7 +174,29 @@ bool c_user::recieve_token (c_token &token) {
     return true;
 }
 
+void c_user::set_new_mint(std::string mintname, std::string pubkey, std::chrono::seconds exp_time) {
 
+    m_mint = c_mint(mintname,pubkey,exp_time);
+}
+
+size_t c_user::tokens_refresh() {
+    size_t all_expired_tokens = 0;
+    all_expired_tokens += m_mint.clean_expired_tokens();
+    all_expired_tokens += m_wallet.clean_expired_tokens();
+
+    for(auto it = used_tokens.begin(); it != used_tokens.end();) {
+        if(it->get_expiration_date() < std::chrono::system_clock::now()) {
+            all_expired_tokens++;
+            std::cout << "User used tokens: removing deprecated token: ";
+            it->print(std::cout);
+            it = used_tokens.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+    return all_expired_tokens;
+}
 
 void c_user::emit_tokens (size_t amount) {
 	for(size_t i = 0; i < amount; ++i) {
@@ -179,6 +204,10 @@ void c_user::emit_tokens (size_t amount) {
 		m_wallet.add_token(emitted_token);
         std::cout << m_username << " emited token with id: "  << emitted_token.get_id() << std::endl;
     }
+}
+
+long c_user::get_mint_last_expired_id() const {
+    return m_mint.get_last_expired_id();
 }
 
 void c_user::print_status(std::ostream &os) const {

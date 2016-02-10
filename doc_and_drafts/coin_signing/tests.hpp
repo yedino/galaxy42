@@ -29,6 +29,7 @@ bool test_netuser();
 
 bool test_wallet_expected_sender();
 bool test_wallet_mint_check();
+int test_mint_token_expiration();
 
 bool test_rpcwallet();
 

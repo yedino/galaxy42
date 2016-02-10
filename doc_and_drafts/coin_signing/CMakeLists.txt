@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -g")
 file(GLOB SOURCE_ED "../../crypto_ops/crypto/ed25519_src/*.c" # All files in directory:
     )
 
-file(GLOB SOURCE_PTEST "ptest/*.cpp") 
+file(GLOB SOURCE_PTEST "ptest/*.cpp")
 
 set(SOURCE_FILES main.cpp tests.cpp c_token.cpp c_wallet.cpp c_mint.cpp c_user.cpp c_netuser.cpp
         c_rpc_bitwallet.cpp c_evidences.cpp

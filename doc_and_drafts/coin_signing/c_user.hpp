@@ -20,22 +20,6 @@ using std::list;
 using std::runtime_error;
 
 class c_user {
-  protected:
-    c_ed25519 m_edsigner;
-    c_mint m_mint;
-	c_wallet m_wallet;
-    c_rpc_bitwallet m_bitwallet;
-    string m_username;
-    vector<c_token> used_tokens;
-    void print_used_status(std::ostream &) const;
-	double m_reputation;
-
-    c_token process_token_tosend(const std::string &, bool fake = 0);
-
-    c_evidences m_evidences;
-
-    list<string> inbox;
-
   public:
     c_user () = delete;
     c_user (std::string&);
@@ -45,19 +29,21 @@ class c_user {
     string get_public_key() const;
     double get_rep();		///< normalize reputation to 0-100 value, approximated by atan()
 
-    void send_token_bymethod(c_user &, bool keep_in_wallet = 0); ///< keep_in_wallet = 1 means double spending try
-                                                                 /// should be used only in tests!
+    /// keep_in_wallet = 1 means double spending try
+    /// should be used only in tests!
+    void send_token_bymethod(c_user &, bool keep_in_wallet = 0);
+    std::string get_token_packet(const std::string &user_pubkey, bool keep_in_wallet = 0);
 
-    std::string get_token_packet(const std::string &user_pubkey, bool keep_in_wallet = 0); ///< keep_in_wallet = 1 means double spending try
-                                                                                           /// should be used only in tests!
     void recieve_from_packet(std::string &);
-
-    void double_spend_token(c_user &, size_t = 1);
-
-    void emit_tokens (size_t);
     bool recieve_token (c_token &token);
 
+    size_t tokens_refresh();		///< mostly for clean databases from expiried tokens
     void print_status(std::ostream &) const;
+
+    // mint
+    void set_new_mint(std::string mintname, std::string pubkey, std::chrono::seconds exp_time = std::chrono::hours(72));
+    void emit_tokens (size_t);
+    long get_mint_last_expired_id() const;
 
     // coin wallet
     void load_coinwallet(const std::string &filename);
@@ -68,6 +54,21 @@ class c_user {
     void set_bitwallet(const std::string &username, const std::string &password, const std::string &address, int port);
     double get_bitwallet_balance();
 
+  protected:
+    c_ed25519 m_edsigner;
+    c_mint m_mint;
+    c_wallet m_wallet;
+    c_rpc_bitwallet m_bitwallet;
+    string m_username;
+
+    vector<c_token> used_tokens;
+    void print_used_status(std::ostream &) const;
+
+    double m_reputation;
+
+    c_token process_token_tosend(const std::string &, bool fake = 0);
+
+    c_evidences m_evidences;
     std::mutex m_mtx;
 };
 

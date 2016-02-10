@@ -12,10 +12,30 @@
 
 #include <boost/serialization/binary_object.hpp>
 
-class token_id_generator {
-	static size_t id;
-  public:
-	static size_t generate_id ();
+struct c_token_header {
+    c_token_header () = default;
+    c_token_header (const std::string &mintname,
+                    const std::string &mint_pubkey,
+                    const size_t id,
+                    const long long password,
+                    const std::chrono::time_point<std::chrono::system_clock> expiration_date);
+
+    void print(std::ostream &os) const;
+
+    size_t m_id;
+    std::string m_mintname;
+    std::string m_mint_pubkey;
+    long long m_password;
+    std::chrono::time_point<std::chrono::system_clock> m_expiration_date;
+
+    template <typename Archive>
+    void serialize(Archive &ar, const unsigned version) {
+        ar & m_mintname;
+        ar & m_mint_pubkey;
+        ar & m_id;
+        ar & m_password;
+        ar & boost::serialization::make_binary_object (&m_expiration_date,sizeof(m_expiration_date));
+    }
 };
 
 struct c_chainsign_element {
@@ -43,43 +63,35 @@ class c_token {
   public:
     c_token () = default;
     c_token (std::string);		///< deserialize token from recived packet
-    c_token (const std::string &mintname, const std::string &mint_pubkey,long long password, std::chrono::time_point<std::chrono::system_clock>, std::chrono::hours);
+    c_token (const c_token_header &header);
+    c_token (c_token_header &&header);
 
-    void add_chain_element(const c_chainsign_element &ch);
-    void add_chain_element(c_chainsign_element &&ch) noexcept;
-    const std::vector<c_chainsign_element>& get_chainsign() const;
-    const size_t get_chainsign_size() const;
+    std::string to_packet ();	///< serialize token
 
-    std::string to_packet();	///< serialize token
-
-    std::string get_emiter_name() const;
-    std::string get_emiter_pubkey() const;
-    size_t get_id() const;
-    std::chrono::time_point<std::chrono::system_clock>  get_expiration_date() const;
+    std::string get_emiter_name () const;
+    std::string get_emiter_pubkey () const;
+    size_t get_id () const;
+    std::chrono::time_point<std::chrono::system_clock>  get_expiration_date () const;
 
     /// verbouse == true : means that for each token all chainsign will be print
-    void print(std::ostream &, bool verbouse = 0) const;
-    long long get_size() const;
+    void print (std::ostream &, bool verbouse = 0) const;
+    long long get_size () const;
     bool check_ps (long long);
 
+    void add_chain_element (const c_chainsign_element &ch);
+    void add_chain_element (c_chainsign_element &&ch) noexcept;
+    const std::vector<c_chainsign_element>& get_chainsign() const;
+    const size_t get_chainsign_size () const;
 
     friend class boost::serialization::access;
   private:
+    c_token_header m_header;
     std::vector<c_chainsign_element> m_chainsign;
-    size_t m_id;
-    std::string m_mintname;
-    std::string m_mint_pubkey;
-    std::chrono::time_point<std::chrono::system_clock> m_expiration_date;
-    long long m_password;
 
     template<typename Archive>
-    void serialize(Archive &ar, const unsigned int version)
+    void serialize (Archive &ar, const unsigned int version)
     {
-        ar & m_id;
-        ar & m_mintname;
-        ar & m_mint_pubkey;
-        ar & boost::serialization::make_binary_object (&m_expiration_date,sizeof(m_expiration_date));
-        ar & m_password;
+        ar & m_header;
         ar & m_chainsign;
     }
 };

@@ -33,6 +33,22 @@ bool c_wallet::process_token() const {
     return false;
 }
 
+size_t c_wallet::clean_expired_tokens() {
+
+    size_t expired_amount = 0;
+    for(auto it = m_tokens.begin(); it != m_tokens.end();) {
+        if(it->get_expiration_date() < std::chrono::system_clock::now()) {
+            expired_amount++;
+            std::cout << "Wallet: removing deprecated token: ";
+            it->print(std::cout);
+            it = m_tokens.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+    return expired_amount;
+}
 
 void c_wallet::remove_token (const c_token &token) {
     m_tokens.remove(token);

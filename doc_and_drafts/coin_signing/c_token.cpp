@@ -1,12 +1,41 @@
 #include "c_token.hpp"
 
-////////////////////////////////////////// CHAINSIGN_ELEMENT //////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////// TOKEN HEADER
+
+c_token_header::c_token_header (const std::string &mintname,
+                  const std::string &mint_pubkey,
+                  const size_t id,
+                  long long password,
+                  const std::chrono::time_point<std::chrono::system_clock> expiration_date) :	m_mintname(mintname),
+                                                                                                m_mint_pubkey(mint_pubkey),
+                                                                                                m_id(id),
+                                                                                                m_password(password),
+                                                                                                m_expiration_date(expiration_date)
+{ }
+
+void c_token_header::print(std::ostream &os) const {
+
+    std::time_t t = std::chrono::system_clock::to_time_t(m_expiration_date);
+    std::string date(ctime(&t));
+    size_t end = date.find_last_of('\n');		// to avoid newline at the end of t
+    std::cout << "Emiter: [" << m_mintname
+       << "], Mint pubkey [" << m_mint_pubkey
+       << "], Id: ["  << m_id
+       << "], Expiration date: [" << date.substr(0,end)
+       << "]" << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////// CHAIN ELEMENT
 
 c_chainsign_element::c_chainsign_element (const std::string msg,
-        const std::string msg_sign,
-		const std::string signer,
-        const std::string signer_pubkey) : m_msg(msg), m_msg_sign(msg_sign), m_signer(signer), m_signer_pubkey(signer_pubkey) {
-}
+                                          const std::string msg_sign,
+                                          const std::string signer,
+                                          const std::string signer_pubkey) : 	m_msg(msg),
+                                                                                m_msg_sign(msg_sign),
+                                                                                m_signer(signer),
+                                                                                m_signer_pubkey(signer_pubkey)
+{ }
+
 c_chainsign_element::c_chainsign_element (const std::string &packet) {
 
     std::stringstream ss(packet);
@@ -20,16 +49,13 @@ void c_chainsign_element::print(std::ostream &os) const{
        << m_signer << '|' << m_signer_pubkey << ']' << std::endl;
 }
 
-/////////////////////////////////////////////// TOKEN /////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////// TOKEN
 
-size_t token_id_generator::id = 0;
 
-c_token::c_token (const std::string &mintname,const std::string &mint_pubkey, long long password, std::chrono::time_point<std::chrono::system_clock> emit_date, std::chrono::hours exp_time) :
-                                        m_mintname(mintname),
-                                        m_mint_pubkey(mint_pubkey),
-                                        m_password(password),
-                                        m_expiration_date(emit_date + exp_time),
-                                        m_id(token_id_generator::generate_id())
+c_token::c_token (const c_token_header &header) : m_header(header)
+{ }
+
+c_token::c_token (c_token_header &&header) : m_header(std::move(header))
 { }
 
 void c_token::add_chain_element(const c_chainsign_element &ch) {
@@ -49,7 +75,7 @@ const size_t c_token::get_chainsign_size() const {
 }
 
 bool c_token::check_ps (long long ps) {
-	if (ps == m_password) {
+    if (ps == m_header.m_password) {
 		return true;
 	}
 	return false;
@@ -57,36 +83,15 @@ bool c_token::check_ps (long long ps) {
 
 void c_token::print(std::ostream &os, bool verbouse) const {
 
-    std::time_t t = std::chrono::system_clock::to_time_t(m_expiration_date);
-    os << "Emiter: [" << m_mintname
-       << "], Id: ["  << m_id
-       << "], Expiration date: [" << std::ctime(&t)
-       << "], Size: [" << get_size()
-       << " B]" << std::endl;
+    m_header.print(os);
     if(verbouse) {
-        for(auto &chain_el : m_chainsign)
+        for(auto &chain_el : m_chainsign) {
             chain_el.print(os);
+        }
+        os << "Size of token: [" << get_size() << " B]" << std::endl;
     }
 }
 
-size_t c_token::get_id() const {
-    return m_id;
-}
-std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
-    return m_expiration_date;
-}
-long long c_token::get_size() const {
-    long long size = 0;
-	size += sizeof(c_token);
-	for(size_t i = 0; i < m_chainsign.size(); ++i) {
-		size += sizeof(c_chainsign_element);
-		size += m_chainsign[i].m_msg.size();
-        size += m_chainsign[i].m_msg_sign.size();
-		size += m_chainsign[i].m_signer.size();
-		size += m_chainsign[i].m_signer_pubkey.size();
-	}
-	return size;
-}
 
 c_token::c_token(std::string packet) {
 
@@ -109,18 +114,35 @@ std::string c_token::to_packet() {
 }
 
 std::string c_token::get_emiter_name() const {
-    return m_mintname;
+    return m_header.m_mintname;
 }
 
 std::string c_token::get_emiter_pubkey() const {
-    return m_mint_pubkey;
+    return m_header.m_mint_pubkey;
 }
 
-size_t token_id_generator::generate_id () {
-	return id++;
+size_t c_token::get_id() const {
+    return m_header.m_id;
 }
 
-bool operator !=(const c_chainsign_element &l_ele, const c_chainsign_element &r_ele) {
+std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
+    return m_header.m_expiration_date;
+}
+
+long long c_token::get_size() const {
+    long long size = 0;
+    size += sizeof(c_token);
+    for(size_t i = 0; i < m_chainsign.size(); ++i) {
+        size += sizeof(c_chainsign_element);
+        size += m_chainsign[i].m_msg.size();
+        size += m_chainsign[i].m_msg_sign.size();
+        size += m_chainsign[i].m_signer.size();
+        size += m_chainsign[i].m_signer_pubkey.size();
+    }
+    return size;
+}
+
+bool operator != (const c_chainsign_element &l_ele, const c_chainsign_element &r_ele) {
     if(	(l_ele.m_msg_sign == r_ele.m_msg_sign) &&
 		(l_ele.m_msg == r_ele.m_msg) &&
 		(l_ele.m_signer == r_ele.m_signer) &&
@@ -131,11 +153,11 @@ bool operator !=(const c_chainsign_element &l_ele, const c_chainsign_element &r_
 	}
 }
 
-bool operator== (const c_token &lhs, const c_token &rhs) {
+bool operator == (const c_token &lhs, const c_token &rhs) {
     return lhs.get_id() == rhs.get_id();
 }
 
-bool operator< (const c_token &lhs, const c_token &rhs) {
+bool operator < (const c_token &lhs, const c_token &rhs) {
     return lhs.get_id() < rhs.get_id();
 }
 

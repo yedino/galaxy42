@@ -29,22 +29,24 @@ bool test_all(int number_of_threads) {
 
     int test_loop = 1000, msg_length = 64;
 
-//    ptest::call_test(number_of_threads,
-//                            [&number_of_threads, &test_loop, &msg_length] () {
-//                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
-//                            }
-//                    );
+    ptest::call_test(number_of_threads,
+                            [&number_of_threads, &test_loop, &msg_length] () {
+                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
+                            }
+                    );
 
-//    run_suite_test(base_tests,test_readableEd, 0, pequal);
-//    run_suite_test(base_tests,test_user_sending , 0, pequal);
-//    run_suite_test(base_tests,test_many_users , 0, pequal);
-//    run_suite_test(base_tests,test_cheater , 0, pequal);
-//    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
-//    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-//    run_suite_test(base_tests,test_netuser, 0, pequal);
+    run_suite_test(base_tests,test_readableEd, 0, pequal);
+    run_suite_test(base_tests,test_user_sending , 0, pequal);
+    run_suite_test(base_tests,test_many_users , 0, pequal);
+    run_suite_test(base_tests,test_cheater , 0, pequal);
+    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
+    run_suite_test(base_tests,test_netuser, 0, pequal);
 
     run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
     run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
+    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
+    run_suite_test(wallet_io,test_user_recieve_deprecated, 0, pequal);
 
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
@@ -56,9 +58,9 @@ bool test_all(int number_of_threads) {
     print_final_test_result();
 }
 
-std::string generate_random_string (size_t length) {
+static std::string generate_random_string (size_t length) {
     auto generate_random_char = [] () -> char {
-        const char Charset[] = "0123456789"
+        static const char Charset[] = "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
         const size_t max_index = (sizeof(Charset) - 1);
@@ -358,5 +360,31 @@ bool test_wallet_mint_check() {
         std::cerr << ec.what() << std::endl;
         return 1;
   }
+    return 0;
+}
+
+int test_mint_token_expiration() {
+    std::cout << "RUNNING_WALLET_MINT_CHECK_TEST" << std::endl;
+
+  try {
+    c_user A("A_user");
+    A.set_new_mint("fast_tokens", A.get_public_key(), std::chrono::seconds(2));
+
+    int token_to_emit = 5;
+    A.emit_tokens(token_to_emit);
+    A.print_status(std::cout);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    int expiried_tokens = A.tokens_refresh();
+    A.print_status(std::cout);		// now mint and wallet should be empty
+    return expiried_tokens;
+    if (run_suite_assert (wallet_io, A.get_mint_last_expired_id() == token_to_emit-1 , "Last id should be different!") == pfailed) return true;
+  } catch(std::exception &ec) {
+        std::cerr << ec.what() << std::endl;
+        return true;	// test expect return 10 (5 copy in mint + 5 in wallet)
+  }
+}
+
+bool test_user_recieve_deprecated() {
+
     return 0;
 }
