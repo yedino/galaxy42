@@ -7,7 +7,7 @@ c_user::c_user (std::string& username) :
 {
     m_username.swap(username);
     if (m_username.find('|') != string::npos) {
-        throw runtime_error("nickname is not allowed to contain '|' character");
+        throw std::runtime_error("nickname is not allowed to contain '|' character");
     }
     m_reputation = 1;
 }
@@ -18,7 +18,7 @@ c_user::c_user (string &&username) :
 {
     m_username.swap(username);
 	if (m_username.find('|') != string::npos) {
-		throw runtime_error("nickname is not allowed to contain '|' character");
+        throw std::runtime_error("nickname is not allowed to contain '|' character");
 	}
     m_reputation = 1;
 }
@@ -36,8 +36,8 @@ double c_user::get_rep() {
 }
 
 void c_user::print_used_status(std::ostream &os) const {
-    os << "Amount of used tokens: " << used_tokens.size() << std::endl;
-    for(auto &tok : used_tokens) {
+    os << "Amount of used tokens: " << m_used_tokens.size() << std::endl;
+    for(auto &tok : m_used_tokens) {
         os << "Id: [" << tok.get_id() << "], Size: [" << tok.get_size() << "B: ]" << std::endl;
     }
 }
@@ -49,31 +49,13 @@ c_token c_user::process_token_tosend(const std::string &user_pubkey, bool keep_i
         std::string msg = m_username + " can't send token -- transaction abort";
         throw std::logic_error(msg);
     }
-    c_token tok = m_wallet.m_tokens.back(); // take any token for now [TODO]
-    if(!keep_in_wallet) {
-        m_wallet.m_tokens.pop_back();
-    }
+    c_token tok = m_wallet.get_any_token(keep_in_wallet); // take any token for now [TODO]
+
     std::string msg = std::to_string(tok.get_id()) + "|" + user_pubkey;
     std::string msg_sign = m_edsigner.sign(msg);
 
     tok.add_chain_element(c_chainsign_element(msg, msg_sign, m_username, get_public_key()));
     return tok;
-}
-
-void c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
-    std::cout << "----send-start-by-method---------------------------------------------------" << std::endl;
-
-  try {
-    c_token tok = process_token_tosend(user.get_public_key(),keep_in_wallet);
-
-    std::cout << "sending token: " << m_username << " => " << user.get_username() << std::endl;		// dbg
-    if(!user.recieve_token(tok)) { // push this coin to the target user
-        std::cout << "Fail to recieve token: token lost" << std::endl;
-    }
-    std::cout << "----send-end-----------------------------------------------------" << std::endl;
-  } catch(std::exception &ec) {
-    std::cerr << ec.what() << std::endl;
-  }
 }
 
 std::string c_user::get_token_packet(const std::string &user_pubkey, bool keep_in_wallet) {
@@ -93,31 +75,47 @@ std::string c_user::get_token_packet(const std::string &user_pubkey, bool keep_i
   }
 }
 
-void c_user::recieve_from_packet(std::string &packet) {
-    c_token tok(packet);
-    if(!recieve_token(tok)) {
+bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
+
+  try {
+    c_token tok = process_token_tosend(user.get_public_key(),keep_in_wallet);
+
+    if(user.recieve_token(tok)) { // push this coin to the target user
         std::cout << "Fail to recieve token: token lost" << std::endl;
+        // place to handle bad token
+        // maybe send invalid token to arbiters?
+        return true;
     }
+    return false;
+  } catch(std::exception &ec) {
+    std::cerr << ec.what() << std::endl;
+  }
+}
+
+bool c_user::recieve_from_packet(std::string &packet) {
+
+    c_token tok(packet);
+    if(recieve_token(tok)) {
+        std::cout << "Fail to recieve token: token lost" << std::endl;
+        // place to handle bad token
+        // maybe send invalid token to arbiters?
+        return true;
+    }
+    return false;
 }
 
 bool c_user::recieve_token (c_token &token) {
-
+    token.print(std::cout,1);
     std::cout << "Refreshing local tokens status before recieving new" << std::endl;
     tokens_refresh();
+    token.print(std::cout,1);
 
-    if(m_evidences.mint_check(token)) {
-        // mint in token header and chainsign disagree
-        return false;
+    if(m_evidences.token_date(token) || m_evidences.mint_check(token)) {
+        return true;
     }
 	// check validity of the signatures chain
 	std::string expected_sender; // publickey
 	bool expected_sender_any=false; // do we expecected sender
-
-	// TODO check if the emitter of coin is good for us, are we at all expecting or interested in such coins
-	{
-		//		expected_sender = MINT_A;
-		//		expected_sender_any = true;
-	}
 
 	// [A->B]   [B->C]   [C->D]
     for (auto &current_signature : token.get_chainsign()) {
@@ -138,12 +136,12 @@ bool c_user::recieve_token (c_token &token) {
 		if ( (expected_sender_any) && current_sender_in_coin != expected_sender) {
 			std::cout << "expected sender ["<<expected_sender<<"] vs in-coin sender ["<<current_sender_in_coin<<"]" << std::endl;
             std::cout << "token validate : BAD_EXPECTED_SENDER !!!" << std::endl;
-            return false;
+            return true;
 		}
 
 		if (!ok_sign) {
 			std::cout << "token validate : BAD_SIGN !!!" << std::endl;
-			return false;
+            return true;
 		}
 
 		expected_sender = current_recipient_in_coin;
@@ -157,21 +155,21 @@ bool c_user::recieve_token (c_token &token) {
 	std::cout << "size of this token : " << token.get_size() << std::endl;
 
     if (m_mint.check_isEmited(token)) { // is this token emitted by me?
-        for (auto &in : used_tokens) { // is this token used?
+        for (auto &in : m_used_tokens) { // is this token used?
             if (in == token) {
                 std::cout << "token validate : TOKEN_USED !!!" << std::endl;
                 if(!m_evidences.find_token_cheater(token, in)) {
                     std::cout << "can't find cheater" << std::endl;
                 } else {
-                    return false;
+                    return true;
                 }
             }
         }
-        used_tokens.push_back(token);
-        return true;		// TODO should we replace token by new one?
+        m_used_tokens.emplace_back(std::move(token));
+        return false;		// TODO should we replace token by new one?
     }
-    m_wallet.m_tokens.push_back(token);
-    return true;
+    m_wallet.move_token(std::move(token));
+    return false;
 }
 
 void c_user::set_new_mint(std::string mintname, std::string pubkey, std::chrono::seconds exp_time) {
@@ -179,30 +177,37 @@ void c_user::set_new_mint(std::string mintname, std::string pubkey, std::chrono:
     m_mint = c_mint(mintname,pubkey,exp_time);
 }
 
+size_t c_user::clean_expired_tokens() {
+
+    size_t size_before = m_used_tokens.size();
+    size_t last_id = get_mint_last_expired_id();
+    m_used_tokens.erase(
+            std::remove_if(	m_used_tokens.begin(),
+                            m_used_tokens.end(),
+                            [&last_id] (const c_token &element) {
+                                    if(element.get_id() < last_id){
+                                        return true;
+                                    }
+                                    return false;
+                            }),
+            m_used_tokens.end());
+
+    size_t expired_amount = size_before - m_used_tokens.size();
+    return expired_amount;
+}
+
 size_t c_user::tokens_refresh() {
     size_t all_expired_tokens = 0;
     all_expired_tokens += m_mint.clean_expired_tokens();
     all_expired_tokens += m_wallet.clean_expired_tokens();
+    all_expired_tokens += clean_expired_tokens();
 
-    for(auto it = used_tokens.begin(); it != used_tokens.end();) {
-        if(it->get_expiration_date() < std::chrono::system_clock::now()) {
-            all_expired_tokens++;
-            std::cout << "User used tokens: removing deprecated token: ";
-            it->print(std::cout);
-            it = used_tokens.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
     return all_expired_tokens;
 }
 
 void c_user::emit_tokens (size_t amount) {
 	for(size_t i = 0; i < amount; ++i) {
-		c_token emitted_token = m_mint.emit_token();
-		m_wallet.add_token(emitted_token);
-        std::cout << m_username << " emited token with id: "  << emitted_token.get_id() << std::endl;
+        m_wallet.move_token(m_mint.emit_token());
     }
 }
 
@@ -224,7 +229,7 @@ void print_strBytes(const std::string& str) {
 	std::cout << std::endl;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////// bitwallet
+//////////////////////////////////////////////////////////////////////////////////////////////////// coinwallet
 
 void c_user::save_coinwallet(const std::string &filename) {
     m_wallet.save_to_file(filename);
@@ -234,8 +239,7 @@ void c_user::load_coinwallet(const std::string &filename) {
     m_wallet.load_from_file(filename);
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////// bitwallet
+//////////////////////////////////////////////////////////////////////////////////////////////////// bitwallet
 
 bool c_user::check_bitwallet() {
     return m_bitwallet.is_set();

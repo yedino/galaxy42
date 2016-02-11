@@ -46,7 +46,7 @@ bool test_all(int number_of_threads) {
     run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
     run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
     run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
-    run_suite_test(wallet_io,test_user_recieve_deprecated, 0, pequal);
+    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
 
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
@@ -218,8 +218,9 @@ bool test_bad_chainsign() {
 }
 
 bool test_convrt_tokenpacket() {
-
+ try {
     std::cout << "RUNNING TEST04 CONVERTING BETWEEN TOKEN<-->PACKET" << std::endl;
+
     c_user A("userA"), B("userB"), C("userC"), D("userD");
     A.emit_tokens(1);
 
@@ -227,7 +228,6 @@ bool test_convrt_tokenpacket() {
     B.send_token_bymethod(C);
     C.send_token_bymethod(D);
 
- try {
     std::string packet = D.get_token_packet(A.get_public_key(),1);
     c_token test_tok(packet);
     std::string packet_two = test_tok.to_packet();
@@ -242,17 +242,15 @@ bool test_convrt_tokenpacket() {
         throw std::logic_error(error);
     }
 
- } catch(std::exception &message) {
-    std::cerr << message.what() << std::endl;
+ } catch(std::exception &ec) {
+    std::cout << ec.what() << std::endl;
     return true; // error
  }
-
-    return false;
 }
 
 bool test_netuser() {
-    std::cout << "RUNNING_NETUSER_TEST" << std::endl;
   try {
+    std::cout << "RUNNING_NETUSER_TEST" << std::endl;
     std::string userA_name("testUser1");
     std::string userB_name("testUser2");
 
@@ -268,16 +266,16 @@ bool test_netuser() {
     B.print_status(std::cout);
 
     B.get_token_packet(A.get_public_key());	// is wallet empty?
+    return false;
   } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;
-        return 1;
+        return true;
   }
-    return 0;
 }
 
 bool test_rpcwallet() {
-    std::cout << "RUNNING_RPCWALLET_TEST" << std::endl;
   try {
+    std::cout << "RUNNING_RPCWALLET_TEST" << std::endl;
     c_user BitUser("namecoin_user");
     if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == false, "wallet should be unset here!") == pfailed) return true;
 
@@ -302,20 +300,19 @@ bool test_rpcwallet() {
 
     std::cout << "Your namecoin balance is: " << std::fixed << std::setprecision(8) <<
                  BitUser.get_bitwallet_balance() << std::endl;
-
+    return false;
   } catch(BitcoinException &btc_ec) {
         std::cout << btc_ec.getCode() << ": " << btc_ec.getMessage() << std::endl;
         std::cout << btc_ec.what() << std::endl;
-        return 1;
+        return true;
   }
-    return 0;
 }
 //////////////////////////////////////////////////////////////////////////////// WALLET_IO SUITE //////////////////////////////////////////////////////////////////////////
 
 bool test_wallet_expected_sender() {
+  try {
     std::cout << "RUNNING_WALLET_EXPECTED_SENDER_TEST" << std::endl;
 
-  try {
     std::string userA_name("MintWallet");
     std::string userB_name("thiefUser");
     std::string userC_name("WalletUser02");
@@ -329,20 +326,21 @@ bool test_wallet_expected_sender() {
     C.save_coinwallet("./wallet.dat");
     B.load_coinwallet("./wallet.dat");
 
-    // should detect bad expected sender
-    B.send_token_bymethod(A);
     C.send_token_bymethod(A);
+    if(B.send_token_bymethod(A)) { 	// should detect bad expected sender
+        return false;
+    }
+    return true;
   } catch(std::exception &ec) {
         std::cerr << ec.what() << std::endl;
-        return 1;
+        return true;
   }
-    return 0;
 }
 
 bool test_wallet_mint_check() {
+  try {
     std::cout << "RUNNING_WALLET_MINT_CHECK_TEST" << std::endl;
 
-  try {
     std::string userA_name("MintWallet");
     std::string userB_name("thiefUser");
     c_user A(userA_name);
@@ -356,17 +354,18 @@ bool test_wallet_mint_check() {
 
     // should detect stolen wallet database
     B.send_token_bymethod(A);
+    return false;
+
   } catch(std::exception &ec) {
         std::cerr << ec.what() << std::endl;
-        return 1;
+        return true;
   }
-    return 0;
 }
 
 int test_mint_token_expiration() {
+  try {
     std::cout << "RUNNING_WALLET_MINT_CHECK_TEST" << std::endl;
 
-  try {
     c_user A("A_user");
     A.set_new_mint("fast_tokens", A.get_public_key(), std::chrono::seconds(2));
 
@@ -376,15 +375,42 @@ int test_mint_token_expiration() {
     std::this_thread::sleep_for(std::chrono::seconds(2));
     int expiried_tokens = A.tokens_refresh();
     A.print_status(std::cout);		// now mint and wallet should be empty
+    if (run_suite_assert (wallet_io, A.get_mint_last_expired_id() == token_to_emit-1 ,
+                          "Last id should be different!") == pfailed) {
+        return true;
+    }
     return expiried_tokens;
-    if (run_suite_assert (wallet_io, A.get_mint_last_expired_id() == token_to_emit-1 , "Last id should be different!") == pfailed) return true;
+
   } catch(std::exception &ec) {
         std::cerr << ec.what() << std::endl;
         return true;	// test expect return 10 (5 copy in mint + 5 in wallet)
   }
 }
 
-bool test_user_recieve_deprecated() {
+bool test_recieve_deprecated_token() {
+  try {
+    std::cout << "RUNNING_RECIEVE_DEPRECATED_TOKEN" << std::endl;
 
-    return 0;
+    c_user A("A_mint_user");
+    c_user B("B_slow_user");
+    A.set_new_mint("fast_tokens", A.get_public_key(), std::chrono::seconds(4));
+
+    int token_to_emit = 1;
+    A.emit_tokens(token_to_emit);
+    A.print_status(std::cout);
+
+    A.send_token_bymethod(B);
+
+    std::this_thread::sleep_for(std::chrono::seconds(4));
+    A.print_status(std::cout);		// now mint and wallet should be empty
+
+    if(B.send_token_bymethod(A)) {		// deprecated token
+        return false;
+    }
+    return true;
+
+  } catch(std::exception &ec) {
+        std::cerr << ec.what() << std::endl;
+        return true;
+  }
 }

@@ -3,7 +3,7 @@
 c_evidences::c_evidences(c_ed25519 &ed) : m_edsigner(ed)
 { }
 
-bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &token_b) {
+bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &token_b) const {
 
     size_t tok_a_chain_size = token_a.get_chainsign_size();
     size_t tok_b_chain_size = token_b.get_chainsign_size();
@@ -89,28 +89,38 @@ bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &tok
     }
 }
 
-bool c_evidences::mint_check(const c_token &tok) {
+bool c_evidences::mint_check(const c_token &tok) const {
 
   try {
-    std::string expecting_mintname = tok.get_emiter_name();
+//    std::string expecting_mintname = tok.get_emiter_name();
     std::string expecting_mint_pubkey = tok.get_emiter_pubkey();
 
-    std::string inchain_mintname = tok.get_chainsign().at(0).m_signer;
+//    std::string inchain_username = tok.get_chainsign().at(0).m_signer;
     std::string inchain_mint_pubkey = tok.get_chainsign().at(0).m_signer_pubkey;
 
     if(expecting_mint_pubkey != inchain_mint_pubkey) {
         std::cout << "MINT_CHECK FAIL : bad mint pubkey" << std::endl;
-        return 1;
+        return true;
     }
-    else if(expecting_mintname != inchain_mintname) {
-        std::cout << "MINT_CHECK FAIL : bad mint name" << std::endl;
-        return 1;
-    }
+//    else if(expecting_mintname != inchain_mintname) {			// TODO inchain username that own mine and mintname could be different
+//        std::cout << "MINT_CHECK FAIL : bad mint name" << std::endl;
+//        return true;
+//    }
   } catch (std::out_of_range &ec) {
         std::cout << ec.what() << std::endl;
         std::cout << "You can't check mint with never used token" << std::endl;
-        return 0;
+        return false;
   }
     std::cout << "MINT_CHECK : ok" << std::endl;
-    return 0;
+    return false;
+}
+
+bool c_evidences::token_date(const c_token &tok) const {
+
+    if(tok.get_expiration_date() < std::chrono::system_clock::now()) {
+        std::cout << "token validate : BAD_TOKEN_DATE !!!" << std::endl;
+        std::cout << "Deprecated token : "; tok.print(std::cout,true);
+        return true;
+    }
+    return false;
 }

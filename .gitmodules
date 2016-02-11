@@ -1,3 +1,13 @@
 [submodule "antinet/src/antinet_sim/test/googletest"]
 	path = antinet/src/antinet_sim/test/googletest
-	url = https://github.com/google/googletest.git
+    url = https://github.com/google/googletest.git
+
+[submodule "antinet/doc_and_drafts/bit_payments/bitcoin-api-cpp"]
+    path = antinet/doc_and_drafts/bit_payments/bitcoin-api-cpp
+    url = https://github.com/minium/bitcoin-api-cpp.git
+    branch = master
+
+[submodule "doc_and_drafts/coin_signing/ptest"]
+    path = doc_and_drafts/coin_signing/ptest
+    url = https://github.com/pingwindyktator/ptest.git 
+    branch = crashey

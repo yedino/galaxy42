@@ -39,7 +39,7 @@ class c_netuser : public c_user {
     enum { max_length = 1024 };
     char data_[max_length];
 
-    vector<std::thread> m_threads;
+    std::vector<std::thread> m_threads;
     void threads_maker(unsigned);
     std::mutex dbg_mtx;
 };

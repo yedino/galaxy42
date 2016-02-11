@@ -13,35 +13,36 @@
 using std::string;
 using std::list;
 
-struct c_wallet {
-    list<c_token> m_tokens;
+class c_wallet {
+  public:
+    c_wallet ();
+    c_wallet (const string &);
+    c_wallet (string &&) noexcept;
 
-    c_wallet();
-    c_wallet(const string &);
+    /// keep_in_wallet = 1 means double spending try
+    /// should be used only in tests!
+    bool process_token () const;
+    c_token get_any_token (bool keep_in_wallet = 0);
+    size_t amount () const;
+    void move_token (c_token &&);
 
-    c_wallet(string &&) noexcept;
-
-    size_t amount() const;
+    size_t clean_expired_tokens ();
 
     /// verbouse == true : means that for each token all chainsign will be print
-    void print_wallet_status(std::ostream &, bool verbouse = 0) const;
-	void add_token (const c_token &);
-    bool process_token() const;
+    void print_wallet_status (std::ostream &, bool verbouse = 0) const;
 
-    size_t clean_expired_tokens();
-
-    void save_to_file(const std::string &filename);
-    void load_from_file(const std::string &filename);
+    void save_to_file (const std::string &filename);
+    void load_from_file (const std::string &filename);
 
     template<typename Archive>
-    void serialize(Archive &ar, const unsigned int version)
+    void serialize (Archive &ar, const unsigned int version)
     {
         ar & m_tokens;
     }
 
   private:
+    list<c_token> m_tokens;
     void remove_token (const c_token &);
-
 };
 
 
