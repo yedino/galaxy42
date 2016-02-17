@@ -33,7 +33,6 @@ size_t c_wallet::amount() const {
 }
 
 void c_wallet::move_token(c_token &&token) {
-    std::cout << "BUU" <<std::endl;
     m_tokens.emplace_back(std::move(token));
 }
 

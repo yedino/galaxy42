@@ -29,29 +29,33 @@ bool test_all(int number_of_threads) {
 
     int test_loop = 1000, msg_length = 64;
 
-    ptest::call_test(number_of_threads,
-                            [&number_of_threads, &test_loop, &msg_length] () {
-                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
-                            }
-                    );
+//    ptest::call_test(number_of_threads,
+//                            [&number_of_threads, &test_loop, &msg_length] () {
+//                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
+//                            }
+//                    );
 
-    run_suite_test(base_tests,test_readableEd, 0, pequal);
-    run_suite_test(base_tests,test_user_sending , 0, pequal);
-    run_suite_test(base_tests,test_many_users , 0, pequal);
+//    run_suite_test(base_tests,test_readableEd, 0, pequal);
+//    run_suite_test(base_tests,test_user_sending , 0, pequal);
+//    run_suite_test(base_tests,test_many_users , 0, pequal);
     run_suite_test(base_tests,test_cheater , 0, pequal);
-    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
-    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-    run_suite_test(base_tests,test_netuser, 0, pequal);
+    run_suite_test(base_tests,test_fast_cheater , 0, pequal);
+    run_suite_test(base_tests,test_malignant_cheater , 0, pequal);
+//    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+//    run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
+//    run_suite_test(base_tests,test_netuser, 0, pequal);
+    run_suite_test(base_tests,test_coinsign_error, 0, pequal);
 
-    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
-    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
-    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
-    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
 
-    //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
+//    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
+//    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
+//    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
+//    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
+
+//	  run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
 //    print_final_suite_result(many_ed_signing);
-//    print_final_suite_result(base_tests);
+    print_final_suite_result(base_tests);
 //    print_final_suite_result(bitwallet);
     print_final_suite_result(wallet_io);
 
@@ -100,7 +104,6 @@ bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_
     c_ed25519 edtest;
     std::string str_pubkey = edtest.get_public_key();
 
-
     for(size_t i = 1; i < signs_num; ++i) {
         const std::string message = generate_random_string(message_len);
         std::string sign = edtest.sign(message);
@@ -144,28 +147,77 @@ bool test_many_users () {
 }
 
 bool test_cheater() {
-
+  try {
     std::cout << "RUNNING TEST03 CHEATER" << std::endl;
-    c_user A("userA"), B("userB"), C("userC"), X("userX");
+    c_user A("userA"), B("userB"), C("userC"), D("userD"), X("userX");
     A.emit_tokens(1);
-
 
     A.send_token_bymethod(B);
     B.send_token_bymethod(C,1);
+    C.send_token_bymethod(D);
+    D.send_token_bymethod(X);
+    X.send_token_bymethod(A);
+
+    B.send_token_bymethod(D);
+    D.send_token_bymethod(B);
     B.send_token_bymethod(X);
-    X.send_token_bymethod(B);
-    B.send_token_bymethod(X);
-    X.send_token_bymethod(B);
-    B.send_token_bymethod(A);
-    C.send_token_bymethod(X);
     X.send_token_bymethod(A); // should detect cheater
 
-    A.emit_tokens(2);
-    B.emit_tokens(1);
-    B.send_token_bymethod(A);
     A.print_status(std::cout);
+  } catch (coinsign_error cec) {
+        std::cout << cec.what() << std::endl;
+        if(cec.get_code() == 15) {
+            return false;
+        }
+  }
+    return true;
+}
 
-    return false;
+bool test_fast_cheater() {
+
+  try {
+    std::cout << "RUNNING TEST03 CHEATER" << std::endl;
+    c_user A("userA"), B("userB");
+    A.emit_tokens(1);
+
+    A.send_token_bymethod(B);
+    B.send_token_bymethod(A,1);
+    B.send_token_bymethod(A); // should detect cheater B
+
+    A.print_status(std::cout);
+  } catch (coinsign_error cec) {
+        std::cout << cec.what() << std::endl;
+        if(cec.get_code() == 15) {
+            return false;
+        }
+  }
+    return true;
+}
+
+
+bool test_malignant_cheater() {
+  try {
+    std::cout << "RUNNING TEST03b MALIGNANT_CHEATER" << std::endl;
+    c_user A("userA"), B("userB"), C("userC"), D("userD"), X("userX");
+    A.emit_tokens(1);
+
+    throw(coinsign_error(14,"Errorrr"));
+    throw coinsign_error(14,"DOUBLE SPENDING - chaeter not found");
+
+    A.send_token_bymethod(B);
+    B.send_token_bymethod(C,1);
+    B.send_token_bymethod(C);
+    C.send_token_bymethod(A);
+    C.send_token_bymethod(A);	// detecting C as the cheater -- but the real cheater is B // TODO
+
+    A.print_status(std::cout);
+  } catch (coinsign_error &cec) {
+        std::cout << cec.what() << std::endl;
+        if(cec.get_code() == 15) {
+            return false;
+        }
+  }
+    return true;
 }
 
 bool test_bad_chainsign() {
@@ -327,11 +379,8 @@ bool test_wallet_expected_sender() {
     B.load_coinwallet("./wallet.dat");
 
     C.send_token_bymethod(A);
-    if(B.send_token_bymethod(A)) { 	// should detect bad expected sender
-        return false;
-    }
-    return true;
-  } catch(std::exception &ec) {
+    B.send_token_bymethod(A); 	// should detect bad expected sender
+  } catch(coinsign_error &ec) {
         std::cerr << ec.what() << std::endl;
         return true;
   }
@@ -354,12 +403,14 @@ bool test_wallet_mint_check() {
 
     // should detect stolen wallet database
     B.send_token_bymethod(A);
-    return false;
 
-  } catch(std::exception &ec) {
+  } catch(coinsign_error &ec) {
         std::cerr << ec.what() << std::endl;
-        return true;
+        if(ec.get_code() == 13){
+            return false;
+        }
   }
+    return true;
 }
 
 int test_mint_token_expiration() {
@@ -413,4 +464,16 @@ bool test_recieve_deprecated_token() {
         std::cerr << ec.what() << std::endl;
         return true;
   }
+}
+
+bool test_coinsign_error() {
+  try {
+    throw(coinsign_error(1,"error"));
+  } catch(coinsign_error &cec) {
+        std::cout << cec.what() << std::endl;
+        if(cec.get_code() == 1) {
+            return 0;
+        }
+  }
+    return 1;
 }

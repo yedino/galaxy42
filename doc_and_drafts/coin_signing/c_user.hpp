@@ -6,7 +6,9 @@
 #include "c_evidences.hpp"
 
 #include "c_mint.hpp"
+#include "coinsign_error.hpp"
 #include "../../crypto_ops/crypto/c_encryption.hpp"
+
 #include <string>
 #include <vector>
 #include <list>

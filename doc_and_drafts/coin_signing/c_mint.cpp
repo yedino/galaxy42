@@ -2,7 +2,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////// ID GENERATOR
 
-token_id_generator::token_id_generator () : id(0)
+token_id_generator::token_id_generator () : id(1)	// 1 instead of 0, becouse 0 is reserved for last expiried id
 { }
 
 size_t token_id_generator::generate_id() {
@@ -16,7 +16,7 @@ c_mint::c_mint (const std::string &mintname,
                 const std::chrono::seconds &exp_time) :	m_pubkey(pubkey),
                                                         m_mintname(mintname),
                                                         t_expiration_time(exp_time),
-                                                        m_last_expired_id(-1)
+                                                        m_last_expired_id(0)
 { }
 
 c_token c_mint::emit_token() {
@@ -61,7 +61,7 @@ size_t c_mint::clean_expired_tokens() {
     for(auto it = m_emited_tokens.begin(); it != m_emited_tokens.end();) {
         if(it->first.get_expiration_date() < std::chrono::system_clock::now()) {
             expired_amount++;
-            m_last_expired_id = std::max(static_cast<long>(it->first.get_id()),m_last_expired_id);
+            m_last_expired_id = std::max(it->first.get_id(),m_last_expired_id);
             std::cout << "Mint: removing deprecated token: ";
             it->first.print(std::cout);
 
@@ -74,6 +74,6 @@ size_t c_mint::clean_expired_tokens() {
     return expired_amount;
 }
 
-long c_mint::get_last_expired_id() const {
+size_t c_mint::get_last_expired_id() const {
     return m_last_expired_id;
 }

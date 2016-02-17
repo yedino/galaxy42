@@ -3,6 +3,7 @@
 
 #include "../../crypto_ops/crypto/c_encryption.hpp"
 #include "c_token.hpp"
+#include "coinsign_error.hpp"
 /***
  * Class that provide evidences methods
  * for ensuring transactions security

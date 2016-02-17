@@ -3,6 +3,56 @@
 c_evidences::c_evidences(c_ed25519 &ed) : m_edsigner(ed)
 { }
 
+namespace form_print {
+
+    int col_size = 15;
+
+    void target_print(const std::string &lt, const std::string &rt) {
+        int w1 = (2*col_size-lt.size())/2;
+        int w2 = (2*col_size-rt.size())/2-lt.size()/2;
+
+        if(lt.empty()) {
+            std::cout 	<< std::setw(w1+w2+1) << '[' << rt << ']';
+        }
+        else if(rt.empty()) {
+            std::cout 	<< std::setw(w1) << '[' << lt << ']';
+        }
+        else {
+            std::cout 	<< std::setw(w1) << '[' << lt << ']'
+                        << std::setw(w2) << '[' << rt << ']';
+        }
+        if(w1<1 || w2<1) {
+            std::cout 	<< " *PRETTY FORMATTING FAIL - " << w1 << " : " << w2 << " - "
+                        << " too long usernames or too small col_size - check it" << std::endl;
+        }
+        else {
+            std::cout << std::endl;
+        }
+    }
+
+    void arrow_print(bool left, bool right) {
+        if(left && !right) {
+            std::cout << std::setw(col_size) << '|' << std::endl;
+            std::cout << std::setw(col_size) << 'V' << std::endl;
+        }
+        else if(!left && right) {
+            std::cout << std::setw(2*col_size+1) << '|' << std::endl;
+            std::cout << std::setw(2*col_size+1) << 'V' << std::endl;
+        }
+        else if(left && right) {
+            std::cout << std::setw(col_size) << '|' << std::setw(col_size+1) << '|' << std::endl;
+            std::cout << std::setw(col_size) << 'V' << std::setw(col_size+1) << 'V' << std::endl;
+        }
+    }
+
+    void cheater_print(std::string &cheater) {
+        std::string l1 = "*** !!! DOUBLE SPENDING detected !!! ***";
+        std::string l2 = "*** !!! the CHEATER is: " + cheater + " !!! ***";
+        std::cout << std::setw(col_size*1.5 + l1.size()/2) << l1 << std::endl;
+        std::cout << std::setw(col_size*1.5 + l2.size()/2) << l2 << std::endl;
+    }
+}
+
 bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &token_b) const {
 
     size_t tok_a_chain_size = token_a.get_chainsign_size();
@@ -19,11 +69,12 @@ bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &tok
             bigger = 'b';
         }
     }
+
     // [A->B]   [B->C]   [C->D] token_a
     // [A->B]   [B->C]   [C->X] token_b if he cheated at end
 
     bool is_dbspend = false;
-    std::cout << "[TOKEN A]" << "\t[TOKEN B]\n";
+    form_print::target_print(std::string("TOKEN A"), std::string("TOKEN B"));
 
     auto tok_a_chain = token_a.get_chainsign();
     auto tok_b_chain = token_b.get_chainsign();
@@ -37,55 +88,69 @@ bool c_evidences::find_token_cheater (const c_token &token_a, const c_token &tok
                                            current_signature_a.m_msg,
                                            current_signature_a.m_signer_pubkey);
         if (!ok_sign_a) {
-            std::cout << "token in validate : BAD_SIGN !!!" << std::endl;
-            return false;
+            std::cout << "token validate : BAD_SIGN !!!" << std::endl;
+            throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
         }
 
-        std::cout << "[" << current_signature_a.m_signer << "]\t[" << current_signature_b.m_signer << "]\n"
-                  << "   |\t   |\n   V\t   V" << std::endl;
+        form_print::target_print(current_signature_a.m_signer, current_signature_b.m_signer);
+        form_print::arrow_print(true, true);
+
         if (current_signature_a != current_signature_b && !is_dbspend) {
-            std::cout << "*** !!! DOUBLE SPENDING detected !!!" << std::endl;
-            std::cout << "*** !!! the CHEATER is: " << current_signature_a.m_signer << std::endl;
+            form_print::cheater_print(current_signature_a.m_signer);
+            form_print::arrow_print(true, true);
             is_dbspend = true;
         }
     }
+    if(len_min == 2) {
+            std::string cheater = tok_a_chain[1].m_signer;
+            form_print::cheater_print(cheater);
+            is_dbspend = true;
+            if(!different_size) {
+                form_print::arrow_print(true,true);
+                form_print::target_print(tok_a_chain[0].m_signer,tok_b_chain[0].m_signer);
+            }
+            return true;
+    }
     if(different_size == false) {
-        std::cout << "[" << tok_a_chain[0].m_signer << "]\t["
-                  << tok_b_chain[0].m_signer << "]" << std::endl;
-        return true;
+        form_print::target_print(tok_a_chain[0].m_signer,tok_b_chain[0].m_signer);
+        if(is_dbspend) {
+            return true;
+        } else {
+            return false;
+        }
     } else if(bigger == 'a') {
-        std::cout << "   V\t" << tok_b_chain[0].m_signer << "]" << std::endl;
+        form_print::target_print("*!* COPIED *!*",tok_b_chain[0].m_signer);
+        form_print::arrow_print(true,false);
         for (auto pos=len_min; pos<len_max; ++pos) {
             auto &current_signature_a = tok_a_chain[pos];
-
 
             // we need to verify only new token A
             bool ok_sign_a = m_edsigner.verify(current_signature_a.m_msg_sign,
                                                current_signature_a.m_msg,
                                                current_signature_a.m_signer_pubkey);
             if (!ok_sign_a) {
-                std::cout << "token in validate : BAD_SIGN !!!" << std::endl;
-                return false;
+                std::cout << "token validate : BAD_SIGN !!!" << std::endl;
+                throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
             }
-            std::cout << "[" << current_signature_a.m_signer << "]\t" << "\t" << "\n"
-                      << "   |\t    \n   V\t    " << std::endl;
+
+            form_print::target_print(current_signature_a.m_signer,"");
+            form_print::arrow_print(true,false);
         }
-        std::cout << "[" << tok_a_chain[0].m_signer << "]\t"
-                  << "\t" << std::endl;
+        form_print::target_print(tok_a_chain[0].m_signer,"");
         return true;
     } else if(bigger == 'b') {
-        std::cout << "[" << tok_a_chain[0].m_signer << "]\t"
-                  << "   V" <<  std::endl;
+        form_print::target_print(tok_a_chain[0].m_signer,"*!* COPIED *!*");
+        form_print::arrow_print(false,true);
         for (auto pos=len_min; pos<len_max; ++pos) {
             auto &current_signature_b = tok_b_chain[pos];
 
-            std::cout << "\t[" << current_signature_b.m_signer << "]\n"
-                      << "   \t   |\n    \t   V" << std::endl;
+            form_print::target_print("",current_signature_b.m_signer);
+            form_print::arrow_print(false,true);
         }
-        std::cout << "\t[" << tok_b_chain[0].m_signer << "]" << std::endl;
+        form_print::target_print("",tok_b_chain[0].m_signer);
         return true;
     } else {
-        throw std::runtime_error("find_the_cheater: unexpected error");
+        throw std::logic_error("find_the_cheater: unexpected error");
     }
 }
 

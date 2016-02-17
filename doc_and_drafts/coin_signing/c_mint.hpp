@@ -28,12 +28,12 @@ class c_mint {
     bool check_isEmited (c_token &);
     size_t clean_expired_tokens ();
     void print_mint_status (std::ostream &os) const;
-    long get_last_expired_id () const;
+    size_t get_last_expired_id () const;
   private:
 	std::map<c_token, long long> m_emited_tokens;
     c_random_generator<long long> random_generator;
 
-    long m_last_expired_id;
+    size_t m_last_expired_id;
 
     /// expitation_time of token
     /// all token emited by this mint should have the same expiration time

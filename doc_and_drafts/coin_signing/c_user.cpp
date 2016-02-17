@@ -68,10 +68,10 @@ std::string c_user::get_token_packet(const std::string &user_pubkey, bool keep_i
 
     return packet;
 
-    } catch(std::string &message) {
-    std::cerr << message << std::endl;
-    std::string fail = "fail";
-    return fail;
+    } catch(const std::logic_error &l_err) {
+        std::cerr << l_err.what() << std::endl;
+        std::string fail = "fail";
+        return fail;
   }
 }
 
@@ -87,13 +87,14 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
         return true;
     }
     return false;
-  } catch(std::exception &ec) {
-    std::cerr << ec.what() << std::endl;
+  } catch(const std::logic_error &l_err) {
+        std::cerr << l_err.what() << std::endl;
   }
 }
 
 bool c_user::recieve_from_packet(std::string &packet) {
 
+  try {
     c_token tok(packet);
     if(recieve_token(tok)) {
         std::cout << "Fail to recieve token: token lost" << std::endl;
@@ -102,16 +103,20 @@ bool c_user::recieve_from_packet(std::string &packet) {
         return true;
     }
     return false;
+  } catch(const std::logic_error &l_err) {
+        std::cerr << l_err.what() << std::endl;
+  }
 }
 
 bool c_user::recieve_token (c_token &token) {
-    token.print(std::cout,1);
     std::cout << "Refreshing local tokens status before recieving new" << std::endl;
     tokens_refresh();
-    token.print(std::cout,1);
 
-    if(m_evidences.token_date(token) || m_evidences.mint_check(token)) {
-        return true;
+    if(m_evidences.token_date(token)) {
+        throw coinsign_error(12,"DEPRECATED TOKEN - bad token date");
+    }
+    if(m_evidences.mint_check(token)) {
+        throw coinsign_error(13,"MINT CHECK FAIL - bad mint public key");
     }
 	// check validity of the signatures chain
 	std::string expected_sender; // publickey
@@ -122,8 +127,12 @@ bool c_user::recieve_token (c_token &token) {
         bool ok_sign = m_edsigner.verify(current_signature.m_msg_sign,
 										 current_signature.m_msg,
 										 current_signature.m_signer_pubkey);
+        if (!ok_sign) {
+            std::cout << "token validate : BAD_SIGN !!!" << std::endl;
+            throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
+        }
 
-		std::string current_sender_in_coin = current_signature.m_signer_pubkey;
+        std::string current_sender_in_coin = current_signature.m_signer_pubkey;
 		std::string current_recipient_in_coin;
 
 		std::string delimeter = "|";
@@ -134,14 +143,9 @@ bool c_user::recieve_token (c_token &token) {
 
 		// [B->C] is the current sender B allowed to send,  check for error:
 		if ( (expected_sender_any) && current_sender_in_coin != expected_sender) {
-			std::cout << "expected sender ["<<expected_sender<<"] vs in-coin sender ["<<current_sender_in_coin<<"]" << std::endl;
-            std::cout << "token validate : BAD_EXPECTED_SENDER !!!" << std::endl;
-            return true;
-		}
-
-		if (!ok_sign) {
-			std::cout << "token validate : BAD_SIGN !!!" << std::endl;
-            return true;
+            std::cout << "expected sender [" << expected_sender <<
+                         "] vs in-coin sender [" << current_sender_in_coin << "]" << std::endl;
+            throw coinsign_error(10,"TOKEN VALIDATE FAIL - bad expected sender");
 		}
 
 		expected_sender = current_recipient_in_coin;
@@ -160,14 +164,17 @@ bool c_user::recieve_token (c_token &token) {
                 std::cout << "token validate : TOKEN_USED !!!" << std::endl;
                 if(!m_evidences.find_token_cheater(token, in)) {
                     std::cout << "can't find cheater" << std::endl;
+                    throw coinsign_error(14,"DOUBLE SPENDING - chaeter not found");
                 } else {
-                    return true;
+                    throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
                 }
             }
         }
+        std::cout << m_username << ": emplace back used token" << std::endl;
         m_used_tokens.emplace_back(std::move(token));
         return false;		// TODO should we replace token by new one?
     }
+    std::cout << m_username << ": move token to wallet" << std::endl;
     m_wallet.move_token(std::move(token));
     return false;
 }
@@ -186,6 +193,8 @@ size_t c_user::clean_expired_tokens() {
                             m_used_tokens.end(),
                             [&last_id] (const c_token &element) {
                                     if(element.get_id() < last_id){
+                                        std::cout << "User : remove deprecated token: "  << std::endl;
+                                        element.print(std::cout);
                                         return true;
                                     }
                                     return false;
