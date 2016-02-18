@@ -18,10 +18,10 @@ class token_id_generator {
 class c_mint {
   public:
     c_mint (const std::string &mintname,
-            const std::string &pubkey,
+            const ustring &pubkey,
             const std::chrono::seconds &exp_time = std::chrono::hours(72));
     std::string m_mintname;
-    std::string m_pubkey;
+    ustring m_pubkey;
 
     c_token emit_token ();
 

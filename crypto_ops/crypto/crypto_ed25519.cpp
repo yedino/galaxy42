@@ -2,7 +2,7 @@
 
 std::ostream &operator<< (std::ostream &os, const ustring &u) {
   for (auto &c : u)
-    os << setfill('0') << setw(2) << std::hex << short(c);
+    os << std::setfill('0') << std::setw(2) << std::hex << short(c);
 
   return os;
 }

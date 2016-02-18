@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <iomanip>
 #include "ed25519_src/ed25519.h"
 
 using ustring = std::basic_string<unsigned char>;

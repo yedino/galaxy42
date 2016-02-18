@@ -11,6 +11,7 @@ file(GLOB SOURCE_PTEST "ptest/*.cpp")
 set(SOURCE_FILES main.cpp tests.cpp c_token.cpp c_wallet.cpp c_mint.cpp c_user.cpp c_netuser.cpp
         c_rpc_bitwallet.cpp c_evidences.cpp
         ../../crypto_ops/crypto/c_encryption.cpp
+        ../../crypto_ops/crypto/crypto_ed25519.cpp
         ../../crypto_ops/crypto/sha_src/sha512.cpp
         ${SOURCE_PTEST}
         ${SOURCE_ED}

@@ -52,14 +52,14 @@ int main (int argc, char *argv[]) {
 		ios_base::sync_with_stdio(false);
 
 		if (argc <= 1) {
-			cout << "please define number of theards to run test\n";
+            std::cout << "please define number of theards to run test" << std::endl;
 			return 0;
 		}
 
         int number_of_threads = atoi(argv[1]);
 
 		if (number_of_threads <= 0) {
-			cout << "please define correct number of theards to run test\n";
+            std::cout << "please define correct number of theards to run test" << std::endl;
 			return 1;
         }
 
@@ -70,6 +70,6 @@ int main (int argc, char *argv[]) {
         return 0;
 
 	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << "\n";
+        std::cerr << "MainException: " << e.what() << std::endl;
 	}
 }

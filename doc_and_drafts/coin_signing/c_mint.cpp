@@ -12,7 +12,7 @@ size_t token_id_generator::generate_id() {
 ////////////////////////////////////////////////////////////////////////////////////////////// MINT
 
 c_mint::c_mint (const std::string &mintname,
-                const std::string &pubkey,
+                const ustring &pubkey,
                 const std::chrono::seconds &exp_time) :	m_pubkey(pubkey),
                                                         m_mintname(mintname),
                                                         t_expiration_time(exp_time),

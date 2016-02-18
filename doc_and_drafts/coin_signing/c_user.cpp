@@ -2,7 +2,7 @@
 void print_strBytes(const std::string& str);
 
 c_user::c_user (std::string& username) :
-    m_evidences(m_edsigner),
+    m_edkeys(crypto_ed25519::generate_key()),
     m_mint(username,get_public_key())	// mintname could by other than username
 {
     m_username.swap(username);
@@ -13,7 +13,7 @@ c_user::c_user (std::string& username) :
 }
 
 c_user::c_user (string &&username) :
-    m_evidences(m_edsigner),
+    m_edkeys(crypto_ed25519::generate_key()),
     m_mint(username,get_public_key())	// mintname could by other than username
 {
     m_username.swap(username);
@@ -27,8 +27,8 @@ string c_user::get_username() const {
 	return m_username;
 }
 
-string c_user::get_public_key() const{
-    return m_edsigner.get_public_key();
+ustring c_user::get_public_key() const{
+    return m_edkeys.public_key;
 }
 
 double c_user::get_rep() {
@@ -43,7 +43,7 @@ void c_user::print_used_status(std::ostream &os) const {
 }
 
 
-c_token c_user::process_token_tosend(const std::string &user_pubkey, bool keep_in_wallet) {
+c_token c_user::process_token_tosend(const ustring &user_pubkey, bool keep_in_wallet) {
     std::lock_guard<std::mutex> lck (m_mtx);
     if(m_wallet.process_token()) {
         std::string msg = m_username + " can't send token -- transaction abort";
@@ -51,14 +51,16 @@ c_token c_user::process_token_tosend(const std::string &user_pubkey, bool keep_i
     }
     c_token tok = m_wallet.get_any_token(keep_in_wallet); // take any token for now [TODO]
 
-    std::string msg = std::to_string(tok.get_id()) + "|" + user_pubkey;
-    std::string msg_sign = m_edsigner.sign(msg);
+    std::stringstream msg_stream;
+    msg_stream << tok.get_id() << '|' << user_pubkey;
+    std::string msg = msg_stream.str();
+    ustring msg_sign = crypto_ed25519::sign(msg,m_edkeys);
 
     tok.add_chain_element(c_chainsign_element(msg, msg_sign, m_username, get_public_key()));
     return tok;
 }
 
-std::string c_user::get_token_packet(const std::string &user_pubkey, bool keep_in_wallet) {
+std::string c_user::get_token_packet(const ustring &user_pubkey, bool keep_in_wallet) {
 
   try {
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
@@ -112,34 +114,37 @@ bool c_user::recieve_token (c_token &token) {
     std::cout << "Refreshing local tokens status before recieving new" << std::endl;
     tokens_refresh();
 
-    if(m_evidences.token_date(token)) {
+    if(coinsign_evidences::token_date(token)) {
         throw coinsign_error(12,"DEPRECATED TOKEN - bad token date");
     }
-    if(m_evidences.mint_check(token)) {
+    if(coinsign_evidences::mint_check(token)) {
         throw coinsign_error(13,"MINT CHECK FAIL - bad mint public key");
     }
 	// check validity of the signatures chain
-	std::string expected_sender; // publickey
+    ustring expected_sender; // publickey
 	bool expected_sender_any=false; // do we expecected sender
 
 	// [A->B]   [B->C]   [C->D]
     for (auto &current_signature : token.get_chainsign()) {
-        bool ok_sign = m_edsigner.verify(current_signature.m_msg_sign,
-										 current_signature.m_msg,
-										 current_signature.m_signer_pubkey);
+        bool ok_sign = crypto_ed25519::verify_signature(current_signature.m_msg,
+                                                        current_signature.m_msg_sign,
+                                                        current_signature.m_signer_pubkey);
         if (!ok_sign) {
             std::cout << "token validate : BAD_SIGN !!!" << std::endl;
             throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
         }
 
-        std::string current_sender_in_coin = current_signature.m_signer_pubkey;
-		std::string current_recipient_in_coin;
+        ustring current_sender_in_coin = current_signature.m_signer_pubkey;
+        ustring current_recipient_in_coin;
 
 		std::string delimeter = "|";
 		std::size_t found = current_signature.m_msg.find(delimeter)+1; // +1 to avoid delimeter
-		if (found != std::string::npos) {
-			current_recipient_in_coin = current_signature.m_msg.substr(found).c_str();
-		}
+        if (found != std::string::npos) {
+            std::stringstream in_hex;
+            in_hex << current_signature.m_msg.substr(found);
+            in_hex >> current_recipient_in_coin;
+          //  current_recipient_in_coin << current_signature.m_msg.substr(found);
+        }
 
 		// [B->C] is the current sender B allowed to send,  check for error:
 		if ( (expected_sender_any) && current_sender_in_coin != expected_sender) {
@@ -162,7 +167,7 @@ bool c_user::recieve_token (c_token &token) {
         for (auto &in : m_used_tokens) { // is this token used?
             if (in == token) {
                 std::cout << "token validate : TOKEN_USED !!!" << std::endl;
-                if(!m_evidences.find_token_cheater(token, in)) {
+                if(!coinsign_evidences::find_token_cheater(token, in)) {
                     std::cout << "can't find cheater" << std::endl;
                     throw coinsign_error(14,"DOUBLE SPENDING - chaeter not found");
                 } else {
@@ -179,7 +184,7 @@ bool c_user::recieve_token (c_token &token) {
     return false;
 }
 
-void c_user::set_new_mint(std::string mintname, std::string pubkey, std::chrono::seconds exp_time) {
+void c_user::set_new_mint(std::string mintname, ustring pubkey, std::chrono::seconds exp_time) {
 
     m_mint = c_mint(mintname,pubkey,exp_time);
 }

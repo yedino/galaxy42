@@ -3,14 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN HEADER
 
 c_token_header::c_token_header (const std::string &mintname,
-                  const std::string &mint_pubkey,
+                  const ustring &mint_pubkey,
                   const size_t id,
                   long long password,
-                  const std::chrono::time_point<std::chrono::system_clock> expiration_date) :	m_mintname(mintname),
-                                                                                                m_mint_pubkey(mint_pubkey),
-                                                                                                m_id(id),
-                                                                                                m_password(password),
-                                                                                                m_expiration_date(expiration_date)
+                  const std::chrono::time_point<std::chrono::system_clock> expiration_date) : m_mintname(mintname),
+                                                                                              m_mint_pubkey(mint_pubkey),
+                                                                                              m_id(id),
+                                                                                              m_password(password),
+                                                                                              m_expiration_date(expiration_date)
 { }
 
 void c_token_header::print(std::ostream &os) const {
@@ -28,12 +28,12 @@ void c_token_header::print(std::ostream &os) const {
 ////////////////////////////////////////////////////////////////////////////////////////////// CHAIN ELEMENT
 
 c_chainsign_element::c_chainsign_element (const std::string msg,
-                                          const std::string msg_sign,
+                                          const ustring msg_sign,
                                           const std::string signer,
-                                          const std::string signer_pubkey) : 	m_msg(msg),
-                                                                                m_msg_sign(msg_sign),
-                                                                                m_signer(signer),
-                                                                                m_signer_pubkey(signer_pubkey)
+                                          const ustring signer_pubkey) : m_msg(msg),
+                                                                         m_msg_sign(msg_sign),
+                                                                         m_signer(signer),
+                                                                         m_signer_pubkey(signer_pubkey)
 { }
 
 c_chainsign_element::c_chainsign_element (const std::string &packet) {
@@ -117,7 +117,7 @@ std::string c_token::get_emiter_name() const {
     return m_header.m_mintname;
 }
 
-std::string c_token::get_emiter_pubkey() const {
+ustring c_token::get_emiter_pubkey() const {
     return m_header.m_mint_pubkey;
 }
 
