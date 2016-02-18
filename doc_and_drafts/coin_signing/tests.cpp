@@ -36,21 +36,21 @@ bool test_all(int number_of_threads) {
 //                    );
 
 //    run_suite_test(base_tests,test_readableEd, 0, pequal);
-    run_suite_test(base_tests,test_user_sending , 0, pequal);
-    run_suite_test(base_tests,test_many_users , 0, pequal);
-    run_suite_test(base_tests,test_cheater , 0, pequal);
-    run_suite_test(base_tests,test_fast_cheater , 0, pequal);
+//    run_suite_test(base_tests,test_user_sending , 0, pequal);
+//    run_suite_test(base_tests,test_many_users , 0, pequal);
+//    run_suite_test(base_tests,test_cheater , 0, pequal);
+//    run_suite_test(base_tests,test_fast_cheater , 0, pequal);
 //    run_suite_test(base_tests,test_malignant_cheater , 0, pequal);
-    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+//    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
     run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-    run_suite_test(base_tests,test_netuser, 0, pequal);
-    run_suite_test(base_tests,test_coinsign_error, 0, pequal);
+//    run_suite_test(base_tests,test_netuser, 0, pequal);
+//    run_suite_test(base_tests,test_coinsign_error, 0, pequal);
 
 
-    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
-    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
-    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
-    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
+//    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
+//    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
+//    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
+//    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
 
     // to pass this test running ./bitcoind or ./bitccoin-qt on your mashine is required
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
@@ -282,7 +282,7 @@ bool test_convrt_tokenpacket() {
     c_token test_tok(packet);
     std::string packet_two = test_tok.to_packet();
 
-    if(packet == packet_two) {
+    if(packet != packet_two) {
         return false;
     }
     else {

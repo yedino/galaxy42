@@ -27,7 +27,7 @@ string c_user::get_username() const {
 	return m_username;
 }
 
-ustring c_user::get_public_key() const{
+ed_key c_user::get_public_key() const{
     return m_edkeys.public_key;
 }
 
@@ -43,7 +43,7 @@ void c_user::print_used_status(std::ostream &os) const {
 }
 
 
-c_token c_user::process_token_tosend(const ustring &user_pubkey, bool keep_in_wallet) {
+c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wallet) {
     std::lock_guard<std::mutex> lck (m_mtx);
     if(m_wallet.process_token()) {
         std::string msg = m_username + " can't send token -- transaction abort";
@@ -54,13 +54,13 @@ c_token c_user::process_token_tosend(const ustring &user_pubkey, bool keep_in_wa
     std::stringstream msg_stream;
     msg_stream << tok.get_id() << '|' << user_pubkey;
     std::string msg = msg_stream.str();
-    ustring msg_sign = crypto_ed25519::sign(msg,m_edkeys);
+    ed_key msg_sign = crypto_ed25519::sign(msg,m_edkeys);
 
     tok.add_chain_element(c_chainsign_element(msg, msg_sign, m_username, get_public_key()));
     return tok;
 }
 
-std::string c_user::get_token_packet(const ustring &user_pubkey, bool keep_in_wallet) {
+std::string c_user::get_token_packet(const ed_key &user_pubkey, bool keep_in_wallet) {
 
   try {
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
@@ -121,7 +121,7 @@ bool c_user::recieve_token (c_token &token) {
         throw coinsign_error(13,"MINT CHECK FAIL - bad mint public key");
     }
 	// check validity of the signatures chain
-    ustring expected_sender; // publickey
+    ed_key expected_sender; // publickey
 	bool expected_sender_any=false; // do we expecected sender
 
 	// [A->B]   [B->C]   [C->D]
@@ -134,8 +134,8 @@ bool c_user::recieve_token (c_token &token) {
             throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
         }
 
-        ustring current_sender_in_coin = current_signature.m_signer_pubkey;
-        ustring current_recipient_in_coin;
+        ed_key current_sender_in_coin = current_signature.m_signer_pubkey;
+        ed_key current_recipient_in_coin;
 
 		std::string delimeter = "|";
 		std::size_t found = current_signature.m_msg.find(delimeter)+1; // +1 to avoid delimeter
@@ -147,7 +147,7 @@ bool c_user::recieve_token (c_token &token) {
         }
 
 		// [B->C] is the current sender B allowed to send,  check for error:
-		if ( (expected_sender_any) && current_sender_in_coin != expected_sender) {
+        if (expected_sender_any && !(current_sender_in_coin == expected_sender)) {
             std::cout << "expected sender [" << expected_sender <<
                          "] vs in-coin sender [" << current_sender_in_coin << "]" << std::endl;
             throw coinsign_error(10,"TOKEN VALIDATE FAIL - bad expected sender");
@@ -184,7 +184,7 @@ bool c_user::recieve_token (c_token &token) {
     return false;
 }
 
-void c_user::set_new_mint(std::string mintname, ustring pubkey, std::chrono::seconds exp_time) {
+void c_user::set_new_mint(std::string mintname, ed_key pubkey, std::chrono::seconds exp_time) {
 
     m_mint = c_mint(mintname,pubkey,exp_time);
 }

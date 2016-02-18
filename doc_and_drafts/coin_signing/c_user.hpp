@@ -24,13 +24,13 @@ class c_user {
     c_user (std::string &&);
 
     std::string get_username () const;
-    ustring get_public_key () const;
+    ed_key get_public_key () const;
     double get_rep ();		///< normalize reputation to 0-100 value, approximated by atan()
 
     /// keep_in_wallet = 1 means double spending try
     /// should be used only in tests!
     bool send_token_bymethod (c_user &, bool keep_in_wallet = 0);
-    std::string get_token_packet (const ustring &user_pubkey, bool keep_in_wallet = 0);
+    std::string get_token_packet (const ed_key &user_pubkey, bool keep_in_wallet = 0);
 
     bool recieve_from_packet (std::string &);
     bool recieve_token (c_token &token);
@@ -40,7 +40,7 @@ class c_user {
     void print_status (std::ostream &) const;
 
     // mint
-    void set_new_mint (std::string mintname, ustring pubkey, std::chrono::seconds exp_time = std::chrono::hours(72));
+    void set_new_mint (std::string mintname, ed_key pubkey, std::chrono::seconds exp_time = std::chrono::hours(72));
     void emit_tokens (size_t);
     long get_mint_last_expired_id () const;
 
@@ -67,7 +67,7 @@ class c_user {
 
     double m_reputation;
 
-    c_token process_token_tosend (const ustring &, bool fake = 0);
+    c_token process_token_tosend (const ed_key &, bool fake = 0);
 
     std::mutex m_mtx;
 };

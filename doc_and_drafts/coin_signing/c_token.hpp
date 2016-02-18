@@ -17,7 +17,7 @@
 struct c_token_header {
     c_token_header () = default;
     c_token_header (const std::string &mintname,
-                    const ustring &mint_pubkey,
+                    const ed_key &mint_pubkey,
                     const size_t id,
                     const long long password,
                     const std::chrono::time_point<std::chrono::system_clock> expiration_date);
@@ -26,14 +26,14 @@ struct c_token_header {
 
     size_t m_id;
     std::string m_mintname;
-    ustring m_mint_pubkey;
+    ed_key m_mint_pubkey;
     long long m_password;
     std::chrono::time_point<std::chrono::system_clock> m_expiration_date;
 
     template <typename Archive>
     void serialize(Archive &ar, const unsigned version) {
         ar & m_mintname;
-        ar & boost::serialization::make_binary_object (&m_mint_pubkey,m_mint_pubkey.size());
+        ar & m_mint_pubkey;
         ar & m_id;
         ar & m_password;
         ar & boost::serialization::make_binary_object (&m_expiration_date,sizeof(m_expiration_date));
@@ -42,22 +42,22 @@ struct c_token_header {
 
 struct c_chainsign_element {
     c_chainsign_element () = default;
-    c_chainsign_element (const std::string, const ustring, const std::string, const ustring);
+    c_chainsign_element (const std::string, const ed_key, const std::string, const ed_key);
     c_chainsign_element (const std::string &);	// deserialize chainelement from packet
 
     std::string m_msg;
-    ustring m_msg_sign;
+    ed_key m_msg_sign;
     std::string m_signer;
-    ustring m_signer_pubkey;
+    ed_key m_signer_pubkey;
 
     void print(std::ostream &) const;
 
     template <typename Archive>
     void serialize(Archive &ar, const unsigned version) {
         ar & m_msg;
-        ar & boost::serialization::make_binary_object (&m_msg_sign,m_msg_sign.size());
+        ar & m_msg_sign;
         ar & m_signer;
-        ar & boost::serialization::make_binary_object (&m_signer_pubkey,m_signer_pubkey.size());
+        ar & m_signer_pubkey,m_signer_pubkey;
     }
 };
 
@@ -71,7 +71,7 @@ class c_token {
     std::string to_packet ();	///< serialize token
 
     std::string get_emiter_name () const;
-    ustring get_emiter_pubkey () const;
+    ed_key get_emiter_pubkey () const;
     size_t get_id () const;
     std::chrono::time_point<std::chrono::system_clock>  get_expiration_date () const;
 

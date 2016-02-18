@@ -24,7 +24,7 @@ class c_netuser : public c_user {
     void create_server();
 
 	// protocol functions
-    ustring get_public_key_resp(ip::tcp::socket &socket_); ///< @param socket_ is connected socket, @return remote public key
+    ed_key get_public_key_resp(ip::tcp::socket &socket_); ///< @param socket_ is connected socket, @return remote public key
 	void send_public_key_req(ip::tcp::socket &socket_); ///< @param socket_ is connected socket
 	void send_public_key_resp(ip::tcp::socket &socket_); ///< @param socket_ is connected socket
 	void send_coin(ip::tcp::socket &socket_, const std::string &coin_data); ///< send one coin via connected @param socket_

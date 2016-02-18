@@ -15,7 +15,7 @@ c_netuser::c_netuser(std::string &username, int port) : c_user(username),
 }
 
 
-ustring c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
+ed_key c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
 	boost::system::error_code ec;
@@ -37,10 +37,10 @@ ustring c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 
 	DBG_MTX(dbg_mtx, "read public key data");
     recieved_bytes = socket_.read_some(buffer(pub_key_data.get(), key_size), ec);
-    DBG_MTX(dbg_mtx, "data:" << recieved_bytes << ":[" << ustring(pub_key_data.get(),recieved_bytes) << "]");
+    DBG_MTX(dbg_mtx, "data:" << recieved_bytes << ":[" << ed_key(pub_key_data.get(),recieved_bytes) << "]");
     assert(recieved_bytes == key_size);
 
-    ustring pub_key(pub_key_data.get(), key_size);
+    ed_key pub_key(pub_key_data.get(), key_size);
 	DBG_MTX(dbg_mtx, "END");
 	return pub_key;
 }
@@ -63,14 +63,14 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
 	DBG_MTX(dbg_mtx, "send header");
 	socket_.write_some(buffer(header, 2), ec);
 	//uint32_t packet_size = ed25519_sizes::pub_key_size;
-    ustring packet = get_public_key();
+    ed_key packet = get_public_key();
 	uint32_t packet_size = packet.size();
 	// TODO send binary data
 	DBG_MTX(dbg_mtx,"send public key size" << "[" << packet_size << "]");
     socket_.write_some(boost::asio::buffer(&packet_size, 4), ec);
 
     DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
-    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size), ec);
+    socket_.write_some(boost::asio::buffer(packet.m_key.c_str(), packet_size), ec);
     DBG_MTX(dbg_mtx,"end of sending public key");
 }
 
@@ -130,7 +130,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
 
 	DBG_MTX(dbg_mtx, "getting remote public key");
 	send_public_key_req(socket_);
-    ustring remote_public_key(get_public_key_resp(socket_));
+    ed_key remote_public_key(get_public_key_resp(socket_));
 	DBG_MTX(dbg_mtx, "remote public key " << remote_public_key);
 
     std::string packet = get_token_packet(remote_public_key);

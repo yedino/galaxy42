@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN HEADER
 
 c_token_header::c_token_header (const std::string &mintname,
-                  const ustring &mint_pubkey,
+                  const ed_key &mint_pubkey,
                   const size_t id,
                   long long password,
                   const std::chrono::time_point<std::chrono::system_clock> expiration_date) : m_mintname(mintname),
@@ -28,9 +28,9 @@ void c_token_header::print(std::ostream &os) const {
 ////////////////////////////////////////////////////////////////////////////////////////////// CHAIN ELEMENT
 
 c_chainsign_element::c_chainsign_element (const std::string msg,
-                                          const ustring msg_sign,
+                                          const ed_key msg_sign,
                                           const std::string signer,
-                                          const ustring signer_pubkey) : m_msg(msg),
+                                          const ed_key signer_pubkey) : m_msg(msg),
                                                                          m_msg_sign(msg_sign),
                                                                          m_signer(signer),
                                                                          m_signer_pubkey(signer_pubkey)
@@ -117,7 +117,7 @@ std::string c_token::get_emiter_name() const {
     return m_header.m_mintname;
 }
 
-ustring c_token::get_emiter_pubkey() const {
+ed_key c_token::get_emiter_pubkey() const {
     return m_header.m_mint_pubkey;
 }
 

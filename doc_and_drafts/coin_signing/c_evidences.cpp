@@ -157,12 +157,12 @@ namespace coinsign_evidences {
 
   try {
     //    std::string expecting_mintname = tok.get_emiter_name();
-        ustring expecting_mint_pubkey = tok.get_emiter_pubkey();
+        ed_key expecting_mint_pubkey = tok.get_emiter_pubkey();
 
     //    std::string inchain_username = tok.get_chainsign().at(0).m_signer;
-        ustring inchain_mint_pubkey = tok.get_chainsign().at(0).m_signer_pubkey;
+        ed_key inchain_mint_pubkey = tok.get_chainsign().at(0).m_signer_pubkey;
 
-        if(expecting_mint_pubkey != inchain_mint_pubkey) {
+        if(!(expecting_mint_pubkey == inchain_mint_pubkey)) {
             std::cout << "MINT_CHECK FAIL : bad mint pubkey" << std::endl;
             return true;
         }
