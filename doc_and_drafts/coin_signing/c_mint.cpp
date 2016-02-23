@@ -36,12 +36,29 @@ c_token c_mint::emit_token() {
 	return token;
 }
 
-bool c_mint::check_isEmited(c_token &token) {
-    if (m_emited_tokens.find(token) != m_emited_tokens.end()) {
+bool c_mint::check_is_emited(c_token &token) {
+    if(m_emited_tokens.find(token) != m_emited_tokens.end()) {
         std::cout << "Token emited here!" << std::endl;
 		return true;
 	}
 	return false;
+}
+
+bool c_mint::get_used_token (c_token &token) {
+
+    auto in_it = std::find(m_used_tokens.begin(),m_used_tokens.end(), token);
+    if(in_it != m_used_tokens.end()) {
+        if(!coinsign_evidences::find_token_cheater(token, *in_it)) {
+            std::cout << "can't find cheater" << std::endl;
+            throw coinsign_error(14,"DOUBLE SPENDING - chaeter not found");
+        } else {
+            throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
+        }
+    }
+    std::cout << m_mintname << ": emplace back used token" << std::endl;
+    m_used_tokens.emplace_back(std::move(token));
+
+    return false;
 }
 
 void c_mint::print_mint_status(std::ostream &os) const {
@@ -56,7 +73,7 @@ long long c_mint::generate_password() {
     return random_generator.get_random(sizeof(long long));
 }
 
-size_t c_mint::clean_expired_tokens() {
+size_t c_mint::clean_expired_emited() {
 
     size_t expired_amount = 0;
     // We must use non pretty loop here, becouse std::remove_if don't working with map
@@ -74,6 +91,27 @@ size_t c_mint::clean_expired_tokens() {
             ++it;
         }
     }
+    return expired_amount;
+}
+
+size_t c_mint::clean_expired_used() {
+
+    size_t size_before = m_used_tokens.size();
+    size_t last_id = m_last_expired_id;
+    m_used_tokens.erase(
+            std::remove_if(	m_used_tokens.begin(),
+                            m_used_tokens.end(),
+                            [&last_id] (const c_token &element) {
+                                    if(element.get_id() < last_id){
+                                        std::cout << "User : remove deprecated token: " << std::endl;
+                                        element.print(std::cout);
+                                        return true;
+                                    }
+                                    return false;
+                            }),
+            m_used_tokens.end());
+
+    size_t expired_amount = size_before - m_used_tokens.size();
     return expired_amount;
 }
 

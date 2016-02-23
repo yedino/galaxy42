@@ -3,6 +3,8 @@
 
 #include <chrono>
 #include "c_token.hpp"
+#include "c_evidences.hpp"
+#include "coinsign_error.hpp"
 #include "../../crypto_ops/crypto/c_random_generator.hpp"
 #include <map>
 #include <list>
@@ -26,8 +28,16 @@ class c_mint {
 
     c_token emit_token ();
 
-    bool check_isEmited (c_token &);
-    size_t clean_expired_tokens ();
+    bool check_is_emited (c_token &);
+
+    /// get back used token
+    /// run find_cheater_token evidence test when double spending is detected
+    /// return false if token is OK
+    /// throw coin_error expection for cheater finding
+    bool get_used_token (c_token &);
+
+    size_t clean_expired_emited ();
+    size_t clean_expired_used ();
     void print_mint_status (std::ostream &os) const;
     size_t get_last_expired_id () const;
   private:

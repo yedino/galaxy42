@@ -44,6 +44,8 @@ size_t c_wallet::clean_expired_tokens() {
                             m_tokens.end(),
                             [] (const c_token &element) {
                                     if(element.get_expiration_date() < std::chrono::system_clock::now()){
+                                        std::cout << "Wallet : remove deprecated token: "  << std::endl;
+                                        element.print(std::cout);
                                         return true;
                                     }
                                     return false;

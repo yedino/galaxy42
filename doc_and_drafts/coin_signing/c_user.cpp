@@ -35,9 +35,9 @@ double c_user::get_rep() {
 	return atan(m_reputation)*100*(2/M_PI);
 }
 
-void c_user::print_used_status(std::ostream &os) const {
-    os << "Amount of used tokens: " << m_used_tokens.size() << std::endl;
-    for(auto &tok : m_used_tokens) {
+void c_user::print_seen_status(std::ostream &os) const {
+    os << "Amount of used tokens: " << m_seen_tokens.size() << std::endl;
+    for(auto &tok : m_seen_tokens) {
         os << "Id: [" << tok.get_id() << "], Size: [" << tok.get_size() << "B: ]" << std::endl;
     }
 }
@@ -163,21 +163,20 @@ bool c_user::recieve_token (c_token &token) {
     //std::cout << "token validate : OK" << std::endl;
     //std::cout << "size of this token : " << token.get_size() << std::endl;
 
-    if (m_mint.check_isEmited(token)) { // is this token emitted by me?
-        for (auto &in : m_used_tokens) { // is this token used?
+    if (m_mint.check_is_emited(token)) { // is this token emitted by me?
+        return m_mint.get_used_token(token);
+
+    } else {
+        for (auto &in : m_seen_tokens) { // is this token used?
             if (in == token) {
-                std::cout << "token validate : TOKEN_USED !!!" << std::endl;
-                if(!coinsign_evidences::find_token_cheater(token, in)) {
-                    std::cout << "can't find cheater" << std::endl;
-                    throw coinsign_error(14,"DOUBLE SPENDING - chaeter not found");
-                } else {
+                //std::cout << "TOKEN_SEEN - checking is it double spend" << std::endl;
+                if(coinsign_evidences::simple_malignant_cheater(token, in)) {
+                    std::cout << "TOKEN_SEEN - find malignant cheater" << std::endl;
                     throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
                 }
             }
         }
-        std::cout << m_username << ": emplace back used token" << std::endl;
-        m_used_tokens.emplace_back(std::move(token));
-        return false;		// TODO should we replace token by new one?
+        m_seen_tokens.push_back(token);
     }
     //std::cout << m_username << ": move token to wallet" << std::endl;
     m_wallet.move_token(std::move(token));
@@ -191,28 +190,28 @@ void c_user::set_new_mint(std::string mintname, ed_key pubkey, std::chrono::seco
 
 size_t c_user::clean_expired_tokens() {
 
-    size_t size_before = m_used_tokens.size();
-    size_t last_id = get_mint_last_expired_id();
-    m_used_tokens.erase(
-            std::remove_if(	m_used_tokens.begin(),
-                            m_used_tokens.end(),
-                            [&last_id] (const c_token &element) {
-                                    if(element.get_id() < last_id){
-                                        std::cout << "User : remove deprecated token: "  << std::endl;
+    size_t size_before = m_seen_tokens.size();
+    m_seen_tokens.erase(
+            std::remove_if(	m_seen_tokens.begin(),
+                            m_seen_tokens.end(),
+                            [] (const c_token &element) {
+                                    if(element.get_expiration_date() < std::chrono::system_clock::now()) {
+                                        std::cout << "User : remove seen deprecated token: "  << std::endl;
                                         element.print(std::cout);
                                         return true;
                                     }
                                     return false;
                             }),
-            m_used_tokens.end());
+            m_seen_tokens.end());
 
-    size_t expired_amount = size_before - m_used_tokens.size();
+    size_t expired_amount = size_before - m_seen_tokens.size();
     return expired_amount;
 }
 
 size_t c_user::tokens_refresh() {
     size_t all_expired_tokens = 0;
-    all_expired_tokens += m_mint.clean_expired_tokens();
+    all_expired_tokens += m_mint.clean_expired_emited();
+    all_expired_tokens += m_mint.clean_expired_used();
     all_expired_tokens += m_wallet.clean_expired_tokens();
     all_expired_tokens += clean_expired_tokens();
 
@@ -229,11 +228,13 @@ long c_user::get_mint_last_expired_id() const {
     return m_mint.get_last_expired_id();
 }
 
-void c_user::print_status(std::ostream &os) const {
-    os << "|||<<>> " << m_username << " <<>>||| status info:" << std::endl;
+void c_user::print_status(std::ostream &os, bool verbouse) const {
+    os << "||| " << m_username << " ||| status info:" << std::endl;
+    m_wallet.print_wallet_status(os,verbouse);
     m_mint.print_mint_status(os);
-    print_used_status(os);
-    m_wallet.print_wallet_status(os,true);
+    if(verbouse) {
+        print_seen_status(os);
+    }
 }
 
 void print_strBytes(const std::string& str) {

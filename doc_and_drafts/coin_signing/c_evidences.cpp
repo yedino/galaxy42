@@ -153,6 +153,33 @@ namespace coinsign_evidences {
         }
     }
 
+    bool simple_malignant_cheater(const c_token &token_a, const c_token &token_b) {
+
+        auto chain_a = token_a.get_chainsign();
+        auto chain_b = token_b.get_chainsign();
+        size_t size_a = chain_a.size();
+        if(size_a == chain_b.size()) {
+            for(int i = 0; i < size_a; ++i) {
+                if(chain_a.at(i) != chain_b.at(i)) {
+                    return false;
+                }
+            }
+            // printing cheater diagram
+            form_print::target_print(std::string("TOKEN A"), std::string("TOKEN B"));
+            int i = 0;
+            for(auto chain_el_a : chain_a) {
+                auto chain_el_b = chain_b.at(i);		// at is ok, after check size
+                form_print::target_print(chain_el_a.m_signer, chain_el_b.m_signer);
+                form_print::arrow_print(true, true);
+                ++i;
+            }
+            std::string cheater = chain_a.at(size_a-1).m_signer;
+            form_print::cheater_print(cheater);
+            return true;
+        }
+        return false;
+    }
+
     bool mint_check(const c_token &tok) {
 
   try {

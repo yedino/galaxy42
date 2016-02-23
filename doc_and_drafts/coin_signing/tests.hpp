@@ -18,7 +18,6 @@
 
 bool chrono_time();
 
-//bool test_readableEd ();
 bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len);
 bool test_user_sending ();
 bool test_many_users ();

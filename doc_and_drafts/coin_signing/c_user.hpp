@@ -37,7 +37,9 @@ class c_user {
 
     size_t clean_expired_tokens();
     size_t tokens_refresh ();		///< mostly for clean databases from expiried tokens
-    void print_status (std::ostream &) const;
+
+    /// Printing tokens status in mint, wallet if verbuse printing all seen tokens and token chainsigns
+    void print_status (std::ostream &, bool verbouse = 0) const;
 
     // mint
     void set_new_mint (std::string mintname, ed_key pubkey, std::chrono::seconds exp_time = std::chrono::hours(72));
@@ -54,7 +56,6 @@ class c_user {
     double get_bitwallet_balance ();
 
   protected:
-    //c_ed25519 m_edsigner;
     crypto_ed25519::keypair m_edkeys;
 
     c_mint m_mint;
@@ -62,10 +63,9 @@ class c_user {
     c_rpc_bitwallet m_bitwallet;
     std::string m_username;
 
-    std::list<c_token> m_used_tokens;
-    std::list<c_token> m_seen_tokens;	// TODO
+    std::list<c_token> m_seen_tokens;
 
-    void print_used_status (std::ostream &) const;
+    void print_seen_status (std::ostream &) const;
 
     double m_reputation;
 

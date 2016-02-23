@@ -35,8 +35,6 @@ bool test_all(int number_of_threads) {
                             }
                     );
 
-
-//    run_suite_test(base_tests,test_readableEd, 0, pequal);
     run_suite_test(base_tests,test_user_sending , 0, pequal);
     run_suite_test(base_tests,test_many_users , 0, pequal);
     run_suite_test(base_tests,test_cheater , 0, pequal);
@@ -78,7 +76,8 @@ static std::string generate_random_string (size_t length) {
     return str;
 }
 
-
+// this test using old ed25519 wrapper - DEPRECATED
+// now readable ed we getting by << operator on ustring wrapper
 //bool test_readableEd () {
 //    std::cout << "RUNNING TEST READABLE_CRYPTO_ED" << std::endl;
 //    c_ed25519 edtest;
@@ -207,13 +206,13 @@ bool test_malignant_cheater() {
     A.send_token_bymethod(B);
     B.send_token_bymethod(C,1);
     B.send_token_bymethod(C);
+    C.send_token_bymethod(A);	// user C should detect the cheater using simple malignant test
     C.send_token_bymethod(A);
-    C.send_token_bymethod(A);	// detecting C as the cheater -- but the real cheater is B // TODO
 
     A.print_status(std::cout);
   } catch (coinsign_error &cec) {
         std::cout << cec.what() << std::endl;
-        if(cec.get_code() == 14) {
+        if(cec.get_code() == 15) {
             return false;
         }
   }
@@ -485,11 +484,11 @@ bool chrono_time() {
   try {
     std::cout << "RUNNING TEST_CHRONO_TIME" << std::endl;
     c_user A("userA"), B("userB"), C("userC"), D("userD");
-    A.emit_tokens(5);
+    A.emit_tokens(3);
     std::chrono::milliseconds all;
-    for(int i = 0; i < 5; ++i) {
+    for(int i = 0; i < 3; ++i) {
         A.send_token_bymethod(B);
-        for(int j = 0; j < 20; ++j) {
+        for(int j = 0; j < 10; ++j) {
             B.send_token_bymethod(C);
             C.send_token_bymethod(D);
             D.send_token_bymethod(C);
@@ -503,6 +502,7 @@ bool chrono_time() {
     std::cout << "recieving size = 100 token: "<< std::chrono::duration_cast<std::chrono::milliseconds>(all).count()/5 << " miliseconds" << std::endl;
 
   } catch(std::exception &ec){
+        std::cout << ec.what() << std::endl;
         return 1;
   }
     return 0;
