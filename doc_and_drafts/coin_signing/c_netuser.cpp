@@ -70,7 +70,7 @@ void c_netuser::send_public_key_resp(ip::tcp::socket &socket_) {
     socket_.write_some(boost::asio::buffer(&packet_size, 4), ec);
 
     DBG_MTX(dbg_mtx,"send public key data" << "[" << packet << "]");
-    socket_.write_some(boost::asio::buffer(packet.m_key.c_str(), packet_size), ec);
+    socket_.write_some(boost::asio::buffer(packet.c_str(), packet_size), ec);
     DBG_MTX(dbg_mtx,"end of sending public key");
 }
 

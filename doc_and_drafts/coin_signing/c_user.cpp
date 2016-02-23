@@ -111,7 +111,7 @@ bool c_user::recieve_from_packet(std::string &packet) {
 }
 
 bool c_user::recieve_token (c_token &token) {
-    std::cout << "Refreshing local tokens status before recieving new" << std::endl;
+    //std::cout << "Refreshing local tokens status before recieving new" << std::endl;
     tokens_refresh();
 
     if(coinsign_evidences::token_date(token)) {
@@ -122,7 +122,7 @@ bool c_user::recieve_token (c_token &token) {
     }
 	// check validity of the signatures chain
     ed_key expected_sender; // publickey
-	bool expected_sender_any=false; // do we expecected sender
+    bool expected_sender_any = false; // do we expecected sender
 
 	// [A->B]   [B->C]   [C->D]
     for (auto &current_signature : token.get_chainsign()) {
@@ -147,7 +147,7 @@ bool c_user::recieve_token (c_token &token) {
         }
 
 		// [B->C] is the current sender B allowed to send,  check for error:
-        if (expected_sender_any && !(current_sender_in_coin == expected_sender)) {
+        if ((expected_sender_any) && current_sender_in_coin != expected_sender) {
             std::cout << "expected sender [" << expected_sender <<
                          "] vs in-coin sender [" << current_sender_in_coin << "]" << std::endl;
             throw coinsign_error(10,"TOKEN VALIDATE FAIL - bad expected sender");
@@ -156,12 +156,12 @@ bool c_user::recieve_token (c_token &token) {
 		expected_sender = current_recipient_in_coin;
 		expected_sender_any = true;
 
-        std::cout << "CHAINSIGN_INFO" << std::endl;
-        current_signature.print(std::cout);
+        //std::cout << "CHAINSIGN_INFO" << std::endl;
+        //current_signature.print(std::cout);
 	}
 
-	std::cout << "token validate : OK" << std::endl;
-	std::cout << "size of this token : " << token.get_size() << std::endl;
+    //std::cout << "token validate : OK" << std::endl;
+    //std::cout << "size of this token : " << token.get_size() << std::endl;
 
     if (m_mint.check_isEmited(token)) { // is this token emitted by me?
         for (auto &in : m_used_tokens) { // is this token used?
@@ -179,7 +179,7 @@ bool c_user::recieve_token (c_token &token) {
         m_used_tokens.emplace_back(std::move(token));
         return false;		// TODO should we replace token by new one?
     }
-    std::cout << m_username << ": move token to wallet" << std::endl;
+    //std::cout << m_username << ": move token to wallet" << std::endl;
     m_wallet.move_token(std::move(token));
     return false;
 }

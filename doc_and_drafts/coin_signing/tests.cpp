@@ -27,35 +27,37 @@ bool test_all(int number_of_threads) {
 
     //ptest::general_suite.config = config_default;
 
-//    int test_loop = 100, msg_length = 64;
+    int test_loop_num = 100, msg_length = 64;
 
-//    ptest::call_test(number_of_threads,
-//                            [&number_of_threads, &test_loop, &msg_length] () {
-//                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop, msg_length, false, pequal);
-//                            }
-//                    );
+    ptest::call_test(number_of_threads,
+                            [&number_of_threads, &test_loop_num, &msg_length] () {
+                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop_num, msg_length, false, pequal);
+                            }
+                    );
+
 
 //    run_suite_test(base_tests,test_readableEd, 0, pequal);
-//    run_suite_test(base_tests,test_user_sending , 0, pequal);
-//    run_suite_test(base_tests,test_many_users , 0, pequal);
-//    run_suite_test(base_tests,test_cheater , 0, pequal);
-//    run_suite_test(base_tests,test_fast_cheater , 0, pequal);
-//    run_suite_test(base_tests,test_malignant_cheater , 0, pequal);
-//    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
+    run_suite_test(base_tests,test_user_sending , 0, pequal);
+    run_suite_test(base_tests,test_many_users , 0, pequal);
+    run_suite_test(base_tests,test_cheater , 0, pequal);
+    run_suite_test(base_tests,test_fast_cheater , 0, pequal);
+    run_suite_test(base_tests,test_malignant_cheater , 0, pequal);
+    run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
     run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-//    run_suite_test(base_tests,test_netuser, 0, pequal);
-//    run_suite_test(base_tests,test_coinsign_error, 0, pequal);
+    run_suite_test(base_tests,test_netuser, 0, pequal);
+    run_suite_test(base_tests,test_coinsign_error, 0, pequal);
 
-
-//    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
-//    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
-//    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
-//    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
+    run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
+    run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
+    run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
+    run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
 
     // to pass this test running ./bitcoind or ./bitccoin-qt on your mashine is required
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
- //   print_final_suite_result(many_ed_signing);
+    print_final_suite_result(many_ed_signing);
+    run_suite_test(base_tests, chrono_time, 0, pequal);
+
     print_final_suite_result(base_tests);
     print_final_suite_result(bitwallet);
     print_final_suite_result(wallet_io);
@@ -101,28 +103,28 @@ static std::string generate_random_string (size_t length) {
 //    return false;
 //}
 
-//bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len) {
-//    c_ed25519 edtest;
-//    std::string str_pubkey = edtest.get_public_key();
+bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len) {
 
-//    for(size_t i = 1; i < signs_num; ++i) {
-//        const std::string message = generate_random_string(message_len);
-//        std::string sign = edtest.sign(message);
+    crypto_ed25519::keypair keys(crypto_ed25519::generate_key());
 
-//        /* verify the signature */
-//        if (run_suite_assert (many_ed_signing, edtest.verify(sign, message, str_pubkey) == true, "invalid signature!") == pfailed) return true;
+    for(size_t i = 1; i < signs_num; ++i) {
+        const std::string message = generate_random_string(message_len);
+        ed_sign sign = crypto_ed25519::sign(message, keys);
 
-//        mtx.lock();
-//        if( !(i % ((signs_num*number_of_threads)/100))) {
-//            tests_counter++;
+        /* verify the signature */
+        if (run_suite_assert (many_ed_signing, crypto_ed25519::verify_signature(message, sign, keys.public_key) == true, "invalid signature!") == pfailed) return true;
 
-//        std::cout << "[" << tests_counter << "%]"
-//                  << "\b\b\b\b\b\b" << std::flush;
-//        }
-//        mtx.unlock();
-//    }
-//    return false;
-//}
+        mtx.lock();
+        if( !(i % ((signs_num*number_of_threads)/100))) {
+            tests_counter++;
+
+        std::cout << "[" << tests_counter << "%]"
+                  << "\b\b\b\b\b\b" << std::flush;
+        }
+        mtx.unlock();
+    }
+    return false;
+}
 
 bool test_user_sending () {
     std::cout << "RUNNING TEST USER_SENDING" << std::endl;
@@ -211,7 +213,7 @@ bool test_malignant_cheater() {
     A.print_status(std::cout);
   } catch (coinsign_error &cec) {
         std::cout << cec.what() << std::endl;
-        if(cec.get_code() == 15) {
+        if(cec.get_code() == 14) {
             return false;
         }
   }
@@ -282,7 +284,7 @@ bool test_convrt_tokenpacket() {
     c_token test_tok(packet);
     std::string packet_two = test_tok.to_packet();
 
-    if(packet != packet_two) {
+    if(packet == packet_two) {
         return false;
     }
     else {
@@ -477,4 +479,31 @@ bool test_coinsign_error() {
         }
   }
     return 1;
+}
+
+bool chrono_time() {
+  try {
+    std::cout << "RUNNING TEST_CHRONO_TIME" << std::endl;
+    c_user A("userA"), B("userB"), C("userC"), D("userD");
+    A.emit_tokens(5);
+    std::chrono::milliseconds all;
+    for(int i = 0; i < 5; ++i) {
+        A.send_token_bymethod(B);
+        for(int j = 0; j < 20; ++j) {
+            B.send_token_bymethod(C);
+            C.send_token_bymethod(D);
+            D.send_token_bymethod(C);
+            C.send_token_bymethod(B);
+        }
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        B.send_token_bymethod(A);
+        std::chrono::time_point<std::chrono::system_clock> after = std::chrono::system_clock::now();
+        all += std::chrono::duration_cast<std::chrono::milliseconds>(after - now);
+    }
+    std::cout << "recieving size = 100 token: "<< std::chrono::duration_cast<std::chrono::milliseconds>(all).count()/5 << " miliseconds" << std::endl;
+
+  } catch(std::exception &ec){
+        return 1;
+  }
+    return 0;
 }

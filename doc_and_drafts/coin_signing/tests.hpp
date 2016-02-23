@@ -16,9 +16,10 @@
 
 #include "ptest/ptest.hpp"
 
+bool chrono_time();
 
 //bool test_readableEd ();
-//bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len);
+bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len);
 bool test_user_sending ();
 bool test_many_users ();
 bool test_cheater();
@@ -39,8 +40,6 @@ bool test_coinsign_error();
 bool test_rpcwallet();
 
 bool test_all(int number_of_threads);
-
-
 
 
 #endif // TESTS_HPP

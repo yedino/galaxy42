@@ -8,7 +8,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include "ed25519_src/ed25519.h"
 
-using ustring = std::basic_string<unsigned char>;
 namespace crypto_ed25519 {
     constexpr size_t public_key_size = 32;
     constexpr size_t private_key_size = 64;
@@ -16,34 +15,40 @@ namespace crypto_ed25519 {
     constexpr size_t seed_size = 32;
     constexpr size_t scalar_size = 32;
 
-    typedef ustring private_key_t;
-    typedef ustring public_key_t;
-    typedef ustring signature_t;
 
-    struct key {
-        key () = default;
-        key (unsigned char *uc_str, size_t size) : m_key(ustring(uc_str,size))
+    struct ustring {
+        ustring () = default;
+        ustring (unsigned char *uc_str, size_t size) : m_string(uc_str,size)
+        { }
+        ustring (const ustring &uc_str) : m_string(uc_str.m_string)
+        { }
+        ustring (ustring &&uc_str) : m_string(std::move(uc_str.m_string))
         { }
 
-        ustring m_key;
+        std::basic_string<unsigned char> m_string;
 
         size_t size() const {
-            return m_key.size();
+            return m_string.size();
+        }
+        const unsigned char *c_str() const noexcept { 	///< Be carefull, unsigned* could contain NULL after converting to char*
+            return m_string.c_str();
         }
 
-        bool operator == (const key &rhs) const {
-            return this->m_key == rhs.m_key;
+        ustring& operator = (const ustring &rhs) = default;
+
+        bool operator == (const ustring &rhs) const {
+            return this->m_string == rhs.m_string;
         }
-        bool operator != (const key &rhs) const {
-            return this->m_key != rhs.m_key;
+        bool operator != (const ustring &rhs) const {
+            return this->m_string != rhs.m_string;
         }
 
         template<class Archive>
         void save (Archive & ar, const unsigned int version) const {
             std::basic_string<char> s;
-            s.assign (m_key.size (), (char)0);
-            for (int i = 0; i < m_key.size (); ++i) {
-                s[i] = (char)m_key.at(i);
+            s.assign (m_string.size (), (char)0);
+            for (int i = 0; i < m_string.size (); ++i) {
+                s[i] = (char)m_string.at(i);
             }
             ar  & s;
         }
@@ -52,20 +57,24 @@ namespace crypto_ed25519 {
         void load (Archive & ar, const unsigned int version) {
             std::basic_string<char> s;
             ar  & s;
-            m_key.assign (s.size (), (unsigned char)0);
+            m_string.assign (s.size (), static_cast<unsigned char>(0));
             for (int i = 0; i < s.size (); ++i) {
-                m_key.at(i) = static_cast<unsigned char>(s.at(i));
+                m_string.at(i) = static_cast<unsigned char>(s.at(i));
             }
         }
         BOOST_SERIALIZATION_SPLIT_MEMBER()
     };
 
-    std::ostream & operator<< (std::ostream &os, const key &u);
-    std::istream & operator>> (std::istream &is, key &u);
+    typedef ustring private_key_t;
+    typedef ustring public_key_t;
+    typedef ustring signature_t;
+
+    std::ostream & operator<< (std::ostream &os, const ustring &u);
+    std::istream & operator>> (std::istream &is, ustring &u);
 
     struct keypair {
-        key private_key;
-        key public_key;
+        ustring private_key;
+        ustring public_key;
 
         template <typename Archieve>
         void serialize(Archieve &ar, const unsigned version) {
@@ -76,13 +85,13 @@ namespace crypto_ed25519 {
 
     keypair generate_key ();
 
-    key sign (const std::string &msg, const keypair &key);
+    ustring sign (const std::string &msg, const keypair &keys);
 
-    bool verify_signature (const std::string &msg, const key &signature, const key &public_key);
+    bool verify_signature (const std::string &msg, const ustring &signature, const ustring &public_key);
 }
 
-using ed_key = crypto_ed25519::key;
-
+using ed_key = crypto_ed25519::ustring;
+using ed_sign = crypto_ed25519::ustring;
 
 
 #endif //BADZER_CRYPTO_ED25519_HPP

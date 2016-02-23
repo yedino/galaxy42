@@ -63,6 +63,8 @@ class c_user {
     std::string m_username;
 
     std::list<c_token> m_used_tokens;
+    std::list<c_token> m_seen_tokens;	// TODO
+
     void print_used_status (std::ostream &) const;
 
     double m_reputation;

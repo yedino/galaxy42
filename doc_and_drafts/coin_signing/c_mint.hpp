@@ -5,6 +5,7 @@
 #include "c_token.hpp"
 #include "../../crypto_ops/crypto/c_random_generator.hpp"
 #include <map>
+#include <list>
 #include <string>
 
 class token_id_generator {
@@ -31,6 +32,7 @@ class c_mint {
     size_t get_last_expired_id () const;
   private:
 	std::map<c_token, long long> m_emited_tokens;
+    std::list<c_token> m_used_tokens;
     c_random_generator<long long> random_generator;
 
     size_t m_last_expired_id;

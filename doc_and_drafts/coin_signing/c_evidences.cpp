@@ -9,14 +9,14 @@ namespace form_print {
         int w2 = (2*col_size-rt.size())/2-lt.size()/2;
 
         if(lt.empty()) {
-            std::cout 	<< std::setw(w1+w2+1) << '[' << rt << ']';
+            std::cout 	<< std::setw(w1+w2+1) << std::setfill(' ') << '[' << rt << ']';
         }
         else if(rt.empty()) {
-            std::cout 	<< std::setw(w1) << '[' << lt << ']';
+            std::cout 	<< std::setw(w1) << std::setfill(' ') << '[' << lt << ']';
         }
         else {
-            std::cout 	<< std::setw(w1) << '[' << lt << ']'
-                        << std::setw(w2) << '[' << rt << ']';
+            std::cout 	<< std::setw(w1) << std::setfill(' ') << '[' << lt << ']'
+                        << std::setw(w2) << std::setfill(' ') << '[' << rt << ']';
         }
         if(w1<1 || w2<1) {
             std::cout 	<< " *PRETTY FORMATTING FAIL - " << w1 << " : " << w2 << " - "
@@ -29,24 +29,24 @@ namespace form_print {
 
     void arrow_print(bool left, bool right) {
         if(left && !right) {
-            std::cout << std::setw(col_size) << '|' << std::endl;
-            std::cout << std::setw(col_size) << 'V' << std::endl;
+            std::cout << std::setw(col_size) << std::setfill(' ') << '|' << std::endl;
+            std::cout << std::setw(col_size) << std::setfill(' ') << 'V' << std::endl;
         }
         else if(!left && right) {
-            std::cout << std::setw(2*col_size+1) << '|' << std::endl;
-            std::cout << std::setw(2*col_size+1) << 'V' << std::endl;
+            std::cout << std::setw(2*col_size+1) << std::setfill(' ') << '|' << std::endl;
+            std::cout << std::setw(2*col_size+1) << std::setfill(' ') << 'V' << std::endl;
         }
         else if(left && right) {
-            std::cout << std::setw(col_size) << '|' << std::setw(col_size+1) << '|' << std::endl;
-            std::cout << std::setw(col_size) << 'V' << std::setw(col_size+1) << 'V' << std::endl;
+            std::cout << std::setw(col_size) << std::setfill(' ') << '|' << std::setw(col_size+1) << '|' << std::endl;
+            std::cout << std::setw(col_size) << std::setfill(' ') << 'V' << std::setw(col_size+1) << 'V' << std::endl;
         }
     }
 
     void cheater_print(std::string &cheater) {
         std::string l1 = "*** !!! DOUBLE SPENDING detected !!! ***";
         std::string l2 = "*** !!! the CHEATER is: " + cheater + " !!! ***";
-        std::cout << std::setw(col_size*1.5 + l1.size()/2) << l1 << std::endl;
-        std::cout << std::setw(col_size*1.5 + l2.size()/2) << l2 << std::endl;
+        std::cout << std::setw(col_size*1.5 + l1.size()/2) << std::setfill(' ') << l1 << std::endl;
+        std::cout << std::setw(col_size*1.5 + l2.size()/2) << std::setfill(' ') << l2 << std::endl;
     }
 }
 
@@ -175,7 +175,7 @@ namespace coinsign_evidences {
         std::cout << "You can't check mint with never used token" << std::endl;
         return false;
   }
-        std::cout << "MINT_CHECK : ok" << std::endl;
+        //std::cout << "MINT_CHECK : ok" << std::endl;
         return false;
 }
 
