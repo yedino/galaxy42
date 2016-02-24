@@ -28,7 +28,7 @@ class c_mint {
 
     c_token emit_token ();
 
-    bool check_is_emited (c_token &);
+    bool check_is_emited (const c_token &) const;
 
     /// get back used token
     /// run find_cheater_token evidence test when double spending is detected

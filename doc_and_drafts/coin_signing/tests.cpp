@@ -40,6 +40,7 @@ bool test_all(int number_of_threads) {
     run_suite_test(base_tests,test_cheater , 0, pequal);
     run_suite_test(base_tests,test_fast_cheater , 0, pequal);
     run_suite_test(base_tests,test_malignant_cheater , 0, pequal);
+    run_suite_test(base_tests,fast_find_cheater , 0, pequal);
     run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
     run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
     run_suite_test(base_tests,test_netuser, 0, pequal);
@@ -160,13 +161,13 @@ bool test_cheater() {
     D.send_token_bymethod(X);
     X.send_token_bymethod(A);
 
-    B.send_token_bymethod(D);
+    B.send_token_bymethod(D); // now cheater will be detect here
     D.send_token_bymethod(B);
     B.send_token_bymethod(X);
     X.send_token_bymethod(A); // should detect cheater
 
     A.print_status(std::cout);
-  } catch (coinsign_error cec) {
+  } catch (coinsign_error &cec) {
         std::cout << cec.what() << std::endl;
         if(cec.get_code() == 15) {
             return false;
@@ -219,7 +220,30 @@ bool test_malignant_cheater() {
     return true;
 }
 
+bool fast_find_cheater() {
+  try {
+    std::cout << "RUNNING FAST_FIND_CHEATER" << std::endl;
+    c_user A("userA"), B("userB"), C("userC"), D("userD");
+    A.emit_tokens(1);
+
+    A.send_token_bymethod(B);
+    B.send_token_bymethod(C,1);
+    B.send_token_bymethod(D);
+    C.send_token_bymethod(A);
+    D.send_token_bymethod(C);	// detecting cheater by user
+
+  } catch (coinsign_error &cec) {
+        //std::cout << cec.what() << std::endl;
+        if(cec.get_code() == 15) {
+            return false;
+        }
+  }
+    return true;
+}
+
+
 bool test_bad_chainsign() {
+    std::cout << "RUNNING BAD INPUT, CHAINSIGN FORMAT TEST" << std::endl;
     int errors = 3;
  try{
     c_token("$0|ed5c06c0577e0bf8a22e5f2c09f471e2c288bedfe255882d265661bf382e784232"

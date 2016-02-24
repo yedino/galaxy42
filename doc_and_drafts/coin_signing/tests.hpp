@@ -24,6 +24,7 @@ bool test_many_users ();
 bool test_cheater();
 bool test_fast_cheater();
 bool test_malignant_cheater();
+bool fast_find_cheater();
 
 bool test_bad_chainsign();
 bool test_convrt_tokenpacket();

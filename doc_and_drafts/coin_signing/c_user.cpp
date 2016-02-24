@@ -163,20 +163,33 @@ bool c_user::recieve_token (c_token &token) {
     //std::cout << "token validate : OK" << std::endl;
     //std::cout << "size of this token : " << token.get_size() << std::endl;
 
-    if (m_mint.check_is_emited(token)) { // is this token emitted by me?
-        return m_mint.get_used_token(token);
-
+    if(m_mint.check_is_emited(token)) { // is this token emitted by me?
+        bool is_ok = m_mint.get_used_token(token);
+        return is_ok;
     } else {
+        bool seen = false;
         for (auto &in : m_seen_tokens) { // is this token used?
             if (in == token) {
                 //std::cout << "TOKEN_SEEN - checking is it double spend" << std::endl;
-                if(coinsign_evidences::simple_malignant_cheater(token, in)) {
-                    std::cout << "TOKEN_SEEN - find malignant cheater" << std::endl;
+                if(coinsign_evidences::simple_malignant_cheater(token, in, m_username)) {
+                    std::cout << "USER: TOKEN_SEEN - found malignant cheater" << std::endl;
                     throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
                 }
+                else if(coinsign_evidences::find_token_cheater(token, in, m_username)) {
+                    std::cout << "USER: TOKEN_SEEN - found cheater" << std::endl;
+                    throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
+                }
+                // after this line cheater test does not make sense
+                // replacing new seen version of token
+                m_seen_tokens.remove(in);
+                m_seen_tokens.push_back(token);
+                seen = true;
+                break;
             }
         }
-        m_seen_tokens.push_back(token);
+        if(!seen) {
+            m_seen_tokens.push_back(token);
+        }
     }
     //std::cout << m_username << ": move token to wallet" << std::endl;
     m_wallet.move_token(std::move(token));

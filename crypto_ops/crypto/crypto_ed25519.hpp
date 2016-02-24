@@ -93,5 +93,4 @@ namespace crypto_ed25519 {
 using ed_key = crypto_ed25519::ustring;
 using ed_sign = crypto_ed25519::ustring;
 
-
 #endif //BADZER_CRYPTO_ED25519_HPP

@@ -36,7 +36,7 @@ c_token c_mint::emit_token() {
 	return token;
 }
 
-bool c_mint::check_is_emited(c_token &token) {
+bool c_mint::check_is_emited(const c_token &token) const {
     if(m_emited_tokens.find(token) != m_emited_tokens.end()) {
         std::cout << "Token emited here!" << std::endl;
 		return true;
@@ -48,10 +48,13 @@ bool c_mint::get_used_token (c_token &token) {
 
     auto in_it = std::find(m_used_tokens.begin(),m_used_tokens.end(), token);
     if(in_it != m_used_tokens.end()) {
-        if(!coinsign_evidences::find_token_cheater(token, *in_it)) {
-            std::cout << "can't find cheater" << std::endl;
-            throw coinsign_error(14,"DOUBLE SPENDING - chaeter not found");
-        } else {
+
+        if(coinsign_evidences::simple_malignant_cheater(token, *in_it, m_mintname)) {
+            std::cout << "MINT: USED_TOKEN - found malignant cheater" << std::endl;
+            throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
+        }
+        else if(coinsign_evidences::find_token_cheater(token, *in_it, m_mintname)) {
+            std::cout << "MINT: USED_TOKEN - found cheater" << std::endl;
             throw coinsign_error(15,"DOUBLE SPENDING - found cheater");
         }
     }

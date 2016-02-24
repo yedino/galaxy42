@@ -13,12 +13,12 @@ namespace coinsign_evidences {
 
     /// double spending cheater finding
     /// true means the cheater was found
-    bool find_token_cheater (const c_token &, const c_token &);
+    bool find_token_cheater (const c_token &, const c_token &, const std::string &receiver = "receiver");
 
     /// double spending chaeter finding
     /// simple malignant test in case two tokens have the same history
     /// true means the cheater is last sender
-    bool simple_malignant_cheater(const c_token &, const c_token &);
+    bool simple_malignant_cheater(const c_token &, const c_token &, const std::string &receiver = "receiver");
 
     /// check if emiter is correct in case of stolen database
     /// true means stolen token
