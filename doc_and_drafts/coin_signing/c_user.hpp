@@ -2,7 +2,7 @@
 #define COIN_SIGNING_C_USER_HPP
 #include "c_token.hpp"
 #include "c_wallet.hpp"
-#include "c_rpc_bitwallet.hpp"
+//#include "c_rpc_bitwallet.hpp"
 #include "c_evidences.hpp"
 
 #include "c_mint.hpp"
@@ -46,21 +46,25 @@ class c_user {
     void emit_tokens (size_t);
     long get_mint_last_expired_id () const;
 
+    void save_user (const std::string &filename);
+    void load_user (const std::string &filename);
+
+
     // coin wallet
     void load_coinwallet (const std::string &filename);
     void save_coinwallet (const std::string &filename);
 
     // bitwallet part
-    bool check_bitwallet ();
-    void set_bitwallet (const std::string &username, const std::string &password, const std::string &address, int port);
-    double get_bitwallet_balance ();
+//    bool check_bitwallet ();
+//    void set_bitwallet (const std::string &username, const std::string &password, const std::string &address, int port);
+//    double get_bitwallet_balance ();
 
   protected:
     crypto_ed25519::keypair m_edkeys;
 
     c_mint m_mint;
     c_wallet m_wallet;
-    c_rpc_bitwallet m_bitwallet;
+//    c_rpc_bitwallet m_bitwallet;
     std::string m_username;
 
     std::list<c_token> m_seen_tokens;

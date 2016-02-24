@@ -2,7 +2,7 @@
 
 new_test_suite(many_ed_signing);
 new_test_suite(base_tests);
-new_test_suite(bitwallet);
+//new_test_suite(bitwallet);
 new_test_suite(wallet_io);
 
 using std::thread;
@@ -59,7 +59,7 @@ bool test_all(int number_of_threads) {
     print_final_suite_result(many_ed_signing);
 
     print_final_suite_result(base_tests);
-    print_final_suite_result(bitwallet);
+//    print_final_suite_result(bitwallet);
     print_final_suite_result(wallet_io);
 
     print_final_test_result();
@@ -349,40 +349,40 @@ bool test_netuser() {
   }
 }
 
-bool test_rpcwallet() {
-  try {
-    std::cout << "RUNNING_RPCWALLET_TEST" << std::endl;
-    c_user BitUser("namecoin_user");
-    if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == false, "wallet should be unset here!") == pfailed) return true;
+//bool test_rpcwallet() {
+//  try {
+//    std::cout << "RUNNING_RPCWALLET_TEST" << std::endl;
+//    c_user BitUser("namecoin_user");
+//    if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == false, "wallet should be unset here!") == pfailed) return true;
 
-    /***
-     * I use my own Xcoin client for this test
-     * If you want to correct use bitwallet look at your .Xcoin/Xcoin.conf for:
-     * 		rpcuser
-     *      rpcpassword
-     *		rpcport
-     *
-     * Be sure you have Xcoind running before start using bitwallet
-     */
+//    /***
+//     * I use my own Xcoin client for this test
+//     * If you want to correct use bitwallet look at your .Xcoin/Xcoin.conf for:
+//     * 		rpcuser
+//     *      rpcpassword
+//     *		rpcport
+//     *
+//     * Be sure you have Xcoind running before start using bitwallet
+//     */
 
-    std::string rpc_usr = "nmc_testadmin";
-    std::string rpc_passwd = "dontworrybehappy";
-    std::string rpc_host = "127.0.0.1";
-    int rpc_port = 8336;
+//    std::string rpc_usr = "nmc_testadmin";
+//    std::string rpc_passwd = "dontworrybehappy";
+//    std::string rpc_host = "127.0.0.1";
+//    int rpc_port = 8336;
 
-    BitUser.set_bitwallet(rpc_usr,rpc_passwd,rpc_host,rpc_port);
+//    BitUser.set_bitwallet(rpc_usr,rpc_passwd,rpc_host,rpc_port);
 
-    if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == true, "wallet should be correctly set here!") == pfailed) return true;
+//    if (run_suite_assert (bitwallet,BitUser.check_bitwallet() == true, "wallet should be correctly set here!") == pfailed) return true;
 
-    std::cout << "Your namecoin balance is: " << std::fixed << std::setprecision(8) <<
-                 BitUser.get_bitwallet_balance() << std::endl;
-    return false;
-  } catch(BitcoinException &btc_ec) {
-        std::cout << btc_ec.getCode() << ": " << btc_ec.getMessage() << std::endl;
-        std::cout << btc_ec.what() << std::endl;
-        return true;
-  }
-}
+//    std::cout << "Your namecoin balance is: " << std::fixed << std::setprecision(8) <<
+//                 BitUser.get_bitwallet_balance() << std::endl;
+//    return false;
+//  } catch(BitcoinException &btc_ec) {
+//        std::cout << btc_ec.getCode() << ": " << btc_ec.getMessage() << std::endl;
+//        std::cout << btc_ec.what() << std::endl;
+//        return true;
+//  }
+//}
 //////////////////////////////////////////////////////////////////////////////// WALLET_IO SUITE //////////////////////////////////////////////////////////////////////////
 
 bool test_wallet_expected_sender() {

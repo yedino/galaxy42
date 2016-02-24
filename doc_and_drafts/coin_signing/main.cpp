@@ -1,7 +1,7 @@
 #include <iostream>
 #include "tests.hpp"
 
-bool check_cmd(const std::string cmd, const std::string request) {
+bool check_cmd(const std::string cmd, const std::string request) {	//TODO return command id (int)
     int start_point = 0;
     while(start_point < request.size()) {
         if(request.at(start_point) != ' ') {
@@ -11,7 +11,8 @@ bool check_cmd(const std::string cmd, const std::string request) {
     }
 
     std::string subrequest = request.substr(start_point, request.find(' ', start_point));
-    return (subrequest == string(cmd));
+
+    return (subrequest == std::string(cmd));
 }
 
 void run_interactive_protocol() {

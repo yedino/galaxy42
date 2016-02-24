@@ -4,7 +4,7 @@ namespace form_print {
 
     int col_size = 15;
 
-    std::ostringstream target_print(const std::string &lt, const std::string &rt) {
+    std::string target_print(const std::string &lt, const std::string &rt) {
         std::ostringstream out;
         int w1 = (2*col_size-lt.size())/2;
         int w2 = (2*col_size-rt.size())/2-lt.size()/2;
@@ -26,10 +26,10 @@ namespace form_print {
         else {
             out << std::endl;
         }
-        return out;
+        return out.str();
     }
 
-    std::ostringstream arrow_print(bool left, bool right) {
+    std::string arrow_print(bool left, bool right) {
         std::ostringstream out;
         if(left && !right) {
             out << std::setw(col_size) << std::setfill(' ') << '|' << std::endl;
@@ -43,16 +43,16 @@ namespace form_print {
             out << std::setw(col_size) << std::setfill(' ') << '|' << std::setw(col_size+1) << '|' << std::endl;
             out << std::setw(col_size) << std::setfill(' ') << 'V' << std::setw(col_size+1) << 'V' << std::endl;
         }
-        return out;
+        return out.str();
     }
 
-    std::ostringstream cheater_print(std::string &cheater) {
+    std::string cheater_print(std::string &cheater) {
         std::ostringstream out;
         std::string l1 = "*** !!! DOUBLE SPENDING detected !!! ***";
         std::string l2 = "*** !!! the CHEATER is: " + cheater + " !!! ***";
         out << std::setw(col_size*1.5 + l1.size()/2) << std::setfill(' ') << l1 << std::endl;
         out << std::setw(col_size*1.5 + l2.size()/2) << std::setfill(' ') << l2 << std::endl;
-        return out;
+        return out.str();
     }
 }
 
@@ -78,7 +78,7 @@ namespace coinsign_evidences {
         }
 
         bool is_dbspend = false;
-        diagram << form_print::target_print(std::string("TOKEN A"), std::string("TOKEN B")).str();
+        diagram << form_print::target_print(std::string("TOKEN A"), std::string("TOKEN B"));
 
         auto tok_a_chain = token_a.get_chainsign();
         auto tok_b_chain = token_b.get_chainsign();
@@ -96,24 +96,24 @@ namespace coinsign_evidences {
                 throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
             }
 
-            diagram << form_print::target_print(current_signature_a.m_signer, current_signature_b.m_signer).str();
-            diagram << form_print::arrow_print(true, true).str();
+            diagram << form_print::target_print(current_signature_a.m_signer, current_signature_b.m_signer);
+            diagram << form_print::arrow_print(true, true);
 
             if (current_signature_a != current_signature_b && !is_dbspend) {
-                diagram << form_print::cheater_print(current_signature_a.m_signer).str();
-                diagram << form_print::arrow_print(true, true).str();
+                diagram << form_print::cheater_print(current_signature_a.m_signer);
+                diagram << form_print::arrow_print(true, true);
                 is_dbspend = true;
             }
         }
         if(different_size == false) {
-            diagram << form_print::target_print(receiver,receiver).str();
+            diagram << form_print::target_print(receiver,receiver);
             if(is_dbspend) {
                 std::cout << diagram.str();
             }
             return is_dbspend;
         } else if(bigger == 'a') {
-            diagram << form_print::target_print("*!* COPIED *!*",receiver).str();
-            diagram << form_print::arrow_print(true,false).str();
+            diagram << form_print::target_print("*!* COPIED *!*",receiver);
+            diagram << form_print::arrow_print(true,false);
             for (auto pos=len_min; pos<len_max; ++pos) {
                 auto &current_signature_a = tok_a_chain[pos];
 
@@ -126,25 +126,25 @@ namespace coinsign_evidences {
                     throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
                 }
 
-                diagram << form_print::target_print(current_signature_a.m_signer,"").str();
-                diagram << form_print::arrow_print(true,false).str();
+                diagram << form_print::target_print(current_signature_a.m_signer,"");
+                diagram << form_print::arrow_print(true,false);
             }
-            diagram << form_print::target_print(receiver,"").str();
+            diagram << form_print::target_print(receiver,"");
 
             if(is_dbspend) {
                 std::cout << diagram.str();
             }
             return is_dbspend;
         } else if(bigger == 'b') {
-            diagram << form_print::target_print(receiver,"*!* COPIED *!*").str();
-            diagram << form_print::arrow_print(false,true).str();
+            diagram << form_print::target_print(receiver,"*!* COPIED *!*");
+            diagram << form_print::arrow_print(false,true);
             for (auto pos=len_min; pos<len_max; ++pos) {
                 auto &current_signature_b = tok_b_chain[pos];
 
-                diagram << form_print::target_print("",current_signature_b.m_signer).str();
-                diagram << form_print::arrow_print(false,true).str();
+                diagram << form_print::target_print("",current_signature_b.m_signer);
+                diagram << form_print::arrow_print(false,true);
             }
-            diagram << form_print::target_print("",receiver).str();
+            diagram << form_print::target_print("",receiver);
 
             if(is_dbspend) {
                 std::cout << diagram.str();
@@ -169,18 +169,18 @@ namespace coinsign_evidences {
                 }
             }
             // printing cheater diagram
-            diagram << form_print::target_print(std::string("TOKEN A"), std::string("TOKEN B")).str();
+            diagram << form_print::target_print(std::string("TOKEN A"), std::string("TOKEN B"));
             int i = 0;
             for(auto chain_el_a : chain_a) {
                 auto chain_el_b = chain_b.at(i);		// at is ok, after check size
-                diagram << form_print::target_print(chain_el_a.m_signer, chain_el_b.m_signer).str();
-                diagram << form_print::arrow_print(true, true).str();
+                diagram << form_print::target_print(chain_el_a.m_signer, chain_el_b.m_signer);
+                diagram << form_print::arrow_print(true, true);
                 ++i;
             }
             std::string cheater = chain_a.at(size_a-1).m_signer;
-            diagram << form_print::cheater_print(cheater).str();
-            diagram << form_print::arrow_print(true,true).str();
-            diagram << form_print::target_print(receiver,receiver).str();
+            diagram << form_print::cheater_print(cheater);
+            diagram << form_print::arrow_print(true,true);
+            diagram << form_print::target_print(receiver,receiver);
             std::cout << diagram.str();
             return true;
         }

@@ -37,7 +37,7 @@ bool test_recieve_deprecated_token();
 
 bool test_coinsign_error();
 
-bool test_rpcwallet();
+//bool test_rpcwallet();
 
 bool test_all(int number_of_threads);
 
