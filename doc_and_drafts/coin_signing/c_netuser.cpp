@@ -7,7 +7,7 @@ c_netuser::c_netuser(std::string &username, int port) : c_user(username),
                                               server_port(port),
                                               client_socket(m_io_service),
                                               server_socket(m_io_service),
-                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v4(),server_port)),
+                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(),server_port)),
                                               m_stop_flag(false)
 {
     create_server();
@@ -114,9 +114,9 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
     if(ec) { ///< boost error - not needed
         throw std::runtime_error("bad ip");
     }
-    if (!addr.is_v4()) {
+    if (!addr.is_v6()) {
         std::string msg = addr.to_string();
-        msg += " is not valid IPv4 address";
+        msg += " is not valid IPv6 address";
         throw std::invalid_argument(msg);
     }
     ip::tcp::endpoint server_endpoint(addr, port);
