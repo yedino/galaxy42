@@ -1,14 +1,8 @@
 #ifndef COIN_SIGNING_C_WALLET_HPP
 #define COIN_SIGNING_C_WALLET_HPP
-#include <string>
-#include <fstream>
-#include <ctime>
-#include <list>
-#include <boost/serialization/list.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include "c_token.hpp"
 
+#include "libs01.hpp"
+#include "c_token.hpp"
 
 using std::string;
 using std::list;
@@ -35,8 +29,8 @@ class c_wallet {
     void load_from_file (const std::string &filename);
 
     template<typename Archive>
-    void serialize (Archive &ar, const unsigned int version)
-    {
+    void serialize (Archive &ar, const unsigned int version) {
+        UNUSED(version);
         ar & m_tokens;
     }
 

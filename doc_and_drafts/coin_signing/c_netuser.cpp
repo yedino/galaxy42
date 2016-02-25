@@ -1,5 +1,4 @@
 #include "c_netuser.hpp"
-#include <iostream>
 
 const unsigned request_type_size = 2;
 
@@ -26,12 +25,12 @@ ed_key c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
     DBG_MTX(dbg_mtx, "pk: " << pkresp << ":[" <<header[0] << header[1] << "]");
 
 	DBG_MTX(dbg_mtx, "read public key size");
-	char pub_key_size[4];
+    size_t pub_key_size = 4;
     uint32_t key_size = 0;
-	size_t recieved_bytes = socket_.read_some(buffer(&key_size, 4), ec);
+    size_t recieved_bytes = socket_.read_some(buffer(&key_size, pub_key_size), ec);
     DBG_MTX(dbg_mtx, "size:" << recieved_bytes << ":[" <<key_size << "]");
 
-    assert(recieved_bytes == 4);
+    assert(recieved_bytes == pub_key_size);
 
     const std::unique_ptr<unsigned char[]> pub_key_data(new unsigned char[key_size]);
 
@@ -250,7 +249,7 @@ c_netuser::~c_netuser() {
 
 void c_netuser::threads_maker(unsigned num) {
     m_threads.reserve(num);
-    for(int i = 0; i < num; ++i) {
+    for(unsigned i = 0; i < num; ++i) {
         DBG_MTX(dbg_mtx,"make " << i << " thread");
         m_threads.emplace_back([this](){
 			while (!m_stop_flag)

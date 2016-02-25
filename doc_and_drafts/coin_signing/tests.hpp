@@ -1,18 +1,10 @@
 #ifndef TESTS_HPP
 #define TESTS_HPP
 
-#include <iostream>
-#include <fstream>
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <chrono>
-#include <exception>
+#include "libs01.hpp"
 
 #include "coinsign_error.hpp"
-
 #include "c_netuser.hpp"
-#include "../../crypto_ops/crypto/crypto_ed25519.hpp"
 
 #include "ptest/ptest.hpp"
 

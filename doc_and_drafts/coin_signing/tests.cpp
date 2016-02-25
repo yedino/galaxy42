@@ -2,6 +2,7 @@
 
 new_test_suite(many_ed_signing);
 new_test_suite(base_tests);
+new_test_suite(cheater_tests);
 //new_test_suite(bitwallet);
 new_test_suite(wallet_io);
 
@@ -22,6 +23,7 @@ bool test_all(int number_of_threads) {
 
     many_ed_signing.config = config_default;
 //    base_tests.config = config_default;
+//    cheater_tests.config = config_default;
 //    bitwallet.config = config_default;
 //    wallet_io.config = config_default;
 
@@ -35,34 +37,38 @@ bool test_all(int number_of_threads) {
                             }
                     );
 
-//    run_suite_test(base_tests,test_user_sending , 0, pequal);
-//    run_suite_test(base_tests,test_many_users , 0, pequal);
-//    run_suite_test(base_tests,test_cheater , 0, pequal);
-//    run_suite_test(base_tests,test_fast_cheater , 0, pequal);
-//    run_suite_test(base_tests,test_malignant_cheater , 0, pequal);
-//    run_suite_test(base_tests,fast_find_cheater , 0, pequal);
-//    //run_suite_test(base_tests,test_bad_chainsign, 0, pequal);
-    //run_suite_test(base_tests,test_convrt_tokenpacket, 0, pequal);
-    run_suite_test(base_tests,test_netuser, 0, pequal);
-    //run_suite_test(base_tests,test_coinsign_error, 0, pequal);
-    //run_suite_test(base_tests, chrono_time, 0, pequal);
+    run_suite_test(base_tests, test_user_sending , 0, pequal);
+    run_suite_test(base_tests, test_many_users , 0, pequal);
 
-    //run_suite_test(wallet_io,test_wallet_expected_sender, 0, pequal);
-    //run_suite_test(wallet_io,test_wallet_mint_check, 0, pequal);
-    //run_suite_test(wallet_io,test_mint_token_expiration, 10, pequal);
-    //run_suite_test(wallet_io,test_recieve_deprecated_token, 0, pequal);
+    run_suite_test(cheater_tests, test_cheater , 0, pequal);
+    run_suite_test(cheater_tests, test_fast_cheater , 0, pequal);
+    run_suite_test(cheater_tests, test_malignant_cheater , 0, pequal);
+    run_suite_test(cheater_tests, fast_find_cheater , 0, pequal);
 
-    // to pass this test running ./bitcoind or ./bitccoin-qt on your mashine is required
+    run_suite_test(base_tests, test_bad_chainsign, 0, pequal);
+    run_suite_test(base_tests, test_convrt_tokenpacket, 0, pequal);
+    run_suite_test(base_tests, test_netuser, 0, pequal);
+    run_suite_test(base_tests, test_coinsign_error, 0, pequal);
+    run_suite_test(base_tests, chrono_time, 0, pequal);
+
+    run_suite_test(wallet_io, test_wallet_expected_sender, 0, pequal);
+    run_suite_test(wallet_io, test_wallet_mint_check, 0, pequal);
+    run_suite_test(wallet_io, test_mint_token_expiration, 10, pequal);
+    run_suite_test(wallet_io, test_recieve_deprecated_token, 0, pequal);
+
+    // To pass below test. Running ./bitcoind or ./bitccoin-qt on your mashine is required
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
 
     print_final_suite_result(many_ed_signing);
 
     print_final_suite_result(base_tests);
-//    print_final_suite_result(bitwallet);
+    print_final_suite_result(cheater_tests);
     print_final_suite_result(wallet_io);
+    //print_final_suite_result(bitwallet);
 
     print_final_test_result();
+    return false;
 }
 
 static std::string generate_random_string (size_t length) {
@@ -483,7 +489,6 @@ bool test_recieve_deprecated_token() {
     A.print_status(std::cout);		// now mint and wallet should be empty
 
     B.send_token_bymethod(A);		// deprecated token
-    return true;
 
   } catch(coinsign_error &cec) {
         std::cout << cec.what() << std::endl;
@@ -491,6 +496,7 @@ bool test_recieve_deprecated_token() {
             return false;
         }
   }
+    return true;
 }
 
 bool test_coinsign_error() {

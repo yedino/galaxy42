@@ -18,7 +18,7 @@ void c_token_header::print(std::ostream &os) const {
     std::time_t t = std::chrono::system_clock::to_time_t(m_expiration_date);
     std::string date(ctime(&t));
     size_t end = date.find_last_of('\n');		// to avoid newline at the end of t
-    std::cout << "Emiter: [" << m_mintname
+    os << "Emiter: [" << m_mintname
        << "], Mint pubkey [" << m_mint_pubkey
        << "], Id: ["  << m_id
        << "], Expiration date: [" << date.substr(0,end)
@@ -27,10 +27,10 @@ void c_token_header::print(std::ostream &os) const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////// CHAIN ELEMENT
 
-c_chainsign_element::c_chainsign_element (const std::string msg,
-                                          const ed_key msg_sign,
-                                          const std::string signer,
-                                          const ed_key signer_pubkey) : m_msg(msg),
+c_chainsign_element::c_chainsign_element (const std::string &msg,
+                                          const ed_key &msg_sign,
+                                          const std::string &signer,
+                                          const ed_key &signer_pubkey) : m_msg(msg),
                                                                          m_msg_sign(msg_sign),
                                                                          m_signer(signer),
                                                                          m_signer_pubkey(signer_pubkey)
@@ -70,7 +70,7 @@ const std::vector<c_chainsign_element>& c_token::get_chainsign() const {
     return m_chainsign;
 }
 
-const size_t c_token::get_chainsign_size() const {
+size_t c_token::get_chainsign_size() const {
     return m_chainsign.size();
 }
 

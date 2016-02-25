@@ -1,19 +1,7 @@
 #ifndef COIN_SIGNING_C_TOKEN_HPP
 #define COIN_SIGNING_C_TOKEN_HPP
-#include <cstdlib>
-#include <vector>
-#include <iostream>
-#include <limits>
-#include <chrono>
-#include <algorithm>
-#include <sstream>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/string.hpp>
-#include "../../crypto_ops/crypto/crypto_ed25519.hpp"
 
-#include <boost/serialization/binary_object.hpp>
+#include "libs01.hpp"
 
 struct c_token_header {
     c_token_header () = default;
@@ -25,14 +13,15 @@ struct c_token_header {
 
     void print(std::ostream &os) const;
 
-    size_t m_id;
     std::string m_mintname;
     ed_key m_mint_pubkey;
+    size_t m_id;
     long long m_password;
     std::chrono::time_point<std::chrono::system_clock> m_expiration_date;
 
     template <typename Archive>
     void serialize(Archive &ar, const unsigned version) {
+        UNUSED(version);
         ar & m_mintname;
         ar & m_mint_pubkey;
         ar & m_id;
@@ -43,7 +32,7 @@ struct c_token_header {
 
 struct c_chainsign_element {
     c_chainsign_element () = default;
-    c_chainsign_element (const std::string, const ed_key, const std::string, const ed_key);
+    c_chainsign_element (const std::string &, const ed_key &, const std::string &, const ed_key &);
     c_chainsign_element (const std::string &);	// deserialize chainelement from packet
 
     std::string m_msg;
@@ -55,10 +44,11 @@ struct c_chainsign_element {
 
     template <typename Archive>
     void serialize(Archive &ar, const unsigned version) {
+        UNUSED(version);
         ar & m_msg;
         ar & m_msg_sign;
         ar & m_signer;
-        ar & m_signer_pubkey,m_signer_pubkey;
+        ar & m_signer_pubkey;
     }
 };
 
@@ -84,7 +74,7 @@ class c_token {
     void add_chain_element (const c_chainsign_element &ch);
     void add_chain_element (c_chainsign_element &&ch) noexcept;
     const std::vector<c_chainsign_element>& get_chainsign() const;
-    const size_t get_chainsign_size () const;
+    size_t get_chainsign_size () const;
 
     friend class boost::serialization::access;
   private:
@@ -92,8 +82,8 @@ class c_token {
     std::vector<c_chainsign_element> m_chainsign;
 
     template<typename Archive>
-    void serialize (Archive &ar, const unsigned int version)
-    {
+    void serialize (Archive &ar, const unsigned int version) {
+        UNUSED(version);
         ar & m_header;
         ar & m_chainsign;
     }

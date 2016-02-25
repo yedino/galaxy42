@@ -1,21 +1,13 @@
 #ifndef COIN_SIGNING_C_USER_HPP
 #define COIN_SIGNING_C_USER_HPP
+
+#include "libs01.hpp"
+#include "coinsign_error.hpp"
 #include "c_token.hpp"
 #include "c_wallet.hpp"
 //#include "c_rpc_bitwallet.hpp"
 #include "c_evidences.hpp"
-
 #include "c_mint.hpp"
-#include "coinsign_error.hpp"
-#include "../../crypto_ops/crypto/crypto_ed25519.hpp"
-
-#include <sstream>
-#include <string>
-#include <vector>
-#include <list>
-#include <stdexcept>
-#include <cmath>
-#include <mutex>
 
 class c_user {
   public:

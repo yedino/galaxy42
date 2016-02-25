@@ -1,9 +1,9 @@
 #ifndef C_EVIDENCES_H
 #define C_EVIDENCES_H
 
-#include "../../crypto_ops/crypto/crypto_ed25519.hpp"
-#include "c_token.hpp"
+#include "libs01.hpp"
 #include "coinsign_error.hpp"
+#include "c_token.hpp"
 /***
  * Class that provide evidences methods
  * for ensuring transactions security

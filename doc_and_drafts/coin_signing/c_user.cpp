@@ -1,4 +1,5 @@
 #include "c_user.hpp"
+
 void print_strBytes(const std::string& str);
 
 c_user::c_user (std::string& username) :
@@ -88,10 +89,10 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
         // maybe send invalid token to arbiters?
         return true;
     }
-    return false;
   } catch(const std::logic_error &l_err) {
         std::cerr << l_err.what() << std::endl;
   }
+    return false;
 }
 
 bool c_user::recieve_from_packet(std::string &packet) {
@@ -104,10 +105,10 @@ bool c_user::recieve_from_packet(std::string &packet) {
         // maybe send invalid token to arbiters?
         return true;
     }
-    return false;
   } catch(const std::logic_error &l_err) {
         std::cerr << l_err.what() << std::endl;
   }
+    return false;
 }
 
 bool c_user::recieve_token (c_token &token) {

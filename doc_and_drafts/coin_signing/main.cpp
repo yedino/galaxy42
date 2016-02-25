@@ -1,8 +1,8 @@
-#include <iostream>
+#include "libs01.hpp"
 #include "tests.hpp"
 
 bool check_cmd(const std::string cmd, const std::string request) {	//TODO return command id (int)
-    int start_point = 0;
+    size_t start_point = 0;
     while(start_point < request.size()) {
         if(request.at(start_point) != ' ') {
             break;
@@ -78,7 +78,7 @@ void run_interactive_protocol() {
 int main (int argc, char *argv[]) {
 	try {
 		ios_base::sync_with_stdio(false);
-        int number_of_threads;
+        int number_of_threads = 0;
         bool correct_threads_num = true;
 		if (argc <= 1) {
             std::cout << "you could define number of theards in argv[1] to run test with" << std::endl;
@@ -94,9 +94,9 @@ int main (int argc, char *argv[]) {
             std::cout << "setting default 1 thread" << std::endl;
             number_of_threads = 1;
         }
-        //test_all(number_of_threads);
+        test_all(number_of_threads);
 
-        run_interactive_protocol();
+        //run_interactive_protocol();
 
         return 0;
 

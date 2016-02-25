@@ -83,7 +83,7 @@ namespace coinsign_evidences {
         auto tok_a_chain = token_a.get_chainsign();
         auto tok_b_chain = token_b.get_chainsign();
 
-        for (auto pos=0; pos<len_min; ++pos) {
+        for (size_t pos = 0; pos<len_min; ++pos) {
             auto &current_signature_a = tok_a_chain[pos];
             auto &current_signature_b = tok_b_chain[pos];
 
@@ -163,7 +163,7 @@ namespace coinsign_evidences {
         auto chain_b = token_b.get_chainsign();
         size_t size_a = chain_a.size();
         if(size_a == chain_b.size()) {
-            for(int i = 0; i < size_a; ++i) {
+            for(size_t i = 0; i < size_a; ++i) {
                 if(chain_a.at(i) != chain_b.at(i)) {
                     return false;
                 }

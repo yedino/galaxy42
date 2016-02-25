@@ -45,9 +45,12 @@ namespace crypto_ed25519 {
 
         template<class Archive>
         void save (Archive & ar, const unsigned int version) const {
+            if(version != 0) {
+                std::cout << "boost::archieve ustring save version:" << version << std::endl;
+            }
             std::basic_string<char> s;
             s.assign (m_string.size (), (char)0);
-            for (int i = 0; i < m_string.size (); ++i) {
+            for (size_t i = 0; i < m_string.size (); ++i) {
                 s[i] = (char)m_string.at(i);
             }
             ar  & s;
@@ -55,10 +58,13 @@ namespace crypto_ed25519 {
 
         template<class Archive>
         void load (Archive & ar, const unsigned int version) {
+            if(version != 0) {
+                std::cout << "boost::archieve ustring load version:" << version << std::endl;
+            }
             std::basic_string<char> s;
             ar  & s;
             m_string.assign (s.size (), static_cast<unsigned char>(0));
-            for (int i = 0; i < s.size (); ++i) {
+            for (size_t i = 0; i < s.size (); ++i) {
                 m_string.at(i) = static_cast<unsigned char>(s.at(i));
             }
         }
@@ -78,6 +84,9 @@ namespace crypto_ed25519 {
 
         template <typename Archieve>
         void serialize(Archieve &ar, const unsigned version) {
+            if(version != 0) {
+                std::cout << "boost::archieve keypair serialize version:" << version << std::endl;
+            }
             ar & private_key;
             ar & public_key;
         }
