@@ -11,3 +11,6 @@
     path = doc_and_drafts/coin_signing/ptest
     url = https://github.com/pingwindyktator/ptest.git 
     branch = crashey
+[submodule "doc_and_drafts/bit_payments/bitcoin-api-cpp"]
+	path = doc_and_drafts/bit_payments/bitcoin-api-cpp
+	url = https://github.com/minium/bitcoin-api-cpp.git
