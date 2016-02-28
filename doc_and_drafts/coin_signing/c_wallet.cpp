@@ -64,7 +64,7 @@ void c_wallet::print_wallet_status(std::ostream &os, bool verbouse) const {
     }
 }
 
-void c_wallet::save_to_file(const std::string &filename) {
+void c_wallet::save_to_file(const std::string &filename) const {
 
     std::ofstream ofs(filename);
     boost::archive::text_oarchive oa(ofs);

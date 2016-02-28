@@ -12,8 +12,9 @@
 class c_user {
   public:
     c_user () = delete;
-    c_user (std::string&);
-    c_user (std::string &&);
+    c_user (const std::string& username);
+    c_user (std::string && username);
+    c_user (c_user && user);
 
     std::string get_username () const;
     ed_key get_public_key () const;
@@ -38,13 +39,16 @@ class c_user {
     void emit_tokens (size_t);
     long get_mint_last_expired_id () const;
 
-    void save_user (const std::string &filename);
-    void load_user (const std::string &filename);
+    // saving state
+    virtual void save_user(std::string filename = "default") const;	///< "default" filename means m_username.dat file
+    virtual void load_user(std::string filename = "default");		///< "default" filename means m_username.dat file
 
-
-    // coin wallet
+    void save_coinwallet (const std::string &filename) const;
     void load_coinwallet (const std::string &filename);
-    void save_coinwallet (const std::string &filename);
+
+    void save_keys() const;
+    void load_keys();
+
 
     // bitwallet part
 //    bool check_bitwallet ();
@@ -52,17 +56,28 @@ class c_user {
 //    double get_bitwallet_balance ();
 
   protected:
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize (Archive &ar, const unsigned int version) {
+        UNUSED(version);
+        ar & m_edkeys;
+        ar & m_mint;
+        ar & m_wallet;
+        ar & m_seen_tokens;
+        ar & m_reputation;
+    }
+
     crypto_ed25519::keypair m_edkeys;
 
     c_mint m_mint;
     c_wallet m_wallet;
 //    c_rpc_bitwallet m_bitwallet;
-    std::string m_username;
 
     std::list<c_token> m_seen_tokens;
 
     void print_seen_status (std::ostream &) const;
 
+    std::string m_username;
     double m_reputation;
 
     c_token process_token_tosend (const ed_key &, bool fake = 0);

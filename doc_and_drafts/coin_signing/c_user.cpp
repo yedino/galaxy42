@@ -1,12 +1,10 @@
 #include "c_user.hpp"
 
-void print_strBytes(const std::string& str);
-
-c_user::c_user (std::string& username) :
+c_user::c_user (const std::string& username) :
     m_edkeys(crypto_ed25519::generate_key()),
     m_mint(username,get_public_key())	// mintname could by other than username
 {
-    m_username.swap(username);
+    m_username = username;
     if (m_username.find('|') != string::npos) {
         throw std::runtime_error("nickname is not allowed to contain '|' character");
     }
@@ -23,6 +21,15 @@ c_user::c_user (string &&username) :
 	}
     m_reputation = 1;
 }
+
+c_user::c_user(c_user && user) :
+                                 m_edkeys(std::move(user.m_edkeys)),
+                                 m_mint(std::move(user.m_mint)),
+                                 m_wallet(std::move(user.m_wallet)),
+                                 m_seen_tokens(std::move(user.m_seen_tokens)),
+                                 m_username(std::move(user.m_username)),
+                                 m_reputation(std::move(user.m_reputation))
+{ }
 
 string c_user::get_username() const {
 	return m_username;
@@ -42,7 +49,6 @@ void c_user::print_seen_status(std::ostream &os) const {
         os << "Id: [" << tok.get_id() << "], Size: [" << tok.get_size() << "B: ]" << std::endl;
     }
 }
-
 
 c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wallet) {
     std::lock_guard<std::mutex> lck (m_mtx);
@@ -251,21 +257,47 @@ void c_user::print_status(std::ostream &os, bool verbouse) const {
     }
 }
 
-void print_strBytes(const std::string& str) {
-	for(size_t i = 0; i < str.length(); ++i) {
-		std::cout << static_cast<int>(str[i]) << ":";
-	}
-	std::cout << std::endl;
+//////////////////////////////////////////////////////////////////////////////////////////////////// saving state
+
+void c_user::save_user(std::string filename) const {
+    if(filename == "default") {
+        filename = m_username;
+        filename += ".dat";
+    }
+    std::ofstream ofs(filename);
+    boost::archive::text_oarchive oa(ofs);
+    oa << *this;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////// coinwallet
+void c_user::load_user(std::string filename) {
+  try {
+    if(filename == "default") {
+        filename = m_username;
+        filename += ".dat";
+    }
+      std::ifstream ifs(filename);
 
-void c_user::save_coinwallet(const std::string &filename) {
+      boost::archive::text_iarchive ia(ifs);
+      ia >> *this;
+    } catch (std::exception &ec) {
+          std::cerr << "Exception opening/reading/closing file :" << ec.what() << std::endl;
+    }
+}
+
+void c_user::save_coinwallet(const std::string &filename) const {
     m_wallet.save_to_file(filename);
 }
 
 void c_user::load_coinwallet(const std::string &filename) {
     m_wallet.load_from_file(filename);
+}
+
+void c_user::save_keys() const {
+    //TODO
+}
+
+void c_user::load_keys() {
+    //TODO
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// bitwallet

@@ -8,10 +8,21 @@ using namespace boost::asio;
 
 class c_netuser : public c_user {
   public:
-    c_netuser(std::string& username, int port = 30000);
+    c_netuser(const std::string& username, int port = 30000);
+    c_netuser(c_user &&user, int port = 30000);
+
     void send_token_bynet(const std::string &ip_address, int port = 30000);
+
     ~c_netuser();
   private:
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize (Archive &ar, const unsigned int version) {
+        UNUSED(version);
+        ar & boost::serialization::base_object<c_user>(*this);
+        ar & server_port;
+    }
+
     const int server_port;
     io_service m_io_service;
     ip::tcp::socket client_socket;

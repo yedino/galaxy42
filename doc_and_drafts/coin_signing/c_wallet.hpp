@@ -25,16 +25,17 @@ class c_wallet {
     /// verbouse == true : means that for each token all chainsign will be print
     void print_wallet_status (std::ostream &, bool verbouse = 0) const;
 
-    void save_to_file (const std::string &filename);
+    void save_to_file (const std::string &filename) const;
     void load_from_file (const std::string &filename);
 
+  private:
+    friend class boost::serialization::access;
     template<typename Archive>
     void serialize (Archive &ar, const unsigned int version) {
         UNUSED(version);
         ar & m_tokens;
     }
 
-  private:
     list<c_token> m_tokens;
     void remove_token (const c_token &);
 };

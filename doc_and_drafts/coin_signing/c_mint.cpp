@@ -2,11 +2,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////// ID GENERATOR
 
-token_id_generator::token_id_generator () : id(1)	// 1 instead of 0, becouse 0 is reserved for last expiried id
+token_id_generator::token_id_generator () : m_id(1)	// 1 instead of 0, becouse 0 is reserved for last expiried id
 { }
 
 size_t token_id_generator::generate_id() {
-    return id++;
+    return m_id++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////// MINT

@@ -10,8 +10,15 @@ class token_id_generator {
   public:
     token_id_generator ();
     size_t generate_id ();
+
+    template <typename Archive>
+    void serialize(Archive &ar, const unsigned version) {
+        UNUSED(version);
+        ar & m_id;
+    }
+
   private:
-    size_t id;
+    size_t m_id;
 };
 
 class c_mint {
@@ -36,11 +43,24 @@ class c_mint {
     size_t clean_expired_used ();
     void print_mint_status (std::ostream &os) const;
     size_t get_last_expired_id () const;
+
   private:
-	std::map<c_token, long long> m_emited_tokens;
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive &ar, const unsigned version) {
+        UNUSED(version);
+        ar & m_pubkey;
+        ar & m_mintname;
+        ar & m_emited_tokens;
+        ar & m_used_tokens;
+        ar & boost::serialization::make_binary_object (&t_expiration_time,sizeof(t_expiration_time));
+        ar & m_last_expired_id;
+        ar & m_id_generator;
+    }
+
+    std::map<c_token, long long> m_emited_tokens;
     std::list<c_token> m_used_tokens;
     c_random_generator<long long> random_generator;
-
 
     /// expitation_time of token
     /// all token emited by this mint should have the same expiration time

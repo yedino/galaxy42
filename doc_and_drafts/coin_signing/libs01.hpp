@@ -34,11 +34,14 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/list.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/serialization/binary_object.hpp>
 
 #include "../../crypto_ops/crypto/crypto_ed25519.hpp"
 #include "../../crypto_ops/crypto/c_random_generator.hpp"
 
 using std::size_t;
+
+void print_strBytes(const std::string& str);
 
 #endif // LIBS_H

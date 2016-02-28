@@ -14,7 +14,6 @@ list(REMOVE_ITEM SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/c_rpc_bitwallet.cpp)
 
 set(SOURCE
         coinsign_error.hpp
-        libs01.hpp
         ../../crypto_ops/crypto/crypto_ed25519.cpp
         ../../crypto_ops/crypto/sha_src/sha512.cpp
         ${SOURCE_FILES}

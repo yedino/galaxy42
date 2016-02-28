@@ -56,6 +56,8 @@ bool test_all(int number_of_threads) {
     run_suite_test(wallet_io, test_mint_token_expiration, 10, pequal);
     run_suite_test(wallet_io, test_recieve_deprecated_token, 0, pequal);
 
+    run_suite_test(base_tests, user_save_load, 0, pequal);
+    run_suite_test(base_tests, netuser_save_load, 0, pequal);
     // To pass below test. Running ./bitcoind or ./bitccoin-qt on your mashine is required
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
@@ -69,19 +71,6 @@ bool test_all(int number_of_threads) {
 
     print_final_test_result();
     return false;
-}
-
-static std::string generate_random_string (size_t length) {
-    auto generate_random_char = [] () -> char {
-        static const char Charset[] = "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-        const size_t max_index = (sizeof(Charset) - 1);
-        return Charset[rand() % max_index];
-    };
-    std::string str(length, 0);
-    generate_n(str.begin(), length, generate_random_char);
-    return str;
 }
 
 // this test using old ed25519 wrapper - DEPRECATED
@@ -109,6 +98,19 @@ static std::string generate_random_string (size_t length) {
 
 //    return false;
 //}
+
+static std::string generate_random_string (size_t length) {
+    auto generate_random_char = [] () -> char {
+        static const char Charset[] = "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+        const size_t max_index = (sizeof(Charset) - 1);
+        return Charset[rand() % max_index];
+    };
+    std::string str(length, 0);
+    generate_n(str.begin(), length, generate_random_char);
+    return str;
+}
 
 bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len) {
 
@@ -155,6 +157,8 @@ bool test_many_users () {
     D.send_token_bymethod(A);
     return false;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////// cheater tests
 
 bool test_cheater() {
   try {
@@ -248,6 +252,7 @@ bool fast_find_cheater() {
     return true;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////// cheater test end
 
 bool test_bad_chainsign() {
     std::cout << "RUNNING BAD INPUT, CHAINSIGN FORMAT TEST" << std::endl;
@@ -355,6 +360,8 @@ bool test_netuser() {
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////// bitwallet test
+
 //bool test_rpcwallet() {
 //  try {
 //    std::cout << "RUNNING_RPCWALLET_TEST" << std::endl;
@@ -389,7 +396,8 @@ bool test_netuser() {
 //        return true;
 //  }
 //}
-//////////////////////////////////////////////////////////////////////////////// WALLET_IO SUITE //////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////////// wallet_io
 
 bool test_wallet_expected_sender() {
   try {
@@ -516,7 +524,7 @@ bool chrono_time() {
     std::cout << "RUNNING TEST_CHRONO_TIME" << std::endl;
     c_user A("userA"), B("userB"), C("userC"), D("userD");
     A.emit_tokens(3);
-    std::chrono::milliseconds all;
+    std::chrono::milliseconds all(0);
     for(int i = 0; i < 3; ++i) {
         A.send_token_bymethod(B);
         for(int j = 0; j < 10; ++j) {
@@ -530,11 +538,86 @@ bool chrono_time() {
         std::chrono::time_point<std::chrono::system_clock> after = std::chrono::system_clock::now();
         all += std::chrono::duration_cast<std::chrono::milliseconds>(after - now);
     }
-    std::cout << "recieving size = 100 token: "<< std::chrono::duration_cast<std::chrono::milliseconds>(all).count()/5 << " miliseconds" << std::endl;
+    std::cout << "recieving size = 100 token: "<< all.count()/5 << " miliseconds" << std::endl;
 
   } catch(std::exception &ec){
         std::cout << ec.what() << std::endl;
-        return 1;
+        return true;
   }
-    return 0;
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////// user save --> load
+
+bool user_save_load() {
+  try {
+    std::cout << "RUNNING TEST USER SAVE LOAD" << std::endl;
+
+    c_user test_user("test_user"), other_user("other_user");
+    test_user.emit_tokens(5);
+    other_user.emit_tokens(1);
+    other_user.send_token_bymethod(test_user);
+    test_user.print_status(std::cout);
+
+    test_user.save_user();
+    test_user.print_status(std::cout);
+
+    c_user loaded("test_user2");
+    loaded.load_user("test_user.dat");
+    loaded.save_user();
+    loaded.print_status(std::cout);
+
+    std::ifstream ofs01("test_user.dat");
+    std::ifstream ofs02("test_user2.dat");
+    std::string file01; ofs01 >> file01;
+    std::string file02; ofs02 >> file02;
+
+
+    if(file01 == file02) {
+        return false;
+    }
+
+  } catch(std::exception &ec){
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+    return true;
+}
+
+bool netuser_save_load() {
+  try {
+    std::cout << "RUNNING TEST NETUSER SAVE LOAD" << std::endl;
+
+    c_user test_user("test_user"), other_user("other_user");
+    test_user.emit_tokens(5);
+    other_user.emit_tokens(1);
+    other_user.send_token_bymethod(test_user);
+    test_user.print_status(std::cout);
+
+    {
+        c_netuser test_netuser(std::move(test_user));
+        test_netuser.save_user();
+        test_netuser.print_status(std::cout);
+    }
+
+    c_netuser loaded("test_user2");
+    loaded.load_user("test_user.dat");
+    loaded.save_user();
+    loaded.print_status(std::cout);
+
+    std::ifstream ofs01("test_user.dat");
+    std::ifstream ofs02("test_user2.dat");
+    std::string file01; ofs01 >> file01;
+    std::string file02; ofs02 >> file02;
+
+
+    if(file01 == file02) {
+        return false;
+    }
+
+  } catch(std::exception &ec){
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+    return true;
 }
