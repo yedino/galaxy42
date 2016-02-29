@@ -11,12 +11,12 @@
 
 class c_user {
   public:
-    c_user () = delete;
     c_user (const std::string& username);
     c_user (std::string && username);
     c_user (c_user && user);
 
     std::string get_username () const;
+    void set_username (std::string &username);
     ed_key get_public_key () const;
     double get_rep ();		///< normalize reputation to 0-100 value, approximated by atan()
 
@@ -41,7 +41,7 @@ class c_user {
 
     // saving state
     virtual void save_user(std::string filename = "default") const;	///< "default" filename means m_username.dat file
-    virtual void load_user(std::string filename = "default");		///< "default" filename means m_username.dat file
+    virtual bool load_user(std::string filename = "default");		///< "default" filename means m_username.dat file
 
     void save_coinwallet (const std::string &filename) const;
     void load_coinwallet (const std::string &filename);
@@ -64,6 +64,7 @@ class c_user {
         ar & m_mint;
         ar & m_wallet;
         ar & m_seen_tokens;
+        ar & m_username;
         ar & m_reputation;
     }
 

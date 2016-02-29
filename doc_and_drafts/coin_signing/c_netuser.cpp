@@ -2,28 +2,35 @@
 
 const unsigned request_type_size = 2;
 
-c_netuser::c_netuser(const std::string &username, int port) : c_user(username),
-                                              server_port(port),
-                                              client_socket(m_io_service),
-                                              server_socket(m_io_service),
-                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(),server_port)),
-                                              m_stop_flag(false)
+c_netuser::c_netuser(const std::string &username, int port) :
+                                                              c_user(username),
+                                                              server_port(port),
+                                                              client_socket(m_io_service),
+                                                              server_socket(m_io_service),
+                                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(),server_port)),
+                                                              m_stop_flag(false)
 {
     create_server();
     threads_maker(2);
 }
 
-c_netuser::c_netuser(c_user &&user, int port) : c_user(std::move(user)),
-                                              server_port(port),
-                                              client_socket(m_io_service),
-                                              server_socket(m_io_service),
-                                              m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(),server_port)),
-                                              m_stop_flag(false)
+c_netuser::c_netuser(c_user &&user, int port) :
+                                                c_user(std::move(user)),
+                                                server_port(port),
+                                                client_socket(m_io_service),
+                                                server_socket(m_io_service),
+                                                m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(),server_port)),
+                                                m_stop_flag(false)
 {
     create_server();
     threads_maker(2);
 }
 
+int c_netuser::get_server_port() {
+    return server_port;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////// networking
 
 ed_key c_netuser::get_public_key_resp(ip::tcp::socket &socket_) {
 	DBG_MTX(dbg_mtx, "START");

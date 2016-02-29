@@ -31,8 +31,11 @@ c_user::c_user(c_user && user) :
                                  m_reputation(std::move(user.m_reputation))
 { }
 
-string c_user::get_username() const {
+std::string c_user::get_username() const {
 	return m_username;
+}
+void c_user::set_username(std::string & username) {
+    m_username = username;
 }
 
 ed_key c_user::get_public_key() const{
@@ -269,19 +272,25 @@ void c_user::save_user(std::string filename) const {
     oa << *this;
 }
 
-void c_user::load_user(std::string filename) {
+bool c_user::load_user(std::string filename) {
   try {
     if(filename == "default") {
         filename = m_username;
         filename += ".dat";
     }
-      std::ifstream ifs(filename);
-
-      boost::archive::text_iarchive ia(ifs);
-      ia >> *this;
-    } catch (std::exception &ec) {
-          std::cerr << "Exception opening/reading/closing file :" << ec.what() << std::endl;
+    if(file_exsist(filename)) {
+        std::ifstream ifs(filename);
+        boost::archive::text_iarchive ia(ifs);
+        ia >> *this;
+    } else {
+        std::cout << "Load "  << filename << " fail" << std::endl;
+        throw std::runtime_error("file does not exist");
     }
+  } catch (std::exception &ec) {
+          std::cerr << "Exception opening/reading/closing file :" << ec.what() << std::endl;
+          return false;
+  }
+    return true;
 }
 
 void c_user::save_coinwallet(const std::string &filename) const {

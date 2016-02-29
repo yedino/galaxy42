@@ -154,7 +154,7 @@ bool operator != (const c_chainsign_element &l_ele, const c_chainsign_element &r
 }
 
 bool operator == (const c_token &lhs, const c_token &rhs) {
-    return lhs.get_id() == rhs.get_id();
+    return (lhs.get_id() == rhs.get_id() && lhs.get_emiter_pubkey() == rhs.get_emiter_pubkey());
 }
 
 bool operator < (const c_token &lhs, const c_token &rhs) {

@@ -6,12 +6,14 @@
 
 using namespace boost::asio;
 
-class c_netuser : public c_user {
+class c_netuser final: public c_user {
   public:
     c_netuser(const std::string& username, int port = 30000);
     c_netuser(c_user &&user, int port = 30000);
 
     void send_token_bynet(const std::string &ip_address, int port = 30000);
+
+    int get_server_port();
 
     ~c_netuser();
   private:

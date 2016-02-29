@@ -43,5 +43,6 @@
 using std::size_t;
 
 void print_strBytes(const std::string& str);
+bool file_exsist (const std::string& filename);
 
 #endif // LIBS_H
