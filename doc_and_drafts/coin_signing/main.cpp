@@ -142,16 +142,40 @@ void run_interactive_protocol() {
     }
 }
 
+// TODO move to utils
+template <typename TCont, typename TValue> 
+bool any_of_is(const TCont & cont, const TValue & target_value) {
+	return std::any_of(cont.begin(), cont.end(), 
+		[target_value](const TValue & this_element) -> bool { return this_element == target_value; } 
+	);
+}
+
+using namespace std;
+
+
 int main (int argc, char *argv[]) {
+	vector<string> argtab;
+	for (auto i=1; i<argc; ++i) argtab.push_back(argv[i]);
+
+	typedef enum { e_mainfunction_interactive , e_mainfunction_tests , e_mainfunction_test_serialize } t_mainfunctions;
+	t_mainfunctions mainfunction = e_mainfunction_interactive;
+
+	if (any_of_is(argtab, string("--test2"))) mainfunction = e_mainfunction_test_serialize;
+
 	try {
 		ios_base::sync_with_stdio(false);
-        int number_of_threads = 0;
+
+        if (mainfunction == e_mainfunction_tests) {        	
+
+      	int number_of_threads = 0;
         bool correct_threads_num = true;
-		if (argc <= 1) {
+
+		if (argc <= 2) {
             std::cout << "you could define number of theards in argv[1] to run test with" << std::endl;
             correct_threads_num = false;
         } else {
-            number_of_threads = atoi(argv[1]);
+        		auto number_of_threads_str = argtab.at(2);
+            number_of_threads = atoi( number_of_threads_str.c_str() );
         }
 		if (number_of_threads <= 0) {
             std::cout << "you define incorrect number of theards" << std::endl;
@@ -161,9 +185,19 @@ int main (int argc, char *argv[]) {
             std::cout << "setting default 1 thread" << std::endl;
             number_of_threads = 1;
         }
+
         test_all(number_of_threads);
 
-        //run_interactive_protocol();
+				}
+
+				if (mainfunction == e_mainfunction_interactive) {
+        	run_interactive_protocol();
+        }
+
+				if (mainfunction == e_mainfunction_test_serialize) {
+					cout << "Test serialize" << endl;
+
+				}
 
         return 0;
 
