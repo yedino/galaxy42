@@ -31,3 +31,8 @@ TARGET_LINK_LIBRARIES(coin_signing ${Boost_LIBRARIES}
                         #jsonrpccpp-common
                         #jsonrpccpp-client
 )
+
+add_custom_target(run
+	COMMAND ./coin_signing
+	DEPENDS coin_signing
+	WORKING_DIRECTORY ${CMAKE_PROJECT_DIR})
