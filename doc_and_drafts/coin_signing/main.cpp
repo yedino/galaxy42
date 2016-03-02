@@ -161,9 +161,9 @@ int main (int argc, char *argv[]) {
             std::cout << "setting default 1 thread" << std::endl;
             number_of_threads = 1;
         }
-        //test_all(number_of_threads);
+        test_all(number_of_threads);
 
-        run_interactive_protocol();
+        //run_interactive_protocol();
 
         return 0;
 

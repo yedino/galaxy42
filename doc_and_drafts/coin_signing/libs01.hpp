@@ -42,7 +42,10 @@
 
 using std::size_t;
 
-void print_strBytes(const std::string& str);
-bool file_exsist (const std::string& filename);
+namespace cs_utils {
+    void print_strBytes(const std::string& str);
+    bool file_exsist (const std::string& filename);
+    std::string generate_random_string (size_t length);
+}
 
 #endif // LIBS_H

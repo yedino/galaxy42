@@ -34,7 +34,7 @@ c_user::c_user(c_user && user) :
 std::string c_user::get_username() const {
 	return m_username;
 }
-void c_user::set_username(std::string & username) {
+void c_user::set_username(std::string username) {
     m_username = username;
 }
 
@@ -76,11 +76,13 @@ std::string c_user::get_token_packet(const ed_key &user_pubkey, bool keep_in_wal
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
     m_mtx.lock();
     std::string packet = tok.to_packet();
+    unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
+    std::cout << "Serialize token with boost::archive version : " << version << std::endl;
     m_mtx.unlock();
-
+    std::cout << "Enter message: "; // pretty display in interactive: waiting for next action
     return packet;
 
-    } catch(const std::logic_error &l_err) {
+  } catch(const std::logic_error &l_err) {
         std::cerr << l_err.what() << std::endl;
         std::string fail = "fail";
         return fail;
@@ -91,7 +93,7 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
 
   try {
     c_token tok = process_token_tosend(user.get_public_key(),keep_in_wallet);
-
+    std::cout << m_username << ": sending [" << tok.get_emiter_name() << "] token with id [" << tok.get_id() << "] by method to [" << user.get_username() << "]" << std::endl;
     if(user.recieve_token(tok)) { // push this coin to the target user
         std::cout << "Fail to recieve token: token lost" << std::endl;
         // place to handle bad token
@@ -114,8 +116,14 @@ bool c_user::recieve_from_packet(std::string &packet) {
         // maybe send invalid token to arbiters?
         return true;
     }
+    unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
+    std::cout << "Deserialize token with boost::archive version : " << version << std::endl;
   } catch(const std::logic_error &l_err) {
         std::cerr << l_err.what() << std::endl;
+        return true;
+  } catch(const boost::archive::archive_exception &b_err) {
+        std::cout << b_err.what() << std::endl;
+        return true;
   }
     return false;
 }
@@ -269,6 +277,7 @@ void c_user::save_user(std::string filename) const {
     }
     std::ofstream ofs(filename);
     boost::archive::text_oarchive oa(ofs);
+    std::cout << m_username << ": saving data to [" << filename << "]" << std::endl;
     oa << *this;
 }
 
@@ -278,9 +287,10 @@ bool c_user::load_user(std::string filename) {
         filename = m_username;
         filename += ".dat";
     }
-    if(file_exsist(filename)) {
+    if(cs_utils::file_exsist(filename)) {
         std::ifstream ifs(filename);
         boost::archive::text_iarchive ia(ifs);
+        std::cout << "Loading data from [" << filename << "]" << std::endl;
         ia >> *this;
     } else {
         std::cout << "Load "  << filename << " fail" << std::endl;

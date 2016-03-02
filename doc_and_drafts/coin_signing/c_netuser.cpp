@@ -162,7 +162,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
 }
 
 void c_netuser::create_server() {
-    DBG_MTX(dbg_mtx,"accept on port " << server_port);
+    //DBG_MTX(dbg_mtx,"accept on port " << server_port);
 	while (m_io_service.stopped() && !m_stop_flag) {
 		//std::cout << "loop " << std::this_thread::get_id() << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -183,7 +183,7 @@ void c_netuser::create_server() {
                                 }
                                 this->create_server();
                             });
-    DBG_MTX(dbg_mtx,"end of async accept");
+    //DBG_MTX(dbg_mtx,"end of async accept");
 }
 
 void c_netuser::server_read(ip::tcp::socket socket_) {

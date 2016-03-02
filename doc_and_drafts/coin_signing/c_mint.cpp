@@ -24,9 +24,6 @@ c_token c_mint::emit_token() {
     long long t_password = generate_password();
 
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-    std::cout << "size of now: " << sizeof(now) << std::endl;
-
-
     std::chrono::time_point<std::chrono::system_clock> t_expiration_date = now+t_expiration_time;
 
     c_token token(c_token_header(m_mintname, m_pubkey, t_id, t_password, t_expiration_date));
@@ -37,7 +34,10 @@ c_token c_mint::emit_token() {
 }
 
 bool c_mint::check_is_emited(const c_token &token) const {
-    if(m_emited_tokens.find(token) != m_emited_tokens.end()) {
+    auto it = m_emited_tokens.find(token);
+    if(it != m_emited_tokens.end() &&
+       it->first == token) {		// we must check second time with ==operator, becouse map.find() using only <operator
+
         std::cout << "Token emited here!" << std::endl;
 		return true;
 	}

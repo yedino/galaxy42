@@ -16,7 +16,7 @@ class c_user {
     c_user (c_user && user);
 
     std::string get_username () const;
-    void set_username (std::string &username);
+    void set_username (std::string username);
     ed_key get_public_key () const;
     double get_rep ();		///< normalize reputation to 0-100 value, approximated by atan()
 

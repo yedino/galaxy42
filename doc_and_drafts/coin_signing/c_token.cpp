@@ -154,10 +154,20 @@ bool operator != (const c_chainsign_element &l_ele, const c_chainsign_element &r
 }
 
 bool operator == (const c_token &lhs, const c_token &rhs) {
-    return (lhs.get_id() == rhs.get_id() && lhs.get_emiter_pubkey() == rhs.get_emiter_pubkey());
+    if(lhs.get_id() != rhs.get_id()) {
+        return false;
+    }
+    if(lhs.get_emiter_pubkey() != rhs.get_emiter_pubkey()) {
+        return false;
+    }
+    if(lhs.get_expiration_date() != rhs.get_expiration_date()) {
+        return false;
+    }
+
+    return true;
 }
 
 bool operator < (const c_token &lhs, const c_token &rhs) {
-    return lhs.get_id() < rhs.get_id();
+    return (lhs.get_id() < rhs.get_id());
 }
 

@@ -7,3 +7,6 @@
 [submodule "doc_and_drafts/coin_signing/ptest"]
 	path = doc_and_drafts/coin_signing/ptest
 	url = https://github.com/pingwindyktator/ptest.git
+[submodule "doc_and_drafts/coin_signing/serialization"]
+	path = doc_and_drafts/coin_signing/serialization
+	url = https://github.com/boostorg/serialization

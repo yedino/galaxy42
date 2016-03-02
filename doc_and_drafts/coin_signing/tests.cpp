@@ -99,25 +99,14 @@ bool test_all(int number_of_threads) {
 //    return false;
 //}
 
-static std::string generate_random_string (size_t length) {
-    auto generate_random_char = [] () -> char {
-        static const char Charset[] = "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-        const size_t max_index = (sizeof(Charset) - 1);
-        return Charset[rand() % max_index];
-    };
-    std::string str(length, 0);
-    generate_n(str.begin(), length, generate_random_char);
-    return str;
-}
+
 
 bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len) {
 
     crypto_ed25519::keypair keys(crypto_ed25519::generate_key());
 
     for(size_t i = 1; i < signs_num; ++i) {
-        const std::string message = generate_random_string(message_len);
+        const std::string message = cs_utils::generate_random_string(message_len);
         ed_sign sign = crypto_ed25519::sign(message, keys);
 
         /* verify the signature */
@@ -557,14 +546,12 @@ bool user_save_load() {
     test_user.emit_tokens(5);
     other_user.emit_tokens(1);
     other_user.send_token_bymethod(test_user);
-    test_user.print_status(std::cout);
-
     test_user.save_user();
     test_user.print_status(std::cout);
 
     c_user loaded("test_user2");
     loaded.load_user("test_user.dat");
-    loaded.save_user();
+    loaded.save_user("test_user2.dat");
     loaded.print_status(std::cout);
 
     std::ifstream ofs01("test_user.dat");
@@ -574,6 +561,7 @@ bool user_save_load() {
 
 
     if(file01 == file02) {
+        std::cout << "Flies are equal - OK" << std::endl;
         return false;
     }
 
@@ -612,6 +600,7 @@ bool netuser_save_load() {
 
 
     if(file01 == file02) {
+        std::cout << "Flies are equal - OK" << std::endl;
         return false;
     }
 
