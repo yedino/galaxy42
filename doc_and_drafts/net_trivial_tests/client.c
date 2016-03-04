@@ -1,3 +1,13 @@
+/*
+This file is educational purposes only! probably has bugs and so on.
+*/
+
+/*
+A trivial socket client sending data.
+*/
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
