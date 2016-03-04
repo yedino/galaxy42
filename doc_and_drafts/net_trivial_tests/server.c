@@ -34,14 +34,15 @@ int main(int argc, char *argv[])
 
 
      if (argc < 3) {
-         fprintf(stderr,"ERRPR wrong params. Usage: program portnumber ipfamily\nexample:\nprogram 9000 ipv4\nprogram 9000 ipv6\n");
+         fprintf(stderr, "ERROR wrong params.\nUsage: program portnumber ipfamily\nexample:\nprogram 9000 ipv4\nprogram 9000 ipv6\n");
          exit(1);
      }
 
 		int mode_ipv6 = 0==strcmp("ipv6",argv[2]);  // ***
-		fprintf("IPv6 mode: %s" , (mode_ipv6 ? "YES, IPv6" : "no, ipv4"));
+		printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 		if (mode_ipv6) {
+			printf("Binding as IPv6\n");
      struct sockaddr_in6 serv_addr, cli_addr;
      sockfd = socket(AF_INET6, SOCK_STREAM, 0);
      if (sockfd < 0)
@@ -63,9 +64,11 @@ int main(int argc, char *argv[])
      if (newsockfd < 0)
           error("ERROR on accept");
 
+			printf("Binding as IPv6 - DONE\n");
 		}
 		else
 		{
+			printf("Binding as IPv4\n");
      struct sockaddr_in serv_addr, cli_addr;
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0)
@@ -85,6 +88,7 @@ int main(int argc, char *argv[])
                  &clilen);
      if (newsockfd < 0)
           error("ERROR on accept");
+			printf("Binding as IPv4 - DONE\n");
 		}
 
 		// count speed etc:
@@ -94,10 +98,12 @@ int main(int argc, char *argv[])
 		long long int w_time1=0; // start when this window started
 		const long long int w_len = 2; // window length in seconds
 
+		printf("Waiting for full second on the clock.\n");
 		w_time1=time(NULL);
 		while (w_time1 == time(NULL)) { } ; // a silly way to wait for a new second to start - so that counter starts at exact second
 		w_time1=time(NULL);
 
+			printf("Starting main loop\n");
 
      while (1) {
 
