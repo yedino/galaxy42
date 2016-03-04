@@ -1,0 +1,29 @@
+Files here could have other licences!
+
+Read their source code to be sure.
+
+We do NOT guarantee they are free to use/copy.
+
+---------------------------------------------------------------------
+
+Informaion for srv.c cli.c files:
+
+Code was found on Internet (and then modified by us), e.g.:
+http://www.linuxhowtos.org/data/6/server.c
+http://www.linuxhowtos.org/data/6/client.c
+http://www.linuxhowtos.org/C_C++/socket.htm
+
+and according to http://www.linuxhowtos.org/category17/
+it could be: "Copyright 2004-2013 Sascha Nitsch Unternehmensberatung UG(haftungsbeschränkt)"
+though no idea if this applies to the page including this example source code or not.
+
+We assume that it is on same licene/legal notice as the site, that is:
+"
+All howtos and documents on this site are provided "AS IS," with no express or implied warranties. Use the information on this site at your own risk.
+Linux is a registered trademark of Linus Torvalds. Other company, product, and service names may be trademarks or service marks of others. 
+"
+
+we do not claim any rights for our modifications of the code, as for us it could be Public Domain.
+
+---------------------------------------------------------------------
+
