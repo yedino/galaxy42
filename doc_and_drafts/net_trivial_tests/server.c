@@ -1,10 +1,11 @@
 /*
 This file is educational purposes only! probably has bugs and so on.
-*/
 
 
-/*
 A trivial socket server receiving data.
+
+Build with:
+gcc --std=c11 -O3 -g3 -Wpedantic -Werror server.c -o server.bin 
 */
 
 #include <stdio.h>
@@ -15,6 +16,7 @@ A trivial socket server receiving data.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <time.h>
+#include <strings.h>
 
 #define BUFFER_SIZE 10000
 
@@ -26,43 +28,44 @@ void error(const char *msg)
 
 int main(int argc, char *argv[])
 {
-		printf("Starting \n");
-
      int sockfd, newsockfd, portno;
      socklen_t clilen;
      char buffer[BUFFER_SIZE];
+ 		 int mode_ipv6 = 0; // should we use IPv6 (or else IPv4 is used) - configured from command line
 
+		printf("Starting \n");
 
      if (argc < 3) {
          fprintf(stderr, "ERROR wrong params.\nUsage: program portnumber ipfamily\nexample:\nprogram 9000 ipv4\nprogram 9000 ipv6\n");
          exit(1);
      }
 
-		int mode_ipv6 = 0==strcmp("ipv6",argv[2]);  // ***
+		mode_ipv6 = 0==strcmp("ipv6",argv[2]);  // ***
 		printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 		if (mode_ipv6) {
-			printf("Binding as IPv6\n");
      struct sockaddr_in6 serv_addr, cli_addr;
+
+		printf("Binding as IPv6\n");
      sockfd = socket(AF_INET6, SOCK_STREAM, 0);
-     if (sockfd < 0)
-        error("ERROR opening socket");
+     if (sockfd < 0) error("ERROR opening socket");
+
      bzero((char *) &serv_addr, sizeof(serv_addr));
      portno = atoi(argv[1]);
      serv_addr.sin6_family = AF_INET6;
-     const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT; //  ...
-     serv_addr.sin6_addr = in6addr_any; // ...
-     serv_addr.sin6_port = htons(portno);
-     if (bind(sockfd, (struct sockaddr *) &serv_addr,
-              sizeof(serv_addr)) < 0)
-              error("ERROR on binding");
+     {
+	     const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT; //  ...
+	     serv_addr.sin6_addr = in6addr_any; // ...
+	     serv_addr.sin6_port = htons(portno);
+	     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) error("ERROR on binding");
+	  }
+
      listen(sockfd,5);
+
      clilen = sizeof(cli_addr);
-     newsockfd = accept(sockfd,
-                 (struct sockaddr *) &cli_addr,
-                 &clilen);
-     if (newsockfd < 0)
-          error("ERROR on accept");
+     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+
+     if (newsockfd < 0) error("ERROR on accept");
 
 			printf("Binding as IPv6 - DONE\n");
 		}
@@ -92,11 +95,12 @@ int main(int argc, char *argv[])
 		}
 
 		// count speed etc:
+		const long long int w_len = 2; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
+
 		long long int count_all=0;  // all since start
 		long long int w_count_b=0;  // in this window: count of bytes
 		long long int w_count_pkt=0;  // in this window: count of packets
 		long long int w_time1=0; // start when this window started
-		const long long int w_len = 2; // window length in seconds
 
 		printf("Waiting for full second on the clock.\n");
 		w_time1=time(NULL);
@@ -135,6 +139,7 @@ int main(int argc, char *argv[])
 
 		if (w_time2 >= w_time1 + w_len) {
 			printf("\nStats at count: %lld \n", count_all);
+			printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 			double speed = w_count_b / ( ((double)w_time2) - w_time1);
 			double speed_pkt = w_count_pkt / ( ((double)w_time2) - w_time1);
