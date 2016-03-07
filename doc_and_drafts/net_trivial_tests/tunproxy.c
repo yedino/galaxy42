@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <stdlib.h>
 #include <net/if.h>
 #include <linux/if_tun.h>
 #include <getopt.h>
