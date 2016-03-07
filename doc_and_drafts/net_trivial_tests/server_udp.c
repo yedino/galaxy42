@@ -10,6 +10,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <time.h>
 
 #define BUFFER_SIZE 10000
 
@@ -42,14 +43,47 @@ int main(int argc, char *argv[])
 	if (bind(sock,(struct sockaddr *)&server,length)<0)
 		 error("binding");
 	fromlen = sizeof(struct sockaddr_in);
+
+	// count speed etc:
+	const long long int w_len = 2; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
+
+	long long int count_all=0;  // all since start
+	long long int w_count_b=0;  // in this window: count of bytes
+	long long int w_count_pkt=0;  // in this window: count of packets
+	long long int w_time1=0; // start when this window started
+
 	while (1) {
-		 n = recvfrom(sock,buf,BUFFER_SIZE,0,(struct sockaddr *)&from,&fromlen);
-		 if (n < 0) error("recvfrom");
-		 //write(1,"Received a datagram: ",21);
-		 //write(1,buf,n);
-		 //n = sendto(sock,"Got your message\n",17,
-		//				0,(struct sockaddr *)&from,fromlen);
-		 //if (n  < 0) error("sendto");
+		n = recvfrom(sock,buf,BUFFER_SIZE,0,(struct sockaddr *)&from,&fromlen);
+		if (n < 0) error("recvfrom");
+		w_count_b += n; // number of bytes (received)
+		++w_count_pkt;
+		++count_all;
+
+		if (1==(count_all % 100))	{
+			long long int w_time2 = time(NULL); // now
+
+			if (w_time2 >= w_time1 + w_len) {
+				printf("\nStats at count: %lld \n", count_all);
+				//printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
+
+				double speed = w_count_b / ( ((double)w_time2) - w_time1);
+				double speed_pkt = w_count_pkt / ( ((double)w_time2) - w_time1);
+				double w_avg_pkt_size = w_count_b / ((double)w_count_pkt);
+
+				printf("speed: %f    avg pkt size %f bits (%f bytes)\n", speed_pkt, w_avg_pkt_size*8, w_avg_pkt_size);
+				printf("speed: %f    pkt  /sec\n", speed_pkt);
+				printf("speed: %f    byte /sec\n", speed);
+				printf("speed: %f Ki byte /sec\n", speed/1024);
+				printf("speed: %f Mi byte /sec\n", speed/(1024*1024));
+				printf("speed: %f    bit  /sec\n", 8*speed);
+				printf("speed: %f Ki bit  /sec\n", 8*speed/1024);
+				printf("speed: %f Mi bit  /sec\n", 8*speed/(1024*1024));
+
+				// restart window counter:
+				w_time1 = w_time2;
+				w_count_b = 0;
+			}
+		}
 	}
 	return 0;
  }
