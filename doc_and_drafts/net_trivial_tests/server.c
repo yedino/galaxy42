@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
      char buffer[BUFFER_SIZE];
  		 int mode_ipv6 = 0; // should we use IPv6 (or else IPv4 is used) - configured from command line
 
-		printf("Starting \n");
+		printf("Starting TCP server\n");
 
      if (argc < 3) {
          fprintf(stderr, "ERROR wrong params.\nUsage: program portnumber ipfamily\nexample:\nprogram 9000 ipv4\nprogram 9000 ipv6\n");
@@ -139,13 +139,13 @@ int main(int argc, char *argv[])
 
 		if (w_time2 >= w_time1 + w_len) {
 			printf("\nStats at count: %lld \n", count_all);
-			printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
+			printf("IPv6 mode: TCP %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 			double speed = w_count_b / ( ((double)w_time2) - w_time1);
 			double speed_pkt = w_count_pkt / ( ((double)w_time2) - w_time1);
 			double w_avg_pkt_size = w_count_b / ((double)w_count_pkt);
 
-			printf("speed: %f    avg pkt size %f bits (%f bytes)\n", speed_pkt, w_avg_pkt_size*8, w_avg_pkt_size);
+			printf("speed:       avg pkt size %f bits (%f bytes)\n", w_avg_pkt_size*8, w_avg_pkt_size);
 			printf("speed: %f    pkt  /sec\n", speed_pkt);
 			printf("speed: %f    byte /sec\n", speed);
 			printf("speed: %f Ki byte /sec\n", speed/1024);
@@ -157,6 +157,7 @@ int main(int argc, char *argv[])
 			// restart window counter:
 			w_time1 = w_time2;
 			w_count_b = 0;
+			w_count_pkt = 0;
 		}
 	}
 

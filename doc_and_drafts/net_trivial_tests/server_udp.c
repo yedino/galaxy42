@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <time.h>
+#include <strings.h>
 
 #define BUFFER_SIZE 10000
 
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
 	}
 
 	mode_ipv6 = 0==strcmp("ipv6", argv[2]);  // ***
-	printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
+	printf("IPv6 mode: UDP %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 	if (mode_ipv6) {
 		struct sockaddr_in6 server;
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
 	}
 
 	// count speed etc:
-	const long long int w_len = 2; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
+	const long long int w_len = 10; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
 
 	long long int count_all=0;  // all since start
 	long long int w_count_b=0;  // in this window: count of bytes
@@ -86,18 +87,27 @@ int main(int argc, char *argv[])
 		++w_count_pkt;
 		++count_all;
 
+		// printf("read=%d ", n);
+
 		if (1==(count_all % 100))	{
 			long long int w_time2 = time(NULL); // now
 
+
 			if (w_time2 >= w_time1 + w_len) {
 				printf("\nStats at count: %lld \n", count_all);
-				//printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
+				printf("IPv6 mode: UDP %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
+				
+
+				buf[n]='\0'; // TODO secure?
+				printf("Received: [%s]\n", buf);
+
 
 				double speed = w_count_b / ( ((double)w_time2) - w_time1);
 				double speed_pkt = w_count_pkt / ( ((double)w_time2) - w_time1);
 				double w_avg_pkt_size = w_count_b / ((double)w_count_pkt);
+				if (w_count_pkt == 0) w_avg_pkt_size=-1;
 
-				printf("speed: %f    avg pkt size %f bits (%f bytes)\n", speed_pkt, w_avg_pkt_size*8, w_avg_pkt_size);
+				printf("speed:       avg pkt size %f bits (%f bytes)\n",  w_avg_pkt_size*8, w_avg_pkt_size);
 				printf("speed: %f    pkt  /sec\n", speed_pkt);
 				printf("speed: %f    byte /sec\n", speed);
 				printf("speed: %f Ki byte /sec\n", speed/1024);
@@ -109,6 +119,7 @@ int main(int argc, char *argv[])
 				// restart window counter:
 				w_time1 = w_time2;
 				w_count_b = 0;
+				w_count_pkt = 0;
 			}
 		}
 	}
