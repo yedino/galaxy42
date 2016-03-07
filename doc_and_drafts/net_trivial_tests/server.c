@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 			double speed_pkt = w_count_pkt / ( ((double)w_time2) - w_time1);
 			double w_avg_pkt_size = w_count_b / ((double)w_count_pkt);
 
-			printf("speed: %f    avg pkt size %f bits (%f bytes)\n", w_avg_pkt_size*8, w_avg_pkt_size);
+			printf("speed: %f    avg pkt size %f bits (%f bytes)\n", speed_pkt, w_avg_pkt_size*8, w_avg_pkt_size);
 			printf("speed: %f    pkt  /sec\n", speed_pkt);
 			printf("speed: %f    byte /sec\n", speed);
 			printf("speed: %f Ki byte /sec\n", speed/1024);

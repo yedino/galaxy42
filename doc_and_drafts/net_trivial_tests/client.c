@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
      }
 
 	int mode_ipv6 = 0==strcmp("ipv6",argv[3]);  // ***
-	fprintf("IPv6 mode: %s" , (mode_ipv6 ? "YES, IPv6" : "no, ipv4"));
+	printf("IPv6 mode: %s" , (mode_ipv6 ? "YES, IPv6" : "no, ipv4"));
 
     	if (mode_ipv6) {
     struct sockaddr_in6	serv_addr;
