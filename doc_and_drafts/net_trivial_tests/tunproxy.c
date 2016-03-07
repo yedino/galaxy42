@@ -97,19 +97,26 @@ int main(int argc, char *argv[])
 	sin.sin_addr.s_addr = htonl(INADDR_ANY);
 	sin.sin_port = htons(PORT);
 	if ( bind(s,(struct sockaddr *)&sin, sizeof(sin)) < 0) PERROR("bind");
+	printf("After bin in line %d", __LINE__);
 
 	fromlen = sizeof(from);
 
 	if (MODE == 1) {
+		printf("Will wait for the passwor packet now...%d", __LINE__);
 		while(1) {
+			printf("Trying to receive password...%d", __LINE__);
 			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&from, &fromlen);
+			printf("Read password packet len=%d in line %d", l, __LINE__);
 			if (l < 0) PERROR("recvfrom");
 			if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD)) == 0)
 				break;
 			printf("Bad magic word from %s:%i\n", 
 			       inet_ntoa(from.sin_addr.s_addr), ntohs(from.sin_port));
 		} 
+		printf("Got correct password in line %d", __LINE__);
+		printf("Sending reply line %d", __LINE__);
 		l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, fromlen);
+		printf("Sent reply line %d", __LINE__);
 		if (l < 0) PERROR("sendto");
 	} else {
 		from.sin_family = AF_INET;
@@ -124,6 +131,7 @@ int main(int argc, char *argv[])
 	}
 	printf("Connection with %s:%i established\n", 
 	       inet_ntoa(from.sin_addr.s_addr), ntohs(from.sin_port));
+
 	while (1) {
 		FD_ZERO(&fdset);
 		FD_SET(fd, &fdset);
