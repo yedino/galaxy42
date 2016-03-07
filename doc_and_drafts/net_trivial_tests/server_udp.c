@@ -11,6 +11,8 @@
 #include <netdb.h>
 #include <stdio.h>
 
+#define BUFFER_SIZE 10000
+
 void error(const char *msg)
 {
 	 perror(msg);
@@ -23,7 +25,7 @@ int main(int argc, char *argv[])
 	socklen_t fromlen;
 	struct sockaddr_in server;
 	struct sockaddr_in from;
-	char buf[1024];
+	char buf[BUFFER_SIZE];
 
 	if (argc < 2) {
 		fprintf(stderr, "ERROR, no port provided\n");
@@ -41,13 +43,13 @@ int main(int argc, char *argv[])
 		 error("binding");
 	fromlen = sizeof(struct sockaddr_in);
 	while (1) {
-		 n = recvfrom(sock,buf,1024,0,(struct sockaddr *)&from,&fromlen);
+		 n = recvfrom(sock,buf,BUFFER_SIZE,0,(struct sockaddr *)&from,&fromlen);
 		 if (n < 0) error("recvfrom");
-		 write(1,"Received a datagram: ",21);
-		 write(1,buf,n);
-		 n = sendto(sock,"Got your message\n",17,
-						0,(struct sockaddr *)&from,fromlen);
-		 if (n  < 0) error("sendto");
+		 //write(1,"Received a datagram: ",21);
+		 //write(1,buf,n);
+		 //n = sendto(sock,"Got your message\n",17,
+		//				0,(struct sockaddr *)&from,fromlen);
+		 //if (n  < 0) error("sendto");
 	}
 	return 0;
  }
