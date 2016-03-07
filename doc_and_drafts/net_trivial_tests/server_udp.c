@@ -24,8 +24,9 @@ int main(int argc, char *argv[])
 {
 	int sock, length, n;
 	socklen_t fromlen;
-	struct sockaddr_in server;
+	//struct sockaddr_in server;
 	struct sockaddr_in from;
+	struct sockaddr_in6 from6;
 	char buf[BUFFER_SIZE];
 	int mode_ipv6 = 0; // should we use IPv6 (or else IPv4 is used) - configured from command line
 
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
 	printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 	if (mode_ipv6) {
-	struct sockaddr_in6 server;
+		struct sockaddr_in6 server;
 		sock=socket(AF_INET6, SOCK_DGRAM, 0);
 		if (sock < 0) error("Opening socket");
 		server.sin6_family=AF_INET6;
@@ -48,9 +49,11 @@ int main(int argc, char *argv[])
 		length = sizeof(server);
 		if (bind(sock,(struct sockaddr *)&server,length)<0)
 			error("binding");
+		fromlen = sizeof(struct sockaddr_in6);
 	}
 
 	else { // IPv4
+		struct sockaddr_in server;
 		sock=socket(AF_INET, SOCK_DGRAM, 0);
 		if (sock < 0) error("Opening socket");
 		length = sizeof(server);
@@ -60,8 +63,8 @@ int main(int argc, char *argv[])
 		server.sin_port=htons(atoi(argv[1]));
 		if (bind(sock,(struct sockaddr *)&server,length)<0)
 			error("binding");
+		fromlen = sizeof(struct sockaddr_in);
 	}
-	fromlen = sizeof(struct sockaddr_in);
 
 	// count speed etc:
 	const long long int w_len = 2; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
@@ -72,7 +75,12 @@ int main(int argc, char *argv[])
 	long long int w_time1=0; // start when this window started
 
 	while (1) {
-		n = recvfrom(sock,buf,BUFFER_SIZE,0,(struct sockaddr *)&from,&fromlen);
+		if (mode_ipv6) {
+			n = recvfrom(sock,buf,BUFFER_SIZE,0,(struct sockaddr *)&from6,&fromlen);
+		}
+		else {
+			n = recvfrom(sock,buf,BUFFER_SIZE,0,(struct sockaddr *)&from,&fromlen);
+		}
 		if (n < 0) error("recvfrom");
 		w_count_b += n; // number of bytes (received)
 		++w_count_pkt;

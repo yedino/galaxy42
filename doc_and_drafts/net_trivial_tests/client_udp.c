@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
 {
 	int sock, n;
 	unsigned int length;
-	struct sockaddr_in server, from; // TODO rm from
-	struct sockaddr_in6	server6;
+	struct sockaddr_in server;
+	struct sockaddr_in6 server6;
 	struct hostent *hp;
 	char buffer[BUFFER_SIZE];
 
@@ -30,13 +30,14 @@ int main(int argc, char *argv[])
 	if (mode_ipv6) {
 		sock= socket(AF_INET6, SOCK_DGRAM, 0);
 		if (sock < 0) error("socket");
-		server6.sin6_family = AF_INET;
+		server6.sin6_family = AF_INET6;
 		hp = gethostbyname2(argv[1], AF_INET6);
 		if (hp==0) error("Unknown host");
 		bcopy((char *)hp->h_addr,
 		  (char *)&server6.sin6_addr,
 			hp->h_length);
 		server6.sin6_port = htons(atoi(argv[2]));
+		length=sizeof(struct sockaddr_in6);
 	}
 
 	else {
@@ -51,8 +52,8 @@ int main(int argc, char *argv[])
 		  (char *)&server.sin_addr,
 			hp->h_length);
 		server.sin_port = htons(atoi(argv[2]));
+		length=sizeof(struct sockaddr_in);
 	}
-	length=sizeof(struct sockaddr_in);
 	memset(buffer, 'a', BUFFER_SIZE);
 	while (1) {
 		if (mode_ipv6) {
