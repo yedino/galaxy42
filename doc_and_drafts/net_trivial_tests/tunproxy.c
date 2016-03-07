@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 	}
 	if (MODE == 0) usage();
 
+/*
 	if ( (fd = open("/dev/net/tun",O_RDWR)) < 0) PERROR("open");
 
 	memset(&ifr, 0, sizeof(ifr));
@@ -91,32 +92,53 @@ int main(int argc, char *argv[])
 	if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0) PERROR("ioctl");
 
 	printf("Allocated interface %s. Configure and use it\n", ifr.ifr_name);
+*/
 	
-	s = socket(PF_INET, SOCK_DGRAM, 0);
+	/*
+	s = socket(AF_INET, SOCK_DGRAM, 0);
+  bzero(&sin, sizeof(sin));
 	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = htonl(INADDR_ANY);
+	sin.sin_addr.s_addr = INADDR_ANY; // or  htonl(INADDR_ANY); TODO ?!
 	sin.sin_port = htons(PORT);
 	if ( bind(s,(struct sockaddr *)&sin, sizeof(sin)) < 0) PERROR("bind");
-	printf("After bin in line %d", __LINE__);
+	*/
+
+	printf("PORT=%d \n", PORT);
+
+	// struct sockaddr_in sin;
+	s = socket(AF_INET, SOCK_DGRAM, 0);
+	if (s < 0) error("Opening socket");
+	//length = sizeof(server);
+	bzero(&sin, sizeof(sin));
+	sin.sin_family=AF_INET;
+	sin.sin_addr.s_addr=INADDR_ANY;
+	sin.sin_port=htons(PORT); 
+	// if (bind(sock,(struct sockaddr *)&server,length)<0)
+	printf("Doing the bind\n");
+	if (bind(s,(struct sockaddr *)&sin, sizeof(sin))<0) error("binding");
+	printf("Doing the bind - DONE\n");
+	// fromlen = sizeof(struct sockaddr_in);
+
+	printf("After bind in line %d\n", __LINE__);
 
 	fromlen = sizeof(from);
 
 	if (MODE == 1) {
-		printf("Will wait for the passwor packet now...%d", __LINE__);
+		printf("Will wait for the passwor packet now...%d\n", __LINE__);
 		while(1) {
-			printf("Trying to receive password...%d", __LINE__);
+			printf("Trying to receive password...%d\n", __LINE__);
 			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&from, &fromlen);
-			printf("Read password packet len=%d in line %d", l, __LINE__);
+			printf("Read password packet len=%d in line %d\n", l, __LINE__);
 			if (l < 0) PERROR("recvfrom");
 			if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD)) == 0)
 				break;
 			printf("Bad magic word from %s:%i\n", 
 			       inet_ntoa(from.sin_addr.s_addr), ntohs(from.sin_port));
 		} 
-		printf("Got correct password in line %d", __LINE__);
-		printf("Sending reply line %d", __LINE__);
+		printf("Got correct password in line %d\n", __LINE__);
+		printf("Sending reply line %d\n", __LINE__);
 		l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, fromlen);
-		printf("Sent reply line %d", __LINE__);
+		printf("Sent reply line %d\n", __LINE__);
 		if (l < 0) PERROR("sendto");
 	} else {
 		from.sin_family = AF_INET;

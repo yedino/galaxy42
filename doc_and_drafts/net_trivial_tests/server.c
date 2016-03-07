@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
      if (argc < 3) {
          fprintf(stderr, "ERROR wrong params.\nUsage: program portnumber ipfamily\nexample:\nprogram 9000 ipv4\nprogram 9000 ipv6\n");
          exit(1);
-     }
+     }AAA
 
 		mode_ipv6 = 0==strcmp("ipv6",argv[2]);  // ***
 		printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
