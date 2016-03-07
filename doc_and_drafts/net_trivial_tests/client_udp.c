@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <assert.h>
 
 #define BUFFER_SIZE 10000
 
@@ -55,7 +56,13 @@ int main(int argc, char *argv[])
 		length=sizeof(struct sockaddr_in);
 	}
 	memset(buffer, 'a', BUFFER_SIZE);
-	while (1) {
+	buffer[0] = 'A';
+	assert(BUFFER_SIZE > 4);
+
+	buffer[BUFFER_SIZE - 3] = 'X';
+	buffer[BUFFER_SIZE - 2] = 'Y';
+	buffer[BUFFER_SIZE - 1] = 'Z';
+	//while (1) {
 		if (mode_ipv6) {
 			n=sendto(sock,buffer,
 					strlen(buffer),0,(const struct sockaddr *)&server6,length);
@@ -65,7 +72,8 @@ int main(int argc, char *argv[])
 					strlen(buffer),0,(const struct sockaddr *)&server,length);
 		}
 		if (n < 0) error("Sendto");
-	}
+	//}
+	sleep(2);
 	close(sock);
 	return 0;
 }
