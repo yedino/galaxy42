@@ -27,21 +27,40 @@ int main(int argc, char *argv[])
 	struct sockaddr_in server;
 	struct sockaddr_in from;
 	char buf[BUFFER_SIZE];
+	int mode_ipv6 = 0; // should we use IPv6 (or else IPv4 is used) - configured from command line
 
-	if (argc < 2) {
-		fprintf(stderr, "ERROR, no port provided\n");
+	if (argc != 3) {
+		fprintf(stderr, "ERROR wrong params.\nUsage: program portnumber ipfamily\nexample:\nprogram 9000 ipv4\nprogram 9000 ipv6\n");
 		exit(0);
 	}
 
-	sock=socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock < 0) error("Opening socket");
-	length = sizeof(server);
-	bzero(&server,length);
-	server.sin_family=AF_INET;
-	server.sin_addr.s_addr=INADDR_ANY;
-	server.sin_port=htons(atoi(argv[1]));
-	if (bind(sock,(struct sockaddr *)&server,length)<0)
-		 error("binding");
+	mode_ipv6 = 0==strcmp("ipv6", argv[2]);  // ***
+	printf("IPv6 mode: %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
+
+	if (mode_ipv6) {
+	struct sockaddr_in6 server;
+		sock=socket(AF_INET6, SOCK_DGRAM, 0);
+		if (sock < 0) error("Opening socket");
+		server.sin6_family=AF_INET6;
+		const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT; //  ...
+		server.sin6_addr=in6addr_any;
+		server.sin6_port=htons(atoi(argv[1]));
+		length = sizeof(server);
+		if (bind(sock,(struct sockaddr *)&server,length)<0)
+			error("binding");
+	}
+
+	else { // IPv4
+		sock=socket(AF_INET, SOCK_DGRAM, 0);
+		if (sock < 0) error("Opening socket");
+		length = sizeof(server);
+		bzero(&server,length);
+		server.sin_family=AF_INET;
+		server.sin_addr.s_addr=INADDR_ANY;
+		server.sin_port=htons(atoi(argv[1]));
+		if (bind(sock,(struct sockaddr *)&server,length)<0)
+			error("binding");
+	}
 	fromlen = sizeof(struct sockaddr_in);
 
 	// count speed etc:
