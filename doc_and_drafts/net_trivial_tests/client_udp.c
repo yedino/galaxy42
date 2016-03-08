@@ -59,20 +59,21 @@ int main(int argc, char *argv[])
 	buffer[0] = 'A';
 	assert(BUFFER_SIZE > 4);
 
-	buffer[BUFFER_SIZE - 3] = 'X';
-	buffer[BUFFER_SIZE - 2] = 'Y';
-	buffer[BUFFER_SIZE - 1] = 'Z';
-	//while (1) {
+	buffer[BUFFER_SIZE - 4] = 'X';
+	buffer[BUFFER_SIZE - 3] = 'Y';
+	buffer[BUFFER_SIZE - 2] = 'Z';
+	buffer[BUFFER_SIZE - 1] = '\0';
+	while (1) {
 		if (mode_ipv6) {
 			n=sendto(sock,buffer,
-					strlen(buffer),0,(const struct sockaddr *)&server6,length);
+					BUFFER_SIZE,0,(const struct sockaddr *)&server6,length);
 		}
 		else {
 			n=sendto(sock,buffer,
-					strlen(buffer),0,(const struct sockaddr *)&server,length);
+					BUFFER_SIZE,0,(const struct sockaddr *)&server,length);
 		}
 		if (n < 0) error("Sendto");
-	//}
+	}
 	sleep(2);
 	close(sock);
 	return 0;
