@@ -154,7 +154,12 @@ int main(int argc, char *argv[])
 		if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD) != 0))
 			ERROR("Bad magic word for peer\n");
 	}*/
-	printf("Connection with %s:%i established\n", 
+	from.sin_family = AF_INET;
+	from.sin_port = htons(port);
+	inet_aton(ip, &from.sin_addr);
+	l =sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
+
+	printf("Connection with %s:%i established\n",
 	       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
 	while (1) {
