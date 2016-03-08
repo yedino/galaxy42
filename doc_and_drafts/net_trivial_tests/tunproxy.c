@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 	}
 	if (MODE == 0) usage();
 
-/*
+
 	if ( (fd = open("/dev/net/tun",O_RDWR)) < 0) PERROR("open");
 
 	memset(&ifr, 0, sizeof(ifr));
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0) PERROR("ioctl");
 
 	printf("Allocated interface %s. Configure and use it\n", ifr.ifr_name);
-*/
+
 	
 	/*
 	s = socket(AF_INET, SOCK_DGRAM, 0);
