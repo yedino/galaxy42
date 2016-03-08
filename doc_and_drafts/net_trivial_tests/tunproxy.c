@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
 	fromlen = sizeof(from);
 
-	if (MODE == 1) {
+/*	if (MODE == 1) {
 		printf("Will wait for the passwor packet now...%d\n", __LINE__);
 		while(1) {
 			printf("Trying to receive password...%d\n", __LINE__);
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 		if (l < 0) PERROR("recvfrom");
 		if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD) != 0))
 			ERROR("Bad magic word for peer\n");
-	}
+	}*/
 	printf("Connection with %s:%i established\n", 
 	       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
