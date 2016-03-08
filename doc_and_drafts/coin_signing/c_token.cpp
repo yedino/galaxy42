@@ -142,6 +142,47 @@ long long c_token::get_size() const {
     return size;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////// JSONCPP
+
+void c_token_header::json_serialize(Json::Value &root) {
+    // serialize primitives
+    root["mintname"] = m_mintname;
+    //TODO pubkey
+    //root["id"] = static_cast<Json::UInt64>(m_id);
+    //root["password"] = m_password;
+
+}
+void c_token_header::json_deserialize(Json::Value &root) {
+    // deserialize primitives
+    std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;
+}
+
+void c_chainsign_element::json_serialize(Json::Value &root) {
+    // serialize primitives
+    root["msg"] = m_msg;
+    //root["msg_sign"] = m_msg_sign.c_str();
+    root["signer"] = m_signer;
+    //root["signer_pubkey"] = m_signer_pubkey.c_str();
+}
+void c_chainsign_element::json_deserialize(Json::Value &root) {
+    // deserialize primitives
+    std::cout << "c_chainsign_element: json deserialize [" << root.asString() << "]" << std::endl;
+}
+
+void c_token::json_serialize(Json::Value &root) {
+    // serialize primitives
+    m_header.json_serialize(root);
+    for(auto &chain_el : m_chainsign) {
+        chain_el.json_serialize(root);
+    }
+}
+void c_token::json_deserialize(Json::Value &root) {
+    // deserialize primitives
+    std::cout << "c_token: json deserialize [" << root.asString() << "]" << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////// operators
+
 bool operator != (const c_chainsign_element &l_ele, const c_chainsign_element &r_ele) {
     if(	(l_ele.m_msg_sign == r_ele.m_msg_sign) &&
 		(l_ele.m_msg == r_ele.m_msg) &&
@@ -170,4 +211,3 @@ bool operator == (const c_token &lhs, const c_token &rhs) {
 bool operator < (const c_token &lhs, const c_token &rhs) {
     return (lhs.get_id() < rhs.get_id());
 }
-

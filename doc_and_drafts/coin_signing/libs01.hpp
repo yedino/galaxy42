@@ -27,7 +27,6 @@
 #include <cmath>
 #include <algorithm>
 
-
 #include <boost/asio.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

@@ -161,34 +161,36 @@ int main (int argc, char *argv[]) {
 	t_mainfunctions mainfunction = e_mainfunction_interactive;
 
 	if (any_of_is(argtab, string("--test2"))) mainfunction = e_mainfunction_test_serialize;
+    if (any_of_is(argtab, string("--test"))) mainfunction = e_mainfunction_tests;
+
 
 	try {
 		ios_base::sync_with_stdio(false);
 
         if (mainfunction == e_mainfunction_tests) {        	
 
-      	int number_of_threads = 0;
-        bool correct_threads_num = true;
+            int number_of_threads = 0;
+            bool correct_threads_num = true;
 
-		if (argc <= 2) {
-            std::cout << "you could define number of theards in argv[1] to run test with" << std::endl;
-            correct_threads_num = false;
-        } else {
-        		auto number_of_threads_str = argtab.at(2);
-            number_of_threads = atoi( number_of_threads_str.c_str() );
-        }
-		if (number_of_threads <= 0) {
-            std::cout << "you define incorrect number of theards" << std::endl;
-            correct_threads_num = false;
-        }
-        if (!correct_threads_num) {
-            std::cout << "setting default 1 thread" << std::endl;
-            number_of_threads = 1;
-        }
+            if (argc <= 2) {
+                std::cout << "you could define number of theards in argv[1] to run test with" << std::endl;
+                correct_threads_num = false;
+            } else {
+                    auto number_of_threads_str = argtab.at(2);
+                number_of_threads = atoi( number_of_threads_str.c_str() );
+            }
+            if (number_of_threads <= 0) {
+                std::cout << "you define incorrect number of theards" << std::endl;
+                correct_threads_num = false;
+            }
+            if (!correct_threads_num) {
+                std::cout << "setting default 1 thread" << std::endl;
+                number_of_threads = 1;
+            }
 
-        test_all(number_of_threads);
+            test_all(number_of_threads);
 
-				}
+        }
 
 				if (mainfunction == e_mainfunction_interactive) {
         	run_interactive_protocol();

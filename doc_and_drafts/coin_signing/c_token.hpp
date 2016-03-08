@@ -2,6 +2,7 @@
 #define COIN_SIGNING_C_TOKEN_HPP
 
 #include "libs01.hpp"
+#include "c_json_serializer.hpp"
 
 struct c_token_header {
     c_token_header () = default;
@@ -18,6 +19,11 @@ struct c_token_header {
     size_t m_id;
     long long m_password;
     std::chrono::time_point<std::chrono::system_clock> m_expiration_date;
+
+    /// JSONCPP serialize
+    virtual void json_serialize (Json::Value &root);
+    /// JSONCPP deserialize
+    virtual void json_deserialize (Json::Value &root);
 
     template <typename Archive>
     void serialize(Archive &ar, const unsigned version) {
@@ -42,6 +48,11 @@ struct c_chainsign_element {
 
     void print(std::ostream &) const;
 
+    /// JSONCPP serialize
+    virtual void json_serialize (Json::Value &root);
+    /// JSONCPP deserialize
+    virtual void json_deserialize (Json::Value &root);
+
     template <typename Archive>
     void serialize(Archive &ar, const unsigned version) {
         UNUSED(version);
@@ -52,7 +63,7 @@ struct c_chainsign_element {
     }
 };
 
-class c_token {
+class c_token : public ijson_serializable {
   public:
     c_token () = default;
     c_token (std::string);		///< deserialize token from recived packet
@@ -76,7 +87,14 @@ class c_token {
     const std::vector<c_chainsign_element>& get_chainsign() const;
     size_t get_chainsign_size () const;
 
+    /// boost::serialization
     friend class boost::serialization::access;
+
+    /// JSONCPP serialize
+    virtual void json_serialize (Json::Value &root);
+    /// JSONCPP deserialize
+    virtual void json_deserialize (Json::Value &root);
+
   private:
     c_token_header m_header;
     std::vector<c_chainsign_element> m_chainsign;
