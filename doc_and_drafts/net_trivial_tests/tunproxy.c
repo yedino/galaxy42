@@ -28,6 +28,8 @@
 #include <linux/if_tun.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <error.h>
 
 #define PERROR(x) do { perror(x); exit(1); } while (0)
 #define ERROR(x, args ...) do { fprintf(stderr,"ERROR:" x, ## args); exit(1); } while (0)
@@ -45,7 +47,8 @@ int main(int argc, char *argv[])
 {
 	struct sockaddr_in sin, sout, from;
 	struct ifreq ifr;
-	int fd, s, fromlen, soutlen, port, PORT, l;
+	int fd, s, port, PORT, l;
+	unsigned int soutlen, fromlen;
 	char c, *p, *ip;
 	char buf[1500];
 	fd_set fdset;
@@ -67,7 +70,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'c':
 			MODE = 2;
-			p = memchr(optarg,':',16);
+			p = (char*)memchr(optarg,':',16);
 			if (!p) ERROR("invalid argument : [%s]\n",optarg);
 			*p = 0;
 			ip = optarg;
@@ -107,7 +110,7 @@ int main(int argc, char *argv[])
 
 	// struct sockaddr_in sin;
 	s = socket(AF_INET, SOCK_DGRAM, 0);
-	if (s < 0) error("Opening socket");
+	if (s < 0) error(1, 1, "Opening socket");
 	//length = sizeof(server);
 	bzero(&sin, sizeof(sin));
 	sin.sin_family=AF_INET;
@@ -115,7 +118,7 @@ int main(int argc, char *argv[])
 	sin.sin_port=htons(PORT); 
 	// if (bind(sock,(struct sockaddr *)&server,length)<0)
 	printf("Doing the bind\n");
-	if (bind(s,(struct sockaddr *)&sin, sizeof(sin))<0) error("binding");
+	if (bind(s,(struct sockaddr *)&sin, sizeof(sin))<0) error(1, 1, "binding");
 	printf("Doing the bind - DONE\n");
 	// fromlen = sizeof(struct sockaddr_in);
 
@@ -133,7 +136,7 @@ int main(int argc, char *argv[])
 			if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD)) == 0)
 				break;
 			printf("Bad magic word from %s:%i\n", 
-			       inet_ntoa(from.sin_addr.s_addr), ntohs(from.sin_port));
+			       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 		} 
 		printf("Got correct password in line %d\n", __LINE__);
 		printf("Sending reply line %d\n", __LINE__);
@@ -152,7 +155,7 @@ int main(int argc, char *argv[])
 			ERROR("Bad magic word for peer\n");
 	}
 	printf("Connection with %s:%i established\n", 
-	       inet_ntoa(from.sin_addr.s_addr), ntohs(from.sin_port));
+	       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
 	while (1) {
 		FD_ZERO(&fdset);
@@ -169,8 +172,8 @@ int main(int argc, char *argv[])
 			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sout, &soutlen);
 			if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
 				printf("Got packet from  %s:%i instead of %s:%i\n", 
-				       inet_ntoa(sout.sin_addr.s_addr), ntohs(sout.sin_port),
-				       inet_ntoa(from.sin_addr.s_addr), ntohs(from.sin_port));
+				       inet_ntoa(sout.sin_addr), ntohs(sout.sin_port),
+				       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 			if (write(fd, buf, l) < 0) PERROR("write");
 		}
 	}
