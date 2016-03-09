@@ -31,6 +31,8 @@
 #include <arpa/inet.h>
 #include <error.h>
 
+#include "NetPlatform.h"
+
 #define PERROR(x) do { perror(x); exit(1); } while (0)
 #define ERROR(x, args ...) do { fprintf(stderr,"ERROR:" x, ## args); exit(1); } while (0)
 
@@ -109,7 +111,11 @@ int main(int argc, char *argv[])
 
 	printf("Allocated interface %s. Configure and use it\n", ifr.ifr_name);
 
-
+	printf("set iface address for iface %s\n", ifr.ifr_name);
+	uint8_t address[16];
+	for (int i=0; i<16; ++i) address[i] = i+100;
+		address[0] = 0xFC;
+	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
 	
 	/* the old code to open UDP socket:
 	s = socket(AF_INET, SOCK_DGRAM, 0);
