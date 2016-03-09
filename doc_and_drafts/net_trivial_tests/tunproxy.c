@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	if ( bind(s,(struct sockaddr *)&sin, sizeof(sin)) < 0) PERROR("bind");
 	*/
 
-	printf("We are listening for peers on udp port PORT=%d \n", PORT);
+	printf("We will listen for peers on udp port PORT=%d \n", PORT);
 
 	// struct sockaddr_in sin;
 	s = socket(AF_INET, SOCK_DGRAM, 0);
@@ -131,8 +131,8 @@ int main(int argc, char *argv[])
 	sin.sin_addr.s_addr=INADDR_ANY;
 	sin.sin_port=htons(PORT); 
 	// if (bind(sock,(struct sockaddr *)&server,length)<0)
-	printf("Doing the bind\n");
-	if (bind(s,(struct sockaddr *)&sin, sizeof(sin))<0) error(1, 1, "binding");
+	printf("Doing the bind, on address %d on port %d\n", sin.sin_addr.s_addr, ntohs(sin.sin_port));
+	if (bind(s,(struct sockaddr *)&sin, sizeof(sin))<0) error(1, 1, "binding"); // <--- bind
 	printf("Doing the bind - DONE\n");
 	// fromlen = sizeof(struct sockaddr_in);
 
