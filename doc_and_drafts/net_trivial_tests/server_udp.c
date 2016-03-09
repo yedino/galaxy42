@@ -70,7 +70,8 @@ int main(int argc, char *argv[])
 	// count speed etc:
 	const long long int w_len = 1; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
 
-	long long int count_all=0;  // all since start
+	long long int count_all=0;  // all since start (packets)
+	long long int count_all_b=0; // all since start (bytes)
 	long long int time_all=0; // all time since start
 	long long int w_count_b=0;  // in this window: count of bytes
 	long long int w_count_pkt=0;  // in this window: count of packets
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
 		}
 		if (n < 0) error("recvfrom");
 		w_count_b += n; // number of bytes (received)
+		count_all_b += n;
 		++w_count_pkt;
 		++count_all;
 
@@ -106,7 +108,7 @@ int main(int argc, char *argv[])
 				printf("Received: [%s]\n", buf);
 
 
-				double all_speed = w_count_b / ( ((double)w_time2) - time_all); // since start
+				double all_speed = count_all_b / ( ((double)w_time2) - time_all); // since start
 
 				// in window:
 				double speed = w_count_b / ( ((double)w_time2) - w_time1);
