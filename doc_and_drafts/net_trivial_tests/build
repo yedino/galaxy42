@@ -4,5 +4,5 @@ gcc -O3 -g3 server_udp.c -o server_udp.bin
 gcc -O3 -g3 client_udp.c -o client_udp.bin 
 gcc -O3 -g3 server_tcp.c -o server_tcp.bin 
 gcc -O3 -g3 client_tcp.c -o client_tcp.bin 
-gcc -O3 -g3 tunproxy.c   -o tunproxy.bin 
+gcc -O3 -g3 tunproxy.c NetPlatform_linux.c -o tunproxy.bin 
 
