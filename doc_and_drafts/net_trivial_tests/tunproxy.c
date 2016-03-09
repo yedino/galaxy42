@@ -39,7 +39,8 @@ char MAGIC_WORD[] = "Wazaaaaaaaaaaahhhh !";
 
 void usage()
 {
-	fprintf(stderr, "Usage: tunproxy [-s port|-c targetip:port] [-e]\n");
+	// TODO nice and correct help see below
+	fprintf(stderr, "Usage: tunproxy [-s port|-c targetip:port] [-e] [-I] [-O] [-a]\n");
 	exit(0);
 }
 
@@ -52,18 +53,18 @@ int main(int argc, char *argv[])
 	char c, *p, *ip;
 	char buf[1500];
 	fd_set fdset;
-	
-	
 
 	int MODE = 0, TUNMODE = IFF_TUN, DEBUG = 0;
 
-	while ((c = getopt(argc, argv, "s:c:ehd")) != -1) {
+	int drop_outgoing=0, drop_incoming=0; // debug: should we drop data that is outgoing (or ingoing)
+
+	int warned_drop_outgoing=0, warned_drop_incoming=0; // warnings for user, did we warned him that we are dropping outgoing (or incoming)
+	int use_auth=1; // should we use authorization on start
+
+	while ((c = getopt(argc, argv, "s:c:ehdIOA")) != -1) {
 		switch (c) {
-		case 'h':
-			usage();
-		case 'd':
-			DEBUG++;
-			break;
+		case 'h': usage(); break;
+		case 'd':	DEBUG++; break;
 		case 's':
 			MODE = 1;
 			PORT = atoi(optarg);
@@ -80,10 +81,15 @@ int main(int argc, char *argv[])
 		case 'e':
 			TUNMODE = IFF_TAP;
 			break;
+		case 'I':	drop_incoming=1; break;
+		case 'O':	drop_outgoing=1; break;
+		case 'A':	use_auth=0; break;
 		default:
 			usage();
 		}
 	}
+	printf("DEBUG=%d\n", DEBUG);
+
 	if (MODE == 0) usage();
 
 
@@ -96,8 +102,9 @@ int main(int argc, char *argv[])
 
 	printf("Allocated interface %s. Configure and use it\n", ifr.ifr_name);
 
+
 	
-	/*
+	/* the old code to open UDP socket:
 	s = socket(AF_INET, SOCK_DGRAM, 0);
   bzero(&sin, sizeof(sin));
 	sin.sin_family = AF_INET;
@@ -106,7 +113,7 @@ int main(int argc, char *argv[])
 	if ( bind(s,(struct sockaddr *)&sin, sizeof(sin)) < 0) PERROR("bind");
 	*/
 
-	printf("PORT=%d \n", PORT);
+	printf("We are listening for peers on udp port PORT=%d \n", PORT);
 
 	// struct sockaddr_in sin;
 	s = socket(AF_INET, SOCK_DGRAM, 0);
@@ -126,7 +133,10 @@ int main(int argc, char *argv[])
 
 	fromlen = sizeof(from);
 
-/*	if (MODE == 1) {
+	if (use_auth) { 
+		printf("Doing authorization\n");
+
+	if (MODE == 1) {
 		printf("Will wait for the passwor packet now...%d\n", __LINE__);
 		while(1) {
 			printf("Trying to receive password...%d\n", __LINE__);
@@ -144,6 +154,7 @@ int main(int argc, char *argv[])
 		printf("Sent reply line %d\n", __LINE__);
 		if (l < 0) PERROR("sendto");
 	} else {
+		printf("Will send the password now...\n");
 		from.sin_family = AF_INET;
 		from.sin_port = htons(port);
 		inet_aton(ip, &from.sin_addr);
@@ -153,7 +164,12 @@ int main(int argc, char *argv[])
 		if (l < 0) PERROR("recvfrom");
 		if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD) != 0))
 			ERROR("Bad magic word for peer\n");
-	}*/
+	}
+
+	printf("Auth done - connection with %s:%i established\n",
+	       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+
+	} // use_auth
 
 	/*
 	from.sin_family = AF_INET;
@@ -162,8 +178,6 @@ int main(int argc, char *argv[])
 	l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
 	*/
 
-	//printf("Connection with %s:%i established\n",
-	//       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
 	printf("Main loop\n");
 
@@ -176,10 +190,15 @@ int main(int argc, char *argv[])
 		if (FD_ISSET(fd, &fdset)) { // data incoming on TUN (we should send it out)
 			if (DEBUG) write(1,">", 1);
 			l = read(fd, buf, sizeof(buf)); // read data from TUN
-			buf[l]='\0';
-			printf("Warning: can NOT send (routing not implemented). Ignoring data: [%s]\n", buf);
-//			if (l < 0) PERROR("read");
-//			if (sendto(s, buf, l, 0, (struct sockaddr *)&from, fromlen) < 0) PERROR("sendto");
+			if (l < 0) PERROR("read");
+			if (!drop_outgoing) {
+				if (sendto(s, buf, l, 0, (struct sockaddr *)&from, fromlen) < 0) PERROR("sendto");
+			} else {
+				if (!warned_drop_outgoing) { 
+					printf("Warning: we are dropping outgoing packets, droping one now (will not warn again about this)\n"); 
+					warned_drop_outgoing=1;
+				}
+			}
 		} 
 		else { // data incoming from peering (we should input it into the TUN to our localhost) -or- route it further in mesh
 			if (DEBUG) write(1,"<", 1);
@@ -191,7 +210,14 @@ int main(int argc, char *argv[])
 				       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 				*/
 
-			// if (write(fd, buf, l) < 0) PERROR("write");
+			if (!drop_incoming) {
+				if (write(fd, buf, l) < 0) PERROR("write");
+			} else {
+				if (!warned_drop_incoming) { 
+					printf("Warning: we are dropping incoming packets, droping one now (will not warn again about this)\n"); 
+					warned_drop_incoming=1;
+				}
+			}
 		}
 	}
 }
