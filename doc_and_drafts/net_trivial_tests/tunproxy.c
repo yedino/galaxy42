@@ -42,7 +42,7 @@ char MAGIC_WORD[] = "Wazaaaaaaaaaaahhhh !";
 void usage()
 {
 	// TODO nice and correct help see below
-	fprintf(stderr, "Usage: tunproxy [-s port|-c targetip:port] [-e] [-I] [-O] [-a]\n");
+	fprintf(stderr, "Usage: tunproxy [-s port|-c targetip:port] [-e] [-I] [-O] [-a] [-F ip_fill_char]\n");
 	exit(0);
 }
 
@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
 	char buf[1500];
 	fd_set fdset;
 
+	uint8_t ip_fill_char = 0;
+
 	int MODE = 0, TUNMODE = IFF_TUN, DEBUG = 0;
 
 	int drop_outgoing=0, drop_incoming=0; // debug: should we drop data that is outgoing (or ingoing)
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
 	int warned_drop_outgoing=0, warned_drop_incoming=0; // warnings for user, did we warned him that we are dropping outgoing (or incoming)
 	int use_auth=1; // should we use authorization on start
 
-	while ((c = getopt(argc, argv, "s:c:ehdIOAp:")) != -1) {
+	while ((c = getopt(argc, argv, "s:c:ehdIOAp:F:")) != -1) {
 		switch (c) {
 		case 'h': usage(); break;
 		case 'd':	DEBUG++; break;
@@ -93,6 +95,7 @@ int main(int argc, char *argv[])
 		case 'I':	drop_incoming=1; break;
 		case 'O':	drop_outgoing=1; break;
 		case 'A':	use_auth=0; break;
+		case 'F':	ip_fill_char=optarg[0]; break;
 		default:
 			usage();
 		}
@@ -113,8 +116,10 @@ int main(int argc, char *argv[])
 
 	printf("set iface address for iface %s\n", ifr.ifr_name);
 	uint8_t address[16];
-	for (int i=0; i<16; ++i) address[i] = i+100;
-		address[0] = 0xFC;
+	for (int i=0; i<16; ++i) address[i] = ip_fill_char;
+
+	address[0] = 0xFD;
+	address[1] = 0x00;
 	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
 	
 	/* the old code to open UDP socket:
