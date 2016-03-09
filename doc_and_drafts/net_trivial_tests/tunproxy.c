@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	struct ifreq ifr;
 	int fd, s, port, PORT, l;
 	unsigned int soutlen, fromlen;
-	char c, *p, *ip;
+	char c, *p, *ip=NULL;
 	char buf[1500];
 	fd_set fdset;
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	int warned_drop_outgoing=0, warned_drop_incoming=0; // warnings for user, did we warned him that we are dropping outgoing (or incoming)
 	int use_auth=1; // should we use authorization on start
 
-	while ((c = getopt(argc, argv, "s:c:ehdIOA")) != -1) {
+	while ((c = getopt(argc, argv, "s:c:ehdIOAp:")) != -1) {
 		switch (c) {
 		case 'h': usage(); break;
 		case 'd':	DEBUG++; break;
@@ -77,6 +77,13 @@ int main(int argc, char *argv[])
 			ip = optarg;
 			port = atoi(p+1);
 			PORT = 0;
+			break;
+		case 'p': // add a peer / set a peer
+			p = (char*)memchr(optarg,':',16);
+			if (!p) ERROR("invalid argument : [%s]\n",optarg);
+			*p = 0;
+			ip = optarg;
+			port = atoi(p+1);
 			break;
 		case 'e':
 			TUNMODE = IFF_TAP;
@@ -170,12 +177,15 @@ int main(int argc, char *argv[])
 	       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
 	} // use_auth
-
 	else {
+		printf("Skipped auth - setting the peer socket (from) to addres of peer.\n");
+		if (!ip) ERROR("You must set the peer address with proper option.\n");
+		printf("Peer address is set to ip=%s and port=%d\n", ip, port);
 		from.sin_family = AF_INET;
 		from.sin_port = htons(port);
 		inet_aton(ip, &from.sin_addr);
-		l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
+		printf("Prepared connection address for our peer.\n");
+		// l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
 	}
 
 
