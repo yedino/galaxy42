@@ -116,7 +116,8 @@ int main(int argc, char *argv[])
 
 	printf("set iface address for iface %s\n", ifr.ifr_name);
 	uint8_t address[16];
-	for (int i=0; i<16; ++i) address[i] = ip_fill_char;
+	int i;
+	for (i=0; i<16; ++i) address[i] = ip_fill_char;
 
 	address[0] = 0xFD;
 	address[1] = 0x00;
