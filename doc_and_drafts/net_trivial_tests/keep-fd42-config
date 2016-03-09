@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# config:
+your_binary_file="/home/rafalcode/work/antinet/doc_and_drafts/net_trivial_tests/tunproxy.bin"
+your_ip_ipgalaxy="fd42:0db8:1::"
+
+while true ; do 
+	setcap "cap_net_admin+eip cap_net_raw+eip" "${your_binary_file}"
+	ip a add "${your_ip_ipgalaxy}/8" dev toto0 # <---- your IP here
+	ip link set toto0 up
+	sleep 0.1 ; 
+done
+
