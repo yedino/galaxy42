@@ -39,10 +39,10 @@ Using this tests: build all:
 After a secon, the script keep-fd42-config running in background should give you CAP flags so that you can run the program without need for root.
 
 Then run:
-  on node A (192.168.0.104) run: ./tunproxy -p  192.168.0.57:9004 -s 9004 # this is the server
-  on node B (192.168.0.57)  run: ./tunproxy -p 192.168.0.104:9004 -c 192.168.0.104:9004
+  on node A (192.168.0.104) run: ./tunproxy.bin -p  192.168.0.57:9004 -s 9004 # this is the server
+  on node B (192.168.0.57)  run: ./tunproxy.bin -p 192.168.0.104:9004 -c 192.168.0.104:9004
 Optionally also:
-  on node C (192.168.0.107) run: ./tunproxy -p 192.168.0.104:9004 -c 192.168.0.104:9004
+  on node C (192.168.0.107) run: ./tunproxy.bin -p 192.168.0.104:9004 -c 192.168.0.104:9004
 (of course adjust the IPs of nodes A/B to be as you have in your setup).
 Nodes IP .104 and .57 will peer on port UDP 9004 and both will listen, and both will send to eachother's such port.
 
