@@ -171,12 +171,13 @@ int main(int argc, char *argv[])
 
 	} // use_auth
 
-	/*
-	from.sin_family = AF_INET;
-	from.sin_port = htons(port);
-	inet_aton(ip, &from.sin_addr);
-	l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
-	*/
+	else {
+		from.sin_family = AF_INET;
+		from.sin_port = htons(port);
+		inet_aton(ip, &from.sin_addr);
+		l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
+	}
+
 
 
 	printf("Main loop\n");
