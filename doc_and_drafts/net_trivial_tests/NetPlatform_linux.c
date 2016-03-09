@@ -1,5 +1,14 @@
-/* vim: set expandtab ts=4 sw=4: */
 /*
+ * Code from cjdns project
+ * https://github.com/cjdelisle/cjdns
+ *
+ * commit 3b7802f00ab588edb3bb3d27f36b47f4b4524433
+ * Author: rob <rob@mail.l>
+ * Date:   Tue Feb 2 11:23:05 2016 +0000
+ *
+ *   [fix] default limit
+ *
+ *
  * You may redistribute this program and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any later version.
@@ -12,8 +21,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "util/platform/netdev/NetPlatform.h"
-#include "util/platform/Sockaddr.h"
+
+#include "NetPlatform.h"
 
 #include <string.h>
 #include <errno.h>
@@ -27,9 +36,8 @@
 #include <stddef.h>
 #include <net/if.h>
 #include <arpa/inet.h>
-#include <linux/if.h>
-#include <linux/route.h>
 #include <linux/ipv6_route.h>
+#include <stdint.h>
 
 /**
  * This hack exists because linux/in.h and linux/in6.h define
@@ -45,6 +53,9 @@
     };
 #endif
 
+const int Sockaddr_AF_INET = AF_INET;
+const int Sockaddr_AF_INET6 = AF_INET6;
+
 /**
  * Get a socket and ifRequest for a given interface by name.
  *
@@ -56,36 +67,28 @@
  * @return a socket for interacting with this interface.
  */
 static int socketForIfName(const char* interfaceName,
-                           int af,
-                           struct Except* eh,
+						int af,
                            struct ifreq* ifRequestOut)
 {
     int s;
 
     if ((s = socket(af, SOCK_DGRAM, 0)) < 0) {
-        Except_throw(eh, "socket() [%s]", strerror(errno));
     }
 
     memset(ifRequestOut, 0, sizeof(struct ifreq));
     strncpy(ifRequestOut->ifr_name, interfaceName, IFNAMSIZ);
 
     if (ioctl(s, SIOCGIFINDEX, ifRequestOut) < 0) {
-        int err = errno;
         close(s);
-        Except_throw(eh, "ioctl(SIOCGIFINDEX) [%s]", strerror(err));
     }
     return s;
 }
 
 static void checkInterfaceUp(int socket,
-                             struct ifreq* ifRequest,
-                             struct Log* logger,
-                             struct Except* eh)
+                             struct ifreq* ifRequest)
 {
     if (ioctl(socket, SIOCGIFFLAGS, ifRequest) < 0) {
-        int err = errno;
         close(socket);
-        Except_throw(eh, "ioctl(SIOCGIFFLAGS) [%s]", strerror(err));
     }
 
     if (ifRequest->ifr_flags & IFF_UP & IFF_RUNNING) {
@@ -93,29 +96,24 @@ static void checkInterfaceUp(int socket,
         return;
     }
 
-    Log_info(logger, "Bringing up interface [%s]", ifRequest->ifr_name);
 
     ifRequest->ifr_flags |= IFF_UP | IFF_RUNNING;
     if (ioctl(socket, SIOCSIFFLAGS, ifRequest) < 0) {
-        int err = errno;
         close(socket);
-        Except_throw(eh, "ioctl(SIOCSIFFLAGS) [%s]", strerror(err));
     }
 }
 
 void NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
-                            int addrFam,
-                            struct Log* logger,
-                            struct Except* eh)
+                            int addrFam)
 {
     struct ifreq ifRequest;
-    int s = socketForIfName(interfaceName, addrFam, eh, &ifRequest);
+    int s = socketForIfName(interfaceName, addrFam, &ifRequest);
     int ifIndex = ifRequest.ifr_ifindex;
 
     // checkInterfaceUp() clobbers the ifindex.
-    checkInterfaceUp(s, &ifRequest, logger, eh);
+    checkInterfaceUp(s, &ifRequest);
 
     if (addrFam == Sockaddr_AF_INET6) {
         struct in6_ifreq ifr6 = {
@@ -125,21 +123,19 @@ void NetPlatform_addAddress(const char* interfaceName,
         memcpy(&ifr6.ifr6_addr, address, 16);
 
         if (ioctl(s, SIOCSIFADDR, &ifr6) < 0) {
-            int err = errno;
             close(s);
-            Except_throw(eh, "ioctl(SIOCSIFADDR) [%s]", strerror(err));
         }
 
 
     } else if (addrFam == Sockaddr_AF_INET) {
-        struct sockaddr_in sin = { .sin_family = AF_INET, .sin_port = 0 };
+		printf("setting ipv4 address\n");
+		printf("not implemented\n");
+        /*struct sockaddr_in sin = { .sin_family = AF_INET, .sin_port = 0 };
         memcpy(&sin.sin_addr.s_addr, address, 4);
         memcpy(&ifRequest.ifr_addr, &sin, sizeof(struct sockaddr));
 
         if (ioctl(s, SIOCSIFADDR, &ifRequest) < 0) {
-            int err = errno;
             close(s);
-            Except_throw(eh, "ioctl(SIOCSIFADDR) failed: [%s]", strerror(err));
         }
 
         uint32_t x = ~0 << (32 - prefixLen);
@@ -148,82 +144,23 @@ void NetPlatform_addAddress(const char* interfaceName,
         memcpy(&ifRequest.ifr_addr, &sin, sizeof(struct sockaddr_in));
 
         if (ioctl(s, SIOCSIFNETMASK, &ifRequest) < 0) {
-            int err = errno;
             close(s);
-            Except_throw(eh, "ioctl(SIOCSIFNETMASK) failed: [%s]", strerror(err));
-        }
+        }*/
     } else {
-        Assert_true(0);
     }
 
     close(s);
 }
 
 void NetPlatform_setMTU(const char* interfaceName,
-                        uint32_t mtu,
-                        struct Log* logger,
-                        struct Except* eh)
+                        uint32_t mtu)
 {
     struct ifreq ifRequest;
-    int s = socketForIfName(interfaceName, AF_INET6, eh, &ifRequest);
-
-    Log_info(logger, "Setting MTU for device [%s] to [%u] bytes.", interfaceName, mtu);
+    int s = socketForIfName(interfaceName, AF_INET6, &ifRequest);
 
     ifRequest.ifr_mtu = mtu;
     if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) {
-        int err = errno;
         close(s);
-        Except_throw(eh, "ioctl(SIOCSIFMTU) [%s]", strerror(err));
-    }
-
-    close(s);
-}
-
-void NetPlatform_addRoute(const char* interfaceName,
-                            const uint8_t* address,
-                            int prefixLen,
-                            int addrFam,
-                            struct Log* logger,
-                            struct Except* eh)
-{
-    struct ifreq ifRequest;
-    int s = socketForIfName(interfaceName, addrFam, eh, &ifRequest);
-    int ifIndex = ifRequest.ifr_ifindex;
-
-    // checkInterfaceUp() clobbers the ifindex.
-    checkInterfaceUp(s, &ifRequest, logger, eh);
-
-
-    if (addrFam == Sockaddr_AF_INET6) {
-        struct in6_rtmsg rt;
-
-        memcpy(&rt.rtmsg_dst, address, 16);
-        rt.rtmsg_dst_len = prefixLen;
-        rt.rtmsg_ifindex = (uint16_t) ifIndex;
-
-        if (ioctl(s, SIOCADDRT, &rt) < 0) {
-            int err = errno;
-            close(s);
-            Except_throw(eh, "ioctl(SIOCSIFADDR) [%s]", strerror(err));
-        }
-
-
-    } else if (addrFam == Sockaddr_AF_INET) {
-        struct rtentry rt;
-        struct sockaddr_in sin = { .sin_family = AF_INET, .sin_port = 0 };
-        memcpy(&sin.sin_addr.s_addr, address, 4);
-        memcpy(&rt.rt_dst, &sin, sizeof(struct sockaddr));
-        sin.sin_addr.s_addr = Endian_hostToBigEndian32(~0 << (32 - prefixLen));
-        memcpy(&rt.rt_genmask, &sin, sizeof(struct sockaddr));
-        rt.rt_dev = (char *) interfaceName;
-
-        if (ioctl(s, SIOCADDRT, &rt) < 0) {
-            int err = errno;
-            close(s);
-            Except_throw(eh, "ioctl(SIOCSIFADDR) failed: [%s]", strerror(err));
-        }
-    } else {
-        Assert_true(0);
     }
 
     close(s);
