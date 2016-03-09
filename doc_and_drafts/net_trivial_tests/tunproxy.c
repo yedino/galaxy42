@@ -154,32 +154,44 @@ int main(int argc, char *argv[])
 		if (strncmp(MAGIC_WORD, buf, sizeof(MAGIC_WORD) != 0))
 			ERROR("Bad magic word for peer\n");
 	}*/
+
+	/*
 	from.sin_family = AF_INET;
 	from.sin_port = htons(port);
 	inet_aton(ip, &from.sin_addr);
-	l =sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
+	l = sendto(s, MAGIC_WORD, sizeof(MAGIC_WORD), 0, (struct sockaddr *)&from, sizeof(from));
+	*/
 
-	printf("Connection with %s:%i established\n",
-	       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+	//printf("Connection with %s:%i established\n",
+	//       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+
+	printf("Main loop\n");
 
 	while (1) {
-		FD_ZERO(&fdset);
-		FD_SET(fd, &fdset);
-		FD_SET(s, &fdset);
-		if (select(fd+s+1, &fdset,NULL,NULL,NULL) < 0) PERROR("select");
-		if (FD_ISSET(fd, &fdset)) {
+		FD_ZERO(&fdset); // wait for:
+		FD_SET(fd, &fdset); // for evet on TUN
+		FD_SET(s, &fdset); // for event on peering socket
+		if (select(fd+s+1, &fdset,NULL,NULL,NULL) < 0) PERROR("select"); // waiting here
+
+		if (FD_ISSET(fd, &fdset)) { // data incoming on TUN (we should send it out)
 			if (DEBUG) write(1,">", 1);
-			l = read(fd, buf, sizeof(buf));
-			if (l < 0) PERROR("read");
-			if (sendto(s, buf, l, 0, (struct sockaddr *)&from, fromlen) < 0) PERROR("sendto");
-		} else {
+			l = read(fd, buf, sizeof(buf)); // read data from TUN
+			buf[l]='\0';
+			printf("Warning: can NOT send (routing not implemented). Ignoring data: [%s]\n", buf);
+//			if (l < 0) PERROR("read");
+//			if (sendto(s, buf, l, 0, (struct sockaddr *)&from, fromlen) < 0) PERROR("sendto");
+		} 
+		else { // data incoming from peering (we should input it into the TUN to our localhost) -or- route it further in mesh
 			if (DEBUG) write(1,"<", 1);
 			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sout, &soutlen);
-			if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
+
+			/*if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
 				printf("Got packet from  %s:%i instead of %s:%i\n", 
 				       inet_ntoa(sout.sin_addr), ntohs(sout.sin_port),
 				       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
-			if (write(fd, buf, l) < 0) PERROR("write");
+				*/
+
+			// if (write(fd, buf, l) < 0) PERROR("write");
 		}
 	}
 }
