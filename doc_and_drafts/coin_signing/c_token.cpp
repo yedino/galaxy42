@@ -3,19 +3,17 @@
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN HEADER
 
 c_token_header::c_token_header (const std::string &mintname,
-                  const ed_key &mint_pubkey,
-                  const size_t id,
-                  long long password,
-                  const std::chrono::time_point<std::chrono::system_clock> expiration_date) : m_mintname(mintname),
-                                                                                              m_mint_pubkey(mint_pubkey),
-                                                                                              m_id(id),
-                                                                                              m_password(password),
-                                                                                              m_expiration_date(expiration_date)
+                                const ed_key &mint_pubkey,
+                                const size_t id,
+                                const uint64_t expiration_date) : m_mintname(mintname),
+                                                                  m_mint_pubkey(mint_pubkey),
+                                                                  m_id(id),
+                                                                  m_expiration_date(expiration_date)
 { }
 
 void c_token_header::print(std::ostream &os) const {
 
-    std::time_t t = std::chrono::system_clock::to_time_t(m_expiration_date);
+    std::time_t t = std::chrono::system_clock::to_time_t(cs_utils::u64_to_time(m_expiration_date));
     std::string date(ctime(&t));
     size_t end = date.find_last_of('\n');		// to avoid newline at the end of t
     os << "Emiter: [" << m_mintname
@@ -25,6 +23,9 @@ void c_token_header::print(std::ostream &os) const {
        << "]" << std::endl;
 }
 
+std::chrono::time_point<std::chrono::system_clock>  c_token_header::get_expiration_date() const {
+    return cs_utils::u64_to_time(m_expiration_date);
+}
 ////////////////////////////////////////////////////////////////////////////////////////////// CHAIN ELEMENT
 
 c_chainsign_element::c_chainsign_element (const std::string &msg,
@@ -74,8 +75,8 @@ size_t c_token::get_chainsign_size() const {
     return m_chainsign.size();
 }
 
-bool c_token::check_ps (long long ps) {
-    if (ps == m_header.m_password) {
+bool c_token::check_date (uint64_t date) {
+    if (date == m_header.m_expiration_date) {
 		return true;
 	}
 	return false;
@@ -126,7 +127,7 @@ size_t c_token::get_id() const {
 }
 
 std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
-    return m_header.m_expiration_date;
+    return m_header.get_expiration_date();
 }
 
 long long c_token::get_size() const {
@@ -148,8 +149,8 @@ void c_token_header::json_serialize(Json::Value &root) {
     // serialize primitives
     root["mintname"] = m_mintname;
     //TODO pubkey
-    //root["id"] = static_cast<Json::UInt64>(m_id);
-    //root["password"] = m_password;
+    root["id"] = static_cast<Json::UInt64>(m_id);
+    root["expiration_date"] = static_cast<Json::UInt64>(m_expiration_date);
 
 }
 void c_token_header::json_deserialize(Json::Value &root) {
@@ -159,10 +160,10 @@ void c_token_header::json_deserialize(Json::Value &root) {
 
 void c_chainsign_element::json_serialize(Json::Value &root) {
     // serialize primitives
-    root["msg"] = m_msg;
-    //root["msg_sign"] = m_msg_sign.c_str();
-    root["signer"] = m_signer;
-    //root["signer_pubkey"] = m_signer_pubkey.c_str();
+    root["msg"].append(m_msg);
+    root["msg_sign"].append(std::string(reinterpret_cast<const char *>(m_msg_sign.c_str()), m_msg_sign.size()));
+    root["signer"].append(m_signer);
+    root["signer_pubkey"].append(m_signer_pubkey.c_str());
 }
 void c_chainsign_element::json_deserialize(Json::Value &root) {
     // deserialize primitives

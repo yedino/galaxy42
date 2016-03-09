@@ -9,7 +9,7 @@ namespace cs_utils {
     }
 
     bool file_exsist (const std::string& filename) {
-        ifstream f(filename.c_str());
+        std::ifstream f(filename.c_str());
         if (f.good()) {
             f.close();
             return true;
@@ -43,5 +43,8 @@ namespace cs_utils {
         std::string str(length, 0);
         generate_n(str.begin(), length, generate_random_char);
         return str;
+    }
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<uint64_t>> u64_to_time(uint64_t timestamp) {
+        return std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>{std::chrono::duration<uint64_t>{timestamp}};
     }
 }

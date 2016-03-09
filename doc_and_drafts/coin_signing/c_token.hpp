@@ -9,16 +9,16 @@ struct c_token_header {
     c_token_header (const std::string &mintname,
                     const ed_key &mint_pubkey,
                     const size_t id,
-                    const long long password,
-                    const std::chrono::time_point<std::chrono::system_clock> expiration_date);
+                    const uint64_t expiration_date);
 
     void print(std::ostream &os) const;
 
     std::string m_mintname;
     ed_key m_mint_pubkey;
     size_t m_id;
-    long long m_password;
-    std::chrono::time_point<std::chrono::system_clock> m_expiration_date;
+    uint64_t m_expiration_date;
+
+    std::chrono::time_point<std::chrono::system_clock> get_expiration_date () const;
 
     /// JSONCPP serialize
     virtual void json_serialize (Json::Value &root);
@@ -31,8 +31,7 @@ struct c_token_header {
         ar & m_mintname;
         ar & m_mint_pubkey;
         ar & m_id;
-        ar & m_password;
-        ar & boost::serialization::make_binary_object (&m_expiration_date,sizeof(m_expiration_date));
+        ar & m_expiration_date;
     }
 };
 
@@ -75,12 +74,12 @@ class c_token : public ijson_serializable {
     std::string get_emiter_name () const;
     ed_key get_emiter_pubkey () const;
     size_t get_id () const;
-    std::chrono::time_point<std::chrono::system_clock>  get_expiration_date () const;
+    std::chrono::time_point<std::chrono::system_clock> get_expiration_date () const;
 
     /// verbouse == true : means that for each token all chainsign will be print
     void print (std::ostream &, bool verbouse = 0) const;
     long long get_size () const;
-    bool check_ps (long long);
+    bool check_date (uint64_t);
 
     void add_chain_element (const c_chainsign_element &ch);
     void add_chain_element (c_chainsign_element &&ch) noexcept;

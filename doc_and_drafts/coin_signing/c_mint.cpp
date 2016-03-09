@@ -21,13 +21,12 @@ c_mint::c_mint (const std::string &mintname,
 
 c_token c_mint::emit_token() {
     size_t t_id = m_id_generator.generate_id();
-    long long t_password = generate_password();
 
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     std::chrono::time_point<std::chrono::system_clock> t_expiration_date = now+t_expiration_time;
 
-    c_token token(c_token_header(m_mintname, m_pubkey, t_id, t_password, t_expiration_date));
-    m_emited_tokens.insert({token, t_password});
+    c_token token(c_token_header(m_mintname, m_pubkey, t_id, std::chrono::duration_cast<std::chrono::seconds>(t_expiration_date.time_since_epoch()).count()));
+    m_emited_tokens.insert({token, std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count()});
     std::cout << "New token emited:"; token.print(std::cout);
 
 	return token;
@@ -70,10 +69,6 @@ void c_mint::print_mint_status(std::ostream &os) const {
     for(auto &el : m_emited_tokens) {
         os << "Id: [" << el.first.get_id() << "]" << std::endl;
     }
-}
-
-long long c_mint::generate_password() {
-    return random_generator.get_random(sizeof(long long));
 }
 
 size_t c_mint::clean_expired_emited() {

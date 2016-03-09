@@ -58,9 +58,8 @@ class c_mint {
         ar & m_id_generator;
     }
 
-    std::map<c_token, long long> m_emited_tokens;
+    std::map<c_token, uint64_t> m_emited_tokens;	//< uint64_t for time representation
     std::list<c_token> m_used_tokens;
-    c_random_generator<long long> random_generator;
 
     /// expitation_time of token
     /// all token emited by this mint should have the same expiration time
@@ -68,7 +67,6 @@ class c_mint {
     std::chrono::seconds t_expiration_time;
     size_t m_last_expired_id;
 
-    long long generate_password ();
     token_id_generator m_id_generator;
 };
 
