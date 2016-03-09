@@ -68,12 +68,16 @@ int main(int argc, char *argv[])
 	}
 
 	// count speed etc:
-	const long long int w_len = 10; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
+	const long long int w_len = 1; // CONFIG: show periodial stat each N seconds with average speeds/values from that time window. (window length in seconds)
 
 	long long int count_all=0;  // all since start
+	long long int time_all=0; // all time since start
 	long long int w_count_b=0;  // in this window: count of bytes
 	long long int w_count_pkt=0;  // in this window: count of packets
 	long long int w_time1=0; // start when this window started
+
+	w_time1=time(NULL);
+	time_all = w_time1;
 
 	while (1) {
 		if (mode_ipv6) {
@@ -102,11 +106,15 @@ int main(int argc, char *argv[])
 				printf("Received: [%s]\n", buf);
 
 
+				double all_speed = w_count_b / ( ((double)w_time2) - time_all); // since start
+
+				// in window:
 				double speed = w_count_b / ( ((double)w_time2) - w_time1);
 				double speed_pkt = w_count_pkt / ( ((double)w_time2) - w_time1);
 				double w_avg_pkt_size = w_count_b / ((double)w_count_pkt);
 				if (w_count_pkt == 0) w_avg_pkt_size=-1;
 
+				printf("In window:\n");
 				printf("speed:       avg pkt size %f bits (%f bytes)\n",  w_avg_pkt_size*8, w_avg_pkt_size);
 				printf("speed: %f    pkt  /sec\n", speed_pkt);
 				printf("speed: %f    byte /sec\n", speed);
@@ -115,6 +123,9 @@ int main(int argc, char *argv[])
 				printf("speed: %f    bit  /sec\n", 8*speed);
 				printf("speed: %f Ki bit  /sec\n", 8*speed/1024);
 				printf("speed: %f Mi bit  /sec\n", 8*speed/(1024*1024));
+				printf("Since start:\n");
+				printf("speed: %f Mi byte /sec\n", all_speed/(1024*1024));
+				printf("speed: %f Mi bit  /sec\n", 8*all_speed/(1024*1024));
 
 				// restart window counter:
 				w_time1 = w_time2;
