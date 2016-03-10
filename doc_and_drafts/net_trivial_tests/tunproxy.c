@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 			*p = 0;
 			ip = optarg;
 			port = atoi(p+1);
-			PORT = 0;
+			PORT = port;
 			break;
 		case 'p': // add a peer / set a peer
 			p = (char*)memchr(optarg,':',16);
