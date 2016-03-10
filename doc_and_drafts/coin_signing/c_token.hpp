@@ -65,7 +65,7 @@ struct c_chainsign_element {
 class c_token : public ijson_serializable {
   public:
     c_token () = default;
-    c_token (std::string);		///< deserialize token from recived packet
+    c_token (std::string);		///< deserialize token using boost::serialization
     c_token (const c_token_header &header);
     c_token (c_token_header &&header);
 

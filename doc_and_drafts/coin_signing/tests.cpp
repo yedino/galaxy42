@@ -624,12 +624,13 @@ bool json_serialize() {
         C.send_token_bymethod(D);
 
         std::string packet = D.get_token_packet(A.get_public_key(),1);
-        c_token test_tok(packet);
+        c_token tok_serialize(packet);
         std::string output;
-        c_json_serializer::serialize(&test_tok, output);
+        c_json_serializer::serialize(&tok_serialize, output);
 
         std::cout << "TEST JSON: " << output << std::endl;
 
+        c_token tok_deserialize();
 
   } catch(std::exception &ec){
         std::cout << ec.what() << std::endl;

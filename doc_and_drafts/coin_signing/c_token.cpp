@@ -148,7 +148,7 @@ long long c_token::get_size() const {
 void c_token_header::json_serialize(Json::Value &root) {
     // serialize primitives
     root["mintname"] = m_mintname;
-    //TODO pubkey
+    root["mint_pubkey"] = std::string(reinterpret_cast<const char *>(m_mint_pubkey.c_str()),m_mint_pubkey.size());
     root["id"] = static_cast<Json::UInt64>(m_id);
     root["expiration_date"] = static_cast<Json::UInt64>(m_expiration_date);
 
@@ -163,7 +163,7 @@ void c_chainsign_element::json_serialize(Json::Value &root) {
     root["msg"].append(m_msg);
     root["msg_sign"].append(std::string(reinterpret_cast<const char *>(m_msg_sign.c_str()), m_msg_sign.size()));
     root["signer"].append(m_signer);
-    root["signer_pubkey"].append(m_signer_pubkey.c_str());
+    root["signer_pubkey"].append(std::string(reinterpret_cast<const char *>(m_signer_pubkey.c_str()), m_signer_pubkey.size()));
 }
 void c_chainsign_element::json_deserialize(Json::Value &root) {
     // deserialize primitives
