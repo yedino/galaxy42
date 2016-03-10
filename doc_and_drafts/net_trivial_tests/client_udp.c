@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <thread>
 
 #define BUFFER_SIZE 100000
 
@@ -68,7 +69,23 @@ int main(int argc, char *argv[])
 	buffer[block_size - 3] = 'Y';
 	buffer[block_size - 2] = 'Z';
 	buffer[block_size - 1] = '\0';
-	while (1) {
+
+	std::thread thread1([&]() {
+		while(1) {
+			n=sendto(sock,buffer,
+				block_size,0,(const struct sockaddr *)&server6,length);
+			if (n < 0) error("Sendto");
+		}
+	});
+
+	std::thread thread2([&]() {
+		while(1) {
+			n=sendto(sock,buffer,
+				block_size,0,(const struct sockaddr *)&server6,length);
+			if (n < 0) error("Sendto");
+		}
+	});
+	/*while (1) {
 		if (mode_ipv6) {
 			n=sendto(sock,buffer,
 					block_size,0,(const struct sockaddr *)&server6,length);
@@ -78,7 +95,10 @@ int main(int argc, char *argv[])
 					block_size,0,(const struct sockaddr *)&server,length);
 		}
 		if (n < 0) error("Sendto");
-	}
+	}*/
+
+	thread1.join();
+	thread2.join();
 	printf("End of main loop...\n");
 	sleep(2);
 	close(sock);
