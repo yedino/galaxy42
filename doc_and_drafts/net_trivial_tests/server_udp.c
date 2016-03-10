@@ -36,7 +36,16 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	mode_ipv6 = 0==strcmp("ipv6", argv[2]);  // ***
+	if (strcmp("ipv6", argv[2]) == 0) {
+		mode_ipv6 = 1;
+	}
+	else if (strcmp("ipv4", argv[2]) == 0) {
+		mode_ipv6 = 0;
+	}
+	else {
+		printf("bad ip mode\n");
+		return 1;
+	}
 	printf("IPv6 mode: UDP %s\n" , (mode_ipv6 ? "YES" : "no (using IPv4. Try option ipv6 to use IPv6 instead)"));
 
 	if (mode_ipv6) {
