@@ -6,11 +6,17 @@ We do NOT guarantee they are free to use/copy.
 
 ---------------------------------------------------------------------
 
-Informaion for srv.c cli.c files:
+File tunproxy.c has licence embbed in it's content.
+
+---------------------------------------------------------------------
+
+Information for some files (server.c server_udp.c client.c client_udp.c)
 
 Code was found on Internet (and then modified by us), e.g.:
 http://www.linuxhowtos.org/data/6/server.c
+http://www.linuxhowtos.org/data/6/server_udp.c
 http://www.linuxhowtos.org/data/6/client.c
+http://www.linuxhowtos.org/data/6/client_udp.c
 http://www.linuxhowtos.org/C_C++/socket.htm
 
 and according to http://www.linuxhowtos.org/category17/
