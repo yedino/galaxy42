@@ -1,20 +1,5 @@
 /**
-This software is part of Antinet (Antinet.org) project,
-and is on same licence as the Antinet.org project,
-
-but in addition is licensed on the BSD Licence:
-
-Copyright (c) 2015-2016, the AntiNet.org team
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+See LICENCE.txt
 */
 
 #include <iostream>
@@ -44,8 +29,40 @@ void error(const char *msg) {
 	throw std::runtime_error(msg);
 }
 
-int main(int argc, char **argv) {
+class cIpBench {
+	public:
+		cIpBench();
 
+		void Configure(const & std::vector<std::string> args);
+		void Run();
+
+	private:
+		std::string m_target_addr; ///< our target: IP address
+		int m_target_port; ///< our target: IP (e.g. UDP) port number
+		bool m_target_is_ipv6; ///< is the target's address an IPv6
+
+		int m_blocksize; ///< size of the block to send
+};
+
+cIpBench::cIpBench() {
+	m_blocksize=0;
+}
+
+void cIpBench::Configure(const & std::vector<std::string> args) {
+	m_target_addr = args.at(1);
+	m_target_port = atoi(args.at(2));
+	m_target_is_ipv6 = atoi(args.at(2));
+	m_blocksize = atoi(args.at(4));
+}
+
+void cIpBench::Run() {
+
+}
+
+
+int main(int argc, char **argv) {
+	cIpBench bench;
+	bench.Run(argc,argv);
 }
 
 
