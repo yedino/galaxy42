@@ -5,3 +5,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic -O3 -
 add_executable(ipclient.elf ipclient.cpp)
 add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
+
+add_custom_target(run
+		COMMAND ./ipclient.elf
+		DEPENDS ./ipclient.elf
+		WORKING_DIRECTORY ./)
