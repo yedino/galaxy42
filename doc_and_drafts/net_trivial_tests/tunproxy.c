@@ -31,10 +31,15 @@
 #include <arpa/inet.h>
 #include <error.h>
 
+#include <sodium.h>
+
 #include "NetPlatform.h"
 
 #define PERROR(x) do { perror(x); exit(1); } while (0)
 #define ERROR(x, args ...) do { fprintf(stderr,"ERROR:" x, ## args); exit(1); } while (0)
+#define BUFF_SIZE 1500
+#define ADDITIONAL_DATA (const unsigned char *) "123456"
+#define ADDITIONAL_DATA_LEN 6
 
 char MAGIC_WORD[] = "Wazaaaaaaaaaaahhhh !";
 
@@ -48,12 +53,15 @@ void usage()
 
 int main(int argc, char *argv[])
 {
+	if(sodium_init() == -1) {
+        return 1;
+    }
 	struct sockaddr_in sin, sout, from;
 	struct ifreq ifr;
 	int fd, s, port, PORT, l;
 	unsigned int soutlen, fromlen;
 	char c, *p, *ip=NULL;
-	char buf[1500];
+	char buf[BUFF_SIZE];
 	fd_set fdset;
 
 	uint8_t ip_fill_char = 0;
@@ -201,6 +209,16 @@ int main(int argc, char *argv[])
 	}
 
 
+	// sodium
+	unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
+	unsigned char key[crypto_aead_chacha20poly1305_KEYBYTES];
+	memset(nonce, 'a', crypto_aead_chacha20poly1305_NPUBBYTES);
+	memset(key, 'b', crypto_aead_chacha20poly1305_NPUBBYTES);
+	//unsigned char ciphertext[BUFF_SIZE + crypto_aead_chacha20poly1305_ABYTES];
+	unsigned char ciphertext[BUFF_SIZE];
+	unsigned long long ciphertext_len = 0;
+	unsigned char decrypted[BUFF_SIZE];
+	unsigned long long decrypted_len;
 
 	printf("Main loop\n");
 
@@ -215,7 +233,11 @@ int main(int argc, char *argv[])
 			l = read(fd, buf, sizeof(buf)); // read data from TUN
 			if (l < 0) PERROR("read");
 			if (!drop_outgoing) {
-				if (sendto(s, buf, l, 0, (struct sockaddr *)&from, fromlen) < 0) PERROR("sendto");
+				crypto_aead_chacha20poly1305_encrypt(ciphertext, &ciphertext_len,
+                                         buf, BUFF_SIZE,
+                                         ADDITIONAL_DATA, ADDITIONAL_DATA_LEN,
+                                         NULL, nonce, key);
+				if (sendto(s, ciphertext, ciphertext_len, 0, (struct sockaddr *)&from, fromlen) < 0) PERROR("sendto");
 			} else {
 				if (!warned_drop_outgoing) { 
 					printf("Warning: we are dropping outgoing packets, droping one now (will not warn again about this)\n"); 
@@ -226,6 +248,12 @@ int main(int argc, char *argv[])
 		else { // data incoming from peering (we should input it into the TUN to our localhost) -or- route it further in mesh
 			if (DEBUG) write(1,"<", 1);
 			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sout, &soutlen);
+			crypto_aead_chacha20poly1305_decrypt(decrypted, &decrypted_len,
+                                             NULL,
+                                             buf, BUFF_SIZE,
+                                             ADDITIONAL_DATA,
+                                             ADDITIONAL_DATA_LEN,
+                                             nonce, key);
 
 			/*if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
 				printf("Got packet from  %s:%i instead of %s:%i\n", 
@@ -234,7 +262,8 @@ int main(int argc, char *argv[])
 				*/
 
 			if (!drop_incoming) {
-				if (write(fd, buf, l) < 0) PERROR("write");
+
+				if (write(fd, decrypted, decrypted_len) < 0) PERROR("write");
 			} else {
 				if (!warned_drop_incoming) { 
 					printf("Warning: we are dropping incoming packets, droping one now (will not warn again about this)\n"); 
