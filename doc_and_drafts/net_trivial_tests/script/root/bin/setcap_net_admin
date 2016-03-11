@@ -1,0 +1,136 @@
+#!/bin/bash -e
+# TODO check the --quiet and --debug modes more
+
+function usage() {
+	echo "Usage: setcap_net_admin run_mode -u expected_user -f target_file"
+	echo "  run_mode: should be string '--normal' or '--quiet' or '--debug'"
+	echo "  expected_user: is the user name (as name, not UID) of the user, or exact string '--current' to select the user who run this command (e.g. run it using sudo)" 
+	echo "  target_file: is name of the file."
+	echo "In this version the arguments must be given exactly in this order"
+	echo "Recommended, safe, sudo line suggestion is to use:"
+	echo "alice ALL=(ALL)NOPASSWD:/usr/bin/setcap_net_admin --normal -u --current -f *"
+	echo "Where, of course, alice is the name of user (or users, groups,...) to be allowed to give this CAP capability to their programs"
+	echo "This command will check proper rights on the given file, if it is owned by expected_user and has secure permissions."
+}
+
+# Copyrighted (C) BSD Licence
+#-----------------------------------------------------------------------------------------
+# This is ongoing implementation of proposed IFCCS-00004 - see e.g. ifccs_00004.txt here
+# section A
+
+TMPDIR1="$TMPDIR"
+
+if [[ "$TMPDIR1" == "/" ]] ; then
+  :
+else
+  TMPDIR1=${TMPDIR1%/} # remove trailing /
+fi
+if [[ -z "$TMPDIR1" ]] ; then
+  TMPDIR1="/tmp"
+fi
+
+newend="/user.$USER"
+# TODO what if newend from $USER contains special characters like dot
+if [[ "$TMPDIR1" == *"$newend" ]] ; then # TMPDIR1 already is /tmp/user.bob
+  newtmpdir="$TMPDIR1" # no change
+else
+  if [[ "$TMPDIR1" == "/" ]] ; then
+    newtmpdir="/user.$USER"
+  else
+    newtmpdir="$TMPDIR1/user.$USER"
+  fi
+fi
+
+#echo "Using newtmpdir=$newtmpdir"
+
+mkdir -p "$newtmpdir" -m 700
+chmod 700 "$newtmpdir"
+TMPDIR="$newtmpdir"
+export TMPDIR
+# echo "Using TMPDIR=$TMPDIR"
+#-----------------------------------------------------------------------------------------
+
+#echo "Usage: setcap_net_admin run_mode -u expected_user -f target_file"
+run_mode="$1"
+[[ "$2" == "-u" ]] || { usage; exit 1; }
+expected_user="$3"
+[[ "$4" == "-f" ]] || { usage; exit 1; }
+target_file_given="$5"
+# will validate arguments later, on use
+
+opt_quiet=0
+opt_debug=0
+
+if [[ "$run_mode" == "--normal" ]] ; then :
+elif [[ "$run_mode" == "--quiet" ]] ; then opt_quiet=1; 
+elif [[ "$run_mode" == "--debug" ]] ; then opt_debug=1; echo "Debug activated"
+fi
+
+if [[ "$opt_debug" == "1" ]] ; then logger "Running setcap ($0) DEBUG for arguments: $*" ; fi
+
+
+if [[ "$expected_user" == "--current" ]] ; then # this must be exact this option
+	expected_user=$(logname) # http://stackoverflow.com/questions/3522341/identify-user-in-a-bash-script-called-by-sudo
+fi
+
+# move the file to safe location where it can not be changed/mutated by anyone while we operate on it
+
+if [[ "$opt_quiet" == "0" ]] ; then logger "Running setcap ($0) on file ($target_file_given), allowed file owner is ($expected_user)." ; fi
+
+temp_file=$( mktemp -t "setcapb-XXXXXX" )
+if [[ "$opt_debug" == "1" ]] ; then logger "Running setcap ($0) DEBUG for arguments: $*" ; fi
+temp_dir="${temp_file}.dir"
+mkdir "$temp_dir"
+
+if [[ ! "$target_file_given" =~ ^[a-zA-Z0-9_-\./]+$ ]] ; then echo "Invalid (or strange) filename given: '$target_file_given'" ; usage ; exit 1 ; fi
+if [[ ! "$expected_user" =~ ^[a-zA-Z0-9_-\.]+$ ]] ; then echo "Invalid username given: '$expected_user'" ; usage ; exit 1 ; fi
+#echo "$expected_user"
+
+target_file_fn=${target_file_given##*/} # just filename eg "tuntap.bin", without path
+target_file_tmp=${temp_dir}/${target_file_fn} # e.g. "/tmp/user.rafalcode/setcapb-anOZOn.dir/tuntap.bin" - full filename where the target should be copied into our tempdir
+
+[ -f "$target_file_given" ] || { echo "The file is not existing as a normal regular file ($target_file_given)"; exit 1; }
+
+cp  --preserve=all "$target_file_given" "$target_file_tmp" || { echo "Can not copy the file ($target_file_given) to temp location in ($target_file_tmp)"; exit 1 ; } # move given file to the tmp location to work on it safely
+
+# stat "$target_file_given" ; stat  "$target_file_tmp"
+
+# ========== now check the file, is it secure. the file is in our temporary dir ==========
+
+has_stat=$(stat -c "%A" "${target_file_tmp}")
+has_username=$(stat -c "%U" "${target_file_tmp}")
+
+# file "$target_file_tmp"
+[ -f "$target_file_tmp" ] || { echo "The file is not existing as a normal regular file ($target_file_tmp)"; exit 1; }
+
+allowed_perms='-....--.--' #  must be not-writable and not-executable - for both group and others (and not have any special flags)
+#              -rwxr-xr-x  <--- user (rwx), group (r-x), other (r-x)
+#              -uuugggooo user group owner
+# TODO does this correctly check for lack of special flags SUID and others? XXX
+if [[ ! "$has_stat" =~ -....--.-- ]] ; then
+	echo "Error: unsafe permissions on the file (${has_stat}). Perhaps run following command on the file: "
+	echo "try: chmod g-wx,o-wx ${target_file_given} (and do not set any other special flags on it)."
+	exit 1
+fi
+
+if [[ ! "$has_username" == "$expected_user" ]] ; then
+	echo "Error: this file is owned by wrong use '$has_username' instead of by user '$expected_user' that you specified."
+	exit 1
+fi
+
+# The main operation:
+#stat "$target_file_tmp"
+extra=""
+if [[ "$opt_quiet" == "1" ]] ; then extra="-v"; fi
+setcap $extra "cap_net_admin+eip" "${target_file_tmp}" 
+if [[ "$opt_debug" == "1" ]] ; then getcap "${target_file_tmp}" ; fi
+# cap_net_raw+eip
+#echo "$target_file_tmp"
+
+cp --preserve=all  -f "$target_file_tmp" "$target_file_given" || { echo "Can not copy the file back from ($target_file_tmp) to ($target_file_given)"; exit 1 ; }
+
+# cleanup TODO call it always (trap)
+rm "${target_file_tmp}" # cleanup
+rm -d "${temp_dir}" # first delete the dir...
+rm "${temp_file}" # ...finally the anchoring file
+

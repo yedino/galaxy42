@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+cp bin/setcap_net_admin /usr/bin/
+# possible race condition here betwen copy and chmod, but doesn't matter, because
+# this script should be run in safe location, and /usr/bin also is one (controlled just by root)
+chmod u=wrx,g=rx,o=rx /usr/bin/setcap_net_admin
+
+echo "Ok, now you should probably edit sudoers"
+echo "E.g. with command: visudo"
+echo "And there in editor add line like:"
+echo "alice ALL=(ALL)NOPASSWD:/usr/bin/setcap_net_admin --normal -u --current -f *"
+echo "Where 'alice' should be the name of user (or group etc) that is allowed to set his programs to have netadmin capability"
+echo "Consider the security implications: the user that you will allow, will be able to configure the network interfaces on such computer as admin"
+

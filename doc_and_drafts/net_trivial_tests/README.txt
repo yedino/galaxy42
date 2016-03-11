@@ -22,21 +22,25 @@ node C has LAN IP for peering 192.168.0.107, and will be configured to have virt
 
 One time setup:
 
-Copy somewhere to root e.g. /root/, and customize the script "keep-fd42-config"
-enter there your IP and directory in which you work on this code here,
-then run this file - as ROOT, run it as bash command:
-  nohup keep-fd42-config &>/dev/null  &
-(in the proper directory of course) - it will run in background.
-You need to restart this script after reboot. You can stop it with killall command for example.
-In future this should be done in other way.
+as root, install the scripts including "setcap_net_admin", by doing following:
+as root take the files from here:
+cp -i -v -r script/root /root/
+and run it, from that directory:
+cd /root/root/ && ./install
+and then edit sudo rules, e.g. with command "visudo" as instructed by the install program.
+
+After this, the user that you configured should be able to run the command like setcap_net_admin,
+this command is already used by the build scripts you have here.
 
 ---
 
-Using this tests: build all:
+Usage: 
+
+build the code:
+
 ./build
-
-
-After a secon, the script keep-fd42-config running in background should give you CAP flags so that you can run the program without need for root.
+(now the programs that need it will request proper capabilities for themselves using e.g. setcap_net_admin
+this happens automatically)
 
 Then run:
   on node A (192.168.0.104) run: ./tunproxy.bin -p  192.168.0.57:9004 -s 9004 # this is the server
