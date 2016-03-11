@@ -10,3 +10,11 @@ add_custom_target(run
 		COMMAND ./ipclient.elf fd00:3232:3232:3232:3232:3232:3232:3232 12006 ipv6 1200
 		DEPENDS ./ipclient.elf
 		WORKING_DIRECTORY ./)
+
+add_custom_command(
+	TARGET ipclient.elf ipserver.elf tunserver.elf
+	POST_BUILD
+	COMMAND chmod g-wx,o-wx ipclient.elf
+	COMMAND chmod g-wx,o-wx ipserver.elf
+	COMMAND chmod g-wx,o-wx tunserver.elf
+	WORKING_DIRECTORY ./)
