@@ -214,8 +214,8 @@ int main(int argc, char *argv[])
 	unsigned char key[crypto_aead_chacha20poly1305_KEYBYTES];
 	memset(nonce, 'a', crypto_aead_chacha20poly1305_NPUBBYTES);
 	memset(key, 'b', crypto_aead_chacha20poly1305_NPUBBYTES);
-	//unsigned char ciphertext[BUFF_SIZE + crypto_aead_chacha20poly1305_ABYTES];
-	unsigned char ciphertext[BUFF_SIZE];
+	unsigned char ciphertext[BUFF_SIZE + crypto_aead_chacha20poly1305_ABYTES];
+	//unsigned char ciphertext[BUFF_SIZE];
 	unsigned long long ciphertext_len = 0;
 	unsigned char decrypted[BUFF_SIZE];
 	unsigned long long decrypted_len;
@@ -248,12 +248,15 @@ int main(int argc, char *argv[])
 		else { // data incoming from peering (we should input it into the TUN to our localhost) -or- route it further in mesh
 			if (DEBUG) write(1,"<", 1);
 			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sout, &soutlen);
-			crypto_aead_chacha20poly1305_decrypt(decrypted, &decrypted_len,
+			if (crypto_aead_chacha20poly1305_decrypt(decrypted, &decrypted_len,
                                              NULL,
                                              buf, BUFF_SIZE,
                                              ADDITIONAL_DATA,
                                              ADDITIONAL_DATA_LEN,
-                                             nonce, key);
+                                             nonce, key)) {
+				printf("decrypt fail: message forged!\n");
+				continue;
+			}
 
 			/*if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
 				printf("Got packet from  %s:%i instead of %s:%i\n", 
@@ -263,7 +266,7 @@ int main(int argc, char *argv[])
 
 			if (!drop_incoming) {
 
-				if (write(fd, decrypted, decrypted_len) < 0) PERROR("write");
+				if (write(fd, (char*)decrypted, decrypted_len) < 0) PERROR("write");
 			} else {
 				if (!warned_drop_incoming) { 
 					printf("Warning: we are dropping incoming packets, droping one now (will not warn again about this)\n"); 
