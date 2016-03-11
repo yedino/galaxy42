@@ -7,7 +7,7 @@ add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
 
 add_custom_target(run
-		COMMAND ./ipclient.elf fd00:3232:3232:3232:3232:3232:3232:3232 12006 ipv6 1200
+		COMMAND ./ipclient.elf ::1 12006 ipv6 1200
 		DEPENDS ./ipclient.elf
 		WORKING_DIRECTORY ./)
 
