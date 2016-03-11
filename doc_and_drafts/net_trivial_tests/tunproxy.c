@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 	if ( (fd = open("/dev/net/tun",O_RDWR)) < 0) PERROR("open");
 
 	memset(&ifr, 0, sizeof(ifr));
-	ifr.ifr_flags = TUNMODE;
+	ifr.ifr_flags = TUNMODE || IFF_MULTI_QUEUE;
 	strncpy(ifr.ifr_name, "toto%d", IFNAMSIZ);
 	if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0) PERROR("ioctl");
 

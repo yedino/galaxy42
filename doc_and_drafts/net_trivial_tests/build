@@ -1,11 +1,12 @@
 #!/bin/bash
 
-g++ -O3 -g3 ipclient.c -o ipclient.bin  --std=c++11 -pthread
+# g++ -O3 -g3 ipclient.c -o ipclient.bin  --std=c++11 -pthread
 
 gcc -O3 -g3 server_udp.c -o server_udp.bin 
 g++ -O3 -g3 client_udp.c -o client_udp.bin --std=c++11 -pthread
 gcc -O3 -g3 server_tcp.c -o server_tcp.bin 
 gcc -O3 -g3 client_tcp.c -o client_tcp.bin 
-gcc -O3 -g3 tunproxy.c NetPlatform_linux.c -o tunproxy.bin 
+
+gcc -O3 -g3 tunproxy.c NetPlatform_linux.c -o tunproxy.bin  && chown g-wx,o-wx tunproxy.bin
 
 gcc -O3 -g3 --std=c99 crypto_box.c -o crypto_box.bin -lsodium
