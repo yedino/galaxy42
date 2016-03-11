@@ -247,15 +247,18 @@ int main(int argc, char *argv[])
 		} 
 		else { // data incoming from peering (we should input it into the TUN to our localhost) -or- route it further in mesh
 			if (DEBUG) write(1,"<", 1);
-			l = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sout, &soutlen);
+			l = recvfrom(s, ciphertext, sizeof(ciphertext), 0, (struct sockaddr *)&sout, &soutlen);
 			if (crypto_aead_chacha20poly1305_decrypt(decrypted, &decrypted_len,
                                              NULL,
-                                             buf, BUFF_SIZE,
+                                             ciphertext, ciphertext_len,
                                              ADDITIONAL_DATA,
                                              ADDITIONAL_DATA_LEN,
                                              nonce, key)) {
 				printf("decrypt fail: message forged!\n");
 				continue;
+			}
+			else {
+				printf("decrypt ok\n");
 			}
 
 			/*if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
