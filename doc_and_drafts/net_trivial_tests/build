@@ -7,6 +7,6 @@ g++ -O3 -g3 client_udp.c -o client_udp.bin --std=c++11 -pthread
 gcc -O3 -g3 server_tcp.c -o server_tcp.bin 
 gcc -O3 -g3 client_tcp.c -o client_tcp.bin 
 
-gcc -O3 -g3 tunproxy.c NetPlatform_linux.c -o tunproxy.bin  && chmod g-wx,o-wx ./tunproxy.bin && sudo setcap_net_admin --normal -u --current -f ./tunproxy.bin
+gcc -O3 -g3 tunproxy.c NetPlatform_linux.c -o tunproxy.bin -lsodium  && chmod g-wx,o-wx ./tunproxy.bin && sudo setcap_net_admin --normal -u --current -f ./tunproxy.bin
 
 gcc -O3 -g3 --std=c99 crypto_box.c -o crypto_box.bin -lsodium
