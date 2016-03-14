@@ -33,40 +33,14 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 
 #include "counter.hpp"
 
+#include "cpputils.hpp" // TODO move to lib later
 
 
-// ------------------------------------------------------------------ XXX move me
-
-
-// --- to library --- TODO ------------------------------------------
-
-template <typename T> void memzero(const T & obj) {
-	std::memset( (void*) & obj , 0 , sizeof(T) );
-}
-
-template <typename T>
-class as_zerofill : public T {
-	public:
-		as_zerofill() {
-			assert( sizeof(*this) == sizeof(T) ); // TODO move to static assert. sanity check. quote isostd
-			void* baseptr = static_cast<void*>( dynamic_cast<T*>(this) );
-			assert(baseptr == this); // TODO quote isostd
-			memset( baseptr , 0 , sizeof(T) );
-		}
-		T& get() { return *this; }
-};
-
-// ------------------------------------------------------------------
-
+// TODO move:
 void error(const std::string & msg) {
 	std::cout << "Error: " << msg << std::endl;
 	throw std::runtime_error(msg);
 }
-
-// ------------------------------------------------------------------
-
-class c_speed_stats {
-};
 
 // ------------------------------------------------------------------
 
