@@ -49,7 +49,7 @@ using std::endl;
 
 
 // ??? decide: XXX
-// #include "c_tnetdbg.hpp"
+#include "c_tnetdbg.hpp"
 
 // --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
 /***

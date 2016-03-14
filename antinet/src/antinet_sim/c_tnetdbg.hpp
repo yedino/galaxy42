@@ -40,5 +40,20 @@
 // this assert MUST BE checked in release too
 #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << __FILE__ << "+" << __LINE__); ::std::abort(); }  } while(0)
 
+// this assert MUST BE checked in release too
+#define _throw_error(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << __FILE__ << "+" << __LINE__); ::std::abort(); }  } while(0)
+
+#define _throw2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  _erro("Going to throw exception. What:" << except_var.what() << " Info:" << MSG); throw except_var; } while(0)
+#define _throw( EXCEPT ) _throw2(EXCEPT, "")
+
+/** TODO document
+throw std::logic_error("foo");
+throw _except2( std::logic_error("foo") , "x=" << x << "y=" << y ) ;
+throw _except( std::logic_error("foo")) ;
+*/
+
+
+
+
 #endif // include guard
 

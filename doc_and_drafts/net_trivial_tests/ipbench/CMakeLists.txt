@@ -38,9 +38,14 @@ endif()
 include_directories(../../../antinet/src/antinet_sim/)
 add_executable(ipclient.elf ipclient.cpp counter.cpp)
 add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf tunserver.cpp)
+add_executable(tunserver.elf tunserver.cpp counter.cpp)
 
 add_custom_target(run
+		COMMAND ./tunserver.elf -c alice
+		DEPENDS ./tunserver.elf
+		WORKING_DIRECTORY ./)
+
+add_custom_target(runcli
 		COMMAND ./ipclient.elf ::1 12006 ipv6 1200
 		DEPENDS ./ipclient.elf
 		WORKING_DIRECTORY ./)
