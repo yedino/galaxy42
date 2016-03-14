@@ -19,4 +19,5 @@ add_custom_command(
 	COMMAND chmod g-wx,o-wx ipclient.elf
 	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
+	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
 	WORKING_DIRECTORY ./)
