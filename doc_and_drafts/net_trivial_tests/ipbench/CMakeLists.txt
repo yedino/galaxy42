@@ -4,7 +4,7 @@ project (ipbench)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic -O3 -g3")
 
 include_directories(../../../antinet/src/antinet_sim/)
-add_executable(ipclient.elf ipclient.cpp)
+add_executable(ipclient.elf ipclient.cpp counter.cpp)
 add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
 
