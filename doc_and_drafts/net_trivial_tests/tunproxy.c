@@ -254,15 +254,15 @@ int main(int argc, char *argv[])
                                              ADDITIONAL_DATA,
                                              ADDITIONAL_DATA_LEN,
                                              nonce, key)) {
-				printf("decrypt fail: message forged!\n");
+				//printf("decrypt fail: message forged!\n");
 				continue;
 			}
 			else {
-				printf("decrypt ok\n");
+				//printf("decrypt ok\n");
 			}
 
 			/*if ((sout.sin_addr.s_addr != from.sin_addr.s_addr) || (sout.sin_port != from.sin_port))
-				printf("Got packet from  %s:%i instead of %s:%i\n", 
+				printf("Got packet from  %s:%i instead of %s:%i\n",
 				       inet_ntoa(sout.sin_addr), ntohs(sout.sin_port),
 				       inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 				*/
