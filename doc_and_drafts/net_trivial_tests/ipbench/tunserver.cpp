@@ -165,6 +165,8 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 // TODO: crypto options here
 class c_peering { ///< An (mostly established) connection to peer
 	public:
+		c_peering(const c_ip46_addr & addr, const std::string & pubkey);
+
 		virtual void send_data(const char * data, size_t data_size)=0;
 		virtual ~c_peering()=default;
 
@@ -175,12 +177,24 @@ class c_peering { ///< An (mostly established) connection to peer
 		// ... TODO crypto type
 };
 
+c_peering::c_peering(const c_ip46_addr & addr, const std::string & pubkey) 
+ : m_addr(addr), m_pubkey(pubkey)
+{
+	_info("I am new peer, with addr="<<addr<<" and pubkey="<<pubkey);
+}
+
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
+		c_peering_udp(const c_ip46_addr & addr, const std::string & pubkey);
+		
 		virtual void send_data(const char * data, size_t data_size);
 		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
 	private:
 };
+
+c_peering_udp::c_peering_udp(const c_ip46_addr & addr, const std::string & pubkey)
+	: c_peering(addr, pubkey)
+{ }
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
 	throw std::runtime_error("Use send_data_udp");
@@ -229,7 +243,10 @@ c_tunserver::c_tunserver() {
 }
 
 void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey) {
-	// m_peer.push_back( ); // XXX
+	_note("Adding peer, address=" << addr << " pubkey=" << pubkey);
+	c_peering_udp obj( addr , pubkey );
+
+	m_peer.push_back( make_unique<c_peering_udp>( addr , pubkey ) ); // XXX
 }
 
 void c_tunserver::configure(const std::vector<std::string> & args) {
@@ -237,7 +254,7 @@ void c_tunserver::configure(const std::vector<std::string> & args) {
 
 		int i=1;
 		if (args.at(i) == "-p") {
-	//		configure_add_peer( args.at(i+1) , args.at(i+2) ); // XXX
+			configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
 		}
 
 	}
