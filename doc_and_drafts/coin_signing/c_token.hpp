@@ -61,22 +61,23 @@ struct c_chainsign_element {
         ar & m_signer_pubkey;
     }
 };
-
+ enum class serialization { boost = 1, Json = 2};
 class c_token : public ijson_serializable {
   public:
     c_token () = default;					///< creating empty token
 
+
     /// deserialize token
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
-    c_token (std::string packet, int method);
+    c_token (std::string packet, serialization method);
     c_token (const c_token_header &header);
     c_token (c_token_header &&header);
 
     /// serialize token
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
-    std::string to_packet (int method);
+    std::string to_packet (serialization method);
 
     std::string get_emiter_name () const;
     ed_key get_emiter_pubkey () const;

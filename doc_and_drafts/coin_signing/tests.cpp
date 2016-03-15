@@ -259,7 +259,7 @@ bool test_bad_chainsign() {
             "$234|edb1fdafc96abac26c52dae3be8b68e3b8e479ebdcc3dbf97e81bf1f47d0472bcf"
             "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
             "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
-            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", 2); // bad ids
+            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", serialization::Json); // bad ids
  } catch(std::exception &message) {
     std::cout << message.what() << " -- OK" << std::endl;
     errors--;
@@ -276,13 +276,13 @@ bool test_bad_chainsign() {
             "$0|edb1fdafc96abac26c52dae3be8b68e3b8e479ebdcc3dbf97e81bf1f47d0472bcf"
             "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
             "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
-            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", 2); // no ids
+            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", serialization::Json); // no ids
  } catch(std::exception &message) {
     std::cout << message.what() << " -- OK" << std::endl;
     errors--;
  }
  try{
-    c_token("$23|aaaaa$123|sbbbbbf#pass", 2);	// bad format
+    c_token("$23|aaaaa$123|sbbbbbf#pass", serialization::Json);	// bad format
  } catch(std::exception &message) {
     std::cout << message.what() << " -- OK" << std::endl;
     errors--;
@@ -306,9 +306,9 @@ bool test_convrt_tokenpacket() {
     B.send_token_bymethod(C);
     C.send_token_bymethod(D);
 
-    std::string packet = D.get_token_packet(2, A.get_public_key(), 1);
-    c_token test_tok(packet, 2);
-    std::string packet_two = test_tok.to_packet(2);
+    std::string packet = D.get_token_packet(serialization::Json, A.get_public_key(), 1);
+    c_token test_tok(packet, serialization::Json);
+    std::string packet_two = test_tok.to_packet(serialization::Json);
 
     if(packet == packet_two) {
         return false;
@@ -343,7 +343,7 @@ bool test_netuser() {
     A.print_status(std::cout);
     B.print_status(std::cout);
 
-    B.get_token_packet(2, A.get_public_key());	// is wallet empty?
+    B.get_token_packet(serialization::Json, A.get_public_key());	// is wallet empty?
     return false;
   } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;
@@ -625,8 +625,8 @@ bool json_serialize() {
         C.send_token_bymethod(D);
 
         // boost::serialize way
-        std::string packet = D.get_token_packet(2, A.get_public_key(),1);
-        c_token tok_serialize(packet, 2);
+        std::string packet = D.get_token_packet(serialization::Json, A.get_public_key(),1);
+        c_token tok_serialize(packet, serialization::Json);
 
         // json::value way
         std::string output;
