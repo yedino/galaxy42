@@ -105,13 +105,15 @@ void c_ipbench::prepare_socket() {
 	uint8_t address[16];
 	for (int i=0; i<16; ++i) address[i] = 8;
 
+	// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
+	// ...to the device to which we are setting IP address here:
 	address[0] = 0xFD;
 	address[1] = 0x00;
 	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
 
 
-	
 
+	
 }
 
 void c_ipbench::event_loop() {
