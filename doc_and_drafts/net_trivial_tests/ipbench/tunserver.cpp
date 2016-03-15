@@ -34,6 +34,11 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include "counter.hpp"
 #include "cpputils.hpp"
 
+// linux (and others?) select use:
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/select.h> 
+
 // for low-level Linux-like systems TUN operations
 #include <fcntl.h>
 #include <sys/ioctl.h> 
@@ -42,7 +47,6 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 // #include <net/if_media.h> // ?
 
 #include "../NetPlatform.h" // from cjdns
-
 
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
@@ -171,10 +175,16 @@ class c_tunserver {
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
 		void event_loop(); ///< the main loop
 
+		void wait_for_fd_event();
+
 	private: 
 		int m_tun_fd; ///< fd of TUN file
 
 		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
+
+		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
+
+		vector<c_peering> m_peer; ///< my peers
 };
 
 // ------------------------------------------------------------------
@@ -184,7 +194,17 @@ using namespace std; // XXX move to implementations, not to header-files later, 
 c_tunserver::c_tunserver() {
 }
 
+void c_tunserver::configure_add_peer
+
 void c_tunserver::configure(const std::vector<std::string> & args) {
+	if (args.size()>=2) {
+
+		int i=1;
+		if (args.at(i) == "-p") {
+			configure_add_peer( args.at(i+1) );
+		}
+
+	}
 }
 
 void c_tunserver::prepare_socket() {
@@ -216,17 +236,55 @@ void c_tunserver::prepare_socket() {
 	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(port);
 
 	{
-		auto addr4 = address_for_sock.get_ip4();
-		//auto bind_result = bind(sock, static_cast<sockaddr*>(&addr4), sizeof(addr4));
-		//_assert( bind_result >= 0 ); // TODO change to except
+		sockaddr_in addr4 = address_for_sock.get_ip4();
+		auto bind_result = bind(m_sock_udp, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
+		_assert( bind_result >= 0 ); // TODO change to except
 	}
 	_info("Bind done - listening on UDP on: "); // TODO  << address_for_sock
 }
 
+void c_tunserver::wait_for_fd_event() { // wait for fd event
+	_info("Selecting");
+	// set the wait for read events:
+	FD_ZERO(& m_fd_set_data);
+	FD_SET(m_sock_udp, &m_fd_set_data); 
+	FD_SET(m_tun_fd, &m_fd_set_data);
+
+	auto fd_max = std::max(m_tun_fd, m_sock_udp);
+	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
+	_assert(fd_max >= 1);
+
+	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL,NULL); // <--- blocks
+	_assert(select_result >= 0);
+}
+
 void c_tunserver::event_loop() {
+	_info("Entering the event loop");
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
+
+	fd_set fd_set_data;
+
+	const int buf_size=65536;
+	char buf[buf_size];
+
 	while (1) {
+		wait_for_fd_event();
+
+		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
+			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
+		}
+		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
+			sockaddr_in6 from_addr_raw; // the address of sender, raw format
+			socklen_t from_addr_raw_size; // the size of sender address 
+
+			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
+			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
+			// ^- reinterpret allowed by linux specs (TODO)
+			// sockaddr *src_addr, socklen_t *addrlen);
+		}
+		else _erro("No event selected?!"); // TODO throw
+
 		int sent=0;
 		counter.tick(sent, std::cout);
 		counter_big.tick(sent, std::cout);
