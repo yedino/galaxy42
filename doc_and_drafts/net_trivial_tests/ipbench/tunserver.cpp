@@ -175,12 +175,10 @@ class c_peering { ///< An (mostly established) connection to peer
 		// ... TODO crypto type
 };
 
-		virtual void send_data(const char * data, size_t data_size);
-		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
-
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
 		virtual void send_data(const char * data, size_t data_size);
+		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
 	private:
 };
 
@@ -188,7 +186,7 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 	throw std::runtime_error("Use send_data_udp");
 }
 
-void c_peering_udp::send_data(const char * data, size_t data_size, int udp_socket) {
+void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket) {
 	// TODO encrpt
 }
 
@@ -216,7 +214,7 @@ class c_tunserver {
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		vector<c_peering> m_peer; ///< my peers
+		vector<unique_ptr<c_peering>> m_peer; ///< my peers
 };
 
 // ------------------------------------------------------------------
@@ -308,7 +306,8 @@ void c_tunserver::event_loop() {
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
 			try {
-				m_peer.at(0)->send_data_udp(buf, size_read, m_sock_udp);
+				auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
+				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
 			} catch(...) {
 				_warn("Can not send to peer."); // TODO more info (which peer, addr, number)
 			}
@@ -322,9 +321,9 @@ void c_tunserver::event_loop() {
 			// ^- reinterpret allowed by linux specs (TODO)
 			// sockaddr *src_addr, socklen_t *addrlen);
 			
-			// decrypt !!!
+			// decrypt !!! TODO
 
-			write(m_tun_fd,
+			write(m_tun_fd, buf, size_read);
 
 			
 		}
