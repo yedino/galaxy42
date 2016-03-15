@@ -188,6 +188,10 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 
 void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket) {
 	// TODO encrpt
+
+	_info("UDP send to peer: " << data_size << " bytes: [" << string(data,data_size)<<"]" );
+
+	write(udp_socket, data, data_size);
 }
 
 // ------------------------------------------------------------------
@@ -305,6 +309,7 @@ void c_tunserver::event_loop() {
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
+			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
 				auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
 				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
@@ -321,10 +326,11 @@ void c_tunserver::event_loop() {
 			// ^- reinterpret allowed by linux specs (TODO)
 			// sockaddr *src_addr, socklen_t *addrlen);
 			
+			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			// decrypt !!! TODO
 
+			_info("UDP received, sending to TUN:" << size_read << " bytes: [" << string(buf,size_read)<<"]" );
 			write(m_tun_fd, buf, size_read);
-
 			
 		}
 		else _erro("No event selected?!"); // TODO throw
