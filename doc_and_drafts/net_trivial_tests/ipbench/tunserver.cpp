@@ -165,9 +165,8 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 // TODO: crypto options here
 class c_peering { ///< An (mostly established) connection to peer
 	public:
-		virtual void dd();
-
-		virtual ~c_peering();
+		virtual void send_data(const char * data, size_t data_size)=0;
+		virtual ~c_peering()=default;
 
 	private:
 		c_ip46_addr	m_addr; ///< peer address in socket format
@@ -176,10 +175,22 @@ class c_peering { ///< An (mostly established) connection to peer
 		// ... TODO crypto type
 };
 
+		virtual void send_data(const char * data, size_t data_size);
+		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
+
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
+		virtual void send_data(const char * data, size_t data_size);
 	private:
 };
+
+void c_peering_udp::send_data(const char * data, size_t data_size) {
+	throw std::runtime_error("Use send_data_udp");
+}
+
+void c_peering_udp::send_data(const char * data, size_t data_size, int udp_socket) {
+	// TODO encrpt
+}
 
 // ------------------------------------------------------------------
 
@@ -296,6 +307,11 @@ void c_tunserver::event_loop() {
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
+			try {
+				m_peer.at(0)->send_data_udp(buf, size_read, m_sock_udp);
+			} catch(...) {
+				_warn("Can not send to peer."); // TODO more info (which peer, addr, number)
+			}
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
 			sockaddr_in6 from_addr_raw; // the address of sender, raw format
@@ -305,6 +321,12 @@ void c_tunserver::event_loop() {
 			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
 			// ^- reinterpret allowed by linux specs (TODO)
 			// sockaddr *src_addr, socklen_t *addrlen);
+			
+			// decrypt !!!
+
+			write(m_tun_fd,
+
+			
 		}
 		else _erro("No event selected?!"); // TODO throw
 
