@@ -116,10 +116,14 @@ void NetPlatform_addAddress(const char* interfaceName,
     checkInterfaceUp(s, &ifRequest);
 
     if (addrFam == Sockaddr_AF_INET6) {
-        struct in6_ifreq ifr6 = {
-            .ifr6_ifindex = ifIndex,
-            .ifr6_prefixlen = prefixLen
-        };
+        struct in6_ifreq ifr6;
+        memset( &ifr6 , 0, sizeof(ifr6) ); // just to be sure
+        ifr6.ifr6_prefixlen = prefixLen;
+        ifr6.ifr6_ifindex = ifIndex;
+        /* = {
+            ifIndex,
+            prefixLen
+        };*/
         memcpy(&ifr6.ifr6_addr, address, 16);
 
         if (ioctl(s, SIOCSIFADDR, &ifr6) < 0) {

@@ -41,6 +41,9 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
 
+#include "../NetPlatform.h" // from cjdns
+
+
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
 
@@ -95,7 +98,20 @@ void c_ipbench::prepare_socket() {
 	ifr.ifr_flags = IFF_TAP || IFF_MULTI_QUEUE;
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
-	_throw( std::runtime_error("Error in ioctl")); // TODO
+	if (errcode_ioctl < 0)_throw( std::runtime_error("Error in ioctl")); // TODO
+
+	_mark("Allocated interface:" << ifr.ifr_name);
+
+	uint8_t address[16];
+	for (int i=0; i<16; ++i) address[i] = 8;
+
+	address[0] = 0xFD;
+	address[1] = 0x00;
+	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
+
+
+	
+
 }
 
 void c_ipbench::event_loop() {

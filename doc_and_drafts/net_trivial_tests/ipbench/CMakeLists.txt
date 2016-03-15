@@ -38,7 +38,7 @@ endif()
 include_directories(../../../antinet/src/antinet_sim/)
 add_executable(ipclient.elf ipclient.cpp counter.cpp)
 add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf tunserver.cpp counter.cpp)
+add_executable(tunserver.elf tunserver.cpp counter.cpp ../NetPlatform_linux.c)
 
 add_custom_target(run
 		COMMAND ./tunserver.elf -c alice

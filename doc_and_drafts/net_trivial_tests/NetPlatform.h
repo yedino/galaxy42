@@ -29,8 +29,8 @@
 
 #include <stdint.h>
 
-const int Sockaddr_AF_INET;
-const int Sockaddr_AF_INET6;
+extern const int Sockaddr_AF_INET;
+extern const int Sockaddr_AF_INET6;
 
 void NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
