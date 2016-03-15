@@ -56,9 +56,83 @@ void error(const std::string & msg) {
 
 // ------------------------------------------------------------------
 
-class c_ipbench {
+// TODO to lib "ip46"
+
+// sockaddr is the base class for sockaddr_in and for sockaddr_in6
+// see also http://stackoverflow.com/a/18579605
+static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in) , "Invalid size of ipv4 vs ipv6 addresses" );
+static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in6) , "Invalid size of ipv4 vs ipv6 addresses" );
+
+class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
+	enum { tag_none, tag_ipv4, tag_ipv6 } m_tag; ///< current type of address
+
+	struct t_ip_data {
+		union { ///< the address is either:
+			sockaddr_in in4;
+			sockaddr_in6 in6;
+		};
+	};
+
+	t_ip_data m_ip_data;
+
+	c_ip46_addr();
+
+	void set_ip4(sockaddr_in in4);
+	void set_ip6(sockaddr_in6 in6);
+	sockaddr_in  get_ip4() const;
+	sockaddr_in6 get_ip6() const;
+};
+
+c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
+
+void c_ip46_addr::set_ip4(sockaddr_in in4) {
+	_assert(in4.sin_family == AF_INET);
+	m_tag = tag_ipv4;
+	this->m_ip_data.in4 = in4;
+}
+void c_ip46_addr::set_ip6(sockaddr_in6 in6) {
+	_assert(in6.sin6_family == AF_INET6);
+	m_tag = tag_ipv6;
+	this->m_ip_data.in6 = in6;
+}
+
+sockaddr_in  c_ip46_addr::get_ip4() const {
+	_assert(m_tag == tag_ipv4);
+	auto ret = this->m_ip_data.in4;
+	_assert(ret.sin_family == AF_INET);
+	return ret;
+}
+sockaddr_in6 c_ip46_addr::get_ip6() const {
+	_assert(m_tag == tag_ipv6);
+	auto ret = this->m_ip_data.in6;
+	_assert(ret.sin6_family == AF_INET6);
+	return ret;
+}
+
+// ------------------------------------------------------------------
+
+// TODO: crypto options here
+class c_peering { ///< An (mostly established) connection to peer
 	public:
-		c_ipbench();
+	private:
+		c_ip46_addr	m_addr; ///< peer address in socket format
+};
+
+class c_peering_udp : public c_peering { ///< An established connection to UDP peer
+	public:
+	//	c_peering_udp(bool 
+	private:
+		// TODO optimize memory waste (union? or casting?)
+		bool m_sockaddr_is6; ///< is it ipv6?
+		as_zerofill< sockaddr_in  > m_sockaddr4 ; ///< socket address (ipv4)
+		as_zerofill< sockaddr_in6 > m_sockaddr6 ; ///< socket address (ipv6)
+};
+
+// ------------------------------------------------------------------
+
+class c_tunserver {
+	public:
+		c_tunserver();
 
 		void configure(const std::vector<std::string> & args);
 		void run();
@@ -69,28 +143,29 @@ class c_ipbench {
 
 	private: 
 
+		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
+		as_zerofill< sockaddr_in  > m_udp_sockaddr4 ; ///< socket address (ipv4) for m_sock_udp
+		as_zerofill< sockaddr_in6 > m_sockaddr6 ; ///< socket address (ipv6) for m_sock_udp
+
 		int m_tun_fd; ///< fd of TUN file
 
 		std::string m_target_addr; ///< our target: IP address XXX
 		int m_target_port; ///< our target: IP (e.g. UDP) port number XXX
 		bool m_target_is_ipv6; ///< is the target's address an IPv6 XXX
 
-		int m_sock; ///< the network socket XXX
-		as_zerofill< sockaddr_in  > m_sockaddr4 ; ///< socket address (ipv4) XXX
-		as_zerofill< sockaddr_in6 > m_sockaddr6 ; ///< socket address (ipv6) XXX
 };
 
 // ------------------------------------------------------------------
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
-c_ipbench::c_ipbench() {
+c_tunserver::c_tunserver() {
 }
 
-void c_ipbench::configure(const std::vector<std::string> & args) {
+void c_tunserver::configure(const std::vector<std::string> & args) {
 }
 
-void c_ipbench::prepare_socket() {
+void c_tunserver::prepare_socket() {
 	m_tun_fd = open("/dev/net/tun", O_RDWR);
 	assert(! (m_tun_fd<0) );
 
@@ -111,12 +186,12 @@ void c_ipbench::prepare_socket() {
 	address[1] = 0x00;
 	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
 
-
+	// create listening socket
 
 	
 }
 
-void c_ipbench::event_loop() {
+void c_tunserver::event_loop() {
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
 	while (1) {
@@ -126,7 +201,7 @@ void c_ipbench::event_loop() {
 	}
 }
 
-void c_ipbench::run() {
+void c_tunserver::run() {
 	std::cout << "Starting tests" << std::endl;
 	prepare_socket();
 	event_loop();
@@ -136,8 +211,11 @@ void c_ipbench::run() {
 
 
 int main(int argc, char **argv) {
+
+	std::cerr << sizeof(sockaddr_in) << " " << sizeof(sockaddr_in6)  << std::endl;
+
 	std::cerr << disclaimer << std::endl;
-	c_ipbench bench;
+	c_tunserver bench;
 	vector <string> args;
 	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
 	bench.configure(args);
