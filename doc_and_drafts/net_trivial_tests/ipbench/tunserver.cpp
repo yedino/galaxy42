@@ -1,8 +1,9 @@
 /**
+Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
 
-const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere. ***"; // XXX
+const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 #include <iostream>
 #include <stdexcept>
@@ -236,16 +237,15 @@ class c_tunserver {
 	public:
 		c_tunserver();
 
-		void configure(const std::vector<std::string> & args);
-		void run();
+		void configure(const std::vector<std::string> & args); ///< load configuration
+		void run(); ///< run the main loop
+		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey); ///< add this as peer
+		void help_usage() const; ///< show help about usage of the program
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
 		void event_loop(); ///< the main loop
-
-		void wait_for_fd_event();
-
-		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey);
+		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
 
 	private:
 		int m_tun_fd; ///< fd of TUN file
@@ -264,39 +264,53 @@ class c_tunserver {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 c_tunserver::c_tunserver()
- : m_myip_fill(1)
+ : m_tun_fd(-1), m_sock_udp(-1),
+ m_myip_fill(1) // default IP
 {
 }
 
 void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey) {
 	_note("Adding peer, address=" << addr << " pubkey=" << pubkey);
-	c_peering_udp obj( addr , pubkey );
-
-	m_peer.push_back( make_unique<c_peering_udp>( addr , pubkey ) ); // XXX
+	m_peer.push_back( make_unique<c_peering_udp>( addr , pubkey ) );
 }
 
 void c_tunserver::configure(const std::vector<std::string> & args) {
-	if (args.size()>=5+1+1) {
-
-		{
-			const int i=1;
-			if (args.at(i) == "-K") { // -K 5 mypub mypriv
-				m_myip_fill = std::atoi( args.at(i+1).c_str() );
+	bool valid=false;
+	try {
+		if (args.size()>=5+1+1) {
+			{	const int i=1;
+				if (args.at(i) == "-K") { // -K 5 mypub mypriv
+					m_myip_fill = std::atoi( args.at(i+1).c_str() );
+				}
 			}
-		}
 
-		{
-			const int i=5;
-			if (args.at(i) == "-p") {
-				configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
+			{	const int i=5;
+				if (args.at(i) == "-p") {
+					configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
+				}
 			}
+			valid=true;
 		}
+	} catch(...) { valid=false; }
 
-	}
-	else { // usage
-		_erro("Usage:" << endl << "program -K 5 mypub mypriv -p 192.168.0.5 pubkey");
+	if (!valid) {
+		_erro("Invalid program options");
+		help_usage();
 		throw std::runtime_error("Fix program options");
 	}
+}
+
+void c_tunserver::help_usage() const {
+	std::ostream & out = cerr;
+	out << "Usage:" << endl
+		<< "program -K ipfill mypub mypriv -p peerip peerpub" << endl
+		<< "program -K 5 mypub mypriv -p 192.168.0.5 peerpub" << endl
+		<< "  ipfill - number that sets your virtual IP address for now, 0-255" << endl
+		<< "  mypub - your public key (give any string, not yet used)" << endl
+		<< "  mypriv - your PRIVATE key (give any string, not yet used - of course this is just for tests)" << endl
+		<< "  peerip - IP over existing networking to connect to your peer" << endl
+		<< "  peerpub - public key of your peer" << endl
+	;
 }
 
 void c_tunserver::prepare_socket() {
@@ -409,7 +423,7 @@ void c_tunserver::run() {
 
 
 int main(int argc, char **argv) {
-	std::cerr << disclaimer << std::endl;
+	std::cerr << std::endl << disclaimer << std::endl << std::endl;
 
 /*	c_ip46_addr addr;
 	std::cout << addr << std::endl;
