@@ -153,8 +153,15 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 // TODO: crypto options here
 class c_peering { ///< An (mostly established) connection to peer
 	public:
+		virtual void dd();
+
+		virtual ~c_peering();
+
 	private:
 		c_ip46_addr	m_addr; ///< peer address in socket format
+
+		std::string m_pubkey; ///< his pubkey
+		// ... TODO crypto type
 };
 
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
@@ -177,6 +184,8 @@ class c_tunserver {
 
 		void wait_for_fd_event();
 
+		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey);
+
 	private: 
 		int m_tun_fd; ///< fd of TUN file
 
@@ -194,14 +203,16 @@ using namespace std; // XXX move to implementations, not to header-files later, 
 c_tunserver::c_tunserver() {
 }
 
-void c_tunserver::configure_add_peer
+void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey) {
+	// m_peer.push_back( ); // XXX
+}
 
 void c_tunserver::configure(const std::vector<std::string> & args) {
 	if (args.size()>=2) {
 
 		int i=1;
 		if (args.at(i) == "-p") {
-			configure_add_peer( args.at(i+1) );
+	//		configure_add_peer( args.at(i+1) , args.at(i+2) ); // XXX
 		}
 
 	}
