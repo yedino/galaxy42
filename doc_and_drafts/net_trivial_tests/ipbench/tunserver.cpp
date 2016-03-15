@@ -37,12 +37,12 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 // linux (and others?) select use:
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/select.h> 
+#include <sys/select.h>
 
 // for low-level Linux-like systems TUN operations
 #include <fcntl.h>
-#include <sys/ioctl.h> 
-#include <net/if.h> 
+#include <sys/ioctl.h>
+#include <net/if.h>
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
 
@@ -69,15 +69,16 @@ static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in6) , "Invalid size of ipv4 
 
 class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 	public:
-		enum { tag_none, tag_ipv4, tag_ipv6 } m_tag; ///< current type of address
+		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
 
-	public:
 		c_ip46_addr();
 
 		void set_ip4(sockaddr_in in4);
 		void set_ip6(sockaddr_in6 in6);
 		sockaddr_in  get_ip4() const;
 		sockaddr_in6 get_ip6() const;
+
+		t_tag get_ip_type() const;
 
 		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
 		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
@@ -92,9 +93,15 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 		};
 
 		t_ip_data m_ip_data;
+
+		t_tag m_tag; ///< current type of address
 };
 
 c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
+
+c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
+	return m_tag;
+}
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
 	_assert(in4.sin_family == AF_INET);
@@ -170,14 +177,14 @@ class c_peering { ///< An (mostly established) connection to peer
 		virtual void send_data(const char * data, size_t data_size)=0;
 		virtual ~c_peering()=default;
 
-	private:
+	protected:
 		c_ip46_addr	m_addr; ///< peer address in socket format
 
 		std::string m_pubkey; ///< his pubkey
 		// ... TODO crypto type
 };
 
-c_peering::c_peering(const c_ip46_addr & addr, const std::string & pubkey) 
+c_peering::c_peering(const c_ip46_addr & addr, const std::string & pubkey)
  : m_addr(addr), m_pubkey(pubkey)
 {
 	_info("I am new peer, with addr="<<addr<<" and pubkey="<<pubkey);
@@ -186,7 +193,7 @@ c_peering::c_peering(const c_ip46_addr & addr, const std::string & pubkey)
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
 		c_peering_udp(const c_ip46_addr & addr, const std::string & pubkey);
-		
+
 		virtual void send_data(const char * data, size_t data_size);
 		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
 	private:
@@ -205,7 +212,22 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	_info("UDP send to peer: " << data_size << " bytes: [" << string(data,data_size)<<"]" );
 
-	write(udp_socket, data, data_size);
+	switch (m_addr.get_ip_type()) {
+		case c_ip46_addr::t_tag::tag_ipv4 : {
+			auto ip_x = m_addr.get_ip4(); // ip of proper type, as local variable
+			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in) );
+		}
+		break;
+		case c_ip46_addr::t_tag::tag_ipv6 : {
+			auto ip_x = m_addr.get_ip6(); // ip of proper type, as local variable
+			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in6) );
+		}
+		break;
+		default: {
+			std::ostringstream oss; oss << m_addr; // TODO
+			throw std::runtime_error(string("Invalid IP type: ") + oss.str());
+		}
+	}
 }
 
 // ------------------------------------------------------------------
@@ -225,7 +247,7 @@ class c_tunserver {
 
 		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey);
 
-	private: 
+	private:
 		int m_tun_fd; ///< fd of TUN file
 
 		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
@@ -241,7 +263,7 @@ class c_tunserver {
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
-c_tunserver::c_tunserver() 
+c_tunserver::c_tunserver()
  : m_myip_fill(1)
 {
 }
@@ -270,7 +292,7 @@ void c_tunserver::configure(const std::vector<std::string> & args) {
 			}
 		}
 
-	} 
+	}
 	else { // usage
 		_erro("Usage:" << endl << "program -K 5 mypub mypriv -p 192.168.0.5 pubkey");
 		throw std::runtime_error("Fix program options");
@@ -319,7 +341,7 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_info("Selecting");
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
-	FD_SET(m_sock_udp, &m_fd_set_data); 
+	FD_SET(m_sock_udp, &m_fd_set_data);
 	FD_SET(m_tun_fd, &m_fd_set_data);
 
 	auto fd_max = std::max(m_tun_fd, m_sock_udp);
@@ -355,19 +377,19 @@ void c_tunserver::event_loop() {
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
 			sockaddr_in6 from_addr_raw; // the address of sender, raw format
-			socklen_t from_addr_raw_size; // the size of sender address 
+			socklen_t from_addr_raw_size; // the size of sender address
 
 			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
 			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
 			// ^- reinterpret allowed by linux specs (TODO)
 			// sockaddr *src_addr, socklen_t *addrlen);
-			
+
 			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			// decrypt !!! TODO
 
 			_info("UDP received, sending to TUN:" << size_read << " bytes: [" << string(buf,size_read)<<"]" );
 			write(m_tun_fd, buf, size_read);
-			
+
 		}
 		else _erro("No event selected?!"); // TODO throw
 
