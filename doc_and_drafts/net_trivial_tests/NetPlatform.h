@@ -27,6 +27,10 @@
 #ifndef NetPlatform_H
 #define NetPlatform_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 extern const int Sockaddr_AF_INET;
@@ -39,5 +43,9 @@ void NetPlatform_addAddress(const char* interfaceName,
 
 void NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif
