@@ -76,6 +76,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 		sockaddr_in6 get_ip6() const;
 
 		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
+		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
 
 	private:
 		struct t_ip_data {
@@ -122,6 +123,25 @@ c_ip46_addr c_ip46_addr::any_on_port(int port) { ///< return my address, any IP 
 	c_ip46_addr ret;
 	ret.set_ip4(addr_in);
 	return ret;
+}
+
+ostream &operator << (ostream &out, const c_ip46_addr& addr) {
+	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
+		char addr_str[INET_ADDRSTRLEN];
+		auto ip4_address = addr.get_ip4();
+		inet_ntop(AF_INET, &ip4_address.sin_addr, addr_str, INET_ADDRSTRLEN);
+		out << addr_str;
+	}
+	else if (addr.m_tag == c_ip46_addr::tag_ipv6) {
+		char addr_str[INET6_ADDRSTRLEN];
+		auto ip6_address = addr.get_ip6();
+		inet_ntop(AF_INET6, &ip6_address.sin6_addr, addr_str, INET6_ADDRSTRLEN);
+		out << addr_str;
+	}
+	else {
+		out << "none";
+	}
+	return out;
 }
 
 // ------------------------------------------------------------------
@@ -197,8 +217,8 @@ void c_tunserver::prepare_socket() {
 
 	{
 		auto addr4 = address_for_sock.get_ip4();
-		auto bind_result = bind(sock, static_cast<sockaddr*>(&addr4), sizeof(addr4)); 
-		_assert( bind_result >= 0 ); // TODO change to except
+		//auto bind_result = bind(sock, static_cast<sockaddr*>(&addr4), sizeof(addr4));
+		//_assert( bind_result >= 0 ); // TODO change to except
 	}
 	_info("Bind done - listening on UDP on: "); // TODO  << address_for_sock
 }
@@ -225,6 +245,20 @@ void c_tunserver::run() {
 int main(int argc, char **argv) {
 	std::cerr << disclaimer << std::endl;
 
+/*	c_ip46_addr addr;
+	std::cout << addr << std::endl;
+	struct sockaddr_in sa;
+	inet_pton(AF_INET, "192.0.2.33", &(sa.sin_addr));
+	sa.sin_family = AF_INET;
+	addr.set_ip4(sa);
+	std::cout << addr << std::endl;
+
+	struct sockaddr_in6 sa6;
+	inet_pton(AF_INET6, "fc72:aa65:c5c2:4a2d:54e:7947:b671:e00c", &(sa6.sin6_addr));
+	sa6.sin6_family = AF_INET6;
+	addr.set_ip6(sa6);
+	std::cout << addr << std::endl;
+*/
 	c_tunserver myserver;
 	vector <string> args;
 	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
