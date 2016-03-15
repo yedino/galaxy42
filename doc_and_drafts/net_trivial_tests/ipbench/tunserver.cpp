@@ -64,23 +64,28 @@ static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in) , "Invalid size of ipv4 v
 static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in6) , "Invalid size of ipv4 vs ipv6 addresses" );
 
 class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
-	enum { tag_none, tag_ipv4, tag_ipv6 } m_tag; ///< current type of address
+	public:
+		enum { tag_none, tag_ipv4, tag_ipv6 } m_tag; ///< current type of address
 
-	struct t_ip_data {
-		union { ///< the address is either:
-			sockaddr_in in4;
-			sockaddr_in6 in6;
+	public:
+		c_ip46_addr();
+
+		void set_ip4(sockaddr_in in4);
+		void set_ip6(sockaddr_in6 in6);
+		sockaddr_in  get_ip4() const;
+		sockaddr_in6 get_ip6() const;
+
+		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
+
+	private:
+		struct t_ip_data {
+			union { ///< the address is either:
+				sockaddr_in in4;
+				sockaddr_in6 in6;
+			};
 		};
-	};
 
-	t_ip_data m_ip_data;
-
-	c_ip46_addr();
-
-	void set_ip4(sockaddr_in in4);
-	void set_ip6(sockaddr_in6 in6);
-	sockaddr_in  get_ip4() const;
-	sockaddr_in6 get_ip6() const;
+		t_ip_data m_ip_data;
 };
 
 c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
@@ -109,6 +114,16 @@ sockaddr_in6 c_ip46_addr::get_ip6() const {
 	return ret;
 }
 
+c_ip46_addr c_ip46_addr::any_on_port(int port) { ///< return my address, any IP (e.g. for listening), on given port
+	as_zerofill< sockaddr_in > addr_in;
+	addr_in.sin_family = AF_INET;
+	addr_in.sin_port = htons(port);
+	addr_in.sin_addr.s_addr = INADDR_ANY;
+	c_ip46_addr ret;
+	ret.set_ip4(addr_in);
+	return ret;
+}
+
 // ------------------------------------------------------------------
 
 // TODO: crypto options here
@@ -120,12 +135,7 @@ class c_peering { ///< An (mostly established) connection to peer
 
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
-	//	c_peering_udp(bool 
 	private:
-		// TODO optimize memory waste (union? or casting?)
-		bool m_sockaddr_is6; ///< is it ipv6?
-		as_zerofill< sockaddr_in  > m_sockaddr4 ; ///< socket address (ipv4)
-		as_zerofill< sockaddr_in6 > m_sockaddr6 ; ///< socket address (ipv6)
 };
 
 // ------------------------------------------------------------------
@@ -142,17 +152,9 @@ class c_tunserver {
 		void event_loop(); ///< the main loop
 
 	private: 
-
-		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
-		as_zerofill< sockaddr_in  > m_udp_sockaddr4 ; ///< socket address (ipv4) for m_sock_udp
-		as_zerofill< sockaddr_in6 > m_sockaddr6 ; ///< socket address (ipv6) for m_sock_udp
-
 		int m_tun_fd; ///< fd of TUN file
 
-		std::string m_target_addr; ///< our target: IP address XXX
-		int m_target_port; ///< our target: IP (e.g. UDP) port number XXX
-		bool m_target_is_ipv6; ///< is the target's address an IPv6 XXX
-
+		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 };
 
 // ------------------------------------------------------------------
@@ -187,8 +189,18 @@ void c_tunserver::prepare_socket() {
 	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
 
 	// create listening socket
+	m_sock_udp = socket(AF_INET, SOCK_DGRAM, 0);
+	_assert(m_sock_udp >= 0);
 
-	
+	int port = 9042;
+	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(port);
+
+	{
+		auto addr4 = address_for_sock.get_ip4();
+		auto bind_result = bind(sock, static_cast<sockaddr*>(&addr4), sizeof(addr4)); 
+		_assert( bind_result >= 0 ); // TODO change to except
+	}
+	_info("Bind done - listening on UDP on: "); // TODO  << address_for_sock
 }
 
 void c_tunserver::event_loop() {
@@ -211,15 +223,13 @@ void c_tunserver::run() {
 
 
 int main(int argc, char **argv) {
-
-	std::cerr << sizeof(sockaddr_in) << " " << sizeof(sockaddr_in6)  << std::endl;
-
 	std::cerr << disclaimer << std::endl;
-	c_tunserver bench;
+
+	c_tunserver myserver;
 	vector <string> args;
 	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
-	bench.configure(args);
-	bench.run();
+	myserver.configure(args);
+	myserver.run();
 }
 
 
