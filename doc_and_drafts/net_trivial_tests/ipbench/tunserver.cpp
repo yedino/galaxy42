@@ -80,6 +80,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 		sockaddr_in6 get_ip6() const;
 
 		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
+		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
 		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
 
 	private:
@@ -128,6 +129,17 @@ c_ip46_addr c_ip46_addr::any_on_port(int port) { ///< return my address, any IP 
 	ret.set_ip4(addr_in);
 	return ret;
 }
+
+c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
+	as_zerofill< sockaddr_in > addr_in;
+	addr_in.sin_family = AF_INET;
+	inet_pton(AF_INET, ipv4_str.c_str(), &(addr_in.sin_addr));
+	addr_in.sin_port = htons(port);
+	c_ip46_addr ret;
+	ret.set_ip4(addr_in);
+	return ret;
+}
+
 
 ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
