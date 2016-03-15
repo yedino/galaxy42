@@ -233,13 +233,17 @@ class c_tunserver {
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
 		vector<unique_ptr<c_peering>> m_peer; ///< my peers
+
+		int m_myip_fill; ///< my test fill for the IP address generation
 };
 
 // ------------------------------------------------------------------
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
-c_tunserver::c_tunserver() {
+c_tunserver::c_tunserver() 
+ : m_myip_fill(1)
+{
 }
 
 void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey) {
@@ -250,13 +254,26 @@ void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string
 }
 
 void c_tunserver::configure(const std::vector<std::string> & args) {
-	if (args.size()>=2) {
+	if (args.size()>=5+1+1) {
 
-		int i=1;
-		if (args.at(i) == "-p") {
-			configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
+		{
+			const int i=1;
+			if (args.at(i) == "-K") { // -K 5 mypub mypriv
+				m_myip_fill = std::atoi( args.at(i+1).c_str() );
+			}
 		}
 
+		{
+			const int i=5;
+			if (args.at(i) == "-p") {
+				configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
+			}
+		}
+
+	} 
+	else { // usage
+		_erro("Usage:" << endl << "program -K 5 mypub mypriv -p 192.168.0.5 pubkey");
+		throw std::runtime_error("Fix program options");
 	}
 }
 
@@ -272,14 +289,16 @@ void c_tunserver::prepare_socket() {
 
 	_mark("Allocated interface:" << ifr.ifr_name);
 
-	uint8_t address[16];
-	for (int i=0; i<16; ++i) address[i] = 8;
-
-	// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
-	// ...to the device to which we are setting IP address here:
-	address[0] = 0xFD;
-	address[1] = 0x00;
-	NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
+	{
+		uint8_t address[16];
+		for (int i=0; i<16; ++i) address[i] = 0;
+		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
+		// ...to the device to which we are setting IP address here:
+		address[0] = 0xFD;
+		address[1] = 0x42;
+		address[2] = m_myip_fill;
+		NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
+	}
 
 	// create listening socket
 	m_sock_udp = socket(AF_INET, SOCK_DGRAM, 0);
