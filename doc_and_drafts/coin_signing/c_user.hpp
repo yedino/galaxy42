@@ -27,7 +27,7 @@ class c_user {
     /// deserialize token
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
-    std::string get_token_packet (int method, const ed_key &user_pubkey, bool keep_in_wallet = 0);
+    std::string get_token_packet (serialization method, const ed_key &user_pubkey, bool keep_in_wallet = 0);
 
     bool recieve_from_packet (std::string &);
     bool recieve_token (c_token &token);

@@ -70,7 +70,7 @@ c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wal
     return tok;
 }
 
-std::string c_user::get_token_packet(int method, const ed_key &user_pubkey, bool keep_in_wallet) {
+std::string c_user::get_token_packet(serialization method, const ed_key &user_pubkey, bool keep_in_wallet) {
 
   try {
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
@@ -106,7 +106,7 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
 bool c_user::recieve_from_packet(std::string &packet) {
 
   try {
-    c_token tok(packet, 2);	// 2 means json method (mayby TODO enum)
+    c_token tok(packet, serialization::Json);
     if(recieve_token(tok)) {
         std::cout << "Fail to recieve token: token lost" << std::endl;
         // place to handle bad token
