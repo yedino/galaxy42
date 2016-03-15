@@ -150,7 +150,7 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
     ed_key remote_public_key(get_public_key_resp(socket_));
 	DBG_MTX(dbg_mtx, "remote public key " << remote_public_key);
 
-    std::string packet = get_token_packet(remote_public_key);
+    std::string packet = get_token_packet(2, remote_public_key);
     if (packet == "fail") {
         DBG_MTX(dbg_mtx,"stop sending token -- empty wallet");
         return;

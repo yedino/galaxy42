@@ -64,12 +64,19 @@ struct c_chainsign_element {
 
 class c_token : public ijson_serializable {
   public:
-    c_token () = default;
-    c_token (std::string);		///< deserialize token using boost::serialization
+    c_token () = default;					///< creating empty token
+
+    /// deserialize token
+    /// method = 1 : using boost::serialization
+    /// method = 2 : using Json::value
+    c_token (std::string packet, int method);
     c_token (const c_token_header &header);
     c_token (c_token_header &&header);
 
-    std::string to_packet ();	///< serialize token
+    /// serialize token
+    /// method = 1 : using boost::serialization
+    /// method = 2 : using Json::value
+    std::string to_packet (int method);
 
     std::string get_emiter_name () const;
     ed_key get_emiter_pubkey () const;

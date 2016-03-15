@@ -18,7 +18,7 @@ namespace crypto_ed25519 {
 
     struct ustring {
         ustring () = default;
-        ustring (unsigned char *uc_str, size_t size) : m_string(uc_str,size)
+        ustring (const unsigned char *uc_str, size_t size) : m_string(uc_str,size)
         { }
         ustring (const ustring &uc_str) : m_string(uc_str.m_string)
         { }

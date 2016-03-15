@@ -70,16 +70,13 @@ c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wal
     return tok;
 }
 
-std::string c_user::get_token_packet(const ed_key &user_pubkey, bool keep_in_wallet) {
+std::string c_user::get_token_packet(int method, const ed_key &user_pubkey, bool keep_in_wallet) {
 
   try {
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
     m_mtx.lock();
-    std::string packet = tok.to_packet();
-    unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
-    std::cout << "Serialize token with boost::archive version : " << version << std::endl;
-    m_mtx.unlock();
-    std::cout << "Enter message: "; // pretty display in interactive: waiting for next action
+
+    std::string packet = tok.to_packet(method);
     return packet;
 
   } catch(const std::logic_error &l_err) {
@@ -109,15 +106,16 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
 bool c_user::recieve_from_packet(std::string &packet) {
 
   try {
-    c_token tok(packet);
+    c_token tok(packet, 2);	// 2 means json method (mayby TODO enum)
     if(recieve_token(tok)) {
         std::cout << "Fail to recieve token: token lost" << std::endl;
         // place to handle bad token
         // maybe send invalid token to arbiters?
         return true;
     }
-    unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
-    std::cout << "Deserialize token with boost::archive version : " << version << std::endl;
+    //unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
+    //std::cout << "Deserialize token with boost::archive version : " << version << std::endl;
+
   } catch(const std::logic_error &l_err) {
         std::cerr << l_err.what() << std::endl;
         return true;

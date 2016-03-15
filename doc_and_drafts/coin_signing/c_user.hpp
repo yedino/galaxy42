@@ -23,7 +23,11 @@ class c_user {
     /// keep_in_wallet = 1 means double spending try
     /// should be used only in tests!
     bool send_token_bymethod (c_user &, bool keep_in_wallet = 0);
-    std::string get_token_packet (const ed_key &user_pubkey, bool keep_in_wallet = 0);
+
+    /// deserialize token
+    /// method = 1 : using boost::serialization
+    /// method = 2 : using Json::value
+    std::string get_token_packet (int method, const ed_key &user_pubkey, bool keep_in_wallet = 0);
 
     bool recieve_from_packet (std::string &);
     bool recieve_token (c_token &token);

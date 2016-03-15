@@ -52,7 +52,6 @@ void c_chainsign_element::print(std::ostream &os) const{
 
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN
 
-
 c_token::c_token (const c_token_header &header) : m_header(header)
 { }
 
@@ -94,23 +93,33 @@ void c_token::print(std::ostream &os, bool verbouse) const {
 }
 
 
-c_token::c_token(std::string packet) {
+c_token::c_token(std::string packet, int method) {
 
-    // std::cout << "Serialized recieved token :" << packet << std::endl; //dbg
-    std::stringstream ss(packet);
-    boost::archive::text_iarchive sa(ss);
-
-    sa >> *this;
+    if(method == 1) {	// boost::serialization way
+        std::cout << "Serialized recieved token :" << packet << std::endl; //dbg
+        std::stringstream ss(packet);
+        boost::archive::text_iarchive sa(ss);
+        sa >> *this;
+    }
+    else if(method == 2) {// Json::valus way
+        c_json_serializer::deserialize(this, packet);
+    }
 }
 
-std::string c_token::to_packet() {
-
-    std::stringstream ss;
-    boost::archive::text_oarchive sa(ss);
-    sa << *this;
+std::string c_token::to_packet(int method) {
 
     std::string packet;
-    packet = ss.str();
+    if(method == 1) {// boost::serialize way
+        unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
+        std::cout << "Serialize token with boost::archive version : " << version << std::endl;	//dbg
+        std::stringstream ss;
+        boost::archive::text_oarchive sa(ss);
+        sa << *this;
+        packet = ss.str();
+    }
+    else if(method == 2) {// json::value
+        c_json_serializer::serialize(this, packet);
+    }
     return packet;
 }
 
@@ -151,8 +160,8 @@ void c_token_header::json_serialize(Json::Value &root) {
     root["mint_pubkey"] = std::string(reinterpret_cast<const char *>(m_mint_pubkey.c_str()),m_mint_pubkey.size());
     root["id"] = static_cast<Json::UInt64>(m_id);
     root["expiration_date"] = static_cast<Json::UInt64>(m_expiration_date);
-
 }
+
 void c_token_header::json_deserialize(Json::Value &root) {
     // deserialize primitives
     std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;
@@ -179,7 +188,59 @@ void c_token::json_serialize(Json::Value &root) {
 }
 void c_token::json_deserialize(Json::Value &root) {
     // deserialize primitives
-    std::cout << "c_token: json deserialize [" << root.asString() << "]" << std::endl;
+
+    std::string mintname = root.get("mintname", "").asString();
+    ed_key mint_pubkey(reinterpret_cast<const unsigned char*>(root.get("mint_pubkey", "").asCString()),crypto_ed25519::public_key_size);
+    size_t id = root.get("id",0).asUInt64();
+    uint64_t expiration_date = root.get("expiration_date",0).asUInt64();
+
+    std::cout << "json deserialize : " 	<< mintname << ' ' << mint_pubkey << ' '
+                                        << id << ' ' << expiration_date << std::endl;
+    // TODO better errors
+    if(mintname.size() == 0) {
+        throw std::logic_error("Bad Json format for c_token : invaild mintname");
+    }
+    if(mint_pubkey.size() == 0) {
+        throw std::logic_error("Bad Json format for c_token : invaild mint_pubkey");
+    }
+    if(id == 0) {
+        throw std::logic_error("Bad Json format for c_token : invaild id");
+    }
+    if(expiration_date == 0) {
+        throw std::logic_error("Bad Json format for c_token : invaild expiration_date");
+    }
+
+    std::cout << "c_token: json deserialize mintname [" << mintname << "]" << std::endl;
+    std::cout << "c_token: json deserialize mint_pubkey [" << mint_pubkey << "]" << std::endl;
+    std::cout << "c_token: json deserialize id [" << id << "]" << std::endl;
+    std::cout << "c_token: json deserialize expiration_date [" << expiration_date << "]" << std::endl;
+
+    m_header = c_token_header(mintname,mint_pubkey,id,expiration_date);
+
+    if(root.get("msg","").isArray()) {
+        Json::Value msg = root.get("msg","");
+        Json::Value msg_sign = root.get("msg_sign","");
+        Json::Value signer = root.get("signer","");
+        Json::Value signer_pubkey = root.get("signer_pubkey","");
+
+        if(!(msg.size() == msg_sign.size() && msg.size() == signer.size() && signer.size() == signer_pubkey.size())) {
+            std::cout << msg.size() << std::endl;
+            std::cout << msg_sign.size() << std::endl;
+            std::cout << signer.size() << std::endl;
+            std::cout << signer_pubkey.size() << std::endl;
+            throw std::logic_error("Bad Json format for c_token : invaild sizes");
+        }
+
+        int chain_size = root.get("msg","").size();
+        for(int i = 0; i < chain_size; i++) {
+            std::string i_msg = msg[i].asString();
+            ed_key i_msg_sign(reinterpret_cast<const unsigned char*>(msg_sign[i].asCString()),crypto_ed25519::signature_size);
+            std::string i_signer = signer[i].asString();
+            ed_key i_signer_pubkey(reinterpret_cast<const unsigned char*>(signer_pubkey[i].asCString()),crypto_ed25519::public_key_size);
+
+            this->add_chain_element(c_chainsign_element(i_msg,i_msg_sign,i_signer,i_signer_pubkey));
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// operators
