@@ -1,27 +1,46 @@
-*~
-
-*.orig
-
-*.user
-*build
-
+# Cmake files
 *.cmake
-CMakeCache.txt
-CMakeFiles
+*Makefile*
+*CMakeFiles*
+*CMakeCache*
 
-Makefile
-
-#DOC by doxygen
-
+# DOC by doxygen
 html
 latex
 
 #QT IDE
 *.pro
 
-#CLion IDE
-./.idea/
-crypto_ops/ring_cryptography_test1/.idea/
-drafts/coin_signing/.idea/
+# CLion IDE
+*.idea*
 
+
+# Executables
+*.exe
+*.out
+*.app
+*.elf
+
+# Other
 *.cbp
+
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.orig
+*.user
+*build
+*~
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
