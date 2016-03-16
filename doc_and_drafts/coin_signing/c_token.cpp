@@ -93,23 +93,23 @@ void c_token::print(std::ostream &os, bool verbouse) const {
 }
 
 
-c_token::c_token(std::string packet, int method) {
+c_token::c_token(std::string packet, serialization method) {
 
-    if(method == 1) {	// boost::serialization way
+    if(method == serialization::boost) {	// boost::serialization way
         std::cout << "Serialized recieved token :" << packet << std::endl; //dbg
         std::stringstream ss(packet);
         boost::archive::text_iarchive sa(ss);
         sa >> *this;
     }
-    else if(method == 2) {// Json::valus way
+    else if(method == serialization::Json) {// Json::valus way
         c_json_serializer::deserialize(this, packet);
     }
 }
 
-std::string c_token::to_packet(int method) {
+std::string c_token::to_packet(serialization method) {
 
     std::string packet;
-    if(method == 1) {// boost::serialize way
+    if(method == serialization::boost) {// boost::serialize way
         unsigned version = boost::archive::BOOST_ARCHIVE_VERSION();
         std::cout << "Serialize token with boost::archive version : " << version << std::endl;	//dbg
         std::stringstream ss;
@@ -117,7 +117,7 @@ std::string c_token::to_packet(int method) {
         sa << *this;
         packet = ss.str();
     }
-    else if(method == 2) {// json::value
+    else if(method == serialization::Json) {// json::value
         c_json_serializer::serialize(this, packet);
     }
     return packet;
