@@ -16,6 +16,8 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <boost/program_options.hpp>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -83,6 +85,14 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 
 		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
 		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
+
+		/**
+		 * @param ipstr string contain ipv4 or ipv6
+		 * @return true if ipstr is ipv4, false if ipv6
+		 * @throw std::invalid_argument if ipstr is unknown address format
+		 * Exception safety: strong exception guarantee
+		 */
+		static bool is_ipv4(const std::string &ipstr);
 		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
 
 	private:
@@ -146,6 +156,27 @@ c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
 	c_ip46_addr ret;
 	ret.set_ip4(addr_in);
 	return ret;
+}
+
+bool c_ip46_addr::is_ipv4(const string &ipstr) {
+	as_zerofill< addrinfo > hint;
+	struct addrinfo *result = nullptr;
+	hint.ai_family = PF_UNSPEC;
+	hint.ai_flags = AI_NUMERICHOST;
+	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
+	if (ret) {
+		_warn("unknown address format");
+		throw std::invalid_argument("");
+	}
+	auto result_deleter = [&](struct addrinfo *result){freeaddrinfo(result);};
+	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
+	if(result_ptr->ai_family == AF_INET) {
+		return true;
+	}
+	else if (result_ptr->ai_family == AF_INET6) {
+		return false;
+	}
+	_assert(false);
 }
 
 
@@ -440,6 +471,33 @@ int main(int argc, char **argv) {
 	std::cout << addr << std::endl;
 */
 	c_tunserver myserver;
+	try {
+		namespace po = boost::program_options;
+		po::options_description desc("Options");
+		desc.add_options()
+			("help", "Print help messages"); // TODO
+
+		po::variables_map vm;
+		try {
+			po::store(po::parse_command_line(argc, argv, desc),
+				vm);
+			if (vm.count("help")) {
+				myserver.help_usage();
+				return 0;
+			}
+			 po::notify(vm);
+		}
+		catch(po::error& e) {
+			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+			std::cerr << desc << std::endl;
+			return 1;
+		}
+	}
+	catch(std::exception& e) {
+		    std::cerr << "Unhandled Exception reached the top of main: "
+				<< e.what() << ", application will now exit" << std::endl;
+		return 2;
+	}
 	vector <string> args;
 	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
 	myserver.configure(args);
