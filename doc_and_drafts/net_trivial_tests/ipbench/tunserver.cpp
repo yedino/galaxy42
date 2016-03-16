@@ -268,6 +268,7 @@ class c_tunserver {
 		c_tunserver();
 
 		void configure(const std::vector<std::string> & args); ///< load configuration
+		void configure(int K, const std::string &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
 		void run(); ///< run the main loop
 		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey); ///< add this as peer
 		void help_usage() const; ///< show help about usage of the program
@@ -329,6 +330,13 @@ void c_tunserver::configure(const std::vector<std::string> & args) {
 		throw std::runtime_error("Fix program options");
 	}
 }
+
+void c_tunserver::configure(int K, const string &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
+	m_myip_fill = K;
+	configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), peerpub);
+	// TODO
+}
+
 
 void c_tunserver::help_usage() const {
 	std::ostream & out = cerr;
@@ -475,20 +483,21 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
-			("K", "number that sets your virtual IP address for now, 0-255"),
-			("mypub", "your public key (give any string, not yet used)"),
-			("mypriv", "your PRIVATE key (give any string, not yet used - of course this is just for tests)"),
-			("peerip", "IP over existing networking to connect to your peer"),
-			("peerpub", "public key of your peer");
+			("K", po::value<int>(), "number that sets your virtual IP address for now, 0-255")
+			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
+			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
+			("peerip", po::value<std::string>()->default_value(""), "IP over existing networking to connect to your peer")
+			("peerpub", po::value<std::string>()->default_value(""), "public key of your peer");
 
 		po::variables_map vm;
 		try {
 			po::store(po::parse_command_line(argc, argv, desc),
 				vm);
 			if (vm.count("help")) {
-				myserver.help_usage();
+				std::cout << desc;
 				return 0;
 			}
+			myserver.configure(vm["K"].as<int>(), vm["mypub"].as<std::string>(), vm["mypriv"].as<std::string>(), vm["peerip"].as<std::string>(), vm["peerpub"].as<std::string>());
 			 po::notify(vm);
 		}
 		catch(po::error& e) {
@@ -502,12 +511,7 @@ int main(int argc, char **argv) {
 				<< e.what() << ", application will now exit" << std::endl;
 		return 2;
 	}
-	return 0;
 
-
-	vector <string> args;
-	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
-	myserver.configure(args);
 	myserver.run();
 }
 
