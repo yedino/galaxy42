@@ -165,8 +165,7 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	hint.ai_flags = AI_NUMERICHOST;
 	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
 	if (ret) {
-		_warn("unknown address format");
-		throw std::invalid_argument("");
+		throw std::invalid_argument("unknown address format");
 	}
 	auto result_deleter = [&](struct addrinfo *result){freeaddrinfo(result);};
 	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
@@ -475,7 +474,12 @@ int main(int argc, char **argv) {
 		namespace po = boost::program_options;
 		po::options_description desc("Options");
 		desc.add_options()
-			("help", "Print help messages"); // TODO
+			("help", "Print help messages")
+			("K", "number that sets your virtual IP address for now, 0-255"),
+			("mypub", "your public key (give any string, not yet used)"),
+			("mypriv", "your PRIVATE key (give any string, not yet used - of course this is just for tests)"),
+			("peerip", "IP over existing networking to connect to your peer"),
+			("peerpub", "public key of your peer");
 
 		po::variables_map vm;
 		try {
@@ -498,6 +502,9 @@ int main(int argc, char **argv) {
 				<< e.what() << ", application will now exit" << std::endl;
 		return 2;
 	}
+	return 0;
+
+
 	vector <string> args;
 	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
 	myserver.configure(args);
