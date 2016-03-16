@@ -483,22 +483,21 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
-			("K", po::value<int>(), "number that sets your virtual IP address for now, 0-255")
+			("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
-			("peerip", po::value<std::string>()->default_value(""), "IP over existing networking to connect to your peer")
+			("peerip", po::value<std::string>()->required(), "IP over existing networking to connect to your peer")
 			("peerpub", po::value<std::string>()->default_value(""), "public key of your peer");
 
 		po::variables_map vm;
 		try {
-			po::store(po::parse_command_line(argc, argv, desc),
-				vm);
+			po::store(po::parse_command_line(argc, argv, desc), vm);
+			 po::notify(vm);
 			if (vm.count("help")) {
 				std::cout << desc;
 				return 0;
 			}
 			myserver.configure(vm["K"].as<int>(), vm["mypub"].as<std::string>(), vm["mypriv"].as<std::string>(), vm["peerip"].as<std::string>(), vm["peerpub"].as<std::string>());
-			 po::notify(vm);
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
