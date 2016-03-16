@@ -31,6 +31,8 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 
 #include <cstring>
 
+#include <sodium.h>
+
 #include "libs1.hpp"
 #include "counter.hpp"
 #include "cpputils.hpp"
@@ -209,19 +211,35 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 }
 
 void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket) {
-	// TODO encrpt
+	static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
+					198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
+					233, 194, 218, 13, 180, 63, 64, 3, 11};
+
+	static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
+	static unsigned char additional_data[] = {1, 2, 3};
+	static unsigned long long additional_data_len = 3;
+
+	// TODO randomize this data
+
+	std::unique_ptr<unsigned char[]> ciphertext(new unsigned char[data_size + crypto_aead_chacha20poly1305_ABYTES]);
+	unsigned long long ciphertext_len;
+
+	assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+
+	crypto_aead_chacha20poly1305_encrypt(ciphertext.get(), &ciphertext_len, (unsigned char *)data, data_size, additional_data,
+	                                     additional_data_len, NULL, nonce, generated_shared_key);
 
 	_info("UDP send to peer: " << data_size << " bytes: [" << string(data,data_size)<<"]" );
 
 	switch (m_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
 			auto ip_x = m_addr.get_ip4(); // ip of proper type, as local variable
-			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in) );
+			sendto(udp_socket, ciphertext.get(), ciphertext_len, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in) );
 		}
 		break;
 		case c_ip46_addr::t_tag::tag_ipv6 : {
 			auto ip_x = m_addr.get_ip6(); // ip of proper type, as local variable
-			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in6) );
+			sendto(udp_socket, ciphertext.get(), ciphertext_len, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in6) );
 		}
 		break;
 		default: {
@@ -399,10 +417,28 @@ void c_tunserver::event_loop() {
 			// sockaddr *src_addr, socklen_t *addrlen);
 
 			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
-			// decrypt !!! TODO
+			// ------------------------------------
+			static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
+							198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
+							233, 194, 218, 13, 180, 63, 64, 3, 11};
+
+			static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
+			static unsigned char additional_data[] = {1, 2, 3};
+			static unsigned long long additional_data_len = 3;
+
+			// TODO randomize this data
+
+			std::unique_ptr<unsigned char []> decrypted (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
+			unsigned long long decrypted_len;
+
+			assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+
+			crypto_aead_chacha20poly1305_encrypt(decrypted.get(), &decrypted_len, (unsigned char *)buf, size_read, additional_data,
+			                                     additional_data_len, NULL, nonce, generated_shared_key);
+			// ------------------------------------
 
 			_info("UDP received, sending to TUN:" << size_read << " bytes: [" << string(buf,size_read)<<"]" );
-			write(m_tun_fd, buf, size_read);
+			write(m_tun_fd, decrypted.get(), decrypted_len);
 
 		}
 		else _erro("No event selected?!"); // TODO throw
