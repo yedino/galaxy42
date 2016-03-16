@@ -85,6 +85,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 
 		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
 		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
+		static c_ip46_addr create_ipv6(const std::string &ipv6_str, int port);
 
 		/**
 		 * @param ipstr string contain ipv4 or ipv6
@@ -157,6 +158,17 @@ c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
 	ret.set_ip4(addr_in);
 	return ret;
 }
+
+c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
+	as_zerofill <sockaddr_in6> addr_in6;
+	addr_in6.sin6_family = AF_INET6;
+	inet_pton(AF_INET6, ipv6_str.c_str(), &(addr_in6.sin6_addr));
+	addr_in6.sin6_port = htons(port);
+	c_ip46_addr ret;
+	ret.set_ip6(addr_in6);
+	return ret;
+}
+
 
 bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	as_zerofill< addrinfo > hint;
@@ -333,7 +345,12 @@ void c_tunserver::configure(const std::vector<std::string> & args) {
 
 void c_tunserver::configure(int K, const string &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
 	m_myip_fill = K;
-	configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), peerpub);
+	if (c_ip46_addr::is_ipv4(peerip)) {
+		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), peerpub);
+	}
+	else {
+		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), peerpub);
+	}
 	// TODO
 }
 
