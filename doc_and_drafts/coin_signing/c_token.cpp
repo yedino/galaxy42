@@ -186,6 +186,10 @@ void c_token::json_serialize(Json::Value &root) {
         chain_el.json_serialize(root);
     }
 }
+
+// reinterpret_cast using in this fun is safe becouse of:
+// cpp reference 5.2.10/7 - Reinterpret cast [expr.reinterpret.cast]
+// cpp reference 3.10/10 -
 void c_token::json_deserialize(Json::Value &root) {
     // deserialize primitives
 
@@ -210,10 +214,11 @@ void c_token::json_deserialize(Json::Value &root) {
         throw std::logic_error("Bad Json format for c_token : invaild expiration_date");
     }
 
-    std::cout << "c_token: json deserialize mintname [" << mintname << "]" << std::endl;
-    std::cout << "c_token: json deserialize mint_pubkey [" << mint_pubkey << "]" << std::endl;
-    std::cout << "c_token: json deserialize id [" << id << "]" << std::endl;
-    std::cout << "c_token: json deserialize expiration_date [" << expiration_date << "]" << std::endl;
+    // dbg
+    //std::cout << "c_token: json deserialize mintname [" << mintname << "]" << std::endl;
+    //std::cout << "c_token: json deserialize mint_pubkey [" << mint_pubkey << "]" << std::endl;
+    //std::cout << "c_token: json deserialize id [" << id << "]" << std::endl;
+    //std::cout << "c_token: json deserialize expiration_date [" << expiration_date << "]" << std::endl;
 
     m_header = c_token_header(mintname,mint_pubkey,id,expiration_date);
 
@@ -231,8 +236,8 @@ void c_token::json_deserialize(Json::Value &root) {
             throw std::logic_error("Bad Json format for c_token : invaild sizes");
         }
 
-        int chain_size = root.get("msg","").size();
-        for(int i = 0; i < chain_size; i++) {
+        auto chain_size = root.get("msg","").size();
+        for(unsigned int i = 0; i < chain_size; ++i) {
             std::string i_msg = msg[i].asString();
             ed_key i_msg_sign(reinterpret_cast<const unsigned char*>(msg_sign[i].asCString()),crypto_ed25519::signature_size);
             std::string i_signer = signer[i].asString();
