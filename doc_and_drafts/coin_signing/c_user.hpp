@@ -35,7 +35,7 @@ class c_user {
     size_t clean_expired_tokens();
     size_t tokens_refresh ();		///< mostly for clean databases from expiried tokens
 
-    /// Printing tokens status in mint, wallet if verbuse printing all seen tokens and token chainsigns
+    /// Printing tokens status in mint, wallet if verbouse printing all seen tokens and token chainsigns
     void print_status (std::ostream &, bool verbouse = 0) const;
 
     // mint

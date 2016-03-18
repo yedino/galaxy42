@@ -33,13 +33,58 @@ int check_cmd(const std::string request) {
         return -1;
     }
 }
+// if address is incorect set addres to localhost [::1]
+bool checkIPv6_address(std::string & address) {
+  try {
+    boost::system::error_code ec;
+    ip::address addr = ip::address::from_string(address, ec);
+    if (!addr.is_v6()) {
+        std::string msg = addr.to_string();
+        msg += " [" + address + "] : is not valid IPv6 address";
+        throw std::invalid_argument(msg);
+    } else if (addr.is_v4()) {
+        std::string msg = addr.to_string();
+        msg += " [" + address + "] : is valid IPv4 address but we using IPv6 addresses";
+        throw std::invalid_argument(msg);
+    } else if(ec) {
+        throw std::invalid_argument(ec.message());
+    }
+  } catch (std::invalid_argument &err) {
+        std::cout << err.what() << std::endl;
+        address = "::1";
+        return false;
+  }
+    return true;	// address is OK
+}
+// Check if port is correct for us. If not returning default port.
+int get_port() {
+  try {
+    int port;
+    if(!(std::cin >> port)) {
+        std::string msg = "Invalid port number [" + std::to_string(port) + "]";
+        throw std::invalid_argument(msg);
+    }
+    if(port > 1025 && port < 32000) {
+        return port;	// port is OK
+    } else {
+        std::string msg = "Invalid port number [" + std::to_string(port) + "]";
+        throw std::invalid_argument(msg);
+    }
+  } catch (std::invalid_argument &err) {
+        std::cout << err.what() << std::endl;
+        std::cout << "Set to default port: 30000" << std::endl;
+        return 30000;
+  }
+}
 
-void set_interactive_target(std::string &address, int &port) {
-
+bool set_interactive_target(std::string &address, int &port) {
     std::cout << "Enter target addres: ";
     std::getline(std::cin,address);
+
     std::cout << "Enter target port: ";
-    std::cin >> port; std::cin.ignore();
+    port = get_port();
+
+    return checkIPv6_address(address);
 }
 
 void run_interactive_protocol() {
@@ -52,9 +97,8 @@ void run_interactive_protocol() {
         new_user = true;
     }
     // SETTING
-    int my_port;
     std::cout << "Set your server port for this session: ";
-    std::cin >> my_port; std::cin.ignore();
+    int my_port = get_port();
 
     std::string my_name = "default";
     std::string filename = "user.dat";
@@ -80,9 +124,14 @@ void run_interactive_protocol() {
     decision = 'n';
 
     std::cout << "Do you want to set terget now? (Y/n): ";
+    std::cin.ignore();
+    std::cin.clear();
+    std::cin.sync();
     std::cin >> decision; std::cin.ignore();
     if(decision == 'Y' || decision == 'y') {
-        set_interactive_target(target_address,target_port);
+        if(!set_interactive_target(target_address,target_port)) {
+            std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
+        }
     }
 
     // HELP
@@ -102,8 +151,11 @@ void run_interactive_protocol() {
     while(!isover) {
         std::string request;
         std::cout << "Enter message: ";
+        std::cin.ignore();
+        std::cin.clear();
+        std::cin.sync();
         std::getline(std::cin,request);
-        std::cout << std::endl;
+        std::cout << std::hex << request << std::endl;
 
 
         switch(check_cmd(request)) {
@@ -129,7 +181,9 @@ void run_interactive_protocol() {
                      A.load_user("user.dat");
                      break;
             case  7:
-                     set_interactive_target(target_address,target_port);
+                     if(!set_interactive_target(target_address,target_port)) {
+                         std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
+                     }
                      break;
             case -1:
                      std::cout << "bad command -- try again" << std::endl;

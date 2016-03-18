@@ -128,12 +128,12 @@ void c_netuser::send_token_bynet(const std::string &ip_address, int port) {
 	DBG_MTX(dbg_mtx, "START");
     boost::system::error_code ec;
     ip::address addr = ip::address::from_string(ip_address, ec);
-    if(ec) { ///< boost error - not needed
-        throw std::runtime_error("bad ip");
-    }
+    //if(ec) { ///< boost error - not needed
+    //    throw std::runtime_error("bad ip");
+    //}
     if (!addr.is_v6()) {
         std::string msg = addr.to_string();
-        msg += " is not valid IPv6 address";
+        msg += ec.message()+" : is not valid IPv6 address";
         throw std::invalid_argument(msg);
     }
     ip::tcp::endpoint server_endpoint(addr, port);

@@ -22,10 +22,10 @@ bool test_all(int number_of_threads) {
     config_default.print_passed_tests = true;
 
     many_ed_signing.config = config_default;
-//    base_tests.config = config_default;
-//    cheater_tests.config = config_default;
-//    bitwallet.config = config_default;
-//    wallet_io.config = config_default;
+    base_tests.config = config_default;
+    cheater_tests.config = config_default;
+    //bitwallet.config = config_default;
+    wallet_io.config = config_default;
 
     //ptest::general_suite.config = config_default;
 
@@ -58,6 +58,7 @@ bool test_all(int number_of_threads) {
 
     run_suite_test(base_tests, user_save_load, 0, pequal);
     run_suite_test(base_tests, netuser_save_load, 0, pequal);
+
     // To pass below test. Running ./bitcoind or ./bitccoin-qt on your mashine is required
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
@@ -245,7 +246,7 @@ bool fast_find_cheater() {
 //////////////////////////////////////////////////////////////////////////////////////////////////// cheater test end
 
 bool test_bad_chainsign() {
-    std::cout << "RUNNING BAD INPUT, CHAINSIGN FORMAT TEST" << std::endl;
+    std::cout << "RUNNING BAD INPUT, CHAINSIGN FORMAT TEST : (boost serialization)" << std::endl;
     int errors = 3;
  try{
     c_token("$0|ed5c06c0577e0bf8a22e5f2c09f471e2c288bedfe255882d265661bf382e784232"
@@ -259,7 +260,7 @@ bool test_bad_chainsign() {
             "$234|edb1fdafc96abac26c52dae3be8b68e3b8e479ebdcc3dbf97e81bf1f47d0472bcf"
             "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
             "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
-            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", serialization::Json); // bad ids
+            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", serialization::boost); // bad ids
  } catch(std::exception &message) {
     std::cout << message.what() << " -- OK" << std::endl;
     errors--;
@@ -276,13 +277,13 @@ bool test_bad_chainsign() {
             "$0|edb1fdafc96abac26c52dae3be8b68e3b8e479ebdcc3dbf97e81bf1f47d0472bcf"
             "&edbde6d2088a2a3520ff5e0222cbb18465e0e3f2b39ca4b45a7ae97b3e56e6909"
             "7783d0b2c54e2d9f12f7d7d5fdd4c80d936e1b7e7006cad4eaf731133a935c20a"
-            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", serialization::Json); // no ids
+            "&userC&ede83da978ac24294ad3c4ce1a14a184dcaf1ce2d35551242986efb7dd4cca68ea", serialization::boost); // no ids
  } catch(std::exception &message) {
     std::cout << message.what() << " -- OK" << std::endl;
     errors--;
  }
  try{
-    c_token("$23|aaaaa$123|sbbbbbf#pass", serialization::Json);	// bad format
+    c_token("$23|aaaaa$123|sbbbbbf#pass", serialization::boost);	// bad format
  } catch(std::exception &message) {
     std::cout << message.what() << " -- OK" << std::endl;
     errors--;
