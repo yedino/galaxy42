@@ -40,7 +40,7 @@ add_executable(ipclient.elf ipclient.cpp counter.cpp)
 add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp counter.cpp ../NetPlatform_linux.c)
 
-target_link_libraries(tunserver.elf boost_program_options)
+target_link_libraries(tunserver.elf boost_program_options sodium)
 
 add_custom_target(run
 		COMMAND ./tunserver.elf -c alice
