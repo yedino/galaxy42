@@ -1,0 +1,13 @@
+#!/bin/bash
+
+logger -s -- "Setting network namespace  PID=$$ PPID=$PPID in $0, then run command: $*"
+
+set -x
+
+unshare --net -- sudo -u "${SUDO_USER}" $*
+# su -l
+# ${SUDO_USER} 
+
+echo "Unshare done for PID=$$ PPID=$PPID"
+echo "Running command"
+
