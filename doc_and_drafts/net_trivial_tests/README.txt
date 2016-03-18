@@ -20,12 +20,13 @@ node C has LAN IP for peering 192.168.0.107, and will be configured to have virt
 
 ---
 
-One time setup:
+One time setup of the setcap program - SETCAP
 
 as root, install the scripts including "setcap_net_admin", by doing following:
 as root take the files from here:
 cp -i -v -r script/root /root/
-and run it, from that directory:
+  *** now review the scripts: install, and the setcap_net_admin there ***
+and run the installer, from that directory:
 cd /root/root/ && ./install
 and then edit sudo rules, e.g. with command "visudo" as instructed by the install program.
 

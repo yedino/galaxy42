@@ -16,6 +16,8 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <boost/program_options.hpp>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -85,6 +87,15 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 
 		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
 		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
+		static c_ip46_addr create_ipv6(const std::string &ipv6_str, int port);
+
+		/**
+		 * @param ipstr string contain ipv4 or ipv6
+		 * @return true if ipstr is ipv4, false if ipv6
+		 * @throw std::invalid_argument if ipstr is unknown address format
+		 * Exception safety: strong exception guarantee
+		 */
+		static bool is_ipv4(const std::string &ipstr);
 		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
 
 	private:
@@ -148,6 +159,37 @@ c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
 	c_ip46_addr ret;
 	ret.set_ip4(addr_in);
 	return ret;
+}
+
+c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
+	as_zerofill <sockaddr_in6> addr_in6;
+	addr_in6.sin6_family = AF_INET6;
+	inet_pton(AF_INET6, ipv6_str.c_str(), &(addr_in6.sin6_addr));
+	addr_in6.sin6_port = htons(port);
+	c_ip46_addr ret;
+	ret.set_ip6(addr_in6);
+	return ret;
+}
+
+
+bool c_ip46_addr::is_ipv4(const string &ipstr) {
+	as_zerofill< addrinfo > hint;
+	struct addrinfo *result = nullptr;
+	hint.ai_family = PF_UNSPEC;
+	hint.ai_flags = AI_NUMERICHOST;
+	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
+	if (ret) {
+		throw std::invalid_argument("unknown address format");
+	}
+	auto result_deleter = [&](struct addrinfo *result){freeaddrinfo(result);};
+	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
+	if(result_ptr->ai_family == AF_INET) {
+		return true;
+	}
+	else if (result_ptr->ai_family == AF_INET6) {
+		return false;
+	}
+	_assert(false);
 }
 
 
@@ -256,6 +298,7 @@ class c_tunserver {
 		c_tunserver();
 
 		void configure(const std::vector<std::string> & args); ///< load configuration
+		void configure(int K, const std::string &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
 		void run(); ///< run the main loop
 		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey); ///< add this as peer
 		void help_usage() const; ///< show help about usage of the program
@@ -318,6 +361,18 @@ void c_tunserver::configure(const std::vector<std::string> & args) {
 	}
 }
 
+void c_tunserver::configure(int K, const string &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
+	m_myip_fill = K;
+	if (c_ip46_addr::is_ipv4(peerip)) {
+		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), peerpub);
+	}
+	else {
+		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), peerpub);
+	}
+	// TODO
+}
+
+
 void c_tunserver::help_usage() const {
 	std::ostream & out = cerr;
 	out << "Usage:" << endl
@@ -362,9 +417,17 @@ void c_tunserver::prepare_socket() {
 	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(port);
 
 	{
-		sockaddr_in addr4 = address_for_sock.get_ip4();
-		auto bind_result = bind(m_sock_udp, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
-		_assert( bind_result >= 0 ); // TODO change to except
+		int bind_result = -1;
+		if (address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv4) {
+			sockaddr_in addr4 = address_for_sock.get_ip4();
+			bind_result = bind(m_sock_udp, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
+		}
+		else if(address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv6) {
+			sockaddr_in6 addr6 = address_for_sock.get_ip6();
+			bind_result = bind(m_sock_udp, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
+		}
+			_assert( bind_result >= 0 ); // TODO change to except
+			_assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
 	}
 	_info("Bind done - listening on UDP on: "); // TODO  << address_for_sock
 }
@@ -476,9 +539,39 @@ int main(int argc, char **argv) {
 	std::cout << addr << std::endl;
 */
 	c_tunserver myserver;
-	vector <string> args;
-	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
-	myserver.configure(args);
+	try {
+		namespace po = boost::program_options;
+		po::options_description desc("Options");
+		desc.add_options()
+			("help", "Print help messages")
+			("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
+			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
+			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
+			("peerip", po::value<std::string>()->required(), "IP over existing networking to connect to your peer")
+			("peerpub", po::value<std::string>()->default_value(""), "public key of your peer");
+
+		po::variables_map vm;
+		try {
+			po::store(po::parse_command_line(argc, argv, desc), vm);
+			 po::notify(vm);
+			if (vm.count("help")) {
+				std::cout << desc;
+				return 0;
+			}
+			myserver.configure(vm["K"].as<int>(), vm["mypub"].as<std::string>(), vm["mypriv"].as<std::string>(), vm["peerip"].as<std::string>(), vm["peerpub"].as<std::string>());
+		}
+		catch(po::error& e) {
+			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+			std::cerr << desc << std::endl;
+			return 1;
+		}
+	}
+	catch(std::exception& e) {
+		    std::cerr << "Unhandled Exception reached the top of main: "
+				<< e.what() << ", application will now exit" << std::endl;
+		return 2;
+	}
+
 	myserver.run();
 }
 
