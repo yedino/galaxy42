@@ -43,10 +43,10 @@ add_executable(tunserver.elf tunserver.cpp counter.cpp ../NetPlatform_linux.c)
 target_link_libraries(tunserver.elf boost_program_options sodium)
 
 #loadjason.elf jsoncpp
-add_executable(loadjson.elf loadjson.cpp)
-target_link_libraries(loadjson.elf
-                      jsoncpp
-)
+#add_executable(loadjson.elf loadjson.cpp)
+#target_link_libraries(loadjson.elf
+#                      jsoncpp
+#)
 
 add_custom_target(run
 		COMMAND ./tunserver.elf -c alice
