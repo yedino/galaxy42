@@ -309,42 +309,14 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 
-void c_tunserver::print_destination_ipv6(const char *buff, size_t budd_size) {
-	struct sockaddr_in6 dest;
-	memset(&dest, 0, sizeof(dest));
+void c_tunserver::print_destination_ipv6(const char *buff, size_t buff_size) {
 	char ipv6_str [INET6_ADDRSTRLEN];
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
-	struct iphdr *iph = (struct iphdr*)buff;
-	unsigned short iphdrlen = iph->ihl*4;
-	switch (iph->protocol) {
-		case 1:  //ICMP Protocol
-			{
-				_dbg1("ICMP");
-			}
-			break;
-		case 2:  //IGMP Protocol
-			_dbg1("IGMP");
-			break;
-		case 6:  //TCP Protocol
-			{
-				_dbg1("TCP");
-				struct tcphdr *tcph=(struct tcphdr*)(buff + iphdrlen);
-				inet_ntop(AF_INET6, &tcph->dest, ipv6_str, INET6_ADDRSTRLEN);
-				_dbg1("dst = " << ipv6_str);
-			}
-			break;
-		case 17: // UDP Protocol
-			{
-				_dbg1("UDP");
-				struct udphdr *udph=(struct udphdr*)(buff + iphdrlen);
-				inet_ntop(AF_INET6, &udph->dest, ipv6_str, INET6_ADDRSTRLEN);
-				_dbg1("dst = " << ipv6_str);
-			}
-			break;
-		default:  //Some Other Protocol like ARP etc.
-			_dbg1("Other");
-			break;
-	}
+	inet_ntop(AF_INET6, buff + 12, ipv6_str, INET6_ADDRSTRLEN);
+	_dbg1("src ipv6_str " << ipv6_str);
+	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
+	inet_ntop(AF_INET6, buff + 28, ipv6_str, INET6_ADDRSTRLEN);
+	_dbg1("dst ipv6_str " << ipv6_str);
 }
 
 
@@ -367,6 +339,7 @@ void c_tunserver::event_loop() {
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
 				auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
+				print_destination_ipv6(buf, size_read);
 				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
 			} catch(...) {
 				_warn("Can not send to peer."); // TODO more info (which peer, addr, number)
