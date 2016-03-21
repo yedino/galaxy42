@@ -9,6 +9,7 @@ struct c_token_header {
     c_token_header (const std::string &mintname,
                     const ed_key &mint_pubkey,
                     const size_t id,
+                    const uint16_t count,
                     const uint64_t expiration_date);
 
     void print(std::ostream &os) const;
@@ -16,6 +17,7 @@ struct c_token_header {
     std::string m_mintname;
     ed_key m_mint_pubkey;
     size_t m_id;
+    uint16_t m_count;
     uint64_t m_expiration_date;
 
     std::chrono::time_point<std::chrono::system_clock> get_expiration_date () const;
@@ -31,6 +33,7 @@ struct c_token_header {
         ar & m_mintname;
         ar & m_mint_pubkey;
         ar & m_id;
+        ar & m_count;
         ar & m_expiration_date;
     }
 };
@@ -82,7 +85,10 @@ class c_token : public ijson_serializable {
     std::string get_emiter_name () const;
     ed_key get_emiter_pubkey () const;
     size_t get_id () const;
+    uint16_t get_count () const;
     std::chrono::time_point<std::chrono::system_clock> get_expiration_date () const;
+
+    void increment_count();
 
     /// verbouse == true : means that for each token all chainsign will be print
     void print (std::ostream &, bool verbouse = 0) const;

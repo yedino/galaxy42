@@ -35,6 +35,7 @@ bool user_save_load();
 bool netuser_save_load();
 
 bool json_serialize();
+bool token_count();
 
 bool test_all(int number_of_threads);
 

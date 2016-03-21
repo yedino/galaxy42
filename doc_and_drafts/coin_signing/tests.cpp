@@ -63,6 +63,7 @@ bool test_all(int number_of_threads) {
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
     run_suite_test(base_tests, json_serialize, 0, pequal);
+    run_suite_test(base_tests, token_count, 0, pequal);
 
     print_final_suite_result(many_ed_signing);
 
@@ -650,6 +651,36 @@ bool json_serialize() {
         }
 
   } catch(std::exception &ec){
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+    return true;
+}
+
+bool token_count() {
+  try {
+        std::cout << "RUNNING TEST TOKEN COUNT" << std::endl;
+
+        c_user A("userA"), B("userB"), C("userC"), D("userD");
+        A.emit_tokens(1);
+        unsigned short test_count = 0;
+        A.send_token_bymethod(B);
+        test_count++;
+        B.send_token_bymethod(C);
+        test_count++;
+        C.send_token_bymethod(D);
+        test_count++;
+        D.send_token_bymethod(B);
+        test_count++;
+
+        c_token tok_test = B.withdraw_token_any();
+        if (tok_test.get_count() == test_count) {
+            std::cout << "Predicted token count ok :" << tok_test.get_count() << " == " << test_count << std::endl;
+            return false;
+        }
+        std::cout << "Predicted token count fail :" << tok_test.get_count() << " == " << test_count << std::endl;
+
+  } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;
         return true;
   }

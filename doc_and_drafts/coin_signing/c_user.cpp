@@ -53,6 +53,11 @@ void c_user::print_seen_status(std::ostream &os) const {
     }
 }
 
+c_token c_user::withdraw_token_any(bool keep_in_wallet) {
+    return m_wallet.get_any_token(keep_in_wallet);
+}
+
+
 c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wallet) {
     std::lock_guard<std::mutex> lck (m_mtx);
     if(m_wallet.process_token()) {
@@ -65,7 +70,7 @@ c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wal
     msg_stream << tok.get_id() << '|' << user_pubkey;
     std::string msg = msg_stream.str();
     ed_key msg_sign = crypto_ed25519::sign(msg,m_edkeys);
-
+    tok.increment_count();
     tok.add_chain_element(c_chainsign_element(msg, msg_sign, m_username, get_public_key()));
     return tok;
 }

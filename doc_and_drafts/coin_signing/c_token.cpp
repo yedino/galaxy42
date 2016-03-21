@@ -5,9 +5,11 @@
 c_token_header::c_token_header (const std::string &mintname,
                                 const ed_key &mint_pubkey,
                                 const size_t id,
+                                const uint16_t count,
                                 const uint64_t expiration_date) : m_mintname(mintname),
                                                                   m_mint_pubkey(mint_pubkey),
                                                                   m_id(id),
+                                                                  m_count(count),
                                                                   m_expiration_date(expiration_date)
 { }
 
@@ -19,6 +21,7 @@ void c_token_header::print(std::ostream &os) const {
     os << "Emiter: [" << m_mintname
        << "], Mint pubkey [" << m_mint_pubkey
        << "], Id: ["  << m_id
+       << "], Counts: ["  << m_count
        << "], Expiration date: [" << date.substr(0,end)
        << "]" << std::endl;
 }
@@ -92,7 +95,6 @@ void c_token::print(std::ostream &os, bool verbouse) const {
     }
 }
 
-
 c_token::c_token(std::string packet, serialization method) {
 
     if(method == serialization::boost) {	// boost::serialization way
@@ -135,8 +137,19 @@ size_t c_token::get_id() const {
     return m_header.m_id;
 }
 
+uint16_t c_token::get_count () const {
+    return m_header.m_count;
+}
+
 std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
     return m_header.get_expiration_date();
+}
+
+void c_token::increment_count() {
+    m_header.m_count++;
+    if(m_header.m_count == std::numeric_limits<uint16_t>::max()) {
+        throw std::logic_error("token count overflow!");
+    }
 }
 
 long long c_token::get_size() const {
@@ -159,6 +172,7 @@ void c_token_header::json_serialize(Json::Value &root) {
     root["mintname"] = m_mintname;
     root["mint_pubkey"] = std::string(reinterpret_cast<const char *>(m_mint_pubkey.c_str()),m_mint_pubkey.size());
     root["id"] = static_cast<Json::UInt64>(m_id);
+    root["count"] = static_cast<Json::UInt>(m_count);
     root["expiration_date"] = static_cast<Json::UInt64>(m_expiration_date);
 }
 
@@ -196,6 +210,7 @@ void c_token::json_deserialize(Json::Value &root) {
     std::string mintname = root.get("mintname", "").asString();
     ed_key mint_pubkey(reinterpret_cast<const unsigned char*>(root.get("mint_pubkey", "").asCString()),crypto_ed25519::public_key_size);
     size_t id = root.get("id",0).asUInt64();
+    uint16_t count = root.get("count",std::numeric_limits<uint16_t>::max()).asUInt();
     uint64_t expiration_date = root.get("expiration_date",0).asUInt64();
 
     std::cout << "json deserialize : " 	<< mintname << ' ' << mint_pubkey << ' '
@@ -210,6 +225,9 @@ void c_token::json_deserialize(Json::Value &root) {
     if(id == 0) {
         throw std::logic_error("Bad Json format for c_token : invaild id");
     }
+    if(count == std::numeric_limits<uint16_t>::max()) {
+        throw std::logic_error("Bad Json format for c_token : invaild count");
+    }
     if(expiration_date == 0) {
         throw std::logic_error("Bad Json format for c_token : invaild expiration_date");
     }
@@ -220,7 +238,11 @@ void c_token::json_deserialize(Json::Value &root) {
     //std::cout << "c_token: json deserialize id [" << id << "]" << std::endl;
     //std::cout << "c_token: json deserialize expiration_date [" << expiration_date << "]" << std::endl;
 
-    m_header = c_token_header(mintname,mint_pubkey,id,expiration_date);
+    m_header = c_token_header(mintname,
+                              mint_pubkey,
+                              id,
+                              count,
+                              expiration_date);
 
     if(root.get("msg","").isArray()) {
         Json::Value msg = root.get("msg","");

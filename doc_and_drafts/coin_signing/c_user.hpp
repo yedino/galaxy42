@@ -24,6 +24,7 @@ class c_user {
     /// should be used only in tests!
     bool send_token_bymethod (c_user &, bool keep_in_wallet = 0);
 
+    c_token withdraw_token_any (bool keep_in_wallet = 0);
     /// deserialize token
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
@@ -32,7 +33,7 @@ class c_user {
     bool recieve_from_packet (std::string &);
     bool recieve_token (c_token &token);
 
-    size_t clean_expired_tokens();
+    size_t clean_expired_tokens ();
     size_t tokens_refresh ();		///< mostly for clean databases from expiried tokens
 
     /// Printing tokens status in mint, wallet if verbouse printing all seen tokens and token chainsigns
@@ -44,15 +45,14 @@ class c_user {
     long get_mint_last_expired_id () const;
 
     // saving state
-    virtual void save_user(std::string filename = "default") const;	///< "default" filename means m_username.dat file
-    virtual bool load_user(std::string filename = "default");		///< "default" filename means m_username.dat file
+    virtual void save_user (std::string filename = "default") const;	///< "default" filename means m_username.dat file
+    virtual bool load_user (std::string filename = "default");		///< "default" filename means m_username.dat file
 
     void save_coinwallet (const std::string &filename) const;
     void load_coinwallet (const std::string &filename);
 
-    void save_keys() const;
-    void load_keys();
-
+    void save_keys () const;
+    void load_keys ();
 
     // bitwallet part
 //    bool check_bitwallet ();
