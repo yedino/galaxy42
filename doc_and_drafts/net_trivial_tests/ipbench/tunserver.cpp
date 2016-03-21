@@ -56,6 +56,8 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
 
+#include "c_ip46_addr.hpp"
+
 // ------------------------------------------------------------------
 
 void error(const std::string & msg) {
@@ -65,152 +67,7 @@ void error(const std::string & msg) {
 
 // ------------------------------------------------------------------
 
-// TODO to lib "ip46"
 
-// sockaddr is the base class for sockaddr_in and for sockaddr_in6
-// see also http://stackoverflow.com/a/18579605
-static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in) , "Invalid size of ipv4 vs ipv6 addresses" );
-static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in6) , "Invalid size of ipv4 vs ipv6 addresses" );
-
-class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
-	public:
-		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
-
-		c_ip46_addr();
-
-		void set_ip4(sockaddr_in in4);
-		void set_ip6(sockaddr_in6 in6);
-		sockaddr_in  get_ip4() const;
-		sockaddr_in6 get_ip6() const;
-
-		t_tag get_ip_type() const;
-
-		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
-		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
-		static c_ip46_addr create_ipv6(const std::string &ipv6_str, int port);
-
-		/**
-		 * @param ipstr string contain ipv4 or ipv6
-		 * @return true if ipstr is ipv4, false if ipv6
-		 * @throw std::invalid_argument if ipstr is unknown address format
-		 * Exception safety: strong exception guarantee
-		 */
-		static bool is_ipv4(const std::string &ipstr);
-		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
-
-	private:
-		struct t_ip_data {
-			union { ///< the address is either:
-				sockaddr_in in4;
-				sockaddr_in6 in6;
-			};
-		};
-
-		t_ip_data m_ip_data;
-
-		t_tag m_tag; ///< current type of address
-};
-
-c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
-
-c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
-	return m_tag;
-}
-
-void c_ip46_addr::set_ip4(sockaddr_in in4) {
-	_assert(in4.sin_family == AF_INET);
-	m_tag = tag_ipv4;
-	this->m_ip_data.in4 = in4;
-}
-void c_ip46_addr::set_ip6(sockaddr_in6 in6) {
-	_assert(in6.sin6_family == AF_INET6);
-	m_tag = tag_ipv6;
-	this->m_ip_data.in6 = in6;
-}
-
-sockaddr_in  c_ip46_addr::get_ip4() const {
-	_assert(m_tag == tag_ipv4);
-	auto ret = this->m_ip_data.in4;
-	_assert(ret.sin_family == AF_INET);
-	return ret;
-}
-sockaddr_in6 c_ip46_addr::get_ip6() const {
-	_assert(m_tag == tag_ipv6);
-	auto ret = this->m_ip_data.in6;
-	_assert(ret.sin6_family == AF_INET6);
-	return ret;
-}
-
-c_ip46_addr c_ip46_addr::any_on_port(int port) { ///< return my address, any IP (e.g. for listening), on given port
-	as_zerofill< sockaddr_in > addr_in;
-	addr_in.sin_family = AF_INET;
-	addr_in.sin_port = htons(port);
-	addr_in.sin_addr.s_addr = INADDR_ANY;
-	c_ip46_addr ret;
-	ret.set_ip4(addr_in);
-	return ret;
-}
-
-c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
-	as_zerofill< sockaddr_in > addr_in;
-	addr_in.sin_family = AF_INET;
-	inet_pton(AF_INET, ipv4_str.c_str(), &(addr_in.sin_addr));
-	addr_in.sin_port = htons(port);
-	c_ip46_addr ret;
-	ret.set_ip4(addr_in);
-	return ret;
-}
-
-c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
-	as_zerofill <sockaddr_in6> addr_in6;
-	addr_in6.sin6_family = AF_INET6;
-	inet_pton(AF_INET6, ipv6_str.c_str(), &(addr_in6.sin6_addr));
-	addr_in6.sin6_port = htons(port);
-	c_ip46_addr ret;
-	ret.set_ip6(addr_in6);
-	return ret;
-}
-
-
-bool c_ip46_addr::is_ipv4(const string &ipstr) {
-	as_zerofill< addrinfo > hint;
-	struct addrinfo *result = nullptr;
-	hint.ai_family = PF_UNSPEC;
-	hint.ai_flags = AI_NUMERICHOST;
-	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
-	if (ret) {
-		throw std::invalid_argument("unknown address format");
-	}
-	auto result_deleter = [&](struct addrinfo *result){freeaddrinfo(result);};
-	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
-	if(result_ptr->ai_family == AF_INET) {
-		return true;
-	}
-	else if (result_ptr->ai_family == AF_INET6) {
-		return false;
-	}
-	_assert(false);
-}
-
-
-ostream &operator << (ostream &out, const c_ip46_addr& addr) {
-	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
-		char addr_str[INET_ADDRSTRLEN];
-		auto ip4_address = addr.get_ip4();
-		inet_ntop(AF_INET, &ip4_address.sin_addr, addr_str, INET_ADDRSTRLEN);
-		out << addr_str;
-	}
-	else if (addr.m_tag == c_ip46_addr::tag_ipv6) {
-		char addr_str[INET6_ADDRSTRLEN];
-		auto ip6_address = addr.get_ip6();
-		inet_ntop(AF_INET6, &ip6_address.sin6_addr, addr_str, INET6_ADDRSTRLEN);
-		out << addr_str;
-	}
-	else {
-		out << "none";
-	}
-	return out;
-}
 
 // ------------------------------------------------------------------
 
