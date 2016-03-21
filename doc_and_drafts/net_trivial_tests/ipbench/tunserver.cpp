@@ -48,6 +48,10 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include<netinet/ip_icmp.h>   //Provides declarations for icmp header
+#include<netinet/udp.h>   //Provides declarations for udp header
+#include<netinet/tcp.h>   //Provides declarations for tcp header
+#include<netinet/ip.h>    //Provides declarations for ip header
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
 
@@ -164,6 +168,7 @@ class c_tunserver {
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
 		void event_loop(); ///< the main loop
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
+		void print_destination_ipv6(const char *buff, size_t budd_size);
 
 	private:
 		int m_tun_fd; ///< fd of TUN file
@@ -304,6 +309,45 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 
+void c_tunserver::print_destination_ipv6(const char *buff, size_t budd_size) {
+	struct sockaddr_in6 dest;
+	memset(&dest, 0, sizeof(dest));
+	char ipv6_str [INET6_ADDRSTRLEN];
+	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
+	struct iphdr *iph = (struct iphdr*)buff;
+	unsigned short iphdrlen = iph->ihl*4;
+	switch (iph->protocol) {
+		case 1:  //ICMP Protocol
+			{
+				_dbg1("ICMP");
+			}
+			break;
+		case 2:  //IGMP Protocol
+			_dbg1("IGMP");
+			break;
+		case 6:  //TCP Protocol
+			{
+				_dbg1("TCP");
+				struct tcphdr *tcph=(struct tcphdr*)(buff + iphdrlen);
+				inet_ntop(AF_INET6, &tcph->dest, ipv6_str, INET6_ADDRSTRLEN);
+				_dbg1("dst = " << ipv6_str);
+			}
+			break;
+		case 17: // UDP Protocol
+			{
+				_dbg1("UDP");
+				struct udphdr *udph=(struct udphdr*)(buff + iphdrlen);
+				inet_ntop(AF_INET6, &udph->dest, ipv6_str, INET6_ADDRSTRLEN);
+				_dbg1("dst = " << ipv6_str);
+			}
+			break;
+		default:  //Some Other Protocol like ARP etc.
+			_dbg1("Other");
+			break;
+	}
+}
+
+
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
 	c_counter counter(2,true);
@@ -319,6 +363,7 @@ void c_tunserver::event_loop() {
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
+
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
 				auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
