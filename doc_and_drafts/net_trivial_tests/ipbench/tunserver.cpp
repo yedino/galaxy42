@@ -74,13 +74,6 @@ void error(const std::string & msg) {
 
 
 
-// ------------------------------------------------------------------
-
-
-
-
-// ------------------------------------------------------------------
-
 class c_tunserver {
 	public:
 		c_tunserver();
@@ -290,20 +283,30 @@ void c_tunserver::event_loop() {
 			static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
 			static unsigned char additional_data[] = {1, 2, 3};
 			static unsigned long long additional_data_len = 3;
-
 			// TODO randomize this data
 
-			std::unique_ptr<unsigned char []> decrypted (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
-			unsigned long long decrypted_len;
+			std::unique_ptr<unsigned char []> decrypted_buf (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
+			unsigned long long decrypted_buf_len;
 
 			assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
 
-			crypto_aead_chacha20poly1305_encrypt(decrypted.get(), &decrypted_len, (unsigned char *)buf, size_read, additional_data,
-			                                     additional_data_len, NULL, nonce, generated_shared_key);
+			// reinterpret the char from IO as unsigned-char as wanted by crypto code
+			unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ... 
+			assert( size_read >= 3 );  // headers + anything
+			long long ciphertext_buf_len = 0; // will be filled in by decrypt
+			assert( ciphertext_buf_len >= 1 ); 
+
+			crypto_aead_chacha20poly1305_decrypt(
+				decrypted_buf.get(), & decrypted_buf_len, 
+				NULL,
+				ciphertext_buf, ciphertext_buf_len, 
+				additional_data, additional_data_len, 
+				nonce, generated_shared_key);
 			// ------------------------------------
 
-			_info("UDP received, sending to TUN:" << size_read << " bytes: [" << string(buf,size_read)<<"]" );
-			write(m_tun_fd, decrypted.get(), decrypted_len);
+			// reinterpret for debug
+			_info("UDP received, sending to TUN:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
+			write(m_tun_fd, decrypted_buf.get(), decrypted_buf_len);
 
 		}
 		else _erro("No event selected?!"); // TODO throw
@@ -322,9 +325,23 @@ void c_tunserver::run() {
 
 // ------------------------------------------------------------------
 
+bool run_mode_developer(boost::program_options::variables_map & argm) {
+	namespace po = boost::program_options;
+	std::cerr << "Running in developer mode. " << std::endl;
+
+	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
+	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
+	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
+	string peer_ip = string("192.168.") + std::to_string( node_nr==1 ? 2 : 1  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+	argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
+	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
+	return true; // continue the test
+	// TODO@r finish auto deployment --r
+}
 
 int main(int argc, char **argv) {
 	std::cerr << std::endl << disclaimer << std::endl << std::endl;
+
 
 /*	c_ip46_addr addr;
 	std::cout << addr << std::endl;
@@ -346,21 +363,31 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
+			("devel","Test: used by developer to run current test")
+			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
 			("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			("peerip", po::value<std::string>()->required(), "IP over existing networking to connect to your peer")
 			("peerpub", po::value<std::string>()->default_value(""), "public key of your peer");
 
-		po::variables_map vm;
+		po::variables_map argm;
 		try {
-			po::store(po::parse_command_line(argc, argv, desc), vm);
-			 po::notify(vm);
-			if (vm.count("help")) {
+			po::store(po::parse_command_line(argc, argv, desc), argm);
+			cout << "devel" << endl;
+			if (argm.count("devel")) {
+				bool should_continue = run_mode_developer(argm);
+				if (!should_continue) return 0;
+			}
+			// argm now can contain options added/modified by developer mode
+			po::notify(argm);
+
+
+			if (argm.count("help")) {
 				std::cout << desc;
 				return 0;
 			}
-			myserver.configure(vm["K"].as<int>(), vm["mypub"].as<std::string>(), vm["mypriv"].as<std::string>(), vm["peerip"].as<std::string>(), vm["peerpub"].as<std::string>());
+			myserver.configure(argm["K"].as<int>(), argm["mypub"].as<std::string>(), argm["mypriv"].as<std::string>(), argm["peerip"].as<std::string>(), argm["peerpub"].as<std::string>());
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
