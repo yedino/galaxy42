@@ -95,7 +95,8 @@ void c_token::print(std::ostream &os, bool verbouse) const {
     }
 }
 
-c_token::c_token(std::string packet, serialization method) {
+
+c_token::c_token(const std::string &packet, serialization method) {
 
     if(method == serialization::boost) {	// boost::serialization way
         std::cout << "Serialized recieved token :" << packet << std::endl; //dbg
@@ -104,7 +105,7 @@ c_token::c_token(std::string packet, serialization method) {
         sa >> *this;
     }
     else if(method == serialization::Json) {// Json::valus way
-        c_json_serializer::deserialize(this, packet);
+        c_json_serializer::deserialize(*this, packet);
     }
 }
 
@@ -120,7 +121,7 @@ std::string c_token::to_packet(serialization method) {
         packet = ss.str();
     }
     else if(method == serialization::Json) {// json::value
-        c_json_serializer::serialize(this, packet);
+        c_json_serializer::serialize(*this, packet);
     }
     return packet;
 }
@@ -167,7 +168,7 @@ long long c_token::get_size() const {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// JSONCPP
 
-void c_token_header::json_serialize(Json::Value &root) {
+void c_token_header::json_serialize(Json::Value &root) const {
     // serialize primitives
     root["mintname"] = m_mintname;
     root["mint_pubkey"] = std::string(reinterpret_cast<const char *>(m_mint_pubkey.c_str()),m_mint_pubkey.size());
@@ -181,7 +182,7 @@ void c_token_header::json_deserialize(Json::Value &root) {
     std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;
 }
 
-void c_chainsign_element::json_serialize(Json::Value &root) {
+void c_chainsign_element::json_serialize(Json::Value &root) const {
     // serialize primitives
     root["msg"].append(m_msg);
     root["msg_sign"].append(std::string(reinterpret_cast<const char *>(m_msg_sign.c_str()), m_msg_sign.size()));
@@ -193,7 +194,7 @@ void c_chainsign_element::json_deserialize(Json::Value &root) {
     std::cout << "c_chainsign_element: json deserialize [" << root.asString() << "]" << std::endl;
 }
 
-void c_token::json_serialize(Json::Value &root) {
+void c_token::json_serialize(Json::Value &root) const {
     // serialize primitives
     m_header.json_serialize(root);
     for(auto &chain_el : m_chainsign) {

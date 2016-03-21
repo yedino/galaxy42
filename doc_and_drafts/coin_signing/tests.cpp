@@ -632,12 +632,12 @@ bool json_serialize() {
 
         // json::value way
         std::string output;
-        c_json_serializer::serialize(&tok_serialize, output);
+        c_json_serializer::serialize(tok_serialize, output);
 
         std::cout << "TEST JSON: " << output << std::endl;
 
         c_token tok_deserialize;
-        c_json_serializer::deserialize(&tok_deserialize, output);
+        c_json_serializer::deserialize(tok_deserialize, output);
 
         tok_serialize.print(std::cout,true);
         tok_deserialize.print(std::cout,true);

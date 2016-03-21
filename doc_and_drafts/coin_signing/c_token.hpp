@@ -4,7 +4,7 @@
 #include "libs01.hpp"
 #include "c_json_serializer.hpp"
 
-struct c_token_header {
+struct c_token_header : public ijson_serializable {
     c_token_header () = default;
     c_token_header (const std::string &mintname,
                     const ed_key &mint_pubkey,
@@ -23,7 +23,7 @@ struct c_token_header {
     std::chrono::time_point<std::chrono::system_clock> get_expiration_date () const;
 
     /// JSONCPP serialize
-    virtual void json_serialize (Json::Value &root);
+    virtual void json_serialize (Json::Value &root) const;
     /// JSONCPP deserialize
     virtual void json_deserialize (Json::Value &root);
 
@@ -36,9 +36,11 @@ struct c_token_header {
         ar & m_count;
         ar & m_expiration_date;
     }
+
+    virtual ~c_token_header () = default;
 };
 
-struct c_chainsign_element {
+struct c_chainsign_element : public ijson_serializable {
     c_chainsign_element () = default;
     c_chainsign_element (const std::string &, const ed_key &, const std::string &, const ed_key &);
     c_chainsign_element (const std::string &);	// deserialize chainelement from packet
@@ -51,7 +53,7 @@ struct c_chainsign_element {
     void print(std::ostream &) const;
 
     /// JSONCPP serialize
-    virtual void json_serialize (Json::Value &root);
+    virtual void json_serialize (Json::Value &root) const;
     /// JSONCPP deserialize
     virtual void json_deserialize (Json::Value &root);
 
@@ -63,6 +65,7 @@ struct c_chainsign_element {
         ar & m_signer;
         ar & m_signer_pubkey;
     }
+    virtual ~c_chainsign_element () = default;
 };
  enum class serialization { boost = 1, Json = 2};
 class c_token : public ijson_serializable {
@@ -73,7 +76,7 @@ class c_token : public ijson_serializable {
     /// deserialize token
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
-    c_token (std::string packet, serialization method);
+    c_token (const std::string &packet, serialization method);
     c_token (const c_token_header &header);
     c_token (c_token_header &&header);
 
@@ -104,7 +107,7 @@ class c_token : public ijson_serializable {
     friend class boost::serialization::access;
 
     /// JSONCPP serialize
-    virtual void json_serialize (Json::Value &root);
+    virtual void json_serialize (Json::Value &root) const;
     /// JSONCPP deserialize
     virtual void json_deserialize (Json::Value &root);
 

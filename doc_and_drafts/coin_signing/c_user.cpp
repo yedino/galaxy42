@@ -34,7 +34,7 @@ c_user::c_user(c_user && user) :
 std::string c_user::get_username() const {
 	return m_username;
 }
-void c_user::set_username(std::string username) {
+void c_user::set_username (const string &username) {
     m_username = username;
 }
 
@@ -108,7 +108,7 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
     return false;
 }
 
-bool c_user::recieve_from_packet(std::string &packet) {
+bool c_user::recieve_from_packet (const string &packet) {
 
   try {
     c_token tok(packet, serialization::Json);
@@ -217,7 +217,7 @@ bool c_user::recieve_token (c_token &token) {
     return false;
 }
 
-void c_user::set_new_mint(std::string mintname, ed_key pubkey, std::chrono::seconds exp_time) {
+void c_user::set_new_mint (const string &mintname, const ed_key &pubkey, std::chrono::seconds exp_time) {
 
     m_mint = c_mint(mintname,pubkey,exp_time);
 }

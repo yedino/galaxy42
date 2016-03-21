@@ -15,8 +15,10 @@ class c_user {
     c_user (std::string && username);
     c_user (c_user && user);
 
+    virtual ~c_user () = default;
+
     std::string get_username () const;
-    void set_username (std::string username);
+    void set_username (const string &username);
     ed_key get_public_key () const;
     double get_rep ();		///< normalize reputation to 0-100 value, approximated by atan()
 
@@ -30,7 +32,7 @@ class c_user {
     /// method = 2 : using Json::value
     std::string get_token_packet (serialization method, const ed_key &user_pubkey, bool keep_in_wallet = 0);
 
-    bool recieve_from_packet (std::string &);
+    bool recieve_from_packet (const string &);
     bool recieve_token (c_token &token);
 
     size_t clean_expired_tokens ();
@@ -40,7 +42,9 @@ class c_user {
     void print_status (std::ostream &, bool verbouse = 0) const;
 
     // mint
-    void set_new_mint (std::string mintname, ed_key pubkey, std::chrono::seconds exp_time = std::chrono::hours(72));
+    void set_new_mint (const string &mintname,
+            const ed_key &pubkey,
+            std::chrono::seconds exp_time = std::chrono::hours(72));
     void emit_tokens (size_t);
     long get_mint_last_expired_id () const;
 
