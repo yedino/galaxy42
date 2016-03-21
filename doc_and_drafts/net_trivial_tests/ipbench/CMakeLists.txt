@@ -49,7 +49,7 @@ target_link_libraries(tunserver.elf boost_program_options sodium)
 #)
 
 add_custom_target(run
-		COMMAND ./tunserver.elf -c alice
+		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
 		WORKING_DIRECTORY ./)
 
