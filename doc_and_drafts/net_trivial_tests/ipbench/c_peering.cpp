@@ -4,16 +4,17 @@
 
 #include "protocol.hpp"
 
-c_peering::c_peering(const c_ip46_addr & addr, const std::string & pubkey)
- : m_addr(addr), m_pubkey(pubkey)
+c_peering::c_peering(const c_ip46_addr & addr_peering , const c_haship_pubkey & pubkey , const c_haship_addr & haship_addr)
+ : m_addr(addr_peering), m_pubkey(pubkey), m_haship_addr(haship_addr)
 {
-	_info("I am new peer, with addr="<<addr<<" and pubkey="<<pubkey);
+	_info("I am new peer, with wire addr="<<addr_peering<<" and pubkey="<<to_string(pubkey)<<" and haship_addr="<<to_string(haship_addr));
 }
 
 
+// ------------------------------------------------------------------
 
-c_peering_udp::c_peering_udp(const c_ip46_addr & addr, const std::string & pubkey)
-	: c_peering(addr, pubkey)
+c_peering_udp::c_peering_udp(const c_ip46_addr & addr_peering , const c_haship_pubkey & pubkey , const c_haship_addr & haship_addr)
+	: c_peering(addr_peering, pubkey, haship_addr)
 { }
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
