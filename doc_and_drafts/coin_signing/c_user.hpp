@@ -5,6 +5,7 @@
 #include "coinsign_error.hpp"
 #include "c_token.hpp"
 #include "c_wallet.hpp"
+#include "c_locked_queue.hpp"
 //#include "c_rpc_bitwallet.hpp"
 #include "c_evidences.hpp"
 #include "c_mint.hpp"
@@ -34,6 +35,7 @@ class c_user {
 
     bool recieve_from_packet (const string &);
     bool recieve_token (c_token &token);
+    void sign_and_push_contract (c_contract &contract);
 
     size_t clean_expired_tokens ();
     size_t tokens_refresh ();		///< mostly for clean databases from expiried tokens
@@ -47,6 +49,7 @@ class c_user {
             std::chrono::seconds exp_time = std::chrono::hours(72));
     void emit_tokens (size_t);
     long get_mint_last_expired_id () const;
+
 
     // saving state
     virtual void save_user (std::string filename = "default") const;	///< "default" filename means m_username.dat file
@@ -75,6 +78,8 @@ class c_user {
         ar & m_username;
         ar & m_reputation;
     }
+    c_locked_queue<c_contract> m_contracts_to_send;
+    std::vector<c_contract> m_signed_contracts;
 
     crypto_ed25519::keypair m_edkeys;
 

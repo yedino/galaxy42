@@ -186,6 +186,52 @@ void c_netuser::create_server() {
     //DBG_MTX(dbg_mtx,"end of async accept");
 }
 
+void c_netuser::send_contract(ip::tcp::socket &socket_) {
+
+
+    boost::system::error_code ec;
+    if (m_contracts_to_send.empty()) {
+         throw std::logic_error("No contracts to send");
+    }
+
+    c_contract contract_data = m_contracts_to_send.pop();
+
+    char header[2] = {'c', 's'};
+    socket_.write_some(buffer(header, 2), ec);
+
+    uint32_t contract_data_size = contract_data.to_packet().size();
+    socket_.write_some(buffer(&contract_data_size, 4), ec);
+
+    socket_.write_some(buffer(contract_data.to_packet()), ec);
+    std::string a("mnkx6qkv9y8bcutg8c1g9m5wznzx8m6shysyb4g3nhluv91wbjv0.k");
+    std::string command = "./tools/cexec '(pubInterfaceController_adminSetUpLimitPeerkey=\"" + a +  "\", limitUp=10)'";
+    system(command.c_str());
+
+}
+
+
+void c_netuser::recieve_contract(ip::tcp::socket &socket_) {
+    DBG_MTX(dbg_mtx, "Contract recieving -- strat");
+    assert(socket_.is_open());
+    boost::system::error_code ec;
+
+    size_t recieved_bytes = 0;
+
+    uint32_t contract_size = 0;
+    recieved_bytes = socket_.read_some(buffer(&contract_size, 4), ec);
+    DBG_MTX(dbg_mtx, "get " << recieved_bytes << " bytes");
+    assert(recieved_bytes == 4);
+
+    const std::unique_ptr<char[]> contract_data(new char[contract_size]);
+
+    recieved_bytes = socket_.read_some(buffer(contract_data.get(), contract_size), ec);
+    assert(recieved_bytes == contract_size);
+
+    std::string contract_packet(contract_data.get(), contract_size);
+    m_signed_contracts.push_back(c_contract(contract_packet));
+}
+
+
 void c_netuser::server_read(ip::tcp::socket socket_) {
 	DBG_MTX(dbg_mtx, "START");
 	assert(socket_.is_open());
@@ -197,11 +243,17 @@ void c_netuser::server_read(ip::tcp::socket socket_) {
 		if (header[0] == 'p' && header[1] == 'k') {
 			send_public_key_resp(socket_);
 		}
-		else if (header[0] == '$' && header[1] == 't') {
+        else if (header[0] == '$' && header[1] == 't') {
 			std::string coin_data = recv_coin(socket_);
 			recieve_from_packet(coin_data);
-		}
-	}
+        }
+        else if (!m_contracts_to_send.empty()) {
+            send_contract(socket_);
+        }
+        else if (header[0] == 'c' && header[1] == 'g') {
+            recieve_contract(socket_);
+        }
+    }
 	socket_.close();
 }
 

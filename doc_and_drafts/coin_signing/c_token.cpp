@@ -55,7 +55,8 @@ void c_chainsign_element::print(std::ostream &os) const{
 
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN
 
-c_token::c_token (const c_token_header &header) : m_header(header)
+c_token::c_token (const c_token_header &header, const c_contract_header &contract_header) : m_header(header),
+                                                                                            m_contract_header(contract_header)
 { }
 
 c_token::c_token (c_token_header &&header) : m_header(std::move(header))
@@ -142,6 +143,10 @@ uint16_t c_token::get_count () const {
     return m_header.m_count;
 }
 
+c_contract_header c_token::get_contract_header() const {
+    return m_contract_header;
+}
+
 std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
     return m_header.get_expiration_date();
 }
@@ -179,7 +184,15 @@ void c_token_header::json_serialize(Json::Value &root) const {
 
 void c_token_header::json_deserialize(Json::Value &root) {
     // deserialize primitives
-    std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;
+    std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;	// TODO
+}
+
+void c_contract_header::json_serialize(Json::Value &root) const {
+    root["contract_info"] = m_contract_info;
+}
+
+void c_contract_header::json_deserialize(Json::Value &root) {
+    std::cout << "c_contract_header: json deserialize [" << root.asString() << "]" << std::endl;	// TODO
 }
 
 void c_chainsign_element::json_serialize(Json::Value &root) const {
@@ -191,12 +204,13 @@ void c_chainsign_element::json_serialize(Json::Value &root) const {
 }
 void c_chainsign_element::json_deserialize(Json::Value &root) {
     // deserialize primitives
-    std::cout << "c_chainsign_element: json deserialize [" << root.asString() << "]" << std::endl;
+    std::cout << "c_chainsign_element: json deserialize [" << root.asString() << "]" << std::endl;	// TODO
 }
 
 void c_token::json_serialize(Json::Value &root) const {
     // serialize primitives
     m_header.json_serialize(root);
+    m_contract_header.json_serialize(root);
     for(auto &chain_el : m_chainsign) {
         chain_el.json_serialize(root);
     }
@@ -213,6 +227,7 @@ void c_token::json_deserialize(Json::Value &root) {
     size_t id = root.get("id",0).asUInt64();
     uint16_t count = root.get("count",std::numeric_limits<uint16_t>::max()).asUInt();
     uint64_t expiration_date = root.get("expiration_date",0).asUInt64();
+
 
     std::cout << "json deserialize : " 	<< mintname << ' ' << mint_pubkey << ' '
                                         << id << ' ' << expiration_date << std::endl;
@@ -232,6 +247,9 @@ void c_token::json_deserialize(Json::Value &root) {
     if(expiration_date == 0) {
         throw std::logic_error("Bad Json format for c_token : invaild expiration_date");
     }
+
+    std::string contract_info = root.get("contract_info","none").asString();
+    m_contract_header = c_contract_header(contract_info);
 
     // dbg
     //std::cout << "c_token: json deserialize mintname [" << mintname << "]" << std::endl;
@@ -301,3 +319,4 @@ bool operator == (const c_token &lhs, const c_token &rhs) {
 bool operator < (const c_token &lhs, const c_token &rhs) {
     return (lhs.get_id() < rhs.get_id());
 }
+

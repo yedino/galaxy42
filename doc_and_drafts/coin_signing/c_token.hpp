@@ -4,6 +4,8 @@
 #include "libs01.hpp"
 #include "c_json_serializer.hpp"
 
+enum class serialization { boost = 1, Json = 2};
+
 struct c_token_header : public ijson_serializable {
     c_token_header () = default;
     c_token_header (const std::string &mintname,
@@ -40,6 +42,29 @@ struct c_token_header : public ijson_serializable {
     virtual ~c_token_header () = default;
 };
 
+struct c_contract_header : public ijson_serializable {
+    c_contract_header () : m_contract_info("none")
+    { }
+    c_contract_header (std::string contract_info) : m_contract_info(contract_info)
+    { }
+
+    std::string m_contract_info;
+
+    /// JSONCPP serialize
+    virtual void json_serialize (Json::Value &root) const;
+    /// JSONCPP deserialize
+    virtual void json_deserialize (Json::Value &root);
+
+    template <typename Archive>
+    void serialize(Archive &ar, const unsigned version) {
+        UNUSED(version);
+        ar & m_contract_info;
+    }
+
+    virtual ~c_contract_header () = default;
+};
+
+
 struct c_chainsign_element : public ijson_serializable {
     c_chainsign_element () = default;
     c_chainsign_element (const std::string &, const ed_key &, const std::string &, const ed_key &);
@@ -67,7 +92,7 @@ struct c_chainsign_element : public ijson_serializable {
     }
     virtual ~c_chainsign_element () = default;
 };
- enum class serialization { boost = 1, Json = 2};
+
 class c_token : public ijson_serializable {
   public:
     c_token () = default;					///< creating empty token
@@ -77,7 +102,7 @@ class c_token : public ijson_serializable {
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
     c_token (const std::string &packet, serialization method);
-    c_token (const c_token_header &header);
+    c_token (const c_token_header &header, const c_contract_header &contract = c_contract_header());
     c_token (c_token_header &&header);
 
     /// serialize token
@@ -89,6 +114,7 @@ class c_token : public ijson_serializable {
     ed_key get_emiter_pubkey () const;
     size_t get_id () const;
     uint16_t get_count () const;
+    c_contract_header get_contract_header() const;
     std::chrono::time_point<std::chrono::system_clock> get_expiration_date () const;
 
     void increment_count();
@@ -113,12 +139,14 @@ class c_token : public ijson_serializable {
 
   private:
     c_token_header m_header;
+    c_contract_header m_contract_header;
     std::vector<c_chainsign_element> m_chainsign;
 
     template<typename Archive>
     void serialize (Archive &ar, const unsigned int version) {
         UNUSED(version);
         ar & m_header;
+        ar & m_contract_header;
         ar & m_chainsign;
     }
 };

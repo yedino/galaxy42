@@ -36,7 +36,9 @@ private:
 
 		void create_server ();
 
-		// protocol functions
+        void send_contract(ip::tcp::socket &socket_);
+        void recieve_contract(ip::tcp::socket &socket_);
+        // protocol functions
 		ed_key get_public_key_resp (ip::tcp::socket &socket_); ///< @param socket_ is connected socket, @return remote public key
 		void send_public_key_req (ip::tcp::socket &socket_); ///< @param socket_ is connected socket
 		void send_public_key_resp (ip::tcp::socket &socket_); ///< @param socket_ is connected socket

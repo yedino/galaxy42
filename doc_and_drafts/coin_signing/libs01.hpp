@@ -14,6 +14,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <queue>
 
 #include <thread>
 #include <mutex>

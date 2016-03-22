@@ -20,9 +20,7 @@ namespace crypto_ed25519 {
 				ustring () = default;
 
 				ustring (const unsigned char *uc_str, size_t size) : m_string(uc_str, size) { }
-
 				ustring (const ustring &uc_str) : m_string(uc_str.m_string) { }
-
 				ustring (ustring &&uc_str) : m_string(std::move(uc_str.m_string)) { }
 
 				std::basic_string<unsigned char> m_string;
@@ -30,7 +28,6 @@ namespace crypto_ed25519 {
 				size_t size () const {
 					return m_string.size();
 				}
-
 				const unsigned char *c_str () const noexcept {  ///< Be carefull, unsigned* could contain NULL after converting to char*
 					return m_string.c_str();
 				}
@@ -57,7 +54,6 @@ namespace crypto_ed25519 {
 					}
 					ar & s;
 				}
-
 				template <class Archive>
 				void load (Archive &ar, const unsigned int version) {
 					if (version != 0) {

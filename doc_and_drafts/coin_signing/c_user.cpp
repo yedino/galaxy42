@@ -22,8 +22,7 @@ c_user::c_user (string &&username) :
     m_reputation = 1;
 }
 
-c_user::c_user(c_user && user) :
-                                 m_edkeys(std::move(user.m_edkeys)),
+c_user::c_user(c_user && user) : m_edkeys(std::move(user.m_edkeys)),
                                  m_mint(std::move(user.m_mint)),
                                  m_wallet(std::move(user.m_wallet)),
                                  m_seen_tokens(std::move(user.m_seen_tokens)),
@@ -185,8 +184,10 @@ bool c_user::recieve_token (c_token &token) {
     //std::cout << "size of this token : " << token.get_size() << std::endl;
 
     if(m_mint.check_is_emited(token)) { // is this token emitted by me?
-        bool is_ok = m_mint.get_used_token(token);
-        return is_ok;
+        c_contract token_contract = c_contract(m_mint.get_used_token(token));
+        sign_and_push_contract(token_contract);
+        //  TODO  change speed
+        return false;
     } else {
         bool seen = false;
         for (auto &in : m_seen_tokens) { // is this token used?
@@ -215,6 +216,12 @@ bool c_user::recieve_token (c_token &token) {
     //std::cout << m_username << ": move token to wallet" << std::endl;
     m_wallet.move_token(std::move(token));
     return false;
+}
+
+void c_user::sign_and_push_contract(c_contract &contract) {
+    contract.sign_contract(m_edkeys);
+    // TODO send
+    m_contracts_to_send.push(contract);
 }
 
 void c_user::set_new_mint (const string &mintname, const ed_key &pubkey, std::chrono::seconds exp_time) {

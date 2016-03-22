@@ -5,6 +5,7 @@
 #include "coinsign_error.hpp"
 #include "c_token.hpp"
 #include "c_evidences.hpp"
+#include "c_contract.hpp"
 
 class token_id_generator {
   public:
@@ -37,7 +38,7 @@ class c_mint {
     /// run find_cheater_token evidence test when double spending is detected
     /// return false if token is OK
     /// throw coin_error expection for cheater finding
-    bool get_used_token (c_token &);
+    c_contract get_used_token (c_token &);
 
     size_t clean_expired_emited ();
     size_t clean_expired_used ();
