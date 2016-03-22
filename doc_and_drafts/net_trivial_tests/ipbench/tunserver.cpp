@@ -123,8 +123,7 @@ class c_tunserver {
 	public:
 		c_tunserver();
 
-		void configure(const std::vector<std::string> & args); ///< load configuration
-		void configure(int K, const std::string &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
+		void configure(const c_haship_pubkey &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
 		void run(); ///< run the main loop
 		void configure_add_peer(const c_ip46_addr & addr_peering, const c_haship_pubkey & pubkey); ///< add this as peer
 		void help_usage() const; ///< show help about usage of the program
@@ -145,7 +144,8 @@ class c_tunserver {
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< my peers (we always know their IPv6 - we assume here)
 		t_peers_by_haship m_peer; ///< my peers
 
-		int m_myip_fill; ///< my test fill for the IP address generation
+		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
+		c_haship_addr m_haship_addr; ///< my haship addres
 };
 
 // ------------------------------------------------------------------
@@ -153,41 +153,33 @@ class c_tunserver {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 c_tunserver::c_tunserver()
- : m_tun_fd(-1), m_sock_udp(-1),
- m_myip_fill(1) // default IP
+ : m_tun_fd(-1), m_sock_udp(-1)
 {
 }
 
 void c_tunserver::configure_add_peer(const c_ip46_addr & addr_peering, const c_haship_pubkey & pubkey) {
 	auto haship_addr = c_haship_addr( pubkey );
 	_note("Adding peer, peering-address=" << addr_peering << " pubkey=" << to_string(pubkey) << " haship_addr=" << to_string(haship_addr) );
-	auto peering_ptr = make_unique<c_peering_udp>( addr_peering , pubkey , haship_addr ) ; // XXX
-	//m_peer.emplace( std::make_pair( haship_addr ,  make_unique<c_peering_udp>( addr_peering , pubkey , haship_addr ) ) ); // XXX
+	auto peering_ptr = make_unique<c_peering_udp>( addr_peering , pubkey , haship_addr ) ;
+	m_peer.emplace( std::make_pair( haship_addr ,  std::move(peering_ptr) ) );
 }
 
-void c_tunserver::configure(int K, const string &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
-	m_myip_fill = K;
-	_info("Configuring the router");
+void c_tunserver::configure(const c_haship_pubkey &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
+	m_haship_pubkey = mypub;
+	m_haship_addr = c_haship_addr( m_haship_pubkey ); // generate my address from my pubkey
+
+	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr));
 	if (c_ip46_addr::is_ipv4(peerip)) {
-		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), string_as_bin(string_as_hex(peerpub))); // XXXNOW XXX
+		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), string_as_bin(string_as_hex(peerpub)));
 	}
 	else {
-		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), string_as_bin(string_as_hex(peerpub))); /// XXXNOW XXX
+		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), string_as_bin(string_as_hex(peerpub)));
 	}
 }
 
 
 void c_tunserver::help_usage() const {
-	std::ostream & out = cerr;
-	out << "Usage:" << endl
-		<< "program -K ipfill mypub mypriv -p peerip peerpub" << endl
-		<< "program -K 5 mypub mypriv -p 192.168.0.5 peerpub" << endl
-		<< "  ipfill - number that sets your virtual IP address for now, 0-255" << endl
-		<< "  mypub - your public key (give any string, not yet used)" << endl
-		<< "  mypriv - your PRIVATE key (give any string, not yet used - of course this is just for tests)" << endl
-		<< "  peerip - IP over existing networking to connect to your peer" << endl
-		<< "  peerpub - public key of your peer" << endl
-	;
+	// TODO remove, using boost options
 }
 
 void c_tunserver::prepare_socket() {
@@ -204,12 +196,11 @@ void c_tunserver::prepare_socket() {
 
 	{
 		uint8_t address[16];
-		for (int i=0; i<16; ++i) address[i] = 0;
+		for (int i=0; i<16; ++i) address[i] = m_haship_addr.at(i);
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
-		address[0] = 0xFD;
-		address[1] = 0x42;
-		address[2] = m_myip_fill;
+		assert(address[0] == 0xFD);
+		assert(address[1] == 0x42);
 		NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
 	}
 
@@ -280,10 +271,10 @@ void c_tunserver::event_loop() {
 
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
-				_erro("SENDING DISABLED FOR NOW"); // XXX
-	//			auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
-//				print_destination_ipv6(buf, size_read);
-//				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
+				auto & next_peer = m_peer.begin()->second;
+				auto peer_udp = unique_cast_ptr<c_peering_udp>( next_peer ); // upcast to UDP peer derived
+				print_destination_ipv6(buf, size_read);
+				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
 			} catch(...) {
 				_warn("Can not send to peer."); // TODO more info (which peer, addr, number)
 			}
@@ -354,6 +345,11 @@ void c_tunserver::run() {
 
 namespace developer_tests {
 
+string make_pubkey_for_peer_nr(int peer_nr) {
+	string peer_pub = string("4a4b4c") + string("4") + string(1, char('0' + peer_nr)  );
+	return peer_pub;
+}
+
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	std::cerr << "Running in developer mode. " << std::endl;
@@ -361,9 +357,17 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
 	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
-	string peer_ip = string("192.168.") + std::to_string( node_nr==1 ? 2 : 1  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
-	argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
+
+	int peer_nr = node_nr==1 ? 2 : 1;
+	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
+	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+
+	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+
+	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
+	argm.at("peerpub") = po::variable_value( peer_pub , false );
+	argm.at("mypub") = po::variable_value( make_pubkey_for_peer_nr(node_nr)  , false );
 	return true; // continue the test
 	// TODO@r finish auto deployment --r
 }
@@ -402,7 +406,7 @@ int main(int argc, char **argv) {
 			("help", "Print help messages")
 			("devel","Test: used by developer to run current test")
 			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
-			("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
+			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			("peerip", po::value<std::string>()->required(), "IP over existing networking to connect to your peer")
@@ -430,7 +434,9 @@ int main(int argc, char **argv) {
 				std::cout << desc;
 				return 0;
 			}
-			myserver.configure(argm["K"].as<int>(), argm["mypub"].as<std::string>(), argm["mypriv"].as<std::string>(), argm["peerip"].as<std::string>(), argm["peerpub"].as<std::string>());
+			auto arg_peerpub =  argm["peerpub"].as<std::string>();
+			_mark("Arguments: arg_peerpub="<<arg_peerpub);
+			myserver.configure( string_as_bin(string_as_hex(argm["mypub"].as<std::string>())) , argm["mypriv"].as<std::string>(), argm["peerip"].as<std::string>(), arg_peerpub);
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;

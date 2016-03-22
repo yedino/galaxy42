@@ -8,10 +8,11 @@ string_as_hex::string_as_hex(const std::string & s) : data(s) { }
 unsigned char hexchar2int(char c) {
 	if ((c>='0')&&(c<='9')) return c-'0';
 	if ((c>='a')&&(c<='f')) return c-'a' +10;
-	throw std::invalid_argument("Invalid character in parsing hex number");
+	throw std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  );
 }
 
 string_as_bin::string_as_bin(const string_as_hex & encoded) {
+try { 
 	// "ff020a" = ff , 02 , 0a
 	//   "020a" = 02 , 0a
 	//    "20a" = 02 , 0a
@@ -43,5 +44,6 @@ string_as_bin::string_as_bin(const string_as_hex & encoded) {
 	}
 
 	assert( out == retsize ); // all expected positions of data allocated above in .resize() were written
+} catch(std::exception &e) { _erro("Failed to parse string [" << encoded.data <<"]"); throw ; }
 }
 
