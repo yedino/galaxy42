@@ -187,6 +187,13 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 	auto s1_hex = string_as_hex( s1 );
 	c_haship_pubkey pub1( s1_hex );
 	_info("pub = " << to_string(pub1));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4e"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex(""))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("ffffffff"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("00000000"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4eaba46381826328363782917263521719badbabdbadfade7455467383947543473839474637293474637239273534873"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"))));
+
 //	c_haship_pubkey pub2( string_as_b64( s1 ) );
 //	c_haship_pubkey pub3( string_as_bin( s1 ) );
 
