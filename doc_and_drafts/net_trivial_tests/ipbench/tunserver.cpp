@@ -293,15 +293,19 @@ void c_tunserver::event_loop() {
 			// reinterpret the char from IO as unsigned-char as wanted by crypto code
 			unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ... 
 			assert( size_read >= 3 );  // headers + anything
-			long long ciphertext_buf_len = 0; // will be filled in by decrypt
-			assert( ciphertext_buf_len >= 1 ); 
+			//long long ciphertext_buf_len = 0; // will be filled in by decrypt
+			long long ciphertext_buf_len = size_read - 2; // XXX
 
-			crypto_aead_chacha20poly1305_decrypt(
-				decrypted_buf.get(), & decrypted_buf_len, 
+			int r = crypto_aead_chacha20poly1305_decrypt(
+				decrypted_buf.get(), & decrypted_buf_len,
 				NULL,
-				ciphertext_buf, ciphertext_buf_len, 
-				additional_data, additional_data_len, 
+				ciphertext_buf, ciphertext_buf_len,
+				additional_data, additional_data_len,
 				nonce, generated_shared_key);
+			if (r == -1) {
+				_warn("verification fails");
+			}
+			//assert( ciphertext_buf_len >= 1 ); // XXX
 			// ------------------------------------
 
 			// reinterpret for debug
