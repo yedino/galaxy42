@@ -95,18 +95,19 @@ string_as_bin::string_as_bin(const string_as_hex & encoded) {
 	// "ff020a" = ff , 02 , 0a
 	//   "020a" = 02 , 0a
 	//    "20a" = 02 , 0a
+	_info("Processing string: ["<< (encoded.data) << "]");
 	const auto es = encoded.data.size();
 	if (!es) return; // empty string
 
 	size_t retsize = es/2; // size of finall string of bytes data
 	if (0 != (es % 2)) retsize++;
 	assert(retsize > 0);
-	assert(retsize < es);
+	assert( (retsize < es) || (retsize==es==1) ); // both are ==1 for e.g. "a"
 	bytes.resize(retsize);
 
 	size_t pos=0, out=0; // position of input, and output
 	for( ; pos<es ; pos+=2, ++out) {
-		_info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
+		// _info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
 		// "02" -> cl="2" ch="0"
 		//  "2" -> cl="2" ch="0"
 		char cl,ch;
@@ -184,15 +185,28 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 //	s2="ab"; // in b64
 	s3="y"; // in bin
 
+
+	// TODO assert is results are as expected!
+	// TODO also assert that the exceptions are thrown as they should be, below
+
 	auto s1_hex = string_as_hex( s1 );
 	c_haship_pubkey pub1( s1_hex );
 	_info("pub = " << to_string(pub1));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("f4b4c4d4e"))));
 	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4e"))));
 	_info("pub = " << to_string(c_haship_pubkey(string_as_hex(""))));
 	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("ffffffff"))));
 	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("00000000"))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4eaba46381826328363782917263521719badbabdbadfade7455467383947543473839474637293474637239273534873"))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"))));
+	try {
+		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4eaba46381826328363782917263521719badbabdbadfade7455467383947543473839474637293474637239273534873"))));
+	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
+	try {
+		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("0aq"))));
+	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
+	try {
+		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"))));
+	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
 
 //	c_haship_pubkey pub2( string_as_b64( s1 ) );
 //	c_haship_pubkey pub3( string_as_bin( s1 ) );
