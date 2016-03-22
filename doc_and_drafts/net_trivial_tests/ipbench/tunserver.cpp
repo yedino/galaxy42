@@ -474,7 +474,7 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 } // namespace developer_tests
 
 bool run_mode_developer(boost::program_options::variables_map & argm) {
-	return developer_tests::wip_strings_encoding(argm);
+	return developer_tests::wip_galaxy_route_star(argm);
 }
 
 int main(int argc, char **argv) {
