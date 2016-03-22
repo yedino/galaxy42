@@ -134,6 +134,8 @@ class c_tunserver {
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
 		void print_destination_ipv6(const char *buff, size_t budd_size);
 
+		void peering_ping_all_peers();
+
 	private:
 		int m_tun_fd; ///< fd of TUN file
 
@@ -252,6 +254,17 @@ void c_tunserver::print_destination_ipv6(const char *buff, size_t buff_size) {
 	_dbg1("dst ipv6_str " << ipv6_str);
 }
 
+void c_tunserver::peering_ping_all_peers() {
+	_info("Sending ping to all peers");
+	for(const auto & v : m_peer) { // to each peer
+		{ // send hi msg
+			string_as_bin cmd_data; // data of the command
+			cmd_data += to_string_bin(m_haship_pubkey) + ";" ;
+			peer_udp->send_data_udp_cmd(e_proto_cmd_public_hi, cmd_data, m_sock_udp);
+		}
+	}
+}
+
 
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
@@ -260,8 +273,12 @@ void c_tunserver::event_loop() {
 
 	fd_set fd_set_data;
 
+
+	this->peering_ping_all_peers();
+
 	const int buf_size=65536;
 	char buf[buf_size];
+
 
 	while (1) {
 		wait_for_fd_event();
