@@ -74,6 +74,33 @@ void error(const std::string & msg) {
 
 
 
+// declare sizes; also forward declarations
+constexpr int g_haship_addr_size = 16;
+constexpr int g_haship_pubkey_size = 32;
+struct c_haship_addr;
+struct c_haship_pubkey;
+
+/***
+@class virtual hash-ip, e.g. ipv6, usable for ipv6-cjdns (fc00/8), and of course also for our ipv6-galaxy (fd42/16)
+*/
+struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> { 
+	c_haship_addr(); 
+	c_haship_addr( const c_haship_pubkey & pubkey ); ///< create the IP address that matches given public key (e.g. hash of it)
+};
+
+c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({}) { }
+c_haship_addr::c_haship_addr( const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({}) { }
+
+struct c_haship_pubkey : std::array<unsigned char, g_haship_pubkey_size > { 
+	c_haship_pubkey(); 
+	c_haship_pubkey( const std::string & text ); ///< create the IP form 
+};
+
+c_haship_pubkey::c_haship_pubkey() : std::array<unsigned char, g_haship_pubkey_size>({}) { }
+c_haship_pubkey::c_haship_pubkey( const std::string & text ) : std::array<unsigned char, g_haship_pubkey_size>({}) { }
+
+// ------------------------------------------------------------------
+
 class c_tunserver {
 	public:
 		c_tunserver();
@@ -81,7 +108,7 @@ class c_tunserver {
 		void configure(const std::vector<std::string> & args); ///< load configuration
 		void configure(int K, const std::string &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
 		void run(); ///< run the main loop
-		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey); ///< add this as peer
+		void configure_add_peer(const c_ip46_addr & addr_peering, const c_haship_pubkey & pubkey); ///< add this as peer
 		void help_usage() const; ///< show help about usage of the program
 
 	protected:
@@ -97,7 +124,8 @@ class c_tunserver {
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		vector<unique_ptr<c_peering>> m_peer; ///< my peers
+		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< my peers (we always know their IPv6 - we assume here)
+		t_peers_by_haship m_peer; ///< my peers 
 
 		int m_myip_fill; ///< my test fill for the IP address generation
 };
@@ -112,9 +140,11 @@ c_tunserver::c_tunserver()
 {
 }
 
-void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey) {
-	_note("Adding peer, address=" << addr << " pubkey=" << pubkey);
-	m_peer.push_back( make_unique<c_peering_udp>( addr , pubkey ) );
+void c_tunserver::configure_add_peer(const c_ip46_addr & addr_peering, const c_haship_pubkey & pubkey) {
+	_note("Adding peer, peering-address=" << addr_peering ); // @TODO << " pubkey=" << pubkey);
+	_erro("DISABLED");
+	// auto haship_addr = c_haship_addr( pubkey ); // XXX
+	// m_peer.emplace( std::make_pair( haship_addr ,  make_unique<c_peering_udp>( addr_peering , pubkey , haship_addr ) ) ); // XXX
 }
 
 void c_tunserver::configure(const std::vector<std::string> & args) {
@@ -173,7 +203,7 @@ void c_tunserver::prepare_socket() {
 	assert(! (m_tun_fd<0) );
 
   as_zerofill< ifreq > ifr; // the if request
-	ifr.ifr_flags = IFF_TAP || IFF_MULTI_QUEUE;
+	ifr.ifr_flags = IFF_TAP; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
 	if (errcode_ioctl < 0)_throw( std::runtime_error("Error in ioctl")); // TODO
@@ -258,9 +288,10 @@ void c_tunserver::event_loop() {
 
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
-				auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
-				print_destination_ipv6(buf, size_read);
-				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
+				_erro("SENDING DISABLED FOR NOW"); // XXX
+	//			auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
+//				print_destination_ipv6(buf, size_read);
+//				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
 			} catch(...) {
 				_warn("Can not send to peer."); // TODO more info (which peer, addr, number)
 			}
@@ -329,7 +360,9 @@ void c_tunserver::run() {
 
 // ------------------------------------------------------------------
 
-bool run_mode_developer(boost::program_options::variables_map & argm) {
+namespace developer_tests {
+
+bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	std::cerr << "Running in developer mode. " << std::endl;
 
@@ -341,6 +374,12 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
 	return true; // continue the test
 	// TODO@r finish auto deployment --r
+}
+
+} // namespace developer_tests
+
+bool run_mode_developer(boost::program_options::variables_map & argm) {
+	return developer_tests::wip_galaxy_route_star(argm);
 }
 
 int main(int argc, char **argv) {
