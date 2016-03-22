@@ -74,6 +74,68 @@ void error(const std::string & msg) {
 
 
 
+struct string_as_hex {
+	std::string data;
+	string_as_hex(const std::string & s);
+};
+string_as_hex::string_as_hex(const std::string & s) : data(s) { }
+
+unsigned char hexchar2int(char c) {
+	if ((c>='0')&&(c<='9')) return c-'0';
+	if ((c>='a')&&(c<='f')) return c-'a' +10;
+	throw std::invalid_argument("Invalid character in parsing hex number");
+}
+
+struct string_as_bin {
+	std::string bytes;
+	string_as_bin(const string_as_hex & encoded);
+};
+
+string_as_bin::string_as_bin(const string_as_hex & encoded) {
+	// "ff020a" = ff , 02 , 0a
+	//   "020a" = 02 , 0a
+	//    "20a" = 02 , 0a
+	const auto es = encoded.data.size();
+	if (!es) return; // empty string
+
+	size_t retsize = es/2; // size of finall string of bytes data
+	if (0 != (es % 2)) retsize++;
+	assert(retsize > 0);
+	assert(retsize < es);
+	bytes.resize(retsize);
+
+	size_t pos=0, out=0; // position of input, and output
+	for( ; pos<es ; pos+=2, ++out) {
+		_info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
+		// "02" -> cl="2" ch="0"
+		//  "2" -> cl="2" ch="0"
+		char cl,ch;
+		if (pos+1 < es) { // pos and pos+1 are valid positions in string
+			ch = encoded.data.at(pos);
+			cl = encoded.data.at(pos+1);
+		} else {
+			ch = '0';
+			cl = encoded.data.at(pos);
+		}
+		unsigned char octet = hexchar2int(ch)*16 + hexchar2int(cl);
+		bytes.at(out) = octet;
+	}
+
+	assert( out == retsize ); // all expected positions of data allocated above in .resize() were written
+}
+
+
+template<class T, std::size_t N>
+std::string to_string( const std::array<T,N> & obj ) {
+	std::ostringstream oss;
+	oss<<'[';
+	bool first=1;
+	for(auto & v : obj) { if (!first) oss << ',';  oss<<v;  first=0;  }
+	oss<<']';
+	return oss.str();
+}
+
+
 // declare sizes; also forward declarations
 constexpr int g_haship_addr_size = 16;
 constexpr int g_haship_pubkey_size = 32;
@@ -83,21 +145,57 @@ struct c_haship_pubkey;
 /***
 @class virtual hash-ip, e.g. ipv6, usable for ipv6-cjdns (fc00/8), and of course also for our ipv6-galaxy (fd42/16)
 */
-struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> { 
-	c_haship_addr(); 
+struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
+	c_haship_addr();
 	c_haship_addr( const c_haship_pubkey & pubkey ); ///< create the IP address that matches given public key (e.g. hash of it)
 };
 
-c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({}) { }
-c_haship_addr::c_haship_addr( const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({}) { }
 
-struct c_haship_pubkey : std::array<unsigned char, g_haship_pubkey_size > { 
-	c_haship_pubkey(); 
-	c_haship_pubkey( const std::string & text ); ///< create the IP form 
+struct c_haship_pubkey : std::array<unsigned char, g_haship_pubkey_size > {
+	c_haship_pubkey();
+	c_haship_pubkey( const string_as_bin & input ); ///< create the IP form
 };
 
+
+
+// c_haship_addr :
+c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({}) { }
+c_haship_addr::c_haship_addr( const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({}) {
+	_warn("TODO");
+	at(0) = pubkey.at(0); // XXX
+}
+
+// c_haship_pubkey :
 c_haship_pubkey::c_haship_pubkey() : std::array<unsigned char, g_haship_pubkey_size>({}) { }
-c_haship_pubkey::c_haship_pubkey( const std::string & text ) : std::array<unsigned char, g_haship_pubkey_size>({}) { }
+c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) : std::array<unsigned char, g_haship_pubkey_size>({}) {
+	for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
+//	for(auto v : input.bytes) at(
+}
+
+
+
+namespace developer_tests {
+
+bool wip_strings_encoding(boost::program_options::variables_map & argm) {
+	_mark("Tests of string encoding");
+	string s1,s2,s3;
+	using namespace std;
+	s1="4a4b4c4d4e"; // in hex
+//	s2="ab"; // in b64
+	s3="y"; // in bin
+
+	auto s1_hex = string_as_hex( s1 );
+	c_haship_pubkey pub1( s1_hex );
+	_info("pub = " << to_string(pub1));
+//	c_haship_pubkey pub2( string_as_b64( s1 ) );
+//	c_haship_pubkey pub3( string_as_bin( s1 ) );
+
+	_info("Test done");
+	return false;
+}
+
+} // namespace
+
 
 // ------------------------------------------------------------------
 
@@ -125,7 +223,7 @@ class c_tunserver {
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< my peers (we always know their IPv6 - we assume here)
-		t_peers_by_haship m_peer; ///< my peers 
+		t_peers_by_haship m_peer; ///< my peers
 
 		int m_myip_fill; ///< my test fill for the IP address generation
 };
@@ -147,39 +245,13 @@ void c_tunserver::configure_add_peer(const c_ip46_addr & addr_peering, const c_h
 	// m_peer.emplace( std::make_pair( haship_addr ,  make_unique<c_peering_udp>( addr_peering , pubkey , haship_addr ) ) ); // XXX
 }
 
-void c_tunserver::configure(const std::vector<std::string> & args) {
-	bool valid=false;
-	try {
-		if (args.size()>=5+1+1) {
-			{	const int i=1;
-				if (args.at(i) == "-K") { // -K 5 mypub mypriv
-					m_myip_fill = std::atoi( args.at(i+1).c_str() );
-				}
-			}
-
-			{	const int i=5;
-				if (args.at(i) == "-p") {
-					configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
-				}
-			}
-			valid=true;
-		}
-	} catch(...) { valid=false; }
-
-	if (!valid) {
-		_erro("Invalid program options");
-		help_usage();
-		throw std::runtime_error("Fix program options");
-	}
-}
-
 void c_tunserver::configure(int K, const string &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
 	m_myip_fill = K;
 	if (c_ip46_addr::is_ipv4(peerip)) {
-		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), peerpub);
+	//	configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), string_as_hex(peerpub)); // XXXNOW XXX
 	}
 	else {
-		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), peerpub);
+//		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), string_as_hex(peerpub)); /// XXXNOW XXX
 	}
 	// TODO
 }
@@ -322,7 +394,7 @@ void c_tunserver::event_loop() {
 			assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
 
 			// reinterpret the char from IO as unsigned-char as wanted by crypto code
-			unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ... 
+			unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ...
 			assert( size_read >= 3 );  // headers + anything
 			long long ciphertext_buf_len = size_read - 2; // TODO 2 = hesder size
 			assert( ciphertext_buf_len >= 1 );
@@ -376,10 +448,12 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	// TODO@r finish auto deployment --r
 }
 
+
+
 } // namespace developer_tests
 
 bool run_mode_developer(boost::program_options::variables_map & argm) {
-	return developer_tests::wip_galaxy_route_star(argm);
+	return developer_tests::wip_strings_encoding(argm);
 }
 
 int main(int argc, char **argv) {
@@ -419,8 +493,14 @@ int main(int argc, char **argv) {
 			po::store(po::parse_command_line(argc, argv, desc), argm);
 			cout << "devel" << endl;
 			if (argm.count("devel")) {
-				bool should_continue = run_mode_developer(argm);
-				if (!should_continue) return 0;
+				try {
+					bool should_continue = run_mode_developer(argm);
+					if (!should_continue) return 0;
+				}
+				catch(std::exception& e) {
+				    std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what() << ", application will now exit" << std::endl;
+						return 0; // no error for developer mode
+				}
 			}
 			// argm now can contain options added/modified by developer mode
 			po::notify(argm);
