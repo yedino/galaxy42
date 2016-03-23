@@ -240,7 +240,11 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 
-void c_tunserver::print_destination_ipv6(const char *buff, size_t buff_size) {
+void c_tunserver::parse_tun_ip_src_dest(const char *buff, size_t buff_size) { // TODO
+	// vuln-TODO(u) throw on invalid size + assert
+
+	assert(buff_size > 28 + INET6_ADDRSTRLEN                 + 8); // quick check. +8 to be sure ;)
+
 	char ipv6_str [INET6_ADDRSTRLEN];
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + 12, ipv6_str, INET6_ADDRSTRLEN);
