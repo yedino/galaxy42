@@ -19,6 +19,10 @@ string_as_bin::string_as_bin(std::string bin)
 	: bytes(bin)
 { }
 
+string_as_bin::string_as_bin(const char * ptr, size_t size)
+ : bytes(ptr,size)
+{ }
+
 string_as_bin::string_as_bin(const string_as_hex & encoded) {
 try {
 	// "ff020a" = ff , 02 , 0a

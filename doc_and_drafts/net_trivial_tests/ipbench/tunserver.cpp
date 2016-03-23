@@ -135,6 +135,7 @@ class c_tunserver {
 		void print_destination_ipv6(const char *buff, size_t budd_size);
 
 		void peering_ping_all_peers();
+		void debug_peers();
 
 	private:
 		int m_tun_fd; ///< fd of TUN file
@@ -168,7 +169,8 @@ void c_tunserver::configure_mykey_from_string(const std::string &mypub, const st
 
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
-	_note("Adding peer, peering-address=" << peer_ref.peering_addr << " pubkey=" << to_string(peer_ref.pubkey) << " haship_addr=" << to_string(peer_ref.haship_addr) );
+	_note("Adding peer from reference=" << peer_ref
+		<< " that reads: " << "peering-address=" << peer_ref.peering_addr << " pubkey=" << to_string(peer_ref.pubkey) << " haship_addr=" << to_string(peer_ref.haship_addr) );
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
 	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
@@ -253,11 +255,23 @@ void c_tunserver::peering_ping_all_peers() {
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
-		string_as_bin cmd_data( m_haship_pubkey ); // data of the command
+
+		// [protocol] build raw
+		string_as_bin cmd_data; 
+		cmd_data.bytes += string_as_bin( m_haship_pubkey ).bytes; 
 		cmd_data.bytes += ";";
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
 	}
 }
+
+void c_tunserver::debug_peers() {
+	_note("=== Debug peers ===");
+	for(auto & v : m_peer) { // to each peer
+		auto & target_peer = v.second;
+		_info("  * Known peer on key [ " << string_as_dbg( v.first ).get() << " ] => " << (* target_peer) );
+	}
+}
+
 
 
 void c_tunserver::event_loop() {
@@ -275,7 +289,11 @@ void c_tunserver::event_loop() {
 
 
 	while (1) {
+		debug_peers();
+
 		wait_for_fd_event();
+
+		try { // ---
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
@@ -294,12 +312,26 @@ void c_tunserver::event_loop() {
 			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
 			socklen_t from_addr_raw_size; // ^ size of it
 
+			c_ip46_addr peer_ip; // IP of peer who sent it
+
+			// ***
 			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
 			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
 			// ^- reinterpret allowed by linux specs (TODO)
 			// sockaddr *src_addr, socklen_t *addrlen);
 
-			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
+			if (from_addr_raw_size == sizeof(sockaddr_in6)) { // the message arrive from IP pasted into sockaddr_in6 format
+				_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
+				// trivial
+			}
+			else if (from_addr_raw_size == sizeof(sockaddr_in)) { // the message arrive from IP pasted into sockaddr_in (ipv4) format
+				sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
+				peer_ip.set_ip4(addr);
+			} else {
+				throw std::runtime_error("Data arrived from unknown socket address type");
+			}
+
+			_info("UDP Socket read from IP = " << peer_ip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
 
 			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
@@ -345,8 +377,15 @@ void c_tunserver::event_loop() {
 
 			} // e_proto_cmd_tunneled_data
 			else if (cmd == c_protocol::e_proto_cmd_public_hi) {
-				_note("Command HI received");
+				_mark("Command HI received");
+				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
+				auto pos1 = 32; // [protocol] size of public key
+				if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
+				string_as_bin bin_his_pubkey( cmd_data.bytes.substr(0,pos1) );
+				_info("We received pubkey=" << string_as_dbg( bin_his_pubkey ).get() );
+				t_peering_reference his_ref( peer_ip , string_as_bin( bin_his_pubkey ) );
+				add_peer( his_ref );
 			}
 			else {
 				_warn("Unknown protocol command, cmd="<<cmd);
@@ -357,9 +396,15 @@ void c_tunserver::event_loop() {
 		}
 		else _erro("No event selected?!"); // TODO throw
 
-		int sent=0;
-		counter.tick(sent, std::cout);
-		counter_big.tick(sent, std::cout);
+		}
+		catch (std::exception &e) {
+			_warn("Parsing network data caused an exception: " << e.what());
+		}
+
+// stats-TODO(r) counters
+//		int sent=0;
+//		counter.tick(sent, std::cout);
+//		counter_big.tick(sent, std::cout);
 	}
 }
 
@@ -468,7 +513,7 @@ int main(int argc, char **argv) {
 			);
 			myserver.add_peer( t_peering_reference(
 				argm["peerip"].as<std::string>(),
-			 string_as_hex(	argm["peerpub"].as<std::string>() )
+				string_as_hex(	argm["peerpub"].as<std::string>() )
 			) );
 		}
 		catch(po::error& e) {
