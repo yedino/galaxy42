@@ -9,6 +9,15 @@ c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
 	return m_tag;
 }
 
+c_ip46_addr::c_ip46_addr(const std::string &ip_str) {
+	// ports-TODO(r) also parse the port here
+	if (is_ipv4(ip_str)) {
+		(*this) = create_ipv4(ip_str);
+	} else {
+		(*this) = create_ipv6(ip_str);
+	}
+}
+
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
 	_assert(in4.sin_family == AF_INET);
 	m_tag = tag_ipv4;

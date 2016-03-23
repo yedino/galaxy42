@@ -7,6 +7,17 @@
 
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
+struct t_peering_reference {
+	public:
+		t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey); // input data from strings e.g. from config text
+		t_peering_reference(const string &peering_addr, const string_as_bin &peering_pubkey); // input data from binary data
+
+	public:
+		c_haship_pubkey pubkey;
+		c_haship_addr haship_addr;
+		c_ip46_addr peering_addr;
+};
+
 // TODO: crypto options here
 class c_peering { ///< An (mostly established) connection to peer
 	public:

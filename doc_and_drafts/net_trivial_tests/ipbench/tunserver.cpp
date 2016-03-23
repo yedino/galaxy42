@@ -122,10 +122,10 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 class c_tunserver {
 	public:
 		c_tunserver();
-
-		void configure(const c_haship_pubkey &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
+		void configure_mykey_from_string(const std::string &mypub, const std::string &mypriv);
 		void run(); ///< run the main loop
-		void configure_add_peer(const c_ip46_addr & addr_peering, const c_haship_pubkey & pubkey); ///< add this as peer
+		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer
+
 		void help_usage() const; ///< show help about usage of the program
 
 	protected:
@@ -159,29 +159,23 @@ c_tunserver::c_tunserver()
 {
 }
 
-void c_tunserver::configure_add_peer(const c_ip46_addr & addr_peering, const c_haship_pubkey & pubkey) {
-	auto haship_addr = c_haship_addr( pubkey );
-	_note("Adding peer, peering-address=" << addr_peering << " pubkey=" << to_string(pubkey) << " haship_addr=" << to_string(haship_addr) );
-	auto peering_ptr = make_unique<c_peering_udp>( addr_peering , pubkey , haship_addr ) ;
-	m_peer.emplace( std::make_pair( haship_addr ,  std::move(peering_ptr) ) );
-}
-
-void c_tunserver::configure(const c_haship_pubkey &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
-	m_haship_pubkey = mypub;
-	m_haship_addr = c_haship_addr( m_haship_pubkey ); // generate my address from my pubkey
-
+// my key
+void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) { 
+	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
+	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
 	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr));
-	if (c_ip46_addr::is_ipv4(peerip)) {
-		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), string_as_bin(string_as_hex(peerpub)));
-	}
-	else {
-		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), string_as_bin(string_as_hex(peerpub)));
-	}
 }
 
+// add peer
+void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
+	_note("Adding peer, peering-address=" << peer_ref.peering_addr << " pubkey=" << to_string(peer_ref.pubkey) << " haship_addr=" << to_string(peer_ref.haship_addr) );
+	auto peering_ptr = make_unique<c_peering_pubkeyudp>( addr_peering , pubkey , haship_addr ) ;
+	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
+	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+}
 
 void c_tunserver::help_usage() const {
-	// TODO remove, using boost options
+	// TODO(r) remove, using boost options
 }
 
 void c_tunserver::prepare_socket() {
@@ -297,8 +291,8 @@ void c_tunserver::event_loop() {
 			}
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
-			sockaddr_in6 from_addr_raw; // the address of sender, raw format
-			socklen_t from_addr_raw_size; // the size of sender address
+			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
+			socklen_t from_addr_raw_size; // ^ size of it
 
 			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
 			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
@@ -307,34 +301,50 @@ void c_tunserver::event_loop() {
 
 			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			// ------------------------------------
-			static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
-							198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
-							233, 194, 218, 13, 180, 63, 64, 3, 11};
+			
+			try { //TODO(r) move to function
 
-			static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
-			static unsigned char additional_data[] = {1, 2, 3};
-			static unsigned long long additional_data_len = 3;
-			// TODO randomize this data
+			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
+			c_protocol::t_proto_cmd cmd = buf[0];
+			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { 
 
-			std::unique_ptr<unsigned char []> decrypted_buf (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
-			unsigned long long decrypted_buf_len;
+				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
+								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
+								233, 194, 218, 13, 180, 63, 64, 3, 11};
 
-			assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+				static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
+				static unsigned char additional_data[] = {1, 2, 3};
+				static unsigned long long additional_data_len = 3;
+				// TODO randomize this data
 
-			// reinterpret the char from IO as unsigned-char as wanted by crypto code
-			unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ...
-			assert( size_read >= 3 );  // headers + anything
-			long long ciphertext_buf_len = size_read - 2; // TODO 2 = hesder size
-			assert( ciphertext_buf_len >= 1 );
+				std::unique_ptr<unsigned char []> decrypted_buf (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
+				unsigned long long decrypted_buf_len;
 
-			int r = crypto_aead_chacha20poly1305_decrypt(
-				decrypted_buf.get(), & decrypted_buf_len,
-				nullptr,
-				ciphertext_buf, ciphertext_buf_len,
-				additional_data, additional_data_len,
-				nonce, generated_shared_key);
-			if (r == -1) {
-				_warn("verification fails");
+				assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+
+				// reinterpret the char from IO as unsigned-char as wanted by crypto code
+				unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ...
+				assert( size_read >= 3 );  // headers + anything
+				long long ciphertext_buf_len = size_read - 2; // TODO 2 = hesder size
+				assert( ciphertext_buf_len >= 1 );
+
+				int r = crypto_aead_chacha20poly1305_decrypt(
+					decrypted_buf.get(), & decrypted_buf_len,
+					nullptr,
+					ciphertext_buf, ciphertext_buf_len,
+					additional_data, additional_data_len,
+					nonce, generated_shared_key);
+				if (r == -1) {
+					_warn("verification fails");
+					continue;
+				}
+			} // e_proto_cmd_tunneled_data
+			else if (cmd == c_protocol::e_proto_cmd_public_hi) {
+				_note("Command HI received");
+
+			}
+			else {
+				_warn("Unknown protocol command, cmd="<<cmd);
 				continue;
 			}
 			// ------------------------------------
@@ -451,9 +461,8 @@ int main(int argc, char **argv) {
 				std::cout << desc;
 				return 0;
 			}
-			auto arg_peerpub =  argm["peerpub"].as<std::string>();
-			_mark("Arguments: arg_peerpub="<<arg_peerpub);
-			myserver.configure( string_as_bin(string_as_hex(argm["mypub"].as<std::string>())) , argm["mypriv"].as<std::string>(), argm["peerip"].as<std::string>(), arg_peerpub);
+			myserver.configure_mykey_from_string( argm["mypub"].as<std::string>() , argm["mypriv"].as<std::string>() );
+			myserver.add_peer( argm["peerip"].as<std::string>(), argm["peerpub"].as<std::string>()  );
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;

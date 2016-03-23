@@ -4,12 +4,15 @@
 
 #include "protocol.hpp"
 
-c_peering::c_peering(const c_ip46_addr & addr_peering , const c_haship_pubkey & pubkey , const c_haship_addr & haship_addr)
- : m_addr(addr_peering), m_pubkey(pubkey), m_haship_addr(haship_addr)
-{
-	_info("I am new peer, with wire addr="<<addr_peering<<" and pubkey="<<to_string(pubkey)<<" and haship_addr="<<to_string(haship_addr));
-}
+// ------------------------------------------------------------------
 
+t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey) 
+	: t_peering_reference( peering_addr , string_as_bin( peering_addr ) )
+{ }
+
+t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_bin &peering_pubkey) 
+	: pubkey( peering_pubkey ) , haship_addr( tag_constr_by_hash_of_pubkey , peering_pubkey ) , peering_addr( peering_addr ), 
+{ }
 
 // ------------------------------------------------------------------
 
