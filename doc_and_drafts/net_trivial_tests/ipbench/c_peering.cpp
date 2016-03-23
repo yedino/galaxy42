@@ -7,7 +7,7 @@
 // ------------------------------------------------------------------
 
 t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey)
-	: t_peering_reference( peering_addr , string_as_bin( peering_addr ) )
+	: t_peering_reference( peering_addr , string_as_bin( peering_pubkey ) )
 // ^--- why no warning about unused peering_pubkey. cmake-TODO(u)
 // also needs asserts on size of the crypto key assert-TODO(r)
 { }
