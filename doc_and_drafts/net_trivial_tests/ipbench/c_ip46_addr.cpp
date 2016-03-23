@@ -9,6 +9,16 @@ c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
 	return m_tag;
 }
 
+c_ip46_addr::c_ip46_addr(const std::string &ip_str) {
+	// ports-TODO(r) also parse the port here
+	int port=9042;
+	if (is_ipv4(ip_str)) {
+		(*this) = create_ipv4(ip_str, port);
+	} else {
+		(*this) = create_ipv6(ip_str, port);
+	}
+}
+
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
 	_assert(in4.sin_family == AF_INET);
 	m_tag = tag_ipv4;
@@ -102,4 +112,47 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 		out << "none";
 	}
 	return out;
+}
+
+bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
+	if (this->m_tag == t_tag::tag_none) {
+		throw std::invalid_argument("lhs: m_tag == tag_none");
+	}
+	if (rhs.m_tag == t_tag::tag_none) {
+		throw std::invalid_argument("rhs: m_tag == tag_none");
+	}
+	if (this->m_tag != rhs.m_tag) {
+		return false;
+	}
+	if (this->m_tag == t_tag::tag_ipv4) {
+		return !memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
+	}
+	else {
+		return !memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr));
+	}
+}
+
+bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
+	if (this->m_tag == t_tag::tag_none) {
+		throw std::invalid_argument("lhs: m_tag == tag_none");
+	}
+	if (rhs.m_tag == t_tag::tag_none) {
+		throw std::invalid_argument("rhs: m_tag == tag_none");
+	}
+	if (this->m_tag == t_tag::tag_ipv4 && rhs.m_tag == t_tag::tag_ipv6) {
+		return true;
+	}
+	else if (this->m_tag == t_tag::tag_ipv6 && rhs.m_tag == t_tag::tag_ipv4) {
+		return false;
+	}
+
+	int ret = 0;
+	if (rhs.m_tag == t_tag::tag_ipv4) {
+		int ret = memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
+	}
+	else {
+		int ret = memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr));
+	}
+	if (ret < 0) return true;
+	else return false;
 }

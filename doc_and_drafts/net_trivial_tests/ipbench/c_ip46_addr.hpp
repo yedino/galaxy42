@@ -20,6 +20,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
 
 		c_ip46_addr();
+		c_ip46_addr(const std::string &ip_str); // port-TODO(r) rename to ip_port_str when port parsing works
 
 		void set_ip4(sockaddr_in in4);
 		void set_ip6(sockaddr_in6 in6);
@@ -40,6 +41,20 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
 		 */
 		static bool is_ipv4(const std::string &ipstr);
 		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
+
+		/**
+		 * @return false if m_tag of lhs and rhs are different
+		 * @throw std::invalid_argument if m_tag of lhs or rhs == tag_none
+		 * Exception safety: strong exception guarantee
+		 */
+		bool operator == (const c_ip46_addr &rhs) const;
+
+		/**
+		 * @throw std::invalid_argument if m_tag of lhs or rhs == tag_none
+		 * Exception safety: strong exception guarantee
+		 */
+		bool operator < (const c_ip46_addr &rhs) const;
+
 
 	private:
 		struct t_ip_data {

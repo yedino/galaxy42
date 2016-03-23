@@ -21,6 +21,6 @@ class c_counter {
 		t_count m_time_ws; ///< when when current window started (time in unix time)
 		t_count m_time_last; ///< current last time
 
-		bool tick_restarts;
+	//	bool tick_restarts;
 };
 

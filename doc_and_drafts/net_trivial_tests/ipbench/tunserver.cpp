@@ -61,6 +61,7 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include <linux/if_tun.h>
 
 #include "c_ip46_addr.hpp"
+#include "c_peering.hpp"
 
 // ------------------------------------------------------------------
 
@@ -73,95 +74,58 @@ void error(const std::string & msg) {
 
 
 
-// ------------------------------------------------------------------
+namespace developer_tests {
 
-// TODO: crypto options here
-class c_peering { ///< An (mostly established) connection to peer
-	public:
-		c_peering(const c_ip46_addr & addr, const std::string & pubkey);
+bool wip_strings_encoding(boost::program_options::variables_map & argm) {
+	_mark("Tests of string encoding");
+	string s1,s2,s3;
+	using namespace std;
+	s1="4a4b4c4d4e"; // in hex
+//	s2="ab"; // in b64
+	s3="y"; // in bin
 
-		virtual void send_data(const char * data, size_t data_size)=0;
-		virtual ~c_peering()=default;
 
-	protected:
-		c_ip46_addr	m_addr; ///< peer address in socket format
+	// TODO assert is results are as expected!
+	// TODO also assert that the exceptions are thrown as they should be, below
 
-		std::string m_pubkey; ///< his pubkey
-		// ... TODO crypto type
-};
+	auto s1_hex = string_as_hex( s1 );
+	c_haship_pubkey pub1( s1_hex );
+	_info("pub = " << to_string(pub1));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("f4b4c4d4e"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4e"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex(""))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("ffffffff"))));
+	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("00000000"))));
+	try {
+		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4eaba46381826328363782917263521719badbabdbadfade7455467383947543473839474637293474637239273534873"))));
+	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
+	try {
+		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("0aq"))));
+	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
+	try {
+		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"))));
+	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
 
-c_peering::c_peering(const c_ip46_addr & addr, const std::string & pubkey)
- : m_addr(addr), m_pubkey(pubkey)
-{
-	_info("I am new peer, with addr="<<addr<<" and pubkey="<<pubkey);
+//	c_haship_pubkey pub2( string_as_b64( s1 ) );
+//	c_haship_pubkey pub3( string_as_bin( s1 ) );
+
+	_info("Test done");
+	return false;
 }
 
-class c_peering_udp : public c_peering { ///< An established connection to UDP peer
-	public:
-		c_peering_udp(const c_ip46_addr & addr, const std::string & pubkey);
+} // namespace
 
-		virtual void send_data(const char * data, size_t data_size);
-		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
-	private:
-};
-
-c_peering_udp::c_peering_udp(const c_ip46_addr & addr, const std::string & pubkey)
-	: c_peering(addr, pubkey)
-{ }
-
-void c_peering_udp::send_data(const char * data, size_t data_size) {
-	throw std::runtime_error("Use send_data_udp");
-}
-
-void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket) {
-	static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
-					198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
-					233, 194, 218, 13, 180, 63, 64, 3, 11};
-
-	static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
-	static unsigned char additional_data[] = {1, 2, 3};
-	static unsigned long long additional_data_len = 3;
-
-	// TODO randomize this data
-
-	std::unique_ptr<unsigned char[]> ciphertext(new unsigned char[data_size + crypto_aead_chacha20poly1305_ABYTES]);
-	unsigned long long ciphertext_len;
-
-	assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
-
-	crypto_aead_chacha20poly1305_encrypt(ciphertext.get(), &ciphertext_len, (unsigned char *)data, data_size, additional_data,
-	                                     additional_data_len, NULL, nonce, generated_shared_key);
-
-	_info("UDP send to peer: " << data_size << " bytes: [" << string(data,data_size)<<"]" );
-
-	switch (m_addr.get_ip_type()) {
-		case c_ip46_addr::t_tag::tag_ipv4 : {
-			auto ip_x = m_addr.get_ip4(); // ip of proper type, as local variable
-			sendto(udp_socket, ciphertext.get(), ciphertext_len, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in) );
-		}
-		break;
-		case c_ip46_addr::t_tag::tag_ipv6 : {
-			auto ip_x = m_addr.get_ip6(); // ip of proper type, as local variable
-			sendto(udp_socket, ciphertext.get(), ciphertext_len, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in6) );
-		}
-		break;
-		default: {
-			std::ostringstream oss; oss << m_addr; // TODO
-			throw std::runtime_error(string("Invalid IP type: ") + oss.str());
-		}
-	}
-}
 
 // ------------------------------------------------------------------
 
 class c_tunserver {
 	public:
 		c_tunserver();
-
-		void configure(const std::vector<std::string> & args); ///< load configuration
-		void configure(int K, const std::string &mypub, const std::string &mypriv, const std::string &peerip, const std::string &peerpub);
+		void configure_mykey_from_string(const std::string &mypub, const std::string &mypriv);
 		void run(); ///< run the main loop
-		void configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey); ///< add this as peer
+		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer
+
 		void help_usage() const; ///< show help about usage of the program
 
 	protected:
@@ -170,6 +134,8 @@ class c_tunserver {
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
 		void print_destination_ipv6(const char *buff, size_t budd_size);
 
+		void peering_ping_all_peers();
+
 	private:
 		int m_tun_fd; ///< fd of TUN file
 
@@ -177,9 +143,11 @@ class c_tunserver {
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		vector<unique_ptr<c_peering>> m_peer; ///< my peers
+		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< my peers (we always know their IPv6 - we assume here)
+		t_peers_by_haship m_peer; ///< my peers
 
-		int m_myip_fill; ///< my test fill for the IP address generation
+		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
+		c_haship_addr m_haship_addr; ///< my haship addres
 };
 
 // ------------------------------------------------------------------
@@ -187,65 +155,27 @@ class c_tunserver {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 c_tunserver::c_tunserver()
- : m_tun_fd(-1), m_sock_udp(-1),
- m_myip_fill(1) // default IP
+ : m_tun_fd(-1), m_sock_udp(-1)
 {
 }
 
-void c_tunserver::configure_add_peer(const c_ip46_addr & addr, const std::string & pubkey) {
-	_note("Adding peer, address=" << addr << " pubkey=" << pubkey);
-	m_peer.push_back( make_unique<c_peering_udp>( addr , pubkey ) );
+// my key
+void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) {
+	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
+	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
+	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr));
 }
 
-void c_tunserver::configure(const std::vector<std::string> & args) {
-	bool valid=false;
-	try {
-		if (args.size()>=5+1+1) {
-			{	const int i=1;
-				if (args.at(i) == "-K") { // -K 5 mypub mypriv
-					m_myip_fill = std::atoi( args.at(i+1).c_str() );
-				}
-			}
-
-			{	const int i=5;
-				if (args.at(i) == "-p") {
-					configure_add_peer( c_ip46_addr::create_ipv4(args.at(i+1),9042) , args.at(i+2) );
-				}
-			}
-			valid=true;
-		}
-	} catch(...) { valid=false; }
-
-	if (!valid) {
-		_erro("Invalid program options");
-		help_usage();
-		throw std::runtime_error("Fix program options");
-	}
+// add peer
+void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
+	_note("Adding peer, peering-address=" << peer_ref.peering_addr << " pubkey=" << to_string(peer_ref.pubkey) << " haship_addr=" << to_string(peer_ref.haship_addr) );
+	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
+	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
-
-void c_tunserver::configure(int K, const string &mypub, const string &mypriv, const string &peerip, const string &peerpub) {
-	m_myip_fill = K;
-	if (c_ip46_addr::is_ipv4(peerip)) {
-		configure_add_peer(c_ip46_addr::create_ipv4(peerip, 9042), peerpub);
-	}
-	else {
-		configure_add_peer(c_ip46_addr::create_ipv6(peerip, 9042), peerpub);
-	}
-	// TODO
-}
-
 
 void c_tunserver::help_usage() const {
-	std::ostream & out = cerr;
-	out << "Usage:" << endl
-		<< "program -K ipfill mypub mypriv -p peerip peerpub" << endl
-		<< "program -K 5 mypub mypriv -p 192.168.0.5 peerpub" << endl
-		<< "  ipfill - number that sets your virtual IP address for now, 0-255" << endl
-		<< "  mypub - your public key (give any string, not yet used)" << endl
-		<< "  mypriv - your PRIVATE key (give any string, not yet used - of course this is just for tests)" << endl
-		<< "  peerip - IP over existing networking to connect to your peer" << endl
-		<< "  peerpub - public key of your peer" << endl
-	;
+	// TODO(r) remove, using boost options
 }
 
 void c_tunserver::prepare_socket() {
@@ -253,7 +183,7 @@ void c_tunserver::prepare_socket() {
 	assert(! (m_tun_fd<0) );
 
   as_zerofill< ifreq > ifr; // the if request
-	ifr.ifr_flags = IFF_TAP || IFF_MULTI_QUEUE;
+	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
 	if (errcode_ioctl < 0)_throw( std::runtime_error("Error in ioctl")); // TODO
@@ -262,13 +192,12 @@ void c_tunserver::prepare_socket() {
 
 	{
 		uint8_t address[16];
-		for (int i=0; i<16; ++i) address[i] = 0;
+		for (int i=0; i<16; ++i) address[i] = m_haship_addr.at(i);
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
-		address[0] = 0xFD;
-		address[1] = 0x42;
-		address[2] = m_myip_fill;
-		NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
+		assert(address[0] == 0xFD);
+		assert(address[1] == 0x42);
+		NetPlatform_addAddress(ifr.ifr_name, address, 16, Sockaddr_AF_INET6);
 	}
 
 	// create listening socket
@@ -319,6 +248,17 @@ void c_tunserver::print_destination_ipv6(const char *buff, size_t buff_size) {
 	_dbg1("dst ipv6_str " << ipv6_str);
 }
 
+void c_tunserver::peering_ping_all_peers() {
+	_info("Sending ping to all peers");
+	for(auto & v : m_peer) { // to each peer
+		auto & target_peer = v.second;
+		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+		string_as_bin cmd_data( m_haship_pubkey ); // data of the command
+		cmd_data.bytes += ";";
+		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
+	}
+}
+
 
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
@@ -327,8 +267,12 @@ void c_tunserver::event_loop() {
 
 	fd_set fd_set_data;
 
+
+	this->peering_ping_all_peers();
+
 	const int buf_size=65536;
 	char buf[buf_size];
+
 
 	while (1) {
 		wait_for_fd_event();
@@ -338,7 +282,8 @@ void c_tunserver::event_loop() {
 
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
-				auto peer_udp = unique_cast_ptr<c_peering_udp>( m_peer.at(0));
+				auto & target_peer = m_peer.begin()->second;
+				auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 				print_destination_ipv6(buf, size_read);
 				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
 			} catch(...) {
@@ -346,8 +291,8 @@ void c_tunserver::event_loop() {
 			}
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
-			sockaddr_in6 from_addr_raw; // the address of sender, raw format
-			socklen_t from_addr_raw_size; // the size of sender address
+			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
+			socklen_t from_addr_raw_size; // ^ size of it
 
 			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
 			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
@@ -356,27 +301,58 @@ void c_tunserver::event_loop() {
 
 			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			// ------------------------------------
-			static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
-							198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
-							233, 194, 218, 13, 180, 63, 64, 3, 11};
 
-			static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
-			static unsigned char additional_data[] = {1, 2, 3};
-			static unsigned long long additional_data_len = 3;
+			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
+			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) ); // TODO
+			_assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
+			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
+			if (cmd == c_protocol::e_proto_cmd_tunneled_data) {
 
-			// TODO randomize this data
+				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
+								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
+								233, 194, 218, 13, 180, 63, 64, 3, 11};
 
-			std::unique_ptr<unsigned char []> decrypted (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
-			unsigned long long decrypted_len;
+				static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
+				static unsigned char additional_data[] = {1, 2, 3};
+				static unsigned long long additional_data_len = 3;
+				// TODO randomize this data
 
-			assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+				std::unique_ptr<unsigned char []> decrypted_buf (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
+				unsigned long long decrypted_buf_len;
 
-			crypto_aead_chacha20poly1305_encrypt(decrypted.get(), &decrypted_len, (unsigned char *)buf, size_read, additional_data,
-			                                     additional_data_len, NULL, nonce, generated_shared_key);
+				assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+
+				// reinterpret the char from IO as unsigned-char as wanted by crypto code
+				unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2; // TODO calculate depending on version, command, ...
+				assert( size_read >= 3 );  // headers + anything
+				long long ciphertext_buf_len = size_read - 2; // TODO 2 = hesder size
+				assert( ciphertext_buf_len >= 1 );
+
+				int r = crypto_aead_chacha20poly1305_decrypt(
+					decrypted_buf.get(), & decrypted_buf_len,
+					nullptr,
+					ciphertext_buf, ciphertext_buf_len,
+					additional_data, additional_data_len,
+					nonce, generated_shared_key);
+				if (r == -1) {
+					_warn("verification fails");
+					continue; // skip this packet (main loop)
+				}
+
+				// reinterpret for debug
+				_info("UDP received, sending to TUN:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
+				write(m_tun_fd, decrypted_buf.get(), decrypted_buf_len);
+
+			} // e_proto_cmd_tunneled_data
+			else if (cmd == c_protocol::e_proto_cmd_public_hi) {
+				_note("Command HI received");
+
+			}
+			else {
+				_warn("Unknown protocol command, cmd="<<cmd);
+				continue; // skip this packet (main loop)
+			}
 			// ------------------------------------
-
-			_info("UDP received, sending to TUN:" << size_read << " bytes: [" << string(buf,size_read)<<"]" );
-			write(m_tun_fd, decrypted.get(), decrypted_len);
 
 		}
 		else _erro("No event selected?!"); // TODO throw
@@ -388,16 +364,53 @@ void c_tunserver::event_loop() {
 }
 
 void c_tunserver::run() {
-	std::cout << "Starting tests" << std::endl;
+	std::cout << "Stating the TUN router." << std::endl;
 	prepare_socket();
 	event_loop();
 }
 
 // ------------------------------------------------------------------
 
+namespace developer_tests {
+
+string make_pubkey_for_peer_nr(int peer_nr) {
+	string peer_pub = string("4a4b4c") + string("4") + string(1, char('0' + peer_nr)  );
+	return peer_pub;
+}
+
+bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
+	namespace po = boost::program_options;
+	std::cerr << "Running in developer mode. " << std::endl;
+
+	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
+	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
+	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
+
+	int peer_nr = node_nr==1 ? 2 : 1;
+	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
+	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+
+	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+
+	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
+	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
+	argm.at("peerpub") = po::variable_value( peer_pub , false );
+	argm.at("mypub") = po::variable_value( make_pubkey_for_peer_nr(node_nr)  , false );
+	return true; // continue the test
+	// TODO@r finish auto deployment --r
+}
+
+
+
+} // namespace developer_tests
+
+bool run_mode_developer(boost::program_options::variables_map & argm) {
+	return developer_tests::wip_galaxy_route_star(argm);
+}
 
 int main(int argc, char **argv) {
 	std::cerr << std::endl << disclaimer << std::endl << std::endl;
+
 
 /*	c_ip46_addr addr;
 	std::cout << addr << std::endl;
@@ -419,21 +432,44 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
-			("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
+			("devel","Test: used by developer to run current test")
+			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
+			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			("peerip", po::value<std::string>()->required(), "IP over existing networking to connect to your peer")
 			("peerpub", po::value<std::string>()->default_value(""), "public key of your peer");
 
-		po::variables_map vm;
+		po::variables_map argm;
 		try {
-			po::store(po::parse_command_line(argc, argv, desc), vm);
-			 po::notify(vm);
-			if (vm.count("help")) {
+			po::store(po::parse_command_line(argc, argv, desc), argm);
+			cout << "devel" << endl;
+			if (argm.count("devel")) {
+				try {
+					bool should_continue = run_mode_developer(argm);
+					if (!should_continue) return 0;
+				}
+				catch(std::exception& e) {
+				    std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what() << ", application will now exit" << std::endl;
+						return 0; // no error for developer mode
+				}
+			}
+			// argm now can contain options added/modified by developer mode
+			po::notify(argm);
+
+
+			if (argm.count("help")) {
 				std::cout << desc;
 				return 0;
 			}
-			myserver.configure(vm["K"].as<int>(), vm["mypub"].as<std::string>(), vm["mypriv"].as<std::string>(), vm["peerip"].as<std::string>(), vm["peerpub"].as<std::string>());
+			myserver.configure_mykey_from_string(
+				argm["mypub"].as<std::string>() ,
+				argm["mypriv"].as<std::string>()
+			);
+			myserver.add_peer( t_peering_reference(
+				argm["peerip"].as<std::string>(),
+			 string_as_hex(	argm["peerpub"].as<std::string>() )
+			) );
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
