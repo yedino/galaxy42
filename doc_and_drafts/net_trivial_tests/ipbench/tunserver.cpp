@@ -160,7 +160,7 @@ c_tunserver::c_tunserver()
 }
 
 // my key
-void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) { 
+void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) {
 	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
 	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
 	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr));
@@ -169,7 +169,7 @@ void c_tunserver::configure_mykey_from_string(const std::string &mypub, const st
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	_note("Adding peer, peering-address=" << peer_ref.peering_addr << " pubkey=" << to_string(peer_ref.pubkey) << " haship_addr=" << to_string(peer_ref.haship_addr) );
-	auto peering_ptr = make_unique<c_peering_pubkeyudp>( addr_peering , pubkey , haship_addr ) ;
+	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
 	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
@@ -301,12 +301,12 @@ void c_tunserver::event_loop() {
 
 			_info("UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			// ------------------------------------
-			
-			try { //TODO(r) move to function
 
 			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
-			c_protocol::t_proto_cmd cmd = buf[0];
-			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { 
+			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) ); // TODO
+			_assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
+			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
+			if (cmd == c_protocol::e_proto_cmd_tunneled_data) {
 
 				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
@@ -336,8 +336,13 @@ void c_tunserver::event_loop() {
 					nonce, generated_shared_key);
 				if (r == -1) {
 					_warn("verification fails");
-					continue;
+					continue; // skip this packet (main loop)
 				}
+
+				// reinterpret for debug
+				_info("UDP received, sending to TUN:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
+				write(m_tun_fd, decrypted_buf.get(), decrypted_buf_len);
+
 			} // e_proto_cmd_tunneled_data
 			else if (cmd == c_protocol::e_proto_cmd_public_hi) {
 				_note("Command HI received");
@@ -345,13 +350,9 @@ void c_tunserver::event_loop() {
 			}
 			else {
 				_warn("Unknown protocol command, cmd="<<cmd);
-				continue;
+				continue; // skip this packet (main loop)
 			}
 			// ------------------------------------
-
-			// reinterpret for debug
-			_info("UDP received, sending to TUN:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
-			write(m_tun_fd, decrypted_buf.get(), decrypted_buf_len);
 
 		}
 		else _erro("No event selected?!"); // TODO throw
@@ -461,8 +462,14 @@ int main(int argc, char **argv) {
 				std::cout << desc;
 				return 0;
 			}
-			myserver.configure_mykey_from_string( argm["mypub"].as<std::string>() , argm["mypriv"].as<std::string>() );
-			myserver.add_peer( argm["peerip"].as<std::string>(), argm["peerpub"].as<std::string>()  );
+			myserver.configure_mykey_from_string(
+				argm["mypub"].as<std::string>() ,
+				argm["mypriv"].as<std::string>()
+			);
+			myserver.add_peer( t_peering_reference(
+				argm["peerip"].as<std::string>(),
+			 string_as_hex(	argm["peerpub"].as<std::string>() )
+			) );
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;

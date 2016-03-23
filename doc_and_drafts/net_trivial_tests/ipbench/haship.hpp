@@ -15,7 +15,7 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	struct tag_constr_by_hash_of_pubkey{};
 
 	c_haship_addr();
-	c_haship_addr( tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ); ///< create the IP address that matches given public key (e.g. hash of it)
+	c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ); ///< create the IP address that matches given public key (e.g. hash of it)
 };
 
 

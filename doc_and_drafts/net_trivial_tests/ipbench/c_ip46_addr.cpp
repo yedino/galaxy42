@@ -11,10 +11,11 @@ c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
 
 c_ip46_addr::c_ip46_addr(const std::string &ip_str) {
 	// ports-TODO(r) also parse the port here
+	int port=9042;
 	if (is_ipv4(ip_str)) {
-		(*this) = create_ipv4(ip_str);
+		(*this) = create_ipv4(ip_str, port);
 	} else {
-		(*this) = create_ipv6(ip_str);
+		(*this) = create_ipv6(ip_str, port);
 	}
 }
 

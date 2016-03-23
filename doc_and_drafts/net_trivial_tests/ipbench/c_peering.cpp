@@ -6,19 +6,26 @@
 
 // ------------------------------------------------------------------
 
-t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey) 
+t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey)
 	: t_peering_reference( peering_addr , string_as_bin( peering_addr ) )
 { }
 
-t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_bin &peering_pubkey) 
-	: pubkey( peering_pubkey ) , haship_addr( tag_constr_by_hash_of_pubkey , peering_pubkey ) , peering_addr( peering_addr ), 
+t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_bin &peering_pubkey)
+	: pubkey( peering_pubkey ) , haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , peering_pubkey ) , peering_addr( peering_addr )
 { }
 
 // ------------------------------------------------------------------
 
-c_peering_udp::c_peering_udp(const c_ip46_addr & addr_peering , const c_haship_pubkey & pubkey , const c_haship_addr & haship_addr)
-	: c_peering(addr_peering, pubkey, haship_addr)
+c_peering::c_peering(const t_peering_reference & ref)
+	: m_pubkey(ref.pubkey), m_haship_addr(ref.haship_addr), m_peering_addr(ref.peering_addr)
 { }
+
+// ------------------------------------------------------------------
+
+c_peering_udp::c_peering_udp(const t_peering_reference & ref)
+	: c_peering(ref)
+{ }
+
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
 	throw std::runtime_error("Use send_data_udp");
@@ -74,20 +81,20 @@ void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_
 void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int udp_socket) {
 	_info("UDP send to peer RAW: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
-	switch (m_addr.get_ip_type()) {
+	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
-			auto ip_x = m_addr.get_ip4(); // ip of proper type, as local variable
+			auto ip_x = m_peering_addr.get_ip4(); // ip of proper type, as local variable
 			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in) );
 		}
 		break;
 		case c_ip46_addr::t_tag::tag_ipv6 : {
-			auto ip_x = m_addr.get_ip6(); // ip of proper type, as local variable
+			auto ip_x = m_peering_addr.get_ip6(); // ip of proper type, as local variable
 			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in6) );
 		}
 		break;
 		default: {
-			std::ostringstream oss; oss << m_addr; // TODO
-			throw std::runtime_error(string("Invalid IP type: ") + oss.str());
+			std::ostringstream oss; oss << m_peering_addr; // TODO
+			throw std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str());
 		}
 	}
 }
