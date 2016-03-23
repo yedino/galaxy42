@@ -256,12 +256,12 @@ void c_tunserver::print_destination_ipv6(const char *buff, size_t buff_size) {
 
 void c_tunserver::peering_ping_all_peers() {
 	_info("Sending ping to all peers");
-	for(const auto & v : m_peer) { // to each peer
-		{ // send hi msg
-			string_as_bin cmd_data; // data of the command
-			cmd_data += to_string_bin(m_haship_pubkey) + ";" ;
-			peer_udp->send_data_udp_cmd(e_proto_cmd_public_hi, cmd_data, m_sock_udp);
-		}
+	for(auto & v : m_peer) { // to each peer
+		auto & target_peer = v.second;
+		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+		string_as_bin cmd_data( m_haship_pubkey ); // data of the command
+		cmd_data.bytes += ";";
+		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
 	}
 }
 
@@ -288,8 +288,8 @@ void c_tunserver::event_loop() {
 
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
-				auto & next_peer = m_peer.begin()->second;
-				auto peer_udp = unique_cast_ptr<c_peering_udp>( next_peer ); // upcast to UDP peer derived
+				auto & target_peer = m_peer.begin()->second;
+				auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 				print_destination_ipv6(buf, size_read);
 				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
 			} catch(...) {
