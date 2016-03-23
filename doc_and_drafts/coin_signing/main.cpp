@@ -65,6 +65,9 @@ int get_port() {
         throw std::invalid_argument(msg);
     }
     if(port > 1025 && port < 32000) {
+        std::cin.clear();
+        std::cin.ignore();
+        std::cin.sync();
         return port;	// port is OK
     } else {
         std::string msg = "Invalid port number [" + std::to_string(port) + "]";
@@ -73,6 +76,9 @@ int get_port() {
   } catch (std::invalid_argument &err) {
         std::cout << err.what() << std::endl;
         std::cout << "Set to default port: 30000" << std::endl;
+        std::cin.clear();
+        std::cin.ignore();
+        std::cin.sync();
         return 30000;
   }
 }
@@ -118,15 +124,11 @@ void run_interactive_protocol() {
         }
     }
 
-
     std::string target_address;
     int target_port;
     decision = 'n';
 
     std::cout << "Do you want to set terget now? (Y/n): ";
-    std::cin.ignore();
-    std::cin.clear();
-    std::cin.sync();
     std::cin >> decision; std::cin.ignore();
     if(decision == 'Y' || decision == 'y') {
         if(!set_interactive_target(target_address,target_port)) {
@@ -151,11 +153,9 @@ void run_interactive_protocol() {
     while(!isover) {
         std::string request;
         std::cout << "Enter message: ";
-        std::cin.ignore();
         std::cin.clear();
-        std::cin.sync();
         std::getline(std::cin,request);
-        std::cout << std::hex << request << std::endl;
+        std::cout << request << std::endl;
 
 
         switch(check_cmd(request)) {

@@ -67,7 +67,7 @@ c_contract c_mint::get_used_token (c_token &token) {
 
     // TODO
 
-    auto send_to = token.get_chainsign().back().m_signer;
+    //auto send_to = token.get_chainsign().back().m_signer;
     // TODO send data
     auto c_header = token.get_contract_header();
     c_contract l_contract = c_contract(c_header.m_contract_info);

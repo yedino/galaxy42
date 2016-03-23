@@ -188,6 +188,7 @@ void c_netuser::create_server() {
 
 void c_netuser::send_contract(ip::tcp::socket &socket_) {
 
+    DBG_MTX(dbg_mtx, "Contract sending -- strat");
 
     boost::system::error_code ec;
     if (m_contracts_to_send.empty()) {
@@ -203,8 +204,12 @@ void c_netuser::send_contract(ip::tcp::socket &socket_) {
     socket_.write_some(buffer(&contract_data_size, 4), ec);
 
     socket_.write_some(buffer(contract_data.to_packet()), ec);
-    std::string a("mnkx6qkv9y8bcutg8c1g9m5wznzx8m6shysyb4g3nhluv91wbjv0.k");
-    std::string command = "./tools/cexec '(pubInterfaceController_adminSetUpLimitPeerkey=\"" + a +  "\", limitUp=10)'";
+
+    std::string a("2p7s7n9bf9jqbdm6wspb9u8xdxhf4hlrps8rhtkbwj2r8gtu6un0.k");
+    std::string command = "./tools/cexec 'InterfaceController_adminSetUpLimitPeer(pubkey=\"" + a +  "\", limitUp=100)'";
+
+    DBG_MTX(dbg_mtx, "Setting cjdns limitiation :" << command);
+
     system(command.c_str());
 
 }
@@ -240,7 +245,7 @@ void c_netuser::server_read(ip::tcp::socket socket_) {
 	while (!ec && !m_stop_flag) {
 		char header[2] = {0, 0};
 		socket_.read_some(buffer(header, 2), ec);
-		if (header[0] == 'p' && header[1] == 'k') {
+        if (header[0] == 'p' && header[1] == 'k') {
 			send_public_key_resp(socket_);
 		}
         else if (header[0] == '$' && header[1] == 't') {
