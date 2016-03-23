@@ -189,7 +189,7 @@ void c_tunserver::prepare_socket() {
 	assert(! (m_tun_fd<0) );
 
   as_zerofill< ifreq > ifr; // the if request
-	ifr.ifr_flags = IFF_TAP; // || IFF_MULTI_QUEUE; TODO
+	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
 	if (errcode_ioctl < 0)_throw( std::runtime_error("Error in ioctl")); // TODO
@@ -203,7 +203,7 @@ void c_tunserver::prepare_socket() {
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
 		assert(address[1] == 0x42);
-		NetPlatform_addAddress(ifr.ifr_name, address, 8, Sockaddr_AF_INET6);
+		NetPlatform_addAddress(ifr.ifr_name, address, 16, Sockaddr_AF_INET6);
 	}
 
 	// create listening socket
