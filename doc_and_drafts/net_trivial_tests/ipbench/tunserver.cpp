@@ -132,7 +132,8 @@ class c_tunserver {
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
 		void event_loop(); ///< the main loop
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
-		void print_destination_ipv6(const char *buff, size_t budd_size);
+
+		c_haship_addr parse_tun_ip_src_dest(const char *buff, size_t buff_size);
 
 		void peering_ping_all_peers();
 		void debug_peers();
@@ -240,18 +241,22 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 
-void c_tunserver::parse_tun_ip_src_dest(const char *buff, size_t buff_size) { // TODO
+c_haship_addr c_tunserver::parse_tun_ip_src_dest(const char *buff, size_t buff_size) { // TODO
 	// vuln-TODO(u) throw on invalid size + assert
 
 	assert(buff_size > 28 + INET6_ADDRSTRLEN                 + 8); // quick check. +8 to be sure ;)
 
-	char ipv6_str [INET6_ADDRSTRLEN];
+	char ipv6_str[INET6_ADDRSTRLEN];
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + 12, ipv6_str, INET6_ADDRSTRLEN);
 	_dbg1("src ipv6_str " << ipv6_str);
+
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + 28, ipv6_str, INET6_ADDRSTRLEN);
 	_dbg1("dst ipv6_str " << ipv6_str);
+
+	c_haship_addr x(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
+	return x;
 }
 
 void c_tunserver::peering_ping_all_peers() {
@@ -306,10 +311,13 @@ void c_tunserver::event_loop() {
 			try {
 				auto & target_peer = m_peer.begin()->second;
 				auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
-				print_destination_ipv6(buf, size_read);
+				c_haship_addr dst_hip = parse_tun_ip_src_dest(buf, size_read);
+				_info("Destination: " << dst_hip);
 				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
+			} catch(std::exception &e) {
+				_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
 			} catch(...) {
-				_warn("Can not send to peer."); // TODO more info (which peer, addr, number)
+				_warn("Can not send to peer (unknown)"); // TODO more info (which peer, addr, number)
 			}
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
