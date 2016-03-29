@@ -8,7 +8,9 @@ struct string_as_hex {
 	string_as_hex(const std::string & s);
 };
 
-unsigned char hexchar2int(char c);
+unsigned char hexchar2int(char c); // 'f' -> 15
+
+unsigned char doublehexchar2int(string s); // "fd" -> 253
 
 
 struct string_as_bin {

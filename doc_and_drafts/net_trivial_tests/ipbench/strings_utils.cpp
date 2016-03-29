@@ -13,6 +13,13 @@ unsigned char hexchar2int(char c) {
 	throw std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  );
 }
 
+unsigned char doublehexchar2int(string s) {
+	if (s.size()!=2) throw std::invalid_argument("Invalid double-hex string: '"+s+"'");
+	unsigned char h = s.at(0);
+	unsigned char l = s.at(1);
+	return hexchar2int(h)*16 + hexchar2int(l);
+}
+
 // ==================================================================
 
 string_as_bin::string_as_bin(std::string bin)

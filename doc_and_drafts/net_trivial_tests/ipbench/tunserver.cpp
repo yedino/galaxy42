@@ -309,11 +309,26 @@ void c_tunserver::event_loop() {
 
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			try {
-				auto & target_peer = m_peer.begin()->second;
-				auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 				c_haship_addr dst_hip = parse_tun_ip_src_dest(buf, size_read);
 				_info("Destination: " << dst_hip);
-				peer_udp->send_data_udp(buf, size_read, m_sock_udp);
+
+				// next hop in peering
+				auto peer_it = m_peer.find(dst_hip);
+				if (peer_it == m_peer.end()) {
+					_info("ROUTE-PEER: can not find, taking first peer");
+					peer_it = m_peer.begin();
+				}
+
+				if (peer_it == m_peer.end()) { // can not find any peer
+					_info("ROUTE-PEER, can not find any peer!");
+				}
+				else {
+					auto & target_peer = peer_it->second;
+					_info("ROUTE-PEER, selected peerig next hop is: " << (*target_peer) );
+					auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+					peer_udp->send_data_udp(buf, size_read, m_sock_udp);
+				}
+
 			} catch(std::exception &e) {
 				_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
 			} catch(...) {
