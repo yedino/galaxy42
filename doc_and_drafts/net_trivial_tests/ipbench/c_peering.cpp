@@ -7,18 +7,32 @@
 // ------------------------------------------------------------------
 
 t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey)
-	: t_peering_reference( peering_addr , string_as_bin( peering_addr ) )
+	: t_peering_reference( peering_addr , string_as_bin( peering_pubkey ) )
+// ^--- why no warning about unused peering_pubkey. cmake-TODO(u)
+// also needs asserts on size of the crypto key assert-TODO(r)
 { }
 
-t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_bin &peering_pubkey)
+t_peering_reference::t_peering_reference(const c_ip46_addr &peering_addr, const string_as_bin &peering_pubkey)
 	: pubkey( peering_pubkey ) , haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , peering_pubkey ) , peering_addr( peering_addr )
-{ }
+{ 
+	_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << ", and this is: " << (*this) );
+}
 
 // ------------------------------------------------------------------
 
 c_peering::c_peering(const t_peering_reference & ref)
 	: m_pubkey(ref.pubkey), m_haship_addr(ref.haship_addr), m_peering_addr(ref.peering_addr)
 { }
+
+void c_peering::print(ostream & ostr) const {
+	ostr << "peering{";
+	ostr << " peering-addr=" << m_peering_addr;
+	ostr << " hip=" << string_as_dbg( m_haship_addr ).get();
+	ostr << " pub=" << string_as_dbg( m_pubkey ).get();
+	ostr << "}";
+}
+
+ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
 
 // ------------------------------------------------------------------
 

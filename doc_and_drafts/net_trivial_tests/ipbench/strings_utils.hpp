@@ -8,7 +8,9 @@ struct string_as_hex {
 	string_as_hex(const std::string & s);
 };
 
-unsigned char hexchar2int(char c);
+unsigned char hexchar2int(char c); // 'f' -> 15
+
+unsigned char doublehexchar2int(string s); // "fd" -> 253
 
 
 struct string_as_bin {
@@ -16,6 +18,7 @@ struct string_as_bin {
 
 	string_as_bin()=default;
 	string_as_bin(const string_as_hex & encoded);
+	string_as_bin(const char * ptr, size_t size); ///< build bytes from c-string data
 	explicit string_as_bin(std::string bin); ///< create from an std::string, that we assume holds binary data
 
 	/*template<class T>

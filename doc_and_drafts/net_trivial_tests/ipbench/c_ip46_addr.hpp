@@ -15,7 +15,7 @@
 static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in) , "Invalid size of ipv4 vs ipv6 addresses" );
 static_assert( sizeof(sockaddr) <= sizeof(sockaddr_in6) , "Invalid size of ipv4 vs ipv6 addresses" );
 
-class c_ip46_addr { ///< any address ipv6 or ipv4, in system socket format
+class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system socket format
 	public:
 		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
 

@@ -17,6 +17,7 @@ c_ip46_addr::c_ip46_addr(const std::string &ip_str) {
 	} else {
 		(*this) = create_ipv6(ip_str, port);
 	}
+	_info("Parsing ip46 from string ["<<ip_str<<"] created: " << (*this));
 }
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
