@@ -2,6 +2,26 @@
 #include "strings_utils.hpp"
 #include "libs1.hpp"
 
+// https://tools.ietf.org/html/rfc2460
+// https://tools.ietf.org/html/rfc4291
+// also https://en.wikipedia.org/wiki/IPv6_packet#Fixed_header
+namespace g_ipv6_rfc {
+	constexpr unsigned char header_position_of_src = 8 ;  // rfc2460#section-3
+	constexpr unsigned char header_length_of_src = 128/8 ;  // length of this field
+
+	constexpr unsigned char header_position_of_dst = 24 ;  // rfc2460#section-3
+	constexpr unsigned char header_length_of_dst = 128/8 ;  // length of this field
+};
+// use: g_ipv6_rfc::header_position_of_src
+
+namespace g_tuntap {
+	namespace TUN_with_PI {
+		constexpr unsigned char header_position_of_ipv6 = 4;
+	}
+	// not supporting TAP for now
+};
+// use: g_tuntap::TUN_with_PI::header_position_of_ipv6
+
 // declare sizes; also forward declarations
 constexpr int g_haship_addr_size = 16;
 constexpr int g_haship_pubkey_size = 32;

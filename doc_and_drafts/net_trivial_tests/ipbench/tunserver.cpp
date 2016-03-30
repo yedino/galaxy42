@@ -128,18 +128,26 @@ class c_tunserver {
 
 		void help_usage() const; ///< show help about usage of the program
 
+		typedef enum {
+			e_route_method_from_me=1, ///< I am the oryginal sender (try hard to send it)
+			e_route_method_if_direct_peer=2, ///< Send data only if if I know the direct peer (e.g. I just route it for someone else - in star protocol the center node)
+		} t_route_method;
+
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
 		void event_loop(); ///< the main loop
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
 
-		c_haship_addr parse_tun_ip_src_dest(const char *buff, size_t buff_size);
+		c_haship_addr parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset); ///< from buffer of TUN-format, with ipv6 bytes at ipv6_offset, extract ipv6 (hip) destination
+		c_haship_addr parse_tun_ip_src_dst(const char *buff, size_t buff_size); ///< the same, but with ipv6_offset that matches our current TUN
+		void route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size); ///< push the tunneled data to where they belong
 
 		void peering_ping_all_peers();
 		void debug_peers();
 
 	private:
 		int m_tun_fd; ///< fd of TUN file
+		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
@@ -157,7 +165,7 @@ class c_tunserver {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 c_tunserver::c_tunserver()
- : m_tun_fd(-1), m_sock_udp(-1)
+ : m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1)
 {
 }
 
@@ -188,7 +196,9 @@ void c_tunserver::prepare_socket() {
   as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
+
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
+	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
 	if (errcode_ioctl < 0)_throw( std::runtime_error("Error in ioctl")); // TODO
 
 	_mark("Allocated interface:" << ifr.ifr_name);
@@ -241,18 +251,27 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 
-c_haship_addr c_tunserver::parse_tun_ip_src_dest(const char *buff, size_t buff_size) { // TODO
+c_haship_addr c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size) { ///< the same, but with ipv6_offset that matches our current TUN
+	return parse_tun_ip_src_dst(buff,buff_size, m_tun_header_offset_ipv6 );
+}
+
+c_haship_addr c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset) {
 	// vuln-TODO(u) throw on invalid size + assert
 
-	assert(buff_size > 28 + INET6_ADDRSTRLEN                 + 8); // quick check. +8 to be sure ;)
+	size_t pos_src = ipv6_offset + g_ipv6_rfc::header_position_of_src , len_src = g_ipv6_rfc::header_length_of_src;
+	size_t pos_dst = ipv6_offset + g_ipv6_rfc::header_position_of_dst , len_dst = g_ipv6_rfc::header_length_of_dst;
+	assert(buff_size > pos_src+len_src);
+	assert(buff_size > pos_dst+len_dst);
+	// valid: reading pos_src up to +len_src, and same for dst
 
-	char ipv6_str[INET6_ADDRSTRLEN];
+	char ipv6_str[INET6_ADDRSTRLEN]; // for string e.g. "fd42:ffaa:..."
+
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
-	inet_ntop(AF_INET6, buff + 12, ipv6_str, INET6_ADDRSTRLEN);
+	inet_ntop(AF_INET6, buff + pos_src, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 8 is source addr, from ipv6 RFC
 	_dbg1("src ipv6_str " << ipv6_str);
 
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
-	inet_ntop(AF_INET6, buff + 28, ipv6_str, INET6_ADDRSTRLEN);
+	inet_ntop(AF_INET6, buff + pos_dst, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 24 is destination addr, from
 	_dbg1("dst ipv6_str " << ipv6_str);
 
 	c_haship_addr x(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
@@ -266,8 +285,8 @@ void c_tunserver::peering_ping_all_peers() {
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 
 		// [protocol] build raw
-		string_as_bin cmd_data; 
-		cmd_data.bytes += string_as_bin( m_haship_pubkey ).bytes; 
+		string_as_bin cmd_data;
+		cmd_data.bytes += string_as_bin( m_haship_pubkey ).bytes;
 		cmd_data.bytes += ";";
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
 	}
@@ -281,6 +300,39 @@ void c_tunserver::debug_peers() {
 	}
 }
 
+void c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size) {
+	try {
+		c_haship_addr dst_hip = parse_tun_ip_src_dst(buff, buff_size);
+		_info("Destination HIP:" << dst_hip);
+
+		// next hop in peering
+		auto peer_it = m_peer.find(dst_hip); // find c_peering to send to
+		if (peer_it == m_peer.end()) {
+			if (method==e_route_method_from_me) {
+				_info("ROUTE-PEER: FIRST PEER - can not find, taking first peer");
+				peer_it = m_peer.begin();
+			} else {
+				_info("ROUTE-PEER:  can not find - and I do not want to try harder, giving up.");
+				return;
+			}
+		}
+
+		if (peer_it == m_peer.end()) { // can not find any peer
+			_info("ROUTE-PEER, can not find any peer!");
+		}
+		else {
+			auto & target_peer = peer_it->second;
+			_info("ROUTE-PEER, selected peerig next hop is: " << (*target_peer) );
+			auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+			peer_udp->send_data_udp(buff, buff_size, m_sock_udp); // <--- ***
+		}
+
+	} catch(std::exception &e) {
+		_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
+	} catch(...) {
+		_warn("Can not send to peer (unknown)"); // TODO more info (which peer, addr, number)
+	}
+}
 
 
 void c_tunserver::event_loop() {
@@ -302,38 +354,14 @@ void c_tunserver::event_loop() {
 
 		wait_for_fd_event();
 
+		// TODO(r): program can be hanged/DoS with bad routing, no TTL field yet
+
 		try { // ---
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
-			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // read data from TUN
-
+			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
-			try {
-				c_haship_addr dst_hip = parse_tun_ip_src_dest(buf, size_read);
-				_info("Destination: " << dst_hip);
-
-				// next hop in peering
-				auto peer_it = m_peer.find(dst_hip);
-				if (peer_it == m_peer.end()) {
-					_info("ROUTE-PEER: can not find, taking first peer");
-					peer_it = m_peer.begin();
-				}
-
-				if (peer_it == m_peer.end()) { // can not find any peer
-					_info("ROUTE-PEER, can not find any peer!");
-				}
-				else {
-					auto & target_peer = peer_it->second;
-					_info("ROUTE-PEER, selected peerig next hop is: " << (*target_peer) );
-					auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
-					peer_udp->send_data_udp(buf, size_read, m_sock_udp);
-				}
-
-			} catch(std::exception &e) {
-				_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
-			} catch(...) {
-				_warn("Can not send to peer (unknown)"); // TODO more info (which peer, addr, number)
-			}
+			this->route_tun_data_to_its_destination(e_route_method_from_me, buf, size_read); // push the tunneled data to where they belong
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
 			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
@@ -358,19 +386,20 @@ void c_tunserver::event_loop() {
 				throw std::runtime_error("Data arrived from unknown socket address type");
 			}
 
-			_info("UDP Socket read from IP = " << peer_ip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
+			_info("UDP Socket read from direct peer_ip = " << peer_ip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
 
 			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
+			assert( size_read >= 2 ); // buf: reads from position 0..1 are asserted as valid now
+
 			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) ); // TODO
 			_assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
-			if (cmd == c_protocol::e_proto_cmd_tunneled_data) {
 
+			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
 				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
 								233, 194, 218, 13, 180, 63, 64, 3, 11};
-
 				static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
 				static unsigned char additional_data[] = {1, 2, 3};
 				static unsigned long long additional_data_len = 3;
@@ -394,16 +423,28 @@ void c_tunserver::event_loop() {
 					additional_data, additional_data_len,
 					nonce, generated_shared_key);
 				if (r == -1) {
-					_warn("verification fails");
+					_warn("crypto verification fails");
 					continue; // skip this packet (main loop)
 				}
 
+				// TODO(r) factor out "reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len"
+
 				// reinterpret for debug
-				_info("UDP received, sending to TUN:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
-				write(m_tun_fd, decrypted_buf.get(), decrypted_buf_len);
+				_info("UDP received, with cleartext:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
+				c_haship_addr dst_hip = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
+
+				if (dst_hip == m_haship_addr) { // received data addresses to us as finall destination:
+					_info("UDP data is addressed to us as finall dst, sending it to TUN.");
+					write(m_tun_fd, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); /// *** send the data into our TUN // reinterpret char-signess
+				}
+				else
+				{ // received data that is addresses to someone else
+					_info("UDP data is addressed to someone-else as finall dst, ROUTING it.");
+					this->route_tun_data_to_its_destination(e_route_method_if_direct_peer, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); // push the tunneled data to where they belong // reinterpret char-signess
+				}
 
 			} // e_proto_cmd_tunneled_data
-			else if (cmd == c_protocol::e_proto_cmd_public_hi) {
+			else if (cmd == c_protocol::e_proto_cmd_public_hi) { // [protocol]
 				_mark("Command HI received");
 				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
