@@ -165,6 +165,7 @@ class c_tunserver {
 
 		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
 		c_haship_addr m_haship_addr; ///< my haship addres
+		c_peering & find_peer_by_sender_peering_addr( c_ip46_addr ip ) const ;
 };
 
 // ------------------------------------------------------------------
@@ -341,6 +342,11 @@ void c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 	}
 }
 
+c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
+	for(auto & v : m_peer) { if (v.second->m_peering_addr == ip) return * v.second.get(); }
+	throw std::runtime_error("Can not find the peer with such IP");
+}
+
 
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
@@ -404,6 +410,9 @@ void c_tunserver::event_loop() {
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
 
 			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
+				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( peer_ip ); // warn: returned value depends on m_peer[], do not invalidate that!!! 
+				_warn(" ********************************************** sender is: " << sender_as_peering);
+
 				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
 								233, 194, 218, 13, 180, 63, 64, 3, 11};

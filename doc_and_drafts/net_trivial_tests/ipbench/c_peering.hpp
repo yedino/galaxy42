@@ -28,6 +28,8 @@ class c_peering { ///< An (mostly established) connection to peer
 
 		void print(ostream & ostr) const;
 
+		friend class c_tunserver;
+
 	protected:
 		c_haship_pubkey m_pubkey; ///< his pubkey
 		c_haship_addr m_haship_addr; ///< his haship address
