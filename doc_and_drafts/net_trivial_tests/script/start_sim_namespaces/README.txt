@@ -11,7 +11,7 @@ After each boot
 
 Create the virtual containers (namespaces) with the virtual cards:
 
-start-containers.sh a 20
+./start-containers.sh a 20
 
 Where "a" is the name of group, and 20 is the number of containers to create.
 
