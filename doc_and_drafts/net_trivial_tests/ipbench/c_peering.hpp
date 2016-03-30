@@ -23,10 +23,10 @@ class c_peering { ///< An (mostly established) connection to peer
 	public:
 		c_peering(const t_peering_reference & ref);
 
-		virtual void send_data(const char * data, size_t data_size)=0;
+		virtual void send_data(const char * data, size_t data_size);
 		virtual ~c_peering()=default;
 
-		void print(ostream & ostr) const;
+		virtual void print(ostream & ostr) const;
 
 		friend class c_tunserver;
 

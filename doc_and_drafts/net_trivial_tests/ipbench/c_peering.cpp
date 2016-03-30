@@ -32,6 +32,10 @@ void c_peering::print(ostream & ostr) const {
 	ostr << "}";
 }
 
+void c_peering::send_data(const char * data, size_t data_size) {
+	throw std::runtime_error("Used abstract send_data() that does nothing");
+}
+
 ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
 
 // ------------------------------------------------------------------
