@@ -2,7 +2,7 @@
 #define C_CONTRACT_HPP
 #include "libs01.hpp"
 #include "c_token.hpp"
-#include "c_json_serializer.hpp"
+#include "serialize/c_json_serializer.hpp"
 
 struct c_antinet_contract { //: public ijson_serializable {
     c_antinet_contract (const std::chrono::seconds &lifetime = std::chrono::hours(2));

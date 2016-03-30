@@ -57,17 +57,16 @@ bool checkIPv6_address(std::string & address) {
     return true;	// address is OK
 }
 // Check if port is correct for us. If not returning default port.
-int get_port() {
+unsigned short get_port() {
   try {
-    int port;
-    if(!(std::cin >> port)) {
-        std::string msg = "Invalid port number [" + std::to_string(port) + "]";
+    std::string input;
+    if(!(std::cin >> input)) {
+        std::string msg = "Invalid port number [" + input + "]";
         throw std::invalid_argument(msg);
     }
+    int port = std::stoi(input);
     if(port > 1025 && port < 32000) {
-        std::cin.clear();
         std::cin.ignore();
-        std::cin.sync();
         return port;	// port is OK
     } else {
         std::string msg = "Invalid port number [" + std::to_string(port) + "]";
@@ -78,7 +77,6 @@ int get_port() {
         std::cout << "Set to default port: 30000" << std::endl;
         std::cin.clear();
         std::cin.ignore();
-        std::cin.sync();
         return 30000;
   }
 }

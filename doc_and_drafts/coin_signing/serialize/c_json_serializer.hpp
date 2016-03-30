@@ -1,7 +1,7 @@
 #ifndef C_JSON_SERIALIZER_H
 #define C_JSON_SERIALIZER_H
 
-#include "libs01.hpp"
+#include "../libs01.hpp"
 #include "jsoncpp/json/json.h"
 
 class ijson_serializable {

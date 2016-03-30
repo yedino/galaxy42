@@ -24,10 +24,13 @@ list(REMOVE_ITEM SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/c_rpc_bitwallet.cpp)
 
 
 set(SOURCE
-        jsoncpp/jsoncpp.cpp
+        serialize/jsoncpp/jsoncpp.cpp
+        serialize/c_json_serializer.cpp
         coinsign_error.hpp
         ../../crypto_ops/crypto/crypto_ed25519.cpp
         ../../crypto_ops/crypto/sha_src/sha512.cpp
+        network/c_TCPasync.cpp
+        network/c_netuser.cpp
         ${SOURCE_FILES}
         ${SOURCE_PTEST}
         ${SOURCE_ED}

@@ -2,7 +2,7 @@
 #define COIN_SIGNING_C_TOKEN_HPP
 
 #include "libs01.hpp"
-#include "c_json_serializer.hpp"
+#include "serialize/c_json_serializer.hpp"
 
 enum class serialization { boost = 1, Json = 2};
 

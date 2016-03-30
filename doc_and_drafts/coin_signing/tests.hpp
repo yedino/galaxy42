@@ -3,8 +3,8 @@
 
 #include "libs01.hpp"
 #include "coinsign_error.hpp"
-#include "c_netuser.hpp"
-#include "c_json_serializer.hpp"
+#include "network/c_netuser.hpp"
+#include "serialize/c_json_serializer.hpp"
 
 #include "ptest/ptest.hpp"
 

@@ -1,8 +1,8 @@
 #ifndef C_NETUSER_H
 #define C_NETUSER_H
 
-#include "libs01.hpp"
-#include "c_user.hpp"
+#include "../libs01.hpp"
+#include "../c_user.hpp"
 
 using namespace boost::asio;
 
