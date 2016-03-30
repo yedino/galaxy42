@@ -29,7 +29,7 @@ set(SOURCE
         coinsign_error.hpp
         ../../crypto_ops/crypto/crypto_ed25519.cpp
         ../../crypto_ops/crypto/sha_src/sha512.cpp
-        network/c_TCPasync.cpp
+        #network/c_TCPasync.cpp
         network/c_netuser.cpp
         ${SOURCE_FILES}
         ${SOURCE_PTEST}

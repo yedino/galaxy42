@@ -205,8 +205,8 @@ void c_netuser::send_contract(ip::tcp::socket &socket_) {
 
     socket_.write_some(buffer(contract_data.to_packet()), ec);
 
-    std::string a("2p7s7n9bf9jqbdm6wspb9u8xdxhf4hlrps8rhtkbwj2r8gtu6un0.k");
-    std::string command = "./tools/cexec 'InterfaceController_adminSetUpLimitPeer(pubkey=\"" + a +  "\", limitUp=100)'";
+    std::string a("v7zrh17f30b1g1fll8kqd6qb6vvbj1d2ldzgkwbg8wmvrw88z020.k");
+    std::string command = "./tools/cexec 'InterfaceController_adminSetUpLimitPeer(pubkey=\"" + a +  "\", limitUp=300)'";
 
     DBG_MTX(dbg_mtx, "Setting cjdns limitiation :" << command);
 
