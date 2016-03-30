@@ -132,6 +132,8 @@ class c_tunserver {
 		void configure_mykey_from_string(const std::string &mypub, const std::string &mypriv);
 		void run(); ///< run the main loop
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer
+		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		void set_my_name(const string & name); ///< set a nice name of this peer (shown in debug for example)
 
 		void help_usage() const; ///< show help about usage of the program
 
@@ -153,6 +155,7 @@ class c_tunserver {
 		void debug_peers();
 
 	private:
+		string m_my_name; ///< a nice name, see set_my_name
 		int m_tun_fd; ///< fd of TUN file
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
@@ -172,10 +175,20 @@ class c_tunserver {
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
+void c_tunserver::add_peer_simplestring(const string & simple) {
+	size_t pos1 = simple.find('-');
+	string part_ip = simple.substr(0,pos1);
+	string part_pub = simple.substr(pos1+1);
+	_note("Simple string parsed as: " << part_ip << " and " << part_pub );
+	this->add_peer( t_peering_reference( part_ip, string_as_hex( part_pub ) ) );
+}
+
 c_tunserver::c_tunserver()
- : m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1)
+ : m_my_name("unnamed-tunserver"), m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1)
 {
 }
+
+void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
 
 // my key
 void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) {
@@ -365,6 +378,8 @@ void c_tunserver::event_loop() {
 	while (1) {
 		debug_peers();
 
+		{ string xx(10,'-');	std::cerr << endl << xx << " Node " << m_my_name << xx << endl << endl; } // --- print your name ---
+
 		wait_for_fd_event();
 
 		// TODO(r): program can be hanged/DoS with bad routing, no TTL field yet
@@ -507,6 +522,13 @@ string make_pubkey_for_peer_nr(int peer_nr) {
 	return peer_pub;
 }
 
+// list of peers that exist in our test-world:
+struct t_peer_cmdline_ref {
+	string ip;
+	string pubkey;
+	string privkey; ///< just in the test world. here we have knowledge of peer's secret key
+};
+
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
@@ -521,29 +543,72 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
 	argm.at("peerpub") = po::variable_value( peer_pub , false );
 	argm.at("mypub") = po::variable_value( make_pubkey_for_peer_nr(node_nr)  , false );
+	argm.at("myname") = po::variable_value( "testnode-" + std::to_string(node_nr) , false );
 	return true; // continue the test
 }
 
 bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
-	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
-	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
+	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
+	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+	
+	// --- define the test world ---
+	map< int , t_peer_cmdline_ref > peer_to_ref; // for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line)
+	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) , 
+		string("deadbeef999fff") + std::to_string(nr) };	}
 
-	map< int , vector<int> > peer_to_peer; // for given peer - list of his peers
-	peer_to_peer.at(1) = vector<int>{ 2 , 3 };
-	peer_to_peer.at(2) = vector<int>{ 4 , 5 };
+	peer_to_ref[1].pubkey = "3992967d946aee767b2ed018a6e1fc394f87bd5bfebd9ea7728edcf421d09471";
+	peer_to_ref[1].privkey = "b98252fdc886680181fccd9b3c10338c04c5288477eeb40755789527eab3ba47";
+	peer_to_ref[2].pubkey = "4491bfdafea313d1b354e0d993028f5e2a0a8119cc634226e5581db554d5283e";
+	peer_to_ref[2].privkey = "bd48ab0e511fd5135134b9fb27491f3fdc344b29b8d8e7ce1b064d7946e48944";
+	peer_to_ref[3].pubkey = "237e7a5224a8a58a0d264733380c4f3fba1f91482542afb269f382357c290445";
+	peer_to_ref[3].privkey = "1bfb4bd0ac720276565f67798d069f7f4166076c6a37788ad21bae054f1b67c7";
+	peer_to_ref[4].pubkey = "e27f2df89219841e0f930f7fbe000424bfbadabceb48eda2ab4521b5ce00b15c";
+	peer_to_ref[4].privkey = "d73257edbfbf9200349bdc87bbc0f76f213d106f83fc027240e70c23a0f2f693";
+	peer_to_ref[5].pubkey = "2cf0ab828ab1642f5fdcb8d197677f431d78fccd40d37400e1e6c51321512e66";
+	peer_to_ref[5].privkey = "5d0dda56f336668e95816ccc4887c7ba23c1d14167918275e2bf76784a3ee702";
+	peer_to_ref[6].pubkey = "26f4c825bcc045d7cb3ad6946d414c8ca1cbeaa3cd4738494e5308dd0d1cc053";
+	peer_to_ref[6].privkey = "6c94c735dd0cfb862f991f05e3193e70b754650a5b4c998e68eb8bd1f43a15aa";
+	peer_to_ref[7].pubkey = "a2047b24dfb02397a9354cc125eb9c2119a24b33c0c706f28bb184eeae064902";
+	peer_to_ref[7].privkey = "2401f2be12ace34cfb221c168a7868d1d9dfe931f61feb8930799bb27fd5a253";
+	// 2e83c0963e497c95bcd0bbc94b58b0c66b4c113b84fdd7587ca18e326a35c84c
+	// 12fed56a2ffee2b0e3a51689ecb4048adfa4f474d31e9180d113f50fe140f5c3
 
-	int peer_nr = node_nr==1 ? 2 : 1;
-	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
-	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+	// list of connections in our test-world:
+	map< int , vector<int> > peer_to_peer; // for given peer that we will create: list of his peer-number(s) that he peers into
+	peer_to_peer[1] = vector<int>{ 2 , 3 };
+	peer_to_peer[2] = vector<int>{ 4 , 5 };
+	peer_to_peer[3] = vector<int>{ 6 , 7 };
+	peer_to_peer[4] = vector<int>{ };
+	peer_to_peer[5] = vector<int>{ };
+	peer_to_peer[6] = vector<int>{ };
+	peer_to_peer[7] = vector<int>{ };
 
-	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
-	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
-	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
-	argm.at("peerpub") = po::variable_value( peer_pub , false );
-	argm.at("mypub") = po::variable_value( make_pubkey_for_peer_nr(node_nr)  , false );
+	for (int peer_nr : peer_to_peer.at(my_nr)) { // for me, add the --peer refrence of all peers that I should peer into:
+		_info(peer_nr);
+		string peer_pub = peer_to_ref.at(peer_nr).pubkey;
+		string peer_ip = peer_to_ref.at(peer_nr).ip;
+		string peerref = peer_ip + "-" + peer_pub;
+		_mark("Developer: adding peerref:" << peerref);
 
-	return false;
+		vector<string> old_peer; 
+		try { 
+			old_peer = argm["peer"].as<vector<string>>();
+			old_peer.push_back(peerref);
+			argm.at("peer") = po::variable_value( old_peer , false );
+		} catch(boost::bad_any_cast) {
+			old_peer.push_back(peerref);
+			argm.insert( std::make_pair("peer" , po::variable_value( old_peer , false )) );
+		}
+	}
+
+	_info("Adding my keys command line");
+	argm.at("mypub") = po::variable_value( peer_to_ref.at(my_nr).pubkey  , false );
+	argm.at("mypriv") = po::variable_value( peer_to_ref.at(my_nr).privkey  , false );
+	argm.at("myname") = po::variable_value( "testnode-" + std::to_string(my_nr) , false );
+
+	_note("Done dev setup");
+	return true;
 }
 
 
@@ -582,10 +647,11 @@ int main(int argc, char **argv) {
 			("devel","Test: used by developer to run current test")
 			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
+			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
-			("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
-			("peerpub", po::value<std::vector<std::string>>()->multitoken(), "public key of your peer")
+			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
+			//("peerpub", po::value<std::vector<std::string>>()->multitoken(), "public key of your peer")
 			("peer", po::value<std::vector<std::string>>()->multitoken(), "Adding entire peer reference, in syntax like ip-pub. Can be give more then once, for multiple peers.")
 			;
 
@@ -611,14 +677,21 @@ int main(int argc, char **argv) {
 				std::cout << desc;
 				return 0;
 			}
+
+			_info("Configuring my own reference (keys):");
 			myserver.configure_mykey_from_string(
 				argm["mypub"].as<std::string>() ,
 				argm["mypriv"].as<std::string>()
 			);
-			myserver.add_peer( t_peering_reference(
-				argm["peerip"].as<std::string>(),
-				string_as_hex(	argm["peerpub"].as<std::string>() )
-			) );
+
+			myserver.set_my_name( argm["myname"].as<string>() );
+
+			_info("Configuring my peers references (keys):");
+			vector<string> peers_cmdline;
+			try { peers_cmdline = argm["peer"].as<vector<string>>(); } catch(...) { }
+			for (const string & peer_ref : peers_cmdline) {
+				myserver.add_peer_simplestring( peer_ref ); 
+			}
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
