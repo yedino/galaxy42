@@ -509,24 +509,41 @@ string make_pubkey_for_peer_nr(int peer_nr) {
 
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
-	std::cerr << "Running in developer mode. " << std::endl;
-
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
 	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
+	int peer_nr = node_nr==1 ? 2 : 1;
+	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
+	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+
+	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
+	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
+	argm.at("peerpub") = po::variable_value( peer_pub , false );
+	argm.at("mypub") = po::variable_value( make_pubkey_for_peer_nr(node_nr)  , false );
+	return true; // continue the test
+}
+
+bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
+	namespace po = boost::program_options;
+	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
+	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
+
+	map< int , vector<int> > peer_to_peer; // for given peer - list of his peers
+	peer_to_peer.at(1) = vector<int>{ 2 , 3 };
+	peer_to_peer.at(2) = vector<int>{ 4 , 5 };
 
 	int peer_nr = node_nr==1 ? 2 : 1;
 	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
 	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
 
 	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
-
 	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
 	argm.at("peerpub") = po::variable_value( peer_pub , false );
 	argm.at("mypub") = po::variable_value( make_pubkey_for_peer_nr(node_nr)  , false );
-	return true; // continue the test
-	// TODO@r finish auto deployment --r
+
+	return false;
 }
 
 
@@ -534,7 +551,8 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 } // namespace developer_tests
 
 bool run_mode_developer(boost::program_options::variables_map & argm) {
-	return developer_tests::wip_galaxy_route_star(argm);
+	std::cerr << "Running in developer mode. " << std::endl;
+	return developer_tests::wip_galaxy_route_doublestar(argm);
 }
 
 int main(int argc, char **argv) {
@@ -566,8 +584,10 @@ int main(int argc, char **argv) {
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
-			("peerip", po::value<std::string>()->required(), "IP over existing networking to connect to your peer")
-			("peerpub", po::value<std::string>()->default_value(""), "public key of your peer");
+			("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
+			("peerpub", po::value<std::vector<std::string>>()->multitoken(), "public key of your peer")
+			("peer", po::value<std::vector<std::string>>()->multitoken(), "Adding entire peer reference, in syntax like ip-pub. Can be give more then once, for multiple peers.")
+			;
 
 		po::variables_map argm;
 		try {
