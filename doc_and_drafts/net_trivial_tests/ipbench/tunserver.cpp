@@ -3,6 +3,13 @@ Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
 
+/*
+
+TODO(r) do not tunnel entire (encrypted) copy of TUN, trimm it from headers that we do not need
+TODO(r) establish end-to-end AE (cryptosession)
+
+*/
+
 const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 #include <iostream>
