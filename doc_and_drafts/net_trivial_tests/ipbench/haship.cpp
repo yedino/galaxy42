@@ -19,7 +19,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//throw std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__));
 
-	if (addr_string.size() >= (8*4+7)) throw std::invalid_argument("The IP address looks invalid (too long)"); // 8 groups of 4 hexchar, plus 7 collon
+	if (addr_string.size() > (8*4+7)) throw std::invalid_argument("The IP address looks invalid (too long) on string ["+addr_string+"]"); // 8 groups of 4 hexchar, plus 7 collon
 	// now sting size is reasonable here, can operate on int
 
 	vector<string> grtab; // group tab
