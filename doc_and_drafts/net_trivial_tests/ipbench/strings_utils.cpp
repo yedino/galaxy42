@@ -7,6 +7,34 @@
 
 string_as_hex::string_as_hex(const std::string & s) : data(s) { }
 
+string_as_hex::string_as_hex(const string_as_bin & in) {
+	size_t in_size = in.bytes.size(); 
+	size_t size_mul = 2; // how much will the string expand
+	size_t in_size_max1 = ( std::numeric_limits<decltype(in_size)>::max() / size_mul ) ; // it will expand e.g. x2 (that is not entire limit yet)
+	assert( in_size < in_size_max1 );
+	assert( in_size < (in_size_max1-1) ); // make sure no issue with ending C-string NULL
+	size_t retsize = in_size*size_mul; // this will be size of output
+	data.resize(retsize);
+
+	size_t pos=0, outpos=0;
+	for( ; pos<in_size; ++pos) {
+		unsigned char byte = in.bytes.at(pos), bh=byte/16, bl=byte%16;
+		data.at(outpos) = int2hexchar(bh);
+		++outpos;
+		data.at(outpos) = int2hexchar(bl);
+		++outpos;
+	}
+	assert(outpos == retsize); // all expected out data was written
+}
+
+const std::string & string_as_hex::get() const { return data; }
+
+unsigned char int2hexchar(unsigned char i) {
+	if (i<=9) return '0'+i;
+	if (i<=15) return 'a'+(i-10);
+	throw std::invalid_argument(  string("Invalid hex value:")+std::to_string(i) );
+}
+
 unsigned char hexchar2int(char c) {
 	if ((c>='0')&&(c<='9')) return c-'0';
 	if ((c>='a')&&(c<='f')) return c-'a' +10;

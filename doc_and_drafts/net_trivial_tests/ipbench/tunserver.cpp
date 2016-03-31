@@ -499,7 +499,7 @@ void c_tunserver::debug_peers() {
 	_note("=== Debug peers ===");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_info("  * Known peer on key [ " << string_as_dbg( v.first ).get() << " ] => " << (* target_peer) );
+		_info("  * Known peer on key [ " << string_as_hex( string_as_bin( v.first ) ).get() << " ] => " << (* target_peer) );
 	}
 }
 
@@ -511,14 +511,17 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 	// try direct peers:
 	auto peer_it = m_peer.find(next_hip); // find c_peering to send to
 	if (peer_it == m_peer.end()) { // not a direct peer!
+		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
 		if (recurse_level>1) {
 			_warn("DROP: Recruse level too big in choosing peer");
 			return false; // <---
 		}
+
 		c_haship_addr via_hip;
 		try {
+			_info("Trying to find a via_hip");
 			auto via_hip = m_routing_manager.get_route_nexthop(next_hip , reason , true);
-		} catch(...) { _info("ROUTE MANAGER: can not find route"); return false; }
+		} catch(...) { _info("ROUTE MANAGER: can not find route at all"); return false; }
 		_info("Route found via hip: via_hip = " << via_hip);
 		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, reason,  via_hip, recurse_level+1);
 		if (!ok) { _info("Routing failed"); return false; } // <---
@@ -526,7 +529,7 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 	}
 	else { // next_hip is a direct peer, send to it:
 		auto & target_peer = peer_it->second;
-		_info("ROUTE-PEER, selected peerig next hop is: " << (*target_peer) );
+		_info("ROUTE-PEER (found the goal in direct peer) selected peerig next hop is: " << (*target_peer) );
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 		peer_udp->send_data_udp(buff, buff_size, m_sock_udp); // <--- ***
 	}
@@ -773,6 +776,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) ,
 		string("deadbeef999fff") + std::to_string(nr) };	}
 
+	// pre-generate example test EC DH keypairs:
 	peer_to_ref[1].pubkey = "3992967d946aee767b2ed018a6e1fc394f87bd5bfebd9ea7728edcf421d09471";
 	peer_to_ref[1].privkey = "b98252fdc886680181fccd9b3c10338c04c5288477eeb40755789527eab3ba47";
 	peer_to_ref[2].pubkey = "4491bfdafea313d1b354e0d993028f5e2a0a8119cc634226e5581db554d5283e";
