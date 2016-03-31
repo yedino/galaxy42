@@ -126,14 +126,13 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 // ------------------------------------------------------------------
 
 class c_routing_manager { ///< holds nowledge about routes, and searches for new ones
-	public:
-		c_haship_addr get_route_nexthop(c_haship_addr dst, bool start_search=true);
+	public: // make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
+		enum t_route_state { e_route_state_found, e_route_state_dead };
 
-		typedef	enum { e_route_state_found, e_route_state_dead } t_route_state;
-
-		typedef	enum { e_search_mode_route_own_packet, 
-			e_search_mode_route_other_packet, 
-			e_search_mode_help_find } t_search_mode;
+		enum t_search_mode {  // why we look for a route
+			e_search_mode_route_own_packet, // we want ourselves to send there
+			e_search_mode_route_other_packet,  // we want to route packet of someone else
+			e_search_mode_help_find }; // some else is asking us about the route
 
 		typedef	std::chrono::steady_clock::time_point t_route_time; ///< type for representing times using in routing search etc
 
@@ -147,6 +146,24 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				int m_ttl; ///< at which TTL we got this reply
 		};
 
+		class c_route_reason {
+			public:
+				c_haship_addr m_his_addr; ///< his address to which we should tell him the path
+				t_search_mode m_search_mode; ///< do we search it for him because we need to route for him, or because he asked, etc
+				// c_haship_addr m_his_question; ///< the address about which we aksed
+
+				c_route_reason(c_haship_addr his_addr, t_search_mode mode);
+
+				bool operator<(const c_route_reason &other) const;
+				bool operator==(const c_route_reason &other) const;
+		};
+
+		class c_route_reason_detail {
+			public:
+				t_route_time m_when; ///< when we hasked about this address last time
+				c_route_reason_detail( t_route_time when );
+		};
+
 		class c_route_search {
 			public:
 				c_haship_addr m_addr; ///< goal of search: dst address
@@ -154,20 +171,11 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				t_route_time m_ask_time; ///< at which time we last time tried asking
 				int m_ask_ttl; ///< at which TTL we last time tried asking
 
-				class c_route_requester {
-					public:
-						c_haship_addr m_his_addr; ///< his address to which we should tell him the path
-						c_haship_addr m_his_question; ///< the address about which we aksed
-						t_route_time m_when; ///< when we hasked about this address last time
-
-						c_route_requester(c_haship_addr his_addr, c_haship_addr his_question, t_route_time when);
-				};
-
-				map<c_haship_addr , c_route_requester > m_requester; ///< information about all other people who are asking about this address
+				map< c_route_reason , c_route_reason_detail > m_request; ///< information about all other people who are asking about this address
 
 				c_route_search(c_haship_addr addr);
 
-				void add_requester(c_haship_addr who); ///< add info that this gy also wants to be informed about the path
+				void add_request(c_routing_manager::c_route_reason reason); ///< add info that this gy also wants to be informed about the path
 		};
 
 		// searches:
@@ -177,37 +185,76 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 		// known routes:
 		typedef std::map< c_haship_addr, unique_ptr<c_route_info> > t_route_nexthop_by_dst; ///< routes to destinations: the hash-ip of next hop, by hash-ip of finall destination
 		t_route_nexthop_by_dst m_route_nexthop; ///< known routes: the hash-ip of next hop, indexed by hash-ip of finall destination
+
+	public:
+		c_haship_addr get_route_nexthop(c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search=true);
 };
 
 std::ostream & operator<<(std::ostream & ostr, std::chrono::steady_clock::time_point) {
 	return ostr << "(chrono TODO)"; // TODO(u)
 }
 
-std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_search::c_route_requester & obj) {
-	return ostr << "{Requester on " << obj.m_his_addr << " looking for DST=" << obj.m_his_question << " since " << obj.m_when << "}";
+std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::t_search_mode & obj) {
+	switch (obj) {
+		case c_routing_manager::e_search_mode_route_own_packet: return ostr<<"route_OWN";
+		case c_routing_manager::e_search_mode_route_other_packet: return ostr<<"route_OTHER";
+		case c_routing_manager::e_search_mode_help_find: return ostr<<"help_FIND";
+	}
+	_warn("Unknown reason"); return ostr<<"???";
+}
+
+std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_reason & obj) {
+	return ostr << "{Reason: asked from " << obj.m_his_addr << " as " << obj.m_search_mode << "}";
+}
+std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_reason_detail & obj) {
+	return ostr << "{Reason...: at " << obj.m_when << "}";
 }
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_search & obj) {
 	ostr << "{SEARCH for route to DST="<<obj.m_addr<<", was yet run=" << (obj.m_ever?"YES":"never")
 		<< " ask: time="<<obj.m_ask_time<<" ttl="<<obj.m_ask_ttl;
-	if (obj.m_requester.size()) {
-		ostr << "with " << obj.m_requester.size() << " REQUESTERS:" << endl;
-		for(auto const & r_pair : obj.m_requester) ostr << " REQ: " << r_pair.second << endl;
+	if (obj.m_request.size()) {
+		ostr << "with " << obj.m_request.size() << " REQUESTS:" << endl;
+		for(auto const & r : obj.m_request) ostr << " REQ: " << r.first << " => " << r.second << endl;
 		ostr << endl;
 	} else ostr << " (no requesters here)";
 	ostr << "}";
 	return ostr;
 }
 
-void c_routing_manager::c_route_search::add_requester(c_haship_addr who) {
-	c_route_requester req(who, this->m_addr, std::chrono::steady_clock::now() );
-	m_requester.emplace(who,  req);
+c_routing_manager::c_route_reason_detail::c_route_reason_detail( t_route_time when )
+	: m_when(when)
+{ }
+
+void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_reason reason) {
+	auto found = m_request.find( reason );
+	if (found == m_request.end()) { // new reason for search
+		c_route_reason_detail reason_detail( std::chrono::steady_clock::now() );
+		_info("Adding new reason for search: " << reason << " details: " << reason_detail);
+		m_request.emplace(reason, reason_detail);
+	}
+	else {
+		auto & detail = found->second;
+		_info("Updating reason of search: " << reason << " old detail: " << detail );
+		detail.m_when = std::chrono::steady_clock::now();
+		_info("Updating reason of search: " << reason << " new detail: " << detail );
+	}
 }
 
-c_routing_manager::c_route_search::c_route_requester::c_route_requester(c_haship_addr his_addr, c_haship_addr his_question, t_route_time when)
-	: m_his_addr(his_addr), m_his_question(his_question), m_when(when)
+c_routing_manager::c_route_reason::c_route_reason(c_haship_addr his_addr, t_search_mode mode)
+	: m_his_addr(his_addr), m_search_mode(mode)
 { 
-	_info("NEW requester: "<< (*this));
+	_info("NEW reason: "<< (*this));
+}
+
+bool c_routing_manager::c_route_reason::operator<(const c_route_reason &other) const {
+	if (this->m_his_addr < other.m_his_addr) return 1;
+	if (this->m_search_mode < other.m_search_mode) return 1;
+	return 0;
+}
+
+bool c_routing_manager::c_route_reason::operator==(const c_route_reason &other) const {
+	return (this->m_his_addr == other.m_his_addr) && (this->m_search_mode == other.m_search_mode);
 }
 
 c_routing_manager::c_route_search::c_route_search(c_haship_addr addr) 
@@ -216,24 +263,35 @@ c_routing_manager::c_route_search::c_route_search(c_haship_addr addr)
 	_info("NEW router SEARCH: " << (*this));
 }
 
-c_haship_addr c_routing_manager::get_route_nexthop(c_haship_addr dst, bool start_search, c_haship_addr who_asks) {
-	_info("ROUTING-MANAGER: find: " << dst << " (who_asks="<<who_asks<<")");
+c_haship_addr c_routing_manager::get_route_nexthop(c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search) {
+	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
 	auto found = m_route_nexthop.find( dst );
 	if (found != m_route_nexthop.end()) { // found
 		auto nexthop = found->second->m_nexthop;
 		_info("ROUTING-MANAGER: found: " << nexthop);
 		return nexthop; // <---
-	} else {
-		auto search_iter = m_search.find(dst);
-		if (search_iter == m_search.end()) {
-			_info("STARTED (created) a new SEARCH for this route to dst="<<dst);
-			auto new_search = make_unique<c_route_search>(dst);
-			new_search.add_requester( who_asks );
-			m_search.emplace( dst , new_search );
+	} 
+	else { // don't have a planned route to him
+		if (!start_search) { 
+			_info("No route, but we also so not want to search for it.");
+			throw std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst));
 		}
-
-		throw std::runtime_error("no route known (yet) to dst=" + STR(dst));
+		else {
+			_info("Route not found, we will be searching");
+			auto search_iter = m_search.find(dst);
+			if (search_iter == m_search.end()) {
+				_info("STARTED (created) a new SEARCH for this route to dst="<<dst);
+				auto new_search = make_unique<c_route_search>(dst);
+				new_search->add_request( reason );
+				m_search.emplace( std::move(dst) , std::move(new_search) );
+			}
+			else {
+				_info("STARTED (updated) an existing SEARCH for this route to dst="<<dst);
+				search_iter->second->add_request( reason ); // add reason
+			}
+		}
 	}
+	throw std::runtime_error("no route known (yet) to dst=" + STR(dst));
 }
 
 
@@ -253,6 +311,7 @@ class c_tunserver {
 		typedef enum {
 			e_route_method_from_me=1, ///< I am the oryginal sender (try hard to send it)
 			e_route_method_if_direct_peer=2, ///< Send data only if if I know the direct peer (e.g. I just route it for someone else - in star protocol the center node)
+			e_route_method_default=3, ///< The default routing method
 		} t_route_method;
 
 	protected:
@@ -260,11 +319,14 @@ class c_tunserver {
 		void event_loop(); ///< the main loop
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
 
-		c_haship_addr parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset); ///< from buffer of TUN-format, with ipv6 bytes at ipv6_offset, extract ipv6 (hip) destination
-		c_haship_addr parse_tun_ip_src_dst(const char *buff, size_t buff_size); ///< the same, but with ipv6_offset that matches our current TUN
+		std::pair<c_haship_addr,c_haship_addr> parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset); ///< from buffer of TUN-format, with ipv6 bytes at ipv6_offset, extract ipv6 (hip) destination
+		std::pair<c_haship_addr,c_haship_addr> parse_tun_ip_src_dst(const char *buff, size_t buff_size); ///< the same, but with ipv6_offset that matches our current TUN
 
-		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size); ///< push the tunneled data to where they belong. On failure returns false or throws, true if ok.
-		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_haship_addr next_hip, int recurse_level);  ///< send to/via this hip (that is or isn't our peer), On failure false or throws, true if ok.
+		///@brief push the tunneled data to where they belong. On failure returns false or throws, true if ok. 
+		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason); 
+
+		///@brief more advanced version for use in routing
+		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, c_haship_addr next_hip, int recurse_level);  
 
 		void peering_ping_all_peers();
 		void debug_peers();
@@ -391,11 +453,11 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 
-c_haship_addr c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size) { ///< the same, but with ipv6_offset that matches our current TUN
+std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size) { ///< the same, but with ipv6_offset that matches our current TUN
 	return parse_tun_ip_src_dst(buff,buff_size, m_tun_header_offset_ipv6 );
 }
 
-c_haship_addr c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset) {
+std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset) {
 	// vuln-TODO(u) throw on invalid size + assert
 
 	size_t pos_src = ipv6_offset + g_ipv6_rfc::header_position_of_src , len_src = g_ipv6_rfc::header_length_of_src;
@@ -409,13 +471,14 @@ c_haship_addr c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_si
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_src, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 8 is source addr, from ipv6 RFC
 	_dbg1("src ipv6_str " << ipv6_str);
+	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
 
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_dst, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 24 is destination addr, from
 	_dbg1("dst ipv6_str " << ipv6_str);
+	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
 
-	c_haship_addr x(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
-	return x;
+	return std::make_pair( ret_dst , ret_src );
 }
 
 void c_tunserver::peering_ping_all_peers() {
@@ -440,7 +503,9 @@ void c_tunserver::debug_peers() {
 	}
 }
 
-bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_haship_addr next_hip, int recurse_level) {
+bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, 
+	c_haship_addr next_hip, int recurse_level) 
+{
 	// --- choose next hop in peering ---
 
 	// try direct peers:
@@ -452,10 +517,10 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 		}
 		c_haship_addr via_hip;
 		try {
-			auto via_hip = m_routing_manager.get_route_nexthop(next_hip , true);
+			auto via_hip = m_routing_manager.get_route_nexthop(next_hip , reason , true);
 		} catch(...) { _info("ROUTE MANAGER: can not find route"); return false; }
 		_info("Route found via hip: via_hip = " << via_hip);
-		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, via_hip,  recurse_level+1);
+		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, reason,  via_hip, recurse_level+1);
 		if (!ok) { _info("Routing failed"); return false; } // <---
 		_info("Routing seems to succeed");
 	}
@@ -468,11 +533,11 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 	return true;
 }
 
-bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size) {
+bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason) {
 	try {
-		c_haship_addr dst_hip = parse_tun_ip_src_dst(buff, buff_size);
+		c_haship_addr dst_hip = parse_tun_ip_src_dst(buff, buff_size).second;
 		_info("Destination HIP:" << dst_hip);
-		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, dst_hip, 0);
+		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, reason,  dst_hip, 0);
 		if (!ok) { _info("Routing/sending failed (top level)"); return false; }
 	} catch(std::exception &e) {
 		_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
@@ -527,7 +592,10 @@ void c_tunserver::event_loop() {
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
 			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
-			this->route_tun_data_to_its_destination(e_route_method_from_me, buf, size_read); // push the tunneled data to where they belong
+			this->route_tun_data_to_its_destination(
+				e_route_method_from_me, buf, size_read,
+				c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet)
+			); // push the tunneled data to where they belong
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
 			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
@@ -602,7 +670,11 @@ void c_tunserver::event_loop() {
 
 				// reinterpret for debug
 				_info("UDP received, with cleartext:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
-				c_haship_addr dst_hip = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
+				
+				// can't wait till C++17 then with http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
+				// auto { src_hip, dst_hip } = parse_tun_ip_src_dst(.....);
+				c_haship_addr src_hip, dst_hip; 
+				std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
 
 				if (dst_hip == m_haship_addr) { // received data addresses to us as finall destination:
 					_info("UDP data is addressed to us as finall dst, sending it to TUN.");
@@ -611,7 +683,11 @@ void c_tunserver::event_loop() {
 				else
 				{ // received data that is addresses to someone else
 					_info("UDP data is addressed to someone-else as finall dst, ROUTING it.");
-					this->route_tun_data_to_its_destination(e_route_method_if_direct_peer, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); // push the tunneled data to where they belong // reinterpret char-signess
+					this->route_tun_data_to_its_destination(
+						e_route_method_default,
+						reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len, 
+						c_routing_manager::c_route_reason( src_hip , c_routing_manager::e_search_mode_route_other_packet )
+					); // push the tunneled data to where they belong // reinterpret char-signess
 				}
 
 			} // e_proto_cmd_tunneled_data
