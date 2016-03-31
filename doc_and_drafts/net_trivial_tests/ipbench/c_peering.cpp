@@ -27,8 +27,8 @@ c_peering::c_peering(const t_peering_reference & ref)
 void c_peering::print(ostream & ostr) const {
 	ostr << "peering{";
 	ostr << " peering-addr=" << m_peering_addr;
-	ostr << " hip=" << string_as_dbg( m_haship_addr ).get();
-	ostr << " pub=" << string_as_dbg( m_pubkey ).get();
+	ostr << " hip=" << m_haship_addr;
+	ostr << " pub=" << m_pubkey;
 	ostr << "}";
 }
 

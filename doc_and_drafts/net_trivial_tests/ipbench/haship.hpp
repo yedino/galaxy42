@@ -43,9 +43,11 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 
-
 struct c_haship_pubkey : std::array<unsigned char, g_haship_pubkey_size > {
 	c_haship_pubkey();
 	c_haship_pubkey( const string_as_bin & input ); ///< create the IP form
+
+	void print(ostream &ostr) const;
 };
+ostream& operator<<(ostream &ostr, const c_haship_pubkey & v);
 

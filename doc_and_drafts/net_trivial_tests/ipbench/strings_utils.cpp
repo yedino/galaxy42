@@ -29,6 +29,11 @@ string_as_hex::string_as_hex(const string_as_bin & in) {
 
 const std::string & string_as_hex::get() const { return data; }
 
+std::ostream& operator<<(std::ostream &ostr, const string_as_hex &obj) { return ostr << obj.get(); }
+
+// ==================================================================
+
+
 unsigned char int2hexchar(unsigned char i) {
 	if (i<=9) return '0'+i;
 	if (i<=15) return 'a'+(i-10);

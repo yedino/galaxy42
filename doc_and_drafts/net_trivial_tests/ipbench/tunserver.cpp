@@ -499,7 +499,7 @@ void c_tunserver::debug_peers() {
 	_note("=== Debug peers ===");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_info("  * Known peer on key [ " << string_as_hex( string_as_bin( v.first ) ).get() << " ] => " << (* target_peer) );
+		_info("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -701,7 +701,7 @@ void c_tunserver::event_loop() {
 				auto pos1 = 32; // [protocol] size of public key
 				if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
 				string_as_bin bin_his_pubkey( cmd_data.bytes.substr(0,pos1) );
-				_info("We received pubkey=" << string_as_dbg( bin_his_pubkey ).get() );
+				_info("We received pubkey=" << string_as_hex( bin_his_pubkey ) );
 				t_peering_reference his_ref( peer_ip , string_as_bin( bin_his_pubkey ) );
 				add_peer( his_ref );
 			}

@@ -62,14 +62,16 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 }
 
 void c_haship_addr::print(ostream &ostr) const {
-	string_as_dbg dbg( (*this) );
-	ostr << dbg.get();
+	string_as_hex dbg( string_as_bin(*this) );
+	ostr << "hip:" << dbg.get();
 }
+ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
 
-ostream& operator<<(ostream &ostr, const c_haship_addr & v) {
-	v.print(ostr);
-	return ostr;
+void c_haship_pubkey::print(ostream &ostr) const {
+	string_as_hex dbg( string_as_bin(*this) );
+	ostr << "pub:" << dbg.get();
 }
+ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	return ostr; }
 
 
 
