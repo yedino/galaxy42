@@ -128,7 +128,7 @@ void c_TCPasync::set_target(const std::string &host, unsigned short server_port)
     if (!connect()) {
         DBG_MTX(m_mtx, "connection with host: success");
     } else {
-        DBG_MTX(m_mtx, "connsection with host: fail");
+        DBG_MTX(m_mtx, "connection with host: fail");
         throw std::invalid_argument("unable connect to host");
     }
 }
@@ -169,7 +169,8 @@ bool c_TCPasync::is_connected() {
 void c_TCPasync::add_cmd(c_TCPcommand &cmd) {
 	protocol type = cmd.get_type();
 	auto cmd_it = find_cmd(type);
-	if(cmd_it == m_available_cmd.end()) {
+    if(cmd_it == m_available_cmd.end()) {
+        DBG_MTX(m_mtx, "push_back [" << static_cast<int>(cmd.get_type()) << "] cmd");
 		m_available_cmd.push_back(std::ref(cmd));
 	} else {
 		DBG_MTX(m_mtx, "can't add cmd[" << static_cast<int>(type) << " that already is available");
@@ -211,23 +212,27 @@ void c_TCPasync::create_server() {
     assert(m_io_service.stopped() == false);
     m_acceptor.async_accept(m_local_socket,
                             [this](boost::system::error_code ec) {
-                                // DBG_MTX(m_mtx,"async lambda"); // dbg
+                                DBG_MTX(m_mtx,"async lambda"); // dbg
                                 if(!ec) {
-                                    // DBG_MTX(m_mtx,"do read start"); // dbg
+                                    DBG_MTX(m_mtx,"do read start"); // dbg
                                     this->server_read(std::move(m_local_socket));
                                 } else {
                                     DBG_MTX(m_mtx,"EC = " << ec);
+                                    return;
                                 }
                                 this->create_server();
                             });
 }
 
-void c_TCPasync::server_read(ip::tcp::socket socket) {
-    assert(socket.is_open());
+void c_TCPasync::server_read(ip::tcp::socket &&socket_) {
+    assert(socket_.is_open());
     boost::system::error_code ec;
     unsigned short prototype_size = sizeof(uint16_t);
 
+    ip::tcp::socket socket(std::move(socket_));
+
     while (!ec && !m_stop_flag) {
+        assert(socket.is_open());
         protocol type = protocol::empty;
 		socket.read_some(buffer(&type, prototype_size), ec);
 		if(type == protocol::empty) {
@@ -242,20 +247,16 @@ void c_TCPasync::server_read(ip::tcp::socket socket) {
         };
         char re = '\0';
 		socket.read_some(buffer(&re, 1), ec);	// request or response msg
-		// DBG_MTX(m_mtx,"req or res: " << re); //dbg
+         DBG_MTX(m_mtx,"req or res: " << re); //dbg
         if (re == 'q') {
-            // DBG_MTX(m_mtx,"server read: get request"); //dbg
-            if(connect()) {
-                cmd->get().send_response(m_server_socket);
-            } else {
-                DBG_MTX(m_mtx,"server read: Can't send response: get request, but host is undefined!"); //dbg
-            }
+             DBG_MTX(m_mtx,"server read: get request"); //dbg
+                cmd->get().send_response(socket);
         } else if (re == 's') {
-			// DBG_MTX(m_mtx,"server read - get response"); //dbg
+             DBG_MTX(m_mtx,"server read - get response"); //dbg
 			cmd->get().get_response(socket);
         }
     }
-	socket.close();
+    socket.close();
 }
 
 std::vector<std::reference_wrapper<c_TCPcommand>>::iterator c_TCPasync::find_cmd(protocol type) {

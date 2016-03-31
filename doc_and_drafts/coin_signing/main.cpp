@@ -126,13 +126,13 @@ void run_interactive_protocol() {
     int target_port;
     decision = 'n';
 
-    std::cout << "Do you want to set terget now? (Y/n): ";
-    std::cin >> decision; std::cin.ignore();
-    if(decision == 'Y' || decision == 'y') {
-        if(!set_interactive_target(target_address,target_port)) {
-            std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
-        }
-    }
+//    std::cout << "Do you want to set terget now? (Y/n): ";
+//    std::cin >> decision; std::cin.ignore();
+//    if(decision == 'Y' || decision == 'y') {
+//        if(!set_interactive_target(target_address,target_port)) {
+//            std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
+//        }
+//    }
 
     // HELP
     std::string help = "help info:\n";
@@ -167,7 +167,7 @@ void run_interactive_protocol() {
                      A.emit_tokens(1);
                      break;
             case  3:
-                     A.send_token_bynet(target_address, target_port);
+                     A.send_token_bynet();
                      break;
             case  4:
                      A.print_status(std::cout);
@@ -182,6 +182,7 @@ void run_interactive_protocol() {
                      if(!set_interactive_target(target_address,target_port)) {
                          std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
                      }
+                     A.set_target(target_address,target_port);
                      break;
             case -1:
                      std::cout << "bad command -- try again" << std::endl;

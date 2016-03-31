@@ -70,7 +70,12 @@ unsigned short c_netuser::get_local_port() {
 void c_netuser::send_token_bynet(){
     m_TCPasync.send_cmd_request(protocol::public_key);
 
-    auto cmd = m_TCPcommands.find(protocol::contract)->second;
+    auto cmd_it = m_TCPcommands.find(protocol::public_key);
+    if(cmd_it == m_TCPcommands.end()) {
+        std::cout << "can't find protocol: return" << std::endl;
+        return;
+    }
+    auto cmd = cmd_it->second;
 
     std::string handle;
     int attempts = 10;
@@ -132,7 +137,13 @@ void c_netuser::check_inboxes () {
 }
 
 void c_netuser::recieve_coin() {
-    auto cmd = m_TCPcommands.find(protocol::token_send)->second;
+    auto cmd_it = m_TCPcommands.find(protocol::token_send);
+    if(cmd_it == m_TCPcommands.end()) {
+        std::cout << "can't find protocol: return" << std::endl;
+        return;
+    }
+    auto cmd = cmd_it->second;
+
     std::string handle;
     if(cmd->has_message()) {
         std::cout << "Pop new coin" << std::endl;
@@ -145,7 +156,13 @@ void c_netuser::recieve_coin() {
 }
 
 void c_netuser::recieve_contract() {
-    auto cmd = m_TCPcommands.find(protocol::contract)->second;
+    auto cmd_it = m_TCPcommands.find(protocol::contract);
+    if(cmd_it == m_TCPcommands.end()) {
+        std::cout << "can't find protocol: return" << std::endl;
+        return;
+    }
+    auto cmd = cmd_it->second;
+
     std::string handle;
     if(cmd->has_message()) {
         std::cout << "Pop new contract" << std::endl;

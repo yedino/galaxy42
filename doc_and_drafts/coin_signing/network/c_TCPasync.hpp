@@ -70,7 +70,7 @@ class c_TCPasync {
 
     std::atomic<bool> m_stop_flag;
     void create_server ();
-	void server_read (ip::tcp::socket socket);
+    void server_read (ip::tcp::socket &&socket);
 
     std::vector<std::reference_wrapper<c_TCPcommand>> m_available_cmd;
 	decltype(m_available_cmd)::iterator find_cmd(protocol type);		// interesting, this is used only on declaration
