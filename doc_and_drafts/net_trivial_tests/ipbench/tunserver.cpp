@@ -243,7 +243,7 @@ void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_r
 
 c_routing_manager::c_route_reason::c_route_reason(c_haship_addr his_addr, t_search_mode mode)
 	: m_his_addr(his_addr), m_search_mode(mode)
-{ 
+{
 	_info("NEW reason: "<< (*this));
 }
 
@@ -257,9 +257,9 @@ bool c_routing_manager::c_route_reason::operator==(const c_route_reason &other) 
 	return (this->m_his_addr == other.m_his_addr) && (this->m_search_mode == other.m_search_mode);
 }
 
-c_routing_manager::c_route_search::c_route_search(c_haship_addr addr) 
+c_routing_manager::c_route_search::c_route_search(c_haship_addr addr)
 	: m_addr(addr), m_ever(false), m_ask_time(), m_ask_ttl(2)
-{ 
+{
 	_info("NEW router SEARCH: " << (*this));
 }
 
@@ -270,9 +270,9 @@ c_haship_addr c_routing_manager::get_route_nexthop(c_haship_addr dst, c_routing_
 		auto nexthop = found->second->m_nexthop;
 		_info("ROUTING-MANAGER: found: " << nexthop);
 		return nexthop; // <---
-	} 
+	}
 	else { // don't have a planned route to him
-		if (!start_search) { 
+		if (!start_search) {
 			_info("No route, but we also so not want to search for it.");
 			throw std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst));
 		}
@@ -322,11 +322,11 @@ class c_tunserver {
 		std::pair<c_haship_addr,c_haship_addr> parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset); ///< from buffer of TUN-format, with ipv6 bytes at ipv6_offset, extract ipv6 (hip) destination
 		std::pair<c_haship_addr,c_haship_addr> parse_tun_ip_src_dst(const char *buff, size_t buff_size); ///< the same, but with ipv6_offset that matches our current TUN
 
-		///@brief push the tunneled data to where they belong. On failure returns false or throws, true if ok. 
-		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason); 
+		///@brief push the tunneled data to where they belong. On failure returns false or throws, true if ok.
+		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason);
 
 		///@brief more advanced version for use in routing
-		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, c_haship_addr next_hip, int recurse_level);  
+		bool route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, c_haship_addr next_hip, int recurse_level);
 
 		void peering_ping_all_peers();
 		void debug_peers();
@@ -373,7 +373,8 @@ void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("T
 void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) {
 	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
 	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
-	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr));
+	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr)
+		<<" privkey="<<mypriv);
 }
 
 // add peer
@@ -478,7 +479,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	_dbg1("dst ipv6_str " << ipv6_str);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
 
-	return std::make_pair( ret_dst , ret_src );
+	return std::make_pair( ret_src , ret_dst );
 }
 
 void c_tunserver::peering_ping_all_peers() {
@@ -503,8 +504,8 @@ void c_tunserver::debug_peers() {
 	}
 }
 
-bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, 
-	c_haship_addr next_hip, int recurse_level) 
+bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason,
+	c_haship_addr next_hip, int recurse_level)
 {
 	// --- choose next hop in peering ---
 
@@ -547,7 +548,7 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 	} catch(...) {
 		_warn("Can not send to peer (unknown)"); // TODO more info (which peer, addr, number)
 	}
-	_info("Routing/sending OK (top level)"); 
+	_info("Routing/sending OK (top level)");
 	return true;
 }
 
@@ -584,7 +585,11 @@ void c_tunserver::event_loop() {
 
 		debug_peers();
 
-		{ string xx(10,'-');	std::cerr << endl << xx << " Node " << m_my_name << xx << endl << endl; } // --- print your name ---
+		{
+			string xx(10,'-');
+			std::cerr << endl << xx << " Node " << m_my_name << " hip=" << m_haship_addr << " pubkey=" << m_haship_pubkey
+				<< xx << endl << endl;
+		} // --- print your name ---
 
 		wait_for_fd_event();
 
@@ -673,10 +678,10 @@ void c_tunserver::event_loop() {
 
 				// reinterpret for debug
 				_info("UDP received, with cleartext:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
-				
+
 				// can't wait till C++17 then with http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
 				// auto { src_hip, dst_hip } = parse_tun_ip_src_dst(.....);
-				c_haship_addr src_hip, dst_hip; 
+				c_haship_addr src_hip, dst_hip;
 				std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
 
 				if (dst_hip == m_haship_addr) { // received data addresses to us as finall destination:
@@ -688,7 +693,7 @@ void c_tunserver::event_loop() {
 					_info("UDP data is addressed to someone-else as finall dst, ROUTING it.");
 					this->route_tun_data_to_its_destination(
 						e_route_method_default,
-						reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len, 
+						reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len,
 						c_routing_manager::c_route_reason( src_hip , c_routing_manager::e_search_mode_route_other_packet )
 					); // push the tunneled data to where they belong // reinterpret char-signess
 				}

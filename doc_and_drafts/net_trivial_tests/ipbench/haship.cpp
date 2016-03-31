@@ -9,9 +9,8 @@ c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({
 c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({}) {
 	at(0) = 0xfd;
 	at(1) = 0x42;
-	for (size_t i=0; i<8; ++i) { // TODO real hash!!!
-		at(2+i) = pubkey.at(i);
-		at(16-1-i) = pubkey.at(i);
+	for (size_t i=2; i<16; ++i) { // TODO real hash!!!
+		at(i) = pubkey.at(i-2);
 	}	
 }
 
