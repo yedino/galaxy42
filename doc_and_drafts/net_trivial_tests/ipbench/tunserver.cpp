@@ -123,6 +123,52 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 
 } // namespace
 
+// ------------------------------------------------------------------
+
+class c_routing_manager { ///< holds nowledge about routes, and searches for new ones
+	public:
+		c_haship_addr get_route_nexthop(c_haship_addr dst, bool start_search=true);
+
+	private:
+		typedef	enum { e_route_state_found, e_route_state_dead } t_route_state;
+
+		typedef	std::chrono::steady_clock::time_point t_route_time; ///< type for representing times using in routing search etc
+
+		class c_route_info {
+			public:
+				t_route_state m_state; ///< e.g. e_route_state_found is route is ready to be used
+				c_haship_addr m_nexthop; ///< hash-ip of next hop in this route
+
+				int m_cost; ///< some general cost
+				t_route_time m_time; ///< age of this route
+				int m_ttl; ///< at which TTL we got this reply
+		};
+
+		class c_route_search {
+			public:
+				c_haship_addr m_addr; ///< goal of search: dst address
+				t_route_time m_ask_time; ///< at which time we last time tried asking
+				int m_ask_ttl; ///< at which TTL we last time tried asking
+		};
+
+
+		typedef std::map< c_haship_addr, unique_ptr<c_route_info> > t_route_nexthop_by_dst; ///< routes to destinations: the hash-ip of next hop, by hash-ip of finall destination
+		t_route_nexthop_by_dst m_route_nexthop; ///< known routes: the hash-ip of next hop, indexed by hash-ip of finall destination
+
+
+};
+
+c_haship_addr c_routing_manager::get_route_nexthop(c_haship_addr dst, bool start_search) {
+	_info("ROUTING-MANAGER: find: " << dst);
+	auto found = m_route_nexthop.find( dst );
+	if (found != m_route_nexthop.end()) { // found
+		auto nexthop = found->second->m_nexthop;
+		_info("ROUTING-MANAGER: found: " << nexthop);
+		return nexthop;
+	}
+	throw std::runtime_error("no route known TODO");
+}
+
 
 // ------------------------------------------------------------------
 
@@ -149,7 +195,9 @@ class c_tunserver {
 
 		c_haship_addr parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset); ///< from buffer of TUN-format, with ipv6 bytes at ipv6_offset, extract ipv6 (hip) destination
 		c_haship_addr parse_tun_ip_src_dst(const char *buff, size_t buff_size); ///< the same, but with ipv6_offset that matches our current TUN
+
 		void route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size); ///< push the tunneled data to where they belong
+		void route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_haship_addr next_hip, int recurse_level);  ///< send to/via this hip (that is or isn't our peer)
 
 		void peering_ping_all_peers();
 		void debug_peers();
@@ -163,12 +211,14 @@ class c_tunserver {
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< my peers (we always know their IPv6 - we assume here)
-		t_peers_by_haship m_peer; ///< my peers
+		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
+		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip
 
 		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
 		c_haship_addr m_haship_addr; ///< my haship addres
 		c_peering & find_peer_by_sender_peering_addr( c_ip46_addr ip ) const ;
+
+		c_routing_manager m_routing_manager; ///< the routing engine used for most things
 };
 
 // ------------------------------------------------------------------
@@ -268,7 +318,9 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 
-	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL,NULL); // <--- blocks
+	timeval timeout { 1 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
+
+	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL, & timeout); // <--- blocks
 	_assert(select_result >= 0);
 }
 
@@ -321,32 +373,37 @@ void c_tunserver::debug_peers() {
 	}
 }
 
+void c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size, c_haship_addr next_hip, int recurse_level) {
+	// --- choose next hop in peering ---
+
+	// try direct peers:
+	auto peer_it = m_peer.find(next_hip); // find c_peering to send to
+	if (peer_it == m_peer.end()) { // not a direct peer!
+		if (recurse_level>1) {
+			_warn("DROP: Recruse level too big in choosing peer");
+			return; // <---
+		}
+		c_haship_addr via_hip;
+		try {
+			auto via_hip = m_routing_manager.get_route_nexthop(next_hip , true);
+		} catch(...) { _info("ROUTE MANAGER: can not find route"); }
+		_info("Route found via hip: via_hip = " << via_hip);
+		this->route_tun_data_to_its_destination(method, buff, buff_size, via_hip,  recurse_level+1);
+		_info("Routing seems to succeed");
+	}
+	else { // next_hip is a direct peer, send to it:
+		auto & target_peer = peer_it->second;
+		_info("ROUTE-PEER, selected peerig next hop is: " << (*target_peer) );
+		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+		peer_udp->send_data_udp(buff, buff_size, m_sock_udp); // <--- ***
+	}
+}
+
 void c_tunserver::route_tun_data_to_its_destination(t_route_method method, const char *buff, size_t buff_size) {
 	try {
 		c_haship_addr dst_hip = parse_tun_ip_src_dst(buff, buff_size);
 		_info("Destination HIP:" << dst_hip);
-
-		// next hop in peering
-		auto peer_it = m_peer.find(dst_hip); // find c_peering to send to
-		if (peer_it == m_peer.end()) {
-			if (method==e_route_method_from_me) {
-				_info("ROUTE-PEER: FIRST PEER - can not find, taking first peer");
-				peer_it = m_peer.begin();
-			} else {
-				_info("ROUTE-PEER:  can not find - and I do not want to try harder, giving up.");
-				return;
-			}
-		}
-
-		if (peer_it == m_peer.end()) { // can not find any peer
-			_info("ROUTE-PEER, can not find any peer!");
-		}
-		else {
-			auto & target_peer = peer_it->second;
-			_info("ROUTE-PEER, selected peerig next hop is: " << (*target_peer) );
-			auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
-			peer_udp->send_data_udp(buff, buff_size, m_sock_udp); // <--- ***
-		}
+		this->route_tun_data_to_its_destination(method, buff, buff_size, dst_hip, 0);
 
 	} catch(std::exception &e) {
 		_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
@@ -357,7 +414,7 @@ void c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	for(auto & v : m_peer) { if (v.second->m_peering_addr == ip) return * v.second.get(); }
-	throw std::runtime_error("Can not find the peer with such IP");
+	throw std::runtime_error("We do not know a peer with such IP=" + STR(ip));
 }
 
 
@@ -370,12 +427,22 @@ void c_tunserver::event_loop() {
 
 
 	this->peering_ping_all_peers();
+	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
+	auto ping_all_frequency = std::chrono::seconds( 5 ); // how often to ping them
+
 
 	const int buf_size=65536;
 	char buf[buf_size];
 
 
 	while (1) {
+		auto time_now = std::chrono::steady_clock::now(); // time now
+		if (time_now > ping_all_time_last + ping_all_frequency ) {
+			_note("It's time to ping all peers again");
+			peering_ping_all_peers(); // TODO(r) later ping only peers that need that
+			ping_all_time_last = std::chrono::steady_clock::now();
+		}
+
 		debug_peers();
 
 		{ string xx(10,'-');	std::cerr << endl << xx << " Node " << m_my_name << xx << endl << endl; } // --- print your name ---
@@ -424,9 +491,11 @@ void c_tunserver::event_loop() {
 			_assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
 
+			_info("Command is: " << cmd);
+
 			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
-				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( peer_ip ); // warn: returned value depends on m_peer[], do not invalidate that!!! 
-				_warn(" ********************************************** sender is: " << sender_as_peering);
+				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( peer_ip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
+				_info("We recognize the sender, as: " << sender_as_peering);
 
 				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
@@ -493,7 +562,7 @@ void c_tunserver::event_loop() {
 			// ------------------------------------
 
 		}
-		else _erro("No event selected?!"); // TODO throw
+		else _info("Idle.");
 
 		}
 		catch (std::exception &e) {
@@ -551,10 +620,10 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-	
+
 	// --- define the test world ---
 	map< int , t_peer_cmdline_ref > peer_to_ref; // for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line)
-	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) , 
+	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) ,
 		string("deadbeef999fff") + std::to_string(nr) };	}
 
 	peer_to_ref[1].pubkey = "3992967d946aee767b2ed018a6e1fc394f87bd5bfebd9ea7728edcf421d09471";
@@ -591,8 +660,8 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 		string peerref = peer_ip + "-" + peer_pub;
 		_mark("Developer: adding peerref:" << peerref);
 
-		vector<string> old_peer; 
-		try { 
+		vector<string> old_peer;
+		try {
 			old_peer = argm["peer"].as<vector<string>>();
 			old_peer.push_back(peerref);
 			argm.at("peer") = po::variable_value( old_peer , false );
@@ -690,7 +759,7 @@ int main(int argc, char **argv) {
 			vector<string> peers_cmdline;
 			try { peers_cmdline = argm["peer"].as<vector<string>>(); } catch(...) { }
 			for (const string & peer_ref : peers_cmdline) {
-				myserver.add_peer_simplestring( peer_ref ); 
+				myserver.add_peer_simplestring( peer_ref );
 			}
 		}
 		catch(po::error& e) {

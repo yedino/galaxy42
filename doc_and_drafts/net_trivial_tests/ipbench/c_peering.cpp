@@ -97,7 +97,7 @@ void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_
 }
 
 void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int udp_socket) {
-	_info("UDP send to peer RAW: " << string_as_dbg(data,data_size).get() ); // TODO .get
+	_info("UDP send to peer RAW. To IP: " << m_peering_addr << ", RAW-DATA: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
