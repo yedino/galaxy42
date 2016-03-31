@@ -102,7 +102,7 @@ class c_token : public ijson_serializable {
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value
     c_token (const std::string &packet, serialization method);
-    c_token (const c_token_header &header, const c_contract_header &contract = c_contract_header());
+    c_token (const c_token_header &header, const c_contract_header contract = c_contract_header());
     c_token (c_token_header &&header);
 
     /// serialize token

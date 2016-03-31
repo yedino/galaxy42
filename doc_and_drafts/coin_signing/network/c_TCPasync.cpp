@@ -72,7 +72,7 @@ void c_TCPcommand::get_response(ip::tcp::socket &socket) {
 
     std::string recieved_str(packet_data.get(), packet_size);
     DBG_MTX(m_mtx, "get_response - recieved[" << recieved_str << "]");
-	incoming_box.push(recieved_str);
+    incoming_box.push(std::move(recieved_str));
 }
 
 bool c_TCPcommand::has_message() {
@@ -88,6 +88,19 @@ std::string c_TCPcommand::pop_message() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// TCPasync
+
+
+c_TCPasync::c_TCPasync (unsigned short local_port) :
+                                                     m_local_port(local_port),
+                                                     m_local_socket(m_io_service),
+                                                     m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(), m_local_port)),
+                                                     m_server_socket(m_io_service),
+                                                     m_stop_flag(false) {
+
+    create_server();
+    threads_maker(2);
+}
+
 
 c_TCPasync::c_TCPasync (const std::string &host,
 						unsigned short server_port,
@@ -149,6 +162,10 @@ bool c_TCPasync::connect(std::chrono::seconds wait) {
     return 0;
 }
 
+bool c_TCPasync::is_connected() {
+    return m_server_socket.is_open();	// TODO
+}
+
 void c_TCPasync::add_cmd(c_TCPcommand &cmd) {
 	protocol type = cmd.get_type();
 	auto cmd_it = find_cmd(type);
@@ -207,7 +224,6 @@ void c_TCPasync::create_server() {
 
 void c_TCPasync::server_read(ip::tcp::socket socket) {
     assert(socket.is_open());
-    assert(m_server_socket.is_open());
     boost::system::error_code ec;
     unsigned short prototype_size = sizeof(uint16_t);
 
@@ -228,8 +244,12 @@ void c_TCPasync::server_read(ip::tcp::socket socket) {
 		socket.read_some(buffer(&re, 1), ec);	// request or response msg
 		// DBG_MTX(m_mtx,"req or res: " << re); //dbg
         if (re == 'q') {
-			// DBG_MTX(m_mtx,"server read: get request"); //dbg
-            cmd->get().send_response(m_server_socket);
+            // DBG_MTX(m_mtx,"server read: get request"); //dbg
+            if(connect()) {
+                cmd->get().send_response(m_server_socket);
+            } else {
+                DBG_MTX(m_mtx,"server read: Can't send response: get request, but host is undefined!"); //dbg
+            }
         } else if (re == 's') {
 			// DBG_MTX(m_mtx,"server read - get response"); //dbg
 			cmd->get().get_response(socket);

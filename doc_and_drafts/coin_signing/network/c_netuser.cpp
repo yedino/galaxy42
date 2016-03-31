@@ -1,6 +1,23 @@
 #include "c_netuser.hpp"
+#include <utility>
 
-const unsigned request_type_size = 2;
+c_netuser::c_netuser(const std::string &username,
+                     unsigned short local_port) :
+                                                  c_user(username),
+                                                  m_TCPasync(local_port),
+                                                  m_stop_thread(true),
+                                                  m_thread([this]() { return check_inboxes(); }) {
+    set_commands();
+}
+
+c_netuser::c_netuser(c_user &&user,
+                     unsigned short local_port) :
+                                                  c_user(std::move(user)),
+                                                  m_TCPasync(local_port),
+                                                  m_stop_thread(true),
+                                                  m_thread([this]() { return check_inboxes(); }) {
+    set_commands();
+}
 
 c_netuser::c_netuser(const std::string &username,
                      const std::string &host,
@@ -10,15 +27,7 @@ c_netuser::c_netuser(const std::string &username,
                                                   m_TCPasync(host, server_port, local_port),
                                                   m_stop_thread(true),
                                                   m_thread([this]() { return check_inboxes(); }) {
-
-    std::string pubkey = std::string(reinterpret_cast<const char*>(get_public_key().c_str()),get_public_key().size());
-    m_TCPcommands.reserve(5);
-    m_TCPcommands.push_back(c_TCPcommand(protocol::public_key,pubkey));
-    m_TCPcommands.push_back(c_TCPcommand(protocol::token_send));
-    m_TCPcommands.push_back(c_TCPcommand(protocol::contract));
-    for(auto &cmd : m_TCPcommands) {
-        m_TCPasync.add_cmd(cmd);
-    }
+    set_commands();
 }
 
 c_netuser::c_netuser(c_user &&user,
@@ -29,17 +38,21 @@ c_netuser::c_netuser(c_user &&user,
                                                   m_TCPasync(host, server_port, local_port),
                                                   m_stop_thread(true),
                                                   m_thread([this]() { return check_inboxes(); }) {
-
-    std::string pubkey = std::string(reinterpret_cast<const char*>(get_public_key().c_str()),get_public_key().size());
-    m_TCPcommands.reserve(5);
-    m_TCPcommands.push_back(c_TCPcommand(protocol::public_key,pubkey));
-    m_TCPcommands.push_back(c_TCPcommand(protocol::token_send));
-    m_TCPcommands.push_back(c_TCPcommand(protocol::contract));
-    for(auto &cmd : m_TCPcommands) {
-        m_TCPasync.add_cmd(cmd);
-    }
+    set_commands();
 }
 
+void c_netuser::set_commands () {
+    std::string pubkey = std::string(reinterpret_cast<const char*>(get_public_key().c_str()),get_public_key().size());
+    std::shared_ptr<c_TCPcommand> s_pubkey_cmd(new c_TCPcommand(protocol::public_key,pubkey));
+    std::shared_ptr<c_TCPcommand> s_token_cmd(new c_TCPcommand(protocol::token_send,pubkey));
+    std::shared_ptr<c_TCPcommand> s_contract_cmd(new c_TCPcommand(protocol::contract,pubkey));
+    m_TCPcommands.emplace(std::make_pair(protocol::public_key,s_pubkey_cmd));
+    m_TCPcommands.emplace(std::make_pair(protocol::token_send,s_token_cmd));
+    m_TCPcommands.emplace(std::make_pair(protocol::contract,s_contract_cmd));
+    for (auto &cmd : m_TCPcommands) {
+        m_TCPasync.add_cmd(*cmd.second);
+    }
+}
 void c_netuser::set_target(const std::string &host, unsigned short server_port) {
     m_TCPasync.set_target(host, server_port);
 }
@@ -52,25 +65,25 @@ unsigned short c_netuser::get_local_port() {
     return m_TCPasync.get_local_port();
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////// networking
+////////////////////////////////////////////////////////////////////////////////////////////////////// networking
 
 void c_netuser::send_token_bynet(){
     m_TCPasync.send_cmd_request(protocol::public_key);
 
-    auto &cmd = m_TCPcommands.at(0);
+    auto cmd = m_TCPcommands.find(protocol::contract)->second;
 
     std::string handle;
-    int attempts = 5;
+    int attempts = 10;
     do {
-        if(cmd.has_message()) {
-            handle = cmd.pop_message();
+        if(cmd->has_message()) {
+            handle = cmd->pop_message();
             break;
         } else {
             std::cout << "Attempt: " << attempts << " waiting for response" << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         if(attempts == 0) {
-            throw std::runtime_error("Fail to get handshake response in wait time");
+            throw std::runtime_error("Fail to get response in wait time");
         }
         attempts--;
     } while(true);
@@ -97,7 +110,6 @@ c_netuser::~c_netuser() {
 }
 
 void c_netuser::send_contract() {
-
     boost::system::error_code ec;
     if (m_contracts_to_send.empty()) {
          throw std::logic_error("No contracts to send");
@@ -120,11 +132,11 @@ void c_netuser::check_inboxes () {
 }
 
 void c_netuser::recieve_coin() {
-    auto &cmd = m_TCPcommands.at(1);
+    auto cmd = m_TCPcommands.find(protocol::token_send)->second;
     std::string handle;
-    if(cmd.has_message()) {
+    if(cmd->has_message()) {
         std::cout << "Pop new coin" << std::endl;
-        handle = cmd.pop_message();
+        handle = cmd->pop_message();
         c_token tok(handle, serialization::Json);
         m_wallet.move_token(std::move(tok));
     } else {
@@ -133,12 +145,11 @@ void c_netuser::recieve_coin() {
 }
 
 void c_netuser::recieve_contract() {
-
-    auto &cmd = m_TCPcommands.at(2);
+    auto cmd = m_TCPcommands.find(protocol::contract)->second;
     std::string handle;
-    if(cmd.has_message()) {
+    if(cmd->has_message()) {
         std::cout << "Pop new contract" << std::endl;
-        handle = cmd.pop_message();
+        handle = cmd->pop_message();
         m_signed_contracts.push_back(c_contract(handle));
     } else {
             //std::cout << "No waiting contract" << std::endl;

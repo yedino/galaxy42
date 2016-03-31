@@ -55,8 +55,8 @@ void c_chainsign_element::print(std::ostream &os) const{
 
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN
 
-c_token::c_token (const c_token_header &header, const c_contract_header &contract_header) : m_header(header),
-                                                                                            m_contract_header(contract_header)
+c_token::c_token (const c_token_header &header, const c_contract_header contract_header) : m_header(header),
+                                                                                           m_contract_header(contract_header)
 { }
 
 c_token::c_token (c_token_header &&header) : m_header(std::move(header))
