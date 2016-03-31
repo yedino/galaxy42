@@ -14,9 +14,11 @@ enum class protocol : uint16_t { empty = 0,
 
 class c_TCPcommand {
   public:
-	c_TCPcommand (const protocol cmd_type, const std::string &data = "");
+    c_TCPcommand (const protocol cmd_type, const std::string &data = "");
+    c_TCPcommand (const c_TCPcommand &cmd) = default;
+
 	protocol get_type() const;
-	void set_response(const std::string &data);
+    void set_response(const std::string &data);
 
     void send_request (ip::tcp::socket &socket);
     void send_response (ip::tcp::socket &socket);
@@ -44,9 +46,10 @@ class c_TCPasync {
     /// wait - in seconds for host connection, and setting server target
     bool connect (std::chrono::seconds wait = std::chrono::seconds(30));
     /// add command that will be handled with this TCP connection
-	void add_cmd(c_TCPcommand &cmd);
+    void add_cmd(c_TCPcommand &cmd);
 	/// send request by server_socket. Throw exception for not available protocols
 	void send_cmd_request(protocol type);
+    void send_cmd_response(protocol type, const std::string &packet);
 
     unsigned short get_server_port ();
     unsigned short get_local_port ();

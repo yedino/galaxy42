@@ -2,15 +2,15 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// TCPcommand
 
-c_TCPcommand::c_TCPcommand(const protocol cmd_type, const std::__cxx11::string &data) : m_type(cmd_type),
-																						m_response_data(data)
+c_TCPcommand::c_TCPcommand(const protocol cmd_type, const std::string &data) : m_type(cmd_type),
+                                                                               m_response_data(data)
 { }
 
 protocol c_TCPcommand::get_type() const {
 	return m_type;
 }
 
-void c_TCPcommand::set_response(const std::__cxx11::string &data) {
+void c_TCPcommand::set_response(const std::string &data) {
 	m_response_data = data;
 }
 
@@ -32,9 +32,17 @@ void c_TCPcommand::send_request(ip::tcp::socket &socket) {
 void c_TCPcommand::send_response(ip::tcp::socket &socket) {
 	DBG_MTX(m_mtx, "send_response - protocol[" << (int)m_type << "], data[" << m_response_data << "]");
     assert(socket.is_open());
+
     boost::system::error_code ec;
     unsigned short type_bytes = sizeof(uint16_t);	// size in bytes of protocol tyle
-	unsigned short size_bytes = sizeof(uint64_t);	// size in bytes of packet data size
+
+    if(m_response_data == "") {		// handling non set response data
+        protocol type = protocol::empty;
+        std::size_t bytes_transfered = socket.write_some(boost::asio::buffer(&type, type_bytes),ec);
+        assert(bytes_transfered == type_bytes);
+    }
+
+    unsigned short size_bytes = sizeof(uint64_t);	// size in bytes of packet data size
 	uint64_t packet_size = m_response_data.size();
 
 	std::vector<boost::asio::const_buffer> bufs;
@@ -85,8 +93,8 @@ c_TCPasync::c_TCPasync (const std::string &host,
                         unsigned short local_port) :
                                                      m_local_port(local_port),
                                                      m_local_socket(m_io_service),
-                                                     m_server_socket(m_io_service),
                                                      m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(), m_local_port)),
+                                                     m_server_socket(m_io_service),
                                                      m_stop_flag(false) {
 
     boost::system::error_code ec;
@@ -158,7 +166,11 @@ void c_TCPasync::send_cmd_request(protocol type) {
 	cmd->get().send_request(m_server_socket);
 }
 
-
+void c_TCPasync::send_cmd_response(protocol type, const std::string &packet) {
+    auto cmd = find_cmd(type);
+    cmd->get().set_response(packet);
+    cmd->get().send_response(m_server_socket);
+}
 
 unsigned short c_TCPasync::get_server_port() {
 	unsigned short server_port = m_server_endpoint.port();
@@ -205,17 +217,8 @@ void c_TCPasync::server_read(ip::tcp::socket socket) {
 			DBG_MTX(m_mtx, "discard packet with empty protocol type");
 			break;
 		}
+        auto cmd = find_cmd(type);
 
-        m_mtx.lock();
-        auto cmd = std::find_if(m_available_cmd.begin(),
-                                m_available_cmd.end(),
-                                [type] (const std::reference_wrapper<c_TCPcommand> &i) {
-									if(i.get().get_type() == type) {
-                                        return true;
-                                    }
-                                return false;
-                                });
-        m_mtx.unlock();
         if(cmd == m_available_cmd.end()) {
 			DBG_MTX(m_mtx,"server read: no available cmd found - type[" << static_cast<int>(type) << "]");
             break;
