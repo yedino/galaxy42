@@ -59,8 +59,8 @@ bool test_all(int number_of_threads) {
     run_suite_test(base_tests, user_save_load, 0, pequal);
     run_suite_test(base_tests, netuser_save_load, 0, pequal);
 
-//    // To pass below test. Running ./bitcoind or ./bitccoin-qt on your mashine is required
-//    //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
+    // To pass below test. Running ./bitcoind or ./bitccoin-qt on your mashine is required
+    //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
     run_suite_test(base_tests, json_serialize, 0, pequal);
     run_suite_test(base_tests, token_count, 0, pequal);

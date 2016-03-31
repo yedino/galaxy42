@@ -1,0 +1,11 @@
+Coin_signing
+
+https://github.com/tigusoft-vm/antinet.git, branch [coin_signing]
+after compiling:
+git submodule init
+git submodule update
+
+newest version -- commit 504813fafa8ced89be59a5f8adef2f7ac71ef9d5   
+
+~stable -- commit b42af0c5557239a724c1fc0d817062c58b901b8d
+     with contract sending and cjdns limitation. Working interactive.
