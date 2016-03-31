@@ -80,6 +80,7 @@ bool c_TCPcommand::has_message() {
 }
 
 std::string c_TCPcommand::pop_message() {
+	std::lock_guard<std::recursive_mutex> lg(incoming_box.get_mutex());
 	if (!has_message()) {
 		throw std::logic_error("No messages to pop");
 	}
