@@ -190,8 +190,10 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 		c_haship_addr get_route_nexthop(c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search=true);
 };
 
-std::ostream & operator<<(std::ostream & ostr, std::chrono::steady_clock::time_point) {
-	return ostr << "(chrono TODO)"; // TODO(u)
+std::ostream & operator<<(std::ostream & ostr, std::chrono::steady_clock::time_point tp) {
+	using namespace std::chrono;
+	steady_clock::duration dtn = tp.time_since_epoch();
+	return ostr << duration_cast<seconds>(dtn).count();
 }
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::t_search_mode & obj) {
