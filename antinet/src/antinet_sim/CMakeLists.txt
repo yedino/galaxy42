@@ -17,11 +17,18 @@ ADD_CUSTOM_TARGET(release
 if(CMAKE_BUILD_TYPE STREQUAL "debug")
 	message("Debug build")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 -Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-variable")
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
+	endif()
+
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
 	message("Release build")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -pedantic -DNDEBUG")
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
+	endif()
 endif()
 
 file(GLOB SOURCE_FILES "*.cpp" # All files in directory:
