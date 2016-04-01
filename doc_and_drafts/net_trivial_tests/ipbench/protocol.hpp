@@ -30,6 +30,8 @@ typedef enum {
 	e_proto_cmd_public_hi = 3, // simple public peering
 	e_proto_cmd_public_ping_request = 4, // simple public ping to the peer
 	e_proto_cmd_public_ping_reply = 5, // simple public ping to the peer
+	e_proto_cmd_findhip_query = 10, // searching HIP - query
+	e_proto_cmd_findhip_reply = 11, // searching HIP - reply
 } t_proto_cmd ;
 
 

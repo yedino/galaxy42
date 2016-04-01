@@ -41,6 +41,11 @@ struct string_as_bin {
 	{
 		static_assert( std::is_pod<T>::value , "Can not serialize as binary data (this array type, of) this non-POD object type");
 	}
+	
+	string_as_bin & operator+=( const string_as_bin & other );
+	string_as_bin operator+( const string_as_bin & other ) const;
+	string_as_bin & operator+=( const std::string & other );
+	string_as_bin operator+( const std::string & other ) const;
 };
 
 

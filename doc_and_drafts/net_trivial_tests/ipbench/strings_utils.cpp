@@ -99,6 +99,26 @@ try {
 } catch(std::exception &e) { _erro("Failed to parse string [" << encoded.data <<"]"); throw ; }
 }
 
+string_as_bin & string_as_bin::operator+=( const string_as_bin & other ) {
+	bytes += other.bytes;
+	return *this;
+}
+string_as_bin string_as_bin::operator+( const string_as_bin & other ) const {
+	string_as_bin ret = *this;
+	ret.bytes += other.bytes;
+	return ret;
+}
+
+string_as_bin & string_as_bin::operator+=( const std::string & other ) {
+	bytes += other;
+	return *this;
+}
+string_as_bin string_as_bin::operator+( const std::string & other ) const { 
+	string_as_bin ret = *this;
+	ret += other;
+	return ret;
+}
+
 // ==================================================================
 
 string_as_dbg::string_as_dbg(const string_as_bin & bin)

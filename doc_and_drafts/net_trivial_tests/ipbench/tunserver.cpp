@@ -125,6 +125,19 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 
 // ------------------------------------------------------------------
 
+/***
+  @brief interface for object that can act as p2p node
+*/
+class c_galaxy_node {
+	public:
+		c_galaxy_node()=default;
+		virtual ~c_galaxy_node()=default;
+
+		virtual void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data)=0;
+};
+
+// ------------------------------------------------------------------
+
 class c_routing_manager { ///< holds nowledge about routes, and searches for new ones
 	public: // make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
 		enum t_route_state { e_route_state_found, e_route_state_dead };
@@ -169,13 +182,20 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				c_haship_addr m_addr; ///< goal of search: dst address
 				bool m_ever; ///< was this ever actually searched yet
 				t_route_time m_ask_time; ///< at which time we last time tried asking
-				int m_ask_ttl; ///< at which TTL we last time tried asking
+
+				int m_ask_ttl; ///< at which TTL we actually last time tried asking
+				int m_highest_ttl; ///< at which TTL we want to search, looking at our requests
+				// TODO(r)
+				// guy ttl=4 --> ttl3 --> ttl2 --> ttl1 *MYSELF*, highest_ttl=1, when we execute then: send ttl=0, set ask_ttl=0
+				// ... meanwhile ...
+				//                    guy ttl4 --> ttl3 *MYSELF*, highest_ttl=3(!!!), when we execute then: send ttl=2 (when timeout!) then ask_ttl=2
 
 				map< c_route_reason , c_route_reason_detail > m_request; ///< information about all other people who are asking about this address
 
 				c_route_search(c_haship_addr addr);
 
-				void add_request(c_routing_manager::c_route_reason reason); ///< add info that this gy also wants to be informed about the path
+				void add_request(c_routing_manager::c_route_reason reason); ///< add info that this guy also wants to be informed about the path
+				void execute( c_galaxy_node & galaxy_node );
 		};
 
 		// searches:
@@ -187,7 +207,7 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 		t_route_nexthop_by_dst m_route_nexthop; ///< known routes: the hash-ip of next hop, indexed by hash-ip of finall destination
 
 	public:
-		c_haship_addr get_route_nexthop(c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search=true);
+		c_haship_addr get_route_nexthop(c_galaxy_node & galaxy_node , c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search=true);
 };
 
 std::ostream & operator<<(std::ostream & ostr, std::chrono::steady_clock::time_point tp) {
@@ -265,7 +285,7 @@ c_routing_manager::c_route_search::c_route_search(c_haship_addr addr)
 	_info("NEW router SEARCH: " << (*this));
 }
 
-c_haship_addr c_routing_manager::get_route_nexthop(c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search) {
+c_haship_addr c_routing_manager::get_route_nexthop(c_galaxy_node & galaxy_node, c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search) {
 	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
 	auto found = m_route_nexthop.find( dst );
 	if (found != m_route_nexthop.end()) { // found
@@ -291,15 +311,33 @@ c_haship_addr c_routing_manager::get_route_nexthop(c_haship_addr dst, c_routing_
 				_info("STARTED (updated) an existing SEARCH for this route to dst="<<dst);
 				search_iter->second->add_request( reason ); // add reason
 			}
+			auto & search_obj = search_iter->second; // search exists now (new or updated)
+			search_obj->execute( galaxy_node ); // ***
 		}
 	}
 	throw std::runtime_error("no route known (yet) to dst=" + STR(dst));
 }
 
+void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) {
+	string_as_bin data; // [protocol] for search query
+	data += string_as_bin(m_addr);
+	data += string(";");
+
+	unsigned char byte_highest_ttl = m_highest_ttl; assert( m_highest_ttl == byte_highest_ttl ); // TODO(r) asserted narrowing
+	data += string(1, static_cast<char>(byte_highest_ttl) );
+	data += string(";");
+
+	galaxy_node.nodep2p_foreach_cmd( c_protocol::e_proto_cmd_findhip_query , data );
+
+	m_ask_ttl = byte_highest_ttl;   
+	m_ask_time = std::chrono::steady_clock::now();
+}
+
+
 
 // ------------------------------------------------------------------
 
-class c_tunserver {
+class c_tunserver : public c_galaxy_node {
 	public:
 		c_tunserver();
 		void configure_mykey_from_string(const std::string &mypub, const std::string &mypriv);
@@ -315,6 +353,8 @@ class c_tunserver {
 			e_route_method_if_direct_peer=2, ///< Send data only if if I know the direct peer (e.g. I just route it for someone else - in star protocol the center node)
 			e_route_method_default=3, ///< The default routing method
 		} t_route_method;
+
+		void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) override;
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -498,6 +538,16 @@ void c_tunserver::peering_ping_all_peers() {
 	}
 }
 
+void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
+	_info("Sending a COMMAND to peers:");
+	size_t count_used=0; ///< peers that we used
+	for(auto & v : m_peer) { // to each peer
+		auto & target_peer = v.second;
+		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+		peer_udp->send_data_udp_cmd(cmd, data, m_sock_udp);
+	}
+}
+
 void c_tunserver::debug_peers() {
 	_note("=== Debug peers ===");
 	for(auto & v : m_peer) { // to each peer
@@ -523,7 +573,7 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 		c_haship_addr via_hip;
 		try {
 			_info("Trying to find a via_hip");
-			auto via_hip = m_routing_manager.get_route_nexthop(next_hip , reason , true);
+			auto via_hip = m_routing_manager.get_route_nexthop(*this, next_hip , reason , true);
 		} catch(...) { _info("ROUTE MANAGER: can not find route at all"); return false; }
 		_info("Route found via hip: via_hip = " << via_hip);
 		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, reason,  via_hip, recurse_level+1);
