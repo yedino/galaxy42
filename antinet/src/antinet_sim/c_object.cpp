@@ -9,7 +9,13 @@
 
 #include "use_opengl.hpp"
 
-c_object::c_object (string name) : m_name(name), m_animframe(0) { }
+c_object::c_object (string name)
+:
+	s_font_allegl(nullptr),
+	m_name(name),
+	m_animframe(0)
+{
+}
 
 void c_object::tick () { }
 
