@@ -1,5 +1,5 @@
 #ifndef C_logical_hpp
-#define C_lohical_hpp
+#define C_logical_hpp
 
 #include "libs1.hpp"
 

@@ -98,6 +98,10 @@ unsigned int c_osi2_switch::get_cost() {
 	return m_connect_cost;
 }
 
+void c_osi2_switch::print(std::ostream &oss) const {
+	print(oss, 0);
+}
+
 
 void c_osi2_switch::print(std::ostream &os, int level) const
 {
@@ -139,7 +143,7 @@ c_world &c_osi2_switch::get_world() const
 
 std::ostream & operator<<(std::ostream &os, const c_osi2_switch &obj)
 {
-	obj.print(os);
+	obj.print(os, 0);
 	return os;
 }
 
