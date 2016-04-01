@@ -21,7 +21,12 @@ string t_drawtarget_type_to_string( t_drawtarget_type x) { ///< name of the enum
 
 // ==================================================================
 
-c_drawtarget::c_drawtarget (t_drawtarget_type p_drawtarget_type) : m_drawtarget_type(p_drawtarget_type) {
+c_drawtarget::c_drawtarget (t_drawtarget_type p_drawtarget_type)
+:
+	m_drawtarget_type(p_drawtarget_type),
+	m_gui(nullptr),
+	m_layer()
+{
 }
 
 // ==================================================================

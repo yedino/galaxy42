@@ -1,6 +1,11 @@
 #include "c_geometry.hpp"
 
-t_geo_point::t_geo_point () { }
+t_geo_point::t_geo_point ()
+:
+	x(),
+	y()
+{
+}
 
 t_geo_point::t_geo_point (t_geo_r p_x, t_geo_r p_y) : x(p_x), y(p_y) { }
 

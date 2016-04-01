@@ -26,6 +26,7 @@ class c_osi2_nic;
 class c_file_loader;
 
 struct t_osi2_route_result {
+		t_osi2_route_result();
 		bool valid; ///< all the data is valid. else, data is not valid (route can not be found)
 		
 		// only if m_valid==1 then you can use this fields:

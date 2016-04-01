@@ -4,6 +4,17 @@
 #include "c_file_loader.hpp"
 #include "c_dijkstry.hpp"
 
+t_osi2_route_result::t_osi2_route_result()
+:
+	valid(),
+	first_hop_nic_ix(),
+	target_nic_ix(),
+	cost(),
+	hops_uuid()
+{
+}
+
+
 long int c_world::s_nr = 0;
 
 c_world::c_world(c_simulation &s)

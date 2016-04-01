@@ -1,5 +1,12 @@
 #include "c_market.hpp"
 
+c_market::c_offer::c_offer()
+:
+	all_offers_amount(t_amount()),
+	values()
+{
+}
+
 void c_market::c_offer::print () {
 	for (auto &it : values)
 		cout << it.first << ' ' << it.second << '\n';
@@ -59,6 +66,15 @@ void c_market::print () {
 	}
 	cout << "---------------------------------------------\n";
 }
+
+c_market::c_market()
+:
+	buy_offers(),
+	sell_offers(),
+	last_price(t_price() - 1)
+{
+}
+
 
 return_info c_market::buy (const t_trader &trader, t_price price, t_amount amount) {
 	last_price = price;

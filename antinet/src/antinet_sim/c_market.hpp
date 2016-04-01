@@ -44,9 +44,9 @@ struct return_info {
 class c_market {
 private:
 	struct c_offer {
-		t_amount all_offers_amount;
+		c_offer ();
 
-		c_offer () : all_offers_amount(t_amount()) { }
+		t_amount all_offers_amount;
 
 		unordered_map<t_trader, t_amount> values;
 
@@ -66,7 +66,7 @@ private:
 	t_price last_price;
 
 public:
-	c_market () : last_price(t_price() - 1) { }
+	c_market ();// : last_price(t_price() - 1) { }
 
 	return_info buy (const t_trader &, t_price, t_amount);
 

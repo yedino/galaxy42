@@ -84,9 +84,9 @@ struct msg { // a general message. e.g.: a direct message, something that is sen
 */
 struct msgcjd : public msg { // a message targetted at cjdns node
 	virtual ~msgcjd () = default;
-	msgcjd() = default;
+	msgcjd();
 public:
-	unsigned int m_ttl = 100; // time to live
+	unsigned int m_ttl; // time to live
 	t_cjdaddr m_to, m_from;
 	t_msgkind m_logic;
 	t_cjdaddr m_destination;

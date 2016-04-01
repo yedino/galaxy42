@@ -87,6 +87,7 @@ public:
 
 	c_layer_allegro (t_layer_nr layer_nr, BITMAP *frame);
 
+	// TODO check this in doxygen
 	/** default copy is safe because m_frame is only observer pointer */
 	c_layer_allegro(const c_layer_allegro &) = default;
 	c_layer_allegro& operator=(const c_layer_allegro &) = default;
