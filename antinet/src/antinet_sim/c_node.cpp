@@ -4,7 +4,15 @@ long int c_osi2_switch::s_nr = 0;
 
 
 c_osi2_switch::c_osi2_switch(c_world &world, const string &name, t_pos x, t_pos y)
-  : c_entity(name, x, y), m_nr( s_nr ++ ), m_world(world), m_type(e_switch)
+:
+	c_entity(name, x, y),
+	m_nr( s_nr ++ ),
+	m_world(world),
+	m_nic(),
+	m_draw_outbox(),
+	m_outbox(),
+	m_inbox(),
+	m_type(e_switch)
 {
 	
 }

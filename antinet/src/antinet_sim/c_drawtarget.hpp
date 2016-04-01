@@ -86,8 +86,10 @@ public:
 	BITMAP *const m_frame; ///< pointer-only, owned by someone else. usually a pointer to the frame
 
 	c_layer_allegro (t_layer_nr layer_nr, BITMAP *frame);
-	c_layer_allegro(const c_layer_allegro &) = delete;
-	c_layer_allegro& operator=(const c_layer_allegro &) = delete;
+
+	/** default copy is safe because m_frame is only observer pointer */
+	c_layer_allegro(const c_layer_allegro &) = default;
+	c_layer_allegro& operator=(const c_layer_allegro &) = default;
 };
 
 

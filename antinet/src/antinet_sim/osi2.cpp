@@ -75,10 +75,14 @@ c_osi2_nic &c_osi2_cable_direct::get_other_end(const c_osi2_nic &other_then_me)
 long int c_osi2_nic::s_nr = 0;
 
 c_osi2_nic::c_osi2_nic(c_osi2_switch &my_switch)
-  :	m_nr( s_nr++ ), m_switch(my_switch)
+:
+	m_nr( s_nr++ ),
+	m_switch(my_switch),
+	m_osi3_uuid(my_switch.get_world().generate_osi3_uuid()),
+	m_plug(nullptr),
+	m_outbox(),
+	m_net_bussy()
 {
-	m_osi3_uuid = my_switch.get_world().generate_osi3_uuid();
-	
 }
 
 void c_osi2_nic::plug_in_cable(c_osi2_cable_direct &cable)

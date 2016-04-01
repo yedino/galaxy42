@@ -3,7 +3,11 @@
 c_dijkstry01::c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B) :
 	m_route_ok(false),
 	m_start(A),
-	m_target(B)
+	m_target(B),
+	m_map_ofRoute(),
+	m_map_it(),
+	m_nodes_routed(),
+	m_last_routeList()
 {
 	find_route();
 	print_all();
@@ -13,7 +17,11 @@ c_dijkstry01::c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B) :
 c_dijkstry01::c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B, c_world &world) :
 	m_route_ok(false),
 	m_start(A),
-	m_target(B)
+	m_target(B),
+	m_map_ofRoute(),
+	m_map_it(),
+	m_nodes_routed(),
+	m_last_routeList()
 {
 	find_route();
 	print_name_route(world);
