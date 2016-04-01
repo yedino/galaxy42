@@ -1,8 +1,16 @@
 #include "c_gui.hpp"
 
 c_gui::c_gui() :
-		m_target_ok(false),
-		m_source_ok(false) {
+	m_selected_object(),
+	m_target_ok(false),
+	m_source_ok(false),
+	m_target_node(),
+	m_source_node(),
+	camera_x(0),
+	camera_y(0),
+	camera_z(20),
+	camera_zoom(1.0)
+{
 	move_to_home();
 }
 

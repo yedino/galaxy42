@@ -1,5 +1,24 @@
 #include"c_dijkstry.hpp"
 
+c_dijkstry01::c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B) :
+	m_route_ok(false),
+	m_start(A),
+	m_target(B)
+{
+	find_route();
+	print_all();
+	print_uuid_route();
+}
+
+c_dijkstry01::c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B, c_world &world) :
+	m_route_ok(false),
+	m_start(A),
+	m_target(B)
+{
+	find_route();
+	print_name_route(world);
+	print_uuid_route();
+}
 
 void c_dijkstry01::find_route() {
 	m_nodes_routed.insert(getID(m_start));

@@ -14,10 +14,12 @@ public:
 	bool m_goodbye; ///< should we exit the program
 	unsigned long int m_frame_number; ///< current frame of animation
 	unique_ptr<c_world> m_world; ///< all the objects in this world
+    std::shared_ptr <FONT> s_font_allegl;
 
 	c_simulation(t_drawtarget_type drawtarget_type); ///< create the simulation. choose the drawtarget type (drawing engine e.g. Allegro or OpenGL)
 //c_simulation(); // t_drawtarget_type drawtarget_type); ///< create the simulation. choose the drawtarget type (drawing engine e.g. Allegro or OpenGL)
-    std::shared_ptr <FONT> s_font_allegl;
+	c_simulation(const c_simulation &) = delete;
+	c_simulation& operator=(const c_simulation &) = delete;
 	virtual ~c_simulation ();
 
 	void init ();

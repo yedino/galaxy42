@@ -9,22 +9,8 @@
 
 class c_dijkstry01 {
   public:
-	c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B) :
-			m_route_ok(false),
-			m_start(A),
-			m_target(B) {
-		find_route();
-		print_all();
-		print_uuid_route();
-	}
-	c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B, c_world &world) :
-			m_route_ok(false),
-			m_start(A),
-			m_target(B) {
-		find_route();
-		print_name_route(world);
-		print_uuid_route();
-	}
+	c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B);
+	c_dijkstry01(c_osi2_switch &A,c_osi2_switch &B, c_world &world);
 	void find_route();
 	std::list<t_osi3_uuid>& get_last_routeList();
 	t_osi3_uuid get_next_uuid();
