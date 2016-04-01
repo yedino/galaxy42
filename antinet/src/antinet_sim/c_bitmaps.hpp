@@ -3,6 +3,9 @@
 
 #include "libs1.hpp"
 
+/**
+ * singleton
+ */
 class c_bitmaps {
 public:
 	static c_bitmaps &get_instance ();

@@ -11,7 +11,14 @@
 
 
 
-msgcjd::msgcjd (const t_msgkind &logic) : m_logic(logic), m_ID(std::rand()) // TODO
+msgcjd::msgcjd (const t_msgkind &logic)
+:
+	m_ttl(100),
+	m_to(),
+	m_from(),
+	m_logic(logic),
+	m_destination(),
+	m_ID(std::rand()) // TODO
 {
 }
 
@@ -20,11 +27,21 @@ msg_ping_request::msg_ping_request () : msgcjd (e_msgkind_ping_request) {
 }
 
 
-msg_dht_hello::msg_dht_hello():msgcjd(e_msgkind_dht_hello) {
-
+msg_dht_hello::msg_dht_hello()
+:
+	msgcjd(e_msgkind_dht_hello),
+	m_direction(),
+	m_target_dht_address(),
+	m_home_dht_address(),
+	m_known_nodes()
+{
 }
 
-msg_ping_response::msg_ping_response () : msgcjd (e_msgkind_ping_response) {
+msg_ping_response::msg_ping_response ()
+:
+	msgcjd (e_msgkind_ping_response),
+	m_ping_time()
+{
 }
 
 msg_buy::msg_buy (const t_msgkind &logic) : msgcjd(logic) {
@@ -33,10 +50,19 @@ msg_buy::msg_buy (const t_msgkind &logic) : msgcjd(logic) {
 msg_buy_inq::msg_buy_inq () : msg_buy(e_msgkind_buy_net_inq) {
 }
 
-msg_buy_menu::msg_buy_menu () : msg_buy(e_msgkind_buy_net_menu) {
+msg_buy_menu::msg_buy_menu ()
+:
+	msg_buy(e_msgkind_buy_net_menu),
+	m_my_price()
+{
 }
 
-msg_buy_buying::msg_buy_buying () : msg_buy(e_msgkind_buy_net_buying) {
+msg_buy_buying::msg_buy_buying ()
+:
+	msg_buy(e_msgkind_buy_net_buying),
+	my_pick(),
+	amount()
+{
 }
 
 msg_buy_agreed::msg_buy_agreed () : msg_buy(e_msgkind_buy_net_agreed) {
@@ -45,10 +71,22 @@ msg_buy_agreed::msg_buy_agreed () : msg_buy(e_msgkind_buy_net_agreed) {
 msg_buy_final::msg_buy_final () : msg_buy(e_msgkind_buy_net_final) {
 }
 
-msg_buy_currency_inq::msg_buy_currency_inq() : msg_buy(e_msgkind_buy_currency) {
+msg_buy_currency_inq::msg_buy_currency_inq()
+:
+	msg_buy(e_msgkind_buy_currency),
+	bid_currency(),
+	ask_currency(),
+	number_of_bid_currency()
+{
 }
 
-msg_use::msg_use () : msgcjd(e_msgkind_data) {
+msg_use::msg_use ()
+:
+	msgcjd(e_msgkind_data),
+	m_type(),
+	m_data(),
+	m_payment()
+{
 }
 
 msg_use_ftp::msg_use_ftp () {

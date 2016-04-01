@@ -7,10 +7,14 @@
 long int c_world::s_nr = 0;
 
 c_world::c_world(c_simulation &s)
-    : m_nr( s_nr++ ),
-      m_simulation(s)
+:
+	m_cable_direct(),
+	m_nr( s_nr++ ),
+	m_uuid_generator(),
+	m_simulation(s),
+	m_objects(),
+	m_simclock()
 {
-	
 }
 
 bool c_world::get_is_pause()

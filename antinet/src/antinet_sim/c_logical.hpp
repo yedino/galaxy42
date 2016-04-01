@@ -6,6 +6,7 @@
 class c_logical { 
 	public:
 		virtual void tick()=0;
+		virtual ~c_logical() = default;
 };
 
 

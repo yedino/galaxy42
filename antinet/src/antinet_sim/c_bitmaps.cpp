@@ -19,7 +19,25 @@ void c_bitmaps::deinit () {
 }
 
 
-c_bitmaps::c_bitmaps () { }
+c_bitmaps::c_bitmaps ()
+:
+	m_background(nullptr),
+	m_node(nullptr),
+	m_package_green(nullptr),
+	m_package_blue(nullptr),
+	m_package_red(nullptr),
+	m_package_white(nullptr),
+	m_bitmap_font1(nullptr),
+	m_background_opengl(),
+	m_node_opengl(),
+	m_pack_green_opengl(),
+	m_pack_blue_opengl(),
+	m_pack_red_opengl(),
+	m_pack_white_opengl(),
+	m_bitmap_font1_opengl(),
+	m_path_to_data()
+{
+}
 
 c_bitmaps::~c_bitmaps () {
 	destroy_bitmap(m_background);
