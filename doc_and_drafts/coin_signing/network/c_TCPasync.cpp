@@ -25,7 +25,7 @@ void c_TCPcommand::send_request(ip::tcp::socket &socket) {
 	bufs.push_back(boost::asio::buffer("q",1));
 
 	std::size_t bytes_transfered = socket.write_some(bufs,ec);
-	// DBG_MTX(m_mtx,"transfered: " << bytes_transfered << " =?= " << type_bytes << "+" << 1); //dbg
+    DBG_MTX(m_mtx,"transfered: " << bytes_transfered << " =?= " << type_bytes << "+" << 1); //dbg
 	assert(bytes_transfered == (type_bytes+1));
 }
 
@@ -52,7 +52,7 @@ void c_TCPcommand::send_response(ip::tcp::socket &socket) {
 	bufs.push_back(boost::asio::buffer(m_response_data, packet_size));
 
 	std::size_t bytes_transfered = socket.write_some(bufs,ec);
-	// DBG_MTX(m_mtx,"transfered: " << bytes_transfered << " =?= " << type_bytes << "+" << 1 << "+" << size_bytes << "+" << packet_size); //dbg
+    DBG_MTX(m_mtx,"transfered: " << bytes_transfered << " =?= " << type_bytes << "+" << 1 << "+" << size_bytes << "+" << packet_size); //dbg
 	assert(bytes_transfered == (type_bytes+size_bytes+packet_size+1));
 }
 
@@ -82,7 +82,7 @@ bool c_TCPcommand::has_message() {
 std::string c_TCPcommand::pop_message() {
 	std::lock_guard<std::recursive_mutex> lg(incoming_box.get_mutex());
 	if (!has_message()) {
-		throw std::logic_error("No messages to pop");
+        throw std::logic_error("No message to pop");
 	}
 	return incoming_box.pop();
 }
@@ -146,7 +146,7 @@ bool c_TCPasync::connect(std::chrono::seconds wait) {
 
     int attempts = 5;
     do {
-        m_server_socket.connect(m_server_endpoint, ec);
+        m_local_socket.connect(m_server_endpoint, ec);
         std::this_thread::sleep_for(wait/5);
         if(ec) {
             DBG_MTX(m_mtx, "attempt " << attempts << " fail to connect");
@@ -173,7 +173,7 @@ void c_TCPasync::add_cmd(c_TCPcommand &cmd) {
         DBG_MTX(m_mtx, "push_back [" << static_cast<int>(cmd.get_type()) << "] cmd");
 		m_available_cmd.push_back(std::ref(cmd));
 	} else {
-		DBG_MTX(m_mtx, "can't add cmd[" << static_cast<int>(type) << " that already is available");
+        DBG_MTX(m_mtx, "can't add cmd[" << static_cast<int>(type) << "] that already is available");
 	}
 }
 
@@ -182,13 +182,13 @@ void c_TCPasync::send_cmd_request(protocol type) {
 	if(cmd == m_available_cmd.end()) {
 		throw std::invalid_argument("Protocol not allowed/added in this connection");
 	};
-	cmd->get().send_request(m_server_socket);
+    cmd->get().send_request(m_local_socket);
 }
 
 void c_TCPasync::send_cmd_response(protocol type, const std::string &packet) {
     auto cmd = find_cmd(type);
     cmd->get().set_response(packet);
-    cmd->get().send_response(m_server_socket);
+    cmd->get().send_response(m_local_socket);
 }
 
 unsigned short c_TCPasync::get_server_port() {
@@ -224,23 +224,23 @@ void c_TCPasync::create_server() {
                             });
 }
 
-void c_TCPasync::server_read(ip::tcp::socket &&socket_) {
-    assert(socket_.is_open());
+void c_TCPasync::server_read(ip::tcp::socket &&socket) {
+    assert(socket.is_open());
     boost::system::error_code ec;
     unsigned short prototype_size = sizeof(uint16_t);
 
-    ip::tcp::socket socket(std::move(socket_));
+    //ip::tcp::socket socket(std::move(socket_));
 
     while (!ec && !m_stop_flag) {
         assert(socket.is_open());
         protocol type = protocol::empty;
-		socket.read_some(buffer(&type, prototype_size), ec);
+        DBG_MTX(m_mtx, "wait for data to read some");
+        socket.read_some(buffer(&type, prototype_size), ec);
 		if(type == protocol::empty) {
 			DBG_MTX(m_mtx, "discard packet with empty protocol type");
 			break;
 		}
         auto cmd = find_cmd(type);
-
         if(cmd == m_available_cmd.end()) {
 			DBG_MTX(m_mtx,"server read: no available cmd found - type[" << static_cast<int>(type) << "]");
             break;
@@ -249,11 +249,11 @@ void c_TCPasync::server_read(ip::tcp::socket &&socket_) {
 		socket.read_some(buffer(&re, 1), ec);	// request or response msg
          DBG_MTX(m_mtx,"req or res: " << re); //dbg
         if (re == 'q') {
-             DBG_MTX(m_mtx,"server read: get request"); //dbg
-                cmd->get().send_response(socket);
+            DBG_MTX(m_mtx,"server read: get request"); //dbg
+            cmd->get().send_response(socket);
         } else if (re == 's') {
-             DBG_MTX(m_mtx,"server read - get response"); //dbg
-			cmd->get().get_response(socket);
+            DBG_MTX(m_mtx,"server read - get response"); //dbg
+            cmd->get().get_response(socket);
         }
     }
     socket.close();

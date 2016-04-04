@@ -138,11 +138,11 @@ void run_interactive_protocol() {
     std::string help = "help info:\n";
                 help += "emit - emit new token\n";
                 help += "send - send token to target\n";
-                help += "status - print status info\n";
-                help += "save - save user status (default in user.dat)\n";
+                help += "status - print status\n";
+                help += "save - save user status (defaultly in user.dat)\n";
                 help += "load - load your last saved user status\n"
                         "       attention, you could lost this session changes\n";
-                help += "target - setting new terget address and server port\n";
+                help += "target - set new terget address and server port\n";
                 help += "quit - for close\n";
     std::cout << "for help type <help>" << std::endl;
 
@@ -180,7 +180,7 @@ void run_interactive_protocol() {
                      break;
             case  7:
                      if(!set_interactive_target(target_address,target_port)) {
-                         std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
+                         std::cout << "Failed to set correct target, try again" << std::endl;
                      }
                      A.set_target(target_address,target_port);
                      break;
@@ -233,7 +233,7 @@ int main (int argc, char *argv[]) {
                 number_of_threads = atoi( number_of_threads_str.c_str() );
             }
             if (number_of_threads <= 0) {
-                std::cout << "you define incorrect number of theards" << std::endl;
+                std::cout << "you provided incorrect number of theards" << std::endl;
                 correct_threads_num = false;
             }
             if (!correct_threads_num) {

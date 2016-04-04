@@ -78,7 +78,7 @@ void c_netuser::send_token_bynet(){
     auto cmd = cmd_it->second;
 
     std::string handle;
-    int attempts = 10;
+    int attempts = 20;
     do {
         if(cmd->has_message()) {
             handle = cmd->pop_message();
