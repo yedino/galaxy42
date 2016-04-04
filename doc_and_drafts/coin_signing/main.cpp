@@ -182,7 +182,7 @@ void run_interactive_protocol() {
                      if(!set_interactive_target(target_address,target_port)) {
                          std::cout << "Failed to set correct target, try again" << std::endl;
                      }
-                     A.set_target(target_address,target_port);
+                     A.connect(target_address,target_port);
                      break;
             case -1:
                      std::cout << "bad command -- try again" << std::endl;

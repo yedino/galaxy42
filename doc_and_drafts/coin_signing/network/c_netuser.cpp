@@ -5,7 +5,7 @@ c_netuser::c_netuser(const std::string &username,
                      unsigned short local_port) :
                                                   c_user(username),
                                                   m_TCPasync(local_port),
-                                                  m_stop_thread(true),
+                                                  m_stop_thread(false),
                                                   m_thread([this]() { return check_inboxes(); }) {
     set_commands();
 }
@@ -14,7 +14,7 @@ c_netuser::c_netuser(c_user &&user,
                      unsigned short local_port) :
                                                   c_user(std::move(user)),
                                                   m_TCPasync(local_port),
-                                                  m_stop_thread(true),
+                                                  m_stop_thread(false),
                                                   m_thread([this]() { return check_inboxes(); }) {
     set_commands();
 }
@@ -25,7 +25,7 @@ c_netuser::c_netuser(const std::string &username,
                      unsigned short local_port) :
                                                   c_user(username),
                                                   m_TCPasync(host, server_port, local_port),
-                                                  m_stop_thread(true),
+                                                  m_stop_thread(false),
                                                   m_thread([this]() { return check_inboxes(); }) {
     set_commands();
 }
@@ -36,41 +36,41 @@ c_netuser::c_netuser(c_user &&user,
                      unsigned short local_port) :
                                                   c_user(std::move(user)),
                                                   m_TCPasync(host, server_port, local_port),
-                                                  m_stop_thread(true),
+                                                  m_stop_thread(false),
                                                   m_thread([this]() { return check_inboxes(); }) {
     set_commands();
 }
 
 void c_netuser::set_commands () {
     std::string pubkey = std::string(reinterpret_cast<const char*>(get_public_key().c_str()),get_public_key().size());
-    std::shared_ptr<c_TCPcommand> s_pubkey_cmd(new c_TCPcommand(protocol::public_key,pubkey));
-    std::shared_ptr<c_TCPcommand> s_token_cmd(new c_TCPcommand(protocol::token_send,pubkey));
-    std::shared_ptr<c_TCPcommand> s_contract_cmd(new c_TCPcommand(protocol::contract,pubkey));
-    m_TCPcommands.emplace(std::make_pair(protocol::public_key,s_pubkey_cmd));
-    m_TCPcommands.emplace(std::make_pair(protocol::token_send,s_token_cmd));
-    m_TCPcommands.emplace(std::make_pair(protocol::contract,s_contract_cmd));
+    std::shared_ptr<c_TCPcommand> s_pubkey_cmd(new c_TCPcommand(packet_type::public_key,pubkey));
+    std::shared_ptr<c_TCPcommand> s_token_cmd(new c_TCPcommand(packet_type::token_send,pubkey));
+    std::shared_ptr<c_TCPcommand> s_contract_cmd(new c_TCPcommand(packet_type::contract,pubkey));
+    m_TCPcommands.emplace(std::make_pair(packet_type::public_key,s_pubkey_cmd));
+    m_TCPcommands.emplace(std::make_pair(packet_type::token_send,s_token_cmd));
+    m_TCPcommands.emplace(std::make_pair(packet_type::contract,s_contract_cmd));
     for (auto &cmd : m_TCPcommands) {
         m_TCPasync.add_cmd(*cmd.second);
     }
 }
-void c_netuser::set_target(const std::string &host, unsigned short server_port) {
-    m_TCPasync.set_target(host, server_port);
+void c_netuser::connect(const std::string &host, unsigned short server_port) {
+    m_TCPasync.connect(host, server_port);
 }
 
-unsigned short c_netuser::get_server_port() {
-    return m_TCPasync.get_server_port();
-}
+//unsigned short c_netuser::get_server_port() {
+//    return m_TCPasync.get_server_port();
+//}
 
-unsigned short c_netuser::get_local_port() {
-    return m_TCPasync.get_local_port();
-}
+//unsigned short c_netuser::get_local_port() {
+//    return m_TCPasync.get_local_port();
+//}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////// networking
 
 void c_netuser::send_token_bynet(){
-    m_TCPasync.send_cmd_request(protocol::public_key);
+    m_TCPasync.send_cmd_request(packet_type::public_key);
 
-    auto cmd_it = m_TCPcommands.find(protocol::public_key);
+    auto cmd_it = m_TCPcommands.find(packet_type::public_key);
     if(cmd_it == m_TCPcommands.end()) {
         std::cout << "can't find protocol: return" << std::endl;
         return;
@@ -78,20 +78,29 @@ void c_netuser::send_token_bynet(){
     auto cmd = cmd_it->second;
 
     std::string handle;
-    int attempts = 20;
-    do {
-        if(cmd->has_message()) {
-            handle = cmd->pop_message();
-            break;
-        } else {
-            std::cout << "Attempt: " << attempts << " waiting for response" << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        if(attempts == 0) {
-            throw std::runtime_error("Fail to get response in wait time");
-        }
-        attempts--;
-    } while(true);
+    int attempts = 5;
+
+    std::this_thread::sleep_for(std::chrono::seconds(attempts));
+    if(cmd->has_message()) {
+        handle = cmd->pop_message();
+    } else {
+        std::cout << "No response in 10 seconds" << std::endl;
+    }
+
+
+    //    do {
+//        if(cmd->has_message()) {
+//            handle = cmd->pop_message();
+//            break;
+//        } else {
+//            std::cout << "Attempt: " << attempts << " waiting for response" << std::endl;
+//            std::this_thread::sleep_for(std::chrono::seconds(1));
+//        }
+//        if(attempts == 0) {
+//            throw std::runtime_error("Fail to get response in wait time");
+//        }
+//        attempts--;
+//    } while(true);
 
     ed_key host_pubkey(reinterpret_cast<const unsigned char*>(handle.c_str()),handle.size());	// TODO
 
@@ -101,16 +110,16 @@ void c_netuser::send_token_bynet(){
         return;
     }
 
-    m_TCPasync.send_cmd_response(protocol::token_send, packet);
+    m_TCPasync.send_cmd_response(packet_type::token_send, packet);
 }
 
 void c_netuser::send_token_bynet(const std::string &host, unsigned short server_port) {
-    set_target(host, server_port);
+    connect(host, server_port);
     send_token_bynet();
 }
 
 c_netuser::~c_netuser() {
-    m_stop_thread = false;
+    m_stop_thread = true;
     m_thread.join();
 }
 
@@ -120,7 +129,7 @@ void c_netuser::send_contract() {
          throw std::logic_error("No contracts to send");
     }
     std::string contract_data = m_contracts_to_send.pop().to_packet();
-    m_TCPasync.send_cmd_response(protocol::contract, contract_data);
+    m_TCPasync.send_cmd_response(packet_type::contract, contract_data);
 
     std::string a("v7zrh17f30b1g1fll8kqd6qb6vvbj1d2ldzgkwbg8wmvrw88z020.k");
     std::string command = "./tools/cexec 'InterfaceController_adminSetUpLimitPeer(pubkey=\"" + a +  "\", limitUp=300)'";
@@ -137,7 +146,7 @@ void c_netuser::check_inboxes () {
 }
 
 void c_netuser::recieve_coin() {
-    auto cmd_it = m_TCPcommands.find(protocol::token_send);
+    auto cmd_it = m_TCPcommands.find(packet_type::token_send);
     if(cmd_it == m_TCPcommands.end()) {
         std::cout << "can't find protocol: return" << std::endl;
         return;
@@ -149,6 +158,7 @@ void c_netuser::recieve_coin() {
         std::cout << "Pop new coin" << std::endl;
         handle = cmd->pop_message();
         c_token tok(handle, serialization::Json);
+        std::cout << "MOVE TOKEN TO WALLET" << std::endl;
         m_wallet.move_token(std::move(tok));
     } else {
             //std::cout << "No waiting coin" << std::endl;
@@ -156,9 +166,9 @@ void c_netuser::recieve_coin() {
 }
 
 void c_netuser::recieve_contract() {
-    auto cmd_it = m_TCPcommands.find(protocol::contract);
+    auto cmd_it = m_TCPcommands.find(packet_type::contract);
     if(cmd_it == m_TCPcommands.end()) {
-        std::cout << "can't find protocol: return" << std::endl;
+        //std::cout << "can't find protocol: return" << std::endl;
         return;
     }
     auto cmd = cmd_it->second;

@@ -1,12 +1,13 @@
 #include "c_TCPasync.hpp"
-
+#include "boost/bind.hpp"
 //////////////////////////////////////////////////////////////////////////////////////////////////// TCPcommand
 
-c_TCPcommand::c_TCPcommand(const protocol cmd_type, const std::string &data) : m_type(cmd_type),
-                                                                               m_response_data(data)
+c_TCPcommand::c_TCPcommand(const packet_type cmd_type,
+                           const std::string &data) : m_type(cmd_type),
+                                                      m_response_data(data)
 { }
 
-protocol c_TCPcommand::get_type() const {
+packet_type c_TCPcommand::get_type() const {
 	return m_type;
 }
 
@@ -37,7 +38,7 @@ void c_TCPcommand::send_response(ip::tcp::socket &socket) {
     unsigned short type_bytes = sizeof(uint16_t);	// size in bytes of protocol tyle
 
     if(m_response_data == "") {		// handling non set response data
-        protocol type = protocol::empty;
+        packet_type type = packet_type::empty;
         std::size_t bytes_transfered = socket.write_some(boost::asio::buffer(&type, type_bytes),ec);
         assert(bytes_transfered == type_bytes);
     }
@@ -64,10 +65,12 @@ void c_TCPcommand::get_response(ip::tcp::socket &socket) {
 
     uint32_t packet_size = 0;
     size_t recieved_bytes = socket.read_some(buffer(&packet_size, size_bytes), ec);
-    assert(recieved_bytes == size_bytes);
+    DBG_MTX(m_mtx,"recieved bytes: [" << recieved_bytes << "] size_bytes: [" << size_bytes << "]");
+    assert(recieved_bytes == 8);
 
     const std::unique_ptr<char[]> packet_data(new char[packet_size]);
     recieved_bytes = socket.read_some(buffer(packet_data.get(), packet_size), ec);
+    DBG_MTX(m_mtx,"recieved bytes: [" <<recieved_bytes << "] recieved_size: [" << packet_size << "]");
     assert(recieved_bytes == packet_size);
 
     std::string recieved_str(packet_data.get(), packet_size);
@@ -92,12 +95,11 @@ std::string c_TCPcommand::pop_message() {
 
 c_TCPasync::c_TCPasync (unsigned short local_port) :
                                                      m_local_port(local_port),
-                                                     m_local_socket(m_io_service),
                                                      m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(), m_local_port)),
-                                                     m_server_socket(m_io_service),
                                                      m_stop_flag(false) {
 
-    create_server();
+    // Start accepting connections.
+    async_accept();
     threads_maker(2);
 }
 
@@ -106,125 +108,113 @@ c_TCPasync::c_TCPasync (const std::string &host,
 						unsigned short server_port,
                         unsigned short local_port) :
                                                      m_local_port(local_port),
-                                                     m_local_socket(m_io_service),
                                                      m_acceptor(m_io_service, ip::tcp::endpoint(ip::tcp::v6(), m_local_port)),
-                                                     m_server_socket(m_io_service),
                                                      m_stop_flag(false) {
 
     boost::system::error_code ec;
     m_host_address = ip::address::from_string(host, ec);
 
-    set_target(host,server_port);
-    create_server();
+    connect(host,server_port);
+    // Start accepting connections.
+    async_accept();
     threads_maker(2);
 }
 
-void c_TCPasync::set_target(const std::string &host, unsigned short server_port) {
-    m_server_socket.close();
-
+std::shared_ptr<connection> c_TCPasync::connect(const std::string &host,
+                                                unsigned short host_port,
+                                                std::chrono::seconds wait) {
+    DBG_MTX(m_mtx, "* connect *");
     boost::system::error_code ec;
-    m_host_address = ip::address::from_string(host, ec);
-    m_server_endpoint = ip::tcp::endpoint(m_host_address, server_port);
-    if (!connect()) {
-        DBG_MTX(m_mtx, "connection with host: success");
-    } else {
-        DBG_MTX(m_mtx, "connection with host: fail");
-        throw std::invalid_argument("unable connect to host");
-    }
-}
-
-bool c_TCPasync::connect(std::chrono::seconds wait) {
-    DBG_MTX(m_mtx, "* check connection *");
-
-    boost::system::error_code ec;
-
-    if (!m_host_address.is_v6()) {	// for now handling only ipv6 addr
-        std::string msg = m_host_address.to_string();
+    ip::address host_address = ip::address::from_string(host, ec);
+    if (!host_address.is_v6()) {	// handling only ipv6 addr
+        std::string msg = host_address.to_string();
         msg += ec.message() + " : is not valid IPv6 address";
         throw std::invalid_argument(msg);
     }
 
-    int attempts = 5;
+    ip::tcp::endpoint host_endpoint(host_address, host_port);
+    auto ex_conn = m_connections.find(host_endpoint);
+    if(ex_conn != m_connections.end()) {
+        return ex_conn->second;			// returning existing connection
+    }
+
+    std::shared_ptr<connection> conn(new connection(get_io_service()));
+
+    int attempts = 10;
     do {
-        m_local_socket.connect(m_server_endpoint, ec);
-        std::this_thread::sleep_for(wait/5);
+        conn->get_socket().connect( host_endpoint, ec);
         if(ec) {
             DBG_MTX(m_mtx, "attempt " << attempts << " fail to connect");
+            std::this_thread::sleep_for(wait/10);
             if(attempts == 0) {
-                return 1;	// fail to connect in wait time
+                break;	// fail to connect in wait time
             }
         } else {
-            DBG_MTX(m_mtx, "connect with " << m_host_address.to_string() << " on " << get_server_port() << " port success");
+            DBG_MTX(m_mtx, "connect with " << m_host_address.to_string() << " on " << host_port << " port success");
             break;
         }
         attempts--;
     } while(true);
-    return 0;
-}
 
-bool c_TCPasync::is_connected() {
-    return m_server_socket.is_open();	// TODO
-}
+    conn->get_socket().set_option(ip::tcp::socket::reuse_address(true));
+    conn->get_socket().set_option(ip::tcp::socket::linger(true, 0));
 
-void c_TCPasync::add_cmd(c_TCPcommand &cmd) {
-	protocol type = cmd.get_type();
-	auto cmd_it = find_cmd(type);
-    if(cmd_it == m_available_cmd.end()) {
-        DBG_MTX(m_mtx, "push_back [" << static_cast<int>(cmd.get_type()) << "] cmd");
-		m_available_cmd.push_back(std::ref(cmd));
-	} else {
-        DBG_MTX(m_mtx, "can't add cmd[" << static_cast<int>(type) << "] that already is available");
-	}
-}
+    ip::tcp::endpoint ep = conn->get_remote_endpoint();
+    BOOST_ASSERT(m_connections.count(ep) == 0);
+    m_mtx.lock();
+    m_connections[ep] = conn;
+    m_mtx.unlock();
 
-void c_TCPasync::send_cmd_request(protocol type) {
-	auto cmd = find_cmd(type);
-	if(cmd == m_available_cmd.end()) {
-		throw std::invalid_argument("Protocol not allowed/added in this connection");
-	};
-    cmd->get().send_request(m_local_socket);
-}
+    // Start reading.
+    //server_read(conn->get_socket());
 
-void c_TCPasync::send_cmd_response(protocol type, const std::string &packet) {
-    auto cmd = find_cmd(type);
-    cmd->get().set_response(packet);
-    cmd->get().send_response(m_local_socket);
-}
-
-unsigned short c_TCPasync::get_server_port() {
-	unsigned short server_port = m_server_endpoint.port();
-	return server_port;
-}
-unsigned short c_TCPasync::get_local_port() {
-	return m_local_port;
+    return conn;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// networking
 
-void c_TCPasync::create_server() {
-    while (m_io_service.stopped() && !m_stop_flag) {
-        std::this_thread::yield();
-    }
-    if (m_stop_flag) {
-        DBG_MTX(m_mtx, "stop flag, return");
-        return;
-    }
-    assert(m_io_service.stopped() == false);
-    m_acceptor.async_accept(m_local_socket,
-                            [this](boost::system::error_code ec) {
-                                DBG_MTX(m_mtx,"async lambda"); // dbg
-                                if(!ec) {
-                                    DBG_MTX(m_mtx,"do read start"); // dbg
-                                    this->server_read(std::move(m_local_socket));
-                                } else {
-                                    DBG_MTX(m_mtx,"EC = " << ec);
-                                    return;
-                                }
-                                this->create_server();
-                            });
+void c_TCPasync::async_accept() {
+    std::shared_ptr<connection> conn;
+    conn.reset(new connection(get_io_service()));
+
+    m_acceptor.async_accept(conn->get_socket(),
+        boost::bind(&c_TCPasync::handle_accept,
+                    boost::ref(*this),
+                    placeholders::error,
+                    conn));
 }
 
-void c_TCPasync::server_read(ip::tcp::socket &&socket) {
+void c_TCPasync::handle_accept(boost::system::error_code const& ec,
+                            std::shared_ptr<connection> conn) {
+    if (!ec) {
+        // If there was no error, then we need to insert conn into the
+        // the connection table, but first we want to set up the next
+        // async_accept.
+        std::shared_ptr<connection> old_conn(conn);
+
+        conn.reset(new connection(get_io_service()));
+
+        m_acceptor.async_accept(conn->get_socket(),
+            boost::bind(&c_TCPasync::handle_accept,
+                        boost::ref(*this),
+                        placeholders::error,
+                        conn));
+
+        // Note that if we had multiple I/O threads, we would have to lock
+        // before touching the map.
+        ip::tcp::endpoint ep = old_conn->get_remote_endpoint();
+        BOOST_ASSERT(m_connections.count(ep) == 0);
+
+        m_mtx.lock();
+        m_connections[ep] = old_conn;
+        m_mtx.unlock();
+
+        // Start reading.
+        server_read(old_conn->get_socket());
+    }
+}
+
+void c_TCPasync::server_read(ip::tcp::socket &socket) {
     assert(socket.is_open());
     boost::system::error_code ec;
     unsigned short prototype_size = sizeof(uint16_t);
@@ -233,10 +223,10 @@ void c_TCPasync::server_read(ip::tcp::socket &&socket) {
 
     while (!ec && !m_stop_flag) {
         assert(socket.is_open());
-        protocol type = protocol::empty;
+        packet_type type = packet_type::empty;
         DBG_MTX(m_mtx, "wait for data to read some");
         socket.read_some(buffer(&type, prototype_size), ec);
-		if(type == protocol::empty) {
+        if(type == packet_type::empty) {
 			DBG_MTX(m_mtx, "discard packet with empty protocol type");
 			break;
 		}
@@ -259,7 +249,7 @@ void c_TCPasync::server_read(ip::tcp::socket &&socket) {
     socket.close();
 }
 
-std::vector<std::reference_wrapper<c_TCPcommand>>::iterator c_TCPasync::find_cmd(protocol type) {
+std::vector<std::reference_wrapper<c_TCPcommand>>::iterator c_TCPasync::find_cmd(packet_type type) {
 	m_mtx.lock();
 	auto cmd = std::find_if(m_available_cmd.begin(),
 							m_available_cmd.end(),
@@ -273,10 +263,36 @@ std::vector<std::reference_wrapper<c_TCPcommand>>::iterator c_TCPasync::find_cmd
 	return cmd;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////// networking
+//////////////////////////////////////////////////////////////////////////////////////////////////// cmd's
+
+void c_TCPasync::add_cmd(c_TCPcommand &cmd) {
+    packet_type type = cmd.get_type();
+    auto cmd_it = find_cmd(type);
+    if(cmd_it == m_available_cmd.end()) {
+        DBG_MTX(m_mtx, "push_back [" << static_cast<int>(cmd.get_type()) << "] cmd");
+        m_available_cmd.push_back(std::ref(cmd));
+    } else {
+        DBG_MTX(m_mtx, "can't add cmd[" << static_cast<int>(type) << "] that already is available");
+    }
+}
+
+void c_TCPasync::send_cmd_request(packet_type type) {
+    auto cmd = find_cmd(type);
+    if(cmd == m_available_cmd.end()) {
+        throw std::invalid_argument("Protocol not allowed/added in this connection");
+    };
+    cmd->get().send_request(m_connections.begin()->second->get_socket());
+}
+
+void c_TCPasync::send_cmd_response(packet_type type, const std::string &packet) {
+    auto cmd = find_cmd(type);
+    cmd->get().set_response(packet);
+    cmd->get().send_response(m_connections.begin()->second->get_socket());
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////// thread, destructor
 
 c_TCPasync::~c_TCPasync() {
-	m_server_socket.close();
 	m_stop_flag = true;
 	m_io_service.stop();
 	for (auto &t : m_threads) {

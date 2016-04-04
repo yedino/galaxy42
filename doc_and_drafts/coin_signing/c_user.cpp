@@ -78,7 +78,6 @@ std::string c_user::get_token_packet(serialization method, const ed_key &user_pu
 
   try {
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
-    m_mtx.lock();
 
     std::string packet = tok.to_packet(method);
     return packet;

@@ -23,9 +23,9 @@ class c_netuser final : public c_user {
                unsigned short server_port = 30000,
                unsigned short local_port = 30000);
 
-    void set_target(const std::string &host, unsigned short server_port);
-    unsigned short get_server_port ();
-    unsigned short get_local_port ();
+    void connect(const std::string &host, unsigned short server_port);
+//    unsigned short get_server_port ();
+//    unsigned short get_local_port ();
 
     /// Setting new target is optional
     void send_token_bynet ();
@@ -44,7 +44,7 @@ class c_netuser final : public c_user {
 
     c_TCPasync m_TCPasync;
     void set_commands ();
-    std::map<protocol,std::shared_ptr<c_TCPcommand>> m_TCPcommands;	// TODO vector --> map
+    std::map<packet_type,std::shared_ptr<c_TCPcommand>> m_TCPcommands;
     std::atomic<bool> m_stop_thread;
     std::thread m_thread;
 

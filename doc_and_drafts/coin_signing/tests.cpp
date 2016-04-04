@@ -29,43 +29,43 @@ bool test_all(int number_of_threads) {
 
     //ptest::general_suite.config = config_default;
 
-    int test_loop_num = 100, msg_length = 64;
+//    int test_loop_num = 100, msg_length = 64;
 
-    ptest::call_test(number_of_threads,
-                            [&number_of_threads, &test_loop_num, &msg_length] () {
-                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop_num, msg_length, false, pequal);
-                            }
-                    );
+//    ptest::call_test(number_of_threads,
+//                            [&number_of_threads, &test_loop_num, &msg_length] () {
+//                                run_suite_test(many_ed_signing,test_manyEdSigning, number_of_threads, test_loop_num, msg_length, false, pequal);
+//                            }
+//                    );
 
-    run_suite_test(base_tests, test_user_sending , 0, pequal);
-    run_suite_test(base_tests, test_many_users , 0, pequal);
+//    run_suite_test(base_tests, test_user_sending , 0, pequal);
+//    run_suite_test(base_tests, test_many_users , 0, pequal);
 
-    run_suite_test(cheater_tests, test_cheater , 0, pequal);
-    run_suite_test(cheater_tests, test_fast_cheater , 0, pequal);
-    run_suite_test(cheater_tests, test_malignant_cheater , 0, pequal);
-    run_suite_test(cheater_tests, fast_find_cheater , 0, pequal);
+//    run_suite_test(cheater_tests, test_cheater , 0, pequal);
+//    run_suite_test(cheater_tests, test_fast_cheater , 0, pequal);
+//    run_suite_test(cheater_tests, test_malignant_cheater , 0, pequal);
+//    run_suite_test(cheater_tests, fast_find_cheater , 0, pequal);
 
-    run_suite_test(base_tests, test_bad_chainsign, 0, pequal);
-    run_suite_test(base_tests, test_convrt_tokenpacket, 0, pequal);
+//    run_suite_test(base_tests, test_bad_chainsign, 0, pequal);
+//    run_suite_test(base_tests, test_convrt_tokenpacket, 0, pequal);
     run_suite_test(base_tests, test_netuser, 0, pequal);
-    run_suite_test(base_tests, test_coinsign_error, 0, pequal);
-    run_suite_test(base_tests, chrono_time, 0, pequal);
+//    run_suite_test(base_tests, test_coinsign_error, 0, pequal);
+//    run_suite_test(base_tests, chrono_time, 0, pequal);
 
-    run_suite_test(wallet_io, test_wallet_expected_sender, 0, pequal);
-    run_suite_test(wallet_io, test_wallet_mint_check, 0, pequal);
-    run_suite_test(wallet_io, test_mint_token_expiration, 10, pequal);
-    run_suite_test(wallet_io, test_recieve_deprecated_token, 0, pequal);
+//    run_suite_test(wallet_io, test_wallet_expected_sender, 0, pequal);
+//    run_suite_test(wallet_io, test_wallet_mint_check, 0, pequal);
+//    run_suite_test(wallet_io, test_mint_token_expiration, 10, pequal);
+//    run_suite_test(wallet_io, test_recieve_deprecated_token, 0, pequal);
 
-    run_suite_test(base_tests, user_save_load, 0, pequal);
-    run_suite_test(base_tests, netuser_save_load, 0, pequal);
+//    run_suite_test(base_tests, user_save_load, 0, pequal);
+//    run_suite_test(base_tests, netuser_save_load, 0, pequal);
 
     // To pass below test. Running ./bitcoind or ./bitccoin-qt on your mashine is required
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
-    run_suite_test(base_tests, json_serialize, 0, pequal);
-    run_suite_test(base_tests, token_count, 0, pequal);
+//    run_suite_test(base_tests, json_serialize, 0, pequal);
+//    run_suite_test(base_tests, token_count, 0, pequal);
 
-    run_suite_test(base_tests, test_contract_sending, 0, pequal);
+//    run_suite_test(base_tests, test_contract_sending, 0, pequal);
 
     print_final_suite_result(many_ed_signing);
 
@@ -339,8 +339,8 @@ bool test_netuser() {
     c_netuser A(userA_name, 30000);
     c_netuser B(userB_name, 30001);
 
-    A.set_target("::1",30001);
-    B.set_target("::1",30000);
+    A.connect("::1",30001);
+    //B.connect("::1",30000);
 
     A.emit_tokens(2);
     A.send_token_bynet();
@@ -350,7 +350,7 @@ bool test_netuser() {
     A.print_status(std::cout);
     B.print_status(std::cout);
 
-    B.get_token_packet(serialization::Json, A.get_public_key());	// is wallet empty?
+    //B.get_token_packet(serialization::Json, A.get_public_key());	// is wallet empty?
     return false;
   } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;
