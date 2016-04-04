@@ -31,6 +31,8 @@ set(SOURCE
         ../../crypto_ops/crypto/sha_src/sha512.cpp
 		network/c_TCPasync.cpp
         network/c_netuser.cpp
+        network/c_connection_base.cpp
+        network/c_tcp_asio_node.cpp
         ${SOURCE_FILES}
         ${SOURCE_PTEST}
         ${SOURCE_ED}

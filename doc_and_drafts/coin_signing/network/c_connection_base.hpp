@@ -8,9 +8,11 @@
  */
 class c_network_message {
 	public:
-		const std::string address_ip;
-		const unsigned short port;
-		const std::string data;
+		c_network_message();
+		c_network_message(c_network_message &&) = default;
+		std::string address_ip;
+		unsigned short port;
+		std::string data;
 };
 
 class c_connection_base {
@@ -20,14 +22,14 @@ class c_connection_base {
 		 * @param message will be consumed
 		 * Exception safety: Strong exception guarantee
 		 */
-		void send(c_network_message && message);
+		virtual void send(c_network_message && message) = 0;
 
 		/**
 		 * The function call always returns immediately
 		 * @returns empty message if error or no data received
 		 * Exception safety: Strong exception guarantee
 		 */
-		c_network_message receive();
+		virtual c_network_message receive() = 0;
 
 		virtual ~c_connection_base() = default;
 };
