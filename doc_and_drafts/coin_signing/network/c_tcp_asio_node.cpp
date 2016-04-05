@@ -1,6 +1,6 @@
 #include "c_tcp_asio_node.hpp"
 
-#include <boost/bind.hpp>
+#include <functional>
 
 using namespace boost::asio;
 
@@ -68,9 +68,17 @@ void c_connection::send(std::string && message) {
 	m_ostream.write(message.data(), message.size());
 	//lg.unlock();
 	m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
-							  boost::bind(&c_connection::write_handler, this, placeholders::error, placeholders::bytes_transferred));
+							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void c_connection::write_handler(const boost::system::error_code &e, std::size_t length) {
-
+	if (e) { // error
+		return;
+	}
+	std::lock_guard<std::mutex> lg(m_streambuff_mtx);
+	m_streambuff.consume(length); // remove sended data from stream
+	if (m_streambuff.size() > 0) {
+		m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
+							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
+	}
 }
