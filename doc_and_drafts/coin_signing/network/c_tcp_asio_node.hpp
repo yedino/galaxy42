@@ -5,14 +5,16 @@
 #include "c_locked_queue.hpp"
 #include <atomic>
 #include <boost/asio.hpp>
-#include <condition_variable>
 #include <map>
 #include <memory>
 #include <thread>
 #include <vector>
 
+class c_connection;
+
 class c_tcp_asio_node final : public c_connection_base
 {
+	friend class c_connection;
 	public:
 		c_tcp_asio_node();
 		~c_tcp_asio_node();
@@ -21,24 +23,27 @@ class c_tcp_asio_node final : public c_connection_base
 	private:
 		std::vector<std::unique_ptr<std::thread>> m_asio_threads;
 		std::atomic<bool> m_stop_flag;
+
 		boost::asio::io_service m_ioservice;
 		std::shared_ptr<c_locked_queue<c_network_message>> m_recv_queue_ptr;
 
-		class connection {
-			public:
-				connection(boost::asio::io_service &io_service, const std::shared_ptr<c_locked_queue<c_network_message>> &msg_queue);
-				void send(std::string && message); // TODO
-				std::string receive(); // TODO
+		std::mutex m_connection_map_mtx;
+		std::map<boost::asio::ip::tcp::endpoint, std::shared_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
+};
 
-			private:
-				boost::asio::ip::tcp::socket m_socket;
-				std::mutex m_streambuff_mtx;
-				boost::asio::streambuf m_streambuff;
+class c_connection {
+	public:
+		c_connection(c_tcp_asio_node &node);
+		void send(std::string && message); // TODO
+		std::string receive(); // TODO
 
-				void connect(const boost::asio::ip::tcp::endpoint &endpoint); // TODO
-		};
+	private:
+		c_tcp_asio_node &m_tcp_node;
+		boost::asio::ip::tcp::socket m_socket;
+		std::mutex m_streambuff_mtx;
+		boost::asio::streambuf m_streambuff;
 
-		std::map<boost::asio::ip::tcp::endpoint, connection> m_connection_map;
+		void connect(const boost::asio::ip::tcp::endpoint &endpoint); // TODO
 };
 
 #endif // C_TCP_ASIO_NODE_H
