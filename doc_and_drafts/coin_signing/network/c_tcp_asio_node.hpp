@@ -25,7 +25,7 @@ class c_tcp_asio_node final : public c_connection_base
 		std::atomic<bool> m_stop_flag;
 
 		boost::asio::io_service m_ioservice;
-		std::shared_ptr<c_locked_queue<c_network_message>> m_recv_queue_ptr;
+		c_locked_queue<c_network_message> m_recv_queue;
 
 		std::mutex m_connection_map_mtx;
 		std::map<boost::asio::ip::tcp::endpoint, std::shared_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
@@ -33,17 +33,20 @@ class c_tcp_asio_node final : public c_connection_base
 
 class c_connection {
 	public:
-		c_connection(c_tcp_asio_node &node);
+		c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint);
 		void send(std::string && message); // TODO
 		std::string receive(); // TODO
 
 	private:
 		c_tcp_asio_node &m_tcp_node;
 		boost::asio::ip::tcp::socket m_socket;
+
 		std::mutex m_streambuff_mtx;
 		boost::asio::streambuf m_streambuff;
+		std::ostream m_ostream;
 
-		void connect(const boost::asio::ip::tcp::endpoint &endpoint); // TODO
+		void write_handler(const boost::system::error_code &e, std::size_t length);
+
 };
 
 #endif // C_TCP_ASIO_NODE_H
