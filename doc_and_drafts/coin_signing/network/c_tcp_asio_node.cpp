@@ -72,7 +72,9 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	m_tcp_node(node),
 	m_socket(node.m_ioservice),
 	m_streambuff(),
-	m_ostream(&m_streambuff)
+	m_ostream(&m_streambuff),
+	m_read_size(),
+	m_input_buffer()
 {
 	m_socket.connect(endpoint); // TODO throw if error
 }
@@ -82,9 +84,13 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 	m_tcp_node(node),
 	m_socket(std::move(socket)),
 	m_streambuff(),
-	m_ostream(&m_streambuff)
+	m_ostream(&m_streambuff),
+	m_read_size(),
+	m_input_buffer()
 {
-	//m_socket.async_read_some(); TODO
+	// start read size
+	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
+							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void c_connection::send(std::string && message) {
@@ -109,4 +115,12 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 		m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
 							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
 	}
+}
+
+void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
+	
+}
+
+void c_connection::read_data_handler(const boost::system::error_code &error, size_t length) {
+	// TODO
 }

@@ -42,6 +42,7 @@ class c_connection {
 
 		/**
 		 * sends 2 size bytes(as uint16_t) and message data
+		 * consume message
 		 */
 		void send(std::string && message);
 		std::string receive(); // TODO
@@ -55,8 +56,12 @@ class c_connection {
 		std::ostream m_ostream; ///< always lock m_streambuff_mtx before use
 
 		void write_handler(const boost::system::error_code &error, size_t length);
-		void read_handler(const boost::system::error_code& error, size_t length);
 
+		uint16_t m_read_size; // TODO atomic?
+		std::vector<char> m_input_buffer; // TODO lock this?
+
+		void read_size_handler(const boost::system::error_code &error, size_t length);
+		void read_data_handler(const boost::system::error_code &error, size_t length);
 };
 
 #endif // C_TCP_ASIO_NODE_H
