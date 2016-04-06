@@ -10,6 +10,7 @@ class c_network_message {
 	public:
 		c_network_message();
 		c_network_message(c_network_message &&) = default;
+		c_network_message& operator = (c_network_message &&) = default;
 		std::string address_ip;
 		unsigned short port;
 		std::string data;

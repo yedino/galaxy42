@@ -51,7 +51,12 @@ void c_tcp_asio_node::send(c_network_message && message) { // TODO add 2 bytes b
 }
 
 c_network_message c_tcp_asio_node::receive() {
-
+	c_network_message message;
+	std::lock_guard<std::recursive_mutex> lg(m_recv_queue.get_mutex());
+	if (m_recv_queue.empty()) {
+		return message;
+	}
+	message = m_recv_queue.pop();
 }
 
 
@@ -118,9 +123,25 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 }
 
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
-	
+	if (error) {
+		return; // TODO close connection
+	}
+	m_input_buffer.resize(m_read_size);
+	assert(m_read_size > 0); // TODO throw?
+	m_socket.async_read_some(buffer(m_input_buffer),
+							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void c_connection::read_data_handler(const boost::system::error_code &error, size_t length) {
-	// TODO
+	if (error) {
+		return; // TODO close connection
+	}
+	// generate c_network_message
+	c_network_message network_message;
+	auto endpoint = m_socket.remote_endpoint();
+	network_message.address_ip = endpoint.address().to_string();
+	network_message.port = endpoint.port();
+	network_message.data.assign(m_input_buffer.begin(), m_input_buffer.end());
+	m_tcp_node.m_recv_queue.push(std::move(network_message));
+	m_input_buffer.clear();
 }
