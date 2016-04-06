@@ -43,7 +43,7 @@ class c_tcp_asio_node final : public c_connection_base
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket_accept;
 
-		void accept_handler(const boost::system::error_code& error); // TODO
+		void accept_handler(const boost::system::error_code& error);
 };
 
 class c_connection {
@@ -57,7 +57,6 @@ class c_connection {
 		 * consume message
 		 */
 		void send(std::string && message);
-		std::string receive(); // TODO
 
 	private:
 		c_tcp_asio_node &m_tcp_node;
@@ -69,8 +68,8 @@ class c_connection {
 
 		void write_handler(const boost::system::error_code &error, size_t length);
 
-		uint16_t m_read_size; // TODO atomic?
-		std::vector<char> m_input_buffer; // TODO lock this?
+		uint16_t m_read_size;
+		std::vector<char> m_input_buffer;
 
 		void read_size_handler(const boost::system::error_code &error, size_t length);
 		void read_data_handler(const boost::system::error_code &error, size_t length);

@@ -740,5 +740,20 @@ bool net_test() {
 	std::cout << "source port " << message2.port << std::endl;
 	std::cout << "data " << message2.data << std::endl;
 
+	std::cout << "send response" << std::endl;
+	message2.data = "0987654321";
+	node2->send(std::move(message2));
+
+	// wait for message
+	do {
+		message = node1->receive();
+		std::this_thread::yield();
+	} while (message.data.empty());
+
+	std::cout << "response" << std::endl;
+	std::cout << "source ip " << message.address_ip << std::endl;
+	std::cout << "source port " << message.port << std::endl;
+	std::cout << "data " << message.data << std::endl;
+
 	return true;
 }

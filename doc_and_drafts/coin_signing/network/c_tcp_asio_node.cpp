@@ -98,6 +98,8 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	_dbg_mtx("c_connection constructor, wait for connect");
 	m_socket.connect(endpoint); // TODO throw if error
 	_dbg_mtx("connected");
+	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
+							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
