@@ -45,29 +45,32 @@ void c_netuser::send_token_bynet(const std::string &host, unsigned short server_
     auto cmd = cmd_it->second;
 
     std::string handle;
-    int wait = 5;
 
-    std::this_thread::sleep_for(std::chrono::seconds(wait));
-    if(cmd->has_message()) {
-        handle = cmd->pop_message();
-    } else {
-        std::cout << "No response " << wait << " in seconds" << std::endl;
-        return;
-    }
 
-//    do {
-//        if(cmd->has_message()) {
-//            handle = cmd->pop_message();
-//            break;
-//        } else {
-//            std::cout << "Attempt: " << attempts << " waiting for response" << std::endl;
-//            std::this_thread::sleep_for(std::chrono::seconds(1));
-//        }
-//        if(attempts == 0) {
-//            throw std::runtime_error("Fail to get response in wait time");
-//        }
-//        attempts--;
-//    } while(true);
+//    std::this_thread::sleep_for(std::chrono::seconds(wait));
+//    if(cmd->has_message()) {
+//        handle = cmd->pop_message();
+//    } else {
+//        std::cout << "No response " << wait << " in seconds" << std::endl;
+//        return;
+//    }
+    int wait = 5000, wait_left = 5000;
+    int step = 1;
+
+    do {
+        if(cmd->has_message()) {
+            handle = cmd->pop_message();
+            std::cout << "Recieve response in: " << wait-wait_left << " milliseconds" << std::endl;
+            break;
+        } else {
+            //std::cout << "Attempt: " << attempts << " waiting for response" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(step));	// *1000 becouse 1s == 1000ms
+            }
+        if(wait_left <= 0) {
+            throw std::runtime_error("Fail to get response in wait time: " + std::to_string(wait/1000) + " seconds");
+        }
+        wait_left -= step;
+    } while(true);
 
     ed_key host_pubkey(reinterpret_cast<const unsigned char*>(handle.c_str()),handle.size());	// TODO
 

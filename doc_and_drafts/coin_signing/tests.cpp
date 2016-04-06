@@ -340,7 +340,8 @@ bool test_netuser() {
     A.emit_tokens(2);
     A.send_token_bynet("::1",30001);
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::cout << "Waiting for coin: 5 seconds . . ." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
 
     A.print_status(std::cout);
     B.print_status(std::cout);

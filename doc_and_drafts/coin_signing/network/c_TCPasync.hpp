@@ -75,16 +75,15 @@ class c_TCPasync {
     /// Handler for new connections.
     void handle_accept (boost::system::error_code const& ec, std::shared_ptr<c_connection> conn);
 
-    void server_read (ip::tcp::socket &socket);
+    /// type_read - 3 bytes struct that determine what to do with recieved packet
+    struct __attribute__ ((__packed__)) {
+        packet_type p_type = packet_type::empty;	// uint16_t
+        uint8_t rs_action = 0;	// defines request or response action
+    } type_read;
+    void server_read (ip::tcp::socket &socket); 
     void handle_type_read (const boost::system::error_code &ec,
                            size_t bytes_read,
-                           packet_type &type,
                            ip::tcp::socket &socket);
-    void handle_resreq_read (const boost::system::error_code &ec,
-                             size_t bytes_read,
-                             char &re,
-                             cmd_wrapped_vector::iterator cmd,
-                             ip::tcp::socket &socket);
 
     cmd_wrapped_vector m_available_cmd;
     cmd_wrapped_vector::iterator find_cmd(packet_type type);

@@ -217,82 +217,54 @@ void c_TCPasync::handle_accept(boost::system::error_code const& ec,
 
 void c_TCPasync::server_read(ip::tcp::socket &socket) {
     assert(socket.is_open());
-    boost::system::error_code ec;
-    unsigned short prototype_size = sizeof(uint16_t);
-    static packet_type type = packet_type::empty;
+
+    type_read = {packet_type::empty, 0}; // set zeros
+    unsigned short type_read_size = sizeof(type_read);
 
     async_read(socket,
-               buffer(&type, prototype_size),
+               buffer(&type_read, type_read_size),
                boost::bind(&c_TCPasync::handle_type_read,
                            boost::ref(*this),
                            placeholders::error,
                            placeholders::bytes_transferred,
-                           boost::ref(type),
                            boost::ref(socket)));
 }
 
 void c_TCPasync::handle_type_read(const boost::system::error_code &ec,
                                   size_t bytes_read,
-                                  packet_type &type,
                                   ip::tcp::socket &socket) {
-    DBG_MTX(dbg_mtx, "handle type read, bytes_read:" << bytes_read << " ,type [" << static_cast<int>(type) << "]");
+
+    DBG_MTX(dbg_mtx, "handle type read, bytes_read:" << bytes_read
+                  << " ,type [" << static_cast<int>(type_read.p_type)
+                  << "] , action [" << static_cast<char>(type_read.rs_action) << "]");
     if (ec) {
         DBG_MTX(dbg_mtx, "boost error: " << ec.message());
         return;
-    }
-    if (bytes_read != sizeof(uint16_t)) {
+    } else if (bytes_read != sizeof(type_read)) {
         DBG_MTX(dbg_mtx, "bad bytes read");
         return;
-    }
-    if (type == packet_type::empty) {
+    } else if (type_read.p_type == packet_type::empty) {
         DBG_MTX(dbg_mtx, "discard packet with empty protocol type");
         return;
     }
-    auto cmd = find_cmd(type);
+
+    auto cmd = find_cmd(type_read.p_type);
     if(cmd == m_available_cmd.end()) {
-        DBG_MTX(dbg_mtx,"no available cmd found - type[" << static_cast<int>(type) << "]");
+        DBG_MTX(dbg_mtx,"no available cmd found - type[" << static_cast<int>(type_read.p_type) << "]");
         return;
     };
 
-    static char re = '\0';
-    async_read(socket,
-               buffer(&re, 1),
-               boost::bind(&c_TCPasync::handle_resreq_read,
-                           boost::ref(*this),
-                           placeholders::error,
-                           placeholders::bytes_transferred,
-                           boost::ref(re),
-                           cmd,
-                           boost::ref(socket)));
-}
-
-void c_TCPasync::handle_resreq_read(const boost::system::error_code &ec,
-                                    size_t bytes_read,
-                                    char &re,
-                                    cmd_wrapped_vector::iterator cmd,
-                                    ip::tcp::socket &socket) {
-
-    DBG_MTX(dbg_mtx, "handle resreq read, bytes_read:" << bytes_read << ", re: " << re);
-
-    if (ec) {
-        DBG_MTX(dbg_mtx, "boost error: " << ec.message());
-        return;
-    }
-    if (bytes_read != sizeof(char)) {
-        DBG_MTX(dbg_mtx, "bad bytes read");
-        return;
-    }
-    DBG_MTX(dbg_mtx,"req or res: " << re); //dbg
-    if (re == 'q') {
-        DBG_MTX(dbg_mtx,"server read: get request"); //dbg
+    if (type_read.rs_action == 'q') {
+        DBG_MTX(dbg_mtx,"get request"); //dbg
         cmd->get().send_response(socket);
-    } else if (re == 's') {
-        DBG_MTX(dbg_mtx,"server read - get response"); //dbg
+    } else if (type_read.rs_action == 's') {
+        DBG_MTX(dbg_mtx,"get response"); //dbg
         cmd->get().get_response(socket);
     } else {
-        DBG_MTX(dbg_mtx,"server read - bad re?"); //dbg
+        DBG_MTX(dbg_mtx,"discart packet with bad rs_action: [" << type_read.rs_action << "]"); //dbg
     }
-    server_read(socket);
+
+    server_read(socket);	// back to async_read new packet
 }
 
 std::vector<std::reference_wrapper<c_TCPcommand>>::iterator c_TCPasync::find_cmd(packet_type type) {

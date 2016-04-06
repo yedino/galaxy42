@@ -9,6 +9,7 @@
 #include <memory>
 #include <thread>
 #include <vector>
+#include <iostream>
 
 #define RUN_DEBUG 1
 #if RUN_DEBUG
