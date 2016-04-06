@@ -10,13 +10,15 @@
 #include <thread>
 #include <vector>
 
+namespace asio_node {
+
 class c_connection;
 
 class c_tcp_asio_node final : public c_connection_base
 {
 	friend class c_connection;
 	public:
-		c_tcp_asio_node();
+		c_tcp_asio_node(unsigned int port = 19000);
 		~c_tcp_asio_node();
 		void send(c_network_message && message) override;
 		c_network_message receive() override; // TODO
@@ -63,5 +65,7 @@ class c_connection {
 		void read_size_handler(const boost::system::error_code &error, size_t length);
 		void read_data_handler(const boost::system::error_code &error, size_t length);
 };
+
+}; // namespace
 
 #endif // C_TCP_ASIO_NODE_H

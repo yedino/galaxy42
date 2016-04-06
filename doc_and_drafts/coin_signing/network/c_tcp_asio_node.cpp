@@ -3,14 +3,15 @@
 #include <functional>
 
 using namespace boost::asio;
+using namespace asio_node;
 
-c_tcp_asio_node::c_tcp_asio_node()
+c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 :
 	m_asio_threads(),
 	m_stop_flag(false),
 	m_ioservice(),
 	m_recv_queue(),
-	m_acceptor(m_ioservice, ip::tcp::endpoint(ip::tcp::v4(), 19000)), // TODO port
+	m_acceptor(m_ioservice, ip::tcp::endpoint(ip::tcp::v4(), port)),
 	m_socket_accept(m_ioservice)
 {
 	unsigned int number_of_threads = std::thread::hardware_concurrency();
@@ -57,6 +58,7 @@ c_network_message c_tcp_asio_node::receive() {
 		return message;
 	}
 	message = m_recv_queue.pop();
+	return message;
 }
 
 
