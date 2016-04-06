@@ -19,9 +19,11 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 	if (number_of_threads == 0) number_of_threads = 1;
 	auto thread_lambda = [this]() {
 		while(!m_stop_flag) {
+			_dbg_mtx("io_service loop");
 			m_ioservice.run();
 			m_ioservice.reset();
 		}
+		_dbg_mtx("end of thread lambda");
 	};
 	for(unsigned int i = 0; i < number_of_threads; ++i) {
 		m_asio_threads.emplace_back(new std::thread(thread_lambda)); // TODO make_unique
@@ -31,8 +33,15 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 }
 
 c_tcp_asio_node::~c_tcp_asio_node() {
+	_dbg_mtx("c_tcp_asio_node destructor");
 	m_stop_flag = true;
-	m_ioservice.stop();
+	while (!m_ioservice.stopped()) {
+		m_ioservice.stop();
+		_dbg_mtx("io_service stop loop");
+	}
+	_dbg_mtx("iostream stopped " << m_ioservice.stopped());
+	m_acceptor.close();
+	m_socket_accept.close();
 	for (auto &thread_ptr : m_asio_threads) {
 		thread_ptr->join();
 	}
@@ -64,12 +73,14 @@ c_network_message c_tcp_asio_node::receive() {
 
 
 void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
+	_dbg_mtx("accept handler");
 	if (error) return;
 	auto endpoint = m_socket_accept.remote_endpoint();
 	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
 	m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, std::move(m_socket_accept)));
 	lg.unlock();
 	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
+	_dbg_mtx("accept handler end");
 }
 
 
@@ -84,7 +95,9 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	m_read_size(),
 	m_input_buffer()
 {
+	_dbg_mtx("c_connection constructor, wait for connect");
 	m_socket.connect(endpoint); // TODO throw if error
+	_dbg_mtx("connected");
 }
 
 c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
@@ -101,6 +114,10 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
+c_connection::~c_connection() {
+	_dbg_mtx("c_connection destructor");
+}
+
 void c_connection::send(std::string && message) {
 	const uint16_t size_of_message = message.size();
 	std::string msg(std::move(message));
@@ -114,6 +131,7 @@ void c_connection::send(std::string && message) {
 }
 
 void c_connection::write_handler(const boost::system::error_code &error, std::size_t length) {
+	_dbg_mtx("write handler");
 	if (error) { // error
 		return;
 	}
@@ -126,6 +144,7 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 }
 
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
+	_dbg_mtx("read size handler, length " << length);
 	if (error) {
 		return; // TODO close connection
 	}
@@ -136,6 +155,7 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 }
 
 void c_connection::read_data_handler(const boost::system::error_code &error, size_t length) {
+	_dbg_mtx("read data handler, length " << length);
 	if (error) {
 		return; // TODO close connection
 	}

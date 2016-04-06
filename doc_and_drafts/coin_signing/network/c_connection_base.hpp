@@ -11,6 +11,7 @@ class c_network_message {
 		c_network_message();
 		c_network_message(c_network_message &&) = default;
 		c_network_message& operator = (c_network_message &&) = default;
+		// TODO remove address_ip and port, create one field
 		std::string address_ip;
 		unsigned short port;
 		std::string data;

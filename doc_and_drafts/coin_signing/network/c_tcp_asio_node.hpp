@@ -27,10 +27,10 @@ class c_tcp_asio_node final : public c_connection_base
 {
 	friend class c_connection;
 	public:
-		c_tcp_asio_node(unsigned int port = 19000);
+		c_tcp_asio_node(unsigned int port);
 		~c_tcp_asio_node();
 		void send(c_network_message && message) override;
-		c_network_message receive() override; // TODO
+		c_network_message receive() override;
 	private:
 		std::vector<std::unique_ptr<std::thread>> m_asio_threads;
 		std::atomic<bool> m_stop_flag;
@@ -49,7 +49,8 @@ class c_tcp_asio_node final : public c_connection_base
 class c_connection {
 	public:
 		c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint); ///< connect constructor
-		c_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket); ///< accept constructor // TODO
+		c_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket); ///< accept constructor
+		~c_connection();
 
 		/**
 		 * sends 2 size bytes(as uint16_t) and message data
