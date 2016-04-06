@@ -41,6 +41,8 @@
 
 using std::size_t;
 
+extern std::mutex dbg_mtx;
+
 namespace cs_utils {
     void print_strBytes(const std::string& str);
     bool file_exsist (const std::string& filename);

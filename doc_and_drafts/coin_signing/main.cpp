@@ -167,7 +167,7 @@ void run_interactive_protocol() {
                      A.emit_tokens(1);
                      break;
             case  3:
-                     A.send_token_bynet();
+                     A.send_token_bynet(target_address, target_port);
                      break;
             case  4:
                      A.print_status(std::cout);
@@ -182,7 +182,6 @@ void run_interactive_protocol() {
                      if(!set_interactive_target(target_address,target_port)) {
                          std::cout << "Failed to set correct target, try again" << std::endl;
                      }
-                     A.connect(target_address,target_port);
                      break;
             case -1:
                      std::cout << "bad command -- try again" << std::endl;

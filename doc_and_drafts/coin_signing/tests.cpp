@@ -67,11 +67,10 @@ bool test_all(int number_of_threads) {
 
 //    run_suite_test(base_tests, test_contract_sending, 0, pequal);
 
-    print_final_suite_result(many_ed_signing);
-
-    print_final_suite_result(base_tests);
-    print_final_suite_result(cheater_tests);
-    print_final_suite_result(wallet_io);
+//    print_final_suite_result(many_ed_signing);
+//    print_final_suite_result(base_tests);
+//    print_final_suite_result(cheater_tests);
+//    print_final_suite_result(wallet_io);
     //print_final_suite_result(bitwallet);
 
     print_final_test_result();
@@ -201,7 +200,6 @@ bool test_fast_cheater() {
   }
     return true;
 }
-
 
 bool test_malignant_cheater() {
   try {
@@ -339,18 +337,17 @@ bool test_netuser() {
     c_netuser A(userA_name, 30000);
     c_netuser B(userB_name, 30001);
 
-    A.connect("::1",30001);
-    //B.connect("::1",30000);
-
     A.emit_tokens(2);
-    A.send_token_bynet();
+    A.send_token_bynet("::1",30001);
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
     A.print_status(std::cout);
     B.print_status(std::cout);
 
-    //B.get_token_packet(serialization::Json, A.get_public_key());	// is wallet empty?
+    if(B.get_token_packet(serialization::Json, A.get_public_key()) == "fail") {   // is wallet empty?
+        return true;
+    }
     return false;
   } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;

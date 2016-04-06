@@ -219,7 +219,6 @@ bool c_user::recieve_token (c_token &token) {
 
 void c_user::sign_and_push_contract(c_contract &contract) {
     contract.sign_contract(m_edkeys);
-    // TODO send
     m_contracts_to_send.push(contract);
 }
 

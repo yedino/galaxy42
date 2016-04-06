@@ -14,21 +14,7 @@ class c_netuser final : public c_user {
     c_netuser (c_user &&user,						///< TODO need to set targer before use!
                unsigned short local_port = 30000);
 
-    c_netuser (const std::string &username,
-               const std::string &host,
-               unsigned short server_port = 30000,
-               unsigned short local_port = 30000);
-    c_netuser (c_user &&user,
-               const std::string &host,
-               unsigned short server_port = 30000,
-               unsigned short local_port = 30000);
-
-    void connect(const std::string &host, unsigned short server_port);
-//    unsigned short get_server_port ();
-//    unsigned short get_local_port ();
-
-    /// Setting new target is optional
-    void send_token_bynet ();
+    /// Send token to specific host target
     void send_token_bynet (const std::string &host, unsigned short server_port);
 
     virtual ~c_netuser ();
@@ -48,7 +34,7 @@ class c_netuser final : public c_user {
     std::atomic<bool> m_stop_thread;
     std::thread m_thread;
 
-    void send_contract ();
+    void send_contract (const std::string &host, unsigned short server_port);
     void check_inboxes ();
     void recieve_coin ();
     void recieve_contract ();
