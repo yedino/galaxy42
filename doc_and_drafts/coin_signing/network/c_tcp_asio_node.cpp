@@ -14,6 +14,7 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 	m_acceptor(m_ioservice, ip::tcp::endpoint(ip::tcp::v4(), port)),
 	m_socket_accept(m_ioservice)
 {
+	_dbg_mtx("c_tcp_asio_node constructor");
 	unsigned int number_of_threads = std::thread::hardware_concurrency();
 	if (number_of_threads == 0) number_of_threads = 1;
 	auto thread_lambda = [this]() {
@@ -37,7 +38,7 @@ c_tcp_asio_node::~c_tcp_asio_node() {
 	}
 }
 
-void c_tcp_asio_node::send(c_network_message && message) { // TODO add 2 bytes before packet (size)
+void c_tcp_asio_node::send(c_network_message && message) {
 	c_network_message msg(std::move(message));
 	ip::address_v4 ip_addr = ip::address_v4::from_string(msg.address_ip); // TODO throw if bad address
 	ip::tcp::endpoint endpoint(ip_addr, msg.port); // generate endpoint from message

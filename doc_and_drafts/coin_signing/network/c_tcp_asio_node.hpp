@@ -10,6 +10,14 @@
 #include <thread>
 #include <vector>
 
+#define RUN_DEBUG 1
+#if RUN_DEBUG
+	extern std::mutex dbg_mtx;
+	#define _dbg_mtx(X) do{std::lock_guard<std::mutex>lg(dbg_mtx); std::cout << X << std::endl;}while(0)
+#else
+	#define _dbg_mtx(X) do{}while(0)
+#endif
+
 namespace asio_node {
 
 class c_connection;
