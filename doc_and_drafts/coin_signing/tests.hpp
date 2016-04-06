@@ -38,6 +38,8 @@ bool token_count();
 
 bool test_contract_sending();
 
+bool net_test();
+
 bool test_all(int number_of_threads);
 
 #endif // TESTS_HPP

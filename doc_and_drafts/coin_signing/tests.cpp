@@ -1,10 +1,12 @@
 #include "tests.hpp"
+#include "network/c_tcp_asio_node.hpp"
 
 new_test_suite(many_ed_signing);
 new_test_suite(base_tests);
 new_test_suite(cheater_tests);
 //new_test_suite(bitwallet);
 new_test_suite(wallet_io);
+new_test_suite(network_tests);
 
 using std::thread;
 using std::mutex;
@@ -47,7 +49,7 @@ bool test_all(int number_of_threads) {
 
 //    run_suite_test(base_tests, test_bad_chainsign, 0, pequal);
 //    run_suite_test(base_tests, test_convrt_tokenpacket, 0, pequal);
-    run_suite_test(base_tests, test_netuser, 0, pequal);
+//    run_suite_test(base_tests, test_netuser, 0, pequal);
 //    run_suite_test(base_tests, test_coinsign_error, 0, pequal);
 //    run_suite_test(base_tests, chrono_time, 0, pequal);
 
@@ -66,6 +68,7 @@ bool test_all(int number_of_threads) {
 //    run_suite_test(base_tests, token_count, 0, pequal);
 
 //    run_suite_test(base_tests, test_contract_sending, 0, pequal);
+	run_suite_test(network_tests, net_test, true, pequal);
 
 //    print_final_suite_result(many_ed_signing);
 //    print_final_suite_result(base_tests);
@@ -713,4 +716,29 @@ bool test_contract_sending() {
         std::cout << ec.what() << std::endl;
         return true;
   }
+}
+
+bool net_test() {
+	using namespace asio_node;
+	std::unique_ptr<c_connection_base> node1(new c_tcp_asio_node(19000));
+	std::unique_ptr<c_connection_base> node2(new c_tcp_asio_node(19001));
+
+	c_network_message message;
+	message.address_ip = "127.0.0.1";
+	message.port = 19001;
+	message.data = "1234567890";
+	node1->send(std::move(message));
+
+	c_network_message message2;
+	// wait for message
+	do {
+		message2 = node2->receive();
+		std::this_thread::yield();
+	} while (message2.data.empty());
+
+	std::cout << "source ip " << message2.address_ip << std::endl;
+	std::cout << "source port " << message2.port << std::endl;
+	std::cout << "data " << message2.data << std::endl;
+
+	return true;
 }
