@@ -58,8 +58,10 @@ c_network_message c_tcp_asio_node::receive() {
 void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 	if (error) return;
 	auto endpoint = m_socket_accept.remote_endpoint();
-	std::lock_guard<std::mutex> lg(m_connection_map_mtx);
+	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
 	m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, std::move(m_socket_accept)));
+	lg.unlock();
+	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
 }
 
 
@@ -82,19 +84,23 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 	m_streambuff(),
 	m_ostream(&m_streambuff)
 {
+	//m_socket.async_read_some(); TODO
 }
 
-
 void c_connection::send(std::string && message) {
+	const uint16_t size_of_message = message.size();
+	std::string msg(std::move(message));
+	assert(msg.size() == size_of_message);
 	std::unique_lock<std::mutex> lg(m_streambuff_mtx);
-	m_ostream.write(message.data(), message.size());
-	//lg.unlock();
+	m_ostream.write(reinterpret_cast<const char *>(&size_of_message), sizeof(size_of_message));
+	m_ostream.write(msg.data(), msg.size());
+	lg.unlock();
 	m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
 							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-void c_connection::write_handler(const boost::system::error_code &e, std::size_t length) {
-	if (e) { // error
+void c_connection::write_handler(const boost::system::error_code &error, std::size_t length) {
+	if (error) { // error
 		return;
 	}
 	std::lock_guard<std::mutex> lg(m_streambuff_mtx);

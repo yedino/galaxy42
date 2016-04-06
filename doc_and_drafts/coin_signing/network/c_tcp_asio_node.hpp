@@ -39,6 +39,10 @@ class c_connection {
 	public:
 		c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint); ///< connect constructor
 		c_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket); ///< accept constructor // TODO
+
+		/**
+		 * sends 2 size bytes(as uint16_t) and message data
+		 */
 		void send(std::string && message);
 		std::string receive(); // TODO
 
@@ -50,7 +54,8 @@ class c_connection {
 		boost::asio::streambuf m_streambuff; ///< always lock m_streambuff_mtx before use
 		std::ostream m_ostream; ///< always lock m_streambuff_mtx before use
 
-		void write_handler(const boost::system::error_code &e, std::size_t length);
+		void write_handler(const boost::system::error_code &error, size_t length);
+		void read_handler(const boost::system::error_code& error, size_t length);
 
 };
 
