@@ -93,11 +93,14 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	m_streambuff(),
 	m_ostream(&m_streambuff),
 	m_read_size(),
-	m_input_buffer()
+	m_input_buffer(),
+	m_input_chunks()
 {
-	_dbg_mtx("c_connection constructor, wait for connect");
+	_dbg_mtx("wait for connect");
 	m_socket.connect(endpoint); // TODO throw if error
 	_dbg_mtx("connected");
+	boost::asio::ip::tcp::no_delay option;
+	m_socket.set_option(option);
 	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -109,20 +112,25 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 	m_streambuff(),
 	m_ostream(&m_streambuff),
 	m_read_size(),
-	m_input_buffer()
+	m_input_buffer(),
+	m_input_chunks()
 {
+	boost::asio::ip::tcp::no_delay option;
+	m_socket.set_option(option);
 	// start read size
 	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 c_connection::~c_connection() {
-	_dbg_mtx("c_connection destructor");
+	_dbg_mtx("");
 }
 
 void c_connection::send(std::string && message) {
-	const uint16_t size_of_message = message.size();
+	const uint32_t size_of_message = message.size();
 	std::string msg(std::move(message));
+	_dbg_mtx("msg.size() = " << msg.size());
+	_dbg_mtx("size_of_message = " << size_of_message);
 	assert(msg.size() == size_of_message);
 	std::unique_lock<std::mutex> lg(m_streambuff_mtx);
 	m_ostream.write(reinterpret_cast<const char *>(&size_of_message), sizeof(size_of_message));
@@ -133,7 +141,7 @@ void c_connection::send(std::string && message) {
 }
 
 void c_connection::write_handler(const boost::system::error_code &error, std::size_t length) {
-	_dbg_mtx("write handler");
+	_dbg_mtx("");
 	if (error) { // error
 		return;
 	}
@@ -146,27 +154,48 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 }
 
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
-	_dbg_mtx("read size handler, length " << length);
+	_dbg_mtx("length " << length);
 	if (error) {
 		return; // TODO close connection
 	}
 	m_input_buffer.resize(m_read_size);
+	m_input_chunks.resize(m_read_size);
 	assert(m_read_size > 0); // TODO throw?
+
 	m_socket.async_read_some(buffer(m_input_buffer),
 							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void c_connection::read_data_handler(const boost::system::error_code &error, size_t length) {
-	_dbg_mtx("read data handler, length " << length);
+	_dbg_mtx("length " << length);
 	if (error) {
 		return; // TODO close connection
 	}
+	_dbg_mtx("m_input_chunks.size() " << m_input_chunks.size());
+	_dbg_mtx("m_read_size " << m_read_size);
+	if (m_input_chunks.size() + length < m_read_size) { // if data is chunked
+		_dbg_mtx("data chunked");
+		assert(m_input_buffer.size() == length);
+		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
+		m_input_buffer.clear(); // clear input data
+		// continue reading
+		m_socket.async_read_some(buffer(m_input_buffer),
+							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
+		return;
+	}
+	else {
+		_dbg_mtx("data not chunked or last chunk");
+		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
+	}
 	// generate c_network_message
 	c_network_message network_message;
+	//network_message.data.assign(m_input_buffer.begin(), m_input_buffer.end());
+	network_message.data = std::move(m_input_chunks);
+	assert(network_message.data.size() == m_read_size);
 	auto endpoint = m_socket.remote_endpoint();
 	network_message.address_ip = endpoint.address().to_string();
 	network_message.port = endpoint.port();
-	network_message.data.assign(m_input_buffer.begin(), m_input_buffer.end());
 	m_tcp_node.m_recv_queue.push(std::move(network_message));
 	m_input_buffer.clear();
+	m_input_chunks.clear();
 }

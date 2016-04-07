@@ -741,7 +741,8 @@ bool net_test() {
 	std::cout << "data " << message2.data << std::endl;
 
 	std::cout << "send response" << std::endl;
-	message2.data = "0987654321";
+	//message2.data = "0987654321";
+	message2.data.assign(655350000, 'a');
 	node2->send(std::move(message2));
 
 	// wait for message
@@ -753,7 +754,8 @@ bool net_test() {
 	std::cout << "response" << std::endl;
 	std::cout << "source ip " << message.address_ip << std::endl;
 	std::cout << "source port " << message.port << std::endl;
-	std::cout << "data " << message.data << std::endl;
+	std::cout << "readet data size " << message.data.size() << std::endl;
+	//std::cout << "data " << message.data << std::endl;
 
 	return true;
 }

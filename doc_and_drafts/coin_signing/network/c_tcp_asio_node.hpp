@@ -14,7 +14,7 @@
 #define RUN_DEBUG 1
 #if RUN_DEBUG
 	extern std::mutex dbg_mtx;
-	#define _dbg_mtx(X) do{std::lock_guard<std::mutex>lg(dbg_mtx); std::cout << X << std::endl;}while(0)
+	#define _dbg_mtx(X) do{std::lock_guard<std::mutex>lg(dbg_mtx); std::cout << __func__ << ": "<< X << std::endl;}while(0)
 #else
 	#define _dbg_mtx(X) do{}while(0)
 #endif
@@ -68,8 +68,9 @@ class c_connection {
 
 		void write_handler(const boost::system::error_code &error, size_t length);
 
-		uint16_t m_read_size;
+		uint32_t m_read_size;
 		std::vector<char> m_input_buffer;
+		std::string m_input_chunks;
 
 		void read_size_handler(const boost::system::error_code &error, size_t length);
 		void read_data_handler(const boost::system::error_code &error, size_t length);
