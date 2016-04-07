@@ -38,7 +38,7 @@ class c_mint {
     /// run find_cheater_token evidence test when double spending is detected
     /// return false if token is OK
     /// throw coin_error expection for cheater finding
-    c_contract get_used_token (c_token &);
+    c_contract get_used_token (c_token &&token);
 
     size_t clean_expired_emited ();
     size_t clean_expired_used ();

@@ -35,7 +35,8 @@ class c_user {
 
     bool recieve_from_packet (const string &);
     bool recieve_token (c_token &token);
-    void sign_and_push_contract (c_contract &contract);
+    void sign_and_push_contract (const ed_key &recipient, c_contract &contract);
+    std::vector<c_contract> get_signed_contracts();
 
     size_t clean_expired_tokens ();
     size_t tokens_refresh ();		///< mostly for clean databases from expiried tokens
@@ -78,7 +79,7 @@ class c_user {
         ar & m_username;
         ar & m_reputation;
     }
-    c_locked_queue<c_contract> m_contracts_to_send;
+    c_locked_queue<std::pair<ed_key,c_contract>> m_contracts_to_send;
     std::vector<c_contract> m_signed_contracts;
 
     crypto_ed25519::keypair m_edkeys;

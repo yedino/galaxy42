@@ -43,19 +43,26 @@ class c_TCPasync {
     c_TCPasync (unsigned short local_port = 30000);		// TODO This constructor need to set_target before use!
     c_TCPasync (const std::string &host, unsigned short server_port = 30000, unsigned short local_port = 30000);
 
+    unsigned int get_port();
+
     /// Setting new server target
     void set_target (const std::string &host_address, unsigned short server_port = 30000);
 
     /// Connection test
     /// wait - for up to seconds for host to be available
+    /// If host is already connected returning existing connection
     std::shared_ptr<c_connection> connect (const std::string &host_address,
                                            unsigned short server_port,
                                            std::chrono::seconds wait = std::chrono::seconds(30));
 
+
     io_service &get_io_service ();
     /// add command that will be handled with this TCP connection
     void add_cmd (c_TCPcommand &cmd);
-	/// send request by server_socket. Throw exception for not available protocols
+    /// finding and returning connection by given pubkey
+    ///
+    std::shared_ptr<c_connection> find_by_pubkey(const ed_key &pubkey);
+    /// send request by server_socket. Throw exception for not available protocols
     void send_cmd_request (packet_type type, const std::string &host, unsigned short port);
     void send_cmd_response (packet_type type,
                             const std::string &host,
@@ -67,6 +74,7 @@ class c_TCPasync {
     io_service m_io_service;
     unsigned short m_local_port;
 
+    /// map [endpoint, shared_prt<c_conncetion>] for this tcp node
     connection_map m_connections;
     ip::tcp::acceptor m_acceptor;	///< acceptor that listen for incoming packets
 
@@ -85,6 +93,10 @@ class c_TCPasync {
                            size_t bytes_read,
                            ip::tcp::socket &socket);
 
+    /// Sending pubkey request for existing socket and waiting for response
+    /// private member using in connect and handle accept
+    ed_key get_remote_pubkey(ip::tcp::socket &socket);
+
     cmd_wrapped_vector m_available_cmd;
     cmd_wrapped_vector::iterator find_cmd(packet_type type);
 
@@ -98,28 +110,21 @@ class c_TCPasync {
 
 class c_connection {
   public:
+    c_connection(c_TCPasync &TCPasync);
 
-    c_connection(io_service &io) : m_socket(io)
-    { }
+    ip::tcp::socket& get_socket();
+    ip::tcp::endpoint get_remote_endpoint() const;
 
-    ip::tcp::socket& get_socket() {
-        return m_socket;
-    }
+    bool is_pubkey_known ();
+    ed_key get_remote_pubkey();
+    void set_remote_pubkey(const ed_key &remote_pubkey);
 
-    ip::tcp::endpoint get_remote_endpoint() const {
-        return m_socket.remote_endpoint();
-    }
-    ~c_connection() {
-        DBG_MTX(dbg_mtx, "connection destructor");
-        if (m_socket.is_open()) {
-            boost::system::error_code ec;
-            m_socket.shutdown(ip::tcp::socket::shutdown_both, ec);
-            m_socket.close(ec);
-        }
-    }
+    ~c_connection();
   private:
+    //c_TCPasync &m_TCPasync;	will be needed
     ip::tcp::socket m_socket;
-    // ed_key remote_pubkey; // TODO
+    bool pubkey_known = false;
+    ed_key m_remote_pubkey;
 };
 
 #endif // C_TCP_NEWTORK_HPP

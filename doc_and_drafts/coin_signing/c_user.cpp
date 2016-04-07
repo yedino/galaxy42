@@ -141,6 +141,7 @@ bool c_user::recieve_token (c_token &token) {
     }
 	// check validity of the signatures chain
     ed_key expected_sender; // publickey
+    ed_key current_sender_in_coin; // for last sender
     bool expected_sender_any = false; // do we expecected sender
 
 	// [A->B]   [B->C]   [C->D]
@@ -153,7 +154,7 @@ bool c_user::recieve_token (c_token &token) {
             throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
         }
 
-        ed_key current_sender_in_coin = current_signature.m_signer_pubkey;
+        current_sender_in_coin = current_signature.m_signer_pubkey;
         ed_key current_recipient_in_coin;
 
 		std::string delimeter = "|";
@@ -183,8 +184,10 @@ bool c_user::recieve_token (c_token &token) {
     //std::cout << "size of this token : " << token.get_size() << std::endl;
 
     if(m_mint.check_is_emited(token)) { // is this token emitted by me?
-        c_contract token_contract = c_contract(m_mint.get_used_token(token));
-        sign_and_push_contract(token_contract);
+        // after last iteration of previous loop current sender in coin will be contract recipient
+        ed_key contract_recipient = current_sender_in_coin;
+        c_contract token_contract = c_contract(m_mint.get_used_token(std::move(token)));
+        sign_and_push_contract(contract_recipient,token_contract);
         //  TODO  change speed
         return false;
     } else {
@@ -217,9 +220,13 @@ bool c_user::recieve_token (c_token &token) {
     return false;
 }
 
-void c_user::sign_and_push_contract(c_contract &contract) {
+void c_user::sign_and_push_contract(const ed_key &recipient, c_contract &contract) {
     contract.sign_contract(m_edkeys);
-    m_contracts_to_send.push(contract);
+    m_contracts_to_send.push(std::make_pair(recipient, contract));
+}
+
+std::vector<c_contract> c_user::get_signed_contracts() {
+    return m_signed_contracts;
 }
 
 void c_user::set_new_mint (const string &mintname, const ed_key &pubkey, std::chrono::seconds exp_time) {

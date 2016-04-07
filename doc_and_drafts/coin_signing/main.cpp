@@ -91,7 +91,7 @@ bool set_interactive_target(std::string &address, int &port) {
     return checkIPv6_address(address);
 }
 
-void run_interactive_protocol() {
+void run_interactive_mode() {
 
     char decision = 'n';
     bool new_user = false;
@@ -161,6 +161,7 @@ void run_interactive_protocol() {
                      isover = true;
                      break;
             case  1:
+                     std::cout << std::endl;
                      std::cout << help << std::endl;
                      break;
             case  2:
@@ -245,7 +246,7 @@ int main (int argc, char *argv[]) {
         }
 
 				if (mainfunction == e_mainfunction_interactive) {
-        	run_interactive_protocol();
+            run_interactive_mode();
         }
 
 				if (mainfunction == e_mainfunction_test_serialize) {

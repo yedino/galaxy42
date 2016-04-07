@@ -37,6 +37,7 @@ bool json_serialize();
 bool token_count();
 
 bool test_contract_sending();
+bool test_contract_circle();
 
 bool net_test();
 

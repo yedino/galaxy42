@@ -97,7 +97,6 @@ class c_token : public ijson_serializable {
   public:
     c_token () = default;					///< creating empty token
 
-
     /// deserialize token
     /// method = 1 : using boost::serialization
     /// method = 2 : using Json::value

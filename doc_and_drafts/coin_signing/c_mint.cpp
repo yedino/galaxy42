@@ -48,7 +48,7 @@ bool c_mint::check_is_emited(const c_token &token) const {
 	return false;
 }
 
-c_contract c_mint::get_used_token (c_token &token) {
+c_contract c_mint::get_used_token (c_token &&token) {
 
     auto in_it = std::find(m_used_tokens.begin(),m_used_tokens.end(), token);
     if(in_it != m_used_tokens.end()) {

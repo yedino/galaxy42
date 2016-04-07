@@ -16,7 +16,7 @@ class c_netuser final : public c_user {
 
     /// Send token to specific host target
     void send_token_bynet (const std::string &host, unsigned short server_port);
-
+    unsigned int get_port();
     virtual ~c_netuser ();
 
   private:
@@ -34,7 +34,7 @@ class c_netuser final : public c_user {
     std::atomic<bool> m_stop_thread;
     std::thread m_thread;
 
-    void send_contract (const std::string &host, unsigned short server_port);
+    void send_contract(const ed_key &recipient, c_contract contract);
     void check_inboxes ();
     void recieve_coin ();
     void recieve_contract ();

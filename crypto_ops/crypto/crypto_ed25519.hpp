@@ -21,7 +21,7 @@ namespace crypto_ed25519 {
 
 				ustring (const unsigned char *uc_str, size_t size) : m_string(uc_str, size) { }
 				ustring (const ustring &uc_str) : m_string(uc_str.m_string) { }
-				ustring (ustring &&uc_str) : m_string(std::move(uc_str.m_string)) { }
+                ustring (ustring &&uc_str) : m_string(std::move(uc_str.m_string)) { }
 
 				std::basic_string<unsigned char> m_string;
 

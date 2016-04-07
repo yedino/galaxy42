@@ -35,44 +35,8 @@ void c_netuser::set_commands () {
 ////////////////////////////////////////////////////////////////////////////////////////////////////// networking
 
 void c_netuser::send_token_bynet(const std::string &host, unsigned short server_port) {
-    m_TCPasync.send_cmd_request(packet_type::public_key, host, server_port);
 
-    auto cmd_it = m_TCPcommands.find(packet_type::public_key);
-    if(cmd_it == m_TCPcommands.end()) {
-        std::cout << "can't find protocol: return" << std::endl;
-        return;
-    }
-    auto cmd = cmd_it->second;
-
-    std::string handle;
-
-
-//    std::this_thread::sleep_for(std::chrono::seconds(wait));
-//    if(cmd->has_message()) {
-//        handle = cmd->pop_message();
-//    } else {
-//        std::cout << "No response " << wait << " in seconds" << std::endl;
-//        return;
-//    }
-    int wait = 5000, wait_left = 5000;
-    int step = 1;
-
-    do {
-        if(cmd->has_message()) {
-            handle = cmd->pop_message();
-            std::cout << "Recieve response in: " << wait-wait_left << " milliseconds" << std::endl;
-            break;
-        } else {
-            //std::cout << "Attempt: " << attempts << " waiting for response" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(step));	// *1000 becouse 1s == 1000ms
-            }
-        if(wait_left <= 0) {
-            throw std::runtime_error("Fail to get response in wait time: " + std::to_string(wait/1000) + " seconds");
-        }
-        wait_left -= step;
-    } while(true);
-
-    ed_key host_pubkey(reinterpret_cast<const unsigned char*>(handle.c_str()),handle.size());	// TODO
+    ed_key host_pubkey = m_TCPasync.connect(host, server_port)->get_remote_pubkey();
 
     std::string packet = get_token_packet(serialization::Json, host_pubkey);
     if (packet == "fail") {
@@ -83,32 +47,50 @@ void c_netuser::send_token_bynet(const std::string &host, unsigned short server_
     m_TCPasync.send_cmd_response(packet_type::token_send, host, server_port, packet);
 }
 
+unsigned int c_netuser::get_port() {
+    return m_TCPasync.get_port();
+}
+
 c_netuser::~c_netuser() {
     m_stop_thread = true;
     m_thread.join();
 }
 
-void c_netuser::send_contract(const std::string &host, unsigned short server_port) {
-    boost::system::error_code ec;
-    if (m_contracts_to_send.empty()) {
-         throw std::logic_error("No contracts to send");
-    }
-    std::string contract_data = m_contracts_to_send.pop().to_packet();
-    m_TCPasync.send_cmd_response(packet_type::contract, host, server_port, contract_data);
+void c_netuser::send_contract(const ed_key &recipient, c_contract contract) {
+    std::cout << "Try to send contract to [" << recipient << "]" << std::endl;
+    std::string contract_data = contract.to_packet();
 
-    std::string a("v7zrh17f30b1g1fll8kqd6qb6vvbj1d2ldzgkwbg8wmvrw88z020.k");
-    std::string command = "./tools/cexec 'InterfaceController_adminSetUpLimitPeer(pubkey=\"" + a +  "\", limitUp=300)'";
-    std::cout << "Setting cjdns limitiation :" << command << std::endl;
-    system(command.c_str());
+    auto recipient_connection = m_TCPasync.find_by_pubkey(recipient);
+    if(recipient_connection != nullptr) {
+        std::cout << "Found connection: [" << recipient_connection->get_remote_endpoint().port()
+                  << "," <<  recipient_connection->get_remote_endpoint().address() << "]" << std::endl;
+
+        auto contract_cmd = m_TCPcommands.find(packet_type::contract);
+        if(contract_cmd == m_TCPcommands.end()) {
+            std::cout << "can't find protocol: return" << std::endl;
+            return;
+        }
+        contract_cmd->second->send_response(recipient_connection->get_socket());
+
+        // CJDNS // TODO end
+        std::string a("v7zrh17f30b1g1fll8kqd6qb6vvbj1d2ldzgkwbg8wmvrw88z020.k");
+        std::string command = "./tools/cexec 'InterfaceController_adminSetUpLimitPeer(pubkey=\"" + a +  "\", limitUp=300)'";
+        std::cout << "Setting cjdns limitiation :" << command << std::endl;
+        system(command.c_str());
+    } else {
+        //m_TCPasync.send_cmd_response(packet_type::contract, host, server_port, contract_data);
+        //TODO looking for recipient address in network
+    }
 }
 
 void c_netuser::check_inboxes () {
     while(!m_stop_thread) {
         recieve_coin();
         recieve_contract();
-        //if(!m_contracts_to_send.empty()) {
-        //    send_contract (TODO need endpoint)
-        //}
+        if(!m_contracts_to_send.empty()) {
+            std::pair<ed_key, c_contract> recipient_contract(m_contracts_to_send.pop());
+            send_contract(recipient_contract.first,recipient_contract.second);
+        }
         std::this_thread::yield();
     }
 }

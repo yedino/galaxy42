@@ -49,7 +49,7 @@ bool test_all(int number_of_threads) {
 
 //    run_suite_test(base_tests, test_bad_chainsign, 0, pequal);
 //    run_suite_test(base_tests, test_convrt_tokenpacket, 0, pequal);
-//    run_suite_test(base_tests, test_netuser, 0, pequal);
+    run_suite_test(base_tests, test_netuser, 0, pequal);
 //    run_suite_test(base_tests, test_coinsign_error, 0, pequal);
 //    run_suite_test(base_tests, chrono_time, 0, pequal);
 
@@ -343,8 +343,8 @@ bool test_netuser() {
     A.emit_tokens(2);
     A.send_token_bynet("::1",30001);
 
-    std::cout << "Waiting for coin: 5 seconds . . ." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::cout << "Waiting for coin: 3 seconds . . ." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     A.print_status(std::cout);
     B.print_status(std::cout);
@@ -695,7 +695,7 @@ bool token_count() {
 
 bool test_contract_sending() {
   try {
-    std::cout << "RUNNING_NETUSER_TEST" << std::endl;
+    std::cout << "RUNNING_SIMPLE_CONTRACT_TEST" << std::endl;
     std::string userA_name("testUser1");
     std::string userB_name("testUser2");
 
@@ -705,13 +705,46 @@ bool test_contract_sending() {
     A.emit_tokens(2);
     A.send_token_bynet("::1", 30001);
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     B.send_token_bynet("::1", 30000);
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     return false;
+  } catch(std::exception &ec) {
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+}
+
+
+bool test_contract_circle() {
+  try {
+    std::cout << "RUNNING_CONTRACTCIRCLE_TEST" << std::endl;
+    std::string userA_name("testUser A");
+    std::string userB_name("testUser B");
+    std::string userC_name("testUser C");
+    std::string userD_name("testUser D");
+
+    c_netuser A(userA_name, 30000);
+    c_netuser B(userB_name, 30001);
+    c_netuser C(userB_name, 30002);
+    c_netuser D(userB_name, 30003);
+
+    A.emit_tokens(1);
+    A.send_token_bynet("::1", 30001);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    B.send_token_bynet("::1", 30002);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    C.send_token_bynet("::1", 30003);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    D.send_token_bynet("::1", 30000);	// User A should send signed contract to B
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    if(D.get_signed_contracts().size() == 1) {
+        return false;
+    }
+
   } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;
         return true;
