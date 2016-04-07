@@ -10,6 +10,14 @@ TODO(r) establish end-to-end AE (cryptosession)
 
 */
 
+/*
+
+Use this tags in this project:
+[confroute] - configuration, tweak - for the routing
+[protocol] - code related to how exactly protocol (e.g. node2node) is defined
+
+*/
+
 const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 #include <iostream>
@@ -174,7 +182,8 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 		class c_route_reason_detail {
 			public:
 				t_route_time m_when; ///< when we hasked about this address last time
-				c_route_reason_detail( t_route_time when );
+				int m_ttl; ///< with what TTL we are doing the search
+				c_route_reason_detail( t_route_time when , int ttl );
 		};
 
 		class c_route_search {
@@ -194,7 +203,7 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 
 				c_route_search(c_haship_addr addr);
 
-				void add_request(c_routing_manager::c_route_reason reason); ///< add info that this guy also wants to be informed about the path
+				void add_request(c_routing_manager::c_route_reason reason, int ttl); ///< add info that this guy also wants to be informed about the path
 				void execute( c_galaxy_node & galaxy_node );
 		};
 
@@ -207,7 +216,7 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 		t_route_nexthop_by_dst m_route_nexthop; ///< known routes: the hash-ip of next hop, indexed by hash-ip of finall destination
 
 	public:
-		c_haship_addr get_route_nexthop(c_galaxy_node & galaxy_node , c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search=true);
+		const c_route_info & get_route_or_maybe_search(c_galaxy_node & galaxy_node , c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search, int search_ttl);
 };
 
 std::ostream & operator<<(std::ostream & ostr, std::chrono::steady_clock::time_point tp) {
@@ -225,11 +234,16 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::t_search
 	_warn("Unknown reason"); return ostr<<"???";
 }
 
+std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_info & obj) {
+	return ostr << "{ROUTE: next_hop=" << obj.m_nexthop 
+		<< " cost=" << obj.m_cost << " time=" << obj.m_time << " ttl=" << obj.m_ttl << "}";
+}
+
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_reason & obj) {
 	return ostr << "{Reason: asked from " << obj.m_his_addr << " as " << obj.m_search_mode << "}";
 }
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_reason_detail & obj) {
-	return ostr << "{Reason...: at " << obj.m_when << "}";
+	return ostr << "{Reason...: at " << obj.m_when << " with TTL=" << obj.m_ttl << "}";
 }
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_search & obj) {
@@ -244,14 +258,14 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 	return ostr;
 }
 
-c_routing_manager::c_route_reason_detail::c_route_reason_detail( t_route_time when )
-	: m_when(when)
+c_routing_manager::c_route_reason_detail::c_route_reason_detail( t_route_time when , int ttl )
+	: m_when(when) , m_ttl ( ttl )
 { }
 
-void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_reason reason) {
+void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_reason reason , int ttl) {
 	auto found = m_request.find( reason );
 	if (found == m_request.end()) { // new reason for search
-		c_route_reason_detail reason_detail( std::chrono::steady_clock::now() );
+		c_route_reason_detail reason_detail( std::chrono::steady_clock::now() , ttl );
 		_info("Adding new reason for search: " << reason << " details: " << reason_detail);
 		m_request.emplace(reason, reason_detail);
 	}
@@ -259,6 +273,7 @@ void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_r
 		auto & detail = found->second;
 		_info("Updating reason of search: " << reason << " old detail: " << detail );
 		detail.m_when = std::chrono::steady_clock::now();
+		detail.m_ttl = std::max( detail.m_ttl , ttl ); // use the bigger TTL [confroute]
 		_info("Updating reason of search: " << reason << " new detail: " << detail );
 	}
 }
@@ -285,13 +300,13 @@ c_routing_manager::c_route_search::c_route_search(c_haship_addr addr)
 	_info("NEW router SEARCH: " << (*this));
 }
 
-c_haship_addr c_routing_manager::get_route_nexthop(c_galaxy_node & galaxy_node, c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search) {
+const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_search(c_galaxy_node & galaxy_node, c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search , int search_ttl) {
 	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
 	auto found = m_route_nexthop.find( dst );
 	if (found != m_route_nexthop.end()) { // found
-		auto nexthop = found->second->m_nexthop;
-		_info("ROUTING-MANAGER: found: " << nexthop);
-		return nexthop; // <---
+		const auto & route = found->second;
+		_info("ROUTING-MANAGER: found route: " << (*route));
+		return *route; // <--- warning: refrerence to this-owned object that is easily invalidatd
 	}
 	else { // don't have a planned route to him
 		if (!start_search) {
@@ -304,12 +319,12 @@ c_haship_addr c_routing_manager::get_route_nexthop(c_galaxy_node & galaxy_node, 
 			if (search_iter == m_search.end()) {
 				_info("STARTED (created) a new SEARCH for this route to dst="<<dst);
 				auto new_search = make_unique<c_route_search>(dst);
-				new_search->add_request( reason );
+				new_search->add_request( reason , search_ttl );
 				m_search.emplace( std::move(dst) , std::move(new_search) );
 			}
 			else {
 				_info("STARTED (updated) an existing SEARCH for this route to dst="<<dst);
-				search_iter->second->add_request( reason ); // add reason
+				search_iter->second->add_request( reason , search_ttl ); // add reason
 			}
 			auto & search_obj = search_iter->second; // search exists now (new or updated)
 			search_obj->execute( galaxy_node ); // ***
@@ -319,11 +334,13 @@ c_haship_addr c_routing_manager::get_route_nexthop(c_galaxy_node & galaxy_node, 
 }
 
 void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) {
-	string_as_bin data; // [protocol] for search query
+	_mark("Sending QUERY for HIP");
+	string_as_bin data; // [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
+
 	data += string_as_bin(m_addr);
 	data += string(";");
 
-	unsigned char byte_highest_ttl = m_highest_ttl; assert( m_highest_ttl == byte_highest_ttl ); // TODO(r) asserted narrowing
+	unsigned char byte_highest_ttl = m_highest_ttl;  assert( m_highest_ttl == byte_highest_ttl ); // TODO(r) asserted narrowing
 	data += string(1, static_cast<char>(byte_highest_ttl) );
 	data += string(";");
 
@@ -490,7 +507,7 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 
-	timeval timeout { 1 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
+	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
 
 	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL, & timeout); // <--- blocks
 	_assert(select_result >= 0);
@@ -563,6 +580,7 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 
 	// try direct peers:
 	auto peer_it = m_peer.find(next_hip); // find c_peering to send to
+
 	if (peer_it == m_peer.end()) { // not a direct peer!
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
 		if (recurse_level>1) {
@@ -572,8 +590,11 @@ bool c_tunserver::route_tun_data_to_its_destination(t_route_method method, const
 
 		c_haship_addr via_hip;
 		try {
-			_info("Trying to find a via_hip");
-			auto via_hip = m_routing_manager.get_route_nexthop(*this, next_hip , reason , true);
+			_info("Trying to find a route to it");
+			const int default_ttl = 5; // for this case [confroute]
+			const auto & route = m_routing_manager.get_route_or_maybe_search(*this, next_hip , reason , true, default_ttl);
+			_info("Found route: " << route);
+			via_hip = route.m_nexthop;
 		} catch(...) { _info("ROUTE MANAGER: can not find route at all"); return false; }
 		_info("Route found via hip: via_hip = " << via_hip);
 		bool ok = this->route_tun_data_to_its_destination(method, buff, buff_size, reason,  via_hip, recurse_level+1);
@@ -651,21 +672,23 @@ void c_tunserver::event_loop() {
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
-			_info("TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
+			_info("###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			this->route_tun_data_to_its_destination(
 				e_route_method_from_me, buf, size_read,
 				c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet)
 			); // push the tunneled data to where they belong
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
+			
 			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
 			socklen_t from_addr_raw_size; // ^ size of it
 
-			c_ip46_addr peer_ip; // IP of peer who sent it
+			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			// ***
 			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
 			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
+			_info("###### ======> UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			// ^- reinterpret allowed by linux specs (TODO)
 			// sockaddr *src_addr, socklen_t *addrlen);
 
@@ -675,14 +698,15 @@ void c_tunserver::event_loop() {
 			}
 			else if (from_addr_raw_size == sizeof(sockaddr_in)) { // the message arrive from IP pasted into sockaddr_in (ipv4) format
 				sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
-				peer_ip.set_ip4(addr);
+				sender_pip.set_ip4(addr);
 			} else {
 				throw std::runtime_error("Data arrived from unknown socket address type");
 			}
 
-			_info("UDP Socket read from direct peer_ip = " << peer_ip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
+			_info("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
 
+			// parse version and command:
 			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
 			assert( size_read >= 2 ); // buf: reads from position 0..1 are asserted as valid now
 
@@ -690,11 +714,16 @@ void c_tunserver::event_loop() {
 			_assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
 
-			_info("Command is: " << cmd);
+			// recognize the peering HIP/CA (cryptoauth is TODO)
+			c_haship_addr sender_hip; 
+			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
+				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
+				_info("We recognize the sender, as: " << sender_as_peering);
+				sender_hip = sender_as_peering.m_haship_addr; // this is not yet confirmed/authenticated(!)
+			}
+			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
 			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
-				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( peer_ip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
-				_info("We recognize the sender, as: " << sender_as_peering);
 
 				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
@@ -752,18 +781,34 @@ void c_tunserver::event_loop() {
 
 			} // e_proto_cmd_tunneled_data
 			else if (cmd == c_protocol::e_proto_cmd_public_hi) { // [protocol]
-				_mark("Command HI received");
+				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
 				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
 				auto pos1 = 32; // [protocol] size of public key
 				if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
 				string_as_bin bin_his_pubkey( cmd_data.bytes.substr(0,pos1) );
 				_info("We received pubkey=" << string_as_hex( bin_his_pubkey ) );
-				t_peering_reference his_ref( peer_ip , string_as_bin( bin_his_pubkey ) );
+				t_peering_reference his_ref( sender_pip , string_as_bin( bin_his_pubkey ) );
 				add_peer( his_ref );
 			}
+			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
+				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
+				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
+
+				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic
+				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
+				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
+
+				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
+
+				_info("We received HIP=" << string_as_hex( bin_hip ) );
+
+				c_routing_manager::c_route_reason reason( sender_hip , c_routing_manager::e_search_mode_help_find );
+				_warn("Query reason will be: " << reason );
+
+			}
 			else {
-				_warn("Unknown protocol command, cmd="<<cmd);
+				_warn("??????????????????? Unknown protocol command, cmd="<<cmd);
 				continue; // skip this packet (main loop)
 			}
 			// ------------------------------------
@@ -773,7 +818,7 @@ void c_tunserver::event_loop() {
 
 		}
 		catch (std::exception &e) {
-			_warn("Parsing network data caused an exception: " << e.what());
+			_warn("### !!! ### Parsing network data caused an exception: " << e.what());
 		}
 
 // stats-TODO(r) counters

@@ -31,7 +31,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	while ( adr_s.good() ) {
 		string gr; // given group
 		getline(adr_s, gr, ':');
-		_info("gr="<<gr);
+		//_info("gr="<<gr);
 		if (gr.size()==0) { // inside ::
 			if (exp>0) throw std::invalid_argument("Invalid address, with more then one '::' in it.");
 			int cc=0; // count of colons
@@ -45,10 +45,10 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 		grtab.push_back(gr);
 	}
 	
-	_note("Parsed as:");
+	//_note("Parsed as:");
 	size_t pos=0;
 	for(const string & gr: grtab) {
-		_info("gr="<<gr); // "fd42"
+		//_info("gr="<<gr); // "fd42"
 		assert(gr.size() == 4);
 
 		unsigned char bh = doublehexchar2int( gr.substr(0,2) ); // "fd" -> 253

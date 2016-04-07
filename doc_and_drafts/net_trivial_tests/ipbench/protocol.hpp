@@ -34,6 +34,8 @@ typedef enum {
 	e_proto_cmd_findhip_reply = 11, // searching HIP - reply
 } t_proto_cmd ;
 
+static bool command_is_valid_from_unknown_peer( t_proto_cmd cmd ); ///< is this command one that can come from an unknown peer (without any HIP and CA)
+
 
 };
 
