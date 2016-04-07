@@ -159,9 +159,9 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 		return; // TODO close connection
 	}
 	m_input_buffer.resize(m_read_size);
-	m_input_chunks.resize(m_read_size);
 	assert(m_read_size > 0); // TODO throw?
 
+	_dbg_mtx("wait for " << m_read_size << " bytes");
 	m_socket.async_read_some(buffer(m_input_buffer),
 							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -175,7 +175,6 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	_dbg_mtx("m_read_size " << m_read_size);
 	if (m_input_chunks.size() + length < m_read_size) { // if data is chunked
 		_dbg_mtx("data chunked");
-		assert(m_input_buffer.size() == length);
 		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
 		m_input_buffer.clear(); // clear input data
 		// continue reading
@@ -191,6 +190,7 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	c_network_message network_message;
 	//network_message.data.assign(m_input_buffer.begin(), m_input_buffer.end());
 	network_message.data = std::move(m_input_chunks);
+	_dbg_mtx("network_message.data.size() " << network_message.data.size());
 	assert(network_message.data.size() == m_read_size);
 	auto endpoint = m_socket.remote_endpoint();
 	network_message.address_ip = endpoint.address().to_string();

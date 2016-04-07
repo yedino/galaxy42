@@ -69,7 +69,7 @@ class c_connection {
 		void write_handler(const boost::system::error_code &error, size_t length);
 
 		uint32_t m_read_size;
-		std::vector<char> m_input_buffer;
+		std::vector<char> m_input_buffer; // TODO use std::array
 		std::string m_input_chunks;
 
 		void read_size_handler(const boost::system::error_code &error, size_t length);
