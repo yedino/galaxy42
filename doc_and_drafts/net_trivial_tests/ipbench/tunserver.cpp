@@ -192,8 +192,8 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				bool m_ever; ///< was this ever actually searched yet
 				t_route_time m_ask_time; ///< at which time we last time tried asking
 
-				int m_ask_ttl; ///< at which TTL we actually last time tried asking
-				int m_highest_ttl; ///< at which TTL we want to search, looking at our requests
+				int m_ttl_used; ///< at which TTL we actually last time tried asking
+				int m_ttl_should_use; ///< at which TTL we want to search, looking at our requests (this is optimization - it's same as highest value in m_requests[])
 				// TODO(r)
 				// guy ttl=4 --> ttl3 --> ttl2 --> ttl1 *MYSELF*, highest_ttl=1, when we execute then: send ttl=0, set ask_ttl=0
 				// ... meanwhile ...
@@ -235,7 +235,7 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::t_search
 }
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_info & obj) {
-	return ostr << "{ROUTE: next_hop=" << obj.m_nexthop 
+	return ostr << "{ROUTE: next_hop=" << obj.m_nexthop
 		<< " cost=" << obj.m_cost << " time=" << obj.m_time << " ttl=" << obj.m_ttl << "}";
 }
 
@@ -248,7 +248,7 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_search & obj) {
 	ostr << "{SEARCH for route to DST="<<obj.m_addr<<", was yet run=" << (obj.m_ever?"YES":"never")
-		<< " ask: time="<<obj.m_ask_time<<" ttl="<<obj.m_ask_ttl;
+		<< " ask: time="<<obj.m_ask_time<<" ttl should="<<obj.m_ttl_should_use << ", ttl used=" << obj.m_ttl_used;
 	if (obj.m_request.size()) {
 		ostr << "with " << obj.m_request.size() << " REQUESTS:" << endl;
 		for(auto const & r : obj.m_request) ostr << " REQ: " << r.first << " => " << r.second << endl;
@@ -276,6 +276,12 @@ void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_r
 		detail.m_ttl = std::max( detail.m_ttl , ttl ); // use the bigger TTL [confroute]
 		_info("Updating reason of search: " << reason << " new detail: " << detail );
 	}
+
+	// update this search'es goal TTL
+	// TODO(r)-refact: this could be factored into some generic: set_highest() , with optional debug too
+	auto ttl_old = this->m_ttl_should_use;
+	this->m_ttl_should_use = std::max( this->m_ttl_should_use , ttl);
+	if (ttl_old != this->m_ttl_should_use) _info("Updated this search TTL to " << this->m_ttl_should_use << " from " << ttl_old);
 }
 
 c_routing_manager::c_route_reason::c_route_reason(c_haship_addr his_addr, t_search_mode mode)
@@ -295,7 +301,7 @@ bool c_routing_manager::c_route_reason::operator==(const c_route_reason &other) 
 }
 
 c_routing_manager::c_route_search::c_route_search(c_haship_addr addr)
-	: m_addr(addr), m_ever(false), m_ask_time(), m_ask_ttl(2)
+	: m_addr(addr), m_ever(false), m_ask_time(), m_ttl_used(0), m_ttl_should_use(5)
 {
 	_info("NEW router SEARCH: " << (*this));
 }
@@ -340,13 +346,13 @@ void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) 
 	data += string_as_bin(m_addr);
 	data += string(";");
 
-	unsigned char byte_highest_ttl = m_highest_ttl;  assert( m_highest_ttl == byte_highest_ttl ); // TODO(r) asserted narrowing
+	unsigned char byte_highest_ttl = m_ttl_should_use;  assert( m_ttl_should_use == byte_highest_ttl ); // TODO(r) asserted narrowing
 	data += string(1, static_cast<char>(byte_highest_ttl) );
 	data += string(";");
 
 	galaxy_node.nodep2p_foreach_cmd( c_protocol::e_proto_cmd_findhip_query , data );
 
-	m_ask_ttl = byte_highest_ttl;   
+	m_ttl_used = byte_highest_ttl;
 	m_ask_time = std::chrono::steady_clock::now();
 }
 
@@ -640,29 +646,47 @@ void c_tunserver::event_loop() {
 
 
 	this->peering_ping_all_peers();
+	const auto ping_all_frequency = std::chrono::seconds( 30 ); // how often to ping them
+	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
+	const long int ping_all_count_low = 2; // how many times send ping fast at first
+
 	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
-	auto ping_all_frequency = std::chrono::seconds( 5 ); // how often to ping them
+	long int ping_all_count = 0; // how many times did we do that in fact
 
 
+	// low level receive buffer
 	const int buf_size=65536;
 	char buf[buf_size];
 
+	bool anything_happened=false; // in given loop iteration, for e.g. debug
 
 	while (1) {
 		auto time_now = std::chrono::steady_clock::now(); // time now
-		if (time_now > ping_all_time_last + ping_all_frequency ) {
-			_note("It's time to ping all peers again");
-			peering_ping_all_peers(); // TODO(r) later ping only peers that need that
-			ping_all_time_last = std::chrono::steady_clock::now();
-		}
-
-		debug_peers();
 
 		{
+			auto freq = ping_all_frequency;
+			if (ping_all_count < ping_all_count_low) freq = ping_all_frequency_low;
+			if (time_now > ping_all_time_last + freq ) {
+				_note("It's time to ping all peers again (at auto-pinging time frequency=" << std::chrono::duration_cast<std::chrono::seconds>(freq).count() << " seconds)");
+				peering_ping_all_peers(); // TODO(r) later ping only peers that need that
+				ping_all_time_last = std::chrono::steady_clock::now();
+				++ping_all_count;
+			}
+		}
+
+		ostringstream oss;
+		oss <<	" Node " << m_my_name << " hip=" << m_haship_addr << " pubkey=" << m_haship_pubkey;
+		const string node_title_bar = oss.str();
+
+
+		if (anything_happened) {
+			debug_peers();
+
 			string xx(10,'-');
-			std::cerr << endl << xx << " Node " << m_my_name << " hip=" << m_haship_addr << " pubkey=" << m_haship_pubkey
-				<< xx << endl << endl;
+			std::cerr << endl << xx << node_title_bar << xx << endl << endl;
 		} // --- print your name ---
+
+		anything_happened=false;
 
 		wait_for_fd_event();
 
@@ -671,6 +695,8 @@ void c_tunserver::event_loop() {
 		try { // ---
 
 		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
+			anything_happened=true;
+
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
 			_info("###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			this->route_tun_data_to_its_destination(
@@ -679,7 +705,8 @@ void c_tunserver::event_loop() {
 			); // push the tunneled data to where they belong
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
-			
+			anything_happened=true;
+
 			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
 			socklen_t from_addr_raw_size; // ^ size of it
 
@@ -715,7 +742,7 @@ void c_tunserver::event_loop() {
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
-			c_haship_addr sender_hip; 
+			c_haship_addr sender_hip;
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 				_info("We recognize the sender, as: " << sender_as_peering);
@@ -800,11 +827,24 @@ void c_tunserver::event_loop() {
 				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
 
 				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
+				c_haship_addr requested_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip );
 
-				_info("We received HIP=" << string_as_hex( bin_hip ) );
+				string_as_bin bin_ttl( cmd_data.bytes.substr(pos1+1,1) );
+				int requested_ttl = static_cast<int>( bin_ttl.bytes.at(0) ); // char to integer
 
-				c_routing_manager::c_route_reason reason( sender_hip , c_routing_manager::e_search_mode_help_find );
-				_warn("Query reason will be: " << reason );
+				_info("We received request for HIP=" << string_as_hex( bin_hip ) << " = " << requested_hip << " and TTL=" << requested_ttl );
+				if (requested_ttl < 1) {
+					_info("Too low TTL, dropping the request");
+				} else {
+					c_routing_manager::c_route_reason reason( sender_hip , c_routing_manager::e_search_mode_help_find );
+					try {
+						_mark("Searching for the route for him");
+						const auto & route = m_routing_manager.get_route_or_maybe_search(*this, requested_hip , reason , true, requested_ttl - 1);
+					} catch(...) {
+						_info("Can not yet reply to that route query.");
+						// a background should be running in background usually
+					}
+				}
 
 			}
 			else {
@@ -814,7 +854,7 @@ void c_tunserver::event_loop() {
 			// ------------------------------------
 
 		}
-		else _info("Idle.");
+		else _info("Idle. " << node_title_bar);
 
 		}
 		catch (std::exception &e) {

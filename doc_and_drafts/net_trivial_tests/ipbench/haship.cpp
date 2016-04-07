@@ -60,6 +60,11 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	}
 }
 
+c_haship_addr::c_haship_addr(tag_constr_by_addr_bin x, const string_as_bin & data ) {
+	assert( this->size() == data.bytes.size() );
+	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.bytes.at(i);
+}
+
 void c_haship_addr::print(ostream &ostr) const {
 	string_as_hex dbg( string_as_bin(*this) );
 	ostr << "hip:" << dbg.get();
