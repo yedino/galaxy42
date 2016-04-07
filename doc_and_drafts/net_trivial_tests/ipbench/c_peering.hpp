@@ -28,6 +28,9 @@ class c_peering { ///< An (mostly established) connection to peer
 
 		virtual void print(ostream & ostr) const;
 
+		virtual c_haship_addr get_hip() const;
+		virtual c_haship_pubkey get_pub() const;
+
 		friend class c_tunserver;
 
 	protected:

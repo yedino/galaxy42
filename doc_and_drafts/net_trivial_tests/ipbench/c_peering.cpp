@@ -38,6 +38,9 @@ void c_peering::send_data(const char * data, size_t data_size) {
 
 ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
 
+c_haship_addr c_peering::get_hip() const { return m_haship_addr; }
+c_haship_pubkey c_peering::get_pub() const { return m_pubkey; }
+
 // ------------------------------------------------------------------
 
 c_peering_udp::c_peering_udp(const t_peering_reference & ref)

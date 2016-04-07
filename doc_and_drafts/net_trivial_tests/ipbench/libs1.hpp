@@ -108,6 +108,18 @@ std::string STR(const T & obj) {
 	return oss.str();
 }
 
+
+class expected_exception : public std::exception {
+	public:
+		const char* what() const noexcept override;
+};
+
+class expected_not_found : public stdplus::expected_exception {
+	public:
+		const char* what() const noexcept override;
+};
+
+
 }
 
 using namespace stdplus;

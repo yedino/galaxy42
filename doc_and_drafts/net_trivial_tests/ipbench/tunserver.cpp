@@ -141,7 +141,8 @@ class c_galaxy_node {
 		c_galaxy_node()=default;
 		virtual ~c_galaxy_node()=default;
 
-		virtual void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data)=0;
+		virtual void nodep2p_foreach_cmd( c_protocol::t_proto_cmd cmd, string_as_bin data )=0; ///< send given command/data to each peer
+		virtual const c_peering & get_peer_with_hip( c_haship_addr addr )=0; ///< return peering reference of a peer by given HIP. Will throw expected_not_found
 };
 
 // ------------------------------------------------------------------
@@ -162,9 +163,11 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				t_route_state m_state; ///< e.g. e_route_state_found is route is ready to be used
 				c_haship_addr m_nexthop; ///< hash-ip of next hop in this route
 
-				int m_cost; ///< some general cost
+				int m_cost; ///< some general cost - currently e.g. in number of hops
 				t_route_time m_time; ///< age of this route
-				int m_ttl; ///< at which TTL we got this reply
+				// int m_ttl; ///< at which TTL we got this reply
+
+				c_route_info(c_haship_addr nexthop, int cost);
 		};
 
 		class c_route_reason {
@@ -215,6 +218,8 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 		typedef std::map< c_haship_addr, unique_ptr<c_route_info> > t_route_nexthop_by_dst; ///< routes to destinations: the hash-ip of next hop, by hash-ip of finall destination
 		t_route_nexthop_by_dst m_route_nexthop; ///< known routes: the hash-ip of next hop, indexed by hash-ip of finall destination
 
+		const c_route_info & add_route_info_and_return(c_haship_addr target, c_route_info route_info); ///< learn a route to this target. If it exists, then merge it correctly (e.g. pick better one)
+
 	public:
 		const c_route_info & get_route_or_maybe_search(c_galaxy_node & galaxy_node , c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search, int search_ttl);
 };
@@ -236,7 +241,7 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::t_search
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_info & obj) {
 	return ostr << "{ROUTE: next_hop=" << obj.m_nexthop
-		<< " cost=" << obj.m_cost << " time=" << obj.m_time << " ttl=" << obj.m_ttl << "}";
+		<< " cost=" << obj.m_cost << " time=" << obj.m_time << "}";
 }
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_reason & obj) {
@@ -257,6 +262,11 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 	ostr << "}";
 	return ostr;
 }
+
+
+c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost)
+	: m_nexthop(nexthop), m_cost(cost), m_time(  std::chrono::steady_clock::now() )
+{ }
 
 c_routing_manager::c_route_reason_detail::c_route_reason_detail( t_route_time when , int ttl )
 	: m_when(when) , m_ttl ( ttl )
@@ -306,9 +316,37 @@ c_routing_manager::c_route_search::c_route_search(c_haship_addr addr, int basic_
 	_info("NEW router SEARCH: " << (*this));
 }
 
+const c_routing_manager::c_route_info & c_routing_manager::add_route_info_and_return(c_haship_addr target, c_route_info route_info) {
+	// TODO(r): refactor out the create-or-update idiom
+	auto it = m_route_nexthop.find( target );
+	if (it == m_route_nexthop.end()) { // new one
+		_info("This is NEW route information." << route_info);
+		auto new_obj = make_unique<c_route_info>( route_info ); // TODO(rob): std::move it here - optimization?
+		auto emplace = m_route_nexthop.emplace( std::move(target) , std::move(new_obj) );
+		assert(emplace.second == true); // inserted new
+		return * emplace.first->second; // reference to object stored in member we own
+	} else {
+		_info("This is UPDATED route information." << route_info);
+		// TODO(r) TODONEXT pick optimal path?
+		return * it->second;
+	}
+}
+
 const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_search(c_galaxy_node & galaxy_node, c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search , int search_ttl) {
 	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
-	auto found = m_route_nexthop.find( dst );
+
+
+	try {
+		const auto & peer = galaxy_node.get_peer_with_hip(dst);
+		_info("We have that peer directly: " << peer );
+		const int cost = 1; // direct peer. In future we can add connection cost or take into account congestion/lag...
+		c_route_info route_info( peer.get_hip() , cost  );
+		_info("Direct route: " << route_info);
+		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
+		return route_info_ref_we_own;
+	} catch(expected_not_found) { }
+
+	auto found = m_route_nexthop.find( dst ); // <--- search what we know
 	if (found != m_route_nexthop.end()) { // found
 		const auto & route = found->second;
 		_info("ROUTING-MANAGER: found route: " << (*route));
@@ -384,6 +422,7 @@ class c_tunserver : public c_galaxy_node {
 		} t_route_method;
 
 		void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) override;
+		const c_peering & get_peer_with_hip( c_haship_addr addr ) override;
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -578,6 +617,12 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 	}
 }
 
+const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr ) {
+	auto peer_iter = m_peer.find(addr);
+	if (peer_iter == m_peer.end()) throw expected_not_found();
+	return * peer_iter->second;
+}
+
 void c_tunserver::debug_peers() {
 	_note("=== Debug peers ===");
 	for(auto & v : m_peer) { // to each peer
@@ -592,7 +637,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	// --- choose next hop in peering ---
 
 	// try direct peers:
-	auto peer_it = m_peer.find(next_hip); // find c_peering to send to
+	auto peer_it = m_peer.find(next_hip); // find c_peering to send to // TODO(r) this functionallity will be soon doubled with the route search in m_routing_manager below, remove it then
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
