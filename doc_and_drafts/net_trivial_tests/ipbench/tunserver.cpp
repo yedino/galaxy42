@@ -168,6 +168,8 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				// int m_ttl; ///< at which TTL we got this reply
 
 				c_route_info(c_haship_addr nexthop, int cost);
+
+				int get_cost() const;
 		};
 
 		class c_route_reason {
@@ -268,6 +270,8 @@ c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost)
 	: m_nexthop(nexthop), m_cost(cost), m_time(  std::chrono::steady_clock::now() )
 { }
 
+int c_routing_manager::c_route_info::get_cost() const { return m_cost; }
+
 c_routing_manager::c_route_reason_detail::c_route_reason_detail( t_route_time when , int ttl )
 	: m_when(when) , m_ttl ( ttl )
 { }
@@ -335,7 +339,6 @@ const c_routing_manager::c_route_info & c_routing_manager::add_route_info_and_re
 const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_search(c_galaxy_node & galaxy_node, c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search , int search_ttl) {
 	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
 
-
 	try {
 		const auto & peer = galaxy_node.get_peer_with_hip(dst);
 		_info("We have that peer directly: " << peer );
@@ -343,8 +346,9 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		c_route_info route_info( peer.get_hip() , cost  );
 		_info("Direct route: " << route_info);
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
-		return route_info_ref_we_own;
-	} catch(expected_not_found) { }
+		return route_info_ref_we_own; // <--- return direct
+	} 
+	catch(expected_not_found) { } // not found in direct peers
 
 	auto found = m_route_nexthop.find( dst ); // <--- search what we know
 	if (found != m_route_nexthop.end()) { // found
@@ -800,10 +804,12 @@ void c_tunserver::event_loop() {
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
+			c_peering * sender_as_peering_ptr  = nullptr; // TODO(r)-security review usage of this, and is it needed
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 				_info("We recognize the sender, as: " << sender_as_peering);
 				sender_hip = sender_as_peering.m_haship_addr; // this is not yet confirmed/authenticated(!)
+				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
 			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
@@ -831,7 +837,7 @@ void c_tunserver::event_loop() {
 
 				// reinterpret the char from IO as unsigned-char as wanted by crypto code
 				unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2 + ttl_width; // TODO calculate depending on version, command, ...
-				long long ciphertext_buf_len = size_read - 2; // TODO 2 = hesder size
+				long long ciphertext_buf_len = size_read - 2; // TODO 2 = header size
 				assert( ciphertext_buf_len >= 1 );
 
 				int r = crypto_aead_chacha20poly1305_decrypt(
@@ -893,7 +899,7 @@ void c_tunserver::event_loop() {
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
-				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic
+				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
 				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
 				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
 
@@ -916,14 +922,63 @@ void c_tunserver::event_loop() {
 				} else {
 					c_routing_manager::c_route_reason reason( sender_hip , c_routing_manager::e_search_mode_help_find );
 					try {
-						_mark("Searching for the route for him");
+						_mark("Searching for the route he asks about");
 						const auto & route = m_routing_manager.get_route_or_maybe_search(*this, requested_hip , reason , true, requested_ttl - 1);
+						_note("We found the route thas he asks about, as: " << route);
+
+						// [protocol] "TTL;HIP_OF_GOAL;COST;" e.g.: (but in binary) "5;fd42...5812;1;"
+						const int reply_ttl = requested_ttl; // will reply as much as needed
+						unsigned char reply_ttl_byte = static_cast<unsigned char>( reply_ttl );
+						assert( reply_ttl_byte == reply_ttl );
+						cmd_data.bytes += reply_ttl_byte; // TODO just 1 byte, fix serialization. https://h.mantis.antinet.org/view.php?id=59
+						cmd_data.bytes += ';';
+
+						cmd_data.bytes += string_as_bin( requested_hip ).bytes; // the address of goal
+						cmd_data.bytes += ';';
+
+						auto cost_a = route.get_cost();
+						unsigned char cost_byte = static_cast<unsigned char>( cost_a );
+						assert( cost_byte == cost_a );
+						cmd_data.bytes += cost_byte; // TODO just 1 byte, fix serialization. https://h.mantis.antinet.org/view.php?id=59
+						cmd_data.bytes += ';'; // the cost
+
+						_info("Will send data to sender_as_peering_ptr=" << sender_as_peering_ptr);
+						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
+						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, cmd_data, m_sock_udp); // <---
+						_note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
 						// a background should be running in background usually
 					}
 				}
 
+			}
+			else if (cmd == c_protocol::e_proto_cmd_findhip_reply) { // [protocol]
+				// [protocol] "TTL;HIP_OF_GOAL;COST;" e.g.: (but in binary) "5;fd42...5812;1;"
+				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
+
+				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
+				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
+				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
+
+				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
+				c_haship_addr goal_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip );
+
+				string_as_bin bin_ttl( cmd_data.bytes.substr(pos1+1,1) );
+				int requested_ttl = static_cast<int>( bin_ttl.bytes.at(0) ); // char to integer
+
+				auto data_route_ttl = requested_ttl - 1;
+				const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
+				if (data_route_ttl > limit_incoming_ttl) {
+					_info("Got command at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
+					data_route_ttl=limit_incoming_ttl;
+				}
+
+				_info("We received REPLY for routing search for HIP=" << string_as_hex( bin_hip ) << " = " << goal_hip << " and TTL=" << requested_ttl );
+				if (requested_ttl < 1) {
+					_info("Too low TTL, dropping the request");
+				} else {
+				}
 			}
 			else {
 				_warn("??????????????????? Unknown protocol command, cmd="<<cmd);
