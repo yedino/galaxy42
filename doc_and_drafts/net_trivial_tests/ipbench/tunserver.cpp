@@ -321,30 +321,32 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		}
 		else {
 			_info("Route not found, we will be searching");
+			bool created_now=false;
 			auto search_iter = m_search.find(dst);
 			if (search_iter == m_search.end()) {
-				_info("STARTED (created) a new SEARCH for this route to dst="<<dst);
+				created_now=true;
+				_info("STARTED SEARCH (created brand new search record) for route to dst="<<dst);
 				auto new_search = make_unique<c_route_search>(dst, search_ttl); // start a new search, at this TTL
 				new_search->add_request( reason , search_ttl ); // add a first reason (it also sets TTL)
-				m_search.emplace( std::move(dst) , std::move(new_search) );
+				auto search_emplace = m_search.emplace( std::move(dst) , std::move(new_search) );
+
+				assert(search_emplace.second == true); // the insertion took place
+				search_iter = search_emplace.first; // save here the result
 			}
 			else {
-				_info("STARTED (updated) an existing SEARCH for this route to dst="<<dst);
+				_info("STARTED SEARCH (updated an existing search) for this to dst="<<dst);
 				search_iter->second->add_request( reason , search_ttl ); // add reason (can increase TTL)
 			}
 			auto & search_obj = search_iter->second; // search exists now (new or updated)
-			search_obj->execute( galaxy_node ); // ***
+			if (created_now) search_obj->execute( galaxy_node ); // ***
 		}
 	}
-	throw std::runtime_error("no route known (yet) to dst=" + STR(dst));
+	_note("NO ROUTE");
+	throw std::runtime_error("NO ROUTE known (at current time) to dst=" + STR(dst));
 }
 
 void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) {
-	_info("Uhm... 1");
-	_info("I am search in this=" << this);
-	_info("Field: " << m_ever );
-	_mark("Sending QUERY for HIP, with m_ttl_should_use=" << m_ttl_should_use);
-	_info("Uhm... 2");
+	_info("Sending QUERY for HIP, with m_ttl_should_use=" << m_ttl_should_use);
 	string_as_bin data; // [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 
 	data += string_as_bin(m_addr);
@@ -651,7 +653,7 @@ void c_tunserver::event_loop() {
 
 
 	this->peering_ping_all_peers();
-	const auto ping_all_frequency = std::chrono::seconds( 30 ); // how often to ping them
+	const auto ping_all_frequency = std::chrono::seconds( 600 ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
@@ -666,6 +668,8 @@ void c_tunserver::event_loop() {
 	bool anything_happened=false; // in given loop iteration, for e.g. debug
 
 	while (1) {
+		// std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
+
 		auto time_now = std::chrono::steady_clock::now(); // time now
 
 		{
