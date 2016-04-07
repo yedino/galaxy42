@@ -93,8 +93,8 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	m_streambuff(),
 	m_ostream(&m_streambuff),
 	m_read_size(),
-	m_input_buffer(),
-	m_input_chunks()
+	m_streambuff_in(),
+	m_istream(&m_streambuff_in)
 {
 	_dbg_mtx("wait for connect");
 	m_socket.connect(endpoint); // TODO throw if error
@@ -112,8 +112,8 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 	m_streambuff(),
 	m_ostream(&m_streambuff),
 	m_read_size(),
-	m_input_buffer(),
-	m_input_chunks()
+	m_streambuff_in(),
+	m_istream(&m_streambuff)
 {
 	boost::asio::ip::tcp::no_delay option;
 	m_socket.set_option(option);
@@ -141,7 +141,7 @@ void c_connection::send(std::string && message) {
 }
 
 void c_connection::write_handler(const boost::system::error_code &error, std::size_t length) {
-	_dbg_mtx("");
+	_dbg_mtx("write " << length << " bytes");
 	if (error) { // error
 		return;
 	}
@@ -151,6 +151,7 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 		m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
 							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
 	}
+	_dbg_mtx("end");
 }
 
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
@@ -158,26 +159,26 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 	if (error) {
 		return; // TODO close connection
 	}
-	m_input_buffer.resize(m_read_size);
 	assert(m_read_size > 0); // TODO throw?
 
 	_dbg_mtx("wait for " << m_read_size << " bytes");
-	m_socket.async_read_some(buffer(m_input_buffer),
+	async_read(m_socket, m_streambuff_in,
 							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void c_connection::read_data_handler(const boost::system::error_code &error, size_t length) {
-	_dbg_mtx("length " << length);
-	if (error) {
+	_dbg_mtx("***************************chunk");
+	_dbg_mtx("chunk size " << length);
+	if (error || length == 0) {
 		return; // TODO close connection
 	}
-	_dbg_mtx("m_input_chunks.size() " << m_input_chunks.size());
 	_dbg_mtx("m_read_size " << m_read_size);
-	if (m_input_chunks.size() + length < m_read_size) { // if data is chunked
+	/*if (m_input_chunks.size() + length < m_read_size) { // if data is chunked
 		_dbg_mtx("data chunked");
 		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
 		m_input_buffer.clear(); // clear input data
 		// continue reading
+		_dbg_mtx("continue reading");
 		m_socket.async_read_some(buffer(m_input_buffer),
 							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 		return;
@@ -185,17 +186,17 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	else {
 		_dbg_mtx("data not chunked or last chunk");
 		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
-	}
+	}*/
+	_dbg_mtx("length " << length);
 	// generate c_network_message
 	c_network_message network_message;
 	//network_message.data.assign(m_input_buffer.begin(), m_input_buffer.end());
-	network_message.data = std::move(m_input_chunks);
 	_dbg_mtx("network_message.data.size() " << network_message.data.size());
 	assert(network_message.data.size() == m_read_size);
 	auto endpoint = m_socket.remote_endpoint();
 	network_message.address_ip = endpoint.address().to_string();
 	network_message.port = endpoint.port();
 	m_tcp_node.m_recv_queue.push(std::move(network_message));
-	m_input_buffer.clear();
-	m_input_chunks.clear();
+	//m_socket.async_read_some(buffer(m_input_buffer),
+	//					std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 }

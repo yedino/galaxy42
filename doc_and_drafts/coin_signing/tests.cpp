@@ -743,6 +743,8 @@ bool net_test() {
 	std::cout << "send response" << std::endl;
 	//message2.data = "0987654321";
 	message2.data.assign(655350000, 'a');
+	auto count_a = std::count(message2.data.begin(), message2.data.end(), 'a');
+	std::cout << "count of a " << count_a << std::endl;
 	node2->send(std::move(message2));
 
 	// wait for message
@@ -755,7 +757,12 @@ bool net_test() {
 	std::cout << "source ip " << message.address_ip << std::endl;
 	std::cout << "source port " << message.port << std::endl;
 	std::cout << "readet data size " << message.data.size() << std::endl;
-	//std::cout << "data " << message.data << std::endl;
+	std::cout << "last char " << (int)*(message.data.end() - 1) << std::endl;
+	count_a = std::count(message.data.begin(), message.data.end(), 'a');
+	auto count_0 = std::count(message.data.begin(), message.data.end(), '\0');
+	std::cout << "count of a " << count_a << std::endl;
+	std::cout << "count of 0 " << count_0 << std::endl;
+	assert(message2.data == message.data);
 
 	return true;
 }

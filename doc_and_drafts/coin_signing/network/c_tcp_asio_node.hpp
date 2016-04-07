@@ -53,7 +53,7 @@ class c_connection {
 		~c_connection();
 
 		/**
-		 * sends 2 size bytes(as uint16_t) and message data
+		 * sends 4 size bytes(as uint32_t) and message data
 		 * consume message
 		 */
 		void send(std::string && message);
@@ -69,8 +69,8 @@ class c_connection {
 		void write_handler(const boost::system::error_code &error, size_t length);
 
 		uint32_t m_read_size;
-		std::vector<char> m_input_buffer; // TODO use std::array
-		std::string m_input_chunks;
+		boost::asio::streambuf m_streambuff_in;
+		std::istream m_istream;
 
 		void read_size_handler(const boost::system::error_code &error, size_t length);
 		void read_data_handler(const boost::system::error_code &error, size_t length);
