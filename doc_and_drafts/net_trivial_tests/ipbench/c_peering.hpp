@@ -44,7 +44,7 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 		c_peering_udp(const t_peering_reference & ref);
 
 		virtual void send_data(const char * data, size_t data_size) override;
-		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket);
+		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket, int ttl);
 		virtual void send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket);
 	private:
 

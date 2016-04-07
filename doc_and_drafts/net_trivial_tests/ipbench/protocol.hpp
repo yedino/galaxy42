@@ -10,6 +10,10 @@ class c_protocol {
 
 		constexpr static unsigned char version_size = 1;
 		constexpr static unsigned char cmd_size = 1;
+		constexpr static unsigned char ttl_size = 1; // size of TTL header
+
+		constexpr static unsigned char ttl_max_value_ever = 200; // no value bigger then that can ever appear, it would be low level error to let that happen
+		constexpr static unsigned char ttl_max_accepted = 5; // how high can be the TTL requested by others that we can [normally?] accept
 
 /*
 Proxy format - the data to be sent on wire to peer:
