@@ -39,7 +39,7 @@ c_tcp_asio_node::~c_tcp_asio_node() {
 		m_ioservice.stop();
 		_dbg_mtx("io_service stop loop");
 	}
-	_dbg_mtx("iostream stopped " << m_ioservice.stopped());
+	_dbg_mtx("io_service stopped " << m_ioservice.stopped());
 	m_acceptor.close();
 	m_socket_accept.close();
 	for (auto &thread_ptr : m_asio_threads) {
