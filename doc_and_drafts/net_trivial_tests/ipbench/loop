@@ -1,0 +1,2 @@
+#!/bin/bash
+while true ; do clear ; echo ; echo ; echo ; ./tunserver.sh ; echo ; sleep 1 ; done

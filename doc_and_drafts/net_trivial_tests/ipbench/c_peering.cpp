@@ -27,12 +27,19 @@ c_peering::c_peering(const t_peering_reference & ref)
 void c_peering::print(ostream & ostr) const {
 	ostr << "peering{";
 	ostr << " peering-addr=" << m_peering_addr;
-	ostr << " hip=" << string_as_dbg( m_haship_addr ).get();
-	ostr << " pub=" << string_as_dbg( m_pubkey ).get();
+	ostr << " hip=" << m_haship_addr;
+	ostr << " pub=" << m_pubkey;
 	ostr << "}";
 }
 
+void c_peering::send_data(const char * data, size_t data_size) {
+	throw std::runtime_error("Used abstract send_data() that does nothing");
+}
+
 ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
+
+c_haship_addr c_peering::get_hip() const { return m_haship_addr; }
+c_haship_pubkey c_peering::get_pub() const { return m_pubkey; }
 
 // ------------------------------------------------------------------
 
@@ -48,7 +55,7 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 
 // TODO unify array types! string_as_bin , unique_ptr to new c-array, raw c-array in libproto etc
 
-void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket) {
+void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket, int ttl) {
 	_info("Send to peer (tunneled data) data: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
 	static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
@@ -61,7 +68,7 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	// TODO randomize this data XXX use real crypto data
 
-	const int header_size = c_protocol::version_size + c_protocol::cmd_size ; // TODO pack this into protocol class --r
+	const int header_size = c_protocol::version_size + c_protocol::cmd_size + c_protocol::ttl_size ; //  [protocol] TODO pack this into protocol class --r
 
 	// TODO allocate buffer outside
 	std::unique_ptr<unsigned char[]> protomsg(new unsigned char[data_size + crypto_aead_chacha20poly1305_ABYTES + header_size ]); // plus the headers
@@ -69,8 +76,12 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	// why? --r:
 	assert(crypto_aead_chacha20poly1305_KEYBYTES <= crypto_generichash_BYTES);
+
+	// write headers:
 	protomsg.get()[0] = c_protocol::current_version;
-	protomsg.get()[1] = c_protocol::e_proto_cmd_tunneled_data;
+	protomsg.get()[1] = c_protocol::e_proto_cmd_tunneled_data; // this are tunneled data
+	assert( (ttl >= 0) && (ttl <= c_protocol::ttl_max_value_ever) );
+	protomsg.get()[2] = ttl; // ...this is their route ttl
 
 	unsigned char * ciphertext_buf = protomsg.get() + header_size; // just-pointer to part of protomsg where to write the message!
 	unsigned long long ciphertext_buf_len = 0; // encryption will write here the resulting size
@@ -93,7 +104,7 @@ void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_
 }
 
 void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int udp_socket) {
-	_info("UDP send to peer RAW: " << string_as_dbg(data,data_size).get() ); // TODO .get
+	_info("UDP send to peer RAW. To IP: " << m_peering_addr << ", RAW-DATA: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {

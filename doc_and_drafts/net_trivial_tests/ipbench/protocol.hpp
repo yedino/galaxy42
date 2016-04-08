@@ -10,6 +10,10 @@ class c_protocol {
 
 		constexpr static unsigned char version_size = 1;
 		constexpr static unsigned char cmd_size = 1;
+		constexpr static unsigned char ttl_size = 1; // size of TTL header
+
+		constexpr static unsigned char ttl_max_value_ever = 200; // no value bigger then that can ever appear, it would be low level error to let that happen
+		constexpr static unsigned char ttl_max_accepted = 5; // how high can be the TTL requested by others that we can [normally?] accept
 
 /*
 Proxy format - the data to be sent on wire to peer:
@@ -30,7 +34,11 @@ typedef enum {
 	e_proto_cmd_public_hi = 3, // simple public peering
 	e_proto_cmd_public_ping_request = 4, // simple public ping to the peer
 	e_proto_cmd_public_ping_reply = 5, // simple public ping to the peer
+	e_proto_cmd_findhip_query = 10, // searching HIP - query
+	e_proto_cmd_findhip_reply = 11, // searching HIP - reply
 } t_proto_cmd ;
+
+static bool command_is_valid_from_unknown_peer( t_proto_cmd cmd ); ///< is this command one that can come from an unknown peer (without any HIP and CA)
 
 
 };

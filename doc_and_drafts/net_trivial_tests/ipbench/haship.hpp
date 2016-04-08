@@ -34,18 +34,22 @@ struct c_haship_pubkey;
 struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	struct tag_constr_by_hash_of_pubkey{};
 	struct tag_constr_by_addr_string{};
+	struct tag_constr_by_addr_bin{};
 
 	c_haship_addr();
 	c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ); ///< create the IP address that matches given public key (e.g. hash of it)
 	c_haship_addr(tag_constr_by_addr_string x, const string & addr_string); ///< create the IP address from a string (as dot/colon IP notation)
+	c_haship_addr(tag_constr_by_addr_bin x, const string_as_bin & data ); ///< create the IP address from binary serialization of the IP address
 
 	void print(ostream &ostr) const;
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 
-
 struct c_haship_pubkey : std::array<unsigned char, g_haship_pubkey_size > {
 	c_haship_pubkey();
 	c_haship_pubkey( const string_as_bin & input ); ///< create the IP form
+
+	void print(ostream &ostr) const;
 };
+ostream& operator<<(ostream &ostr, const c_haship_pubkey & v);
 

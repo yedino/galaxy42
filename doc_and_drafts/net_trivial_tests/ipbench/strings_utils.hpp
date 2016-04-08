@@ -1,14 +1,21 @@
 
 #include "libs1.hpp"
 
+struct string_as_bin;
+
 struct string_as_hex {
 	std::string data; ///< e.g.: "1fab"
 
 	string_as_hex()=default;
-	string_as_hex(const std::string & s);
+	string_as_hex(const std::string & s); ///< e.g. for "1fab" -> I will store "1fab"
+	explicit string_as_hex(const string_as_bin & s); /// e.g. for "MN" I will store the hex representing bytes 0x4d(77) 0x4e(78) -> "4d4e"
+
+	const std::string & get() const; ///< TODO(u) instead use operator<< to ostream so this is not usually needed... -- DONE?  just remove this probably
 };
+std::ostream& operator<<(std::ostream &ostr, const string_as_hex &obj);
 
 unsigned char hexchar2int(char c); // 'f' -> 15
+unsigned char int2hexchar(unsigned char i); // 15 -> 'f'
 
 unsigned char doublehexchar2int(string s); // "fd" -> 253
 
@@ -34,6 +41,11 @@ struct string_as_bin {
 	{
 		static_assert( std::is_pod<T>::value , "Can not serialize as binary data (this array type, of) this non-POD object type");
 	}
+	
+	string_as_bin & operator+=( const string_as_bin & other );
+	string_as_bin operator+( const string_as_bin & other ) const;
+	string_as_bin & operator+=( const std::string & other );
+	string_as_bin operator+( const std::string & other ) const;
 };
 
 

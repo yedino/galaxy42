@@ -9,9 +9,8 @@ c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({
 c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({}) {
 	at(0) = 0xfd;
 	at(1) = 0x42;
-	for (size_t i=0; i<8; ++i) { // TODO real hash!!!
-		at(2+i) = pubkey.at(i);
-		at(16-1-i) = pubkey.at(i);
+	for (size_t i=2; i<16; ++i) { // TODO real hash!!!
+		at(i) = pubkey.at(i-2);
 	}	
 }
 
@@ -19,7 +18,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//throw std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__));
 
-	if (addr_string.size() >= (8*4+7)) throw std::invalid_argument("The IP address looks invalid (too long)"); // 8 groups of 4 hexchar, plus 7 collon
+	if (addr_string.size() > (8*4+7)) throw std::invalid_argument("The IP address looks invalid (too long) on string ["+addr_string+"]"); // 8 groups of 4 hexchar, plus 7 collon
 	// now sting size is reasonable here, can operate on int
 
 	vector<string> grtab; // group tab
@@ -32,7 +31,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	while ( adr_s.good() ) {
 		string gr; // given group
 		getline(adr_s, gr, ':');
-		_info("gr="<<gr);
+		//_info("gr="<<gr);
 		if (gr.size()==0) { // inside ::
 			if (exp>0) throw std::invalid_argument("Invalid address, with more then one '::' in it.");
 			int cc=0; // count of colons
@@ -46,10 +45,10 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 		grtab.push_back(gr);
 	}
 	
-	_note("Parsed as:");
+	//_note("Parsed as:");
 	size_t pos=0;
 	for(const string & gr: grtab) {
-		_info("gr="<<gr); // "fd42"
+		//_info("gr="<<gr); // "fd42"
 		assert(gr.size() == 4);
 
 		unsigned char bh = doublehexchar2int( gr.substr(0,2) ); // "fd" -> 253
@@ -61,15 +60,22 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	}
 }
 
-void c_haship_addr::print(ostream &ostr) const {
-	string_as_dbg dbg( (*this) );
-	ostr << dbg.get();
+c_haship_addr::c_haship_addr(tag_constr_by_addr_bin x, const string_as_bin & data ) {
+	assert( this->size() == data.bytes.size() );
+	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.bytes.at(i);
 }
 
-ostream& operator<<(ostream &ostr, const c_haship_addr & v) {
-	v.print(ostr);
-	return ostr;
+void c_haship_addr::print(ostream &ostr) const {
+	string_as_hex dbg( string_as_bin(*this) );
+	ostr << "hip:" << dbg.get();
 }
+ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
+
+void c_haship_pubkey::print(ostream &ostr) const {
+	string_as_hex dbg( string_as_bin(*this) );
+	ostr << "pub:" << dbg.get();
+}
+ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	return ostr; }
 
 
 

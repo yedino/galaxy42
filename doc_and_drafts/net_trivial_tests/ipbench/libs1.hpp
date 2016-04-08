@@ -22,6 +22,7 @@
 #include <cassert>
 #include <array>
 #include <set>
+#include <tuple>
 #include <iomanip>
 #include <unordered_set>
 
@@ -56,7 +57,7 @@ using std::endl;
  * type that is a size_t, but can be with error-signaling value e.g. -1, otherwise it is valid.
  * the caller MUST check the returned value against size_t_is() before using it
  */
-typedef size_t size_t_maybe; 
+typedef size_t size_t_maybe;
 
 inline size_t_maybe size_t_invalid() { ///< returns a size_t that means "invalid size_t"
 	return static_cast<size_t>( -1 );
@@ -99,6 +100,25 @@ template <typename T, typename U>
 T* unique_cast_ptr(std::unique_ptr<U> & u) {
 	return dynamic_cast<T*>( u.get() );
 }
+
+template <typename T>
+std::string STR(const T & obj) {
+	std::ostringstream oss;
+	oss << obj;
+	return oss.str();
+}
+
+
+class expected_exception : public std::exception {
+	public:
+		const char* what() const noexcept override;
+};
+
+class expected_not_found : public stdplus::expected_exception {
+	public:
+		const char* what() const noexcept override;
+};
+
 
 }
 
