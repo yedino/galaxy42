@@ -57,7 +57,6 @@ void c_tcp_asio_node::send(c_network_message && message) {
 	std::lock_guard<std::mutex> lg(m_connection_map_mtx);
 	auto it = m_connection_map.find(endpoint); // find destination connection
 	if (it == m_connection_map.end()) { // not found connection, create new
-		//m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, endpoint));
 		m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, endpoint));
 	}
 	assert(!m_connection_map.empty());
@@ -169,6 +168,7 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 	_dbg_mtx("write " << length << " bytes");
 	if (error) { // error
 		_dbg_mtx("error: " << error.message());
+		delete_me();
 		return;
 	}
 	std::lock_guard<std::mutex> lg(m_streambuff_mtx);
@@ -184,6 +184,7 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 	_dbg_mtx("length " << length);
 	if (error) {
 		_dbg_mtx("error: " << error.message());
+		delete_me();
 		return; // TODO close connection
 	}
 	assert(m_read_size > 0); // TODO throw?
@@ -199,23 +200,10 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	_dbg_mtx("chunk size " << length);
 	if (error || length == 0) {
 		_dbg_mtx("error: " << error.message());
+		delete_me();
 		return; // TODO close connection
 	}
 	_dbg_mtx("m_read_size " << m_read_size);
-	/*if (m_input_chunks.size() + length < m_read_size) { // if data is chunked
-		_dbg_mtx("data chunked");
-		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
-		m_input_buffer.clear(); // clear input data
-		// continue reading
-		_dbg_mtx("continue reading");
-		m_socket.async_read_some(buffer(m_input_buffer),
-							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
-		return;
-	}
-	else {
-		_dbg_mtx("data not chunked or last chunk");
-		m_input_chunks.append(m_input_buffer.begin(), m_input_buffer.end()); // add data to chunks
-	}*/
 	_dbg_mtx("length " << length);
 	// generate c_network_message
 	c_network_message network_message;
@@ -233,4 +221,16 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	// comtinue read
 	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+
+void c_connection::delete_me() {
+	_dbg_mtx("");
+	auto endpoint = m_socket.remote_endpoint();
+	std::unique_lock<std::mutex> lg(m_tcp_node.get().m_connection_map_mtx);
+	m_tcp_node.get().m_connection_map.erase(endpoint); // remove this object from connection map
+	lg.unlock();
+	assert(m_myself.unique());
+	// delete myself
+	m_myself.reset();
 }

@@ -80,6 +80,7 @@ class c_connection : public std::enable_shared_from_this<c_connection> {
 
 		void read_size_handler(const boost::system::error_code &error, size_t length);
 		void read_data_handler(const boost::system::error_code &error, size_t length);
+		void delete_me();
 };
 
 }; // namespace
