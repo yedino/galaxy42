@@ -58,6 +58,9 @@ Do not create any of these objects outside of the world, because only world can 
 Also objects from different worlds can not be connected or interact together in any way (they must not
 find out, store, etc each-other addresses, of their objects).
 
+You should assume that when ever a reference is returned from member function, that it can be invalidated when the object is changed.
+How ever this should be in addition marked in comments [TODO or in special wrapping type?].
+
 === Memory access ===
 
 in main code, use & when possible if you just want to select object:
