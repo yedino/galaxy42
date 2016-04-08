@@ -70,7 +70,6 @@ class c_connection {
 
 		uint32_t m_read_size;
 		boost::asio::streambuf m_streambuff_in;
-		std::istream m_istream;
 
 		void read_size_handler(const boost::system::error_code &error, size_t length);
 		void read_data_handler(const boost::system::error_code &error, size_t length);

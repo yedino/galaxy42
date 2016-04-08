@@ -93,8 +93,7 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	m_streambuff(),
 	m_ostream(&m_streambuff),
 	m_read_size(),
-	m_streambuff_in(),
-	m_istream(&m_streambuff_in)
+	m_streambuff_in()
 {
 	_dbg_mtx("wait for connect");
 	m_socket.connect(endpoint); // TODO throw if error
@@ -112,8 +111,7 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 	m_streambuff(),
 	m_ostream(&m_streambuff),
 	m_read_size(),
-	m_streambuff_in(),
-	m_istream(&m_streambuff)
+	m_streambuff_in()
 {
 	boost::asio::ip::tcp::no_delay option;
 	m_socket.set_option(option);
@@ -162,7 +160,10 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 	assert(m_read_size > 0); // TODO throw?
 
 	_dbg_mtx("wait for " << m_read_size << " bytes");
+	streambuf::mutable_buffers_type mutableBuffer = m_streambuff_in.prepare(m_read_size);
+	//m_socket.async_read_some(mutableBuffer,
 	async_read(m_socket, m_streambuff_in,
+							transfer_exactly(m_read_size),
 							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -190,13 +191,18 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	_dbg_mtx("length " << length);
 	// generate c_network_message
 	c_network_message network_message;
-	//network_message.data.assign(m_input_buffer.begin(), m_input_buffer.end());
+	network_message.data.reserve(length);
+	_dbg_mtx("streambuff size " << m_streambuff_in.size());
+	streambuf::const_buffers_type buf = m_streambuff_in.data();
+	std::copy(buffers_begin(buf), buffers_begin(buf) + length, std::back_inserter(network_message.data));
+	m_streambuff_in.consume(length);
 	_dbg_mtx("network_message.data.size() " << network_message.data.size());
-	assert(network_message.data.size() == m_read_size);
+	//assert(network_message.data.size() == m_read_size);
 	auto endpoint = m_socket.remote_endpoint();
 	network_message.address_ip = endpoint.address().to_string();
 	network_message.port = endpoint.port();
 	m_tcp_node.m_recv_queue.push(std::move(network_message));
-	//m_socket.async_read_some(buffer(m_input_buffer),
-	//					std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
+	// comtinue read
+	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
+							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
