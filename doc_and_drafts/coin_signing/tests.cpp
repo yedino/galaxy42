@@ -742,7 +742,7 @@ bool net_test() {
 
 	std::cout << "send response" << std::endl;
 	//message2.data = "0987654321";
-	constexpr size_t big_message_size = 600 * 1024 * 1024;
+	constexpr size_t big_message_size = 100 * 1024 * 1024;
 	message2.data.assign(big_message_size, 'a');
 	auto count_a = std::count(message2.data.begin(), message2.data.end(), 'a');
 	std::cout << "count of a " << count_a << std::endl;

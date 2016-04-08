@@ -17,13 +17,15 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 	_dbg_mtx("c_tcp_asio_node constructor");
 	unsigned int number_of_threads = std::thread::hardware_concurrency();
 	if (number_of_threads == 0) number_of_threads = 1;
+	_dbg_mtx("create " << number_of_threads << " threads for asio");
 	auto thread_lambda = [this]() {
 		while(!m_stop_flag) {
-			_dbg_mtx("io_service loop");
+			_dbg_mtx(this << " io_service loop");
 			m_ioservice.run();
 			m_ioservice.reset();
 		}
-		_dbg_mtx("end of thread lambda");
+		_dbg_mtx(this << " m_ioservice stopped " << m_ioservice.stopped());
+		_dbg_mtx(this << " end of thread lambda");
 	};
 	for(unsigned int i = 0; i < number_of_threads; ++i) {
 		m_asio_threads.emplace_back(new std::thread(thread_lambda)); // TODO make_unique
@@ -33,13 +35,13 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 }
 
 c_tcp_asio_node::~c_tcp_asio_node() {
-	_dbg_mtx("c_tcp_asio_node destructor");
+	_dbg_mtx(this << " c_tcp_asio_node destructor");
 	m_stop_flag = true;
 	while (!m_ioservice.stopped()) {
 		m_ioservice.stop();
-		_dbg_mtx("io_service stop loop");
+		_dbg_mtx(this << " io_service stop loop");
 	}
-	_dbg_mtx("io_service stopped " << m_ioservice.stopped());
+	_dbg_mtx(this << " io_service stopped " << m_ioservice.stopped());
 	m_acceptor.close();
 	m_socket_accept.close();
 	for (auto &thread_ptr : m_asio_threads) {
@@ -74,7 +76,10 @@ c_network_message c_tcp_asio_node::receive() {
 
 void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 	_dbg_mtx("accept handler");
-	if (error) return;
+	if (error) {
+		_dbg_mtx("error: " << error.message());
+		return;
+	}
 	auto endpoint = m_socket_accept.remote_endpoint();
 	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
 	m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, std::move(m_socket_accept)));
@@ -141,6 +146,7 @@ void c_connection::send(std::string && message) {
 void c_connection::write_handler(const boost::system::error_code &error, std::size_t length) {
 	_dbg_mtx("write " << length << " bytes");
 	if (error) { // error
+		_dbg_mtx("error: " << error.message());
 		return;
 	}
 	std::lock_guard<std::mutex> lg(m_streambuff_mtx);
@@ -155,13 +161,12 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
 	_dbg_mtx("length " << length);
 	if (error) {
+		_dbg_mtx("error: " << error.message());
 		return; // TODO close connection
 	}
 	assert(m_read_size > 0); // TODO throw?
 
 	_dbg_mtx("wait for " << m_read_size << " bytes");
-	streambuf::mutable_buffers_type mutableBuffer = m_streambuff_in.prepare(m_read_size);
-	//m_socket.async_read_some(mutableBuffer,
 	async_read(m_socket, m_streambuff_in,
 							transfer_exactly(m_read_size),
 							std::bind(&c_connection::read_data_handler, this, std::placeholders::_1, std::placeholders::_2));
@@ -171,6 +176,7 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	_dbg_mtx("***************************chunk");
 	_dbg_mtx("chunk size " << length);
 	if (error || length == 0) {
+		_dbg_mtx("error: " << error.message());
 		return; // TODO close connection
 	}
 	_dbg_mtx("m_read_size " << m_read_size);
