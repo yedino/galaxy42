@@ -48,9 +48,12 @@ class c_tcp_asio_node final : public c_connection_base
 
 class c_connection : public std::enable_shared_from_this<c_connection> {
 	public:
-		static c_connection s_create_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint);
-		static c_connection s_create_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket);
-		//c_connection(c_connection &&) = default;
+		static std::shared_ptr<c_connection> s_create_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint);
+		static std::shared_ptr<c_connection> s_create_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket);
+		c_connection(const c_connection &) = delete;
+		c_connection& operator = (const c_connection &) = delete;
+		c_connection(c_connection &&) = default;
+		c_connection& operator = (c_connection &&) = default;
 		c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint); ///< connect constructor
 		c_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket); ///< accept constructor
 		~c_connection();
@@ -82,3 +85,4 @@ class c_connection : public std::enable_shared_from_this<c_connection> {
 }; // namespace
 
 #endif // C_TCP_ASIO_NODE_H
+
