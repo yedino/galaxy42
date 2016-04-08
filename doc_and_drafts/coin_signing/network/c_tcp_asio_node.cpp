@@ -91,8 +91,16 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 
 /************************************************************/
 
+c_connection c_connection::s_create_connection(c_tcp_asio_node &node, const ip::tcp::endpoint &endpoint) {
+/*	c_connection connection(node, endpoint);
+	connection.m_myself = connection.shared_from_this();
+	return connection;*/
+}
+
+
 c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint)
 :
+	m_myself(nullptr),
 	m_tcp_node(node),
 	m_socket(node.m_ioservice),
 	m_streambuff(),
@@ -111,6 +119,7 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 
 c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 :
+	m_myself(nullptr),
 	m_tcp_node(node),
 	m_socket(std::move(socket)),
 	m_streambuff(),
@@ -127,6 +136,11 @@ c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 
 c_connection::~c_connection() {
 	_dbg_mtx("");
+	if (m_socket.is_open()) {
+		_dbg_mtx("close connection socket");
+		m_socket.shutdown(ip::tcp::socket::socket_base::shutdown_both);
+		m_socket.close();
+	}
 }
 
 void c_connection::send(std::string && message) {
@@ -207,7 +221,7 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	auto endpoint = m_socket.remote_endpoint();
 	network_message.address_ip = endpoint.address().to_string();
 	network_message.port = endpoint.port();
-	m_tcp_node.m_recv_queue.push(std::move(network_message));
+	m_tcp_node.get().m_recv_queue.push(std::move(network_message));
 	// comtinue read
 	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));

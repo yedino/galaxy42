@@ -33,7 +33,7 @@ class c_tcp_asio_node final : public c_connection_base
 		c_network_message receive() override;
 	private:
 		std::vector<std::unique_ptr<std::thread>> m_asio_threads;
-		std::atomic<bool> m_stop_flag;
+		std::atomic<bool> m_stop_flag; // TODO atomic_flag?
 		boost::asio::io_service m_ioservice;
 		c_locked_queue<c_network_message> m_recv_queue;
 
@@ -46,8 +46,11 @@ class c_tcp_asio_node final : public c_connection_base
 		void accept_handler(const boost::system::error_code& error);
 };
 
-class c_connection {
+class c_connection : public std::enable_shared_from_this<c_connection> {
 	public:
+		static c_connection s_create_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint);
+		static c_connection s_create_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket);
+		//c_connection(c_connection &&) = default;
 		c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint); ///< connect constructor
 		c_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket); ///< accept constructor
 		~c_connection();
@@ -59,7 +62,8 @@ class c_connection {
 		void send(std::string && message);
 
 	private:
-		c_tcp_asio_node &m_tcp_node;
+		std::shared_ptr<c_connection> m_myself;
+		std::reference_wrapper<c_tcp_asio_node> m_tcp_node;
 		boost::asio::ip::tcp::socket m_socket;
 
 		std::mutex m_streambuff_mtx;
