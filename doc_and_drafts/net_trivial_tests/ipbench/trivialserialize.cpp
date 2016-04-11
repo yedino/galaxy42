@@ -84,16 +84,6 @@ class generator {
 		template <int S> void push_bytes_sizeoctets(const std::string & data, size_t max_size_for_assert);
 		template <int S> void push_bytes_sizeoctets(const std::string & data); //< same as push_bytes_sizeoctets with max_size_for_assert, except that argument is not used (and this additional assert is not done)
 
-		/*** 
-		@brief Write string of binary bytes, with different length each time. Therefore we need to encode the actuall-length. 
-		@note It is nicer when defininig the format to use push_bytes_sizeoctets<S> instead
-		@param data - the string of binary data.
-		@param max_size - the allowed maximum data size, from it we deduce number of octets needed to encode the actuall-length. This parameter can switch the serialiation 
-		format to other one each time it is changed (though it could be safe to use other numbers in same range, ranges defined as [ 2^(8*S), 2^(8*S+8)-1 ], that is:
-		0 .. 255 ; 256 .. 65535 ; 65536 .. 16777215 ; 16777216 .. 4294967296
-		*/
-		void push_bytes_maxsize(const std::string & data, size_t max_size); 
-
 		const std::string & str() const; ///< get the generated string. This can be INVALIDATED by any non-const operations of this object (and ofc. after object expires)!
 
 	protected:
@@ -109,14 +99,6 @@ generator::generator(size_t suggested_size)
 void generator::push_bytes_n(size_t size, const std::string & data) {
 	assert(size == data.size()); // is the size of data the same as size that we think should go here
 	m_str += data;
-}
-
-void generator::push_bytes_maxsize(const std::string & data, size_t max_size) {
-	if (max_size < bytesize1) push_bytes_sizeoctets<1>(data,max_size);
-	else if (max_size < bytesize2) push_bytes_sizeoctets<2>(data,max_size);
-	else if (max_size < bytesize3) push_bytes_sizeoctets<3>(data,max_size);
-	else if (max_size < bytesize4minus1) push_bytes_sizeoctets<4>(data,max_size);
-	else throw format_error_write_too_long(); // not supported
 }
 
 template <int S> void generator::push_bytes_sizeoctets(const std::string & data, size_t max_size_for_assert) {
