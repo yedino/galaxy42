@@ -110,19 +110,19 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 	static_assert( S<=8 , "S must be <= 8");
 
 	if (S==8) { // make this variant to even COMPILE only for S==8 and the other one not compile to fix unneeded warning
-		cerr<<S<<endl;
+		//cerr<<S<<endl;
 		if ( value >= 0xFFFFFFFFFFFFFFFF ) throw format_error_write_value_too_big();
 	} else {
-		cerr<<S<<endl;
+		//cerr<<S<<endl;
 		if ( value >= ( (1ULL<<(8*S))  -1) ) throw format_error_write_value_too_big();
 	}
 
 	// TODO use proper type, depending on S
 	uint64_t divider = 1LLU << ((S-1)*8); // TODO(r) style: LLU vs uint64_t
 	for (auto i=0; i<S; ++i) {
-		cerr << "Serializing " << value << " into S="<<S<<" octets. divider="<<divider<<"..." << flush;
+		//cerr << "Serializing " << value << " into S="<<S<<" octets. divider="<<divider<<"..." << flush;
 		auto this_byte = (value / divider) % 256;
-		cerr << " this_byte=" << this_byte << endl;
+		//cerr << " this_byte=" << this_byte << endl;
 		assert( (this_byte>=0) && (this_byte<=255) ); // TODO(r) remove assert later, when unit tests/code review
 		push_byte_u( this_byte );
 		divider = divider >> 8; // move to next 8 bits
@@ -145,36 +145,8 @@ template <int S> void generator::push_bytes_sizeoctets(const std::string & data,
 
 template <int S> void generator::push_bytes_sizeoctets(const std::string & data) {
 	static_assert(( (S>=1) && (S<=4) ) , "Unsupported number of octets that will express actuall-size of the data. Try using 1,2,3 or 4.");
-
 	const auto size = data.size();
-
-	// write the actuall-data-size number:
-	switch (S) {
-		case 1:
-			assert(size < bytesize1); // up to 255 char long sting
-			push_byte_u(size); // the size expressed as one byte 0..255
-		break;
-		case 2:
-			assert(size < bytesize2); // up to 2^(2*8) - 1 char long string
-			push_byte_u((size / bytesize0) % bytesize1); // high byte
-			push_byte_u((size / bytesize1)            ); // low byte; no need to modulo because division guarantees it will be in range
-		break;
-		case 3:
-			assert(size < bytesize3); // up to 2^(3*8) - 1 char long string
-			push_byte_u((size / bytesize0) % bytesize1); // highest byte
-			push_byte_u((size / bytesize1) % bytesize1); //
-			push_byte_u((size / bytesize2)            ); // lowest byte, no need to modulo [as above]
-		break;
-		case 4:
-			assert(size <= bytesize4minus1); // up to 2^(4*8) - 1 char long string
-			push_byte_u((size / bytesize0) % bytesize1); // highest byte
-			push_byte_u((size / bytesize1) % bytesize1); //
-			push_byte_u((size / bytesize2) % bytesize1); //
-			push_byte_u((size / bytesize3)            ); // lowest byte, no need to modulo [as above]
-		break;
-		default: throw format_error_write_too_long(); // not supported
-	}
-
+	push_integer_u<S>(size);
 	m_str += data; // write the actuall data
 }
 
@@ -210,7 +182,8 @@ class parser {
 		template <int S, typename T> T pop_integer_s(); ///< Reads some   signed integer-type S, into field that is S octets wide, as value of type T.
 
 		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always, that was saved using push_bytes_n()
-		template <int S> std::string pop_bytes_sizeoctets() { return std::string(); }  // TODO
+
+		template <int S> std::string pop_bytes_sizeoctets();
 };
 
 parser::parser( tag_caller_must_keep_this_string_valid x , const std::string & data_str)
@@ -250,7 +223,7 @@ template <int S, typename T> T parser::pop_integer_u() {
 	uint64_t multiplier = 1LLU << ((S-1)*8); // TODO(r) style: LLU vs uint64_t
 	for (auto i=0; i<S; ++i) {
 		unsigned int this_byte = pop_byte_u();
-		cerr << "Reading for S="<<S<<" this_byte = " << this_byte << " mul=" << multiplier << endl;
+		// cerr << "Reading for S="<<S<<" this_byte = " << this_byte << " mul=" << multiplier << endl;
 		value += this_byte * multiplier;
 		multiplier = multiplier >> 8; // move to next 8 bits
 	}
@@ -267,12 +240,17 @@ std::string parser::pop_bytes_n(size_t size) {
 	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
 
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
-	assert( (m_data_now + size < m_data_end) );
+	assert( (m_data_now + size <= m_data_end) );
 	auto from = m_data_now;
 	m_data_now += size; // *** move
 	return std::string( from , size );
 }
 
+template <int S> std::string parser::pop_bytes_sizeoctets() {
+	size_t size = pop_integer_u<S,size_t>();
+	// here we have the size, and we moved pass the serialized bytes of size, string is next:
+	return pop_bytes_n( size );
+}
 
 
 } // namespace
