@@ -70,7 +70,7 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
 
-#include "../NetPlatform.h" // from cjdns
+#include "cjdns-code/NetPlatform.h" // from cjdns
 
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
