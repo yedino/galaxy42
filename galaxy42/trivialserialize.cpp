@@ -176,7 +176,7 @@ class parser {
 		signed char pop_byte_s();
 
 		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always, that was saved using push_bytes_n()
-		template <int S> std::string pop_bytes_sizeoctets() { } 
+		template <int S> std::string pop_bytes_sizeoctets() { return std::string(); }  // TODO
 };
 
 parser::parser( tag_caller_must_keep_this_string_valid x , const std::string & data_str) 
