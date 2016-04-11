@@ -59,7 +59,7 @@ void c_tcp_asio_node::send(c_network_message && message) {
 		m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, endpoint));
 	}
 	assert(!m_connection_map.empty());
-	m_connection_map.at(endpoint)->send(std::move(msg.data)); // send raw data
+	m_connection_map.at(endpoint).lock()->send(std::move(msg.data)); // send raw data
 }
 
 c_network_message c_tcp_asio_node::receive() {
@@ -92,13 +92,15 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 /************************************************************/
 
 std::shared_ptr<c_connection> c_connection::s_create_connection(c_tcp_asio_node &node, const ip::tcp::endpoint &endpoint) {
-	std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, endpoint);
+	//std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, endpoint);
+	std::shared_ptr<c_connection> connection(new c_connection(node, endpoint));
 	connection->m_myself = connection->shared_from_this();
 	return connection;
 }
 
 std::shared_ptr< c_connection > c_connection::s_create_connection(c_tcp_asio_node &node, ip::tcp::socket && socket) {
-	std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, std::move(socket));
+	//std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, std::move(socket));
+	std::shared_ptr<c_connection> connection(new c_connection(node, std::move(socket)));
 	connection->m_myself = connection->shared_from_this();
 	return connection;
 }
@@ -147,6 +149,7 @@ c_connection::~c_connection() {
 		m_socket.shutdown(ip::tcp::socket::socket_base::shutdown_both);
 		m_socket.close();
 	}
+	delete_me(); // XXX
 }
 
 void c_connection::send(std::string && message) {
