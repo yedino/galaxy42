@@ -1,0 +1,129 @@
+#pragma once
+#ifndef LIBS1_HPP
+#define LIBS1_HPP
+
+#include <memory>
+#include <string>
+#include <vector>
+#include <list>
+#include <map>
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include <ostream>
+#include <sstream>
+#include <fstream>
+#include <limits>
+#include <cmath>
+#include <random>
+#include <algorithm>
+#include <exception>
+#include <mutex>
+#include <cassert>
+#include <array>
+#include <set>
+#include <tuple>
+#include <iomanip>
+#include <unordered_set>
+
+#include "c_tnetdbg.hpp"
+
+using std::string;
+using std::shared_ptr;
+using std::weak_ptr;
+using std::unique_ptr;
+
+using std::make_shared;
+
+using std::vector;
+using std::list;
+using std::map;
+using std::multimap;
+using std::pair;
+using std::unordered_set;
+
+using std::ostream;
+using std::ifstream;
+using std::istringstream;
+
+using std::endl;
+
+
+// ??? decide: XXX
+#include "c_tnetdbg.hpp"
+
+// --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
+/***
+ * type that is a size_t, but can be with error-signaling value e.g. -1, otherwise it is valid.
+ * the caller MUST check the returned value against size_t_is() before using it
+ */
+typedef size_t size_t_maybe;
+
+inline size_t_maybe size_t_invalid() { ///< returns a size_t that means "invalid size_t"
+	return static_cast<size_t>( -1 );
+}
+
+/***
+ * returns if given size_t is correct, or is it the invalid value
+*/
+inline bool size_t_is_ok(size_t x) {
+	if (x == size_t_invalid()) return false;
+	return true;
+}
+// -----------------------------------------
+
+// extending the std with helpfull tools
+namespace std {
+
+
+// this is due to enter C++14
+// http://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique (Args &&... args) {
+		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+}
+
+using std::make_unique;
+
+
+// extending the std with helpfull tools - by own idea
+namespace stdplus {
+
+template <typename T, typename U>
+T& unique_cast_ref(std::unique_ptr<U> & u) {
+	return dynamic_cast<T&>( * u.get() );
+}
+
+template <typename T, typename U>
+T* unique_cast_ptr(std::unique_ptr<U> & u) {
+	return dynamic_cast<T*>( u.get() );
+}
+
+template <typename T>
+std::string STR(const T & obj) {
+	std::ostringstream oss;
+	oss << obj;
+	return oss.str();
+}
+
+
+class expected_exception : public std::exception {
+	public:
+		const char* what() const noexcept override;
+};
+
+class expected_not_found : public stdplus::expected_exception {
+	public:
+		const char* what() const noexcept override;
+};
+
+
+}
+
+using namespace stdplus;
+
+
+#endif
+
