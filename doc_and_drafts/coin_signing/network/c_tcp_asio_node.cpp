@@ -27,7 +27,7 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 		m_ioservice.stop();
 		_dbg_mtx(this << " m_ioservice stopped " << m_ioservice.stopped());
 		_dbg_mtx(this << " end of thread lambda");
-	};
+	}; // lambda
 	for(unsigned int i = 0; i < number_of_threads; ++i) {
 		m_asio_threads.emplace_back(new std::thread(thread_lambda));
 	}
@@ -47,8 +47,8 @@ c_tcp_asio_node::~c_tcp_asio_node() {
 }
 
 void c_tcp_asio_node::send(c_network_message && message) {
-	c_network_message msg(std::move(message));
-	ip::address_v4 ip_addr = ip::address_v4::from_string(msg.address_ip); // TODO throw if bad address
+	c_network_message msg(std::move(message)); // consume message
+	ip::address_v4 ip_addr = ip::address_v4::from_string(msg.address_ip); // throw "Invalid argument"
 	ip::tcp::endpoint endpoint(ip_addr, msg.port); // generate endpoint from message
 
 	std::lock_guard<std::mutex> lg(m_connection_map_mtx);
@@ -63,6 +63,7 @@ void c_tcp_asio_node::send(c_network_message && message) {
 c_network_message c_tcp_asio_node::receive() {
 	c_network_message message;
 	std::lock_guard<std::recursive_mutex> lg(m_recv_queue.get_mutex());
+	// if incomming queue is empty returns empty message
 	if (m_recv_queue.empty()) {
 		return message;
 	}
@@ -77,17 +78,19 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 		_dbg_mtx("error: " << error.message());
 		return;
 	}
+	// create new connection in m_connection_map
 	auto endpoint = m_socket_accept.remote_endpoint();
 	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
 	m_connection_map[endpoint] = std::unique_ptr<c_connection>(new c_connection(*this, std::move(m_socket_accept)));
 	lg.unlock();
-	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
+	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1)); // continue accepting
 	_dbg_mtx("accept handler end");
 }
 
 
 /************************************************************/
 
+// connect constructor
 c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint)
 :
 	m_tcp_node(node),
@@ -106,6 +109,7 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
+// accept constructor
 c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 :
 	m_tcp_node(node),
@@ -133,13 +137,13 @@ c_connection::~c_connection() {
 
 void c_connection::send(std::string && message) {
 	const uint32_t size_of_message = message.size();
-	std::string msg(std::move(message));
+	std::string msg(std::move(message)); //< consume message
 	_dbg_mtx("msg.size() = " << msg.size());
 	_dbg_mtx("size_of_message = " << size_of_message);
 	assert(msg.size() == size_of_message);
 	std::unique_lock<std::mutex> lg(m_streambuff_mtx);
-	m_ostream.write(reinterpret_cast<const char *>(&size_of_message), sizeof(size_of_message));
-	m_ostream.write(msg.data(), msg.size());
+	m_ostream.write(reinterpret_cast<const char *>(&size_of_message), sizeof(size_of_message)); ///< write size of message (4 bytes)
+	m_ostream.write(msg.data(), msg.size()); ///< write message
 	lg.unlock();
 	m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
 							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
@@ -154,13 +158,14 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 	}
 	std::lock_guard<std::mutex> lg(m_streambuff_mtx);
 	m_streambuff.consume(length); // remove sended data from stream
-	if (m_streambuff.size() > 0) {
+	if (m_streambuff.size() > 0) { ///< if sen buffer is not empty continue sending
 		m_socket.async_write_some(buffer(m_streambuff.data(), m_streambuff.size()),
 							std::bind(&c_connection::write_handler, this, std::placeholders::_1, std::placeholders::_2));
 	}
 	_dbg_mtx("end");
 }
 
+// read always 4 bytes (size)
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
 	_dbg_mtx("length " << length);
 	if (error) {
@@ -168,7 +173,7 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 		delete_me();
 		return;
 	}
-	assert(m_read_size > 0); // TODO throw?
+	assert(m_read_size > 0);
 
 	_dbg_mtx("wait for " << m_read_size << " bytes");
 	async_read(m_socket, m_streambuff_in,
@@ -190,16 +195,17 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	c_network_message network_message;
 	network_message.data.reserve(length);
 	_dbg_mtx("streambuff size " << m_streambuff_in.size());
+	// get data from input stream
 	streambuf::const_buffers_type buf = m_streambuff_in.data();
 	std::copy(buffers_begin(buf), buffers_begin(buf) + length, std::back_inserter(network_message.data));
 	m_streambuff_in.consume(length);
 	_dbg_mtx("network_message.data.size() " << network_message.data.size());
-	//assert(network_message.data.size() == m_read_size);
+	// fill source message data
 	auto endpoint = m_socket.remote_endpoint();
 	network_message.address_ip = endpoint.address().to_string();
 	network_message.port = endpoint.port();
 	m_tcp_node.get().m_recv_queue.push(std::move(network_message));
-	// comtinue read
+	// continue read
 	m_socket.async_read_some(buffer(&m_read_size, sizeof(m_read_size)),
 							std::bind(&c_connection::read_size_handler, this, std::placeholders::_1, std::placeholders::_2));
 }

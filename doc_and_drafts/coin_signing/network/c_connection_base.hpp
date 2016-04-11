@@ -20,7 +20,8 @@ class c_network_message {
 class c_connection_base {
 	public:
 		/**
-		 * sends message and always returns immediately
+		 * sends message
+		 * function call will block until the connection is successfully made or throw exception
 		 * @param message will be consumed
 		 * Exception safety: Strong exception guarantee
 		 */

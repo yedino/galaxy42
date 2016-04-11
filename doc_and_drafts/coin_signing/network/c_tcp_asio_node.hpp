@@ -35,7 +35,7 @@ class c_tcp_asio_node final : public c_connection_base
 		std::vector<std::unique_ptr<std::thread>> m_asio_threads;
 		std::atomic<bool> m_stop_flag; // TODO atomic_flag?
 		boost::asio::io_service m_ioservice;
-		c_locked_queue<c_network_message> m_recv_queue;
+		c_locked_queue<c_network_message> m_recv_queue; ///< queue for incomming message
 
 		std::mutex m_connection_map_mtx;
 		std::map<boost::asio::ip::tcp::endpoint, std::unique_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
@@ -52,6 +52,7 @@ class c_connection final {
 		c_connection& operator = (const c_connection &) = delete;
 		c_connection(c_connection &&) = default;
 		c_connection& operator = (c_connection &&) = default;
+
 		c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint); ///< connect constructor
 		c_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket); ///< accept constructor
 		~c_connection();
