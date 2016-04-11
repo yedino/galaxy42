@@ -767,11 +767,13 @@ bool net_test() {
 	message.address_ip = "127.0.0.1";
 	message.port = 19002; // random port
 	std::cout << "send to bad adress" << std::endl;
+	std::cout << "wait for exception" << std::endl;
 	try {
 		node1->send(std::move(message)); // send error
 	}
-	catch( ... ) {
+	catch( std::exception & e ) {
 		std::cout << "OK" << std::endl;
+		std::cout << "exception " << e.what() << std::endl;
 	}
 
 	return true;

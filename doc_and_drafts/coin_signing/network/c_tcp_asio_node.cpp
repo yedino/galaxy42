@@ -29,7 +29,7 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 		_dbg_mtx(this << " end of thread lambda");
 	};
 	for(unsigned int i = 0; i < number_of_threads; ++i) {
-		m_asio_threads.emplace_back(new std::thread(thread_lambda)); // TODO make_unique
+		m_asio_threads.emplace_back(new std::thread(thread_lambda));
 	}
 
 	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
@@ -41,8 +41,6 @@ c_tcp_asio_node::~c_tcp_asio_node() {
 	m_ioservice.stop();
 	_dbg_mtx(this << " io_service stop");
 	_dbg_mtx(this << " io_service stopped " << m_ioservice.stopped());
-	//m_acceptor.close();
-	//m_socket_accept.close();
 	for (auto &thread_ptr : m_asio_threads) {
 		thread_ptr->join();
 	}
@@ -56,8 +54,6 @@ void c_tcp_asio_node::send(c_network_message && message) {
 	std::lock_guard<std::mutex> lg(m_connection_map_mtx);
 	auto it = m_connection_map.find(endpoint); // find destination connection
 	if (it == m_connection_map.end()) { // not found connection, create new
-		//m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, endpoint));
-		//m_connection_map.emplace(std::make_pair(endpoint, std::unique_ptr<c_connection>(new c_connection(*this, endpoint))));
 		m_connection_map[endpoint] = std::unique_ptr<c_connection>(new c_connection(*this, endpoint));
 	}
 	assert(!m_connection_map.empty());
@@ -102,7 +98,7 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 	m_streambuff_in()
 {
 	_dbg_mtx("wait for connect");
-	m_socket.connect(endpoint); // TODO throw if error
+	m_socket.connect(endpoint);
 	_dbg_mtx("connected");
 	boost::asio::ip::tcp::no_delay option;
 	m_socket.set_option(option);
@@ -133,7 +129,6 @@ c_connection::~c_connection() {
 		m_socket.shutdown(ip::tcp::socket::socket_base::shutdown_both);
 		m_socket.close();
 	}
-	//delete_me(); // XXX
 }
 
 void c_connection::send(std::string && message) {
@@ -171,7 +166,7 @@ void c_connection::read_size_handler(const boost::system::error_code &error, siz
 	if (error) {
 		_dbg_mtx("error: " << error.message());
 		delete_me();
-		return; // TODO close connection
+		return;
 	}
 	assert(m_read_size > 0); // TODO throw?
 
@@ -187,7 +182,7 @@ void c_connection::read_data_handler(const boost::system::error_code &error, siz
 	if (error || length == 0) {
 		_dbg_mtx("error: " << error.message());
 		delete_me();
-		return; // TODO close connection
+		return;
 	}
 	_dbg_mtx("m_read_size " << m_read_size);
 	_dbg_mtx("length " << length);
@@ -216,7 +211,4 @@ void c_connection::delete_me() {
 	std::unique_lock<std::mutex> lg(m_tcp_node.get().m_connection_map_mtx);
 	m_tcp_node.get().m_connection_map.erase(endpoint); // remove this object from connection map
 	lg.unlock();
-	//assert(m_myself.unique());
-	// delete myself
-	//m_myself.reset();
 }
