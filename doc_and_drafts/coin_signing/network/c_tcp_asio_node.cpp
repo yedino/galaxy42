@@ -24,6 +24,7 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 			m_ioservice.run();
 			m_ioservice.reset();
 		}
+		m_ioservice.stop();
 		_dbg_mtx(this << " m_ioservice stopped " << m_ioservice.stopped());
 		_dbg_mtx(this << " end of thread lambda");
 	};
@@ -37,13 +38,11 @@ c_tcp_asio_node::c_tcp_asio_node(unsigned int port)
 c_tcp_asio_node::~c_tcp_asio_node() {
 	_dbg_mtx(this << " c_tcp_asio_node destructor");
 	m_stop_flag = true;
-	while (!m_ioservice.stopped()) {
-		m_ioservice.stop();
-		_dbg_mtx(this << " io_service stop loop");
-	}
+	m_ioservice.stop();
+	_dbg_mtx(this << " io_service stop");
 	_dbg_mtx(this << " io_service stopped " << m_ioservice.stopped());
-	m_acceptor.close();
-	m_socket_accept.close();
+	//m_acceptor.close();
+	//m_socket_accept.close();
 	for (auto &thread_ptr : m_asio_threads) {
 		thread_ptr->join();
 	}
