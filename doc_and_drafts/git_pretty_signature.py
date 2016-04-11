@@ -62,7 +62,7 @@ def readchar(wait_for_char=True):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 
-def print_totag_stats(check_mode=False):
+def make_totag_stats(buffor, check_mode = False):
     encoding = locale.getdefaultlocale()[1]
     i = 0
     ch = 't'
@@ -99,36 +99,36 @@ def print_totag_stats(check_mode=False):
             if sig_stat == 'U':
                 U_totag-=1
                 col_tag = bcolors.WARNING
-                print(col_tag+"WARNING: Last tag have untrusted sign!"+col_end)
+                buffor.append(col_tag+"WARNING: Last tag have untrusted sign!"+col_end)
                 if check_mode:
                     exit(1)
             if sig_stat == 'B':
                 B_totag-=1
                 col_tag = bcolors.FAIL
-                print(col_tag+"ERROR: Last tag have bad sign!!"+col_end)
+                buffor.append(col_tag+"ERROR: Last tag have bad sign!!"+col_end)
                 if check_mode:
                     exit(1)
             if sig_stat == 'N':
                 N_totag-=1
                 col_tag = bcolors.FAIL
-                print(col_tag+"ERROR: Last tag is not signed!!"+col_end)
+                buffor.append(col_tag+"ERROR: Last tag is not signed!!"+col_end)
                 if check_mode:
                     exit(1)
             col_coms = bcolors.OKGREEN
             # commits checking
             if U_totag:
                 col_coms = bcolors.OKBLUE
-                print(col_coms+"NOTICE: At least one commit with untrusted sign!"+col_end)
+                buffor.append(col_coms+"NOTICE: At least one commit with untrusted sign!"+col_end)
                 if check_mode:
                     exit(1)
             if B_totag:
                 col_coms = bcolors.FAIL
-                print(col_coms+"ERROR: At least one commit with bad sign!"+col_end)
+                buffor.append(col_coms+"ERROR: At least one commit with bad sign!"+col_end)
                 if check_mode:
                     exit(1)
             if N_totag:
                 col_coms = bcolors.WARNING
-                print(col_coms+"WARNING: At leas one not signed commit!!"+col_end)
+                buffor.append(col_coms+"WARNING: At leas one not signed commit!!"+col_end)
                 if check_mode:
                     exit(1)
             info_head=""
@@ -137,7 +137,7 @@ def print_totag_stats(check_mode=False):
             else:
                 info_head = col_coms+"Signatures status after "+col_tag+tag_info+"\n"
             info_str = info_head+col_coms+str(G_totag)+": GOOD\n"+str(U_totag)+": UNTRUSTED\n"+str(B_totag)+": BAD SIGN\n"+str(N_totag)+": NOT SIGNED"+col_end
-            print(info_str)
+            buffor.append(info_str)
             return
         i+=1
 
@@ -153,60 +153,37 @@ def buffor_popleft_all(buffor):
         print(buffor.popleft())
 
 def buffor_popleft_singly(buffor):
-    ch = 't'
     while buffor:
-        print(buffor.popleft())
-        sys.stdout.write(':')
-        sys.stdout.flush()
-        ch = readchar()
-        sys.stdout.write('\b')
-        sys.stdout.write("\033[K")
-        sys.stdout.flush()
-        if ch == 'q':
-            return 'q'
-
-def wait_for_quit():
-    ch = 't'
-    while ch != 'q':
-        sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b')
-        sys.stdout.write("\033[K") # Clear to the end of line
-        # sys.stdout.write("\033[F") # Cursor up one line
-        sys.stdout.write("(END) type q for quit")
-        sys.stdout.flush()
-        ch = readchar()
-    sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b')
-    sys.stdout.write("\033[K")
-
+        try:
+            print(buffor.popleft())
+        except:
+            exit(0)     # catch exit from less
 
 if __name__ == "__main__":
+
+    teminal_height = 20
+    terminal_height = getTerminalSize()[1]
 
     if not is_git_directory():
         print("Exit: This directory does not contain a git repository!")
         exit(1)
+
+    buffor = deque([])
 
     parser = argparse.ArgumentParser(description='Display git log with gpg signatures in pretty colored format')
     parser.add_argument('-c','--check',action="store_true",
                         help='running check mode, exit with 1 status if occurs warning or error')
     args = parser.parse_args()
     if args.check:
-        print_totag_stats(True)
+        make_totag_stats(buffor, True)
     else:
-        print_totag_stats()
+        make_totag_stats(buffor)
 
     encoding = locale.getdefaultlocale()[1]
-    i=0
-    ch='t'
-
-    teminal_height = 20
-    if (sys.version_info > (3, 0)):
-        terminal_height = os.get_terminal_size().lines
-    else:
-        terminal_height = getTerminalSize()[1]
-
-    terminal_height -= 9 # for status // TODO Load status to buffer too
     first_lines_printed = False
-    buffor = deque([])
-    while (ch != 'q'):
+
+    i=0
+    while (True):
         data_com = 'git log -1 --skip='+str(i)+' --pretty=format:"%H:%G?%d"'
 
         try:
@@ -218,19 +195,17 @@ if __name__ == "__main__":
         if not first_lines_printed and len(buffor) >= terminal_height:
             buffor_popleft_n(buffor,terminal_height)
             first_lines_printed = True
-        if first_lines_printed and buffor and buffor_popleft_singly(buffor) == 'q':
-            break
+
+        if first_lines_printed and buffor:
+            buffor_popleft_singly(buffor)
 
         if not data:
             if len(buffor) <= terminal_height and not first_lines_printed:
-                print("printed?:" + str(first_lines_printed))
                 buffor_popleft_all(buffor)
             elif len(buffor) >= terminal_height and not first_lines_printed:
                 buffor_popleft_n(buffor,terminal_height)
 
-            if buffor_popleft_singly(buffor) != 'q':
-                wait_for_quit()
-
+            buffor_popleft_singly(buffor)
             break     # end of commits success exit
 
         del_pos = data.find(':')
@@ -247,6 +222,7 @@ if __name__ == "__main__":
 
         sig_info = repr(sig_info).replace('"','\\"')[2:-2]
         sig_info = sig_info.replace('\\n','\n')
+        sig_info = sig_info.replace('\\\"','\"')
         if sig_stat == 'G':
             com += "%C(green)SIGNATURE - GOOD\n%C(green)"
             com += sig_info.replace('\n','\n%C(green)')[1:-1]
@@ -262,7 +238,6 @@ if __name__ == "__main__":
         com += "%C(white)Author: %aN <%aE>\n%C(white)Date: %aD\n\n    %B\n\""
 
         try:
-            #print(com.split("||"))
             if (sys.version_info > (3, 0)):
                 data = check_output(com.split("||")).decode(encoding)
                 data = data[1:-2]
@@ -277,12 +252,4 @@ if __name__ == "__main__":
             print("exit(1)")
             exit(1)
 
-        #sys.stdout.write(':')
-        #sys.stdout.flush()
-        #ch = readchar()
-        #sys.stdout.write('\b')
         i+=1
-
-    #print("end buffor_size: "+str(len(buffor)));
-    #for line in buffor:
-    #    print(line)
