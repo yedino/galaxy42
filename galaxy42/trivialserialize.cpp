@@ -130,7 +130,7 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 }
 
 template <int S, typename T> void generator::push_integer_s(T value) {
-	// static_assert(false, "Serializing signed values not implemented yet"); // ?
+	throw std::runtime_error("Not implemented yet");
 }
 
 void generator::push_bytes_n(size_t size, const std::string & data) {
@@ -205,6 +205,10 @@ class parser {
 		unsigned char pop_byte_u();
 		signed char pop_byte_s();
 
+		// TODO(r) deduce type T fitting from S octets:
+		template <int S, typename T> T pop_integer_u(); ///< Reads some unsigned integer-type S, into field that is S octets wide, as value of type T.
+		template <int S, typename T> T pop_integer_s(); ///< Reads some   signed integer-type S, into field that is S octets wide, as value of type T.
+
 		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always, that was saved using push_bytes_n()
 		template <int S> std::string pop_bytes_sizeoctets() { return std::string(); }  // TODO
 };
@@ -233,6 +237,28 @@ signed char parser::pop_byte_s() {
 	signed char c = *m_data_now;
 	++m_data_now;
 	return c;
+}
+
+template <int S, typename T> T parser::pop_integer_u() {
+	static_assert( std::is_unsigned<T>() , "This function saves only unsigned types, pass it unsigned or use other function.");
+	static_assert( S>0 , "S must be > 0");
+	static_assert( S<=8 , "S must be <= 8");
+
+	// TODO test if type T is not overflowing
+
+	T value=0;
+	uint64_t multiplier = 1LLU << ((S-1)*8); // TODO(r) style: LLU vs uint64_t
+	for (auto i=0; i<S; ++i) {
+		unsigned int this_byte = pop_byte_u();
+		cerr << "Reading for S="<<S<<" this_byte = " << this_byte << " mul=" << multiplier << endl;
+		value += this_byte * multiplier;
+		multiplier = multiplier >> 8; // move to next 8 bits
+	}
+	return value;
+}
+
+template <int S, typename T> T parser::pop_integer_s() {
+	throw std::runtime_error("Not implemented yet");
 }
 
 std::string parser::pop_bytes_n(size_t size) {
@@ -282,6 +308,12 @@ void test_trivialserialize() {
 	cerr << "Read ["<<(int)cu<<"] and [" << (int)su << "]" << endl;
 
 	std::string sa1 = parser.pop_bytes_n(3);	cerr << "Read ["<<sa1<<"]" << endl;
+
+	cerr << "Number: " << parser.pop_integer_u<1,unsigned int>() << endl;
+	cerr << "Number: " << parser.pop_integer_u<2,unsigned int>() << endl;
+	cerr << "Number: " << parser.pop_integer_u<8,unsigned int>() << endl;
+	cerr << "Number: " << parser.pop_integer_u<4,unsigned int>() << endl;
+	cerr << "Number: " << parser.pop_integer_u<4,unsigned int>() << endl;
 
 	auto sb1 = parser.pop_bytes_sizeoctets<1>();
 	cerr<<"["<<sb1<<"]"<<endl;
