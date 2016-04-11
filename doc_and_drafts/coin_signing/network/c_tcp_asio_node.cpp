@@ -57,7 +57,8 @@ void c_tcp_asio_node::send(c_network_message && message) {
 	auto it = m_connection_map.find(endpoint); // find destination connection
 	if (it == m_connection_map.end()) { // not found connection, create new
 		//m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, endpoint));
-		m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, endpoint));
+		//m_connection_map.emplace(std::make_pair(endpoint, std::unique_ptr<c_connection>(new c_connection(*this, endpoint))));
+		m_connection_map[endpoint] = std::unique_ptr<c_connection>(new c_connection(*this, endpoint));
 	}
 	assert(!m_connection_map.empty());
 	m_connection_map.at(endpoint)->send(std::move(msg.data)); // send raw data
@@ -82,8 +83,10 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 	}
 	auto endpoint = m_socket_accept.remote_endpoint();
 	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
-	m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, std::move(m_socket_accept)));
+	//m_connection_map.emplace(endpoint, new c_connection(*this, std::move(m_socket_accept)));
 	//m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, std::move(m_socket_accept)));
+	//m_connection_map.emplace(std::make_pair(endpoint, std::unique_ptr<c_connection>(new c_connection(*this, std::move(m_socket_accept)))));
+	m_connection_map[endpoint] = std::unique_ptr<c_connection>(new c_connection(*this, std::move(m_socket_accept)));
 	lg.unlock();
 	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
 	_dbg_mtx("accept handler end");

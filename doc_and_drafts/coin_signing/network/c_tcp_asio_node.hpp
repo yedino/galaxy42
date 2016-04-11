@@ -38,7 +38,7 @@ class c_tcp_asio_node final : public c_connection_base
 		c_locked_queue<c_network_message> m_recv_queue;
 
 		std::mutex m_connection_map_mtx;
-		std::map<boost::asio::ip::tcp::endpoint, std::shared_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
+		std::map<boost::asio::ip::tcp::endpoint, std::unique_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
 
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket_accept;
