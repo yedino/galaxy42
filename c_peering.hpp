@@ -30,6 +30,7 @@ class c_peering { ///< An (mostly established) connection to peer
 
 		virtual c_haship_addr get_hip() const;
 		virtual c_haship_pubkey get_pub() const;
+		virtual c_ip46_addr get_pip() const;
 
 		friend class c_tunserver;
 
