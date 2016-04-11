@@ -32,6 +32,8 @@ const char * format_error_write::what() const noexcept { return "format-error in
 class format_error_write_too_long : public format_error_write { public:	const char * what() const noexcept override; };
 const char * format_error_write_too_long::what() const noexcept { return "format-error in trivialserialize while writting, the given data can not be serialized - because data is too long (e.g. binary string)"; }
 
+class format_error_write_value_too_big : public format_error { public:	const char * what() const noexcept override; };
+const char * format_error_write_value_too_big::what() const noexcept { return "format-error in trivialserialize while writing - value was too big over limit"; }
 
 /***
 @brief Generates the serialized data string, from input data like bytes and strings of various types.
@@ -53,19 +55,22 @@ class generator {
 
 		// powers of two for different number of bytes (8-bit - octets):
 		constexpr static size_t bytesize0 = 1;
-		constexpr static size_t bytesize1 = 2 << (8*1); // and size of 1 byte, so usable for module
-		constexpr static size_t bytesize2 = 2 << (8*2); // size for 2 octet word
-		constexpr static size_t bytesize3 = 2 << (8*3); // 3 byte
-		constexpr static size_t bytesize4minus1 = (2LL << (8*4)) -1; // typical 4 octet bigger word, but -1 (so it fits in size_t), we need other comparsion when using it (<=).
-		
+		constexpr static size_t bytesize1 = 1 << (8*1); // and size of 1 byte, so usable for module
+		constexpr static size_t bytesize2 = 1 << (8*2); // size for 2 octet word
+		constexpr static size_t bytesize3 = 1 << (8*3); // 3 byte
+		constexpr static size_t bytesize4minus1 = (1LL << (8*4)) -1; // typical 4 octet bigger word, but -1 (so it fits in size_t), we need other comparsion when using it (<=).
+
 	public:
 		generator(size_t suggested_size);
 
 		void push_byte_u(unsigned char c);
 		void push_byte_s(signed char c);
 
-		/*** 
-		@brief writes conststr (see class notes). 
+		template <int S, typename T> void push_integer_u(T value); ///< Saves some unsigned integer-type S, into field that is S octets wide.
+		template <int S, typename T> void push_integer_s(T value); ///< Saves some   signed integer-type S, into field that is S octets wide.
+
+		/***
+		@brief writes conststr (see class notes).
 		@note Supported data size is 0 to 2^32 -1.
 		@note Serialized size will be <= the data size.
 		@param size - the defined exact size of data. We require (and assert) that it == data.size(). It is used ONLY for asserting.
@@ -73,8 +78,8 @@ class generator {
 		*/
 		void push_bytes_n(size_t size, const std::string & data);
 
-		/*** 
-		@brief writes octetsvarstr (see class notes). 
+		/***
+		@brief writes octetsvarstr (see class notes).
 		@note Supported data size is 0 to 2^32 -1 in general, and for given S it is 2^(8*S)-1
 		@note Serialized size will be <= the data size + S
 		@param S - the numbers of octets needed to express the maximum possible size of string. String can have at most (2^(8*S)-1) characters.
@@ -90,10 +95,42 @@ class generator {
 		void push_bytes_octets_and_size(unsigned char octets, size_t max_size, const std::string & data); ///< give number of octets of actuall-data-size, give the max_size that is just asserted, and the data
 };
 
-generator::generator(size_t suggested_size) 
+generator::generator(size_t suggested_size)
 	: m_str()
 {
 	m_str.reserve( suggested_size );
+}
+
+void generator::push_byte_u(unsigned char c) { 	m_str += c; }
+void generator::push_byte_s(signed char c) {	m_str += c; }
+
+template <int S, typename T> void generator::push_integer_u(T value) {
+	static_assert( std::is_unsigned<T>() , "This function saves only unsigned types, pass it unsigned or use other function.");
+	static_assert( S>0 , "S must be > 0");
+	static_assert( S<=8 , "S must be <= 8");
+
+	if (S==8) { // make this variant to even COMPILE only for S==8 and the other one not compile to fix unneeded warning
+		cerr<<S<<endl;
+		if ( value >= 0xFFFFFFFFFFFFFFFF ) throw format_error_write_value_too_big();
+	} else {
+		cerr<<S<<endl;
+		if ( value >= ( (1ULL<<(8*S))  -1) ) throw format_error_write_value_too_big();
+	}
+
+	// TODO use proper type, depending on S
+	uint64_t divider = 1LLU << ((S-1)*8); // TODO(r) style: LLU vs uint64_t
+	for (auto i=0; i<S; ++i) {
+		cerr << "Serializing " << value << " into S="<<S<<" octets. divider="<<divider<<"..." << flush;
+		auto this_byte = (value / divider) % 256;
+		cerr << " this_byte=" << this_byte << endl;
+		assert( (this_byte>=0) && (this_byte<=255) ); // TODO(r) remove assert later, when unit tests/code review
+		push_byte_u( this_byte );
+		divider = divider >> 8; // move to next 8 bits
+	}
+}
+
+template <int S, typename T> void generator::push_integer_s(T value) {
+	// static_assert(false, "Serializing signed values not implemented yet"); // ?
 }
 
 void generator::push_bytes_n(size_t size, const std::string & data) {
@@ -125,14 +162,14 @@ template <int S> void generator::push_bytes_sizeoctets(const std::string & data)
 		case 3:
 			assert(size < bytesize3); // up to 2^(3*8) - 1 char long string
 			push_byte_u((size / bytesize0) % bytesize1); // highest byte
-			push_byte_u((size / bytesize1) % bytesize1); // 
+			push_byte_u((size / bytesize1) % bytesize1); //
 			push_byte_u((size / bytesize2)            ); // lowest byte, no need to modulo [as above]
 		break;
 		case 4:
 			assert(size <= bytesize4minus1); // up to 2^(4*8) - 1 char long string
 			push_byte_u((size / bytesize0) % bytesize1); // highest byte
-			push_byte_u((size / bytesize1) % bytesize1); // 
-			push_byte_u((size / bytesize2) % bytesize1); // 
+			push_byte_u((size / bytesize1) % bytesize1); //
+			push_byte_u((size / bytesize2) % bytesize1); //
 			push_byte_u((size / bytesize3)            ); // lowest byte, no need to modulo [as above]
 		break;
 		default: throw format_error_write_too_long(); // not supported
@@ -141,13 +178,6 @@ template <int S> void generator::push_bytes_sizeoctets(const std::string & data)
 	m_str += data; // write the actuall data
 }
 
-
-//void generator::push_byte(unsigned char c) {	m_str += c; }
-//void generator::push_byte(signed char c) {	m_str += c; }
-//void generator::push_byte(char c) {	m_str += c; }
-
-void generator::push_byte_u(unsigned char c) { 	m_str += c; }
-void generator::push_byte_s(signed char c) {	m_str += c; }
 
 const std::string & generator::str() const { return m_str; }
 
@@ -161,8 +191,8 @@ And this asserts must be always-on, because this is for parsing unsafe external 
 
 class parser {
 	public:
-		struct tag_caller_must_keep_this_string_valid {} ; 
-		struct tag_caller_must_keep_this_buffer_valid {} ; 
+		struct tag_caller_must_keep_this_string_valid {} ;
+		struct tag_caller_must_keep_this_buffer_valid {} ;
 
 		// TODO(r): pick a guideline and use existing view idiom like that:
 		const char * m_data_begin; ///< the begining of string
@@ -179,7 +209,7 @@ class parser {
 		template <int S> std::string pop_bytes_sizeoctets() { return std::string(); }  // TODO
 };
 
-parser::parser( tag_caller_must_keep_this_string_valid x , const std::string & data_str) 
+parser::parser( tag_caller_must_keep_this_string_valid x , const std::string & data_str)
  : m_data_begin( & * data_str.begin() ), m_data_now( m_data_begin ), m_data_end( & * data_str.end() )
 { }
 
@@ -228,9 +258,14 @@ void test_trivialserialize() {
 	string f="fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
 
 	trivialserialize::generator gen(50);
-	gen.push_bytes_n(3, "abc");
 	gen.push_byte_u(50);
 	gen.push_byte_s(-42);
+	gen.push_bytes_n(3, "abc");
+	gen.push_integer_u<1>((unsigned int)150);
+	gen.push_integer_u<2>((unsigned int)+30000);
+	gen.push_integer_u<8>((unsigned int)+30000);
+	gen.push_integer_u<4>((unsigned int)+2140000000);
+	gen.push_integer_u<4>((unsigned int)+4294777777);
 	gen.push_bytes_sizeoctets<1>("Octets1"+f, 100);
 	gen.push_bytes_sizeoctets<2>("Octets2"+f, 100);
 	gen.push_bytes_sizeoctets<3>("Octets3"+f, 100);
@@ -241,11 +276,21 @@ void test_trivialserialize() {
 	const string input = gen.str();
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , input );
 
-	std::string s1 = parser.pop_bytes_n(3);
-	cerr << "Read ["<<s1<<"]" << endl;
+
 	auto cu = parser.pop_byte_u();
 	auto su = parser.pop_byte_s();
 	cerr << "Read ["<<(int)cu<<"] and [" << (int)su << "]" << endl;
+
+	std::string sa1 = parser.pop_bytes_n(3);	cerr << "Read ["<<sa1<<"]" << endl;
+
+	auto sb1 = parser.pop_bytes_sizeoctets<1>();
+	cerr<<"["<<sb1<<"]"<<endl;
+	auto sb2 = parser.pop_bytes_sizeoctets<2>();
+	cerr<<"["<<sb2<<"]"<<endl;
+	auto sb3 = parser.pop_bytes_sizeoctets<3>();
+	cerr<<"["<<sb3<<"]"<<endl;
+	auto sb4 = parser.pop_bytes_sizeoctets<4>();
+	cerr<<"["<<sb4<<"]"<<endl;
 
 }
 
