@@ -11,7 +11,7 @@ namespace g_ipv6_rfc {
 
 	constexpr unsigned char header_position_of_dst = 24 ;  // rfc2460#section-3
 	constexpr unsigned char header_length_of_dst = 128/8 ;  // length of this field
-};
+}
 // use: g_ipv6_rfc::header_position_of_src
 
 namespace g_tuntap {
@@ -19,7 +19,7 @@ namespace g_tuntap {
 		constexpr unsigned char header_position_of_ipv6 = 4;
 	}
 	// not supporting TAP for now
-};
+}
 // use: g_tuntap::TUN_with_PI::header_position_of_ipv6
 
 // declare sizes; also forward declarations

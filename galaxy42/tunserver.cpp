@@ -78,7 +78,7 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 
-#include "trivialserialize.hpp"
+// #include "trivialserialize.hpp"
 
 // ------------------------------------------------------------------
 
@@ -690,7 +690,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method, c
 }
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
-	for(auto & v : m_peer) { if (v.second->m_peering_addr == ip) return * v.second.get(); }
+	for(auto & v : m_peer) { if (v.second->get_pip() == ip) return * v.second.get(); }
 	throw std::runtime_error("We do not know a peer with such IP=" + STR(ip));
 }
 
@@ -810,7 +810,7 @@ void c_tunserver::event_loop() {
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 				_info("We recognize the sender, as: " << sender_as_peering);
-				sender_hip = sender_as_peering.m_haship_addr; // this is not yet confirmed/authenticated(!)
+				sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
 			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
@@ -1120,7 +1120,8 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 bool run_mode_developer(boost::program_options::variables_map & argm) { 
 	std::cerr << "Running in developer mode. " << std::endl;
 
-	test_trivialserialize();  return false;
+//	test_trivialserialize();  
+return false;
 
 	// return developer_tests::wip_galaxy_route_doublestar(argm);
 }

@@ -40,6 +40,7 @@ ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); r
 
 c_haship_addr c_peering::get_hip() const { return m_haship_addr; }
 c_haship_pubkey c_peering::get_pub() const { return m_pubkey; }
+c_ip46_addr c_peering::get_pip() const { return m_peering_addr; }
 
 // ------------------------------------------------------------------
 
