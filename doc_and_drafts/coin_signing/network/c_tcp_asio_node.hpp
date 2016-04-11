@@ -46,10 +46,8 @@ class c_tcp_asio_node final : public c_connection_base
 		void accept_handler(const boost::system::error_code& error);
 };
 
-class c_connection {
+class c_connection final {
 	public:
-		static std::shared_ptr<c_connection> s_create_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint);
-		static std::shared_ptr<c_connection> s_create_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket);
 		c_connection(const c_connection &) = delete;
 		c_connection& operator = (const c_connection &) = delete;
 		c_connection(c_connection &&) = default;
@@ -65,7 +63,6 @@ class c_connection {
 		void send(std::string && message);
 
 	private:
-		std::shared_ptr<c_connection> m_myself;
 		std::reference_wrapper<c_tcp_asio_node> m_tcp_node;
 		boost::asio::ip::tcp::socket m_socket;
 

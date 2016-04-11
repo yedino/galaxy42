@@ -83,9 +83,6 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 	}
 	auto endpoint = m_socket_accept.remote_endpoint();
 	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
-	//m_connection_map.emplace(endpoint, new c_connection(*this, std::move(m_socket_accept)));
-	//m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, std::move(m_socket_accept)));
-	//m_connection_map.emplace(std::make_pair(endpoint, std::unique_ptr<c_connection>(new c_connection(*this, std::move(m_socket_accept)))));
 	m_connection_map[endpoint] = std::unique_ptr<c_connection>(new c_connection(*this, std::move(m_socket_accept)));
 	lg.unlock();
 	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
@@ -95,24 +92,8 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 
 /************************************************************/
 
-std::shared_ptr<c_connection> c_connection::s_create_connection(c_tcp_asio_node &node, const ip::tcp::endpoint &endpoint) {
-	//std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, endpoint);
-	std::shared_ptr<c_connection> connection(new c_connection(node, endpoint));
-	//connection->m_myself = connection->shared_from_this();
-	return connection;
-}
-
-std::shared_ptr< c_connection > c_connection::s_create_connection(c_tcp_asio_node &node, ip::tcp::socket && socket) {
-	//std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, std::move(socket));
-	std::shared_ptr<c_connection> connection(new c_connection(node, std::move(socket)));
-	//connection->m_myself = connection->shared_from_this();
-	return connection;
-}
-
-
 c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint)
 :
-	m_myself(nullptr),
 	m_tcp_node(node),
 	m_socket(node.m_ioservice),
 	m_streambuff(),
@@ -131,7 +112,6 @@ c_connection::c_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::en
 
 c_connection::c_connection(c_tcp_asio_node &node, ip::tcp::socket && socket)
 :
-	m_myself(nullptr),
 	m_tcp_node(node),
 	m_socket(std::move(socket)),
 	m_streambuff(),
