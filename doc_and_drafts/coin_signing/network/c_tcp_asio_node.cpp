@@ -56,10 +56,11 @@ void c_tcp_asio_node::send(c_network_message && message) {
 	std::lock_guard<std::mutex> lg(m_connection_map_mtx);
 	auto it = m_connection_map.find(endpoint); // find destination connection
 	if (it == m_connection_map.end()) { // not found connection, create new
-		m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, endpoint));
+		//m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, endpoint));
+		m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, endpoint));
 	}
 	assert(!m_connection_map.empty());
-	m_connection_map.at(endpoint).lock()->send(std::move(msg.data)); // send raw data
+	m_connection_map.at(endpoint)->send(std::move(msg.data)); // send raw data
 }
 
 c_network_message c_tcp_asio_node::receive() {
@@ -81,8 +82,8 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 	}
 	auto endpoint = m_socket_accept.remote_endpoint();
 	std::unique_lock<std::mutex> lg(m_connection_map_mtx);
-	//m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, std::move(m_socket_accept)));
-	m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, std::move(m_socket_accept)));
+	m_connection_map.emplace(endpoint, std::make_shared<c_connection>(*this, std::move(m_socket_accept)));
+	//m_connection_map.emplace(endpoint, c_connection::s_create_connection(*this, std::move(m_socket_accept)));
 	lg.unlock();
 	m_acceptor.async_accept(m_socket_accept, std::bind(&c_tcp_asio_node::accept_handler, this, std::placeholders::_1));
 	_dbg_mtx("accept handler end");
@@ -94,14 +95,14 @@ void c_tcp_asio_node::accept_handler(const boost::system::error_code &error) {
 std::shared_ptr<c_connection> c_connection::s_create_connection(c_tcp_asio_node &node, const ip::tcp::endpoint &endpoint) {
 	//std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, endpoint);
 	std::shared_ptr<c_connection> connection(new c_connection(node, endpoint));
-	connection->m_myself = connection->shared_from_this();
+	//connection->m_myself = connection->shared_from_this();
 	return connection;
 }
 
 std::shared_ptr< c_connection > c_connection::s_create_connection(c_tcp_asio_node &node, ip::tcp::socket && socket) {
 	//std::shared_ptr<c_connection> connection = std::make_shared<c_connection>(node, std::move(socket));
 	std::shared_ptr<c_connection> connection(new c_connection(node, std::move(socket)));
-	connection->m_myself = connection->shared_from_this();
+	//connection->m_myself = connection->shared_from_this();
 	return connection;
 }
 
@@ -149,7 +150,7 @@ c_connection::~c_connection() {
 		m_socket.shutdown(ip::tcp::socket::socket_base::shutdown_both);
 		m_socket.close();
 	}
-	delete_me(); // XXX
+	//delete_me(); // XXX
 }
 
 void c_connection::send(std::string && message) {
@@ -232,7 +233,7 @@ void c_connection::delete_me() {
 	std::unique_lock<std::mutex> lg(m_tcp_node.get().m_connection_map_mtx);
 	m_tcp_node.get().m_connection_map.erase(endpoint); // remove this object from connection map
 	lg.unlock();
-	assert(m_myself.unique());
+	//assert(m_myself.unique());
 	// delete myself
-	m_myself.reset();
+	//m_myself.reset();
 }

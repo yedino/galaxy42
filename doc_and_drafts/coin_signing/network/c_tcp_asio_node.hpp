@@ -38,7 +38,7 @@ class c_tcp_asio_node final : public c_connection_base
 		c_locked_queue<c_network_message> m_recv_queue;
 
 		std::mutex m_connection_map_mtx;
-		std::map<boost::asio::ip::tcp::endpoint, std::weak_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
+		std::map<boost::asio::ip::tcp::endpoint, std::shared_ptr<c_connection>> m_connection_map; ///< always use m_connection_map_mtx !!!
 
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket_accept;
@@ -46,7 +46,7 @@ class c_tcp_asio_node final : public c_connection_base
 		void accept_handler(const boost::system::error_code& error);
 };
 
-class c_connection : public std::enable_shared_from_this<c_connection> {
+class c_connection {
 	public:
 		static std::shared_ptr<c_connection> s_create_connection(c_tcp_asio_node &node, const boost::asio::ip::tcp::endpoint &endpoint);
 		static std::shared_ptr<c_connection> s_create_connection(c_tcp_asio_node &node, boost::asio::ip::tcp::socket &&socket);
