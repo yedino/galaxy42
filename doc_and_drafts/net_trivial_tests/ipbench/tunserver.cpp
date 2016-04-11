@@ -78,6 +78,8 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 
+#include "trivialserialize.hpp"
+
 // ------------------------------------------------------------------
 
 void error(const std::string & msg) {
@@ -1110,9 +1112,17 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 
 } // namespace developer_tests
 
-bool run_mode_developer(boost::program_options::variables_map & argm) {
+/*** 
+@brief Run the main developer test in this code version (e.g. on this code branch / git branch)
+@param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
+@return false if the program should quit after this test
+*/
+bool run_mode_developer(boost::program_options::variables_map & argm) { 
 	std::cerr << "Running in developer mode. " << std::endl;
-	return developer_tests::wip_galaxy_route_doublestar(argm);
+
+	test_trivialserialize();  return false;
+
+	// return developer_tests::wip_galaxy_route_doublestar(argm);
 }
 
 int main(int argc, char **argv) {
