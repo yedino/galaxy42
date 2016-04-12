@@ -855,7 +855,7 @@ void c_tunserver::event_loop() {
 
 				// reinterpret the char from IO as unsigned-char as wanted by crypto code
 				unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2 + ttl_width; // TODO calculate depending on version, command, ...
-				long long ciphertext_buf_len = size_read - 2; // TODO 2 = header size
+				long long ciphertext_buf_len = size_read - 2 - 1; // TODO 2 = header size, and TTL
 				assert( ciphertext_buf_len >= 1 );
 
 				int r = crypto_aead_chacha20poly1305_decrypt(
@@ -865,7 +865,7 @@ void c_tunserver::event_loop() {
 					additional_data, additional_data_len,
 					nonce, generated_shared_key);
 				if (r == -1) {
-					_warn("crypto verification fails");
+					_warn("Crypto verification failed!!!");
 	//				continue; // skip this packet (main loop) // TODO
 				}
 
