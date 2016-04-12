@@ -18,6 +18,8 @@ class format_error_read : public format_error { public:	const char * what() cons
 
 class format_error_read_badformat : public format_error { public:	const char * what() const noexcept override; };
 
+class format_error_read_delimiter : public format_error { public:	const char * what() const noexcept override; };
+
 
 class format_error_write : public format_error { public:	const char * what() const noexcept override; };
 
@@ -108,6 +110,7 @@ class parser {
 
 		unsigned char pop_byte_u();
 		signed char pop_byte_s();
+		void pop_byte_skip(char c); // read expected character (e.g. a delimiter)
 
 		// TODO(r) deduce type T fitting from S octets:
 		template <int S, typename T> T pop_integer_u(); ///< Reads some unsigned integer-type S, into field that is S octets wide, as value of type T.
