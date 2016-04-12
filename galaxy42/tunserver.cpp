@@ -78,7 +78,7 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 
-// #include "trivialserialize.hpp"
+#include "trivialserialize.hpp"
 
 // ------------------------------------------------------------------
 
@@ -1120,8 +1120,8 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 bool run_mode_developer(boost::program_options::variables_map & argm) { 
 	std::cerr << "Running in developer mode. " << std::endl;
 
-//	test_trivialserialize();  
-return false;
+	trivialserialize::test_trivialserialize();  
+	return false;
 
 	// return developer_tests::wip_galaxy_route_doublestar(argm);
 }
