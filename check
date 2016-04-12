@@ -1,0 +1,2 @@
+#!/bin/bash
+tools/git_check.sh
