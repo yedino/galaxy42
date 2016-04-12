@@ -14,6 +14,8 @@ const char * format_error_read::what() const noexcept { return "format-error in 
 
 const char * format_error_read_badformat::what() const noexcept { return "format-error in trivialserialize while reading, but it seems the format definition in the program is wrong"; }
 
+const char * format_error_read_delimiter::what() const noexcept { return "format-error in trivialserialize while reading, input data is invalid, the delimiter was wrong."; }
+
 
 const char * format_error_write::what() const noexcept { return "format-error in trivialserialize while writting, the given data can not be serialized"; }
 
@@ -108,6 +110,12 @@ signed char parser::pop_byte_s() {
 	signed char c = *m_data_now;
 	++m_data_now;
 	return c;
+}
+
+void parser::pop_byte_skip(char c) { // read expected character (e.g. a delimiter)
+	unsigned char was = pop_byte_u();
+	unsigned char expected = static_cast<unsigned char>(c);
+	if (was != expected) throw format_error_read_delimiter();
 }
 
 template <int S, typename T> T parser::pop_integer_u() {
