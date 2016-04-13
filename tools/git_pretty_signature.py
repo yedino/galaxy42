@@ -57,7 +57,7 @@ def totag_stats(pager, encoding, check_mode = False):
         if tag_pos != -1 or not data:
             # getting tag from %d ref names
             if tag_pos != -1:
-                tag_info = data[tag_pos:-2]
+                tag_info = data[tag_pos:-1]
                 tag_end_pos = tag_info.find(',')
                 tag_info = tag_info[:tag_end_pos]
 
