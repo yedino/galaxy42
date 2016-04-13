@@ -3,20 +3,23 @@
 echo ; echo ; echo "Installing the scripts/tools needed to run/develop Galaxy42 network..."
 
 if [[ $EUID -ne 0 ]]; then
+	echo
 	echo "ERROR: This script must be run as root. Log in as root user, then run this script." 1>&2
 	echo
 	exit 1
 fi
 
-pwd=$(PWD)
+pwd=$PWD
 
+echo "--------------------------------------------------------------------"
 cd netpriv_scripts  
 ./install
 cd $pwd
 
+echo "--------------------------------------------------------------------"
 cd setcap_scripts
 ./install
 cd $pwd
 
 
-echo "OK - all seems installed" ; echo
+echo "OK - all seems installed ... but MAKE SURE you followed any extra instructions above like, running as root visudo and configuring that." ; echo

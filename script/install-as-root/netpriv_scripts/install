@@ -17,6 +17,8 @@ chmod u=wrx,g=rx,o=rx /usr/local/bin/netpriv2
 chmod u=wrx,g=rx,o=rx /usr/local/bin/netpriv9
 chmod u=wrx,g=rx,o=rx /usr/local/bin/netpriv_enter
 
+echo
+echo "--- DO THIS ---"
 echo "Ok, now you should probably edit sudoers (e.g. as root with command: visudo)"
 echo "And there in editor add line like:"
 echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/netpriv1"
@@ -26,4 +28,8 @@ echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/netpriv_enter"
 echo ""
 echo "Where 'alice' should be the name of user (or group etc) that is allowed to set his programs to have netadmin capability"
 echo "Consider the security implications: the user that you will allow, will be able to configure the network interfaces on such computer as admin"
+echo
+echo "... after reading above instructions, press ENTER to continue"
+read _
+echo
 
