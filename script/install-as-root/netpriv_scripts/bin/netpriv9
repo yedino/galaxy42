@@ -1,0 +1,44 @@
+#!/bin/bash
+sandbox="prv${1}x"
+netbig="$2"
+netH="$3" # e.g. "1" to get 10.0.50.1, or 2, or 3...
+netG="$4" # e.g. "101" to get 10.0.50.101, or 102, or 103...
+
+[[ -z "$sandbox" ]] && { echo "Usage: give the namespace name. Aborting"; exit 0; }
+[[ -z "$netbig" ]] && { echo "Usage: give the number (for IP). Aborting"; exit 0; }
+[[ -z "$netH" ]] && { echo "Usage... H Aborting"; exit 0; }
+[[ -z "$netG" ]] && { echo "Usage... G Aborting"; exit 0; }
+# TODO validate $nr as integer e.g. 1..254
+sandbox0="${sandbox}H" 
+sandbox1="${sandbox}G"
+
+logger -s -- "Setting network namespace in sandbox=$sandbox sandbox0=$sandbox0 sandbox1=$sandbox1 netbig=$netbig PID=$$ PPID=$PPID in $0 options: $*" # logger
+
+set -x
+
+# configure $sandbox loopback
+ip netns exec $sandbox ip addr add "127.0.0.1/8" dev lo
+ip netns exec $sandbox ip link set lo up
+# create a device pairs
+ip link add $sandbox0 type veth peer name $sandbox1
+
+# initiate the host side
+ip link set $sandbox0 up
+# initiate the container side
+ip link set $sandbox1 netns $sandbox up
+
+# configure network
+ip addr add "192.168.${netbig}.${netH}/30" dev $sandbox0
+ip netns exec $sandbox ip addr add "192.168.${netbig}.${netG}/30" dev $sandbox1
+ip netns exec $sandbox ip route add default via "192.168.${netbig}.${netH}" dev $sandbox1
+
+# enable routing
+echo 1 | tee /proc/sys/net/ipv4/ip_forward
+ext_if=$(ip route get 8.8.8.8 | grep 'dev' | awk '{ print $5 }')
+iptables -I POSTROUTING -t nat -s "192.168.${netbig}.${netG}/32" -o ${ext_if} -j MASQUERADE
+iptables -I FORWARD -i $sandbox0 -o ${ext_if} -j ACCEPT
+iptables -I FORWARD -i ${ext_if} -o $sandbox0 -j ACCEPT
+
+# configure resolv.conf
+mkdir -p /etc/netns/$sandbox
+echo nameserver 8.8.8.8 | tee /etc/netns/$sandbox/resolv.conf

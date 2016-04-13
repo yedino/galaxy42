@@ -1,0 +1,15 @@
+#!/bin/bash
+
+sandbox="prv${1}x"
+shift 
+
+[[ -z "$sandbox" ]] && { echo "Usage: give the namespace name. Aborting"; exit 0; }
+logger -s -- "Setting network namespace in sandbox=$sandbox PID=$$ PPID=$PPID SUDO_USER=$SUDO_USER in $0, and then calls: $*"
+
+set -x
+
+# create a new namespace
+ip netns add $sandbox
+
+ip netns exec $sandbox sudo -u "${SUDO_USER}" -- $*
+

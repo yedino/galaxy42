@@ -1,0 +1,19 @@
+#!/bin/bash -e
+echo "This will install some of our util programs (system-wide)"
+echo "This programs are not yet fully secured, likely can contain some exploits especially exploitable by local malicious user" # TODO XXX
+echo "Type OK (in upper case) to install it anyway, or any other key or ctrl-c to exit now"
+
+read ok ; [[ "$ok" == "OK" ]] || { echo "Aborting" ; exit 1 ; } # !
+echo "Installing... "
+
+cp bin/setcap_net_admin /usr/local/bin/
+# possible race condition here betwen copy and chmod, but doesn't matter, because
+# this script should be run in safe location, and /usr/bin also is one (controlled just by root)
+chmod u=wrx,g=rx,o=rx /usr/local/bin/setcap_net_admin
+
+echo "Ok, now you should probably edit sudoers (e.g. as root with command: visudo)"
+echo "And there in editor add line like:"
+echo "alice ALL=(ALL)NOPASSWD:/usr/bin/setcap_net_admin --normal -u --current -f *"
+echo "Where 'alice' should be the name of user (or group etc) that is allowed to set his programs to have netadmin capability"
+echo "Consider the security implications: the user that you will allow, will be able to configure the network interfaces on such computer as admin"
+

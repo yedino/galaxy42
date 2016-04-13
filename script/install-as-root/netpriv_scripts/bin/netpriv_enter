@@ -1,0 +1,19 @@
+#!/bin/bash
+
+sandbox="prv${1}x"
+backtouser="${SUDO_USER}"
+
+usage() { 
+	echo "(no usage yet)"
+}
+if [[ ! "$sandbox" =~ ^prv[a-z]*[0-9]+x$ ]] ; then echo "Invalid (or strange) option for sandbox '$sandbox'" ; usage ; exit 1 ; fi
+if [[ ${#sandbox} -gt 8 ]] ; then echo "Too long sandbox name" ; usage ; exit 1 ; fi
+if [[ ! "$backtouser" =~ ^[a-zA-Z0-9._-]+$ ]] ; then echo "Invalid (or strange) user name  '$backtouser'" ; usage ; exit 1 ; fi
+
+logger -s -- "Entering namespace sandbox=${sandbox} and going back to user ${backtouser} PID=$$ PPID=$PPID in $0 options: $*"
+
+set -x
+
+nsenter --net=/var/run/netns/${sandbox} /bin/su ${backtouser}
+
+
