@@ -90,7 +90,7 @@ class c_osi2_nic {
 		unique_ptr<c_osi2_cable_direct_plug> m_plug; ///< the (plug to the) cable to my physical-peer
 		
 		std::vector< t_osi3_packet > m_outbox; ///< the data that is being sent out to OSI3 (over OSI2)
-		t_netspeed m_net_bussy; ///< how much data we received (and we need to cool down)
+		//t_netspeed m_net_bussy; ///< how much data we received (and we need to cool down)
 //		t_netspeed m_net_limit
 		
 		// t_osi3_addr m_addr; ///< my address in OSI3 (in LAN, in ICANN internet) // TODO remove

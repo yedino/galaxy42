@@ -9,7 +9,7 @@ size_t t_osi3_packet::size() {
 ////////////////////////////////////////////////////////////////////
 
 c_osi2_cable_direct::c_osi2_cable_direct(c_osi2_nic &a, c_osi2_nic &b, t_osi2_cost cost) 
-  : m_endpoint( {a,b} ), m_cost(cost)
+  : m_endpoint( {{a,b}} ), m_cost(cost)
 {
 	_info("NEW cable, in "<<this<<" I am referencing endpoints: " << &a << " and " << &b << " at cost " << cost);
 	_info("NEW cable, in "<<this<<" my endpoints are: " << endl << a << endl << " and: " << endl << b );
@@ -80,8 +80,7 @@ c_osi2_nic::c_osi2_nic(c_osi2_switch &my_switch)
 	m_switch(my_switch),
 	m_osi3_uuid(my_switch.get_world().generate_osi3_uuid()),
 	m_plug(nullptr),
-	m_outbox(),
-	m_net_bussy()
+	m_outbox()
 {
 }
 
