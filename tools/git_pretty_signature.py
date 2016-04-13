@@ -173,21 +173,26 @@ if __name__ == "__main__":
             sig_stat = data[del_pos+1:del_pos+2]
 
             com = "git||log||-1||"+com_hash+"||--pretty=format:\"%C(yellow)%H%C(auto)%d\n"
+            sig_info = ""
+            ref_info = ""
             sig_info_com = "git log "+com_hash+" -1 --pretty=format:\"%GG\""
-
-            tag_pos = data.find("tag")
-            # getting tag from %d ref names
-            if tag_pos != -1:
-                tag_info = data[tag_pos:-2]
-                info_len = len(tag_info) + len(com_hash) - 1
-                tag_end_pos = tag_info.find(',')
-                tag_info = tag_info[:tag_end_pos]
-                com += "%C(yellow reverse)=== "+tag_info+" is here " + '='*info_len+'\n'    #TODO bad nr of =
+            ref_info_com = "git log "+com_hash+" -1 --pretty=format:\"%d\""
 
             if (sys.version_info > (3, 0)):
                 sig_info = check_output(sig_info_com.split()).decode(encoding)
+                ref_info = check_output(ref_info_com.split()).decode(encoding)
             else:
                 sig_info = check_output(sig_info_com.split())
+                ref_info = check_output(ref_info_com.split())
+
+            tag_pos = ref_info.find("tag")
+            # getting tag from %d ref names
+            if tag_pos != -1:
+                tag_info = ref_info[tag_pos:-1]
+                tag_end_pos = tag_info.find(',')
+                tag_info = tag_info[:tag_end_pos]
+                info_len = len(com_hash) + len(ref_info) - len(tag_info) - 15
+                com += "%C(yellow reverse)=== "+tag_info+" is here " + '='*info_len+'\n'
 
             sig_info = repr(sig_info).replace('"','\\"')[2:-2]
             sig_info = sig_info.replace('\\n','\n')
