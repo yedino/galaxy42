@@ -1,4 +1,4 @@
-/**
+/**ZZZZZZZZZ
 Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
@@ -1120,10 +1120,9 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 bool run_mode_developer(boost::program_options::variables_map & argm) { 
 	std::cerr << "Running in developer mode. " << std::endl;
 
-//	test_trivialserialize();  
-return false;
+	// test_trivialserialize();  return false;
 
-	// return developer_tests::wip_galaxy_route_doublestar(argm);
+	return developer_tests::wip_galaxy_route_doublestar(argm);
 }
 
 int main(int argc, char **argv) {

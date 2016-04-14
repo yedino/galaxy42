@@ -70,12 +70,12 @@ try {
 	//    "20a" = 02 , 0a
 	_info("Processing string: ["<< (encoded.data) << "]");
 	const auto es = encoded.data.size();
-	if (!es) return; // empty string
+	if (!es) return; // empty string encoded --> empty binary string
 
 	size_t retsize = es/2; // size of finall string of bytes data
 	if (0 != (es % 2)) retsize++;
-	assert(retsize > 0);
-	assert( (retsize < es) || (retsize==es==1) ); // both are ==1 for e.g. "a"
+	assert(retsize > 0); // the binary string will be not-empty (empty case is covered already)
+	assert( (retsize < es)   ||   ((retsize==1)&&(es==1)) ); // binary string is smaller  -or-  both are ==1 for e.g. encoded "a" means "0a" so it should result in ---> a 1-byte binary string
 	bytes.resize(retsize);
 
 	size_t pos=0, out=0; // position of input, and output

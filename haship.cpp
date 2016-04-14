@@ -2,15 +2,32 @@
 
 #include "haship.hpp"
 
+#include <sodium.h>
+
 
 // c_haship_addr :
-c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({}) { }
+c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({{}}) { }
 
-c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({}) {
+c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({{}}) {
+	_info("Creating HIP from pubkey: " << pubkey);
+
+	// TODO(r) [crypto] hashing of pubkey to HIP - review this
+	unsigned char hash[crypto_generichash_BYTES];
+	string_as_bin pubkey_bin( pubkey );
+	_info("Creating HIP from pubkey: " << string_as_dbg(pubkey_bin).get());
+	crypto_generichash(hash, sizeof hash, reinterpret_cast<const unsigned char*>(pubkey_bin.bytes.c_str()), pubkey_bin.bytes.size(), NULL, 0);
+	//_info("...creating: " << string_as_dbg(string_as_bin( reinterpret_cast<const char*>(hash), sizeof hash)).get());
+
+	crypto_generichash(hash, sizeof hash, hash, sizeof hash, NULL, 0);
+	//_info("...creating: " << string_as_dbg(string_as_bin( reinterpret_cast<const char*>(hash), sizeof hash)).get());
+
+	// TODO(r) repeat untill we "bruteforce" an fd42 ?
+
 	at(0) = 0xfd;
 	at(1) = 0x42;
-	for (size_t i=2; i<16; ++i) { // TODO real hash!!!
-		at(i) = pubkey.at(i-2);
+	assert( sizeof hash >= 16 );
+	for (size_t i=2; i<16; ++i) {
+		at(i) = hash[i];
 	}	
 }
 
@@ -80,8 +97,8 @@ ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	r
 
 
 // c_haship_pubkey :
-c_haship_pubkey::c_haship_pubkey() : std::array<unsigned char, g_haship_pubkey_size>({}) { }
-c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) : std::array<unsigned char, g_haship_pubkey_size>({}) {
+c_haship_pubkey::c_haship_pubkey() : std::array<unsigned char, g_haship_pubkey_size>({{}}) { }
+c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) : std::array<unsigned char, g_haship_pubkey_size>({{}}) {
 	for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
 //	for(auto v : input.bytes) at(
 }
