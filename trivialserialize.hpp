@@ -1,5 +1,5 @@
-#ifndef INCLUDE_trivialserialize_hppAAA
-#define INCLUDE_trivialserialize_hppAAA
+#ifndef include_trivialserialize_hppaaa
+#define include_trivialserialize_hppaaa
 
 #include "libs1.hpp"
 

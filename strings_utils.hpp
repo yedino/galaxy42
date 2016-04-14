@@ -1,3 +1,5 @@
+#ifndef include_strings_utils_hpp
+#define include_strings_utils_hpp
 
 #include "libs1.hpp"
 
@@ -95,4 +97,7 @@ std::string to_string( const std::array<T,N> & obj ) {
 	oss<<']';
 	return oss.str();
 }
+
+#endif
+
 
