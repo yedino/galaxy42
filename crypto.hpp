@@ -2,7 +2,7 @@
 #define include_crypto_hpp
 
 #include "libs1.hpp"
-
+#include <sodium.h>
 #include "strings_utils.hpp"
 
 using namespace std;
@@ -45,11 +45,31 @@ c_symhash_state::t_hash c_symhash_state::get_password() const {
 
 
 c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
-	return string_as_bin( "a(" + hash.bytes + ")" );
+
+    // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
+    size_t u_hashmsg_len = hash.bytes.length();
+    const unsigned char* u_hashmsg = new unsigned char [u_hashmsg_len];
+    u_hashmsg = reinterpret_cast<const unsigned char *>(hash.bytes.c_str());
+
+    size_t out_u_hash_len = crypto_generichash_BYTES;
+    unsigned char out_u_hash[crypto_generichash_BYTES];
+
+    crypto_generichash(out_u_hash, sizeof out_u_hash_len,
+                       u_hashmsg, u_hashmsg_len,
+                       NULL, 0);
+
+    return string_as_bin(reinterpret_cast<char *>(out_u_hash));
+    //return string_as_bin( "a(" + hash.bytes + ")" );
 }
 
 c_symhash_state::t_hash c_symhash_state::Hash2( const t_hash & hash ) const {
-	return string_as_bin( "B(" + hash.bytes + ")" );
+
+    t_hash hash_from_hash = Hash1(hash);
+    for(auto &ch : hash_from_hash.bytes) {
+        ch = ~ch;
+    }
+    return Hash1(hash_from_hash);
+    //return string_as_bin( "B(" + hash.bytes + ")" );
 }
 
 
