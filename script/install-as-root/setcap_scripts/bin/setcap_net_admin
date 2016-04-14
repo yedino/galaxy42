@@ -11,6 +11,7 @@ function usage() {
 	echo "alice ALL=(ALL)NOPASSWD:/usr/bin/setcap_net_admin --normal -u --current -f *"
 	echo "Where, of course, alice is the name of user (or users, groups,...) to be allowed to give this CAP capability to their programs"
 	echo "This command will check proper rights on the given file, if it is owned by expected_user and has secure permissions."
+    echo "Please put this line ABOVE special lines like e.g. includedir - otherwise it might not work!"
 }
 
 # Copyrighted (C) BSD Licence
