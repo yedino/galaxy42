@@ -38,7 +38,8 @@ endif()
 include_directories(../antinet/src/antinet_sim/)
 add_executable(ipclient.elf ipclient.cpp counter.cpp)
 add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf tunserver.cpp counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs1.cpp trivialserialize.cpp)
+add_executable(tunserver.elf tunserver.cpp counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs1.cpp trivialserialize.cpp
+			   crypto-sodium/ecdh_ChaCha20_Poly1305.cpp)
 
 target_link_libraries(tunserver.elf boost_program_options sodium)
 
