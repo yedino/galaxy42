@@ -25,7 +25,7 @@ c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
 
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
     size_t u_hashmsg_len = hash.bytes.length();
-    const unsigned char* u_hashmsg = new unsigned char [u_hashmsg_len];
+    const unsigned char* u_hashmsg;
     u_hashmsg = reinterpret_cast<const unsigned char *>(hash.bytes.c_str());
 
     size_t out_u_hash_len = crypto_generichash_BYTES;
