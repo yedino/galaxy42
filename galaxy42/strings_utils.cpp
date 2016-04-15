@@ -119,6 +119,12 @@ string_as_bin string_as_bin::operator+( const std::string & other ) const {
 	return ret;
 }
 
+
+bool operator<( const string_as_bin &a, const string_as_bin &b) {
+	return a.bytes < b.bytes;
+}
+
+
 // ==================================================================
 
 string_as_dbg::string_as_dbg(const string_as_bin & bin)
