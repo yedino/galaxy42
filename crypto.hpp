@@ -118,7 +118,7 @@ class c_dhdh_state {
 		t_symkey execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
 		void generate_temp_key_pair(); ///< save generated keys to m_pubkey_temp and m_privkey_temp
 
-		t_symkey secure_random();
+		t_symkey secure_random(size_t size_of_radom_data);
 
 		t_nonce m_nonce;
 };
