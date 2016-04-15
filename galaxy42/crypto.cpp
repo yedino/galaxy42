@@ -72,6 +72,14 @@ c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_privkey &my_pri
 	return ret;
 }
 
+void c_dhdh_state::generate_temp_key_pair() {
+	using namespace ecdh_ChaCha20_Poly1305;
+	keypair_t keypair = generate_keypair();
+	std::copy(keypair.privkey.begin(), keypair.privkey.end(), m_privkey_temp.bytes.begin());
+	std::copy(keypair.pubkey.begin(), keypair.pubkey.end(), m_pubkey_temp.bytes.begin());
+}
+
+
 c_dhdh_state::t_symkey c_dhdh_state::secure_random() {
 	t_symkey ret;
 	ret.bytes.resize(128); // TODO size of out buff
