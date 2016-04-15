@@ -50,6 +50,8 @@ struct string_as_bin {
 	string_as_bin operator+( const std::string & other ) const;
 };
 
+bool operator<( const string_as_bin &a, const string_as_bin &b);
+
 
 struct string_as_dbg {
 	public:
