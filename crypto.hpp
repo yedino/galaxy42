@@ -112,8 +112,11 @@ class c_dhdh_state {
 		t_pubkey m_theirs_pub;
 		t_symkey m_r; // my random r1 or r2 to use in CA shared key
 
-		// const& ? TODO
+		t_pubkey m_pubkey_temp;
+		t_privkey m_privkey_temp;
+
 		t_symkey execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
+		void generate_temp_key_pair(); ///< save generated keys to m_pubkey_temp and m_privkey_temp
 
 		t_symkey secure_random();
 
