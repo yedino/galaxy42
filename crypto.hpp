@@ -105,10 +105,12 @@ class c_dhdh_state {
 		c_dhdh_state(t_privkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub);
 
 		void step1();
+		t_pubkey get_permanent_pubkey();
+		t_pubkey get_temp_pubkey();
 
 	private: 
-		t_privkey m_our_priv;
-		t_pubkey m_our_pub;
+		t_privkey m_our_priv; ///< permanent
+		t_pubkey m_our_pub; ///< permanent
 		t_pubkey m_theirs_pub;
 		t_symkey m_r; // my random r1 or r2 to use in CA shared key
 

@@ -33,7 +33,7 @@ c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
 
     crypto_generichash(out_u_hash, sizeof out_u_hash_len,
                        u_hashmsg, u_hashmsg_len,
-                       NULL, 0);
+                       nullptr, 0);
 
     return string_as_bin(reinterpret_cast<char *>(out_u_hash));
     //return string_as_bin( "a(" + hash.bytes + ")" );
@@ -59,6 +59,15 @@ void c_dhdh_state::step1() {
 	m_r = secure_random(128); // TODO size
 	m_skp = execute_DH_exchange( m_our_priv, m_our_pub, m_our_pub );
 }
+
+c_dhdh_state::t_pubkey c_dhdh_state::get_permanent_pubkey() {
+	return m_our_pub;
+}
+
+c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() {
+	return m_pubkey_temp;
+}
+
 
 c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub) {
 	using namespace ecdh_ChaCha20_Poly1305;
