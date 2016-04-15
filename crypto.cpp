@@ -65,7 +65,11 @@ c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(t_privkey & my_priv , t
 }
 
 c_dhdh_state::t_symkey c_dhdh_state::secure_random() {
-	return string_as_bin("RANDOM");
+	t_symkey ret;
+	ret.bytes.resize(128); // TODO size of out buff
+	unsigned char *data_ptr = reinterpret_cast<unsigned char *>(const_cast<char *>(ret.bytes.data())); // !!! const_cast
+	randombytes(data_ptr, ret.bytes.size());
+	return ret;
 }
 
 
