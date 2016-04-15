@@ -81,6 +81,8 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 
 #include "crypto.hpp" // for tests
 
+#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+
 // #include "trivialserialize.hpp"
 
 // ------------------------------------------------------------------
@@ -1131,6 +1133,11 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 int main(int argc, char **argv) {
 	std::cerr << std::endl << disclaimer << std::endl << std::endl;
+
+	{
+		std::cerr<<"Startig lib sodium..."<<std::endl;
+		ecdh_ChaCha20_Poly1305::init();
+	}
 
 
 /*	c_ip46_addr addr;

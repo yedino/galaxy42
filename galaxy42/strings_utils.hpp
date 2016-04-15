@@ -16,6 +16,8 @@ struct string_as_hex {
 };
 std::ostream& operator<<(std::ostream &ostr, const string_as_hex &obj);
 
+bool operator==( const string_as_hex &a, const string_as_hex &b);
+
 unsigned char hexchar2int(char c); // 'f' -> 15
 unsigned char int2hexchar(unsigned char i); // 15 -> 'f'
 

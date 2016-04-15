@@ -31,6 +31,10 @@ const std::string & string_as_hex::get() const { return data; }
 
 std::ostream& operator<<(std::ostream &ostr, const string_as_hex &obj) { return ostr << obj.get(); }
 
+bool operator==( const string_as_hex &a, const string_as_hex &b) {
+	return a.data == b.data;
+}
+
 // ==================================================================
 
 
