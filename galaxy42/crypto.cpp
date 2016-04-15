@@ -1,4 +1,5 @@
 #include "crypto.hpp"
+#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 namespace antinet_crypto {
 
@@ -56,12 +57,19 @@ c_dhdh_state::c_dhdh_state(t_privkey our_priv, t_pubkey our_pub, t_pubkey theirs
 
 void c_dhdh_state::step1() {
 	m_r = secure_random();
-	m_skp = execute_DH_exchange( m_our_priv , m_our_pub );
+	m_skp = execute_DH_exchange( m_our_priv, m_our_pub, m_our_pub );
 }
 
-c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(t_privkey & my_priv , t_pubkey theirs_pub) {
-	// TODO
-	return t_symkey();
+c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub) {
+	using namespace ecdh_ChaCha20_Poly1305;
+	keypair_t my_keys;
+	std::copy(my_priv.bytes.begin(), my_priv.bytes.end(), my_keys.privkey.begin());
+	std::copy(my_pub.bytes.begin(), my_pub.bytes.end(), my_keys.pubkey.begin());
+	pubkey_t theirs_pub_key;
+	std::copy(theirs_pub.bytes.begin(), theirs_pub.bytes.end(), theirs_pub_key.begin());
+	sharedkey_t sk = generate_sharedkey_with (my_keys, theirs_pub_key);
+	t_symkey ret(std::string(sk.begin(), sk.end()));
+	return ret;
 }
 
 c_dhdh_state::t_symkey c_dhdh_state::secure_random() {
