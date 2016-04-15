@@ -26,7 +26,7 @@ c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
     size_t u_hashmsg_len = hash.bytes.length();
     const unsigned char* u_hashmsg;
-    u_hashmsg = reinterpret_cast<const unsigned char *>(hash.bytes.c_str());
+    u_hashmsg = reinterpret_cast<const unsigned char *>(&hash.bytes[0]);
 
     size_t out_u_hash_len = crypto_generichash_BYTES;
     unsigned char out_u_hash[crypto_generichash_BYTES];
@@ -92,7 +92,8 @@ void c_dhdh_state::generate_temp_key_pair() {
 c_dhdh_state::t_symkey c_dhdh_state::secure_random(size_t size_of_radom_data) {
 	t_symkey ret;
 	ret.bytes.resize(size_of_radom_data);
-	unsigned char *data_ptr = reinterpret_cast<unsigned char *>(const_cast<char *>(ret.bytes.data())); // !!! const_cast
+	assert(!ret.bytes.empty());
+	unsigned char *data_ptr = reinterpret_cast<unsigned char *>(&ret.bytes[0]);
 	randombytes(data_ptr, ret.bytes.size());
 	return ret;
 }
