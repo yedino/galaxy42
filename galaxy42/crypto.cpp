@@ -56,7 +56,7 @@ c_dhdh_state::c_dhdh_state(t_privkey our_priv, t_pubkey our_pub, t_pubkey theirs
 { }
 
 void c_dhdh_state::step1() {
-	m_r = secure_random();
+	m_r = secure_random(128); // TODO size
 	m_skp = execute_DH_exchange( m_our_priv, m_our_pub, m_our_pub );
 }
 
@@ -80,9 +80,9 @@ void c_dhdh_state::generate_temp_key_pair() {
 }
 
 
-c_dhdh_state::t_symkey c_dhdh_state::secure_random() {
+c_dhdh_state::t_symkey c_dhdh_state::secure_random(size_t size_of_radom_data) {
 	t_symkey ret;
-	ret.bytes.resize(128); // TODO size of out buff
+	ret.bytes.resize(size_of_radom_data);
 	unsigned char *data_ptr = reinterpret_cast<unsigned char *>(const_cast<char *>(ret.bytes.data())); // !!! const_cast
 	randombytes(data_ptr, ret.bytes.size());
 	return ret;
