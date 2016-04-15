@@ -31,11 +31,11 @@ c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
     size_t out_u_hash_len = crypto_generichash_BYTES;
     unsigned char out_u_hash[crypto_generichash_BYTES];
 
-    crypto_generichash(out_u_hash, sizeof out_u_hash_len,
+    crypto_generichash(out_u_hash, crypto_generichash_BYTES,
                        u_hashmsg, u_hashmsg_len,
                        nullptr, 0);
 
-    return string_as_bin(reinterpret_cast<char *>(out_u_hash));
+    return string_as_bin(reinterpret_cast<char *>(out_u_hash), crypto_generichash_BYTES);
     //return string_as_bin( "a(" + hash.bytes + ")" );
 }
 
