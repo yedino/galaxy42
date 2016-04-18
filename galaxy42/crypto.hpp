@@ -4,6 +4,7 @@
 #include "libs1.hpp"
 #include <sodium.h>
 #include "strings_utils.hpp"
+#include "gtest/gtest_prod.h"
 
 using namespace std;
 
@@ -44,6 +45,8 @@ class c_symhash_state : public c_crypto_state {
 	private:
 		t_hash get_the_SECRET_PRIVATE_state() const; //< used e.g. by some tests
 		friend class unittest::c_symhash_state__tests_with_private_access;
+		FRIEND_TEST(crypto, aeshash_not_repeating_state_nor_password);
+
 	
 	private:
 		t_hash m_state;
