@@ -26,12 +26,12 @@ class c_crypto_state {
 
 		virtual ~c_crypto_state()=default;
 
-		virtual t_symkey secure_random(size_t size_of_radom_data);
+		virtual t_symkey secure_random(size_t size_of_radom_data) const;
 };
 
 
 
-class c_symhash_state : public c_crypto_state {
+class c_symhash_state final : public c_crypto_state {
 	public:
 		typedef string_as_bin t_hash;
 
@@ -117,7 +117,7 @@ attack hardness:   badluck-DH << DH-tmp , DH-perm
 
 
 // For given CA (form me, to given recipient) - and given session
-class c_dhdh_state : public c_crypto_state {
+class c_dhdh_state final : public c_crypto_state {
 	public:
 		typedef string_as_bin t_pubkey;
 		typedef string_as_bin t_privkey;
@@ -128,8 +128,8 @@ class c_dhdh_state : public c_crypto_state {
 		c_dhdh_state(t_privkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub);
 
 		void step1();
-		t_pubkey get_permanent_pubkey();
-		t_pubkey get_temp_pubkey();
+		t_pubkey get_permanent_pubkey() const;
+		t_pubkey get_temp_pubkey() const;
 
 	private: 
 		t_privkey m_our_priv; ///< permanent
@@ -153,7 +153,7 @@ class c_dhdh_state : public c_crypto_state {
 void test_crypto();
 	
 
-}
+} // namespace
 
 
 #endif

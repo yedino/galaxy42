@@ -6,7 +6,7 @@
 namespace antinet_crypto {
 
 
-c_dhdh_state::t_symkey c_crypto_state::secure_random(size_t size_of_radom_data) {
+c_dhdh_state::t_symkey c_crypto_state::secure_random(size_t size_of_radom_data) const {
 	t_symkey ret;
 	ret.bytes.resize(size_of_radom_data);
 	assert(!ret.bytes.empty());
@@ -80,11 +80,11 @@ void c_dhdh_state::step1() {
 	m_skp = execute_DH_exchange( m_our_priv, m_our_pub, m_our_pub );
 }
 
-c_dhdh_state::t_pubkey c_dhdh_state::get_permanent_pubkey() {
+c_dhdh_state::t_pubkey c_dhdh_state::get_permanent_pubkey() const {
 	return m_our_pub;
 }
 
-c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() {
+c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() const {
 	return m_pubkey_temp;
 }
 
