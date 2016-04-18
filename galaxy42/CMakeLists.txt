@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project (ipbench)
 
+#add local gtest
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
+include_directories(test.elf ../googletest/googletest/include/)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
 
 ADD_CUSTOM_TARGET(fast
@@ -42,6 +46,9 @@ add_executable(tunserver.elf tunserver.cpp counter.cpp cjdns-code/NetPlatform_li
 			   crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp)
 
 target_link_libraries(tunserver.elf boost_program_options sodium)
+
+add_executable(test.elf test/main.cpp)
+target_link_libraries(test.elf gtest)
 
 #loadjason.elf jsoncpp
 #add_executable(loadjson.elf loadjson.cpp)
