@@ -60,6 +60,10 @@ void c_antinet_0004_B::sign_contract(const crypto_ed25519::keypair &keypair) {
     // TODO
 //}
 
+c_contract::c_contract(const std::string &packet) {
+    c_json_serializer::deserialize(*this, packet);
+}
+
 c_contract_header c_contract::to_contract_header() {
     return c_contract_header("");
 }
@@ -81,9 +85,9 @@ void c_contract::sign_contract(const crypto_ed25519::keypair &keypair) {
 }
 
 void c_contract::json_serialize(Json::Value &root) const {
-    root["signed antinet contract"] = std::string("aggree");
+    root["signed antinet contract"] = std::string("aggree");	// TODO
 }
 
 void c_contract::json_deserialize(Json::Value &root) {
-    std::cout << "All contract recieved!" << std::endl; 	// TODO
+    std::cout << "Contract recieved!" << std::endl; 	// TODO
 }

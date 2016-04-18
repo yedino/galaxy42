@@ -127,8 +127,7 @@ class c_contract : public ijson_serializable {
 public:
 
     c_contract () = default;
-    c_contract(const std::string &contract_info)
-    { } //  TODO
+    c_contract(const std::string &packet);
 
     c_contract(const c_antinet_0001_A &a1,
                const c_antinet_0002_A &a2,
