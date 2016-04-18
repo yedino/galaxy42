@@ -110,11 +110,11 @@ namespace ecdh_ChaCha20_Poly1305 {
 
             unsigned long long ciphertext_len = 0;
             crypto_aead_chacha20poly1305_encrypt(ciphertext.get(), &ciphertext_len,
-                                                 (const unsigned char *)data.c_str(), data.size(),
-                                                 (const unsigned char *)additional_data.c_str(), additional_data.size(),
+                                                 reinterpret_cast<const unsigned char *>(data.c_str()), data.size(),
+                                                 reinterpret_cast<const unsigned char *>(additional_data.c_str()), additional_data.size(),
                                                  NULL, nonce.data(), sharedkey.data());
 
-            return std::string((const char *)ciphertext.get(), ciphertext_len);
+            return std::string(reinterpret_cast<const char *>(ciphertext.get()), ciphertext_len);
             // TODO update nonce
         }
 
@@ -128,8 +128,8 @@ namespace ecdh_ChaCha20_Poly1305 {
 
             if (crypto_aead_chacha20poly1305_decrypt(decrypted, &decrypted_len,
                                                      NULL,
-                                                     (const unsigned char *)ciphertext.c_str(), ciphertext.size(),
-                                                     (const unsigned char *)additional_data.c_str(),
+                                                     reinterpret_cast<const unsigned char *>(ciphertext.c_str()), ciphertext.size(),
+                                                     reinterpret_cast<const unsigned char *>(additional_data.c_str()),
                                                      additional_data.size(),
                                                      nonce.data(), sharedkey.data()) != 0) {
                 return "message forged!";
@@ -139,6 +139,6 @@ namespace ecdh_ChaCha20_Poly1305 {
                 throw std::runtime_error("'decrypted' is null!");
             }
 
-            return std::string((const char *)decrypted, decrypted_len);
+            return std::string(reinterpret_cast<const char *>(decrypted), decrypted_len);
         }
 }
