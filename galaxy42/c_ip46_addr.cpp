@@ -148,10 +148,10 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 	}
 
 	int ret = 0;
-	if (rhs.m_tag == t_tag::tag_ipv4) {
+    if (rhs.m_tag == t_tag::tag_ipv4) {
         ret = memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
 	}
-	else {
+    else {
         ret = memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr));
 	}
 	if (ret < 0) return true;
