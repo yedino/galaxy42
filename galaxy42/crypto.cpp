@@ -129,20 +129,23 @@ bool c_symhash_state__tests_with_private_access::aeshash_not_repeating_state_nor
 	std::set< c_symhash_state::t_hash > used_hash;
 	const int amount_iterations = 10000;
 
-	typedef enum { RX_none=0, RX_constant, RX_same, RX_random , RX_END } type_RX;
+    enum class type_RX : int { RX_none=0, RX_constant, RX_same, RX_random , RX_END };
 
 
-	for (auto rx_type = RX_none ; rx_type < RX_END ; rx_type = static_cast<type_RX>(static_cast<int>(rx_type) + 1)  ) {
+    for (auto rx_type = type_RX::RX_none ; rx_type < type_RX::RX_END ; rx_type = static_cast<type_RX>(static_cast<int>(rx_type) + 1)  ) {
 		c_symhash_state symhash( string_as_hex("") );
 
 		auto rx_same = symhash.secure_random( 10 );
 
 		switch (rx_type) { // first nextstate after creation of symhash
-			case RX_none:	break; // here we do not do it, but must be then done in others to avoid collision
-			case RX_constant:	symhash.next_state( string_as_bin("foo") ); break;
-			case RX_same:	symhash.next_state( rx_same ); break;
-			case RX_random:	symhash.next_state( symhash.secure_random( 2 ) ); break;
-			default: assert(false);
+            case type_RX::RX_none:			break; // here we do not do it, but must be then done in others to avoid collision
+            case type_RX::RX_constant:		symhash.next_state( string_as_bin("foo") );
+                                            break;
+            case type_RX::RX_same:			symhash.next_state( rx_same );
+                                            break;
+            case type_RX::RX_random:		symhash.next_state( symhash.secure_random( 2 ) );
+                                            break;
+            default: assert(false);
 		}
 
 
@@ -156,17 +159,21 @@ bool c_symhash_state__tests_with_private_access::aeshash_not_repeating_state_nor
 				UTASSERT( result.second == true ); // inserted new one
 			}
 			switch (rx_type) {
-				case RX_none:	symhash.next_state(); break;
-				case RX_constant:	symhash.next_state( string_as_bin("foo") ); break;
-				case RX_same:	symhash.next_state( rx_same ); break;
-				case RX_random:	symhash.next_state( symhash.secure_random( 2 ) ); break;
+                case type_RX::RX_none:		symhash.next_state();
+                                            break;
+                case type_RX::RX_constant:	symhash.next_state( string_as_bin("foo") );
+                                            break;
+                case type_RX::RX_same:		symhash.next_state( rx_same );
+                                            break;
+                case type_RX::RX_random:	symhash.next_state( symhash.secure_random( 2 ) );
+                                            break;
 				default: assert(false);
 			}
 		} // all iterations of using it
 
 
 		switch (rx_type) {
-			case RX_none:	
+            case type_RX::RX_none:
 				UTEQ( string_as_hex(symhash.get_password()) , string_as_hex("084b0ff5a81c8f3c1001b2d596cc02db629ea047716eba8440bb823223f18bddaa3631a02e43bbf886584cc636eb0a56a5813f15c9c0aeb3b5b4b4877221da8e") );
 				UTEQ( string_as_hex(symhash.get_the_SECRET_PRIVATE_state()) , string_as_hex("b64bde9d13b26847df387b6aa2f475a1309b64d14aaa07877df1b43cd1c79364ff7d7fbbef222ec41d55bb21f4144124c91d69a7411d3a4e29178a7e6748e097") );
 			break;
