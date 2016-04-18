@@ -48,6 +48,7 @@ using std::istringstream;
 
 using std::endl;
 
+#define UNUSED(expr) do { (void)(expr); } while (0)
 
 // ??? decide: XXX
 #include "c_tnetdbg.hpp"

@@ -86,8 +86,8 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	unsigned char * ciphertext_buf = protomsg.get() + header_size; // just-pointer to part of protomsg where to write the message!
 	unsigned long long ciphertext_buf_len = 0; // encryption will write here the resulting size
-	crypto_aead_chacha20poly1305_encrypt(ciphertext_buf, &ciphertext_buf_len, (unsigned char *)data, data_size, additional_data,
-	                                     additional_data_len, NULL, nonce, generated_shared_key);
+    crypto_aead_chacha20poly1305_encrypt(ciphertext_buf, &ciphertext_buf_len, reinterpret_cast<const unsigned char *>(data), data_size, additional_data,
+                                         additional_data_len, NULL, nonce, generated_shared_key);
 	unsigned long long protomsg_len = ciphertext_buf_len + header_size; // the output of crypto, plus the header in front
 
 	// TODO asserts!!!
@@ -98,8 +98,8 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
 	_info("Send to peer (COMMAND): command="<<static_cast<int>(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
 	string_as_bin raw;
-	raw.bytes += (unsigned char) c_protocol::current_version;
-	raw.bytes += (unsigned char) cmd;
+    raw.bytes += c_protocol::current_version;
+    raw.bytes += cmd;
 	raw.bytes += bin.bytes;
 	this->send_data_RAW_udp(raw.bytes.c_str(), raw.bytes.size(), udp_socket);
 }

@@ -869,9 +869,12 @@ void c_tunserver::event_loop() {
 				std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
 
 				if (dst_hip == m_haship_addr) { // received data addresses to us as finall destination:
-					_info("UDP data is addressed to us as finall dst, sending it to TUN.");
-					write(m_tun_fd, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); /// *** send the data into our TUN // reinterpret char-signess
-				}
+                    _info("UDP data is addressed to us as finall dst, sending it to TUN.");
+                    ssize_t write_bytes = write(m_tun_fd, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); /// *** send the data into our TUN // reinterpret char-signess
+                    if (write_bytes == -1) {
+                       throw std::runtime_error("Fail to send UDP to TUN: write returned -1");
+                    }
+                }
 				else
 				{ // received data that is addresses to someone else
 					auto data_route_ttl = requested_ttl - 1;
@@ -921,7 +924,8 @@ void c_tunserver::event_loop() {
 				if (data_route_ttl > limit_incoming_ttl) {
 					_info("We were requested to route (help search route) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
-				}
+                    UNUSED(data_route_ttl); // TODO is it should be used?
+                }
 
 				_info("We received request for HIP=" << string_as_hex( bin_hip ) << " = " << requested_hip << " and TTL=" << requested_ttl );
 				if (requested_ttl < 1) {
