@@ -141,8 +141,9 @@ class c_dhdh_state final : public c_crypto_state {
 		t_privkey m_privkey_temp;
 
 		t_symkey execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
-		void generate_temp_key_pair(); ///< save generated keys to m_pubkey_temp and m_privkey_temp
+		std::pair<t_pubkey, t_privkey> generate_key_pair() const;
 
+		FRIEND_TEST(crypto, dh_exchange);
 
 		t_nonce m_nonce;
 };
