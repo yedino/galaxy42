@@ -10,3 +10,6 @@
 [submodule "doc_and_drafts/coin_signing/serialization"]
 	path = doc_and_drafts/coin_signing/serialization
 	url = https://github.com/boostorg/serialization
+[submodule "googletest"]
+	path = googletest
+	url = ../googletest
