@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-//#include "../strings_utils.hpp"
 #include "../crypto.hpp"
 
 namespace antinet_crypto {
@@ -62,8 +61,6 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 }
 
 
-//using namespace antinet_crypto;
-
 TEST(crypto, aeshash_start_and_get_same_passwords) {
 	c_symhash_state symhash( string_as_hex("6a6b") ); // "jk"
 	auto p = string_as_hex( symhash.get_password() );
@@ -78,5 +75,7 @@ TEST(crypto, aeshash_start_and_get_same_passwords) {
 	p = string_as_hex( symhash.get_password() );
 	EXPECT_EQ(p.get(), "8a986c419f1347d8ea94b3ad4b9614d840bb2dad2e13287a7a6cb5cf72232c3211997b6435f44256a010654d6f49e71517e46ce420a77f09f3a425eabaa99d8a");
 }
+
+
 
 } // namespace
