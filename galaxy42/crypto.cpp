@@ -110,11 +110,13 @@ c_crypto_state::t_symkey c_dhdh_state::execute_DH_exchange() {
 std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_privkey> c_dhdh_state::generate_key_pair() {
 	using namespace ecdh_ChaCha20_Poly1305;
 	keypair_t keypair = generate_keypair();
-	//std::copy(keypair.privkey.begin(), keypair.privkey.end(), m_privkey_temp.bytes.begin());
-	//std::copy(keypair.pubkey.begin(), keypair.pubkey.end(), m_pubkey_temp.bytes.begin());
 	std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_privkey> ret;
+	ret.first.bytes.resize(keypair.pubkey.size());
+	ret.second.bytes.resize(keypair.privkey.size());
 	std::copy(keypair.pubkey.begin(), keypair.pubkey.end(), ret.first.bytes.begin());
+	assert(keypair.pubkey.size() == ret.first.bytes.size());
 	std::copy(keypair.privkey.begin(), keypair.privkey.end(), ret.second.bytes.begin());
+	assert(keypair.privkey.size() == ret.second.bytes.size());
 	return ret;
 }
 
