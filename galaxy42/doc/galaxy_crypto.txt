@@ -1,5 +1,5 @@
 
-(C) 2016 Antinet.org Team 
+(C) 2016 Antinet.org Team
 
 All this text is copyrighted as part of Antinet project (e.g.:GPLv3, but see Antinet project licence).
 
@@ -16,7 +16,7 @@ Things Vulnerable to QC are marked as <vulnQC>.
 Things thought to be resistant to QC are marked as <resistant>.
 Hash and SymEncrypt (including SymAuth) are immune to QC.
 
-NTru ---> NTru-Sign PubSign/Chain <resistant> 
+NTru ---> NTru-Sign PubSign/Chain <resistant>
       '-> NTru-Encr PubEncrypt <resistant>
 
 RSA<vulnQC> (PubSign, PubEncrypt)
@@ -75,14 +75,14 @@ The problem is how to establish K in secure way (next chapter).
 How to establish the secret K - in a way resistant to QC?
 (For comparsion as of 2016-04, Cjdns v17 that uses ECDH X25519 it is NOT resistant to QC attacks).
 
-We use Diffie-Hellman like key exchange & also we use symmetrical crypto; 
+We use Diffie-Hellman like key exchange & also we use symmetrical crypto;
 Both methods protect eachother recursively.
 So we use:
 
 DH & SymHash - and more exactly it is:
 DHDH & SymHash - and more exactly it is:
 ECDH+ECDH & AES+HASH - and more exactly it is:
-X25519+X25519 & Salsa20+BLAKE2 
+X25519+X25519 & Salsa20+BLAKE2
 
 But we also use DH-like key exchange with NTru encrypt/sign optionally:
 
@@ -97,8 +97,8 @@ If any of them resists attacks, then entire system resisted too.
 
 Problem with 3 is that it can not be established between two IPv6 directly as it requires exchange of
 another password over secure channel first.
-If ANY of previous session was not broken by attacker, e.g. was not monitored by attacker, 
-then we are safe - since in each we exchange and add the symmetrical 
+If ANY of previous session was not broken by attacker, e.g. was not monitored by attacker,
+then we are safe - since in each we exchange and add the symmetrical
 passwords (we keep hashed state known as Historical Password).
 We offer 3 solutions:
 1. Not observed - we can hope attacker did not archived ALL of Alice conversations to given Bob.
@@ -121,7 +121,7 @@ Bob   rb=random(), encrypts rb to PubA, sends to Alice.
 Alice: K = ra xor rb
 Bob:   K = ra xor rb
  or instead (maybe better):
-K = H( H(ra) xor H(rb) xor H(ra xor rb) ) // todo? doe it decrease chance of...
+K = H( H(ra) xor H(rb) xor H(ra xor rb) ) // todo? does it decrease chance of...
 // ...other  side to in any way predict anything about K?
 
 Xchg-Pubkey[NTru-encrypt] is above, using NTru Encrypt as the assymetrical encryption.
@@ -129,15 +129,42 @@ Xchg-Pubkey[NTru-encrypt] is above, using NTru Encrypt as the assymetrical encry
 
 === Key levels ===
 
-Alice's vault --- (for PubSign) key Vault - offline computer, saved on disk 
-
+Alice's vault --- (for PubSign) key Vault - offline computer, saved on disk
 Alice's issuer --- (for PubSign) key Issuer - other computer (e.g. offline), saved on disk
-
 Alice's installation --- (for PubSign) key Program - this computer, disk, and this process on startup ONLY!
-
 Alice's program runs --- (for *DH) key Runtime - memory only (same for all users), generated on startup
-
 CA session (to Bob) --- (for *DH) key Temporary/ephemeral - memory only (generated for each user / CA reset)
+
+For each session the program generates temporary/ephemeral key;
+And authenticates it by encrypting temporary key to some shared key password1 (and optionaly some
+confirmation string like a constant or maybe Poly1305)
+and this password1 was agreed upon by exchange X25519 between Alice (and Bob's) runtime key.
+
+The runtime key is again confirmed, by being signed (PubKey sign this time, e.g. with Ed25519),
+by the installation key.
+
+Installation key can be optionally signed by issuer key.
+Issuer key can be optionally signed by vault key.
+
+The IPv6 hash is create by the highest key: that is by vault key if it exists, else by issuer, else by installation.
+
+Above steps allow to regain controll of IPv6 address after e.g. entire program runtime memory was compromised [Instalation
+recovers that],
+or when entire installation machine (e.g. a server) was compromised [then Issuer fixes that],
+or even when Issuer was compromised (the Vault).
+
+Keys have validity periods, and define the time for the key they sign.
+
+Example:
+
+Vault key 0x99998888 (valid forever) is created;  It's hash defines the IPv6 e.g. fd42cafe4242
+Issuer generates key 0x7777.
+Vault signs: "key 0x7777 is valid since 2016-01-01 for 744 hours".
+Install generates key 0x5555.
+Issuer signs: "key 0x5555 is valid since 2016-01-01 for 50 hours".
+
+When program starts, it generates and hold in memory a runtime key 0x4444.
+
 
 Example:
 
@@ -153,19 +180,19 @@ K-Ntru  N-DHDH  K-SymHash
 For each: K-Ntru, K-DHDH - we load them by delegated steps:
 
 
-K-*-Alice-tmp, is generated, and then encrypted with K-*-Alice-runtime. 
+K-*-Alice-tmp, is generated, and then encrypted with K-*-Alice-runtime.
 Therefore key "runtime" is what we called "permanent" in "DHDH" (DH plus ephemeral; DH PFS)
 
         K-*-tmp for example K-DHDH this is the temporary (ephemeral) key
         ^
         |
-     ENCRYPT <---- encrypt to password1
+     ENCRYPT(+auth by adding constant string) <---- encrypt to password1
         |                         |
   generate_X25519()               |
                                   | from DH exchange with pubkey
                                   |
-                         DH to pubkey K-*-runtime 
-                                  ^    
+                         DH to pubkey K-*-runtime
+                                  ^
                                   |
                            generate_X25519() on program startup
                                   ^
@@ -179,11 +206,11 @@ Key form disk.
                               ^
                               |
                           signed by Vault key
-                          
 
-             
 
-            
+
+
+
 
 
 === IP hashing type ===
@@ -257,7 +284,7 @@ attack hardness: badluck-DH << DH-tmp , DH-perm
 
 ***
 break: bp - bob permanent privkey
-impersonate bob: BT' <-- attackers key 
+impersonate bob: BT' <-- attackers key
 
 
 === TODO ===
@@ -270,7 +297,7 @@ How do I validate Curve25519 public keys? [ https://cr.yp.to/ecdh.html ]
 "
 Don't. The Curve25519 function was carefully designed to allow all 32-byte strings as Diffie-Hellman public keys. Relevant lower-level facts: the number of points of this elliptic curve over the base field is 8 times the prime 2^252 + 27742317777372353535851937790883648493; the number of points of the twist is 4 times the prime 2^253 - 55484635554744707071703875581767296995. This is discussed in more detail in the curve25519 paper.
 
-There are some unusual non-Diffie-Hellman elliptic-curve protocols that need to ensure ``contributory'' behavior. In those protocols, you should reject the 32-byte strings that, in little-endian form, represent 0, 1, 325606250916557431795983626356110631294008115727848805560023387167927233504 (which has order 8), 39382357235489614581723060781553021112529911719440698176882885853963445705823 (which also has order 8), 2^255 - 19 - 1, 2^255 - 19, 2^255 - 19 + 1, 2^255 - 19 + 325606250916557431795983626356110631294008115727848805560023387167927233504, 2^255 - 19 + 39382357235489614581723060781553021112529911719440698176882885853963445705823, 2(2^255 - 19) - 1, 2(2^255 - 19), and 2(2^255 - 19) + 1. But these exclusions are unnecessary for Diffie-Hellman. 
+There are some unusual non-Diffie-Hellman elliptic-curve protocols that need to ensure ``contributory'' behavior. In those protocols, you should reject the 32-byte strings that, in little-endian form, represent 0, 1, 325606250916557431795983626356110631294008115727848805560023387167927233504 (which has order 8), 39382357235489614581723060781553021112529911719440698176882885853963445705823 (which also has order 8), 2^255 - 19 - 1, 2^255 - 19, 2^255 - 19 + 1, 2^255 - 19 + 325606250916557431795983626356110631294008115727848805560023387167927233504, 2^255 - 19 + 39382357235489614581723060781553021112529911719440698176882885853963445705823, 2(2^255 - 19) - 1, 2(2^255 - 19), and 2(2^255 - 19) + 1. But these exclusions are unnecessary for Diffie-Hellman.
 "
 
 
