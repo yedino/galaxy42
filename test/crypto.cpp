@@ -81,16 +81,19 @@ TEST(crypto, dh_exchange) {
 	auto alice_pub = alice_keys.first;
 	auto alice_priv = alice_keys.second;
 	EXPECT_EQ(alice_pub, alice_keys.first);
+	EXPECT_EQ(alice_priv, alice_keys.second);
 
 	auto bob_keys = c_dhdh_state::generate_key_pair();
 	auto bob_pub = bob_keys.first;
 	auto bob_priv = bob_keys.second;
+	EXPECT_EQ(bob_pub, bob_keys.first);
+	EXPECT_EQ(bob_priv, bob_keys.second);
 
 	EXPECT_NE(alice_pub, bob_pub);
 	EXPECT_NE(alice_priv, bob_priv);
 
 	EXPECT_NE(alice_pub, alice_priv);
-	EXPECT_NE(bob_priv, bob_priv);
+	EXPECT_NE(bob_pub, bob_priv);
 
 	c_dhdh_state alice_state(alice_priv, alice_pub, bob_pub);
 	c_dhdh_state bob_state(bob_priv, bob_pub, alice_pub);
