@@ -49,7 +49,8 @@ add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 			   crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp)
 
 #tests
-add_executable(test.elf test/main.cpp test/crypto.cpp)
+file(GLOB TEST_SOURCES "test/*.cpp")
+add_executable(test.elf ${TEST_SOURCES})
 target_link_libraries(test.elf tunserver gtest sodium)
 
 #loadjason.elf jsoncpp
