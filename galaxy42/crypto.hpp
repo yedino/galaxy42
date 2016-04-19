@@ -130,8 +130,9 @@ class c_dhdh_state final : public c_crypto_state {
 		void step1();
 		t_pubkey get_permanent_pubkey() const;
 		t_pubkey get_temp_pubkey() const;
+		static std::pair<t_pubkey, t_privkey> generate_key_pair();
 
-	private: 
+	private:
 		t_privkey m_our_priv; ///< permanent
 		t_pubkey m_our_pub; ///< permanent
 		t_pubkey m_theirs_pub;
@@ -141,7 +142,7 @@ class c_dhdh_state final : public c_crypto_state {
 		t_privkey m_privkey_temp;
 
 		t_symkey execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
-		std::pair<t_pubkey, t_privkey> generate_key_pair() const;
+		t_symkey execute_DH_exchange(); ///< call execute_DH_exchange with internal fields
 
 		FRIEND_TEST(crypto, dh_exchange);
 

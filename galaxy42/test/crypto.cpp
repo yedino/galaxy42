@@ -76,6 +76,28 @@ TEST(crypto, aeshash_start_and_get_same_passwords) {
 	EXPECT_EQ(p.get(), "8a986c419f1347d8ea94b3ad4b9614d840bb2dad2e13287a7a6cb5cf72232c3211997b6435f44256a010654d6f49e71517e46ce420a77f09f3a425eabaa99d8a");
 }
 
+TEST(crypto, dh_exchange) {
+	auto alice_keys = c_dhdh_state::generate_key_pair();
+	auto alice_pub = alice_keys.first;
+	auto alice_priv = alice_keys.second;
+	EXPECT_EQ(alice_pub, alice_keys.first);
 
+	auto bob_keys = c_dhdh_state::generate_key_pair();
+	auto bob_pub = bob_keys.first;
+	auto bob_priv = bob_keys.second;
+
+	ASSERT_NE(alice_pub, bob_pub);
+	ASSERT_NE(alice_priv, bob_priv);
+
+	ASSERT_NE(alice_pub, alice_priv);
+	ASSERT_NE(bob_priv, bob_priv);
+
+	c_dhdh_state alice_state(alice_priv, alice_pub, bob_pub);
+	c_dhdh_state bob_state(bob_priv, bob_pub, alice_pub);
+
+	auto alice_sym_key = alice_state.execute_DH_exchange();
+	auto bob_sym_key = bob_state.execute_DH_exchange();
+	EXPECT_EQ(alice_sym_key, bob_sym_key);
+}
 
 } // namespace
