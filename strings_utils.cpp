@@ -123,6 +123,14 @@ string_as_bin string_as_bin::operator+( const std::string & other ) const {
 	return ret;
 }
 
+bool string_as_bin::operator==(const string_as_bin &rhs) const {
+	return this->bytes == rhs.bytes;
+}
+
+bool string_as_bin::operator!=(const string_as_bin &rhs) const {
+	return this->bytes != rhs.bytes;
+}
+
 
 bool operator<( const string_as_bin &a, const string_as_bin &b) {
 	return a.bytes < b.bytes;
