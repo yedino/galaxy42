@@ -86,11 +86,11 @@ TEST(crypto, dh_exchange) {
 	auto bob_pub = bob_keys.first;
 	auto bob_priv = bob_keys.second;
 
-	ASSERT_NE(alice_pub, bob_pub);
-	ASSERT_NE(alice_priv, bob_priv);
+	EXPECT_NE(alice_pub, bob_pub);
+	EXPECT_NE(alice_priv, bob_priv);
 
-	ASSERT_NE(alice_pub, alice_priv);
-	ASSERT_NE(bob_priv, bob_priv);
+	EXPECT_NE(alice_pub, alice_priv);
+	EXPECT_NE(bob_priv, bob_priv);
 
 	c_dhdh_state alice_state(alice_priv, alice_pub, bob_pub);
 	c_dhdh_state bob_state(bob_priv, bob_pub, alice_pub);
