@@ -56,7 +56,7 @@ Cjdns (v17) uses:
 1) Establish CryptoAuth session - DHDH (X25519 permanent + X25519 ephemeral)
 2) Each packet: Poly1305 Salsa20
 
-=== Galaxy42 crypto overview ===
+=== Galaxy42 crypto - overview ===
 
 Galaxy uses following crypto:
 
@@ -70,7 +70,7 @@ This part is very secure against QC and other attacks.
 The problem is how to establish K in secure way (next chapter).
 
 
-=== Galaxy42 secure crypto session ===
+=== Galaxy42 crypto - establishing secure session K ===
 
 How to establish the secret K - in a way resistant to QC?
 (For comparsion as of 2016-04, Cjdns v17 that uses ECDH X25519 it is NOT resistant to QC attacks).
@@ -107,9 +107,7 @@ We offer 3 solutions:
 This is interesting in case if NTru will turn out to be sometimes breakable and sometimes not, based on
 today yet unknown mathematical property of given key.
 
-
-
-=== Xchg-Pubkey ===
+--- Xchg-Pubkey ---
 
 Is a secret key agreement protocol between parties that know each-other public key already,
 using assymetrical crypto.
@@ -126,8 +124,15 @@ K = H( H(ra) xor H(rb) xor H(ra xor rb) ) // todo? does it decrease chance of...
 
 Xchg-Pubkey[NTru-encrypt] is above, using NTru Encrypt as the assymetrical encryption.
 
+=== Galaxy42 crypto - loading the main key ===
 
-=== Key levels ===
+We need main key(s).
+For example (as in Cjdns v17) a permanent X25519 key.
+We call that key the runtime key (e.g. runtime DH = runtime X25519 key).
+
+But we also use other stages of the key - see in chapter "Key levels".
+
+=== Galaxy42 crypto - key levels ===
 
 Alice's vault --- (for PubSign) key Vault - offline computer, saved on disk
 Alice's issuer --- (for PubSign) key Issuer - other computer (e.g. offline), saved on disk
@@ -209,8 +214,36 @@ Key form disk.
 
 
 
+=== Galaxy42 crypto - all ===
 
+All together, the big picture.
 
+Shortcut names for crypto systems used below:
+
+X     = X25519 (type of ECC) pubkey for key agreement.
+E     = Ed25519 (type of ECC) pubkey for pubsig.
+NT    = NTru (lattice-based, likely QC resistant) pubkey (for sign and for encry).
+Ge    = Geport (Lamport variant, almost certainly QC resistant) pubsig. Includes the tree of signatures as needed.
+
+Mode name    | IPv6        | Vault | Issuer | Install | Runtime  | ephemeral | Packet(K)
+-------------|-------------+-------+--------+---------+----------+-----------|---------
+Cjdns        |Hash1(X)     |       |        | X       | =install | X         | Curve1305+Salsa20
+Galaxy turbo |Hash2(Vault) | E+NT  |        | X       | =install | X         | Curve1305+ChaCha20
+Galaxy fast  |Hash2(Vault) | E+NT  | E+NT   | E+NT    | X+NT     | X+NT      | Curve1305+ChaCha20
+Galaxy bank  |Hash2(Vault) |E+NT+Ge|E+NT+Ge | E+NT    | X+NT     | X+NT      | Curve1305+ChaCha20
+
+Hash1(m) = truncate_to(512, SHA512(SHA512(m)))
+Hash2(m) could be = Hash1(m) or else:
+<<optional>> Hash2(m) = compress4( SHA3x(SHA3x(SHA3x( m ))) )
+
+Compress4 generates an (n/4)-bit output "y" from n-bit input "x", as: y[i/4] = x[i] ^ x[i+1] ^ x[i+2] ^ x[i+3]
+
+--- Full example ---
+
+Generate IP:
+  generate keypair NTru
+  generate keypair Ed25519
+  generate keypair Geport<Blake2>
 
 
 === IP hashing type ===
