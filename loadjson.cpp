@@ -1,4 +1,3 @@
-#include "libs1.hpp"
 #include "loadjson.hpp"
 
 
@@ -48,15 +47,19 @@ std::vector<c_peer> c_json_file_parser::get_peers() {
 }
 
 // test - usage
-int main(int argc, char **argv) {
+int main() {
 
   try {
-    c_json_file_parser config_file("galaxy.conf");
+	// Working example of json
+	c_json_file_parser config_file("galaxy.conf");
 
-    for(auto peer : config_file.get_peers()) {
-        std::cout 	<< "Peer ["<< peer.m_nr << "] : " << peer.m_ip
-                    << " with public key [" << peer.m_public_key << ']' <<  std::endl;
-    }
+	for(auto peer : config_file.get_peers()) {
+		std::cout 	<< "Peer ["<< peer.m_nr << "] : " << peer.m_ip
+					<< " with public key [" << peer.m_public_key << ']' <<  std::endl;
+	}
+	// Not working
+	c_galaxyconf_load galaxyconf("a.conf");
+
   } catch (std::exception &err) {
         std::cout << err.what() << std::endl;
   }
