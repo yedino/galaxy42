@@ -88,7 +88,7 @@ But we also use DH-like key exchange with NTru encrypt/sign optionally:
 
 Xchg-Pubkey[NTru-encrypt] and X25519+X25519  &  Salsa20+BLAKE2
 
-These 3 parts can establish 3 shared keys that then are combined into the K shared key.
+These 3 parts can establish 3 shared keys that then are combined into the SK shared key.
 If any of them resists attacks, then entire system resisted too.
 
 1. Xchg-Pubkey[NTru-encrypt] - probably resistant to QC.
@@ -116,11 +116,11 @@ Alice has pubkey PubA ( == the virtual IP)
 Bob has pubkey PubB ( == the virtual IP)
 Alice ra=random(), encrypts ra to PubB, sends to Bob.
 Bob   rb=random(), encrypts rb to PubA, sends to Alice.
-Alice: K = ra xor rb
-Bob:   K = ra xor rb
+Alice: SK = ra xor rb
+Bob:   SK = ra xor rb
  or instead (maybe better):
-K = H( H(ra) xor H(rb) xor H(ra xor rb) ) // todo? does it decrease chance of...
-// ...other  side to in any way predict anything about K?
+SK = H( H(ra) xor H(rb) xor H(ra xor rb) ) // todo? does it decrease chance of...
+// ...other  side to in any way predict anything about SK?
 
 Xchg-Pubkey[NTru-encrypt] is above, using NTru Encrypt as the assymetrical encryption.
 
@@ -174,21 +174,21 @@ When program starts, it generates and hold in memory a runtime key 0x4444.
 Example:
 
 
-           K for ChaCha20 + Poly1305
+           SK for ChaCha20 + Poly1305
            ^
            |
          / | \
         /  |  \
-K-Ntru  N-DHDH  K-SymHash
+SK-Ntru  SN-DHDH  SK-SymHash
 
 
 For each: K-Ntru, K-DHDH - we load them by delegated steps:
 
 
-K-*-Alice-tmp, is generated, and then encrypted with K-*-Alice-runtime.
+SK-*-Alice-tmp, is generated, and then encrypted with SK-*-Alice-runtime.
 Therefore key "runtime" is what we called "permanent" in "DHDH" (DH plus ephemeral; DH PFS)
 
-        K-*-tmp for example K-DHDH this is the temporary (ephemeral) key
+        SK-*-tmp for example SK-DHDH this is the temporary (ephemeral) key
         ^
         |
      ENCRYPT(+auth by adding constant string) <---- encrypt to password1
@@ -196,7 +196,7 @@ Therefore key "runtime" is what we called "permanent" in "DHDH" (DH plus ephemer
   generate_X25519()               |
                                   | from DH exchange with pubkey
                                   |
-                         DH to pubkey K-*-runtime
+                         DH to pubkey SK-*-runtime
                                   ^
                                   |
                            generate_X25519() on program startup
@@ -225,7 +225,7 @@ E     = Ed25519 (type of ECC) pubkey for pubsig.
 NT    = NTru (lattice-based, likely QC resistant) pubkey (for sign and for encry).
 Ge    = Geport (Lamport variant, almost certainly QC resistant) pubsig. Includes the tree of signatures as needed.
 
-Mode name    | IPv6        | Vault | Issuer | Install | Runtime  | ephemeral | Packet(K)
+Mode name    | IPv6        | Vault | Issuer | Install | Runtime  | ephemeral | Packet(SK)
 -------------|-------------+-------+--------+---------+----------+-----------|---------
 Cjdns        |Hash1(X)     |       |        | X       | =install | X         | Curve1305+Salsa20
 Galaxy turbo |Hash2(Vault) | E+NT  |        | X       | =install | X         | Curve1305+ChaCha20
@@ -240,13 +240,124 @@ Compress4 generates an (n/4)-bit output "y" from n-bit input "x", as: y[i/4] = x
 
 --- Full example ---
 
-Generate IP:
-  generate keypair NTru
+
+On example of most advanced crypto.
+
+
+Generate our own IP:
   generate keypair Ed25519
+  generate keypair NTru
   generate keypair Geport<Blake2>
+  (generate SIDH once that system becomes usable)
+  Extra meta-data like e.g. our Bitcoin address that we want to publish, PGP key etc.
+Hash above data:
+  Concatenate above data, plus a nonce, and calculate hash2 of it.
+  Repeat untill we hit proper hash (considering IP-hashing-type bits) and allowed IP ranges.
+Save all data to disk (and backups!) on the Vault computer.
+
+Generate certs on Issuer:
+  generate keypair Ed25519
+  generate keypair NTru
+  generate keypair Geport<Blake2>
+  (generate SIDH once that system becomes usable)
+  Agreement meta-data:
+  - from what date, for how long, we want to be valid
+  - from what date, for how long, we will allow our child agreement to be valid if we sign it later.
+Generate document with above data, and get it's hash.
+Save all data to disk (and backups!) on the Issuer computer.
+
+Vault computer signs the above Issuer *hash* (this is equall to signing the document), 
+and generates a detached signature data "vault-signs-issuer".
+The signature is just a set of signatures on that *hash* as made by each public key:
+  - hash of Issuer document - signed by Vault NTru
+  - hash of Issuer document - signed by Vault Ed25519
+  - hash of Issuer document - signed by Vault Geport<Blake2>
+This signatures are moved to Install.
+
+Install the program on the server (Install keys).
+  generate keypair Ed25519
+  generate keypair NTru
+  (generate SIDH once that system becomes usable)
+  - from what date, for how long, we want to be valid
+  - from what date, for how long, we will allow our child agreement to be valid if we sign it later.
+Generate document, hash, and save - as in previous steps.
+
+Issuer signs the above - as in previous steps:
+  - hash of Install document - signed by Issuer Ed25519
+  - hash of Install document - signed by Issuer NTru
+  - hash of Install document - signed by Issuer Geport<Blake2>
+Detached signature (as in previous steps) is delivered to Install.
+
+Runtime: the program starts up, and generates keys on start:
+(This is "Alice". This is the permanent key in Cjdns v17 system/naming)
+  generate keypair X25519
+  generate keypair NTru
+this program signs above data (hash of them) by using the Install keys:
+  - hash of runtime keys is signed by Install key Ed25519
+  - hash of runtime keys is signed by Install key NTru
+NOW we SHOULD - delete from MEMORY the Install keys.
+Now we have in memory of program only: the Runtime keys. Install keys are removed (only on disk),
+and Issuer and Value keys are safe elsewhere (even if this program would be fully exploited).
+
+--- FOR EACH connection when some "Bob" connect ---
+
+Get Bob's Runtime keys.
+
+For each given Bob (session of cryptoauth)
+we generate new:
+  - generate Ephemeral X25519 keypair (on a fast random generator)
+  - generate Ephemeral NTru keypair   (on a fast random generator)
+  - generate Ephemeral r1 random
+Exchange this data in authorized (and encrypted) way as following:
+Generate message M with above data.
+Use Alice.Runtime.X25519 key to agree with Bob.Runtime.X25519 on shared key X1 (it is Ephemeral)
+(as done in standard D-H key agreement protocol)
+Encrypt M with X1 into cyphertext C1.
+Encrypt C1 into publickey Bob.Runtime.Tru into C2.
+(Encrypt C2 into publickey Bob.Runtime.SIDH into C3 when SIDH is available)
+CFA is the finall C... from Assymetric crypto: e.g. C2 now.
+Encrypt CFA with KH (Key Historical) into CFS (Crypto Finall Symetrical).
+
+Give the CFS to Bob.
+Bob decrypts it and gets:
+  - has Alice.Ephemeral.X25519 pubkey
+  - has Alice.Ephemeral.NTru pubkey
+  - has Alice.Ephemeral.rand value
+
+<<<signature chain>>> TODO
+
+Bob finished key agreement between our Alice.Ephemeral.X25519 (read from CFS)
+and his Bob ===> this establishes shared secret SK_DHDH.
+
+Bob generates SK_NTru_bob. And encrypts that into SK_NTru_bob_c for our pubkey Alice.Ephemeral.NTru.
+And sends to Alice.
+Alice will decrypt, so she has SK_NTru_bob.
 
 
-=== IP hashing type ===
+SK_NTru = H(SK_NTru_bob) xor H(SK_NTru_alice) xor H(r1) xor H(r2)
+
+SK_SH = H( our history state same for both sides )
+
+SK = SK_NTru xor SK_DHDH xor SK_SH.
+
+Now the SK can be used for symmetrical crypto auth.
+
+
+
+
+--- Q&A ---
+
+Q: Why not just use Runtime key instead of Ephemeral key?
+A: It can not regenerate because we want to remove and never again load the Install keys in the runtime of our program
+so that code injected into us in runtime (by exploit) has no way to get controll of Install keys and will lose ability
+to inpersonate us etc after a rester.
+In addition Runtime key is same for all "Bobs" sessions while Ephemeral is different for each session (increasing PFS strength
+against memory leaks).
+
+
+
+
+=== IP-hashing-type ===
 
 << optional ? >>
 
@@ -262,6 +373,8 @@ encode the desired IP type, e.g. will be "01" for IP type 1.
 
 
 === Details ===
+
+<<< this contains typos >>>
 
 DH-DH exchange:
 
