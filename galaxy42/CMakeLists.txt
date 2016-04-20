@@ -54,10 +54,10 @@ add_executable(test.elf ${TEST_SOURCES})
 target_link_libraries(test.elf tunserver gtest sodium)
 
 #loadjason.elf jsoncpp
-#add_executable(loadjson.elf loadjson.cpp)
-#target_link_libraries(loadjson.elf
-#                      jsoncpp
-#)
+add_executable(loadjson.elf loadjson.cpp)
+target_link_libraries(loadjson.elf
+					  jsoncpp
+)
 
 add_custom_target(run
 		COMMAND ./tunserver.sh
@@ -75,5 +75,5 @@ add_custom_command(
 	COMMAND chmod g-wx,o-wx ipclient.elf
 	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
-	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
+#	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
 	WORKING_DIRECTORY ./)
