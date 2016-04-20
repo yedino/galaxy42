@@ -1,4 +1,3 @@
-
 #include "jsoncpp/json/json.h"
 #include <libs1.hpp>
 
@@ -27,31 +26,17 @@ class c_json_file_parser {
 
 
 class c_auth_password_load {
-	c_auth_password_load (const std::string &filename) {
-  try {
-		c_json_file_parser parser(filename);
-
-
-  } catch (std::invalid_argument &err) {
-		std::cout << "Fail to load galaxy configuration file" << std::endl;
-		std::cout << err.what() << std::endl;
-  }
-	}
+  public:
+	c_auth_password_load (const std::string &filename);
+	c_auth_password_load () = delete;
 
 	c_auth_password_load (const c_auth_password_load &) = delete;
 };
 
 class c_connect_to_load {
-	c_connect_to_load (const std::string &filename) {
-  try {
-		c_json_file_parser parser(filename);
-
-
-  } catch (std::invalid_argument &err) {
-		std::cout << "Fail to load galaxy configuration file" << std::endl;
-		std::cout << err.what() << std::endl;
-  }
-	}
+  public:
+	c_connect_to_load (const std::string &filename);
+	c_connect_to_load () = delete;
 
 	c_connect_to_load (const c_connect_to_load &) = delete;
 };
@@ -59,20 +44,16 @@ class c_connect_to_load {
 
 class c_galaxyconf_load {
   public:
-	c_galaxyconf_load (const std::string &filename = "galaxy.conf") {
-  try {
-		c_json_file_parser parser(filename);
-
-
-  } catch (std::invalid_argument &err) {
-		std::cout << "Fail to load galaxy configuration file" << std::endl;
-		std::cout << err.what() << std::endl;
-  }
-	}
+	c_galaxyconf_load (const std::string &filename = "galaxy.conf");
 
 	c_galaxyconf_load (const c_galaxyconf_load &) = delete;
 
   private:
+	std::string m_filename;
+	Json::Value root;
 
+	void auth_password_load ();
+
+	void connect_to_load ();
 
 };
