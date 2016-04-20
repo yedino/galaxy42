@@ -1,4 +1,4 @@
-/**ZZZZZZZZZ
+/**
 Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
@@ -27,6 +27,10 @@ Current TODO / topics:
 */
 
 const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
+
+// The name of the hardcoded default demo that will be run with --devel (unless option --develdemo is given) can be set here:
+const char * g_demoname_default = "route_dij";
+// see function run_mode_developer() here to see list of possible values
 
 #include <iostream>
 #include <stdexcept>
@@ -1171,18 +1175,58 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 
 } // namespace developer_tests
 
+/***
+ * @brief Loads name of demo from demo.conf.
+ * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
+ * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
+*/
+string demoname_load_conf() {
+	string ret="default";
+	const string democonf_fn="config/demo.conf";
+	ifstream democonf_file(democonf_fn);
+	if (! democonf_file.good()) return ret;
+	string line="";
+	getline(democonf_file,line);
+	if (! democonf_file.good()) return ret;
+	ret = line.substr( string("demo=").size() );
+	return ret;
+}
+
+
+bool test_foo() {
+	_info("TEST FOO");
+	return false;
+}
+
+bool test_bar() {
+	_info("TEST BAR");
+	return false;
+}
+
 /*** 
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test
 */
 bool run_mode_developer(boost::program_options::variables_map & argm) { 
-	std::cerr << "Running in developer mode. " << std::endl;
+	std::cerr << "Running in developer/demo mode." << std::endl;
 
-	// test_trivialserialize();  return false;
-	antinet_crypto::test_crypto();  return false;
+	const string demoname_default = g_demoname_default;
+	auto demoname = argm["develdemo"].as<string>();
+	const string demoname_loaded = demoname_load_conf();
+	if (demoname_loaded != "default") demoname = demoname_loaded;
+	if (demoname=="hardcoded") demoname = demoname_default;
 
-	return developer_tests::wip_galaxy_route_doublestar(argm);
+	_note("Demo name selected: [" << demoname << "]");
+
+	if (demoname=="foo") { test_foo();  return false; }
+	if (demoname=="bar") { test_bar();  return false; }
+	if (demoname=="serialize") { trivialserialize::test_trivialserialize();  return false; }
+	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
+	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
+	
+	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
+	return false;
 }
 
 int main(int argc, char **argv) {
@@ -1214,8 +1258,10 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
+			("demo", po::value<string>()->default_value(""), "Try DEMO here. Run one of the compiled-in demonstrations of how program works. Use --demo help to see list of demos [TODO].")
 			("devel","Test: used by developer to run current test")
 			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
+			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
@@ -1227,9 +1273,22 @@ int main(int argc, char **argv) {
 
 		po::variables_map argm;
 		try {
-			po::store(po::parse_command_line(argc, argv, desc), argm);
-			cout << "devel" << endl;
-			if (argm.count("devel")) {
+			po::store(po::parse_command_line(argc, argv, desc), argm); // <-- parse actuall real command line options
+
+			// === PECIAL options - that set up other program options ===
+
+			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
+				auto opt_demo = argm["demo"].as<string>();
+				_info("DEMO !");
+				if ( opt_demo!="" ) {
+					// argm.insert(std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
+					argm.at("develdemo") = po::variable_value( opt_demo , false );
+					// (std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
+					argm.insert(std::make_pair("devel",     po::variable_value( false , false ))); // --devel
+				}
+			}
+
+			if (argm.count("devel")) { // can also set up additional options
 				try {
 					bool should_continue = run_mode_developer(argm);
 					if (!should_continue) return 0;
@@ -1239,11 +1298,11 @@ int main(int argc, char **argv) {
 						return 0; // no error for developer mode
 				}
 			}
-			// argm now can contain options added/modified by developer mode
-			po::notify(argm);
 
+			// === argm now can contain options added/modified by developer mode ===
+			po::notify(argm);  // !
 
-			if (argm.count("help")) {
+			if (argm.count("help")) { // usage
 				std::cout << desc;
 				return 0;
 			}

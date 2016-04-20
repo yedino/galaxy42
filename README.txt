@@ -44,3 +44,45 @@ cooperation from other participants of the network if they want to get his help.
 
 
 
+=== HOWTO ===
+
+Q: How to develop Galaxy42?
+A: [devel] Read most of questions here first, including [devel.demo], [devel.contact].
+
+Q: How to use Galaxy42?
+A: [use] The program is in development, it's not yet suitable for any end-user. See [devel] if you are developer.
+
+Q: How to contact developers?
+A: [devel.contact] Contact us on IRC server icann.irc.meshnet.pl on channel #meshnet or #antinet (that for now is also about Galaxy42).
+
+Q: How to see a demo how program works?
+A: [devel.demo] First build the program, and then choose one of methods:
+
+1. Run program as ./tunserver.elf --devel --demo foo to run test foo. Existing tests include test "foo",
+test "bar", and other real tests. 
+[TODO] You can see list of the possible tests by running it with "help" demo,
+so as:
+./tunserver.elf --devel --demo help
+
+2. In directory ./config crete a file config/demo.conf. In this file write a single line like "demo=bar";
+Then run the program with "make run" or with "./tunserver.elf --devel"
+It should run a demo "bar" and write bar on screen (read the debug messages).
+If you change that text in file to "demo=foo" then it runs test Foo.
+If something does not work then see debug to figure it out.
+You can now write other demo name in the config file and run tests again.
+Set demo to "list" or "help" to see list of possible demo options [TODO].
+
+3. If you just run program with --devel it will run the hardcoded demo,
+as set in code in variable g_demoname_default.
+If you start working on a new branch you could set it there to other value
+to run your test - see [devel.newthing]
+
+Q: How to develop something new?
+A: [devel.newthing] (First read [devel]) and then create git branch named like "wip_galaxy_SOMENAME"
+where SOMENAME is a nice name summarizing on what you do work.
+Then create also a demo for it (see how other demos are done, see function run_mode_developer,
+see demo developer_tests::wip_galaxy_route_doublestar that can be used in simulation of few nodes etc)
+
+
+
+
