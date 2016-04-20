@@ -46,6 +46,65 @@ std::vector<c_peer> c_json_file_parser::get_peers() {
     return peers;
 }
 
+
+c_auth_password_load::c_auth_password_load(const std::__cxx11::string &filename) {
+	try {
+		c_json_file_parser parser(filename);
+
+	} catch (std::invalid_argument &err) {
+		std::cout << "Fail to load galaxy configuration file" << std::endl;
+		std::cout << err.what() << std::endl;
+	}
+}
+
+c_connect_to_load::c_connect_to_load(const std::__cxx11::string &filename) {
+	try {
+		c_json_file_parser parser(filename);
+
+	} catch (std::invalid_argument &err) {
+		std::cout << "Fail to load galaxy configuration file" << std::endl;
+		std::cout << err.what() << std::endl;
+	}
+}
+
+c_galaxyconf_load::c_galaxyconf_load(const std::__cxx11::string &filename) : m_filename(filename) {
+	try {
+		c_json_file_parser parser(filename);
+		root = parser.get_root();
+		auth_password_load();
+		connect_to_load();
+
+	} catch (std::invalid_argument &err) {
+		std::cout << "Fail to load galaxy configuration file" << std::endl;
+		std::cout << err.what() << std::endl;
+	}
+}
+
+void c_galaxyconf_load::auth_password_load() {
+	if(root.get("authorizedPasswords","").isArray()) {
+		Json::Value authpass_array = root.get("authorizedPasswords","");
+		for(auto &filename : authpass_array) {
+			std::cout << "Load authorizedPassword file: " << filename.asString() << std::endl;
+			c_auth_password_load authpass_load(filename.asString());
+		}
+	} else {
+		throw std::invalid_argument("Empty authorizedPasswords in conf file");
+	}
+}
+
+void c_galaxyconf_load::connect_to_load() {
+	if(root.get("authorizedPasswords","").isArray()) {
+		Json::Value authpass_array = root.get("authorizedPasswords","");
+		for(auto &filename : authpass_array) {
+			std::cout << "Load connectTo file: " << filename.asString() << std::endl;
+			c_connect_to_load connect_to_load(filename.asString());
+		}
+	} else {
+		throw std::invalid_argument("Empty connectTo in conf file");
+	}
+
+}
+
 // test - usage
 int main() {
 
@@ -61,8 +120,8 @@ int main() {
 	c_galaxyconf_load galaxyconf("a.conf");
 
   } catch (std::exception &err) {
-        std::cout << err.what() << std::endl;
+		std::cout << err.what() << std::endl;
   }
 
-    return 0;
+	return 0;
 }
