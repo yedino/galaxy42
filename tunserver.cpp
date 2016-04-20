@@ -18,6 +18,14 @@ Use this tags in this project:
 
 */
 
+/*
+
+Current TODO / topics:
+* routing with dijkstra
+** re-routing data for someone else fails, probably because the data is not in TUN-format but it's just the datagram
+
+*/
+
 const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 #include <iostream>
@@ -72,18 +80,21 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 
 #include "cjdns-code/NetPlatform.h" // from cjdns
 
-//#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
 
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 
+
 #include "crypto.hpp" // for tests
 
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-// #include "trivialserialize.hpp"
+
+#include "trivialserialize.hpp"
+
 
 // ------------------------------------------------------------------
 
@@ -154,8 +165,14 @@ class c_galaxy_node {
 
 // ------------------------------------------------------------------
 
-class c_routing_manager { ///< holds nowledge about routes, and searches for new ones
-	public: // make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
+
+/***
+@brief Use this to get information about route. It resp.: returns, stores and searches the information.
+- m_search - pathes we now look for
+- m_route_nexthop - known pathes
+*/
+class c_routing_manager { ///< holds knowledge about routes, and searches for new ones
+	public: // TODO(r) make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
 		enum t_route_state { e_route_state_found, e_route_state_dead };
 
 		enum t_search_mode {  // why we look for a route
@@ -218,6 +235,8 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				void add_request(c_routing_manager::c_route_reason reason, int ttl); ///< add info that this guy also wants to be informed about the path
 				void execute( c_galaxy_node & galaxy_node );
 		};
+
+		
 
 		// searches:
 		typedef std::map< c_haship_addr, unique_ptr<c_route_search> > t_route_search_by_dst; ///< running searches, by the hash-ip of finall destination
@@ -844,7 +863,7 @@ void c_tunserver::event_loop() {
 
 				// reinterpret the char from IO as unsigned-char as wanted by crypto code
 				unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2 + ttl_width; // TODO calculate depending on version, command, ...
-				long long ciphertext_buf_len = size_read - 2; // TODO 2 = header size
+				long long ciphertext_buf_len = size_read - 2 - 1; // TODO 2 = header size, and TTL
 				assert( ciphertext_buf_len >= 1 );
 
 				int r = crypto_aead_chacha20poly1305_decrypt(
@@ -854,8 +873,8 @@ void c_tunserver::event_loop() {
 					additional_data, additional_data_len,
 					nonce, generated_shared_key);
 				if (r == -1) {
-					_warn("crypto verification fails");
-					continue; // skip this packet (main loop)
+					_warn("Crypto verification failed!!!");
+	//				continue; // skip this packet (main loop) // TODO
 				}
 
 				// TODO(r) factor out "reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len"
@@ -937,25 +956,24 @@ void c_tunserver::event_loop() {
 						const auto & route = m_routing_manager.get_route_or_maybe_search(*this, requested_hip , reason , true, requested_ttl - 1);
 						_note("We found the route thas he asks about, as: " << route);
 
-						// [protocol] "TTL;HIP_OF_GOAL;COST;" e.g.: (but in binary) "5;fd42...5812;1;"
 						const int reply_ttl = requested_ttl; // will reply as much as needed
-						unsigned char reply_ttl_byte = static_cast<unsigned char>( reply_ttl );
-						assert( reply_ttl_byte == reply_ttl );
-						cmd_data.bytes += reply_ttl_byte; // TODO just 1 byte, fix serialization. https://h.mantis.antinet.org/view.php?id=59
-						cmd_data.bytes += ';';
 
-						cmd_data.bytes += string_as_bin( requested_hip ).bytes; // the address of goal
-						cmd_data.bytes += ';';
+						// [protocol] e_proto_cmd_findhip_reply write "TTL;COST:HIP_OF_GOAL"
+						trivialserialize::generator gen(50); // TODO optimal size
+						gen.push_byte_u( reply_ttl );
+						gen.push_byte_u( ';' );
+						gen.push_byte_u( route.get_cost() );
+						gen.push_byte_u( ';' );
+						gen.push_bytes_n( g_haship_addr_size , string_as_bin( requested_hip ).bytes ); // the hip of goal
+						gen.push_byte_u( ';' );
 
-						auto cost_a = route.get_cost();
-						unsigned char cost_byte = static_cast<unsigned char>( cost_a );
-						assert( cost_byte == cost_a );
-						cmd_data.bytes += cost_byte; // TODO just 1 byte, fix serialization. https://h.mantis.antinet.org/view.php?id=59
-						cmd_data.bytes += ';'; // the cost
+						auto data = gen.str();
 
-						_info("Will send data to sender_as_peering_ptr=" << sender_as_peering_ptr);
+						_info("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD Will send data to sender_as_peering_ptr=" 
+							<< sender_as_peering_ptr 
+							<< " data: " << string_as_dbg( string_as_bin(data) ).get() );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
-						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, cmd_data, m_sock_udp); // <---
+						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_sock_udp); // <---
 						_note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
@@ -965,30 +983,33 @@ void c_tunserver::event_loop() {
 
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_reply) { // [protocol]
-				// [protocol] "TTL;HIP_OF_GOAL;COST;" e.g.: (but in binary) "5;fd42...5812;1;"
-				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
-
-				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
-				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
-				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
-
-				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
-				c_haship_addr goal_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip );
-
-				string_as_bin bin_ttl( cmd_data.bytes.substr(pos1+1,1) );
-				int requested_ttl = static_cast<int>( bin_ttl.bytes.at(0) ); // char to integer
-
-				auto data_route_ttl = requested_ttl - 1;
+				_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+				// [protocol] e_proto_cmd_findhip_reply read "TTL;COST:HIP_OF_GOAL"
+				int offset1=2; // version, cmd
+				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() ,  buf+offset1 , size_read-offset1);
+				int given_ttl = parser.pop_byte_u(); // ttl
+				parser.pop_byte_skip(';');
+				int given_cost = parser.pop_byte_u(); // cost
+				parser.pop_byte_skip(';');
+				c_haship_addr given_goal_hip( c_haship_addr::tag_constr_by_addr_bin(), string_as_bin( parser.pop_bytes_n( g_haship_addr_size ) ) ); // hip
+				parser.pop_byte_skip(';');
+				_info("We have a TTL reply: ttl="<<given_ttl<<" goal="<<given_goal_hip<<" cost="<<given_cost);
+				
+				auto data_route_ttl = given_ttl - 1;
 				const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 				if (data_route_ttl > limit_incoming_ttl) {
 					_info("Got command at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
 				}
 
-				_info("We received REPLY for routing search for HIP=" << string_as_hex( bin_hip ) << " = " << goal_hip << " and TTL=" << requested_ttl );
-				if (requested_ttl < 1) {
+				if (given_ttl < 1) {
 					_info("Too low TTL, dropping the request");
 				} else {
+					_info("GOT CORRECT REPLY - USING IT");
+					c_routing_manager::c_route_info route_info( sender_hip , given_cost );
+					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
+					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); // store it, so that we own this object
+					// TODONOW and reply to others who asked us
 				}
 			}
 			else {
