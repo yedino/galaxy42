@@ -16,10 +16,10 @@ other systems.
 
 NETWORK TYPE:
 
-* Meshnet - it will be possible to set up the net with minimal config 
+* Meshnet - it will be possible to set up the net with minimal config
 (and later zeroconf), no nodes are centralized.
 
-* VPN - it will provide end-to-end encryption and authentication, 
+* VPN - it will provide end-to-end encryption and authentication,
 and IP access even to places with no own traditional Internet-accessible IP.
 
 * IP-Hash - the IP address is hash (e.g. of public key) and therefore
@@ -60,7 +60,7 @@ Q: How to see a demo how program works?
 A: [devel.demo] First build the program, and then choose one of methods:
 
 1. Run program as ./tunserver.elf --devel --demo foo to run test foo. Existing tests include test "foo",
-test "bar", and other real tests. 
+test "bar", and other real tests.
 [TODO] You can see list of the possible tests by running it with "help" demo,
 so as:
 ./tunserver.elf --devel --demo help
