@@ -1,6 +1,8 @@
 #include "crypto.hpp"
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
+#include <sodiumpp/sodiumpp.h>
+
 
 
 namespace antinet_crypto {
@@ -167,8 +169,8 @@ void test_crypto() {
 	const string app_orginal = app_msg;
 
 
-	
-	 
+	sodiumpp::nonce<crypto_box_NONCEBYTES> nonce;
+
 	// encrypt
 	
 	// decrypt
