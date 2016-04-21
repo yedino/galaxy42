@@ -166,16 +166,18 @@ void test_crypto() {
 
 
 	const string app_msg("Message-send-from-application"); // the finall end-user text that we want to tunnel.
-	const string app_orginal = app_msg;
-
+	const string key(crypto_secretbox_KEYBYTES, 'a');
 
 	sodiumpp::nonce<crypto_box_NONCEBYTES> nonce;
 
 	// encrypt
-	
-	// decrypt
+	string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, key);
 
-	if ( app_msg == app_orginal ) _note("OK "); else _erro("Msg decoded differs!");
+	// decrypt
+	string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, key);
+
+	if (encrypt != decrypt) _note("OK "); else _erro("bad decrypt message");
+	if ( app_msg == decrypt ) _note("OK "); else _erro("Msg decoded differs!");
 
 
 
