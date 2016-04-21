@@ -1,12 +1,13 @@
 
-Small experimental network in category of Meshnet, VPN, IP-hash.
+---> Users, developers, read also the HOWTO section it contains friendly FAQ how to use/develop/hack this :) <---
+
+Galaxy42 - Small experimental network in category of Meshnet, VPN, IP-hash.
 
 Title: Galaxy42
 Status: Experimental, pre-beta, NOT reviewed, NOT secure.
 
 Do not use this network for any purpose at all (yet!) it contains
 bugs, probably including vulns. Could be ok to try it in a VM.
-
 Intended ONLY for developers (for now).
 
 Finall version will be aimed to all users on Windows, Linux, Mac and
