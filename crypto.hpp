@@ -11,9 +11,14 @@ using namespace std;
 namespace antinet_crypto {
 
 namespace unittest {
-class c_symhash_state__tests_with_private_access;
+	class c_symhash_state__tests_with_private_access;
 } // namespace
 
+
+enum e_crypto_system_type : int {
+	t_crypto_system_type_ = 5,
+	t_ = 6,
+};
 
 
 /***
@@ -21,7 +26,6 @@ class c_symhash_state__tests_with_private_access;
 */
 class c_crypto_state {
 	public:
-
 		typedef string_as_bin t_symkey; // symmetric key
 
 		virtual ~c_crypto_state()=default;

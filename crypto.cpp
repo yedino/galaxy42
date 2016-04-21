@@ -159,9 +159,30 @@ bool alltests() {
 } // namespace
 
 
-void test_crypto() {
-	_mark("Testing crypto - unittests");
 
+void test_crypto() {
+
+
+	const string app_msg("Message-send-from-application"); // the finall end-user text that we want to tunnel.
+	const string app_orginal = app_msg;
+
+
+	
+	 
+	// encrypt
+	
+	// decrypt
+
+	if ( app_msg == app_orginal ) _note("OK "); else _erro("Msg decoded differs!");
+
+
+
+	int SKPAB=0;
+	_note("SKPAB="<<SKPAB);
+
+	return;
+
+	_mark("Testing crypto - unittests");
 	if (! unittest::alltests() ) {
 		_erro("Unit tests failed!");
 		return ;
