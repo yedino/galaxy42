@@ -7,7 +7,7 @@ include_directories(../googletest/googletest/include/)
 
 #add local local lib sodiumpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
-include_directories(../sodiumpp/sodiumpp/include/sodiumpp)
+include_directories(../sodiumpp/sodiumpp/include)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
 
