@@ -1213,9 +1213,6 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
-	const string demoname_loaded = demoname_load_conf();
-	if (demoname_loaded != "default") demoname = demoname_loaded;
-	if (demoname=="hardcoded") demoname = demoname_default;
 
 	namespace poo = boost::program_options;
 	poo::options_description desc("Possible demos");
@@ -1227,10 +1224,16 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 					("route_dij", "dijkstra test")
 					("help", "Help msg");
 
-	if (demoname=="help"){
-		std::cout << desc;
-		_note("Choose one of them.");
-		return false;}
+	if (demoname=="help") {
+		std::cout << "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:";
+		std::cout << desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" << std::endl; // TODO(janusz)
+		return false;
+	}
+
+	const string demoname_loaded = demoname_load_conf();
+	if (demoname_loaded != "default") demoname = demoname_loaded;
+	if (demoname=="hardcoded") demoname = demoname_default;
+
 	_note("Demo name selected: [" << demoname << "]");
 
 	if (demoname=="foo") { test_foo();  return false; }
