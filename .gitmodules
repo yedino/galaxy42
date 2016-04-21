@@ -13,3 +13,6 @@
 [submodule "googletest"]
 	path = googletest
 	url = ../googletest
+[submodule "sodiumpp"]
+	path = sodiumpp
+	url = ../sodiumpp
