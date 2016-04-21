@@ -1217,6 +1217,20 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	if (demoname_loaded != "default") demoname = demoname_loaded;
 	if (demoname=="hardcoded") demoname = demoname_default;
 
+	namespace poo = boost::program_options;
+	poo::options_description desc("Possible demos");
+	desc.add_options()
+					("foo", "foo test")
+					("bar", "bar test")
+					("serialize",  "serialize test")
+					("crypto", "crypto test")
+					("route_dij", "dijkstra test")
+					("help", "Help msg");
+
+	if (demoname=="help"){
+		std::cout << desc;
+		_note("Choose one of them.");
+		return false;}
 	_note("Demo name selected: [" << demoname << "]");
 
 	if (demoname=="foo") { test_foo();  return false; }
