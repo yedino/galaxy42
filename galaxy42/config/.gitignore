@@ -1,0 +1,4 @@
+
+# the actuall .conf file are local to given user
+*.conf
+
