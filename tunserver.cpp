@@ -1,4 +1,4 @@
-/**ZZZZZZZZZ
+/**
 Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
@@ -18,7 +18,19 @@ Use this tags in this project:
 
 */
 
+/*
+
+Current TODO / topics:
+* routing with dijkstra
+** re-routing data for someone else fails, probably because the data is not in TUN-format but it's just the datagram
+
+*/
+
 const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
+
+// The name of the hardcoded default demo that will be run with --devel (unless option --develdemo is given) can be set here:
+const char * g_demoname_default = "route_dij";
+// see function run_mode_developer() here to see list of possible values
 
 #include <iostream>
 #include <stdexcept>
@@ -26,6 +38,7 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 #include <string>
 #include <iomanip>
 #include <algorithm>
+#include <regex>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,18 +85,21 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 
 #include "cjdns-code/NetPlatform.h" // from cjdns
 
-//#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
 
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 
+
 #include "crypto.hpp" // for tests
 
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-// #include "trivialserialize.hpp"
+
+#include "trivialserialize.hpp"
+
 
 // ------------------------------------------------------------------
 
@@ -154,8 +170,14 @@ class c_galaxy_node {
 
 // ------------------------------------------------------------------
 
-class c_routing_manager { ///< holds nowledge about routes, and searches for new ones
-	public: // make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
+
+/***
+@brief Use this to get information about route. It resp.: returns, stores and searches the information.
+- m_search - pathes we now look for
+- m_route_nexthop - known pathes
+*/
+class c_routing_manager { ///< holds knowledge about routes, and searches for new ones
+	public: // TODO(r) make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
 		enum t_route_state { e_route_state_found, e_route_state_dead };
 
 		enum t_search_mode {  // why we look for a route
@@ -218,6 +240,8 @@ class c_routing_manager { ///< holds nowledge about routes, and searches for new
 				void add_request(c_routing_manager::c_route_reason reason, int ttl); ///< add info that this guy also wants to be informed about the path
 				void execute( c_galaxy_node & galaxy_node );
 		};
+
+		
 
 		// searches:
 		typedef std::map< c_haship_addr, unique_ptr<c_route_search> > t_route_search_by_dst; ///< running searches, by the hash-ip of finall destination
@@ -470,6 +494,13 @@ class c_tunserver : public c_galaxy_node {
 		c_peering & find_peer_by_sender_peering_addr( c_ip46_addr ip ) const ;
 
 		c_routing_manager m_routing_manager; ///< the routing engine used for most things
+		/**
+		 * @param ip_string contain ip address and port, i.e. 127.0.0.1:5000
+		 * @retrun pair with ip string ad first and port as second
+		 * @throw std::invalid_argument
+		 * Exception safety: strong exception guarantee
+		 */
+		std::pair<std::string, unsigned int> parse_ip_string(const std::string &ip_string);
 };
 
 // ------------------------------------------------------------------
@@ -477,11 +508,20 @@ class c_tunserver : public c_galaxy_node {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
+
 	size_t pos1 = simple.find('-');
 	string part_ip = simple.substr(0,pos1);
 	string part_pub = simple.substr(pos1+1);
-	_note("Simple string parsed as: " << part_ip << " and " << part_pub );
-	this->add_peer( t_peering_reference( part_ip, string_as_hex( part_pub ) ) );
+	try {
+		auto ip_pair = parse_ip_string(part_ip);
+		_note("Simple string parsed as: " << part_ip << " and " << part_pub );
+		_note("ip address " << ip_pair.first);
+		_note("port: " << ip_pair.second);
+		this->add_peer( t_peering_reference( ip_pair.first, string_as_hex( part_pub ) ) );
+	}
+	catch (const std::exception &e) {
+		_erro(e.what()); // TODO throw?
+	}
 }
 
 c_tunserver::c_tunserver()
@@ -699,6 +739,18 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 	throw std::runtime_error("We do not know a peer with such IP=" + STR(ip));
 }
 
+std::pair< std::string, unsigned int > c_tunserver::parse_ip_string(const string& ip_string) {
+	std::regex pattern(R"((\d\.{1,3}){3}\d{1,3}\:\d{1,5})"); // i.e. 127.0.0.1:4562
+	std::smatch result;
+	if (!std::regex_search(ip_string, result, pattern)) { // bad argument
+		throw std::invalid_argument("bad format of input ip address");
+	}
+	size_t pos = ip_string.find(':');
+	std::string ip = ip_string.substr(0, pos);
+	std::string port = ip_string.substr(pos+1);
+	return std::make_pair(std::move(ip), std::stoi(port));
+}
+
 
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
@@ -844,7 +896,7 @@ void c_tunserver::event_loop() {
 
 				// reinterpret the char from IO as unsigned-char as wanted by crypto code
 				unsigned char * ciphertext_buf = reinterpret_cast<unsigned char*>( buf ) + 2 + ttl_width; // TODO calculate depending on version, command, ...
-				long long ciphertext_buf_len = size_read - 2; // TODO 2 = header size
+				long long ciphertext_buf_len = size_read - 2 - 1; // TODO 2 = header size, and TTL
 				assert( ciphertext_buf_len >= 1 );
 
 				int r = crypto_aead_chacha20poly1305_decrypt(
@@ -854,8 +906,8 @@ void c_tunserver::event_loop() {
 					additional_data, additional_data_len,
 					nonce, generated_shared_key);
 				if (r == -1) {
-					_warn("crypto verification fails");
-					continue; // skip this packet (main loop)
+					_warn("Crypto verification failed!!!");
+	//				continue; // skip this packet (main loop) // TODO
 				}
 
 				// TODO(r) factor out "reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len"
@@ -937,25 +989,24 @@ void c_tunserver::event_loop() {
 						const auto & route = m_routing_manager.get_route_or_maybe_search(*this, requested_hip , reason , true, requested_ttl - 1);
 						_note("We found the route thas he asks about, as: " << route);
 
-						// [protocol] "TTL;HIP_OF_GOAL;COST;" e.g.: (but in binary) "5;fd42...5812;1;"
 						const int reply_ttl = requested_ttl; // will reply as much as needed
-						unsigned char reply_ttl_byte = static_cast<unsigned char>( reply_ttl );
-						assert( reply_ttl_byte == reply_ttl );
-						cmd_data.bytes += reply_ttl_byte; // TODO just 1 byte, fix serialization. https://h.mantis.antinet.org/view.php?id=59
-						cmd_data.bytes += ';';
 
-						cmd_data.bytes += string_as_bin( requested_hip ).bytes; // the address of goal
-						cmd_data.bytes += ';';
+						// [protocol] e_proto_cmd_findhip_reply write "TTL;COST:HIP_OF_GOAL"
+						trivialserialize::generator gen(50); // TODO optimal size
+						gen.push_byte_u( reply_ttl );
+						gen.push_byte_u( ';' );
+						gen.push_byte_u( route.get_cost() );
+						gen.push_byte_u( ';' );
+						gen.push_bytes_n( g_haship_addr_size , string_as_bin( requested_hip ).bytes ); // the hip of goal
+						gen.push_byte_u( ';' );
 
-						auto cost_a = route.get_cost();
-						unsigned char cost_byte = static_cast<unsigned char>( cost_a );
-						assert( cost_byte == cost_a );
-						cmd_data.bytes += cost_byte; // TODO just 1 byte, fix serialization. https://h.mantis.antinet.org/view.php?id=59
-						cmd_data.bytes += ';'; // the cost
+						auto data = gen.str();
 
-						_info("Will send data to sender_as_peering_ptr=" << sender_as_peering_ptr);
+						_info("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD Will send data to sender_as_peering_ptr=" 
+							<< sender_as_peering_ptr 
+							<< " data: " << string_as_dbg( string_as_bin(data) ).get() );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
-						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, cmd_data, m_sock_udp); // <---
+						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_sock_udp); // <---
 						_note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
@@ -965,30 +1016,33 @@ void c_tunserver::event_loop() {
 
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_reply) { // [protocol]
-				// [protocol] "TTL;HIP_OF_GOAL;COST;" e.g.: (but in binary) "5;fd42...5812;1;"
-				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
-
-				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
-				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
-				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
-
-				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
-				c_haship_addr goal_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip );
-
-				string_as_bin bin_ttl( cmd_data.bytes.substr(pos1+1,1) );
-				int requested_ttl = static_cast<int>( bin_ttl.bytes.at(0) ); // char to integer
-
-				auto data_route_ttl = requested_ttl - 1;
+				_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+				// [protocol] e_proto_cmd_findhip_reply read "TTL;COST:HIP_OF_GOAL"
+				int offset1=2; // version, cmd
+				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() ,  buf+offset1 , size_read-offset1);
+				int given_ttl = parser.pop_byte_u(); // ttl
+				parser.pop_byte_skip(';');
+				int given_cost = parser.pop_byte_u(); // cost
+				parser.pop_byte_skip(';');
+				c_haship_addr given_goal_hip( c_haship_addr::tag_constr_by_addr_bin(), string_as_bin( parser.pop_bytes_n( g_haship_addr_size ) ) ); // hip
+				parser.pop_byte_skip(';');
+				_info("We have a TTL reply: ttl="<<given_ttl<<" goal="<<given_goal_hip<<" cost="<<given_cost);
+				
+				auto data_route_ttl = given_ttl - 1;
 				const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 				if (data_route_ttl > limit_incoming_ttl) {
 					_info("Got command at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
 				}
 
-				_info("We received REPLY for routing search for HIP=" << string_as_hex( bin_hip ) << " = " << goal_hip << " and TTL=" << requested_ttl );
-				if (requested_ttl < 1) {
+				if (given_ttl < 1) {
 					_info("Too low TTL, dropping the request");
 				} else {
+					_info("GOT CORRECT REPLY - USING IT");
+					c_routing_manager::c_route_info route_info( sender_hip , given_cost );
+					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
+					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); // store it, so that we own this object
+					// TODONOW and reply to others who asked us
 				}
 			}
 			else {
@@ -1121,18 +1175,58 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 
 } // namespace developer_tests
 
+/***
+ * @brief Loads name of demo from demo.conf.
+ * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
+ * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
+*/
+string demoname_load_conf() {
+	string ret="default";
+	const string democonf_fn="config/demo.conf";
+	ifstream democonf_file(democonf_fn);
+	if (! democonf_file.good()) return ret;
+	string line="";
+	getline(democonf_file,line);
+	if (! democonf_file.good()) return ret;
+	ret = line.substr( string("demo=").size() );
+	return ret;
+}
+
+
+bool test_foo() {
+	_info("TEST FOO");
+	return false;
+}
+
+bool test_bar() {
+	_info("TEST BAR");
+	return false;
+}
+
 /*** 
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test
 */
 bool run_mode_developer(boost::program_options::variables_map & argm) { 
-	std::cerr << "Running in developer mode. " << std::endl;
+	std::cerr << "Running in developer/demo mode." << std::endl;
 
-	// test_trivialserialize();  return false;
-	antinet_crypto::test_crypto();  return false;
+	const string demoname_default = g_demoname_default;
+	auto demoname = argm["develdemo"].as<string>();
+	const string demoname_loaded = demoname_load_conf();
+	if (demoname_loaded != "default") demoname = demoname_loaded;
+	if (demoname=="hardcoded") demoname = demoname_default;
 
-	return developer_tests::wip_galaxy_route_doublestar(argm);
+	_note("Demo name selected: [" << demoname << "]");
+
+	if (demoname=="foo") { test_foo();  return false; }
+	if (demoname=="bar") { test_bar();  return false; }
+	if (demoname=="serialize") { trivialserialize::test_trivialserialize();  return false; }
+	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
+	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
+	
+	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
+	return false;
 }
 
 int main(int argc, char **argv) {
@@ -1164,8 +1258,10 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
+			("demo", po::value<string>()->default_value(""), "Try DEMO here. Run one of the compiled-in demonstrations of how program works. Use --demo help to see list of demos [TODO].")
 			("devel","Test: used by developer to run current test")
 			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
+			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
@@ -1177,9 +1273,22 @@ int main(int argc, char **argv) {
 
 		po::variables_map argm;
 		try {
-			po::store(po::parse_command_line(argc, argv, desc), argm);
-			cout << "devel" << endl;
-			if (argm.count("devel")) {
+			po::store(po::parse_command_line(argc, argv, desc), argm); // <-- parse actuall real command line options
+
+			// === PECIAL options - that set up other program options ===
+
+			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
+				auto opt_demo = argm["demo"].as<string>();
+				_info("DEMO !");
+				if ( opt_demo!="" ) {
+					// argm.insert(std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
+					argm.at("develdemo") = po::variable_value( opt_demo , false );
+					// (std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
+					argm.insert(std::make_pair("devel",     po::variable_value( false , false ))); // --devel
+				}
+			}
+
+			if (argm.count("devel")) { // can also set up additional options
 				try {
 					bool should_continue = run_mode_developer(argm);
 					if (!should_continue) return 0;
@@ -1189,11 +1298,11 @@ int main(int argc, char **argv) {
 						return 0; // no error for developer mode
 				}
 			}
-			// argm now can contain options added/modified by developer mode
-			po::notify(argm);
 
+			// === argm now can contain options added/modified by developer mode ===
+			po::notify(argm);  // !
 
-			if (argm.count("help")) {
+			if (argm.count("help")) { // usage
 				std::cout << desc;
 				return 0;
 			}
