@@ -55,7 +55,7 @@ add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 #tests
 file(GLOB TEST_SOURCES "test/*.cpp")
 add_executable(test.elf ${TEST_SOURCES})
-target_link_libraries(test.elf tunserver gtest sodium )
+target_link_libraries(test.elf tunserver gtest sodium sodiumpp)
 
 #loadjason.elf jsoncpp
 #add_executable(loadjson.elf loadjson.cpp)
