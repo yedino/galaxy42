@@ -128,95 +128,31 @@ std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_privkey> c_dhdh_state::generat
 
 namespace unittest {
 
+// !!! WARNING:  most of the tests are now MOVED into googletest, e.g. into test/crypto.cpp !!!
+
+
+// This will be probably removed soon from here - thugh it's a place to very quickly run some tests
+// while you develop them
+
 #define UTASSERT(X) do { if (!(X)) { _warn("Unit test failed!"); return false; } } while(0)
 #define UTEQ(X,Y) do { if (!(X == Y)) { _warn("Unit test failed! Values differ: actuall=[" << X << "] vs expected=["<<Y<<"]" ); return false; } } while(0)
 
 class c_symhash_state__tests_with_private_access {
 	public:
-		static bool aeshash_not_repeating_state_nor_password();
+		static bool foo1();
 };
 
-bool c_symhash_state__tests_with_private_access::aeshash_not_repeating_state_nor_password() {
-	std::set< c_symhash_state::t_hash > used_hash;
-	const int amount_iterations = 10000;
-
-    enum class type_RX : int { RX_none=0, RX_constant, RX_same, RX_random , RX_END };
-
-
-    for (auto rx_type = type_RX::RX_none ; rx_type < type_RX::RX_END ; rx_type = static_cast<type_RX>(static_cast<int>(rx_type) + 1)  ) {
-		c_symhash_state symhash( string_as_hex("") );
-
-		auto rx_same = symhash.secure_random( 10 );
-
-		switch (rx_type) { // first nextstate after creation of symhash
-            case type_RX::RX_none:			break; // here we do not do it, but must be then done in others to avoid collision
-            case type_RX::RX_constant:		symhash.next_state( string_as_bin("foo") );
-                                            break;
-            case type_RX::RX_same:			symhash.next_state( rx_same );
-                                            break;
-            case type_RX::RX_random:		symhash.next_state( symhash.secure_random( 2 ) );
-                                            break;
-            default: assert(false);
-		}
-
-
-		for (int i=0; i<amount_iterations; ++i) {
-			{
-				auto result = used_hash.insert( symhash.get_the_SECRET_PRIVATE_state() );
-				UTASSERT( result.second == true ); // inserted new one
-			}
-			{
-				auto result = used_hash.insert( symhash.get_password() );
-				UTASSERT( result.second == true ); // inserted new one
-			}
-			switch (rx_type) {
-                case type_RX::RX_none:		symhash.next_state();
-                                            break;
-                case type_RX::RX_constant:	symhash.next_state( string_as_bin("foo") );
-                                            break;
-                case type_RX::RX_same:		symhash.next_state( rx_same );
-                                            break;
-                case type_RX::RX_random:	symhash.next_state( symhash.secure_random( 2 ) );
-                                            break;
-				default: assert(false);
-			}
-		} // all iterations of using it
-
-
-		switch (rx_type) {
-            case type_RX::RX_none:
-				UTEQ( string_as_hex(symhash.get_password()) , string_as_hex("084b0ff5a81c8f3c1001b2d596cc02db629ea047716eba8440bb823223f18bddaa3631a02e43bbf886584cc636eb0a56a5813f15c9c0aeb3b5b4b4877221da8e") );
-				UTEQ( string_as_hex(symhash.get_the_SECRET_PRIVATE_state()) , string_as_hex("b64bde9d13b26847df387b6aa2f475a1309b64d14aaa07877df1b43cd1c79364ff7d7fbbef222ec41d55bb21f4144124c91d69a7411d3a4e29178a7e6748e097") );
-			break;
-			default: break;
-		}
-
-	}
-
-
-	_note("Ended this test");
+bool c_symhash_state__tests_with_private_access::foo1() {
 	return true;
 }
 
-bool aeshash_start_and_get_same_passwords() {
-	c_symhash_state symhash( string_as_hex("6a6b") ); // "jk"
-	auto p = string_as_hex( symhash.get_password() );
-	//	cout << "\"" << string_as_hex( symhash.get_password() ) << "\"" << endl;
-	UTEQ( p.get() , "1ddb0a828c4d3776bf12abbe17fb4d82bcaf202a1b00b5b54e90db701303d69ce235f36d25c9fd1343225888e00abdc0e18c2036e86af9f3a90faf1abfefedf7" );
-	symhash.next_state();
-
-	p = string_as_hex( symhash.get_password() );
-	UTEQ( p.get() , "72e4af0f04e2113852fd0d5320a14aeb2219d93ed710bc9bd72173b4ca657f37e4270c8480beb8fded05b6161d32a6450d4c3abb86023984f4f9017c309b5330" );
-
-	symhash.next_state();
-	p = string_as_hex( symhash.get_password() );
-	UTEQ( p.get() , "8a986c419f1347d8ea94b3ad4b9614d840bb2dad2e13287a7a6cb5cf72232c3211997b6435f44256a010654d6f49e71517e46ce420a77f09f3a425eabaa99d8a" );
+bool aeshash_foo2() {
 	return true;
 }
 
 bool alltests() {
-	if (! aeshash_start_and_get_same_passwords()) return false;
-	if (! c_symhash_state__tests_with_private_access::aeshash_not_repeating_state_nor_password()) return false;
+	if (! aeshash_foo2()) return false;
+	if (! c_symhash_state__tests_with_private_access::foo1()) return false;
 	return true;
 }
 
@@ -224,15 +160,12 @@ bool alltests() {
 
 
 void test_crypto() {
-
 	_mark("Testing crypto - unittests");
 
 	if (! unittest::alltests() ) {
 		_erro("Unit tests failed!");
 		return ;
 	}
-
-	unittest::aeshash_start_and_get_same_passwords();
 
 	_mark("Testing crypto - more");
 
