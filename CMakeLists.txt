@@ -54,10 +54,13 @@ add_executable(test.elf ${TEST_SOURCES})
 target_link_libraries(test.elf tunserver gtest sodium)
 
 #loadjason.elf jsoncpp
-add_executable(loadjson.elf loadjson.cpp
-               jsoncpp/jsoncpp.cpp
+add_executable(jsonload.elf c_json_load.cpp
+			   c_json_genconf.cpp
+			   jsoncpp/jsoncpp.cpp
 )
-target_link_libraries(loadjson.elf
+target_link_libraries(jsonload.elf
+                tunserver
+                sodium
 )
 
 add_custom_target(run
