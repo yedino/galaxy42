@@ -1,5 +1,7 @@
 #include "c_json_genconf.hpp"
 
+
+
 void c_json_genconf::genconf() {
 	generate_galaxy_conf();
 	generate_authpass_conf("connect_from.my.conf");
@@ -80,7 +82,17 @@ void c_json_genconf::generate_connectto_conf(const std::string &filename) {
 		conf_file << "\t\"connectTo\" : {\n";
 		conf_file << "\t// --- below --- insert the credentials from friends\n";
 		conf_file << "\n";
-		conf_file << "\t// here ...\n";
+		conf_file << "\t\t/**\n";
+		conf_file << "\t\t * Testing peers:\n";
+		conf_file << "\t\t * // Peer nr 0\n";
+		conf_file << "\t\t *  \"192.168.0.57\" : {\n";
+		conf_file << "\t\t *  \t\"publicKey\" : \"asdasd\"\n";
+		conf_file << "\t\t *  },\n";
+		conf_file << "\t\t * // Peer nr 1\n";
+		conf_file << "\t\t *  \"fc72:aa65:c5c2:4a2d:54e:7947:b671:e00c\" : {\n";
+		conf_file << "\t\t *  \t\"publicKey\" : \"asdasd\"\n";
+		conf_file << "\t\t *  }\n";
+		conf_file << "\t\t */\n";
 		conf_file << "\n";
 		conf_file << "\t// --- above --- insert the credentials from friends\n";
 		conf_file << "\t}\n";

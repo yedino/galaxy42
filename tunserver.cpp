@@ -75,7 +75,7 @@ const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use t
 //#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
-
+#include "c_json_load.hpp"
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 
@@ -1212,6 +1212,13 @@ int main(int argc, char **argv) {
 			for (const string & peer_ref : peers_cmdline) {
 				myserver.add_peer_simplestring( peer_ref );
 			}
+
+			// loading peers from galaxy.conf file
+			c_galaxyconf_load galaxyconf("galaxy.conf");
+			for(auto &ref : galaxyconf.get_peer_references()) {
+				myserver.add_peer(ref);
+			}
+
 		}
 		catch(po::error& e) {
 			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;

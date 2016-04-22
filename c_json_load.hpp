@@ -16,6 +16,12 @@ struct t_auth_password {
 	std::string m_myname;
 };
 
+class c_file_checker {
+  public:
+	c_file_checker () = delete;
+		static bool is_file_ok(const std::string &filename);
+};
+
 /**
  * @brief The c_json_file_parser class
  * 		  General class for parsing json files to root Json::Value,
@@ -78,6 +84,8 @@ class c_galaxyconf_load {
   public:
 	c_galaxyconf_load (const std::string &filename = "galaxy.conf");
 	c_galaxyconf_load (const c_galaxyconf_load &) = delete;
+
+	std::vector<t_peering_reference> get_peer_references ();
 
   private:
 	std::string m_filename;

@@ -1,5 +1,34 @@
 #include "c_json_load.hpp"
 
+bool c_file_checker::is_file_ok(const std::string &filename) {
+	using namespace boost::filesystem;
+
+	path p(filename);
+
+	try {
+		if (exists(p)) {    // does p actually exist?
+			if (is_regular_file(p)) {       // is p a regular file?
+				// std::cout << p << " size is " << file_size(p) << std::endl;  //dbg
+
+			} else if (is_directory(p)) {     // is p a directory?
+				std::cout << p << "is a directory" << std::endl;
+				return 0;
+
+			} else {
+				std::cout << p << "exists, but is neither a regular file nor a directory" << std::endl;
+				return 0;
+			}
+		} else {
+			std::cout << p << "does not exist" << std::endl;
+			return 0;
+		}
+
+	} catch (const filesystem_error& ex) {
+		std::cout << ex.what() << std::endl;
+		return 0;
+	}
+	return 1;
+}
 
 c_json_file_parser::c_json_file_parser (const std::string &filename) {
 
@@ -14,6 +43,10 @@ Json::Value c_json_file_parser::get_root() {
 }
 
 bool c_json_file_parser::parse_file(const std::string &filename) {
+
+	if(!c_file_checker::is_file_ok(filename)) {
+		return 1;
+	}
 
     Json::CharReaderBuilder rbuilder;
 	std::ifstream file_stream(filename, std::ifstream::binary);
@@ -101,6 +134,10 @@ c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(f
 	}
 }
 
+std::vector<t_peering_reference> c_galaxyconf_load::get_peer_references() {
+	return m_peer_references;
+}
+
 t_my_keypair c_galaxyconf_load::my_keypair_load() {
 	std::string private_key_type = m_root.get("privateKeyType","").asString();
 	if(private_key_type == "") {
@@ -153,8 +190,8 @@ void c_galaxyconf_load::connect_to_load() {
 
 }
 
-// test - usage
-int main() {
+// test - simple usage
+int json_test() {
 
   try {
 	c_json_genconf::genconf();
@@ -162,6 +199,7 @@ int main() {
 
   } catch (std::exception &err) {
 		std::cout << err.what() << std::endl;
+		return 1;
   }
 
 	return 0;
