@@ -173,9 +173,12 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 
 
 void test_crypto() {
+
+
+
 	// the goal:
 	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
-	string app_msg; 
+	string app_msg;
 	for (int i=0; i<1; ++i) app_msg += app_msg1;
 
 	// --- in runtime ---
@@ -198,12 +201,12 @@ void test_crypto() {
 
 	// encrypt
 	// and xor pubkey_alice xor pubkey_bob TODO?
-	string Alice_dh_key = crypto_state.Hash1( string_as_bin(Alice_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES); 
+	string Alice_dh_key = crypto_state.Hash1( string_as_bin(Alice_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
 	_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
 	string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
 
 	// decrypt
-	string Bob_dh_key = crypto_state.Hash1( string_as_bin(Bob_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES); 
+	string Bob_dh_key = crypto_state.Hash1( string_as_bin(Bob_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
 

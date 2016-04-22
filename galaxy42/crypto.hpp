@@ -15,11 +15,6 @@ namespace unittest {
 } // namespace
 
 
-enum e_crypto_system_type : int {
-	t_crypto_system_type_ = 5,
-	t_ = 6,
-};
-
 
 /***
  * Some state of some crypto system
@@ -54,7 +49,7 @@ class c_symhash_state final : public c_crypto_state {
 		friend class unittest::c_symhash_state__tests_with_private_access;
 		FRIEND_TEST(crypto, aeshash_not_repeating_state_nor_password);
 
-	
+
 	private:
 		t_hash m_state;
 		int m_number; ///< for debug mostly for now
@@ -97,9 +92,31 @@ class c_dhdh_state final : public c_crypto_state {
 
 
 
+enum t_crypto_system_type : unsigned char {
+	// 0 is reserved
+	e_crypto_system_type_dhdh = 1,
+	e_crypto_system_type_ntru = 2,
+	e_crypto_system_type_geport = 3,
+	e_crypto_system_type_symhash = 4,
+	e_crypto_system_type_END = 5,
+};
+
+class c_multistate {
+	typedef std::array<
+		vector< unique_ptr< c_crypto_state > > ,
+		e_crypto_system_type_END
+	> t_cryptolists;
+
+	c_dhdh_state dhdh;
+
+	c_symhash_state symhash;
+};
+
+
+
 
 void test_crypto();
-	
+
 
 } // namespace
 
