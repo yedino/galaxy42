@@ -179,7 +179,19 @@ void test_crypto() {
 	if (encrypt != decrypt) _note("OK "); else _erro("bad decrypt message");
 	if ( app_msg == decrypt ) _note("OK "); else _erro("Msg decoded differs!");
 
+	_note(sodiumpp::bin2hex(encrypt));
 
+	// X25519 dh exchange
+	std::string Alice_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string Alice_pk(sodiumpp::crypto_scalarmult_base(Alice_sk));
+
+	std::string Bob_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES));
+	std::string Bob_pk(sodiumpp::crypto_scalarmult_base(Bob_sk));
+
+	std::string Alice_shared = sodiumpp::crypto_scalarmult(Alice_sk, Bob_pk);
+	std::string Bob_shared = sodiumpp::crypto_scalarmult(Bob_sk, Alice_pk);
+	// TODO use generic hash
+	if (Alice_shared == Bob_shared) _note("OK "); else _erro("key exchange error");
 
 	int SKPAB=0;
 	_note("SKPAB="<<SKPAB);
