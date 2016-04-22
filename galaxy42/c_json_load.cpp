@@ -1,4 +1,4 @@
-#include "loadjson.hpp"
+#include "c_json_load.hpp"
 
 
 c_json_file_parser::c_json_file_parser (const std::string &filename) {
@@ -29,20 +29,20 @@ bool c_json_file_parser::parse_file(const std::string &filename) {
 	return 0;
 }
 
-c_auth_password_load::c_auth_password_load(const std::string &filename) : m_filename(filename) {
+c_auth_password_load::c_auth_password_load(const std::string &filename, std::vector<t_auth_password> &auth_passwords) : m_filename(filename) {
 	try {
 		c_json_file_parser parser(filename);
 		m_root = parser.get_root();
+
+		get_auth_passwords(auth_passwords); ///< proper auth loading
 	} catch (std::invalid_argument &err) {
 		std::cout << "Fail to load " << m_filename << " configuration file" << std::endl;
 		std::cout << err.what() << std::endl;
 	}
 }
 
-std::vector<c_auth_password> c_auth_password_load::get_authpass() {
-	std::vector<c_auth_password> auth_passwords;
+void c_auth_password_load::get_auth_passwords (std::vector<t_auth_password> &auth_passwords) {
 
-	std::cout << "getting auth passwords from " << m_filename << std::endl;
 	Json::Value authpass_array = m_root["authorizedPasswords"];
 	size_t i = 0;
 	for(auto &authpass : authpass_array) {
@@ -53,41 +53,45 @@ std::vector<c_auth_password> c_auth_password_load::get_authpass() {
 		auth_passwords.push_back({l_pass, l_myname});
 		i++;
 	}
-	return auth_passwords;
 }
 
-c_connect_to_load::c_connect_to_load(const std::string &filename) : m_filename(filename) {
+c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_peering_reference> &peer_refs) : m_filename(filename) {
 	try {
 		c_json_file_parser parser(filename);
 		m_root = parser.get_root();
+
+		get_peers(peer_refs);	///< proper peer loading
 	} catch (std::invalid_argument &err) {
 		std::cout << "Fail to load " << m_filename <<  " configuration file" << std::endl;
 		std::cout << err.what() << std::endl;
 	}
 }
 
-std::vector<c_peer> c_connect_to_load::get_peers() {
-	std::vector<c_peer> peers;
-
-	std::cout << "getting peers from " << m_filename << std::endl;
+void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 
 	Json::Value connectTo_array = m_root["connectTo"];
 	uint32_t i = 0;
-	for(auto &peer : connectTo_array) {
+	for(auto &peer_ref : connectTo_array) {
 		std::string l_ip = connectTo_array.getMemberNames()[i];
-		std::string l_pubkey = peer["publicKey"].asString();
+		std::string l_pubkey = peer_ref["publicKey"].asString();
 		std::cout 	<< "Peer ["<< i << "] : " << l_ip							//dbg
 					<< " with public key [" << l_pubkey << ']' <<  std::endl;		//dbg
-		peers.push_back({l_ip, l_pubkey});
+		peer_refs.emplace_back(t_peering_reference(l_ip, string_as_hex(l_pubkey)));
 		i++;
 	}
-	return peers;
 }
 
 c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(filename) {
 	try {
 		c_json_file_parser parser(filename);
 		m_root = parser.get_root();
+		t_my_keypair my_keypair = my_keypair_load();
+		std::cout << "my info:\nprivKeyType[" << my_keypair.m_private_key_type
+				  << "]\nprivKey[" << my_keypair.m_private_key
+				  << "]\npubKey[" << my_keypair.m_public_key
+				  << "]\nipv6[" << my_keypair.m_ipv6
+				  << "]" << std::endl;
+
 		auth_password_load();
 		connect_to_load();
 
@@ -97,15 +101,35 @@ c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(f
 	}
 }
 
+t_my_keypair c_galaxyconf_load::my_keypair_load() {
+	std::string private_key_type = m_root.get("privateKeyType","").asString();
+	if(private_key_type == "") {
+		throw std::invalid_argument("empty privateKeyType field in your configuration file");
+	}
+	std::string private_key = m_root.get("privateKey","").asString();
+	if(private_key == "") {
+		throw std::invalid_argument("empty privateKey field in your configuration file");
+	}
+	std::string public_key = m_root.get("myself-public","").get("publicKey","").asString();
+	if(public_key == "") {
+		throw std::invalid_argument("empty publicKey field in your configuration file");
+	}
+	std::string ipv6 = m_root.get("myself-public","").get("ipv6","").asString();
+	if(private_key_type == "" || private_key == "" || public_key == "" || ipv6 == "") {
+		throw std::invalid_argument("empty ipv6 field in your configuration file");
+	}
+	return t_my_keypair({private_key_type,private_key,public_key,ipv6});
+}
+
 void c_galaxyconf_load::auth_password_load() {
 	if(m_root.get("authorizedPasswords","").isArray()) {
 		Json::Value authpass_array = m_root.get("authorizedPasswords","");
 		for(auto &filename : authpass_array) {
 			std::cout << "Loading authorizedPassword file: " << filename.asString() << std::endl;
-			c_auth_password_load authpass_load(filename.asString());
-			authpass_load.get_authpass();
-			for(auto &authpass : authpass_load.get_authpass()) {
-				std::cout << "auth -- password[" << authpass.m_password << "] myname[" << authpass.m_myname << "]" << std::endl;
+			c_auth_password_load authpass_load(filename.asString(), m_auth_passwords);
+			for(auto &authpass : m_auth_passwords) {
+				std::cout << "auth -- password[" << authpass.m_password << "] myname["
+						  << authpass.m_myname << "]" << std::endl;
 			}
 		}
 	} else {
@@ -115,12 +139,12 @@ void c_galaxyconf_load::auth_password_load() {
 
 void c_galaxyconf_load::connect_to_load() {
 	if(m_root.get("authorizedPasswords","").isArray()) {
-		Json::Value connectto = m_root.get("connectTo","");
-		for(auto &filename : connectto) {
+		Json::Value connect_to = m_root.get("connectTo","");
+		for(auto &filename : connect_to) {
 			std::cout << "Loading connectTo file: " << filename.asString() << std::endl;
-			c_connect_to_load connect_to_load(filename.asString());
-			for(auto &peer : connect_to_load.get_peers()) {
-				std::cout << "peer -- ip[" << peer.m_ip << "] pubkey[" << peer.m_public_key << "]" << std::endl;
+			c_connect_to_load connect_to_load(filename.asString(), m_peer_references);
+			for(auto &peer : m_peer_references) {
+				std::cout << "peer -- ip[" << peer.peering_addr << "] pubkey[" << peer.pubkey << "]" << std::endl;
 			}
 		}
 	} else {
@@ -133,15 +157,8 @@ void c_galaxyconf_load::connect_to_load() {
 int main() {
 
   try {
-	// Working example of json
-//	c_json_file_parser config_file("galaxy.conf");
-
-//	for(auto peer : config_file.get_peers()) {
-//		std::cout 	<< "Peer ["<< peer.m_nr << "] : " << peer.m_ip
-//					<< " with public key [" << peer.m_public_key << ']' <<  std::endl;
-//	}
-	// Not working
-	c_galaxyconf_load galaxyconf("a.conf");
+	c_json_genconf::genconf();
+	c_galaxyconf_load galaxyconf("galaxy.conf");
 
   } catch (std::exception &err) {
 		std::cout << err.what() << std::endl;
