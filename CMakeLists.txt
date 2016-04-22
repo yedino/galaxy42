@@ -9,6 +9,11 @@ include_directories(../googletest/googletest/include/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(../sodiumpp/sodiumpp/include)
 
+#add local build of some external libs
+link_directories( build_extra/ntru )
+include_directories( build_extra )
+
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
 
 ADD_CUSTOM_TARGET(fast

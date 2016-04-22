@@ -27,24 +27,27 @@ enum e_crypto_system_type : int {
 class c_crypto_state {
 	public:
 		typedef string_as_bin t_symkey; // symmetric key
+		typedef string_as_bin t_hash;
 
 		virtual ~c_crypto_state()=default;
 
 		virtual t_symkey secure_random(size_t size_of_radom_data) const;
+
+		virtual t_hash Hash1( const t_hash & hash ) const;
+		virtual t_hash Hash2( const t_hash & hash ) const;
+
+//		virtual t_hash Hash1( const string & hash ) const;
+//		virtual t_hash Hash2( const string & hash ) const;
 };
 
 
 
 class c_symhash_state final : public c_crypto_state {
 	public:
-		typedef string_as_bin t_hash;
 
 		c_symhash_state( t_hash initial_state );
 		void next_state( t_hash additional_secret_material = t_hash("") );
 		t_hash get_password() const;
-
-		t_hash Hash1( const t_hash & hash ) const;
-		t_hash Hash2( const t_hash & hash ) const;
 
 	private:
 		t_hash get_the_SECRET_PRIVATE_state() const; //< used e.g. by some tests
