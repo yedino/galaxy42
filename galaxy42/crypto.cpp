@@ -160,13 +160,31 @@ bool alltests() {
 
 } // namespace
 
-
+bool safe_string_cmp(const std::string & a, const std::string & b) {
+	if (a.size() != b.size()) return false;
+	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
+}
 
 void test_crypto() {
-
-
-	const string app_msg("Message-send-from-application"); // the finall end-user text that we want to tunnel.
+	// the goal:
+	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
+	string app_msg; 
+	for (int i=0; i<1; ++i) app_msg += app_msg1;
 	const string key(crypto_secretbox_KEYBYTES, 'a');
+
+	// --- in runtime ---
+
+	// X25519 DH exchange
+	std::string Alice_dh_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string Alice_dh_pk(sodiumpp::crypto_scalarmult_base(Alice_dh_sk));
+
+	std::string Bob_dh_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES));
+	std::string Bob_dh_pk(sodiumpp::crypto_scalarmult_base(Bob_dh_sk));
+
+	std::string Alice_dh_shared = sodiumpp::crypto_scalarmult(Alice_dh_sk, Bob_dh_pk);
+	std::string Bob_dh_shared = sodiumpp::crypto_scalarmult(Bob_dh_sk, Alice_dh_pk);
+	// TODO use generic hash
+	if (Alice_dh_shared == Bob_dh_shared) _note("DH shared - OK"); else _erro("key exchange error");
 
 	sodiumpp::nonce<crypto_box_NONCEBYTES> nonce;
 
@@ -176,22 +194,10 @@ void test_crypto() {
 	// decrypt
 	string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, key);
 
-	if (encrypt != decrypt) _note("OK "); else _erro("bad decrypt message");
-	if ( app_msg == decrypt ) _note("OK "); else _erro("Msg decoded differs!");
+	if (safe_string_cmp(app_msg,decrypt)) _note("Encrypted message - OK "); else _erro("Msg decoded differs!");
+	if (! safe_string_cmp(encrypt,decrypt)) _note("It is encrypted  - OK"); else _erro("Not encrypted?!");
 
-	_note(sodiumpp::bin2hex(encrypt));
-
-	// X25519 dh exchange
-	std::string Alice_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
-	std::string Alice_pk(sodiumpp::crypto_scalarmult_base(Alice_sk));
-
-	std::string Bob_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES));
-	std::string Bob_pk(sodiumpp::crypto_scalarmult_base(Bob_sk));
-
-	std::string Alice_shared = sodiumpp::crypto_scalarmult(Alice_sk, Bob_pk);
-	std::string Bob_shared = sodiumpp::crypto_scalarmult(Bob_sk, Alice_pk);
-	// TODO use generic hash
-	if (Alice_shared == Bob_shared) _note("OK "); else _erro("key exchange error");
+	_note("Encrypted as:" << sodiumpp::bin2hex(encrypt));
 
 	int SKPAB=0;
 	_note("SKPAB="<<SKPAB);
