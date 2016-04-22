@@ -47,10 +47,12 @@ include_directories(../antinet/src/antinet_sim/)
 add_executable(ipclient.elf ipclient.cpp counter.cpp)
 add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
-target_link_libraries(tunserver.elf tunserver boost_program_options sodium sodiumpp)
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium)
 
-add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs1.cpp trivialserialize.cpp
-			   crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp)
+add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
+	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs1.cpp
+	trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
+	c_json_load.cpp c_json_genconf.cpp jsoncpp/jsoncpp.cpp )
 
 #tests
 file(GLOB TEST_SOURCES "test/*.cpp")
@@ -58,9 +60,16 @@ add_executable(test.elf ${TEST_SOURCES})
 target_link_libraries(test.elf tunserver gtest sodium )
 
 #loadjason.elf jsoncpp
-#add_executable(loadjson.elf loadjson.cpp)
-#target_link_libraries(loadjson.elf
-#                      jsoncpp
+#add_executable(jsonload.elf
+#			   c_json_load.cpp
+#			   c_json_genconf.cpp
+#			   jsoncpp/jsoncpp.cpp
+#)
+#target_link_libraries(jsonload.elf
+#				tunserver
+#				boost_system
+#				boost_filesystem
+#                sodium
 #)
 
 add_custom_target(run
