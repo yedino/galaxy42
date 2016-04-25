@@ -1281,6 +1281,7 @@ int main(int argc, char **argv) {
 			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
+			("config", po::value<std::string>()->default_value("galaxy.conf") , "load configuration file")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1324,6 +1325,15 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
+			std::string conf = argm["config"].as<std::string>();
+			if (!conf.empty()) {
+				// loading peers from galaxy.conf file
+				c_galaxyconf_load galaxyconf(conf);
+				for(auto &ref : galaxyconf.get_peer_references()) {
+					myserver.add_peer(ref);
+				}
+			}
+
 			_info("Configuring my own reference (keys):");
 			myserver.configure_mykey_from_string(
 				argm["mypub"].as<std::string>() ,
@@ -1339,11 +1349,6 @@ int main(int argc, char **argv) {
 				myserver.add_peer_simplestring( peer_ref );
 			}
 
-			// loading peers from galaxy.conf file
-			c_galaxyconf_load galaxyconf("galaxy.conf");
-			for(auto &ref : galaxyconf.get_peer_references()) {
-				myserver.add_peer(ref);
-			}
 
 		}
 		catch(po::error& e) {
