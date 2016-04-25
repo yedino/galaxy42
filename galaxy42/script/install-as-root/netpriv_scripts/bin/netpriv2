@@ -5,7 +5,7 @@ sandbox="prv${1}x"
 shift 
 
 [[ -z "$sandbox" ]] && { 
-	echo -E "" "Usage: $0 sandboxname [command with arguments]."
+	echo "" "Usage: $0 sandboxname [command with arguments]."
 	echo "Aborting"
 	exit 0 
 }
@@ -18,5 +18,5 @@ set -x
 ip netns add $sandbox
 
 # start a new user-shell inside of the namespace, and then run the user commands in it
-ip netns exec $sandbox sudo -u "${SUDO_USER}" -- $*
+ip netns exec $sandbox sudo -u "${SUDO_USER}" -- "$@"
 

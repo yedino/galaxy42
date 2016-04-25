@@ -13,10 +13,10 @@ set -x # for more debug
 # by mistake give root access to the user who is allowed to create netpriv!
 # e.g the start-containers script uses that to call other steps inside the namespace, then this other steps 
 # are the extra command that will be executed there
-unshare --net -- sudo -u "${SUDO_USER}" $*
+unshare --net -- sudo -u "${SUDO_USER}" "$@"
 # su -l
 # ${SUDO_USER} 
 
 # once this command is done, we will just debug:
-echo -E "" "Unshare done for PID=$$ PPID=$PPID"
+echo "" "Unshare done for PID=$$ PPID=$PPID"
 
