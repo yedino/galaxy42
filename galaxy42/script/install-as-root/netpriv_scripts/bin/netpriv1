@@ -1,13 +1,22 @@
 #!/bin/bash
+# *** review *** this program was reviewed and does NOT SEEM to have any OBVIOUS critical flaws.
 
+# Part of netpriv: create namespace (part1)
+
+# log it:
 logger -s -- "Setting network namespace  PID=$$ PPID=$PPID in $0, then run command: $*"
 
-set -x
+set -x # for more debug
 
+# create a new namespace (and run futher commands in it]),
+# return in it back to the original user who called the sudo (SUDO_USER) <--- this MUST!!! be done to not
+# by mistake give root access to the user who is allowed to create netpriv!
+# e.g the start-containers script uses that to call other steps inside the namespace, then this other steps 
+# are the extra command that will be executed there
 unshare --net -- sudo -u "${SUDO_USER}" $*
 # su -l
 # ${SUDO_USER} 
 
-echo "Unshare done for PID=$$ PPID=$PPID"
-echo "Running command"
+# once this command is done, we will just debug:
+echo -E "" "Unshare done for PID=$$ PPID=$PPID"
 

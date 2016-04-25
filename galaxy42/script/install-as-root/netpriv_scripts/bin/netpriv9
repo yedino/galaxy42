@@ -1,4 +1,6 @@
 #!/bin/bash
+# *** review *** this program was reviewed and does NOT SEEM to have any OBVIOUS critical flaws.
+
 sandbox="prv${1}x"
 netbig="$2"
 netH="$3" # e.g. "1" to get 10.0.50.1, or 2, or 3...
@@ -17,28 +19,29 @@ logger -s -- "Setting network namespace in sandbox=$sandbox sandbox0=$sandbox0 s
 set -x
 
 # configure $sandbox loopback
-ip netns exec $sandbox ip addr add "127.0.0.1/8" dev lo
-ip netns exec $sandbox ip link set lo up
+ip netns exec "$sandbox" ip addr add "127.0.0.1/8" dev lo
+ip netns exec "$sandbox" ip link set lo up
 # create a device pairs
-ip link add $sandbox0 type veth peer name $sandbox1
+ip link add "$sandbox0" type veth peer name "$sandbox1"
 
 # initiate the host side
-ip link set $sandbox0 up
+ip link set "$sandbox0" up
 # initiate the container side
-ip link set $sandbox1 netns $sandbox up
+ip link set "$sandbox1" netns "$sandbox" up
 
 # configure network
-ip addr add "192.168.${netbig}.${netH}/30" dev $sandbox0
-ip netns exec $sandbox ip addr add "192.168.${netbig}.${netG}/30" dev $sandbox1
-ip netns exec $sandbox ip route add default via "192.168.${netbig}.${netH}" dev $sandbox1
+ip addr add "192.168.${netbig}.${netH}/30" dev "$sandbox0"
+ip netns exec "$sandbox" ip addr add "192.168.${netbig}.${netG}/30" dev "$sandbox1"
+ip netns exec "$sandbox" ip route add default via "192.168.${netbig}.${netH}" dev "$sandbox1"
 
 # enable routing
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 ext_if=$(ip route get 8.8.8.8 | grep 'dev' | awk '{ print $5 }')
-iptables -I POSTROUTING -t nat -s "192.168.${netbig}.${netG}/32" -o ${ext_if} -j MASQUERADE
-iptables -I FORWARD -i $sandbox0 -o ${ext_if} -j ACCEPT
-iptables -I FORWARD -i ${ext_if} -o $sandbox0 -j ACCEPT
+iptables -I POSTROUTING -t nat -s "192.168.${netbig}.${netG}/32" -o "${ext_if}" -j MASQUERADE
+iptables -I FORWARD -i "$sandbox0" -o "${ext_if}" -j ACCEPT
+iptables -I FORWARD -i "${ext_if}" -o "$sandbox0" -j ACCEPT
 
 # configure resolv.conf
-mkdir -p /etc/netns/$sandbox
-echo nameserver 8.8.8.8 | tee /etc/netns/$sandbox/resolv.conf
+mkdir -p "/etc/netns/$sandbox"
+echo nameserver 8.8.8.8 | tee "/etc/netns/$sandbox/resolv.conf"
+
