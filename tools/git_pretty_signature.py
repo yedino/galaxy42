@@ -1,8 +1,5 @@
 import sys
 import os
-import select
-import tty
-import termios
 import argparse
 from collections import deque
 from subprocess import check_output, call, Popen, PIPE, CalledProcessError, STDOUT
@@ -53,6 +50,9 @@ def totag_stats(pager, encoding, check_mode = False):
         elif sig_stat == 'N':
             N_totag+=1
 
+        col_end = bcolors.ENDC
+        col_tag = bcolors.OKGREEN
+
         tag_pos = data.find("tag")
         if tag_pos != -1 or not data:
             # getting tag from %d ref names
@@ -61,29 +61,27 @@ def totag_stats(pager, encoding, check_mode = False):
                 tag_end_pos = tag_info.find(',')
                 tag_info = tag_info[:tag_end_pos]
 
-                col_tag = bcolors.OKGREEN
-                col_end = bcolors.ENDC
                 # last tag checking
                 if sig_stat == 'G':
                     G_totag-=1
                 if sig_stat == 'U':
                     U_totag-=1
                     col_tag = bcolors.WARNING
-                    string = col_tag+"WARNING: Last tag have untrusted sign!"+col_end
+                    string = col_tag+"WARNING: Last tag have untrusted sign!"+col_end+'\n'
                     pager.stdin.write(string.encode(encoding))
                     if check_mode:
                         exit(1)
                 if sig_stat == 'B':
                     B_totag-=1
                     col_tag = bcolors.FAIL
-                    string = col_tag+"ERROR: Last tag have bad sign!!"+col_end
+                    string = col_tag+"ERROR: Last tag have bad sign!!"+col_end+'\n'
                     pager.stdin.write(string.encode(encoding))
                     if check_mode:
                         exit(1)
                 if sig_stat == 'N':
                     N_totag-=1
                     col_tag = bcolors.FAIL
-                    string = col_tag+"ERROR: Last tag is not signed!!"+col_end
+                    string = col_tag+"ERROR: Last tag is not signed!!"+col_end+'\n'
                     pager.stdin.write(string.encode(encoding))
                     if check_mode:
                         exit(1)
@@ -92,19 +90,19 @@ def totag_stats(pager, encoding, check_mode = False):
             # commits checking
             if U_totag:
                 col_coms = bcolors.OKBLUE
-                string = col_coms+"NOTICE: At least one commit with untrusted sign!"+col_end
+                string = col_coms+"NOTICE: At least one commit with untrusted sign!"+col_end+'\n'
                 pager.stdin.write(string.encode(encoding))
                 if check_mode:
                     exit(1)
             if B_totag:
                 col_coms = bcolors.FAIL
-                string = col_coms+"ERROR: At least one commit with bad sign!"+col_end
+                string = col_coms+"ERROR: At least one commit with bad sign!"+col_end+'\n'
                 pager.stdin.write(string.encode(encoding))
                 if check_mode:
                     exit(1)
             if N_totag:
                 col_coms = bcolors.WARNING
-                string = col_coms+"WARNING: At leas one not signed commit!!"+col_end
+                string = col_coms+"WARNING: At leas one not signed commit!!"+col_end+'\n'
                 pager.stdin.write(string.encode(encoding))
                 if check_mode:
                     exit(1)
@@ -119,7 +117,7 @@ def totag_stats(pager, encoding, check_mode = False):
                     info_ft = col_coms+"Occur at least one problem with signatures SINCE LAST TAG "+tag_info[5:]+'\n'
             else:
                 info_head = col_coms+"Signatures status for all commits:\n"
-                info_ft = bcolors.WARNING+"no tag found in this repository\n"
+                info_ft = bcolors.OKBLUE+"NOTICE: No tag found in this repository\n"
 
             info_str = info_head                                    \
                         +col_coms+str(G_totag)+": GOOD\n"           \
