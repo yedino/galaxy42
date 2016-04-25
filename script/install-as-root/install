@@ -1,6 +1,7 @@
 #!/bin/bash -e
+# *** review *** this program was reviewed and not have critical flaws
 
-echo ; echo ; echo "Installing the scripts/tools needed to run/develop Galaxy42 network..."
+echo ; echo ; echo "Installing the scripts/tools needed to run/develop (some parts of) Galaxy42/Antinet network..."
 
 if [[ $EUID -ne 0 ]]; then
 	echo
@@ -9,17 +10,17 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-pwd=$PWD
+pwd="$PWD"
 
 echo "--------------------------------------------------------------------"
 cd netpriv_scripts  
 ./install
-cd $pwd
+cd "$pwd"
 
 echo "--------------------------------------------------------------------"
 cd setcap_scripts
 ./install
-cd $pwd
+cd "$pwd"
 
 
-echo "OK - all seems installed ... but MAKE SURE you followed any extra instructions above like, running as root visudo and configuring that." ; echo
+echo "OK - all seems installed ... but MAKE SURE you followed any extra instructions above, including running (as root) visudo and configuring that." ; echo

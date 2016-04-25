@@ -1,5 +1,20 @@
 #!/bin/bash -e
+
+# ***review*** This script had initial (not-expert) code review (but needs more). It has following (hopefully not-critical) flaw(s) remaining:
+# TODO: This script could be used to overwrite a file that was owned by user and then very quickly replaced with owned by other user.
+# TODO: This script might not clean up all the temporary files if aborted. Solution: use bash trap?
+
 # TODO check the --quiet and --debug modes more
+
+# This program does setcap on given file to give it network CAPs.
+# It is this long instead a one-liner, because it first moves the binary to some safer
+# location (it is run as root usually, so e.g. to root's own dir in /tmp/)
+# Then it checks if the binary does not have too wide permissions e.g. being writable by world
+# (that should be forbidden for programs that will get extra CAP rights)
+# and at end it does the actuall setcap and copy the program back to original location.
+
+echo "Warning: using program ($0) that is not yet fully correct/reviewed. Use only in safe test environments for now."
+
 
 function usage() {
 	echo "Usage: setcap_net_admin run_mode -u expected_user -f target_file"
@@ -17,6 +32,10 @@ function usage() {
 #-----------------------------------------------------------------------------------------
 # This is ongoing implementation of proposed IFCCS-00004 - see e.g. ifccs_00004.txt here
 # section A
+
+# Goal: at end of this small code part, we will have a temporary main level directory to use,
+# that is safe (chmod 700). This is the directory "instead of /tmp/" - the base in which
+# you should create actuall tmp directories (it will be for example "/tmp/user.yourusername/")
 
 TMPDIR1="$TMPDIR"
 
@@ -46,9 +65,11 @@ fi
 mkdir -p "$newtmpdir" -m 700
 chmod 700 "$newtmpdir"
 TMPDIR="$newtmpdir"
-export TMPDIR
+export TMPDIR # this is the safe/correct TMPDIR to use
 # echo "Using TMPDIR=$TMPDIR"
 #-----------------------------------------------------------------------------------------
+
+# Parse commandline options:
 
 #echo "Usage: setcap_net_admin run_mode -u expected_user -f target_file"
 run_mode="$1"
@@ -65,6 +86,8 @@ if [[ "$run_mode" == "--normal" ]] ; then :
 elif [[ "$run_mode" == "--quiet" ]] ; then opt_quiet=1; 
 elif [[ "$run_mode" == "--debug" ]] ; then opt_debug=1; echo "Debug activated"
 fi
+
+# --- options are parsed now ---
 
 if [[ "$opt_debug" == "1" ]] ; then logger "Running setcap ($0) DEBUG for arguments: $*" ; fi
 

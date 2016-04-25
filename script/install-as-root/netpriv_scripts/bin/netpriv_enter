@@ -1,10 +1,11 @@
 #!/bin/bash
+# *** review *** this program was reviewed and does NOT SEEM to have any OBVIOUS critical flaws.
 
 sandbox="prv${1}x"
 backtouser="${SUDO_USER}"
 
 usage() { 
-	echo "(no usage yet)"
+	echo "$0 namespacename"
 }
 if [[ ! "$sandbox" =~ ^prv[a-z]*[0-9]+x$ ]] ; then echo "Invalid (or strange) option for sandbox '$sandbox'" ; usage ; exit 1 ; fi
 if [[ ${#sandbox} -gt 8 ]] ; then echo "Too long sandbox name" ; usage ; exit 1 ; fi
@@ -14,6 +15,6 @@ logger -s -- "Entering namespace sandbox=${sandbox} and going back to user ${bac
 
 set -x
 
-nsenter --net=/var/run/netns/${sandbox} /bin/su ${backtouser}
+nsenter "--net=/var/run/netns/${sandbox}" /bin/su "${backtouser}"
 
 

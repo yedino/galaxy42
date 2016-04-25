@@ -1,4 +1,6 @@
 #!/bin/bash -e
+# *** review *** this program was reviewed and does not have critical flaws
+
 echo "This will install some of our util programs (system-wide)"
 echo "This programs are not yet fully secured, likely can contain some exploits especially exploitable by local malicious user" # TODO XXX
 echo "Type OK (in upper case) to install it anyway, or any other key or ctrl-c to exit now"
