@@ -11,15 +11,15 @@ bool c_file_checker::is_file_ok(const std::string &filename) {
 				// std::cout << p << " size is " << file_size(p) << std::endl;  //dbg
 
 			} else if (is_directory(p)) {     // is p a directory?
-				std::cout << p << "is a directory" << std::endl;
+				std::cout << p << " is a directory" << std::endl;
 				return 0;
 
 			} else {
-				std::cout << p << "exists, but is neither a regular file nor a directory" << std::endl;
+				std::cout << p << " exists, but is neither a regular file nor a directory" << std::endl;
 				return 0;
 			}
 		} else {
-			std::cout << p << "does not exist" << std::endl;
+			std::cout << p << " does not exist" << std::endl;
 			return 0;
 		}
 
