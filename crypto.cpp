@@ -199,26 +199,38 @@ void test_crypto() {
 
 	c_crypto_state crypto_state;
 
-	// encrypt
-	// and xor pubkey_alice xor pubkey_bob TODO?
+	// Alice prepare boxer
+	// and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
 	string Alice_dh_key = crypto_state.Hash1( string_as_bin(Alice_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
 	_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
-	string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
+	assert( Alice_dh_pk != Bob_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
+	typedef sodiumpp::nonce64 t_crypto_nonce;
+	using sodiumpp::boxer<>::boxer_type_shared_key;
+	sodiumpp::boxer< t_crypto_nonce > Alice_boxer  ( boxer_type_shared_key() , Alice_dh_pk > Bob_dh_pk , Alice_dh_key );
+	sodiumpp::boxer< t_crypto_nonce > Alice_unboxer( boxer_type_shared_key() , Alice_dh_pk > Bob_dh_pk , Alice_dh_key );
+	//string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
 
-	// decrypt
+	// Bob  prepare boxer
 	string Bob_dh_key = crypto_state.Hash1( string_as_bin(Bob_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
-	string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
+	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
+	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
+	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_type_shared_key() , Bob_dh_pk > Alice_dh_pk , Bob_dh_key );
+	sodiumpp::boxer< t_crypto_nonce > Bob_unboxer( boxer_type_shared_key() , Bob_dh_pk > Alice_dh_pk , Bob_dh_key );
 
-	_info("MSG: " << decrypt );
+	// Use CryptoAuth:
 
-	if (safe_string_cmp(app_msg,decrypt)) _note("Encrypted message - OK "); else _erro("Msg decoded differs!");
-	if (! safe_string_cmp(encrypt,decrypt)) _note("It is encrypted  - OK"); else _erro("Not encrypted?!");
+	auto msg_send = string{"Hello-world"};
+	auto cypher = Alice_boxer.box(msg_send);
+	auto msg_recived = Bob_boxer.unbox(cypher);
+	_info("send: " << msg_send );
+	_info("reci: " << msg_recived );
+	_info("cyph: " << cypher );
+
+//	if (safe_string_cmp(app_msg,decrypt)) _note("Encrypted message - OK "); else _erro("Msg decoded differs!");
+//	if (! safe_string_cmp(encrypt,decrypt)) _note("It is encrypted  - OK"); else _erro("Not encrypted?!");
 
 	_note("Encrypted as:" << sodiumpp::bin2hex(encrypt));
-
-	int SKPAB=0;
-	_note("SKPAB="<<SKPAB);
 
 	return;
 
