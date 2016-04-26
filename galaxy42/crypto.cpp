@@ -206,8 +206,9 @@ void test_crypto() {
 	assert( Alice_dh_pk != Bob_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	typedef sodiumpp::nonce64 t_crypto_nonce;
 	using sodiumpp::boxer_base;
-	sodiumpp::boxer< t_crypto_nonce > Alice_boxer  ( boxer_base::boxer_type_shared_key() , Alice_dh_pk > Bob_dh_pk ,sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
-	sodiumpp::boxer< t_crypto_nonce > Alice_unboxer( boxer_base::boxer_type_shared_key() , Alice_dh_pk > Bob_dh_pk , sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
+	sodiumpp::boxer< t_crypto_nonce > Alice_boxer  ( boxer_base::boxer_type_shared_key() , (Alice_dh_pk > Bob_dh_pk) ,sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
+	sodiumpp::unboxer< t_crypto_nonce > Alice_unboxer( boxer_base::boxer_type_shared_key() , ! (Alice_dh_pk > Bob_dh_pk) , sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
+	_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce().get().bytes)).get());
 	//string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
 
 	// Bob  prepare boxer
@@ -215,17 +216,24 @@ void test_crypto() {
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
-	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_base::boxer_type_shared_key() , Bob_dh_pk > Alice_dh_pk , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary ) );
-	sodiumpp::boxer< t_crypto_nonce > Bob_unboxer( boxer_base::boxer_type_shared_key() , Bob_dh_pk > Alice_dh_pk , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary));
+	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_base::boxer_type_shared_key() , ! (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary ) );
+	sodiumpp::unboxer< t_crypto_nonce > Bob_unboxer( boxer_base::boxer_type_shared_key() , (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary));
+	_note("Bob unboxer nonce: " << string_as_dbg(string_as_bin(Bob_unboxer.get_nonce().get().bytes)).get());
 
 	// Use CryptoAuth:
 
 	auto msg_send = string{"Hello-world"};
 	auto cypher = Alice_boxer.box(msg_send);
-	//auto msg_recived = Bob_boxer.unbox(cypher);
+
 	_info("send: " << msg_send );
-	//_info("reci: " << msg_recived );
-	//_info("cyph: " << cypher );
+	_info("cyph: " << cypher.to_binary() );
+	
+	try {
+		auto msg_recived = Bob_unboxer.unbox(cypher);
+		_info("reci: " << msg_recived );
+	} catch(const std::exception &e) {
+		_erro("Failed: " << e.what());
+	}
 
 //	if (safe_string_cmp(app_msg,decrypt)) _note("Encrypted message - OK "); else _erro("Msg decoded differs!");
 //	if (! safe_string_cmp(encrypt,decrypt)) _note("It is encrypted  - OK"); else _erro("Not encrypted?!");
