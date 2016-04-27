@@ -209,6 +209,10 @@ void test_crypto() {
 	sodiumpp::boxer< t_crypto_nonce > Alice_boxer  ( boxer_base::boxer_type_shared_key() , (Alice_dh_pk > Bob_dh_pk) ,sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
 	sodiumpp::unboxer< t_crypto_nonce > Alice_unboxer( boxer_base::boxer_type_shared_key() , ! (Alice_dh_pk > Bob_dh_pk) , sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
 	_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce().get().bytes)).get());
+	_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce_constant().bytes)).get());
+
+	auto nonce_constant = Alice_boxer.get_nonce_constant();
+
 	//string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
 
 	// Bob  prepare boxer
@@ -216,8 +220,14 @@ void test_crypto() {
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
-	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_base::boxer_type_shared_key() , ! (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary ) );
-	sodiumpp::unboxer< t_crypto_nonce > Bob_unboxer( boxer_base::boxer_type_shared_key() , (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary));
+	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_base::boxer_type_shared_key() , (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary ) );
+
+	sodiumpp::unboxer< t_crypto_nonce > Bob_unboxer( 
+		boxer_base::boxer_type_shared_key() , 
+		! (Bob_dh_pk > Alice_dh_pk) , 
+		sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary),
+		nonce_constant
+	);
 	_note("Bob unboxer nonce: " << string_as_dbg(string_as_bin(Bob_unboxer.get_nonce().get().bytes)).get());
 
 	// Use CryptoAuth:
