@@ -5,6 +5,8 @@
 
 #include "ntru/include/ntru_crypto.h"
 
+#include "trivialserialize.hpp"
+
 
 namespace antinet_crypto {
 
@@ -215,7 +217,36 @@ void test_crypto() {
 
 	//string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
 
-	// Bob  prepare boxer
+	// Use CryptoAuth:
+
+	auto msg_send = string{"Hello-world"};
+	auto cypher = Alice_boxer.box(msg_send);
+
+	_info("send: " << msg_send );
+	_info("cyph: " << cypher.to_binary() );
+
+
+	// alice generate packet:
+	trivialserialize::generator gen(50);
+	// assert that message size is smaller then around 2^(8*2)
+
+	gen.push_bytes_n(16, nonce_constant.bytes );
+	gen.push_bytes_sizeoctets<1>( cypher.to_binary()  );
+	gen.push_byte_u(';'); // XXX
+
+	const auto & packet = gen.str();
+
+	_info("Network packet:" << packet);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , 
+		packet // !! do not change this while parser exists
+	);
+	const string Bob_nonce_constant_str = parser.pop_bytes_n(16);
+	_info("Parsed: nonce const " << Bob_nonce_constant_str);
+	// t_crypto_nonce Bob_nonce_constant( sodiumpp::encoded_bytes( Bob_nonce_constant_str , sodiumpp::encoding::binary ));
+	const string Bob_cyphertext = parser.pop_bytes_sizeoctets<1>();
+	_info("Parsed: cypher " << Bob_cyphertext);
+
+	// Bob  prepare boxer:
 	string Bob_dh_key = crypto_state.Hash1( string_as_bin(Bob_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
@@ -226,20 +257,12 @@ void test_crypto() {
 		boxer_base::boxer_type_shared_key() , 
 		! (Bob_dh_pk > Alice_dh_pk) , 
 		sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary),
-		nonce_constant
+	  sodiumpp::encoded_bytes( Bob_nonce_constant_str , sodiumpp::encoding::binary)
 	);
 	_note("Bob unboxer nonce: " << string_as_dbg(string_as_bin(Bob_unboxer.get_nonce().get().bytes)).get());
 
-	// Use CryptoAuth:
-
-	auto msg_send = string{"Hello-world"};
-	auto cypher = Alice_boxer.box(msg_send);
-
-	_info("send: " << msg_send );
-	_info("cyph: " << cypher.to_binary() );
-	
 	try {
-		auto msg_recived = Bob_unboxer.unbox(cypher);
+		auto msg_recived = Bob_unboxer.unbox( sodiumpp::encoded_bytes(Bob_cyphertext,  sodiumpp::encoding::binary)  );
 		_info("reci: " << msg_recived );
 	} catch(const std::exception &e) {
 		_erro("Failed: " << e.what());
