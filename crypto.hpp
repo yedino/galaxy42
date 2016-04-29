@@ -105,7 +105,7 @@ class c_multikeys_pub : c_crypto_system {
 		//< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
 
 	public:
-		void add_public(t_crypto_system_type crypto_type, t_pubkey & pubkey);
+		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
 		virtual t_crypto_system_type get_system_type() const;
 };
 
@@ -121,7 +121,7 @@ class c_multikeys_PRIV : c_crypto_system {
 		t_PRIVkey pub_dh; // the DH pubkey
 
 	public:
-		void add_PRIVATE(t_crypto_system_type crypto_type, t_PRIVkey & PRIVkey);
+		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey);
 		virtual t_crypto_system_type get_system_type() const;
 };
 
@@ -134,9 +134,9 @@ class c_multikeys_PAIR {
 
 		void debug() const;
 
-		void add_public_and_PRIVATE(t_crypto_system_type crypto_type, 
-			c_crypto_system::t_pubkey & pubkey , 
-			c_crypto_system::t_PRIVkey & PRIVkey);
+		void add_public_and_PRIVATE(t_crypto_system_type crypto_type,
+			const c_crypto_system::t_pubkey & pubkey ,
+			const c_crypto_system::t_PRIVkey & PRIVkey);
 
 		virtual t_crypto_system_type get_system_type() const;
 };
@@ -150,14 +150,14 @@ class c_stream_crypto : public c_crypto_system {
 
 	public:
 		virtual t_crypto_system_type get_system_type() const;
-		
+
 };
 
 /*** Tool ready to process the stream as CryptoTunnel (like CryptoAuth from Cjdns naming) */
 class c_crypto_tunnel {
 	protected:
 		unique_ptr<c_stream_crypto> m_stream_crypto;
-		
+
 	public:
 		c_crypto_tunnel()=default;
 };
