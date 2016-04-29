@@ -12,11 +12,12 @@ namespace antinet_crypto {
 
 
 c_dhdh_state::t_symkey c_crypto_state::secure_random(size_t size_of_radom_data) const {
+	// TODO memory-locking?
 	t_symkey ret;
-	ret.bytes.resize(size_of_radom_data);
-	assert(!ret.bytes.empty());
-	unsigned char *data_ptr = reinterpret_cast<unsigned char *>(&ret.bytes[0]);
-	randombytes(data_ptr, ret.bytes.size());
+	ret.resize(size_of_radom_data);
+	assert( ret.size() == size_of_radom_data );
+	unsigned char *data_ptr = reinterpret_cast<unsigned char*>( & ret[0] );
+	randombytes(data_ptr, ret.size());
 	return ret;
 }
 
@@ -25,8 +26,8 @@ c_dhdh_state::t_symkey c_crypto_state::secure_random(size_t size_of_radom_data) 
 c_symhash_state::c_symhash_state( t_hash initial_state )
 	: m_state( initial_state )
 {
-	_info("Initial state: " << m_state.bytes);
-	_info("Initial state dbg: " << string_as_dbg(m_state).get() );
+//	_info("Initial state: " << m_state);
+//	_info("Initial state dbg: " << string_as_dbg(m_state).get() );
 }
 
 void c_symhash_state::next_state( t_hash additional_secret_material ) {
@@ -46,9 +47,9 @@ c_symhash_state::t_hash c_symhash_state::get_password() const {
 c_symhash_state::t_hash c_crypto_state::Hash1( const t_hash & hash ) const {
 
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
-    size_t u_hashmsg_len = hash.bytes.length();
+    size_t u_hashmsg_len = hash.length();
     const unsigned char* u_hashmsg;
-    u_hashmsg = reinterpret_cast<const unsigned char *>(&hash.bytes[0]);
+    u_hashmsg = reinterpret_cast<const unsigned char *>(&hash[0]);
 
    	const size_t out_u_hash_len = 64;
     assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
@@ -58,13 +59,13 @@ c_symhash_state::t_hash c_crypto_state::Hash1( const t_hash & hash ) const {
                        u_hashmsg, u_hashmsg_len,
                        nullptr, 0);
 
-    return string_as_bin(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
+    return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
 }
 
 c_symhash_state::t_hash c_crypto_state::Hash2( const t_hash & hash ) const {
 
     t_hash hash_from_hash = Hash1(hash);
-    for(auto &ch : hash_from_hash.bytes) {
+    for(auto &ch : hash_from_hash) { // negate all octets in it
         ch = ~ch;
     }
     return Hash1(hash_from_hash);
@@ -173,10 +174,9 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 
 
 
-
 void test_crypto() {
 
-
+#if 0
 
 	// the goal:
 	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
@@ -203,7 +203,7 @@ void test_crypto() {
 
 	// Alice prepare boxer
 	// and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
-	string Alice_dh_key = crypto_state.Hash1( string_as_bin(Alice_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
+	string Alice_dh_key = crypto_state.Hash1( Alice_dh_shared ).substr(0,crypto_secretbox_KEYBYTES);
 	_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
 	assert( Alice_dh_pk != Bob_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	typedef sodiumpp::nonce64 t_crypto_nonce;
@@ -247,7 +247,7 @@ void test_crypto() {
 	_info("Parsed: cypher " << Bob_cyphertext);
 
 	// Bob  prepare boxer:
-	string Bob_dh_key = crypto_state.Hash1( string_as_bin(Bob_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
+	string Bob_dh_key = crypto_state.Hash1( Bob_dh_shared).substr(0,crypto_secretbox_KEYBYTES);
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
@@ -275,6 +275,9 @@ void test_crypto() {
 
 	return;
 
+
+#endif
+
 	_mark("Testing crypto - unittests");
 	if (! unittest::alltests() ) {
 		_erro("Unit tests failed!");
@@ -283,19 +286,19 @@ void test_crypto() {
 
 	_mark("Testing crypto - more");
 
-	#define SHOW _info( string_as_dbg( symhash.get_password() ).get() );
+	#define SHOW _info( string_as_dbg( string_as_bin( symhash.get_password() ) ).get() );
 
-	c_symhash_state symhash( string_as_hex("6a6b") ); // "jk"
+	c_symhash_state symhash( string_as_hex("6a6b").get() ); // "jk"
 	SHOW;
 	symhash.next_state();
 	SHOW;
 	symhash.next_state();
 	SHOW;
-	symhash.next_state( string_as_bin("---RX-1---") );
+	symhash.next_state( "---RX-1---" );
 	SHOW;
 	symhash.next_state();
 	SHOW;
-	symhash.next_state( string_as_bin("---RX-2---") );
+	symhash.next_state( "---RX-2---" );
 	SHOW;
 
 	// SymHash
