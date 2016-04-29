@@ -21,8 +21,8 @@ namespace unittest {
 */
 class c_crypto_state {
 	public:
-		typedef string_as_bin t_symkey; // symmetric key
-		typedef string_as_bin t_hash;
+		typedef std::string t_symkey; // symmetric key
+		typedef std::string t_hash;
 
 		virtual ~c_crypto_state()=default;
 
