@@ -1,8 +1,6 @@
 #include "crypto.hpp"
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-#include <sodiumpp/sodiumpp.h>
-
 #include "ntru/include/ntru_crypto.h"
 
 #include "trivialserialize.hpp"
@@ -10,8 +8,19 @@
 
 namespace antinet_crypto {
 
+t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_system_type_invalid; }
 
-c_dhdh_state::t_symkey c_crypto_state::secure_random(size_t size_of_radom_data) const {
+t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_system_type_symhash_todo; }
+
+t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_system_type_multikey_pub; }
+
+t_crypto_system_type c_multikeys_PRIV::get_system_type() const { return e_crypto_system_type_multikey_private; }
+
+t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
+
+// ==================================================================
+
+c_dhdh_state::t_symkey c_crypto_system::secure_random(size_t size_of_radom_data) const {
 	// TODO memory-locking?
 	t_symkey ret;
 	ret.resize(size_of_radom_data);
@@ -40,11 +49,7 @@ c_symhash_state::t_hash c_symhash_state::get_password() const {
 	return Hash2( m_state );
 }
 
-/*c_symhash_state::t_hash c_crypto_state::Hash1( const string & data ) const {
-	return Hash1( string_as_bin( data ) );
-}
-*/
-c_symhash_state::t_hash c_crypto_state::Hash1( const t_hash & hash ) const {
+c_symhash_state::t_hash c_crypto_system::Hash1( const t_hash & hash ) const {
 
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
     size_t u_hashmsg_len = hash.length();
@@ -62,7 +67,7 @@ c_symhash_state::t_hash c_crypto_state::Hash1( const t_hash & hash ) const {
     return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
 }
 
-c_symhash_state::t_hash c_crypto_state::Hash2( const t_hash & hash ) const {
+c_symhash_state::t_hash c_crypto_system::Hash2( const t_hash & hash ) const {
 
     t_hash hash_from_hash = Hash1(hash);
     for(auto &ch : hash_from_hash) { // negate all octets in it
@@ -80,7 +85,7 @@ c_symhash_state::t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
 
 
 
-c_dhdh_state::c_dhdh_state(t_privkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub)
+c_dhdh_state::c_dhdh_state(t_PRIVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub)
 	: m_our_priv(our_priv), m_our_pub(our_pub), m_theirs_pub(theirs_pub)
 { }
 
@@ -99,7 +104,7 @@ c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() const {
 
 
 
-c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_privkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub) {
+c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_PRIVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub) {
 	using namespace ecdh_ChaCha20_Poly1305;
 	keypair_t my_keys;
 	std::copy(my_priv.bytes.begin(), my_priv.bytes.end(), my_keys.privkey.begin());
@@ -111,15 +116,15 @@ c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_privkey &my_pri
 	return ret;
 }
 
-c_crypto_state::t_symkey c_dhdh_state::execute_DH_exchange() {
+c_crypto_system::t_symkey c_dhdh_state::execute_DH_exchange() {
 	return execute_DH_exchange(m_our_priv, m_our_pub, m_theirs_pub);
 }
 
 
-std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_privkey> c_dhdh_state::generate_key_pair() {
+std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRIVkey> c_dhdh_state::generate_key_pair() {
 	using namespace ecdh_ChaCha20_Poly1305;
 	keypair_t keypair = generate_keypair();
-	std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_privkey> ret;
+	std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRIVkey> ret;
 	ret.first.bytes.resize(keypair.pubkey.size());
 	ret.second.bytes.resize(keypair.privkey.size());
 	std::copy(keypair.pubkey.begin(), keypair.pubkey.end(), ret.first.bytes.begin());
@@ -159,6 +164,13 @@ bool aeshash_foo2() {
 	return true;
 }
 
+
+std::string t_crypto_system_type__to_name(t_crypto_system_type val) {
+	switch(val) {
+	}
+	return "UNKNOWN";
+}
+
 bool alltests() {
 	if (! aeshash_foo2()) return false;
 	if (! c_symhash_state__tests_with_private_access::foo1()) return false;
@@ -167,17 +179,75 @@ bool alltests() {
 
 } // namespace
 
+
+void c_multikeys_PAIR::debug() const {
+	_info("KEY PAIR:");
+	for(size_t ix=0; ix<m_pub.m_cryptolists_pubkey.size(); ++ix) {
+		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
+		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
+		_info("Cryptosystem: " << t_crypto_system_type__to_name(ix) );
+	}
+	_info("---------");
+}
+
+void c_multikeys_PAIR::generate() {
+	_info("Generting keypair");
+
+	_info("X25519 generating...");
+	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
+
+	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRIV );
+}
+
+
+void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, t_pubkey & pubkey) {
+	m_cryptolists_pubkey.at( crypto_type ).push_back( pubkey );
+}
+
+void c_multikeys_PRIV::add_PRIVATE(t_crypto_system_type crypto_type, t_PRIVkey & PRIVkey) {
+	m_cryptolists_PRIVkey.at( crypto_type ).push_back( PRIVkey );
+}
+
+
+void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
+	 c_crypto_system::t_pubkey & pubkey , 
+	 c_crypto_system::t_PRIVkey & PRIVkey) 
+{
+	m_pub.add_public(crypto_type, pubkey);
+	m_PRIV.add_PRIVATE(crypto_type, PRIVkey);
+}
+
 bool safe_string_cmp(const std::string & a, const std::string & b) {
 	if (a.size() != b.size()) return false;
 	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
 }
 
 
+c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other) {
+	c_crypto_tunnel tunnel;
+
+	//string a_dh = self.
+
+	return tunnel;
+}
+
 
 void test_crypto() {
+	std::string Alice_dh_sk(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string Alice_dh_pk(sodiumpp::crypto_scalarmult_base(Alice_dh_sk));
+
+	c_multikeys_PAIR keypair;
+	keypair.generate();
+	keypair.debug();
+
+	c_crypto_tunnel AliceCT;
+
+
+
+	return ;
 
 #if 0
-
 	// the goal:
 	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
 	string app_msg;
@@ -199,11 +269,11 @@ void test_crypto() {
 
 	sodiumpp::nonce<crypto_box_NONCEBYTES> nonce;
 
-	c_crypto_state crypto_state;
+	c_crypto_system crypto_system;
 
 	// Alice prepare boxer
 	// and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
-	string Alice_dh_key = crypto_state.Hash1( Alice_dh_shared ).substr(0,crypto_secretbox_KEYBYTES);
+	string Alice_dh_key = crypto_system.Hash1( Alice_dh_shared ).substr(0,crypto_secretbox_KEYBYTES);
 	_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
 	assert( Alice_dh_pk != Bob_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	typedef sodiumpp::nonce64 t_crypto_nonce;
@@ -247,7 +317,7 @@ void test_crypto() {
 	_info("Parsed: cypher " << Bob_cyphertext);
 
 	// Bob  prepare boxer:
-	string Bob_dh_key = crypto_state.Hash1( Bob_dh_shared).substr(0,crypto_secretbox_KEYBYTES);
+	string Bob_dh_key = crypto_system.Hash1( Bob_dh_shared).substr(0,crypto_secretbox_KEYBYTES);
 	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
@@ -274,7 +344,6 @@ void test_crypto() {
 	// XXX _note("Encrypted as:" << sodiumpp::bin2hex(encrypt));
 
 	return;
-
 
 #endif
 
