@@ -25,6 +25,7 @@ Types: uses own t_types - that are probably std::string
 =====================================================================
 */
 
+// must match: t_crypto_system_type_to_name() 
 enum t_crypto_system_type : unsigned char {
 	// 0 is reserved
 	e_crypto_system_type_invalid = 0,
@@ -99,6 +100,7 @@ class c_multistate {
 class c_multikeys_pub : c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
+		friend class c_crypto_system;
 
 		typedef std::array< vector< t_pubkey > , e_crypto_system_type_END	> t_cryptolists_pubkey;
 		t_cryptolists_pubkey m_cryptolists_pubkey; //< A "map" of public keys of given type, organized by their crypto type.
@@ -113,12 +115,11 @@ class c_multikeys_pub : c_crypto_system {
 class c_multikeys_PRIV : c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
+		friend class c_crypto_system;
 
 		typedef std::array< vector< t_PRIVkey > , e_crypto_system_type_END	> t_cryptolists_PRIVkey;
 		t_cryptolists_PRIVkey m_cryptolists_PRIVkey; //< A "map" of PRIVATE keys of given type, organized by their crypto type.
 		//< example use: to get 50-th of our Ed25519 keys: m_cryptolists_PRIVkey[ e_crypto_system_type_Ed25519 ].at(50);
-
-		t_PRIVkey pub_dh; // the DH pubkey
 
 	public:
 		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey);
@@ -143,13 +144,25 @@ class c_multikeys_PAIR {
 
 
 /*** The finall crypto of the stream */
-class c_stream_crypto : public c_crypto_system {
+class c_stream_crypto final /* because strange ctor init list functions */ 
+: public c_crypto_system 
+{
 	protected:
+		t_symkey m_usable_key; //< UK (a.k.a. "K") is the finall key to be used on the streams
+		bool m_nonce_odd; //< is our key uneven (odd) as used in sodiumpp to decide nonce for us
+		// TODO lock it's memory before setting it!!!
+
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
 
 	public:
 		virtual t_crypto_system_type get_system_type() const;
+
+		c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
+	
+	private:
+		static t_symkey calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
+		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
 };
 
@@ -160,6 +173,7 @@ class c_crypto_tunnel {
 
 	public:
 		c_crypto_tunnel()=default;
+		c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 };
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);
