@@ -165,11 +165,8 @@ bool aeshash_foo2() {
 }
 
 
-std::string t_crypto_system_type__to_name(t_crypto_system_type val) {
-	switch(val) {
-	}
-	return "UNKNOWN";
-}
+
+
 
 bool alltests() {
 	if (! aeshash_foo2()) return false;
@@ -179,13 +176,29 @@ bool alltests() {
 
 } // namespace
 
+		std::string t_crypto_system_type_to_name(int val) {
+			switch(val) {
+				case 1:			return "X25519";
+				case 2:			return "Ed25519";
+				case 3:     return "ntru128";
+				case 4:			return "geport_todo";
+				case 5:			return "symhash_todo";
+				case 6:			return "multikey";
+					//default:		return "Wrong type";
+			}
+			return "UNKNOWN";
+		}
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
-	for(size_t ix=0; ix<m_pub.m_cryptolists_pubkey.size(); ++ix) {
+	for(int ix=0; ix<m_pub.m_cryptolists_pubkey.size(); ++ix) {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
-		_info("Cryptosystem: " << t_crypto_system_type__to_name(ix) );
+		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
+		for(int iy=0; iy<m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
+			_info( "PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
+			_info(" PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
+		}
 	}
 	_info("---------");
 }
@@ -201,18 +214,18 @@ void c_multikeys_PAIR::generate() {
 }
 
 
-void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, t_pubkey & pubkey) {
+void c_multikeys_pub::add_public(t_crypto_system_type crypto_type,const  t_pubkey & pubkey) {
 	m_cryptolists_pubkey.at( crypto_type ).push_back( pubkey );
 }
 
-void c_multikeys_PRIV::add_PRIVATE(t_crypto_system_type crypto_type, t_PRIVkey & PRIVkey) {
+void c_multikeys_PRIV::add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey) {
 	m_cryptolists_PRIVkey.at( crypto_type ).push_back( PRIVkey );
 }
 
 
 void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
-	 c_crypto_system::t_pubkey & pubkey , 
-	 c_crypto_system::t_PRIVkey & PRIVkey) 
+	 const c_crypto_system::t_pubkey & pubkey ,
+	 const c_crypto_system::t_PRIVkey & PRIVkey)
 {
 	m_pub.add_public(crypto_type, pubkey);
 	m_PRIV.add_PRIVATE(crypto_type, PRIVkey);
@@ -307,7 +320,7 @@ void test_crypto() {
 	const auto & packet = gen.str();
 
 	_info("Network packet:" << packet);
-	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , 
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() ,
 		packet // !! do not change this while parser exists
 	);
 	const string Bob_nonce_constant_str = parser.pop_bytes_n(16);
@@ -323,9 +336,9 @@ void test_crypto() {
 	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
 	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_base::boxer_type_shared_key() , (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary ) );
 
-	sodiumpp::unboxer< t_crypto_nonce > Bob_unboxer( 
-		boxer_base::boxer_type_shared_key() , 
-		! (Bob_dh_pk > Alice_dh_pk) , 
+	sodiumpp::unboxer< t_crypto_nonce > Bob_unboxer(
+		boxer_base::boxer_type_shared_key() ,
+		! (Bob_dh_pk > Alice_dh_pk) ,
 		sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary),
 	  sodiumpp::encoded_bytes( Bob_nonce_constant_str , sodiumpp::encoding::binary)
 	);
