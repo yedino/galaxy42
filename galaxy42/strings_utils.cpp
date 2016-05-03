@@ -59,7 +59,7 @@ unsigned char doublehexchar2int(string s) {
 
 // ==================================================================
 
-string_as_bin::string_as_bin(std::string bin)
+string_as_bin::string_as_bin(const std::string & bin)
 	: bytes(bin)
 { }
 

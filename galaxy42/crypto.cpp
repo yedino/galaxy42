@@ -3,6 +3,7 @@
 
 #include <sodiumpp/sodiumpp.h>
 
+#include "ntru/include/ntru_crypto.h"
 
 
 namespace antinet_crypto {
@@ -36,8 +37,11 @@ c_symhash_state::t_hash c_symhash_state::get_password() const {
 	return Hash2( m_state );
 }
 
-
-c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
+/*c_symhash_state::t_hash c_crypto_state::Hash1( const string & data ) const {
+	return Hash1( string_as_bin( data ) );
+}
+*/
+c_symhash_state::t_hash c_crypto_state::Hash1( const t_hash & hash ) const {
 
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
     size_t u_hashmsg_len = hash.bytes.length();
@@ -55,7 +59,7 @@ c_symhash_state::t_hash c_symhash_state::Hash1( const t_hash & hash ) const {
     return string_as_bin(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
 }
 
-c_symhash_state::t_hash c_symhash_state::Hash2( const t_hash & hash ) const {
+c_symhash_state::t_hash c_crypto_state::Hash2( const t_hash & hash ) const {
 
     t_hash hash_from_hash = Hash1(hash);
     for(auto &ch : hash_from_hash.bytes) {
@@ -165,12 +169,17 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
 }
 
+
+
+
 void test_crypto() {
+
+
+
 	// the goal:
 	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
-	string app_msg; 
+	string app_msg;
 	for (int i=0; i<1; ++i) app_msg += app_msg1;
-	const string key(crypto_secretbox_KEYBYTES, 'a');
 
 	// --- in runtime ---
 
@@ -188,11 +197,20 @@ void test_crypto() {
 
 	sodiumpp::nonce<crypto_box_NONCEBYTES> nonce;
 
+	c_crypto_state crypto_state;
+
 	// encrypt
-	string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, key);
+	// and xor pubkey_alice xor pubkey_bob TODO?
+	string Alice_dh_key = crypto_state.Hash1( string_as_bin(Alice_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
+	_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
+	string encrypt = sodiumpp::crypto_secretbox(app_msg, nonce.get().bytes, Alice_dh_key);
 
 	// decrypt
-	string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, key);
+	string Bob_dh_key = crypto_state.Hash1( string_as_bin(Bob_dh_shared) ).bytes.substr(0,crypto_secretbox_KEYBYTES);
+	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
+	string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
+
+	_info("MSG: " << decrypt );
 
 	if (safe_string_cmp(app_msg,decrypt)) _note("Encrypted message - OK "); else _erro("Msg decoded differs!");
 	if (! safe_string_cmp(encrypt,decrypt)) _note("It is encrypted  - OK"); else _erro("Not encrypted?!");

@@ -16,3 +16,6 @@
 [submodule "sodiumpp"]
 	path = sodiumpp
 	url = ../sodiumpp
+[submodule "ntru-crypto"]
+	path = ntru-crypto
+	url = ../ntru-crypto
