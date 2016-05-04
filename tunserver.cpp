@@ -111,7 +111,6 @@ void error(const std::string & msg) {
 // ------------------------------------------------------------------
 
 
-
 namespace developer_tests {
 
 bool wip_strings_encoding(boost::program_options::variables_map & argm) {
@@ -1182,15 +1181,17 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
  * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
  * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
 */
-string demoname_load_conf() {
+string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	string ret="default";
-	const string democonf_fn="config/demo.conf";
-	ifstream democonf_file(democonf_fn);
-	if (! democonf_file.good()) return ret;
-	string line="";
-	getline(democonf_file,line);
-	if (! democonf_file.good()) return ret;
-	ret = line.substr( string("demo=").size() );
+	try {
+		ifstream democonf_file(democonf_fn);
+		if (! democonf_file.good()) { cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << endl; return ret; }
+		string line="";
+		getline(democonf_file,line);
+		if (! democonf_file.good()) { cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << endl; return ret; }
+		ret = line.substr( string("demo=").size() );
+	} catch(...) { }
+	cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << endl;
 	return ret;
 }
 
@@ -1210,7 +1211,7 @@ bool test_bar() {
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test
 */
-bool run_mode_developer(boost::program_options::variables_map & argm) {
+bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	std::cerr << "Running in developer/demo mode." << std::endl;
 
 	const string demoname_default = g_demoname_default;
@@ -1237,6 +1238,8 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	if (demoname=="hardcoded") demoname = demoname_default;
 
 	_note("Demo name selected: [" << demoname << "]");
+	std::cout << std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
+		<< std::string(70,'=')<<"\n" << std::endl;
 
 	if (demoname=="foo") { test_foo();  return false; }
 	if (demoname=="bar") { test_bar();  return false; }
@@ -1246,6 +1249,12 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;
+}
+
+bool run_mode_developer(boost::program_options::variables_map & argm) {
+	auto ret = run_mode_developer_main(argm);
+	std::cout << std::string(70,'=')<<"\n" << std::endl;
+	return ret;
 }
 
 int main(int argc, char **argv) {

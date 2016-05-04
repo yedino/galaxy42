@@ -12,6 +12,13 @@ echo "and then create repository next to place where you have this repository"
 echo "E.g. if you have THIS project on git.you.com/antinet.git then "
 echo "create and push the google tests into git.you.com/googletest.git"
 echo ""
+echo "---------------------------------------------------------------"
+echo "CLONE THIS to your repository:"
+echo ""
+echo " * https://github.com/google/googletest"
+echo " * https://github.com/NTRUOpenSourceProject/ntru-crypto"
+echo ""
+echo "---------------------------------------------------------------"
 
 set -x
 
