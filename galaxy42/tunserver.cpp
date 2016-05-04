@@ -513,6 +513,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	string part_ip = simple.substr(0,pos1);
 	string part_pub = simple.substr(pos1+1);
 	try {
+		std::cout << part_ip << " -- " << part_pub << std::endl;
 		auto ip_pair = parse_ip_string(part_ip);
 		_note("Simple string parsed as: " << part_ip << " and " << part_pub );
 		_note("ip address " << ip_pair.first);
@@ -740,7 +741,8 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 }
 
 std::pair< std::string, unsigned int > c_tunserver::parse_ip_string(const string& ip_string) {
-	std::regex pattern(R"((\d\.{1,3}){3}\d{1,3}\:\d{1,5})"); // i.e. 127.0.0.1:4562
+	//std::regex pattern(R"((\d\.{1,3}){3}\d{1,3}\:\d{1,5})"); // i.e. 127.0.0.1:4562
+	std::regex pattern("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5}"); // i.e. 127.0.0.1:4562
 	std::smatch result;
 	if (!std::regex_search(ip_string, result, pattern)) { // bad argument
 		throw std::invalid_argument("bad format of input ip address");
@@ -1281,7 +1283,10 @@ int main(int argc, char **argv) {
 			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
-			("config", po::value<std::string>()->default_value("galaxy.conf") , "load configuration file")
+			("gen-config", "Denerate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf\n-connect_to.seed.conf\n"
+						   "*** this could overwrite your actual configurations ***")
+			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
+			("no-config", "Don't load any configuration file")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1325,9 +1330,13 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
-			std::string conf = argm["config"].as<std::string>();
-			if (!conf.empty()) {
-				// loading peers from galaxy.conf file
+			if (argm.count("gen-config")) {
+				c_json_genconf::genconf();
+			}
+
+			if (!(argm.count("no-config"))) {
+				// loading peers from configuration file (default from galaxy.conf)
+				std::string conf = argm["config"].as<std::string>();
 				c_galaxyconf_load galaxyconf(conf);
 				for(auto &ref : galaxyconf.get_peer_references()) {
 					myserver.add_peer(ref);
