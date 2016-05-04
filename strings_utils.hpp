@@ -30,7 +30,7 @@ struct string_as_bin {
 	string_as_bin()=default;
 	string_as_bin(const string_as_hex & encoded);
 	string_as_bin(const char * ptr, size_t size); ///< build bytes from c-string data
-	explicit string_as_bin(std::string bin); ///< create from an std::string, that we assume holds binary data
+	explicit string_as_bin(const std::string & bin); ///< create from an std::string, that we assume holds binary data
 
 	/*template<class T>
 	explicit string_as_bin( const T & obj  )

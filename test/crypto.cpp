@@ -11,13 +11,13 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 
 
     for (auto rx_type = type_RX::RX_none ; rx_type < type_RX::RX_END ; rx_type = static_cast<type_RX>(static_cast<int>(rx_type) + 1)  ) {
-		c_symhash_state symhash( string_as_hex("") );
+		c_symhash_state symhash( "" );
 
 		auto rx_same = symhash.secure_random( 10 );
 
 		switch (rx_type) { // first nextstate after creation of symhash
             case type_RX::RX_none:			break; // here we do not do it, but must be then done in others to avoid collision
-            case type_RX::RX_constant:		symhash.next_state( string_as_bin("foo") );
+            case type_RX::RX_constant:		symhash.next_state( "foo" );
                                             break;
             case type_RX::RX_same:			symhash.next_state( rx_same );
                                             break;
@@ -39,7 +39,7 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 			switch (rx_type) {
                 case type_RX::RX_none:		symhash.next_state();
                                             break;
-                case type_RX::RX_constant:	symhash.next_state( string_as_bin("foo") );
+                case type_RX::RX_constant:	symhash.next_state( "foo" );
                                             break;
                 case type_RX::RX_same:		symhash.next_state( rx_same );
                                             break;
@@ -62,8 +62,8 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 
 
 TEST(crypto, aeshash_start_and_get_same_passwords) {
-	c_symhash_state symhash( string_as_hex("6a6b") ); // "jk"
-	auto p = string_as_hex( symhash.get_password() );
+	c_symhash_state symhash( string_as_bin(string_as_hex("6a6b")).bytes ); // "jk"
+	auto p = string_as_hex( string_as_bin( symhash.get_password() ) );
 	//	cout << "\"" << string_as_hex( symhash.get_password() ) << "\"" << endl;
 	EXPECT_EQ(p.get(), "1ddb0a828c4d3776bf12abbe17fb4d82bcaf202a1b00b5b54e90db701303d69ce235f36d25c9fd1343225888e00abdc0e18c2036e86af9f3a90faf1abfefedf7");
 	symhash.next_state();
