@@ -1,0 +1,12 @@
+
+
+# directories copied from source
+# (the source is e.g. git submodule but in other location)
+sodiumpp/
+googletest/
+
+
+# also other libs
+
+build_extra/
+

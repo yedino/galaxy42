@@ -9,6 +9,11 @@ include_directories(../googletest/googletest/include/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(../sodiumpp/sodiumpp/include)
 
+#add local build of some external libs
+link_directories( build_extra/ntru )
+include_directories( build_extra )
+
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
 
 ADD_CUSTOM_TARGET(fast
@@ -44,8 +49,8 @@ endif()
 
 
 include_directories(../antinet/src/antinet_sim/)
-add_executable(ipclient.elf ipclient.cpp counter.cpp)
-add_executable(ipserver.elf ipserver.cpp)
+# add_executable(ipclient.elf ipclient.cpp counter.cpp)
+# add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp)
 
@@ -85,8 +90,9 @@ add_custom_target(runcli
 add_custom_command(
 	TARGET ipclient.elf ipserver.elf tunserver.elf
 	POST_BUILD
-	COMMAND chmod g-wx,o-wx ipclient.elf
-	COMMAND chmod g-wx,o-wx ipserver.elf
+#	COMMAND chmod g-wx,o-wx ipclient.elf
+#	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
+	COMMAND cp tunserver.elf nocap-tunserver.elf
 	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
 	WORKING_DIRECTORY ./)
