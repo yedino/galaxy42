@@ -110,6 +110,7 @@ class c_multikeys_pub : public c_crypto_system {
 		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
 		t_pubkey get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		virtual t_crypto_system_type get_system_type() const;
+		bool operator > (const c_multikeys_pub &rhs) const;
 };
 
 /*** All PRIVATE keys of given identity */
@@ -149,7 +150,7 @@ class c_multikeys_PAIR {
 class c_stream_crypto final /* because strange ctor init list functions */ 
 : public c_crypto_system 
 {
-	protected:
+	private:
 		t_symkey m_usable_key; //< UK (a.k.a. "K") is the finall key to be used on the streams
 		bool m_nonce_odd; //< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
