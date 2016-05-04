@@ -215,12 +215,21 @@ void c_multikeys_PAIR::generate() {
 }
 
 
-void c_multikeys_pub::add_public(t_crypto_system_type crypto_type,const  t_pubkey & pubkey) {
-	m_cryptolists_pubkey.at( crypto_type ).push_back( pubkey );
+void c_multikeys_pub::add_public(t_crypto_system_type type, const  t_pubkey & pubkey) {
+	m_cryptolists_pubkey.at( type ).push_back( pubkey );
+}
+
+c_crypto_system::t_pubkey c_multikeys_pub::get_public(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	// TODO check range
+	return m_cryptolists_pubkey.at(crypto_type).at(number_of_key);
 }
 
 void c_multikeys_PRIV::add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey) {
 	m_cryptolists_PRIVkey.at( crypto_type ).push_back( PRIVkey );
+}
+
+c_crypto_system::t_PRIVkey c_multikeys_PRIV::get_private(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	return m_cryptolists_PRIVkey.at(crypto_type).at(number_of_key);
 }
 
 
@@ -247,17 +256,16 @@ c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & 
 }
 
 c_crypto_system::t_symkey 
-c_stream_crypto::calculate_usable_key((const c_multikeys_PAIR & self,  const c_multikeys_pub & them) 
-{
+c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	// used in constructor!
 	std::string dh_shared_part1 = sodiumpp::crypto_scalarmult(
-		self. m_PRIV  .m_cryptolists_PRIVkey. at( e_crypto_system_type_X25519 ).at(0) , // my priv
-		them.          m_cryptolists_pubkey.  at( e_crypto_system_type_X25519 ).at(0)
+		self.m_PRIV.get_private( e_crypto_system_type_X25519, 0),
+		them.get_public(e_crypto_system_type_X25519, 0)
 	);
 
 	// TODO: and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
-	string dh_shared_ready = crypto_system.Hash1( dh_shared_part1 ).substr(0,crypto_secretbox_KEYBYTES);
-	_info("DH based key to use: " dh_shared_ready );
+	string dh_shared_ready = self.m_PRIV.Hash1( dh_shared_part1 ).substr(0,crypto_secretbox_KEYBYTES);
+	_info("DH based key to use: " << dh_shared_ready );
 
 	return dh_shared_ready;
 }
@@ -266,14 +274,14 @@ bool c_stream_crypto::calculate_nonce_odd(const c_multikeys_PAIR & self,  const 
 	return self > them;
 }
 
-c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
 	: 
 	m_usable_key( self, them ), // calculate UK and save it, and now use it:
 	m_nonce_odd( calculate_nonce_odd( self, them),
 	m_boxer( 
-		boxer_base::boxer_type_shared_key(), 
-		m_nonce_odd , 
-		odiumpp::encoded
+	sodiumpp::boxer_base::boxer_type_shared_key(),
+	m_nonce_odd ,
+	encoded,
 		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
 	)
 {
