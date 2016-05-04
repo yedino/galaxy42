@@ -14,6 +14,15 @@ t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_system_type_multikey_pub; }
 
+bool c_multikeys_pub::operator >(const c_multikeys_pub &rhs) const {
+	// TODO review this !!!
+	for (size_t i = 0; i < m_cryptolists_pubkey.size(); ++i) {
+		if (m_cryptolists_pubkey.at(i).empty() || rhs.m_cryptolists_pubkey.at(i).empty()) continue;
+		return m_cryptolists_pubkey.at(0) > rhs.m_cryptolists_pubkey.at(0);
+	}
+	return false;
+}
+
 t_crypto_system_type c_multikeys_PRIV::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
@@ -271,17 +280,26 @@ c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_mu
 }
 
 bool c_stream_crypto::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
-	return self > them;
+	return self.m_pub > them;
+}
+
+t_crypto_system_type c_stream_crypto::get_system_type() const
+{
+	assert(false && "not implemented");
 }
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
-	: 
-	m_usable_key( self, them ), // calculate UK and save it, and now use it:
-	m_nonce_odd( calculate_nonce_odd( self, them),
+	:
+	m_usable_key( calculate_usable_key(self, them) ), // calculate UK and save it, and now use it:
+	m_nonce_odd( calculate_nonce_odd( self, them)),
 	m_boxer( 
-	sodiumpp::boxer_base::boxer_type_shared_key(),
-	m_nonce_odd ,
-	encoded,
+		sodiumpp::boxer_base::boxer_type_shared_key(),
+		m_nonce_odd ,
+		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
+	),
+	m_unboxer(
+		sodiumpp::boxer_base::boxer_type_shared_key(),
+		m_nonce_odd ,
 		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
 	)
 {
