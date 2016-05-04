@@ -97,7 +97,7 @@ class c_multistate {
 
 
 /*** All pubkeys of given identity */
-class c_multikeys_pub : c_crypto_system {
+class c_multikeys_pub : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
@@ -108,11 +108,12 @@ class c_multikeys_pub : c_crypto_system {
 
 	public:
 		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
+		t_pubkey get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		virtual t_crypto_system_type get_system_type() const;
 };
 
 /*** All PRIVATE keys of given identity */
-class c_multikeys_PRIV : c_crypto_system {
+class c_multikeys_PRIV : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
@@ -123,6 +124,7 @@ class c_multikeys_PRIV : c_crypto_system {
 
 	public:
 		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey);
+		t_PRIVkey get_private(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		virtual t_crypto_system_type get_system_type() const;
 };
 
