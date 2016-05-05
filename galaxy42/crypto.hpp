@@ -124,6 +124,8 @@ class c_multistate {
 
 */
 
+char t_crypto_system_type_to_ID(int val);
+t_crypto_system_type t_crypto_system_type_from_ID(char name);
 
 /*** All pubkeys of given identity */
 class c_multikeys_pub : public c_crypto_system {
@@ -139,7 +141,7 @@ class c_multikeys_pub : public c_crypto_system {
 		// empty "" means that it needs calculation.
 		// ^- TODO invalidate by setters
 
-		void update_hash(); ///< calculate the current m_hash and save it
+		void update_hash() const; ///< calculate the current m_hash and save it
 
 	public:
 		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
@@ -150,6 +152,8 @@ class c_multikeys_pub : public c_crypto_system {
 
 		bool operator>(const c_multikeys_pub &rhs) const; ///< some sorting order, e.g. using the get_hash(). Used e.g. to
 		/// pick even/odd nonce depending on comparing keys.
+
+		std::string serialize_bin() const; ///< returns a string with all our data serialized, to a binary format
 };
 
 /*** All PRIVATE keys of given identity */
