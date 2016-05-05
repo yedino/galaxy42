@@ -82,6 +82,8 @@ class generator {
 		template <int S> void push_bytes_sizeoctets(const std::string & data, size_t max_size_for_assert);
 		template <int S> void push_bytes_sizeoctets(const std::string & data); //< same as push_bytes_sizeoctets with max_size_for_assert, except that argument is not used (and this additional assert is not done)
 
+		void push_integer_uvarint(uint64_t val); ///< Encode unsigned int dynamically on 1,3,5,9 octets like Bitcoin's CompactSize
+
 		const std::string & str() const; ///< get the generated string. This can be INVALIDATED by any non-const operations of this object (and ofc. after object expires)!
 
 	protected:
@@ -160,6 +162,8 @@ class parser {
 		template <int S, typename T> T pop_integer_s(); ///< Reads some   signed integer-type S, into field that is S octets wide, as value of type T.
 
 		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always, that was saved using push_bytes_n()
+
+		uint64_t pop_integer_uvarint(); ///< Decode unsigned int of 1,3,5,9 octets like Bitcoin's CompactSize
 
 		template <int S> std::string pop_bytes_sizeoctets();
 };

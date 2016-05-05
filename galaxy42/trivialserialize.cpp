@@ -39,6 +39,9 @@ void generator::push_bytes_n(size_t size, const std::string & data) {
 	m_str += data;
 }
 
+void generator::push_integer_uvarint(uint64_t val) {
+}
+
 const std::string & generator::str() const { return m_str; }
 
 
@@ -89,6 +92,9 @@ std::string parser::pop_bytes_n(size_t size) {
 	return std::string( from , size );
 }
 
+uint64_t parser::pop_integer_uvarint() {
+	return 0;
+}
 
 } // namespace
 
@@ -112,6 +118,12 @@ void trivialserialize::test_trivialserialize() {
 	gen.push_bytes_sizeoctets<2>("Octets2"+f, 100);
 	gen.push_bytes_sizeoctets<3>("Octets3"+f, 100);
 	gen.push_bytes_sizeoctets<4>("Octets4"+f, 100);
+
+	vector<uint64_t> test_uvarint1 = {1,42,100,250, 0xFD,     0xFE,      0xFF,  1000,     0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFA };
+	// width should be:              {1,1,   1,  1,  1+2,     1+2,        1+2,  1+2,         1+2,        1+4,         1+8};
+	// serialization should be:                      FD,0,FD  FD,0,FE FD,0,FF  FD,(1000) FD,FFFF  FE,FFFFFFF  FF,FFFFFFFFA
+
+	for (auto val : test_uvarint1) gen.push_integer_uvarint(val);
 
 	cout << "Serialized: [" << gen.str() << "]" << endl;
 
@@ -139,6 +151,13 @@ void trivialserialize::test_trivialserialize() {
 	cerr<<"["<<sb3<<"]"<<endl;
 	auto sb4 = parser.pop_bytes_sizeoctets<4>();
 	cerr<<"["<<sb4<<"]"<<endl;
+
+	for (auto val_expected : test_uvarint1) {
+		auto val_given = parser.pop_integer_uvarint();
+		cerr<<"uvarint " << val_given << endl;
+		bool ok = ( val_given == val_expected );
+		if (!ok) throw std::runtime_error("Failed test for expected value " + std::to_string(val_expected));
+	}
 
 }
 

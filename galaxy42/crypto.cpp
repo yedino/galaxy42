@@ -54,7 +54,7 @@ std::string c_multikeys_pub::serialize_bin() const { ///< returns a string with 
 
 	for (unsigned long ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type
 		const auto & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix);
-		_info("Cryptosystem: " << t_crypto_system_type_to_ID(ix) );
+//		t_crypto_system_type_to_ID(ix);
 	}
 	return gen.str();
 }
