@@ -259,7 +259,7 @@ void c_multikeys_PAIR::debug() const {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
 		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
-		for(int iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
+		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
 			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
 			_info("  PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
 		}
