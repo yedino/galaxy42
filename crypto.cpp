@@ -27,26 +27,13 @@ bool c_multikeys_pub::operator>(const c_multikeys_pub &rhs) const {
 std::string c_multikeys_pub::get_hash() const {
 	if (m_hash_cached=="") update_hash();
 	assert(m_hash_cached != "");
+	_info("Hash of this multikey:"  << to_debug(m_hash_cached));
 	return m_hash_cached;
 }
 
 void c_multikeys_pub::update_hash() const {
 	string all_pub; // all public keys together
-
-	// TODO
-
-	/*
-
-	// "aaa" "bbb" - 	"aaa;bbb"
-  //  "aaa;bb" "b"
-
-	for (size_t i = 0; i < m_cryptolists_pubkey.size(); ++i) {
-		//if (m_cryptolists_pubkey.at(i).empty() || rhs.m_cryptolists_pubkey.at(i).empty()) continue;
-		//return m_cryptolists_pubkey.at(0) > rhs.m_cryptolists_pubkey.at(0);
-	}
-	*/
-
-	m_hash_cached="(hash-todo)";
+	m_hash_cached = Hash1( this->serialize_bin()  );
 }
 
 std::string c_multikeys_pub::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
@@ -82,7 +69,7 @@ Serialized pubkeys: [(104)[
 	}
 
 	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
-	_info("Generating serialize - so far - " << to_debug(gen.str()));
+	//_info("Generating serialize - so far - " << to_debug(gen.str()));
 	int used_types_check=0; // counter just to assert
 	for (unsigned int ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type (for each element)
 		const vector<string> & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix); // take vector of keys
@@ -91,7 +78,7 @@ Serialized pubkeys: [(104)[
 			assert(ix < std::numeric_limits<unsigned char>::max()); // save the type
 			gen.push_byte_u(  t_crypto_system_type_to_ID(ix) ); // save key type
 			gen.push_vector_string( pubkeys_of_this_system ); // save the vector of keys
-			_info("Generating serialize - so far - " << to_debug(gen.str()));
+			//_info("Generating serialize - so far - " << to_debug(gen.str()));
 		}
 	}
 	assert(used_types_check == used_types); // we written same amount of keys as we previously counted
