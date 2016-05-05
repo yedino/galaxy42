@@ -58,15 +58,15 @@ Types: uses own t_types - that are probably std::string
 enum t_crypto_system_type : unsigned char {
 	// 0 is reserved
 	e_crypto_system_type_invalid = 0,
-	e_crypto_system_type_X25519 = 1,
-	e_crypto_system_type_Ed25519 = 2,
-	e_crypto_system_type_ntru128 = 3,
-	e_crypto_system_type_geport_todo = 4,
-	e_crypto_system_type_symhash_todo = 5,
+	e_crypto_system_type_X25519 = 21,
+	e_crypto_system_type_Ed25519 = 22,
+	e_crypto_system_type_ntru128 = 23,
+	e_crypto_system_type_geport_todo = 24,
+	e_crypto_system_type_symhash_todo = 25,
 	e_crypto_system_type_END_normal,
 
-	e_crypto_system_type_multikey_pub = 6,
-	e_crypto_system_type_multikey_private = 6,
+	e_crypto_system_type_multikey_pub = 26,
+	e_crypto_system_type_multikey_private = 27,
 	e_crypto_system_type_END,
 };
 

@@ -171,4 +171,8 @@ const std::string & string_as_dbg::get() const {
 	return this->dbg;
 }
 
+std::string to_debug(const std::string & data) {
+	return string_as_dbg( string_as_bin( data ) ).get();
+}
+
 
