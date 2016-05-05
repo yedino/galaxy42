@@ -242,12 +242,15 @@ char t_crypto_system_type_to_ID(int val) {
 		case e_crypto_system_type_ntru128: return 't';
 		case e_crypto_system_type_geport_todo: return 'g';
 	}
-	throw std::invalid_argument("Unknown crypto type");
+	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type");
 }
 
 t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 	switch(name) {
 		case 'x': return e_crypto_system_type_X25519;
+		case 'e': return e_crypto_system_type_Ed25519;
+		case 't': return e_crypto_system_type_ntru128;
+		case 'g': return e_crypto_system_type_geport_todo;
 	}
 	throw std::invalid_argument("Unknown crypto type");
 }
