@@ -80,6 +80,7 @@ target_link_libraries(test.elf tunserver gtest sodium sodiumpp)
 add_custom_target(run
 		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
+		DEPENDS ./test.elf
 		WORKING_DIRECTORY ./)
 
 add_custom_target(runcli
