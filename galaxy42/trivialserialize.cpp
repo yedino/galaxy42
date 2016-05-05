@@ -3,6 +3,8 @@
 
 #include "trivialserialize.hpp"
 
+#include "strings_utils.hpp"
+
 
 using namespace std;
 
@@ -40,6 +42,11 @@ void generator::push_bytes_n(size_t size, const std::string & data) {
 }
 
 void generator::push_integer_uvarint(uint64_t val) {
+	// like in https://en.bitcoin.it/wiki/Protocol_documentation
+	if (val < 0xFD) {	push_integer_u<1>(val);	}
+	else if (val < 0xFFFF) { push_byte_u(0xFD); push_integer_u<2>(val); }
+	else if (val < 0xFFFFFFFF) { push_byte_u(0xFE); push_integer_u<4>(val); }
+	else { push_byte_u(0xFF); push_integer_u<8>(val); }
 }
 
 const std::string & generator::str() const { return m_str; }
@@ -93,7 +100,12 @@ std::string parser::pop_bytes_n(size_t size) {
 }
 
 uint64_t parser::pop_integer_uvarint() {
-	return 0;
+	// like in https://en.bitcoin.it/wiki/Protocol_documentation
+	unsigned char first = pop_byte_u();
+	if (first < 0xFD) {	return first;	}
+	else if (first == 0xFD) { return pop_integer_u<2,uint64_t>(); }
+	else if (first == 0xFE) { return pop_integer_u<4,uint64_t>(); }
+	else { assert(first==0xFF); return pop_integer_u<8,uint64_t>(); }
 }
 
 } // namespace
@@ -119,13 +131,15 @@ void trivialserialize::test_trivialserialize() {
 	gen.push_bytes_sizeoctets<3>("Octets3"+f, 100);
 	gen.push_bytes_sizeoctets<4>("Octets4"+f, 100);
 
-	vector<uint64_t> test_uvarint1 = {1,42,100,250, 0xFD,     0xFE,      0xFF,  1000,     0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFA };
+	vector<uint64_t> test_uvarint1 = {1,42,100,250, 0xFD,     0xFE,      0xFF,  1000,     0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFA};
 	// width should be:              {1,1,   1,  1,  1+2,     1+2,        1+2,  1+2,         1+2,        1+4,         1+8};
 	// serialization should be:                      FD,0,FD  FD,0,FE FD,0,FF  FD,(1000) FD,FFFF  FE,FFFFFFF  FF,FFFFFFFFA
+	test_uvarint1.push_back(0xDEADCAFEBEEF);
 
 	for (auto val : test_uvarint1) gen.push_integer_uvarint(val);
 
 	cout << "Serialized: [" << gen.str() << "]" << endl;
+	cout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
 
 	const string input = gen.str();
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , input );
