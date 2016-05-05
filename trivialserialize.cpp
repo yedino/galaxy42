@@ -54,6 +54,13 @@ void generator::push_varstring(const std::string &data) {
 	push_bytes_n(data.size(),data); // save the data
 }
 
+void generator::push_vector_string(const vector<string> & data) {
+	auto size = data.size(); // TODO const
+//	assert( size <= ) ); // TODO
+	push_integer_uvarint( data.size() );
+	for (decltype(size) i = 0; i<size; ++i) push_varstring(data.at(i));
+}
+
 const std::string & generator::str() const { return m_str; }
 
 
@@ -118,6 +125,14 @@ std::string parser::pop_varstring() { ///< Decode string of any length saved by 
 	return pop_bytes_n(size);
 }
 
+vector<string> parser::pop_vector_string() {
+	vector<string> ret; 
+	auto size = pop_integer_uvarint(); // TODO const
+	// assert( size <= (1LLU << 64LLU) ); // TODO
+	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_varstring() );
+	return ret;
+}
+
 } // namespace
 
 // ==================================================================
@@ -160,6 +175,8 @@ void trivialserialize::test_trivialserialize() {
 		string(400,'z'),
 	};
 	for (auto val : test_varstring) gen.push_varstring(val);
+
+	gen.push_vector_string( test_varstring );
 
 	cout << "Serialized: [" << gen.str() << "]" << endl;
 	cout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
@@ -205,6 +222,11 @@ void trivialserialize::test_trivialserialize() {
 		cerr<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 		bool ok = ( val_given == val_expected );
 		if (!ok) throw std::runtime_error("Failed test for expected value " + (val_expected));
+	}
+	auto test_varstring_LOADED = parser.pop_vector_string();
+
+	for (auto val_given : test_varstring_LOADED) {
+		cerr<<"vector string decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 	}
 
 }

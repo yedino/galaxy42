@@ -96,6 +96,10 @@ class generator {
 		void push_integer_uvarint(uint64_t val); ///< Encode unsigned int dynamically on 1,3,5,9 octets like Bitcoin's CompactSize
 
 		void push_varstring(const std::string &data); ///< Encode entire string of any length (but < max uint64) in dynamic format.
+		
+		/// === high level interface - handling data structures ===
+
+		void push_vector_string(const vector<string> & data); ///< Save vector<string>
 
 		/// === export the result ===
 
@@ -187,6 +191,11 @@ class parser {
 
 		uint64_t pop_integer_uvarint(); ///< Decode unsigned int of 1,3,5,9 octets saved by push_integer_uvarint
 		std::string pop_varstring(); ///< Decode string of any length saved by push_varstring()
+
+		/// === high level interface - handling data structures ===
+
+		vector<string> pop_vector_string(); ///< Decode a vector<string> object saved with push_vector_string
+
 };
 
 
