@@ -89,7 +89,7 @@ Serialized pubkeys: [(104)[
 		if (pubkeys_of_this_system.size()) { // save them this time 
 			++used_types_check;
 			assert(ix < std::numeric_limits<unsigned char>::max()); // save the type
-			gen.push_integer_u<1>(ix);
+			gen.push_byte_u(  t_crypto_system_type_to_ID(ix) ); // save key type
 			gen.push_vector_string( pubkeys_of_this_system ); // save the vector of keys
 			_info("Generating serialize - so far - " << to_debug(gen.str()));
 		}
@@ -259,7 +259,7 @@ bool alltests() {
 } // namespace
 
 
-// TODO(janek): case as enum name
+// TODO(janek): case as enum name . warning: new enum types added
 // TODO(janek) fix identation
 		std::string t_crypto_system_type_to_name(int val) {
 			switch(val) {
@@ -278,7 +278,8 @@ char t_crypto_system_type_to_ID(int val) {
 	switch(val) {
 		case e_crypto_system_type_X25519: return 'x';
 		case e_crypto_system_type_Ed25519: return 'e';
-		case e_crypto_system_type_ntru128: return 't';
+		case e_crypto_system_type_ntru: return 't';
+		case e_crypto_system_type_SIDH: return 's';
 		case e_crypto_system_type_geport_todo: return 'g';
 	}
 	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (val == " + std::to_string(val) + ")");
@@ -288,7 +289,8 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 	switch(name) {
 		case 'x': return e_crypto_system_type_X25519;
 		case 'e': return e_crypto_system_type_Ed25519;
-		case 't': return e_crypto_system_type_ntru128;
+		case 't': return e_crypto_system_type_ntru;
+		case 's': return e_crypto_system_type_SIDH;
 		case 'g': return e_crypto_system_type_geport_todo;
 	}
 	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " + name + ")");
@@ -323,7 +325,7 @@ void c_multikeys_PAIR::generate() {
 	_info("(fake) NTru generating..."); // XXX TODO
 	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
 	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
-	this->add_public_and_PRIVATE( e_crypto_system_type_ntru128 , key_pub , key_PRIV ); // XXX TODO test!
+	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRIV ); // XXX TODO test!
 	}
 
 	string serialized = this->m_pub.serialize_bin();
