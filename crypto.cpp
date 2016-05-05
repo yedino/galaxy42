@@ -14,18 +14,50 @@ t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_system_type_multikey_pub; }
 
-bool c_multikeys_pub::operator >(const c_multikeys_pub &rhs) const {
-	// TODO review this !!!
-	for (size_t i = 0; i < m_cryptolists_pubkey.size(); ++i) {
-		if (m_cryptolists_pubkey.at(i).empty() || rhs.m_cryptolists_pubkey.at(i).empty()) continue;
-		return m_cryptolists_pubkey.at(0) > rhs.m_cryptolists_pubkey.at(0);
-	}
-	return false;
-}
-
 t_crypto_system_type c_multikeys_PRIV::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
+
+// ==================================================================
+
+bool c_multikeys_pub::operator>(const c_multikeys_pub &rhs) const {
+	return this->get_hash() > rhs.get_hash();
+}
+
+std::string c_multikeys_pub::get_hash() const {
+	if (m_hash_cached=="") update_hash();
+	assert(m_hash_cached != "");
+	return m_hash_cached;
+}
+
+void c_multikeys_pub::update_hash() const {
+	string all_pub; // all public keys together
+
+	// TODO
+
+	/*
+
+	// "aaa" "bbb" - 	"aaa;bbb"
+  //  "aaa;bb" "b"
+
+	for (size_t i = 0; i < m_cryptolists_pubkey.size(); ++i) {
+		//if (m_cryptolists_pubkey.at(i).empty() || rhs.m_cryptolists_pubkey.at(i).empty()) continue;
+		//return m_cryptolists_pubkey.at(0) > rhs.m_cryptolists_pubkey.at(0);
+	}
+	*/
+
+	m_hash_cached="(hash-todo)";
+}
+
+std::string c_multikeys_pub::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
+	trivialserialize::generator gen(100);
+
+	for (unsigned long ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type
+		const auto & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix);
+		_info("Cryptosystem: " << t_crypto_system_type_to_ID(ix) );
+	}
+	return gen.str();
+}
 
 // ==================================================================
 
@@ -202,6 +234,24 @@ bool alltests() {
 			}
 			return "UNKNOWN";
 		}
+
+char t_crypto_system_type_to_ID(int val) {
+	switch(val) {
+		case e_crypto_system_type_X25519: return 'x';
+		case e_crypto_system_type_Ed25519: return 'e';
+		case e_crypto_system_type_ntru128: return 't';
+		case e_crypto_system_type_geport_todo: return 'g';
+	}
+	throw std::invalid_argument("Unknown crypto type");
+}
+
+t_crypto_system_type t_crypto_system_type_from_ID(char name) {
+	switch(name) {
+		case 'x': return e_crypto_system_type_X25519;
+	}
+	throw std::invalid_argument("Unknown crypto type");
+}
+
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
