@@ -104,6 +104,8 @@ std::string to_string( const std::array<T,N> & obj ) {
 	return oss.str();
 }
 
+std::string to_debug(const std::string & data);
+
 #endif
 
 

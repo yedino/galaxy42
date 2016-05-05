@@ -52,10 +52,49 @@ void c_multikeys_pub::update_hash() const {
 std::string c_multikeys_pub::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
 	trivialserialize::generator gen(100);
 
-	for (unsigned long ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type
-		const auto & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix);
-//		t_crypto_system_type_to_ID(ix);
+	/** 
+	A sparse "map" of keys type => of vectors of strings
+
+	format: there are 2 types of keys: ( 
+		keys type 5:  ( 3 keys of this type: varstr varstr varstr )  
+		keys type 42: ( 2 keys of this type: varstr varstr ) )  
+
+	format: 2 ( 5 ( 3 varstr varstr varstr )  42 ( 2 varstr varstr ) )  
+
+Example (as of commit after d3b9872f758a90541dde8fc2cf45a97b691e1a17)
+Serialized pubkeys: [(104)[
+0x02(02) - two key types
+0x15(21) - first type is 21 (enum numbers changed for the test)
+0x02(02) - two pieces of this key:
+, , - it is a 32 char string
+0x9f(159),0x9e(158),0x09(09),,+,V,0xc6(198),g,*,b,0xf3(243),w,a,,0x9d(157),0xf1(241),0xd6(214),0xdd(221),0x83(131),X,0xd0(208),0x97(151),0xbd(189),0xef(239),0xc6(198),z,U,0x97(151),0xd4(212),0x10(16),u,;
+, ,0x11(17),3,\,0xe0(224),0xdc(220),0xc7(199),H,0xed(237),0x81(129),X,0xd1(209),0xca(202),=,A,0x15(21),0xd3(211),V,0xc0(192),&,0x90(144),",{,0xe4(228),0xaa(170),0x92(146),0xa2(162),0x85(133),0xd6(214),2,0xb7(183),0xcd(205),0x04(04),
+
+0x17(23) - now key type 23,
+0x01(01) - 1 piece of it
+, ,f,0x80(128),0x81(129),$,0x98(152),0x89(137),0x0f(15),0xde(222),0xbc(188),0xbc(188),0x1f(31),g,0xc9(201),R,6,0x94(148),j,0xd2(210),0x8f(143),0xd5(213),0x98(152),q,0xb7(183),3,[,0xb2(178),0xb4(180),0x8c(140),0xa5(165),0xdf(223),.,b]]
+	*/
+
+	int used_types=0; // count how many key types are actually used
+	for (unsigned int ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type (for each element)
+		const vector<string> & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix); // take vector of keys
+		if (pubkeys_of_this_system.size()) ++used_types; // << count them
 	}
+
+	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
+	_info("Generating serialize - so far - " << to_debug(gen.str()));
+	int used_types_check=0; // counter just to assert
+	for (unsigned int ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type (for each element)
+		const vector<string> & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix); // take vector of keys
+		if (pubkeys_of_this_system.size()) { // save them this time 
+			++used_types_check;
+			assert(ix < std::numeric_limits<unsigned char>::max()); // save the type
+			gen.push_integer_u<1>(ix);
+			gen.push_vector_string( pubkeys_of_this_system ); // save the vector of keys
+			_info("Generating serialize - so far - " << to_debug(gen.str()));
+		}
+	}
+	assert(used_types_check == used_types); // we written same amount of keys as we previously counted
 	return gen.str();
 }
 
@@ -273,11 +312,22 @@ void c_multikeys_PAIR::debug() const {
 void c_multikeys_PAIR::generate() {
 	_info("Generting keypair");
 
+	for (int i=0; i<2; ++i) {
 	_info("X25519 generating...");
 	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
 	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
-
 	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRIV );
+	}
+
+	for (int i=0; i<1; ++i) {
+	_info("(fake) NTru generating..."); // XXX TODO
+	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
+	this->add_public_and_PRIVATE( e_crypto_system_type_ntru128 , key_pub , key_PRIV ); // XXX TODO test!
+	}
+
+	string serialized = this->m_pub.serialize_bin();
+	_info("Serialized pubkeys: [" << to_debug(serialized) << "]");
 }
 
 
