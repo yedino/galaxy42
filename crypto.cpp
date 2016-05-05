@@ -113,7 +113,9 @@ c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() const {
 
 
 
-c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(const t_PRIVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub) {
+c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(
+const t_PRIVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub)
+{
 	using namespace ecdh_ChaCha20_Poly1305;
 	keypair_t my_keys;
 	std::copy(my_priv.bytes.begin(), my_priv.bytes.end(), my_keys.privkey.begin());
@@ -186,6 +188,8 @@ bool alltests() {
 } // namespace
 
 
+// TODO(janek): case as enum name
+// TODO(janek) fix identation
 		std::string t_crypto_system_type_to_name(int val) {
 			switch(val) {
 				case 1:			return "X25519";
@@ -205,7 +209,7 @@ void c_multikeys_PAIR::debug() const {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
 		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
-		for(int iy=0; iy<m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
+		for(int iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
 			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
 			_info("  PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
 		}
@@ -264,7 +268,7 @@ c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & 
 	return tunnel;
 }
 
-c_crypto_system::t_symkey 
+c_crypto_system::t_symkey
 c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	// used in constructor!
 	std::string dh_shared_part1 = sodiumpp::crypto_scalarmult(
@@ -292,7 +296,7 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	:
 	m_usable_key( calculate_usable_key(self, them) ), // calculate UK and save it, and now use it:
 	m_nonce_odd( calculate_nonce_odd( self, them)),
-	m_boxer( 
+	m_boxer(
 		sodiumpp::boxer_base::boxer_type_shared_key(),
 		m_nonce_odd ,
 		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
@@ -310,14 +314,20 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 }
 
 void test_crypto() {
+
+	// Create IDC:
+
+	// Alice:
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
+	// Bob:
 	c_multikeys_PAIR keypairB;
 	keypairB.generate();
 
 	c_multikeys_pub keypubB = keypairB.m_pub;
 
+	// Create KCT and CT (CTE?)
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
 
 	return ;
@@ -354,9 +364,9 @@ void test_crypto() {
 	typedef sodiumpp::nonce64 t_crypto_nonce;
 	using sodiumpp::boxer_base;
 
-	sodiumpp::boxer< t_crypto_nonce > Alice_boxer  ( boxer_base::boxer_type_shared_key() , 
+	sodiumpp::boxer< t_crypto_nonce > Alice_boxer  ( boxer_base::boxer_type_shared_key() ,
 	(Alice_dh_pk > Bob_dh_pk) ,
-	sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) 
+	sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary)
 	);
 
 	sodiumpp::unboxer< t_crypto_nonce > Alice_unboxer( boxer_base::boxer_type_shared_key() , ! (Alice_dh_pk > Bob_dh_pk) , sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
