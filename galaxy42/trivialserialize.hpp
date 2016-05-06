@@ -160,22 +160,35 @@ it must be technically valid, e.g. not nullptr string).
 And this asserts must be always-on, because this is for parsing unsafe external data. TODO(r) abort() that can not be disabled
 */
 class parser {
+	private:
+		// TODO(r): pick a guideline and use existing view idiom like that:
+		const char * const  m_data_begin; ///< the begining of string
+		const char * m_data_now; ///< current position (must be inside string, must be in range begin..end)
+		const char * const m_data_end;
+
 	public:
 		struct tag_caller_must_keep_this_string_valid {} ;
 		struct tag_caller_must_keep_this_buffer_valid {} ;
-
-		// TODO(r): pick a guideline and use existing view idiom like that:
-		const char * m_data_begin; ///< the begining of string
-		const char * m_data_now; ///< current position (must be inside string, must be in range begin..end)
-		const char * m_data_end;
 
 		parser( tag_caller_must_keep_this_string_valid x , const std::string & data_str);
 		parser( tag_caller_must_keep_this_buffer_valid x , const char * buf , size_t size);
 
 		/// === static interface - you need to specify exact (or maximum) data size youself ===
 
+		/**
+		 * \par Exception safety
+		 * strong exception guarantee
+		 */
 		unsigned char pop_byte_u();
+		/**
+		 * \par Exception safety
+		 * strong exception guarantee
+		 */
 		signed char pop_byte_s();
+		/**
+		 * \par Exception safety
+		 * strong exception guarantee
+		 */
 		void pop_byte_skip(char c); // read expected character (e.g. a delimiter)
 
 		// TODO(r) deduce type T fitting from S octets:
@@ -186,7 +199,7 @@ class parser {
 		//< that was saved using push_bytes_n(). N can be 0.
 
 		template <int S> std::string pop_bytes_sizeoctets();
-		
+
 		/// === dynamic interface - easy handling data of any runtime size without thinking about it yourself ===
 
 		uint64_t pop_integer_uvarint(); ///< Decode unsigned int of 1,3,5,9 octets saved by push_integer_uvarint

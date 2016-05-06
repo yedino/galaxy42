@@ -40,3 +40,10 @@ TEST(serialize, get_bad_type) {
 		trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
 	ASSERT_THROW(parser.pop_varstring(), std::exception);
 }
+
+TEST(serialize, get_from_empty_string) {
+	std::string empty("");
+	trivialserialize::parser parser(
+		trivialserialize::parser::tag_caller_must_keep_this_string_valid() , empty );
+	ASSERT_THROW((parser.pop_integer_u<1, uint8_t>()), std::exception);
+}
