@@ -189,23 +189,36 @@ class c_multikeys_PAIR {
 		virtual t_crypto_system_type get_system_type() const;
 };
 
+/**
+* Crypto primitives are provided by - sodiumpp library (and NTru, SIDH, Geport - in future - TODO)
+* Raw symmetric encryption - done by c_stream_crypto
+* Adding needed crypto data - nonce constant, nonce counter - done by c_crypto_tunnel
+* Downloading pubkeys, adding other meta-data, transport - are to be done by other, higher layers.
+*/
 
-/*** The finall crypto of the stream */
+
+/** 
+* The KCT crypto system of the stream, ready for finall use.
+* It does only the main crypto algorithm.
+*/
 class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
-		t_symkey m_usable_key; ///< UK (a.k.a. "K") is the finall key to be used on the streams
+		t_symkey m_usable_key; ///< the KCT for this stream
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
 
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
-
+		
 	public:
 		virtual t_crypto_system_type get_system_type() const;
 
 		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+
+		std::string box(const std::string & msg);
+		std::string unbox(const std::string & msg);
 
 	private:
 		static t_symkey calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
@@ -221,6 +234,9 @@ class c_crypto_tunnel final {
 	public:
 		c_crypto_tunnel()=default;
 		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+
+		std::string box(const std::string & msg);
+		std::string unbox(const std::string & msg);
 };
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);

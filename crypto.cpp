@@ -337,6 +337,18 @@ c_crypto_system::t_PRIVkey c_multikeys_PRIV::get_private(t_crypto_system_type cr
 	return m_cryptolists_PRIVkey.at(crypto_type).at(number_of_key);
 }
 
+std::string c_stream_crypto::box(const std::string & msg) {
+	_info("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	return m_boxer.box(msg).to_binary();
+}
+
+std::string c_stream_crypto::unbox(const std::string & msg) {
+	_info("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
+}
+
+
+
 
 void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_pubkey & pubkey ,
@@ -360,6 +372,16 @@ c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & 
 	return tunnel;
 }
 
+
+std::string c_crypto_tunnel::box(const std::string & msg) {
+	return m_stream_crypto->box(msg);
+}
+
+std::string c_crypto_tunnel::unbox(const std::string & msg) {
+	return m_stream_crypto->unbox(msg);
+}
+
+
 c_crypto_system::t_symkey
 c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	// used in constructor!
@@ -370,7 +392,7 @@ c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_mu
 
 	// TODO: and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
 	string dh_shared_ready = self.m_PRIV.Hash1( dh_shared_part1 ).substr(0,crypto_secretbox_KEYBYTES);
-	_info("DH based key to use: " << dh_shared_ready );
+	_info("DH based key to use: " << to_debug(dh_shared_ready) );
 
 	return dh_shared_ready;
 }
@@ -399,6 +421,8 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
 	)
 {
+	_note("Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd 
+		<< " and m_usable_key=" << to_debug( m_usable_key ) );
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
@@ -406,6 +430,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 }
 
 void test_crypto() {
+	/*
 
 	// Create IDC:
 
@@ -417,14 +442,22 @@ void test_crypto() {
 	c_multikeys_PAIR keypairB;
 	keypairB.generate();
 
+	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
 
-	// Create KCT and CT (CTE?)
+	// Create KCT and CT (e.g. CTE?)
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
+	c_crypto_tunnel BobCT  (keypairB, keypubA);
+
+	auto msg1s = AliceCT.box("Hello");
+	_info("Boxed to:  " << to_debug(msg1s));
+	auto msg1r = BobCT.unbox(msg1s);
+	_info("Tunneled message: " << msg1r << " from encrypted: " << to_debug(msg1s));
 
 	return ;
+*/
 
-#if 0
+#if 1
 	// the goal:
 	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
 	string app_msg;
