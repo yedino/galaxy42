@@ -12,7 +12,7 @@
 	url = https://github.com/boostorg/serialization
 [submodule "googletest"]
 	path = googletest
-	url = ../googletest
+	url =  https://github.com/google/googletest
 [submodule "sodiumpp"]
 	path = sodiumpp
 	url = https://github.com/tigusoft/sodiumpp
