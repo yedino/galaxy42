@@ -10,31 +10,31 @@ using namespace std;
 
 namespace trivialserialize {
 
-const char * format_error::what() const noexcept { 
+const char * format_error::what() const noexcept {
 	return "format-error in trivialserialize"; }
 
-const char * format_error_read::what() const noexcept { 
+const char * format_error_read::what() const noexcept {
 	return "format-error in trivialserialize while reading, input data is invalid"; }
 
-const char * format_error_read_badformat::what() const noexcept { 
+const char * format_error_read_badformat::what() const noexcept {
 	return "format-error in trivialserialize while reading, but it seems the format definition in the program is wrong"; }
 
-const char * format_error_read_delimiter::what() const noexcept { 
+const char * format_error_read_delimiter::what() const noexcept {
 	return "format-error in trivialserialize while reading, input data is invalid, the delimiter was wrong."; }
 
 
-const char * format_error_write::what() const noexcept { 
+const char * format_error_write::what() const noexcept {
 	return "format-error in trivialserialize while writting, the given data can not be serialized"; }
 
-const char * format_error_write_too_long::what() const noexcept { 
+const char * format_error_write_too_long::what() const noexcept {
 	return "format-error in trivialserialize while writting, the given data can not be serialized - "
 	"because data is too long (e.g. binary string)"; }
 
-const char * format_error_write_value_too_big::what() const noexcept { 
+const char * format_error_write_value_too_big::what() const noexcept {
 	return "format-error in trivialserialize while writing - value was too big over limit"; }
 
 
-const char * format_error_read_invalid_version::what() const noexcept { 
+const char * format_error_read_invalid_version::what() const noexcept {
 	return "format-error in trivialserialize while reading - the given version/magic number is not allowed"; }
 
 
@@ -138,14 +138,14 @@ std::string parser::pop_varstring() { ///< Decode string of any length saved by 
 }
 
 vector<string> parser::pop_vector_string() {
-	vector<string> ret; 
+	vector<string> ret;
 	auto size = pop_integer_uvarint(); // TODO const
 	// assert( size <= (1LLU << 64LLU) ); // TODO
 	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_varstring() );
 	return ret;
 }
 
-		
+
 bool parser::is_end() const {
 	return m_data_now >= m_data_end ;
 }
@@ -153,7 +153,7 @@ bool parser::is_end() const {
 void parser::debug() const {
 	_info("Currently at POS octet number:" << (size_t)(m_data_now - m_data_begin));
 }
-		
+
 
 } // namespace
 
