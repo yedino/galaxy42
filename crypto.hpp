@@ -233,7 +233,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 		std::string unbox(const std::string & msg);
 
 	private:
-		static t_symkey calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
+		static t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
 };
