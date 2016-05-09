@@ -144,17 +144,29 @@ class generator {
 		void push_bytes_octets_and_size(unsigned char octets, size_t max_size, const std::string & data);
 };
 
+/**
+ * Calculates the maximum value of unsigned integer written in binary notation that can fit given S octets.
+ This function is written so that calculating of this maximum value will not even temporarly/correctly overflow
+ the integers, to silence compiler warnings.
+*/
+template <int S> uint64_t get_max_value_of_S_octet_uint() {
+	// TODO(rob): we could use unit tests for this
+	static_assert( ( (S*8) <= 64) , "Size S is too big to calculate it's max value on this data types.");
+	return
+	  ( 0xFFLLU << (S-1)*8 ) // this is the FF 00 00 00 part (on example of S=4)
+	    | // binary-or joins both parts, since the "empty" bits in them are 0
+		( (1LLU << ((S-1)*8)) - 1 ); // this is the 00 FF FF FF part, calculated from from 01 00 00 00
+}
+
 template <int S, typename T> void generator::push_integer_u(T value) {
 	static_assert( std::is_unsigned<T>() , "This function saves only unsigned types, pass it unsigned or use other function.");
 	static_assert( S>0 , "S must be > 0");
 	static_assert( S<=8 , "S must be <= 8");
 
-	if (S==8) { // make this variant to even COMPILE only for S==8 and the other one not compile to fix unneeded warning
-		//cerr<<S<<endl;
+	if (S==8) {
 		if ( value >= 0xFFFFFFFFFFFFFFFF ) throw format_error_write_value_too_big();
 	} else {
-		//cerr<<S<<endl;
-		if ( value >= ( (1ULL<<(8*S))  -1) ) throw format_error_write_value_too_big();
+		if ( value >= get_max_value_of_S_octet_uint<S>() ) throw format_error_write_value_too_big();
 	}
 
 	// TODO use proper type, depending on S
@@ -230,7 +242,7 @@ class parser {
 		template <int S, typename T> T pop_integer_u(); ///< Reads some unsigned integer-type S, into field that is S octets wide, as value of type T.
 		template <int S, typename T> T pop_integer_s(); ///< Reads some   signed integer-type S, into field that is S octets wide, as value of type T.
 
-		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always, 
+		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always,
 		//< that was saved using push_bytes_n(). N can be 0.
 
 		template <int S> std::string pop_bytes_sizeoctets();
@@ -256,7 +268,6 @@ class parser {
 
 		void debug() const; ///< do some debuggging as set by devel
 };
-
 
 template <int S, typename T> T parser::pop_integer_u() {
 	static_assert( std::is_unsigned<T>() , "This function saves only unsigned types, pass it unsigned or use other function.");
