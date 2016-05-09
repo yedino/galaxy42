@@ -6,16 +6,17 @@
 
 // ------------------------------------------------------------------
 
-t_peering_reference::t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey)
-	: t_peering_reference( peering_addr , string_as_bin( peering_pubkey ) )
+t_peering_reference::t_peering_reference(const string &peering_addr, int port, const string_as_hex &peering_pubkey)
+	: t_peering_reference( c_ip46_addr(peering_addr, port) , string_as_bin( peering_pubkey ) )
 // ^--- why no warning about unused peering_pubkey. cmake-TODO(u)
 // also needs asserts on size of the crypto key assert-TODO(r)
 { }
 
 t_peering_reference::t_peering_reference(const c_ip46_addr &peering_addr, const string_as_bin &peering_pubkey)
 	: pubkey( peering_pubkey ) , haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , peering_pubkey ) , peering_addr( peering_addr )
-{ 
-	_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << ", and this is: " << (*this) );
+{
+	_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << " on port="
+		  << peering_addr.get_assign_port() << ", and this is: " << (*this) );
 }
 
 // ------------------------------------------------------------------

@@ -9,15 +9,15 @@ c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
 	return m_tag;
 }
 
-c_ip46_addr::c_ip46_addr(const std::string &ip_str) {
+c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) {
 	// ports-TODO(r) also parse the port here
-	int port=9042;
-	if (is_ipv4(ip_str)) {
-		(*this) = create_ipv4(ip_str, port);
+	// TODO parsing ipv6
+	if (is_ipv4(ip_addr)) {
+		(*this) = create_ipv4(ip_addr, port);
 	} else {
-		(*this) = create_ipv6(ip_str, port);
+		(*this) = create_ipv6(ip_addr, port);
 	}
-	_info("Parsing ip46 from string ["<<ip_str<<"] created: " << (*this));
+	_info("Parsing ip46 from string ["<<ip_addr<<":" << port << "] created: " << (*this));
 }
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
@@ -43,8 +43,8 @@ sockaddr_in6 c_ip46_addr::get_ip6() const {
 	_assert(ret.sin6_family == AF_INET6);
 	return ret;
 }
-
-c_ip46_addr c_ip46_addr::any_on_port(int port) { ///< return my address, any IP (e.g. for listening), on given port
+///< return my address, any IP (e.g. for listening), on given port
+c_ip46_addr c_ip46_addr::any_on_port(int port) {
 	as_zerofill< sockaddr_in > addr_in;
 	addr_in.sin_family = AF_INET;
 	addr_in.sin_port = htons(port);
@@ -101,13 +101,13 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 		char addr_str[INET_ADDRSTRLEN];
 		auto ip4_address = addr.get_ip4();
 		inet_ntop(AF_INET, &ip4_address.sin_addr, addr_str, INET_ADDRSTRLEN);
-		out << addr_str;
+		out << addr_str << ":" << addr.get_assign_port();
 	}
 	else if (addr.m_tag == c_ip46_addr::tag_ipv6) {
 		char addr_str[INET6_ADDRSTRLEN];
 		auto ip6_address = addr.get_ip6();
 		inet_ntop(AF_INET6, &ip6_address.sin6_addr, addr_str, INET6_ADDRSTRLEN);
-		out << addr_str;
+		out << addr_str << ":" << addr.get_assign_port();
 	}
 	else {
 		out << "none";

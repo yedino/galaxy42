@@ -38,7 +38,6 @@ const char * g_demoname_default = "route_dij";
 #include <string>
 #include <iomanip>
 #include <algorithm>
-#include <regex>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -499,7 +498,7 @@ class c_tunserver : public c_galaxy_node {
 		 * @throw std::invalid_argument
 		 * Exception safety: strong exception guarantee
 		 */
-		std::pair<std::string, unsigned int> parse_ip_string(const std::string &ip_string);
+		std::pair<string,int> parse_ip_string(const std::string &ip_string);
 };
 
 // ------------------------------------------------------------------
@@ -513,11 +512,11 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	string part_pub = simple.substr(pos1+1);
 	try {
 		std::cout << part_ip << " -- " << part_pub << std::endl;
-		auto ip_pair = parse_ip_string(part_ip);
+		auto ip_pair = tunserver_utils::parse_ip_string(part_ip);
 		_note("Simple string parsed as: " << part_ip << " and " << part_pub );
 		_note("ip address " << ip_pair.first);
 		_note("port: " << ip_pair.second);
-		this->add_peer( t_peering_reference( ip_pair.first, string_as_hex( part_pub ) ) );
+		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second ,string_as_hex( part_pub ) ) );
 	}
 	catch (const std::exception &e) {
 		_erro(e.what()); // TODO throw?
@@ -738,20 +737,6 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 	for(auto & v : m_peer) { if (v.second->get_pip() == ip) return * v.second.get(); }
 	throw std::runtime_error("We do not know a peer with such IP=" + STR(ip));
 }
-
-std::pair< std::string, unsigned int > c_tunserver::parse_ip_string(const string& ip_string) {
-	//std::regex pattern(R"((\d\.{1,3}){3}\d{1,3}\:\d{1,5})"); // i.e. 127.0.0.1:4562
-	std::regex pattern("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5}"); // i.e. 127.0.0.1:4562
-	std::smatch result;
-	if (!std::regex_search(ip_string, result, pattern)) { // bad argument
-		throw std::invalid_argument("bad format of input ip address");
-	}
-	size_t pos = ip_string.find(':');
-	std::string ip = ip_string.substr(0, pos);
-	std::string port = ip_string.substr(pos+1);
-	return std::make_pair(std::move(ip), std::stoi(port));
-}
-
 
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
@@ -1292,7 +1277,7 @@ int main(int argc, char **argv) {
 			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
-			("gen-config", "Denerate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf\n-connect_to.seed.conf\n"
+			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf\n-connect_to.seed.conf\n"
 						   "*** this could overwrite your actual configurations ***")
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")

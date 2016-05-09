@@ -20,16 +20,29 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
 
 		c_ip46_addr();
-		c_ip46_addr(const std::string &ip_str); // port-TODO(r) rename to ip_port_str when port parsing works
+		/// Default port: 9042
+		c_ip46_addr(const std::string &ip_addr, int port = 9042);
 
 		void set_ip4(sockaddr_in in4);
 		void set_ip6(sockaddr_in6 in6);
+
 		sockaddr_in  get_ip4() const;
 		sockaddr_in6 get_ip6() const;
 
 		t_tag get_ip_type() const;
+		int get_assign_port() const {
+			if(m_tag == tag_ipv4) {
+				return ntohs(m_ip_data.in4.sin_port);
+			} else if (m_tag == tag_ipv6){
+				return ntohs(m_ip_data.in6.sin6_port);
+			} else {
+				assert(false && "c_ip46_addr has bad ip type");
+			}
+		}
 
-		static c_ip46_addr any_on_port(int port); ///< return my address, any IP (e.g. for listening), on given port. it should listen on both ipv4 and 6
+		/// return my address, any IP (e.g. for listening), on given port.
+		/// it should listen on both ipv4 and 6
+		static c_ip46_addr any_on_port(int port);
 		static c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
 		static c_ip46_addr create_ipv6(const std::string &ipv6_str, int port);
 

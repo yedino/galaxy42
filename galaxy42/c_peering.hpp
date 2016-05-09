@@ -9,7 +9,7 @@
 
 struct t_peering_reference {
 	public:
-		t_peering_reference(const string &peering_addr, const string_as_hex &peering_pubkey); // input data from strings e.g. from config text
+		t_peering_reference(const string &peering_addr, int port, const string_as_hex &peering_pubkey); // input data from strings e.g. from config text
 		t_peering_reference(const c_ip46_addr & peering_addr, const string_as_bin &peering_pubkey); // input data from binary data
 
 	public:
