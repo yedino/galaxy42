@@ -175,6 +175,8 @@ class c_multikeys_PRIV : public c_crypto_system {
 		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey);
 		t_PRIVkey get_private(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		virtual t_crypto_system_type get_system_type() const;
+		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
+		size_t get_count_of_systems() const; ///< how many key types?
 };
 
 class c_multikeys_PAIR {

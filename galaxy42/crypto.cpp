@@ -16,6 +16,14 @@ t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_multikeys_PRIV::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
+size_t c_multikeys_PRIV::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
+	return m_cryptolists_PRIVkey.at(crypto_type).size();
+}
+
+size_t c_multikeys_PRIV::get_count_of_systems() const {
+	return m_cryptolists_PRIVkey.size();
+}
+
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
 // ==================================================================
@@ -39,14 +47,14 @@ void c_multikeys_pub::update_hash() const {
 std::string c_multikeys_pub::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
 	trivialserialize::generator gen(100);
 
-	/** 
+	/**
 	A sparse "map" of keys type => of vectors of strings
 
-	format: there are 2 types of keys: ( 
-		keys type 5:  ( 3 keys of this type: varstr varstr varstr )  
-		keys type 42: ( 2 keys of this type: varstr varstr ) )  
+	format: there are 2 types of keys: (
+		keys type 5:  ( 3 keys of this type: varstr varstr varstr )
+		keys type 42: ( 2 keys of this type: varstr varstr ) )
 
-	format: 2 ( 5 ( 3 varstr varstr varstr )  42 ( 2 varstr varstr ) )  
+	format: 2 ( 5 ( 3 varstr varstr varstr )  42 ( 2 varstr varstr ) )
 
 Example (as of commit after d3b9872f758a90541dde8fc2cf45a97b691e1a17)
 Serialized pubkeys: [(104)[
@@ -73,7 +81,7 @@ Serialized pubkeys: [(104)[
 	int used_types_check=0; // counter just to assert
 	for (unsigned int ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type (for each element)
 		const vector<string> & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix); // take vector of keys
-		if (pubkeys_of_this_system.size()) { // save them this time 
+		if (pubkeys_of_this_system.size()) { // save them this time
 			++used_types_check;
 			assert(ix < std::numeric_limits<unsigned char>::max()); // save the type
 			gen.push_byte_u(  t_crypto_system_type_to_ID(ix) ); // save key type
@@ -392,14 +400,16 @@ std::string c_crypto_tunnel::unbox(const std::string & msg) {
 
 
 c_crypto_system::t_symkey
-c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
+c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
 	// used in constructor!
 
-	assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
-	// TODO assert self priv == them priv;    
+	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
+	assert(self.m_PRIV.get_count_of_systems() == them.get_count_of_systems());
+	// TODO assert self priv == them priv;
+	assert(self.m_PRIV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
-	for (unsigned long ix=0; ix<self.m_pub.m_cryptolists_pubkey.size(); ++ix) { // all key crypto systems
+	/*for (unsigned long ix=0; ix<self.m_pub.m_cryptolists_pubkey.size(); ++ix) { // all key crypto systems
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
 		_info("Exchanging for Cryptosystem: " << t_crypto_system_type_to_name(ix) );
@@ -407,7 +417,7 @@ c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_mu
 			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
 			_info("  PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
 		}
-	}
+	}*/
 
 
 
@@ -449,8 +459,8 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(42)), sodiumpp::encoding::binary) // nonce
 	)
 {
-	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd 
-		<< " and m_KCT=" << to_debug( m_KCT ) 
+	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
+		<< " and m_KCT=" << to_debug( m_KCT )
 		);
 	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
 	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
@@ -482,7 +492,7 @@ void test_crypto() {
 
 	// generate ephemeral keys
 
-	_warn("WARNING: this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, " 
+	_warn("WARNING: this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
 
 	_note("Alice will box:");
