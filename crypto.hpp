@@ -205,7 +205,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
-		t_symkey m_usable_key; ///< the KCT for this stream
+		t_symkey m_KCT; ///< the KCT for this stream
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
 
