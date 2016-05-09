@@ -409,17 +409,25 @@ c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self, const c_mul
 	assert(self.m_PRIV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
-	/*for (unsigned long ix=0; ix<self.m_pub.m_cryptolists_pubkey.size(); ++ix) { // all key crypto systems
-		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
-		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
-		_info("Exchanging for Cryptosystem: " << t_crypto_system_type_to_name(ix) );
-		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy) { // all keys of this sytem
-			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
-			_info("  PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
+
+
+	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
+
+		// for given crypto system:
+		if (sys == e_crypto_system_type_X25519) {
+			auto key_count_a = self.m_pub.get_count_keys_in_system(int_to_enum<t_crypto_system_type>(sys));
+			auto key_count_b = self.m_pub.get_count_keys_in_system(int_to_enum<t_crypto_system_type>(sys));
+			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
+			auto key_count_bigger = std::max( key_count_a , key_count_b );
+
+			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
+				auto keynr_a = keynr_i % key_count_a;
+				auto keynr_b = keynr_i % key_count_b;
+				_info("kex " << keynr_a << " " << keynr_b);
+			}
 		}
-	}*/
-
-
+	}
 
 	std::string dh_shared_part1 = sodiumpp::crypto_scalarmult(
 		self.m_PRIV.get_private( e_crypto_system_type_X25519, 0),
