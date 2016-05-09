@@ -421,7 +421,7 @@ std::string c_crypto_tunnel::unbox(const std::string & msg) {
 
 
 c_crypto_system::t_symkey
-c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
+c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
 	// used in constructor!
 
 	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
@@ -473,7 +473,7 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
 	:
-	m_KCT( calculate_usable_key(self, them) ), // calculate UK and save it, and now use it:
+	m_KCT( calculate_KCT(self, them) ), // calculate UK and save it, and now use it:
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
 	m_boxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
