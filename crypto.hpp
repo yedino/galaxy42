@@ -14,7 +14,9 @@ Glossary:
 IDP - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
 IDC - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
 It is authorized by his IDP. In Cjdns, IDP == IDC (there is no separation).
-IDCFP - ID Current From Permanent - full chain of crypto signatures, pubkeys, etc to prove ownership from HIP and IDP to given IDC.
+IDPtC - ID Current from Permanent - full chain of crypto signatures, pubkeys, etc to prove ownership from HIP and IDP to given IDC.
+
+IDP ------ signatures (IDPtC) ------> IDC
 
 HIP - Hash IP - the IP (here IPv6 always), that is a hash of some public key(s) - of his IDP.
 
@@ -133,8 +135,8 @@ class c_multikeys_pub : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
-
 		typedef std::array< vector< t_pubkey > , e_crypto_system_type_END	> t_cryptolists_pubkey;
+
 		t_cryptolists_pubkey m_cryptolists_pubkey; //< A "map" of public keys of given type, organized by their crypto type.
 		//< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
 
@@ -147,6 +149,8 @@ class c_multikeys_pub : public c_crypto_system {
 	public:
 		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
 		t_pubkey get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
+		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
+		size_t get_count_of_systems() const; ///< how many key types?
 		virtual t_crypto_system_type get_system_type() const;
 
 		string get_hash() const; ///< const, though it is allowed to update mutable field with cache of current hash
