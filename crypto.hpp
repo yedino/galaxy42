@@ -203,7 +203,7 @@ class c_multikeys_PAIR {
 */
 
 
-/** 
+/**
 * The KCT crypto system of the stream, ready for finall use.
 * It does only the main crypto algorithm.
 */
@@ -217,7 +217,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
-		
+
 	public:
 		virtual t_crypto_system_type get_system_type() const;
 

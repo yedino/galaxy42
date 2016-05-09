@@ -122,6 +122,21 @@ class expected_not_found : public stdplus::expected_exception {
 };
 
 
+template <typename TE, typename TI>
+TE int_to_enum(TI i) {
+	TE e = static_cast<TE>(i);
+	TI i_check = static_cast<TI>(e);
+	if (i_check != i) {
+		std::string err = "Can not convert integer " + std::to_string(i)
+		+ std::string(" to enum of type ") + std::string(typeid(TE).name())
+		+ std::string(" because it is truncated to other value: ") + std::to_string( i_check )
+		;
+		throw std::runtime_error(err);
+	}
+	return e;
+}
+
+
 }
 
 using namespace stdplus;
