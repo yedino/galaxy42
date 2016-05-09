@@ -109,7 +109,14 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 		std::string l_pubkey = peer_ref["publicKey"].asString();
 		std::cout 	<< "Peer ["<< i << "] : " << l_ip							//dbg
 					<< " with public key [" << l_pubkey << ']' <<  std::endl;		//dbg
-		peer_refs.emplace_back(t_peering_reference(l_ip, string_as_hex(l_pubkey)));
+
+		size_t pos = l_ip.find(':');
+		if(pos != std::string::npos) {
+			auto pair = tunserver_utils::parse_ip_string(l_ip);
+			peer_refs.emplace_back(t_peering_reference(pair.first, pair.second, string_as_hex(l_pubkey)));
+		} else {
+			peer_refs.emplace_back(t_peering_reference(l_ip, string_as_bin(l_pubkey)));
+		}
 		i++;
 	}
 }

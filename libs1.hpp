@@ -25,6 +25,7 @@
 #include <tuple>
 #include <iomanip>
 #include <unordered_set>
+#include <regex>
 
 #include "c_tnetdbg.hpp"
 
@@ -125,6 +126,10 @@ class expected_not_found : public stdplus::expected_exception {
 
 using namespace stdplus;
 
+namespace tunserver_utils {
 
+std::pair< std::string,int > parse_ip_string(const string& ip_string);
+
+}
 #endif
 

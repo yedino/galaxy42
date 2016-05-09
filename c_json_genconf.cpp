@@ -65,7 +65,7 @@ void c_json_genconf::generate_authpass_conf(const std::string &filename) {
 
 		conf_file << "{\n";
 		conf_file << "\t\"authorizedPasswords\" : [\n";
-		conf_file << "\t\t{\"password\": \"C3yhZ8PjPoVFYwHfw0oKtNLxgMo5V9YUr7r4UXul\", \"myname\":\"default_public_password\"},\n";
+		conf_file << "\t\t{\"password\": \"C3yhZ8PjPoVFYwHfw0oKtNLxgMo5V9YUr7r4UXul\", \"myname\":\"default_public_password\"}\n";
 		conf_file << "\t\t//{\"password\": \"Lq6yi0Ql9lcNWSDnCPophU7R0JWgyKwY5vrVEUrF\", \"myname\":\"password_nr1\"},\n";
 		conf_file << "\t\t//{\"password\": \"S417y9vFrzbm6JyxTIotylPcsqyNFMufRL6BjwrA\", \"myname\":\"password_nr2\"},\n";
 		conf_file << "\t\t//{\"password\": \"rpWG35w2JAjAizvRWeydOz739Hd11xgvvDufOAgn\", \"myname\":\"password_nr3\"}\n";
@@ -95,7 +95,7 @@ void c_json_genconf::generate_connectto_conf(const std::string &filename) {
 		conf_file << "\t\t *  \t\"publicKey\" : \"asdasd\"\n";
 		conf_file << "\t\t *  },\n";
 		conf_file << "\t\t * // Peer nr 1\n";
-		conf_file << "\t\t *  \"fc72:aa65:c5c2:4a2d:54e:7947:b671:e00c\" : {\n";
+		conf_file << "\t\t *  \"[fc72:aa65:c5c2:4a2d:54e:7947:b671:e00c]\" : {\n";
 		conf_file << "\t\t *  \t\"publicKey\" : \"asdasd\"\n";
 		conf_file << "\t\t *  }\n";
 		conf_file << "\t\t */\n";
