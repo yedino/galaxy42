@@ -338,7 +338,8 @@ c_crypto_system::t_PRIVkey c_multikeys_PRIV::get_private(t_crypto_system_type cr
 }
 
 std::string c_stream_crypto::box(const std::string & msg) {
-	_info("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	_info("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
+	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
 	return m_boxer.box(msg).to_binary();
 }
 
@@ -408,21 +409,26 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
 	:
-	m_usable_key( calculate_usable_key(self, them) ), // calculate UK and save it, and now use it:
-	m_nonce_odd( calculate_nonce_odd( self, them)),
+	m_KCT( calculate_usable_key(self, them) ), // calculate UK and save it, and now use it:
+	m_nonce_odd( calculate_nonce_odd( self, them) ),
 	m_boxer(
-		sodiumpp::boxer_base::boxer_type_shared_key(),
-		m_nonce_odd ,
-		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
+		sodiumpp::boxer_base::boxer_type_shared_key()
+		,m_nonce_odd
+		,sodiumpp::encoded_bytes(m_KCT, sodiumpp::encoding::binary)
+		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(42)), sodiumpp::encoding::binary) // nonce
 	),
 	m_unboxer(
-		sodiumpp::boxer_base::boxer_type_shared_key(),
-		m_nonce_odd ,
-		sodiumpp::encoded_bytes(m_usable_key, sodiumpp::encoding::binary)
+		sodiumpp::boxer_base::boxer_type_shared_key()
+		,! m_nonce_odd
+		,sodiumpp::encoded_bytes(m_KCT, sodiumpp::encoding::binary)
+		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(42)), sodiumpp::encoding::binary) // nonce
 	)
 {
-	_note("Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd 
-		<< " and m_usable_key=" << to_debug( m_usable_key ) );
+	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd 
+		<< " and m_KCT=" << to_debug( m_KCT ) 
+		);
+	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
+	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
@@ -430,8 +436,6 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 }
 
 void test_crypto() {
-	/*
-
 	// Create IDC:
 
 	// Alice:
@@ -445,19 +449,26 @@ void test_crypto() {
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
 
-	// Create KCT and CT (e.g. CTE?)
+	// Create CT (e.g. CTE?) - that has KCT
+	_note("Alice CT:");
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
+	_note("Bob CT:");
 	c_crypto_tunnel BobCT  (keypairB, keypubA);
 
+	_warn("WARNING: this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, " 
+		"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
+
+	_note("Alice will box:");
 	auto msg1s = AliceCT.box("Hello");
 	_info("Boxed to:  " << to_debug(msg1s));
+	_note("Bob will unbox:");
 	auto msg1r = BobCT.unbox(msg1s);
 	_info("Tunneled message: " << msg1r << " from encrypted: " << to_debug(msg1s));
 
 	return ;
-*/
 
-#if 1
+
+#if 0
 	// the goal:
 	const string app_msg1("Message-send-from-application"); // the finall end-user text that we want to tunnel.
 	string app_msg;
