@@ -309,7 +309,7 @@ void c_multikeys_PAIR::generate() {
 	}
 
 	for (int i=0; i<1; ++i) {
-	_info("(fake) NTru generating..."); // XXX TODO
+	_info("(fake!!! TODO!!!) NTru generating..."); // XXX TODO
 	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
 	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRIV ); // XXX TODO test!
@@ -327,6 +327,14 @@ void c_multikeys_pub::add_public(t_crypto_system_type type, const  t_pubkey & pu
 c_crypto_system::t_pubkey c_multikeys_pub::get_public(t_crypto_system_type crypto_type, size_t number_of_key) const {
 	// TODO check range
 	return m_cryptolists_pubkey.at(crypto_type).at(number_of_key);
+}
+
+size_t c_multikeys_pub::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
+	return m_cryptolists_pubkey.at(crypto_type).size();
+}
+
+size_t c_multikeys_pub::get_count_of_systems() const {
+	return m_cryptolists_pubkey.size();
 }
 
 void c_multikeys_PRIV::add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey) {
@@ -386,6 +394,23 @@ std::string c_crypto_tunnel::unbox(const std::string & msg) {
 c_crypto_system::t_symkey
 c_stream_crypto::calculate_usable_key(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	// used in constructor!
+
+	assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
+	// TODO assert self priv == them priv;    
+	// TODO priv self == pub self
+
+	for (unsigned long ix=0; ix<self.m_pub.m_cryptolists_pubkey.size(); ++ix) { // all key crypto systems
+		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
+		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
+		_info("Exchanging for Cryptosystem: " << t_crypto_system_type_to_name(ix) );
+		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy) { // all keys of this sytem
+			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
+			_info("  PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
+		}
+	}
+
+
+
 	std::string dh_shared_part1 = sodiumpp::crypto_scalarmult(
 		self.m_PRIV.get_private( e_crypto_system_type_X25519, 0),
 		them.get_public(e_crypto_system_type_X25519, 0)
@@ -436,13 +461,13 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 }
 
 void test_crypto() {
-	// Create IDC:
+	_mark("Create IDC");
 
-	// Alice:
+	// Alice: IDC
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
-	// Bob:
+	// Bob: IDC
 	c_multikeys_PAIR keypairB;
 	keypairB.generate();
 
@@ -454,6 +479,8 @@ void test_crypto() {
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
 	_note("Bob CT:");
 	c_crypto_tunnel BobCT  (keypairB, keypubA);
+
+	// generate ephemeral keys
 
 	_warn("WARNING: this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, " 
 		"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
