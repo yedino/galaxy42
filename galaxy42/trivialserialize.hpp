@@ -16,6 +16,7 @@ using namespace std;
 /**
  * @defgroup trivialserialize Trivial Serialize
  * Description: ...
+ * TODO: TODO(serialize_parser_assert) - make read functions in parser that assert values and length min-max
  */
 namespace trivialserialize {
 
@@ -48,6 +49,8 @@ class format_error_write : public format_error { public:	const char * what() con
 class format_error_write_too_long : public format_error_write { public:	const char * what() const noexcept override; };
 
 class format_error_write_value_too_big : public format_error { public:	const char * what() const noexcept override; };
+
+class format_error_read_invalid_version : public format_error { public:	const char * what() const noexcept override; };
 /** @} */	// end of format_error group
 
 
@@ -248,6 +251,10 @@ class parser {
 		///@{
 		vector<string> pop_vector_string(); ///< Decode a vector<string> object saved with push_vector_string
 		///@}
+
+		bool is_end() const; ///< check if we are standing now at end of string (so reading anything more is not possible)
+
+		void debug() const; ///< do some debuggging as set by devel
 };
 
 

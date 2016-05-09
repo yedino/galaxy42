@@ -141,12 +141,14 @@ class c_multikeys_pub : public c_crypto_system {
 		//< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
 
 		mutable string m_hash_cached; ///< Hash of all my public keys (a cache, auto calculated by getters/cleared by setters)
-		// empty "" means that it needs calculation.
+		// empty "" means that it needs calculation. (this is the default value)
 		// ^- TODO invalidate by setters
 
 		void update_hash() const; ///< calculate the current m_hash and save it
 
 	public:
+		c_multikeys_pub()=default;
+
 		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
 		t_pubkey get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
@@ -158,7 +160,11 @@ class c_multikeys_pub : public c_crypto_system {
 		bool operator>(const c_multikeys_pub &rhs) const; ///< some sorting order, e.g. using the get_hash(). Used e.g. to
 		/// pick even/odd nonce depending on comparing keys.
 
-		std::string serialize_bin() const; ///< returns a string with all our data serialized, to a binary format
+		std::string serialize_bin() const; ///< returns a string with all our data serialized, see load_from_bin() for details
+
+		static c_multikeys_pub load_from_bin(const std::string & data); ///< create object from result of serialize_bin().
+		///< Will be always compatible with older/newer versions (across stable releases of the program)
+		///< @warning Must remain compatible especially because this can change the resulting HIP address!
 };
 
 /*** All PRIVATE keys of given identity */
