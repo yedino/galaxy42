@@ -136,6 +136,8 @@ TE int_to_enum(TI i) {
 	return e;
 }
 
+std::string to_string(const std::string & v); ///< just to have identical syntax
+
 
 }
 

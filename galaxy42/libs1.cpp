@@ -23,3 +23,13 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	std::cout << "IP: " << ip <<  " port: " << std::stoi(port) << std::endl;
 	return std::make_pair(std::move(ip), std::stoi(port));
 }
+
+
+namespace stdplus {
+
+std::string to_string(const std::string & v) {
+	return v;
+}
+
+} // namespace
+
