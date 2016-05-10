@@ -56,6 +56,19 @@ Types: uses own t_types - that are probably std::string
 =====================================================================
 */
 
+// Group: crypto utils, free functions etc
+
+// Hashing functions group:
+
+typedef std::string t_hash; //< type of hash
+
+t_hash Hash1( const t_hash & hash );
+size_t Hash1_size(); ///< returns size (in octets) of the output of Hash1 function
+t_hash Hash2( const t_hash & hash );
+size_t Hash2_size(); ///< returns size (in octets) of the output of Hash1 function
+
+
+
 // must match: t_crypto_system_type_to_name()
 enum t_crypto_system_type : unsigned char {
 	// 0 is reserved
@@ -77,7 +90,6 @@ enum t_crypto_system_type : unsigned char {
 class c_crypto_system {
 	public:
 		typedef std::string t_symkey; //< type of symmetric key
-		typedef std::string t_hash; //< type of hash
 		typedef std::string t_pubkey; //< type of public key
 		typedef std::string t_PRIVkey; //< type of private key
 
@@ -86,9 +98,6 @@ class c_crypto_system {
 		virtual ~c_crypto_system()=default;
 
 		virtual t_symkey secure_random(size_t size_of_radom_data) const;
-
-		virtual t_hash Hash1( const t_hash & hash ) const;
-		virtual t_hash Hash2( const t_hash & hash ) const;
 
 		virtual t_crypto_system_type get_system_type() const;
 };
