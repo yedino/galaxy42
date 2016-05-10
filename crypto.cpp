@@ -5,7 +5,6 @@
 
 #include "trivialserialize.hpp"
 
-
 namespace antinet_crypto {
 
 t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_system_type_invalid; }
@@ -141,18 +140,19 @@ void c_symhash_state::next_state( t_hash additional_secret_material ) {
 	++m_number;
 }
 
-c_symhash_state::t_hash c_symhash_state::get_password() const {
+t_hash c_symhash_state::get_password() const {
 	return Hash2( m_state );
 }
 
-c_symhash_state::t_hash c_crypto_system::Hash1( const t_hash & hash ) const {
-
+t_hash c_crypto_system::Hash1( const t_hash & hash ) const {
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
     size_t u_hashmsg_len = hash.length();
     const unsigned char* u_hashmsg;
     u_hashmsg = reinterpret_cast<const unsigned char *>(&hash[0]);
 
-   	const size_t out_u_hash_len = 64;
+   	const size_t out_u_hash_len = 64; // Hash1_size();
+   	assert( out_u_hash_len == Hash1_size() );  // <-- ^-- TODO(rob) constexpr instead?
+
     assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
     unsigned char out_u_hash[out_u_hash_len];
 
@@ -163,17 +163,25 @@ c_symhash_state::t_hash c_crypto_system::Hash1( const t_hash & hash ) const {
     return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
 }
 
-c_symhash_state::t_hash c_crypto_system::Hash2( const t_hash & hash ) const {
+size_t c_crypto_system::Hash1_size() const { 
+	return 64;
+}
 
+t_hash c_crypto_system::Hash2( const t_hash & hash ) const {
     t_hash hash_from_hash = Hash1(hash);
     for(auto &ch : hash_from_hash) { // negate all octets in it
         ch = ~ch;
     }
-    return Hash1(hash_from_hash);
-    //return string_as_bin( "B(" + hash.bytes + ")" );
+    const auto ret = Hash1(hash_from_hash);
+    assert( ret.size() == Hash2_size() );
+    return ret;
 }
 
-c_symhash_state::t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
+size_t c_crypto_system::Hash2_size() const { 
+	return 64;
+}
+
+t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
 	return m_state;
 }
 
@@ -401,6 +409,31 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
 }
 
+namespace string_binary_op {
+
+// TODO move to a lib?
+
+std::string binary_string_xor(const std::string & str1, const std::string & str2) {
+	// WARNING: this function is written with less assertive code (e.g. without at()),
+	// it MUST be checked against any errors if you would modify it.
+	const auto size1 = str1.size();
+	const auto size2 = str2.size();
+	if (size1 != size2) throw std::runtime_error( 
+		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
+		+ std::to_string(size1) + " vs " + std::to_string(size2) );
+	std::string ret = str1;
+	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i]; 
+	// TODO: decltype(size1) without const
+
+	assert(ret.size() == str1.size());	assert(str1.size() == str2.size());
+	return ret;
+}
+
+std::string operator^(const std::string & str1, const std::string & str2) {
+	return binary_string_xor(str1,str2);
+}
+
+} // namespace
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other) {
 	c_crypto_tunnel tunnel;
@@ -419,10 +452,10 @@ std::string c_crypto_tunnel::unbox(const std::string & msg) {
 	return m_stream_crypto->unbox(msg);
 }
 
-
 c_crypto_system::t_symkey
 c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
-	// used in constructor!
+	// WARNING: used in constructor
+	// WARNING: taking & to values, do not invalidate them! (here and in entire function)
 
 	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
 	assert(self.m_PRIV.get_count_of_systems() == them.get_count_of_systems());
@@ -430,36 +463,60 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	assert(self.m_PRIV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
-
+	string KCT_accum = std::string( Hash1_size() , static_cast<unsigned char>(0) ); // fill it with 0 bytes (octets)
 
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
+		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
+
+		const c_multikeys_PRIV & self_pub = self.m_pub ; // my    pub keys - all of this sys
+		const c_multikeys_pub  & self_PRV = self.m_PRIV; // my    PRV keys - all of this sys
+		const c_multikeys_pub  & them_pub = them       ; // their pub keys - all of this sys
+
+		auto key_count_a = self_pub.get_count_keys_in_system(sys_id);
+		auto key_count_b = them_pub.get_count_keys_in_system(sys_id);
 
 		// for given crypto system:
 		if (sys == e_crypto_system_type_X25519) {
-			auto key_count_a = self.m_pub.get_count_keys_in_system(int_to_enum<t_crypto_system_type>(sys));
-			auto key_count_b = self.m_pub.get_count_keys_in_system(int_to_enum<t_crypto_system_type>(sys));
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
 			auto key_count_bigger = std::max( key_count_a , key_count_b );
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
-				auto keynr_a = keynr_i % key_count_a;
+				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
+				auto keynr_a = keynr_i % key_count_a; 
 				auto keynr_b = keynr_i % key_count_b;
 				_info("kex " << keynr_a << " " << keynr_b);
+
+				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
+				auto const key_A_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+
+				using namespace binary_string_xor; // operator^
+
+				std::string k_dh_raw = 
+					// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
+					sodiumpp::crypto_scalarmult( 
+						key_A_PRV, key_B_pub
+					);
+
+				std::string k_dh_agreed = // the fully agreed key, that is secure result of DH
+				Hash1(
+					Hash1( k_dh_raw )
+					^	Hash1( key_A_pub )
+					^ Hash1( key_B_pub )
+				);
+
+				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+
+				_info("");
 			}
-		}
+		} // X25519
 	}
 
-	std::string dh_shared_part1 = sodiumpp::crypto_scalarmult(
-		self.m_PRIV.get_private( e_crypto_system_type_X25519, 0),
-		them.get_public(e_crypto_system_type_X25519, 0)
-	);
-
-	// TODO: and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
-	string dh_shared_ready = self.m_PRIV.Hash1( dh_shared_part1 ).substr(0,crypto_secretbox_KEYBYTES);
-	_info("DH based key to use: " << to_debug(dh_shared_ready) );
-
-	return dh_shared_ready;
+	string KCT_ready = self.m_PRIV.Hash1( KCT_accum );
+	// .substr(0,crypto_secretbox_KEYBYTES);
+	_note("KCT ready exchanged: " << to_debug(KCT_ready) );
+	return KCT_ready;
 }
 
 bool c_stream_crypto::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
