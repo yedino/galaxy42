@@ -11,31 +11,59 @@
 /***
 Glossary:
 
-IDP - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
-IDC - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
+* kagr - is a process of key agreement (using either DH and it variants, or other systems)
+
+* PFS - perfrect forward security - is the security property that means data should be secure even if [all other]
+long-term keys are compromised.
+In this system we have kind of PFS created by IDP -> IDC (see below),
+but mainly this is done by using IDCE instead IDC, which are unique keys for pair alice/bob AND for each of their tunnels.
+
+* IDP - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
+* IDC - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
 It is authorized by his IDP. In Cjdns, IDP == IDC (there is no separation).
-IDPtC - ID Current from Permanent - full chain of crypto signatures, pubkeys, etc to prove ownership from HIP and IDP to given IDC.
+* IDPtC - ID Permanent to Current -  is the full chain of crypto signatures, pubkeys, etc,
+to prove ownership from HIP and IDP to given IDC.
+* IDCE - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDC.
 
 IDP ------ signatures (IDPtC) ------> IDC
 
+
+Overview of creating of the CT between two people known by their IPv6:
+
+Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC           ,-> IDCE   (of Alice)
+                                        |           /         \
+                                        V          /           \
+                                       kagr --> KCTab           > kagr ---> KCTf - symmetrical
+                                        ^          \           /                  crypto stream
+                                        |           \         /
+Bob:   IPv6 HIP <-- IDP ---(IDPtC)---> IDC           '-> IDCE   (of Bob)
+
+
 HIP - Hash IP - the IP (here IPv6 always), that is a hash of some public key(s) - of his IDP.
 
-KCT - Key for CryptoTunnel - the most low-level, current, low-level key that is directly used for given CT crypto (authentication, and also encryption is present).
-Currently alwyas this is some Symmetrical Key.
-Created between two IDC.
+KCT - Key for CryptoTunnel - this name usually means KCTf:
 
-CT   - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted, and always authenticated.
+KCTab - is a key for CT, that is always the same between same "Alice and Bob" (therefore the name "ab") - the same
+under same two IDC - because it uses nonce==0, therefore it is insecure.
+It is insecure to send any predictable/guessable data, and content "encrypted" with it can be spoofed (because
+it lacks property of PFS), therefore it should be used only to exchange (e.g. authorize) the KCTf key.
+
+KCTf is the ephemeral final key in CT, that is generated for given one CT each time even for same Alice/Bob, secure to use.
+This is the most low-level, current, low-level key that is directly used for given CT crypto.
+Used for: authentication, and optionally also encryption.
+Currently alwyas this is some Symmetrical Key.
+
+CT   - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted,
+and always authenticated.
 CTE  - CryptoTunnel Encrypted - a CT that in addition always is encrypted (and of course is authenticated)
 CTNE - CryptoTunnel NOT Encrypted - a CT that is NOT encrypted (and of course is authenticated)
 
 CT-E2E - a CT established end-to-end for transmission of data, it is of type CTE.
 CT-P2P - a CT established peer-to-peer for forwarding of data further, so it is only CTNE.
 
-HIP == IDP-h --> IDP-pub --> ID*-pub -- ... --> IDC-pub
-
 *pub - public key
-*PRIV - private key
-*PAIR - pair of pub + PRIV
+*PRV - private key
+*PAIR - pair of pub + PRV
 
 */
 
@@ -91,7 +119,7 @@ class c_crypto_system {
 	public:
 		typedef std::string t_symkey; //< type of symmetric key
 		typedef std::string t_pubkey; //< type of public key
-		typedef std::string t_PRIVkey; //< type of private key
+		typedef std::string t_PRVkey; //< type of private key
 
 		typedef sodiumpp::nonce64 t_crypto_nonce; //< the type of nonce that we use
 
@@ -177,18 +205,18 @@ class c_multikeys_pub : public c_crypto_system {
 };
 
 /*** All PRIVATE keys of given identity */
-class c_multikeys_PRIV : public c_crypto_system {
+class c_multikeys_PRV : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
 
-		typedef std::array< vector< t_PRIVkey > , e_crypto_system_type_END	> t_cryptolists_PRIVkey;
-		t_cryptolists_PRIVkey m_cryptolists_PRIVkey; ///< A "map" of PRIVATE keys of given type, organized by their crypto type.
+		typedef std::array< vector< t_PRVkey > , e_crypto_system_type_END	> t_cryptolists_PRVkey;
+		t_cryptolists_PRVkey m_cryptolists_PRVkey; ///< A "map" of PRIVATE keys of given type, organized by their crypto type.
 		///< example use: to get 50-th of our Ed25519 keys: m_cryptolists_PRIVkey[ e_crypto_system_type_Ed25519 ].at(50);
 
 	public:
-		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey);
-		t_PRIVkey get_private(t_crypto_system_type crypto_type, size_t number_of_key) const;
+		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRVkey & PRVkey);
+		t_PRVkey get_private(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		virtual t_crypto_system_type get_system_type() const;
 		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
 		size_t get_count_of_systems() const; ///< how many key types?
@@ -197,7 +225,7 @@ class c_multikeys_PRIV : public c_crypto_system {
 class c_multikeys_PAIR {
 	public:
 		c_multikeys_pub m_pub;
-		c_multikeys_PRIV m_PRIV;
+		c_multikeys_PRV m_PRV;
 
 		void generate();
 
@@ -205,7 +233,7 @@ class c_multikeys_PAIR {
 
 		void add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 			const c_crypto_system::t_pubkey & pubkey ,
-			const c_crypto_system::t_PRIVkey & PRIVkey);
+			const c_crypto_system::t_PRVkey & PRVkey);
 
 		virtual t_crypto_system_type get_system_type() const;
 };
@@ -250,7 +278,8 @@ class c_stream_crypto final /* because strange ctor init list functions */
 /*** A CT, can be used to send data in both directions. */
 class c_crypto_tunnel final {
 	private:
-		unique_ptr<c_stream_crypto> m_stream_crypto;
+		unique_ptr<c_stream_crypto> m_stream_crypto; // the "ab" crypto - wit KCTab
+		unique_ptr<c_stream_crypto> m_stream_crypto_final; // the ephemeral crypto - with KCTf
 
 	public:
 		c_crypto_tunnel()=default;
@@ -263,32 +292,34 @@ class c_crypto_tunnel final {
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);
 
 
-/** For given CT (form me, to given recipient) - and given session */
+/** For given CT (form me, to given recipient) - and given session
+ * TODO this is not really used (instead see c_stream_crypto)
+*/
 class c_dhdh_state final : public c_crypto_system {
 	public:
 		typedef string_as_bin t_pubkey;
-		typedef string_as_bin t_PRIVkey;
+		typedef string_as_bin t_PRVkey;
 		typedef long long int t_nonce;
 
 		t_symkey m_skp; // shared key from permanent // KP = complete_DH( ap , BP ) , () // prepare permanent-key based AuthEncr
 
-		c_dhdh_state(t_PRIVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub);
+		c_dhdh_state(t_PRVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub);
 
 		void step1();
 		t_pubkey get_permanent_pubkey() const;
 		t_pubkey get_temp_pubkey() const;
-		static std::pair<t_pubkey, t_PRIVkey> generate_key_pair();
+		static std::pair<t_pubkey, t_PRVkey> generate_key_pair();
 
 	private:
-		t_PRIVkey m_our_priv; ///< permanent
+		t_PRVkey m_our_priv; ///< permanent
 		t_pubkey m_our_pub; ///< permanent
 		t_pubkey m_theirs_pub;
-		t_symkey m_r; // my random r1 or r2 to use in CA shared key
+		t_symkey m_r; ///< my random r1 or r2 to use in CA shared key // TODO(r) not used...
 
 		t_pubkey m_pubkey_temp;
-		t_PRIVkey m_privkey_temp;
+		t_PRVkey m_privkey_temp;
 
-		t_symkey execute_DH_exchange(const t_PRIVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
+		t_symkey execute_DH_exchange(const t_PRVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
 		t_symkey execute_DH_exchange(); ///< call execute_DH_exchange with internal fields
 
 		FRIEND_TEST(crypto, dh_exchange);

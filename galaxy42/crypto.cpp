@@ -13,14 +13,14 @@ t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_system_type_multikey_pub; }
 
-t_crypto_system_type c_multikeys_PRIV::get_system_type() const { return e_crypto_system_type_multikey_private; }
+t_crypto_system_type c_multikeys_PRV::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
-size_t c_multikeys_PRIV::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
-	return m_cryptolists_PRIVkey.at(crypto_type).size();
+size_t c_multikeys_PRV::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
+	return m_cryptolists_PRVkey.at(crypto_type).size();
 }
 
-size_t c_multikeys_PRIV::get_count_of_systems() const {
-	return m_cryptolists_PRIVkey.size();
+size_t c_multikeys_PRV::get_count_of_systems() const {
+	return m_cryptolists_PRVkey.size();
 }
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
@@ -47,7 +47,7 @@ t_hash Hash1( const t_hash & hash ) {
     return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
 }
 
-size_t Hash1_size() { 
+size_t Hash1_size() {
 	return 64;
 }
 
@@ -61,7 +61,7 @@ t_hash Hash2( const t_hash & hash ) {
     return ret;
 }
 
-size_t Hash2_size() { 
+size_t Hash2_size() {
 	return 64;
 }
 
@@ -193,7 +193,7 @@ t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
 
 
 
-c_dhdh_state::c_dhdh_state(t_PRIVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub)
+c_dhdh_state::c_dhdh_state(t_PRVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub)
 	: m_our_priv(our_priv), m_our_pub(our_pub), m_theirs_pub(theirs_pub)
 { }
 
@@ -213,7 +213,7 @@ c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() const {
 
 
 c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(
-const t_PRIVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub)
+const t_PRVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub)
 {
 	using namespace ecdh_ChaCha20_Poly1305;
 	keypair_t my_keys;
@@ -231,10 +231,10 @@ c_crypto_system::t_symkey c_dhdh_state::execute_DH_exchange() {
 }
 
 
-std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRIVkey> c_dhdh_state::generate_key_pair() {
+std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRVkey> c_dhdh_state::generate_key_pair() {
 	using namespace ecdh_ChaCha20_Poly1305;
 	keypair_t keypair = generate_keypair();
-	std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRIVkey> ret;
+	std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRVkey> ret;
 	ret.first.bytes.resize(keypair.pubkey.size());
 	ret.second.bytes.resize(keypair.privkey.size());
 	std::copy(keypair.pubkey.begin(), keypair.pubkey.end(), ret.first.bytes.begin());
@@ -329,11 +329,11 @@ void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
 	for (unsigned long ix=0; ix<m_pub.m_cryptolists_pubkey.size(); ++ix) {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
-		const auto & PRIVkeys_of_this_system = m_PRIV.m_cryptolists_PRIVkey.at(ix);
+		const auto & PRVkeys_of_this_system = m_PRV.m_cryptolists_PRVkey.at(ix);
 		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
 		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
 			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
-			_info("  PRIV:"<< m_PRIV.m_cryptolists_PRIVkey[ix].at(iy) << "\n");
+			_info("  PRV:"<< m_PRV.m_cryptolists_PRVkey[ix].at(iy) << "\n");
 		}
 	}
 	_info("---------");
@@ -344,16 +344,16 @@ void c_multikeys_PAIR::generate() {
 
 	for (int i=0; i<2; ++i) {
 	_info("X25519 generating...");
-	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
-	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
-	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRIV );
+	std::string key_PRV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV)); // PRV -> pub
+	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
 	}
 
 	for (int i=0; i<1; ++i) {
 	_info("(fake!!! TODO!!!) NTru generating..."); // XXX TODO
-	std::string key_PRIV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
-	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRIV)); // PRIV -> pub
-	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRIV ); // XXX TODO test!
+	std::string key_PRV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV)); // PRV -> pub
+	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRV ); // XXX TODO test!
 	}
 
 	string serialized = this->m_pub.serialize_bin();
@@ -378,12 +378,12 @@ size_t c_multikeys_pub::get_count_of_systems() const {
 	return m_cryptolists_pubkey.size();
 }
 
-void c_multikeys_PRIV::add_PRIVATE(t_crypto_system_type crypto_type,const t_PRIVkey & PRIVkey) {
-	m_cryptolists_PRIVkey.at( crypto_type ).push_back( PRIVkey );
+void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type,const t_PRVkey & PRVkey) {
+	m_cryptolists_PRVkey.at( crypto_type ).push_back( PRVkey );
 }
 
-c_crypto_system::t_PRIVkey c_multikeys_PRIV::get_private(t_crypto_system_type crypto_type, size_t number_of_key) const {
-	return m_cryptolists_PRIVkey.at(crypto_type).at(number_of_key);
+c_crypto_system::t_PRVkey c_multikeys_PRV::get_private(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	return m_cryptolists_PRVkey.at(crypto_type).at(number_of_key);
 }
 
 std::string c_stream_crypto::box(const std::string & msg) {
@@ -402,10 +402,10 @@ std::string c_stream_crypto::unbox(const std::string & msg) {
 
 void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_pubkey & pubkey ,
-	 const c_crypto_system::t_PRIVkey & PRIVkey)
+	 const c_crypto_system::t_PRVkey & PRVkey)
 {
 	m_pub.add_public(crypto_type, pubkey);
-	m_PRIV.add_PRIVATE(crypto_type, PRIVkey);
+	m_PRV.add_PRIVATE(crypto_type, PRVkey);
 }
 
 bool safe_string_cmp(const std::string & a, const std::string & b) {
@@ -422,11 +422,11 @@ std::string binary_string_xor(const std::string & str1, const std::string & str2
 	// it MUST be checked against any errors if you would modify it.
 	const auto size1 = str1.size();
 	const auto size2 = str2.size();
-	if (size1 != size2) throw std::runtime_error( 
+	if (size1 != size2) throw std::runtime_error(
 		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
 		+ std::to_string(size1) + " vs " + std::to_string(size2) );
 	std::string ret = str1;
-	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i]; 
+	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i];
 	// TODO: decltype(size1) without const
 
 	assert(ret.size() == str1.size());	assert(str1.size() == str2.size());
@@ -462,9 +462,9 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	// WARNING: taking & to values, do not invalidate them! (here and in entire function)
 
 	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
-	assert(self.m_PRIV.get_count_of_systems() == them.get_count_of_systems());
+	assert(self.m_PRV.get_count_of_systems() == them.get_count_of_systems());
 	// TODO assert self priv == them priv;
-	assert(self.m_PRIV.get_count_of_systems() == self.m_pub.get_count_of_systems());
+	assert(self.m_PRV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
 	string KCT_accum = std::string( Hash1_size() , static_cast<unsigned char>(0) ); // fill it with 0 bytes (octets)
@@ -473,7 +473,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
 
 		const c_multikeys_pub  & self_pub = self.m_pub ; // my    pub keys - all of this sys
-		const c_multikeys_PRIV & self_PRV = self.m_PRIV; // my    PRV keys - all of this sys
+		const c_multikeys_PRV & self_PRV = self.m_PRV; // my    PRV keys - all of this sys
 		const c_multikeys_pub  & them_pub = them       ; // their pub keys - all of this sys
 
 		auto key_count_a = self_pub.get_count_keys_in_system(sys_id);
@@ -487,7 +487,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
-				auto keynr_a = keynr_i % key_count_a; 
+				auto keynr_a = keynr_i % key_count_a;
 				auto keynr_b = keynr_i % key_count_b;
 				_info("kex " << keynr_a << " " << keynr_b);
 
@@ -497,9 +497,9 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 				using namespace string_binary_op; // operator^
 
-				std::string k_dh_raw = 
+				std::string k_dh_raw =
 					// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
-					sodiumpp::crypto_scalarmult( 
+					sodiumpp::crypto_scalarmult(
 						key_A_PRV, key_B_pub
 					);
 				_info("k_dh_raw = " << to_string(k_dh_raw)); // _info( XVAR(k_dh_raw ) );
@@ -538,8 +538,10 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
 	:
-	m_KCT( calculate_KCT(self, them) ), // calculate UK and save it, and now use it:
+	m_KCT( calculate_KCT(self, them) ), // ***calculate*** KCT and save it, and now use it:
+
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
+
 	m_boxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,m_nonce_odd
