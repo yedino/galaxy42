@@ -449,11 +449,11 @@ c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & 
 
 
 std::string c_crypto_tunnel::box(const std::string & msg) {
-	return m_stream_crypto->box(msg);
+	return m_stream_crypto_final->box(msg);
 }
 
 std::string c_crypto_tunnel::unbox(const std::string & msg) {
-	return m_stream_crypto->unbox(msg);
+	return m_stream_crypto_final->unbox(msg);
 }
 
 c_crypto_system::t_symkey
@@ -563,7 +563,10 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
-	m_stream_crypto = make_unique<c_stream_crypto>( self , them );
+	_note("Creating the crypto tunnel");
+	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them );
+	// m_stream_crypto_final = make_unique<c_stream_crypto>( self , them ); // TODO
+	_note("Done - crypto tunnel is ready (final)");
 }
 
 void test_crypto() {

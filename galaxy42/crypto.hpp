@@ -55,6 +55,7 @@ Currently alwyas this is some Symmetrical Key.
 
 CT   - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted,
 and always authenticated.
+
 CTE  - CryptoTunnel Encrypted - a CT that in addition always is encrypted (and of course is authenticated)
 CTNE - CryptoTunnel NOT Encrypted - a CT that is NOT encrypted (and of course is authenticated)
 
@@ -278,7 +279,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 /*** A CT, can be used to send data in both directions. */
 class c_crypto_tunnel final {
 	private:
-		unique_ptr<c_stream_crypto> m_stream_crypto; // the "ab" crypto - wit KCTab
+		unique_ptr<c_stream_crypto> m_stream_crypto_ab; // the "ab" crypto - wit KCTab
 		unique_ptr<c_stream_crypto> m_stream_crypto_final; // the ephemeral crypto - with KCTf
 
 	public:
