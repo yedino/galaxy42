@@ -4,7 +4,7 @@
 namespace antinet_crypto {
 
 TEST(crypto, aeshash_not_repeating_state_nor_password) {
-	std::set< c_symhash_state::t_hash > used_hash;
+	std::set< t_hash > used_hash;
 	const int amount_iterations = 10000;
 
     enum class type_RX : int { RX_none=0, RX_constant, RX_same, RX_random , RX_END };

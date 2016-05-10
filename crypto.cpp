@@ -25,6 +25,46 @@ size_t c_multikeys_PRIV::get_count_of_systems() const {
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
+
+// ==================================================================
+
+t_hash Hash1( const t_hash & hash ) {
+    // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
+    size_t u_hashmsg_len = hash.length();
+    const unsigned char* u_hashmsg;
+    u_hashmsg = reinterpret_cast<const unsigned char *>(&hash[0]);
+
+   	const size_t out_u_hash_len = 64; // Hash1_size();
+   	assert( out_u_hash_len == Hash1_size() );  // <-- ^-- TODO(rob) constexpr instead?
+
+    assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
+    unsigned char out_u_hash[out_u_hash_len];
+
+    crypto_generichash(out_u_hash, out_u_hash_len,
+                       u_hashmsg, u_hashmsg_len,
+                       nullptr, 0);
+
+    return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
+}
+
+size_t Hash1_size() { 
+	return 64;
+}
+
+t_hash Hash2( const t_hash & hash ) {
+    t_hash hash_from_hash = Hash1(hash);
+    for(auto &ch : hash_from_hash) { // negate all octets in it
+        ch = ~ch;
+    }
+    const auto ret = Hash1(hash_from_hash);
+    assert( ret.size() == Hash2_size() );
+    return ret;
+}
+
+size_t Hash2_size() { 
+	return 64;
+}
+
 // ==================================================================
 
 bool c_multikeys_pub::operator>(const c_multikeys_pub &rhs) const {
@@ -144,42 +184,6 @@ t_hash c_symhash_state::get_password() const {
 	return Hash2( m_state );
 }
 
-t_hash c_crypto_system::Hash1( const t_hash & hash ) const {
-    // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper
-    size_t u_hashmsg_len = hash.length();
-    const unsigned char* u_hashmsg;
-    u_hashmsg = reinterpret_cast<const unsigned char *>(&hash[0]);
-
-   	const size_t out_u_hash_len = 64; // Hash1_size();
-   	assert( out_u_hash_len == Hash1_size() );  // <-- ^-- TODO(rob) constexpr instead?
-
-    assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
-    unsigned char out_u_hash[out_u_hash_len];
-
-    crypto_generichash(out_u_hash, out_u_hash_len,
-                       u_hashmsg, u_hashmsg_len,
-                       nullptr, 0);
-
-    return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
-}
-
-size_t c_crypto_system::Hash1_size() const { 
-	return 64;
-}
-
-t_hash c_crypto_system::Hash2( const t_hash & hash ) const {
-    t_hash hash_from_hash = Hash1(hash);
-    for(auto &ch : hash_from_hash) { // negate all octets in it
-        ch = ~ch;
-    }
-    const auto ret = Hash1(hash_from_hash);
-    assert( ret.size() == Hash2_size() );
-    return ret;
-}
-
-size_t c_crypto_system::Hash2_size() const { 
-	return 64;
-}
 
 t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
 	return m_state;
@@ -468,8 +472,8 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
 		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
 
-		const c_multikeys_PRIV & self_pub = self.m_pub ; // my    pub keys - all of this sys
-		const c_multikeys_pub  & self_PRV = self.m_PRIV; // my    PRV keys - all of this sys
+		const c_multikeys_pub  & self_pub = self.m_pub ; // my    pub keys - all of this sys
+		const c_multikeys_PRIV & self_PRV = self.m_PRIV; // my    PRV keys - all of this sys
 		const c_multikeys_pub  & them_pub = them       ; // their pub keys - all of this sys
 
 		auto key_count_a = self_pub.get_count_keys_in_system(sys_id);
@@ -491,13 +495,14 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				auto const key_A_PRV = self_PRV.get_private(sys_id, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
 
-				using namespace binary_string_xor; // operator^
+				using namespace string_binary_op; // operator^
 
 				std::string k_dh_raw = 
 					// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
 					sodiumpp::crypto_scalarmult( 
 						key_A_PRV, key_B_pub
 					);
+				_info("k_dh_raw = " << to_string(k_dh_raw)); // _info( XVAR(k_dh_raw ) );
 
 				std::string k_dh_agreed = // the fully agreed key, that is secure result of DH
 				Hash1(
@@ -505,16 +510,19 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 					^	Hash1( key_A_pub )
 					^ Hash1( key_B_pub )
 				);
+				_info("k_dh_agreed = " << to_string(k_dh_agreed));
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
-
-				_info("");
+				_info("KCT_accum = " << to_string(KCT_accum));
 			}
 		} // X25519
 	}
 
-	string KCT_ready = self.m_PRIV.Hash1( KCT_accum );
-	// .substr(0,crypto_secretbox_KEYBYTES);
+	string KCT_ready_full = Hash1( KCT_accum );
+	_info("KCT_ready_full = " << to_string(KCT_ready_full));
+	assert( KCT_ready_full.size() >= crypto_secretbox_KEYBYTES ); // assert that we can in fact narrow the hash
+	string KCT_ready = KCT_ready_full.substr(0,crypto_secretbox_KEYBYTES); // narrow it to length of symmetrical key
+
 	_note("KCT ready exchanged: " << to_debug(KCT_ready) );
 	return KCT_ready;
 }
@@ -536,13 +544,13 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,m_nonce_odd
 		,sodiumpp::encoded_bytes(m_KCT, sodiumpp::encoding::binary)
-		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(42)), sodiumpp::encoding::binary) // nonce
+		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
 	),
 	m_unboxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,! m_nonce_odd
 		,sodiumpp::encoded_bytes(m_KCT, sodiumpp::encoding::binary)
-		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(42)), sodiumpp::encoding::binary) // nonce
+		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
 	)
 {
 	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
