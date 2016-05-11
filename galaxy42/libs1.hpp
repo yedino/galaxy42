@@ -53,19 +53,17 @@ using std::endl;
 
 
 // === RELEASE OPTIONS ===
-#ifndef RELEASE
-	#define RELEASE 0
+#ifndef RELEASEMODE
+	#define RELEASEMODE 0
 #endif
 
-#ifndef DEBUG_SHOW_SECRET_STRINGS
-	#if RELEASE
-		#define DEBUG_SHOW_SECRET_STRINGS 0
-	#else
-		#define DEBUG_SHOW_SECRET_STRINGS 1
-	#endif
+#if RELEASEMODE
+	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 0
+#else
+	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 1
 #endif
 
-#if DEBUG_SHOW_SECRET_STRINGS
+#if OPTION_DEBUG_SHOW_SECRET_STRINGS
 	#define DEBUG_SECRET_STR( X ) ( X )
 #else
 	#define DEBUG_SECRET_STR( X ) ( "(a secret string, hidden by compilation options)" )
