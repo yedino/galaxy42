@@ -84,6 +84,15 @@ where SOMENAME is a nice name summarizing on what you do work.
 Then create also a demo for it (see how other demos are done, see function run_mode_developer,
 see demo developer_tests::wip_galaxy_route_doublestar that can be used in simulation of few nodes etc)
 
+Q: How to debug a crash, memory leak, etc, how to run in valgrind/gdb
+A: [debug.nocap] You can use gdb and valgrind, but if you have a problem there that the CAP privilages level
+block your debug tool from working (as is the case with some hardened platforms) then if you can run
+a test, or a demo [devel.demo] that does not require net CAP privilages etc,
+then use the binary file that is not trying to get CAP rights,
+the file nocap-* binary, e.g.: nocap-tunserver.elf
+e.g.: valgrind  ./nocap-tunserver.elf --devel
+e.g.: valgrind  ./nocap-tunserver.elf --devel  --demo foo
+
 
 
 
