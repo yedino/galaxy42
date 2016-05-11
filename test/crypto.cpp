@@ -64,7 +64,7 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 
 TEST(crypto, aeshash_start_and_get_same_passwords) {
 	c_symhash_state symhash( string_as_bin(string_as_hex("6a6b")).bytes ); // "jk"
-	auto p = string_as_hex( string_as_bin( symhash.get_password() ) );
+	string_as_hex p(( string_as_bin( symhash.get_password() ) ));
 	//	cout << "\"" << string_as_hex( symhash.get_password() ) << "\"" << endl;
 	EXPECT_EQ(p.get(), "1ddb0a828c4d3776bf12abbe17fb4d82bcaf202a1b00b5b54e90db701303d69ce235f36d25c9fd1343225888e00abdc0e18c2036e86af9f3a90faf1abfefedf7");
 	symhash.next_state();
@@ -107,3 +107,39 @@ TEST(crypto, dh_exchange) {
 }
 
 } // namespace
+
+TEST(crypto, bin_string_xor) {
+
+	std::string test_str("longrandomstring123123345345!@#$%^&*())))(*&^%$#@");
+	std::string result;
+
+	// xor for the same string should be tab of zeros
+	result = antinet_crypto::string_binary_op::binary_string_xor(test_str, test_str);
+	for(auto ch : result) {
+		EXPECT_EQ(static_cast<int>(ch), 0);
+	}
+
+	// two empty strings
+	result = antinet_crypto::string_binary_op::binary_string_xor("","");
+	EXPECT_EQ(result.length(),0u);
+	EXPECT_EQ(result,"");
+
+	bool size_diff_err = false;
+  try {
+	// binary string xor of two string with different size should throw runtime error
+	antinet_crypto::string_binary_op::binary_string_xor("xx", "xxxx");
+  } catch(std::runtime_error) {
+		size_diff_err = true;
+  }
+	EXPECT_EQ(true, size_diff_err);
+
+	size_diff_err = false;
+  try {
+	// binary string xor of two string with different size should throw runtime error
+	// try with empty string
+	antinet_crypto::string_binary_op::binary_string_xor("", "xxxx");
+  } catch(std::runtime_error) {
+		size_diff_err = true;
+  }
+	EXPECT_EQ(true, size_diff_err);
+}

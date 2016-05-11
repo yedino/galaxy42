@@ -103,6 +103,19 @@ namespace unittest {
 // Group: crypto utils, free functions etc
 
 /**
+ * @defgroup crypto_utils Crypto utils
+ * @ingroup antinet_crypto
+ * Usefull free crypto functions
+ */
+///@{
+namespace string_binary_op {
+std::string binary_string_xor(const std::string & str1, const std::string & str2);
+std::string operator^(const std::string & str1, const std::string & str2);
+} //namespace
+///@}
+
+
+/**
  * @defgroup hash_func Hashing functions
  * @ingroup antinet_crypto
  * Hashing functions group
