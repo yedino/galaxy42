@@ -5,6 +5,8 @@
 
 #include "trivialserialize.hpp"
 
+using sodiumpp::locked_string;
+
 namespace antinet_crypto {
 
 t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_system_type_invalid; }
@@ -155,15 +157,11 @@ c_multikeys_pub c_multikeys_pub::load_from_bin(const std::string & data) {
 
 // ==================================================================
 
+#if 0
 c_dhdh_state::t_symkey c_crypto_system::secure_random(size_t size_of_radom_data) const {
-	// TODO memory-locking?
-	t_symkey ret;
-	ret.resize(size_of_radom_data);
-	assert( ret.size() == size_of_radom_data );
-	unsigned char *data_ptr = reinterpret_cast<unsigned char*>( & ret[0] );
-	randombytes(data_ptr, ret.size());
-	return ret;
+	return sodiumpp::randombytes_locked(size_of_radom_data);
 }
+#endif
 
 // ==================================================================
 
@@ -192,6 +190,7 @@ t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
 // ==================================================================
 
 
+#if 0
 
 c_dhdh_state::c_dhdh_state(t_PRVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub)
 	: m_our_priv(our_priv), m_our_pub(our_pub), m_theirs_pub(theirs_pub)
@@ -248,6 +247,8 @@ std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRVkey> c_dhdh_state::generate
 /*bool operator<( const c_symhash_state::t_hash &a, const c_symhash_state::t_hash &b) {
 	return a.bytes < b.bytes;
 }*/
+
+#endif
 
 
 namespace unittest {
@@ -333,7 +334,7 @@ void c_multikeys_PAIR::debug() const {
 		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
 		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
 			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
-			_info("  PRV:"<< m_PRV.m_cryptolists_PRVkey[ix].at(iy) << "\n");
+			_info("  PRV:"<<DEBUG_SECRET_STR( m_PRV.m_cryptolists_PRVkey[ix].at(iy).get_string() ) << "\n");
 		}
 	}
 	_info("---------");
@@ -344,15 +345,15 @@ void c_multikeys_PAIR::generate() {
 
 	for (int i=0; i<2; ++i) {
 	_info("X25519 generating...");
-	std::string key_PRV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
-	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV)); // PRV -> pub
+	sodiumpp::locked_string key_PRV(sodiumpp::randombytes_locked(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
 	}
 
 	for (int i=0; i<1; ++i) {
 	_info("(fake!!! TODO!!!) NTru generating..."); // XXX TODO
-	std::string key_PRV(sodiumpp::randombytes(crypto_scalarmult_SCALARBYTES)); // random secret key
-	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV)); // PRV -> pub
+	sodiumpp::locked_string key_PRV(sodiumpp::randombytes_locked(crypto_scalarmult_SCALARBYTES)); // random secret key
+	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRV ); // XXX TODO test!
 	}
 
@@ -497,11 +498,13 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 				using namespace string_binary_op; // operator^
 
-				std::string k_dh_raw =
-					// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
+				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
+				locked_string k_dh_raw(
 					sodiumpp::crypto_scalarmult(
-						key_A_PRV, key_B_pub
-					);
+						key_A_PRV.get_string(), 
+						key_B_pub
+					)
+				);
 				_info("k_dh_raw = " << to_string(k_dh_raw)); // _info( XVAR(k_dh_raw ) );
 
 				std::string k_dh_agreed = // the fully agreed key, that is secure result of DH
