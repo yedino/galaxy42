@@ -27,7 +27,7 @@
  * * \b IDCE - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDC.
  *
  * * \b IDP - - - - signatures (IDPtC) - - - -> IDC
- *
+ * \n
  * * Overview of creating of the CT between two people known by their IPv6:\n
  * <pre>
  * Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC              IDCE (of Alice)
@@ -52,11 +52,11 @@
  *			 	It is insecure to send any predictable/guessable data, and content "encrypted" with it can be spoofed (because
  * 			 	it lacks property of PFS), therefore it should be used only to exchange (e.g. authorize) the KCTf key.
  *
- * * \b KCTf is the ephemeral final key in CT, that is generated for given one CT each time even for same Alice/Bob,
- * 		  	 secure to use. This is the most low-level, current, low-level key that is directly used for given CT crypto.
+ * * \b KCTf - is the ephemeral final key in CT, that is generated for given one CT each time even for same Alice/Bob,
+ * 		  	   secure to use. This is the most low-level, current, low-level key that is directly used for given CT crypto.
  *
- * * \b Used for: authentication, and optionally also encryption.
- * 			   	  Currently alwyas this is some Symmetrical Key.
+ * * Used for - authentication, and optionally also encryption.
+ * 			   	Currently alwyas this is some Symmetrical Key.
  *
  * * \b CT - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted,
  * 			 and always authenticated.
