@@ -244,6 +244,8 @@ class c_multikeys_PAIR {
 			const c_crypto_system::t_PRVkey & PRVkey);
 
 		virtual t_crypto_system_type get_system_type() const;
+
+		virtual ~c_multikeys_PAIR() = default;
 };
 
 /**
