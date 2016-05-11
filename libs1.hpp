@@ -51,6 +51,26 @@ using std::endl;
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
+
+// === RELEASE OPTIONS ===
+#ifndef RELEASE
+	#define RELEASE 0
+#endif
+
+#ifndef DEBUG_SHOW_SECRET_STRINGS
+	#if RELEASE
+		#define DEBUG_SHOW_SECRET_STRINGS 0
+	#else
+		#define DEBUG_SHOW_SECRET_STRINGS 1
+	#endif
+#endif
+
+#if DEBUG_SHOW_SECRET_STRINGS
+	#define DEBUG_SECRET_STR( X ) ( X )
+#else
+	#define DEBUG_SECRET_STR( X ) ( "(a secret string, hidden by compilation options)" )
+#endif
+
 // ??? decide: XXX
 #include "c_tnetdbg.hpp"
 
@@ -148,5 +168,6 @@ namespace tunserver_utils {
 std::pair< std::string,int > parse_ip_string(const string& ip_string);
 
 }
+
 #endif
 
