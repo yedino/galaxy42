@@ -23,7 +23,7 @@ TEST(crypto_sodium, generate_unique_key_pair) {
 	ASSERT_EQ(pub_keys.size(), amount_iterations);
 }
 
-TEST(crypto_codium, generate_sharedkey) {
+TEST(crypto_sodium, generate_sharedkey) {
 	const size_t amount_iterations = 10000;
 	std::set<sharedkey_t> shared_keys;
 	for (size_t i = 0; i < amount_iterations; ++i) {
