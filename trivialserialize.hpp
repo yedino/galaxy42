@@ -24,7 +24,7 @@ void test_trivialserialize();
 
 // ---
 /** @defgroup format_error The Format Error
- *  Detailed Description: one description for all members of this group
+ *  One description for all members of this group
  *  @{
  */
 

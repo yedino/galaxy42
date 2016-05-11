@@ -8,69 +8,69 @@
 
 #include <sodiumpp/sodiumpp.h>
 
-/***
-Glossary:
-
-* kagr - is a process of key agreement (using either DH and it variants, or other systems)
-
-* PFS - perfrect forward security - is the security property that means data should be secure even if [all other]
-long-term keys are compromised.
-In this system we have kind of PFS created by IDP -> IDC (see below),
-but mainly this is done by using IDCE instead IDC, which are unique keys for pair alice/bob AND for each of their tunnels.
-
-* IDP - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
-* IDC - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
-It is authorized by his IDP. In Cjdns, IDP == IDC (there is no separation).
-* IDPtC - ID Permanent to Current -  is the full chain of crypto signatures, pubkeys, etc,
-to prove ownership from HIP and IDP to given IDC.
-* IDCE - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDC.
-
-IDP ------ signatures (IDPtC) ------> IDC
-
-
-Overview of creating of the CT between two people known by their IPv6:
-
-Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC           ,-> IDCE   (of Alice)
-                                        |           /         \
-                                        V          /           \
-                                       kagr --> KCTab           > kagr ---> KCTf - symmetrical
-                                        ^          \           /                  crypto stream
-                                        |           \         /
-Bob:   IPv6 HIP <-- IDP ---(IDPtC)---> IDC           '-> IDCE   (of Bob)
-
-
-HIP - Hash IP - the IP (here IPv6 always), that is a hash of some public key(s) - of his IDP.
-
-KCT - Key for CryptoTunnel - this name usually means KCTf:
-
-KCTab - is a key for CT, that is always the same between same "Alice and Bob" (therefore the name "ab") - the same
-under same two IDC - because it uses nonce==0, therefore it is insecure.
-It is insecure to send any predictable/guessable data, and content "encrypted" with it can be spoofed (because
-it lacks property of PFS), therefore it should be used only to exchange (e.g. authorize) the KCTf key.
-
-KCTf is the ephemeral final key in CT, that is generated for given one CT each time even for same Alice/Bob, secure to use.
-This is the most low-level, current, low-level key that is directly used for given CT crypto.
-Used for: authentication, and optionally also encryption.
-Currently alwyas this is some Symmetrical Key.
-
-CT   - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted,
-and always authenticated.
-
-CTE  - CryptoTunnel Encrypted - a CT that in addition always is encrypted (and of course is authenticated)
-CTNE - CryptoTunnel NOT Encrypted - a CT that is NOT encrypted (and of course is authenticated)
-
-CT-E2E - a CT established end-to-end for transmission of data, it is of type CTE.
-CT-P2P - a CT established peer-to-peer for forwarding of data further, so it is only CTNE.
-
-*pub - public key
-*PRV - private key
-*PAIR - pair of pub + PRV
-
-*/
-
+/**
+ * @defgroup antinet_crypto Antinet Crypto
+ * @page cryptoglossary Crypto Glossary
+ *
+ * * \b kagr - is a process of key agreement (using either DH and it variants, or other systems)
+ *
+ * * \b PFS - perfrect forward security - is the security property that means data should be secure even if [all other]
+ * 			  long-term keys are compromised. In this system we have kind of PFS created by IDP -> IDC (see below),
+ * 			  but mainly this is done by using IDCE instead IDC, which are unique keys for pair alice/bob AND
+ * 			  for each of their tunnels.
+ *
+ * * \b IDP - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
+ * * \b IDC - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
+ * 			  It is authorized by his IDP. In Cjdns, IDP == IDC (there is no separation).
+ * * \b IDPtC - ID Permanent to Current -  is the full chain of crypto signatures, pubkeys, etc,
+ * 			 	to prove ownership from HIP and IDP to given IDC.
+ * * \b IDCE - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDC.
+ *
+ * * \b IDP - - - - signatures (IDPtC) - - - -> IDC
+ *
+ * * Overview of creating of the CT between two people known by their IPv6:\n
+ * <pre>
+ * Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC           ,-> IDCE   (of Alice)
+ *                                         |           /         \
+ *                                         V          /           \
+ *                                        kagr --> KCTab           > kagr ---> KCTf - symmetrical
+ *                                         ^          \           /                  crypto stream
+ *                                         |           \         /
+ * Bob:   IPv6 HIP <-- IDP ---(IDPtC)---> IDC           '-> IDCE   (of Bob)
+ * </pre>
+ *
+ * * \b HIP - Hash IP - the IP (here IPv6 always), that is a hash of some public key(s) - of his IDP.
+ *
+ * * \b KCT - Key for CryptoTunnel - this name usually means KCTf:
+ *
+ * * \b KCTab - is a key for CT, that is always the same between same "Alice and Bob" (therefore the name "ab") - the same
+ * 			 	under same two IDC - because it uses nonce==0, therefore it is insecure.
+ *			 	It is insecure to send any predictable/guessable data, and content "encrypted" with it can be spoofed (because
+ * 			 	it lacks property of PFS), therefore it should be used only to exchange (e.g. authorize) the KCTf key.
+ *
+ * * \b KCTf is the ephemeral final key in CT, that is generated for given one CT each time even for same Alice/Bob,
+ * 		  	 secure to use. This is the most low-level, current, low-level key that is directly used for given CT crypto.
+ *
+ * * \b Used for: authentication, and optionally also encryption.
+ * 			   	  Currently alwyas this is some Symmetrical Key.
+ *
+ * * \b CT - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted,
+ * 			 and always authenticated.
+ *
+ * * \b CTE - CryptoTunnel Encrypted - a CT that in addition always is encrypted (and of course is authenticated)
+ * * \b CTNE - CryptoTunnel NOT Encrypted - a CT that is NOT encrypted (and of course is authenticated)
+ *
+ * * \b CT-E2E - a CT established end-to-end for transmission of data, it is of type CTE.
+ * * \b CT-P2P - a CT established peer-to-peer for forwarding of data further, so it is only CTNE.
+ *
+ * * pub - public key
+ * * PRV - private key
+ * * PAIR - pair of pub + PRV
+ */
 
 using namespace std;
 
+/// @ingroup antinet_crypto
 namespace antinet_crypto {
 
 namespace unittest {
@@ -78,24 +78,30 @@ namespace unittest {
 } // namespace
 
 
-/***
-=====================================================================
-Above is the crypto at basic level in Galaxy.
-Types: uses own t_types - that are probably std::string
-=====================================================================
-*/
+/**
+ * \verbatim
+ * =====================================================================
+ * Above is the crypto at basic level in Galaxy.
+ * Types: uses own t_types - that are probably std::string
+ * =====================================================================
+ * \endverbatim
+ */
 
 // Group: crypto utils, free functions etc
 
-// Hashing functions group:
-
-typedef std::string t_hash; //< type of hash
+/**
+ * @defgroup hash_func Hashing functions
+ * @ingroup antinet_crypto
+ * Hashing functions group
+ */
+///@{
+typedef std::string t_hash; ///< type of hash
 
 t_hash Hash1( const t_hash & hash );
 size_t Hash1_size(); ///< returns size (in octets) of the output of Hash1 function
 t_hash Hash2( const t_hash & hash );
 size_t Hash2_size(); ///< returns size (in octets) of the output of Hash1 function
-
+///@}
 
 
 // must match: t_crypto_system_type_to_name()
@@ -115,7 +121,7 @@ enum t_crypto_system_type : unsigned char {
 	e_crypto_system_type_END,
 };
 
-/*** Some state of some crypto system */
+/** Some state of some crypto system */
 class c_crypto_system {
 	public:
 		typedef std::string t_symkey; //< type of symmetric key
@@ -132,7 +138,7 @@ class c_crypto_system {
 };
 
 
-/*** State of the SymHash (aka: ratchet?) */
+/** State of the SymHash (aka: ratchet?) */
 class c_symhash_state final : public c_crypto_system {
 	public:
 		c_symhash_state( t_hash initial_state );
@@ -168,15 +174,16 @@ class c_multistate {
 char t_crypto_system_type_to_ID(int val);
 t_crypto_system_type t_crypto_system_type_from_ID(char name);
 
-/*** All pubkeys of given identity */
+/** All pubkeys of given identity */
 class c_multikeys_pub : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
 		typedef std::array< vector< t_pubkey > , e_crypto_system_type_END	> t_cryptolists_pubkey;
 
-		t_cryptolists_pubkey m_cryptolists_pubkey; //< A "map" of public keys of given type, organized by their crypto type.
-		//< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
+		///< A "map" of public keys of given type, organized by their crypto type.
+		///< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
+		t_cryptolists_pubkey m_cryptolists_pubkey;
 
 		mutable string m_hash_cached; ///< Hash of all my public keys (a cache, auto calculated by getters/cleared by setters)
 		// empty "" means that it needs calculation. (this is the default value)
@@ -205,7 +212,7 @@ class c_multikeys_pub : public c_crypto_system {
 		///< @warning Must remain compatible especially because this can change the resulting HIP address!
 };
 
-/*** All PRIVATE keys of given identity */
+/** All PRIVATE keys of given identity */
 class c_multikeys_PRV : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
@@ -240,17 +247,17 @@ class c_multikeys_PAIR {
 };
 
 /**
-* Crypto primitives are provided by - sodiumpp library (and NTru, SIDH, Geport - in future - TODO)
-* Raw symmetric encryption - done by c_stream_crypto
-* Adding needed crypto data - nonce constant, nonce counter - done by c_crypto_tunnel
-* Downloading pubkeys, adding other meta-data, transport - are to be done by other, higher layers.
-*/
+ * Crypto primitives are provided by - sodiumpp library (and NTru, SIDH, Geport - in future - TODO)
+ * Raw symmetric encryption - done by c_stream_crypto
+ * Adding needed crypto data - nonce constant, nonce counter - done by c_crypto_tunnel
+ * Downloading pubkeys, adding other meta-data, transport - are to be done by other, higher layers.
+ */
 
 
 /**
-* The KCT crypto system of the stream, ready for finall use.
-* It does only the main crypto algorithm.
-*/
+ * The KCT crypto system of the stream, ready for finall use.
+ * It does only the main crypto algorithm.
+ */
 class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
@@ -276,11 +283,11 @@ class c_stream_crypto final /* because strange ctor init list functions */
 
 };
 
-/*** A CT, can be used to send data in both directions. */
+/** A CT, can be used to send data in both directions. */
 class c_crypto_tunnel final {
 	private:
-		unique_ptr<c_stream_crypto> m_stream_crypto_ab; // the "ab" crypto - wit KCTab
-		unique_ptr<c_stream_crypto> m_stream_crypto_final; // the ephemeral crypto - with KCTf
+		unique_ptr<c_stream_crypto> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
+		unique_ptr<c_stream_crypto> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
 	public:
 		c_crypto_tunnel()=default;
@@ -293,17 +300,20 @@ class c_crypto_tunnel final {
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);
 
 
-/** For given CT (form me, to given recipient) - and given session
+/**
+ * For given CT (form me, to given recipient) - and given session
  * TODO this is not really used (instead see c_stream_crypto)
-*/
+ */
 class c_dhdh_state final : public c_crypto_system {
 	public:
 		typedef string_as_bin t_pubkey;
 		typedef string_as_bin t_PRVkey;
 		typedef long long int t_nonce;
 
-		t_symkey m_skp; // shared key from permanent // KP = complete_DH( ap , BP ) , () // prepare permanent-key based AuthEncr
-
+		/// shared key from permanent
+		/// KP = complete_DH( ap , BP ) , ()
+		/// prepare permanent-key based AuthEncr
+		t_symkey m_skp;
 		c_dhdh_state(t_PRVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub);
 
 		void step1();
@@ -327,8 +337,6 @@ class c_dhdh_state final : public c_crypto_system {
 
 		t_nonce m_nonce;
 };
-
-
 
 void test_crypto();
 

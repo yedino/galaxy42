@@ -958,7 +958,7 @@ USE_MDFILE_AS_MAINPAGE =
 # also VERBATIM_HEADERS is set to NO.
 # The default value is: NO.
 
-SOURCE_BROWSER         = YES
+SOURCE_BROWSER         = NO
 
 # Setting the INLINE_SOURCES tag to YES will include the body of functions,
 # classes and enums directly into the documentation.
@@ -2370,7 +2370,7 @@ DIAFILE_DIRS           =
 PLANTUML_JAR_PATH      =
 
 # When using plantuml, the specified paths are searched for files specified by
-# the !include statement in a plantuml block.
+# the !include statement in a plantuml block:.
 
 PLANTUML_INCLUDE_PATH  =
 
