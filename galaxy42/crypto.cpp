@@ -565,7 +565,7 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	_note("Creating the crypto tunnel");
 	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them );
-	// m_stream_crypto_final = make_unique<c_stream_crypto>( self , them ); // TODO
+	m_stream_crypto_final = make_unique<c_stream_crypto>( self , them ); // TODO
 	_note("Done - crypto tunnel is ready (final)");
 }
 
