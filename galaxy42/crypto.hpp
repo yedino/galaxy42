@@ -30,13 +30,17 @@
  *
  * * Overview of creating of the CT between two people known by their IPv6:\n
  * <pre>
- * Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC           ,-> IDCE   (of Alice)
- *                                         |           /         \
- *                                         V          /           \
- *                                        kagr --> KCTab           > kagr ---> KCTf - symmetrical
- *                                         ^          \           /                  crypto stream
- *                                         |           \         /
- * Bob:   IPv6 HIP <-- IDP ---(IDPtC)---> IDC           '-> IDCE   (of Bob)
+ * Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC              IDCE (of Alice)
+ *                                         |                  |      
+ *                                         |                ,-+--(auth+encrypt)
+ *                                         |               /          \
+ *                                         V              /            \
+ *                                        kagr --> KCTab <              > kagr ---> KCTf - symmetrical
+ *                                         ^              \            /                  crypto stream
+ *                                         |               \          /
+ *                                         |                '-+--(auth+encrypt)
+ *                                         |                  |
+ * Bob:   IPv6 HIP <-- IDP ---(IDPtC)---> IDC              IDCE (of Bob)
  * </pre>
  *
  * * \b HIP - Hash IP - the IP (here IPv6 always), that is a hash of some public key(s) - of his IDP.
