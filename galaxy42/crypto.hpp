@@ -128,9 +128,10 @@ enum t_crypto_system_type : unsigned char {
 /** Some state of some crypto system */
 class c_crypto_system {
 	public:
-		typedef std::string t_symkey; //< type of symmetric key
+		typedef sodiumpp::locked_string t_symkey; //< type of symmetric key
+		typedef sodiumpp::locked_string t_PRVkey; //< type of private key
+
 		typedef std::string t_pubkey; //< type of public key
-		typedef std::string t_PRVkey; //< type of private key
 
 		typedef sodiumpp::nonce64 t_crypto_nonce; //< the type of nonce that we use
 
@@ -305,6 +306,8 @@ class c_crypto_tunnel final {
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);
 
+#if 0
+
 
 /**
  * For given CT (form me, to given recipient) - and given session
@@ -343,6 +346,8 @@ class c_dhdh_state final : public c_crypto_system {
 
 		t_nonce m_nonce;
 };
+
+#endif
 
 void test_crypto();
 
