@@ -513,7 +513,7 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 	sodiumpp::locked_string ret( len );
 	assert(ret.size() == len);
 	assert(len < str.size());
-	for (size_t p=0; p<str.size() && p < ret.size(); ++p) ret[p] = str[p];
+	for (size_t p=0; p<str.size() && p < ret.size(); ++p) ret.at(p) = str.at(p);
 	return ret;
 }
 
