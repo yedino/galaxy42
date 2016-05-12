@@ -9,6 +9,17 @@ using sodiumpp::locked_string;
 
 namespace antinet_crypto {
 
+
+std::string to_debug_locked(const sodiumpp::locked_string & data) {
+	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
+		return string_as_dbg( string_as_bin( data.c_str() ) ).get();
+	#endif
+	return "[hidden-secret](locked_string)";
+}
+
+// ==================================================================
+
+
 t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_system_type_invalid; }
 
 t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_system_type_symhash_todo; }
@@ -26,7 +37,6 @@ size_t c_multikeys_PRV::get_count_of_systems() const {
 }
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
-
 
 // ==================================================================
 
@@ -108,6 +118,8 @@ bool c_multikeys_pub::operator>(const c_multikeys_pub &rhs) const {
 std::string c_multikeys_pub::get_hash() const {
 	if (m_hash_cached=="") update_hash();
 	assert(m_hash_cached != "");
+	string s;
+	string b=to_debug(s);
 	_info("Hash of this multikey:"  << to_debug(m_hash_cached));
 	return m_hash_cached;
 }
@@ -365,8 +377,8 @@ void c_multikeys_PAIR::debug() const {
 		const auto & PRVkeys_of_this_system = m_PRV.m_cryptolists_PRVkey.at(ix);
 		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
 		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
-			_info("  PUB:" << m_pub.m_cryptolists_pubkey[ix].at(iy) );
-			_info("  PRV:"<<DEBUG_SECRET_STR( m_PRV.m_cryptolists_PRVkey[ix].at(iy).get_string() ) << "\n");
+			_info("  PUB:" << to_debug( m_pub.m_cryptolists_pubkey[ix].at(iy) ) );
+			_info("  PRV:" << to_debug_locked( m_PRV.m_cryptolists_PRVkey[ix].at(iy) ) << "\n");
 		}
 	}
 	_info("---------");
@@ -384,7 +396,7 @@ void c_multikeys_PAIR::generate() {
 	_info("b");
 	auto rnd = sodiumpp::randombytes_locked(s);
 	_info("c");
-	_info("Random data=" << DEBUG_SECRET_STR( rnd.c_str() ) );
+	_info("Random data=" << to_debug_locked(rnd) );
 	sodiumpp::locked_string key_PRV(rnd); // random secret key
 	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
@@ -563,7 +575,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
 				locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
-				_info("k_dh_raw = " << DEBUG_SECRET_STR( to_string(k_dh_raw.c_str()) )); // _info( XVAR(k_dh_raw ) );
+				_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // _info( XVAR(k_dh_raw ) );
 
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 				Hash1_PRV(
@@ -571,21 +583,21 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 					^	Hash1( key_A_pub )
 					^ Hash1( key_B_pub )
 				);
-				_info("k_dh_agreed = " << DEBUG_SECRET_STR( to_string(k_dh_agreed.c_str()) ) );
+				_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
-				_info("KCT_accum = " <<  DEBUG_SECRET_STR( to_string(KCT_accum.c_str()) ) );
+				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 		} // X25519
 	}
 
 	t_hash_PRV KCT_ready_full = Hash1_PRV( KCT_accum );
-	_info("KCT_ready_full = " << DEBUG_SECRET_STR( to_string(KCT_ready_full.c_str()) ) );
+	_info("KCT_ready_full = " << to_debug_locked( KCT_ready_full ) );
 	assert( KCT_ready_full.size() >= crypto_secretbox_KEYBYTES ); // assert that we can in fact narrow the hash
 
 	locked_string KCT_ready = substr( KCT_ready_full , crypto_secretbox_KEYBYTES); // narrow it to length of symmetrical key
 
-	_note("KCT ready exchanged: " << DEBUG_SECRET_STR( to_debug(KCT_ready.c_str()) ) );
+	_note("KCT ready exchanged: " << to_debug_locked( KCT_ready ) );
 	return KCT_ready;
 }
 
@@ -618,7 +630,7 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	)
 {
 	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
-		<< " and m_KCT=" << DEBUG_SECRET_STR( to_debug( m_KCT.c_str() ) )
+		<< " and m_KCT=" << to_debug_locked( m_KCT )
 		);
 	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
 	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
