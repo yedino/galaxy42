@@ -12,7 +12,7 @@ namespace antinet_crypto {
 
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
-		return string_as_dbg( string_as_bin( data.c_str() ) ).get();
+		return string_as_dbg( string_as_bin( data.get_string() ) ).get();
 	#endif
 	return "[hidden-secret](locked_string)";
 }
@@ -387,17 +387,12 @@ void c_multikeys_PAIR::debug() const {
 void c_multikeys_PAIR::generate() {
 	_info("Generting keypair");
 
-	for (int i=0; i<200; ++i) {
+	for (int i=0; i<2; ++i) {
 	_info("X25519 generating...");
 	size_t s = crypto_scalarmult_SCALARBYTES;
-	_info("Random for s="<<s);
-	_info("a");
 	sodiumpp::randombytes_locked(s);
-	_info("b");
 	auto rnd = sodiumpp::randombytes_locked(s);
-	_info("c");
 	_info("Random data size=" << (rnd.size()) );
-	for (size_t i=0; i<rnd.size(); ++i) _info("i="<<i<<" (" << hex << ((unsigned int)(unsigned char)rnd.at(i)) << dec << ")");
 	_info("Random data=" << to_debug_locked(rnd) );
 	sodiumpp::locked_string key_PRV(rnd); // random secret key
 	std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
@@ -621,13 +616,13 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	m_boxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,m_nonce_odd
-		,sodiumpp::encoded_bytes( m_KCT.c_str(), sodiumpp::encoding::binary ) // TODO leaks memlock secret
+		,m_KCT
 		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
 	),
 	m_unboxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,! m_nonce_odd
-		,sodiumpp::encoded_bytes( m_KCT.c_str(), sodiumpp::encoding::binary ) // TODO leaks memlock secret
+		,m_KCT
 		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
 	)
 {
@@ -636,6 +631,7 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 		);
 	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
 	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
+	_mark("CT constr - unboxer is at" << ((void*)&m_unboxer) );
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
@@ -707,6 +703,7 @@ void test_crypto() {
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
 	_note("Bob CT:");
 	c_crypto_tunnel BobCT  (keypairB, keypubA);
+	_mark("Prepared tunnels.");
 
 	// generate ephemeral keys
 
