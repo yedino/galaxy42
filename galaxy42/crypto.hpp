@@ -74,8 +74,12 @@
 
 using namespace std;
 
+std::string to_debug_locked(const sodiumpp::locked_string & data);
+
+
 /// @ingroup antinet_crypto
 namespace antinet_crypto {
+
 
 namespace unittest {
 	class c_symhash_state__tests_with_private_access;
