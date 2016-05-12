@@ -387,7 +387,7 @@ void c_multikeys_PAIR::debug() const {
 void c_multikeys_PAIR::generate() {
 	_info("Generting keypair");
 
-	for (int i=0; i<2; ++i) {
+	for (int i=0; i<200; ++i) {
 	_info("X25519 generating...");
 	size_t s = crypto_scalarmult_SCALARBYTES;
 	_info("Random for s="<<s);
@@ -396,19 +396,21 @@ void c_multikeys_PAIR::generate() {
 	_info("b");
 	auto rnd = sodiumpp::randombytes_locked(s);
 	_info("c");
+	_info("Random data size=" << (rnd.size()) );
+	for (size_t i=0; i<rnd.size(); ++i) _info("i="<<i<<" (" << hex << ((unsigned int)(unsigned char)rnd.at(i)) << dec << ")");
 	_info("Random data=" << to_debug_locked(rnd) );
 	sodiumpp::locked_string key_PRV(rnd); // random secret key
-	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
+	std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
 	}
 
-	for (int i=0; i<1; ++i) {
+/*	for (int i=0; i<1; ++i) {
 	_info("(fake!!! TODO!!!) NTru generating..."); // XXX TODO
 	sodiumpp::locked_string key_PRV(sodiumpp::randombytes_locked(crypto_scalarmult_SCALARBYTES)); // random secret key
 	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRV ); // XXX TODO test!
 	}
-
+*/
 	string serialized = this->m_pub.serialize_bin();
 	_info("Serialized pubkeys: [" << to_debug(serialized) << "]");
 }
