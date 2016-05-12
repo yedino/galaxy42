@@ -261,7 +261,10 @@ void c_TCPasync::handle_accept(boost::system::error_code const& ec,
 void c_TCPasync::server_read(ip::tcp::socket &socket) {
     assert(socket.is_open());
 
-    type_read = {packet_type::empty, 0}; // set zeros
+	// set zeros
+	type_read.p_type = packet_type::empty
+	type_read.rs_action = 0;
+
     unsigned short type_read_size = sizeof(type_read);
 
     async_read(socket,
