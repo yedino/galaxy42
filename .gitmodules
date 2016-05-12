@@ -15,7 +15,7 @@
 	url =  https://github.com/google/googletest
 [submodule "sodiumpp"]
 	path = sodiumpp
-	url = https://github.com/tigusoft/sodiumpp
+	url = https://github.com/tigusoft-vm/sodiumpp
 [submodule "ntru-crypto"]
 	path = ntru-crypto
 	url = ../ntru-crypto
