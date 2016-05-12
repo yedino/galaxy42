@@ -629,7 +629,41 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 	_note("Done - crypto tunnel is ready (final)");
 }
 
+void test_string_lock() {
+	_mark("Testing locked string operations");
+	{
+		locked_string a(3);
+		assert(a.size() == 3);
+
+		a[0]='x';	a[1]='y';	a[2]='z';
+		assert(a.size() == 3);
+		assert(a.c_str() == string("xyz"));
+
+		char * ptr = a.buffer_writable();
+		*(ptr+0) = 'X';		*(ptr+1) = 'Y';		*(ptr+2) = 'Z';
+		assert(a.size() == 3);
+		assert(a.c_str() == string("XYZ"));
+	}
+	{
+		string s("pqr");
+		locked_string a(s);
+		assert(a.size() == 3);
+
+		a[0]='x';	a[1]='y';	a[2]='z';
+		assert(a.size() == 3);
+		assert(a.c_str() == string("xyz"));
+
+		char * ptr = a.buffer_writable();
+		*(ptr+0) = 'X';		*(ptr+1) = 'Y';		*(ptr+2) = 'Z';
+		assert(a.size() == 3);
+		assert(a.c_str() == string("XYZ"));
+	}
+}
+
 void test_crypto() {
+	test_string_lock();
+
+
 	_mark("Create IDC");
 
 	// Alice: IDC
