@@ -31,7 +31,7 @@
  * * Overview of creating of the CT between two people known by their IPv6:\n
  * <pre>
  * Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC              IDCE (of Alice)
- *                                         |                  |      
+ *                                         |                  |
  *                                         |                ,-+--(auth+encrypt)
  *                                         |               /          \
  *                                         V              /            \
