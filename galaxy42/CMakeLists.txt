@@ -15,6 +15,7 @@ include_directories( build_extra )
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 ADD_CUSTOM_TARGET(fast
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=fast ${CMAKE_SOURCE_DIR}
@@ -44,7 +45,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
         message("Release build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3 -DNDEBUG")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3 -DNDEBUG -DRELEASEMODE")
 endif()
 
 
@@ -59,10 +60,16 @@ add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
 	c_json_load.cpp c_json_genconf.cpp jsoncpp/jsoncpp.cpp )
 
-#tests
+###tests
 file(GLOB TEST_SOURCES "test/*.cpp")
-add_executable(test.elf ${TEST_SOURCES})
-target_link_libraries(test.elf tunserver gtest sodium sodiumpp)
+#debug version
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
+add_executable(test-debug.elf ${TEST_SOURCES})
+target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp)
+#release version
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE")
+add_executable(test-release.elf ${TEST_SOURCES})
+target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp)
 
 #loadjason.elf jsoncpp
 #add_executable(jsonload.elf
