@@ -49,6 +49,26 @@ t_hash Hash1( const t_hash & hash ) {
     return string(reinterpret_cast<char *>(out_u_hash),  out_u_hash_len);
 }
 
+t_hash_PRV Hash1_PRV( const t_hash_PRV & hash ) {
+    size_t u_hashmsg_len = hash.size();
+    const unsigned char* u_hashmsg;
+    u_hashmsg = reinterpret_cast<const unsigned char *>( hash.c_str() ); // read locked
+
+   	const size_t out_u_hash_len = 64; // Hash1_size();
+   	assert( out_u_hash_len == Hash1_size() );  // <-- ^-- TODO(rob) constexpr instead?
+
+    assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
+		t_hash_PRV out_u_hash(out_u_hash_len);
+
+    crypto_generichash(
+			reinterpret_cast<unsigned char*>( out_u_hash.buffer_writable() ), // write locked
+			out_u_hash_len,
+      u_hashmsg, u_hashmsg_len, nullptr, 0);
+
+    return out_u_hash;
+}
+
+
 size_t Hash1_size() {
 	return 64;
 }
@@ -59,6 +79,18 @@ t_hash Hash2( const t_hash & hash ) {
         ch = ~ch;
     }
     const auto ret = Hash1(hash_from_hash);
+    assert( ret.size() == Hash2_size() );
+    return ret;
+}
+
+t_hash_PRV Hash2_PRV( const t_hash_PRV & hash ) {
+    t_hash_PRV hash_from_hash = Hash1_PRV(hash);
+    //for(auto &ch : hash_from_hash) { // negate all octets in it
+		for (size_t p=0; p<hash_from_hash.size(); ++p) { // TODO use foreach when locked_string supports it
+			char & ch = hash_from_hash.at(0); // TODO performance, change to [] after review
+    	ch = ~ch;
+    }
+    const auto ret = Hash1_PRV(hash_from_hash);
     assert( ret.size() == Hash2_size() );
     return ret;
 }
@@ -345,7 +377,15 @@ void c_multikeys_PAIR::generate() {
 
 	for (int i=0; i<2; ++i) {
 	_info("X25519 generating...");
-	sodiumpp::locked_string key_PRV(sodiumpp::randombytes_locked(crypto_scalarmult_SCALARBYTES)); // random secret key
+	size_t s = crypto_scalarmult_SCALARBYTES;
+	_info("Random for s="<<s);
+	_info("a");
+	sodiumpp::randombytes_locked(s);
+	_info("b");
+	auto rnd = sodiumpp::randombytes_locked(s);
+	_info("c");
+	_info("Random data=" << DEBUG_SECRET_STR( rnd.c_str() ) );
+	sodiumpp::locked_string key_PRV(rnd); // random secret key
 	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
 	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
 	}
@@ -418,7 +458,8 @@ namespace string_binary_op {
 
 // TODO move to a lib?
 
-std::string binary_string_xor(const std::string & str1, const std::string & str2) {
+template <class T>
+T binary_string_xor(const T & str1, const T & str2) {
 	// WARNING: this function is written with less assertive code (e.g. without at()),
 	// it MUST be checked against any errors if you would modify it.
 	const auto size1 = str1.size();
@@ -426,7 +467,7 @@ std::string binary_string_xor(const std::string & str1, const std::string & str2
 	if (size1 != size2) throw std::runtime_error(
 		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
 		+ std::to_string(size1) + " vs " + std::to_string(size2) );
-	std::string ret = str1;
+	T ret( str1 );
 	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i];
 	// TODO: decltype(size1) without const
 
@@ -437,6 +478,16 @@ std::string binary_string_xor(const std::string & str1, const std::string & str2
 std::string operator^(const std::string & str1, const std::string & str2) {
 	return binary_string_xor(str1,str2);
 }
+
+sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const sodiumpp::locked_string & str2) {
+	return binary_string_xor(str1,str2);
+}
+
+sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const std::string & str2_un) {
+	sodiumpp::locked_string str2(str2_un);
+	return binary_string_xor(str1,str2);
+}
+
 
 } // namespace
 
@@ -457,6 +508,13 @@ std::string c_crypto_tunnel::unbox(const std::string & msg) {
 	return m_stream_crypto_final->unbox(msg);
 }
 
+sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
+	if (len<1) throw std::runtime_error( string("Invalid substring of len=") + to_string(len) );
+	sodiumpp::locked_string ret( len );
+	for (size_t p=0; p<str.size(); ++p) ret[p] = str[p];
+	return ret;
+}
+
 c_crypto_system::t_symkey
 c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
 	// WARNING: used in constructor
@@ -468,7 +526,10 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	assert(self.m_PRV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
-	string KCT_accum = std::string( Hash1_size() , static_cast<unsigned char>(0) ); // fill it with 0 bytes (octets)
+	// fill it with 0 bytes (octets):
+	locked_string KCT_accum( Hash1_size() );
+	for (size_t p=0; p<KCT_accum.size(); ++p) KCT_accum[p] = static_cast<unsigned char>(0); 
+	// TODO(rob): we could make locked_string(size_t, char) constructor and use it
 
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
 		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
@@ -499,34 +560,30 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				using namespace string_binary_op; // operator^
 
 				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
-				locked_string k_dh_raw(
-					sodiumpp::crypto_scalarmult(
-						key_A_PRV.get_string(), 
-						key_B_pub
-					)
-				);
-				_info("k_dh_raw = " << to_string(k_dh_raw)); // _info( XVAR(k_dh_raw ) );
+				locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
+				_info("k_dh_raw = " << DEBUG_SECRET_STR( to_string(k_dh_raw.c_str()) )); // _info( XVAR(k_dh_raw ) );
 
-				std::string k_dh_agreed = // the fully agreed key, that is secure result of DH
-				Hash1(
-					Hash1( k_dh_raw )
+				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+				Hash1_PRV(
+					Hash1_PRV( k_dh_raw )
 					^	Hash1( key_A_pub )
 					^ Hash1( key_B_pub )
 				);
-				_info("k_dh_agreed = " << to_string(k_dh_agreed));
+				_info("k_dh_agreed = " << DEBUG_SECRET_STR( to_string(k_dh_agreed.c_str()) ) );
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
-				_info("KCT_accum = " << to_string(KCT_accum));
+				_info("KCT_accum = " <<  DEBUG_SECRET_STR( to_string(KCT_accum.c_str()) ) );
 			}
 		} // X25519
 	}
 
-	string KCT_ready_full = Hash1( KCT_accum );
-	_info("KCT_ready_full = " << to_string(KCT_ready_full));
+	t_hash_PRV KCT_ready_full = Hash1_PRV( KCT_accum );
+	_info("KCT_ready_full = " << DEBUG_SECRET_STR( to_string(KCT_ready_full.c_str()) ) );
 	assert( KCT_ready_full.size() >= crypto_secretbox_KEYBYTES ); // assert that we can in fact narrow the hash
-	string KCT_ready = KCT_ready_full.substr(0,crypto_secretbox_KEYBYTES); // narrow it to length of symmetrical key
 
-	_note("KCT ready exchanged: " << to_debug(KCT_ready) );
+	locked_string KCT_ready = substr( KCT_ready_full , crypto_secretbox_KEYBYTES); // narrow it to length of symmetrical key
+
+	_note("KCT ready exchanged: " << DEBUG_SECRET_STR( to_debug(KCT_ready.c_str()) ) );
 	return KCT_ready;
 }
 
@@ -548,18 +605,18 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	m_boxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,m_nonce_odd
-		,sodiumpp::encoded_bytes(m_KCT, sodiumpp::encoding::binary)
+		,sodiumpp::encoded_bytes( m_KCT.c_str(), sodiumpp::encoding::binary ) // TODO leaks memlock secret
 		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
 	),
 	m_unboxer(
 		sodiumpp::boxer_base::boxer_type_shared_key()
 		,! m_nonce_odd
-		,sodiumpp::encoded_bytes(m_KCT, sodiumpp::encoding::binary)
+		,sodiumpp::encoded_bytes( m_KCT.c_str(), sodiumpp::encoding::binary ) // TODO leaks memlock secret
 		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
 	)
 {
 	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
-		<< " and m_KCT=" << to_debug( m_KCT )
+		<< " and m_KCT=" << DEBUG_SECRET_STR( to_debug( m_KCT.c_str() ) )
 		);
 	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
 	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));

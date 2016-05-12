@@ -100,11 +100,16 @@ namespace unittest {
  */
 ///@{
 typedef std::string t_hash; ///< type of hash
+typedef sodiumpp::locked_string t_hash_PRV; ///< type of hash that contains a private secure data (e.g. is memlocked)
 
 t_hash Hash1( const t_hash & hash );
 size_t Hash1_size(); ///< returns size (in octets) of the output of Hash1 function
 t_hash Hash2( const t_hash & hash );
 size_t Hash2_size(); ///< returns size (in octets) of the output of Hash1 function
+
+t_hash_PRV Hash1_PRV( const t_hash_PRV & hash );
+t_hash_PRV Hash2_PRV( const t_hash_PRV & hash );
+
 ///@}
 
 
@@ -137,7 +142,7 @@ class c_crypto_system {
 
 		virtual ~c_crypto_system()=default;
 
-		virtual t_symkey secure_random(size_t size_of_radom_data) const;
+		// virtual t_symkey secure_random(size_t size_of_radom_data) const;
 
 		virtual t_crypto_system_type get_system_type() const;
 };
