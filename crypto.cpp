@@ -511,7 +511,9 @@ std::string c_crypto_tunnel::unbox(const std::string & msg) {
 sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
 	if (len<1) throw std::runtime_error( string("Invalid substring of len=") + to_string(len) );
 	sodiumpp::locked_string ret( len );
-	for (size_t p=0; p<str.size(); ++p) ret[p] = str[p];
+	assert(ret.size() == len);
+	assert(len < str.size());
+	for (size_t p=0; p<str.size() && p < ret.size(); ++p) ret[p] = str[p];
 	return ret;
 }
 
