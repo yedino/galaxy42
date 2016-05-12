@@ -55,7 +55,7 @@ add_executable(tunserver.elf tunserver.cpp)
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp)
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
-	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs1.cpp
+	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp
 	trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
 	c_json_load.cpp c_json_genconf.cpp jsoncpp/jsoncpp.cpp )
 
