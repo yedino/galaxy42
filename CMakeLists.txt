@@ -10,7 +10,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_
 include_directories(../sodiumpp/sodiumpp/include)
 
 #add local build of some external libs
-link_directories( build_extra/ntru )
+link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
 
 
@@ -45,7 +45,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
         message("Release build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3 -DNDEBUG -DRELEASEMODE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3 -DNDEBUG")
 endif()
 
 
@@ -53,23 +53,23 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp)
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt)
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp
 	trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
 	c_json_load.cpp c_json_genconf.cpp jsoncpp/jsoncpp.cpp )
 
-###tests
+#tests
 file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp)
+target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp)
+target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt)
 
 #loadjason.elf jsoncpp
 #add_executable(jsonload.elf

@@ -38,6 +38,40 @@ size_t c_multikeys_PRV::get_count_of_systems() const {
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
+// TODO move to class
+uint8_t c_multikeys_PAIR::get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
+    static std::ifstream rand_source;
+    static locked_string random_byte(1);
+
+    if (cmd == INIT) {
+        /* Any initialization for a real entropy source goes here. */
+        rand_source.open("/dev/urandom");
+        return 1;
+    }
+
+    if (out == nullptr)
+        return 0;
+
+    if (cmd == GET_NUM_BYTES_PER_BYTE_OF_ENTROPY) {
+        /* Here we return the number of bytes needed from the entropy
+         * source to obtain 8 bits of entropy.  Maximum is 8.
+         */
+        *out = 1;
+        return 1;
+    }
+
+    if (cmd == GET_BYTE_OF_ENTROPY) {
+        if (!rand_source.is_open())
+            return 0;
+
+        rand_source.get(random_byte[0]);
+        *out = static_cast<uint8_t>(random_byte[0]);
+        return 1;
+    }
+    return 0;
+}
+
+
 // ==================================================================
 
 t_hash Hash1( const t_hash & hash ) {
@@ -399,13 +433,31 @@ void c_multikeys_PAIR::generate() {
 	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
 	}
 
-/*	for (int i=0; i<1; ++i) {
-	_info("(fake!!! TODO!!!) NTru generating..."); // XXX TODO
-	sodiumpp::locked_string key_PRV(sodiumpp::randombytes_locked(crypto_scalarmult_SCALARBYTES)); // random secret key
-	std::string key_pub(sodiumpp::crypto_scalarmult_base(key_PRV.c_str())); // PRV -> pub
-	this->add_public_and_PRIVATE( e_crypto_system_type_ntru , key_pub , key_PRV ); // XXX TODO test!
+	for (int i=0; i<1; ++i) {
+		// real NTRU
+		_info("NTRU generating...");
+		DRBG_HANDLE drbg; // handle for instantiated DRBG
+		uint32_t r =  ntru_crypto_drbg_instantiate(128, nullptr, 0, get_entropy, &drbg);
+		if (r != DRBG_OK) throw std::runtime_error("An error occurred during DRBG instantiation.");
+		// generate key pair
+		uint16_t public_key_len = 0;
+		uint16_t private_key_len = 0;
+		// get size of keys
+		r = ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1, &public_key_len, nullptr, &private_key_len, nullptr);
+		std::string public_key(public_key_len, 0);
+		locked_string private_key(private_key_len);
+		if (r != NTRU_OK) throw std::runtime_error("An error occurred during key generation.");
+		// values for NTRU_EES439EP1
+		assert(public_key_len == 609);
+		assert(private_key_len == 659);
+
+		r = ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1,
+			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
+			&private_key_len, reinterpret_cast<uint8_t*>(&private_key[0]));
+		if (r != NTRU_OK) throw std::runtime_error("An error occurred during key generation.");
+		this->add_public_and_PRIVATE(e_crypto_system_type_ntru, public_key, private_key);
 	}
-*/
+
 	string serialized = this->m_pub.serialize_bin();
 	_info("Serialized pubkeys: [" << to_debug(serialized) << "]");
 }

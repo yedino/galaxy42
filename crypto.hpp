@@ -5,7 +5,7 @@
 #include <sodium.h>
 #include "strings_utils.hpp"
 #include "gtest/gtest_prod.h"
-
+#include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
 
 /**
@@ -260,7 +260,10 @@ class c_multikeys_PAIR {
 		virtual t_crypto_system_type get_system_type() const;
 
 		virtual ~c_multikeys_PAIR() = default;
+	private:
+		static uint8_t get_entropy(ENTROPY_CMD  cmd, uint8_t *out);
 };
+
 
 /**
  * Crypto primitives are provided by - sodiumpp library (and NTru, SIDH, Geport - in future - TODO)
