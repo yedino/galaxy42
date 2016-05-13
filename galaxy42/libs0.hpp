@@ -56,11 +56,7 @@ using std::endl;
 
 
 // === RELEASE OPTIONS ===
-#ifndef RELEASEMODE
-	#define RELEASEMODE 0
-#endif
-
-#if RELEASEMODE
+#if defined (RELEASEMODE_)
 	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 0
 #else
 	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 1

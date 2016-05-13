@@ -27,27 +27,30 @@ ADD_CUSTOM_TARGET(debug
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=debug ${CMAKE_SOURCE_DIR}
 		COMMAND make)
 
-message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 if(NOT CMAKE_BUILD_TYPE)
 	message("DEFAULT BUILD: Fast build")
 	set(CMAKE_BUILD_TYPE fast)
 endif()
 
+set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
+
 if(CMAKE_BUILD_TYPE STREQUAL "fast")
         message("Fast build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
-endif()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
 
-if(CMAKE_BUILD_TYPE STREQUAL "debug")
+elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
         message("Debug build")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3")
-endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "release")
         message("Release build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3 -DNDEBUG")
+        add_definitions(-DRELEASEMODE_ -DNDEBUG)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3")
+else()
+    message("bad CMAKE_BUILD_TYPE flag")
+    message("usage cmake [fast/debug/release] .")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
 endif()
-
 
 include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
@@ -67,7 +70,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
 target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt)
 #release version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
 target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt)
 
@@ -87,7 +90,7 @@ target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencry
 add_custom_target(run
 		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
-		DEPENDS ./test.elf
+		DEPENDS test-debug.elf
 		WORKING_DIRECTORY ./)
 
 add_custom_target(runcli
