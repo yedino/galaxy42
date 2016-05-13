@@ -113,6 +113,8 @@ void error(const std::string & msg) {
 namespace developer_tests {
 
 bool wip_strings_encoding(boost::program_options::variables_map & argm) {
+	UNUSED(argm);
+
 	_mark("Tests of string encoding");
 	string s1,s2,s3;
 	using namespace std;
@@ -346,6 +348,7 @@ bool c_routing_manager::c_route_reason::operator==(const c_route_reason &other) 
 c_routing_manager::c_route_search::c_route_search(c_haship_addr addr, int basic_ttl)
 	: m_addr(addr), m_ever(false), m_ask_time(), m_ttl_used(0), m_ttl_should_use(5)
 {
+	UNUSED(basic_ttl); // TODO or use it as m_ttl_should_use?
 	_info("NEW router SEARCH: " << (*this));
 }
 
@@ -659,7 +662,6 @@ void c_tunserver::peering_ping_all_peers() {
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
-	size_t count_used=0; ///< peers that we used
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -742,9 +744,6 @@ void c_tunserver::event_loop() {
 	_info("Entering the event loop");
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
-
-	fd_set fd_set_data;
-
 
 	this->peering_ping_all_peers();
 	const auto ping_all_frequency = std::chrono::seconds( 600 ); // how often to ping them
@@ -1027,8 +1026,9 @@ void c_tunserver::event_loop() {
 					_info("GOT CORRECT REPLY - USING IT");
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost );
 					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
-					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); // store it, so that we own this object
-					// TODONOW and reply to others who asked us
+					// store it, so that we own this object:
+					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); 
+					UNUSED(route_info_ref_we_own); // TODO TODONOW and reply to others who asked us
 				}
 			}
 			else {

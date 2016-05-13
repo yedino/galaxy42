@@ -79,11 +79,11 @@ const std::string & generator::str() const { return m_str; }
 // ==================================================================
 
 
-parser::parser( tag_caller_must_keep_this_string_valid x , const std::string & data_str)
+parser::parser( tag_caller_must_keep_this_string_valid, const std::string & data_str)
  : m_data_begin( & * data_str.begin() ), m_data_now( m_data_begin ), m_data_end( & * data_str.end() )
 { }
 
-parser::parser( tag_caller_must_keep_this_buffer_valid x , const char * buf , size_t size)
+parser::parser( tag_caller_must_keep_this_buffer_valid, const char * buf , size_t size)
  : m_data_begin( buf ), m_data_now( m_data_begin  ), m_data_end( buf + size )
 { }
 
