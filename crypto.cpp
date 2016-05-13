@@ -40,8 +40,9 @@ size_t c_multikeys_PRV::get_count_of_systems() const {
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
-// TODO move to class
-uint8_t c_multikeys_PAIR::get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
+
+// TODO move to top of file - group of free functions
+uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
     static std::ifstream rand_source;
     static locked_string random_byte(1);
 
@@ -367,27 +368,26 @@ bool alltests() {
 
 } // namespace
 
-
 // TODO(janek): case as enum name . warning: new enum types added
 // TODO(janek) fix identation
 		std::string t_crypto_system_type_to_name(int val) {
 			switch(val) {
 				case 1:			return "X25519";
 				case 2:			return "Ed25519";
-				case 3:     return "ntru128";
+				case e_crypto_system_type_NTRU_EES439EP1:     return "NTRU-EES439EP1";
 				case 4:			return "geport_todo";
 				case 5:			return "symhash_todo";
 				case 6:			return "multikey";
 					//default:		return "Wrong type";
 			}
-			return "UNKNOWN";
+			return string("(Invalid enum type=") + to_string(val) + string(")");
 		}
 
 char t_crypto_system_type_to_ID(int val) {
 	switch(val) {
 		case e_crypto_system_type_X25519: return 'x';
 		case e_crypto_system_type_Ed25519: return 'e';
-		case e_crypto_system_type_ntru: return 't';
+		case e_crypto_system_type_NTRU_EES439EP1: return 't';
 		case e_crypto_system_type_SIDH: return 's';
 		case e_crypto_system_type_geport_todo: return 'g';
 	}
@@ -398,7 +398,7 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 	switch(name) {
 		case 'x': return e_crypto_system_type_X25519;
 		case 'e': return e_crypto_system_type_Ed25519;
-		case 't': return e_crypto_system_type_ntru;
+		case 't': return e_crypto_system_type_NTRU_EES439EP1;
 		case 's': return e_crypto_system_type_SIDH;
 		case 'g': return e_crypto_system_type_geport_todo;
 	}
@@ -447,54 +447,95 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 }
 
 void c_multikeys_PAIR::generate() {
-	_info("Generting keypair");
+	generate( e_crypto_system_type_X25519 , 3 );
+	generate( e_crypto_system_type_NTRU_EES439EP1 , 2 );
+}
 
-	for (int i=0; i<2; ++i) {
-	_info("X25519 generating...");
-	size_t s = crypto_scalarmult_SCALARBYTES;
-	sodiumpp::randombytes_locked(s);
-	auto rnd = sodiumpp::randombytes_locked(s);
-	_info("Random data size=" << (rnd.size()) );
-	_info("Random data=" << to_debug_locked(rnd) );
-	sodiumpp::locked_string key_PRV(rnd); // random secret key
-	std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
-	this->add_public_and_PRIVATE( e_crypto_system_type_X25519 , key_pub , key_PRV );
+DRBG_HANDLE get_DRBG(size_t size) {
+	// TODO(r) use std::once / lock? - not thread safe now
+	static map<size_t , DRBG_HANDLE> drbg_tab;
+
+	auto found = drbg_tab.find(size);
+	if (found == drbg_tab.end()) { // not created yet
+		try {
+			_note("Creating DRBG for size=" << size);
+			DRBG_HANDLE newone;
+			NTRU_DRBG_exec_or_throw(
+				ntru_crypto_drbg_instantiate(size, nullptr, 0, get_entropy, &newone)
+				,"random init"
+			);
+			drbg_tab[ size ] = newone;
+			_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
+			return newone;
+		} catch(...) {
+			_erro("Can not init DRBG! (exception)");
+			throw;
+		}
+	} // not found
+	else {
+		return found->second;
 	}
+	assert(false);
+}
 
-	for (int i=0; i<1; ++i) {
-		// real NTRU
-		_info("NTRU generating...");
-		DRBG_HANDLE drbg; // handle for instantiated DRBG
+void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int count) {
+	switch (crypto_system_type)
+	{
+		case e_crypto_system_type_X25519:
+		{
+			for (int i=0; i<count; ++i) {
+				_info("X25519 generating...");
+				size_t s = crypto_scalarmult_SCALARBYTES;
+				sodiumpp::randombytes_locked(s);
+				auto rnd = sodiumpp::randombytes_locked(s);
+				_info("Random data size=" << (rnd.size()) );
+				_info("Random data=" << to_debug_locked(rnd) );
+				sodiumpp::locked_string key_PRV(rnd); // random secret key
+				std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
+				this->add_public_and_PRIVATE( crypto_system_type , key_pub , key_PRV );
+			}
+			break;
+		}
 
-		NTRU_DRBG_exec_or_throw(
-			ntru_crypto_drbg_instantiate(128, nullptr, 0, get_entropy, &drbg)
-			,"random init"
-		);
+		case e_crypto_system_type_NTRU_EES439EP1:
+		{
+			for (int i=0; i<count; ++i) {
+				// real NTRU
+				_info("NTRU generating...");
 
-		// generate key pair
-		uint16_t public_key_len = 0, private_key_len = 0;
-		// get size of keys:
-		NTRU_exec_or_throw(
-			ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1, &public_key_len, nullptr, &private_key_len, nullptr)
-			,"generate keypair - get key length"
-		);
-		// values for NTRU_EES439EP1
-		assert(public_key_len == 609);
-		assert(private_key_len == 659);
+				// generate key pair
+				uint16_t public_key_len = 0, private_key_len = 0;
+				// get size of keys:
+				NTRU_exec_or_throw(
+					ntru_crypto_ntru_encrypt_keygen(
+						get_DRBG(128),
+						NTRU_EES439EP1,
+						&public_key_len, nullptr, &private_key_len, nullptr
+						)
+					,"generate keypair - get key length"
+				);
+				// values for NTRU_EES439EP1
+				assert(public_key_len == 609);
+				assert(private_key_len == 659);
 
-		std::string public_key(public_key_len, 0);
-		locked_string private_key(private_key_len);
+				std::string public_key(public_key_len, 0);
+				locked_string private_key(private_key_len);
 
-		NTRU_exec_or_throw(
-			ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1,
-				&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
-				&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
-			)
-			,"generate keypair"
-		);
+				NTRU_exec_or_throw(
+					ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
+						&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
+						&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
+					)
+					,"generate keypair"
+				);
+				this->add_public_and_PRIVATE(crypto_system_type, public_key, private_key);
+			}
+			break;
+		}
 
-		this->add_public_and_PRIVATE(e_crypto_system_type_ntru, public_key, private_key);
-	}
+		default: throw runtime_error("Trying to generate unsupported key type:"
+			+ t_crypto_system_type_to_name(crypto_system_type));
+	} // switch
 
 	string serialized = this->m_pub.serialize_bin();
 	_info("Serialized pubkeys: [" << to_debug(serialized) << "]");
@@ -647,6 +688,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		auto key_count_b = them_pub.get_count_keys_in_system(sys_id);
 
 		// for given crypto system:
+
 		if (sys == e_crypto_system_type_X25519) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
@@ -680,6 +722,44 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 		} // X25519
+
+
+/*
+		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
+			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
+			auto key_count_bigger = std::max( key_count_a , key_count_b );
+
+			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
+				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
+				auto keynr_a = keynr_i % key_count_a;
+				auto keynr_b = keynr_i % key_count_b;
+				_info("kex " << keynr_a << " " << keynr_b);
+
+				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
+				auto const key_A_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+
+				using namespace string_binary_op; // operator^
+
+				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
+				locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
+				_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // _info( XVAR(k_dh_raw ) );
+
+				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+				Hash1_PRV(
+					Hash1_PRV( k_dh_raw )
+					^	Hash1( key_A_pub )
+					^ Hash1( key_B_pub )
+				);
+				_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+
+				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
+			}
+		} // NTRU_EES439EP1
+		*/
+
 	}
 
 	t_hash_PRV KCT_ready_full = Hash1_PRV( KCT_accum );

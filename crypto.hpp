@@ -81,6 +81,11 @@ std::string to_debug_locked(const sodiumpp::locked_string & data);
 namespace antinet_crypto {
 
 
+DRBG_HANDLE get_DRBG(size_t size);
+
+uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out);
+
+
 namespace unittest {
 	class c_symhash_state__tests_with_private_access;
 } // namespace
@@ -123,7 +128,7 @@ enum t_crypto_system_type : unsigned char {
 	e_crypto_system_type_invalid = 0,
 	e_crypto_system_type_X25519 = 5,
 	e_crypto_system_type_Ed25519 = 6,
-	e_crypto_system_type_ntru = 7,
+	e_crypto_system_type_NTRU_EES439EP1 = 7,
 	e_crypto_system_type_SIDH = 8,
 	e_crypto_system_type_geport_todo = 9,
 	e_crypto_system_type_symhash_todo = 10,
@@ -133,6 +138,8 @@ enum t_crypto_system_type : unsigned char {
 	e_crypto_system_type_multikey_private = 30,
 	e_crypto_system_type_END,
 };
+
+std::string t_crypto_system_type_to_name(int val);
 
 /** Some state of some crypto system */
 class c_crypto_system {
@@ -249,7 +256,8 @@ class c_multikeys_PAIR {
 		c_multikeys_pub m_pub;
 		c_multikeys_PRV m_PRV;
 
-		void generate();
+		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
+		void generate(); ///< generate the default set of keys
 
 		void debug() const;
 
@@ -260,8 +268,7 @@ class c_multikeys_PAIR {
 		virtual t_crypto_system_type get_system_type() const;
 
 		virtual ~c_multikeys_PAIR() = default;
-	private:
-		static uint8_t get_entropy(ENTROPY_CMD  cmd, uint8_t *out);
+
 };
 
 
