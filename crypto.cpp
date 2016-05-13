@@ -412,9 +412,9 @@ void c_multikeys_PAIR::debug() const {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRVkeys_of_this_system = m_PRV.m_cryptolists_PRVkey.at(ix);
 		_info("Cryptosystem: " << t_crypto_system_type_to_name(ix) );
-		for(size_t iy=0; iy < m_pub.m_cryptolists_pubkey[ix].size(); ++iy){
-			_info("  PUB:" << to_debug( m_pub.m_cryptolists_pubkey[ix].at(iy) ) );
-			_info("  PRV:" << to_debug_locked( m_PRV.m_cryptolists_PRVkey[ix].at(iy) ) << "\n");
+		for(size_t iy=0; iy < pubkeys_of_this_system.size(); ++iy){
+			_info("  PUB:" << to_debug( pubkeys_of_this_system.at(iy) ) );
+			_info("  PRV:" << to_debug_locked( PRVkeys_of_this_system.at(iy) ) << "\n");
 		}
 	}
 	_info("---------");

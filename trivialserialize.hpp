@@ -182,7 +182,7 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 }
 
 template <int S, typename T> void generator::push_integer_s(T value) {
-	throw std::runtime_error("Not implemented yet");
+	UNUSED(value); TODOCODE;
 }
 
 template <int S> void generator::push_bytes_sizeoctets(const std::string & data, size_t max_size_for_assert) {
