@@ -34,6 +34,7 @@ void c_peering::print(ostream & ostr) const {
 }
 
 void c_peering::send_data(const char * data, size_t data_size) {
+	UNUSED(data); UNUSED(data_size);
 	throw std::runtime_error("Used abstract send_data() that does nothing");
 }
 
@@ -51,6 +52,7 @@ c_peering_udp::c_peering_udp(const t_peering_reference & ref)
 
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
+	UNUSED(data); UNUSED(data_size);
 	throw std::runtime_error("Use send_data_udp");
 }
 
