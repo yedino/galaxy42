@@ -27,6 +27,8 @@
 #include <unordered_set>
 #include <regex>
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include "c_tnetdbg.hpp"
 
 using std::string;
@@ -50,6 +52,7 @@ using std::istringstream;
 using std::endl;
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
+
 
 
 // === RELEASE OPTIONS ===
@@ -166,6 +169,12 @@ namespace tunserver_utils {
 std::pair< std::string,int > parse_ip_string(const string& ip_string);
 
 }
+
+#define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
+<<__func__<<" (line "<<__LINE__<<")"; \
+_erro(oss.str()); \
+throw std::runtime_error(oss.str()); \
+} while(0)
 
 #endif
 

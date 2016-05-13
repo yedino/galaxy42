@@ -421,8 +421,15 @@ void c_multikeys_PAIR::debug() const {
 }
 
 
-template <typename T>
-void errcode_valid_or_throw( T ok_value , T errcode , const std::string &api_name, const std::string &info="") {
+template <typename T_ok_value, typename T_errcode>
+void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
+	const std::string &api_name, const std::string &info="")
+{
+	// convert type type of ok_value to exactly same type as type of the error code
+	// because sometimes they differ, e.g. some APIs have functions return uint32_t,
+	// while just doing #define NTRU_OK 0 which is an "int" type.
+	const T_errcode ok_value = boost::numeric_cast<T_errcode>( ok_value_raw );
+	// the conversion above is safe (range-checked) so we can now safely compare the value:
 	if ( errcode != ok_value ) {
 		ostringstream oss; oss<<api_name<<" function failed";
 		if (info.size()) oss<<" - " << info ;
@@ -432,11 +439,11 @@ void errcode_valid_or_throw( T ok_value , T errcode , const std::string &api_nam
 }
 
 void NTRU_DRBG_exec_or_throw( uint32_t errcode , const std::string &info="") {
-	errcode_valid_or_throw( (uint32_t)DRBG_OK, errcode, "DRBG for NTRU", info);
+	errcode_valid_or_throw( DRBG_OK, errcode, "DRBG for NTRU", info);
 }
 
 void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
-	errcode_valid_or_throw( (uint32_t)NTRU_OK, errcode, "NTRU", info);
+	errcode_valid_or_throw( NTRU_OK, errcode, "NTRU", info);
 }
 
 void c_multikeys_PAIR::generate() {
@@ -585,6 +592,10 @@ sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const st
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other) {
 	c_crypto_tunnel tunnel;
+
+	UNUSED(self);
+	UNUSED(other);
+	TODOCODE;
 
 	//string a_dh = self.
 
