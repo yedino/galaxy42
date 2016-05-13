@@ -8,7 +8,7 @@
 // c_haship_addr :
 c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({{}}) { }
 
-c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({{}}) {
+c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({{}}) {
 	_info("Creating HIP from pubkey: " << pubkey);
 
 	// TODO(r) [crypto] hashing of pubkey to HIP - review this
@@ -28,10 +28,10 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubk
 	assert( sizeof hash >= 16 );
 	for (size_t i=2; i<16; ++i) {
 		at(i) = hash[i];
-	}	
+	}
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_string ) { ///< create the IP address from a string (as dot/colon IP notation)
+c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_string ) { ///< create the IP address from a string (as dot/colon IP notation)
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//throw std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__));
 
@@ -77,7 +77,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string x, const string & addr_st
 	}
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_bin x, const string_as_bin & data ) {
+c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const string_as_bin & data ) {
 	assert( this->size() == data.bytes.size() );
 	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.bytes.at(i);
 }

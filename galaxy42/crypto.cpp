@@ -13,6 +13,8 @@ namespace antinet_crypto {
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
 		return string_as_dbg( string_as_bin( data.get_string() ) ).get();
+	#else
+		UNUSED(data);
 	#endif
 	return "[hidden-secret](locked_string)";
 }
@@ -418,6 +420,25 @@ void c_multikeys_PAIR::debug() const {
 	_info("---------");
 }
 
+
+template <typename T>
+void errcode_valid_or_throw( T ok_value , T errcode , const std::string &api_name, const std::string &info="") {
+	if ( errcode != ok_value ) {
+		ostringstream oss; oss<<api_name<<" function failed";
+		if (info.size()) oss<<" - " << info ;
+		oss << '!';
+		throw std::runtime_error(oss.str());
+	}
+}
+
+void NTRU_DRBG_exec_or_throw( uint32_t errcode , const std::string &info="") {
+	errcode_valid_or_throw( (uint32_t)DRBG_OK, errcode, "DRBG for NTRU", info);
+}
+
+void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
+	errcode_valid_or_throw( (uint32_t)NTRU_OK, errcode, "NTRU", info);
+}
+
 void c_multikeys_PAIR::generate() {
 	_info("Generting keypair");
 
@@ -437,24 +458,34 @@ void c_multikeys_PAIR::generate() {
 		// real NTRU
 		_info("NTRU generating...");
 		DRBG_HANDLE drbg; // handle for instantiated DRBG
-		uint32_t r =  ntru_crypto_drbg_instantiate(128, nullptr, 0, get_entropy, &drbg);
-		if (r != DRBG_OK) throw std::runtime_error("An error occurred during DRBG instantiation.");
+
+		NTRU_DRBG_exec_or_throw(
+			ntru_crypto_drbg_instantiate(128, nullptr, 0, get_entropy, &drbg)
+			,"random init"
+		);
+
 		// generate key pair
-		uint16_t public_key_len = 0;
-		uint16_t private_key_len = 0;
-		// get size of keys
-		r = ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1, &public_key_len, nullptr, &private_key_len, nullptr);
-		std::string public_key(public_key_len, 0);
-		locked_string private_key(private_key_len);
-		if (r != NTRU_OK) throw std::runtime_error("An error occurred during key generation.");
+		uint16_t public_key_len = 0, private_key_len = 0;
+		// get size of keys:
+		NTRU_exec_or_throw(
+			ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1, &public_key_len, nullptr, &private_key_len, nullptr)
+			,"generate keypair - get key length"
+		);
 		// values for NTRU_EES439EP1
 		assert(public_key_len == 609);
 		assert(private_key_len == 659);
 
-		r = ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1,
-			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
-			&private_key_len, reinterpret_cast<uint8_t*>(&private_key[0]));
-		if (r != NTRU_OK) throw std::runtime_error("An error occurred during key generation.");
+		std::string public_key(public_key_len, 0);
+		locked_string private_key(private_key_len);
+
+		NTRU_exec_or_throw(
+			ntru_crypto_ntru_encrypt_keygen(drbg, NTRU_EES439EP1,
+				&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
+				&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
+			)
+			,"generate keypair"
+		);
+
 		this->add_public_and_PRIVATE(e_crypto_system_type_ntru, public_key, private_key);
 	}
 
