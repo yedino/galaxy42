@@ -108,10 +108,17 @@ namespace unittest {
  * Usefull free crypto functions
  */
 ///@{
+
 namespace string_binary_op {
+
+
 std::string binary_string_xor(const std::string & str1, const std::string & str2);
 std::string operator^(const std::string & str1, const std::string & str2);
+sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const sodiumpp::locked_string & str2);
+sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const std::string & str2_un);
+
 } //namespace
+
 ///@}
 
 

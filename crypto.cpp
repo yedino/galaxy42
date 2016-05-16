@@ -9,9 +9,13 @@
 
 using sodiumpp::locked_string;
 
+
+
 namespace antinet_crypto {
 
 
+
+// obsolete? delete it. TODO(r)
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
 		return string_as_dbg( string_as_bin( data.get_string() ) ).get();
@@ -20,6 +24,48 @@ std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#endif
 	return "[hidden-secret](locked_string)";
 }
+
+
+
+namespace string_binary_op {
+
+template <class T1, class T2>
+T1 binary_string_xor(T1 const & str1, T2 const& str2) {
+	typedef std::string T;
+
+	// WARNING: this function is written with less assertive code (e.g. without at()),
+	// it MUST be checked against any errors if you would modify it.
+	const auto size1 = str1.size();
+	const auto size2 = str2.size();
+	if (size1 != size2) throw std::runtime_error(
+		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
+		+ std::to_string(size1) + " vs " + std::to_string(size2) );
+
+	// this is safe also for locked string:
+	T1 ret( str1 );
+	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i];
+	// TODO: decltype(size1) without const
+
+	assert(ret.size() == str1.size());	assert(str1.size() == str2.size());
+	return ret;
+}
+
+std::string operator^(const std::string & str1, const std::string & str2) {
+	return binary_string_xor(str1,str2);
+}
+
+sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const sodiumpp::locked_string & str2) {
+	return binary_string_xor(str1,str2);
+}
+
+sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const std::string & str2_un) {
+	sodiumpp::locked_string str2(str2_un);
+	return binary_string_xor(str1,str2);
+}
+
+
+} // namespace
+
 
 // ==================================================================
 
@@ -569,6 +615,26 @@ t_crypto_system_type crypto_type, size_t number_of_key) const
 
 // ---
 
+void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
+	add_key(crypto_type, key);
+}
+
+c_multikeys_pub::t_key c_multikeys_pub::get_public(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	return get_key(crypto_type, number_of_key);
+}
+
+// ---
+
+void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type, const t_key & key) {
+	add_key(crypto_type, key);
+}
+
+c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	return get_key(crypto_type, number_of_key);
+}
+
+// ---
+
 std::string c_stream_crypto::box(const std::string & msg) {
 	_info("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
 	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
@@ -595,43 +661,6 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 	if (a.size() != b.size()) return false;
 	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
 }
-
-namespace string_binary_op {
-
-// TODO move to a lib?
-
-template <class T>
-T binary_string_xor(const T & str1, const T & str2) {
-	// WARNING: this function is written with less assertive code (e.g. without at()),
-	// it MUST be checked against any errors if you would modify it.
-	const auto size1 = str1.size();
-	const auto size2 = str2.size();
-	if (size1 != size2) throw std::runtime_error(
-		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
-		+ std::to_string(size1) + " vs " + std::to_string(size2) );
-	T ret( str1 );
-	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i];
-	// TODO: decltype(size1) without const
-
-	assert(ret.size() == str1.size());	assert(str1.size() == str2.size());
-	return ret;
-}
-
-std::string operator^(const std::string & str1, const std::string & str2) {
-	return binary_string_xor(str1,str2);
-}
-
-sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const sodiumpp::locked_string & str2) {
-	return binary_string_xor(str1,str2);
-}
-
-sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const std::string & str2_un) {
-	sodiumpp::locked_string str2(str2_un);
-	return binary_string_xor(str1,str2);
-}
-
-
-} // namespace
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other) {
 	c_crypto_tunnel tunnel;
@@ -676,7 +705,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 	// fill it with 0 bytes (octets):
 	locked_string KCT_accum( Hash1_size() );
-	for (size_t p=0; p<KCT_accum.size(); ++p) KCT_accum[p] = static_cast<unsigned char>(0); 
+	for (size_t p=0; p<KCT_accum.size(); ++p) KCT_accum[p] = static_cast<unsigned char>(0);
 	// TODO(rob): we could make locked_string(size_t, char) constructor and use it
 
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
