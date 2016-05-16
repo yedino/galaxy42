@@ -19,3 +19,6 @@
 [submodule "ntru-crypto"]
 	path = ntru-crypto
 	url = ../ntru-crypto
+[submodule "libsidhms"]
+	path = libsidhms
+	url = https://github.com/tigusoft-vm/libsidhms.git
