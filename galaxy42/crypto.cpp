@@ -5,6 +5,8 @@
 
 #include "trivialserialize.hpp"
 
+#include "glue_lockedstring_trivialserialize.hpp"
+
 using sodiumpp::locked_string;
 
 namespace antinet_crypto {
@@ -30,12 +32,14 @@ t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_multikeys_PRV::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
-size_t c_multikeys_PRV::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
-	return m_cryptolists_PRVkey.at(crypto_type).size();
+template <typename TKey>
+size_t c_multikeys_general<TKey>::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
+	return m_cryptolists_general.at(crypto_type).size();
 }
 
-size_t c_multikeys_PRV::get_count_of_systems() const {
-	return m_cryptolists_PRVkey.size();
+template <typename TKey>
+size_t c_multikeys_general<TKey>::get_count_of_systems() const {
+	return m_cryptolists_general.size();
 }
 
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
@@ -148,11 +152,13 @@ size_t Hash2_size() {
 
 // ==================================================================
 
-bool c_multikeys_pub::operator>(const c_multikeys_pub &rhs) const {
+template <typename TKey>
+bool c_multikeys_general<TKey>::operator>(const t_self &rhs) const {
 	return this->get_hash() > rhs.get_hash();
 }
 
-std::string c_multikeys_pub::get_hash() const {
+template <typename TKey>
+std::string c_multikeys_general<TKey>::get_hash() const {
 	if (m_hash_cached=="") update_hash();
 	assert(m_hash_cached != "");
 	string s;
@@ -161,7 +167,8 @@ std::string c_multikeys_pub::get_hash() const {
 	return m_hash_cached;
 }
 
-void c_multikeys_pub::update_hash() const {
+template <typename TKey>
+void c_multikeys_general<TKey>::update_hash() const {
 	string all_pub; // all public keys together
 	m_hash_cached = Hash1( this->serialize_bin()  );
 }
@@ -195,27 +202,30 @@ Serialized pubkeys: [(104)[
 , ,f,0x80(128),0x81(129),$,0x98(152),0x89(137),0x0f(15),0xde(222),0xbc(188),0xbc(188),0x1f(31),g,0xc9(201),R,6,0x94(148),j,0xd2(210),0x8f(143),0xd5(213),0x98(152),q,0xb7(183),3,[,0xb2(178),0xb4(180),0x8c(140),0xa5(165),0xdf(223),.,b]]
 	*/
 
-std::string c_multikeys_pub::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
+template <typename TKey>
+std::string c_multikeys_general<TKey>::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
 	trivialserialize::generator gen(100);
 	gen.push_byte_u( (char) 'a' ); // version of this map. '$' will be development, and then use 'a','b',... for stable formats
 	int used_types=0; // count how many key types are actually used - we will count
-	for (size_t ix=0; ix<m_cryptolists_pubkey.size(); ++ix) if (m_cryptolists_pubkey.at(ix).size()) ++used_types;
+	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
 	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
 	int used_types_check=0; // counter just to assert
-	for (size_t ix=0; ix<m_cryptolists_pubkey.size(); ++ix) { // for all key type (for each element)
-		const vector<string> & pubkeys_of_this_system  = m_cryptolists_pubkey.at(ix); // take vector of keys
+	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
+		const vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
 		if (pubkeys_of_this_system.size()) { // save them this time
 			++used_types_check;
 			gen.push_integer_uvarint(  t_crypto_system_type_to_ID(ix) ); // save key type
-			gen.push_vector_string( pubkeys_of_this_system ); // save the vector of keys
+			gen.push_vector_object( pubkeys_of_this_system ); // save the vector of keys
 		}
 	}
 	assert(used_types_check == used_types); // we written same amount of keys as we previously counted
 	return gen.str();
 }
 
-c_multikeys_pub c_multikeys_pub::load_from_bin(const std::string & data) {
-	c_multikeys_pub ret;
+template <typename TKey>
+void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
+	// clear(); // remove all keys TODO
+
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	auto magic = parser.pop_byte_u();
 	_info(magic);
@@ -225,15 +235,14 @@ c_multikeys_pub c_multikeys_pub::load_from_bin(const std::string & data) {
 		for (size_t map_i=0; map_i<map_size; ++map_i) {
 			auto sys_id = t_crypto_system_type_from_ID(  parser.pop_integer_uvarint() );
 			_info("sys_id=" << sys_id);
-			auto sys_keys = parser.pop_vector_string();
+			auto sys_keys = parser.pop_vector_string(); // <--- load vector of all keys of this system
 			// TODO(r) asert sys_id is a normal expected crypto key type
-			ret.m_cryptolists_pubkey.at( sys_id ) = sys_keys;
+			this->m_cryptolists_general.at( sys_id ) = sys_keys;
 		}
 		if (!parser.is_end()) throw std::runtime_error("Format incorrect: extra elements at end");
 	}	else throw trivialserialize::format_error_read_invalid_version();
 	// TODO(r) check that numbers are sorted and not-repeating; extent exceptions type to report details of problem
-	ret.m_hash_cached=""; // mark it as dirty
-	return ret;
+	this->m_hash_cached=""; // mark it as dirty
 }
 
 // ==================================================================
@@ -408,6 +417,8 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
+	// TODO NOW TODONOW 
+	/*
 	for (unsigned long ix=0; ix<m_pub.m_cryptolists_pubkey.size(); ++ix) {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRVkeys_of_this_system = m_PRV.m_cryptolists_PRVkey.at(ix);
@@ -417,6 +428,7 @@ void c_multikeys_PAIR::debug() const {
 			_info("  PRV:" << to_debug_locked( PRVkeys_of_this_system.at(iy) ) << "\n");
 		}
 	}
+	*/
 	_info("---------");
 }
 
@@ -542,30 +554,20 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 }
 
 
-void c_multikeys_pub::add_public(t_crypto_system_type type, const  t_pubkey & pubkey) {
-	m_cryptolists_pubkey.at( type ).push_back( pubkey );
+template <typename TKey>
+void c_multikeys_general<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
+	m_cryptolists_general.at( type ).push_back( pubkey );
 }
 
-c_crypto_system::t_pubkey c_multikeys_pub::get_public(t_crypto_system_type crypto_type, size_t number_of_key) const {
+template <typename TKey>
+typename c_multikeys_general<TKey>::t_key  c_multikeys_general<TKey>::get_key(
+t_crypto_system_type crypto_type, size_t number_of_key) const
+{
 	// TODO check range
-	return m_cryptolists_pubkey.at(crypto_type).at(number_of_key);
+	return m_cryptolists_general.at(crypto_type).at(number_of_key);
 }
 
-size_t c_multikeys_pub::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
-	return m_cryptolists_pubkey.at(crypto_type).size();
-}
-
-size_t c_multikeys_pub::get_count_of_systems() const {
-	return m_cryptolists_pubkey.size();
-}
-
-void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type,const t_PRVkey & PRVkey) {
-	m_cryptolists_PRVkey.at( crypto_type ).push_back( PRVkey );
-}
-
-c_crypto_system::t_PRVkey c_multikeys_PRV::get_private(t_crypto_system_type crypto_type, size_t number_of_key) const {
-	return m_cryptolists_PRVkey.at(crypto_type).at(number_of_key);
-}
+// ---
 
 std::string c_stream_crypto::box(const std::string & msg) {
 	_info("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
@@ -701,7 +703,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				_info("kex " << keynr_a << " " << keynr_b);
 
 				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_A_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
 
 				using namespace string_binary_op; // operator^
@@ -865,7 +867,8 @@ void test_crypto() {
 
 	// Check key save/restore:
 	string keypubA_serialized = keypubA.serialize_bin();
-	c_multikeys_pub keypubA_restored = c_multikeys_pub::load_from_bin( keypubA_serialized );
+	c_multikeys_pub keypubA_restored;
+	keypubA_restored.load_from_bin( keypubA_serialized );
 	_note("Serialize save/load test: serialized key to: " << to_debug(keypubA_serialized));
 	if (keypubA.get_hash() == keypubA_restored.get_hash()) {
 		_info("Seems to match");

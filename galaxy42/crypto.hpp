@@ -195,60 +195,101 @@ class c_multistate {
 char t_crypto_system_type_to_ID(int val);
 t_crypto_system_type t_crypto_system_type_from_ID(char name);
 
-/** All pubkeys of given identity */
-class c_multikeys_pub : public c_crypto_system {
+/** All keys, of template type TKey, of given identity. It can be e.g. all public keys, or all private, etc.  */
+template <typename TKey>
+class c_multikeys_general : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
-		typedef std::array< vector< t_pubkey > , e_crypto_system_type_END	> t_cryptolists_pubkey;
 
-		///< A "map" of public keys of given type, organized by their crypto type.
+		typedef c_multikeys_general<TKey> t_self; ///< My own type (concretized ofcourse). Useful for shorter coding style.
+
+		typedef std::array< vector< TKey > , e_crypto_system_type_END	> t_cryptolists_general; ///< templated!
+		typedef TKey t_key; ///< concretized key type used in this templated class
+
+		///< A "map" of [e.g.] public keys of given type, organized by their crypto type.
 		///< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
-		t_cryptolists_pubkey m_cryptolists_pubkey;
+		t_cryptolists_general m_cryptolists_general; ///<  *** The main collection ("map") of the keys
 
-		mutable string m_hash_cached; ///< Hash of all my public keys (a cache, auto calculated by getters/cleared by setters)
+		mutable string m_hash_cached; ///< Hash of all my [e.g.] public keys (a cache,
+		// auto calculated by getters/cleared by setters - when m_autoupdate_hash)
 		// empty "" means that it needs calculation. (this is the default value)
-		// ^- TODO invalidate by setters
 
 		void update_hash() const; ///< calculate the current m_hash and save it
 
-	public:
-		c_multikeys_pub()=default;
+	protected:
+		/// @name Modifiers - general version. \n(that sould be wrapped in child class) @{
+		void add_key(t_crypto_system_type crypto_type, const TKey & key); ///< append one more key
+		/// @}
 
-		void add_public(t_crypto_system_type crypto_type, const t_pubkey & pubkey);
-		t_pubkey get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
+		/// @name Getters - general version. \n(that sould be wrapped in child class) @{
+		TKey get_key(t_crypto_system_type crypto_type, size_t number_of_key) const;
+		/// @}
+
+	public:
+		c_multikeys_general()=default;
+		virtual ~c_multikeys_general()=default;
+
+		/// @name Getters: @{
 		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
 		size_t get_count_of_systems() const; ///< how many key types?
-		virtual t_crypto_system_type get_system_type() const;
 
 		string get_hash() const; ///< const, though it is allowed to update mutable field with cache of current hash
+		/// @}
 
-		bool operator>(const c_multikeys_pub &rhs) const; ///< some sorting order, e.g. using the get_hash(). Used e.g. to
-		/// pick even/odd nonce depending on comparing keys.
+		/// @name save/load: @{
+		virtual std::string serialize_bin() const; ///< returns a string with all our data serialized, see load_from_bin() for details
 
-		std::string serialize_bin() const; ///< returns a string with all our data serialized, see load_from_bin() for details
-
-		static c_multikeys_pub load_from_bin(const std::string & data); ///< create object from result of serialize_bin().
+		virtual void load_from_bin(const std::string & data); ///< set this object to data loaded from string from serialize_bin().
+		///< Will delete any prior data in this object.
 		///< Will be always compatible with older/newer versions (across stable releases of the program)
 		///< @warning Must remain compatible especially because this can change the resulting HIP address!
+		/// @}
+
+		bool operator>(const t_self &rhs) const; ///< some sorting order, e.g. using the get_hash(). Used e.g. to
+		/// pick even/odd nonce depending on comparing keys.
 };
 
-/** All PRIVATE keys of given identity */
-class c_multikeys_PRV : public c_crypto_system {
+/** All pubkeys of given identity */
+class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
 
-		typedef std::array< vector< t_PRVkey > , e_crypto_system_type_END	> t_cryptolists_PRVkey;
-		t_cryptolists_PRVkey m_cryptolists_PRVkey; ///< A "map" of PRIVATE keys of given type, organized by their crypto type.
-		///< example use: to get 50-th of our Ed25519 keys: m_cryptolists_PRIVkey[ e_crypto_system_type_Ed25519 ].at(50);
+		typedef c_multikeys_general<t_pubkey>::t_cryptolists_general  t_cryptolists_pubkey;
 
 	public:
-		void add_PRIVATE(t_crypto_system_type crypto_type,const t_PRVkey & PRVkey);
-		t_PRVkey get_private(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		virtual t_crypto_system_type get_system_type() const;
-		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
-		size_t get_count_of_systems() const; ///< how many key types?
+
+		/// @name Modifiers - concretized version. \n Ready to use. @{
+		void add_public(t_crypto_system_type crypto_type, const t_key & key); ///< append one more key
+		/// @}
+
+		/// @name Getters - concretized version. \n Ready to use. @{
+		t_key get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
+		/// @}
+};
+
+/** All PRIVATE keys of given identity */
+class c_multikeys_PRV : public c_multikeys_general<c_crypto_system::t_PRVkey> {
+	protected:
+		friend class c_multikeys_PAIR;
+		friend class c_crypto_system;
+
+		typedef c_multikeys_general<t_PRVkey>::t_cryptolists_general  t_cryptolists_PRVkey;
+
+	public:
+		virtual t_crypto_system_type get_system_type() const;
+
+		/// @name Modifiers - concretized version. \n Ready to use. @{
+		void add_PRIVATE(t_crypto_system_type crypto_type, const t_key & key); ///< append one more key
+		/// @}
+
+		/// @name Getters - concretized version. \n Ready to use. @{
+		t_key get_PRIVATE(t_crypto_system_type crypto_type, size_t number_of_key) const;
+		/// @}
+
+		bool operator>(const t_key &rhs) const; ///< TODO refer to base class
 };
 
 class c_multikeys_PAIR {
