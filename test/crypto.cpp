@@ -114,20 +114,20 @@ TEST(crypto, bin_string_xor) {
 	std::string result;
 
 	// xor for the same string should be tab of zeros
-	result = antinet_crypto::string_binary_op::binary_string_xor(test_str, test_str);
+	result = antinet_crypto::string_binary_op::binary_string_xor<42>(test_str, test_str);
 	for(auto ch : result) {
 		EXPECT_EQ(static_cast<int>(ch), 0);
 	}
 
 	// two empty strings
-	result = antinet_crypto::string_binary_op::binary_string_xor("","");
+	result = antinet_crypto::string_binary_op::binary_string_xor<42>(std::string(""),std::string(""));
 	EXPECT_EQ(result.length(),0u);
 	EXPECT_EQ(result,"");
 
 	bool size_diff_err = false;
   try {
 	// binary string xor of two string with different size should throw runtime error
-	antinet_crypto::string_binary_op::binary_string_xor("xx", "xxxx");
+	antinet_crypto::string_binary_op::binary_string_xor<42>(std::string("xx"), std::string("xxxx"));
   } catch(std::runtime_error) {
 		size_diff_err = true;
   }
@@ -137,7 +137,7 @@ TEST(crypto, bin_string_xor) {
   try {
 	// binary string xor of two string with different size should throw runtime error
 	// try with empty string
-	antinet_crypto::string_binary_op::binary_string_xor("", "xxxx");
+	antinet_crypto::string_binary_op::binary_string_xor<42>(std::string(""), std::string("xxxx"));
   } catch(std::runtime_error) {
 		size_diff_err = true;
   }

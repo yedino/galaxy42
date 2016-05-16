@@ -111,8 +111,49 @@ namespace unittest {
 
 namespace string_binary_op {
 
+typedef sodiumpp::locked_string LS;
+typedef std::string NS;
 
-std::string binary_string_xor(const std::string & str1, const std::string & str2);
+//template <class T1, class T2>
+template <int S_test, class T1, class T2> T1 binary_string_xor(T1 const & str1, T2 const& str2) {
+	// TODO XXX
+	UNUSED(str2);
+	return str1;
+}
+/*
+template <int S_test, class T1> LS binary_string_xor(T1 const & str1, LS const& str2) {
+	// TODO XXX
+	UNUSED(str2);
+	return str1;
+}
+template <int S_test, class T1> NS binary_string_xor(T1 const & str1, NS const& str2) {
+	// TODO XXX
+	UNUSED(str2);
+	return str1;
+}
+*/
+	/*
+	typedef std::string T;
+
+	// WARNING: this function is written with less assertive code (e.g. without at()),
+	// it MUST be checked against any errors if you would modify it.
+	const auto size1 = str1.size();
+	const auto size2 = str2.size();
+	if (size1 != size2) throw std::runtime_error(
+		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
+		+ std::to_string(size1) + " vs " + std::to_string(size2) );
+
+	// this is safe also for locked string:
+	T1 ret( str1 );
+	for (size_t i=0; i<size1; ++i) ret[i] ^= str2[i];
+	// TODO: decltype(size1) without const
+
+	assert(ret.size() == str1.size());	assert(str1.size() == str2.size());
+	return ret;
+}
+	*/
+
+
 std::string operator^(const std::string & str1, const std::string & str2);
 sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const sodiumpp::locked_string & str2);
 sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const std::string & str2_un);
