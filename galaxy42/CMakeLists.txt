@@ -68,11 +68,11 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt)
+target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt)
+target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
 
 #loadjason.elf jsoncpp
 #add_executable(jsonload.elf
