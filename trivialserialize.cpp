@@ -156,6 +156,16 @@ void parser::debug() const {
 }
 
 
+template <> void serialize(const std::string & data, trivialserialize::generator & gen) {
+	gen.push_varstring(data);
+}
+template <> std::string deserialize<std::string>(trivialserialize::parser & parser) {
+	std::string ret = parser.pop_varstring();
+	return ret;
+}
+
+
+
 } // namespace
 
 // ==================================================================

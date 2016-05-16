@@ -235,7 +235,7 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 		for (size_t map_i=0; map_i<map_size; ++map_i) {
 			auto sys_id = t_crypto_system_type_from_ID(  parser.pop_integer_uvarint() );
 			_info("sys_id=" << sys_id);
-			auto sys_keys = parser.pop_vector_string(); // <--- load vector of all keys of this system
+			auto sys_keys = parser.pop_vector_object<TKey>(); // <--- load vector of all keys of this system
 			// TODO(r) asert sys_id is a normal expected crypto key type
 			this->m_cryptolists_general.at( sys_id ) = sys_keys;
 		}
