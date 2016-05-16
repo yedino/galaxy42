@@ -114,25 +114,8 @@ namespace string_binary_op {
 typedef sodiumpp::locked_string LS;
 typedef std::string NS;
 
-//template <class T1, class T2>
-template <int S_test, class T1, class T2> T1 binary_string_xor(T1 const & str1, T2 const& str2) {
-	// TODO XXX
-	UNUSED(str2);
-	return str1;
-}
-/*
-template <int S_test, class T1> LS binary_string_xor(T1 const & str1, LS const& str2) {
-	// TODO XXX
-	UNUSED(str2);
-	return str1;
-}
-template <int S_test, class T1> NS binary_string_xor(T1 const & str1, NS const& str2) {
-	// TODO XXX
-	UNUSED(str2);
-	return str1;
-}
-*/
-	/*
+template <class T1, class T2>
+T1 binary_string_xor(T1 const & str1, T2 const& str2) {
 	typedef std::string T;
 
 	// WARNING: this function is written with less assertive code (e.g. without at()),
@@ -151,7 +134,6 @@ template <int S_test, class T1> NS binary_string_xor(T1 const & str1, NS const& 
 	assert(ret.size() == str1.size());	assert(str1.size() == str2.size());
 	return ret;
 }
-	*/
 
 
 std::string operator^(const std::string & str1, const std::string & str2);

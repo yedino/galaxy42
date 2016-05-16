@@ -31,19 +31,16 @@ namespace string_binary_op {
 
 
 std::string operator^(const std::string & str1, const std::string & str2) {
-	UNUSED(str1); UNUSED(str2);
-	return "";// binary_string_xor<42>(str1,str2);
+	return binary_string_xor(str1,str2);
 }
 
 sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const sodiumpp::locked_string & str2) {
-	UNUSED(str1); UNUSED(str2);
-	return locked_string(1); //binary_string_xor<42>(str1,str2);
+	return binary_string_xor(str1,str2);
 }
 
 sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const std::string & str2_un) {
 	sodiumpp::locked_string str2(str2_un);
-	UNUSED(str1); UNUSED(str2);
-	return locked_string(1); //binary_string_xor<42>(str1,str2);
+	return binary_string_xor(str1,str2);
 }
 
 
@@ -446,8 +443,9 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
-	// TODO NOW TODONOW 
+	_info("(this debug currently disabled");
 	/*
+	TODO(j) rewrite using new API like get_count_of_systems / get_count_keys_in_system / get_public / get_PRIVATE
 	for (unsigned long ix=0; ix<m_pub.m_cryptolists_pubkey.size(); ++ix) {
 		const auto & pubkeys_of_this_system  = m_pub. m_cryptolists_pubkey. at(ix);
 		const auto & PRVkeys_of_this_system = m_PRV.m_cryptolists_PRVkey.at(ix);
@@ -456,8 +454,7 @@ void c_multikeys_PAIR::debug() const {
 			_info("  PUB:" << to_debug( pubkeys_of_this_system.at(iy) ) );
 			_info("  PRV:" << to_debug_locked( PRVkeys_of_this_system.at(iy) ) << "\n");
 		}
-	}
-	*/
+	}*/
 	_info("---------");
 }
 
