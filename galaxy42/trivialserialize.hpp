@@ -167,8 +167,48 @@ class generator {
 		void push_bytes_octets_and_size(unsigned char octets, size_t max_size, const std::string & data);
 };
 
+
+/**
+ * @defgroup trivialserialize_serializefreefunctions
+ * @ingroup trivialserialize
+ * @brief This are the free functions that create API to serialize/deserialize given type.
+ * @{
+ */
+
+// example "abstract" serialize() - it should not be used ever, instead user needs to provide own version of it
+template <typename T> void serialize(const T & data, trivialserialize::generator & gen) {
+	UNUSED(data); UNUSED(gen);
+	static_assert(templated_always_false<T>(),
+		"To use this type in serialization, implement specialized serialize(..) for it.");
+	assert(false);
+}
+
+// example "abstract" deserialize() - it should not be used ever, instead user needs to provide own version of it
+class parser;
+template <typename T> T deserialize(trivialserialize::parser & parser) {
+	UNUSED(parser);
+	static_assert(templated_always_false<T>(),
+		"To use this type in deserialization, implement specialized deserialize(..) for it.");
+	assert(false);
+	T ret;
+	return ret;
+}
+
+/**
+ * @defgroup trivialserialize_serializefreefunctions_standardtypes
+ * @ingroup trivialserialize_serializefreefunctions
+ * @brief This are the free functions to (de)serialize some of the standard C++11 types
+ * @{
+ */
+template <> void serialize(const std::string & data, trivialserialize::generator & gen);
+template <> std::string deserialize<std::string>(trivialserialize::parser & parser);
+/// @} //  trivialserialize_serializefreefunctions_standardtypes
+
+/// @} //  trivialserialize_serializefreefunctions
+
+
 template <typename T> void generator::push_object(const T & data) {
-	serialize(data, *this);
+	serialize(data, *this); // this should use the specialized, user-provided deserialize() free function.
 }
 
 template <typename T> void generator::push_vector_object(const vector<T> & data) {
@@ -225,7 +265,8 @@ template <int S> void generator::push_bytes_sizeoctets(const std::string & data,
 }
 
 template <int S> void generator::push_bytes_sizeoctets(const std::string & data) {
-	static_assert(( (S>=1) && (S<=4) ) , "Unsupported number of octets that will express actuall-size of the data. Try using 1,2,3 or 4.");
+	static_assert(( (S>=1) && (S<=4) ) , "Unsupported number of octets that will express actuall-size of the data."
+		"Try using 1,2,3 or 4.");
 	const auto size = data.size();
 	push_integer_u<S>(size);
 	m_str += data; // write the actuall data
@@ -310,18 +351,10 @@ class parser {
 };
 
 template <typename T>
-T deserialize(trivialserialize::parser &) {
-	T ret;
-	throw std::runtime_error(
-		string("Trying to deserialize object that does not have that implemented: ")
-		+ typeid(T).name() +".");
-}
-
-template <typename T>
 T parser::pop_object() {
-	T ret( deserialize<T>( *this ) );
+	T ret( deserialize<T>( *this ) ); // this should use the specialized, user-provided deserialize() free function.
+	return ret;
 }
-
 
 template <typename T>
 vector<T> parser::pop_vector_object() {
@@ -361,6 +394,7 @@ template <int S> std::string parser::pop_bytes_sizeoctets() {
 	// here we have the size, and we moved pass the serialized bytes of size, string is next:
 	return pop_bytes_n( size );
 }
+
 
 } // namespace
 

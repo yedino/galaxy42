@@ -156,6 +156,8 @@ TE int_to_enum(TI i) {
 
 std::string to_string(const std::string & v); ///< just to have identical syntax
 
+template<typename T> constexpr bool templated_always_false() { return false; }
+
 
 }
 
