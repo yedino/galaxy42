@@ -1,5 +1,5 @@
 /** @file
- *  trivialserialice.hpp -- docs for this file
+ *  trivialserialize.hpp -- docs for this file
  */
 
 #ifndef include_trivialserialize_hppaaa
@@ -130,19 +130,53 @@ class generator {
 		 */
 		///@{
 		void push_vector_string(const vector<string> & data); ///< Save vector<string>
+
+		template <typename T>
+		void push_vector_object(const vector<T> & data); ///< Save vector<T>
+
+		template <typename T>
+		void push_object(const T & data); ///< Save object T, you must provide free function: void serialize(const T&obj, generated &)
 		///@}
 
 		/** @name Export The Result
 		 * Description: export the result
 		 */
 		///@{
-		const std::string & str() const; ///< get the generated string. This can be INVALIDATED by any non-const operations of this object (and ofc. after object expires)!
+		const std::string & str() const; ///< get the generated string.
+		///< This can be INVALIDATED by any non-const operations of this object (and ofc. after object expires)!
+		///< This GUARANTEES it will give reference to the internal-buffer, you CAN:
+		///< * memlock it
+		///< * you could write to it (though of course this can change the format of string and make deserialize not work)
+		///< * you should NOT resize it
+		///@}
+
+		/** @name Buffer access
+		 * Description: access the internal buffer for the purpose of reading it, or memlocking the memory location
+		 */
+		///@{
+		const std::string & get_buffer() const; ///< get the generated string.
+		///< This can be INVALIDATED by any non-const operations of this object (and ofc. after object expires)!
+		///< This GUARANTEES it will give reference to the internal-buffer, you CAN:
+		///< * memlock it
+		///< * you should NOT write to it
+		///< * you should NOT resize it
 		///@}
 
 	protected:
 		/// give number of octets of actuall-data-size, give the max_size that is just asserted, and the data
 		void push_bytes_octets_and_size(unsigned char octets, size_t max_size, const std::string & data);
 };
+
+template <typename T> void generator::push_object(const T & data) {
+	serialize(data, *this);
+}
+
+template <typename T> void generator::push_vector_object(const vector<T> & data) {
+	auto size = data.size(); // TODO const
+	//	assert( size <= ) ); // TODO
+	push_integer_uvarint( data.size() );
+	for (decltype(size) i = 0; i<size; ++i) push_object(data.at(i));
+}
 
 /**
  * Calculates the maximum value of unsigned integer written in binary notation that can fit given S octets.
@@ -262,12 +296,42 @@ class parser {
 		 */
 		///@{
 		vector<string> pop_vector_string(); ///< Decode a vector<string> object saved with push_vector_string
+
+		template <typename T>
+		vector<T> pop_vector_object(); ///< Decode vector<T> saved with push_vector_object<T>
+
+		template <typename T>
+		T pop_object(); ///< Decode object T, you must provide free function: T deserialize<T>(parser &)
 		///@}
 
 		bool is_end() const; ///< check if we are standing now at end of string (so reading anything more is not possible)
 
 		void debug() const; ///< do some debuggging as set by devel
 };
+
+template <typename T>
+T deserialize(trivialserialize::parser &) {
+	T ret;
+	throw std::runtime_error(
+		string("Trying to deserialize object that does not have that implemented: ")
+		+ typeid(T).name() +".");
+}
+
+template <typename T>
+T parser::pop_object() {
+	T ret( deserialize<T>( *this ) );
+}
+
+
+template <typename T>
+vector<T> parser::pop_vector_object() {
+	vector<T> ret;
+	auto size = pop_integer_uvarint(); // TODO const
+	// assert( size <= (1LLU << 64LLU) ); // TODO
+	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_object<T>() );
+	return ret;
+
+}
 
 template <int S, typename T> T parser::pop_integer_u() {
 	static_assert( std::is_unsigned<T>() , "This function saves only unsigned types, pass it unsigned or use other function.");

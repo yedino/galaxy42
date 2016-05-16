@@ -75,6 +75,7 @@ void generator::push_vector_string(const vector<string> & data) {
 
 const std::string & generator::str() const { return m_str; }
 
+const std::string & generator::get_buffer() const { return m_str; }
 
 // ==================================================================
 
