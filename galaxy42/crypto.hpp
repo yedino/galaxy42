@@ -7,7 +7,7 @@
 #include "gtest/gtest_prod.h"
 #include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
-#include "SIDH.h"
+#include <SIDH.h>
 
 /**
  * @defgroup antinet_crypto Antinet Crypto

@@ -551,22 +551,48 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 			PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 			size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
 			size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
-			locked_string private_key(obytes);
+			locked_string private_key_a(obytes);
+			locked_string private_key_b(obytes);
+			std::string public_key_a(4*2*pbytes, 0);
+			std::string public_key_b(4*2*pbytes, 0);
 			CRYPTO_STATUS status = CRYPTO_SUCCESS;
+			PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
 			try {
-				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
 				if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
 				status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
+				// generate keys
+				status = KeyGeneration_A(
+					reinterpret_cast<unsigned char*>(&private_key_a[0]),
+					reinterpret_cast<unsigned char *>(&public_key_a[0]),
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (A)");
+				status = KeyGeneration_B(
+					reinterpret_cast<unsigned char*>(&private_key_b[0]),
+					reinterpret_cast<unsigned char *>(&public_key_b[0]),
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
 
+				// check keys valid
+				bool valid_pub_key = false;
+				status = Validate_PKA(
+				reinterpret_cast<unsigned char *>(&public_key_a[0]),
+					&valid_pub_key,
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (A)");
+				if (!valid_pub_key) throw std::runtime_error("public key (A) is not valid");
+				status = Validate_PKB(
+				reinterpret_cast<unsigned char *>(&public_key_b[0]),
+					&valid_pub_key,
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (B)");
+				if (!valid_pub_key) throw std::runtime_error("public key (B) is not valid");
 			}
 			catch(const std::exception &e) { // TODO
-				/*SIDH_curve_free(curveIsogeny);
-				clear_words((void*)PrivateKeyA, NBYTES_TO_NWORDS(obytes));
-				clear_words((void*)PrivateKeyB, NBYTES_TO_NWORDS(obytes));
-				clear_words((void*)PublicKeyA, NBYTES_TO_NWORDS(4*2*pbytes));
-				clear_words((void*)PublicKeyB, NBYTES_TO_NWORDS(4*2*pbytes));
-				clear_words((void*)SharedSecretA, NBYTES_TO_NWORDS(2*pbytes));
-				clear_words((void*)SharedSecretB, NBYTES_TO_NWORDS(2*pbytes));*/
+				SIDH_curve_free(curveIsogeny);
+				clear_words(static_cast<void*>(&private_key_a[0]), NBYTES_TO_NWORDS(obytes));
+				clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(obytes));
+				clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(4*2*pbytes));
+				clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(4*2*pbytes));
 				throw e;
 			}
 
