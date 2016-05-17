@@ -2,6 +2,7 @@
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 #include "ntru/include/ntru_crypto.h"
+#include <SIDH_internal.h>
 
 #include "trivialserialize.hpp"
 
@@ -548,13 +549,16 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 
 		case e_crypto_system_type_SIDH:
 		{
+			_info("SIDH generating...");
 			PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
-			size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
 			size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
-			locked_string private_key_a(obytes);
-			locked_string private_key_b(obytes);
-			std::string public_key_a(4*2*pbytes, 0);
-			std::string public_key_b(4*2*pbytes, 0);
+			size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
+			const size_t private_key_len = obytes;
+			const size_t public_key_len = 4*2*pbytes;
+			locked_string private_key_a(private_key_len);
+			locked_string private_key_b(private_key_len);
+			std::string public_key_a(public_key_len, 0);
+			std::string public_key_b(public_key_len, 0);
 			CRYPTO_STATUS status = CRYPTO_SUCCESS;
 			PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
 			try {
@@ -586,17 +590,24 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 					curveIsogeny);
 				if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (B)");
 				if (!valid_pub_key) throw std::runtime_error("public key (B) is not valid");
+				assert(public_key_a != public_key_b);
+				assert(private_key_a != private_key_b);
 			}
-			catch(const std::exception &e) { // TODO
+			catch(const std::exception &e) {
 				SIDH_curve_free(curveIsogeny);
-				clear_words(static_cast<void*>(&private_key_a[0]), NBYTES_TO_NWORDS(obytes));
-				clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(obytes));
-				clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(4*2*pbytes));
-				clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(4*2*pbytes));
+				clear_words(static_cast<void*>(&private_key_a[0]), NBYTES_TO_NWORDS(private_key_len));
+				clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(private_key_len));
+				clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(public_key_len));
+				clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(public_key_len));
 				throw e;
 			}
+			locked_string private_key_main(2 * private_key_len);
+			private_key_a.copy(&private_key_main[0], private_key_len);
+			private_key_main.copy(&private_key_main[private_key_len], private_key_len);
+			std::string public_key_main = public_key_a + public_key_b;
+			this->add_public_and_PRIVATE(crypto_system_type, public_key_main, private_key_main);
 
-		}
+		} // case
 
 		default: throw runtime_error("Trying to generate unsupported key type:"
 			+ t_crypto_system_type_to_name(crypto_system_type));
