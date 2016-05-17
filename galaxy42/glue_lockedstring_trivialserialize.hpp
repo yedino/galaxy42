@@ -8,21 +8,15 @@
 #include "libs0.hpp"
 #include "strings_utils.hpp"
 
-void memlock(const trivialserialize::generator & gen) {
-	sodiumpp::mlock( const_cast<std::string&>(gen.get_buffer()) ); // TODO(rob) const string memlock
-}
+namespace trivialserialize {
 
-template <> void trivialserialize::serialize(const sodiumpp::locked_string & data, trivialserialize::generator & gen) {
-	UNUSED(data); UNUSED(gen);
+void memlock(const generator & gen);
 
-}
+template <> void serialize<sodiumpp::locked_string>(const sodiumpp::locked_string & data, generator & gen);
 
-template <> sodiumpp::locked_string trivialserialize::deserialize<sodiumpp::locked_string>(trivialserialize::parser & parser) {
-	UNUSED(parser);
-	sodiumpp::locked_string ret;
-	return ret;
-}
+template <> sodiumpp::locked_string deserialize<sodiumpp::locked_string>(parser & parser);
 
+}	// namespace trivialserialize
 #endif
 
 
