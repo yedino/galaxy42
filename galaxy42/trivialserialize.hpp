@@ -136,8 +136,13 @@ class generator {
 		template <typename T>
 		void push_vector_object(const vector<T> & data); ///< Save vector<T>
 
-		template <typename T>
-		void push_object(const T & data); ///< Save object T, you must provide free function: void serialize(const T&obj, generated &)
+		/**
+		 * @brief Saves object T, also used by e.g. push_vector_object.
+		 * @note If you will use this API then you must provide special function,
+		 * with signature: template<> void trivialserialize::obj_serialize(const T&obj, generated &)
+		*/
+		template <typename T>	void push_object(const T & data);
+
 		///@}
 
 		/** @name Export The Result
@@ -178,19 +183,19 @@ class generator {
  */
 
 // example "abstract" serialize() - it should not be used ever, instead user needs to provide own version of it
-template <typename T> void serialize(const T & data, trivialserialize::generator & gen) {
+template <typename T> void obj_serialize(const T & data, trivialserialize::generator & gen) {
 	UNUSED(data); UNUSED(gen);
 	static_assert(templated_always_false<T>(),
-		"To use this type in serialization, implement specialized serialize(..) for it.");
+		"To use this type in serialization, implement specialized template<> serialize(..) for it.");
 	assert(false);
 }
 
-// example "abstract" deserialize() - it should not be used ever, instead user needs to provide own version of it
-class parser;
-template <typename T> T deserialize(trivialserialize::parser & parser) {
+// example "abstract" obj_deserialize() - it should not be used ever, instead user needs to provide own version of it
+class parser; // needs the forward declaration if placed here
+template <typename T> T obj_deserialize(trivialserialize::parser & parser) {
 	UNUSED(parser);
 	static_assert(templated_always_false<T>(),
-		"To use this type in deserialization, implement specialized deserialize(..) for it.");
+		"To use this type in deserialization, implement specialized template<> obj_deserialize(..) for it.");
 	assert(false);
 	T ret;
 	return ret;
@@ -202,15 +207,15 @@ template <typename T> T deserialize(trivialserialize::parser & parser) {
  * @brief This are the free functions to (de)serialize some of the standard C++11 types
  * @{
  */
-template <> void serialize(const std::string & data, trivialserialize::generator & gen);
-template <> std::string deserialize<std::string>(trivialserialize::parser & parser);
+template <> void obj_serialize(const std::string & data, trivialserialize::generator & gen);
+template <> std::string obj_deserialize<std::string>(trivialserialize::parser & parser);
 /// @} //  trivialserialize_serializefreefunctions_standardtypes
 
 /// @} //  trivialserialize_serializefreefunctions
 
 
 template <typename T> void generator::push_object(const T & data) {
-	serialize(data, *this); // this should use the specialized, user-provided deserialize() free function.
+	obj_serialize(data, *this); // this should use the specialized user-provided function
 }
 
 template <typename T> void generator::push_vector_object(const vector<T> & data) {
@@ -343,8 +348,12 @@ class parser {
 		template <typename T>
 		vector<T> pop_vector_object(); ///< Decode vector<T> saved with push_vector_object<T>
 
-		template <typename T>
-		T pop_object(); ///< Decode object T, you must provide free function: T deserialize<T>(parser &)
+		/**
+		 * @brief Loads object T, also used by e.g. pop_vector_object.
+		 * @note If you will use this API then you must provide special function,
+		 * with signature: template<> void trivialserialize::obj_deserialize(const T&obj, generated &)
+		*/
+		template <typename T>	T pop_object(); ///< Decode object T, you must provide free function: T deserialize<T>(parser &)
 		///@}
 
 		bool is_end() const; ///< check if we are standing now at end of string (so reading anything more is not possible)
@@ -354,7 +363,7 @@ class parser {
 
 template <typename T>
 T parser::pop_object() {
-	T ret( deserialize<T>( *this ) ); // this should use the specialized, user-provided deserialize() free function.
+	T ret( obj_deserialize<T>( *this ) ); // this should use the specialized, user-provided obj_deserialize() free function.
 	return ret;
 }
 

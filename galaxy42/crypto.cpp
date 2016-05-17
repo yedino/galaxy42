@@ -861,11 +861,13 @@ void test_crypto() {
 	test_string_lock();
 
 
+
 	_mark("Create IDC");
 
 	// Alice: IDC
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
+	return ;
 
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
@@ -889,11 +891,11 @@ void test_crypto() {
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
 	_note("Bob CT:");
 	c_crypto_tunnel BobCT  (keypairB, keypubA);
-	_mark("Prepared tunnels.");
+	_mark("Prepared tunnels (KCTab)");
 
 	// generate ephemeral keys
 
-	_warn("WARNING: this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
+	_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
 
 	_note("Alice will box:");
