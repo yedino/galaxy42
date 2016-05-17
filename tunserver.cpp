@@ -26,7 +26,8 @@ Current TODO / topics:
 
 */
 
-const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
+const char * disclaimer =
+"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 // The name of the hardcoded default demo that will be run with --devel (unless option --develdemo is given) can be set here:
 const char * g_demoname_default = "route_dij";
@@ -1079,9 +1080,12 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
 	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
+
 	int peer_nr = node_nr==1 ? 2 : 1;
+
 	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
-	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+	// each connect to node .1., except the node 1 that connects to .2."
+	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62");
 
 	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
 	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
@@ -1098,7 +1102,8 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
 
 	// --- define the test world ---
-	map< int , t_peer_cmdline_ref > peer_to_ref; // for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line)
+	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
+	map< int , t_peer_cmdline_ref > peer_to_ref;
 	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) ,
 		string("deadbeef999fff") + std::to_string(nr) };	}
 
@@ -1228,7 +1233,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 
 	if (demoname=="foo") { test_foo();  return false; }
 	if (demoname=="bar") { test_bar();  return false; }
-	if (demoname=="serialize") { trivialserialize::test_trivialserialize();  return false; }
+	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize();  return false; }
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 

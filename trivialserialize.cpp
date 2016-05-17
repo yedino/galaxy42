@@ -165,12 +165,55 @@ template <> std::string deserialize<std::string>(trivialserialize::parser & pars
 }
 
 
-
-} // namespace
-
 // ==================================================================
 
-void trivialserialize::test_trivialserialize() {
+
+struct c_tank {
+	int ammo;
+	int speed;
+	string name;
+};
+std::ofstream& operator<<(std::ofstream& out, const c_tank & t) {
+	out << "[" << t.ammo << ' ' << t.speed << ' ' << t.name << "]";
+	return out;
+}
+
+vector<c_tank> get_example_tanks() {
+	vector<c_tank> data = {
+		{ 150, 60 , "T-64"} ,
+		{ 500, 70 , "T-72"} ,
+		{ 800, 80 , "T-80"} ,
+		{ 2000, 90 , "Shilka"} ,
+	};
+	return data;
+}
+
+template <> void serialize(const c_tank & data , trivialserialize::generator & gen) {
+	gen.push_integer_uvarint(data.ammo);
+	gen.push_integer_uvarint(data.speed);
+	gen.push_varstring(data.name);
+}
+template <> c_tank deserialize<c_tank>(trivialserialize::parser & parser) {
+	c_tank ret;
+	ret.ammo = parser.pop_integer_uvarint();
+	ret.speed = parser.pop_integer_uvarint();
+	ret.name = parser.pop_varstring();
+	return ret;
+}
+
+namespace test {
+
+namespace detail {
+
+
+} // namespace detail
+}
+
+namespace test {
+
+void test_trivialserialize() {
+	using namespace detail;
+
 	cerr << endl<< "Tests: " << __FUNCTION__ << endl << endl;
 
 	string f="fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
@@ -211,9 +254,12 @@ void trivialserialize::test_trivialserialize() {
 
 	gen.push_vector_string( test_varstring );
 
+	gen.push_vector_object( get_example_tanks() );
+
 	cout << "Serialized: [" << gen.str() << "]" << endl;
 	cout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
 
+	// ==============================================
 	const string input = gen.str();
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , input );
 
@@ -262,6 +308,17 @@ void trivialserialize::test_trivialserialize() {
 		cerr<<"vector string decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 	}
 
+	auto tank = parser.pop_vector_object<c_tank>();
+	// TODO
+	// for(auto & t : tank) _info(t);
+
+	// if ( tank == get_example_tanks()) {	}
+
 }
+
+} // namespace
+
+
+} // namespace
 
 
