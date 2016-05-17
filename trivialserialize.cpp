@@ -156,10 +156,11 @@ void parser::debug() const {
 }
 
 
-template <> void serialize(const std::string & data, trivialserialize::generator & gen) {
+template <> void obj_serialize(const std::string & data, trivialserialize::generator & gen) {
 	gen.push_varstring(data);
 }
-template <> std::string deserialize<std::string>(trivialserialize::parser & parser) {
+
+template<> std::string obj_deserialize<std::string>(trivialserialize::parser & parser) {
 	std::string ret = parser.pop_varstring();
 	return ret;
 }
@@ -188,12 +189,13 @@ vector<c_tank> get_example_tanks() {
 	return data;
 }
 
-template <> void serialize(const c_tank & data , trivialserialize::generator & gen) {
+template <> void obj_serialize(const c_tank & data , trivialserialize::generator & gen) {
 	gen.push_integer_uvarint(data.ammo);
 	gen.push_integer_uvarint(data.speed);
 	gen.push_varstring(data.name);
 }
-template <> c_tank deserialize<c_tank>(trivialserialize::parser & parser) {
+
+template <> c_tank obj_deserialize<c_tank>(trivialserialize::parser & parser) {
 	c_tank ret;
 	ret.ammo = parser.pop_integer_uvarint();
 	ret.speed = parser.pop_integer_uvarint();
