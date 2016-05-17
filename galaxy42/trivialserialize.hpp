@@ -20,7 +20,9 @@ using namespace std;
  */
 namespace trivialserialize {
 
-void test_trivialserialize();
+namespace test {
+	void test_trivialserialize();
+} // namespace
 
 // ---
 /** @defgroup format_error The Format Error
