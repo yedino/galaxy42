@@ -75,6 +75,19 @@ uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
 }
 
 
+CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
+	static std::ifstream rand_source("/dev/urandom");
+	if (nbytes == 0) {
+		return CRYPTO_ERROR;
+	}
+
+	for (unsigned int i = 0; i < nbytes; i++) {
+		*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
+	}
+
+	return CRYPTO_SUCCESS;
+}
+
 // ==================================================================
 
 t_hash Hash1( const t_hash & hash ) {
@@ -531,6 +544,32 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 				this->add_public_and_PRIVATE(crypto_system_type, public_key, private_key);
 			}
 			break;
+		}
+
+		case e_crypto_system_type_SIDH:
+		{
+			PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
+			size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
+			size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
+			locked_string private_key(obytes);
+			CRYPTO_STATUS status = CRYPTO_SUCCESS;
+			try {
+				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+				if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
+				status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
+
+			}
+			catch(const std::exception &e) { // TODO
+				/*SIDH_curve_free(curveIsogeny);
+				clear_words((void*)PrivateKeyA, NBYTES_TO_NWORDS(obytes));
+				clear_words((void*)PrivateKeyB, NBYTES_TO_NWORDS(obytes));
+				clear_words((void*)PublicKeyA, NBYTES_TO_NWORDS(4*2*pbytes));
+				clear_words((void*)PublicKeyB, NBYTES_TO_NWORDS(4*2*pbytes));
+				clear_words((void*)SharedSecretA, NBYTES_TO_NWORDS(2*pbytes));
+				clear_words((void*)SharedSecretB, NBYTES_TO_NWORDS(2*pbytes));*/
+				throw e;
+			}
+
 		}
 
 		default: throw runtime_error("Trying to generate unsupported key type:"
