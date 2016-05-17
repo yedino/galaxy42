@@ -5,9 +5,12 @@ project (ipbench)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(../googletest/googletest/include/)
 
-#add local local lib sodiumpp
+#add local lib sodiumpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(../sodiumpp/sodiumpp/include)
+
+#add local lib sidh
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
 
 #add local build of some external libs
 link_directories( build_extra/ntru/.libs )
@@ -56,7 +59,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt)
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt sidh)
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp
