@@ -11,7 +11,7 @@ include_directories(../sodiumpp/sodiumpp/include)
 
 #add local lib sidh
 #flags for SIDH.h
-add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
+add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
 include_directories(../libsidhms/SIDH)
 
