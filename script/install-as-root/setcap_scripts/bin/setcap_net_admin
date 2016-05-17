@@ -94,7 +94,7 @@ if [[ "$opt_debug" == "1" ]] ; then logger "Running setcap ($0) DEBUG for argume
 
 
 if [[ "$expected_user" == "--current" ]] ; then # this must be exact this option
-	expected_user=$(logname) # http://stackoverflow.com/questions/3522341/identify-user-in-a-bash-script-called-by-sudo
+	expected_user=$USER # http://stackoverflow.com/questions/3522341/identify-user-in-a-bash-script-called-by-sudo
 fi
 
 # move the file to safe location where it can not be changed/mutated by anyone while we operate on it
