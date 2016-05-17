@@ -287,10 +287,15 @@ class c_multikeys_general : public c_crypto_system {
 		///< Will delete any prior data in this object.
 		///< Will be always compatible with older/newer versions (across stable releases of the program)
 		///< @warning Must remain compatible especially because this can change the resulting HIP address!
+
+		void save(const string  & fname) const; ///< Save this data to a file.
+		void load(const string  & fname); ///< Replace all current data with data loaded from this file.
+		void clear(); ///< Delete all current data.
 		/// @}
 
 		bool operator>(const t_self &rhs) const; ///< some sorting order, e.g. using the get_hash(). Used e.g. to
 		/// pick even/odd nonce depending on comparing keys.
+
 };
 
 /** All pubkeys of given identity */
@@ -337,8 +342,12 @@ class c_multikeys_PRV : public c_multikeys_general<c_crypto_system::t_PRVkey> {
 
 class c_multikeys_PAIR {
 	public:
+		// TODO move to private:
 		c_multikeys_pub m_pub;
 		c_multikeys_PRV m_PRV;
+
+	public:
+		virtual ~c_multikeys_PAIR() = default;
 
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
 		void generate(); ///< generate the default set of keys
@@ -346,13 +355,14 @@ class c_multikeys_PAIR {
 		void debug() const;
 
 		void add_public_and_PRIVATE(t_crypto_system_type crypto_type,
-			const c_crypto_system::t_pubkey & pubkey ,
-			const c_crypto_system::t_PRVkey & PRVkey);
+		const c_crypto_system::t_pubkey & pubkey ,
+		const c_crypto_system::t_PRVkey & PRVkey);
+
+		void save_PRV(const string  & fname_base) const; ///< like c_multikeys_general<>::save(), for the private (+public) key
+		void save_pub(const string  & fname_base) const; ///< like c_multikeys_general<>::save(), for the public key
+		void load_PRV(const string  & fname_base); ///< like c_multikeys_general<>::load(), for the private (+public) key
 
 		virtual t_crypto_system_type get_system_type() const;
-
-		virtual ~c_multikeys_PAIR() = default;
-
 };
 
 

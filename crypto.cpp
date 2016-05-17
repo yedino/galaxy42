@@ -9,6 +9,15 @@
 
 using sodiumpp::locked_string;
 
+/**
+ * @TODO
+ * Things that need memlocked proving:
+ * serialize_bin()
+ * load_from_bin()
+ * save() and load() - when calling e.g. serialize_bin() / load_from_bin(),
+ * ... and them again, when doing file operations (fstream buffers - instead use simply 1 file function to read/write
+ entire buffer at once (btw then size file size limit is it in reasonable values when loading etc)
+ */
 
 
 namespace antinet_crypto {
@@ -271,6 +280,48 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	this->m_hash_cached=""; // mark it as dirty
 }
 
+template <typename TKey>
+void c_multikeys_general<TKey>::save(const string  & fname) const {
+	// TODO need a serialize_bin() that works on, and returns, a locked_string
+	_note("Savin key to fname="<<fname);
+	std::string serialized_data_notlocked = serialize_bin();
+	_info("Serialized to: " << to_debug(serialized_data_notlocked));
+	locked_string data = locked_string::move_from_not_locked_string( std::move(serialized_data_notlocked) );
+	_info("Serialized to: " << to_debug_locked(data));
+	ofstream thefile( fname.c_str() );
+	thefile.write(data.c_str(), data.size()); // TODO replace with more low level thing that is unlikely to copy data to any temporary buffer
+	if (! thefile.good()) throw std::runtime_error(string("Error in file during save operation on fname=")+fname);
+}
+
+template <typename TKey>
+void c_multikeys_general<TKey>::load(const string  & fname) {
+	std::string data;
+
+	ifstream thefile;
+	size_t length=0;
+	thefile.open(fname.c_str());
+	thefile.seekg(0, std::ios::end);
+	length = thefile.tellg();
+	if (! length) throw std::runtime_error(string("Error in file during load (file size seems 0?) operation on fname=")+fname);
+	thefile.seekg(0, std::ios::beg);
+	if (! thefile.good()) throw std::runtime_error(string("Error in file during load operation on fname=")+fname);
+
+	locked_string buff_safe;
+	char * buff_ptr = buff_safe.buffer_writable();
+	thefile.read(buff_ptr, length);
+
+	thefile.close();
+	if (! thefile.good()) throw std::runtime_error(string("Error in file during load operation on fname=")+fname);
+
+	clear();
+	load_from_bin( buff_safe.get_string() );
+}
+
+template <typename TKey>
+void c_multikeys_general<TKey>::c_multikeys_general<TKey>::clear() {
+	for (auto & sys : m_cryptolists_general) sys.clear();
+}
+
 // ==================================================================
 
 #if 0
@@ -458,6 +509,18 @@ void c_multikeys_PAIR::debug() const {
 	_info("---------");
 }
 
+void c_multikeys_PAIR::save_PRV(const string  & fname_base) const {
+	m_PRV.save(fname_base+".PRIVATE");
+	m_pub.save(fname_base+".public");
+}
+void c_multikeys_PAIR::save_pub(const string  & fname_base) const {
+	m_pub.save(fname_base+".public");
+}
+void c_multikeys_PAIR::load_PRV(const string  & fname_base) {
+	m_PRV.load(fname_base+".PRIVATE");
+	m_pub.load(fname_base+".public");
+}
+
 
 template <typename T_ok_value, typename T_errcode>
 void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
@@ -634,6 +697,7 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_PRVkey & PRVkey)
 {
 	m_pub.add_public(crypto_type, pubkey);
+	_note("ADD PRIVATE KEY: " << to_debug_locked(PRVkey));
 	m_PRV.add_PRIVATE(crypto_type, PRVkey);
 }
 
@@ -867,6 +931,9 @@ void test_crypto() {
 	// Alice: IDC
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
+
+	keypairA.save_PRV("vartmp/alice.key");
+	keypairA.save_PRV("vartmp/alice2.key");
 	return ;
 
 	// Bob: IDC
