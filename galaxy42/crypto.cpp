@@ -461,8 +461,11 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 }
 
 void c_multikeys_PAIR::generate() {
+	_info("generate X25519");
 	generate( e_crypto_system_type_X25519 , 3 );
+	_info("generate NRTU");
 	generate( e_crypto_system_type_NTRU_EES439EP1 , 2 );
+	_info("generate SIDH");
 	generate( e_crypto_system_type_SIDH , 1 );
 }
 
@@ -754,6 +757,7 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 	return ret;
 }
 
+// TODO code duplicate
 c_crypto_system::t_symkey
 c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
 	// WARNING: used in constructor
@@ -852,6 +856,67 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 			}
 		} // NTRU_EES439EP1
 		*/
+
+		if (sys == e_crypto_system_type_SIDH) {
+			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
+			auto key_count_bigger = std::max( key_count_a , key_count_b );
+			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
+				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
+				auto keynr_a = keynr_i % key_count_a;
+				auto keynr_b = keynr_i % key_count_b;
+				_info("kex " << keynr_a << " " << keynr_b);
+				auto const key_self_pub = self_pub.get_public (sys_id, keynr_a);
+				auto const key_self_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_them_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+
+				//string key_self_pub_a = key_self_pub.substr(0, key_self_pub.size()/2);
+				//string key_self_pub_b = key_self_pub.substr(key_self_pub.size()/2);
+				string key_them_pub_a = key_them_pub.substr(0, key_them_pub.size()/2);
+				string key_them_pub_b = key_them_pub.substr(key_self_pub.size()/2);
+
+				sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
+				sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
+				key_self_PRV.copy(&key_self_PRV_a.front(), key_self_PRV_a.size(), 0);
+				key_self_PRV.copy(&key_self_PRV_b.front(), key_self_PRV_b.size(), key_self_PRV_b.size() / 2);
+
+
+				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
+				sodiumpp::locked_string shared_secret_a(shared_secret_size);
+				sodiumpp::locked_string shared_secret_b(shared_secret_size);
+				CRYPTO_STATUS status = CRYPTO_SUCCESS;
+				// alocate curve
+				// TODO move this to calss or make global variable
+				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
+				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+
+				status = SecretAgreement_A(
+					reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
+					reinterpret_cast<unsigned char *>(&key_them_pub_b[0]),
+					reinterpret_cast<unsigned char *>(&shared_secret_a[0]),
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
+
+				status = SecretAgreement_B(
+					reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
+					reinterpret_cast<unsigned char *>(&key_them_pub_a[0]),
+					reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
+
+				using namespace string_binary_op; // operator^
+				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+				Hash1_PRV(
+					Hash1_PRV( shared_secret_a )
+					^	Hash1_PRV( shared_secret_b )
+					^ 	Hash1( key_self_pub )
+					^	Hash1( key_them_pub )
+				);
+				KCT_accum = KCT_accum ^ k_dh_agreed; //i join this fully agreed key, with other keys
+
+				// key agriment
+			}
+		} // SIDH
 
 	}
 
