@@ -5,16 +5,27 @@ project (ipbench)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(../googletest/googletest/include/)
 
+#add local jsoncpp
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
+include_directories(../jsoncpp/include)
+#link_directories(../jsoncpp/src/lib_json)
+
 #add local local lib sodiumpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(../sodiumpp/sodiumpp/include)
+
+#add local lib sidh
+#flags for SIDH.h
+add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
+include_directories(../libsidhms/SIDH)
 
 #add local build of some external libs
 link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 ADD_CUSTOM_TARGET(fast
@@ -56,36 +67,25 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt)
+
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
-	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp
+	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp
 	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
-	c_json_load.cpp c_json_genconf.cpp jsoncpp/jsoncpp.cpp )
+	c_json_load.cpp c_json_genconf.cpp)
 
 #tests
 file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
+target_link_libraries(test-debug.elf   tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
-
-#loadjason.elf jsoncpp
-#add_executable(jsonload.elf
-#			   c_json_load.cpp
-#			   c_json_genconf.cpp
-#			   jsoncpp/jsoncpp.cpp
-#)
-#target_link_libraries(jsonload.elf
-#				tunserver
-#				boost_system
-#				boost_filesystem
-#                sodium
-#)
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
 
 add_custom_target(run
 		COMMAND ./tunserver.sh

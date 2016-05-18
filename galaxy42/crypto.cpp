@@ -2,13 +2,25 @@
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 #include "ntru/include/ntru_crypto.h"
+#include <SIDH_internal.h>
 
 #include "trivialserialize.hpp"
+
+#include "filestorage.hpp"
 
 #include "glue_lockedstring_trivialserialize.hpp"
 
 using sodiumpp::locked_string;
 
+/**
+ * @TODO
+ * Things that need memlocked proving:
+ * serialize_bin()
+ * load_from_bin()
+ * save() and load() - when calling e.g. serialize_bin() / load_from_bin(),
+ * ... and them again, when doing file operations (fstream buffers - instead use simply 1 file function to read/write
+ entire buffer at once (btw then size file size limit is it in reasonable values when loading etc)
+ */
 
 
 namespace antinet_crypto {
@@ -104,6 +116,19 @@ uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
     return 0;
 }
 
+
+CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
+	static std::ifstream rand_source("/dev/urandom");
+	if (nbytes == 0) {
+		return CRYPTO_ERROR;
+	}
+
+	for (unsigned int i = 0; i < nbytes; i++) {
+		*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
+	}
+
+	return CRYPTO_SUCCESS;
+}
 
 // ==================================================================
 
@@ -231,6 +256,7 @@ Serialized pubkeys: [(104)[
 template <typename TKey>
 std::string c_multikeys_general<TKey>::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
 	trivialserialize::generator gen(100);
+	gen.push_bytes_n(3,"GMK"); // magic marker - GMK - "Galaxy MultiKey"
 	gen.push_byte_u( (char) 'a' ); // version of this map. '$' will be development, and then use 'a','b',... for stable formats
 	int used_types=0; // count how many key types are actually used - we will count
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
@@ -253,9 +279,14 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	// clear(); // remove all keys TODO
 
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
-	auto magic = parser.pop_byte_u();
-	_info(magic);
-	if (magic == 'a') {
+	auto magic_marker = parser.pop_bytes_n(3);
+	if (magic_marker !=  "GMK") throw
+		std::runtime_error("Format incorrect: bad magic marker for GMK (was"s + magic_marker+")"s);
+
+	auto magic_version = parser.pop_byte_u();
+	_info(magic_version);
+
+	if (magic_version == 'a') {
 		size_t map_size = parser.pop_integer_uvarint();
 		assert( map_size <= 100 ); // TODO(serialize_parser_assert)
 		for (size_t map_i=0; map_i<map_size; ++map_i) {
@@ -269,6 +300,50 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	}	else throw trivialserialize::format_error_read_invalid_version();
 	// TODO(r) check that numbers are sorted and not-repeating; extent exceptions type to report details of problem
 	this->m_hash_cached=""; // mark it as dirty
+}
+
+template <typename TKey>
+void c_multikeys_general<TKey>::save(const string  & fname) const {
+	// TODO need a serialize_bin() that works on, and returns, a locked_string
+	_note("Savin key to fname="<<fname);
+	std::string serialized_data_notlocked = serialize_bin();
+	_info("Serialized to: " << to_debug(serialized_data_notlocked));
+	locked_string data = locked_string::move_from_not_locked_string( std::move(serialized_data_notlocked) );
+	_info("Serialized to: " << to_debug_locked(data));
+	// create directory if necessary
+	filestorage::create_parent_dir(fname);
+	ofstream thefile( fname.c_str() );
+	thefile.write(data.c_str(), data.size()); // TODO replace with more low level thing that is unlikely to copy data to any temporary buffer
+	if (! thefile.good()) throw std::runtime_error(string("Error in file during save operation on fname=")+fname);
+}
+
+template <typename TKey>
+void c_multikeys_general<TKey>::load(const string  & fname) {
+	std::string data;
+
+	ifstream thefile;
+	size_t length=0;
+	thefile.open(fname.c_str());
+	thefile.seekg(0, std::ios::end);
+	length = thefile.tellg();
+	if (! length) throw std::runtime_error(string("Error in file during load (file size seems 0?) operation on fname=")+fname);
+	thefile.seekg(0, std::ios::beg);
+	if (! thefile.good()) throw std::runtime_error(string("Error in file during load operation on fname=")+fname);
+
+	locked_string buff_safe;
+	char * buff_ptr = buff_safe.buffer_writable();
+	thefile.read(buff_ptr, length);
+
+	thefile.close();
+	if (! thefile.good()) throw std::runtime_error(string("Error in file during load operation on fname=")+fname);
+
+	clear();
+	load_from_bin( buff_safe.get_string() );
+}
+
+template <typename TKey>
+void c_multikeys_general<TKey>::clear() {
+	for (auto & sys : m_cryptolists_general) sys.clear();
 }
 
 // ==================================================================
@@ -458,6 +533,18 @@ void c_multikeys_PAIR::debug() const {
 	_info("---------");
 }
 
+void c_multikeys_PAIR::save_PRV(const string  & fname_base) const {
+	m_PRV.save(fname_base+".PRIVATE");
+	m_pub.save(fname_base+".public");
+}
+void c_multikeys_PAIR::save_pub(const string  & fname_base) const {
+	m_pub.save(fname_base+".public");
+}
+void c_multikeys_PAIR::load_PRV(const string  & fname_base) {
+	m_PRV.load(fname_base+".PRIVATE");
+	m_pub.load(fname_base+".public");
+}
+
 
 template <typename T_ok_value, typename T_errcode>
 void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
@@ -485,8 +572,115 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 }
 
 void c_multikeys_PAIR::generate() {
+	_info("generate X25519");
 	generate( e_crypto_system_type_X25519 , 3 );
+	_info("generate NRTU");
 	generate( e_crypto_system_type_NTRU_EES439EP1 , 2 );
+	_info("generate SIDH");
+	generate( e_crypto_system_type_SIDH , 1 );
+}
+
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
+	size_t s = crypto_scalarmult_SCALARBYTES;
+	sodiumpp::randombytes_locked(s);
+	auto rnd = sodiumpp::randombytes_locked(s);
+	//_info("Random data size=" << (rnd.size()) );
+	//_info("Random data=" << to_debug_locked(rnd) );
+	sodiumpp::locked_string key_PRV(rnd); // random secret key
+	std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
+	return std::make_pair(std::move(key_PRV), std::move(key_pub));
+}
+
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair() {
+	// generate key pair
+	uint16_t public_key_len = 0, private_key_len = 0;
+	// get size of keys:
+	NTRU_exec_or_throw(
+		ntru_crypto_ntru_encrypt_keygen(
+			get_DRBG(128),
+			NTRU_EES439EP1,
+			&public_key_len, nullptr, &private_key_len, nullptr
+			)
+		,"generate keypair - get key length"
+	);
+	// values for NTRU_EES439EP1
+	assert(public_key_len == 609);
+	assert(private_key_len == 659);
+
+	std::string public_key(public_key_len, 0);
+	locked_string private_key(private_key_len);
+
+	NTRU_exec_or_throw(
+		ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
+			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
+			&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
+		)
+		,"generate keypair"
+	);
+	return std::make_pair(std::move(private_key), std::move(public_key));
+}
+
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair()
+{
+	//_info("SIDH generating...");
+	PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
+	size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
+	size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
+	const size_t private_key_len = obytes;
+	const size_t public_key_len = 4*2*pbytes;
+	locked_string private_key_a(private_key_len);
+	locked_string private_key_b(private_key_len);
+	std::string public_key_a(public_key_len, 0);
+	std::string public_key_b(public_key_len, 0);
+	CRYPTO_STATUS status = CRYPTO_SUCCESS;
+	PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+	try {
+		if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
+		status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
+		// generate keys
+		status = KeyGeneration_A(
+			reinterpret_cast<unsigned char*>(&private_key_a[0]),
+			reinterpret_cast<unsigned char *>(&public_key_a[0]),
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (A)");
+		status = KeyGeneration_B(
+			reinterpret_cast<unsigned char*>(&private_key_b[0]),
+			reinterpret_cast<unsigned char *>(&public_key_b[0]),
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
+
+		// check keys valid
+		//_info("SIDH validate...");
+		bool valid_pub_key = false;
+		status = Validate_PKA(
+		reinterpret_cast<unsigned char *>(&public_key_a[0]),
+			&valid_pub_key,
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (A)");
+		if (!valid_pub_key) throw std::runtime_error("public key (A) is not valid");
+		status = Validate_PKB(
+		reinterpret_cast<unsigned char *>(&public_key_b[0]),
+			&valid_pub_key,
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (B)");
+		if (!valid_pub_key) throw std::runtime_error("public key (B) is not valid");
+		assert(public_key_a != public_key_b);
+		assert(private_key_a != private_key_b);
+	}
+	catch(const std::exception &e) {
+		SIDH_curve_free(curveIsogeny);
+		clear_words(static_cast<void*>(&private_key_a[0]), NBYTES_TO_NWORDS(private_key_len));
+		clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(private_key_len));
+		clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(public_key_len));
+		clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(public_key_len));
+		throw e;
+	}
+	SIDH_curve_free(curveIsogeny);
+	locked_string private_key_main(2 * private_key_len);
+	private_key_a.copy(&private_key_main[0], private_key_len);
+	private_key_b.copy(&private_key_main[private_key_len], private_key_len);
+	std::string public_key_main = public_key_a + public_key_b;
+	return std::make_pair(std::move(private_key_main), std::move(public_key_main));
 }
 
 DRBG_HANDLE get_DRBG(size_t size) {
@@ -522,15 +716,8 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_X25519:
 		{
 			for (int i=0; i<count; ++i) {
-				_info("X25519 generating...");
-				size_t s = crypto_scalarmult_SCALARBYTES;
-				sodiumpp::randombytes_locked(s);
-				auto rnd = sodiumpp::randombytes_locked(s);
-				_info("Random data size=" << (rnd.size()) );
-				_info("Random data=" << to_debug_locked(rnd) );
-				sodiumpp::locked_string key_PRV(rnd); // random secret key
-				std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
-				this->add_public_and_PRIVATE( crypto_system_type , key_pub , key_PRV );
+				auto keypair = generate_x25519_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
 		}
@@ -538,38 +725,20 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_NTRU_EES439EP1:
 		{
 			for (int i=0; i<count; ++i) {
-				// real NTRU
-				_info("NTRU generating...");
-
-				// generate key pair
-				uint16_t public_key_len = 0, private_key_len = 0;
-				// get size of keys:
-				NTRU_exec_or_throw(
-					ntru_crypto_ntru_encrypt_keygen(
-						get_DRBG(128),
-						NTRU_EES439EP1,
-						&public_key_len, nullptr, &private_key_len, nullptr
-						)
-					,"generate keypair - get key length"
-				);
-				// values for NTRU_EES439EP1
-				assert(public_key_len == 609);
-				assert(private_key_len == 659);
-
-				std::string public_key(public_key_len, 0);
-				locked_string private_key(private_key_len);
-
-				NTRU_exec_or_throw(
-					ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
-						&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
-						&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
-					)
-					,"generate keypair"
-				);
-				this->add_public_and_PRIVATE(crypto_system_type, public_key, private_key);
+				auto keypair = generate_nrtu_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
 		}
+
+		case e_crypto_system_type_SIDH :
+		{
+			for (int i=0; i<count; ++i) {
+				auto keypair = generate_sidh_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
+			}
+			break;
+		} // case
 
 		default: throw runtime_error("Trying to generate unsupported key type:"
 			+ t_crypto_system_type_to_name(crypto_system_type));
@@ -634,6 +803,7 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_PRVkey & PRVkey)
 {
 	m_pub.add_public(crypto_type, pubkey);
+	_note("ADD PRIVATE KEY: " << to_debug_locked(PRVkey));
 	m_PRV.add_PRIVATE(crypto_type, PRVkey);
 }
 
@@ -672,6 +842,7 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 	return ret;
 }
 
+// TODO code duplicate
 c_crypto_system::t_symkey
 c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
 	// WARNING: used in constructor
@@ -771,6 +942,67 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		} // NTRU_EES439EP1
 		*/
 
+		if (sys == e_crypto_system_type_SIDH) {
+			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
+			auto key_count_bigger = std::max( key_count_a , key_count_b );
+			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
+				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
+				auto keynr_a = keynr_i % key_count_a;
+				auto keynr_b = keynr_i % key_count_b;
+				_info("kex " << keynr_a << " " << keynr_b);
+				auto const key_self_pub = self_pub.get_public (sys_id, keynr_a);
+				auto const key_self_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_them_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+
+				//string key_self_pub_a = key_self_pub.substr(0, key_self_pub.size()/2);
+				//string key_self_pub_b = key_self_pub.substr(key_self_pub.size()/2);
+				string key_them_pub_a = key_them_pub.substr(0, key_them_pub.size()/2);
+				string key_them_pub_b = key_them_pub.substr(key_self_pub.size()/2);
+
+				sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
+				sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
+				key_self_PRV.copy(&key_self_PRV_a.front(), key_self_PRV_a.size(), 0);
+				key_self_PRV.copy(&key_self_PRV_b.front(), key_self_PRV_b.size(), key_self_PRV_b.size() / 2);
+
+
+				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
+				sodiumpp::locked_string shared_secret_a(shared_secret_size);
+				sodiumpp::locked_string shared_secret_b(shared_secret_size);
+				CRYPTO_STATUS status = CRYPTO_SUCCESS;
+				// alocate curve
+				// TODO move this to calss or make global variable
+				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
+				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+
+				status = SecretAgreement_A(
+					reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
+					reinterpret_cast<unsigned char *>(&key_them_pub_b[0]),
+					reinterpret_cast<unsigned char *>(&shared_secret_a[0]),
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
+
+				status = SecretAgreement_B(
+					reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
+					reinterpret_cast<unsigned char *>(&key_them_pub_a[0]),
+					reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
+					curveIsogeny);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
+
+				using namespace string_binary_op; // operator^
+				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+				Hash1_PRV(
+					Hash1_PRV( shared_secret_a )
+					^	Hash1_PRV( shared_secret_b )
+					^ 	Hash1( key_self_pub )
+					^	Hash1( key_them_pub )
+				);
+				KCT_accum = KCT_accum ^ k_dh_agreed; //i join this fully agreed key, with other keys
+
+				// key agriment
+			}
+		} // SIDH
+
 	}
 
 	t_hash_PRV KCT_ready_full = Hash1_PRV( KCT_accum );
@@ -861,11 +1093,16 @@ void test_crypto() {
 	test_string_lock();
 
 
+
 	_mark("Create IDC");
 
 	// Alice: IDC
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
+
+	keypairA.save_PRV("vartmp/alice.key");
+	keypairA.save_PRV("vartmp/alice2.key");
+	return ;
 
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
@@ -889,11 +1126,11 @@ void test_crypto() {
 	c_crypto_tunnel AliceCT(keypairA, keypubB);
 	_note("Bob CT:");
 	c_crypto_tunnel BobCT  (keypairB, keypubA);
-	_mark("Prepared tunnels.");
+	_mark("Prepared tunnels (KCTab)");
 
 	// generate ephemeral keys
 
-	_warn("WARNING: this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
+	_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
 
 	_note("Alice will box:");
@@ -1041,6 +1278,51 @@ map_size
 
 	// DH+DH
 
+}
+
+void test_crypto_benchmark(const size_t seconds_for_test_case) {
+	_mark("test_crypto_benchmark");
+	using namespace std::chrono;
+
+	// X25519
+	size_t generated_keys_x25519 = 0;
+	auto start_point = steady_clock::now();
+	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_x25519_key_pair();
+		++generated_keys_x25519;
+	}
+	auto stop_point = steady_clock::now();
+	unsigned int x25519_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+
+	// ntru
+	size_t generated_keys_ntru = 0;
+	start_point = steady_clock::now();
+	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_nrtu_key_pair();
+		++generated_keys_ntru;
+	}
+	stop_point = steady_clock::now();
+	unsigned int ntru_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+
+	//sidh
+	size_t generated_keys_sidh = 0;
+	start_point = steady_clock::now();
+	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_sidh_key_pair();
+		++generated_keys_sidh;
+	}
+	stop_point = steady_clock::now();
+	unsigned int sidh_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+
+	_info("X25519");
+	_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
+	_info(static_cast<double>(generated_keys_x25519) / x25519_ms * 1000 << " key pairs per second");
+	_info("NTRU");
+	_info("Generated " << generated_keys_ntru << " in " << ntru_ms << " ms");
+	_info(static_cast<double>(generated_keys_ntru) / ntru_ms * 1000 << " key pairs per second");
+	_info("SIDH");
+	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
+	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
 }
 
 

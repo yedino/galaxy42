@@ -10,11 +10,14 @@
 
 namespace trivialserialize {
 
-void memlock(const generator & gen);
 
-template <> void serialize<sodiumpp::locked_string>(const sodiumpp::locked_string & data, generator & gen);
+void memlock(const trivialserialize::generator &gen); ///< mem lock entire generator
 
-template <> sodiumpp::locked_string deserialize<sodiumpp::locked_string>(parser & parser);
+// provide the obj_serialize API for trivialserialize
+
+template <> void obj_serialize<sodiumpp::locked_string>(const sodiumpp::locked_string & data, generator & gen);
+
+template <> sodiumpp::locked_string obj_deserialize<sodiumpp::locked_string>(parser & parser);
 
 }	// namespace trivialserialize
 #endif
