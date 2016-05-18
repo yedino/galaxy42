@@ -7,6 +7,7 @@ vartmp/
 # (the source is e.g. git submodule but in other location)
 sodiumpp/
 googletest/
+jsoncpp/
 
 
 # also other libs
