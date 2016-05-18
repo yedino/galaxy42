@@ -1,0 +1,26 @@
+This Readme contains information how to install and use our galaxy42 network for Ubuntu(tested on 16.04 LTS).
+1) Install Sodium and Boost:
+	sudo apt install libsodium-dev
+	sudo apt install libboost-all-dev
+2) Clone project from git-repository, enter project directory and change branch to usable_proxy_nocrypto:
+	git clone https://github.com/tigusoft-vm/antinet
+	cd antinet
+	git checkout usable_proxy_nocrypto
+3) Initialize and update submodules:
+	git submodule init
+	git submodule update
+4) Change directory to galaxy42:
+	cd galaxy42
+5) Make project, you can do it for 2 different ways:
+
+	5.1)First is not very secure so we recomend to use it only for Virtual Machines:
+		sudo cmake . && make
+	Using this method requied running script as a root.
+
+	5.2)Second way is to install script called "install" which is placed in galaxy42/script/install-as-root and install it as a root:
+		cd script/install-as-root
+		sudo ./install
+	Then go back to galaxy42, run cmake and make
+		cd ../..
+		cmake . && make
+	This is safe method but can contain bugs.
