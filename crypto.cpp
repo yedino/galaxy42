@@ -318,7 +318,7 @@ void c_multikeys_general<TKey>::load(const string  & fname) {
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::c_multikeys_general<TKey>::clear() {
+void c_multikeys_general<TKey>::clear() {
 	for (auto & sys : m_cryptolists_general) sys.clear();
 }
 
