@@ -1214,6 +1214,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("bar", "bar test")
 					("serialize",  "serialize test")
 					("crypto", "crypto test")
+					("crypto_bench", "crypto benchmark")
 					("route_dij", "dijkstra test")
 					("help", "Help msg");
 
@@ -1235,6 +1236,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="bar") { test_bar();  return false; }
 	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize();  return false; }
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
+	if (demoname=="crypto_bench") { antinet_crypto::test_crypto_benchmark(2);  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
