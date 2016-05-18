@@ -14,6 +14,12 @@ include_directories(../jsoncpp/include)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(../sodiumpp/sodiumpp/include)
 
+#add local lib sidh
+#flags for SIDH.h
+add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
+include_directories(../libsidhms/SIDH)
+
 #add local build of some external libs
 link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
@@ -61,7 +67,9 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static)
+
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp
@@ -73,11 +81,11 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static)
+target_link_libraries(test-debug.elf   tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf boost_system boost_filesystem tunserver gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static)
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
 
 add_custom_target(run
 		COMMAND ./tunserver.sh

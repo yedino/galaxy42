@@ -7,6 +7,7 @@
 #include "gtest/gtest_prod.h"
 #include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
+#include <SIDH.h>
 
 /**
  * @defgroup antinet_crypto Antinet Crypto
@@ -85,8 +86,13 @@ namespace antinet_crypto {
 
 DRBG_HANDLE get_DRBG(size_t size);
 
+// random functions
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out);
-
+/**
+ * Generate "nbytes" random bytes and output the result to random_array
+ * Returns CRYPTO_SUCCESS (=1) on success, CRYPTO_ERROR (=0) otherwise.
+ */
+CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array);
 
 namespace unittest {
 	class c_symhash_state__tests_with_private_access;
@@ -353,6 +359,9 @@ class c_multikeys_PAIR {
 
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
 		void generate(); ///< generate the default set of keys
+		static std::pair<sodiumpp::locked_string, std::string> generate_x25519_key_pair();
+		static std::pair<sodiumpp::locked_string, std::string> generate_nrtu_key_pair();
+		static std::pair<sodiumpp::locked_string, std::string> generate_sidh_key_pair();
 
 		void debug() const;
 
@@ -465,6 +474,7 @@ class c_dhdh_state final : public c_crypto_system {
 #endif
 
 void test_crypto();
+void test_crypto_benchmark(const size_t seconds_for_test_case);
 
 
 } // namespace
