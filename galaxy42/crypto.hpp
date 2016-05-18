@@ -70,6 +70,8 @@
  * * pub - public key
  * * PRV - private key
  * * PAIR - pair of pub + PRV
+ *
+ * * GMK - Galaxy Multi Key - is the name of data format used
  */
 
 using namespace std;

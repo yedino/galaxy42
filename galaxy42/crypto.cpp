@@ -242,6 +242,7 @@ Serialized pubkeys: [(104)[
 template <typename TKey>
 std::string c_multikeys_general<TKey>::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
 	trivialserialize::generator gen(100);
+	gen.push_bytes_n(3,"GMK"); // magic marker - GMK - "Galaxy MultiKey"
 	gen.push_byte_u( (char) 'a' ); // version of this map. '$' will be development, and then use 'a','b',... for stable formats
 	int used_types=0; // count how many key types are actually used - we will count
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
@@ -264,9 +265,14 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	// clear(); // remove all keys TODO
 
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
-	auto magic = parser.pop_byte_u();
-	_info(magic);
-	if (magic == 'a') {
+	auto magic_marker = parser.pop_bytes_n(3);
+	if (magic_marker !=  "GMK") throw
+		std::runtime_error("Format incorrect: bad magic marker for GMK (was"s + magic_marker+")"s);
+
+	auto magic_version = parser.pop_byte_u();
+	_info(magic_version);
+
+	if (magic_version == 'a') {
 		size_t map_size = parser.pop_integer_uvarint();
 		assert( map_size <= 100 ); // TODO(serialize_parser_assert)
 		for (size_t map_i=0; map_i<map_size; ++map_i) {
