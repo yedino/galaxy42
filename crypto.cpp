@@ -466,23 +466,18 @@ void c_multikeys_PAIR::generate() {
 	generate( e_crypto_system_type_SIDH , 1 );
 }
 
-std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair()
-{
-	_info("X25519 generating...");
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
 	size_t s = crypto_scalarmult_SCALARBYTES;
 	sodiumpp::randombytes_locked(s);
 	auto rnd = sodiumpp::randombytes_locked(s);
-	_info("Random data size=" << (rnd.size()) );
-	_info("Random data=" << to_debug_locked(rnd) );
+	//_info("Random data size=" << (rnd.size()) );
+	//_info("Random data=" << to_debug_locked(rnd) );
 	sodiumpp::locked_string key_PRV(rnd); // random secret key
 	std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
 	return std::make_pair(std::move(key_PRV), std::move(key_pub));
 }
 
-std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair()
-{
-	_info("NTRU generating...");
-
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair() {
 	// generate key pair
 	uint16_t public_key_len = 0, private_key_len = 0;
 	// get size of keys:
@@ -513,7 +508,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_p
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair()
 {
-	_info("SIDH generating...");
+	//_info("SIDH generating...");
 	PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 	size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
 	size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
@@ -541,7 +536,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_p
 		if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
 
 		// check keys valid
-		_info("SIDH validate...");
+		//_info("SIDH validate...");
 		bool valid_pub_key = false;
 		status = Validate_PKA(
 		reinterpret_cast<unsigned char *>(&public_key_a[0]),
@@ -1127,6 +1122,51 @@ map_size
 
 	// DH+DH
 
+}
+
+void test_crypto_benchmark(const size_t seconds_for_test_case) {
+	_mark("test_crypto_benchmark");
+	using namespace std::chrono;
+
+	// X25519
+	size_t generated_keys_x25519 = 0;
+	auto start_point = steady_clock::now();
+	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_x25519_key_pair();
+		++generated_keys_x25519;
+	}
+	auto stop_point = steady_clock::now();
+	unsigned int x25519_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+
+	// ntru
+	size_t generated_keys_ntru = 0;
+	start_point = steady_clock::now();
+	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_nrtu_key_pair();
+		++generated_keys_ntru;
+	}
+	stop_point = steady_clock::now();
+	unsigned int ntru_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+
+	//sidh
+	size_t generated_keys_sidh = 0;
+	start_point = steady_clock::now();
+	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_sidh_key_pair();
+		++generated_keys_sidh;
+	}
+	stop_point = steady_clock::now();
+	unsigned int sidh_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+
+	_info("X25519");
+	_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
+	_info(static_cast<double>(generated_keys_x25519) / x25519_ms * 1000 << " key pairs per second");
+	_info("NTRU");
+	_info("Generated " << generated_keys_ntru << " in " << ntru_ms << " ms");
+	_info(static_cast<double>(generated_keys_ntru) / ntru_ms * 1000 << " key pairs per second");
+	_info("SIDH");
+	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
+	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
 }
 
 
