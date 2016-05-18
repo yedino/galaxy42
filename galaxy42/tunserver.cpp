@@ -745,8 +745,10 @@ void c_tunserver::event_loop() {
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
 
+	fd_set fd_set_data;
+
 	this->peering_ping_all_peers();
-	const auto ping_all_frequency = std::chrono::seconds( 600 ); // how often to ping them
+	const auto ping_all_frequency = std::chrono::seconds( 1 ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
