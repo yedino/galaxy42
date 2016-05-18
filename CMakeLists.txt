@@ -59,7 +59,7 @@ add_executable(tunserver.elf tunserver.cpp)
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt)
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
-	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp
+	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp
 	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
 	c_json_load.cpp c_json_genconf.cpp jsoncpp/jsoncpp.cpp )
 
@@ -68,11 +68,11 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
+target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt)
 
 #loadjason.elf jsoncpp
 #add_executable(jsonload.elf

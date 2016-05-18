@@ -2,6 +2,7 @@
 #include "c_json_genconf.hpp"
 #include "libs1.hpp"
 #include "c_peering.hpp"
+#include "filestorage.hpp"
 #include "strings_utils.hpp"
 
 struct t_my_keypair {
@@ -14,12 +15,6 @@ struct t_my_keypair {
 struct t_auth_password {
 	std::string m_password;
 	std::string m_myname;
-};
-
-class c_file_checker {
-  public:
-	c_file_checker () = delete;
-		static bool is_file_ok(const std::string &filename);
 };
 
 /**
