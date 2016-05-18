@@ -466,6 +466,114 @@ void c_multikeys_PAIR::generate() {
 	generate( e_crypto_system_type_SIDH , 1 );
 }
 
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair()
+{
+	_info("X25519 generating...");
+	size_t s = crypto_scalarmult_SCALARBYTES;
+	sodiumpp::randombytes_locked(s);
+	auto rnd = sodiumpp::randombytes_locked(s);
+	_info("Random data size=" << (rnd.size()) );
+	_info("Random data=" << to_debug_locked(rnd) );
+	sodiumpp::locked_string key_PRV(rnd); // random secret key
+	std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
+	return std::make_pair(std::move(key_PRV), std::move(key_pub));
+}
+
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair()
+{
+	_info("NTRU generating...");
+
+	// generate key pair
+	uint16_t public_key_len = 0, private_key_len = 0;
+	// get size of keys:
+	NTRU_exec_or_throw(
+		ntru_crypto_ntru_encrypt_keygen(
+			get_DRBG(128),
+			NTRU_EES439EP1,
+			&public_key_len, nullptr, &private_key_len, nullptr
+			)
+		,"generate keypair - get key length"
+	);
+	// values for NTRU_EES439EP1
+	assert(public_key_len == 609);
+	assert(private_key_len == 659);
+
+	std::string public_key(public_key_len, 0);
+	locked_string private_key(private_key_len);
+
+	NTRU_exec_or_throw(
+		ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
+			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
+			&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
+		)
+		,"generate keypair"
+	);
+	return std::make_pair(std::move(private_key), std::move(public_key));
+}
+
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair()
+{
+	_info("SIDH generating...");
+	PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
+	size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
+	size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
+	const size_t private_key_len = obytes;
+	const size_t public_key_len = 4*2*pbytes;
+	locked_string private_key_a(private_key_len);
+	locked_string private_key_b(private_key_len);
+	std::string public_key_a(public_key_len, 0);
+	std::string public_key_b(public_key_len, 0);
+	CRYPTO_STATUS status = CRYPTO_SUCCESS;
+	PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+	try {
+		if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
+		status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
+		// generate keys
+		status = KeyGeneration_A(
+			reinterpret_cast<unsigned char*>(&private_key_a[0]),
+			reinterpret_cast<unsigned char *>(&public_key_a[0]),
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (A)");
+		status = KeyGeneration_B(
+			reinterpret_cast<unsigned char*>(&private_key_b[0]),
+			reinterpret_cast<unsigned char *>(&public_key_b[0]),
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
+
+		// check keys valid
+		_info("SIDH validate...");
+		bool valid_pub_key = false;
+		status = Validate_PKA(
+		reinterpret_cast<unsigned char *>(&public_key_a[0]),
+			&valid_pub_key,
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (A)");
+		if (!valid_pub_key) throw std::runtime_error("public key (A) is not valid");
+		status = Validate_PKB(
+		reinterpret_cast<unsigned char *>(&public_key_b[0]),
+			&valid_pub_key,
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (B)");
+		if (!valid_pub_key) throw std::runtime_error("public key (B) is not valid");
+		assert(public_key_a != public_key_b);
+		assert(private_key_a != private_key_b);
+	}
+	catch(const std::exception &e) {
+		SIDH_curve_free(curveIsogeny);
+		clear_words(static_cast<void*>(&private_key_a[0]), NBYTES_TO_NWORDS(private_key_len));
+		clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(private_key_len));
+		clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(public_key_len));
+		clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(public_key_len));
+		throw e;
+	}
+	SIDH_curve_free(curveIsogeny);
+	locked_string private_key_main(2 * private_key_len);
+	private_key_a.copy(&private_key_main[0], private_key_len);
+	private_key_b.copy(&private_key_main[private_key_len], private_key_len);
+	std::string public_key_main = public_key_a + public_key_b;
+	return std::make_pair(std::move(private_key_main), std::move(public_key_main));
+}
+
 DRBG_HANDLE get_DRBG(size_t size) {
 	// TODO(r) use std::once / lock? - not thread safe now
 	static map<size_t , DRBG_HANDLE> drbg_tab;
@@ -499,15 +607,8 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_X25519:
 		{
 			for (int i=0; i<count; ++i) {
-				_info("X25519 generating...");
-				size_t s = crypto_scalarmult_SCALARBYTES;
-				sodiumpp::randombytes_locked(s);
-				auto rnd = sodiumpp::randombytes_locked(s);
-				_info("Random data size=" << (rnd.size()) );
-				_info("Random data=" << to_debug_locked(rnd) );
-				sodiumpp::locked_string key_PRV(rnd); // random secret key
-				std::string key_pub( sodiumpp::generate_pubkey_from_privkey(key_PRV) ); // PRV -> pub
-				this->add_public_and_PRIVATE( crypto_system_type , key_pub , key_PRV );
+				auto keypair = generate_x25519_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
 		}
@@ -515,35 +616,8 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_NTRU_EES439EP1:
 		{
 			for (int i=0; i<count; ++i) {
-				// real NTRU
-				_info("NTRU generating...");
-
-				// generate key pair
-				uint16_t public_key_len = 0, private_key_len = 0;
-				// get size of keys:
-				NTRU_exec_or_throw(
-					ntru_crypto_ntru_encrypt_keygen(
-						get_DRBG(128),
-						NTRU_EES439EP1,
-						&public_key_len, nullptr, &private_key_len, nullptr
-						)
-					,"generate keypair - get key length"
-				);
-				// values for NTRU_EES439EP1
-				assert(public_key_len == 609);
-				assert(private_key_len == 659);
-
-				std::string public_key(public_key_len, 0);
-				locked_string private_key(private_key_len);
-
-				NTRU_exec_or_throw(
-					ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
-						&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
-						&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
-					)
-					,"generate keypair"
-				);
-				this->add_public_and_PRIVATE(crypto_system_type, public_key, private_key);
+				auto keypair = generate_nrtu_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
 		}
@@ -551,65 +625,8 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_SIDH :
 		{
 			for (int i=0; i<count; ++i) {
-				_info("SIDH generating...");
-				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
-				size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
-				size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
-				const size_t private_key_len = obytes;
-				const size_t public_key_len = 4*2*pbytes;
-				locked_string private_key_a(private_key_len);
-				locked_string private_key_b(private_key_len);
-				std::string public_key_a(public_key_len, 0);
-				std::string public_key_b(public_key_len, 0);
-				CRYPTO_STATUS status = CRYPTO_SUCCESS;
-				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
-				try {
-					if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
-					status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
-					// generate keys
-					status = KeyGeneration_A(
-						reinterpret_cast<unsigned char*>(&private_key_a[0]),
-						reinterpret_cast<unsigned char *>(&public_key_a[0]),
-						curveIsogeny);
-					if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (A)");
-					status = KeyGeneration_B(
-						reinterpret_cast<unsigned char*>(&private_key_b[0]),
-						reinterpret_cast<unsigned char *>(&public_key_b[0]),
-						curveIsogeny);
-					if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
-
-					// check keys valid
-					_info("SIDH validate...");
-					bool valid_pub_key = false;
-					status = Validate_PKA(
-					reinterpret_cast<unsigned char *>(&public_key_a[0]),
-						&valid_pub_key,
-						curveIsogeny);
-					if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (A)");
-					if (!valid_pub_key) throw std::runtime_error("public key (A) is not valid");
-					status = Validate_PKB(
-					reinterpret_cast<unsigned char *>(&public_key_b[0]),
-						&valid_pub_key,
-						curveIsogeny);
-					if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (B)");
-					if (!valid_pub_key) throw std::runtime_error("public key (B) is not valid");
-					assert(public_key_a != public_key_b);
-					assert(private_key_a != private_key_b);
-				}
-				catch(const std::exception &e) {
-					SIDH_curve_free(curveIsogeny);
-					clear_words(static_cast<void*>(&private_key_a[0]), NBYTES_TO_NWORDS(private_key_len));
-					clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(private_key_len));
-					clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(public_key_len));
-					clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(public_key_len));
-					throw e;
-				}
-				SIDH_curve_free(curveIsogeny);
-				locked_string private_key_main(2 * private_key_len);
-				private_key_a.copy(&private_key_main[0], private_key_len);
-				private_key_b.copy(&private_key_main[private_key_len], private_key_len);
-				std::string public_key_main = public_key_a + public_key_b;
-				this->add_public_and_PRIVATE(crypto_system_type, public_key_main, private_key_main);
+				auto keypair = generate_sidh_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
 		} // case
