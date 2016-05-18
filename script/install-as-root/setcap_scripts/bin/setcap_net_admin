@@ -97,6 +97,7 @@ if [[ "$expected_user" == "--current" ]] ; then # this must be exact this option
 	# http://unix.stackexchange.com/questions/137175/how-to-get-the-name-of-the-user-who-executed-a-bash-script-as-sudo
 	the_user="${SUDO_USER:-$USER}"
 	# echo $the_user
+	expected_user=$the_user
 	# expected_user=$USER # http://stackoverflow.com/questions/3522341/identify-user-in-a-bash-script-called-by-sudo
 fi
 
