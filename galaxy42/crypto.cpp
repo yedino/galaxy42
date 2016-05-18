@@ -952,7 +952,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				auto keynr_b = keynr_i % key_count_b;
 				_info("kex " << keynr_a << " " << keynr_b);
 				auto const key_self_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_self_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_self_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
 				auto const key_them_pub = them_pub.get_public (sys_id, keynr_b); // number b!
 
 				//string key_self_pub_a = key_self_pub.substr(0, key_self_pub.size()/2);
