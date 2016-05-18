@@ -22,9 +22,9 @@ echo "---------------------------------------------------------------"
 
 set -x
 
-git submodule init
+git submodule init || { echo "Error: submodules download failed (init);" ; exit 1 ; }
 
-git submodule update 
+git submodule update || { echo "Error: submodules download failed (update)." ; exit 1 ; }
 
 set +x
 
