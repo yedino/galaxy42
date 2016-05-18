@@ -171,6 +171,10 @@ std::pair< std::string,int > parse_ip_string(const string& ip_string);
 
 }
 
+
+using namespace std::string_literals;
+
+
 #define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
 <<__func__<<" (line "<<__LINE__<<")"; \
 _erro(oss.str()); \

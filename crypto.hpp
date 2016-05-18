@@ -124,8 +124,6 @@ typedef std::string NS;
 
 template <class T1, class T2>
 T1 binary_string_xor(T1 const & str1, T2 const& str2) {
-	typedef std::string T;
-
 	// WARNING: this function is written with less assertive code (e.g. without at()),
 	// it MUST be checked against any errors if you would modify it.
 	const auto size1 = str1.size();

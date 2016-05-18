@@ -959,19 +959,23 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				//string key_self_pub_b = key_self_pub.substr(key_self_pub.size()/2);
 				string key_them_pub_a = key_them_pub.substr(0, key_them_pub.size()/2);
 				string key_them_pub_b = key_them_pub.substr(key_self_pub.size()/2);
+				assert( key_self_pub.size() == key_them_pub.size());
 
 				sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
 				sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
+				// this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
 				key_self_PRV.copy(&key_self_PRV_a.front(), key_self_PRV_a.size(), 0);
 				key_self_PRV.copy(&key_self_PRV_b.front(), key_self_PRV_b.size(), key_self_PRV_b.size() / 2);
 
 
+				// TODO(rob) make this size-calculations more explained; are they correctd? 
+				// XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal
 				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
 				sodiumpp::locked_string shared_secret_a(shared_secret_size);
 				sodiumpp::locked_string shared_secret_b(shared_secret_size);
 				CRYPTO_STATUS status = CRYPTO_SUCCESS;
-				// alocate curve
-				// TODO move this to calss or make global variable
+				// allocate curve
+				// TODO move this to class or make global variable
 				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
 
@@ -992,14 +996,13 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				using namespace string_binary_op; // operator^
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 				Hash1_PRV(
-					Hash1_PRV( shared_secret_a )
-					^	Hash1_PRV( shared_secret_b )
-					^ 	Hash1( key_self_pub )
-					^	Hash1( key_them_pub )
-				);
-				KCT_accum = KCT_accum ^ k_dh_agreed; //i join this fully agreed key, with other keys
+					Hash1_PRV( shared_secret_a ) ^	Hash1_PRV( shared_secret_b ) // both agreed-shared-keys, hashed
+					^ Hash1( key_self_pub )	^	Hash1( key_them_pub ) // and hash of public keys too
+				); // and all of this hashed once more
 
-				// key agriment
+				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+
+				// key agreement
 			}
 		} // SIDH
 
@@ -1021,7 +1024,7 @@ bool c_stream_crypto::calculate_nonce_odd(const c_multikeys_PAIR & self,  const 
 
 t_crypto_system_type c_stream_crypto::get_system_type() const
 {
-	assert(false && "not implemented");
+	TODOCODE;	return t_crypto_system_type(0);
 }
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
@@ -1282,7 +1285,10 @@ map_size
 
 void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	_mark("test_crypto_benchmark");
-	using namespace std::chrono;
+	namespace chrono = std::chrono;
+	using chrono::steady_clock;
+	typedef seconds = chrono::seconds;
+	/* TODO(rob) XXX - do not use entire using namespace std::chrono - on older compilers then ""s conflicts.
 
 	// X25519
 	size_t generated_keys_x25519 = 0;
@@ -1323,6 +1329,8 @@ void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	_info("SIDH");
 	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
 	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
+
+	*/
 }
 
 
