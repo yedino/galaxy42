@@ -29,6 +29,7 @@ public:
 	static bool is_file_ok(const std::string &filename);
 
 	static std::string create_path_for(t_filestore file_type) {
+		UNUSED(file_type); // TODO(hb)
 
 		boost::filesystem::path user_home(getenv("HOME"));
 		std::cout << user_home << std::endl;
@@ -36,6 +37,7 @@ public:
 	}
 
 	static std::string prepare_file_for_write(t_filestore file_type, const std::string &filename) {
+		UNUSED(filename); // TODO(hb)
 		switch (file_type) {
 			case e_filestore_wallet_galaxy_ipkeys_pub: { 	//...keyid .... filename = getenv("USER").".config/antinet......" + name + ".PRIVATE" ;
 				break;	//mod=0700 for private key
