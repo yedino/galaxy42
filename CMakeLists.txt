@@ -7,8 +7,8 @@ include_directories(../googletest/googletest/include/)
 
 #add local jsoncpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-include_directories(../jsoncpp/include/json)
-link_directories(../jsoncpp/src/lib_json)
+include_directories(../jsoncpp/include)
+#link_directories(../jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
@@ -61,7 +61,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp)
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static)
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp
@@ -73,11 +73,11 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
+target_link_libraries(test-debug.elf tunserver gtest sodium sodiumpp ntruencrypt crypto jsoncpp_lib_static)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt crypto)
+target_link_libraries(test-release.elf tunserver gtest sodium sodiumpp ntruencrypt crypto jsoncpp_lib_static)
 
 add_custom_target(run
 		COMMAND ./tunserver.sh
