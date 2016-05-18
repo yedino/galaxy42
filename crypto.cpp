@@ -548,7 +548,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 			break;
 		}
 
-		case e_crypto_system_type_SIDH:
+		case e_crypto_system_type_SIDH :
 		{
 			_info("SIDH generating...");
 			PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
@@ -578,6 +578,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 				if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
 
 				// check keys valid
+				_info("SIDH validate...");
 				bool valid_pub_key = false;
 				status = Validate_PKA(
 				reinterpret_cast<unsigned char *>(&public_key_a[0]),
@@ -604,10 +605,8 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 			}
 			SIDH_curve_free(curveIsogeny);
 			locked_string private_key_main(2 * private_key_len);
-			_dbg1("copy1");
 			private_key_a.copy(&private_key_main[0], private_key_len);
-			_dbg2("copy2");
-			private_key_main.copy(&private_key_main[private_key_len], private_key_len);
+			private_key_b.copy(&private_key_main[private_key_len], private_key_len);
 			std::string public_key_main = public_key_a + public_key_b;
 			this->add_public_and_PRIVATE(crypto_system_type, public_key_main, private_key_main);
 			break;
