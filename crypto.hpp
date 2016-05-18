@@ -282,7 +282,6 @@ class c_multikeys_general : public c_crypto_system {
 		/// @name Getters: @{
 		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
 		size_t get_count_of_systems() const; ///< how many key types?
-
 		string get_hash() const; ///< const, though it is allowed to update mutable field with cache of current hash
 		/// @}
 
