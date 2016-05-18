@@ -463,6 +463,7 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 void c_multikeys_PAIR::generate() {
 	generate( e_crypto_system_type_X25519 , 3 );
 	generate( e_crypto_system_type_NTRU_EES439EP1 , 2 );
+	generate( e_crypto_system_type_SIDH , 1 );
 }
 
 DRBG_HANDLE get_DRBG(size_t size) {
@@ -601,12 +602,15 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 				clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(public_key_len));
 				throw e;
 			}
+			SIDH_curve_free(curveIsogeny);
 			locked_string private_key_main(2 * private_key_len);
+			_dbg1("copy1");
 			private_key_a.copy(&private_key_main[0], private_key_len);
+			_dbg2("copy2");
 			private_key_main.copy(&private_key_main[private_key_len], private_key_len);
 			std::string public_key_main = public_key_a + public_key_b;
 			this->add_public_and_PRIVATE(crypto_system_type, public_key_main, private_key_main);
-
+			break;
 		} // case
 
 		default: throw runtime_error("Trying to generate unsupported key type:"
