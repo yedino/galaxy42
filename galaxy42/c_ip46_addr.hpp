@@ -35,9 +35,10 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 				return ntohs(m_ip_data.in4.sin_port);
 			} else if (m_tag == tag_ipv6){
 				return ntohs(m_ip_data.in6.sin6_port);
-			} else {
-				assert(false && "c_ip46_addr has bad ip type");
 			}
+
+			assert(false && "c_ip46_addr has bad ip type");
+			return 0;
 		}
 
 		/// return my address, any IP (e.g. for listening), on given port.

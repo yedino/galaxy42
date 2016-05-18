@@ -22,3 +22,6 @@
 [submodule "libsidhms"]
 	path = libsidhms
 	url = https://github.com/tigusoft-vm/libsidhms.git
+[submodule "jsoncpp"]
+	path = jsoncpp
+	url = https://github.com/tigusoft-vm/jsoncpp.git
