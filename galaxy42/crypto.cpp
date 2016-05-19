@@ -579,11 +579,11 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 
 void c_multikeys_PAIR::generate() {
 	_info("generate X25519");
-	generate( e_crypto_system_type_X25519 , 3 );
+	generate( e_crypto_system_type_X25519 , 2 );
 	_info("generate NRTU");
-	generate( e_crypto_system_type_NTRU_EES439EP1 , 2 );
+	generate( e_crypto_system_type_NTRU_EES439EP1 , 0 );
 	_info("generate SIDH");
-	generate( e_crypto_system_type_SIDH , 1 );
+	generate( e_crypto_system_type_SIDH , 0 );
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
@@ -1105,6 +1105,9 @@ void test_string_lock() {
 }
 
 void test_crypto() {
+	volatile int a=5;
+	assert( a > 100 );
+
 	vector<locked_string> vec;
 	std::string s1("TestString");
 	locked_string s = locked_string::move_from_not_locked_string(std::move(s1));

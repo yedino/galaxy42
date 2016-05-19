@@ -1,1 +1,1 @@
-/home/rafalcode/work/antinet/check
+check

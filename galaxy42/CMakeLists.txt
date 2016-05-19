@@ -1,5 +1,21 @@
 cmake_minimum_required(VERSION 2.8.3)
+
+# http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
+# If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
+# and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
+# to Debug prior to calling PROJECT()
+#
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
+   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
+   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+ENDIF()
+
 project (ipbench)
+
+message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
@@ -38,28 +54,26 @@ ADD_CUSTOM_TARGET(debug
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=debug ${CMAKE_SOURCE_DIR}
 		COMMAND make)
 
-if(NOT CMAKE_BUILD_TYPE)
-	message("DEFAULT BUILD: Fast build")
-	set(CMAKE_BUILD_TYPE fast)
-endif()
+
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
 
-if(CMAKE_BUILD_TYPE STREQUAL "fast")
+if(CMAKE_BUILD_TYPE STREQUAL "Fast")
         message("Fast build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
-
-elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
-        message("Debug build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3")
-
-elseif(CMAKE_BUILD_TYPE STREQUAL "release")
-        message("Release build")
         add_definitions(-DRELEASEMODE_ -DNDEBUG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O3")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
+
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message("Debug build")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O1")
+
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        message("Release build")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2")
 else()
     message("bad CMAKE_BUILD_TYPE flag")
-    message("usage cmake [fast/debug/release] .")
+    message("usage is: cmake [fast/debug/release] .")
+    message( FATAL_ERROR "error" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
 endif()
 

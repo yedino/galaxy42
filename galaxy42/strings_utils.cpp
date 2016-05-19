@@ -8,7 +8,7 @@
 string_as_hex::string_as_hex(const std::string & s) : data(s) { }
 
 string_as_hex::string_as_hex(const string_as_bin & in) {
-	size_t in_size = in.bytes.size(); 
+	size_t in_size = in.bytes.size();
 	size_t size_mul = 2; // how much will the string expand
 	size_t in_size_max1 = ( std::numeric_limits<decltype(in_size)>::max() / size_mul ) ; // it will expand e.g. x2 (that is not entire limit yet)
 	assert( in_size < in_size_max1 );
