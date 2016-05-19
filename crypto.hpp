@@ -398,6 +398,8 @@ class c_stream_crypto final /* because strange ctor init list functions */
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
 
+		static const sodiumpp::locked_string s_ntru_dh_random_bytes;
+
 	public:
 		virtual t_crypto_system_type get_system_type() const;
 
