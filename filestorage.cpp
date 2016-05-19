@@ -42,8 +42,8 @@ std::string filestorage::load_string(t_filestore file_type,
 									 const std::string &filename) {
 	std::string content;
 
-	fs::path file_with_path = get_path_for(file_type);
-	file_with_path += filename;
+	fs::path file_with_path = get_path_for(file_type, filename);
+	//file_with_path += filename;
 	if (!is_file_ok(file_with_path.native())) {
 		throw std::invalid_argument("Fail to open file for read: " + filename);
 	} else {
@@ -59,8 +59,8 @@ std::string filestorage::load_string(t_filestore file_type,
 sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 														 const std::string &filename) {
 	FILE * f_ptr;
-	fs::path file_with_path = get_path_for(file_type);
-	file_with_path += filename;
+	fs::path file_with_path = get_path_for(file_type, filename);
+	//file_with_path += filename;
 
 	f_ptr = std::fopen(file_with_path.c_str(), "r");
 
@@ -122,19 +122,19 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 	fs::path file_with_path;
 	try {
 		// creating directory tree if necessary
-		fs::path full_path = create_path_for(file_type);
+		fs::path full_path = create_path_for(file_type, filename);
 
 		// connect parent path with filename
 		file_with_path = full_path;
-		file_with_path += filename;
+		//file_with_path += filename;
 		switch (file_type) {
 			case e_filestore_galaxy_ipkeys_pub: {
-				file_with_path += ".public";
+				//file_with_path += ".public";
 				//mod=0700 for private key
 				break;
 			}
 			case e_filestore_wallet_galaxy_ipkeys_PRV: {
-				file_with_path += ".PRIVATE";
+				//file_with_path += ".PRIVATE";
 				//mod=0755 for public
 				break;
 			}
@@ -155,33 +155,39 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 	return file_with_path;
 }
 
-fs::path filestorage::create_path_for(t_filestore file_type) {
+fs::path filestorage::create_path_for(t_filestore file_type,
+									  const fs::path &filename) {
 
-	fs::path full_path(get_path_for(file_type));
-	create_parent_dir(full_path.native());
+	fs::path full_path = get_path_for(file_type, filename);
+	create_parent_dir(full_path);
 	// std::cout << user_home << std::endl; //dbg
 	// std::cout << full_path << std::endl; //dbg
 	return full_path;
 }
 
-fs::path filestorage::get_path_for(t_filestore file_type) {
+fs::path filestorage::get_path_for(t_filestore file_type,
+								   const fs::path &filename) {
 
 	fs::path user_home(getenv("HOME"));
 	fs::path full_path(user_home.c_str());
 	switch (file_type) {
 		case e_filestore_wallet_galaxy_ipkeys_PRV: {
 			full_path += "/.config/antinet/galaxy42/wallet/";
+			full_path += filename;
+			full_path += ".PRIVATE";
 			break;
 		}
 		case e_filestore_galaxy_ipkeys_pub: {
 			full_path += "/.config/antinet/galaxy42/";
+			full_path += filename;
+			full_path += ".public";
 			break;
 		}
 	}
 	return full_path;
 }
 
-bool filestorage::create_parent_dir(const std::string &filename) {
+bool filestorage::create_parent_dir(const fs::path &filename) {
 
 	fs::path file(filename);
 	fs::path parent_path = file.parent_path();
