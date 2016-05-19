@@ -391,6 +391,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
+		sodiumpp::locked_string m_ntru_dh_random_bytes;
 		t_symkey m_KCT; ///< the KCT for this stream
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
@@ -398,7 +399,6 @@ class c_stream_crypto final /* because strange ctor init list functions */
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
 
-		static const sodiumpp::locked_string s_ntru_dh_random_bytes;
 
 	public:
 		virtual t_crypto_system_type get_system_type() const;
@@ -409,7 +409,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 		std::string unbox(const std::string & msg);
 
 	private:
-		static t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
+		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
 };
