@@ -1175,30 +1175,32 @@ void test_crypto() {
 	} else throw std::runtime_error("Test failed serialize save/load");
 
 
-	// Create CT (e.g. CTE?) - that has KCT
-	_note("Alice CT:");
-	c_crypto_tunnel AliceCT(keypairA, keypubB);
-	_note("Bob CT:");
-	c_crypto_tunnel BobCT  (keypairB, keypubA);
-	_mark("Prepared tunnels (KCTab)");
 
-	// generate ephemeral keys
+	for (int ib=0; ib<2; ++ib) {
+		_note("Starting new conversation (new CT) - number " << ib);
 
-	_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
-		"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
+		// Create CT (e.g. CTE?) - that has KCT
+		_note("Alice CT:");
+		c_crypto_tunnel AliceCT(keypairA, keypubB);
+		_note("Bob CT:");
+		c_crypto_tunnel BobCT  (keypairB, keypubA);
+		_mark("Prepared tunnels (KCTab)");
 
-	_note("Alice will box:");
-	auto msg1s = AliceCT.box("Hello");
-	auto msg1r = BobCT.unbox(msg1s);
-	_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
+		// generate ephemeral keys
 
-	auto msg2s = BobCT.box("Hello");
-	auto msg2r = AliceCT.unbox(msg2s);
-	_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
+		_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
+			"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
+		for (int ia=0; ia<5; ++ia) {
+			_note("Alice will box:");
+			auto msg1s = AliceCT.box("Hello");
+			auto msg1r = BobCT.unbox(msg1s);
+			_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
 
-	auto msg3s = AliceCT.box("Hello");
-	auto msg3r = BobCT.unbox(msg3s);
-	_note("Decrypted message: [" << msg3r << "] from encrypted: " << to_debug(msg3s));
+			auto msg2s = BobCT.box("Hello");
+			auto msg2r = AliceCT.unbox(msg2s);
+			_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
+		}
+	}
 
 	return ;
 
