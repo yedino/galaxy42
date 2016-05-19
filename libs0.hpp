@@ -161,9 +161,48 @@ std::string to_string(const std::string & v); ///< just to have identical syntax
 template<typename T> constexpr bool templated_always_false() { return false; }
 
 
+// === ranges, copy ===
+
+/**
+ * @brief Checks if the range [start1,end1) overlaps (intersects) with range [start2,end2),
+ * name "oc" is for Open,Closed range, name "ne" is for Not-Empty,
+ * and asserted means that we assert validity of input data.
+ * @note It assumes that ranges are properly defined end not-empty, that is: start1<end1 && start2<end2
+ */
+template <typename TIn, typename TOut> bool ranges_overlap_oc_ne_asserted(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
+	assert( (start1<end1) );
+	assert( (start2<end2) );
+	return ( start1 < end2 and start2 < end1 );
 }
 
+/**
+ * @brief This asserts that range [start1,end1) does not overlap with range [start2,end2).
+ * @note It asserts also that the given ranges are not-empty and valid (start<end).
+ */
+template <typename TIn, typename TOut> void assert_not_ranges_overlap_oc_ne(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
+	assert( ! ranges_overlap_oc_ne_asserted(start1,end1, start2,end2) );
+}
+
+/**
+ * Very safe copy of memory from range [first..last) into [d_first, d_first+size)
+ * It asserts following conditions:
+ * - the memory ranges must not overlap
+ * - they must be not-empty and valid (begin < end)
+ * - the size given as argument must match the size of range [first..last)
+ */
+template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
+	assert( numeric_cast<size_t>(last-first) == size); // is size as expected
+	// check if the memory ranges do not overlap by any chance:
+	assert_not_ranges_overlap_oc_ne(first,last, d_first,d_first+size);
+	std::copy(first,last, d_first); // ***
+}
+
+
+} // namespace
+
+
 using namespace stdplus;
+
 
 namespace tunserver_utils {
 
