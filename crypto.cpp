@@ -1158,6 +1158,8 @@ void test_crypto() {
 	loadedA.datastore_load_PRV_and_pub("vartmp/alice.key");
 	loadedA.datastore_save_PRV_and_pub("vartmp/alice.key.again");
 
+	// --- move on to Bob ---
+
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
 	keypairB.generate();
@@ -1165,7 +1167,7 @@ void test_crypto() {
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
 
-	// Check key save/restore:
+	// Check key save/restore (without saving to file)
 	string keypubA_serialized = keypubA.serialize_bin();
 	c_multikeys_pub keypubA_restored;
 	keypubA_restored.load_from_bin( keypubA_serialized );
@@ -1175,6 +1177,7 @@ void test_crypto() {
 	} else throw std::runtime_error("Test failed serialize save/load");
 
 
+	// test seding messages in CT sessions
 
 	for (int ib=0; ib<2; ++ib) {
 		_note("Starting new conversation (new CT) - number " << ib);
