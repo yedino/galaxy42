@@ -392,13 +392,13 @@ class c_stream_crypto final /* because strange ctor init list functions */
 {
 	private:
 		sodiumpp::locked_string m_ntru_dh_random_bytes;
+		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
 		t_symkey m_KCT; ///< the KCT for this stream
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
 
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
-		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
 
 	public:
 		virtual t_crypto_system_type get_system_type() const;
