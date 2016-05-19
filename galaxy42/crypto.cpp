@@ -317,7 +317,6 @@ void c_multikeys_general<TKey>::save(const string  & fname) const {
 	locked_string data = locked_string::move_from_not_locked_string( std::move(serialized_data_notlocked) );
 	_info("Serialized to: " << to_debug_locked(data));
 	// create directory if necessary
-	filestorage::create_parent_dir(fname);
 	std::ofstream thefile( fname.c_str() );
 	thefile.write(data.c_str(), data.size()); // TODO replace with more low level thing that is unlikely to copy data to any temporary buffer
 	if (! thefile.good()) throw std::runtime_error(string("Error in file during save operation on fname=")+fname);
