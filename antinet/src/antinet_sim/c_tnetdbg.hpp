@@ -9,7 +9,9 @@
 #define _dbg3(X) do{}while(0)
 // do { ::std::cerr<<"dbg3: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 
-#define _dbg2(X) do { ::std::cerr<<"dbg2: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg2(X) do{}while(0)
+// do { ::std::cerr<<"dbg2: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
+
 #define _dbg1(X) do { ::std::cerr<<"dbg1: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _info(X) do { ::std::cerr<<"\033[94minfo: " << __FILE__ << "+" << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
 #define _note(X) do { ::std::cerr<<"note: " << __FILE__ << "+" << __LINE__ << " " << X << ::std::endl; } while(0)

@@ -824,13 +824,13 @@ c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_
 // ---
 
 std::string c_stream_crypto::box(const std::string & msg) {
-	_info("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
+	_dbg2("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
 	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
 	return m_boxer.box(msg).to_binary();
 }
 
 std::string c_stream_crypto::unbox(const std::string & msg) {
-	_info("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
 	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
@@ -1150,14 +1150,13 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
+	_mark("Load/save tests");
 	keypairA.datastore_save_PRV_and_pub("vartmp/alice.key");
 	keypairA.datastore_save_PRV_and_pub("vartmp/alice2.key");
 
 	c_multikeys_PAIR loadedA;
 	loadedA.datastore_load_PRV_and_pub("vartmp/alice.key");
 	loadedA.datastore_save_PRV_and_pub("vartmp/alice.key.again");
-
-	return ;
 
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
@@ -1190,10 +1189,16 @@ void test_crypto() {
 
 	_note("Alice will box:");
 	auto msg1s = AliceCT.box("Hello");
-	_info("Boxed to:  " << to_debug(msg1s));
-	_note("Bob will unbox:");
 	auto msg1r = BobCT.unbox(msg1s);
-	_info("Tunneled message: " << msg1r << " from encrypted: " << to_debug(msg1s));
+	_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
+
+	auto msg2s = BobCT.box("Hello");
+	auto msg2r = AliceCT.unbox(msg2s);
+	_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
+
+	auto msg3s = AliceCT.box("Hello");
+	auto msg3r = BobCT.unbox(msg3s);
+	_note("Decrypted message: [" << msg3r << "] from encrypted: " << to_debug(msg3s));
 
 	return ;
 
