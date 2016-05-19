@@ -797,6 +797,11 @@ std::string c_stream_crypto::unbox(const std::string & msg) {
 	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
+std::vector<string> c_stream_crypto::get_ntru_encrypt_rand()
+{
+	return m_ntru_ecrypt_to_them_rand;
+}
+
 
 
 
@@ -846,7 +851,7 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 
 // TODO code duplicate
 c_crypto_system::t_symkey
-c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
+c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them, std::vector<string> ntru_rand_encrypt_to_me) {
 	// WARNING: used in constructor
 	// WARNING: taking & to values, do not invalidate them! (here and in entire function)
 
@@ -953,12 +958,12 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				assert(ciphertext_len == encrypted_rand_data.size());
 				_dbg1("random data encrypted");
 
-				locked_string k_dh_agreed = sodiumpp::locked_string::move_from_not_locked_string( // the fully agreed key, that is secure result of DH
-				Hash1(
-					Hash1( encrypted_rand_data )
+				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+				Hash1_PRV(
+					Hash1_PRV( m_ntru_dh_random_bytes )
 					^	Hash1( key_A_pub )
 					^ Hash1( key_B_pub )
-				));
+				);
 				_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
@@ -1052,10 +1057,10 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 	TODOCODE;	return t_crypto_system_type(0);
 }
 
-c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> ntru_rand_encrypt_to_me)
 	:
 	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(64)),
-	m_KCT( calculate_KCT(self, them) ), // ***calculate*** KCT and save it, and now use it:
+	m_KCT( calculate_KCT(self, them, ntru_rand_encrypt_to_me) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
 
@@ -1078,6 +1083,11 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
 	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
 	_mark("CT constr - unboxer is at" << ((void*)&m_unboxer) );
+}
+
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them)
+: c_stream_crypto(IDC_self, IDC_them, std::vector<std::string>())
+{
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
