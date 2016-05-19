@@ -1145,7 +1145,9 @@ void test_crypto() {
 	keypairA.datastore_save_PRV("vartmp/alice.key");
 	keypairA.datastore_save_PRV("vartmp/alice2.key");
 
-
+	c_multikeys_PAIR loadedA;
+	loadedA.datastore_load_PRV("vartmp/alice.key");
+	loadedA.datastore_save_PRV("vartmp/alice.key.again");
 
 	return ;
 
