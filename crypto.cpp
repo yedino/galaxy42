@@ -209,6 +209,11 @@ size_t Hash2_size() {
 // ==================================================================
 
 template <typename TKey>
+c_multikeys_general<TKey>::c_multikeys_general(t_key_type_secop secop)
+ : m_type_secop( secop )
+{ }
+
+template <typename TKey>
 bool c_multikeys_general<TKey>::operator>(const t_self &rhs) const {
 	return this->get_hash() > rhs.get_hash();
 }
@@ -263,7 +268,8 @@ std::string c_multikeys_general<TKey>::serialize_bin() const { ///< returns a st
 	trivialserialize::generator gen(100);
 	gen.push_bytes_n(3,"GMK"); // magic marker - GMK - "Galaxy MultiKey"
 	gen.push_byte_u( (char) 'a' ); // version of this map. '$' will be development, and then use 'a','b',... for stable formats
-	int used_types=0; // count how many key types are actually used - we will count
+	gen.push_byte_u( m_type_secop ); // marker is it open or secret
+	int used_types=0; // count how many key types are actually used - we will count below
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
 	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
 	int used_types_check=0; // counter just to assert
@@ -286,11 +292,17 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
-		std::runtime_error( std::string("Format incorrect: bad magic marker for GMK (was") 
-			+ magic_marker + std::string(")"));
+		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was")
+			+ magic_marker + string(")"));
 
 	auto magic_version = parser.pop_byte_u();
-	_info(magic_version);
+
+	auto magic_secop = parser.pop_byte_u();
+	if (magic_secop != m_type_secop) {
+		std::ostringstream oss;
+		oss<<"Format error: secop was=" << magic_secop << " but we expected=" << m_type_secop;
+		throw std::runtime_error(oss.str());
+	}
 
 	if (magic_version == 'a') {
 		size_t map_size = parser.pop_integer_uvarint();
@@ -309,7 +321,7 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::save(const string  & fname) const {
+void c_multikeys_general<TKey>::datastore_save(const string  & fname) const {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
 	_note("Savin key to fname="<<fname);
 	std::string serialized_data_notlocked = serialize_bin();
@@ -324,7 +336,7 @@ void c_multikeys_general<TKey>::save(const string  & fname) const {
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::load(const string  & fname) {
+void c_multikeys_general<TKey>::datastore_load(const string  & fname) {
 	std::string data;
 
 	ifstream thefile;
@@ -539,16 +551,16 @@ void c_multikeys_PAIR::debug() const {
 	_info("---------");
 }
 
-void c_multikeys_PAIR::save_PRV(const string  & fname_base) const {
-	m_PRV.save(fname_base+".PRIVATE");
-	m_pub.save(fname_base+".public");
+void c_multikeys_PAIR::datastore_save_PRV(const string  & fname_base) const {
+	m_PRV.datastore_save(fname_base+".PRIVATE");
+	m_pub.datastore_save(fname_base+".public");
 }
-void c_multikeys_PAIR::save_pub(const string  & fname_base) const {
-	m_pub.save(fname_base+".public");
+void c_multikeys_PAIR::datastore_save_pub(const string  & fname_base) const {
+	m_pub.datastore_save(fname_base+".public");
 }
-void c_multikeys_PAIR::load_PRV(const string  & fname_base) {
-	m_PRV.load(fname_base+".PRIVATE");
-	m_pub.load(fname_base+".public");
+void c_multikeys_PAIR::datastore_load_PRV(const string  & fname_base) {
+	m_PRV.datastore_load(fname_base+".PRIVATE");
+	m_pub.datastore_load(fname_base+".public");
 }
 
 
@@ -775,6 +787,10 @@ t_crypto_system_type crypto_type, size_t number_of_key) const
 
 // ---
 
+c_multikeys_pub::c_multikeys_pub()
+	: c_multikeys_general<c_crypto_system::t_pubkey>( e_key_type_secop_open )
+{ }
+
 void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
 	add_key(crypto_type, key);
 }
@@ -784,6 +800,11 @@ c_multikeys_pub::t_key c_multikeys_pub::get_public(t_crypto_system_type crypto_t
 }
 
 // ---
+
+
+c_multikeys_PRV::c_multikeys_PRV()
+	: c_multikeys_general<c_crypto_system::t_PRVkey>( e_key_type_secop_secret )
+{ }
 
 void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type, const t_key & key) {
 	add_key(crypto_type, key);
@@ -1102,11 +1123,6 @@ void test_string_lock() {
 		assert(a.size() == 3);
 		assert(a.c_str() == string("XYZ"));
 	}
-}
-
-void test_crypto() {
-	volatile int a=5;
-	assert( a > 100 );
 
 	vector<locked_string> vec;
 	std::string s1("TestString");
@@ -1114,13 +1130,12 @@ void test_crypto() {
 	vec.push_back(s);
 	vec.push_back(s);
 	vec.push_back(s);
-	_info( vec.at(0).get_string() );
-	_info( vec.at(1).get_string() );
-	_info( vec.at(2).get_string() );
+	if (vec.at(2).get_string() != "TestString") throw std::runtime_error("Test failed - vector of locked strings");
 //	return;
+}
+
+void test_crypto() {
 	test_string_lock();
-
-
 
 	_mark("Create IDC");
 
@@ -1128,8 +1143,11 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
-	keypairA.save_PRV("vartmp/alice.key");
-	keypairA.save_PRV("vartmp/alice2.key");
+	keypairA.datastore_save_PRV("vartmp/alice.key");
+	keypairA.datastore_save_PRV("vartmp/alice2.key");
+
+
+
 	return ;
 
 	// Bob: IDC
