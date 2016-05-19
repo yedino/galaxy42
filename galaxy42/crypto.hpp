@@ -73,6 +73,9 @@
  * * PAIR - pair of pub + PRV
  *
  * * GMK - Galaxy Multi Key - is the name of data format used
+ * * in file format (and in serializaion) you can find magic headers:
+ * * GMKaS - Galaxy Multi Key, in version "a", the Secret key (private key)
+ * * GMKao - Galaxy Multi Key, in version "a", the open key (public key)
  */
 
 using namespace std;
@@ -244,6 +247,11 @@ class c_multistate {
 char t_crypto_system_type_to_ID(int val);
 t_crypto_system_type t_crypto_system_type_from_ID(char name);
 
+enum t_key_type_secop : unsigned char {
+	e_key_type_secop_secret='S', // for secret key (PRIVATE key)
+	e_key_type_secop_open='o',  // for open key (public key)
+};
+
 /** All keys, of template type TKey, of given identity. It can be e.g. all public keys, or all private, etc.  */
 template <typename TKey>
 class c_multikeys_general : public c_crypto_system {
@@ -266,6 +274,8 @@ class c_multikeys_general : public c_crypto_system {
 
 		void update_hash() const; ///< calculate the current m_hash and save it
 
+		t_key_type_secop m_type_secop; ///< are we secret/open - set by child classes e.g. by public multikey
+
 	protected:
 		/// @name Modifiers - general version. \n(that sould be wrapped in child class) @{
 		void add_key(t_crypto_system_type crypto_type, const TKey & key); ///< append one more key
@@ -276,7 +286,7 @@ class c_multikeys_general : public c_crypto_system {
 		/// @}
 
 	public:
-		c_multikeys_general()=default;
+		c_multikeys_general(t_key_type_secop secop);
 		virtual ~c_multikeys_general()=default;
 
 		/// @name Getters: @{
@@ -287,15 +297,19 @@ class c_multikeys_general : public c_crypto_system {
 		/// @}
 
 		/// @name save/load: @{
-		virtual std::string serialize_bin() const; ///< returns a string with all our data serialized, see load_from_bin() for details
+		/** Returns a string with all our data serialized, see load_from_bin() for details
+		 */
+		virtual std::string serialize_bin() const;
 
-		virtual void load_from_bin(const std::string & data); ///< set this object to data loaded from string from serialize_bin().
-		///< Will delete any prior data in this object.
-		///< Will be always compatible with older/newer versions (across stable releases of the program)
-		///< @warning Must remain compatible especially because this can change the resulting HIP address!
+		/** Set this object to data loaded from string from serialize_bin().
+		 * Will delete any prior data in this object.
+		 * Will be always compatible with older/newer versions (across stable releases of the program)
+		 * @warning Must remain compatible especially because this can change the resulting HIP address!
+		*/
+		virtual void load_from_bin(const std::string & data);
 
-		void save(const string  & fname) const; ///< Save this data to a file.
-		void load(const string  & fname); ///< Replace all current data with data loaded from this file.
+		void datastore_save(const string  & fname) const; ///< Save this data to a file.
+		void datastore_load(const string  & fname); ///< Replace all current data with data datastore_loaded from this file.
 		void clear(); ///< Delete all current data.
 		/// @}
 
@@ -313,6 +327,7 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		typedef c_multikeys_general<t_pubkey>::t_cryptolists_general  t_cryptolists_pubkey;
 
 	public:
+		c_multikeys_pub();
 		virtual t_crypto_system_type get_system_type() const;
 
 		/// @name Modifiers - concretized version. \n Ready to use. @{
@@ -333,6 +348,7 @@ class c_multikeys_PRV : public c_multikeys_general<c_crypto_system::t_PRVkey> {
 		typedef c_multikeys_general<t_PRVkey>::t_cryptolists_general  t_cryptolists_PRVkey;
 
 	public:
+		c_multikeys_PRV();
 		virtual t_crypto_system_type get_system_type() const;
 
 		/// @name Modifiers - concretized version. \n Ready to use. @{
@@ -367,9 +383,12 @@ class c_multikeys_PAIR {
 		const c_crypto_system::t_pubkey & pubkey ,
 		const c_crypto_system::t_PRVkey & PRVkey);
 
-		void save_PRV(const string  & fname_base) const; ///< like c_multikeys_general<>::save(), for the private (+public) key
-		void save_pub(const string  & fname_base) const; ///< like c_multikeys_general<>::save(), for the public key
-		void load_PRV(const string  & fname_base); ///< like c_multikeys_general<>::load(), for the private (+public) key
+		/// like c_multikeys_general<>::datastore_save(), for the private (+public) key
+		void datastore_save_PRV(const string  & fname_base) const;
+		/// like c_multikeys_general<>::datastore_save(), for the public key
+		void datastore_save_pub(const string  & fname_base) const;
+		/// like c_multikeys_general<>::datastore_load(), for the private (+public) key
+		void datastore_load_PRV(const string  & fname_base);
 
 		virtual t_crypto_system_type get_system_type() const;
 };
