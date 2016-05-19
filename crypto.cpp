@@ -968,7 +968,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				key_self_PRV.copy(&key_self_PRV_b.front(), key_self_PRV_b.size(), key_self_PRV_b.size() / 2);
 
 
-				// TODO(rob) make this size-calculations more explained; are they correctd? 
+				// TODO(rob) make this size-calculations more explained; are they correctd?
 				// XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal
 				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
 				sodiumpp::locked_string shared_secret_a(shared_secret_size);
@@ -1285,40 +1285,36 @@ map_size
 
 void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	_mark("test_crypto_benchmark");
-	namespace chrono = std::chrono;
-	using chrono::steady_clock;
-	typedef seconds = chrono::seconds;
-	/* TODO(rob) XXX - do not use entire using namespace std::chrono - on older compilers then ""s conflicts.
 
 	// X25519
 	size_t generated_keys_x25519 = 0;
-	auto start_point = steady_clock::now();
-	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+	auto start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		auto pair = c_multikeys_PAIR::generate_x25519_key_pair();
 		++generated_keys_x25519;
 	}
-	auto stop_point = steady_clock::now();
-	unsigned int x25519_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+	auto stop_point = std::chrono::steady_clock::now();
+	unsigned int x25519_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
 	// ntru
 	size_t generated_keys_ntru = 0;
-	start_point = steady_clock::now();
-	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		auto pair = c_multikeys_PAIR::generate_nrtu_key_pair();
 		++generated_keys_ntru;
 	}
-	stop_point = steady_clock::now();
-	unsigned int ntru_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+	stop_point = std::chrono::steady_clock::now();
+	unsigned int ntru_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
 	//sidh
 	size_t generated_keys_sidh = 0;
-	start_point = steady_clock::now();
-	while (steady_clock::now() - start_point < seconds(seconds_for_test_case)) {
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		auto pair = c_multikeys_PAIR::generate_sidh_key_pair();
 		++generated_keys_sidh;
 	}
-	stop_point = steady_clock::now();
-	unsigned int sidh_ms = duration_cast<milliseconds>(stop_point - start_point).count();
+	stop_point = std::chrono::steady_clock::now();
+	unsigned int sidh_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
 	_info("X25519");
 	_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
@@ -1330,7 +1326,6 @@ void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
 	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
 
-	*/
 }
 
 
