@@ -325,7 +325,9 @@ class parser {
 		template <int S, typename T> T pop_integer_s(); ///< Reads some   signed integer-type S, into field that is S octets wide, as value of type T.
 
 		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always,
-		//< that was saved using push_bytes_n(). N can be 0.
+		///< that was saved using push_bytes_n(). N can be 0.
+		void pop_bytes_n_into_buff(size_t size, char *buff); ///< in this version we read directly into
+		///< memory buff - that must be valid block of size 'size', so [ buff .. buff+size ) must be valid memory to write into.
 
 		template <int S> std::string pop_bytes_sizeoctets();
 
