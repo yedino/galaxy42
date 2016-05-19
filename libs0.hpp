@@ -191,7 +191,7 @@ template <typename TIn, typename TOut> void assert_not_ranges_overlap_oc_ne(TIn 
  * - the size given as argument must match the size of range [first..last)
  */
 template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
-	assert( numeric_cast<size_t>(last-first) == size); // is size as expected
+	assert( boost::numeric_cast<size_t>(last-first) == size); // is size as expected
 	// check if the memory ranges do not overlap by any chance:
 	assert_not_ranges_overlap_oc_ne(first,last, d_first,d_first+size);
 	std::copy(first,last, d_first); // ***
