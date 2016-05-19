@@ -14,7 +14,7 @@ TEST(filestorage, create_path) {
 	std::string home(getenv("HOME"));
 	std::cout << "Home dir: "  << home << std::endl;
 
-	fs::path PRV_dir = filestorage::create_path_for(e_filestore_wallet_galaxy_ipkeys_PRV);
+	fs::path PRV_dir = filestorage::create_path_for(e_filestore_wallet_galaxy_ipkeys_PRV, "key");
 	std::cout << PRV_dir << std::endl;
 
 	fs::path PRV_full = filestorage::prepare_file_for_write(e_filestore_wallet_galaxy_ipkeys_PRV, "key");
@@ -22,7 +22,7 @@ TEST(filestorage, create_path) {
 
 	std::cout << "Removing PRV: " << filestorage::remove(PRV_full.native()) << std::endl;
 
-	fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_ipkeys_pub);
+	fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_ipkeys_pub, "key");
 	std::cout << pub_dir << std::endl;
 
 	fs::path pub_full = filestorage::prepare_file_for_write(e_filestore_galaxy_ipkeys_pub, "key");
@@ -44,9 +44,9 @@ TEST(filestorage, create_path) {
 
 	// load data
 	std::cout << "Loaded from first pub: "
-			  << filestorage::load_string(e_filestore_galaxy_ipkeys_pub, "key01.public") << std::endl;
+			  << filestorage::load_string(e_filestore_galaxy_ipkeys_pub, "key01") << std::endl;
 	std::cout << "Loaded from second pub: "
-			  << filestorage::load_string(e_filestore_galaxy_ipkeys_pub, "key02.public") << std::endl;
+			  << filestorage::load_string(e_filestore_galaxy_ipkeys_pub, "key02") << std::endl;
 
 	// cleaning
 	std::cout << "Removing key01.public: " << filestorage::remove(pub_full01.native()) << std::endl;
@@ -70,9 +70,9 @@ TEST(filestorage, create_path) {
 
 	// load data
 	std::cout << "Loaded from PRV: "
-			  << filestorage::load_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, "key01.PRIVATE").c_str() << std::endl;
+			  << filestorage::load_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, "key01").c_str() << std::endl;
 	std::cout << "Loaded from PRV: "
-			  << filestorage::load_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, "key02.PRIVATE").c_str() << std::endl;
+			  << filestorage::load_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, "key02").c_str() << std::endl;
 
 	// cleaning
 	std::cout << "Removing key01.PRIVATE: " << filestorage::remove(PRV_full01.native()) << std::endl;
