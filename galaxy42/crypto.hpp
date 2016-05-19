@@ -424,10 +424,12 @@ class c_crypto_tunnel final {
 
 	public:
 		c_crypto_tunnel()=default;
-		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		//c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, std::vector<std::string> them_encrypted_ntru_rand);
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
+		std::vector<std::string> get_encrypt_ntru_rand();
 };
 
 c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);
