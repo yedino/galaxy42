@@ -252,6 +252,9 @@ enum t_key_type_secop : unsigned char {
 	e_key_type_secop_open='o',  // for open key (public key)
 };
 
+/// A type to count how may keys we have of given crypto system.
+typedef std::array< int , e_crypto_system_type_END	> t_crypto_system_count;
+
 /** All keys, of template type TKey, of given identity. It can be e.g. all public keys, or all private, etc.  */
 template <typename TKey>
 class c_multikeys_general : public c_crypto_system {
@@ -370,6 +373,7 @@ class c_multikeys_PAIR {
 	public:
 		virtual ~c_multikeys_PAIR() = default;
 
+		void generate(t_crypto_system_count cryptolists_count); ///< generate from list of how many keys of given type we need
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
 		void generate(); ///< generate the default set of keys
 		static std::pair<sodiumpp::locked_string, std::string> generate_x25519_key_pair();
@@ -401,6 +405,7 @@ class c_multikeys_PAIR {
  */
 
 
+
 /**
  * The KCT crypto system of the stream, ready for finall use.
  * It does only the main crypto algorithm.
@@ -416,16 +421,25 @@ class c_stream_crypto final /* because strange ctor init list functions */
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
 
+		t_crypto_system_count m_cryptolists_count; ///< count how many keys we have of each crypto system
+
 	public:
+		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+
 		virtual t_crypto_system_type get_system_type() const;
 
-		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		/**
+		 * Return how many key of given type we should generate "for KCTf",
+		 * e.g. this moves us one level up in "PFS", usually from KCTab to KCTf
+		 */
+		t_crypto_system_count get_cryptolists_count_for_KCTf() const;
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
 
 	private:
-		static t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
+		static t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them,
+			t_crypto_system_count & cryptolists_count);
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
 };
@@ -436,15 +450,22 @@ class c_crypto_tunnel final {
 		unique_ptr<c_stream_crypto> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
 		unique_ptr<c_stream_crypto> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
+		unique_ptr<c_multikeys_PAIR> m_IDe; ///< our ephemeral ID (that will create KCTf)
+
 	public:
 		c_crypto_tunnel()=default;
 		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
 
+		void create_CTf();
+
+		c_multikeys_PAIR & get_IDe(); ///< get our m_IDe needed to create KCTf
+
+		std::string box_ab(const std::string & msg);
+		std::string unbox_ab(const std::string & msg);
+
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
 };
-
-c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other);
 
 #if 0
 

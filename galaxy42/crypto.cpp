@@ -88,6 +88,8 @@ size_t c_multikeys_general<TKey>::get_count_of_systems() const {
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
 
+
+
 // TODO move to top of file - group of free functions
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
     static std::ifstream rand_source;
@@ -601,6 +603,19 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 	errcode_valid_or_throw( NTRU_OK, errcode, "NTRU", info);
 }
 
+void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count) {
+	_info("Generating from cryptolists_count");
+	for (size_t sys=0; sys<cryptolists_count.size(); ++sys) { // all key crypto systems
+		// for given crypto system:
+		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
+		auto how_many = cryptolists_count.at(sys);
+		if (how_many > 0) {
+			_info("From sys="<<sys<<" generate sys_id="<<sys_id<<" keys, in amount: how_many="<<how_many);
+			this->generate(sys_id, how_many);
+		}
+	}
+}
+
 void c_multikeys_PAIR::generate() {
 	_info("generate X25519");
 	generate( e_crypto_system_type_X25519 , 2 );
@@ -839,6 +854,10 @@ std::string c_stream_crypto::unbox(const std::string & msg) {
 	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
+t_crypto_system_count c_stream_crypto::get_cryptolists_count_for_KCTf() const {
+	return m_cryptolists_count;
+}
+
 
 
 
@@ -847,9 +866,9 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_PRVkey & PRVkey)
 {
 	m_pub.add_public(crypto_type, pubkey);
-	_note("ADD PRIVATE KEY: " << to_debug_locked(PRVkey));
+	_info("Adding PRIVATE KEY: " << to_debug_locked(PRVkey));
 	m_PRV.add_PRIVATE(crypto_type, PRVkey);
-	_note("ADD PRIVATE KEY: RESULT IS: " << to_debug(m_PRV.serialize_bin()));
+	//_note("ADD PRIVATE KEY: RESULT IS: " << to_debug(m_PRV.serialize_bin()));
 }
 
 bool safe_string_cmp(const std::string & a, const std::string & b) {
@@ -857,25 +876,20 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
 }
 
-c_crypto_tunnel create_crypto_tunnel(c_multikeys_PAIR & self, c_multikeys_pub & other) {
-	c_crypto_tunnel tunnel;
-
-	UNUSED(self);
-	UNUSED(other);
-	TODOCODE;
-
-	//string a_dh = self.
-
-	return tunnel;
-}
-
-
 std::string c_crypto_tunnel::box(const std::string & msg) {
-	return m_stream_crypto_final->box(msg);
+	return PTR(m_stream_crypto_final)->box(msg);
 }
 
 std::string c_crypto_tunnel::unbox(const std::string & msg) {
-	return m_stream_crypto_final->unbox(msg);
+	return PTR(m_stream_crypto_final)->unbox(msg);
+}
+
+std::string c_crypto_tunnel::box_ab(const std::string & msg) {
+	return PTR(m_stream_crypto_ab)->box(msg);
+}
+
+std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
+	return PTR(m_stream_crypto_ab)->unbox(msg);
 }
 
 sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
@@ -889,7 +903,9 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 
 // TODO code duplicate
 c_crypto_system::t_symkey
-c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them) {
+c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
+	t_crypto_system_count & cryptolists_count
+) {
 	// WARNING: used in constructor
 	// WARNING: taking & to values, do not invalidate them! (here and in entire function)
 
@@ -899,12 +915,16 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	assert(self.m_PRV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
+	for (auto & count : cryptolists_count) count=0;
+
 	// fill it with 0 bytes (octets):
 	locked_string KCT_accum( Hash1_size() );
 	for (size_t p=0; p<KCT_accum.size(); ++p) KCT_accum[p] = static_cast<unsigned char>(0);
 	// TODO(rob): we could make locked_string(size_t, char) constructor and use it
 
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
+		// for given crypto system:
+
 		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
 
 		const c_multikeys_pub  & self_pub = self.m_pub ; // my    pub keys - all of this sys
@@ -913,13 +933,16 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 		auto key_count_a = self_pub.get_count_keys_in_system(sys_id);
 		auto key_count_b = them_pub.get_count_keys_in_system(sys_id);
+		auto key_count_bigger = std::max( key_count_a , key_count_b );
 
-		// for given crypto system:
+		if (key_count_bigger < 1) continue ; // !
+
+
+		cryptolists_count.at(sys) = 1; // count that we use this cryptosystem
 
 		if (sys == e_crypto_system_type_X25519) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
-			auto key_count_bigger = std::max( key_count_a , key_count_b );
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
@@ -955,7 +978,6 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
-			auto key_count_bigger = std::max( key_count_a , key_count_b );
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
@@ -990,7 +1012,6 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		if (sys == e_crypto_system_type_SIDH) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
-			auto key_count_bigger = std::max( key_count_a , key_count_b );
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
 				auto keynr_a = keynr_i % key_count_a;
@@ -1063,6 +1084,11 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	return KCT_ready;
 }
 
+
+c_multikeys_PAIR & c_crypto_tunnel::get_IDe() {
+	return * PTR(m_IDe);
+}
+
 bool c_stream_crypto::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	return self.m_pub > them;
 }
@@ -1074,7 +1100,7 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
 	:
-	m_KCT( calculate_KCT(self, them) ), // ***calculate*** KCT and save it, and now use it:
+	m_KCT( calculate_KCT(self, them, m_cryptolists_count) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
 
@@ -1094,17 +1120,27 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
 		<< " and m_KCT=" << to_debug_locked( m_KCT )
 		);
-	_note("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
-	_note("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
-	_mark("CT constr - unboxer is at" << ((void*)&m_unboxer) );
+	_dbg2("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
+	_dbg2("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
+	_dbg2("CT constr - unboxer is at" << ((void*)&m_unboxer) );
 }
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+	: m_IDe(nullptr)
+{
 	_note("Creating the crypto tunnel");
 	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them );
-	m_stream_crypto_final = make_unique<c_stream_crypto>( self , them ); // TODO
+	m_stream_crypto_final = nullptr;
 	_note("Done - crypto tunnel is ready (final)");
 }
+
+void c_crypto_tunnel::create_CTf() {
+	_mark("Creating CTf");
+	m_IDe = make_unique<c_multikeys_PAIR>();
+	m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
+	_mark("Creating CTf - DONE");
+}
+
 
 void test_string_lock() {
 	_mark("Testing locked string operations");
@@ -1192,6 +1228,16 @@ void test_crypto() {
 		_note("Bob CT:");
 		c_crypto_tunnel BobCT  (keypairB, keypubA);
 		_mark("Prepared tunnels (KCTab)");
+
+		AliceCT.create_CTf();
+		BobCT.create_CTf();
+
+		c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
+		c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
+
+		_mark("Preparing for ephemeral KEX:");
+		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
+		_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
 
 		// generate ephemeral keys
 

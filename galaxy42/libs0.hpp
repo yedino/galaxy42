@@ -213,6 +213,15 @@ std::pair< std::string,int > parse_ip_string(const string& ip_string);
 
 using namespace std::string_literals;
 
+#define PTR(X) (PTR_assert(X, __func__))
+template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
+	if (!(ptr!=nullptr)) {
+		_erro("NULL pointer used! from func="<<func);
+		assert(ptr!=nullptr);
+	}
+	return ptr;
+}
+
 
 #define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
 <<__func__<<" (line "<<__LINE__<<")"; \
