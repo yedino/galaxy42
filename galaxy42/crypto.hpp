@@ -398,18 +398,20 @@ class c_stream_crypto final /* because strange ctor init list functions */
 
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
-
+		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
 
 	public:
 		virtual t_crypto_system_type get_system_type() const;
 
 		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, std::vector<std::string> ntru_rand_encrypt_to_me);
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
+		std::vector<std::string> get_ntru_encrypt_rand();
 
 	private:
-		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
+		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<std::string> ntru_rand_encrypt_to_me);
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
 };
