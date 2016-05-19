@@ -324,45 +324,50 @@ template <typename TKey>
 void c_multikeys_general<TKey>::datastore_save(const string  & fname) const {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
 	_note("Savin key to fname="<<fname);
-	if (m_type_secop == e_key_type_secop_open) _note("Save this as public key");
-	if (m_type_secop == e_key_type_secop_secret) _note("Save this as PRIVATE key!!!");
 
-	std::string serialized_data_notlocked = serialize_bin();
-	_info("Serialized to: " << to_debug(serialized_data_notlocked));
-	locked_string data = locked_string::move_from_not_locked_string( std::move(serialized_data_notlocked) );
-	_info("Serialized to: " << to_debug_locked(data));
-	// create directory if necessary
-	std::ofstream thefile( fname.c_str() );
-	thefile.write(data.c_str(), data.size()); // TODO replace with more low level thing that is unlikely to copy data to any temporary buffer
-	if (! thefile.good()) throw std::runtime_error(string("Error in file during save operation on fname=")+fname);
+	std::string serialized_data = serialize_bin();
+	_info("Serialized to: " << to_debug(serialized_data));
+
+	switch(m_type_secop) {
+		case e_key_type_secop_open: {
+			_note("Save this as public key");
+			filestorage::save_string(e_filestore_galaxy_ipkeys_pub, fname, serialized_data);
+			break;
+		}
+		case e_key_type_secop_secret: {
+			_note("Save this as PRIVATE key!!!");
+			locked_string data = locked_string::unsafe_create(serialized_data);
+			filestorage::save_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, fname, data);
+			break;
+		}
+	}
+
+	if (m_type_secop == e_key_type_secop_open) 	if (m_type_secop == e_key_type_secop_secret) _note("Save this as PRIVATE key!!!");
 }
 
 template <typename TKey>
 void c_multikeys_general<TKey>::datastore_load(const string  & fname) {
 	std::string data;
-	if (m_type_secop == e_key_type_secop_open) _note("Load this as public key");
-	if (m_type_secop == e_key_type_secop_secret) _note("Load this as PRIVATE key!!!");
+	locked_string buff_safe;
 
-	std::ifstream thefile;
-	size_t length=0;
-	thefile.open(fname.c_str());
-	thefile.seekg(0, std::ios::end);
-	length = thefile.tellg();
-	if (! length) throw std::runtime_error(string("Error in file during load (file size seems 0?) operation on fname=")+fname);
-	thefile.seekg(0, std::ios::beg);
-	if (! thefile.good()) throw std::runtime_error(string("Error in file during load operation on fname=")+fname);
-	_info("Loading: file size: " << length);
-
-	locked_string buff_safe(length);
-	char * buff_ptr = buff_safe.buffer_writable();
-	thefile.read(buff_ptr, length);
-
-	thefile.close();
-	if (! thefile.good()) throw std::runtime_error(string("Error in file during load operation on fname=")+fname);
-
-	clear();
-	_info("Loading: reading now");
-	load_from_bin( buff_safe.get_string() );
+	switch(m_type_secop) {
+		case e_key_type_secop_open: {
+			_note("Load this as public key");
+			data = filestorage::load_string(e_filestore_galaxy_ipkeys_pub, fname);
+			clear();
+			_info("Loading: reading now");
+			load_from_bin(data);
+			break;
+		}
+		case e_key_type_secop_secret: {
+			_note("Load this as PRIVATE key!!!");
+			buff_safe = filestorage::load_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, fname);
+			clear();
+			_info("Loading: reading now");
+			load_from_bin(buff_safe.get_string());
+			break;
+		}
+	}
 	_info("Loading: done, debug: " << to_debug(serialize_bin()));
 }
 
@@ -559,15 +564,15 @@ void c_multikeys_PAIR::debug() const {
 }
 
 void c_multikeys_PAIR::datastore_save_PRV_and_pub(const string  & fname_base) const {
-	m_PRV.datastore_save(fname_base+".PRIVATE");
-	m_pub.datastore_save(fname_base+".public");
+	m_PRV.datastore_save(fname_base);
+	m_pub.datastore_save(fname_base);
 }
 void c_multikeys_PAIR::datastore_save_pub(const string  & fname_base) const {
-	m_pub.datastore_save(fname_base+".public");
+	m_pub.datastore_save(fname_base);
 }
 void c_multikeys_PAIR::datastore_load_PRV_and_pub(const string  & fname_base) {
-	m_PRV.datastore_load(fname_base+".PRIVATE");
-	m_pub.datastore_load(fname_base+".public");
+	m_PRV.datastore_load(fname_base);
+	m_pub.datastore_load(fname_base);
 }
 
 
@@ -1150,12 +1155,12 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
-	keypairA.datastore_save_PRV_and_pub("vartmp/alice.key");
-	keypairA.datastore_save_PRV_and_pub("vartmp/alice2.key");
+	keypairA.datastore_save_PRV_and_pub("alice.key");
+	keypairA.datastore_save_PRV_and_pub("alice2.key");
 
 	c_multikeys_PAIR loadedA;
-	loadedA.datastore_load_PRV_and_pub("vartmp/alice.key");
-	loadedA.datastore_save_PRV_and_pub("vartmp/alice.key.again");
+	loadedA.datastore_load_PRV_and_pub("alice.key");
+	loadedA.datastore_save_PRV_and_pub("alice.key.again");
 
 	return ;
 

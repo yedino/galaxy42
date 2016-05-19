@@ -26,7 +26,6 @@ public:
 							const std::string &filename,
 							const std::string &data);
 
-	// TODO save_string_mlocked
 	static void save_string_mlocked(t_filestore file_type,
 									const std::string &filename,
 									const sodiumpp::locked_string &locked_data);
@@ -34,7 +33,6 @@ public:
 	static std::string load_string(t_filestore file_type,
 								   const std::string &filename);
 
-	// TODO load locked_string
 	static sodiumpp::locked_string load_string_mlocked(t_filestore file_type,
 													   const std::string &filename);
 
@@ -66,15 +64,17 @@ private:
 										   const std::string &filename);
 
 
-	static fs::path create_path_for(t_filestore file_type);
+	static fs::path create_path_for(t_filestore file_type,
+									const fs::path &filename);
 	/**
 	 * @brief creating directory for given filename path
 	 * @returns true if directory was created
 	 *  		false if directory alredy exist
 	 */
-	static bool create_parent_dir(const std::string &filename);
+	static bool create_parent_dir(const fs::path &filename);
 
-	static fs::path get_path_for(t_filestore file_type);
+	static fs::path get_path_for(t_filestore file_type,
+								 const fs::path &filename);
 };
 
 #endif // C_FILESYSTEM_HPP
