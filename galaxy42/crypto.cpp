@@ -1134,10 +1134,16 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 	_note("Done - crypto tunnel is ready (final)");
 }
 
-void c_crypto_tunnel::create_CTf() {
-	_mark("Creating CTf");
+void c_crypto_tunnel::create_IDe() {
+	_mark("Creating IDe");
 	m_IDe = make_unique<c_multikeys_PAIR>();
 	m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
+	_mark("Creating IDe - DONE");
+}
+
+void c_crypto_tunnel::create_CTf(const c_multikeys_pub & IDe_them) {
+	_mark("Creating CTf");
+	m_stream_crypto_final = make_unique<c_stream_crypto>( *PTR(m_IDe) , IDe_them);
 	_mark("Creating CTf - DONE");
 }
 
@@ -1229,8 +1235,8 @@ void test_crypto() {
 		c_crypto_tunnel BobCT  (keypairB, keypubA);
 		_mark("Prepared tunnels (KCTab)");
 
-		AliceCT.create_CTf();
-		BobCT.create_CTf();
+		AliceCT.create_IDe();
+		BobCT  .create_IDe();
 
 		c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
 		c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
@@ -1239,12 +1245,15 @@ void test_crypto() {
 		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
 		_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
 
+		AliceCT.create_CTf( keypairB_IDe_pub );
+		BobCT  .create_CTf( keypairA_IDe_pub );
+
 		// generate ephemeral keys
 
 		_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 			"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
 		for (int ia=0; ia<5; ++ia) {
-			_note("Alice will box:");
+			_dbg2("Alice will box:");
 			auto msg1s = AliceCT.box("Hello");
 			auto msg1r = BobCT.unbox(msg1s);
 			_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
