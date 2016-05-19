@@ -383,11 +383,11 @@ class c_multikeys_PAIR {
 		const c_crypto_system::t_PRVkey & PRVkey);
 
 		/// like c_multikeys_general<>::datastore_save(), for the private (+public) key
-		void datastore_save_PRV(const string  & fname_base) const;
+		void datastore_save_PRV_and_pub(const string  & fname_base) const;
 		/// like c_multikeys_general<>::datastore_save(), for the public key
 		void datastore_save_pub(const string  & fname_base) const;
 		/// like c_multikeys_general<>::datastore_load(), for the private (+public) key
-		void datastore_load_PRV(const string  & fname_base);
+		void datastore_load_PRV_and_pub(const string  & fname_base);
 
 		virtual t_crypto_system_type get_system_type() const;
 };
