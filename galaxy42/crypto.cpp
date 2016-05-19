@@ -281,7 +281,7 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
-		std::runtime_error( std::string("Format incorrect: bad magic marker for GMK (was") 
+		std::runtime_error( std::string("Format incorrect: bad magic marker for GMK (was")
 			+ magic_marker + std::string(")"));
 
 	auto magic_version = parser.pop_byte_u();
@@ -557,7 +557,7 @@ void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
 	const T_errcode ok_value = boost::numeric_cast<T_errcode>( ok_value_raw );
 	// the conversion above is safe (range-checked) so we can now safely compare the value:
 	if ( errcode != ok_value ) {
-		ostringstream oss; oss<<api_name<<" function failed";
+		ostringstream oss; oss<<api_name<<" function failed (" << errcode << ")";
 		if (info.size()) oss<<" - " << info ;
 		oss << '!';
 		throw std::runtime_error(oss.str());
@@ -618,6 +618,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_p
 		)
 		,"generate keypair"
 	);
+
 	return std::make_pair(std::move(private_key), std::move(public_key));
 }
 
@@ -710,6 +711,8 @@ DRBG_HANDLE get_DRBG(size_t size) {
 	}
 	assert(false);
 }
+
+const sodiumpp::locked_string c_stream_crypto::s_ntru_dh_random_bytes = sodiumpp::randombytes_locked(64);
 
 void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int count) {
 	switch (crypto_system_type)
@@ -907,7 +910,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		} // X25519
 
 
-/*
+
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
@@ -920,13 +923,40 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				_info("kex " << keynr_a << " " << keynr_b);
 
 				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_A_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
 
 				using namespace string_binary_op; // operator^
 
 				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
-				locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
+				//locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
+				locked_string k_dh_raw(1); // XXX
+
+				uint16_t ciphertext_len = 0;
+				// calculate ciphet text size
+				_dbg2("calculate ciphertext_len");
+				NTRU_exec_or_throw (
+					ntru_crypto_ntru_encrypt(get_DRBG(128),
+						key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
+						0, nullptr,
+						&ciphertext_len, nullptr)
+				); //NTRU_exec_or_throw
+				_dbg1("ciphertext_len = " << ciphertext_len);
+
+				std::string ciphertext(ciphertext_len, 0);
+				// encrypt random bytes
+				_dbg1("random data size = " << s_ntru_dh_random_bytes.size());
+				_dbg2("encrypt");
+				_dbg2("public key size " << key_B_pub.size());
+				NTRU_exec_or_throw (
+					ntru_crypto_ntru_encrypt(get_DRBG(128),
+						key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
+						s_ntru_dh_random_bytes.size(), reinterpret_cast<const uint8_t *>(s_ntru_dh_random_bytes.data()),
+						&ciphertext_len, reinterpret_cast<uint8_t *>(&ciphertext[0]))
+				); // NTRU_exec_or_throw
+				assert(ciphertext_len == ciphertext.size());
+				_dbg1("random data encrypted");
+
 				_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // _info( XVAR(k_dh_raw ) );
 
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
@@ -941,7 +971,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 		} // NTRU_EES439EP1
-		*/
+
 
 		if (sys == e_crypto_system_type_SIDH) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
@@ -1106,7 +1136,7 @@ void test_crypto() {
 
 	keypairA.save_PRV("vartmp/alice.key");
 	keypairA.save_PRV("vartmp/alice2.key");
-	return ;
+	//return ;
 
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
