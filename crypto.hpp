@@ -456,7 +456,8 @@ class c_crypto_tunnel final {
 		c_crypto_tunnel()=default;
 		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
 
-		void create_CTf();
+		void create_IDe();
+		void create_CTf(const c_multikeys_pub & IDC_them);
 
 		c_multikeys_PAIR & get_IDe(); ///< get our m_IDe needed to create KCTf
 
