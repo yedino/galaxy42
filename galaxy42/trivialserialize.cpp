@@ -123,6 +123,19 @@ std::string parser::pop_bytes_n(size_t size) {
 	return std::string( from , size );
 }
 
+void parser::pop_bytes_n_into_buff(size_t size, char * buff) {
+	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
+	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
+	assert(buff!=nullptr);
+
+	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
+	assert( (m_data_now + size <= m_data_end) );
+	auto range1 = m_data_now;
+	m_data_now += size; // *** move
+	auto range2 = m_data_now;
+	stdplus::copy_and_assert_no_overlap_size(range1, range2, buff, size); // copy the result into output
+}
+
 uint64_t parser::pop_integer_uvarint() {
 	// like in https://en.bitcoin.it/wiki/Protocol_documentation
 	unsigned char first = pop_byte_u();

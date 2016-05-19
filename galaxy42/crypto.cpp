@@ -26,8 +26,6 @@ using sodiumpp::locked_string;
 namespace antinet_crypto {
 
 
-
-// obsolete? delete it. TODO(r)
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
 		return string_as_dbg( string_as_bin( data.get_string() ) ).get();
@@ -37,6 +35,13 @@ std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	return "[hidden-secret](locked_string)";
 }
 
+
+std::string to_debug_locked_maybe(const sodiumpp::locked_string & data) {
+	return to_debug_locked(data);
+}
+std::string to_debug_locked_maybe(const std::string & data) {
+	return data;
+}
 
 
 namespace string_binary_op {
@@ -752,7 +757,12 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 
 template <typename TKey>
 void c_multikeys_general<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
-	m_cryptolists_general.at( type ).push_back( pubkey );
+	auto & sys_vector = m_cryptolists_general.at( type );
+	//_note("ADD KEY: size before: " << sys_vector.size());
+	sys_vector.push_back( pubkey );
+	//_note("ADD KEY: size after: " << sys_vector.size());
+	//_note("ADD KEY: RESULT IS: " << to_debug(serialize_bin()));
+	//_note("ADD KEY: THE newest element IS: " << to_debug_locked_maybe( sys_vector.at( sys_vector.size()-1 )  ));
 }
 
 template <typename TKey>
@@ -806,6 +816,7 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	m_pub.add_public(crypto_type, pubkey);
 	_note("ADD PRIVATE KEY: " << to_debug_locked(PRVkey));
 	m_PRV.add_PRIVATE(crypto_type, PRVkey);
+	_note("ADD PRIVATE KEY: RESULT IS: " << to_debug(m_PRV.serialize_bin()));
 }
 
 bool safe_string_cmp(const std::string & a, const std::string & b) {
@@ -1094,6 +1105,16 @@ void test_string_lock() {
 }
 
 void test_crypto() {
+	vector<locked_string> vec;
+	std::string s1("TestString");
+	locked_string s = locked_string::move_from_not_locked_string(std::move(s1));
+	vec.push_back(s);
+	vec.push_back(s);
+	vec.push_back(s);
+	_info( vec.at(0).get_string() );
+	_info( vec.at(1).get_string() );
+	_info( vec.at(2).get_string() );
+//	return;
 	test_string_lock();
 
 
