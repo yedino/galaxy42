@@ -712,8 +712,6 @@ DRBG_HANDLE get_DRBG(size_t size) {
 	assert(false);
 }
 
-const sodiumpp::locked_string c_stream_crypto::s_ntru_dh_random_bytes = sodiumpp::randombytes_locked(64);
-
 void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int count) {
 	switch (crypto_system_type)
 	{
@@ -923,14 +921,13 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				_info("kex " << keynr_a << " " << keynr_b);
 
 				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
+				//auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
 
 				using namespace string_binary_op; // operator^
 
 				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
 				//locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
-				locked_string k_dh_raw(1); // XXX
 
 				uint16_t ciphertext_len = 0;
 				// calculate ciphet text size
@@ -943,28 +940,25 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				); //NTRU_exec_or_throw
 				_dbg1("ciphertext_len = " << ciphertext_len);
 
-				std::string ciphertext(ciphertext_len, 0);
+				std::string encrypted_rand_data(ciphertext_len, 0);
 				// encrypt random bytes
-				_dbg1("random data size = " << s_ntru_dh_random_bytes.size());
 				_dbg2("encrypt");
 				_dbg2("public key size " << key_B_pub.size());
 				NTRU_exec_or_throw (
 					ntru_crypto_ntru_encrypt(get_DRBG(128),
 						key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
-						s_ntru_dh_random_bytes.size(), reinterpret_cast<const uint8_t *>(s_ntru_dh_random_bytes.data()),
-						&ciphertext_len, reinterpret_cast<uint8_t *>(&ciphertext[0]))
+						m_ntru_dh_random_bytes.size(), reinterpret_cast<const uint8_t *>(m_ntru_dh_random_bytes.data()),
+						&ciphertext_len, reinterpret_cast<uint8_t *>(&encrypted_rand_data[0]))
 				); // NTRU_exec_or_throw
-				assert(ciphertext_len == ciphertext.size());
+				assert(ciphertext_len == encrypted_rand_data.size());
 				_dbg1("random data encrypted");
 
-				_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // _info( XVAR(k_dh_raw ) );
-
-				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
-				Hash1_PRV(
-					Hash1_PRV( k_dh_raw )
+				locked_string k_dh_agreed = sodiumpp::locked_string::move_from_not_locked_string( // the fully agreed key, that is secure result of DH
+				Hash1(
+					Hash1( encrypted_rand_data )
 					^	Hash1( key_A_pub )
 					^ Hash1( key_B_pub )
-				);
+				));
 				_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
@@ -1060,6 +1054,7 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
 	:
+	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(64)),
 	m_KCT( calculate_KCT(self, them) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
