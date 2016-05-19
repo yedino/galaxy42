@@ -281,7 +281,8 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
-		std::runtime_error("Format incorrect: bad magic marker for GMK (was"s + magic_marker+")"s);
+		std::runtime_error( std::string("Format incorrect: bad magic marker for GMK (was") 
+			+ magic_marker + std::string(")"));
 
 	auto magic_version = parser.pop_byte_u();
 	_info(magic_version);
