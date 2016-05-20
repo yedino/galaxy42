@@ -25,6 +25,27 @@ using sodiumpp::locked_string;
 
 namespace antinet_crypto {
 
+// ==================================================================
+// extra implementation tools
+
+bool safe_string_cmp(const std::string & a, const std::string & b) {
+	if (a.size() != b.size()) return false;
+	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
+}
+
+sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
+	if (len<1) throw std::runtime_error( string("Invalid substring of len=") + to_string(len) );
+	sodiumpp::locked_string ret( len );
+	assert(ret.size() == len);
+	assert(len < str.size());
+	for (size_t p=0; p<str.size() && p < ret.size(); ++p) ret.at(p) = str.at(p);
+	return ret;
+}
+
+
+
+// ==================================================================
+// debug
 
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
@@ -43,7 +64,10 @@ std::string to_debug_locked_maybe(const std::string & data) {
 	return data;
 }
 
+// ==================================================================
 
+
+// ==================================================================
 namespace string_binary_op {
 
 
@@ -62,10 +86,13 @@ sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const st
 
 
 } // namespace
+// ==================================================================
+
 
 
 // ==================================================================
 
+// === The crypto types ===
 
 t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_system_type_invalid; }
 
@@ -88,7 +115,8 @@ size_t c_multikeys_general<TKey>::get_count_of_systems() const {
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
 
-
+// ==================================================================
+// Random
 
 // TODO move to top of file - group of free functions
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
@@ -210,6 +238,78 @@ size_t Hash2_size() {
 
 // ==================================================================
 
+// TODO(janek): case as enum name . warning: new enum types added
+// TODO(janek) fix identation
+		std::string t_crypto_system_type_to_name(int val) {
+			switch(val) {
+				case 1:			return "X25519";
+				case 2:			return "Ed25519";
+				case e_crypto_system_type_NTRU_EES439EP1:     return "NTRU-EES439EP1";
+				case 4:			return "geport_todo";
+				case 5:			return "symhash_todo";
+				case 6:			return "multikey";
+					//default:		return "Wrong type";
+			}
+			return string("(Invalid enum type=") + to_string(val) + string(")");
+		}
+
+char t_crypto_system_type_to_ID(int val) {
+	switch(val) {
+		case e_crypto_system_type_X25519: return 'x';
+		case e_crypto_system_type_Ed25519: return 'e';
+		case e_crypto_system_type_NTRU_EES439EP1: return 't';
+		case e_crypto_system_type_SIDH: return 's';
+		case e_crypto_system_type_geport_todo: return 'g';
+	}
+	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (val == " + std::to_string(val) + ")");
+}
+
+t_crypto_system_type t_crypto_system_type_from_ID(char name) {
+	switch(name) {
+		case 'x': return e_crypto_system_type_X25519;
+		case 'e': return e_crypto_system_type_Ed25519;
+		case 't': return e_crypto_system_type_NTRU_EES439EP1;
+		case 's': return e_crypto_system_type_SIDH;
+		case 'g': return e_crypto_system_type_geport_todo;
+	}
+	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " + name + ")");
+}
+
+
+
+// ==================================================================
+// c_symhash_state
+
+c_symhash_state::c_symhash_state( t_hash initial_state )
+	: m_state( initial_state )
+{
+//	_info("Initial state: " << m_state);
+//	_info("Initial state dbg: " << string_as_dbg(m_state).get() );
+}
+
+void c_symhash_state::next_state( t_hash additional_secret_material ) {
+	m_state = Hash1( Hash1( m_state ) + additional_secret_material );
+	//_info("State:" << m_state.bytes);
+	++m_number;
+}
+
+t_hash c_symhash_state::get_password() const {
+	return Hash2( m_state );
+}
+
+
+t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
+	return m_state;
+}
+
+
+// ##################################################################
+// ##################################################################
+// all about the multikeys
+
+// ==================================================================
+// c_multikeys_general<>
+
 template <typename TKey>
 c_multikeys_general<TKey>::c_multikeys_general(t_key_type_secop secop)
  : m_type_secop( secop )
@@ -236,6 +336,25 @@ void c_multikeys_general<TKey>::update_hash() const {
 	m_hash_cached = Hash1( this->serialize_bin()  );
 }
 
+template <typename TKey>
+void c_multikeys_general<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
+	auto & sys_vector = m_cryptolists_general.at( type );
+	//_note("ADD KEY: size before: " << sys_vector.size());
+	sys_vector.push_back( pubkey );
+	//_note("ADD KEY: size after: " << sys_vector.size());
+	//_note("ADD KEY: RESULT IS: " << to_debug(serialize_bin()));
+	//_note("ADD KEY: THE newest element IS: " << to_debug_locked_maybe( sys_vector.at( sys_vector.size()-1 )  ));
+}
+
+template <typename TKey>
+typename c_multikeys_general<TKey>::t_key  c_multikeys_general<TKey>::get_key(
+t_crypto_system_type crypto_type, size_t number_of_key) const
+{
+	// TODO check range
+	return m_cryptolists_general.at(crypto_type).at(number_of_key);
+}
+
+
 
 /**
 
@@ -258,7 +377,7 @@ Serialized pubkeys: [(104)[
 0x02(02) - two pieces of this key:
 , , - it is a 32 char string
 0x9f(159),0x9e(158),0x09(09),,+,V,0xc6(198),g,*,b,0xf3(243),w,a,,0x9d(157),0xf1(241),0xd6(214),0xdd(221),0x83(131),X,0xd0(208),0x97(151),0xbd(189),0xef(239),0xc6(198),z,U,0x97(151),0xd4(212),0x10(16),u,;
-, ,0x11(17),3,\,0xe0(224),0xdc(220),0xc7(199),H,0xed(237),0x81(129),X,0xd1(209),0xca(202),=,A,0x15(21),0xd3(211),V,0xc0(192),&,0x90(144),",{,0xe4(228),0xaa(170),0x92(146),0xa2(162),0x85(133),0xd6(214),2,0xb7(183),0xcd(205),0x04(04),
+, ,0x11(17),3,\,0xe0(224),0xdc(220),0xc7(199),H,0xed(237),0x81(129),X,0xd1(209),0xca(202),=,A,0x15(21),0xd3(211),V,0xc0(192),&,0x90(144),",X,0xe4(228),0xaa(170),0x92(146),0xa2(162),0x85(133),0xd6(214),2,0xb7(183),0xcd(205),0x04(04),
 
 0x17(23) - now key type 23,
 0x01(01) - 1 piece of it
@@ -379,175 +498,45 @@ void c_multikeys_general<TKey>::clear() {
 	for (auto & sys : m_cryptolists_general) sys.clear();
 }
 
-// ==================================================================
 
-#if 0
-c_dhdh_state::t_symkey c_crypto_system::secure_random(size_t size_of_radom_data) const {
-	return sodiumpp::randombytes_locked(size_of_radom_data);
-}
-#endif
 
 // ==================================================================
+// c_multikeys_pub
 
-c_symhash_state::c_symhash_state( t_hash initial_state )
-	: m_state( initial_state )
-{
-//	_info("Initial state: " << m_state);
-//	_info("Initial state dbg: " << string_as_dbg(m_state).get() );
-}
-
-void c_symhash_state::next_state( t_hash additional_secret_material ) {
-	m_state = Hash1( Hash1( m_state ) + additional_secret_material );
-	//_info("State:" << m_state.bytes);
-	++m_number;
-}
-
-t_hash c_symhash_state::get_password() const {
-	return Hash2( m_state );
-}
-
-
-t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
-	return m_state;
-}
-
-// ==================================================================
-
-
-#if 0
-
-c_dhdh_state::c_dhdh_state(t_PRVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub)
-	: m_our_priv(our_priv), m_our_pub(our_pub), m_theirs_pub(theirs_pub)
+c_multikeys_pub::c_multikeys_pub()
+	: c_multikeys_general<c_crypto_system::t_pubkey>( e_key_type_secop_open )
 { }
 
-void c_dhdh_state::step1() {
-	m_r = secure_random(128); // TODO size
-	m_skp = execute_DH_exchange( m_our_priv, m_our_pub, m_our_pub );
+void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
+	add_key(crypto_type, key);
 }
 
-c_dhdh_state::t_pubkey c_dhdh_state::get_permanent_pubkey() const {
-	return m_our_pub;
-}
-
-c_dhdh_state::t_pubkey c_dhdh_state::get_temp_pubkey() const {
-	return m_pubkey_temp;
+c_multikeys_pub::t_key c_multikeys_pub::get_public(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	return get_key(crypto_type, number_of_key);
 }
 
 
 
-c_dhdh_state::t_symkey c_dhdh_state::execute_DH_exchange(
-const t_PRVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub)
-{
-	using namespace ecdh_ChaCha20_Poly1305;
-	keypair_t my_keys;
-	std::copy(my_priv.bytes.begin(), my_priv.bytes.end(), my_keys.privkey.begin());
-	std::copy(my_pub.bytes.begin(), my_pub.bytes.end(), my_keys.pubkey.begin());
-	pubkey_t theirs_pub_key;
-	std::copy(theirs_pub.bytes.begin(), theirs_pub.bytes.end(), theirs_pub_key.begin());
-	sharedkey_t sk = generate_sharedkey_with (my_keys, theirs_pub_key);
-	t_symkey ret(std::string(sk.begin(), sk.end()));
-	return ret;
+// ==================================================================
+// c_multikeys_PRV
+
+
+c_multikeys_PRV::c_multikeys_PRV()
+	: c_multikeys_general<c_crypto_system::t_PRVkey>( e_key_type_secop_secret )
+{ }
+
+void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type, const t_key & key) {
+	add_key(crypto_type, key);
 }
 
-c_crypto_system::t_symkey c_dhdh_state::execute_DH_exchange() {
-	return execute_DH_exchange(m_our_priv, m_our_pub, m_theirs_pub);
-}
-
-
-std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRVkey> c_dhdh_state::generate_key_pair() {
-	using namespace ecdh_ChaCha20_Poly1305;
-	keypair_t keypair = generate_keypair();
-	std::pair<c_dhdh_state::t_pubkey, c_dhdh_state::t_PRVkey> ret;
-	ret.first.bytes.resize(keypair.pubkey.size());
-	ret.second.bytes.resize(keypair.privkey.size());
-	std::copy(keypair.pubkey.begin(), keypair.pubkey.end(), ret.first.bytes.begin());
-	assert(keypair.pubkey.size() == ret.first.bytes.size());
-	std::copy(keypair.privkey.begin(), keypair.privkey.end(), ret.second.bytes.begin());
-	assert(keypair.privkey.size() == ret.second.bytes.size());
-	return ret;
-}
-
-
-/*bool operator<( const c_symhash_state::t_hash &a, const c_symhash_state::t_hash &b) {
-	return a.bytes < b.bytes;
-}*/
-
-#endif
-
-
-namespace unittest {
-
-// !!! WARNING:  most of the tests are now MOVED into googletest, e.g. into test/crypto.cpp !!!
-
-
-// This will be probably removed soon from here - thugh it's a place to very quickly run some tests
-// while you develop them
-
-#define UTASSERT(X) do { if (!(X)) { _warn("Unit test failed!"); return false; } } while(0)
-#define UTEQ(X,Y) do { if (!(X == Y)) { _warn("Unit test failed! Values differ: actuall=[" << X << "] vs expected=["<<Y<<"]" ); return false; } } while(0)
-
-class c_symhash_state__tests_with_private_access {
-	public:
-		static bool foo1();
-};
-
-bool c_symhash_state__tests_with_private_access::foo1() {
-	return true;
-}
-
-bool aeshash_foo2() {
-	return true;
+c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_type, size_t number_of_key) const {
+	return get_key(crypto_type, number_of_key);
 }
 
 
 
-
-
-bool alltests() {
-	if (! aeshash_foo2()) return false;
-	if (! c_symhash_state__tests_with_private_access::foo1()) return false;
-	return true;
-}
-
-} // namespace
-
-// TODO(janek): case as enum name . warning: new enum types added
-// TODO(janek) fix identation
-		std::string t_crypto_system_type_to_name(int val) {
-			switch(val) {
-				case 1:			return "X25519";
-				case 2:			return "Ed25519";
-				case e_crypto_system_type_NTRU_EES439EP1:     return "NTRU-EES439EP1";
-				case 4:			return "geport_todo";
-				case 5:			return "symhash_todo";
-				case 6:			return "multikey";
-					//default:		return "Wrong type";
-			}
-			return string("(Invalid enum type=") + to_string(val) + string(")");
-		}
-
-char t_crypto_system_type_to_ID(int val) {
-	switch(val) {
-		case e_crypto_system_type_X25519: return 'x';
-		case e_crypto_system_type_Ed25519: return 'e';
-		case e_crypto_system_type_NTRU_EES439EP1: return 't';
-		case e_crypto_system_type_SIDH: return 's';
-		case e_crypto_system_type_geport_todo: return 'g';
-	}
-	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (val == " + std::to_string(val) + ")");
-}
-
-t_crypto_system_type t_crypto_system_type_from_ID(char name) {
-	switch(name) {
-		case 'x': return e_crypto_system_type_X25519;
-		case 'e': return e_crypto_system_type_Ed25519;
-		case 't': return e_crypto_system_type_NTRU_EES439EP1;
-		case 's': return e_crypto_system_type_SIDH;
-		case 'g': return e_crypto_system_type_geport_todo;
-	}
-	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " + name + ")");
-}
-
+// ==================================================================
+// c_multikeys_PAIR
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
@@ -578,6 +567,9 @@ void c_multikeys_PAIR::datastore_load_PRV_and_pub(const string  & fname_base) {
 	m_pub.datastore_load(fname_base);
 }
 
+c_multikeys_PAIR & c_crypto_tunnel::get_IDe() {
+	return * PTR(m_IDe);
+}
 
 template <typename T_ok_value, typename T_errcode>
 void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
@@ -795,79 +787,6 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 	_info("Serialized pubkeys: [" << to_debug(serialized) << "]");
 }
 
-
-template <typename TKey>
-void c_multikeys_general<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
-	auto & sys_vector = m_cryptolists_general.at( type );
-	//_note("ADD KEY: size before: " << sys_vector.size());
-	sys_vector.push_back( pubkey );
-	//_note("ADD KEY: size after: " << sys_vector.size());
-	//_note("ADD KEY: RESULT IS: " << to_debug(serialize_bin()));
-	//_note("ADD KEY: THE newest element IS: " << to_debug_locked_maybe( sys_vector.at( sys_vector.size()-1 )  ));
-}
-
-template <typename TKey>
-typename c_multikeys_general<TKey>::t_key  c_multikeys_general<TKey>::get_key(
-t_crypto_system_type crypto_type, size_t number_of_key) const
-{
-	// TODO check range
-	return m_cryptolists_general.at(crypto_type).at(number_of_key);
-}
-
-// ---
-
-c_multikeys_pub::c_multikeys_pub()
-	: c_multikeys_general<c_crypto_system::t_pubkey>( e_key_type_secop_open )
-{ }
-
-void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
-	add_key(crypto_type, key);
-}
-
-c_multikeys_pub::t_key c_multikeys_pub::get_public(t_crypto_system_type crypto_type, size_t number_of_key) const {
-	return get_key(crypto_type, number_of_key);
-}
-
-// ---
-
-
-c_multikeys_PRV::c_multikeys_PRV()
-	: c_multikeys_general<c_crypto_system::t_PRVkey>( e_key_type_secop_secret )
-{ }
-
-void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type, const t_key & key) {
-	add_key(crypto_type, key);
-}
-
-c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_type, size_t number_of_key) const {
-	return get_key(crypto_type, number_of_key);
-}
-
-// ---
-
-std::string c_stream_crypto::box(const std::string & msg) {
-	_dbg2("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
-	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
-	return m_boxer.box(msg).to_binary();
-}
-
-std::string c_stream_crypto::unbox(const std::string & msg) {
-	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
-	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
-}
-
-t_crypto_system_count c_stream_crypto::get_cryptolists_count_for_KCTf() const {
-	return m_cryptolists_count;
-}
-
-std::vector<string> c_stream_crypto::get_ntru_encrypt_rand()
-{
-	return m_ntru_ecrypt_to_them_rand;
-}
-
-
-
-
 void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_pubkey & pubkey ,
 	 const c_crypto_system::t_PRVkey & PRVkey)
@@ -878,45 +797,26 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	//_note("ADD PRIVATE KEY: RESULT IS: " << to_debug(m_PRV.serialize_bin()));
 }
 
-bool safe_string_cmp(const std::string & a, const std::string & b) {
-	if (a.size() != b.size()) return false;
-	return 0 == sodium_memcmp( a.c_str() , b.c_str() , a.size() );
+
+// ==================================================================
+
+std::string c_stream::box(const std::string & msg) {
+	_dbg2("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
+	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
+	return m_boxer.box(msg).to_binary();
 }
 
-std::string c_crypto_tunnel::box(const std::string & msg) {
-	return PTR(m_stream_crypto_final)->box(msg);
+std::string c_stream::unbox(const std::string & msg) {
+	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
-std::string c_crypto_tunnel::unbox(const std::string & msg) {
-	return PTR(m_stream_crypto_final)->unbox(msg);
+t_crypto_system_count c_stream::get_cryptolists_count_for_KCTf() const {
+	return m_cryptolists_count;
 }
 
-std::string c_crypto_tunnel::box_ab(const std::string & msg) {
-	return PTR(m_stream_crypto_ab)->box(msg);
-}
 
-std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
-	return PTR(m_stream_crypto_ab)->unbox(msg);
-}
-
-std::vector<string> c_crypto_tunnel::get_encrypt_ntru_rand()
-{
-	return m_stream_crypto_ab->get_ntru_encrypt_rand();
-}
-
-sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
-	if (len<1) throw std::runtime_error( string("Invalid substring of len=") + to_string(len) );
-	sodiumpp::locked_string ret( len );
-	assert(ret.size() == len);
-	assert(len < str.size());
-	for (size_t p=0; p<str.size() && p < ret.size(); ++p) ret.at(p) = str.at(p);
-	return ret;
-}
-
-// TODO code duplicate
-c_crypto_system::t_symkey
-
-c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
+void c_stream::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
 	t_crypto_system_count & cryptolists_count, std::vector<string> ntru_rand_encrypt_to_me
 ) {
 	// WARNING: used in constructor
@@ -1024,7 +924,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 					NTRU_exec_or_throw (
 						ntru_crypto_ntru_encrypt(get_DRBG(128),
 							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
-							m_ntru_dh_random_bytes.size(), reinterpret_cast<const uint8_t *>(m_ntru_dh_random_bytes.data()),
+							m_ntru_kex_password.size(), reinterpret_cast<const uint8_t *>(m_ntru_kex_password.data()),
 							&ciphertext_len, reinterpret_cast<uint8_t *>(&encrypted_rand_data[0]))
 					); // NTRU_exec_or_throw
 					assert(ciphertext_len == encrypted_rand_data.size());
@@ -1033,7 +933,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 					Hash1_PRV(
-						Hash1_PRV( m_ntru_dh_random_bytes )
+						Hash1_PRV( m_ntru_kex_password )
 						^	Hash1( key_A_pub )
 						^ Hash1( key_B_pub )
 					);
@@ -1054,7 +954,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
 							&plaintext_len, nullptr)
 					);*/
-					plaintext_len = m_ntru_dh_random_bytes.size();
+					plaintext_len = m_ntru_kex_password.size();
 					sodiumpp::locked_string decrypted_rand(plaintext_len);
 					_dbg1("plaintext len = " << plaintext_len);
 					// decrypt
@@ -1155,24 +1055,21 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 	return KCT_ready;
 }
 
+// ==================================================================
 
-c_multikeys_PAIR & c_crypto_tunnel::get_IDe() {
-	return * PTR(m_IDe);
-}
-
-bool c_stream_crypto::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
+bool c_stream::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
 	return self.m_pub > them;
 }
 
-t_crypto_system_type c_stream_crypto::get_system_type() const
+t_crypto_system_type c_stream::get_system_type() const
 {
 	TODOCODE;	return t_crypto_system_type(0);
 }
 
-c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, const sodiumpp::locked_string &rand_ntru_data, std::vector<string> ntru_rand_encrypt_to_me)
+c_stream::c_stream(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, const sodiumpp::locked_string &rand_ntru_data, std::vector<string> ntru_rand_encrypt_to_me)
 	:
-	m_ntru_dh_random_bytes(rand_ntru_data),
-	//m_ntru_dh_random_bytes(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_dh_random_bytes_size, 'a'))),
+	m_ntru_kex_password(rand_ntru_data),
+	//m_ntru_kex_password(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_kex_password_size, 'a'))),
 	m_KCT( calculate_KCT(self, them, m_cryptolists_count, ntru_rand_encrypt_to_me) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
@@ -1198,28 +1095,48 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	_dbg2("CT constr - unboxer is at" << ((void*)&m_unboxer) );
 }
 
+// ==================================================================
+
+std::string c_crypto_tunnel::box(const std::string & msg) {
+	return PTR(m_stream_crypto_final)->box(msg);
+}
+
+std::string c_crypto_tunnel::unbox(const std::string & msg) {
+	return PTR(m_stream_crypto_final)->unbox(msg);
+}
+
+std::string c_crypto_tunnel::box_ab(const std::string & msg) {
+	return PTR(m_stream_crypto_ab)->box(msg);
+}
+
+std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
+	return PTR(m_stream_crypto_ab)->unbox(msg);
+}
+
+
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them
   ,const sodiumpp::locked_string &rand_ntru_data, rand_ntru_data, std::vector<std::string>()
 )
 	: m_IDe(nullptr),
-	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size))
+	m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size))
 {
 	_note("Creating the crypto tunnel");
-	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them ,  m_ntru_dh_random_bytes, them_encrypted_ntru_rand);
+	m_stream_crypto_ab = make_unique<c_stream>( self , them ,  m_ntru_kex_password, them_encrypted_ntru_rand);
 	m_stream_crypto_final = nullptr;
+} // TODO MERGEME
 
-c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them, const sodiumpp::locked_string &rand_ntru_data)
-: c_stream_crypto(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>())
+c_stream::c_stream(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them, const sodiumpp::locked_string &rand_ntru_data)
+: c_stream(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>())
 {
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> them_encrypted_ntru_rand)
 :
-	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size))
+	m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size))
 {
 	_note("Creating the crypto tunnel");
-	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them , m_ntru_dh_random_bytes, them_encrypted_ntru_rand );
-	m_stream_crypto_final = make_unique<c_stream_crypto>( self , them , m_ntru_dh_random_bytes, them_encrypted_ntru_rand ); // TODO
+	m_stream_crypto_ab = make_unique<c_stream>( self , them , m_ntru_kex_password, them_encrypted_ntru_rand );
+	m_stream_crypto_final = make_unique<c_stream>( self , them , m_ntru_kex_password, them_encrypted_ntru_rand ); // TODO
 >>>>>>> rob/wip_galaxy_crypto_ntru2
 	_note("Done - crypto tunnel is ready (final)");
 }
@@ -1233,9 +1150,48 @@ void c_crypto_tunnel::create_IDe() {
 
 void c_crypto_tunnel::create_CTf(const c_multikeys_pub & IDe_them) {
 	_mark("Creating CTf");
-	m_stream_crypto_final = make_unique<c_stream_crypto>( *PTR(m_IDe) , IDe_them);
+	m_stream_crypto_final = make_unique<c_stream>( *PTR(m_IDe) , IDe_them);
 	_mark("Creating CTf - DONE");
 }
+
+
+
+// ##################################################################
+// ##################################################################
+// tests
+
+namespace unittest {
+
+// !!! WARNING:  most of the tests are now MOVED into googletest, e.g. into test/crypto.cpp !!!
+
+
+// This will be probably removed soon from here - thugh it's a place to very quickly run some tests
+// while you develop them
+
+#define UTASSERT(X) do { if (!(X)) { _warn("Unit test failed!"); return false; } } while(0)
+#define UTEQ(X,Y) do { if (!(X == Y)) { _warn("Unit test failed! Values differ: actuall=[" << X << "] vs expected=["<<Y<<"]" ); return false; } } while(0)
+
+class c_symhash_state__tests_with_private_access {
+	public:
+		static bool foo1();
+};
+
+bool c_symhash_state__tests_with_private_access::foo1() {
+	return true;
+}
+
+bool aeshash_foo2() {
+	return true;
+}
+
+
+bool alltests() {
+	if (! aeshash_foo2()) return false;
+	if (! c_symhash_state__tests_with_private_access::foo1()) return false;
+	return true;
+}
+
+} // namespace
 
 
 void test_string_lock() {
@@ -1279,6 +1235,8 @@ void test_string_lock() {
 }
 
 void test_crypto() {
+
+#if 0
 	test_string_lock();
 
 	_mark("Create IDC");
@@ -1362,6 +1320,7 @@ void test_crypto() {
 			_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
 		}
 	}
+#endif
 
 	return ;
 
