@@ -414,6 +414,8 @@ class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
+		sodiumpp::locked_string m_ntru_dh_random_bytes;
+		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
 		t_symkey m_KCT; ///< the KCT for this stream
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
@@ -424,22 +426,22 @@ class c_stream_crypto final /* because strange ctor init list functions */
 		t_crypto_system_count m_cryptolists_count; ///< count how many keys we have of each crypto system
 
 	public:
-		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, const sodiumpp::locked_string &rand_ntru_data);
+		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, const sodiumpp::locked_string &rand_ntru_data, std::vector<std::string> ntru_rand_encrypt_to_me);
 
 		virtual t_crypto_system_type get_system_type() const;
 
-		/**
-		 * Return how many key of given type we should generate "for KCTf",
-		 * e.g. this moves us one level up in "PFS", usually from KCTab to KCTf
-		 */
-		t_crypto_system_count get_cryptolists_count_for_KCTf() const;
-
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
+		std::vector<std::string> get_ntru_encrypt_rand();
 
 	private:
+// MERGEME
 		static t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them,
 			t_crypto_system_count & cryptolists_count);
+
+		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<std::string> ntru_rand_encrypt_to_me);
+
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
 };
@@ -447,6 +449,10 @@ class c_stream_crypto final /* because strange ctor init list functions */
 /** A CT, can be used to send data in both directions. */
 class c_crypto_tunnel final {
 	private:
+		
+		// TODO why 65:
+		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1
+		sodiumpp::locked_string m_ntru_dh_random_bytes;
 		unique_ptr<c_stream_crypto> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
 		unique_ptr<c_stream_crypto> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
@@ -454,7 +460,9 @@ class c_crypto_tunnel final {
 
 	public:
 		c_crypto_tunnel()=default;
-		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		//c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
+		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, std::vector<std::string> them_encrypted_ntru_rand);
+		// MERGEME
 
 		void create_IDe();
 		void create_CTf(const c_multikeys_pub & IDC_them);
@@ -466,6 +474,7 @@ class c_crypto_tunnel final {
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
+		std::vector<std::string> get_encrypt_ntru_rand();
 };
 
 #if 0

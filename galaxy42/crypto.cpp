@@ -294,6 +294,7 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
+
 		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was")
 			+ magic_marker + string(")"));
 
@@ -588,7 +589,7 @@ void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
 	const T_errcode ok_value = boost::numeric_cast<T_errcode>( ok_value_raw );
 	// the conversion above is safe (range-checked) so we can now safely compare the value:
 	if ( errcode != ok_value ) {
-		ostringstream oss; oss<<api_name<<" function failed";
+		ostringstream oss; oss<<api_name<<" function failed (" << errcode << ")";
 		if (info.size()) oss<<" - " << info ;
 		oss << '!';
 		throw std::runtime_error(oss.str());
@@ -662,6 +663,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_p
 		)
 		,"generate keypair"
 	);
+
 	return std::make_pair(std::move(private_key), std::move(public_key));
 }
 
@@ -858,6 +860,11 @@ t_crypto_system_count c_stream_crypto::get_cryptolists_count_for_KCTf() const {
 	return m_cryptolists_count;
 }
 
+std::vector<string> c_stream_crypto::get_ntru_encrypt_rand()
+{
+	return m_ntru_ecrypt_to_them_rand;
+}
+
 
 
 
@@ -892,6 +899,11 @@ std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
 	return PTR(m_stream_crypto_ab)->unbox(msg);
 }
 
+std::vector<string> c_crypto_tunnel::get_encrypt_ntru_rand()
+{
+	return m_stream_crypto_ab->get_ntru_encrypt_rand();
+}
+
 sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
 	if (len<1) throw std::runtime_error( string("Invalid substring of len=") + to_string(len) );
 	sodiumpp::locked_string ret( len );
@@ -903,8 +915,9 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 
 // TODO code duplicate
 c_crypto_system::t_symkey
+
 c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
-	t_crypto_system_count & cryptolists_count
+	t_crypto_system_count & cryptolists_count, std::vector<string> ntru_rand_encrypt_to_me
 ) {
 	// WARNING: used in constructor
 	// WARNING: taking & to values, do not invalidate them! (here and in entire function)
@@ -974,7 +987,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 		} // X25519
 
 
-/*
+
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
@@ -986,28 +999,86 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				_info("kex " << keynr_a << " " << keynr_b);
 
 				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_A_PRV = self_PRV.get_private(sys_id, keynr_a);
+				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
 
 				using namespace string_binary_op; // operator^
 
-				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
-				locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
-				_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // _info( XVAR(k_dh_raw ) );
+				// I encrypt rand data
+				if (ntru_rand_encrypt_to_me.empty()) {
+					uint16_t ciphertext_len = 0;
+					// calculate ciphet text size
+					_dbg2("calculate ciphertext_len");
+					NTRU_exec_or_throw (
+						ntru_crypto_ntru_encrypt(get_DRBG(128),
+							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
+							0, nullptr,
+							&ciphertext_len, nullptr)
+					); //NTRU_exec_or_throw
+					_dbg1("ciphertext_len = " << ciphertext_len);
 
-				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
-				Hash1_PRV(
-					Hash1_PRV( k_dh_raw )
-					^	Hash1( key_A_pub )
-					^ Hash1( key_B_pub )
-				);
-				_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+					std::string encrypted_rand_data(ciphertext_len, 0);
+					// encrypt random bytes
+					_dbg2("encrypt");
+					_dbg2("public key size " << key_B_pub.size());
+					NTRU_exec_or_throw (
+						ntru_crypto_ntru_encrypt(get_DRBG(128),
+							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
+							m_ntru_dh_random_bytes.size(), reinterpret_cast<const uint8_t *>(m_ntru_dh_random_bytes.data()),
+							&ciphertext_len, reinterpret_cast<uint8_t *>(&encrypted_rand_data[0]))
+					); // NTRU_exec_or_throw
+					assert(ciphertext_len == encrypted_rand_data.size());
+					_dbg1("random data encrypted");
+					m_ntru_ecrypt_to_them_rand.push_back(encrypted_rand_data);
 
-				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+					Hash1_PRV(
+						Hash1_PRV( m_ntru_dh_random_bytes )
+						^	Hash1( key_A_pub )
+						^ Hash1( key_B_pub )
+					);
+					_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+
+					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+				}
+				// them encrypt rand data to me
+				else {
+					//rc = ntru_crypto_ntru_decrypt(private_key_len, private_key, ciphertext_len,
+					//ciphertext, &plaintext_len, NULL);
+					uint16_t plaintext_len = 0;
+					std::string ciphertext = ntru_rand_encrypt_to_me.front();
+					ntru_rand_encrypt_to_me.erase(ntru_rand_encrypt_to_me.begin());
+					// calculate plaintext size
+					/*NTRU_exec_or_throw (
+						ntru_crypto_ntru_decrypt(key_A_PRV.size(), reinterpret_cast<const uint8_t *>(key_A_PRV.data()),
+							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
+							&plaintext_len, nullptr)
+					);*/
+					plaintext_len = m_ntru_dh_random_bytes.size();
+					sodiumpp::locked_string decrypted_rand(plaintext_len);
+					_dbg1("plaintext len = " << plaintext_len);
+					// decrypt
+					NTRU_exec_or_throw (
+						ntru_crypto_ntru_decrypt(key_A_PRV.size(), reinterpret_cast<const uint8_t *>(key_A_PRV.data()),
+							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
+							&plaintext_len, reinterpret_cast<uint8_t *>(&decrypted_rand[0]))
+					);
+					// TODO double code
+					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+					Hash1_PRV(
+						Hash1_PRV( decrypted_rand )
+						^	Hash1( key_A_pub )
+						^ Hash1( key_B_pub )
+					);
+					_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+
+					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+
+				}
 				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 		} // NTRU_EES439EP1
-		*/
+
 
 		if (sys == e_crypto_system_type_SIDH) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
@@ -1098,9 +1169,11 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 	TODOCODE;	return t_crypto_system_type(0);
 }
 
-c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, const sodiumpp::locked_string &rand_ntru_data, std::vector<string> ntru_rand_encrypt_to_me)
 	:
-	m_KCT( calculate_KCT(self, them, m_cryptolists_count) ), // ***calculate*** KCT and save it, and now use it:
+	m_ntru_dh_random_bytes(rand_ntru_data),
+	//m_ntru_dh_random_bytes(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_dh_random_bytes_size, 'a'))),
+	m_KCT( calculate_KCT(self, them, m_cryptolists_count, ntru_rand_encrypt_to_me) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
 
@@ -1125,12 +1198,29 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	_dbg2("CT constr - unboxer is at" << ((void*)&m_unboxer) );
 }
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
-	: m_IDe(nullptr)
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them
+  ,const sodiumpp::locked_string &rand_ntru_data, rand_ntru_data, std::vector<std::string>()
+)
+	: m_IDe(nullptr),
+	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size))
 {
 	_note("Creating the crypto tunnel");
-	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them );
+	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them ,  m_ntru_dh_random_bytes, them_encrypted_ntru_rand);
 	m_stream_crypto_final = nullptr;
+
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them, const sodiumpp::locked_string &rand_ntru_data)
+: c_stream_crypto(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>())
+{
+}
+
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> them_encrypted_ntru_rand)
+:
+	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size))
+{
+	_note("Creating the crypto tunnel");
+	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them , m_ntru_dh_random_bytes, them_encrypted_ntru_rand );
+	m_stream_crypto_final = make_unique<c_stream_crypto>( self , them , m_ntru_dh_random_bytes, them_encrypted_ntru_rand ); // TODO
+>>>>>>> rob/wip_galaxy_crypto_ntru2
 	_note("Done - crypto tunnel is ready (final)");
 }
 
@@ -1204,8 +1294,6 @@ void test_crypto() {
 	loadedA.datastore_load_PRV_and_pub("alice.key");
 	loadedA.datastore_save_PRV_and_pub("alice.key.again");
 
-	// --- move on to Bob ---
-
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
 	keypairB.generate();
@@ -1221,6 +1309,7 @@ void test_crypto() {
 	if (keypubA.get_hash() == keypubA_restored.get_hash()) {
 		_info("Seems to match");
 	} else throw std::runtime_error("Test failed serialize save/load");
+
 
 
 	// test seding messages in CT sessions
@@ -1240,6 +1329,16 @@ void test_crypto() {
 
 		c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
 		c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
+
+/* for NTru:
+	// Create CT (e.g. CTE?) - that has KCT
+	std::vector<std::string> empty_vactor;
+	_note("Alice CT:");
+	c_crypto_tunnel AliceCT(keypairA, keypubB, empty_vactor);
+	_note("Bob CT:");
+	c_crypto_tunnel BobCT  (keypairB, keypubA, AliceCT.get_encrypt_ntru_rand());
+	_mark("Prepared tunnels (KCTab)");
+*/
 
 		_mark("Preparing for ephemeral KEX:");
 		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
