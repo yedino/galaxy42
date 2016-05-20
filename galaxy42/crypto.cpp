@@ -716,8 +716,8 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_p
 	}
 	SIDH_curve_free(curveIsogeny);
 	locked_string private_key_main(2 * private_key_len);
-	private_key_a.copy(&private_key_main[0], private_key_len);
-	private_key_b.copy(&private_key_main[private_key_len], private_key_len);
+	std::copy_n(private_key_a.begin(), private_key_len, private_key_main.begin());
+	std::copy_n(private_key_b.begin(), private_key_len, private_key_main.begin() + private_key_len);
 	std::string public_key_main = public_key_a + public_key_b;
 	return std::make_pair(std::move(private_key_main), std::move(public_key_main));
 }
@@ -1078,8 +1078,9 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
 				sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
 				// this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
-				key_self_PRV.copy(&key_self_PRV_a.front(), key_self_PRV_a.size(), 0);
-				key_self_PRV.copy(&key_self_PRV_b.front(), key_self_PRV_b.size(), key_self_PRV_b.size() / 2);
+				std::copy_n(key_self_PRV.begin(), key_self_PRV_a.size(), key_self_PRV_a.begin());
+				auto pos_iterator = key_self_PRV.begin() + (key_self_PRV_b.size() / 2);
+				std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
 
 
 				// TODO(rob) make this size-calculations more explained; are they correctd?
