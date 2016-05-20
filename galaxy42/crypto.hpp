@@ -391,6 +391,7 @@ class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
+		const size_t m_ntru_dh_random_bytes_size = 2;
 		sodiumpp::locked_string m_ntru_dh_random_bytes;
 		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
 		t_symkey m_KCT; ///< the KCT for this stream

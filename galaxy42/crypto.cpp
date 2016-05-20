@@ -574,11 +574,11 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 
 void c_multikeys_PAIR::generate() {
 	_info("generate X25519");
-	generate( e_crypto_system_type_X25519 , 1 );
+	generate( e_crypto_system_type_X25519 , 0 );
 	_info("generate NRTU");
 	generate( e_crypto_system_type_NTRU_EES439EP1 , 1 );
 	_info("generate SIDH");
-	generate( e_crypto_system_type_SIDH , 1 );
+	generate( e_crypto_system_type_SIDH , 0);
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
@@ -977,7 +977,7 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				else {
 					//rc = ntru_crypto_ntru_decrypt(private_key_len, private_key, ciphertext_len,
 					//ciphertext, &plaintext_len, NULL);
-					uint16_t plaintext_len = 0;
+					uint16_t plaintext_len = m_ntru_dh_random_bytes_size;
 					std::string ciphertext = ntru_rand_encrypt_to_me.front();
 					ntru_rand_encrypt_to_me.erase(ntru_rand_encrypt_to_me.begin());
 					// calculate plaintext size
@@ -986,20 +986,21 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
 							&plaintext_len, nullptr)
 					);
+					plaintext_len = m_ntru_dh_random_bytes_size;
 					sodiumpp::locked_string decrypted_rand(plaintext_len);
+					_dbg1("plaintext len = " << plaintext_len);
 					// decrypt
 					NTRU_exec_or_throw (
 						ntru_crypto_ntru_decrypt(key_A_PRV.size(), reinterpret_cast<const uint8_t *>(key_A_PRV.data()),
 							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
 							&plaintext_len, reinterpret_cast<uint8_t *>(&decrypted_rand[0]))
 					);
-
 					// TODO double code
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 					Hash1_PRV(
 						Hash1_PRV( decrypted_rand )
-						^	Hash1( key_B_pub )
-						^ Hash1( key_A_pub )
+						^	Hash1( key_A_pub )
+						^ Hash1( key_B_pub )
 					);
 					_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
 
@@ -1098,8 +1099,8 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 
 c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> ntru_rand_encrypt_to_me)
 	:
-	//m_ntru_dh_random_bytes(sodiumpp:Arandombytes_locked(64)),
-	m_ntru_dh_random_bytes(sodiumpp::locked_string::move_from_not_locked_string(std::move(std::string("a")))), // XXX
+	//m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size)),
+	m_ntru_dh_random_bytes(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_dh_random_bytes_size, 'a'))),
 	m_KCT( calculate_KCT(self, them, ntru_rand_encrypt_to_me) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
