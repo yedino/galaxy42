@@ -977,16 +977,16 @@ c_stream_crypto::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_
 				else {
 					//rc = ntru_crypto_ntru_decrypt(private_key_len, private_key, ciphertext_len,
 					//ciphertext, &plaintext_len, NULL);
-					uint16_t plaintext_len = m_ntru_dh_random_bytes_size;
+					uint16_t plaintext_len = 0;
 					std::string ciphertext = ntru_rand_encrypt_to_me.front();
 					ntru_rand_encrypt_to_me.erase(ntru_rand_encrypt_to_me.begin());
 					// calculate plaintext size
-					NTRU_exec_or_throw (
+					/*NTRU_exec_or_throw (
 						ntru_crypto_ntru_decrypt(key_A_PRV.size(), reinterpret_cast<const uint8_t *>(key_A_PRV.data()),
 							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
 							&plaintext_len, nullptr)
-					);
-					plaintext_len = m_ntru_dh_random_bytes_size;
+					);*/
+					plaintext_len = m_ntru_dh_random_bytes.size();
 					sodiumpp::locked_string decrypted_rand(plaintext_len);
 					_dbg1("plaintext len = " << plaintext_len);
 					// decrypt
@@ -1097,10 +1097,10 @@ t_crypto_system_type c_stream_crypto::get_system_type() const
 	TODOCODE;	return t_crypto_system_type(0);
 }
 
-c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> ntru_rand_encrypt_to_me)
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, const sodiumpp::locked_string &rand_ntru_data, std::vector<string> ntru_rand_encrypt_to_me)
 	:
-	//m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size)),
-	m_ntru_dh_random_bytes(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_dh_random_bytes_size, 'a'))),
+	m_ntru_dh_random_bytes(rand_ntru_data),
+	//m_ntru_dh_random_bytes(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_dh_random_bytes_size, 'a'))),
 	m_KCT( calculate_KCT(self, them, ntru_rand_encrypt_to_me) ), // ***calculate*** KCT and save it, and now use it:
 
 	m_nonce_odd( calculate_nonce_odd( self, them) ),
@@ -1126,15 +1126,18 @@ c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR & self,  const c_multike
 	_mark("CT constr - unboxer is at" << ((void*)&m_unboxer) );
 }
 
-c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them)
-: c_stream_crypto(IDC_self, IDC_them, std::vector<std::string>())
+c_stream_crypto::c_stream_crypto(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them, const sodiumpp::locked_string &rand_ntru_data)
+: c_stream_crypto(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>())
 {
 }
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> them_encrypted_ntru_rand) {
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> them_encrypted_ntru_rand)
+:
+	m_ntru_dh_random_bytes(sodiumpp::randombytes_locked(m_ntru_dh_random_bytes_size))
+{
 	_note("Creating the crypto tunnel");
-	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them , them_encrypted_ntru_rand );
-	m_stream_crypto_final = make_unique<c_stream_crypto>( self , them , them_encrypted_ntru_rand ); // TODO
+	m_stream_crypto_ab = make_unique<c_stream_crypto>( self , them , m_ntru_dh_random_bytes, them_encrypted_ntru_rand );
+	m_stream_crypto_final = make_unique<c_stream_crypto>( self , them , m_ntru_dh_random_bytes, them_encrypted_ntru_rand ); // TODO
 	_note("Done - crypto tunnel is ready (final)");
 }
 

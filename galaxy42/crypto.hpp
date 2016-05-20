@@ -391,7 +391,6 @@ class c_stream_crypto final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
-		const size_t m_ntru_dh_random_bytes_size = 2;
 		sodiumpp::locked_string m_ntru_dh_random_bytes;
 		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
 		t_symkey m_KCT; ///< the KCT for this stream
@@ -404,8 +403,8 @@ class c_stream_crypto final /* because strange ctor init list functions */
 	public:
 		virtual t_crypto_system_type get_system_type() const;
 
-		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
-		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, std::vector<std::string> ntru_rand_encrypt_to_me);
+		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, const sodiumpp::locked_string &rand_ntru_data);
+		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, const sodiumpp::locked_string &rand_ntru_data, std::vector<std::string> ntru_rand_encrypt_to_me);
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
@@ -420,6 +419,8 @@ class c_stream_crypto final /* because strange ctor init list functions */
 /** A CT, can be used to send data in both directions. */
 class c_crypto_tunnel final {
 	private:
+		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1
+		sodiumpp::locked_string m_ntru_dh_random_bytes;
 		unique_ptr<c_stream_crypto> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
 		unique_ptr<c_stream_crypto> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
