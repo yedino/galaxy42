@@ -76,20 +76,65 @@
  * * in file format (and in serializaion) you can find magic headers:
  * * GMKaS - Galaxy Multi Key, in version "a", the Secret key (private key)
  * * GMKao - Galaxy Multi Key, in version "a", the open key (public key)
+
+
+ Crypto elements overview:
+
+c_multikeys_general<>
+c_multikeys_pub
+c_multikeys_PRV
+c_multikeys_PAIR
+
+=== Full exchange (PFS and asymkex) ===
+
+Alice:
+  exchange_start( multikeys_pub , multikeys_PRV ) -> do DH; count_keys_IDe; gen random IDC_asymkex_pass ---> KCT(ab)
+  create_IDe();
+  exchange_start_get_packet() - IDe, IDC_asymkex_pass{encrypted to IDC-Bob}
+A===>B
+
+Bob:
+  exchange_done( c_multikeys_pub , c_multikeys_PRV , start_packet ) -> do DH; count; decrypt IDC_asymkex_pass,
+  // --- KCTab ready ---
+  create_IDe( without_asymkex )
+  exchange_start() ---> do DH (IDe{no asymkex}), [dont count], gen random IDe_asymkex_pass ---> KCT(f)
+  exchange_start_get_packet() - IDe{no_symkex}, IDe_asymkex_pass{encrypted to IDe-Alice}
+A<===B
+
+Alice:
+  exchange_done( c_multikeys_pub , c_multikeys_PRV , start_packet ) -> do DH; count; decrypt IDC_asymkex_pass )
+
+  // --- KCTf ready ---
+
+c_stream - between simply 1 and 1 Multikey
+	exchange_start() opt:  bool will_new_id (should count?)
+	exchange_done()
+	create_IDe() opt: bool will_asymkex
+	exchange_start_get_packet() - return IDe{and asymkex if any} , tosend_asymkex_pass
+
+c_crypto_tunnel - advanced connection between 1-1 Multikey, but adding e.g. ephemeral keys IDe, (KCTab -> CKTf)
+
  */
 
 using namespace std;
 
-std::string to_debug_locked(const sodiumpp::locked_string & data);
-
-
 /// @ingroup antinet_crypto
+// NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+// NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 namespace antinet_crypto {
 
 
-DRBG_HANDLE get_DRBG(size_t size);
+// extra implementation tools
+bool safe_string_cmp(const std::string & a, const std::string & b);
+
+
+// === for debug ===
+std::string to_debug_locked(const sodiumpp::locked_string & data);
+
 
 // random functions
+DRBG_HANDLE get_DRBG(size_t size);
+
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out);
 /**
  * Generate "nbytes" random bytes and output the result to random_array
@@ -101,15 +146,6 @@ namespace unittest {
 	class c_symhash_state__tests_with_private_access;
 } // namespace
 
-
-/**
- * \verbatim
- * =====================================================================
- * Above is the crypto at basic level in Galaxy.
- * Types: uses own t_types - that are probably std::string
- * =====================================================================
- * \endverbatim
- */
 
 // Group: crypto utils, free functions etc
 
@@ -153,6 +189,7 @@ sodiumpp::locked_string operator^(const sodiumpp::locked_string & str1, const st
 
 ///@}
 
+// ==================================================================
 
 /**
  * @defgroup hash_func Hashing functions
@@ -173,6 +210,7 @@ t_hash_PRV Hash2_PRV( const t_hash_PRV & hash );
 
 ///@}
 
+// ==================================================================
 
 // must match: t_crypto_system_type_to_name()
 enum t_crypto_system_type : unsigned char {
@@ -193,6 +231,11 @@ enum t_crypto_system_type : unsigned char {
 
 std::string t_crypto_system_type_to_name(int val);
 
+char t_crypto_system_type_to_ID(int val);
+t_crypto_system_type t_crypto_system_type_from_ID(char name);
+
+// ------------------------------------------------------------------
+
 /** Some state of some crypto system */
 class c_crypto_system {
 	public:
@@ -210,8 +253,10 @@ class c_crypto_system {
 		virtual t_crypto_system_type get_system_type() const;
 };
 
+// ==================================================================
 
 /** State of the SymHash (aka: ratchet?) */
+// TODO: this is unused for now
 class c_symhash_state final : public c_crypto_system {
 	public:
 		c_symhash_state( t_hash initial_state );
@@ -229,23 +274,12 @@ class c_symhash_state final : public c_crypto_system {
 		int m_number; ///< for debug mostly for now
 };
 
-/*
 
-class c_multistate {
-	typedef std::array<
-		vector< unique_ptr< c_crypto_system > > ,
-		e_crypto_system_type_END
-	> t_cryptolists;
+// ##################################################################
+// ##################################################################
+// all about the multikeys
 
-	c_dhdh_state dhdh;
-
-	c_symhash_state symhash;
-};
-
-*/
-
-char t_crypto_system_type_to_ID(int val);
-t_crypto_system_type t_crypto_system_type_from_ID(char name);
+// ==================================================================
 
 enum t_key_type_secop : unsigned char {
 	e_key_type_secop_secret='S', // for secret key (PRIVATE key)
@@ -319,6 +353,8 @@ class c_multikeys_general : public c_crypto_system {
 		/// pick even/odd nonce depending on comparing keys.
 
 };
+
+// ==================================================================
 
 /** All pubkeys of given identity */
 class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
@@ -394,46 +430,50 @@ class c_multikeys_PAIR {
 		void datastore_load_PRV_and_pub(const string  & fname_base);
 
 		virtual t_crypto_system_type get_system_type() const;
-};
 
+};
 
 /**
  * Crypto primitives are provided by - sodiumpp library (and NTru, SIDH, Geport - in future - TODO)
- * Raw symmetric encryption - done by c_stream_crypto
+ * Raw symmetric encryption - done by c_stream
  * Adding needed crypto data - nonce constant, nonce counter - done by c_crypto_tunnel
  * Downloading pubkeys, adding other meta-data, transport - are to be done by other, higher layers.
  */
 
-
-
 /**
- * The KCT crypto system of the stream, ready for finall use.
- * It does only the main crypto algorithm.
+ * Basic KCT crypto system of the stream, e.g. a KCTab / KCTf.
+ * It does only the main crypto algorithm (or even it's part - without ephemeral)
  */
-class c_stream_crypto final /* because strange ctor init list functions */
+class c_stream final /* because strange ctor init list functions */
 : public c_crypto_system
 {
 	private:
-		sodiumpp::locked_string m_ntru_dh_random_bytes;
-		std::vector<std::string> m_ntru_ecrypt_to_them_rand; ///< m_ntru_dh_random_bytes encrypted by all ntru pub keys
-		t_symkey m_KCT; ///< the KCT for this stream
+		t_symkey m_KCT; ///< the main KCT for this stream
+
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
 
+		// Extra data created as result of KEX:
+		sodiumpp::locked_string m_ntru_kex_password; ///< our passwords: for asym-kex (e.g. NTru based)
+		t_crypto_system_count m_cryptolists_count; ///< our count: how many keys we have of each crypto system
+
+		// Objects to use the stream:
 		sodiumpp::boxer< t_crypto_nonce > m_boxer;
 		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
 
-		t_crypto_system_count m_cryptolists_count; ///< count how many keys we have of each crypto system
-
 	public:
-		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, const sodiumpp::locked_string &rand_ntru_data);
-		c_stream_crypto(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, const sodiumpp::locked_string &rand_ntru_data, std::vector<std::string> ntru_rand_encrypt_to_me);
+		c_stream();
 
-		virtual t_crypto_system_type get_system_type() const;
+		void exchange_start(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them,
+			bool will_new_id);
+		void exchange_done();
+		void create_IDe(bool will_use_new_asymkex);
+		std::string exchange_start_get_packet(); ///< const
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
-		std::vector<std::string> get_ntru_encrypt_rand();
+
+		virtual t_crypto_system_type get_system_type() const;
 
 	private:
 // MERGEME
@@ -444,17 +484,20 @@ class c_stream_crypto final /* because strange ctor init list functions */
 
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
+		t_crypto_system_count get_cryptolists_count_for_KCTf() const;
 };
 
-/** A CT, can be used to send data in both directions. */
+
+/**
+ * A CT, can be used to send data in both directions.
+*/
 class c_crypto_tunnel final {
 	private:
-		
 		// TODO why 65:
 		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1
-		sodiumpp::locked_string m_ntru_dh_random_bytes;
-		unique_ptr<c_stream_crypto> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
-		unique_ptr<c_stream_crypto> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
+
+		unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
+		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
 		unique_ptr<c_multikeys_PAIR> m_IDe; ///< our ephemeral ID (that will create KCTf)
 
@@ -474,15 +517,16 @@ class c_crypto_tunnel final {
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
-		std::vector<std::string> get_encrypt_ntru_rand();
+
 };
+
 
 #if 0
 
 
 /**
  * For given CT (form me, to given recipient) - and given session
- * TODO this is not really used (instead see c_stream_crypto)
+ * TODO this is not really used (instead see c_stream)
  */
 class c_dhdh_state final : public c_crypto_system {
 	public:
@@ -524,7 +568,9 @@ void test_crypto();
 void test_crypto_benchmark(const size_t seconds_for_test_case);
 
 
-} // namespace
+} // namespace antinet_crypto
+
+// NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 
 
 #endif
