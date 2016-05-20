@@ -800,35 +800,109 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 
 // ==================================================================
 
+
+c_stream::c_stream()
+:
+	m_KCT( return_empty_K() ),
+	m_nonce_odd( 0 ),
+	m_boxer( nullptr ),
+	m_unboxer( nullptr )
+{
+}
+
+sodiumpp::locked_string c_stream::return_empty_K() {
+	sodiumpp::locked_string ret( Hash1_size() );
+	std::fill_n( ret.buffer_writable() , ret.size() , static_cast<char>(0));
+	assert( ret.size() == Hash1_size() );
+	return ret;
+}
+
+
+// ---------------------------------------------------------------------------
+
 std::string c_stream::box(const std::string & msg) {
 	_dbg2("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
 	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
-	return m_boxer.box(msg).to_binary();
+	return PTR(m_boxer)->box(msg).to_binary();
 }
 
 std::string c_stream::unbox(const std::string & msg) {
 	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
-	return m_unboxer.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
+	return PTR(m_unboxer)->unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
+
+// ---------------------------------------------------------------------------
 
 t_crypto_system_count c_stream::get_cryptolists_count_for_KCTf() const {
 	return m_cryptolists_count;
 }
 
+void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
+	bool will_new_id)
+{
+	_note("EXCHANGE START");
+	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id );
 
-void c_stream::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
-	t_crypto_system_count & cryptolists_count, std::vector<string> ntru_rand_encrypt_to_me
-) {
-	// WARNING: used in constructor
-	// WARNING: taking & to values, do not invalidate them! (here and in entire function)
+	sodiumpp::encoded_bytes nonce_zero =
+		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
+	;
 
+	m_boxer   = make_unique<t_boxer>  ( sodiumpp::boxer_base::boxer_type_shared_key(),   m_nonce_odd, m_KCT, nonce_zero );
+	m_unboxer = make_unique<t_unboxer>( sodiumpp::boxer_base::boxer_type_shared_key(), ! m_nonce_odd, m_KCT, nonce_zero );
+
+	_note("EXCHANGE start:: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
+		<< " and m_KCT=" << to_debug_locked( m_KCT )
+		);
+	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(PTR(m_boxer)  ->get_nonce().get().to_binary()));
+	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(PTR(m_unboxer)->get_nonce().get().to_binary()));
+	_dbg1("EXCHANGE start: - unboxer is at" << ((void*)&m_unboxer) );
+
+	assert(m_boxer); assert(m_unboxer);
+}
+
+void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
+			const std::string & packetstart)
+{
+	UNUSED(ID_self); UNUSED(ID_them); UNUSED(packetstart);
+	TODOCODE;
+}
+
+unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_use_new_asymkex) {
+	UNUSED(will_use_new_asymkex);
+	TODOCODE;
+	return make_unique<c_multikeys_PAIR>();
+}
+
+std::string c_stream::exchange_start_get_packet() const {
+	TODOCODE;
+	return "TODO";
+}
+
+// ---------------------------------------------------------------------------
+
+bool c_stream::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
+	return self.m_pub > them;
+}
+
+t_crypto_system_type c_stream::get_system_type() const
+{
+	TODOCODE;	return t_crypto_system_type(0);
+}
+
+// ---------------------------------------------------------------------------
+
+c_crypto_system::t_symkey c_stream::calculate_KCT
+(const c_multikeys_PAIR & self, const c_multikeys_pub & them , bool will_new_id)
+{
 	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
 	assert(self.m_PRV.get_count_of_systems() == them.get_count_of_systems());
 	// TODO assert self priv == them priv;
 	assert(self.m_PRV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
-	for (auto & count : cryptolists_count) count=0;
+	bool should_count = will_new_id;
+
+	if (should_count) for (auto & count : m_cryptolists_count) count=0;
 
 	// fill it with 0 bytes (octets):
 	locked_string KCT_accum( Hash1_size() );
@@ -851,7 +925,7 @@ void c_stream::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pu
 		if (key_count_bigger < 1) continue ; // !
 
 
-		cryptolists_count.at(sys) = 1; // count that we use this cryptosystem
+		if (should_count) m_cryptolists_count.at(sys) = 1; // count that we use this cryptosystem
 
 		if (sys == e_crypto_system_type_X25519) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
@@ -888,6 +962,8 @@ void c_stream::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pu
 
 
 
+		#if 0
+		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
@@ -978,6 +1054,7 @@ void c_stream::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pu
 				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 		} // NTRU_EES439EP1
+		#endif
 
 
 		if (sys == e_crypto_system_type_SIDH) {
@@ -1053,47 +1130,9 @@ void c_stream::calculate_KCT(const c_multikeys_PAIR & self, const c_multikeys_pu
 
 	_note("KCT ready exchanged: " << to_debug_locked( KCT_ready ) );
 	return KCT_ready;
-}
+} // calculate_KCT
 
-// ==================================================================
 
-bool c_stream::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them) {
-	return self.m_pub > them;
-}
-
-t_crypto_system_type c_stream::get_system_type() const
-{
-	TODOCODE;	return t_crypto_system_type(0);
-}
-
-c_stream::c_stream(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, const sodiumpp::locked_string &rand_ntru_data, std::vector<string> ntru_rand_encrypt_to_me)
-	:
-	m_ntru_kex_password(rand_ntru_data),
-	//m_ntru_kex_password(sodiumpp::locked_string::move_from_not_locked_string(std::string(m_ntru_kex_password_size, 'a'))),
-	m_KCT( calculate_KCT(self, them, m_cryptolists_count, ntru_rand_encrypt_to_me) ), // ***calculate*** KCT and save it, and now use it:
-
-	m_nonce_odd( calculate_nonce_odd( self, them) ),
-
-	m_boxer(
-		sodiumpp::boxer_base::boxer_type_shared_key()
-		,m_nonce_odd
-		,m_KCT
-		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
-	),
-	m_unboxer(
-		sodiumpp::boxer_base::boxer_type_shared_key()
-		,! m_nonce_odd
-		,m_KCT
-		,sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary) // nonce zero!
-	)
-{
-	_note("CT constr: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
-		<< " and m_KCT=" << to_debug_locked( m_KCT )
-		);
-	_dbg2("CT constr created boxer   with nonce=" << to_debug(m_boxer  .get_nonce().get().to_binary()));
-	_dbg2("CT constr created unboxer with nonce=" << to_debug(m_unboxer.get_nonce().get().to_binary()));
-	_dbg2("CT constr - unboxer is at" << ((void*)&m_unboxer) );
-}
 
 // ==================================================================
 
@@ -1113,47 +1152,43 @@ std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
 	return PTR(m_stream_crypto_ab)->unbox(msg);
 }
 
+// ------------------------------------------------------------------
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them
-  ,const sodiumpp::locked_string &rand_ntru_data, rand_ntru_data, std::vector<std::string>()
-)
-	: m_IDe(nullptr),
-	m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size))
+
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+	: m_side_initiator(true),
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
 {
+	// m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size)) // TODOdel or example
 	_note("Creating the crypto tunnel");
-	m_stream_crypto_ab = make_unique<c_stream>( self , them ,  m_ntru_kex_password, them_encrypted_ntru_rand);
+	m_stream_crypto_ab = make_unique<c_stream>();
 	m_stream_crypto_final = nullptr;
-} // TODO MERGEME
 
-c_stream::c_stream(const c_multikeys_PAIR &IDC_self, const c_multikeys_pub &IDC_them, const sodiumpp::locked_string &rand_ntru_data)
-: c_stream(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>())
-{
+	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
 }
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<string> them_encrypted_ntru_rand)
-:
-	m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size))
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
+	const std::string & packetstart )
+	: m_side_initiator(false),
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
 {
-	_note("Creating the crypto tunnel");
-	m_stream_crypto_ab = make_unique<c_stream>( self , them , m_ntru_kex_password, them_encrypted_ntru_rand );
-	m_stream_crypto_final = make_unique<c_stream>( self , them , m_ntru_kex_password, them_encrypted_ntru_rand ); // TODO
->>>>>>> rob/wip_galaxy_crypto_ntru2
-	_note("Done - crypto tunnel is ready (final)");
+	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart );
 }
+
+// : c_stream(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>()) // TODOdel
 
 void c_crypto_tunnel::create_IDe() {
 	_mark("Creating IDe");
-	m_IDe = make_unique<c_multikeys_PAIR>();
-	m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
+	//m_IDe = make_unique<c_multikeys_PAIR>();
+	//m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
+	m_IDe = PTR( m_stream_crypto_ab )->create_IDe( m_side_initiator==true  );
 	_mark("Creating IDe - DONE");
 }
 
 void c_crypto_tunnel::create_CTf(const c_multikeys_pub & IDe_them) {
-	_mark("Creating CTf");
-	m_stream_crypto_final = make_unique<c_stream>( *PTR(m_IDe) , IDe_them);
-	_mark("Creating CTf - DONE");
+	m_stream_crypto_final = make_unique<c_stream>();
+	// *PTR(m_IDe) , IDe_them);
 }
-
 
 
 // ##################################################################
