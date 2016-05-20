@@ -90,24 +90,24 @@ c_multikeys_PAIR
 Alice:
   exchange_start( multikeys_pub , multikeys_PRV ) -> do DH; count_keys_IDe; gen random IDC_asymkex_pass ---> KCT(ab)
   create_IDe();
-  exchange_start_get_packet() - IDe, IDC_asymkex_pass{encrypted to IDC-Bob}
+  exchange_start_get_packetstart() - IDe, IDC_asymkex_pass{encrypted to IDC-Bob}
 A===>B
 
 Bob:
-  exchange_done( c_multikeys_pub , c_multikeys_PRV , start_packet ) -> do DH; count; decrypt IDC_asymkex_pass,
+  exchange_done( c_multikeys_pub , c_multikeys_PRV , start_packet ) -> do DH; count; decrypt IDC_asymkex_pass, ---> KCT(ab)
   // --- KCTab ready ---
   create_IDe( without_asymkex )
   exchange_start() ---> do DH (IDe{no asymkex}), [dont count], gen random IDe_asymkex_pass ---> KCT(f)
-  exchange_start_get_packet() - IDe{no_symkex}, IDe_asymkex_pass{encrypted to IDe-Alice}
+  exchange_start_get_packetstart() - IDe{no_symkex}, IDe_asymkex_pass{encrypted to IDe-Alice}
 A<===B
 
 Alice:
-  exchange_done( c_multikeys_pub , c_multikeys_PRV , start_packet ) -> do DH; count; decrypt IDC_asymkex_pass )
+  exchange_done( c_multikeys_pub , c_multikeys_PRV , start_packet ) -> do DH; count; decrypt IDC_asymkex_pass ) --> KCT(f)
 
   // --- KCTf ready ---
 
 c_stream - between simply 1 and 1 Multikey
-	exchange_start() opt:  bool will_new_id (should count?)
+	exchange_start() opt:  bool will_new_id (should count?) ---> KCT(*)
 	exchange_done()
 	create_IDe() opt: bool will_asymkex
 	exchange_start_get_packet() - return IDe{and asymkex if any} , tosend_asymkex_pass
@@ -457,18 +457,24 @@ class c_stream final /* because strange ctor init list functions */
 		sodiumpp::locked_string m_ntru_kex_password; ///< our passwords: for asym-kex (e.g. NTru based)
 		t_crypto_system_count m_cryptolists_count; ///< our count: how many keys we have of each crypto system
 
+		typedef sodiumpp::boxer< t_crypto_nonce > t_boxer;
+		typedef sodiumpp::unboxer< t_crypto_nonce > t_unboxer;
+
 		// Objects to use the stream:
-		sodiumpp::boxer< t_crypto_nonce > m_boxer;
-		sodiumpp::unboxer< t_crypto_nonce > m_unboxer;
+		unique_ptr< t_boxer > m_boxer;
+		unique_ptr< t_unboxer > m_unboxer;
 
 	public:
 		c_stream();
 
-		void exchange_start(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them,
+		void exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			bool will_new_id);
-		void exchange_done();
-		void create_IDe(bool will_use_new_asymkex);
-		std::string exchange_start_get_packet(); ///< const
+
+		void exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
+			const std::string & packetstart);
+
+		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_use_new_asymkex);
+		std::string exchange_start_get_packet() const;
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
@@ -476,11 +482,9 @@ class c_stream final /* because strange ctor init list functions */
 		virtual t_crypto_system_type get_system_type() const;
 
 	private:
-// MERGEME
-		static t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them,
-			t_crypto_system_count & cryptolists_count);
+		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, bool will_new_id);
 
-		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, std::vector<std::string> ntru_rand_encrypt_to_me);
+		static sodiumpp::locked_string return_empty_K();
 
 		static bool calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multikeys_pub & them);
 
@@ -496,16 +500,17 @@ class c_crypto_tunnel final {
 		// TODO why 65:
 		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1
 
-		unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
-		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
+		bool m_side_initiator; ///< am I initiator of the dialog (or respondent)
 
 		unique_ptr<c_multikeys_PAIR> m_IDe; ///< our ephemeral ID (that will create KCTf)
 
+		unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
+		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
+
 	public:
-		c_crypto_tunnel()=default;
-		//c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them);
-		c_crypto_tunnel(const c_multikeys_PAIR & IDC_self,  const c_multikeys_pub & IDC_them, std::vector<std::string> them_encrypted_ntru_rand);
-		// MERGEME
+		c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them);
+		c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
+			const std::string & packetstart );
 
 		void create_IDe();
 		void create_CTf(const c_multikeys_pub & IDC_them);
