@@ -61,7 +61,7 @@ std::string to_debug_locked_maybe(const sodiumpp::locked_string & data) {
 	return to_debug_locked(data);
 }
 std::string to_debug_locked_maybe(const std::string & data) {
-	return data;
+	return to_debug(data);
 }
 
 // ==================================================================
@@ -611,11 +611,11 @@ void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count) {
 
 void c_multikeys_PAIR::generate() {
 	_info("generate X25519");
-	generate( e_crypto_system_type_X25519 , 2 );
-	_info("generate NRTU");
-	generate( e_crypto_system_type_NTRU_EES439EP1 , 1 );
+	generate( e_crypto_system_type_X25519 , 1 );
+	_info("generate NTRU");
+	generate( e_crypto_system_type_NTRU_EES439EP1 , 0 );
 	_info("generate SIDH");
-	generate( e_crypto_system_type_SIDH , 1 );
+	generate( e_crypto_system_type_SIDH , 0 );
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
@@ -750,6 +750,8 @@ DRBG_HANDLE get_DRBG(size_t size) {
 }
 
 void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int count) {
+	if (!count) return;
+
 	switch (crypto_system_type)
 	{
 		case e_crypto_system_type_X25519:
@@ -855,7 +857,6 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 		);
 	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(PTR(m_boxer)  ->get_nonce().get().to_binary()));
 	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(PTR(m_unboxer)->get_nonce().get().to_binary()));
-	_dbg1("EXCHANGE start: - unboxer is at" << ((void*)&m_unboxer) );
 
 	assert(m_boxer); assert(m_unboxer);
 }
@@ -940,6 +941,11 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
 				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+
+				_note("Keys:");
+				_info(to_debug_locked_maybe(key_A_pub));
+				_info(to_debug_locked_maybe(key_A_PRV));
+				_info(to_debug_locked_maybe(key_B_pub));
 
 				using namespace string_binary_op; // operator^
 
@@ -1121,6 +1127,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					Hash1_PRV( shared_secret_a ) ^	Hash1_PRV( shared_secret_b ) // both agreed-shared-keys, hashed
 					^ Hash1( key_self_pub )	^	Hash1( key_them_pub ) // and hash of public keys too
 				); // and all of this hashed once more
+				_info("SIDH secret key: " << to_debug_locked(k_dh_agreed));
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 
@@ -1289,7 +1296,7 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
-	if (1) {
+	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
 		keypairA.datastore_save_PRV_and_pub("alice2.key");
 
@@ -1326,6 +1333,7 @@ void test_crypto() {
 		// Create CT (e.g. CTE?) - that has KCT
 		_note("Alice CT:");
 		c_crypto_tunnel AliceCT(keypairA, keypubB);
+		return; // !!!
 		_note("Bob CT:");
 		c_crypto_tunnel BobCT  (keypairB, keypubA);
 		_mark("Prepared tunnels (KCTab)");

@@ -508,12 +508,12 @@ class c_crypto_tunnel final {
 		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
 	public:
-		c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them);
-		c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
+		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them);
+		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them,
 			const std::string & packetstart );
 
 		void create_IDe();
-		void create_CTf(const c_multikeys_pub & IDC_them);
+		void create_CTf(const c_multikeys_pub & IDC_ID_them);
 
 		c_multikeys_PAIR & get_IDe(); ///< get our m_IDe needed to create KCTf
 
@@ -526,48 +526,7 @@ class c_crypto_tunnel final {
 };
 
 
-#if 0
-
-
-/**
- * For given CT (form me, to given recipient) - and given session
- * TODO this is not really used (instead see c_stream)
- */
-class c_dhdh_state final : public c_crypto_system {
-	public:
-		typedef string_as_bin t_pubkey;
-		typedef string_as_bin t_PRVkey;
-		typedef long long int t_nonce;
-
-		/// shared key from permanent
-		/// KP = complete_DH( ap , BP ) , ()
-		/// prepare permanent-key based AuthEncr
-		t_symkey m_skp;
-		c_dhdh_state(t_PRVkey our_priv, t_pubkey our_pub, t_pubkey theirs_pub);
-
-		void step1();
-		t_pubkey get_permanent_pubkey() const;
-		t_pubkey get_temp_pubkey() const;
-		static std::pair<t_pubkey, t_PRVkey> generate_key_pair();
-
-	private:
-		t_PRVkey m_our_priv; ///< permanent
-		t_pubkey m_our_pub; ///< permanent
-		t_pubkey m_theirs_pub;
-		t_symkey m_r; ///< my random r1 or r2 to use in CA shared key // TODO(r) not used...
-
-		t_pubkey m_pubkey_temp;
-		t_PRVkey m_privkey_temp;
-
-		t_symkey execute_DH_exchange(const t_PRVkey &my_priv, const t_pubkey &my_pub, const t_pubkey &theirs_pub);
-		t_symkey execute_DH_exchange(); ///< call execute_DH_exchange with internal fields
-
-		FRIEND_TEST(crypto, dh_exchange);
-
-		t_nonce m_nonce;
-};
-
-#endif
+// === high level tests ===
 
 void test_crypto();
 void test_crypto_benchmark(const size_t seconds_for_test_case);
