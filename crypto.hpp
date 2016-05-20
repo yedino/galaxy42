@@ -113,6 +113,9 @@ c_stream - between simply 1 and 1 Multikey
 	exchange_start_get_packet() - return IDe{and asymkex if any} , tosend_asymkex_pass
 
 c_crypto_tunnel - advanced connection between 1-1 Multikey, but adding e.g. ephemeral keys IDe, (KCTab -> CKTf)
+	construct( mk_pub , mk_PRV )
+  	exchange_start( multikeys_pub , multikeys_PRV );
+  	create_IDe();
 
  */
 
@@ -230,9 +233,11 @@ enum t_crypto_system_type : unsigned char {
 };
 
 std::string t_crypto_system_type_to_name(int val);
+std::string enum_name(t_crypto_system_type e);
 
 char t_crypto_system_type_to_ID(int val);
 t_crypto_system_type t_crypto_system_type_from_ID(char name);
+bool t_crypto_system_type_is_asymkex(t_crypto_system_type sys); ///< is this type doing asymmetric KEX instead of D-H
 
 // ------------------------------------------------------------------
 
@@ -409,7 +414,8 @@ class c_multikeys_PAIR {
 	public:
 		virtual ~c_multikeys_PAIR() = default;
 
-		void generate(t_crypto_system_count cryptolists_count); ///< generate from list of how many keys of given type we need
+		///< generate from list of how many keys of given type we need
+		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex); 
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
 		void generate(); ///< generate the default set of keys
 		static std::pair<sodiumpp::locked_string, std::string> generate_x25519_key_pair();
@@ -473,7 +479,7 @@ class c_stream final /* because strange ctor init list functions */
 		void exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart);
 
-		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_use_new_asymkex);
+		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
 		std::string exchange_start_get_packet() const;
 
 		std::string box(const std::string & msg);

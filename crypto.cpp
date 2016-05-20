@@ -49,7 +49,7 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
-		return string_as_dbg( string_as_bin( data.get_string() ) ).get();
+		return to_debug(data.get_string());
 	#else
 		UNUSED(data);
 	#endif
@@ -253,6 +253,10 @@ std::string t_crypto_system_type_to_name(int val) {
 	return string("(Invalid enum type=") + to_string(val) + string(")");
 }
 
+std::string enum_name(t_crypto_system_type e) {
+	return t_crypto_system_type_to_name( e );
+}
+
 char t_crypto_system_type_to_ID(int val) {
 	switch(val) {
 		case e_crypto_system_type_X25519: return 'x';
@@ -275,6 +279,16 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " + name + ")");
 }
 
+bool t_crypto_system_type_is_asymkex(t_crypto_system_type sys) {
+	switch (sys) {
+		case e_crypto_system_type_X25519: return false;
+		case e_crypto_system_type_SIDH: return false;
+		case e_crypto_system_type_NTRU_EES439EP1: return true;
+		default: break;	// other things are not a KEX at all:
+	}
+	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " 
+		+ t_crypto_system_type_to_name(sys) + ")");
+}
 
 
 // ==================================================================
@@ -596,15 +610,17 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 	errcode_valid_or_throw( NTRU_OK, errcode, "NTRU", info);
 }
 
-void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count) {
+void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool will_asymkex) {
 	_info("Generating from cryptolists_count");
 	for (size_t sys=0; sys<cryptolists_count.size(); ++sys) { // all key crypto systems
 		// for given crypto system:
 		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
 		auto how_many = cryptolists_count.at(sys);
 		if (how_many > 0) {
-			_info("From sys="<<sys<<" generate sys_id="<<sys_id<<" keys, in amount: how_many="<<how_many);
-			this->generate(sys_id, how_many);
+			_info("Generate keys " << t_crypto_system_type_to_name(sys_id) << " in amount: "<<how_many);
+			if ( will_asymkex || false==t_crypto_system_type_is_asymkex(sys_id) ) {
+				this->generate(sys_id, how_many);
+			} else _dbg1("Skipping because asymkex; " << to_string(sys_id));
 		}
 	}
 }
@@ -613,7 +629,7 @@ void c_multikeys_PAIR::generate() {
 	_info("generate X25519");
 	generate( e_crypto_system_type_X25519 , 1 );
 	_info("generate NTRU");
-	generate( e_crypto_system_type_NTRU_EES439EP1 , 0 );
+	generate( e_crypto_system_type_NTRU_EES439EP1 , 1 );
 	_info("generate SIDH");
 	generate( e_crypto_system_type_SIDH , 0 );
 }
@@ -868,10 +884,10 @@ void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikey
 	TODOCODE;
 }
 
-unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_use_new_asymkex) {
-	UNUSED(will_use_new_asymkex);
-	TODOCODE;
-	return make_unique<c_multikeys_PAIR>();
+unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
+	unique_ptr<c_multikeys_PAIR> IDe = make_unique< c_multikeys_PAIR >(); 
+	IDe -> generate( m_cryptolists_count , will_asymkex );
+	return std::move(IDe);
 }
 
 std::string c_stream::exchange_start_get_packet() const {
@@ -968,7 +984,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 
 
-		#if 0
+		#if 1
 		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
@@ -986,8 +1002,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 				using namespace string_binary_op; // operator^
 
-				// I encrypt rand data
-				if (ntru_rand_encrypt_to_me.empty()) {
+				// I am initiator - so I create random passwords, and encrypt them for other side of stream
+				if (m_side_initiator) {
 					uint16_t ciphertext_len = 0;
 					// calculate ciphet text size
 					_dbg2("calculate ciphertext_len");
@@ -999,19 +1015,24 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					); //NTRU_exec_or_throw
 					_dbg1("ciphertext_len = " << ciphertext_len);
 
-					std::string encrypted_rand_data(ciphertext_len, 0);
+					sodiumpp::locked_string password_cleartext 
+						= sodiumpp::randombytes_locked(ciphertext_len)); // <--- generate password
+
+					m_ntru_kex_password.
+
 					// encrypt random bytes
 					_dbg2("encrypt");
 					_dbg2("public key size " << key_B_pub.size());
+					
 					NTRU_exec_or_throw (
 						ntru_crypto_ntru_encrypt(get_DRBG(128),
 							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
-							m_ntru_kex_password.size(), reinterpret_cast<const uint8_t *>(m_ntru_kex_password.data()),
-							&ciphertext_len, reinterpret_cast<uint8_t *>(&encrypted_rand_data[0]))
+							password_cleartext.size(), reinterpret_cast<const uint8_t *>(password_cleartext.c_str()),
+							&ciphertext_len, reinterpret_cast<uint8_t *>(&u[0]))
 					); // NTRU_exec_or_throw
 					assert(ciphertext_len == encrypted_rand_data.size());
 					_dbg1("random data encrypted");
-					m_ntru_ecrypt_to_them_rand.push_back(encrypted_rand_data);
+					m_ntru_kex_password.push_back(encrypted_rand_data);
 
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 					Hash1_PRV(
@@ -1176,10 +1197,12 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 {
 	// m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size)) // TODOdel or example
 	_note("Creating the crypto tunnel");
+
 	m_stream_crypto_ab = make_unique<c_stream>();
 	m_stream_crypto_final = nullptr;
 
 	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
+	create_IDe();
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
@@ -1294,7 +1317,8 @@ void test_crypto() {
 
 	// Alice: IDC
 	c_multikeys_PAIR keypairA;
-	keypairA.generate();
+	keypairA.generate(e_crypto_system_type_X25519,3);
+	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,2);
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -1307,7 +1331,8 @@ void test_crypto() {
 
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
-	keypairB.generate();
+	keypairB.generate(e_crypto_system_type_X25519,3);
+	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,3);
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
@@ -1332,17 +1357,14 @@ void test_crypto() {
 
 		// Create CT (e.g. CTE?) - that has KCT
 		_note("Alice CT:");
-		c_crypto_tunnel AliceCT(keypairA, keypubB);
-		return; // !!!
+		c_crypto_tunnel AliceCT(keypairA, keypubB); // proto!
 		_note("Bob CT:");
-		c_crypto_tunnel BobCT  (keypairB, keypubA);
+		c_crypto_tunnel BobCT  (keypairB, keypubA); // proto!
 		_mark("Prepared tunnels (KCTab)");
-
-		AliceCT.create_IDe();
-		BobCT  .create_IDe();
 
 		c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
 		c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
+
 
 /* for NTru:
 	// Create CT (e.g. CTE?) - that has KCT
@@ -1354,12 +1376,15 @@ void test_crypto() {
 	_mark("Prepared tunnels (KCTab)");
 */
 
+		return; // !!!
+
 		_mark("Preparing for ephemeral KEX:");
 		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
 		_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
 
 		AliceCT.create_CTf( keypairB_IDe_pub );
 		BobCT  .create_CTf( keypairA_IDe_pub );
+
 
 		// generate ephemeral keys
 
