@@ -238,20 +238,20 @@ size_t Hash2_size() {
 
 // ==================================================================
 
-// TODO(janek): case as enum name . warning: new enum types added
-// TODO(janek) fix identation
-		std::string t_crypto_system_type_to_name(int val) {
-			switch(val) {
-				case 1:			return "X25519";
-				case 2:			return "Ed25519";
-				case e_crypto_system_type_NTRU_EES439EP1:     return "NTRU-EES439EP1";
-				case 4:			return "geport_todo";
-				case 5:			return "symhash_todo";
-				case 6:			return "multikey";
-					//default:		return "Wrong type";
-			}
-			return string("(Invalid enum type=") + to_string(val) + string(")");
-		}
+std::string t_crypto_system_type_to_name(int val) {
+	switch(val) {
+		case e_crypto_system_type_X25519:			return "X25519";
+		case e_crypto_system_type_Ed25519:			return "Ed25519";
+		case e_crypto_system_type_NTRU_EES439EP1:     return "NTRU-EES439EP1";
+		case e_crypto_system_type_SIDH:			return "SIDH-p751";
+		case e_crypto_system_type_geport_todo:			return "geport_todo";
+		case e_crypto_system_type_symhash_todo:			return "symhash_todo";
+		case e_crypto_system_type_multikey_pub:			return "multikey-pub";
+		case e_crypto_system_type_multikey_private:			return "multikey-PRIVATE";
+			//default:		return "Wrong type";
+	}
+	return string("(Invalid enum type=") + to_string(val) + string(")");
+}
 
 char t_crypto_system_type_to_ID(int val) {
 	switch(val) {
@@ -613,9 +613,9 @@ void c_multikeys_PAIR::generate() {
 	_info("generate X25519");
 	generate( e_crypto_system_type_X25519 , 2 );
 	_info("generate NRTU");
-	generate( e_crypto_system_type_NTRU_EES439EP1 , 0 );
+	generate( e_crypto_system_type_NTRU_EES439EP1 , 1 );
 	_info("generate SIDH");
-	generate( e_crypto_system_type_SIDH , 0 );
+	generate( e_crypto_system_type_SIDH , 1 );
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
@@ -1093,12 +1093,16 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
 
+				_info("SIDH A: prv: " << to_debug_locked(key_self_PRV_a));
+				_info("SIDH B: pub: " << to_debug(key_them_pub_b));
+
 				status = SecretAgreement_A(
 					reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
 					reinterpret_cast<unsigned char *>(&key_them_pub_b[0]),
-					reinterpret_cast<unsigned char *>(&shared_secret_a[0]),
+					reinterpret_cast<unsigned char *>(shared_secret_a.buffer_writable()),
 					curveIsogeny);
 				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
+				_note(shared_secret_a.get_string());
 
 				status = SecretAgreement_B(
 					reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
@@ -1106,6 +1110,9 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
 					curveIsogeny);
 				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
+
+				_info("SIDH agreed secret A: " << to_debug_locked( shared_secret_a )  );
+				_info("SIDH agreed secret B: " << to_debug_locked( shared_secret_b )  );
 
 				using namespace string_binary_op; // operator^
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
@@ -1186,6 +1193,8 @@ void c_crypto_tunnel::create_IDe() {
 }
 
 void c_crypto_tunnel::create_CTf(const c_multikeys_pub & IDe_them) {
+	UNUSED(IDe_them);
+	TODOCODE
 	m_stream_crypto_final = make_unique<c_stream>();
 	// *PTR(m_IDe) , IDe_them);
 }
@@ -1271,7 +1280,6 @@ void test_string_lock() {
 
 void test_crypto() {
 
-#if 0
 	test_string_lock();
 
 	_mark("Create IDC");
@@ -1280,12 +1288,14 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate();
 
-	keypairA.datastore_save_PRV_and_pub("alice.key");
-	keypairA.datastore_save_PRV_and_pub("alice2.key");
+	if (1) {
+		keypairA.datastore_save_PRV_and_pub("alice.key");
+		keypairA.datastore_save_PRV_and_pub("alice2.key");
 
-	c_multikeys_PAIR loadedA;
-	loadedA.datastore_load_PRV_and_pub("alice.key");
-	loadedA.datastore_save_PRV_and_pub("alice.key.again");
+		c_multikeys_PAIR loadedA;
+		loadedA.datastore_load_PRV_and_pub("alice.key");
+		loadedA.datastore_save_PRV_and_pub("alice.key.again");
+	}
 
 	// Bob: IDC
 	c_multikeys_PAIR keypairB;
@@ -1294,14 +1304,16 @@ void test_crypto() {
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
 
-	// Check key save/restore (without saving to file)
-	string keypubA_serialized = keypubA.serialize_bin();
-	c_multikeys_pub keypubA_restored;
-	keypubA_restored.load_from_bin( keypubA_serialized );
-	_note("Serialize save/load test: serialized key to: " << to_debug(keypubA_serialized));
-	if (keypubA.get_hash() == keypubA_restored.get_hash()) {
-		_info("Seems to match");
-	} else throw std::runtime_error("Test failed serialize save/load");
+	if (0) {
+		// Check key save/restore (without saving to file)
+		string keypubA_serialized = keypubA.serialize_bin();
+		c_multikeys_pub keypubA_restored;
+		keypubA_restored.load_from_bin( keypubA_serialized );
+		_note("Serialize save/load test: serialized key to: " << to_debug(keypubA_serialized));
+		if (keypubA.get_hash() == keypubA_restored.get_hash()) {
+			_info("Seems to match");
+		} else throw std::runtime_error("Test failed serialize save/load");
+	}
 
 
 
@@ -1355,7 +1367,6 @@ void test_crypto() {
 			_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
 		}
 	}
-#endif
 
 	return ;
 
