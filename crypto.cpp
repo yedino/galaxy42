@@ -819,10 +819,11 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 // ==================================================================
 
 
-c_stream::c_stream()
+c_stream::c_stream(bool side_initiator)
 :
 	m_KCT( return_empty_K() ),
 	m_nonce_odd( 0 ),
+	m_side_initiator( side_initiator ),
 	m_boxer( nullptr ),
 	m_unboxer( nullptr )
 {
@@ -859,7 +860,7 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 	bool will_new_id)
 {
 	_note("EXCHANGE START");
-	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id );
+	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
 
 	sodiumpp::encoded_bytes nonce_zero =
 		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
@@ -908,9 +909,89 @@ t_crypto_system_type c_stream::get_system_type() const
 
 // ---------------------------------------------------------------------------
 
+
+
+
+// ---------------------------------------------------------------------------
+
+namespace ntru_cpp {
+
+/*
+NTRUCALL
+ntru_crypto_ntru_encrypt(
+    DRBG_HANDLE     drbg_handle,     //     in - handle for DRBG
+    uint16_t        pubkey_blob_len, //     in - no. of octets in public key blob
+    uint8_t const  *pubkey_blob,     //     in - pointer to public key
+    uint16_t        pt_len,          //     in - no. of octets in plaintext
+    uint8_t const  *pt,              //     in - pointer to plaintext
+    uint16_t       *ct_len,          // in/out - no. of octets in ct, addr for no. of octets in ciphertext
+    uint8_t        *ct);             //    out - address for ciphertext
+*/
+
+/***
+ * Encrypt plain text for given pubkey.
+ */
+std::string ntru_encrypt(const sodiumpp::locked_string plain, const std::string & pubkey) {
+	uint16_t cyphertext_size=0;
+
+	const auto & drbg = get_DRBG(128);
+
+	// first run just to get the size of output:
+	ntru_crypto_ntru_encrypt( drbg,
+		numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
+		numeric_cast<uint16_t>(plain.size()),  reinterpret_cast<const uint8_t*>(plain.c_str()),
+		&cyphertext_size, NULL	);
+	assert( (cyphertext_size!=0) || (plain.size()==0) );
+	assert( (cyphertext_size >= plain.size()) );
+
+	string ret( cyphertext_size , static_cast<char>(0) ); // allocate memory of the encrypted text
+	assert( ret.size() == cyphertext_size );
+	// actually encrypt now:
+	ntru_crypto_ntru_encrypt( drbg,
+		numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
+		numeric_cast<uint16_t>(plain.size()), reinterpret_cast<const uint8_t*>(plain.c_str()),
+		&cyphertext_size, reinterpret_cast<uint8_t*>(&ret[0])	);
+
+	return ret;
+}
+
+/*
+NTRUCALL
+ntru_crypto_ntru_decrypt(
+    uint16_t       privkey_blob_len, //     in - no. of octets in private key
+                                                 blob 
+    uint8_t const *privkey_blob,     //     in - pointer to private key 
+    uint16_t       ct_len,           //     in - no. of octets in ciphertext 
+    uint8_t const *ct,               //     in - pointer to ciphertext 
+    uint16_t      *pt_len,           // in/out - no. of octets in pt, addr for
+                                                 no. of octets in plaintext 
+    uint8_t       *pt);              //    out - address for plaintext 
+*/
+sodiumpp::locked_string ntru_decrypt(const string cyphertext, const sodiumpp::locked_string & PRVkey) {
+	uint16_t cleartext_len=0;
+	ntru_crypto_ntru_decrypt( 
+		numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
+		numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
+		&cleartext_len, NULL);
+	assert( (cleartext_len!=0) || (cyphertext.size()==0) );
+
+	sodiumpp::locked_string ret( cleartext_len );
+	assert( ret.size() == cleartext_len );
+	ntru_crypto_ntru_decrypt( 
+		numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
+		numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
+		&cleartext_len, reinterpret_cast<uint8_t*>(ret.buffer_writable()));
+
+	return ret;
+}
+
+} // namespace ntru_cpp
+
 c_crypto_system::t_symkey c_stream::calculate_KCT
-(const c_multikeys_PAIR & self, const c_multikeys_pub & them , bool will_new_id)
+(const c_multikeys_PAIR & self, const c_multikeys_pub & them , bool will_new_id
+, const std::string & packetstart )
 {
+	UNUSED(packetstart);
 	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
 	assert(self.m_PRV.get_count_of_systems() == them.get_count_of_systems());
 	// TODO assert self priv == them priv;
@@ -940,6 +1021,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		auto key_count_bigger = std::max( key_count_a , key_count_b );
 
 		if (key_count_bigger < 1) continue ; // !
+		if (!( (key_count_a>0) && (key_count_b>0) )) continue ; // !
 
 
 		if (should_count) m_cryptolists_count.at(sys) = 1; // count that we use this cryptosystem
@@ -984,7 +1066,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 
 
-		#if 1
+		#if 0
 		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
@@ -1002,21 +1084,21 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 				using namespace string_binary_op; // operator^
 
-				// I am initiator - so I create random passwords, and encrypt them for other side of stream
 				if (m_side_initiator) {
+					// I am initiator - so I create random passwords, and encrypt them for other side of stream
 					uint16_t ciphertext_len = 0;
 					// calculate ciphet text size
 					_dbg2("calculate ciphertext_len");
 					NTRU_exec_or_throw (
 						ntru_crypto_ntru_encrypt(get_DRBG(128),
-							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
+							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()), // encrypt to this pubkey
 							0, nullptr,
-							&ciphertext_len, nullptr)
+							&ciphertext_len, nullptr) // save result here0
 					); //NTRU_exec_or_throw
 					_dbg1("ciphertext_len = " << ciphertext_len);
 
-					sodiumpp::locked_string password_cleartext 
-						= sodiumpp::randombytes_locked(ciphertext_len)); // <--- generate password
+//					sodiumpp::locked_string password_cleartext 
+//						= sodiumpp::randombytes_locked(ciphertext_len)); // <--- generate password
 
 					m_ntru_kex_password.
 
@@ -1198,7 +1280,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 	// m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size)) // TODOdel or example
 	_note("Creating the crypto tunnel");
 
-	m_stream_crypto_ab = make_unique<c_stream>();
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
 	m_stream_crypto_final = nullptr;
 
 	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
@@ -1226,7 +1308,7 @@ void c_crypto_tunnel::create_IDe() {
 void c_crypto_tunnel::create_CTf(const c_multikeys_pub & IDe_them) {
 	UNUSED(IDe_them);
 	TODOCODE
-	m_stream_crypto_final = make_unique<c_stream>();
+	m_stream_crypto_final = make_unique<c_stream>(m_side_initiator);
 	// *PTR(m_IDe) , IDe_them);
 }
 
@@ -1317,8 +1399,8 @@ void test_crypto() {
 
 	// Alice: IDC
 	c_multikeys_PAIR keypairA;
-	keypairA.generate(e_crypto_system_type_X25519,3);
-	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,2);
+	keypairA.generate(e_crypto_system_type_X25519,0);
+	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -1352,7 +1434,7 @@ void test_crypto() {
 
 	// test seding messages in CT sessions
 
-	for (int ib=0; ib<2; ++ib) {
+	for (int ib=0; ib<1; ++ib) {
 		_note("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
