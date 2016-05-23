@@ -91,6 +91,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_json_load.hpp"
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
+#include "generate_config.hpp"
 
 
 #include "crypto.hpp" // for tests
@@ -1288,6 +1289,11 @@ int main(int argc, char **argv) {
 						   "*** this could overwrite your actual configurations ***")
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
+			("gen-lowest", "Generate lowest set of cryptographic keys:\n (1x 25519)")
+			("gen-fast", "Generate fast set of cryptographic keys:\n (1x 25519, 1x sidh)")
+			("gen-normal", "Generate normal set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
+			("gen-high", "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru, 1x geport)")
+			("gen-highest", "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru, 2x geport)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1342,6 +1348,32 @@ int main(int argc, char **argv) {
 				for(auto &ref : galaxyconf.get_peer_references()) {
 					myserver.add_peer(ref);
 				}
+			}
+
+
+			if(argm.count("gen-highest")) {
+				std::cout << "Generating highest cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::highest);
+				return 0;
+			} else if(argm.count("gen-high")) {
+				std::cout << "Generating high cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::high);
+				return 0;
+
+			} else if(argm.count("gen-normal")) {
+				std::cout << "Generating normal cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::normal);
+				return 0;
+
+			} else if(argm.count("gen-fast")) {
+				std::cout << "Generating fast cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::fast);
+				return 0;
+
+			} else if(argm.count("gen-lowest")) {
+				std::cout << "Generating lowest cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::lowest);
+				return 0;
 			}
 
 			_info("Configuring my own reference (keys):");
