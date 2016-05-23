@@ -458,6 +458,8 @@ class c_stream final /* because strange ctor init list functions */
 
 		bool m_nonce_odd; ///< is our key uneven (odd) as used in sodiumpp to decide nonce for us
 		// TODO lock it's memory before setting it!!!
+		
+		bool m_side_initiator; ///< am I initiator of the dialog (or respondent); This is usually copied from my CT usually
 
 		// Extra data created as result of KEX:
 		sodiumpp::locked_string m_ntru_kex_password; ///< our passwords: for asym-kex (e.g. NTru based)
@@ -471,7 +473,7 @@ class c_stream final /* because strange ctor init list functions */
 		unique_ptr< t_unboxer > m_unboxer;
 
 	public:
-		c_stream();
+		c_stream(bool side_initiator);
 
 		void exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			bool will_new_id);
@@ -488,7 +490,8 @@ class c_stream final /* because strange ctor init list functions */
 		virtual t_crypto_system_type get_system_type() const;
 
 	private:
-		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, bool will_new_id);
+		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them, 
+			bool will_new_id, const std::string & packetstart);
 
 		static sodiumpp::locked_string return_empty_K();
 
