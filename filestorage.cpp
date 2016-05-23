@@ -1,15 +1,19 @@
 #include "filestorage.hpp"
 
+overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
+{ }
+
 
 void filestorage::save_string(t_filestore file_type,
 							  const std::string &filename,
-							  const std::string &data) {
+							  const std::string &data,
+							  bool overwrite) {
 
 	if (filename == "") {
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_file_for_write(file_type, filename);
+	fs::path file_with_path = prepare_file_for_write(file_type, filename, overwrite);
 	fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
 
 	if (file.is_open()) {
@@ -22,13 +26,14 @@ void filestorage::save_string(t_filestore file_type,
 
 void filestorage::save_string_mlocked(t_filestore file_type,
 									  const std::string &filename,
-									  const sodiumpp::locked_string &locked_data) {
+									  const sodiumpp::locked_string &locked_data,
+									  bool overwrite) {
 
 	if (filename == "") {
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_file_for_write(file_type, filename);
+	fs::path file_with_path = prepare_file_for_write(file_type, filename, overwrite);
 	FILE *f_ptr;
 
 	f_ptr = std::fopen(file_with_path.c_str(), "w");
@@ -115,11 +120,20 @@ bool filestorage::remove(const std::string &p) {
 }
 
 fs::path filestorage::prepare_file_for_write(t_filestore file_type,
-											 const std::string &filename) {
+											 const std::string &filename,
+											 bool overwrite) {
 	fs::path file_with_path;
 	try {
+
 		// creating directory tree if necessary
 		file_with_path = create_path_for(file_type, filename);
+
+		// prevent overwriting
+		if(is_file_ok(file_with_path.native()) &&  !overwrite) {
+			std::string err_msg(file_with_path.native() + ": file existing, it can't be overwrite [overwrite="s
+								+ std::to_string(overwrite) + "]"s);
+			throw overwrite_error(err_msg);
+		}
 
 		// In code below we want to create an empty file which will help us to open and write down it without any errors
 		boost::filesystem::ofstream empty_file;
