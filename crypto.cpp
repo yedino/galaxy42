@@ -631,7 +631,7 @@ void c_multikeys_PAIR::generate() {
 	_info("generate NTRU");
 	generate( e_crypto_system_type_NTRU_EES439EP1 , 1 );
 	_info("generate SIDH");
-	generate( e_crypto_system_type_SIDH , 0 );
+	generate( e_crypto_system_type_SIDH , 1 );
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
@@ -1183,14 +1183,27 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				string key_them_pub_a = key_them_pub.substr(0, key_them_pub.size()/2);
 				string key_them_pub_b = key_them_pub.substr(key_self_pub.size()/2);
 				assert( key_self_pub.size() == key_them_pub.size());
+				assert(key_them_pub == key_them_pub_a + key_them_pub_b);
 
 				sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
 				sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
+
 				// this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
-				std::copy_n(key_self_PRV.begin(), key_self_PRV_a.size(), key_self_PRV_a.begin());
+				assert(key_self_PRV.size() == key_self_PRV_a.size() + key_self_PRV_b.size());
+				std::copy_n(key_self_PRV.begin(), key_self_PRV.size()/2, key_self_PRV_a.begin());
 				auto pos_iterator = key_self_PRV.begin() + (key_self_PRV_b.size() / 2);
 				std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
-
+				/*size_t i = 0;
+				for (; i <  key_self_PRV_a.size(); ++i) {
+					key_self_PRV_a[i] = key_self_PRV[i];
+				}
+				for (size_t j = 0; j < key_self_PRV_b.size(); ++j) {
+					key_self_PRV_b[j] = key_self_PRV[i];
+					++i;
+				}*/
+				_dbg1("SIDH prv " << to_debug_locked(key_self_PRV));
+				_dbg1("prv a " << to_debug_locked(key_self_PRV_a));
+				_dbg1("prv b " << to_debug_locked(key_self_PRV_b));
 
 				// TODO(rob) make this size-calculations more explained; are they correctd?
 				// XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal
@@ -1202,6 +1215,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				// TODO move this to class or make global variable
 				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+				status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
+				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SIDH_curve_initialize error");
 
 				_info("SIDH A: prv: " << to_debug_locked(key_self_PRV_a));
 				_info("SIDH B: pub: " << to_debug(key_them_pub_b));
@@ -1212,7 +1227,6 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					reinterpret_cast<unsigned char *>(shared_secret_a.buffer_writable()),
 					curveIsogeny);
 				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
-				_note(shared_secret_a.get_string());
 
 				status = SecretAgreement_B(
 					reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
@@ -1223,6 +1237,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 				_info("SIDH agreed secret A: " << to_debug_locked( shared_secret_a )  );
 				_info("SIDH agreed secret B: " << to_debug_locked( shared_secret_b )  );
+				std::cout << endl;
 
 				using namespace string_binary_op; // operator^
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
@@ -1401,6 +1416,7 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate(e_crypto_system_type_X25519,0);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
+	keypairA.generate(e_crypto_system_type_SIDH, 1);
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -1415,6 +1431,7 @@ void test_crypto() {
 	c_multikeys_PAIR keypairB;
 	keypairB.generate(e_crypto_system_type_X25519,3);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,3);
+	keypairB.generate(e_crypto_system_type_SIDH, 1);
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
