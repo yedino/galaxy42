@@ -136,6 +136,9 @@ class generator {
 		template <typename T>
 		void push_vector_object(const vector<T> & data); ///< Save vector<T>
 
+		template <typename TKey, typename TVal>
+		void push_map_object(const map<TKey,TVal> & data); ///< Save this map
+
 		/**
 		 * @brief Saves object T, also used by e.g. push_vector_object.
 		 * @note If you will use this API then you must provide special function,
@@ -223,6 +226,15 @@ template <typename T> void generator::push_vector_object(const vector<T> & data)
 	//	assert( size <= ) ); // TODO
 	push_integer_uvarint( data.size() );
 	for (decltype(size) i = 0; i<size; ++i) push_object(data.at(i));
+}
+
+template <typename TKey, typename TVal>
+void generator::push_map_object(const map<TKey,TVal> & data) {
+	push_integer_uvarint( data.size() );
+	for(const auto & it : data) {
+		push_object(it->first);
+		push_object(it->second);
+	}
 }
 
 /**
@@ -350,6 +362,10 @@ class parser {
 		template <typename T>
 		vector<T> pop_vector_object(); ///< Decode vector<T> saved with push_vector_object<T>
 
+		template <typename TKey, typename TVal>
+		map<TKey,TVal> pop_map_object(); ///< Decode data saved with matchig push_map_object
+
+
 		/**
 		 * @brief Loads object T, also used by e.g. pop_vector_object.
 		 * @note If you will use this API then you must provide special function,
@@ -376,8 +392,27 @@ vector<T> parser::pop_vector_object() {
 	// assert( size <= (1LLU << 64LLU) ); // TODO
 	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_object<T>() );
 	return ret;
-
 }
+
+template <typename TKey, typename TVal>
+map<TKey,TVal> parser::pop_map_object() {
+	map<TKey,TVal> ret;
+	auto size = pop_integer_uvarint(); // TODO const
+	// assert( size <= (1LLU << 64LLU) ); // TODO
+	for (decltype(size) i = 0; i<size; ++i) {
+		TKey key = pop_object<TKey>();
+		TVal value = pop_object<TVal>();
+
+		auto size_old = ret.size();
+		auto found = ret.find(key);
+		if (found != ret.end()) throw format_error_read_badformat(); // there was already such key
+		ret.at(key) = value;
+		if (ret.size() != size_old+1) throw format_error_read_badformat(); // the insert failed apparently
+	}
+	if (ret.size() != size) throw format_error_read_badformat(); // the resulting size somehow was different then expected
+	return ret;
+}
+
 
 template <int S, typename T> T parser::pop_integer_u() {
 	static_assert( std::is_unsigned<T>() , "This function saves only unsigned types, pass it unsigned or use other function.");

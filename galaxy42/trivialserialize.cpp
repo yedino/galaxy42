@@ -187,9 +187,21 @@ struct c_tank {
 	int speed;
 	string name;
 };
-std::ofstream& operator<<(std::ofstream& out, const c_tank & t) {
+std::ostream& operator<<(std::ostream& out, const c_tank & t) {
 	out << "[" << t.ammo << ' ' << t.speed << ' ' << t.name << "]";
 	return out;
+}
+bool operator==(const c_tank & aaa, const c_tank & bbb) {
+	return (aaa.ammo == bbb.ammo) && (aaa.speed == bbb.speed) && (aaa.name == bbb.name);
+}
+bool operator>(const c_tank & aaa, const c_tank & bbb) {
+	if (aaa.ammo > bbb.ammo) return 1;
+	if (aaa.ammo < bbb.ammo) return 0;
+	if (aaa.speed > bbb.speed) return 1;
+	if (aaa.speed < bbb.speed) return 0;
+	if (aaa.name > bbb.name) return 1;
+	if (aaa.name < bbb.name) return 0;
+	return 0; // the same
 }
 
 vector<c_tank> get_example_tanks() {
@@ -275,6 +287,8 @@ void test_trivialserialize() {
 	cout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
 
 	// ==============================================
+	// ==============================================
+
 	const string input = gen.str();
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , input );
 
@@ -324,10 +338,11 @@ void test_trivialserialize() {
 	}
 
 	auto tank = parser.pop_vector_object<c_tank>();
-	// TODO
-	// for(auto & t : tank) _info(t);
 
-	// if ( tank == get_example_tanks()) {	}
+	for(auto & t : tank) _info(t);
+
+	if ( tank == get_example_tanks()) {	_info("Container deserialized correctly"); }
+	else throw std::runtime_error("Deserialization failed");
 
 }
 
