@@ -1007,6 +1007,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 	for (size_t p=0; p<KCT_accum.size(); ++p) KCT_accum[p] = static_cast<unsigned char>(0);
 	// TODO(rob): we could make locked_string(size_t, char) constructor and use it
 
+	map< char , vector<string> > kexasym; // passwords that I now generated for kexaasym
+
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
 		// for given crypto system:
 
@@ -1065,8 +1067,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		} // X25519
 
 
-
-		#if 1
+		#if 0
 		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
