@@ -874,6 +874,7 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 {
 	_note("EXCHANGE START");
 	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
+	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
 
@@ -882,6 +883,7 @@ void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikey
 {
 	_note("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
 	m_KCT = calculate_KCT( ID_self , ID_them, false, packetstart );
+	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
 
@@ -1474,7 +1476,7 @@ void test_crypto() {
 
 	// test seding messages in CT sessions
 
-	for (int ib=0; ib<1; ++ib) {
+	for (int ib=0; ib<2; ++ib) {
 		_mark("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
@@ -1489,46 +1491,39 @@ void test_crypto() {
 
 		_mark("Prepared tunnels (KCTab)");
 
+		_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
+			"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
+		for (int ia=0; ia<2; ++ia) {
+			_dbg2("Alice will box:");
+			auto msg1s = AliceCT.box_ab("Hello");
+			auto msg1r = BobCT.unbox_ab(msg1s);
+			_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
+
+			auto msg2s = BobCT.box_ab("Hello");
+			auto msg2r = AliceCT.unbox_ab(msg2s);
+			_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
+		}
+	}
+
 		return; // !!!
 
-		c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
-		c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
+	//	c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
+	//	c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
 
 
-/* for NTru:
-	// Create CT (e.g. CTE?) - that has KCT
-	std::vector<std::string> empty_vactor;
-	_note("Alice CT:");
-	c_crypto_tunnel AliceCT(keypairA, keypubB, empty_vactor);
-	_note("Bob CT:");
-	c_crypto_tunnel BobCT  (keypairB, keypubA, AliceCT.get_encrypt_ntru_rand());
-	_mark("Prepared tunnels (KCTab)");
-*/
 
 
+/*
 		_mark("Preparing for ephemeral KEX:");
 		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
 		_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
 
 		AliceCT.create_CTf( keypairB_IDe_pub );
 		BobCT  .create_CTf( keypairA_IDe_pub );
-
+*/
 
 		// generate ephemeral keys
 
-		_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
-			"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
-		for (int ia=0; ia<5; ++ia) {
-			_dbg2("Alice will box:");
-			auto msg1s = AliceCT.box("Hello");
-			auto msg1r = BobCT.unbox(msg1s);
-			_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
-
-			auto msg2s = BobCT.box("Hello");
-			auto msg2r = AliceCT.unbox(msg2s);
-			_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
-		}
-	}
 
 	return ;
 
