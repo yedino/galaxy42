@@ -324,6 +324,23 @@ void test_trivialserialize() {
 	gen.push_map_object( get_example_tanks_map_location() );
 	gen.push_map_object( get_example_tanks_map_captain() );
 
+
+	{
+	std::map<std::string, std::string> input;
+	input["aaa"] = "bbb";
+	input["111"] = "2222222222222222222";
+	input["0"] = "zzzzzzzzz";
+	input["asdfas"] = "5567";
+	input[";"] = "...";
+	input[",./234"] = ";433334;43;34;34;2<>;";
+	input["           "] = "htfthfft";
+	input[R"(		  		)"] = "xyz";
+	input["%"] = std::string();
+	input[std::string()] = std::string();
+	input[std::string(259, 'x')] = std::string(259, 'x');
+	gen.push_map_object(input);
+	}
+
 	// ==============================================
 
 	cout << "Serialized: [" << gen.str() << "]" << endl;
@@ -396,6 +413,10 @@ void test_trivialserialize() {
 	if ( tanks_captain == get_example_tanks_map_captain()) {	_info("Container deserialized correctly"); }
 		else throw std::runtime_error("Deserialization failed");
 	_info("Map tank: " << tanks_captain);
+
+	auto output = parser.pop_map_object<std::string, std::string>();
+	_info("Output: " << output);
+
 
 }
 
