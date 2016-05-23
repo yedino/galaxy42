@@ -396,17 +396,25 @@ vector<T> parser::pop_vector_object() {
 
 template <typename TKey, typename TVal>
 map<TKey,TVal> parser::pop_map_object() {
+	bool dbg=0;
+	if (dbg) _dbg1("Reading map");
+
 	map<TKey,TVal> ret;
 	auto size = pop_integer_uvarint(); // TODO const
+	if (dbg) _dbg1("Reading map size="<<size);
 	// assert( size <= (1LLU << 64LLU) ); // TODO
 	for (decltype(size) i = 0; i<size; ++i) {
+		if (dbg) _dbg1("Reading i=" << i);
 		TKey key = pop_object<TKey>();
+		if (dbg) _dbg1("Key =" << key);
 		TVal value = pop_object<TVal>();
+		if (dbg) _dbg1("Value =" << value);
 
 		auto size_old = ret.size();
 		auto found = ret.find(key);
 		if (found != ret.end()) throw format_error_read_badformat(); // there was already such key
-		ret.at(key) = value;
+		if (dbg) _dbg1("Inserting");
+		ret.emplace(std::move(key), std::move(value));
 		if (ret.size() != size_old+1) throw format_error_read_badformat(); // the insert failed apparently
 	}
 	if (ret.size() != size) throw format_error_read_badformat(); // the resulting size somehow was different then expected
