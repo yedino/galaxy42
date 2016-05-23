@@ -810,7 +810,7 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 	 const c_crypto_system::t_PRVkey & PRVkey)
 {
 	m_pub.add_public(crypto_type, pubkey);
-	_info("Adding PRIVATE KEY: " << to_debug_locked(PRVkey));
+	_info("Adding PRIVATE KEY: (" << t_crypto_system_type_to_name(crypto_type) << ") " << to_debug_locked(PRVkey));
 	m_PRV.add_PRIVATE(crypto_type, PRVkey);
 	//_note("ADD PRIVATE KEY: RESULT IS: " << to_debug(m_PRV.serialize_bin()));
 }
@@ -1406,17 +1406,19 @@ void test_string_lock() {
 //	return;
 }
 
+// ##################################################################
+// ##################################################################
 void test_crypto() {
 
 	test_string_lock();
 
-	_mark("Create IDC");
 
 	// Alice: IDC
+	_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
 	keypairA.generate(e_crypto_system_type_X25519,0);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairA.generate(e_crypto_system_type_SIDH, 1);
+	keypairA.generate(e_crypto_system_type_SIDH, 0);
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -1428,10 +1430,11 @@ void test_crypto() {
 	}
 
 	// Bob: IDC
+	_mark("Create IDC for BOB");
 	c_multikeys_PAIR keypairB;
-	keypairB.generate(e_crypto_system_type_X25519,3);
-	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,3);
-	keypairB.generate(e_crypto_system_type_SIDH, 1);
+	keypairB.generate(e_crypto_system_type_X25519,0);
+	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
+	keypairB.generate(e_crypto_system_type_SIDH, 0);
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
