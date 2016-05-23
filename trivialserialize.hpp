@@ -212,6 +212,13 @@ template <typename T> T obj_deserialize(trivialserialize::parser & parser) {
  */
 template <> void obj_serialize(const std::string & data, trivialserialize::generator & gen);
 template <> std::string obj_deserialize<std::string>(trivialserialize::parser & parser);
+
+template <> void obj_serialize(const char & data, trivialserialize::generator & gen);
+template <> char obj_deserialize<char>(trivialserialize::parser & parser);
+
+template <> void obj_serialize(const std::vector<string> & data, trivialserialize::generator & gen);
+template <> std::vector<std::string> obj_deserialize<std::vector<string>>(trivialserialize::parser & parser);
+
 /// @} //  trivialserialize_serializefreefunctions_standardtypes
 
 /// @} //  trivialserialize_serializefreefunctions
@@ -406,9 +413,7 @@ map<TKey,TVal> parser::pop_map_object() {
 	for (decltype(size) i = 0; i<size; ++i) {
 		if (dbg) _dbg1("Reading i=" << i);
 		TKey key = pop_object<TKey>();
-		if (dbg) _dbg1("Key =" << key);
 		TVal value = pop_object<TVal>();
-		if (dbg) _dbg1("Value =" << value);
 
 		auto size_old = ret.size();
 		auto found = ret.find(key);

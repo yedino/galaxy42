@@ -178,6 +178,17 @@ template<> std::string obj_deserialize<std::string>(trivialserialize::parser & p
 	return ret;
 }
 
+template <> void obj_serialize(const char & data, trivialserialize::generator & gen) {	gen.push_byte_u(data); }
+template <> char obj_deserialize<char>(trivialserialize::parser & parser) {	return parser.pop_byte_u(); }
+
+
+template <> void obj_serialize(const std::vector<string> & data, trivialserialize::generator & gen) {
+	gen.push_vector_object(data);
+}
+template <> std::vector<std::string> obj_deserialize<std::vector<string>>(trivialserialize::parser & parser) {
+	return parser.pop_vector_object<string>();
+}
+
 
 // ==================================================================
 
