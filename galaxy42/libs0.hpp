@@ -51,6 +51,8 @@ using std::istringstream;
 
 using std::endl;
 
+using boost::numeric_cast;
+
 #define UNUSED(expr) do { (void)(expr); } while (0)
 #define SVAR(x) #x << " = " << x
 

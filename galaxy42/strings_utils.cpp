@@ -160,7 +160,7 @@ void string_as_dbg::print(std::ostream & os, char v)
 	if (uc<32) { widthH=2; widthD=2; }
 	if (uc>127) { widthH=2; widthD=3; }
 	if (widthH!=-1) { // escape it
-		os << 'x' << std::hex << std::setfill('0') << std::setw(widthH) << static_cast<int>(uc)
+		os << 'x' << std::hex << std::setfill('0') << std::setw(widthH) << std::uppercase << static_cast<int>(uc)
 		   << '=' << std::dec << std::setfill('0') << std::setw(widthD) << static_cast<int>(uc);
 	}
 	else os<<v; // normal
