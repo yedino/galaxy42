@@ -835,6 +835,8 @@ c_stream::c_stream(bool side_initiator)
 	m_KCT( return_empty_K() ),
 	m_nonce_odd( 0 ),
 	m_side_initiator( side_initiator ),
+	m_packetstart_kexasym(""),
+	m_cryptolists_count(),
 	m_boxer( nullptr ),
 	m_unboxer( nullptr )
 {
@@ -872,32 +874,38 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 {
 	_note("EXCHANGE START");
 	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
-
-	sodiumpp::encoded_bytes nonce_zero =
-		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
-	;
-
-	m_boxer   = make_unique<t_boxer>  ( sodiumpp::boxer_base::boxer_type_shared_key(),   m_nonce_odd, m_KCT, nonce_zero );
-	m_unboxer = make_unique<t_unboxer>( sodiumpp::boxer_base::boxer_type_shared_key(), ! m_nonce_odd, m_KCT, nonce_zero );
-
-	_note("EXCHANGE start:: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
-		<< " and m_KCT=" << to_debug_locked( m_KCT )
-		);
-	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(PTR(m_boxer)  ->get_nonce().get().to_binary()));
-	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(PTR(m_unboxer)->get_nonce().get().to_binary()));
-
-	assert(m_boxer); assert(m_unboxer);
+	create_boxer_with_K();
 }
 
 void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart)
 {
-	UNUSED(ID_self); UNUSED(ID_them); UNUSED(packetstart);
-	TODOCODE;
+	_note("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
+	m_KCT = calculate_KCT( ID_self , ID_them, false, packetstart );
+	create_boxer_with_K();
+}
+
+void c_stream::create_boxer_with_K() {
+	_note("Got stream K = " << to_debug_locked(m_KCT));
+	sodiumpp::encoded_bytes nonce_zero =
+		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
+	;
+	m_boxer   = make_unique<t_boxer>  ( sodiumpp::boxer_base::boxer_type_shared_key(),   m_nonce_odd, m_KCT, nonce_zero );
+	m_unboxer = make_unique<t_unboxer>( sodiumpp::boxer_base::boxer_type_shared_key(), ! m_nonce_odd, m_KCT, nonce_zero );
+	_note("EXCHANGE start:: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
+		<< " and m_KCT=" << to_debug_locked( m_KCT )
+		);
+	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(PTR(m_boxer)  ->get_nonce().get().to_binary()));
+	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(PTR(m_unboxer)->get_nonce().get().to_binary()));
+	assert(m_boxer); assert(m_unboxer);
+}
+
+std::string c_stream::get_packetstart() const {
+	return m_packetstart_kexasym;
 }
 
 unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
-	unique_ptr<c_multikeys_PAIR> IDe = make_unique< c_multikeys_PAIR >(); 
+	unique_ptr<c_multikeys_PAIR> IDe = make_unique< c_multikeys_PAIR >();
 	IDe -> generate( m_cryptolists_count , will_asymkex );
 	return std::move(IDe);
 }
@@ -1009,6 +1017,24 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 	assert(self.m_PRV.get_count_of_systems() == self.m_pub.get_count_of_systems());
 	// TODO priv self == pub self
 
+	typedef map< char , vector<string> > t_kexasym; // map for kexasym passwords grouped by crypto system
+
+	t_kexasym kexasym_passencr_tosend; // passwords that I now generated for kexasym, encrypted to Bob
+		// it will hold e.g. 't' => "ntrupassfoooo","ntrupassbr",   'r'=>"rsapass1",...   etc
+	t_kexasym kexasym_passencr_received; // as above, but the ones I received from initiator
+
+	if (m_side_initiator) {
+		if (packetstart.size()) throw std::invalid_argument("Invalid use of CT: initiator mode, but not-empty packetstarter");
+	}
+	else {
+		// I am respondent
+		if (! packetstart.size()) throw std::invalid_argument("Invalid use of CT: not-initiator mode, but empty packetstarter");
+
+		trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart );
+
+		kexasym_passencr_received = parser.pop_map_object<t_kexasym::key_type , t_kexasym::mapped_type>();
+	}
+
 	bool should_count = will_new_id;
 
 	if (should_count) for (auto & count : m_cryptolists_count) count=0;
@@ -1018,24 +1044,24 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 	for (size_t p=0; p<KCT_accum.size(); ++p) KCT_accum[p] = static_cast<unsigned char>(0);
 	// TODO(rob): we could make locked_string(size_t, char) constructor and use it
 
-	map< char , vector<string> > kexasym; // passwords that I now generated for kexaasym
+	const c_multikeys_pub  & self_pub = self.m_pub ; // my    pub keys - all of this sys
+	const c_multikeys_PRV & self_PRV = self.m_PRV; // my    PRV keys - all of this sys
+	const c_multikeys_pub  & them_pub = them       ; // their pub keys - all of this sys
 
 	for (size_t sys=0; sys<self.m_pub.get_count_of_systems(); ++sys) { // all key crypto systems
 		// for given crypto system:
 
-		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
+		auto sys_enum = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto system
 
-		const c_multikeys_pub  & self_pub = self.m_pub ; // my    pub keys - all of this sys
-		const c_multikeys_PRV & self_PRV = self.m_PRV; // my    PRV keys - all of this sys
-		const c_multikeys_pub  & them_pub = them       ; // their pub keys - all of this sys
-
-		auto key_count_a = self_pub.get_count_keys_in_system(sys_id);
-		auto key_count_b = them_pub.get_count_keys_in_system(sys_id);
+		auto key_count_a = self_pub.get_count_keys_in_system(sys_enum);
+		auto key_count_b = them_pub.get_count_keys_in_system(sys_enum);
 		auto key_count_bigger = std::max( key_count_a , key_count_b );
 
 		if (key_count_bigger < 1) continue ; // !
 		if (!( (key_count_a>0) && (key_count_b>0) )) continue ; // !
 
+		auto sys_id = t_crypto_system_type_to_ID(sys_enum); // ID (e.g. char) of this crypto system
+		_info("sys_id=" << sys_id);
 
 		if (should_count) m_cryptolists_count.at(sys) = 1; // count that we use this cryptosystem
 
@@ -1049,9 +1075,9 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				auto keynr_b = keynr_i % key_count_b;
 				_info("kex " << keynr_a << " " << keynr_b);
 
-				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
-				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+				auto const key_A_pub = self_pub.get_public (sys_enum, keynr_a);
+				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
+				auto const key_B_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
 
 				_note("Keys:");
 				_info(to_debug_locked_maybe(key_A_pub));
@@ -1078,80 +1104,65 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		} // X25519
 
 
-		#if 0
+		#if 1
 		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
-			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys_enum)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
+				auto pass_nr = keynr_i;
+
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
 				auto keynr_a = keynr_i % key_count_a;
 				auto keynr_b = keynr_i % key_count_b;
 				_info("kex " << keynr_a << " " << keynr_b);
 
-				auto const key_A_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
-				auto const key_B_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+				auto const key_A_pub = self_pub.get_public (sys_enum, keynr_a);
+				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
+				auto const key_B_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
 
 				using namespace string_binary_op; // operator^
 
 				if (m_side_initiator) {
 					// I am initiator - so I create random passwords, and encrypt them for other side of stream
-
 					const uint16_t random_len = 65; // because this much fits in this NTRU NTRU_EES439EP1
-
 					sodiumpp::locked_string password_cleartext
-						= sodiumpp::randombytes_locked(ciphertext_len); // <--- generate password
+						= sodiumpp::randombytes_locked(random_len); // <--- generate password
 
-					_dbg1( to_debug_locked("NTru password GENERATED: " << password_cleartext) );
-
+					// encrypt
+					_dbg1("NTru password GENERATED: " << to_debug_locked(password_cleartext));
 					_dbg2("NTru to pubkey " << to_debug(key_B_pub));
-					sodiumpp::locked_string password_encrypted = ntru_cpp::ntru_encrypt(password_cleartext, key_B_pub);
-					_dbg1("random data encrypted as: " << to_debug_locked(password_encrypted));
+					string password_encrypted = ntru_cpp::ntru_encrypt(password_cleartext, key_B_pub);
+					_dbg1("random data encrypted as: " << to_debug(password_encrypted));
 
-					m_ke.push_back(encrypted_rand_data);
+					kexasym_passencr_tosend[sys_id].push_back(password_encrypted); // store encrypted to send to Bob
 
+					// calculate K so we know it too, before we throw away plaintext of passwords
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 					Hash1_PRV(
-						Hash1_PRV( m_ntru_kex_password )
+						Hash1_PRV( password_cleartext )
 						^	Hash1( key_A_pub )
 						^ Hash1( key_B_pub )
 					);
-					_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+					_info("k_dh_agreed = " << t_crypto_system_type_to_name(sys_enum) << ": " << to_debug_locked(k_dh_agreed) );
 
 					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 				}
-				// them encrypt rand data to me
-				else {
-					//rc = ntru_crypto_ntru_decrypt(private_key_len, private_key, ciphertext_len,
-					//ciphertext, &plaintext_len, NULL);
-					uint16_t plaintext_len = 0;
-					std::string ciphertext = ntru_rand_encrypt_to_me.front();
-					ntru_rand_encrypt_to_me.erase(ntru_rand_encrypt_to_me.begin());
-					// calculate plaintext size
-					/*NTRU_exec_or_throw (
-						ntru_crypto_ntru_decrypt(key_A_PRV.size(), reinterpret_cast<const uint8_t *>(key_A_PRV.data()),
-							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
-							&plaintext_len, nullptr)
-					);*/
-					plaintext_len = m_ntru_kex_password.size();
-					sodiumpp::locked_string decrypted_rand(plaintext_len);
-					_dbg1("plaintext len = " << plaintext_len);
-					// decrypt
-					NTRU_exec_or_throw (
-						ntru_crypto_ntru_decrypt(key_A_PRV.size(), reinterpret_cast<const uint8_t *>(key_A_PRV.data()),
-							ciphertext.size(), reinterpret_cast<const uint8_t *>(&ciphertext[0]),
-							&plaintext_len, reinterpret_cast<uint8_t *>(&decrypted_rand[0]))
-					);
+				else { // they encrypted rand data to me, I need to decrypt:
+					string & encrypted = kexasym_passencr_received.at(sys_id).at(pass_nr);
+					_info("Opening NTru KEX: from encrypted=" << to_debug(encrypted));
+					sodiumpp::locked_string decrypted = ntru_cpp::ntru_decrypt(encrypted, key_A_PRV);
+					_info("Opening NTru KEX: from decrypted=" << to_debug_locked(decrypted));
+
 					// TODO double code
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 					Hash1_PRV(
-						Hash1_PRV( decrypted_rand )
+						Hash1_PRV( decrypted )
 						^	Hash1( key_A_pub )
 						^ Hash1( key_B_pub )
 					);
-					_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+					_info("k_dh_agreed = " << t_crypto_system_type_to_name(sys_enum) << ": " << to_debug_locked(k_dh_agreed) );
 
 					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 
@@ -1170,9 +1181,9 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				auto keynr_a = keynr_i % key_count_a;
 				auto keynr_b = keynr_i % key_count_b;
 				_info("kex " << keynr_a << " " << keynr_b);
-				auto const key_self_pub = self_pub.get_public (sys_id, keynr_a);
-				auto const key_self_PRV = self_PRV.get_PRIVATE(sys_id, keynr_a);
-				auto const key_them_pub = them_pub.get_public (sys_id, keynr_b); // number b!
+				auto const key_self_pub = self_pub.get_public (sys_enum, keynr_a);
+				auto const key_self_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
+				auto const key_them_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
 
 				//string key_self_pub_a = key_self_pub.substr(0, key_self_pub.size()/2);
 				//string key_self_pub_b = key_self_pub.substr(key_self_pub.size()/2);
@@ -1257,11 +1268,26 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 	locked_string KCT_ready = substr( KCT_ready_full , crypto_secretbox_KEYBYTES); // narrow it to length of symmetrical key
 
+	trivialserialize::generator gen(1000);
+	gen.push_map_object( kexasym_passencr_tosend );
+	m_packetstart_kexasym = gen.str();
+	_note("KCT created packetstart: " << to_debug(m_packetstart_kexasym) );
+
 	_note("KCT ready exchanged: " << to_debug_locked( KCT_ready ) );
 	return KCT_ready;
 } // calculate_KCT
 
+// ------------------------------------------------------------------
 
+
+std::string c_crypto_tunnel::get_packetstart_ab() const {
+	return PTR(m_stream_crypto_ab)->get_packetstart();
+
+}
+
+std::string c_crypto_tunnel::get_packetstart_final() const {
+	return PTR(m_stream_crypto_final)->get_packetstart();
+}
 
 // ==================================================================
 
@@ -1292,10 +1318,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 	_note("Creating the crypto tunnel");
 
 	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
-	m_stream_crypto_final = nullptr;
-
 	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
-	create_IDe();
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
@@ -1303,6 +1326,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 	: m_side_initiator(false),
 	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
 {
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
 	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart );
 }
 
@@ -1312,7 +1336,7 @@ void c_crypto_tunnel::create_IDe() {
 	_mark("Creating IDe");
 	//m_IDe = make_unique<c_multikeys_PAIR>();
 	//m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
-	m_IDe = PTR( m_stream_crypto_ab )->create_IDe( m_side_initiator==true  );
+	m_IDe = PTR( m_stream_crypto_ab )->create_IDe( m_side_initiator );
 	_mark("Creating IDe - DONE");
 }
 
@@ -1451,14 +1475,21 @@ void test_crypto() {
 	// test seding messages in CT sessions
 
 	for (int ib=0; ib<1; ++ib) {
-		_note("Starting new conversation (new CT) - number " << ib);
+		_mark("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
 		_note("Alice CT:");
 		c_crypto_tunnel AliceCT(keypairA, keypubB); // proto!
+		string packetstart = AliceCT.get_packetstart_ab();
+
+		_info("Packet sent to Bob: " << to_debug(packetstart));
+
 		_note("Bob CT:");
-		c_crypto_tunnel BobCT  (keypairB, keypubA); // proto!
+		c_crypto_tunnel BobCT  (keypairB, keypubA, packetstart); // proto!
+
 		_mark("Prepared tunnels (KCTab)");
+
+		return; // !!!
 
 		c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
 		c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
@@ -1474,7 +1505,6 @@ void test_crypto() {
 	_mark("Prepared tunnels (KCTab)");
 */
 
-		return; // !!!
 
 		_mark("Preparing for ephemeral KEX:");
 		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );

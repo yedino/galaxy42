@@ -486,6 +486,8 @@ class c_stream final /* because strange ctor init list functions */
 		void exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart);
 
+		string get_packetstart() const;
+
 		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
 		std::string exchange_start_get_packet() const;
 
@@ -497,6 +499,8 @@ class c_stream final /* because strange ctor init list functions */
 	private:
 		t_symkey calculate_KCT(const c_multikeys_PAIR & self,  const c_multikeys_pub & them,
 			bool will_new_id, const std::string & packetstart);
+
+		void create_boxer_with_K(); ///< create m_boxer, m_unboxer etc, call this when we have m_KCT set
 
 		static sodiumpp::locked_string return_empty_K();
 
@@ -530,6 +534,9 @@ class c_crypto_tunnel final {
 		void create_CTf(const c_multikeys_pub & IDC_ID_them);
 
 		c_multikeys_PAIR & get_IDe(); ///< get our m_IDe needed to create KCTf
+
+		std::string get_packetstart_ab() const;
+		std::string get_packetstart_final() const;
 
 		std::string box_ab(const std::string & msg);
 		std::string unbox_ab(const std::string & msg);
