@@ -153,14 +153,14 @@ void string_as_dbg::print(std::ostream & os, char v)
 	signed char widthH=-1; // -1 is normal print, otherwise the width of hex
 	signed char widthD; // width of dec
 	if (uc<=9) {
-		os << ' ' << static_cast<int>(uc) << ' ';
+		os << "0x" << static_cast<int>(uc);
 	}
 	else
 	{
 	if (uc<32) { widthH=2; widthD=2; }
 	if (uc>127) { widthH=2; widthD=3; }
 	if (widthH!=-1) { // escape it
-		os << 'x' << std::hex << std::setfill('0') << std::setw(widthH) << std::uppercase << static_cast<int>(uc)
+		os << "0x" << std::hex << std::setfill('0') << std::setw(widthH) << std::uppercase << static_cast<int>(uc)
 		   << '=' << std::dec << std::setfill('0') << std::setw(widthD) << static_cast<int>(uc);
 	}
 	else os<<v; // normal
