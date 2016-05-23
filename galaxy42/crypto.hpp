@@ -349,7 +349,7 @@ class c_multikeys_general : public c_crypto_system {
 		*/
 		virtual void load_from_bin(const std::string & data);
 
-		void datastore_save(const string  & fname) const; ///< Save this data to a file.
+		void datastore_save(const string  & fname, bool overwrite = false) const; ///< Save this data to a file.
 		void datastore_load(const string  & fname); ///< Replace all current data with data datastore_loaded from this file.
 		void clear(); ///< Delete all current data.
 		/// @}

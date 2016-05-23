@@ -7,6 +7,7 @@
 #include "trivialserialize.hpp"
 
 #include "filestorage.hpp"
+#include "text_ui.hpp"
 
 #include "glue_lockedstring_trivialserialize.hpp"
 
@@ -457,7 +458,8 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::datastore_save(const string  & fname) const {
+void c_multikeys_general<TKey>::datastore_save(const string  & fname, bool overwrite) const {
+try {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
 	_note("Savin key to fname="<<fname);
 
@@ -467,18 +469,27 @@ void c_multikeys_general<TKey>::datastore_save(const string  & fname) const {
 	switch(m_type_secop) {
 		case e_key_type_secop_open: {
 			_note("Save this as public key");
-			filestorage::save_string(e_filestore_galaxy_ipkeys_pub, fname, serialized_data);
+			filestorage::save_string(e_filestore_galaxy_ipkeys_pub, fname, serialized_data, overwrite);
+
 			break;
 		}
 		case e_key_type_secop_secret: {
 			_note("Save this as PRIVATE key!!!");
 			locked_string data = locked_string::unsafe_create(serialized_data);
-			filestorage::save_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, fname, data);
+			filestorage::save_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, fname, data, overwrite);
 			break;
 		}
 	}
 
 	if (m_type_secop == e_key_type_secop_open) 	if (m_type_secop == e_key_type_secop_secret) _note("Save this as PRIVATE key!!!");
+
+} catch(overwrite_error &err) {
+	std::cout << err.what() << std::endl;
+	if(text_ui::ask_user_forpermission("overwrite file?")){
+		this->datastore_save(fname, true);
+	}
+}
+
 }
 
 template <typename TKey>

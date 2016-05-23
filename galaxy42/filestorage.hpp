@@ -18,17 +18,26 @@ enum t_filestore : unsigned char {
 };
 // TODO doc
 // TODO more tests
+class overwrite_error: public std::runtime_error {
+public:
+	explicit overwrite_error(const std::string &msg);
+};
+
+
+
 class filestorage {
 public:
 	filestorage() = delete;
 
 	static void save_string(t_filestore file_type,
 							const std::string &filename,
-							const std::string &data);
+							const std::string &data,
+							bool overwrite = false);
 
 	static void save_string_mlocked(t_filestore file_type,
 									const std::string &filename,
-									const sodiumpp::locked_string &locked_data);
+									const sodiumpp::locked_string &locked_data,
+									bool overwrite = false);
 
 	static std::string load_string(t_filestore file_type,
 								   const std::string &filename);
@@ -58,10 +67,12 @@ private:
 	 * @brief prepare_file_for_write
 	 * @param file_type
 	 * @param filename
+	 * @param overwrite allow to overwrite file (default = false)
 	 * @return full path with fixed filename
 	 */
 	static fs::path prepare_file_for_write(t_filestore file_type,
-										   const std::string &filename);
+										   const std::string &filename,
+										   bool overwrite = false);
 
 
 	static fs::path create_path_for(t_filestore file_type,
