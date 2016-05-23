@@ -25,6 +25,7 @@ TEST(serialize, varstring_vector) {
 	std::string(R"(""""")")
 	};
 	gen.push_vector_string(input);
+
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
 	auto output_vector = parser.pop_vector_string();
 	for (size_t i = 0; i < output_vector.size(); ++i) {
@@ -64,14 +65,14 @@ TEST(serialize, varstring_map) {
 	input[R"(		  		)"] = "xyz";
 	input["%"] = std::string();
 	input[std::string()] = std::string();
-	input[std::string(25489, 'x')] = std::string(25489, 'x');
+	input[std::string(254, 'x')] = std::string(254, 'x');
 	generator gen(1);
 	gen.push_map_object(input);
 	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
 	auto output = parser.pop_map_object<std::string, std::string>();
 	for (const auto &  pair : input) {
-		std::string output_key;
-		EXPECT_NO_THROW(output_key = output.at(pair.first)); // key exists in output map
-		EXPECT_EQ(pair.second, output.at(output_key));
+		EXPECT_EQ(pair.second, output.at(pair.first));
 	}
+	EXPECT_EQ( output , input );
+	EXPECT_EQ( output.size() , input.size() );
 }
