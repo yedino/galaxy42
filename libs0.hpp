@@ -219,7 +219,8 @@ using namespace std::string_literals;
 template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
 	if (!(ptr!=nullptr)) {
 		_erro("NULL pointer used! from func="<<func);
-		assert(ptr!=nullptr);
+		std::abort();
+		//assert(ptr!=nullptr);
 	}
 	return ptr;
 }
