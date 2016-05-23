@@ -51,3 +51,27 @@ TEST(serialize, get_from_empty_string) {
 TEST(serialize, test_trivialserialize) {
 	EXPECT_NO_THROW(test::test_trivialserialize());
 }
+
+TEST(serialize, varstring_map) {
+	std::map<std::string, std::string> input;
+	input["aaa"] = "bbb";
+	input["111"] = "2222222222222222222";
+	input["0"] = "zzzzzzzzz";
+	input["asdfas"] = "5567";
+	input[";"] = "...";
+	input[",./234"] = ";433334;43;34;34;2<>;";
+	input["           "] = "htfthfft";
+	input[R"(		  		)"] = "xyz";
+	input["%"] = std::string();
+	input[std::string()] = std::string();
+	input[std::string(25489, 'x')] = std::string(25489, 'x');
+	generator gen(1);
+	gen.push_map_object(input);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	auto output = parser.pop_map_object<std::string, std::string>();
+	for (const auto &  pair : input) {
+		std::string output_key;
+		EXPECT_NO_THROW(output_key = output.at(pair.first)); // key exists in output map
+		EXPECT_EQ(pair.second, output.at(output_key));
+	}
+}

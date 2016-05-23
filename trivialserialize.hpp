@@ -231,9 +231,9 @@ template <typename T> void generator::push_vector_object(const vector<T> & data)
 template <typename TKey, typename TVal>
 void generator::push_map_object(const map<TKey,TVal> & data) {
 	push_integer_uvarint( data.size() );
-	for(const auto & it : data) {
-		push_object(it->first);
-		push_object(it->second);
+	for(const auto & pair : data) {
+		push_object(pair.first);
+		push_object(pair.second);
 	}
 }
 
