@@ -194,13 +194,13 @@ std::ostream& operator<<(std::ostream& out, const c_tank & t) {
 bool operator==(const c_tank & aaa, const c_tank & bbb) {
 	return (aaa.ammo == bbb.ammo) && (aaa.speed == bbb.speed) && (aaa.name == bbb.name);
 }
-bool operator>(const c_tank & aaa, const c_tank & bbb) {
-	if (aaa.ammo > bbb.ammo) return 1;
-	if (aaa.ammo < bbb.ammo) return 0;
-	if (aaa.speed > bbb.speed) return 1;
-	if (aaa.speed < bbb.speed) return 0;
-	if (aaa.name > bbb.name) return 1;
-	if (aaa.name < bbb.name) return 0;
+bool operator<(const c_tank & aaa, const c_tank & bbb) {
+	if (aaa.ammo < bbb.ammo) return 1;
+	if (aaa.ammo > bbb.ammo) return 0;
+	if (aaa.speed < bbb.speed) return 1;
+	if (aaa.speed > bbb.speed) return 0;
+	if (aaa.name < bbb.name) return 1;
+	if (aaa.name > bbb.name) return 0;
 	return 0; // the same
 }
 
@@ -210,6 +210,22 @@ vector<c_tank> get_example_tanks() {
 		{ 500, 70 , "T-72"} ,
 		{ 800, 80 , "T-80"} ,
 		{ 2000, 90 , "Shilka"} ,
+	};
+	return data;
+}
+
+map<string, c_tank> get_example_tanks_map_location() {
+	map<string, c_tank> data = {
+		{ "Moscow", { 150, 60 , "T-64"} } ,
+		{ "Puszkin" , { 500, 70 , "T-72"} },
+	};
+	return data;
+}
+
+map<c_tank, string> get_example_tanks_map_captain() {
+	map<c_tank, string> data = {
+		{ { 150, 60 , "T-64"} , "Pavlov" },
+		{ { 900, 80 , "BMP"} , "A. Ramius" },
 	};
 	return data;
 }
@@ -235,6 +251,28 @@ namespace detail {
 
 } // namespace detail
 }
+
+
+template <typename T> ostream& operator<<(ostream &ostr , const vector<T> & tab) {
+	bool first=0; // first was done yet
+	for (const auto & obj : tab) {
+		if (first) cout << ", ";
+		first=1;
+		ostr<<obj;
+	}
+	return ostr;
+}
+
+template <typename TKey, typename TVal> ostream& operator<<(ostream &ostr , const map<TKey,TVal> & tab) {
+	bool first=0; // first was done yet
+	for (const auto & it : tab) {
+		if (first) cout << ", ";
+		first=1;
+		ostr << (it.first) << ": {" << (it.second) << "}";
+	}
+	return ostr;
+}
+
 
 namespace test {
 
@@ -282,6 +320,11 @@ void test_trivialserialize() {
 	gen.push_vector_string( test_varstring );
 
 	gen.push_vector_object( get_example_tanks() );
+
+	gen.push_map_object( get_example_tanks_map_location() );
+	gen.push_map_object( get_example_tanks_map_captain() );
+
+	// ==============================================
 
 	cout << "Serialized: [" << gen.str() << "]" << endl;
 	cout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
@@ -337,12 +380,22 @@ void test_trivialserialize() {
 		cerr<<"vector string decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 	}
 
-	auto tank = parser.pop_vector_object<c_tank>();
+	auto tanks = parser.pop_vector_object<c_tank>();
 
-	for(auto & t : tank) _info(t);
+	_info("Vector tank: " << tanks);
+	for(auto & t : tanks) _info(t);
+	if ( tanks == get_example_tanks()) {	_info("Container deserialized correctly"); }
+		else throw std::runtime_error("Deserialization failed");
 
-	if ( tank == get_example_tanks()) {	_info("Container deserialized correctly"); }
-	else throw std::runtime_error("Deserialization failed");
+	auto tanks_location = parser.pop_map_object<string, c_tank>();
+	if ( tanks_location == get_example_tanks_map_location()) {	_info("Container deserialized correctly"); }
+		else throw std::runtime_error("Deserialization failed");
+	_info("Map tank: " << tanks_location);
+
+	auto tanks_captain = parser.pop_map_object<c_tank,string>();
+	if ( tanks_captain == get_example_tanks_map_captain()) {	_info("Container deserialized correctly"); }
+		else throw std::runtime_error("Deserialization failed");
+	_info("Map tank: " << tanks_captain);
 
 }
 
