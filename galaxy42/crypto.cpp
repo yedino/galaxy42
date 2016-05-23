@@ -1066,7 +1066,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 
 
-		#if 0
+		#if 1
 		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
@@ -1086,35 +1086,19 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 				if (m_side_initiator) {
 					// I am initiator - so I create random passwords, and encrypt them for other side of stream
-					uint16_t ciphertext_len = 0;
-					// calculate ciphet text size
-					_dbg2("calculate ciphertext_len");
-					NTRU_exec_or_throw (
-						ntru_crypto_ntru_encrypt(get_DRBG(128),
-							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()), // encrypt to this pubkey
-							0, nullptr,
-							&ciphertext_len, nullptr) // save result here0
-					); //NTRU_exec_or_throw
-					_dbg1("ciphertext_len = " << ciphertext_len);
 
-//					sodiumpp::locked_string password_cleartext 
-//						= sodiumpp::randombytes_locked(ciphertext_len)); // <--- generate password
+					const uint16_t random_len = 65; // because this much fits in this NTRU NTRU_EES439EP1
 
-					m_ntru_kex_password.
+					sodiumpp::locked_string password_cleartext
+						= sodiumpp::randombytes_locked(ciphertext_len); // <--- generate password
 
-					// encrypt random bytes
-					_dbg2("encrypt");
-					_dbg2("public key size " << key_B_pub.size());
-					
-					NTRU_exec_or_throw (
-						ntru_crypto_ntru_encrypt(get_DRBG(128),
-							key_B_pub.size(), reinterpret_cast<const uint8_t *>(key_B_pub.data()),
-							password_cleartext.size(), reinterpret_cast<const uint8_t *>(password_cleartext.c_str()),
-							&ciphertext_len, reinterpret_cast<uint8_t *>(&u[0]))
-					); // NTRU_exec_or_throw
-					assert(ciphertext_len == encrypted_rand_data.size());
-					_dbg1("random data encrypted");
-					m_ntru_kex_password.push_back(encrypted_rand_data);
+					_dbg1( to_debug_locked("NTru password GENERATED: " << password_cleartext) );
+
+					_dbg2("NTru to pubkey " << to_debug(key_B_pub));
+					sodiumpp::locked_string password_encrypted = ntru_cpp::ntru_encrypt(password_cleartext, key_B_pub);
+					_dbg1("random data encrypted as: " << to_debug_locked(password_encrypted));
+
+					m_ke.push_back(encrypted_rand_data);
 
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 					Hash1_PRV(
