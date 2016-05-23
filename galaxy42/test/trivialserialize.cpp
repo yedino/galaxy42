@@ -47,3 +47,7 @@ TEST(serialize, get_from_empty_string) {
 		trivialserialize::parser::tag_caller_must_keep_this_string_valid() , empty );
 	ASSERT_THROW((parser.pop_integer_u<1, uint8_t>()), std::exception);
 }
+
+TEST(serialize, test_trivialserialize) {
+	EXPECT_NO_THROW(test::test_trivialserialize());
+}
