@@ -186,9 +186,11 @@ void parser::debug() const {
 	oss << " is at POS octet number:" << (size_t)(m_data_now - m_data_begin) << '.';
 	oss << " now="<<(void*)m_data_now<<" range is [" << (void*)m_data_begin << ".." << (void*)m_data_end << ").";
 
-	oss << "Next: ";
-	for (int i=0; i<6; ++i)	{ 
-		auto now=m_data_now+i;	
+	const int dbg_lookahead=8; // show this many characters ahead
+	oss << " Next: ";
+	for (int i=0; i<dbg_lookahead; ++i)	{ 
+		auto now=m_data_now+i;
+		if (i>0) oss<<",";
 		if ((now < m_data_end) && (now >= m_data_begin)) oss << chardbg(*now);
 			else { oss<<"(END)"; break; }
 	}

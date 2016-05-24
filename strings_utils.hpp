@@ -57,6 +57,8 @@ struct string_as_bin {
 bool operator<( const string_as_bin &a, const string_as_bin &b);
 
 
+std::string chardbg(char c); ///< Prints one character in "debugging" format, e.g. 0x0, or 0x20=32, etc.
+
 struct string_as_dbg {
 	public:
 		std::string dbg; ///< this string is already nicelly formatted for debug output e.g. "(3){a,l,a,0x13}" or "(3){1,2,3}"
@@ -104,6 +106,8 @@ struct string_as_dbg {
 
 		template<class T>	void print(std::ostream & os, const T & v) { os<<v; }
 
+
+	public: // for chardbg.  TODO move to class & make friend class
 		void print(std::ostream & os, unsigned char v);
 		void print(std::ostream & os, signed char v);
 		void print(std::ostream & os, char v);
