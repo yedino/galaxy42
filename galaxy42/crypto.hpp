@@ -26,6 +26,7 @@
  * * \b IDPtC - ID Permanent to Current -  is the full chain of crypto signatures, pubkeys, etc,
  * 			 	to prove ownership from HIP and IDP to given IDC.
  * * \b IDCE - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDC.
+ * ... also known as IDe (TODO: pick one :)
  *
  * * \b IDP - - - - signatures (IDPtC) - - - -> IDC
  * \n
@@ -72,6 +73,11 @@
  * * PRV - private key
  * * PAIR - pair of pub + PRV
  *
+ * * KEX - key exchange: Alice and Bob do so that: Alice has Bob's key (e.g. shared symmetrical key) (or viceversa, or both)
+ * * KEXASYM - KEX done with assymetrical keys, usually e.g. Alice creates passwords and encrypts it for/to Bob
+ * * DH Diffie-Hellman exchange (or similar). Both parties know instantly the shared key when they see pubkey of other.
+ * * DH+ASYM - other name for KEXASYM
+ *
  * * GMK - Galaxy Multi Key - is the name of data format used
  * * in file format (and in serializaion) you can find magic headers:
  * * GMKaS - Galaxy Multi Key, in version "a", the Secret key (private key)
@@ -88,10 +94,10 @@ c_multikeys_PAIR
 === Full exchange (PFS and asymkex) ===
 
 Alice:
-(IDC) -> do KEX(+ASYM) -> {created IDC_ali_ASYM_PASS} + KCTab !
+(IDC) -> do KEX(+ASYM) -> {created IDC_ali_ASYM_PASS} + count_keys + KCTab !
 gen(count_keys) -> IDe_ali
 send IDC_ali_ASYM_PASS via clear
-send IDe_ali via KCTab
+send IDe_ali - via KCTab
 
 Bob:
 recv IDC_ali_ASYM_PASS via clear
@@ -381,6 +387,7 @@ class c_multikeys_general : public c_crypto_system {
 		bool operator>(const t_self &rhs) const; ///< some sorting order, e.g. using the get_hash(). Used e.g. to
 		/// pick even/odd nonce depending on comparing keys.
 
+		virtual std::string to_debug() const;
 };
 
 // ==================================================================
@@ -439,7 +446,7 @@ class c_multikeys_PAIR {
 		virtual ~c_multikeys_PAIR() = default;
 
 		///< generate from list of how many keys of given type we need
-		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex); 
+		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex);
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
 		void generate(); ///< generate the default set of keys
 		static std::pair<sodiumpp::locked_string, std::string> generate_x25519_key_pair();
@@ -449,8 +456,8 @@ class c_multikeys_PAIR {
 		void debug() const;
 
 		void add_public_and_PRIVATE(t_crypto_system_type crypto_type,
-		const c_crypto_system::t_pubkey & pubkey ,
-		const c_crypto_system::t_PRVkey & PRVkey);
+			const c_crypto_system::t_pubkey & pubkey ,
+			const c_crypto_system::t_PRVkey & PRVkey);
 
 		/// like c_multikeys_general<>::datastore_save(), for the private (+public) key
 		void datastore_save_PRV_and_pub(const string  & fname_base) const;
@@ -460,6 +467,8 @@ class c_multikeys_PAIR {
 		void datastore_load_PRV_and_pub(const string  & fname_base);
 
 		virtual t_crypto_system_type get_system_type() const;
+
+		const c_multikeys_pub & read_pub() const;
 
 };
 
@@ -514,6 +523,8 @@ class c_stream final /* because strange ctor init list functions */
 		string parse_packetstart_kexasym(const string & data) const; ///< parse received packetstart and get kexasym part
 		string parse_packetstart_IDe(const string & data) const;
 
+		void set_packetstart_IDe_from(const c_multikeys_PAIR & keypair);
+
 		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
 		std::string exchange_start_get_packet() const;
 
@@ -555,7 +566,7 @@ class c_crypto_tunnel final {
 			const std::string & packetstart );
 
 		void create_IDe();
-		void create_CTf(const c_multikeys_pub & IDC_ID_them);
+		void create_CTf(const std::string & packetstart);
 
 		c_multikeys_PAIR & get_IDe(); ///< get our m_IDe needed to create KCTf
 
