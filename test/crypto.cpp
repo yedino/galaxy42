@@ -153,15 +153,24 @@ TEST(crypto, bin_string_xor) {
 	EXPECT_EQ(true, size_diff_err);
 }
 
-
 TEST(crypto, ntru_sign) {
 	const std::string msg("message to sign");
-	int64 pubkey[PASS_N] = {0};
 	int64 secretkey[PASS_N];
-	gen_key(secretkey);
-	gen_pubkey(pubkey, secretkey);
-	unsigned char hash[HASH_BYTES];
+	int64 pubkey[PASS_N] = {0};
+	std::fill_n(secretkey, PASS_N, 0);
+	std::fill_n(pubkey, PASS_N, 0);
 	auto z = std::make_unique<int64[]>(PASS_N);
-	crypto_hash_sha512(hash, reinterpret_cast<unsigned char*>(secretkey), sizeof(int64)*PASS_N); // necessary ?
+	init_fast_prng();
+	if(ntt_setup() == -1) {
+		fprintf(stderr,
+		"ERROR: Could not initialize FFTW. Bad wisdom?\n");
+		exit(EXIT_FAILURE);
+	}
+	gen_key(secretkey);
+	unsigned char hash[HASH_BYTES];
+	crypto_hash_sha512(hash, reinterpret_cast<unsigned char*>(secretkey), sizeof(int64)*PASS_N); // necessary?
+	gen_pubkey(pubkey, secretkey);
 	sign(hash, z.get(), secretkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size());
+	ntt_cleanup();
+
 }
