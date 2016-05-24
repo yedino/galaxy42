@@ -157,10 +157,7 @@ TEST(crypto, ntru_sign) {
 	const std::string msg("message to sign");
 	int64 secretkey[PASS_N];
 	int64 pubkey[PASS_N] = {0};
-	std::fill_n(secretkey, PASS_N, 0);
-	std::fill_n(pubkey, PASS_N, 0);
-	auto z = std::make_unique<int64[]>(PASS_N);
-	init_fast_prng();
+	int64 z[PASS_N];
 	if(ntt_setup() == -1) {
 		fprintf(stderr,
 		"ERROR: Could not initialize FFTW. Bad wisdom?\n");
@@ -170,7 +167,10 @@ TEST(crypto, ntru_sign) {
 	unsigned char hash[HASH_BYTES];
 	crypto_hash_sha512(hash, reinterpret_cast<unsigned char*>(secretkey), sizeof(int64)*PASS_N); // necessary?
 	gen_pubkey(pubkey, secretkey);
-	sign(hash, z.get(), secretkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size());
+	sign(hash, z, secretkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size());
+	ASSERT_EQ(verify(hash, z, pubkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size()), VALID);
+	z[0] = ~ z[0];
+	ASSERT_NE(verify(hash, z, pubkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size()), VALID);
 	ntt_cleanup();
 
 }
