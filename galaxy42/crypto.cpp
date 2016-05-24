@@ -631,7 +631,8 @@ void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool wi
 			_info("Generate keys " << t_crypto_system_type_to_name(sys_id) << " in amount: "<<how_many);
 			if ( will_asymkex || false==t_crypto_system_type_is_asymkex(sys_id) ) {
 				this->generate(sys_id, how_many);
-			} else _dbg1("Skipping because asymkex; " << to_string(sys_id));
+			} else _dbg1("Skipping because this is asymkex, and we do not want to do that "
+				<< "will_asymkex="<<will_asymkex<<" : " << to_string(sys_id));
 		}
 	}
 }
@@ -882,7 +883,7 @@ void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikey
 			const std::string & packetstart)
 {
 	_note("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
-	m_KCT = calculate_KCT( ID_self , ID_them, false, packetstart );
+	m_KCT = calculate_KCT( ID_self , ID_them, true, packetstart );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
@@ -903,7 +904,12 @@ void c_stream::create_boxer_with_K() {
 }
 
 std::string c_stream::get_packetstart() const {
-	return m_packetstart_kexasym;
+	trivialserialize::generator gen( m_packetstart_kexasym.size() + m_packetstart_IDe.size() + 20);
+	gen.push_varstring( m_packetstart_kexasym );
+	_note("MAKING: m_packetstart_kexasym = " << to_debug(m_packetstart_kexasym));
+	gen.push_varstring( m_packetstart_IDe );
+	_note("MAKING: m_packetstart_IDe = " << to_debug(m_packetstart_IDe));
+	return gen.str();
 }
 
 unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
@@ -927,8 +933,6 @@ t_crypto_system_type c_stream::get_system_type() const
 {
 	TODOCODE;	return t_crypto_system_type(0);
 }
-
-// ---------------------------------------------------------------------------
 
 
 
@@ -1029,11 +1033,25 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		if (packetstart.size()) throw std::invalid_argument("Invalid use of CT: initiator mode, but not-empty packetstarter");
 	}
 	else {
+		_dbg1("Parsing packetstart " << to_debug(packetstart));
 		// I am respondent
 		if (! packetstart.size()) throw std::invalid_argument("Invalid use of CT: not-initiator mode, but empty packetstarter");
 
-		trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart );
+		// TODO-speed: change to zerocopy view strings (after implemented in trivialserialize)
+		string packetstart_kexasym, packetstart_IDe;
+		{
+			trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart );
+			parser.debug();
+			packetstart_kexasym = parser.pop_varstring();
+			_dbg1("got string: " << to_debug(packetstart_kexasym));
+			parser.debug();
 
+			packetstart_IDe = parser.pop_varstring(); // not needed? can remove later TODO
+			_dbg1("Btw: packetstart_IDe " << to_debug(packetstart_IDe)); // ^
+			parser.debug();
+		}
+		_dbg1("Parsing packetstart_kexasym " << to_debug(packetstart_kexasym));
+		trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart_kexasym );
 		kexasym_passencr_received = parser.pop_map_object<t_kexasym::key_type , t_kexasym::mapped_type>();
 	}
 
@@ -1281,6 +1299,44 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 
 // ------------------------------------------------------------------
 
+// TODO(rob) move to locked string ; and also vice-versa function with other order of args
+bool operator==(const sodiumpp::locked_string & a, const std::string & b) {
+	std::string b_cpy = b;
+	sodiumpp::locked_string b_locked = sodiumpp::locked_string::move_from_not_locked_string(std::move(b_cpy));
+	using namespace sodiumpp;
+	return a == b_locked;
+}
+
+bool c_stream::is_K_not_empty() const { 
+	return !( m_KCT == return_empty_K() ); // constant time op==
+}
+
+// ==================================================================
+// c_crypto_tunnel
+
+
+// ------------------------------------------------------------------
+
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+	: m_side_initiator(true),
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
+{
+	_note("Creating the crypto tunnel");
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
+	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
+}
+
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
+	const std::string & packetstart )
+	: m_side_initiator(false),
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
+{
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
+	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart );
+}
+
+
+// ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::get_packetstart_ab() const {
 	return PTR(m_stream_crypto_ab)->get_packetstart();
@@ -1291,7 +1347,7 @@ std::string c_crypto_tunnel::get_packetstart_final() const {
 	return PTR(m_stream_crypto_final)->get_packetstart();
 }
 
-// ==================================================================
+// ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::box(const std::string & msg) {
 	return PTR(m_stream_crypto_final)->box(msg);
@@ -1311,34 +1367,14 @@ std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
 
 // ------------------------------------------------------------------
 
-
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
-	: m_side_initiator(true),
-	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
-{
-	// m_ntru_kex_password(sodiumpp::randombytes_locked(m_ntru_kex_password_size)) // TODOdel or example
-	_note("Creating the crypto tunnel");
-
-	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
-	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
-}
-
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
-	const std::string & packetstart )
-	: m_side_initiator(false),
-	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
-{
-	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
-	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart );
-}
-
 // : c_stream(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>()) // TODOdel
 
 void c_crypto_tunnel::create_IDe() {
 	_mark("Creating IDe");
+	if (m_IDe) throw std::runtime_error("Tried to create IDe again, on a CT that already has one created.");
 	//m_IDe = make_unique<c_multikeys_PAIR>();
 	//m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
-	m_IDe = PTR( m_stream_crypto_ab )->create_IDe( m_side_initiator );
+	m_IDe = PTR( m_stream_crypto_ab )->create_IDe( true );
 	_mark("Creating IDe - DONE");
 }
 
@@ -1350,6 +1386,7 @@ void c_crypto_tunnel::create_CTf(const c_multikeys_pub & IDe_them) {
 }
 
 
+// ##################################################################
 // ##################################################################
 // ##################################################################
 // tests
@@ -1481,15 +1518,18 @@ void test_crypto() {
 
 		// Create CT (e.g. CTE?) - that has KCT
 		_note("Alice CT:");
-		c_crypto_tunnel AliceCT(keypairA, keypubB); // proto!
+		c_crypto_tunnel AliceCT(keypairA, keypubB); // start
+		AliceCT.create_IDe();
 		string packetstart = AliceCT.get_packetstart_ab();
-
-		_info("Packet sent to Bob: " << to_debug(packetstart));
+		_info("SEND packetstart to Bob: " << to_debug(packetstart));
 
 		_note("Bob CT:");
-		c_crypto_tunnel BobCT  (keypairB, keypubA, packetstart); // proto!
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart); // start
 
 		_mark("Prepared tunnels (KCTab)");
+
+		//c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
+		//c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
 
 		_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 			"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
@@ -1497,18 +1537,15 @@ void test_crypto() {
 			_dbg2("Alice will box:");
 			auto msg1s = AliceCT.box_ab("Hello");
 			auto msg1r = BobCT.unbox_ab(msg1s);
-			_note("Decrypted message: [" << msg1r << "] from encrypted: " << to_debug(msg1s));
+			_note("(via CTab) Message: [" << msg1r << "] from: " << to_debug(msg1s));
 
 			auto msg2s = BobCT.box_ab("Hello");
 			auto msg2r = AliceCT.unbox_ab(msg2s);
-			_note("Decrypted message: [" << msg2r << "] from encrypted: " << to_debug(msg2s));
+			_note("(via CTab) Message: [" << msg2r << "] from: " << to_debug(msg2s));
 		}
 	}
 
 		return; // !!!
-
-	//	c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
-	//	c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
 
 
 

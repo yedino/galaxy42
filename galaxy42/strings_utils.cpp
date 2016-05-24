@@ -136,6 +136,15 @@ bool operator<( const string_as_bin &a, const string_as_bin &b) {
 	return a.bytes < b.bytes;
 }
 
+// ==================================================================
+
+std::string chardbg(char c) {
+	// this is quite slow
+	std::ostringstream oss;
+	string_as_dbg s;
+	s.print(oss,c);
+	return oss.str();
+}
 
 // ==================================================================
 
