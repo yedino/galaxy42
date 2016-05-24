@@ -1,6 +1,13 @@
 #include "gtest/gtest.h"
 #include "../crypto.hpp"
 
+// ntru sign
+#include <constants.h>
+#include <pass_types.h>
+#include <hash.h>
+#include <ntt.h>
+#include <pass.h>
+
 namespace antinet_crypto {
 
 /* broke after the memlock and _PRV hash functions...
@@ -146,5 +153,13 @@ TEST(crypto, bin_string_xor) {
 
 
 TEST(crypto, ntru_sign) {
-
+	const std::string msg("message to sign");
+	int64 pubkey[PASS_N] = {0};
+	int64 secretkey[PASS_N];
+	gen_key(secretkey);
+	gen_pubkey(pubkey, secretkey);
+	unsigned char hash[HASH_BYTES];
+	auto z = std::make_unique<int64[]>(PASS_N);
+	crypto_hash_sha512(hash, reinterpret_cast<unsigned char*>(secretkey), sizeof(int64)*PASS_N); // necessary ?
+	sign(hash, z.get(), secretkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size());
 }
