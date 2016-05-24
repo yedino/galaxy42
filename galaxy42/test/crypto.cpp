@@ -143,3 +143,8 @@ TEST(crypto, bin_string_xor) {
   }
 	EXPECT_EQ(true, size_diff_err);
 }
+
+
+TEST(crypto, ntru_sign) {
+
+}
