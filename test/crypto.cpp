@@ -2,11 +2,13 @@
 #include "../crypto.hpp"
 
 // ntru sign
+extern "C" {
 #include <constants.h>
 #include <pass_types.h>
 #include <hash.h>
 #include <ntt.h>
 #include <pass.h>
+}
 
 namespace antinet_crypto {
 
