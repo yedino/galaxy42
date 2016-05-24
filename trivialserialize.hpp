@@ -345,6 +345,7 @@ class parser {
 
 		std::string pop_bytes_n(size_t size); //< Read and return binary string of exactly N characters always,
 		///< that was saved using push_bytes_n(). N can be 0.
+		void skip_bytes_n(size_t size); ///< as pop_bytes_n() but just skips the data
 		void pop_bytes_n_into_buff(size_t size, char *buff); ///< in this version we read directly into
 		///< memory buff - that must be valid block of size 'size', so [ buff .. buff+size ) must be valid memory to write into.
 
@@ -358,6 +359,7 @@ class parser {
 		///@{
 		uint64_t pop_integer_uvarint(); ///< Decode unsigned int of 1,3,5,9 octets saved by push_integer_uvarint
 		std::string pop_varstring(); ///< Decode string of any length saved by push_varstring()
+		void skip_varstring(); ///< as pop_varstring() but skips the data
 		///@}
 
 		/** @name High Level Interface

@@ -113,15 +113,26 @@ void parser::pop_byte_skip(char c) { // read expected character (e.g. a delimite
 }
 
 std::string parser::pop_bytes_n(size_t size) {
+	if (!size) return string("");
 	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
 	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
-
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	auto from = m_data_now;
 	m_data_now += size; // *** move
 	return std::string( from , size );
 }
+
+void parser::skip_bytes_n(size_t size) {
+	if (!size) return;
+	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
+	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
+	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
+	assert( (m_data_now + size <= m_data_end) );
+	// auto from = m_data_now;
+	m_data_now += size; // *** move
+}
+
 
 void parser::pop_bytes_n_into_buff(size_t size, char * buff) {
 	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
@@ -151,6 +162,12 @@ std::string parser::pop_varstring() { ///< Decode string of any length saved by 
 	return pop_bytes_n(size);
 }
 
+void parser::skip_varstring() {
+	size_t size = pop_integer_uvarint();
+	assert( size <= SANE_MAX_SIZE_FOR_STRING );
+	return skip_bytes_n(size);
+}
+
 vector<string> parser::pop_vector_string() {
 	vector<string> ret;
 	auto size = pop_integer_uvarint(); // TODO const
@@ -165,7 +182,18 @@ bool parser::is_end() const {
 }
 
 void parser::debug() const {
-	_info("Currently at POS octet number:" << (size_t)(m_data_now - m_data_begin));
+	ostringstream oss;
+	oss << " is at POS octet number:" << (size_t)(m_data_now - m_data_begin) << '.';
+	oss << " now="<<(void*)m_data_now<<" range is [" << (void*)m_data_begin << ".." << (void*)m_data_end << ").";
+
+	oss << "Next: ";
+	for (int i=0; i<6; ++i)	{ 
+		auto now=m_data_now+i;	
+		if ((now < m_data_end) && (now >= m_data_begin)) oss << chardbg(*now);
+			else { oss<<"(END)"; break; }
+	}
+
+	_info("Parser " << (void*)this << oss.str());
 }
 
 
@@ -287,8 +315,31 @@ template <typename TKey, typename TVal> ostream& operator<<(ostream &ostr , cons
 
 namespace test {
 
+
+void test_shortstring_end() {
+	trivialserialize::generator gen(50);
+
+	vector<string> test_varstring = {
+		string("ABC"),
+		string(""),
+	};
+	for (auto val : test_varstring) gen.push_varstring(val);
+
+	const string input = gen.str();
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , input );
+
+	for (auto val_expected : test_varstring) {
+		auto val_given = parser.pop_varstring();
+		cerr<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
+		bool ok = ( val_given == val_expected );
+		if (!ok) throw std::runtime_error("Failed test for expected value " + (val_expected));
+	}
+}
+
 void test_trivialserialize() {
 	using namespace detail;
+
+	test_shortstring_end();
 
 	cerr << endl<< "Tests: " << __FUNCTION__ << endl << endl;
 
@@ -320,6 +371,13 @@ void test_trivialserialize() {
 
 	vector<string> test_varstring = {
 		string("Hi."),
+		string("Now empty string:"),
+		string(""),
+		string("Now empty string x5"),
+		string(""),
+		string(""),
+		string(""),
+		string(""),
 		string(""),
 		string("Hello!"),
 		string(250,'x'),
@@ -402,8 +460,8 @@ void test_trivialserialize() {
 		bool ok = ( val_given == val_expected );
 		if (!ok) throw std::runtime_error("Failed test for expected value " + (val_expected));
 	}
-	auto test_varstring_LOADED = parser.pop_vector_string();
 
+	auto test_varstring_LOADED = parser.pop_vector_string();
 	for (auto val_given : test_varstring_LOADED) {
 		cerr<<"vector string decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 	}
