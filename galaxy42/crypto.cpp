@@ -903,7 +903,7 @@ void c_stream::create_boxer_with_K() {
 	assert(m_boxer); assert(m_unboxer);
 }
 
-std::string c_stream::get_packetstart() const {
+std::string c_stream::generate_packetstart() const {
 	trivialserialize::generator gen( m_packetstart_kexasym.size() + m_packetstart_IDe.size() + 20);
 	gen.push_varstring( m_packetstart_kexasym );
 	_note("MAKING: m_packetstart_kexasym = " << to_debug(m_packetstart_kexasym));
@@ -1333,12 +1333,12 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 // ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::get_packetstart_ab() const {
-	return PTR(m_stream_crypto_ab)->get_packetstart();
+	return PTR(m_stream_crypto_ab)->generate_packetstart();
 
 }
 
 std::string c_crypto_tunnel::get_packetstart_final() const {
-	return PTR(m_stream_crypto_final)->get_packetstart();
+	return PTR(m_stream_crypto_final)->generate_packetstart();
 }
 
 // ------------------------------------------------------------------
