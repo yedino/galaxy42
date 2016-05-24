@@ -36,6 +36,15 @@ add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
 include_directories(../libsidhms/SIDH)
 
+#add local ntru sign lib
+set(NTRU_SIGN_DIR "../ntru-crypto/reference-code/C/Sign/PASS/src")
+include_directories("${NTRU_SIGN_DIR}")
+file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
+file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
+list(REMOVE_ITEM ntru-sign-files ${BENCH})
+add_library(ntrusign ${ntru-sign-files})
+
+
 #add local build of some external libs
 link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
