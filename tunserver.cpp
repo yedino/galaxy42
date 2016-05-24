@@ -818,7 +818,7 @@ void c_tunserver::event_loop() {
 			debug_peers();
 
 			string xx(10,'-');
-			std::cerr << endl << xx << node_title_bar << xx << endl << endl;
+			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
 
 		anything_happened=false;
