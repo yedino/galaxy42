@@ -509,7 +509,10 @@ class c_stream final /* because strange ctor init list functions */
 		void exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart);
 
-		string get_packetstart() const;
+		string generate_packetstart() const; ///< generate and return our full packetstarter
+
+		string parse_packetstart_kexasym(const string & data) const; ///< parse received packetstart and get kexasym part
+		string parse_packetstart_IDe(const string & data) const;
 
 		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
 		std::string exchange_start_get_packet() const;

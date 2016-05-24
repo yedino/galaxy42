@@ -1041,14 +1041,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		string packetstart_kexasym, packetstart_IDe;
 		{
 			trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart );
-			parser.debug();
 			packetstart_kexasym = parser.pop_varstring();
 			_dbg1("got string: " << to_debug(packetstart_kexasym));
-			parser.debug();
-
-			packetstart_IDe = parser.pop_varstring(); // not needed? can remove later TODO
-			_dbg1("Btw: packetstart_IDe " << to_debug(packetstart_IDe)); // ^
-			parser.debug();
 		}
 		_dbg1("Parsing packetstart_kexasym " << to_debug(packetstart_kexasym));
 		trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart_kexasym );
