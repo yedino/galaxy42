@@ -43,6 +43,7 @@ file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
 file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
 list(REMOVE_ITEM ntru-sign-files ${BENCH})
 add_library(ntrusign ${ntru-sign-files})
+target_link_libraries(ntrusign fftw3 m)
 
 
 #add local build of some external libs
@@ -104,7 +105,7 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt ntrusign jsoncpp_lib_static sidh)
+target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
