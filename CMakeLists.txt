@@ -36,6 +36,16 @@ add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
 include_directories(../libsidhms/SIDH)
 
+#add local ntru sign lib
+set(NTRU_SIGN_DIR "../ntru-crypto/reference-code/C/Sign/PASS/src")
+include_directories("${NTRU_SIGN_DIR}")
+file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
+file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
+list(REMOVE_ITEM ntru-sign-files ${BENCH})
+add_library(ntrusign ${ntru-sign-files})
+target_link_libraries(ntrusign fftw3 m)
+
+
 #add local build of some external libs
 link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
@@ -95,11 +105,11 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf   tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
 
 add_custom_target(run
 		COMMAND ./tunserver.sh
