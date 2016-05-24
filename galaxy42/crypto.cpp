@@ -902,13 +902,13 @@ sodiumpp::locked_string c_stream::return_empty_K() {
 // ---------------------------------------------------------------------------
 
 std::string c_stream::box(const std::string & msg) {
-	_dbg2("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
-	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
+	_dbg2("Boxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary())
+	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
 	return PTR(m_boxer)->box(msg).to_binary();
 }
 
 std::string c_stream::unbox(const std::string & msg) {
-	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary()));
 	return PTR(m_unboxer)->unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
