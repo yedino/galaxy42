@@ -3,6 +3,37 @@ Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
 
+/**
+
+GPL or other licence, see the licence file!
+
+This is early pre-pre-alpha version, do NOT use it yet for anything,
+do NOT run it other then in a test VM or better on isolated computer,
+it has bugs and 'typpos'.
+                                                 _       _
+ _ __  _ __ ___       _ __  _ __ ___        __ _| |_ __ | |__   __ _
+| '_ \| '__/ _ \_____| '_ \| '__/ _ \_____ / _` | | '_ \| '_ \ / _` |
+| |_) | | |  __/_____| |_) | | |  __/_____| (_| | | |_) | | | | (_| |
+| .__/|_|  \___|     | .__/|_|  \___|      \__,_|_| .__/|_| |_|\__,_|
+|_|                  |_|                          |_|                
+     _                       _                                    _   
+  __| | ___      _ __   ___ | |_     _   _ ___  ___    _   _  ___| |_ 
+ / _` |/ _ \    | '_ \ / _ \| __|   | | | / __|/ _ \  | | | |/ _ \ __|
+| (_| | (_) |   | | | | (_) | |_    | |_| \__ \  __/  | |_| |  __/ |_ 
+ \__,_|\___/    |_| |_|\___/ \__|    \__,_|___/\___|   \__, |\___|\__|
+                                                       |___/          
+ _                   _                     
+| |__   __ _ ___    | |__  _   _  __ _ ___ 
+| '_ \ / _` / __|   | '_ \| | | |/ _` / __|
+| | | | (_| \__ \   | |_) | |_| | (_| \__ \
+|_| |_|\__,_|___/   |_.__/ \__,_|\__, |___/
+                                 |___/  
+
+*/
+
+
+
+
 /*
 
 TODO(r) do not tunnel entire (encrypted) copy of TUN, trimm it from headers that we do not need
