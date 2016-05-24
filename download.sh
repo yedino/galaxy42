@@ -29,6 +29,9 @@ set -x
 
 git submodule init || { echo "Error: submodules download failed (init);" ; exit 1 ; }
 
+# needed because maybe work directory has old version connected to old git path
+git submodule sync || { echo "Error: submodules download failed (sync);" ; exit 1 ; }
+
 git submodule update || { echo "Error: submodules download failed (update)." ; exit 1 ; }
 
 set +x
