@@ -76,3 +76,44 @@ TEST(serialize, varstring_map) {
 	EXPECT_EQ( output , input );
 	EXPECT_EQ( output.size() , input.size() );
 }
+
+TEST(serialize, empty_vector) {
+	generator gen(1);
+	std::vector<std::string> input;
+	gen.push_vector_string(input);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	auto output_vector = parser.pop_vector_string();
+	ASSERT_TRUE(output_vector.empty());
+}
+
+TEST(serialize, empty_element_as_last) {
+	generator gen(1);
+	std::vector<std::string> input = {
+	std::string("aaaa"),
+	std::string("bbbb"),
+	std::string()
+	};
+	gen.push_vector_string(input);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	auto output = parser.pop_vector_string();
+	ASSERT_EQ(input.size(), output.size());
+	for (size_t i = 0; i < input.size(); ++i) {
+		ASSERT_EQ(input.at(i), output.at(i));
+	}
+}
+
+TEST(serialize, empty_element_as_first) {
+	generator gen(1);
+	std::vector<std::string> input = {
+	std::string(),
+	std::string("aaaa"),
+	std::string("bbbb")
+	};
+	gen.push_vector_string(input);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	auto output = parser.pop_vector_string();
+	ASSERT_EQ(input.size(), output.size());
+	for (size_t i = 0; i < input.size(); ++i) {
+		ASSERT_EQ(input.at(i), output.at(i));
+	}
+}
