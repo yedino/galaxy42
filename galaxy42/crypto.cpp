@@ -128,6 +128,8 @@ t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_system_type_symhash_todo; }
 
+t_crypto_system_type c_multisign::get_system_type() const { return e_crypto_system_type_multisign; }
+
 t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_system_type_multikey_pub; }
 
 t_crypto_system_type c_multikeys_PRV::get_system_type() const { return e_crypto_system_type_multikey_private; }
@@ -267,6 +269,7 @@ std::string t_crypto_system_type_to_name(int val) {
 		case e_crypto_system_type_symhash_todo:			return "symhash_todo";
 		case e_crypto_system_type_multikey_pub:			return "multikey-pub";
 		case e_crypto_system_type_multikey_private:			return "multikey-PRIVATE";
+		// TODONOW(hb)
 			//default:		return "Wrong type";
 	}
 	return string("(Invalid enum type=") + to_string(val) + string(")");
