@@ -175,7 +175,7 @@ TEST(crypto, ntru_sign) {
 
 }
 
-TEST(crypto, multi_sign) {
+TEST(crypto, multi_sign_ed25519) {
 
 	antinet_crypto::c_multikeys_PAIR Alice;
 	Alice.generate(antinet_crypto::e_crypto_system_type_Ed25519,5);
