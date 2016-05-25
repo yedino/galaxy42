@@ -803,6 +803,49 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_p
 	return std::make_pair(std::move(private_key_main), std::move(public_key_main));
 }
 
+std::vector<string> c_multikeys_PAIR::multi_sign(const string &msg,
+												 t_crypto_system_type sign_type) {
+
+	std::vector<std::string> signs;
+
+	size_t ed_count = m_PRV.get_count_keys_in_system(sign_type);
+	assert(ed_count > 0 && "no keys of the required type");
+
+	switch(sign_type) {
+		case e_crypto_system_type_Ed25519: {
+			for(size_t i = 0; i < ed_count; ++i) {
+				std::string sign;
+				sign = sodiumpp::crypto_sign_detached(msg,m_PRV.get_PRIVATE(sign_type,i).get_string());
+				signs.emplace_back(std::move(sign));
+			}
+			break;
+		}
+		default: throw std::runtime_error("sign type not supported");
+	}
+
+	return signs;
+}
+
+void c_multikeys_PAIR::multi_sign_verify(const string &msg,
+										 const std::vector<string> &signs,
+										 const c_multikeys_pub &pubkeys,
+										 t_crypto_system_type sign_type) {
+
+	size_t keys_size = pubkeys.get_count_keys_in_system(sign_type);
+	assert(keys_size == signs.size() && "keys_size != signs_size");
+
+	switch(sign_type) {
+		case e_crypto_system_type_Ed25519: {
+			for(size_t i = 0; i < keys_size; ++i) {
+				std::string pubkey = pubkeys.get_public(sign_type,i);
+				sodiumpp::crypto_sign_verify_detached(signs.at(i), msg, pubkey);
+			}
+			break;
+		}
+		default: throw std::runtime_error("sign type not supported");
+	}
+}
+
 DRBG_HANDLE get_DRBG(size_t size) {
 	// TODO(r) use std::once / lock? - not thread safe now
 	static map<size_t , DRBG_HANDLE> drbg_tab;
@@ -813,9 +856,9 @@ DRBG_HANDLE get_DRBG(size_t size) {
 			_note("Creating DRBG for size=" << size);
 			DRBG_HANDLE newone;
 			NTRU_DRBG_exec_or_throw(
-				ntru_crypto_drbg_instantiate(size, nullptr, 0, get_entropy, &newone)
-				,"random init"
-			);
+						ntru_crypto_drbg_instantiate(size, nullptr, 0, get_entropy, &newone)
+						,"random init"
+						);
 			drbg_tab[ size ] = newone;
 			_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
 			return newone;
