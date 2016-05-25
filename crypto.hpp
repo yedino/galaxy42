@@ -291,6 +291,7 @@ enum t_crypto_system_type : unsigned char {
 
 	e_crypto_system_type_multikey_pub = 29,
 	e_crypto_system_type_multikey_private = 30,
+	e_crypto_system_type_multisign = 31,
 	e_crypto_system_type_END,
 };
 
@@ -432,8 +433,17 @@ class c_multikeys_general : public c_multicryptostrings<TKey> {
 
 };
 
-// ==================================================================
 
+// ==================================================================
+/** All pubkeys of given identity */
+class c_multisign : public c_multicryptostrings< std::string > {
+	public:
+		c_multisign();
+		virtual t_crypto_system_type get_system_type() const;
+};
+
+
+// ==================================================================
 /** All pubkeys of given identity */
 class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 	protected:
@@ -455,6 +465,7 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		/// @}
 };
 
+// ==================================================================
 /** All PRIVATE keys of given identity */
 class c_multikeys_PRV : public c_multikeys_general<c_crypto_system::t_PRVkey> {
 	protected:
