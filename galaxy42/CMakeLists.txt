@@ -17,6 +17,8 @@ project (ipbench)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
+add_compile_options(-Wno-unused-command-line-argument)
+
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(../googletest/googletest/include/)
