@@ -486,6 +486,29 @@ class c_multikeys_PAIR {
 		static std::pair<sodiumpp::locked_string, std::string> generate_nrtu_key_pair();
 		static std::pair<sodiumpp::locked_string, std::string> generate_sidh_key_pair();
 
+
+		/**
+		 * @brief multi_sign Multiple signing message using all keys of given sign type
+		 * @param msg Massage that will be sign
+		 * @param sign_type	Type of crypto system
+		 * @return Vector of signs
+		 */
+		std::vector<std::string> multi_sign(const std::string &msg,
+											t_crypto_system_type sign_type = e_crypto_system_type_Ed25519);
+		/**
+		 * @brief multi_sign_verify	Verify message that was signed multiple by c_multikeys_pub.
+		 * 		  Throw sodiumpp::crypto_error when verify fails.
+		 * @param msg Message that was signed.
+		 * @param signs	Vector of signs
+		 * @param pubkeys c_multikeys_pub that contain according to signs vector of public keys.
+		 * 		  Public keys must coresponding to PRV keys that was used to sign message
+		 * @param sign_type	Type of crypto system.
+		 */
+		static void multi_sign_verify(const std::string &msg,
+							   const std::vector<std::string> &signs,
+							   const c_multikeys_pub &pubkeys,
+							   t_crypto_system_type sign_type = e_crypto_system_type_Ed25519);
+
 		void debug() const;
 
 		void add_public_and_PRIVATE(t_crypto_system_type crypto_type,

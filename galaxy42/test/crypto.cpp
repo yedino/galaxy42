@@ -174,3 +174,28 @@ TEST(crypto, ntru_sign) {
 	ntt_cleanup();
 
 }
+
+TEST(crypto, multi_sign) {
+
+	antinet_crypto::c_multikeys_PAIR Alice;
+	Alice.generate(antinet_crypto::e_crypto_system_type_Ed25519,5);
+
+	std::string msg_to_sign = "message";
+	std::vector<std::string> signs;
+
+	// ed25519 is default sign system
+	signs = Alice.multi_sign(msg_to_sign);
+
+	EXPECT_THROW({
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify("bad_message",
+															signs,
+															Alice.read_pub());
+
+	}, sodiumpp::crypto_error);
+
+	EXPECT_NO_THROW( {
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(msg_to_sign,
+															signs,
+															Alice.read_pub());
+	});
+}
