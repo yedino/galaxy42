@@ -482,6 +482,7 @@ class c_multikeys_PAIR {
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys
 		void generate(); ///< generate the default set of keys
 		static std::pair<sodiumpp::locked_string, std::string> generate_x25519_key_pair();
+		static std::pair<sodiumpp::locked_string, std::string> generate_ed25519_key_pair();
 		static std::pair<sodiumpp::locked_string, std::string> generate_nrtu_key_pair();
 		static std::pair<sodiumpp::locked_string, std::string> generate_sidh_key_pair();
 
