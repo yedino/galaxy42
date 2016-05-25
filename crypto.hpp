@@ -348,9 +348,10 @@ class c_symhash_state final : public c_crypto_system {
 
 // ==================================================================
 
-enum t_key_type_secop : unsigned char {
-	e_key_type_secop_secret='S', // for secret key (PRIVATE key)
-	e_key_type_secop_open='o',  // for open key (public key)
+enum t_crypto_use : unsigned char {
+	e_crypto_use_secret='S', // for secret key (PRIVATE key)
+	e_crypto_use_open='o',  // for open key (public key)
+	e_crypto_use_signature='n',  // for signature - the signature data (not a key actually)
 };
 
 /// A type to count how may keys we have of given crypto system.
@@ -358,12 +359,12 @@ typedef std::array< int , e_crypto_system_type_END	> t_crypto_system_count;
 
 /** All keys, of template type TKey, of given identity. It can be e.g. all public keys, or all private, etc.  */
 template <typename TKey>
-class c_multikeys_general : public c_crypto_system {
+class c_multicryptostrings : public c_crypto_system {
 	protected:
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
 
-		typedef c_multikeys_general<TKey> t_self; ///< My own type (concretized ofcourse). Useful for shorter coding style.
+		typedef c_multicryptostrings<TKey> t_self; ///< My own type (concretized ofcourse). Useful for shorter coding style.
 
 		typedef std::array< vector< TKey > , e_crypto_system_type_END	> t_cryptolists_general; ///< templated!
 		typedef TKey t_key; ///< concretized key type used in this templated class
@@ -378,7 +379,7 @@ class c_multikeys_general : public c_crypto_system {
 
 		void update_hash() const; ///< calculate the current m_hash and save it
 
-		t_key_type_secop m_type_secop; ///< are we secret/open - set by child classes e.g. by public multikey
+		t_crypto_use m_crypto_use; ///< what is our key use: e.g. are we secret key / public key / are we the signature etc
 
 	protected:
 		/// @name Modifiers - general version. \n(that sould be wrapped in child class) @{
@@ -390,8 +391,8 @@ class c_multikeys_general : public c_crypto_system {
 		/// @}
 
 	public:
-		c_multikeys_general(t_key_type_secop secop);
-		virtual ~c_multikeys_general()=default;
+		c_multicryptostrings(t_crypto_use secop);
+		virtual ~c_multicryptostrings()=default;
 
 		/// @name Getters: @{
 		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
@@ -420,6 +421,15 @@ class c_multikeys_general : public c_crypto_system {
 		/// pick even/odd nonce depending on comparing keys.
 
 		virtual std::string to_debug() const;
+};
+
+// ==================================================================
+
+template <typename TKey>
+class c_multikeys_general : public c_multicryptostrings<TKey> {
+	public:
+		c_multikeys_general(t_crypto_use secop);
+
 };
 
 // ==================================================================
