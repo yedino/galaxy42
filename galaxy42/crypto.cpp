@@ -132,18 +132,7 @@ t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_
 
 t_crypto_system_type c_multikeys_PRV::get_system_type() const { return e_crypto_system_type_multikey_private; }
 
-template <typename TKey>
-size_t c_multikeys_general<TKey>::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
-	return m_cryptolists_general.at(crypto_type).size();
-}
-
-template <typename TKey>
-size_t c_multikeys_general<TKey>::get_count_of_systems() const {
-	return m_cryptolists_general.size();
-}
-
 t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto_system_type_multikey_private; }
-
 
 // ==================================================================
 // Random
@@ -352,33 +341,43 @@ t_hash c_symhash_state::get_the_SECRET_PRIVATE_state() const {
 // all about the multikeys
 
 // ==================================================================
-// c_multikeys_general<>
+// c_multicryptostrings<>
 
 template <typename TKey>
-c_multikeys_general<TKey>::c_multikeys_general(t_key_type_secop secop)
- : m_type_secop( secop )
+c_multicryptostrings<TKey>::c_multicryptostrings(t_crypto_use crypto_use)
+ : m_crypto_use( crypto_use )
 { }
 
 template <typename TKey>
-bool c_multikeys_general<TKey>::operator>(const t_self &rhs) const {
+size_t c_multicryptostrings<TKey>::get_count_keys_in_system(t_crypto_system_type crypto_type) const {
+	return m_cryptolists_general.at(crypto_type).size();
+}
+
+template <typename TKey>
+size_t c_multicryptostrings<TKey>::get_count_of_systems() const {
+	return m_cryptolists_general.size();
+}
+
+template <typename TKey>
+bool c_multicryptostrings<TKey>::operator>(const t_self &rhs) const {
 	return this->get_hash() > rhs.get_hash();
 }
 
 template <typename TKey>
-std::string c_multikeys_general<TKey>::get_hash() const {
+std::string c_multicryptostrings<TKey>::get_hash() const {
 	if (m_hash_cached=="") update_hash();
 	assert(m_hash_cached != "");
 	return m_hash_cached;
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::update_hash() const {
+void c_multicryptostrings<TKey>::update_hash() const {
 	string all_pub; // all public keys together
 	m_hash_cached = Hash1( this->serialize_bin()  );
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
+void c_multicryptostrings<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
 	auto & sys_vector = m_cryptolists_general.at( type );
 	//_note("ADD KEY: size before: " << sys_vector.size());
 	sys_vector.push_back( pubkey );
@@ -388,7 +387,7 @@ void c_multikeys_general<TKey>::add_key(t_crypto_system_type type, const t_key &
 }
 
 template <typename TKey>
-typename c_multikeys_general<TKey>::t_key  c_multikeys_general<TKey>::get_key(
+typename c_multicryptostrings<TKey>::t_key  c_multicryptostrings<TKey>::get_key(
 t_crypto_system_type crypto_type, size_t number_of_key) const
 {
 	// TODO check range
@@ -426,11 +425,11 @@ Serialized pubkeys: [(104)[
 	*/
 
 template <typename TKey>
-std::string c_multikeys_general<TKey>::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
+std::string c_multicryptostrings<TKey>::serialize_bin() const { ///< returns a string with all our data serialized, to a binary format
 	trivialserialize::generator gen(100);
 	gen.push_bytes_n(3,"GMK"); // magic marker - GMK - "Galaxy MultiKey"
 	gen.push_byte_u( (char) 'a' ); // version of this map. '$' will be development, and then use 'a','b',... for stable formats
-	gen.push_byte_u( m_type_secop ); // marker is it open or secret
+	gen.push_byte_u( m_crypto_use ); // marker is it open or secret
 	int used_types=0; // count how many key types are actually used - we will count below
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
 	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
@@ -448,7 +447,7 @@ std::string c_multikeys_general<TKey>::serialize_bin() const { ///< returns a st
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
+void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 	// clear(); // remove all keys TODO
 
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
@@ -460,10 +459,10 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 
 	auto magic_version = parser.pop_byte_u();
 
-	auto magic_secop = parser.pop_byte_u();
-	if (magic_secop != m_type_secop) {
+	auto magic_crypto_use = parser.pop_byte_u();
+	if (magic_crypto_use != m_crypto_use) {
 		std::ostringstream oss;
-		oss<<"Format error: secop was=" << magic_secop << " but we expected=" << m_type_secop;
+		oss<<"Format error: crypto_use was=" << magic_crypto_use << " but we expected=" << m_crypto_use;
 		throw std::runtime_error(oss.str());
 	}
 
@@ -484,7 +483,7 @@ void c_multikeys_general<TKey>::load_from_bin(const std::string & data) {
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::datastore_save(const string  & fname, bool overwrite) const {
+void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool overwrite) const {
 try {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
 	_note("Savin key to fname="<<fname);
@@ -492,22 +491,22 @@ try {
 	std::string serialized_data = serialize_bin();
 	_info("Serialized to: " << to_debug_locked_maybe(serialized_data));
 
-	switch(m_type_secop) {
-		case e_key_type_secop_open: {
+	switch(m_crypto_use) {
+		case e_crypto_use_open: {
 			_note("Save this as public key");
 			filestorage::save_string(e_filestore_galaxy_ipkeys_pub, fname, serialized_data, overwrite);
 
 			break;
 		}
-		case e_key_type_secop_secret: {
+		case e_crypto_use_secret: {
 			_note("Save this as PRIVATE key!!!");
 			locked_string data = locked_string::unsafe_create(serialized_data);
 			filestorage::save_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, fname, data, overwrite);
 			break;
 		}
+		default:
+			throw std::runtime_error("Can not handle this crypto_use");
 	}
-
-	if (m_type_secop == e_key_type_secop_open) 	if (m_type_secop == e_key_type_secop_secret) _note("Save this as PRIVATE key!!!");
 
 } catch(overwrite_error &err) {
 	std::cout << err.what() << std::endl;
@@ -519,12 +518,12 @@ try {
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::datastore_load(const string  & fname) {
+void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 	std::string data;
 	locked_string buff_safe;
 
-	switch(m_type_secop) {
-		case e_key_type_secop_open: {
+	switch(m_crypto_use) {
+		case e_crypto_use_open: {
 			_note("Load this as public key");
 			data = filestorage::load_string(e_filestore_galaxy_ipkeys_pub, fname);
 			clear();
@@ -532,7 +531,7 @@ void c_multikeys_general<TKey>::datastore_load(const string  & fname) {
 			load_from_bin(data);
 			break;
 		}
-		case e_key_type_secop_secret: {
+		case e_crypto_use_secret: {
 			_note("Load this as PRIVATE key!!!");
 			buff_safe = filestorage::load_string_mlocked(e_filestore_wallet_galaxy_ipkeys_PRV, fname);
 			clear();
@@ -540,17 +539,19 @@ void c_multikeys_general<TKey>::datastore_load(const string  & fname) {
 			load_from_bin(buff_safe.get_string());
 			break;
 		}
+		default:
+			throw std::runtime_error("Can not handle this crypto_use");
 	}
 	_info("Loading: done, debug: " << to_debug_locked_maybe(serialize_bin()));
 }
 
 template <typename TKey>
-void c_multikeys_general<TKey>::clear() {
+void c_multicryptostrings<TKey>::clear() {
 	for (auto & sys : m_cryptolists_general) sys.clear();
 }
 
 template <typename TKey>
-std::string c_multikeys_general<TKey>::to_debug() const {
+std::string c_multicryptostrings<TKey>::to_debug() const {
 	ostringstream oss;
 	oss << "MK(";
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
@@ -565,10 +566,18 @@ std::string c_multikeys_general<TKey>::to_debug() const {
 }
 
 // ==================================================================
+// c_multikeys_general
+
+template <typename TKey>
+c_multikeys_general<TKey>::c_multikeys_general(t_crypto_use crypto_use)
+	: c_multicryptostrings<TKey>(crypto_use)
+{ }
+
+// ==================================================================
 // c_multikeys_pub
 
 c_multikeys_pub::c_multikeys_pub()
-	: c_multikeys_general<c_crypto_system::t_pubkey>( e_key_type_secop_open )
+	: c_multikeys_general<c_crypto_system::t_pubkey>( e_crypto_use_open )
 { }
 
 void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
@@ -586,7 +595,7 @@ c_multikeys_pub::t_key c_multikeys_pub::get_public(t_crypto_system_type crypto_t
 
 
 c_multikeys_PRV::c_multikeys_PRV()
-	: c_multikeys_general<c_crypto_system::t_PRVkey>( e_key_type_secop_secret )
+	: c_multikeys_general<c_crypto_system::t_PRVkey>( e_crypto_use_secret )
 { }
 
 void c_multikeys_PRV::add_PRIVATE(t_crypto_system_type crypto_type, const t_key & key) {
