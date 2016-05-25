@@ -701,6 +701,15 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key
 	return std::make_pair(std::move(key_PRV), std::move(key_pub));
 }
 
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_ed25519_key_pair() {
+	std::string public_key;
+	size_t privkey_size = crypto_sign_SECRETKEYBYTES;
+	sodiumpp::locked_string private_key(privkey_size);
+	public_key = sodiumpp::crypto_sign_keypair(private_key);
+
+	return std::make_pair(std::move(private_key), std::move(public_key));
+}
+
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair() {
 	// generate key pair
 	uint16_t public_key_len = 0, private_key_len = 0;
@@ -835,6 +844,15 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 			break;
 		}
 
+		case e_crypto_system_type_Ed25519:
+		{
+			for (int i=0; i<count; ++i) {
+				auto keypair = generate_ed25519_key_pair();
+				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
+			}
+			break;
+		}
+
 		case e_crypto_system_type_NTRU_EES439EP1:
 		{
 			for (int i=0; i<count; ++i) {
@@ -902,13 +920,13 @@ sodiumpp::locked_string c_stream::return_empty_K() {
 // ---------------------------------------------------------------------------
 
 std::string c_stream::box(const std::string & msg) {
-	_dbg2("Boxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary())
-	<< " and nonce_cost = " << to_debug(m_boxer.get_nonce_constant().to_binary()) );
+	_dbg2("Boxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary())
+	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
 	return PTR(m_boxer)->box(msg).to_binary();
 }
 
 std::string c_stream::unbox(const std::string & msg) {
-	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer.get_nonce().get().to_binary()));
+	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary()));
 	return PTR(m_unboxer)->unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
@@ -1564,8 +1582,9 @@ void test_crypto() {
 	// Alice: IDC
 	_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
-	keypairA.generate(e_crypto_system_type_X25519,4);
-	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,2);
+	keypairA.generate(e_crypto_system_type_X25519,0);
+	keypairA.generate(e_crypto_system_type_Ed25519,5);
+	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairA.generate(e_crypto_system_type_SIDH, 0);
 
 	if (0) {
@@ -1580,8 +1599,9 @@ void test_crypto() {
 	// Bob: IDC
 	_mark("Create IDC for BOB");
 	c_multikeys_PAIR keypairB;
-	keypairB.generate(e_crypto_system_type_X25519,2);
-	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,2);
+	keypairB.generate(e_crypto_system_type_X25519,0);
+	keypairB.generate(e_crypto_system_type_Ed25519,5);
+	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairB.generate(e_crypto_system_type_SIDH, 0);
 
 	c_multikeys_pub keypubA = keypairA.m_pub;

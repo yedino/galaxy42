@@ -10,12 +10,11 @@ const char * debug_shorten__FILE__(const char * name);
 
 #define _my__FILE__ (debug_shorten__FILE__(__FILE__))
 
-#define _dbg3(X) do{}while(0)
-// do { ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define SHOW_DEBUG
+#ifdef SHOW_DEBUG
 
-#define _dbg2(X) do{}while(0)
-// do { ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-
+#define _dbg3(X) do { ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg2(X) do { ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _dbg1(X) do { ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _info(X) do { ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
 #define _note(X) do { ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
@@ -35,6 +34,19 @@ const char * debug_shorten__FILE__(const char * name);
 	::std::cerr<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
 	} while(0)
+
+#else
+
+#define _dbg3(X) do {} while(0)
+#define _dbg2(X) do {} while(0)
+#define _dbg1(X) do {} while(0)
+#define _info(X) do {} while(0)
+#define _note(X) do {} while(0)
+#define _warn(X) do {} while(0)
+#define _erro(X) do {} while(0)
+#define _mark(X) do {} while(0)
+
+#endif
 
 // TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)
