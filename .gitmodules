@@ -18,4 +18,10 @@
 	url = https://github.com/tigusoft-vm/sodiumpp
 [submodule "ntru-crypto"]
 	path = ntru-crypto
-	url = ../ntru-crypto
+	url = https://github.com/tigusoft-vm/ntru-crypto.git
+[submodule "libsidhms"]
+	path = libsidhms
+	url = https://github.com/tigusoft-vm/libsidhms.git
+[submodule "jsoncpp"]
+	path = jsoncpp
+	url = https://github.com/tigusoft-vm/jsoncpp.git

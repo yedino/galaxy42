@@ -27,6 +27,8 @@
 #include <unordered_set>
 #include <regex>
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include "c_tnetdbg.hpp"
 
 using std::string;
@@ -49,15 +51,15 @@ using std::istringstream;
 
 using std::endl;
 
+using boost::numeric_cast;
+
 #define UNUSED(expr) do { (void)(expr); } while (0)
+#define SVAR(x) #x << " = " << x
+
 
 
 // === RELEASE OPTIONS ===
-#ifndef RELEASEMODE
-	#define RELEASEMODE 0
-#endif
-
-#if RELEASEMODE
+#if defined (RELEASEMODE_)
 	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 0
 #else
 	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 1
@@ -96,12 +98,14 @@ inline bool size_t_is_ok(size_t x) {
 namespace std {
 
 
+/*
 // this is due to enter C++14
 // http://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique (Args &&... args) {
 		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+*/
 
 }
 
@@ -156,16 +160,77 @@ TE int_to_enum(TI i) {
 
 std::string to_string(const std::string & v); ///< just to have identical syntax
 
+template<typename T> constexpr bool templated_always_false() { return false; }
 
+
+// === ranges, copy ===
+
+/**
+ * @brief Checks if the range [start1,end1) overlaps (intersects) with range [start2,end2),
+ * name "oc" is for Open,Closed range, name "ne" is for Not-Empty,
+ * and asserted means that we assert validity of input data.
+ * @note It assumes that ranges are properly defined end not-empty, that is: start1<end1 && start2<end2
+ */
+template <typename TIn, typename TOut> bool ranges_overlap_oc_ne_asserted(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
+	assert( (start1<end1) );
+	assert( (start2<end2) );
+	return ( start1 < end2 and start2 < end1 );
 }
 
+/**
+ * @brief This asserts that range [start1,end1) does not overlap with range [start2,end2).
+ * @note It asserts also that the given ranges are not-empty and valid (start<end).
+ */
+template <typename TIn, typename TOut> void assert_not_ranges_overlap_oc_ne(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
+	assert( ! ranges_overlap_oc_ne_asserted(start1,end1, start2,end2) );
+}
+
+/**
+ * Very safe copy of memory from range [first..last) into [d_first, d_first+size)
+ * It asserts following conditions:
+ * - the memory ranges must not overlap
+ * - they must be not-empty and valid (begin < end)
+ * - the size given as argument must match the size of range [first..last)
+ */
+template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
+	assert( boost::numeric_cast<size_t>(last-first) == size); // is size as expected
+	// check if the memory ranges do not overlap by any chance:
+	assert_not_ranges_overlap_oc_ne(first,last, d_first,d_first+size);
+	std::copy(first,last, d_first); // ***
+}
+
+
+} // namespace
+
+
 using namespace stdplus;
+
 
 namespace tunserver_utils {
 
 std::pair< std::string,int > parse_ip_string(const string& ip_string);
 
 }
+
+
+using namespace std::string_literals;
+
+#define PTR(X) (PTR_assert(X, __func__))
+template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
+	if (!(ptr!=nullptr)) {
+		_erro("NULL pointer used! from func="<<func);
+		std::abort();
+		//assert(ptr!=nullptr);
+	}
+	return ptr;
+}
+
+
+#define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
+<<__func__<<" (line "<<__LINE__<<")"; \
+_erro(oss.str()); \
+throw std::runtime_error(oss.str()); \
+} while(0)
 
 #endif
 

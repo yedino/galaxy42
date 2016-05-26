@@ -25,6 +25,7 @@ TEST(serialize, varstring_vector) {
 	std::string(R"(""""")")
 	};
 	gen.push_vector_string(input);
+
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
 	auto output_vector = parser.pop_vector_string();
 	for (size_t i = 0; i < output_vector.size(); ++i) {
@@ -46,4 +47,73 @@ TEST(serialize, get_from_empty_string) {
 	trivialserialize::parser parser(
 		trivialserialize::parser::tag_caller_must_keep_this_string_valid() , empty );
 	ASSERT_THROW((parser.pop_integer_u<1, uint8_t>()), std::exception);
+}
+
+TEST(serialize, test_trivialserialize) {
+	EXPECT_NO_THROW(test::test_trivialserialize());
+}
+
+TEST(serialize, varstring_map) {
+	std::map<std::string, std::string> input;
+	input["aaa"] = "bbb";
+	input["111"] = "2222222222222222222";
+	input["0"] = "zzzzzzzzz";
+	input["asdfas"] = "5567";
+	input[";"] = "...";
+	input[",./234"] = ";433334;43;34;34;2<>;";
+	input["           "] = "htfthfft";
+	input[R"(		  		)"] = "xyz";
+	input["%"] = std::string();
+	input[std::string()] = std::string();
+	input[std::string(254, 'x')] = std::string(254, 'x');
+	generator gen(1);
+	gen.push_map_object(input);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	auto output = parser.pop_map_object<std::string, std::string>();
+	for (const auto &  pair : input) {
+		EXPECT_EQ(pair.second, output.at(pair.first));
+	}
+	EXPECT_EQ( output , input );
+	EXPECT_EQ( output.size() , input.size() );
+}
+
+TEST(serialize, empty_vector) {
+	generator gen(1);
+	std::vector<std::string> input;
+	gen.push_vector_string(input);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	auto output_vector = parser.pop_vector_string();
+	ASSERT_TRUE(output_vector.empty());
+}
+
+TEST(serialize, empty_element_as_last) {
+	generator gen(1);
+	std::vector<std::string> input = {
+	std::string("aaaa"),
+	std::string("bbbb"),
+	std::string()
+	};
+	gen.push_vector_string(input);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	auto output = parser.pop_vector_string();
+	ASSERT_EQ(input.size(), output.size());
+	for (size_t i = 0; i < input.size(); ++i) {
+		ASSERT_EQ(input.at(i), output.at(i));
+	}
+}
+
+TEST(serialize, empty_element_as_first) {
+	generator gen(1);
+	std::vector<std::string> input = {
+	std::string(),
+	std::string("aaaa"),
+	std::string("bbbb")
+	};
+	gen.push_vector_string(input);
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	auto output = parser.pop_vector_string();
+	ASSERT_EQ(input.size(), output.size());
+	for (size_t i = 0; i < input.size(); ++i) {
+		ASSERT_EQ(input.at(i), output.at(i));
+	}
 }

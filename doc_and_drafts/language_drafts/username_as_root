@@ -1,0 +1,16 @@
+echo "Run this file via sudo to test if it shows the correct name of user who run this sudo (not the root)"
+
+set -x
+
+echo $USER
+logname
+id
+who
+who am i
+who am i | awk '{print$1}'
+whoami
+
+# http://unix.stackexchange.com/questions/137175/how-to-get-the-name-of-the-user-who-executed-a-bash-script-as-sudo
+the_user="${SUDO_USER:-$USER}"
+echo $the_user
+

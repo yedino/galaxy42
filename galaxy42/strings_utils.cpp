@@ -8,7 +8,7 @@
 string_as_hex::string_as_hex(const std::string & s) : data(s) { }
 
 string_as_hex::string_as_hex(const string_as_bin & in) {
-	size_t in_size = in.bytes.size(); 
+	size_t in_size = in.bytes.size();
 	size_t size_mul = 2; // how much will the string expand
 	size_t in_size_max1 = ( std::numeric_limits<decltype(in_size)>::max() / size_mul ) ; // it will expand e.g. x2 (that is not entire limit yet)
 	assert( in_size < in_size_max1 );
@@ -117,7 +117,7 @@ string_as_bin & string_as_bin::operator+=( const std::string & other ) {
 	bytes += other;
 	return *this;
 }
-string_as_bin string_as_bin::operator+( const std::string & other ) const { 
+string_as_bin string_as_bin::operator+( const std::string & other ) const {
 	string_as_bin ret = *this;
 	ret += other;
 	return ret;
@@ -136,6 +136,15 @@ bool operator<( const string_as_bin &a, const string_as_bin &b) {
 	return a.bytes < b.bytes;
 }
 
+// ==================================================================
+
+std::string chardbg(char c) {
+	// this is quite slow
+	std::ostringstream oss;
+	string_as_dbg s;
+	s.print(oss,c);
+	return oss.str();
+}
 
 // ==================================================================
 
@@ -152,13 +161,20 @@ void string_as_dbg::print(std::ostream & os, char v)
 	unsigned char uc = static_cast<unsigned char>(v);
 	signed char widthH=-1; // -1 is normal print, otherwise the width of hex
 	signed char widthD; // width of dec
+	if (uc<=9) {
+		os << "0x" << static_cast<int>(uc);
+	}
+	else
+	{
 	if (uc<32) { widthH=2; widthD=2; }
 	if (uc>127) { widthH=2; widthD=3; }
 	if (widthH!=-1) { // escape it
-		os << "0x" << std::hex << std::setfill('0') << std::setw(widthH) << static_cast<int>(uc)
-		   << '(' << std::dec << std::setfill('0') << std::setw(widthD) << static_cast<int>(uc) << ')';
+		os << "0x" << std::hex << std::setfill('0') << std::setw(widthH) << std::uppercase << static_cast<int>(uc)
+		   << '=' << std::dec << std::setfill('0') << std::setw(widthD) << static_cast<int>(uc);
 	}
 	else os<<v; // normal
+	}
+	//
 }
 void string_as_dbg::print(std::ostream & os, signed char v) { print(os, static_cast<char>(v)); }
 void string_as_dbg::print(std::ostream & os, unsigned char v) { print(os, static_cast<char>(v)); }

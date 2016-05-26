@@ -3,6 +3,37 @@ Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
 
+/**
+
+GPL or other licence, see the licence file!
+
+This is early pre-pre-alpha version, do NOT use it yet for anything,
+do NOT run it other then in a test VM or better on isolated computer,
+it has bugs and 'typpos'.
+                                                 _       _
+ _ __  _ __ ___       _ __  _ __ ___        __ _| |_ __ | |__   __ _
+| '_ \| '__/ _ \_____| '_ \| '__/ _ \_____ / _` | | '_ \| '_ \ / _` |
+| |_) | | |  __/_____| |_) | | |  __/_____| (_| | | |_) | | | | (_| |
+| .__/|_|  \___|     | .__/|_|  \___|      \__,_|_| .__/|_| |_|\__,_|
+|_|                  |_|                          |_|                
+     _                       _                                    _   
+  __| | ___      _ __   ___ | |_     _   _ ___  ___    _   _  ___| |_ 
+ / _` |/ _ \    | '_ \ / _ \| __|   | | | / __|/ _ \  | | | |/ _ \ __|
+| (_| | (_) |   | | | | (_) | |_    | |_| \__ \  __/  | |_| |  __/ |_ 
+ \__,_|\___/    |_| |_|\___/ \__|    \__,_|___/\___|   \__, |\___|\__|
+                                                       |___/          
+ _                   _                     
+| |__   __ _ ___    | |__  _   _  __ _ ___ 
+| '_ \ / _` / __|   | '_ \| | | |/ _` / __|
+| | | | (_| \__ \   | |_) | |_| | (_| \__ \
+|_| |_|\__,_|___/   |_.__/ \__,_|\__, |___/
+                                 |___/  
+
+*/
+
+
+
+
 /*
 
 TODO(r) do not tunnel entire (encrypted) copy of TUN, trimm it from headers that we do not need
@@ -26,7 +57,8 @@ Current TODO / topics:
 
 */
 
-const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
+const char * disclaimer =
+"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 // The name of the hardcoded default demo that will be run with --devel (unless option --develdemo is given) can be set here:
 const char * g_demoname_default = "route_dij";
@@ -90,6 +122,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_json_load.hpp"
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
+#include "generate_config.hpp"
 
 
 #include "crypto.hpp" // for tests
@@ -113,6 +146,8 @@ void error(const std::string & msg) {
 namespace developer_tests {
 
 bool wip_strings_encoding(boost::program_options::variables_map & argm) {
+	UNUSED(argm);
+
 	_mark("Tests of string encoding");
 	string s1,s2,s3;
 	using namespace std;
@@ -346,6 +381,7 @@ bool c_routing_manager::c_route_reason::operator==(const c_route_reason &other) 
 c_routing_manager::c_route_search::c_route_search(c_haship_addr addr, int basic_ttl)
 	: m_addr(addr), m_ever(false), m_ask_time(), m_ttl_used(0), m_ttl_should_use(5)
 {
+	UNUSED(basic_ttl); // TODO or use it as m_ttl_should_use?
 	_info("NEW router SEARCH: " << (*this));
 }
 
@@ -506,7 +542,7 @@ class c_tunserver : public c_galaxy_node {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
-
+	_dbg1("Adding peer from simplestring=" << simple);
 	size_t pos1 = simple.find('-');
 	string part_ip = simple.substr(0,pos1);
 	string part_pub = simple.substr(pos1+1);
@@ -659,7 +695,6 @@ void c_tunserver::peering_ping_all_peers() {
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
-	size_t count_used=0; ///< peers that we used
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -743,11 +778,8 @@ void c_tunserver::event_loop() {
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
 
-	fd_set fd_set_data;
-
-
 	this->peering_ping_all_peers();
-	const auto ping_all_frequency = std::chrono::seconds( 600 ); // how often to ping them
+	const auto ping_all_frequency = std::chrono::seconds( 1 ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
@@ -786,7 +818,7 @@ void c_tunserver::event_loop() {
 			debug_peers();
 
 			string xx(10,'-');
-			std::cerr << endl << xx << node_title_bar << xx << endl << endl;
+			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
 
 		anything_happened=false;
@@ -1027,8 +1059,9 @@ void c_tunserver::event_loop() {
 					_info("GOT CORRECT REPLY - USING IT");
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost );
 					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
-					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); // store it, so that we own this object
-					// TODONOW and reply to others who asked us
+					// store it, so that we own this object:
+					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); 
+					UNUSED(route_info_ref_we_own); // TODO TODONOW and reply to others who asked us
 				}
 			}
 			else {
@@ -1079,9 +1112,12 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
 	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
+
 	int peer_nr = node_nr==1 ? 2 : 1;
+
 	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
-	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62"); // each connect to node .1., except the node 1 that connects to .2.
+	// each connect to node .1., except the node 1 that connects to .2."
+	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62");
 
 	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
 	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
@@ -1098,9 +1134,15 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
 
 	// --- define the test world ---
-	map< int , t_peer_cmdline_ref > peer_to_ref; // for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line)
-	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) ,
-		string("deadbeef999fff") + std::to_string(nr) };	}
+	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
+	map< int , t_peer_cmdline_ref > peer_to_ref;
+	for (int nr=1; nr<20; ++nr) {
+		peer_to_ref[nr] = {
+			string("192.168.") + std::to_string( nr ) + string(".62") + ":9042"
+			, string("cafe") + std::to_string(nr) ,
+			string("deadbeef999fff") + std::to_string(nr)
+		};
+	}
 
 	// pre-generate example test EC DH keypairs:
 	peer_to_ref[1].pubkey = "3992967d946aee767b2ed018a6e1fc394f87bd5bfebd9ea7728edcf421d09471";
@@ -1209,10 +1251,11 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("bar", "bar test")
 					("serialize",  "serialize test")
 					("crypto", "crypto test")
+					("crypto_bench", "crypto benchmark")
 					("route_dij", "dijkstra test")
 					("help", "Help msg");
 
-	if (demoname=="help") {
+	if ((demoname=="help")||(demoname=="list")) {
 		std::cout << "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:";
 		std::cout << desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" << std::endl; // TODO(janusz)
 		return false;
@@ -1228,8 +1271,9 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 
 	if (demoname=="foo") { test_foo();  return false; }
 	if (demoname=="bar") { test_bar();  return false; }
-	if (demoname=="serialize") { trivialserialize::test_trivialserialize();  return false; }
+	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize();  return false; }
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
+	if (demoname=="crypto_bench") { antinet_crypto::test_crypto_benchmark(2);  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
@@ -1281,6 +1325,11 @@ int main(int argc, char **argv) {
 						   "*** this could overwrite your actual configurations ***")
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
+			("gen-lowest", "Generate lowest set of cryptographic keys:\n (1x 25519)")
+			("gen-fast", "Generate fast set of cryptographic keys:\n (1x 25519, 1x sidh)")
+			("gen-normal", "Generate normal set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
+			("gen-high", "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru, 1x geport)")
+			("gen-highest", "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru, 2x geport)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1335,6 +1384,32 @@ int main(int argc, char **argv) {
 				for(auto &ref : galaxyconf.get_peer_references()) {
 					myserver.add_peer(ref);
 				}
+			}
+
+
+			if(argm.count("gen-highest")) {
+				std::cout << "Generating highest cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::highest);
+				return 0;
+			} else if(argm.count("gen-high")) {
+				std::cout << "Generating high cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::high);
+				return 0;
+
+			} else if(argm.count("gen-normal")) {
+				std::cout << "Generating normal cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::normal);
+				return 0;
+
+			} else if(argm.count("gen-fast")) {
+				std::cout << "Generating fast cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::fast);
+				return 0;
+
+			} else if(argm.count("gen-lowest")) {
+				std::cout << "Generating lowest cryptographic keys ..." << std::endl;
+				generate_config::crypto_set(e_crypto_set::lowest);
+				return 0;
 			}
 
 			_info("Configuring my own reference (keys):");

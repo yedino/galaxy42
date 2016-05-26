@@ -1,9 +1,8 @@
 #!/bin/bash
 
-echo "Ok I am in the namespace"
+echo "Ok I am in the namespace..."
 
-while true ; do sleep 10 || break ; done
+while true ; do sleep 3600 || break ; done
 
-echo "Done waiting in the namespace":w
+echo "Done waiting in the namespace"
 
- 

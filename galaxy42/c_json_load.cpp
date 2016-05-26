@@ -1,35 +1,5 @@
 #include "c_json_load.hpp"
 
-bool c_file_checker::is_file_ok(const std::string &filename) {
-	using namespace boost::filesystem;
-
-	path p(filename);
-
-	try {
-		if (exists(p)) {    // does p actually exist?
-			if (is_regular_file(p)) {       // is p a regular file?
-				// std::cout << p << " size is " << file_size(p) << std::endl;  //dbg
-
-			} else if (is_directory(p)) {     // is p a directory?
-				std::cout << p << " is a directory" << std::endl;
-				return 0;
-
-			} else {
-				std::cout << p << " exists, but is neither a regular file nor a directory" << std::endl;
-				return 0;
-			}
-		} else {
-			std::cout << p << " does not exist" << std::endl;
-			return 0;
-		}
-
-	} catch (const filesystem_error& ex) {
-		std::cout << ex.what() << std::endl;
-		return 0;
-	}
-	return 1;
-}
-
 c_json_file_parser::c_json_file_parser (const std::string &filename) {
 
     if(parse_file(filename)) {
@@ -44,7 +14,7 @@ Json::Value c_json_file_parser::get_root() {
 
 bool c_json_file_parser::parse_file(const std::string &filename) {
 
-	if(!c_file_checker::is_file_ok(filename)) {
+	if(!filestorage::is_file_ok(filename)) {
 		return 1;
 	}
 
