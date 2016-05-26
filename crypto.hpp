@@ -525,15 +525,15 @@ class c_multikeys_PAIR {
 		 * 		  Public keys must coresponding to PRV keys that was used to sign message
 		 * @param sign_type	Type of crypto system.
 		 */
-		static void multi_sign_verify(const std::string &msg,
-							   const std::vector<std::string> &signs,
-							   const c_multikeys_pub &pubkeys,
-							   t_crypto_system_type sign_type = e_crypto_system_type_Ed25519);
+		static void multi_sign_verify(const std::vector<string> &signs,
+									  const string &msg,
+									  const c_multikeys_pub &pubkeys,
+									  t_crypto_system_type sign_type = e_crypto_system_type_Ed25519);
 
 		void debug() const;
 
 		void add_public_and_PRIVATE(t_crypto_system_type crypto_type,
-			const c_crypto_system::t_pubkey & pubkey ,
+			const c_crypto_system::t_pubkey & pubkey,
 			const c_crypto_system::t_PRVkey & PRVkey);
 
 		/// like c_multikeys_general<>::datastore_save(), for the private (+public) key

@@ -187,15 +187,15 @@ TEST(crypto, multi_sign_ed25519) {
 	signs = Alice.multi_sign(msg_to_sign);
 
 	EXPECT_THROW({
-		antinet_crypto::c_multikeys_PAIR::multi_sign_verify("bad_message",
-															signs,
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
+															"bad_msg",
 															Alice.read_pub());
 
 	}, sodiumpp::crypto_error);
 
 	EXPECT_NO_THROW( {
-		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(msg_to_sign,
-															signs,
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
+															msg_to_sign,
 															Alice.read_pub());
 	});
 }
