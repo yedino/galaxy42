@@ -72,13 +72,13 @@ namespace ntrupp {
 
 		unsigned char hash[HASH_BYTES];
 		crypto_hash_sha512(hash,
-						   reinterpret_cast<const unsigned char*>(private_key.get_string()),
+						   reinterpret_cast<const unsigned char*>(private_key.data()),
 						   sizeof(int64)*PASS_N); // necessary?
 
 		::sign(hash,
 			   z,
 			   private_key.get_string(),
-			   reinterpret_cast<const unsigned char *>(msg.c_str()),
+			   reinterpret_cast<const unsigned char *>(msg.data()),
 			   msg.size());
 
 		std::string signature(reinterpret_cast<const char *>(z), PASS_N);
