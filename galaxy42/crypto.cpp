@@ -820,15 +820,22 @@ std::vector<string> c_multikeys_PAIR::multi_sign(const string &msg,
 
 	std::vector<std::string> signs;
 
-	size_t ed_count = m_PRV.get_count_keys_in_system(sign_type);
-	assert(ed_count > 0 && "no keys of the required type");
+	size_t keys_count = m_PRV.get_count_keys_in_system(sign_type);
+	assert(keys_count > 0 && "no keys of the required type");
 
 	switch(sign_type) {
 		case e_crypto_system_type_Ed25519: {
-			for(size_t i = 0; i < ed_count; ++i) {
+			for(size_t i = 0; i < keys_count; ++i) {
 				std::string sign;
 				sign = sodiumpp::crypto_sign_detached(msg,m_PRV.get_PRIVATE(sign_type,i).get_string());
 				signs.emplace_back(std::move(sign));
+			}
+			break;
+		}
+		case e_crypto_system_type_NTRU_EES439EP1: {
+			for(size_t i = 0; i < keys_count; ++i) {
+				std::string sign;
+				auto pubkey = m_PRV.get_PRIVATE(sign_type,i).get_string();
 			}
 			break;
 		}
@@ -838,8 +845,8 @@ std::vector<string> c_multikeys_PAIR::multi_sign(const string &msg,
 	return signs;
 }
 
-void c_multikeys_PAIR::multi_sign_verify(const string &msg,
-										 const std::vector<string> &signs,
+void c_multikeys_PAIR::multi_sign_verify(const std::vector<string> &signs,
+										 const string &msg,
 										 const c_multikeys_pub &pubkeys,
 										 t_crypto_system_type sign_type) {
 
