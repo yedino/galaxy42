@@ -48,7 +48,7 @@ c_tcp_asio_node::~c_tcp_asio_node() {
 
 void c_tcp_asio_node::send(c_network_message && message) {
 	c_network_message msg(std::move(message)); // consume message
-	ip::address_v6 ip_addr = ip::address_v6::from_string(msg.address_ip); // throw "Invalid argument"
+	ip::address_v4 ip_addr = ip::address_v4::from_string(msg.address_ip); // throw "Invalid argument"
 	ip::tcp::endpoint endpoint(ip_addr, msg.port); // generate endpoint from message
 
 	std::lock_guard<std::mutex> lg(m_connection_map_mtx);

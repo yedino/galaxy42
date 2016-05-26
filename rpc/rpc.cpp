@@ -18,23 +18,24 @@ void rpc::rpc_demo() {
 	_info("Running rpc demo");
 
 try {
-	// create example localhost resiever on port 9042
-	std::unique_ptr<c_connection_base> example_reciever(new asio_node::c_tcp_asio_node(9042));
+	// create example localhost resiever on port 9040
+	//std::unique_ptr<c_connection_base> example_reciever(new asio_node::c_tcp_asio_node(9042));
 
-	_info("sending example message to localhost:9042");
+
+	_info("sending example message to localhost:9040");
 	// default addr = "::1", port = 9042
-	send_tcp_msg("Hello there");
+	send_tcp_msg("Hello there", "127.0.0.1", 9040);
 
-	c_network_message message2;
+	//c_network_message message2;
 	// wait for message
-	do {
-		message2 = example_reciever->receive();
-		std::this_thread::yield();
-	} while (message2.data.empty());
+	//do {
+	//	message2 = example_reciever->receive();
+	//	std::this_thread::yield();
+	//} while (message2.data.empty());
 
-	_dbg2("source ip " << message2.address_ip);
-	_dbg2("source port " << message2.port);
-	_dbg2("data " << message2.data);
+	//_dbg2("source ip " << message2.address_ip);
+	//_dbg2("source port " << message2.port);
+	//_dbg2("data " << message2.data);
 } catch (std::exception &err) {
 	std::cerr << err.what() << std::endl;
 }
