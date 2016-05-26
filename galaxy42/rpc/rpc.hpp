@@ -6,7 +6,7 @@
 
 namespace rpc {
 
-void send_tcp_msg(const std::string &msg, const std::string addr = "::1", int port = 9042);
+void send_tcp_msg(const std::string &msg, const std::string addr = "127.0.0.1", int port = 9040);
 void rpc_demo ();
 
 } // namespace rpc
