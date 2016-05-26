@@ -542,7 +542,7 @@ class c_tunserver : public c_galaxy_node {
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
-
+	_dbg1("Adding peer from simplestring=" << simple);
 	size_t pos1 = simple.find('-');
 	string part_ip = simple.substr(0,pos1);
 	string part_pub = simple.substr(pos1+1);
@@ -1136,8 +1136,13 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
 	map< int , t_peer_cmdline_ref > peer_to_ref;
-	for (int nr=1; nr<20; ++nr) { peer_to_ref[nr] = { string("192.168.") + std::to_string( nr ) + string(".62") , string("cafe") + std::to_string(nr) ,
-		string("deadbeef999fff") + std::to_string(nr) };	}
+	for (int nr=1; nr<20; ++nr) {
+		peer_to_ref[nr] = {
+			string("192.168.") + std::to_string( nr ) + string(".62") + ":9042"
+			, string("cafe") + std::to_string(nr) ,
+			string("deadbeef999fff") + std::to_string(nr)
+		};
+	}
 
 	// pre-generate example test EC DH keypairs:
 	peer_to_ref[1].pubkey = "3992967d946aee767b2ed018a6e1fc394f87bd5bfebd9ea7728edcf421d09471";
@@ -1250,7 +1255,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("route_dij", "dijkstra test")
 					("help", "Help msg");
 
-	if (demoname=="help") {
+	if ((demoname=="help")||(demoname=="list")) {
 		std::cout << "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:";
 		std::cout << desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" << std::endl; // TODO(janusz)
 		return false;
