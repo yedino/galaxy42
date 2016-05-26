@@ -134,9 +134,9 @@ def totag_stats(pager, encoding, check_mode=False):
 				info_head = col_coms+"Signatures status for all commits:\n"
 				info_ft = BColors.OKBLUE + "NOTICE: No tag found in this repository\n"
 
-			info_head = "\n\n\n" + "Warning: (bug#m145) check if no branches, remotes (refnames) contain word 'tag' otherwise "
-				+ "this parsing can be not accurate and could show not correct stats. Also read the log yourself "
-				+" to make sure.\n\n" + info_head
+			info_head = "\n\n\n" + "Warning: (bug#m145) check if no branches, remotes (refnames) contain word 'tag' otherwise " \
+			+ "this parsing can be not accurate and could show not correct stats. Also read the log yourself " \
+			+ " to make sure.\n\n" + info_head
 
 			info_str = info_head                                    \
 						+ col_coms + str(G_totag) + ": GOOD\n"      \
