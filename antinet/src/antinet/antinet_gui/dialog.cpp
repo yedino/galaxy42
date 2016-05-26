@@ -85,6 +85,7 @@ void Dialog::onRead()
 		m_tmp_socket->flush();
 		m_tmp_socket->waitForBytesWritten();
 	   m_tmp_socket->close();
+	   msg.remove(0,4);
 		m_info_model->addMessage(QString(msg));
 
 		ui->errorView->selectRow(m_info_model->rowCount()-1);
