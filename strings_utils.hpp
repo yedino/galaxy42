@@ -45,7 +45,7 @@ struct string_as_bin {
 	{
 		static_assert( std::is_pod<T>::value , "Can not serialize as binary data (this array type, of) this non-POD object type");
 	}
-	
+
 	string_as_bin & operator+=( const string_as_bin & other );
 	string_as_bin operator+( const string_as_bin & other ) const;
 	string_as_bin & operator+=( const std::string & other );
@@ -56,6 +56,8 @@ struct string_as_bin {
 
 bool operator<( const string_as_bin &a, const string_as_bin &b);
 
+
+std::string chardbg(char c); ///< Prints one character in "debugging" format, e.g. 0x0, or 0x20=32, etc.
 
 struct string_as_dbg {
 	public:
@@ -69,9 +71,27 @@ struct string_as_dbg {
 		explicit string_as_dbg( T it_begin , T it_end ) ///< from range defined by two iterator-like objects
 		{
 			std::ostringstream oss;
-			oss<<"(" << std::distance(it_begin, it_end) << ")";
-			oss<<'['; bool first=1;
-			for (auto it = it_begin ; it!=it_end ; ++it) { if (!first) oss << ','; print(oss,*it);  first=0;  }
+			oss << std::distance(it_begin, it_end) << ' ';
+			oss<<'[';
+			bool first=1;
+			size_t size = it_end - it_begin;
+			const size_t size1 = 8;
+			const size_t size2 = 4;
+			// TODO assert/review pointer operations
+			if (size <= size1+size2) {
+				for (auto it = it_begin ; it!=it_end ; ++it) { if (!first) oss << ','; print(oss,*it);  first=0;  }
+			} else {
+				{
+					auto b = it_begin, e = std::min(it_end, it_begin+size1);
+					for (auto it = b ; it!=e ; ++it) { if (!first) oss << ','; print(oss,*it);  first=0;  }
+				}
+				oss<<" ... ";
+				first=1;
+				{
+					auto b = std::max(it_begin, it_end - size2), e = it_end;
+					for (auto it = b ; it!=e ; ++it) { if (!first) oss << ','; print(oss,*it);  first=0;  }
+				}
+			}
 			oss<<']';
 			this->dbg = oss.str();
 		}
@@ -86,6 +106,8 @@ struct string_as_dbg {
 
 		template<class T>	void print(std::ostream & os, const T & v) { os<<v; }
 
+
+	public: // for chardbg.  TODO move to class & make friend class
 		void print(std::ostream & os, unsigned char v);
 		void print(std::ostream & os, signed char v);
 		void print(std::ostream & os, char v);

@@ -1,6 +1,15 @@
 #include "gtest/gtest.h"
 #include "../crypto.hpp"
 
+// ntru sign
+extern "C" {
+#include <constants.h>
+#include <pass_types.h>
+#include <hash.h>
+#include <ntt.h>
+#include <pass.h>
+}
+
 namespace antinet_crypto {
 
 /* broke after the memlock and _PRV hash functions...
@@ -64,7 +73,7 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 
 TEST(crypto, aeshash_start_and_get_same_passwords) {
 	c_symhash_state symhash( string_as_bin(string_as_hex("6a6b")).bytes ); // "jk"
-	auto p = string_as_hex( string_as_bin( symhash.get_password() ) );
+	string_as_hex p(( string_as_bin( symhash.get_password() ) ));
 	//	cout << "\"" << string_as_hex( symhash.get_password() ) << "\"" << endl;
 	EXPECT_EQ(p.get(), "1ddb0a828c4d3776bf12abbe17fb4d82bcaf202a1b00b5b54e90db701303d69ce235f36d25c9fd1343225888e00abdc0e18c2036e86af9f3a90faf1abfefedf7");
 	symhash.next_state();
@@ -107,3 +116,86 @@ TEST(crypto, dh_exchange) {
 }
 
 } // namespace
+
+TEST(crypto, bin_string_xor) {
+
+	std::string test_str("longrandomstring123123345345!@#$%^&*())))(*&^%$#@");
+	std::string result;
+
+	// xor for the same string should be tab of zeros
+	result = antinet_crypto::string_binary_op::binary_string_xor(test_str, test_str);
+	for(auto ch : result) {
+		EXPECT_EQ(static_cast<int>(ch), 0);
+	}
+
+	// two empty strings
+	result = antinet_crypto::string_binary_op::binary_string_xor(std::string(""),std::string(""));
+	EXPECT_EQ(result.length(),0u);
+	EXPECT_EQ(result,"");
+
+	bool size_diff_err = false;
+  try {
+	// binary string xor of two string with different size should throw runtime error
+	antinet_crypto::string_binary_op::binary_string_xor(std::string("xx"), std::string("xxxx"));
+  } catch(std::runtime_error) {
+		size_diff_err = true;
+  }
+	EXPECT_EQ(true, size_diff_err);
+
+	size_diff_err = false;
+  try {
+	// binary string xor of two string with different size should throw runtime error
+	// try with empty string
+	antinet_crypto::string_binary_op::binary_string_xor(std::string(""), std::string("xxxx"));
+  } catch(std::runtime_error) {
+		size_diff_err = true;
+  }
+	EXPECT_EQ(true, size_diff_err);
+}
+
+TEST(crypto, ntru_sign) {
+	const std::string msg("message to sign");
+	int64 secretkey[PASS_N];
+	int64 pubkey[PASS_N] = {0};
+	int64 z[PASS_N];
+	if(ntt_setup() == -1) {
+		fprintf(stderr,
+		"ERROR: Could not initialize FFTW. Bad wisdom?\n");
+		exit(EXIT_FAILURE);
+	}
+	gen_key(secretkey);
+	unsigned char hash[HASH_BYTES];
+	crypto_hash_sha512(hash, reinterpret_cast<unsigned char*>(secretkey), sizeof(int64)*PASS_N); // necessary?
+	gen_pubkey(pubkey, secretkey);
+	sign(hash, z, secretkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size());
+	ASSERT_EQ(verify(hash, z, pubkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size()), VALID);
+	z[0] = ~ z[0];
+	ASSERT_NE(verify(hash, z, pubkey, reinterpret_cast<const unsigned char *>(msg.data()), msg.size()), VALID);
+	ntt_cleanup();
+
+}
+
+TEST(crypto, multi_sign_ed25519) {
+
+	antinet_crypto::c_multikeys_PAIR Alice;
+	Alice.generate(antinet_crypto::e_crypto_system_type_Ed25519,5);
+
+	std::string msg_to_sign = "message";
+	std::vector<std::string> signs;
+
+	// ed25519 is default sign system
+	signs = Alice.multi_sign(msg_to_sign);
+
+	EXPECT_THROW({
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify("bad_message",
+															signs,
+															Alice.read_pub());
+
+	}, sodiumpp::crypto_error);
+
+	EXPECT_NO_THROW( {
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(msg_to_sign,
+															signs,
+															Alice.read_pub());
+	});
+}

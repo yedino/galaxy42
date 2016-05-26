@@ -20,13 +20,23 @@ echo " * https://github.com/NTRUOpenSourceProject/ntru-crypto"
 echo ""
 echo "---------------------------------------------------------------"
 
+
+echo "Downloading (git submodule) now:"
+echo "Security: relax, this downloads are always validated by strong cryptographic checksum as git uses, e.g. SHA1 :)";
+echo "PLEASE WAIT..."
+
 set -x
 
-git submodule init
+git submodule init || { echo "Error: submodules download failed (init);" ; exit 1 ; }
 
-git submodule update 
+# needed because maybe work directory has old version connected to old git path
+git submodule sync || { echo "Error: submodules download failed (sync);" ; exit 1 ; }
+
+git submodule update || { echo "Error: submodules download failed (update)." ; exit 1 ; }
 
 set +x
+
+echo "OK - download done"
 
 
 

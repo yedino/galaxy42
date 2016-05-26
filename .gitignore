@@ -1,9 +1,13 @@
 
+# temporary var files, including created by running-in-place program
+# (untill we write proper support for some ~/.galaxy42/var/
+vartmp/
 
 # directories copied from source
 # (the source is e.g. git submodule but in other location)
 sodiumpp/
 googletest/
+jsoncpp/
 
 
 # also other libs

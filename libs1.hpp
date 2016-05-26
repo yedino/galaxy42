@@ -7,6 +7,5 @@
 
 #include "strings_utils.hpp"
 
-
 #endif
 
