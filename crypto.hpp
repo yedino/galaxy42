@@ -595,15 +595,18 @@ class c_stream final /* because strange ctor init list functions */
 		void exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart);
 
-		string generate_packetstart() const; ///< generate and return our full packetstarter
+		///! generate and return our full packetstarter
+		///!
+		string generate_packetstart(c_stream & stream_to_encrypt_with) const;
 
+		///! parse received packetstart and get IDe (the next ID to start next stream)
 		string parse_packetstart_kexasym(const string & data) const; ///< parse received packetstart and get kexasym part
+		///! parse received packetstart and get IDe (the next ID to start next stream)
 		string parse_packetstart_IDe(const string & data) const;
 
 		void set_packetstart_IDe_from(const c_multikeys_PAIR & keypair);
 
 		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
-		std::string exchange_start_get_packet() const;
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);

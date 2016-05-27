@@ -457,15 +457,15 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
 
-		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was")
-			+ magic_marker + string(")"));
+		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was: ")
+			+ ::to_debug(magic_marker) + string(")"));
 
 	auto magic_version = parser.pop_byte_u();
 
 	auto magic_crypto_use = parser.pop_byte_u();
 	if (magic_crypto_use != m_crypto_use) {
 		std::ostringstream oss;
-		oss<<"Format error: crypto_use was=" << magic_crypto_use << " but we expected=" << m_crypto_use;
+		oss<<"Format error: crypto_use was=" << ::to_debug(magic_crypto_use) << " but we expected=" << m_crypto_use;
 		throw std::runtime_error(oss.str());
 	}
 
@@ -1024,12 +1024,15 @@ void c_stream::create_boxer_with_K() {
 	assert(m_boxer); assert(m_unboxer);
 }
 
-std::string c_stream::generate_packetstart() const {
+std::string c_stream::generate_packetstart(c_stream & stream_to_encrypt_with) const {
 	trivialserialize::generator gen( m_packetstart_kexasym.size() + m_packetstart_IDe.size() + 20);
-	gen.push_varstring( m_packetstart_kexasym );
 	_note("MAKING packetstart: m_packetstart_kexasym = " << to_debug(m_packetstart_kexasym));
-	gen.push_varstring( m_packetstart_IDe );
+	gen.push_varstring( m_packetstart_kexasym );
+
 	_note("MAKING packetstart: m_packetstart_IDe = " << to_debug(m_packetstart_IDe));
+	string packetstart_IDe_via_CT = stream_to_encrypt_with.box( m_packetstart_IDe );
+	_note("MAKING packetstart: packetstart_IDe_via_CT = " << to_debug(packetstart_IDe_via_CT));
+	gen.push_varstring( packetstart_IDe_via_CT );
 	return gen.str();
 }
 
@@ -1042,8 +1045,11 @@ string c_stream::parse_packetstart_kexasym(const string & data) const {
 string c_stream::parse_packetstart_IDe(const string & data) const {
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	parser.skip_varstring(); // 1
-	auto ret = parser.pop_varstring(); // 2
-	return ret;
+	auto data_encr = parser.pop_varstring(); // 2
+	auto data_decr = m_unboxer->unbox( sodiumpp::encoded_bytes(data_encr,sodiumpp::encoding::binary ));
+	_info("Reading packetstart IDe, encr: " << to_debug(data_encr));
+	_info("Reading packetstart IDe, decr: " << to_debug(data_decr));
+	return data_decr;
 }
 
 
@@ -1058,13 +1064,6 @@ unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
 
 void c_stream::set_packetstart_IDe_from(const c_multikeys_PAIR & keypair) {
 	m_packetstart_IDe = keypair.read_pub().serialize_bin();
-}
-
-
-// TODO-delete:
-std::string c_stream::exchange_start_get_packet() const {
-	TODOCODE;
-	return "TODO";
 }
 
 // ---------------------------------------------------------------------------
@@ -1488,7 +1487,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 	m_stream_crypto_final->set_packetstart_IDe_from( * m_IDe ); // finall stream will send our IDe in packetstarter
 
 	_mark("Bob? created packet starter for CTe...");
-	_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
+//	_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
 	_note("Bob? Creating the crypto tunnel (we are respondent) - DONE");
 }
 
@@ -1506,12 +1505,12 @@ void c_crypto_tunnel::create_CTf(const string & packetstart) {
 // ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::get_packetstart_ab() const {
-	return PTR(m_stream_crypto_ab)->generate_packetstart();
+	return PTR(m_stream_crypto_ab)->generate_packetstart( * PTR(m_stream_crypto_ab) );
 
 }
 
 std::string c_crypto_tunnel::get_packetstart_final() const {
-	return PTR(m_stream_crypto_final)->generate_packetstart();
+	return PTR(m_stream_crypto_final)->generate_packetstart( * PTR(m_stream_crypto_ab) );
 }
 
 // ------------------------------------------------------------------
@@ -1677,7 +1676,7 @@ void test_crypto() {
 
 	// test seding messages in CT sessions
 
-	for (int ib=0; ib<2; ++ib) {
+	for (int ib=0; ib<1; ++ib) {
 		_mark("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
