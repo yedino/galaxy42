@@ -191,4 +191,13 @@ std::string to_debug(const std::string & data) {
 	return string_as_dbg( string_as_bin( data ) ).get();
 }
 
+std::string to_debug(char data) {
+	return to_debug( std::string(1,data) );
+}
+
+
+
+
+
+
 
