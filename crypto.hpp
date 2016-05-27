@@ -353,6 +353,7 @@ enum t_crypto_use : unsigned char {
 	e_crypto_use_secret='S', // for secret key (PRIVATE key)
 	e_crypto_use_open='o',  // for open key (public key)
 	e_crypto_use_signature='n',  // for signature - the signature data (not a key actually)
+	e_crypto_use_fingerprint='f',  // for fingerprinting - e.g. hashes of individual public keys
 };
 
 /// A type to count how may keys we have of given crypto system.
@@ -456,6 +457,8 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		c_multikeys_pub();
 		virtual t_crypto_system_type get_system_type() const;
 
+		string get_ipv6_string() const; ///< IPV6 from hash of this key
+
 		/// @name Modifiers - concretized version. \n Ready to use. @{
 		void add_public(t_crypto_system_type crypto_type, const t_key & key); ///< append one more key
 		/// @}
@@ -497,6 +500,8 @@ class c_multikeys_PAIR {
 
 	public:
 		virtual ~c_multikeys_PAIR() = default;
+
+		string get_ipv6_string() const; ///< IPV6 from hash of this key
 
 		///< generate from list of how many keys of given type we need
 		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex);
