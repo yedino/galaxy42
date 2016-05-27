@@ -375,8 +375,47 @@ std::string c_multicryptostrings<TKey>::get_hash() const {
 
 template <typename TKey>
 void c_multicryptostrings<TKey>::update_hash() const {
-	string all_pub; // all public keys together
-	m_hash_cached = Hash1( this->serialize_bin()  );
+	// TODO review this code, maybe pick nicer (easier to generate by others) format
+
+	//m_hash_cached = Hash1( this->serialize_bin()  );
+	t_crypto_use crypto_use_for_fingerprint = e_crypto_use_fingerprint;
+	trivialserialize::generator gen(100);
+	gen.push_bytes_n(3,"GMK"); // magic marker - GMK - "Galaxy MultiKey"
+	gen.push_byte_u( (char) 'a' ); // version of this map
+	gen.push_byte_u( crypto_use_for_fingerprint );
+	gen.push_byte_u( 1 ); /// sub-version of fingerprinting format
+
+	int used_types=0; // count how many key types are actually used - we will count below
+	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
+	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
+	int used_types_check=0; // counter just to assert
+	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
+		const vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
+		if (pubkeys_of_this_system.size()) { // save them this time
+			++used_types_check;
+			gen.push_byte_u(  t_crypto_system_type_to_ID(ix) ); // save key type
+
+			// fill it with 0 bytes (octets):
+			locked_string fpr_accum( Hash1_size() ); // accumulator to get XORed hashes of fprs of this type
+			for (size_t p=0; p<fpr_accum.size(); ++p) fpr_accum[p] = static_cast<unsigned char>(0);
+
+			// vector<string> fingerprints;
+			for (const auto pk : pubkeys_of_this_system) {
+				auto h = Hash1( pk );
+				_dbg1("fingerprint: pk -> h: " << ::to_debug(pk) << " -> " << ::to_debug(h));
+				using namespace string_binary_op;
+				fpr_accum = fpr_accum ^ h;
+				//fingerprints.push_back(h);
+			}
+			gen.push_varstring( fpr_accum.get_string() ); // save the "vector" of key FINGERPRINTS
+		}
+	}
+	assert(used_types_check == used_types); // we written same amount of keys as we previously counted
+	string fingerprint_serial = gen.str();
+
+	string myhash = Hash1( fingerprint_serial );
+
+	m_hash_cached =  myhash;
 }
 
 template <typename TKey>
@@ -583,6 +622,18 @@ c_multikeys_pub::c_multikeys_pub()
 	: c_multikeys_general<c_crypto_system::t_pubkey>( e_crypto_use_open )
 { }
 
+string c_multikeys_pub::get_ipv6_string() const {
+	string hash = get_hash();
+	string prefix = "fd48";
+	// still discussion how to generate address regarding number of bruteforce cost to it TODO
+
+	const int len_ip = 128/8; // needed for ipv6
+	const int len_pre = prefix.size();
+
+	string ip = prefix + hash.substr(0, len_ip - len_pre);
+	return ip;
+}
+
 void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
 	add_key(crypto_type, key);
 }
@@ -613,6 +664,11 @@ c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_
 
 // ==================================================================
 // c_multikeys_PAIR
+
+
+string c_multikeys_PAIR::get_ipv6_string() const {
+	return m_pub.get_ipv6_string();
+}
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
@@ -1640,6 +1696,7 @@ void test_crypto() {
 	keypairA.generate(e_crypto_system_type_Ed25519,5);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairA.generate(e_crypto_system_type_SIDH, 0);
+	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string()));
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -1657,6 +1714,7 @@ void test_crypto() {
 	keypairB.generate(e_crypto_system_type_Ed25519,5);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairB.generate(e_crypto_system_type_SIDH, 0);
+	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string()));
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
