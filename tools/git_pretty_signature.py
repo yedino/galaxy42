@@ -4,6 +4,7 @@ import argparse
 from subprocess import check_output, call, Popen, PIPE, CalledProcessError, STDOUT
 import locale
 
+# the colors info
 class BColors:
 
 	def __init__(self):
@@ -16,7 +17,7 @@ class BColors:
 	FAIL = '\033[91m'
 	ENDC = '\033[0m'
 
-	def disable(self):
+	def disable(self): # remove all colors
 		self.HEADER = ''
 		self.OKBLUE = ''
 		self.OKGREEN = ''
@@ -26,14 +27,20 @@ class BColors:
 
 
 
+# count signatures types (e.g. good/bad/...) if check_mode then will exit at first problem,
+# encoding current system encoding
+# pager - is the pipe to some pager e.g. to the "less" process
 def totag_stats(pager, encoding, check_mode=False):
 	mainloop_count = 0
-	ch = 't'
-	G_totag = 0
-	U_totag = 0
-	B_totag = 0
-	N_totag = 0
+	ch = 't' # should we quit now? (maybe not needed now with the ls?)
+	# count
+	G_totag = 0 # good
+	U_totag = 0 # untrust
+	B_totag = 0 # bad
+	N_totag = 0 # none (not signed - or maybe can not check e.g. can not find pubkey)
 	while ch != 'q':
+
+		# the command to get log:
 		data_com = 'git log -1 --skip='+str(mainloop_count)+' --pretty=format:"%G?%d"'
 
 		try:
@@ -42,6 +49,8 @@ def totag_stats(pager, encoding, check_mode=False):
 			pager.stdin.write('exit(1)'.encode(encoding))
 			exit(1)
 
+		# the status of git signature check - parsed from git log
+		# the letters G,U,B,N are here because of the git pretty format used above
 		sig_stat = data[1:2]
 		if sig_stat == 'G':
 			G_totag += 1
@@ -55,15 +64,18 @@ def totag_stats(pager, encoding, check_mode=False):
 		col_end = BColors.ENDC
 		col_tag = BColors.OKGREEN
 
+		# find the "tag" in the log - to see the lines with information about the git tag
+		# TODO secure this?
 		tag_pos = data.find("tag")
-		if tag_pos != -1 or not data:
+
+		if tag_pos != -1 or not data: # if there is a tag - or if we should end our work because no data
 			# getting tag from %d ref names
 			if tag_pos != -1:
 				tag_info = data[tag_pos:-1]
 				tag_end_pos = tag_info.find(',')
 				tag_info = tag_info[:tag_end_pos]
 
-				# last tag checking
+				# last tag checking (the newest tag - to which we are counting)
 				if sig_stat == 'G':
 					G_totag -= 1
 				if sig_stat == 'U':
@@ -88,8 +100,10 @@ def totag_stats(pager, encoding, check_mode=False):
 					if check_mode:
 						exit(1)
 
-			col_coms = BColors.OKGREEN
+			col_coms = BColors.OKGREEN # default colour to use if all ok
+
 			# commits checking
+			# if any problems:
 			if U_totag:
 				col_coms = BColors.OKBLUE
 				string = col_coms+"NOTICE: At least one commit with untrusted sign!"+col_end+'\n'
@@ -109,15 +123,20 @@ def totag_stats(pager, encoding, check_mode=False):
 				if check_mode:
 					exit(1)
 
+			# if ther was some tag:
 			if tag_pos != -1:
 				info_head = col_coms+"Signatures status after "+col_tag+tag_info+":\n"
 				if col_tag == BColors.OKGREEN and (col_coms == BColors.OKGREEN or col_coms == BColors.OKBLUE):
-					info_ft = col_coms+"Everything SINCE LAST TAG "+tag_info[5:]+" seems correctly signed\n"
+					info_ft = col_coms+"OK: Everything SINCE LAST TAG "+tag_info[5:]+" seems correctly signed\n"
 				else:
-					info_ft = col_coms+"Occur at least one problem with signatures SINCE LAST TAG "+tag_info[5:]+'\n'
+					info_ft = col_coms+"WARNING: There is at least one problem with signatures SINCE LAST TAG "+tag_info[5:]+'\n'
 			else:
 				info_head = col_coms+"Signatures status for all commits:\n"
 				info_ft = BColors.OKBLUE + "NOTICE: No tag found in this repository\n"
+
+			info_head = "\n\n\n" + "Warning: (bug#m145) check if no branches, remotes (refnames) contain word 'tag' otherwise " \
+			+ "this parsing can be not accurate and could show not correct stats. Also read the log yourself " \
+			+ " to make sure.\n\n" + info_head
 
 			info_str = info_head                                    \
 						+ col_coms + str(G_totag) + ": GOOD\n"      \
@@ -130,6 +149,7 @@ def totag_stats(pager, encoding, check_mode=False):
 		mainloop_count += 1
 
 
+# quick test is git working here, is this git working directory:
 def is_git_directory(path='.'):
 	return call(['git', '-C', path, 'branch'], stderr=STDOUT, stdout=open(os.devnull, 'w')) == 0
 
@@ -153,7 +173,8 @@ if __name__ == "__main__":
 		else:
 			totag_stats(pager, encoding)
 
-		i = 0
+		i = 0 # the position (number of commits - top skip since newest one, since start of git log now)
+		# main loop:
 		while True:
 			data_com = 'git log -1 --skip='+str(i)+' --pretty=format:"%H:%G?%d"'
 
@@ -186,7 +207,7 @@ if __name__ == "__main__":
 			tag_pos = ref_info.find("tag")
 			# getting tag from %d ref names
 			tag_table = ""
-			if tag_pos != -1:
+			if tag_pos != -1: # show a tag info:
 				tag_info = ref_info[tag_pos:-1]
 				tag_end_pos = tag_info.find(',')
 				tag_info = tag_info[:tag_end_pos]

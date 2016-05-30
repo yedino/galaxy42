@@ -1,0 +1,16 @@
+
+
+Some remarks regarding scripting (e.g. bash scripts for our tools)
+
+06:53 < Camusensei> xxiad: for some locales, a-z (if valid) contains MORE characters
+06:55 < newsguy> A problem I have that should probably be really easy to fix, but that I've struggled to fix is that ffmpeg sometimes starts before
+livestreamer despite the sleep
+06:55 < geirha> xxiad: use [[:alnum:]]
+06:55 < osse> # echo øsse | LANG=nb_NO.UTF-8 grep '^[a-å]'
+06:55 < shbot> osse: øsse
+06:55 < osse> :3
+06:55 < geirha> ah wait, ascii, right
+06:56 < geirha> then there's globasciiranges shopt which was introduced in 4.2 or 4.3
+06:56 < geirha> or change LC_COLLATE=C when you need the glob to only handle ascii
+
+

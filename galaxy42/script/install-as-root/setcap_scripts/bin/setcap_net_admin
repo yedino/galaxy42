@@ -110,8 +110,8 @@ if [[ "$opt_debug" == "1" ]] ; then logger "Running setcap ($0) DEBUG for argume
 temp_dir="${temp_file}.dir"
 mkdir "$temp_dir"
 
-if [[ ! "$target_file_given" =~ ^[a-zA-Z0-9_-\./]+$ ]] ; then echo "Invalid (or strange) filename given: '$target_file_given'" ; usage ; exit 1 ; fi
-if [[ ! "$expected_user" =~ ^[a-zA-Z0-9_-\.]+$ ]] ; then echo "Invalid username given: '$expected_user'" ; usage ; exit 1 ; fi
+if [[ ! "$target_file_given" =~ ^[[:alnum:]_./-]+$ ]] ; then echo "Invalid (or strange) filename given: '$target_file_given'" ; usage ; exit 1 ; fi
+if [[ ! "$expected_user" =~ ^[[:alnum:]_.-]+$ ]] ; then echo "Invalid username given: '$expected_user'" ; usage ; exit 1 ; fi
 #echo "$expected_user"
 
 target_file_fn=${target_file_given##*/} # just filename eg "tuntap.bin", without path

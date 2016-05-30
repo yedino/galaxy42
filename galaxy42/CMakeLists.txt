@@ -81,7 +81,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
         message("Release build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -DNDEBUG -DRELEASEMODE")
 else()
     message("bad CMAKE_BUILD_TYPE flag")
     message("usage is: cmake [fast/debug/release] .")
@@ -94,13 +94,14 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
 
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
 
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
 	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp ntrupp.cpp
-	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp)
+	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp
+	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp )
 
 #tests
 file(GLOB TEST_SOURCES "test/*.cpp")

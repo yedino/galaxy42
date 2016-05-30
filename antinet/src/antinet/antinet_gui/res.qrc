@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qrCode.png</file>
+        <file>error.png</file>
+        <file>warning.png</file>
+    </qresource>
+</RCC>
