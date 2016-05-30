@@ -37,6 +37,7 @@ it has bugs and 'typpos'.
 
 #include "filestorage.hpp"
 #include "text_ui.hpp"
+#include "ntrupp.hpp"
 
 #include "glue_lockedstring_trivialserialize.hpp"
 
@@ -138,40 +139,6 @@ t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto
 
 // ==================================================================
 // Random
-
-// TODO move to top of file - group of free functions
-uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
-    static std::ifstream rand_source;
-    static locked_string random_byte(1);
-
-    if (cmd == INIT) {
-        /* Any initialization for a real entropy source goes here. */
-        rand_source.open("/dev/urandom");
-        return 1;
-    }
-
-    if (out == nullptr)
-        return 0;
-
-    if (cmd == GET_NUM_BYTES_PER_BYTE_OF_ENTROPY) {
-        /* Here we return the number of bytes needed from the entropy
-         * source to obtain 8 bits of entropy.  Maximum is 8.
-         */
-        *out = 1;
-        return 1;
-    }
-
-    if (cmd == GET_BYTE_OF_ENTROPY) {
-        if (!rand_source.is_open())
-            return 0;
-
-        rand_source.get(random_byte[0]);
-        *out = static_cast<uint8_t>(random_byte[0]);
-        return 1;
-    }
-    return 0;
-}
-
 
 CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
 	static std::ifstream rand_source("/dev/urandom");
@@ -669,14 +636,6 @@ void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
 	}
 }
 
-void NTRU_DRBG_exec_or_throw( uint32_t errcode , const std::string &info="") {
-	errcode_valid_or_throw( DRBG_OK, errcode, "DRBG for NTRU", info);
-}
-
-void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
-	errcode_valid_or_throw( NTRU_OK, errcode, "NTRU", info);
-}
-
 void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool will_asymkex) {
 	_info("Generating from cryptolists_count");
 	for (size_t sys=0; sys<cryptolists_count.size(); ++sys) { // all key crypto systems
@@ -726,14 +685,15 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_p
 	// generate key pair
 	uint16_t public_key_len = 0, private_key_len = 0;
 	// get size of keys:
-	NTRU_exec_or_throw(
-		ntru_crypto_ntru_encrypt_keygen(
-			get_DRBG(128),
-			NTRU_EES439EP1,
-			&public_key_len, nullptr, &private_key_len, nullptr
-			)
-		,"generate keypair - get key length"
-	);
+// TODO use ntrupp
+//	NTRU_exec_or_throw(
+//		ntru_crypto_ntru_encrypt_keygen(
+//			get_DRBG(128),
+//			NTRU_EES439EP1,
+//			&public_key_len, nullptr, &private_key_len, nullptr
+//			)
+//		,"generate keypair - get key length"
+//	);
 	// values for NTRU_EES439EP1
 	assert(public_key_len == 609);
 	assert(private_key_len == 659);
@@ -741,13 +701,14 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_p
 	std::string public_key(public_key_len, 0);
 	locked_string private_key(private_key_len);
 
-	NTRU_exec_or_throw(
-		ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
-			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
-			&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
-		)
-		,"generate keypair"
-	);
+// TODO use ntrupp
+//	NTRU_exec_or_throw(
+//		ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
+//			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
+//			&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
+//		)
+//		,"generate keypair"
+//	);
 
 	return std::make_pair(std::move(private_key), std::move(public_key));
 }
@@ -863,33 +824,6 @@ void c_multikeys_PAIR::multi_sign_verify(const std::vector<string> &signs,
 		}
 		default: throw std::runtime_error("sign type not supported");
 	}
-}
-
-DRBG_HANDLE get_DRBG(size_t size) {
-	// TODO(r) use std::once / lock? - not thread safe now
-	static map<size_t , DRBG_HANDLE> drbg_tab;
-
-	auto found = drbg_tab.find(size);
-	if (found == drbg_tab.end()) { // not created yet
-		try {
-			_note("Creating DRBG for size=" << size);
-			DRBG_HANDLE newone;
-			NTRU_DRBG_exec_or_throw(
-						ntru_crypto_drbg_instantiate(size, nullptr, 0, get_entropy, &newone)
-						,"random init"
-						);
-			drbg_tab[ size ] = newone;
-			_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
-			return newone;
-		} catch(...) {
-			_erro("Can not init DRBG! (exception)");
-			throw;
-		}
-	} // not found
-	else {
-		return found->second;
-	}
-	assert(false);
 }
 
 void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int count) {
@@ -1085,84 +1019,6 @@ t_crypto_system_type c_stream::get_system_type() const
 	TODOCODE;	return t_crypto_system_type(0);
 }
 
-
-
-
-// ---------------------------------------------------------------------------
-
-namespace ntru_cpp {
-
-/*
-NTRUCALL
-ntru_crypto_ntru_encrypt(
-    DRBG_HANDLE     drbg_handle,     //     in - handle for DRBG
-    uint16_t        pubkey_blob_len, //     in - no. of octets in public key blob
-    uint8_t const  *pubkey_blob,     //     in - pointer to public key
-    uint16_t        pt_len,          //     in - no. of octets in plaintext
-    uint8_t const  *pt,              //     in - pointer to plaintext
-    uint16_t       *ct_len,          // in/out - no. of octets in ct, addr for no. of octets in ciphertext
-    uint8_t        *ct);             //    out - address for ciphertext
-*/
-
-/***
- * Encrypt plain text for given pubkey.
- */
-std::string ntru_encrypt(const sodiumpp::locked_string plain, const std::string & pubkey) {
-	uint16_t cyphertext_size=0;
-
-	const auto & drbg = get_DRBG(128);
-
-	// first run just to get the size of output:
-	ntru_crypto_ntru_encrypt( drbg,
-		numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
-		numeric_cast<uint16_t>(plain.size()),  reinterpret_cast<const uint8_t*>(plain.c_str()),
-		&cyphertext_size, NULL	);
-	assert( (cyphertext_size!=0) || (plain.size()==0) );
-	assert( (cyphertext_size >= plain.size()) );
-
-	string ret( cyphertext_size , static_cast<char>(0) ); // allocate memory of the encrypted text
-	assert( ret.size() == cyphertext_size );
-	// actually encrypt now:
-	ntru_crypto_ntru_encrypt( drbg,
-		numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
-		numeric_cast<uint16_t>(plain.size()), reinterpret_cast<const uint8_t*>(plain.c_str()),
-		&cyphertext_size, reinterpret_cast<uint8_t*>(&ret[0])	);
-
-	return ret;
-}
-
-/*
-NTRUCALL
-ntru_crypto_ntru_decrypt(
-    uint16_t       privkey_blob_len, //     in - no. of octets in private key
-                                                 blob 
-    uint8_t const *privkey_blob,     //     in - pointer to private key 
-    uint16_t       ct_len,           //     in - no. of octets in ciphertext 
-    uint8_t const *ct,               //     in - pointer to ciphertext 
-    uint16_t      *pt_len,           // in/out - no. of octets in pt, addr for
-                                                 no. of octets in plaintext 
-    uint8_t       *pt);              //    out - address for plaintext 
-*/
-sodiumpp::locked_string ntru_decrypt(const string cyphertext, const sodiumpp::locked_string & PRVkey) {
-	uint16_t cleartext_len=0;
-	ntru_crypto_ntru_decrypt( 
-		numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
-		numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
-		&cleartext_len, NULL);
-	assert( (cleartext_len!=0) || (cyphertext.size()==0) );
-
-	sodiumpp::locked_string ret( cleartext_len );
-	assert( ret.size() == cleartext_len );
-	ntru_crypto_ntru_decrypt( 
-		numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
-		numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
-		&cleartext_len, reinterpret_cast<uint8_t*>(ret.buffer_writable()));
-
-	return ret;
-}
-
-} // namespace ntru_cpp
-
 c_crypto_system::t_symkey c_stream::calculate_KCT
 (const c_multikeys_PAIR & self, const c_multikeys_pub & them , bool will_new_id
 , const std::string & packetstart )
@@ -1293,7 +1149,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					// encrypt
 					_dbg1("NTru password GENERATED: " << to_debug_locked(password_cleartext));
 					_dbg2("NTru to pubkey " << to_debug(key_B_pub));
-					string password_encrypted = ntru_cpp::ntru_encrypt(password_cleartext, key_B_pub);
+					string password_encrypted = ntrupp::ntru_encrypt(password_cleartext, key_B_pub);
 					_dbg1("random data encrypted as: " << to_debug(password_encrypted));
 
 					kexasym_passencr_tosend[sys_id].push_back(password_encrypted); // store encrypted to send to Bob
@@ -1312,7 +1168,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				else { // they encrypted rand data to me, I need to decrypt:
 					string & encrypted = kexasym_passencr_received.at(sys_id).at(pass_nr);
 					_info("Opening NTru KEX: from encrypted=" << to_debug(encrypted));
-					sodiumpp::locked_string decrypted = ntru_cpp::ntru_decrypt(encrypted, key_A_PRV);
+					sodiumpp::locked_string decrypted = ntrupp::ntru_decrypt(encrypted, key_A_PRV);
 					_info("Opening NTru KEX: from decrypted=" << to_debug_locked(decrypted));
 
 					// TODO double code
