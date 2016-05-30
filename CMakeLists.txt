@@ -94,7 +94,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
 
-target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt ntrusign jsoncpp_lib_static sidh)
 
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
