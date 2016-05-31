@@ -1,5 +1,7 @@
 #include "ntrupp.hpp"
 
+#include "trivialserialize.hpp"
+
 #include "ntru/include/ntru_crypto.h"
 #include "ntru/include/ntru_crypto_drbg.h"
 
@@ -85,7 +87,7 @@ static DRBG_HANDLE get_DRBG(size_t size) {
 	assert(false);
 }
 
-std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
+std::pair<sodiumpp::locked_string, std::string> generate_encrypt_keypair() {
 
 	if(ntt_setup() == -1) {
 		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
@@ -120,23 +122,72 @@ std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
 								reinterpret_cast<uint8_t *>(private_key.buffer_writable()))
 				,"generate keypair");
 
+	ntt_cleanup();
+
+	return std::make_pair(std::move(private_key), std::move(public_key));
+}
+
+std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
+
+	//int64 secretkey[PASS_N];
+	//int64 pubkey[PASS_N] = {0};
+	sodiumpp::locked_string private_key(PASS_N*sizeof(int64_t));
+	std::string public_key(PASS_N*sizeof(int64_t), '\0');
+
+	int64_t * const private_key_ptr = reinterpret_cast<int64_t * const>(&private_key[0]);
+	int64_t * const public_key_ptr = reinterpret_cast<int64_t * const>(&public_key[0]);
+
+
+	if(ntt_setup() == -1) {
+		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
+	}
+
+	gen_key(private_key_ptr);
+	gen_pubkey(public_key_ptr, private_key_ptr);
+
+//	// generate key pair
+//	uint16_t public_key_len = 0, private_key_len = 0;
+//	// get size of keys:
+//	NTRU_exec_or_throw(
+//				ntru_crypto_ntru_encrypt_keygen(
+//					get_DRBG(128),
+//					NTRU_EES439EP1,
+//					&public_key_len,
+//					nullptr,
+//					&private_key_len,
+//					nullptr)
+//				,"generate keypair - get key length");
+
+//	// values for NTRU_EES439EP1
+//	assert(public_key_len == 609);
+//	assert(private_key_len == 659);
+
+//	std::string public_key(public_key_len, 0);
+//	sodiumpp::locked_string private_key(private_key_len);
+
+//	NTRU_exec_or_throw(
+//				ntru_crypto_ntru_encrypt_keygen(get_DRBG(128),
+//								NTRU_EES439EP1,
+//								&public_key_len,
+//								reinterpret_cast<uint8_t *>(&public_key[0]),
+//								&private_key_len,
+//								reinterpret_cast<uint8_t *>(private_key.buffer_writable()))
+//				,"generate keypair");
+
 	unsigned char hash[HASH_BYTES];
 	crypto_hash_sha512(hash,
 					   reinterpret_cast<const unsigned char*>(private_key.data()),
 					   sizeof(int64)*PASS_N); // necessary?
 
-	//public_key += std::string(reinterpret_cast<const char *>(hash));
+	std::string hash_and_pubkey(reinterpret_cast<const char *>(hash),HASH_BYTES);
+	hash_and_pubkey += public_key;
 
-
-	std::string public_and_hash(public_key + std::string(reinterpret_cast<const char *>(hash), HASH_BYTES));
-//								public_key_len + HASH_BYTES);
-
-	assert(public_and_hash.size() == (public_key_len + HASH_BYTES)
+	assert(hash_and_pubkey.size() == (public_key.size() + HASH_BYTES)
 		   && "Ntru public_key + hash: BAD sizes" );
 
 	ntt_cleanup();
 
-	return std::make_pair(std::move(private_key), std::move(public_and_hash));
+	return std::make_pair(std::move(private_key), std::move(hash_and_pubkey));
 }
 
 std::string sign(const std::string &msg, const sodiumpp::locked_string &private_key) {
@@ -171,8 +222,10 @@ void verify(const std::string &sign, const std::string &msg, const std::string &
 		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
 	}
 
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), public_key);
+	std::string hash(parser.pop_bytes_n(HASH_BYTES));
 	//		std::string public_key = pubkey.substr()
-	//		::verify()
+	//::verify()
 
 	//		ntt_cleanup();
 }

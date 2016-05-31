@@ -7,9 +7,9 @@
 
 namespace ntrupp {
 
-	/// @return pair of <private key, public_key + hash_sha512(private_key) >
+	/// @return pair of <private key, hash_sha512(private_key) + pubkey>
 	/// pricate_key hash before publickey is necessary for verifying signatures
-	std::pair<sodiumpp::locked_string,std::string> generate_keypair();
+	std::pair<sodiumpp::locked_string,std::string> generate_sign_keypair();
 
 	std::string sign(const std::string &msg,
 					 const sodiumpp::locked_string &private_key);
@@ -18,6 +18,7 @@ namespace ntrupp {
 				const std::string &msg,
 				const std::string &public_key);
 
+	std::pair<sodiumpp::locked_string,std::string> generate_encrypt_keypair();
 /*
 NTRUCALL
 ntru_crypto_ntru_encrypt(
