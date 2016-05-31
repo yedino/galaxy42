@@ -201,6 +201,32 @@ TEST(crypto, ntrupp_generate_keypair) {
 	}
 }
 
+TEST(crypto, ntrupp_encrypt) {
+	const size_t test_number = 100;
+	std::string msg = "msg_to_encrypt/decrypt /.,l;']/n/t!@#$%^&*()_NULL_+0'0\0";
+
+	// helping function that adding int to string
+	auto iterate_string = [] (std::string &str, int add) -> std::string {
+		std::string out = "";
+		for(size_t i = 0; i < str.size(); ++i) {
+			out += str.at(i) + add;
+		}
+		return out;
+	};
+
+	for (size_t i = 0; i < test_number; ++i) {
+		std::string i_msg = iterate_string(msg, i);
+
+		std::pair<sodiumpp::locked_string, std::string> l_keypair;
+		l_keypair = ntrupp::generate_encrypt_keypair();
+
+		std::string cyphertext = ntrupp::encrypt(i_msg, l_keypair.second);
+		std::string decrypted(ntrupp::decrypt(cyphertext, l_keypair.first));
+
+		ASSERT_EQ(i_msg, decrypted);
+	}
+}
+
 TEST(crypto, ntrupp_sign) {
 
 	FILE * f_ptr;
