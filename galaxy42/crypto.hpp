@@ -353,6 +353,7 @@ enum t_crypto_use : unsigned char {
 	e_crypto_use_secret='S', // for secret key (PRIVATE key)
 	e_crypto_use_open='o',  // for open key (public key)
 	e_crypto_use_signature='n',  // for signature - the signature data (not a key actually)
+	e_crypto_use_fingerprint='f',  // for fingerprinting - e.g. hashes of individual public keys
 };
 
 /// A type to count how may keys we have of given crypto system.
@@ -456,6 +457,8 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		c_multikeys_pub();
 		virtual t_crypto_system_type get_system_type() const;
 
+		string get_ipv6_string() const; ///< IPV6 from hash of this key
+
 		/// @name Modifiers - concretized version. \n Ready to use. @{
 		void add_public(t_crypto_system_type crypto_type, const t_key & key); ///< append one more key
 		/// @}
@@ -497,6 +500,8 @@ class c_multikeys_PAIR {
 
 	public:
 		virtual ~c_multikeys_PAIR() = default;
+
+		string get_ipv6_string() const; ///< IPV6 from hash of this key
 
 		///< generate from list of how many keys of given type we need
 		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex);
@@ -586,8 +591,11 @@ class c_stream final /* because strange ctor init list functions */
 		unique_ptr< t_boxer > m_boxer;
 		unique_ptr< t_unboxer > m_unboxer;
 
+		string m_nicename; ///< my nice name for logging/debugging
+
 	public:
-		c_stream(bool side_initiator);
+		c_stream(bool side_initiator, const string& nicename);
+		std::string debug_this() const;
 
 		void exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			bool will_new_id);
@@ -595,15 +603,18 @@ class c_stream final /* because strange ctor init list functions */
 		void exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart);
 
-		string generate_packetstart() const; ///< generate and return our full packetstarter
+		///! generate and return our full packetstarter
+		///!
+		string generate_packetstart(c_stream & stream_to_encrypt_with) const;
 
+		///! parse received packetstart and get IDe (the next ID to start next stream)
 		string parse_packetstart_kexasym(const string & data) const; ///< parse received packetstart and get kexasym part
+		///! parse received packetstart and get IDe (the next ID to start next stream)
 		string parse_packetstart_IDe(const string & data) const;
 
 		void set_packetstart_IDe_from(const c_multikeys_PAIR & keypair);
 
 		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
-		std::string exchange_start_get_packet() const;
 
 		std::string box(const std::string & msg);
 		std::string unbox(const std::string & msg);
@@ -637,10 +648,14 @@ class c_crypto_tunnel final {
 		unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
 		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
+		string m_nicename; ///< my nice name for logging/debugging
+
 	public:
-		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them);
+		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them, const string& nicename);
 		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them,
-			const std::string & packetstart );
+			const std::string & packetstart, const string& nicename );
+
+		std::string debug_this() const;
 
 		void create_IDe();
 		void create_CTf(const std::string & packetstart);

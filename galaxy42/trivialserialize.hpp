@@ -158,6 +158,10 @@ class generator {
 		///< * memlock it
 		///< * you could write to it (though of course this can change the format of string and make deserialize not work)
 		///< * you should NOT resize it
+
+		std::string && str_move(); ///< gives up the stream of generated data.
+		///< You should not use this object after using this function because it can be incosistent.
+
 		///@}
 
 		/** @name Buffer access

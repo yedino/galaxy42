@@ -22,6 +22,10 @@ const char * debug_shorten__FILE__(const char * name) {
 		if (*p1=='\0') return name; // not matched
 	}
 
-	
+}
+
+
+std::string debug_this() {
+	return "(global) ";
 }
 

@@ -167,6 +167,7 @@ void c_connection::write_handler(const boost::system::error_code &error, std::si
 
 // read always 4 bytes (size)
 void c_connection::read_size_handler(const boost::system::error_code &error, size_t length) {
+	UNUSED(length);
 	_dbg_mtx("length " << length);
 	if (error) {
 		_dbg_mtx("error: " << error.message());

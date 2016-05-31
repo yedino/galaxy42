@@ -40,6 +40,7 @@ it has bugs and 'typpos'.
 #include "ntrupp.hpp"
 
 #include "glue_lockedstring_trivialserialize.hpp"
+#include "glue_sodiumpp_crypto.hpp"
 
 using sodiumpp::locked_string;
 
@@ -342,8 +343,47 @@ std::string c_multicryptostrings<TKey>::get_hash() const {
 
 template <typename TKey>
 void c_multicryptostrings<TKey>::update_hash() const {
-	string all_pub; // all public keys together
-	m_hash_cached = Hash1( this->serialize_bin()  );
+	// TODO review this code, maybe pick nicer (easier to generate by others) format
+
+	//m_hash_cached = Hash1( this->serialize_bin()  );
+	t_crypto_use crypto_use_for_fingerprint = e_crypto_use_fingerprint;
+	trivialserialize::generator gen(100);
+	gen.push_bytes_n(3,"GMK"); // magic marker - GMK - "Galaxy MultiKey"
+	gen.push_byte_u( (char) 'a' ); // version of this map
+	gen.push_byte_u( crypto_use_for_fingerprint );
+	gen.push_byte_u( 1 ); /// sub-version of fingerprinting format
+
+	int used_types=0; // count how many key types are actually used - we will count below
+	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) if (m_cryptolists_general.at(ix).size()) ++used_types;
+	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
+	int used_types_check=0; // counter just to assert
+	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
+		const vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
+		if (pubkeys_of_this_system.size()) { // save them this time
+			++used_types_check;
+			gen.push_byte_u(  t_crypto_system_type_to_ID(ix) ); // save key type
+
+			// fill it with 0 bytes (octets):
+			locked_string fpr_accum( Hash1_size() ); // accumulator to get XORed hashes of fprs of this type
+			for (size_t p=0; p<fpr_accum.size(); ++p) fpr_accum[p] = static_cast<unsigned char>(0);
+
+			// vector<string> fingerprints;
+			for (const auto pk : pubkeys_of_this_system) {
+				auto h = Hash1( pk );
+				_dbg1("fingerprint: pk -> h: " << ::to_debug(pk) << " -> " << ::to_debug(h));
+				using namespace string_binary_op;
+				fpr_accum = fpr_accum ^ h;
+				//fingerprints.push_back(h);
+			}
+			gen.push_varstring( fpr_accum.get_string() ); // save the "vector" of key FINGERPRINTS
+		}
+	}
+	assert(used_types_check == used_types); // we written same amount of keys as we previously counted
+	string fingerprint_serial = gen.str();
+
+	string myhash = Hash1( fingerprint_serial );
+
+	m_hash_cached =  myhash;
 }
 
 template <typename TKey>
@@ -424,15 +464,15 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
 
-		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was")
-			+ magic_marker + string(")"));
+		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was: ")
+			+ ::to_debug(magic_marker) + string(")"));
 
 	auto magic_version = parser.pop_byte_u();
 
 	auto magic_crypto_use = parser.pop_byte_u();
 	if (magic_crypto_use != m_crypto_use) {
 		std::ostringstream oss;
-		oss<<"Format error: crypto_use was=" << magic_crypto_use << " but we expected=" << m_crypto_use;
+		oss<<"Format error: crypto_use was=" << ::to_debug(magic_crypto_use) << " but we expected=" << m_crypto_use;
 		throw std::runtime_error(oss.str());
 	}
 
@@ -550,6 +590,18 @@ c_multikeys_pub::c_multikeys_pub()
 	: c_multikeys_general<c_crypto_system::t_pubkey>( e_crypto_use_open )
 { }
 
+string c_multikeys_pub::get_ipv6_string() const {
+	string hash = get_hash();
+	string prefix = "fd48";
+	// still discussion how to generate address regarding number of bruteforce cost to it TODO
+
+	const int len_ip = 128/8; // needed for ipv6
+	const int len_pre = prefix.size();
+
+	string ip = prefix + hash.substr(0, len_ip - len_pre);
+	return ip;
+}
+
 void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
 	add_key(crypto_type, key);
 }
@@ -580,6 +632,11 @@ c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_
 
 // ==================================================================
 // c_multikeys_PAIR
+
+
+string c_multikeys_PAIR::get_ipv6_string() const {
+	return m_pub.get_ipv6_string();
+}
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
@@ -876,7 +933,7 @@ const c_multikeys_pub & c_multikeys_PAIR::read_pub() const {
 // ==================================================================
 
 
-c_stream::c_stream(bool side_initiator)
+c_stream::c_stream(bool side_initiator, const string& m_nicename)
 :
 	m_KCT( return_empty_K() ),
 	m_nonce_odd( 0 ),
@@ -884,8 +941,16 @@ c_stream::c_stream(bool side_initiator)
 	m_packetstart_kexasym(""),
 	m_cryptolists_count(),
 	m_boxer( nullptr ),
-	m_unboxer( nullptr )
+	m_unboxer( nullptr ),
+	m_nicename(m_nicename)
 {
+	_dbg2n("created");
+}
+
+std::string c_stream::debug_this() const {
+	ostringstream oss;
+	oss << "{stream: "<<m_nicename<<"} ";
+	return oss.str();
 }
 
 sodiumpp::locked_string c_stream::return_empty_K() {
@@ -899,14 +964,23 @@ sodiumpp::locked_string c_stream::return_empty_K() {
 // ---------------------------------------------------------------------------
 
 std::string c_stream::box(const std::string & msg) {
-	_dbg2("Boxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary())
-	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
-	return PTR(m_boxer)->box(msg).to_binary();
+	auto & cb = * PTR(m_boxer); // my crypto (un)boxer
+	const auto N = cb.get_nonce(); // nonce (before operation)
+	const auto ret = cb.box(msg).to_binary();
+	_dbg1n("Encrypt N="<<show_nice_nonce(N)
+		<<" text " << to_debug(msg) << " ---> " << to_debug(ret)
+		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+	return ret;
 }
 
 std::string c_stream::unbox(const std::string & msg) {
-	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary()));
-	return PTR(m_unboxer)->unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
+	auto & cb = * PTR(m_unboxer); // my crypto (un)boxer
+	const auto N = cb.get_nonce(); // nonce (before operation)
+	auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
+	_dbg1n("Decrypt N="<<show_nice_nonce(N)
+		<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
+		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+	return ret;
 }
 
 // ---------------------------------------------------------------------------
@@ -918,7 +992,7 @@ t_crypto_system_count c_stream::get_cryptolists_count_for_KCTf() const {
 void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 	bool will_new_id)
 {
-	_note("EXCHANGE START");
+	_noten("EXCHANGE START");
 	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
@@ -927,14 +1001,14 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart)
 {
-	_note("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
+	_noten("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
 	m_KCT = calculate_KCT( ID_self , ID_them, true, packetstart );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
 
 void c_stream::create_boxer_with_K() {
-	_note("Got stream K = " << to_debug_locked(m_KCT));
+	_noten("Got stream K = " << to_debug_locked(m_KCT));
 	sodiumpp::encoded_bytes nonce_zero =
 		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
 	;
@@ -948,12 +1022,15 @@ void c_stream::create_boxer_with_K() {
 	assert(m_boxer); assert(m_unboxer);
 }
 
-std::string c_stream::generate_packetstart() const {
+std::string c_stream::generate_packetstart(c_stream & stream_to_encrypt_with) const {
 	trivialserialize::generator gen( m_packetstart_kexasym.size() + m_packetstart_IDe.size() + 20);
-	gen.push_varstring( m_packetstart_kexasym );
 	_note("MAKING packetstart: m_packetstart_kexasym = " << to_debug(m_packetstart_kexasym));
-	gen.push_varstring( m_packetstart_IDe );
+	gen.push_varstring( m_packetstart_kexasym );
+
 	_note("MAKING packetstart: m_packetstart_IDe = " << to_debug(m_packetstart_IDe));
+	string packetstart_IDe_via_CT = stream_to_encrypt_with.box( m_packetstart_IDe );
+	_note("MAKING packetstart: packetstart_IDe_via_CT = " << to_debug(packetstart_IDe_via_CT));
+	gen.push_varstring( packetstart_IDe_via_CT );
 	return gen.str();
 }
 
@@ -966,8 +1043,11 @@ string c_stream::parse_packetstart_kexasym(const string & data) const {
 string c_stream::parse_packetstart_IDe(const string & data) const {
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , data );
 	parser.skip_varstring(); // 1
-	auto ret = parser.pop_varstring(); // 2
-	return ret;
+	auto data_encr = parser.pop_varstring(); // 2
+	auto data_decr = m_unboxer->unbox( sodiumpp::encoded_bytes(data_encr,sodiumpp::encoding::binary ));
+	_info("Reading packetstart IDe, encr: " << to_debug(data_encr));
+	_info("Reading packetstart IDe, decr: " << to_debug(data_decr));
+	return data_decr;
 }
 
 
@@ -982,13 +1062,6 @@ unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
 
 void c_stream::set_packetstart_IDe_from(const c_multikeys_PAIR & keypair) {
 	m_packetstart_IDe = keypair.read_pub().serialize_bin();
-}
-
-
-// TODO-delete:
-std::string c_stream::exchange_start_get_packet() const {
-	TODOCODE;
-	return "TODO";
 }
 
 // ---------------------------------------------------------------------------
@@ -1296,23 +1369,24 @@ bool c_stream::is_K_not_empty() const {
 
 // ------------------------------------------------------------------
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them,
+const string& nicename)
 	: m_side_initiator(true),
-	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
-	_note("Alice? Creating the crypto tunnel (we are initiator)");
-	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
+	_noten("Alice? Creating the crypto tunnel (we are initiator)");
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator, m_nicename+"-CTab"); // TODONOW
 	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
-	_note("Alice? Creating the crypto tunnel (we are initiator) - DONE");
+	_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
-	const std::string & packetstart )
+	const std::string & packetstart, const string & nicename )
 	: m_side_initiator(false),
-	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
 	_note("Bob? Creating the crypto tunnel (we are respondent)");
-	m_stream_crypto_ab = make_unique<c_stream>(false);
+	m_stream_crypto_ab = make_unique<c_stream>(false, nicename+"-CTab");
 	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart ); // exchange for IDC is ready
 	_mark("Ok exchange for AB is finalized");
 
@@ -1322,7 +1396,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 
 	// exchange for IDe is ready here:
 	_note("Bob? Ok creating final stream");
-	m_stream_crypto_final = make_unique<c_stream>(true); // I am initiator for CTe
+	m_stream_crypto_final = make_unique<c_stream>(true, m_nicename+"-CTf"); // I am initiator for CTe
 
 	c_multikeys_pub them_IDe;
 	them_IDe.load_from_bin( m_stream_crypto_ab->parse_packetstart_IDe( packetstart ) );
@@ -1334,17 +1408,21 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 	m_stream_crypto_final->set_packetstart_IDe_from( * m_IDe ); // finall stream will send our IDe in packetstarter
 
 	_mark("Bob? created packet starter for CTe...");
-	_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
+//	_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
 	_note("Bob? Creating the crypto tunnel (we are respondent) - DONE");
 }
 
 // ---
 
+std::string c_crypto_tunnel::debug_this() const {
+	return "{CT: "+m_nicename+"} ";
+}
+
 void c_crypto_tunnel::create_CTf(const string & packetstart) {
 	_info("Alice? Creating CTf from packetstart="<<to_debug(packetstart));
 	c_multikeys_pub them_IDe;
 	them_IDe.load_from_bin( PTR(m_stream_crypto_ab)->parse_packetstart_IDe(packetstart) );
-	m_stream_crypto_final = make_unique<c_stream>(false); // I am not initiator of this return-stream CTe
+	m_stream_crypto_final = make_unique<c_stream>(false, m_nicename+"-CTf"); // I am not initiator of this return-stream CTe
 	m_stream_crypto_final -> exchange_done( * this->m_IDe , them_IDe , packetstart);
 	_info("Alice? Creating CTf - done");
 }
@@ -1352,12 +1430,12 @@ void c_crypto_tunnel::create_CTf(const string & packetstart) {
 // ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::get_packetstart_ab() const {
-	return PTR(m_stream_crypto_ab)->generate_packetstart();
+	return PTR(m_stream_crypto_ab)->generate_packetstart( * PTR(m_stream_crypto_ab) );
 
 }
 
 std::string c_crypto_tunnel::get_packetstart_final() const {
-	return PTR(m_stream_crypto_final)->generate_packetstart();
+	return PTR(m_stream_crypto_final)->generate_packetstart( * PTR(m_stream_crypto_ab) );
 }
 
 // ------------------------------------------------------------------
@@ -1487,6 +1565,7 @@ void test_crypto() {
 	keypairA.generate(e_crypto_system_type_Ed25519,5);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairA.generate(e_crypto_system_type_SIDH, 0);
+	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string()));
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -1504,6 +1583,7 @@ void test_crypto() {
 	keypairB.generate(e_crypto_system_type_Ed25519,5);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairB.generate(e_crypto_system_type_SIDH, 0);
+	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string()));
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
@@ -1523,18 +1603,18 @@ void test_crypto() {
 
 	// test seding messages in CT sessions
 
-	for (int ib=0; ib<2; ++ib) {
+	for (int ib=0; ib<1; ++ib) {
 		_mark("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
 		_note("Alice CT:");
-		c_crypto_tunnel AliceCT(keypairA, keypubB); // start, has KCT_ab
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice"); // start, has KCT_ab
 		AliceCT.create_IDe();
 		string packetstart_1 = AliceCT.get_packetstart_ab();
 		_info("SEND packetstart to Bob: " << to_debug(packetstart_1));
 
 		_note("Bob CT:");
-		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1); // start -> has
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby"); // start -> has
 		string packetstart_2 = BobCT.get_packetstart_final();
 
 		AliceCT.create_CTf(packetstart_2);
@@ -1546,15 +1626,14 @@ void test_crypto() {
 
 		//_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		//	"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
-		for (int ia=0; ia<2; ++ia) {
-			_dbg2("Alice will box:");
+		for (int ia=0; ia<5; ++ia) {
 			auto msg1s = AliceCT.box("Hello");
 			auto msg1r = BobCT.unbox(msg1s);
-			_note("(via CTab) Message: [" << msg1r << "] from: " << to_debug(msg1s));
+			//_note("Message: [" << msg1r << "] from: " << to_debug(msg1s));
 
 			auto msg2s = BobCT.box("Hello");
 			auto msg2r = AliceCT.unbox(msg2s);
-			_note("(via CTab) Message: [" << msg2r << "] from: " << to_debug(msg2s));
+			//_note("Message: [" << msg2r << "] from: " << to_debug(msg2s));
 		}
 	}
 
