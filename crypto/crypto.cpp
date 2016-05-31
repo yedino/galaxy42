@@ -43,6 +43,7 @@ it has bugs and 'typpos'.
 #include "../glue_sodiumpp_crypto.hpp"
 
 #include "multikeys.hpp"
+#include "multikeys.tpl.hpp"
 
 using sodiumpp::locked_string;
 
