@@ -125,7 +125,7 @@ const char * g_demoname_default = "route_dij";
 #include "generate_config.hpp"
 
 
-#include "crypto.hpp" // for tests
+#include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
 
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
@@ -523,6 +523,8 @@ class c_tunserver : public c_galaxy_node {
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
 		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip
+
+		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
 		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
 		c_haship_addr m_haship_addr; ///< my haship addres
@@ -1254,6 +1256,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("crypto", "crypto test")
 					("crypto_bench", "crypto benchmark")
 					("route_dij", "dijkstra test")
+					("route", "current best routing (could be equal to some other test)")
 					("rpc", "rpc demo")
 					("help", "Help msg");
 
@@ -1277,6 +1280,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
 	if (demoname=="crypto_bench") { antinet_crypto::test_crypto_benchmark(2);  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
+	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }
 
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");

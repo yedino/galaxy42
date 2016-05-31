@@ -195,6 +195,9 @@ std::string to_debug(char data) {
 	return to_debug( std::string(1,data) );
 }
 
+std::string to_debug(const string_as_bin & data) {
+	return to_debug( data.bytes );
+}
 
 
 

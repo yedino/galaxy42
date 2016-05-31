@@ -1,6 +1,7 @@
 
 
 #include "haship.hpp"
+#include "strings_utils.hpp"
 
 #include <sodium.h>
 
@@ -61,7 +62,6 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_stri
 		while(gr.size() < 4) gr.insert(0,1,'0');
 		grtab.push_back(gr);
 	}
-	
 	//_note("Parsed as:");
 	size_t pos=0;
 	for(const string & gr: grtab) {
@@ -99,6 +99,7 @@ ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	r
 // c_haship_pubkey :
 c_haship_pubkey::c_haship_pubkey() : std::array<unsigned char, g_haship_pubkey_size>({{}}) { }
 c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) : std::array<unsigned char, g_haship_pubkey_size>({{}}) {
+	_mark("XXXXXXXXXXXXXXXXXXXXXXXX " << to_debug(input) );
 	for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
 //	for(auto v : input.bytes) at(
 }
