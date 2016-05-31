@@ -180,7 +180,8 @@ std::string sign(const std::string &msg, const sodiumpp::locked_string &private_
 		   reinterpret_cast<const unsigned char *>(msg.data()),
 		   msg.size());
 
-	std::string signature(reinterpret_cast<const char *>(z), PASS_N);
+	std::string signature(reinterpret_cast<const char *>(z), PASS_N * sizeof(int64_t));
+	assert(std::memcmp(z, signature.data(), PASS_N * sizeof(int64_t)) == 0);
 
 	ntt_cleanup();
 
