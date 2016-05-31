@@ -75,6 +75,8 @@ void generator::push_vector_string(const vector<string> & data) {
 
 const std::string & generator::str() const { return m_str; }
 
+std::string && generator::str_move() { return std::move(m_str); }
+
 const std::string & generator::get_buffer() const { return m_str; }
 
 // ==================================================================
@@ -344,6 +346,19 @@ void test_trivialserialize() {
 	test_shortstring_end();
 
 	cerr << endl<< "Tests: " << __FUNCTION__ << endl << endl;
+
+	{
+		trivialserialize::generator gen(20);
+		gen.push_varstring("Helloworld.");
+
+		const auto gen2 = gen;
+		string s2 = gen2.str();
+
+		std::string s = gen.str_move();
+
+		_info("Given up simple string: " << s);
+		_info("Given up simple string: " << s2);
+	}
 
 	string f="fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
 
