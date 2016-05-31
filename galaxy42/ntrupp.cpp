@@ -27,7 +27,7 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 		throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
 }
 
-static uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
+uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
 	static std::ifstream rand_source;
 	static sodiumpp::locked_string random_byte(1);
 
@@ -59,8 +59,7 @@ static uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
 	return 0;
 }
 
-
-static DRBG_HANDLE get_DRBG(size_t size) {
+DRBG_HANDLE get_DRBG(size_t size) {
 	// TODO(r) use std::once / lock? - not thread safe now
 	static map<size_t , DRBG_HANDLE> drbg_tab;
 
@@ -206,47 +205,4 @@ bool verify(const std::string &sign, const std::string &msg, const std::string &
 		msg.size());
 	return ret == VALID;
 }
-
-std::string encrypt(const std::string &plain, const std::string &pubkey) {
-	uint16_t cyphertext_size=0;
-
-	const auto & drbg = get_DRBG(128);
-
-	// first run just to get the size of output:
-	ntru_crypto_ntru_encrypt( drbg,
-							  numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
-							  numeric_cast<uint16_t>(plain.size()),  reinterpret_cast<const uint8_t*>(plain.c_str()),
-							  &cyphertext_size, NULL	);
-	assert( (cyphertext_size!=0) || (plain.size()==0) );
-	assert( (cyphertext_size >= plain.size()) );
-
-	string ret( cyphertext_size , static_cast<char>(0) ); // allocate memory of the encrypted text
-	assert( ret.size() == cyphertext_size );
-	// actually encrypt now:
-	ntru_crypto_ntru_encrypt( drbg,
-							  numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
-							  numeric_cast<uint16_t>(plain.size()), reinterpret_cast<const uint8_t*>(plain.c_str()),
-							  &cyphertext_size, reinterpret_cast<uint8_t*>(&ret[0])	);
-
-	return ret;
-}
-
-sodiumpp::locked_string decrypt(const std::string cyphertext, const sodiumpp::locked_string &PRVkey) {
-	uint16_t cleartext_len=0;
-	ntru_crypto_ntru_decrypt(
-				numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
-				numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
-				&cleartext_len, NULL);
-	assert( (cleartext_len!=0) || (cyphertext.size()==0) );
-
-	sodiumpp::locked_string ret( cleartext_len );
-	assert( ret.size() == cleartext_len );
-	ntru_crypto_ntru_decrypt(
-				numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
-				numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
-				&cleartext_len, reinterpret_cast<uint8_t*>(ret.buffer_writable()));
-
-	return ret;
-}
-
 } // namspace ntrupp
