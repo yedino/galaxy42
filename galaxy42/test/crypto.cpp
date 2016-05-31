@@ -202,7 +202,7 @@ TEST(crypto, multi_sign_ed25519) {
 }
 
 TEST(crypto, ntrupp_generate_keypair) {
-	const size_t test_number = 10000;
+	const size_t test_number = 30;
 	std::vector<decltype (ntrupp::generate_keypair())> keys;
 	for (size_t i = 0; i < test_number; ++i) {
 		auto key_pair = ntrupp::generate_keypair();
