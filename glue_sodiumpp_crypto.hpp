@@ -23,10 +23,12 @@ std::string show_nice_nonce(const sodiumpp::nonce<sequentialbytes> & thenonce) {
 
 	int num_zero = 0; // count the leading zeros
 	size_t pos = 0;
-	while (pos < str_size) {
-		if (str.at(pos) == 0) ++num_zero; // another 0
-		else break;
-		++pos;
+	if (str_size>1) {
+		while (pos < str_size-1) {
+			if (str.at(pos) == 0) ++num_zero; // another 0
+			else break;
+			++pos;
+		}
 	}
 	uint64_t ev=0; // the value at end
 	for (size_t i=pos; i<str_size; ++i) {
@@ -39,7 +41,7 @@ std::string show_nice_nonce(const sodiumpp::nonce<sequentialbytes> & thenonce) {
 
 	ostringstream oss;
 	if (num_zero>0) {
-		oss << "(0*" << num_zero << "),";
+		oss << "(0*" << num_zero << ")...";
 	}
 	oss<<ev;
 	return oss.str();

@@ -594,7 +594,7 @@ class c_stream final /* because strange ctor init list functions */
 		string m_nicename; ///< my nice name for logging/debugging
 
 	public:
-		c_stream(bool side_initiator, const string& m_nicename);
+		c_stream(bool side_initiator, const string& nicename);
 		std::string debug_this() const;
 
 		void exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
@@ -648,10 +648,14 @@ class c_crypto_tunnel final {
 		unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
 		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
+		string m_nicename; ///< my nice name for logging/debugging
+
 	public:
-		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them);
+		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them, const string& nicename);
 		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them,
-			const std::string & packetstart );
+			const std::string & packetstart, const string& nicename );
+
+		std::string debug_this() const;
 
 		void create_IDe();
 		void create_CTf(const std::string & packetstart);

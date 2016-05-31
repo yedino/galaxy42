@@ -1025,7 +1025,7 @@ c_stream::c_stream(bool side_initiator, const string& m_nicename)
 
 std::string c_stream::debug_this() const {
 	ostringstream oss;
-	oss << "{stream: "<<m_nicename<<"}";
+	oss << "{stream: "<<m_nicename<<"} ";
 	return oss.str();
 }
 
@@ -1040,15 +1040,23 @@ sodiumpp::locked_string c_stream::return_empty_K() {
 // ---------------------------------------------------------------------------
 
 std::string c_stream::box(const std::string & msg) {
-	_dbg2n("Boxing as: nonce="<<show_nice_nonce(m_boxer->get_nonce())
-	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
-	return PTR(m_boxer)->box(msg).to_binary();
+	auto & cb = * PTR(m_boxer); // my crypto (un)boxer
+	const auto N = cb.get_nonce(); // nonce (before operation)
+	const auto ret = cb.box(msg).to_binary();
+	_dbg1n("Encrypt N="<<show_nice_nonce(N)
+		<<" text " << to_debug(msg) << " ---> " << to_debug(ret)
+		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+	return ret;
 }
 
 std::string c_stream::unbox(const std::string & msg) {
-	_dbg2n("Unboxing as: nonce="<<show_nice_nonce(m_boxer->get_nonce())
-	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
-	return PTR(m_unboxer)->unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
+	auto & cb = * PTR(m_unboxer); // my crypto (un)boxer
+	const auto N = cb.get_nonce(); // nonce (before operation)
+	auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
+	_dbg1n("Decrypt N="<<show_nice_nonce(N)
+		<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
+		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+	return ret;
 }
 
 // ---------------------------------------------------------------------------
@@ -1515,23 +1523,24 @@ bool c_stream::is_K_not_empty() const {
 
 // ------------------------------------------------------------------
 
-c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them)
+c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multikeys_pub & them,
+const string& nicename)
 	: m_side_initiator(true),
-	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
-	_note("Alice? Creating the crypto tunnel (we are initiator)");
-	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator(m_nicename)); // TODONOW
+	_noten("Alice? Creating the crypto tunnel (we are initiator)");
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator, m_nicename+"-CTab"); // TODONOW
 	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
-	_note("Alice? Creating the crypto tunnel (we are initiator) - DONE");
+	_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
-	const std::string & packetstart )
+	const std::string & packetstart, const string & nicename )
 	: m_side_initiator(false),
-	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
+	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
 	_note("Bob? Creating the crypto tunnel (we are respondent)");
-	m_stream_crypto_ab = make_unique<c_stream>(false);
+	m_stream_crypto_ab = make_unique<c_stream>(false, nicename+"-CTab");
 	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart ); // exchange for IDC is ready
 	_mark("Ok exchange for AB is finalized");
 
@@ -1541,7 +1550,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 
 	// exchange for IDe is ready here:
 	_note("Bob? Ok creating final stream");
-	m_stream_crypto_final = make_unique<c_stream>(true); // I am initiator for CTe
+	m_stream_crypto_final = make_unique<c_stream>(true, m_nicename+"-CTf"); // I am initiator for CTe
 
 	c_multikeys_pub them_IDe;
 	them_IDe.load_from_bin( m_stream_crypto_ab->parse_packetstart_IDe( packetstart ) );
@@ -1559,11 +1568,15 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 
 // ---
 
+std::string c_crypto_tunnel::debug_this() const {
+	return "{CT: "+m_nicename+"} ";
+}
+
 void c_crypto_tunnel::create_CTf(const string & packetstart) {
 	_info("Alice? Creating CTf from packetstart="<<to_debug(packetstart));
 	c_multikeys_pub them_IDe;
 	them_IDe.load_from_bin( PTR(m_stream_crypto_ab)->parse_packetstart_IDe(packetstart) );
-	m_stream_crypto_final = make_unique<c_stream>(false); // I am not initiator of this return-stream CTe
+	m_stream_crypto_final = make_unique<c_stream>(false, m_nicename+"-CTf"); // I am not initiator of this return-stream CTe
 	m_stream_crypto_final -> exchange_done( * this->m_IDe , them_IDe , packetstart);
 	_info("Alice? Creating CTf - done");
 }
@@ -1749,13 +1762,13 @@ void test_crypto() {
 
 		// Create CT (e.g. CTE?) - that has KCT
 		_note("Alice CT:");
-		c_crypto_tunnel AliceCT(keypairA, keypubB); // start, has KCT_ab
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice"); // start, has KCT_ab
 		AliceCT.create_IDe();
 		string packetstart_1 = AliceCT.get_packetstart_ab();
 		_info("SEND packetstart to Bob: " << to_debug(packetstart_1));
 
 		_note("Bob CT:");
-		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1); // start -> has
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby"); // start -> has
 		string packetstart_2 = BobCT.get_packetstart_final();
 
 		AliceCT.create_CTf(packetstart_2);
@@ -1767,15 +1780,14 @@ void test_crypto() {
 
 		//_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		//	"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
-		for (int ia=0; ia<2; ++ia) {
-			_dbg2("Alice will box:");
+		for (int ia=0; ia<5; ++ia) {
 			auto msg1s = AliceCT.box("Hello");
 			auto msg1r = BobCT.unbox(msg1s);
-			_note("(via CTab) Message: [" << msg1r << "] from: " << to_debug(msg1s));
+			//_note("Message: [" << msg1r << "] from: " << to_debug(msg1s));
 
 			auto msg2s = BobCT.box("Hello");
 			auto msg2r = AliceCT.unbox(msg2s);
-			_note("(via CTab) Message: [" << msg2r << "] from: " << to_debug(msg2s));
+			//_note("Message: [" << msg2r << "] from: " << to_debug(msg2s));
 		}
 	}
 
