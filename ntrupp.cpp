@@ -16,11 +16,13 @@ extern "C" {
 namespace ntrupp {
 
 void NTRU_DRBG_exec_or_throw( uint32_t errcode , const std::string &info="") {
-	throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
+	if (errcode != DRBG_OK)
+		throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
 }
 
 void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
-	throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
+	if (errcode != NTRU_OK)
+		throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
 }
 
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
