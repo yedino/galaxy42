@@ -28,19 +28,19 @@ it has bugs and 'typpos'.
 
 
 #include "crypto.hpp"
-#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+#include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-#include "ntru/include/ntru_crypto.h"
+#include "../build_extra/ntru/include/ntru_crypto.h"
 #include <SIDH_internal.h>
 
-#include "trivialserialize.hpp"
+#include "../trivialserialize.hpp"
 
-#include "filestorage.hpp"
-#include "text_ui.hpp"
-#include "ntrupp.hpp"
+#include "../filestorage.hpp"
+#include "../text_ui.hpp"
+#include "../ntrupp.hpp"
 
-#include "glue_lockedstring_trivialserialize.hpp"
-#include "glue_sodiumpp_crypto.hpp"
+#include "../glue_lockedstring_trivialserialize.hpp"
+#include "../glue_sodiumpp_crypto.hpp"
 
 using sodiumpp::locked_string;
 

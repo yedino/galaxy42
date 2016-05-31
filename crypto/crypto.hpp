@@ -33,9 +33,9 @@ it has bugs and 'typpos'.
 #ifndef include_crypto_hpp
 #define include_crypto_hpp
 
-#include "libs1.hpp"
+#include "../libs1.hpp"
 #include <sodium.h>
-#include "strings_utils.hpp"
+#include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
 #include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
