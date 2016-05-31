@@ -150,39 +150,7 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 	UNUSED(argm);
 
 	_mark("Tests of string encoding");
-	string s1,s2,s3;
-	using namespace std;
-	s1="4a4b4c4d4e"; // in hex
-//	s2="ab"; // in b64
-	s3="y"; // in bin
-
-
-	// TODO assert is results are as expected!
-	// TODO also assert that the exceptions are thrown as they should be, below
-
-	auto s1_hex = string_as_hex( s1 );
-	c_haship_pubkey pub1( s1_hex );
-	_info("pub = " << to_string(pub1));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4"))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("f4b4c4d4e"))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4e"))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex(""))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("ffffffff"))));
-	_info("pub = " << to_string(c_haship_pubkey(string_as_hex("00000000"))));
-	try {
-		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("4a4b4c4d4eaba46381826328363782917263521719badbabdbadfade7455467383947543473839474637293474637239273534873"))));
-	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
-	try {
-		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("0aq"))));
-	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
-	try {
-		_info("pub = " << to_string(c_haship_pubkey(string_as_hex("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"))));
-	} catch (std::exception &e) { _note("Test failed, as expected: " << e.what()); }
-
-//	c_haship_pubkey pub2( string_as_b64( s1 ) );
-//	c_haship_pubkey pub3( string_as_bin( s1 ) );
-
-	_info("Test done");
+	_warn("Test needs rewritting");
 	return false;
 }
 
@@ -573,17 +541,18 @@ void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("T
 void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) {
 	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
 	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
-	_info("Configuring the router, I am: pubkey="<<to_string(m_haship_pubkey)<<" ip="<<to_string(m_haship_addr)
+	_info("Configuring the router, I am: pubkey="<<to_debug(m_haship_pubkey.serialize_bin())
+	<<" ip="<<to_string(m_haship_addr)
 		<<" privkey="<<mypriv);
 }
 
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
-	_note("Adding peer from reference=" << peer_ref
-		<< " that reads: " << "peering-address=" << peer_ref.peering_addr << " pubkey=" << to_string(peer_ref.pubkey) << " haship_addr=" << to_string(peer_ref.haship_addr) );
-	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+	UNUSED(peer_ref);
+	_erro("Adding peers from text references not supported now. (make it load a file instead or convert hex2bin)");
+	//auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
 	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
-	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	//m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
 
 void c_tunserver::help_usage() const {
@@ -690,7 +659,7 @@ void c_tunserver::peering_ping_all_peers() {
 
 		// [protocol] build raw
 		string_as_bin cmd_data;
-		cmd_data.bytes += string_as_bin( m_haship_pubkey ).bytes;
+		cmd_data.bytes += m_haship_pubkey.serialize_bin();
 		cmd_data.bytes += ";";
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
 	}
