@@ -1224,7 +1224,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				else { // they encrypted rand data to me, I need to decrypt:
 					string & encrypted = kexasym_passencr_received.at(sys_id).at(pass_nr);
 					_info("Opening NTru KEX: from encrypted=" << to_debug(encrypted));
-					sodiumpp::locked_string decrypted = ntrupp::decrypt(encrypted, key_A_PRV);
+					sodiumpp::locked_string decrypted = ntrupp::decrypt<sodiumpp::locked_string>(encrypted, key_A_PRV);
 					_info("Opening NTru KEX: from decrypted=" << to_debug_locked(decrypted));
 
 					// TODO double code

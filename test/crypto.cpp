@@ -221,7 +221,7 @@ TEST(crypto, ntrupp_encrypt) {
 		l_keypair = ntrupp::generate_encrypt_keypair();
 
 		std::string cyphertext = ntrupp::encrypt(i_msg, l_keypair.second);
-		std::string decrypted(ntrupp::decrypt(cyphertext, l_keypair.first));
+		std::string decrypted(ntrupp::decrypt<std::string>(cyphertext, l_keypair.first));
 
 		ASSERT_EQ(i_msg, decrypted);
 	}
@@ -236,11 +236,13 @@ TEST(crypto, ntrupp_sign) {
 
 	std::pair<sodiumpp::locked_string, std::string> keypair = ntrupp::generate_sign_keypair();
 
-	std::string msg_to_sign = "Message to sign";
+	std::string msg = "Message to sign";
 	std::string signature;
 
-	signature = ntrupp::sign(msg_to_sign, keypair.first);	// keys for encrypt ...
+	signature = ntrupp::sign(msg, keypair.first);	// keys for encrypt ...
 	std::cout << "Signature: " << signature << std::endl;
+
+	EXPECT_TRUE(ntrupp::verify(signature, msg, keypair.second));
 }
 
 TEST(crypto, multi_sign_ed25519) {

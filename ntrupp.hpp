@@ -21,6 +21,9 @@ extern "C" {
 
 namespace ntrupp {
 
+	uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out);
+	DRBG_HANDLE get_DRBG(size_t size);
+
 	/// @return pair of <private key, hash_sha512(private_key) + pubkey>
 	/// pricate_key hash before publickey is necessary for verifying signatures
 	std::pair<sodiumpp::locked_string,std::string> generate_sign_keypair();
@@ -48,7 +51,30 @@ ntru_crypto_ntru_encrypt(
 /***
  * Encrypt plain text for given pubkey.
  */
-std::string encrypt(const std::string &plain, const std::string & pubkey);
+template<class T>
+std::string encrypt(const T &plain, const std::string & pubkey) {
+	uint16_t cyphertext_size=0;
+
+	const auto & drbg = get_DRBG(128);
+
+	// first run just to get the size of output:
+	ntru_crypto_ntru_encrypt( drbg,
+							  numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
+							  numeric_cast<uint16_t>(plain.size()),  reinterpret_cast<const uint8_t*>(plain.c_str()),
+							  &cyphertext_size, NULL	);
+	assert( (cyphertext_size!=0) || (plain.size()==0) );
+	assert( (cyphertext_size >= plain.size()) );
+
+	string ret( cyphertext_size , static_cast<char>(0) ); // allocate memory of the encrypted text
+	assert( ret.size() == cyphertext_size );
+	// actually encrypt now:
+	ntru_crypto_ntru_encrypt( drbg,
+							  numeric_cast<uint16_t>(pubkey.size()), reinterpret_cast<const uint8_t*>(pubkey.c_str()),
+							  numeric_cast<uint16_t>(plain.size()), reinterpret_cast<const uint8_t*>(plain.c_str()),
+							  &cyphertext_size, reinterpret_cast<uint8_t*>(&ret[0])	);
+
+	return ret;
+}
 
 /*
 NTRUCALL
@@ -77,7 +103,7 @@ T decrypt(const std::string &cyphertext, const sodiumpp::locked_string &PRVkey) 
 	ntru_crypto_ntru_decrypt(
 				numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
 				numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
-				&cleartext_len, reinterpret_cast<uint8_t*>(ret.buffer_writable()));
+				&cleartext_len, reinterpret_cast<uint8_t*>(&ret[0]));
 
 	return ret;
 }
