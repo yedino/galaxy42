@@ -37,6 +37,11 @@ t_crypto_system_type c_multikeys_PAIR::get_system_type() const { return e_crypto
 // ##################################################################
 // all about the multikeys
 
+
+
+
+
+
 // ==================================================================
 // c_multicryptostrings<>
 
@@ -308,6 +313,38 @@ template <typename TKey>
 c_multikeys_general<TKey>::c_multikeys_general(t_crypto_use crypto_use)
 	: c_multicryptostrings<TKey>(crypto_use)
 { }
+
+
+
+
+
+
+
+
+
+// ##################################################################
+// ##################################################################
+
+
+
+
+
+// TODONOW remove?
+void instantiate() {
+	{ c_multicryptostrings<std::string> someobject(e_crypto_use_open); }
+	{ c_multicryptostrings<sodiumpp::locked_string> someobject(e_crypto_use_open); }
+	{ c_multikeys_general<std::string> someobject(e_crypto_use_open); }
+	{ c_multikeys_general<sodiumpp::locked_string> someobject(e_crypto_use_open); }
+}
+
+
+
+
+
+
+
+
+
 
 // ==================================================================
 // c_multikeys_pub
