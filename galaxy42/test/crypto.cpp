@@ -222,6 +222,7 @@ TEST(crypto, ntrupp_encrypt) {
 
 		std::string cyphertext = ntrupp::encrypt(i_msg, l_keypair.second);
 		std::string decrypted(ntrupp::decrypt<std::string>(cyphertext, l_keypair.first));
+		decrypted.erase(i_msg.size());
 
 		ASSERT_EQ(i_msg, decrypted);
 	}
