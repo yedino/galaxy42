@@ -21,6 +21,16 @@ cp -v -r ../ntru-crypto/reference-code/C/Encrypt/include/    build_extra/ntru
 
 cp -v -r ../ntru-crypto/reference-code/C/Encrypt/.libs/    build_extra/ntru/
 
+echo "Generating wisdom files ..."
+cp -r ../ntru-crypto/reference-code/C/Sign/PASS/data .
+cp ../ntru-crypto/reference-code/C/Sign/PASS/bin/wiseup.sh build_extra/
+cd build_extra
+for param in 433 577 769 1153
+do
+	./wiseup.sh $param
+done
+cd ..
+
 echo "Look at what we prepared:"
 
 find build_extra/
