@@ -1,3 +1,4 @@
+#pragma once
 #ifndef C_TNETDBG_HPP
 #define C_TNETDBG_HPP
 
@@ -82,10 +83,7 @@ throw _except2( std::logic_error("foo") , "x=" << x << "y=" << y ) ;
 throw _except( std::logic_error("foo")) ;
 */
 
-
-std::string debug_this() {
-	return "(global)";
-}
+std::string debug_this();
 
 #define _dbg3n(X) _dbg3(debug_this() << X)
 #define _dbg2n(X) _dbg2(debug_this() << X)
