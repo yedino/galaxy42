@@ -591,8 +591,11 @@ class c_stream final /* because strange ctor init list functions */
 		unique_ptr< t_boxer > m_boxer;
 		unique_ptr< t_unboxer > m_unboxer;
 
+		string m_nicename; ///< my nice name for logging/debugging
+
 	public:
-		c_stream(bool side_initiator);
+		c_stream(bool side_initiator, const string& m_nicename);
+		std::string debug_this() const;
 
 		void exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			bool will_new_id);

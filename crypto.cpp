@@ -39,6 +39,7 @@ it has bugs and 'typpos'.
 #include "text_ui.hpp"
 
 #include "glue_lockedstring_trivialserialize.hpp"
+#include "glue_sodiumpp_crypto.hpp"
 
 using sodiumpp::locked_string;
 
@@ -1008,7 +1009,7 @@ const c_multikeys_pub & c_multikeys_PAIR::read_pub() const {
 // ==================================================================
 
 
-c_stream::c_stream(bool side_initiator)
+c_stream::c_stream(bool side_initiator, const string& m_nicename)
 :
 	m_KCT( return_empty_K() ),
 	m_nonce_odd( 0 ),
@@ -1016,8 +1017,16 @@ c_stream::c_stream(bool side_initiator)
 	m_packetstart_kexasym(""),
 	m_cryptolists_count(),
 	m_boxer( nullptr ),
-	m_unboxer( nullptr )
+	m_unboxer( nullptr ),
+	m_nicename(m_nicename)
 {
+	_dbg2n("created");
+}
+
+std::string c_stream::debug_this() const {
+	ostringstream oss;
+	oss << "{stream: "<<m_nicename<<"}";
+	return oss.str();
 }
 
 sodiumpp::locked_string c_stream::return_empty_K() {
@@ -1031,13 +1040,14 @@ sodiumpp::locked_string c_stream::return_empty_K() {
 // ---------------------------------------------------------------------------
 
 std::string c_stream::box(const std::string & msg) {
-	_dbg2("Boxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary())
+	_dbg2n("Boxing as: nonce="<<show_nice_nonce(m_boxer->get_nonce())
 	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
 	return PTR(m_boxer)->box(msg).to_binary();
 }
 
 std::string c_stream::unbox(const std::string & msg) {
-	_dbg2("Unboxing as: nonce="<<to_debug(m_boxer->get_nonce().get().to_binary()));
+	_dbg2n("Unboxing as: nonce="<<show_nice_nonce(m_boxer->get_nonce())
+	<< " and nonce_cost = " << to_debug(m_boxer->get_nonce_constant().to_binary()) );
 	return PTR(m_unboxer)->unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
 }
 
@@ -1050,7 +1060,7 @@ t_crypto_system_count c_stream::get_cryptolists_count_for_KCTf() const {
 void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 	bool will_new_id)
 {
-	_note("EXCHANGE START");
+	_noten("EXCHANGE START");
 	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
@@ -1059,14 +1069,14 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart)
 {
-	_note("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
+	_noten("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
 	m_KCT = calculate_KCT( ID_self , ID_them, true, packetstart );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
 
 void c_stream::create_boxer_with_K() {
-	_note("Got stream K = " << to_debug_locked(m_KCT));
+	_noten("Got stream K = " << to_debug_locked(m_KCT));
 	sodiumpp::encoded_bytes nonce_zero =
 		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
 	;
@@ -1510,7 +1520,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self,  const c_multike
 	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr)
 {
 	_note("Alice? Creating the crypto tunnel (we are initiator)");
-	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator);
+	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator(m_nicename)); // TODONOW
 	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
 	_note("Alice? Creating the crypto tunnel (we are initiator) - DONE");
 }
