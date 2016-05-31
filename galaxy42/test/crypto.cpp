@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "../crypto.hpp"
+#include "../ntrupp.hpp"
 
 // ntru sign
 extern "C" {
@@ -198,4 +199,15 @@ TEST(crypto, multi_sign_ed25519) {
 															msg_to_sign,
 															Alice.read_pub());
 	});
+}
+
+TEST(crypto, ntrupp_generate_keypair) {
+	const size_t test_number = 10000;
+	std::vector<decltype (ntrupp::generate_keypair())> keys;
+	for (size_t i = 0; i < test_number; ++i) {
+		auto key_pair = ntrupp::generate_keypair();
+		keys.emplace_back(std::move(key_pair));
+	}
+	std::unique(keys.begin(), keys.end());
+	ASSERT_EQ(keys.size(), test_number);
 }
