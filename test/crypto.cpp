@@ -11,6 +11,8 @@ extern "C" {
 #include <pass.h>
 }
 
+#include "../ntrupp.hpp"
+
 namespace antinet_crypto {
 
 /* broke after the memlock and _PRV hash functions...
@@ -176,6 +178,23 @@ TEST(crypto, ntru_sign) {
 
 }
 
+TEST(crypto, ntrupp_sign) {
+
+	//ntrupp::si
+	FILE * f_ptr;
+	f_ptr = std::fopen("data/769_wisdom.dat", "r");
+
+	assert(f_ptr != NULL);
+
+	std::pair<sodiumpp::locked_string, std::string> keypair = ntrupp::generate_keypair();
+
+	std::string msg_to_sign = "Message to sign";
+	std::string signature;
+
+	// signature = ntrupp::sign(msg_to_sign, keypair.first);	// keys for encrypt ...
+	std::cout << "Signature: " << signature << std::endl;
+}
+
 TEST(crypto, multi_sign_ed25519) {
 
 	antinet_crypto::c_multikeys_PAIR Alice;
@@ -202,7 +221,7 @@ TEST(crypto, multi_sign_ed25519) {
 }
 
 TEST(crypto, ntrupp_generate_keypair) {
-	const size_t test_number = 30;
+	const size_t test_number = 10;
 	std::vector<decltype (ntrupp::generate_keypair())> keys;
 	for (size_t i = 0; i < test_number; ++i) {
 		auto key_pair = ntrupp::generate_keypair();
