@@ -4,6 +4,20 @@
 #include "libs0.hpp"
 #include "sodiumpp/locked_string.h"
 
+#include "trivialserialize.hpp"
+
+#include "ntru/include/ntru_crypto.h"
+#include "ntru/include/ntru_crypto_drbg.h"
+
+// ntru sign
+extern "C" {
+#include <constants.h>
+#include <pass_types.h>
+#include <hash.h>
+#include <ntt.h>
+#include <pass.h>
+}
+
 
 namespace ntrupp {
 
@@ -34,7 +48,7 @@ ntru_crypto_ntru_encrypt(
 /***
  * Encrypt plain text for given pubkey.
  */
-std::string ntru_encrypt(const sodiumpp::locked_string plain, const std::string & pubkey);
+std::string encrypt(const std::string &plain, const std::string & pubkey);
 
 /*
 NTRUCALL
@@ -48,8 +62,25 @@ ntru_crypto_ntru_decrypt(
 												 no. of octets in plaintext
 	uint8_t       *pt);              //    out - address for plaintext
 */
-sodiumpp::locked_string ntru_decrypt(const string cyphertext, const sodiumpp::locked_string & PRVkey);
+//sodiumpp::locked_string decrypt(const string cyphertext, const sodiumpp::locked_string & PRVkey);
+template<class T>
+T decrypt(const std::string &cyphertext, const sodiumpp::locked_string &PRVkey) {
+	uint16_t cleartext_len=0;
+	ntru_crypto_ntru_decrypt(
+				numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
+				numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
+				&cleartext_len, NULL);
+	assert( (cleartext_len!=0) || (cyphertext.size()==0) );
 
+	T ret( cleartext_len, '\0');
+	assert( ret.size() == cleartext_len );
+	ntru_crypto_ntru_decrypt(
+				numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),
+				numeric_cast<uint16_t>(cyphertext.size()), reinterpret_cast<const uint8_t*>(cyphertext.c_str()),
+				&cleartext_len, reinterpret_cast<uint8_t*>(ret.buffer_writable()));
+
+	return ret;
+}
 
 }	// namespace ntrucpp
 

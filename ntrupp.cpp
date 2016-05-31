@@ -207,7 +207,7 @@ bool verify(const std::string &sign, const std::string &msg, const std::string &
 	return ret == VALID;
 }
 
-std::string ntru_encrypt(const sodiumpp::locked_string plain, const std::string &pubkey) {
+std::string encrypt(const std::string &plain, const std::string &pubkey) {
 	uint16_t cyphertext_size=0;
 
 	const auto & drbg = get_DRBG(128);
@@ -231,7 +231,7 @@ std::string ntru_encrypt(const sodiumpp::locked_string plain, const std::string 
 	return ret;
 }
 
-sodiumpp::locked_string ntru_decrypt(const std::string cyphertext, const sodiumpp::locked_string &PRVkey) {
+sodiumpp::locked_string decrypt(const std::string cyphertext, const sodiumpp::locked_string &PRVkey) {
 	uint16_t cleartext_len=0;
 	ntru_crypto_ntru_decrypt(
 				numeric_cast<uint16_t>(PRVkey.size()), reinterpret_cast<const uint8_t*>(PRVkey.c_str()),

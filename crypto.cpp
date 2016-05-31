@@ -1205,7 +1205,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					// encrypt
 					_dbg1("NTru password GENERATED: " << to_debug_locked(password_cleartext));
 					_dbg2("NTru to pubkey " << to_debug(key_B_pub));
-					string password_encrypted = ntrupp::ntru_encrypt(password_cleartext, key_B_pub);
+					string password_encrypted = ntrupp::encrypt(password_cleartext.get_string(), key_B_pub);
 					_dbg1("random data encrypted as: " << to_debug(password_encrypted));
 
 					kexasym_passencr_tosend[sys_id].push_back(password_encrypted); // store encrypted to send to Bob
@@ -1224,7 +1224,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				else { // they encrypted rand data to me, I need to decrypt:
 					string & encrypted = kexasym_passencr_received.at(sys_id).at(pass_nr);
 					_info("Opening NTru KEX: from encrypted=" << to_debug(encrypted));
-					sodiumpp::locked_string decrypted = ntrupp::ntru_decrypt(encrypted, key_A_PRV);
+					sodiumpp::locked_string decrypted = ntrupp::decrypt(encrypted, key_A_PRV);
 					_info("Opening NTru KEX: from decrypted=" << to_debug_locked(decrypted));
 
 					// TODO double code
