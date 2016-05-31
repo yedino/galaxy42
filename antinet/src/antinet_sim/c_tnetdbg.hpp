@@ -3,6 +3,8 @@
 
 #include <cstdlib>
 
+#include <string>
+
 
 /// This macros will be moved later to glorious-cpp library or other
 
@@ -80,6 +82,19 @@ throw _except2( std::logic_error("foo") , "x=" << x << "y=" << y ) ;
 throw _except( std::logic_error("foo")) ;
 */
 
+
+std::string debug_this() {
+	return "(global)";
+}
+
+#define _dbg3n(X) _dbg3(debug_this() << X)
+#define _dbg2n(X) _dbg2(debug_this() << X)
+#define _dbg1n(X) _dbg1(debug_this() << X)
+#define _infon(X) _info(debug_this() << X)
+#define _noten(X) _note(debug_this() << X)
+#define _warnn(X) _warn(debug_this() << X)
+#define _erron(X) _erro(debug_this() << X)
+#define _markn(X) _mark(debug_this() << X)
 
 
 
