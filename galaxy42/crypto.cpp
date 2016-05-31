@@ -619,23 +619,6 @@ c_multikeys_PAIR & c_crypto_tunnel::get_IDe() {
 	return * PTR(m_IDe);
 }
 
-template <typename T_ok_value, typename T_errcode>
-void errcode_valid_or_throw( T_ok_value ok_value_raw , T_errcode errcode ,
-	const std::string &api_name, const std::string &info="")
-{
-	// convert type type of ok_value to exactly same type as type of the error code
-	// because sometimes they differ, e.g. some APIs have functions return uint32_t,
-	// while just doing #define NTRU_OK 0 which is an "int" type.
-	const T_errcode ok_value = boost::numeric_cast<T_errcode>( ok_value_raw );
-	// the conversion above is safe (range-checked) so we can now safely compare the value:
-	if ( errcode != ok_value ) {
-		ostringstream oss; oss<<api_name<<" function failed (" << errcode << ")";
-		if (info.size()) oss<<" - " << info ;
-		oss << '!';
-		throw std::runtime_error(oss.str());
-	}
-}
-
 void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool will_asymkex) {
 	_info("Generating from cryptolists_count");
 	for (size_t sys=0; sys<cryptolists_count.size(); ++sys) { // all key crypto systems

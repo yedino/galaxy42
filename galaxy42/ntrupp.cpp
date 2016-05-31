@@ -25,7 +25,7 @@ void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 		throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
 }
 
-uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
+static uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
 	static std::ifstream rand_source;
 	static sodiumpp::locked_string random_byte(1);
 
@@ -58,7 +58,7 @@ uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
 }
 
 
-DRBG_HANDLE get_DRBG(size_t size) {
+static DRBG_HANDLE get_DRBG(size_t size) {
 	// TODO(r) use std::once / lock? - not thread safe now
 	static map<size_t , DRBG_HANDLE> drbg_tab;
 
@@ -87,6 +87,10 @@ DRBG_HANDLE get_DRBG(size_t size) {
 
 std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
 
+	if(ntt_setup() == -1) {
+		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
+	}
+
 	// generate key pair
 	uint16_t public_key_len = 0, private_key_len = 0;
 	// get size of keys:
@@ -94,10 +98,12 @@ std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
 				ntru_crypto_ntru_encrypt_keygen(
 					get_DRBG(128),
 					NTRU_EES439EP1,
-					&public_key_len, nullptr, &private_key_len, nullptr
-					)
-				,"generate keypair - get key length"
-				);
+					&public_key_len,
+					nullptr,
+					&private_key_len,
+					nullptr)
+				,"generate keypair - get key length");
+
 	// values for NTRU_EES439EP1
 	assert(public_key_len == 609);
 	assert(private_key_len == 659);
@@ -106,12 +112,14 @@ std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
 	sodiumpp::locked_string private_key(private_key_len);
 
 	NTRU_exec_or_throw(
-				ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
-												&public_key_len, reinterpret_cast<uint8_t *>(&public_key[0]),
-				&private_key_len, reinterpret_cast<uint8_t *>(private_key.buffer_writable())
-				)
-			,"generate keypair"
-			);
+				ntru_crypto_ntru_encrypt_keygen(get_DRBG(128),
+								NTRU_EES439EP1,
+								&public_key_len,
+								reinterpret_cast<uint8_t *>(&public_key[0]),
+								&private_key_len,
+								reinterpret_cast<uint8_t *>(private_key.buffer_writable()))
+				,"generate keypair");
+
 	unsigned char hash[HASH_BYTES];
 	crypto_hash_sha512(hash,
 					   reinterpret_cast<const unsigned char*>(private_key.data()),
@@ -125,6 +133,8 @@ std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
 
 	assert(public_and_hash.size() == (public_key_len + HASH_BYTES)
 		   && "Ntru public_key + hash: BAD sizes" );
+
+	ntt_cleanup();
 
 	return std::make_pair(std::move(private_key), std::move(public_and_hash));
 }
@@ -140,7 +150,7 @@ std::string sign(const std::string &msg, const sodiumpp::locked_string &private_
 	unsigned char hash[HASH_BYTES];
 	crypto_hash_sha512(hash,
 					   reinterpret_cast<const unsigned char*>(private_key.data()),
-					   sizeof(int64)*PASS_N); // necessary?
+					   sizeof(int64_t)*PASS_N); // necessary?
 
 	::sign(hash,
 		   z,
