@@ -117,11 +117,11 @@ std::pair<sodiumpp::locked_string, std::string> generate_keypair() {
 					   reinterpret_cast<const unsigned char*>(private_key.data()),
 					   sizeof(int64)*PASS_N); // necessary?
 
-	public_key += std::string(reinterpret_cast<const char *>(hash));
+	//public_key += std::string(reinterpret_cast<const char *>(hash));
 
 
-	std::string public_and_hash(public_key + std::string(reinterpret_cast<const char *>(hash)),
-								public_key_len + HASH_BYTES);
+	std::string public_and_hash(public_key + std::string(reinterpret_cast<const char *>(hash), HASH_BYTES));
+//								public_key_len + HASH_BYTES);
 
 	assert(public_and_hash.size() == (public_key_len + HASH_BYTES)
 		   && "Ntru public_key + hash: BAD sizes" );
