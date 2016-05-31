@@ -14,7 +14,7 @@ namespace ntrupp {
 	std::string sign(const std::string &msg,
 					 const sodiumpp::locked_string &private_key);
 
-	void verify(const std::string &signature,
+	bool verify(const std::string &signature,
 				const std::string &msg,
 				const std::string &public_key);
 
