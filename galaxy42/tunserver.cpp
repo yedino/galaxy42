@@ -132,6 +132,7 @@ const char * g_demoname_default = "route_dij";
 
 
 #include "trivialserialize.hpp"
+#include "galaxy_debug.hpp"
 
 
 // ------------------------------------------------------------------
@@ -1226,6 +1227,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("crypto_bench", "crypto benchmark")
 					("route_dij", "dijkstra test")
 					("route", "current best routing (could be equal to some other test)")
+					("debug", "some of the debug/logging functions")
 					("rpc", "rpc demo")
 					("help", "Help msg");
 
@@ -1251,6 +1253,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }
+	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;

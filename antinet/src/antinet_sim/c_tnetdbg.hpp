@@ -3,7 +3,7 @@
 #define C_TNETDBG_HPP
 
 #include <cstdlib>
-
+#include <iostream>
 #include <string>
 
 
