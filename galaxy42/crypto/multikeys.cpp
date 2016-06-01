@@ -12,7 +12,7 @@
 
 #include "../filestorage.hpp"
 #include "../text_ui.hpp"
-#include "../ntrupp.hpp"
+#include "ntrupp.hpp"
 
 #include "../glue_lockedstring_trivialserialize.hpp"
 #include "../glue_sodiumpp_crypto.hpp"

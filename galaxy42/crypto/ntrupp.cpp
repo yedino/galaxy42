@@ -1,6 +1,6 @@
 #include "ntrupp.hpp"
 
-#include "trivialserialize.hpp"
+#include "../trivialserialize.hpp"
 
 #include "ntru/include/ntru_crypto.h"
 #include "ntru/include/ntru_crypto_drbg.h"
@@ -128,14 +128,11 @@ std::pair<sodiumpp::locked_string, std::string> generate_encrypt_keypair() {
 
 std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
 
-	//int64 secretkey[PASS_N];
-	//int64 pubkey[PASS_N] = {0};
 	sodiumpp::locked_string private_key(PASS_N*sizeof(int64_t));
 	std::string public_key(PASS_N*sizeof(int64_t), '\0');
 
 	int64_t * const private_key_ptr = reinterpret_cast<int64_t * const>(&private_key[0]);
 	int64_t * const public_key_ptr = reinterpret_cast<int64_t * const>(&public_key[0]);
-
 
 	if(ntt_setup() == -1) {
 		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
@@ -144,15 +141,9 @@ std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
 	gen_key(private_key_ptr);
 	gen_pubkey(public_key_ptr, private_key_ptr);
 
-	unsigned char hash[HASH_BYTES];
-	crypto_hash_sha512(hash,
-					   reinterpret_cast<const unsigned char*>(private_key.data()),
-					   sizeof(int64)*PASS_N); // necessary?
-
 	std::vector <std::string> public_key_data_vector = {
 		std::string("1"), // ntru version
 		public_key,
-		std::string(reinterpret_cast<char *>(hash), HASH_BYTES) // hash of private key
 	};
 	trivialserialize::generator gen(1);
 	gen.push_vector_string(public_key_data_vector);
@@ -180,10 +171,12 @@ std::string sign(const std::string &msg, const sodiumpp::locked_string &private_
 		   reinterpret_cast<const unsigned char *>(msg.data()),
 		   msg.size());
 
-	std::string signature(reinterpret_cast<const char *>(z), PASS_N);
+	std::string signature(reinterpret_cast<const char *>(z), PASS_N * sizeof(int64_t));
+	assert(std::memcmp(z, signature.data(), PASS_N * sizeof(int64_t)) == 0);
+	// signature = z + hash
+	signature.append(reinterpret_cast<char *>(hash), HASH_BYTES);
 
 	ntt_cleanup();
-
 	return signature;
 }
 
@@ -196,9 +189,9 @@ bool verify(const std::string &sign, const std::string &msg, const std::string &
 	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), public_key);
 	auto public_key_vector_data = parser.pop_vector_string();
 	std::string public_key_data = public_key_vector_data.at(1);
-	std::string private_key_hash = public_key_vector_data.at(2);
+	std::string message_hash = sign.substr(PASS_N * sizeof(int64_t));
 	auto ret = ::verify(
-		reinterpret_cast<const unsigned char *>(private_key_hash.data()),
+		reinterpret_cast<const unsigned char *>(message_hash.data()),
 		reinterpret_cast<const int64 *>(sign.data()),
 		reinterpret_cast<const int64 *>(public_key_data.data()),
 		reinterpret_cast<const unsigned char *>(msg.data()),
