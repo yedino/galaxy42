@@ -243,7 +243,7 @@ TEST(crypto, ntrupp_sign) {
 	std::string signature;
 
 	signature = ntrupp::sign(msg, keypair.first);	// keys for encrypt ...
-	std::cout << "Signature: " << signature << std::endl;
+	_info("Signature: " << to_debug(signature, e_debug_style_crypto_devel ));
 
 	EXPECT_TRUE(ntrupp::verify(signature, msg, keypair.second));
 }
