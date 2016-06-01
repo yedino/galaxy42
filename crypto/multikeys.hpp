@@ -124,6 +124,7 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 
 		string get_ipv6_string_bin() const; ///< IPV6 from hash of this key - as binary data string
 		string get_ipv6_string_hex() const; ///< IPV6 from hash of this key - as hex values string
+		string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
 
 		/// @name Modifiers - concretized version. \n Ready to use. @{
 		void add_public(t_crypto_system_type crypto_type, const t_key & key); ///< append one more key
@@ -172,6 +173,7 @@ class c_multikeys_PAIR {
 
 		string get_ipv6_string_bin() const; ///< IPV6 from hash of this key (binary data)
 		string get_ipv6_string_hex() const; ///< IPV6 from hash of this key (hex string)
+		string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
 
 		///< generate from list of how many keys of given type we need
 		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex);

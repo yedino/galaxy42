@@ -272,3 +272,15 @@ TEST(crypto, multi_sign_ed25519) {
 															Alice.read_pub());
 	});
 }
+
+
+TEST(crypto, ipv6_hexdot) {
+	const size_t test_number = 10;
+	for (size_t i = 0; i < test_number; ++i) {
+		antinet_crypto::c_multikeys_PAIR Alice;
+		Alice.generate(antinet_crypto::e_crypto_system_type_X25519,1);
+
+		_info("IPv6: " << Alice.get_ipv6_string_hexdot());
+	}
+
+}

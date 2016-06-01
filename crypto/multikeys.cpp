@@ -81,6 +81,22 @@ string c_multikeys_pub::get_ipv6_string_hex() const {
 	return as_hex.get();
 }
 
+string c_multikeys_pub::get_ipv6_string_hexdot() const {
+	std::string hex_str = this->get_ipv6_string_hex();
+	std::string hexdot_str;
+	for (size_t i = 0; i < hex_str.size(); ++i ) {
+		hexdot_str += hex_str[i];
+		if (i != 0
+			&& i+1 != hex_str.size()
+			&& ((i+1) % 4) == 0) {
+
+			hexdot_str += ":";
+		}
+	}
+
+	return hexdot_str;
+}
+
 void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
 	add_key(crypto_type, key);
 }
@@ -115,6 +131,7 @@ c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_
 
 string c_multikeys_PAIR::get_ipv6_string_bin() const { return m_pub.get_ipv6_string_bin(); }
 string c_multikeys_PAIR::get_ipv6_string_hex() const { return m_pub.get_ipv6_string_hex(); }
+string c_multikeys_PAIR::get_ipv6_string_hexdot() const { return m_pub.get_ipv6_string_hexdot(); }
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
