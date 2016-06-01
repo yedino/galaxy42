@@ -88,6 +88,8 @@ const char * g_demoname_default = "route_dij";
 #include <string.h>
 #include <assert.h>
 
+#include <boost/optional.hpp>
+
 #include <thread>
 
 #include <cstring>
@@ -1206,6 +1208,16 @@ bool test_bar() {
 	return false;
 }
 
+
+void test_lang_optional() {
+	/* this fails on boost from debian 7
+	boost::optional<float> x = boost::none;
+	if (x) _info("too early: " << *x );
+	x = 3.14;
+	if (x) _info("and now: " << x.value() );
+	*/
+}
+
 /***
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
@@ -1220,6 +1232,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	namespace poo = boost::program_options;
 	poo::options_description desc("Possible demos");
 	desc.add_options()
+					("lang_optional", "foo boost::optional<>")
 					("foo", "foo test")
 					("bar", "bar test")
 					("serialize",  "serialize test")
@@ -1245,6 +1258,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	std::cout << std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
 		<< std::string(70,'=')<<"\n" << std::endl;
 
+	if (demoname=="lang_optional") { test_lang_optional();  return false; }
 	if (demoname=="foo") { test_foo();  return false; }
 	if (demoname=="bar") { test_bar();  return false; }
 	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize();  return false; }
@@ -1254,6 +1268,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
+
 
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;
