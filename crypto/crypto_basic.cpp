@@ -28,7 +28,7 @@ sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len)
 
 std::string to_debug_locked(const sodiumpp::locked_string & data) {
 	#if OPTION_DEBUG_SHOW_SECRET_STRINGS
-		return to_debug(data.get_string());
+		return to_debug(data.get_string() , e_debug_style_crypto_devel);
 	#else
 		UNUSED(data);
 	#endif

@@ -3,6 +3,12 @@
 
 #include "libs0.hpp"
 
+
+enum t_debug_style {
+	e_debug_style_short_devel=1,
+	e_debug_style_crypto_devel=2,
+};
+
 struct string_as_bin;
 
 struct string_as_hex {
@@ -57,6 +63,8 @@ struct string_as_bin {
 bool operator<( const string_as_bin &a, const string_as_bin &b);
 
 
+std::string debug_simple_hash(const std::string & str);
+
 std::string chardbg(char c); ///< Prints one character in "debugging" format, e.g. 0x0, or 0x20=32, etc.
 
 struct string_as_dbg {
@@ -64,14 +72,16 @@ struct string_as_dbg {
 		std::string dbg; ///< this string is already nicelly formatted for debug output e.g. "(3){a,l,a,0x13}" or "(3){1,2,3}"
 
 		string_as_dbg()=default;
-		string_as_dbg(const string_as_bin & bin); ///< from our binary data string
-		string_as_dbg(const char * data, size_t data_size); ///< from C style character bufer
+		string_as_dbg(const string_as_bin & bin, t_debug_style style=e_debug_style_short_devel); ///< from our binary data string
+		string_as_dbg(const char * data, size_t data_size, t_debug_style style=e_debug_style_short_devel); ///< from C style character bufer
 
+		///! from range defined by two iterator-like objects
 		template<class T>
-		explicit string_as_dbg( T it_begin , T it_end ) ///< from range defined by two iterator-like objects
+		explicit string_as_dbg( T it_begin , T it_end, t_debug_style style=e_debug_style_short_devel )
 		{
 			std::ostringstream oss;
-			oss << std::distance(it_begin, it_end) << ' ';
+			oss << std::distance(it_begin, it_end) << ':';
+			if (style==e_debug_style_crypto_devel) oss << "{hash=0x" << debug_simple_hash(std::string(it_begin, it_end)) << "}";
 			oss<<'[';
 			bool first=1;
 			size_t size = it_end - it_begin;
@@ -108,9 +118,9 @@ struct string_as_dbg {
 
 
 	public: // for chardbg.  TODO move to class & make friend class
-		void print(std::ostream & os, unsigned char v);
-		void print(std::ostream & os, signed char v);
-		void print(std::ostream & os, char v);
+		void print(std::ostream & os, unsigned char v, t_debug_style style=e_debug_style_short_devel );
+		void print(std::ostream & os, signed char v, t_debug_style style=e_debug_style_short_devel );
+		void print(std::ostream & os, char v, t_debug_style style=e_debug_style_short_devel );
 };
 
 
@@ -126,9 +136,10 @@ std::string to_string( const std::array<T,N> & obj ) {
 	return oss.str();
 }
 
-std::string to_debug(const std::string & data);
-std::string to_debug(const string_as_bin & data);
-std::string to_debug(char data);
+
+std::string to_debug(const std::string & data, t_debug_style style=e_debug_style_short_devel);
+std::string to_debug(const string_as_bin & data, t_debug_style style=e_debug_style_short_devel);
+std::string to_debug(char data, t_debug_style style=e_debug_style_short_devel);
 
 #endif
 
