@@ -22,14 +22,14 @@ t_peering_reference::t_peering_reference(const c_ip46_addr &peering_addr, const 
 // ------------------------------------------------------------------
 
 c_peering::c_peering(const t_peering_reference & ref)
-	: m_pubkey(ref.pubkey), m_haship_addr(ref.haship_addr), m_peering_addr(ref.peering_addr)
+	: m_pubkey(make_unique<c_haship_pubkey>(ref.pubkey)), m_haship_addr(ref.haship_addr), m_peering_addr(ref.peering_addr)
 { }
 
 void c_peering::print(ostream & ostr) const {
 	ostr << "peering{";
 	ostr << " peering-addr=" << m_peering_addr;
 	ostr << " hip=" << m_haship_addr;
-	ostr << " pub=" << m_pubkey;
+	ostr << " pub=" << to_debug(m_pubkey);
 	ostr << "}";
 }
 
@@ -41,7 +41,7 @@ void c_peering::send_data(const char * data, size_t data_size) {
 ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
 
 c_haship_addr c_peering::get_hip() const { return m_haship_addr; }
-c_haship_pubkey c_peering::get_pub() const { return m_pubkey; }
+c_haship_pubkey * c_peering::get_pub() const { return m_pubkey.get(); }
 c_ip46_addr c_peering::get_pip() const { return m_peering_addr; }
 
 // ------------------------------------------------------------------

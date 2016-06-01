@@ -29,13 +29,13 @@ class c_peering { ///< An (mostly established) connection to peer
 		virtual void print(ostream & ostr) const;
 
 		virtual c_haship_addr get_hip() const;
-		virtual c_haship_pubkey get_pub() const;
+		virtual c_haship_pubkey * get_pub() const; ///< gets "reference" to current pubkey; will be invlidated, use immediatelly
 		virtual c_ip46_addr get_pip() const;
 
 		friend class c_tunserver;
 
 	protected:
-		c_haship_pubkey m_pubkey; ///< his pubkey
+		unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey
 		c_haship_addr m_haship_addr; ///< his haship address
 		c_ip46_addr	m_peering_addr; ///< peer address in socket format
 		// ... TODO crypto type
