@@ -61,7 +61,7 @@ c_multikeys_pub::c_multikeys_pub()
 	: c_multikeys_general<c_crypto_system::t_pubkey>( e_crypto_use_open )
 { }
 
-string c_multikeys_pub::get_ipv6_string() const {
+string c_multikeys_pub::get_ipv6_string_bin() const {
 	string hash = get_hash();
 	string prefix = "fd48";
 	// still discussion how to generate address regarding number of bruteforce cost to it TODO
@@ -71,6 +71,11 @@ string c_multikeys_pub::get_ipv6_string() const {
 
 	string ip = prefix + hash.substr(0, len_ip - len_pre);
 	return ip;
+}
+
+string c_multikeys_pub::get_ipv6_string_hex() const {
+	string_as_hex as_hex( get_ipv6_string_bin() );
+	return as_hex.get();
 }
 
 void c_multikeys_pub::add_public(t_crypto_system_type crypto_type, const t_key & key) {
@@ -105,9 +110,8 @@ c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_
 // c_multikeys_PAIR
 
 
-string c_multikeys_PAIR::get_ipv6_string() const {
-	return m_pub.get_ipv6_string();
-}
+string c_multikeys_PAIR::get_ipv6_string_bin() const { return m_pub.get_ipv6_string_bin(); }
+string c_multikeys_PAIR::get_ipv6_string_hex() const { return m_pub.get_ipv6_string_hex(); }
 
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");

@@ -16,7 +16,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey
 {
 	_info("Creating HIP from pubkey: " << pubkey);
 
-	string addr = pubkey.get_ipv6_string();
+	string addr = pubkey.get_ipv6_string_bin();
 	for (size_t i=0; i<16; ++i) at(i) = addr.at(i);
 }
 
