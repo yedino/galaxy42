@@ -723,9 +723,9 @@ void test_crypto() {
 	_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
 	keypairA.generate(e_crypto_system_type_X25519,0);
-	keypairA.generate(e_crypto_system_type_Ed25519,5);
+	keypairA.generate(e_crypto_system_type_Ed25519,0);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairA.generate(e_crypto_system_type_SIDH, 0);
+	keypairA.generate(e_crypto_system_type_SIDH, 1);
 	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string()));
 
 	if (0) {
@@ -741,9 +741,9 @@ void test_crypto() {
 	_mark("Create IDC for BOB");
 	c_multikeys_PAIR keypairB;
 	keypairB.generate(e_crypto_system_type_X25519,0);
-	keypairB.generate(e_crypto_system_type_Ed25519,5);
+	keypairB.generate(e_crypto_system_type_Ed25519,0);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairB.generate(e_crypto_system_type_SIDH, 0);
+	keypairB.generate(e_crypto_system_type_SIDH, 1);
 	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string()));
 
 	c_multikeys_pub keypubA = keypairA.m_pub;

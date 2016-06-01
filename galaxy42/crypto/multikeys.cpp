@@ -208,10 +208,12 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_p
 	PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 	size_t obytes = (curveIsogenyData->owordbits + 7)/8; // Number of bytes in an element in [1, order]
 	size_t pbytes = (curveIsogenyData->pwordbits + 7)/8; // Number of bytes in a field element
-	const size_t private_key_len = obytes;
+	const size_t private_key_len = obytes * 2;
 	const size_t public_key_len = 4*2*pbytes;
 	locked_string private_key_a(private_key_len);
 	locked_string private_key_b(private_key_len);
+	std::fill_n(private_key_a.begin(), private_key_len, 0);
+	std::fill_n(private_key_b.begin(), private_key_len, 0);
 	std::string public_key_a(public_key_len, 0);
 	std::string public_key_b(public_key_len, 0);
 	CRYPTO_STATUS status = CRYPTO_SUCCESS;
