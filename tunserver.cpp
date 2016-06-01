@@ -1103,10 +1103,31 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	return true; // continue the test
 }
 
+void add_program_option_vector_strings(boost::program_options::variables_map & argm,
+	const string & name , const string & value_to_append)
+{
+	vector<string> old_peer;
+	try {
+		old_peer = argm[name].as<vector<string>>();
+		old_peer.push_back(value_to_append);
+		argm.at(name) = po::variable_value( old_peer , false );
+	} catch(boost::bad_any_cast) {
+		old_peer.push_back(value_to_append);
+		argm.insert( std::make_pair(name , po::variable_value( old_peer , false )) );
+	}
+}
+
 bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+
+	antinet_crypto::c_multikeys_PAIR my_IDC;
+	my_IDC.datastore_load_PRV_and_pub("current_keys");
+	_info("Loaded your IDC: " << to_debug(my_IDC.get_ipv6_string_bin()));
+	_info("Your IPv6: " << to_debug(my_IDC.get_ipv6_string_hex());
+
+	add_program_option_vector_strings(argm, "peer", "");
 
 	return true;
 }

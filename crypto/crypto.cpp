@@ -726,7 +726,7 @@ void test_crypto() {
 	keypairA.generate(e_crypto_system_type_Ed25519,5);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairA.generate(e_crypto_system_type_SIDH, 0);
-	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string()));
+	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string_hex()));
 
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -744,7 +744,7 @@ void test_crypto() {
 	keypairB.generate(e_crypto_system_type_Ed25519,5);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairB.generate(e_crypto_system_type_SIDH, 0);
-	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string()));
+	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string_hex()));
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
