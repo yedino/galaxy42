@@ -74,7 +74,6 @@ try {
 	// "ff020a" = ff , 02 , 0a
 	//   "020a" = 02 , 0a
 	//    "20a" = 02 , 0a
-	_info("Processing string: ["<< (encoded.data) << "]");
 	const auto es = encoded.data.size();
 	if (!es) return; // empty string encoded --> empty binary string
 

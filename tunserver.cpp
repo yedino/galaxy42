@@ -448,7 +448,8 @@ void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) 
 class c_tunserver : public c_galaxy_node {
 	public:
 		c_tunserver();
-		void configure_mykey_from_string(const std::string &mypub, const std::string &mypriv);
+
+		void configure_mykey(); ///<  load my (this node's) keypair
 		void run(); ///< run the main loop
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
@@ -497,8 +498,11 @@ class c_tunserver : public c_galaxy_node {
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
-		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
-		c_haship_addr m_haship_addr; ///< my haship addres
+		antinet_crypto::c_multikeys_PAIR m_my_IDC; ///< my keys!
+
+//		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
+//		c_haship_addr m_haship_addr; ///< my haship addres
+
 		c_peering & find_peer_by_sender_peering_addr( c_ip46_addr ip ) const ;
 
 		c_routing_manager m_routing_manager; ///< the routing engine used for most things
@@ -541,12 +545,19 @@ c_tunserver::c_tunserver()
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
 
 // my key
-void c_tunserver::configure_mykey_from_string(const std::string &mypub, const std::string &mypriv) {
+void c_tunserver::configure_mykey() {
+	antinet_crypto::c_multikeys_PAIR my_IDC;
+	m_my_IDC.datastore_load_PRV_and_pub("current_keys");
+	_info("Loaded your IDC: " << to_debug(my_IDC.get_ipv6_string_bin()) );
+	_info("Your IPv6: " << (my_IDC.get_ipv6_string_hex()) );
+
+/* TODONOW-del
 	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
 	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
 	_info("Configuring the router, I am: pubkey="<<to_debug(m_haship_pubkey.serialize_bin())
 	<<" ip="<<to_string(m_haship_addr)
 		<<" privkey="<<mypriv);
+*/
 }
 
 // add peer
@@ -578,7 +589,7 @@ void c_tunserver::prepare_socket() {
 
 	{
 		uint8_t address[16];
-		for (int i=0; i<16; ++i) address[i] = m_haship_addr.at(i);
+		for (int i=0; i<16; ++i) address[i] = m_my_IDC.get_ipv6_string_bin().at(i);
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
@@ -662,7 +673,8 @@ void c_tunserver::peering_ping_all_peers() {
 
 		// [protocol] build raw
 		string_as_bin cmd_data;
-		cmd_data.bytes += m_haship_pubkey.serialize_bin();
+		// TODONOW
+		cmd_data.bytes += m_my_IDC.get_serialize_bin_pubkey();
 		cmd_data.bytes += ";";
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
 	}
@@ -785,7 +797,7 @@ void c_tunserver::event_loop() {
 		}
 
 		ostringstream oss;
-		oss <<	" Node " << m_my_name << " hip=" << m_haship_addr << " pubkey=" << m_haship_pubkey;
+		oss <<	" Node " << m_my_name << " hip=" << m_my_IDC.get_ipv6_string_hexdot() ;
 		const string node_title_bar = oss.str();
 
 
@@ -913,7 +925,8 @@ void c_tunserver::event_loop() {
 				c_haship_addr src_hip, dst_hip;
 				std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
 
-				if (dst_hip == m_haship_addr) { // received data addresses to us as finall destination:
+				// TODONOW optimize? make sure the proper binary format is cached:
+				if (dst_hip == m_my_IDC.get_ipv6_string_bin()) { // received data addresses to us as finall destination:
                     _info("UDP data is addressed to us as finall dst, sending it to TUN.");
                     ssize_t write_bytes = write(m_tun_fd, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); /// *** send the data into our TUN // reinterpret char-signess
                     if (write_bytes == -1) {
@@ -1123,12 +1136,7 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
 
-	antinet_crypto::c_multikeys_PAIR my_IDC;
-	my_IDC.datastore_load_PRV_and_pub("current_keys");
-	_info("Loaded your IDC: " << to_debug(my_IDC.get_ipv6_string_bin()) );
-	_info("Your IPv6: " << (my_IDC.get_ipv6_string_hex()) );
-
-	add_program_option_vector_strings(argm, "peer", "");
+	// add_program_option_vector_strings(argm, "peer", "");
 
 	return true;
 }
@@ -1437,11 +1445,7 @@ int main(int argc, char **argv) {
 			}
 
 			_info("Configuring my own reference (keys):");
-			myserver.configure_mykey_from_string(
-				argm["mypub"].as<std::string>() ,
-				argm["mypriv"].as<std::string>()
-			);
-
+			myserver.configure_mykey();
 			myserver.set_my_name( argm["myname"].as<string>() );
 
 			_info("Configuring my peers references (keys):");
