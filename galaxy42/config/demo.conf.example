@@ -1,7 +1,7 @@
 demo=bar
 # demo= sets the demo to be loaded, try e.g. demo=crypto or demo=foo
 
-# save this file under same name as now but remove the ending ".example" and then you can set name of demo. 
+# save this file under same name as now but remove the ending ".example" and then you can set name of demo.
 # !!! Keep EXACTLY this format (no spaces, comments, empty lines above, ...) untill a real parser is written.
 # Parsing of this program is reported in debug on start.
 # Remember to use --devel for this file to be loaded at all (run program with --help to read)
