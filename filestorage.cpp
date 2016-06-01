@@ -130,8 +130,10 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 
 		// prevent overwriting
 		if(is_file_ok(file_with_path.native()) &&  !overwrite) {
-			std::string err_msg(file_with_path.native() + ": file existing, it can't be overwrite [overwrite="s
-								+ std::to_string(overwrite) + "]"s);
+			std::string err_msg(file_with_path.native()
+								+ std::string(": file existing, it can't be overwrite [overwrite=")
+								+ std::to_string(overwrite)
+								+ std::string("]"));
 			throw overwrite_error(err_msg);
 		}
 
@@ -140,7 +142,7 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 		empty_file.open(file_with_path);
 		empty_file.close();
 		if (!is_file_ok(file_with_path.c_str())) {
-			std::string err_msg(__func__ + ": fail to create empty file on given path and name"s);
+			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
 			throw std::invalid_argument(err_msg);
 		}
 
