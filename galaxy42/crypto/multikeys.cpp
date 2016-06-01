@@ -194,34 +194,12 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_ed25519_ke
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair() {
 	// generate key pair
-	uint16_t public_key_len = 0, private_key_len = 0;
-	// get size of keys:
-// TODO use ntrupp
-//	NTRU_exec_or_throw(
-//		ntru_crypto_ntru_encrypt_keygen(
-//			get_DRBG(128),
-//			NTRU_EES439EP1,
-//			&public_key_len, nullptr, &private_key_len, nullptr
-//			)
-//		,"generate keypair - get key length"
-//	);
+	auto keypair = ntrupp::generate_encrypt_keypair();
 	// values for NTRU_EES439EP1
-	assert(public_key_len == 609);
-	assert(private_key_len == 659);
+	assert(keypair.first.size() == 659);
+	assert(keypair.second.size() == 609);
 
-	std::string public_key(public_key_len, 0);
-	locked_string private_key(private_key_len);
-
-// TODO use ntrupp
-//	NTRU_exec_or_throw(
-//		ntru_crypto_ntru_encrypt_keygen(get_DRBG(128), NTRU_EES439EP1,
-//			&public_key_len, reinterpret_cast<uint8_t*>(&public_key[0]),
-//			&private_key_len, reinterpret_cast<uint8_t*>(private_key.buffer_writable())
-//		)
-//		,"generate keypair"
-//	);
-
-	return std::make_pair(std::move(private_key), std::move(public_key));
+	return keypair;
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair()
