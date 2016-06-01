@@ -63,18 +63,21 @@ c_multikeys_pub::c_multikeys_pub()
 
 string c_multikeys_pub::get_ipv6_string_bin() const {
 	string hash = get_hash();
-	string prefix = "fd48";
+	string_as_hex prefix_hex( "fd42" );
+	string_as_bin prefix_bin( prefix_hex );
 	// still discussion how to generate address regarding number of bruteforce cost to it TODO
 
 	const int len_ip = 128/8; // needed for ipv6
-	const int len_pre = prefix.size();
+	const int len_pre = prefix_bin.bytes.size();
 
-	string ip = prefix + hash.substr(0, len_ip - len_pre);
+	string ip = prefix_bin.bytes + hash.substr(0, len_ip - len_pre);
 	return ip;
 }
 
 string c_multikeys_pub::get_ipv6_string_hex() const {
-	string_as_hex as_hex( get_ipv6_string_bin() );
+	string_as_bin as_bin( get_ipv6_string_bin() );
+	_info( ::to_debug(as_bin) );
+	string_as_hex as_hex( as_bin );
 	return as_hex.get();
 }
 

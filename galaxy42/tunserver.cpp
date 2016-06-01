@@ -1106,6 +1106,7 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 void add_program_option_vector_strings(boost::program_options::variables_map & argm,
 	const string & name , const string & value_to_append)
 {
+	namespace po = boost::program_options;
 	vector<string> old_peer;
 	try {
 		old_peer = argm[name].as<vector<string>>();
@@ -1124,8 +1125,8 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 
 	antinet_crypto::c_multikeys_PAIR my_IDC;
 	my_IDC.datastore_load_PRV_and_pub("current_keys");
-	_info("Loaded your IDC: " << to_debug(my_IDC.get_ipv6_string_bin()));
-	_info("Your IPv6: " << to_debug(my_IDC.get_ipv6_string_hex());
+	_info("Loaded your IDC: " << to_debug(my_IDC.get_ipv6_string_bin()) );
+	_info("Your IPv6: " << (my_IDC.get_ipv6_string_hex()) );
 
 	add_program_option_vector_strings(argm, "peer", "");
 
