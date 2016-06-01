@@ -1,6 +1,6 @@
 #include "ntrupp.hpp"
 
-#include "trivialserialize.hpp"
+#include "../trivialserialize.hpp"
 
 #include "ntru/include/ntru_crypto.h"
 #include "ntru/include/ntru_crypto_drbg.h"

@@ -1,10 +1,10 @@
 #ifndef NTRUCPP_HPP
 #define NTRUCPP_HPP
 
-#include "libs0.hpp"
+#include "../libs0.hpp"
 #include "sodiumpp/locked_string.h"
 
-#include "trivialserialize.hpp"
+#include "../trivialserialize.hpp"
 
 #include "ntru/include/ntru_crypto.h"
 #include "ntru/include/ntru_crypto_drbg.h"
