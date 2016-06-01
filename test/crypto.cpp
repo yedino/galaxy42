@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "../crypto/crypto.hpp"
-#include "../ntrupp.hpp"
+#include "../crypto/ntrupp.hpp"
 
 // ntru sign
 extern "C" {
@@ -11,7 +11,6 @@ extern "C" {
 #include <pass.h>
 }
 
-#include "../ntrupp.hpp"
 
 namespace antinet_crypto {
 
