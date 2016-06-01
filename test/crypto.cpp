@@ -256,19 +256,20 @@ TEST(crypto, multi_sign_ed25519) {
 	std::string msg_to_sign = "message";
 	std::vector<std::string> signs;
 
-	// ed25519 is default sign system
-	signs = Alice.multi_sign(msg_to_sign);
+	signs = Alice.multi_sign(msg_to_sign, antinet_crypto::e_crypto_system_type_Ed25519);
 
 	EXPECT_THROW({
 		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
 															"bad_msg",
-															Alice.read_pub());
+															Alice.read_pub(),
+															antinet_crypto::e_crypto_system_type_Ed25519);
 
 	}, sodiumpp::crypto_error);
 
 	EXPECT_NO_THROW( {
 		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
 															msg_to_sign,
-															Alice.read_pub());
+															Alice.read_pub(),
+															antinet_crypto::e_crypto_system_type_Ed25519);
 	});
 }

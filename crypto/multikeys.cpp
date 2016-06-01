@@ -192,13 +192,21 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_ed25519_ke
 	return std::make_pair(std::move(private_key), std::move(public_key));
 }
 
-std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_pair() {
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_encrypt_key_pair() {
 	// generate key pair
 	auto keypair = ntrupp::generate_encrypt_keypair();
 	// values for NTRU_EES439EP1
 	assert(keypair.first.size() == 659);
 	assert(keypair.second.size() == 609);
 
+	return keypair;
+}
+
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_sign_key_pair() {
+
+	auto keypair = ntrupp::generate_sign_keypair();
+	assert(keypair.first.size() == 6152);
+	assert(keypair.second.size() == 6158);
 	return keypair;
 }
 
@@ -265,6 +273,10 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_p
 	return std::make_pair(std::move(private_key_main), std::move(public_key_main));
 }
 
+c_multisign c_multikeys_PAIR::multi_sign(const string &msg) {
+
+}
+
 std::vector<string> c_multikeys_PAIR::multi_sign(const string &msg,
 												 t_crypto_system_type sign_type) {
 
@@ -315,6 +327,12 @@ void c_multikeys_PAIR::multi_sign_verify(const std::vector<string> &signs,
 	}
 }
 
+void c_multikeys_PAIR::multi_sign_verify(const c_multisign &all_signatures,
+										 const string &msg,
+										 const c_multikeys_pub &pubkeys) {
+
+}
+
 void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int count) {
 	if (!count) return;
 
@@ -341,7 +359,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_NTRU_EES439EP1:
 		{
 			for (int i=0; i<count; ++i) {
-				auto keypair = generate_nrtu_key_pair();
+				auto keypair = generate_nrtu_encrypt_key_pair();
 				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
