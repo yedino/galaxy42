@@ -1103,6 +1103,14 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	return true; // continue the test
 }
 
+bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
+	namespace po = boost::program_options;
+	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
+	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+
+	return true;
+}
+
 bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
@@ -1265,7 +1273,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
 	if (demoname=="crypto_bench") { antinet_crypto::test_crypto_benchmark(2);  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
-	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
+	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_pair(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 

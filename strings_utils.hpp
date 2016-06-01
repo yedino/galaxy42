@@ -141,6 +141,18 @@ std::string to_debug(const std::string & data, t_debug_style style=e_debug_style
 std::string to_debug(const string_as_bin & data, t_debug_style style=e_debug_style_short_devel);
 std::string to_debug(char data, t_debug_style style=e_debug_style_short_devel);
 
+template <typename T> std::string to_debug(const T * ptr) {
+	if (! ptr) return "(null)";
+	std::ostringstream oss; oss << (*ptr);
+	return oss.str();
+}
+
+template <typename T> std::string to_debug(const std::unique_ptr<T> & ptr) {
+	if (! ptr) return "(null)";
+	std::ostringstream oss; oss << (*ptr);
+	return oss.str();
+}
+
 #endif
 
 
