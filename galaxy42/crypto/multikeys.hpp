@@ -175,6 +175,8 @@ class c_multikeys_PAIR {
 		string get_ipv6_string_hex() const; ///< IPV6 from hash of this key (hex string)
 		string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
 
+		string get_serialize_bin_pubkey() const; ///< get the serialized pubkey of this, e.g. to send it to others
+
 		///< generate from list of how many keys of given type we need
 		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex);
 		void generate(t_crypto_system_type crypto_system_type, int count=1); ///< generate and save e.g. 3 X25519 keys

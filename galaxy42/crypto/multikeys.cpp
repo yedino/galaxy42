@@ -133,6 +133,11 @@ string c_multikeys_PAIR::get_ipv6_string_bin() const { return m_pub.get_ipv6_str
 string c_multikeys_PAIR::get_ipv6_string_hex() const { return m_pub.get_ipv6_string_hex(); }
 string c_multikeys_PAIR::get_ipv6_string_hexdot() const { return m_pub.get_ipv6_string_hexdot(); }
 
+string c_multikeys_PAIR::get_serialize_bin_pubkey() const {
+	return m_pub.serialize_bin();
+}
+
+
 void c_multikeys_PAIR::debug() const {
 	_info("KEY PAIR:");
 
