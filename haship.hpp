@@ -1,6 +1,12 @@
+#pragma once
+#ifndef include_haship_hpp
+#define include_haship_hpp 1
+
 
 #include "strings_utils.hpp"
 #include "libs1.hpp"
+
+#include "crypto/crypto.hpp"
 
 // https://tools.ietf.org/html/rfc2460
 // https://tools.ietf.org/html/rfc4291
@@ -45,11 +51,13 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 
-struct c_haship_pubkey : std::array<unsigned char, g_haship_pubkey_size > {
+struct c_haship_pubkey : antinet_crypto::c_multikeys_pub {
 	c_haship_pubkey();
-	c_haship_pubkey( const string_as_bin & input ); ///< create the IP form
+	c_haship_pubkey( const string_as_bin & input ); ///< create the IP from a string with serialization of the key
 
 	void print(ostream &ostr) const;
 };
 ostream& operator<<(ostream &ostr, const c_haship_pubkey & v);
+
+#endif
 

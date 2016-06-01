@@ -17,7 +17,7 @@ cd "$normaldir"
 
 mkdir -p build_extra/ntru/
 
-cp -v -r ../ntru-crypto/reference-code/C/Encrypt/include/    build_extra/ntru
+cp -v -r ../ntru-crypto/reference-code/C/Encrypt/include/    build_extra/ntru/
 
 cp -v -r ../ntru-crypto/reference-code/C/Encrypt/.libs/    build_extra/ntru/
 
