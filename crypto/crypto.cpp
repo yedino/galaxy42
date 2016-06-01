@@ -450,6 +450,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
 				sodiumpp::locked_string shared_secret_a(shared_secret_size);
 				sodiumpp::locked_string shared_secret_b(shared_secret_size);
+				std::fill(shared_secret_a.begin(), shared_secret_a.end(), 0);
+				std::fill(shared_secret_b.begin(), shared_secret_b.end(), 0);
 				CRYPTO_STATUS status = CRYPTO_SUCCESS;
 				// allocate curve
 				// TODO move this to class or make global variable
