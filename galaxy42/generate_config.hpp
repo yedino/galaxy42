@@ -2,7 +2,7 @@
 #define GENERATE_CONFIG_HPP
 
 #include "filestorage.hpp"
-#include "crypto.hpp"
+#include "crypto/crypto.hpp"
 
 
 enum class e_crypto_set : unsigned char {

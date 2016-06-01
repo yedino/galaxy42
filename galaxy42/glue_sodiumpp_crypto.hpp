@@ -2,7 +2,7 @@
 #ifndef glue_sodiumpp_crypto
 #define glue_sodiumpp_crypto
 
-#include "crypto.hpp"
+#include "crypto/crypto.hpp"
 
 #include <sodiumpp/sodiumpp.h>
 #include "libs0.hpp"
