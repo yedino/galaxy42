@@ -96,7 +96,6 @@ template <typename TKey>
 class c_multikeys_general : public c_multicryptostrings<TKey> {
 	public:
 		c_multikeys_general(t_crypto_use secop);
-
 };
 
 
@@ -104,8 +103,28 @@ class c_multikeys_general : public c_multicryptostrings<TKey> {
 /** All pubkeys of given identity */
 class c_multisign : public c_multicryptostrings< std::string > {
 	public:
-		c_multisign();
+		c_multisign ();
 		virtual t_crypto_system_type get_system_type() const;
+
+		void add_signature_vec (const std::vector<std::string> &signatures_vec,
+							   t_crypto_system_type crypto_type);
+		void add_signature (t_crypto_system_type crypto_type, const std::string &signature);
+
+		std::vector<std::string> get_signature_vec (t_crypto_system_type crypto_type) const;
+		std::string get_signature (t_crypto_system_type crypto_type, size_t number_of_key) const;
+
+		/**
+		 * @brief print_signatures debug function
+		 * 						   that print all signatures
+		 */
+		void print_signatures () const;
+		/**
+		 * @brief cryptosystem_sign_allowed
+		 * @param crypto_system
+		 * @return true if crypto system have ability to signing messages
+		 * 		   false otherwise
+		 */
+		static bool cryptosystem_sign_allowed (t_crypto_system_type crypto_system);
 };
 
 
