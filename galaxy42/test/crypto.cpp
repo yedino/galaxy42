@@ -257,18 +257,50 @@ TEST(crypto, multi_sign_ed25519) {
 	std::string msg_to_sign = "message";
 	std::vector<std::string> signs;
 
-	// ed25519 is default sign system
-	signs = Alice.multi_sign(msg_to_sign);
+	signs = Alice.multi_sign(msg_to_sign, antinet_crypto::e_crypto_system_type_Ed25519);
 
 	EXPECT_THROW({
 		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
 															"bad_msg",
-															Alice.read_pub());
+															Alice.read_pub(),
+															antinet_crypto::e_crypto_system_type_Ed25519);
 
-	}, sodiumpp::crypto_error);
+	}, std::invalid_argument);
 
 	EXPECT_NO_THROW( {
 		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
+															msg_to_sign,
+															Alice.read_pub(),
+															antinet_crypto::e_crypto_system_type_Ed25519);
+	});
+}
+
+TEST(crypto, multi_sign) {
+
+	antinet_crypto::c_multikeys_PAIR Alice;
+	Alice.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,1);
+	Alice.generate(antinet_crypto::e_crypto_system_type_Ed25519,3);
+	Alice.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,2);
+	Alice.generate(antinet_crypto::e_crypto_system_type_Ed25519,2);
+	std::string msg_to_sign = "message";
+
+	antinet_crypto::c_multisign multi_signature = antinet_crypto::c_multisign();
+
+	_dbg1("multi sign : start signing \"mgs to sign\"");
+	multi_signature = Alice.multi_sign(msg_to_sign);
+
+	// printing signatures:
+	multi_signature.print_signatures();
+
+	// verifying
+	EXPECT_THROW( {
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(multi_signature,
+															"bad msg",
+															Alice.read_pub());
+	}, std::invalid_argument);
+
+	EXPECT_NO_THROW( {
+		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(multi_signature,
 															msg_to_sign,
 															Alice.read_pub());
 	});

@@ -156,6 +156,7 @@ enum t_crypto_system_type : unsigned char {
 	e_crypto_system_type_SIDH = 8,
 	e_crypto_system_type_geport_todo = 9,
 	e_crypto_system_type_symhash_todo = 10,
+	e_crypto_system_type_NTRU_sign = 11,
 	e_crypto_system_type_END_normal,
 
 	e_crypto_system_type_multikey_pub = 29,
