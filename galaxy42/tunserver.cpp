@@ -451,9 +451,14 @@ class c_tunserver : public c_galaxy_node {
 
 		void configure_mykey(); ///<  load my (this node's) keypair
 		void run(); ///< run the main loop
-		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer
-		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+
 		void set_my_name(const string & name); ///< set a nice name of this peer (shown in debug for example)
+
+		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
+		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		///! add this user (or append existing user) with his actuall public key data
+		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> pubkey);
+
 
 		void help_usage() const; ///< show help about usage of the program
 
@@ -566,8 +571,22 @@ void c_tunserver::configure_mykey() {
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	UNUSED(peer_ref);
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
-	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
+	// key is unique in map
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+}
+
+void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
+unique_ptr<c_haship_pubkey> pubkey)
+{
+	auto find = m_peer.find( peer_ref.haship_addr );
+	if (find == m_peer.end()) { // no such peer yet
+		auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+		peering_ptr->set_pubkey(std::move(pubkey));
+		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	} else { // update existing
+		auto & peering_ptr = find->second;
+		peering_ptr->set_pubkey(std::move(pubkey));
+	}
 }
 
 void c_tunserver::help_usage() const {
@@ -676,10 +695,10 @@ void c_tunserver::peering_ping_all_peers() {
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 
 		// [protocol] build raw
-		string_as_bin cmd_data;
+		trivialserialize::generator gen(8000);
+		gen.push_varstring( m_my_IDC.get_serialize_bin_pubkey() );
+		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
-		cmd_data.bytes += m_my_IDC.get_serialize_bin_pubkey();
-		cmd_data.bytes += ";";
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
 	}
 }
@@ -958,16 +977,20 @@ void c_tunserver::event_loop() {
 			} // e_proto_cmd_tunneled_data
 			else if (cmd == c_protocol::e_proto_cmd_public_hi) { // [protocol]
 				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
-				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
+				int offset1=2; assert( size_read >= offset1); // skip CMD headers (TODO instead use one parser)
+
+				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() ,
+					buf+offset1 , size_read-offset1);
 
 				// TODONOW: size of pubkey is different, use serialize
-				auto pos1 = 32; // [protocol] size of public key
-				if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
-				string_as_bin bin_his_pubkey( cmd_data.bytes.substr(0,pos1) );
-				_info("We received pubkey=" << string_as_hex( bin_his_pubkey ) );
-				_warn("TODONOW: implement adding pubkey to existing (or to new) peer reference known by ipv6");
-				// t_peering_reference his_ref( sender_pip , bin_his_pubkey);
-				// add_peer( his_ref );
+				// if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
+				string_as_bin bin_his_pubkey( parser.pop_varstring() ); // PARSE
+				_info("We received pubkey=" << to_debug( bin_his_pubkey ) );
+				auto his_pubkey = make_unique<c_haship_pubkey>();
+				his_pubkey->load_from_bin( bin_his_pubkey.bytes );
+				_info("Parsed pubkey into: " << his_pubkey->to_debug());
+				t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
+				add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
@@ -1146,7 +1169,8 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
 
-	add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
+	if (my_nr == 1) add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
+	if (my_nr == 2) add_program_option_vector_strings(argm, "peer", "192.168.1.62:9042-fd42:ae11:f636:8636:ae76:acf5:e5c4:dae1");
 
 	return true;
 }
