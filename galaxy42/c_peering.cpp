@@ -69,6 +69,7 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket, int ttl) {
 	_info("Send to peer (tunneled data) data: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
+	// TODONOW turn off this crypto (unless leave here for peer-to-peer auth only)
 	static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 					198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
 					233, 194, 218, 13, 180, 63, 64, 3, 11};

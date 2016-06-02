@@ -713,14 +713,15 @@ void test_crypto() {
 		_note("Alice CT:");
 		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice"); // start, has KCT_ab
 		AliceCT.create_IDe();
-		string packetstart_1 = AliceCT.get_packetstart_ab();
+		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
 		_info("SEND packetstart to Bob: " << to_debug(packetstart_1));
 
 		_note("Bob CT:");
+		// B<<<---
 		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby"); // start -> has
-		string packetstart_2 = BobCT.get_packetstart_final();
+		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
 
-		AliceCT.create_CTf(packetstart_2);
+		AliceCT.create_CTf(packetstart_2); // A<<<---
 
 		_mark("Prepared tunnels (KCTf from KCTab)");
 
