@@ -123,11 +123,7 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
 		using namespace antinet_crypto;
 		using namespace string_binary_op;
-		sodiumpp::locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
-		Hash1_PRV(
-			Hash1_PRV( shared_secret_a ) ^	Hash1_PRV( shared_secret_b ) // both agreed-shared-keys, hashed
-			^ Hash1( key_self_pub )	^	Hash1( them_public_key ) // and hash of public keys too
-		); // and all of this hashed once more
+		sodiumpp::locked_string k_dh_agreed = shared_secret_a ^ shared_secret_b; // the fully agreed key, that is secure result of DH
 		return k_dh_agreed;
 }
 

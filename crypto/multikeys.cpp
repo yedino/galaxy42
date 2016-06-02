@@ -6,7 +6,7 @@
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 #include "../build_extra/ntru/include/ntru_crypto.h"
-#include <SIDH_internal.h>
+#include "sidhpp.hpp"
 
 #include "../trivialserialize.hpp"
 
@@ -204,7 +204,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_key_p
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair()
 {
-	return std::pair<sodiumpp::locked_string, string>(); // TODO
+	return sidhpp::generate_keypair();
 }
 
 std::vector<string> c_multikeys_PAIR::multi_sign(const string &msg,
@@ -292,7 +292,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		case e_crypto_system_type_SIDH :
 		{
 			for (int i=0; i<count; ++i) {
-				auto keypair = generate_sidh_key_pair();
+				auto keypair = sidhpp::generate_keypair();
 				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 			}
 			break;
