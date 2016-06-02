@@ -914,7 +914,7 @@ void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	size_t generated_keys_ntru = 0;
 	start_point = std::chrono::steady_clock::now();
 	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
-		auto pair = c_multikeys_PAIR::generate_nrtu_key_pair();
+		auto pair = c_multikeys_PAIR::generate_nrtu_encrypt_key_pair();
 		++generated_keys_ntru;
 	}
 	stop_point = std::chrono::steady_clock::now();
