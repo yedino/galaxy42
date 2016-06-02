@@ -450,8 +450,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
 				sodiumpp::locked_string shared_secret_a(shared_secret_size);
 				sodiumpp::locked_string shared_secret_b(shared_secret_size);
-				std::fill(shared_secret_a.begin(), shared_secret_a.end(), 0);
-				std::fill(shared_secret_b.begin(), shared_secret_b.end(), 0);
+				std::fill_n(shared_secret_a.begin(), shared_secret_size, 0);
+				std::fill_n(shared_secret_b.begin(), shared_secret_size, 0);
 				CRYPTO_STATUS status = CRYPTO_SUCCESS;
 				// allocate curve
 				// TODO move this to class or make global variable
@@ -726,7 +726,7 @@ void test_crypto() {
 	c_multikeys_PAIR keypairA;
 	keypairA.generate(e_crypto_system_type_X25519,0);
 	keypairA.generate(e_crypto_system_type_Ed25519,0);
-	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
+	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,0);
 	keypairA.generate(e_crypto_system_type_SIDH, 1);
 	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string()));
 
@@ -744,7 +744,7 @@ void test_crypto() {
 	c_multikeys_PAIR keypairB;
 	keypairB.generate(e_crypto_system_type_X25519,0);
 	keypairB.generate(e_crypto_system_type_Ed25519,0);
-	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
+	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,0);
 	keypairB.generate(e_crypto_system_type_SIDH, 1);
 	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string()));
 
