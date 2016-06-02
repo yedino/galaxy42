@@ -7,6 +7,7 @@
 enum t_debug_style {
 	e_debug_style_short_devel=1,
 	e_debug_style_crypto_devel=2,
+	e_debug_style_big=2,
 };
 
 struct string_as_bin;
@@ -140,18 +141,25 @@ std::string to_string( const std::array<T,N> & obj ) {
 std::string to_debug(const std::string & data, t_debug_style style=e_debug_style_short_devel);
 std::string to_debug(const string_as_bin & data, t_debug_style style=e_debug_style_short_devel);
 std::string to_debug(char data, t_debug_style style=e_debug_style_short_devel);
-
 template <typename T> std::string to_debug(const T * ptr) {
 	if (! ptr) return "(null)";
 	std::ostringstream oss; oss << (*ptr);
 	return oss.str();
 }
-
 template <typename T> std::string to_debug(const std::unique_ptr<T> & ptr) {
 	if (! ptr) return "(null)";
 	std::ostringstream oss; oss << (*ptr);
 	return oss.str();
 }
+
+// the _b - big - wrappers/shortcuts:
+std::string to_debug_b(const std::string & data);
+std::string to_debug_b(const string_as_bin & data);
+std::string to_debug_b(char data);
+template <typename T> std::string to_debug_b(const T * ptr)
+{	return to_debug_b(ptr, e_debug_style_big); }
+template <typename T> std::string to_debug_b(const std::unique_ptr<T> & ptr)
+{	return to_debug(ptr,e_debug_style_big); }
 
 #endif
 

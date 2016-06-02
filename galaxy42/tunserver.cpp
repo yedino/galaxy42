@@ -499,6 +499,7 @@ class c_tunserver : public c_galaxy_node {
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
 		antinet_crypto::c_multikeys_PAIR m_my_IDC; ///< my keys!
+		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
 
 //		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
 //		c_haship_addr m_haship_addr; ///< my haship addres
@@ -521,19 +522,18 @@ using namespace std; // XXX move to implementations, not to header-files later, 
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	_dbg1("Adding peer from simplestring=" << simple);
+	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	size_t pos1 = simple.find('-');
-	string part_ip = simple.substr(0,pos1);
-	string part_pub = simple.substr(pos1+1);
+	string part_pip = simple.substr(0,pos1);
+	string part_hip = simple.substr(pos1+1);
 	try {
-		std::cout << part_ip << " -- " << part_pub << std::endl;
-		auto ip_pair = tunserver_utils::parse_ip_string(part_ip);
-		_note("Simple string parsed as: " << part_ip << " and " << part_pub );
-		_note("ip address " << ip_pair.first);
-		_note("port: " << ip_pair.second);
-		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second ,string_as_hex( part_pub ) ) );
+		_info("Peer pip="<<part_pip<<" hip="<<part_hip);
+		auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
+		_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
+		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
 	}
 	catch (const std::exception &e) {
-		_erro(e.what()); // TODO throw?
+		_erro("Adding peer from simplereference failed (exception): " << e.what()); // TODO throw?
 	}
 }
 
@@ -548,8 +548,10 @@ void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("T
 void c_tunserver::configure_mykey() {
 	antinet_crypto::c_multikeys_PAIR my_IDC;
 	m_my_IDC.datastore_load_PRV_and_pub("current_keys");
-	_info("Loaded your IDC: " << to_debug(my_IDC.get_ipv6_string_bin()) );
-	_info("Your IPv6: " << (my_IDC.get_ipv6_string_hex()) );
+	auto hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
+	_info("Your IPv6: " << hexdot);
+	m_my_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , hexdot );
+	_dbg1("Your IPv6: " << m_my_hip << " (other var type)");
 
 /* TODONOW-del
 	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
@@ -655,18 +657,21 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_src, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 8 is source addr, from ipv6 RFC
 	_dbg1("src ipv6_str " << ipv6_str);
-	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
+	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ipv6_str);
+	// TODONOW^ this works fine?
 
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_dst, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 24 is destination addr, from
 	_dbg1("dst ipv6_str " << ipv6_str);
-	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_string(), ipv6_str);
+	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ipv6_str);
+	// TODONOW^ this works fine?
 
 	return std::make_pair( ret_src , ret_dst );
 }
 
 void c_tunserver::peering_ping_all_peers() {
-	_info("Sending ping to all peers");
+	auto & peers = m_peer;
+	_info("Sending ping to all peers (count=" << peers.size() << ")");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -926,7 +931,7 @@ void c_tunserver::event_loop() {
 				std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
 
 				// TODONOW optimize? make sure the proper binary format is cached:
-				if (dst_hip == m_my_IDC.get_ipv6_string_bin()) { // received data addresses to us as finall destination:
+				if (dst_hip == m_my_hip) { // received data addresses to us as finall destination:
                     _info("UDP data is addressed to us as finall dst, sending it to TUN.");
                     ssize_t write_bytes = write(m_tun_fd, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); /// *** send the data into our TUN // reinterpret char-signess
                     if (write_bytes == -1) {
@@ -956,12 +961,14 @@ void c_tunserver::event_loop() {
 				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
 				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
+				// TODONOW: size of pubkey is different, use serialize
 				auto pos1 = 32; // [protocol] size of public key
 				if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
 				string_as_bin bin_his_pubkey( cmd_data.bytes.substr(0,pos1) );
 				_info("We received pubkey=" << string_as_hex( bin_his_pubkey ) );
-				t_peering_reference his_ref( sender_pip , string_as_bin( bin_his_pubkey ) );
-				add_peer( his_ref );
+				_warn("TODONOW: implement adding pubkey to existing (or to new) peer reference known by ipv6");
+				// t_peering_reference his_ref( sender_pip , bin_his_pubkey);
+				// add_peer( his_ref );
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
@@ -972,7 +979,7 @@ void c_tunserver::event_loop() {
 				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
 
 				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
-				c_haship_addr requested_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip );
+				c_haship_addr requested_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip.bytes ); // *
 
 				string_as_bin bin_ttl( cmd_data.bytes.substr(pos1+1,1) );
 				int requested_ttl = static_cast<int>( bin_ttl.bytes.at(0) ); // char to integer
@@ -1023,6 +1030,9 @@ void c_tunserver::event_loop() {
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_reply) { // [protocol]
 				_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+				// TODO-NOW format with hip etc
+				// TODO-NOW here we will parse pubkey probably
+
 				// [protocol] e_proto_cmd_findhip_reply read "TTL;COST:HIP_OF_GOAL"
 				int offset1=2; // version, cmd
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() ,  buf+offset1 , size_read-offset1);
@@ -1030,7 +1040,8 @@ void c_tunserver::event_loop() {
 				parser.pop_byte_skip(';');
 				int given_cost = parser.pop_byte_u(); // cost
 				parser.pop_byte_skip(';');
-				c_haship_addr given_goal_hip( c_haship_addr::tag_constr_by_addr_bin(), string_as_bin( parser.pop_bytes_n( g_haship_addr_size ) ) ); // hip
+				c_haship_addr given_goal_hip( c_haship_addr::tag_constr_by_addr_bin(),
+					parser.pop_bytes_n( g_haship_addr_size ) ); // hip
 				parser.pop_byte_skip(';');
 				_info("We have a TTL reply: ttl="<<given_ttl<<" goal="<<given_goal_hip<<" cost="<<given_cost);
 
@@ -1048,7 +1059,7 @@ void c_tunserver::event_loop() {
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost );
 					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
 					// store it, so that we own this object:
-					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info ); 
+					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info );
 					UNUSED(route_info_ref_we_own); // TODO TODONOW and reply to others who asked us
 				}
 			}
@@ -1136,7 +1147,7 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
 
-	// add_program_option_vector_strings(argm, "peer", "");
+	add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
 
 	return true;
 }

@@ -6,14 +6,14 @@
 
 // ------------------------------------------------------------------
 
-t_peering_reference::t_peering_reference(const string &peering_addr, int port, const string_as_hex &peering_pubkey)
-	: t_peering_reference( c_ip46_addr(peering_addr, port) , string_as_bin( peering_pubkey ) )
-// ^--- why no warning about unused peering_pubkey. cmake-TODO(u)
-// also needs asserts on size of the crypto key assert-TODO(r)
+t_peering_reference::t_peering_reference(const t_ipv46dot & peering_addr, int port, const t_ipv6dot & peering_hip)
+	: t_peering_reference( c_ip46_addr(peering_addr, port) , peering_hip )
 { }
 
-t_peering_reference::t_peering_reference(const c_ip46_addr &peering_addr, const string_as_bin &peering_pubkey)
-	: pubkey( peering_pubkey ) , haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , peering_pubkey ) , peering_addr( peering_addr )
+t_peering_reference::t_peering_reference(const c_ip46_addr & peering_addr, const t_ipv6dot & peering_hip)
+	:
+	peering_addr( peering_addr )
+	,haship_addr( c_haship_addr::tag_constr_by_addr_bin() , peering_hip  )
 {
 	_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << " on port="
 		  << peering_addr.get_assign_port() << ", and this is: " << (*this) );
@@ -22,7 +22,10 @@ t_peering_reference::t_peering_reference(const c_ip46_addr &peering_addr, const 
 // ------------------------------------------------------------------
 
 c_peering::c_peering(const t_peering_reference & ref)
-	: m_pubkey(make_unique<c_haship_pubkey>(ref.pubkey)), m_haship_addr(ref.haship_addr), m_peering_addr(ref.peering_addr)
+	:
+	m_peering_addr(ref.peering_addr)
+	,m_haship_addr(ref.haship_addr)
+	,m_pubkey(nullptr) // unknown untill we e.g. download it; was: make_unique<c_haship_pubkey>(ref.pubkey))
 { }
 
 void c_peering::print(ostream & ostr) const {

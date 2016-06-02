@@ -21,6 +21,8 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 
 		c_ip46_addr();
 		/// Default port: 9042
+
+		///! Constructs, from ip_addr in format hexdotip e.g.: fd42:ae11:f636:86:5:1:e5c4:d
 		c_ip46_addr(const std::string &ip_addr, int port = 9042);
 
 		void set_ip4(sockaddr_in in4);

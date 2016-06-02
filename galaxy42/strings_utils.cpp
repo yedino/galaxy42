@@ -205,6 +205,13 @@ std::string to_debug(const string_as_bin & data, t_debug_style style) {
 }
 
 
+std::string to_debug_b(const std::string & data)
+	{ return  to_debug(data,e_debug_style_big); }
+std::string to_debug_b(const string_as_bin & data)
+	{ return  to_debug(data,e_debug_style_big); }
+std::string to_debug_b(char data)
+	{ return  to_debug(data,e_debug_style_big); }
+
 std::string debug_simple_hash(const std::string & str) {
 	string s = antinet_crypto::Hash1(str).substr(0,4) ;
 	string_as_bin bin( s );
