@@ -80,15 +80,7 @@ t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_
 // Random
 
 CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
-	static std::ifstream rand_source("/dev/urandom");
-	if (nbytes == 0) {
-		return CRYPTO_ERROR;
-	}
-
-	for (unsigned int i = 0; i < nbytes; i++) {
-		*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
-	}
-
+	// DELETE ME
 	return CRYPTO_SUCCESS;
 }
 

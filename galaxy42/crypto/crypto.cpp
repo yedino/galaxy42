@@ -31,7 +31,7 @@ it has bugs and 'typpos'.
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 #include "../build_extra/ntru/include/ntru_crypto.h"
-#include <SIDH_internal.h>
+#include "sidhpp.hpp"
 
 #include "../trivialserialize.hpp"
 
@@ -418,71 +418,12 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				auto const key_self_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
 				auto const key_them_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
 
-				//string key_self_pub_a = key_self_pub.substr(0, key_self_pub.size()/2);
-				//string key_self_pub_b = key_self_pub.substr(key_self_pub.size()/2);
-				string key_them_pub_a = key_them_pub.substr(0, key_them_pub.size()/2);
-				string key_them_pub_b = key_them_pub.substr(key_self_pub.size()/2);
-				assert( key_self_pub.size() == key_them_pub.size());
-				assert(key_them_pub == key_them_pub_a + key_them_pub_b);
-
-				sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
-				sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
-
-				// this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
-				assert(key_self_PRV.size() == key_self_PRV_a.size() + key_self_PRV_b.size());
-				std::copy_n(key_self_PRV.begin(), key_self_PRV.size()/2, key_self_PRV_a.begin());
-				auto pos_iterator = key_self_PRV.begin() + (key_self_PRV_b.size() / 2);
-				std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
-				/*size_t i = 0;
-				for (; i <  key_self_PRV_a.size(); ++i) {
-					key_self_PRV_a[i] = key_self_PRV[i];
-				}
-				for (size_t j = 0; j < key_self_PRV_b.size(); ++j) {
-					key_self_PRV_b[j] = key_self_PRV[i];
-					++i;
-				}*/
-				_dbg1("SIDH prv " << to_debug_locked(key_self_PRV));
-				_dbg1("prv a " << to_debug_locked(key_self_PRV_a));
-				_dbg1("prv b " << to_debug_locked(key_self_PRV_b));
-
-				// TODO(rob) make this size-calculations more explained; are they correctd?
-				// XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal
-				const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
-				sodiumpp::locked_string shared_secret_a(shared_secret_size);
-				sodiumpp::locked_string shared_secret_b(shared_secret_size);
-				CRYPTO_STATUS status = CRYPTO_SUCCESS;
-				// allocate curve
-				// TODO move this to class or make global variable
-				PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
-				PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
-				status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
-				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SIDH_curve_initialize error");
-
-				_info("SIDH A: prv: " << to_debug_locked(key_self_PRV_a));
-				_info("SIDH B: pub: " << to_debug(key_them_pub_b));
-
-				status = SecretAgreement_A(
-					reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
-					reinterpret_cast<unsigned char *>(&key_them_pub_b[0]),
-					reinterpret_cast<unsigned char *>(shared_secret_a.buffer_writable()),
-					curveIsogeny);
-				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
-
-				status = SecretAgreement_B(
-					reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
-					reinterpret_cast<unsigned char *>(&key_them_pub_a[0]),
-					reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
-					curveIsogeny);
-				if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
-
-				_info("SIDH agreed secret A: " << to_debug_locked( shared_secret_a )  );
-				_info("SIDH agreed secret B: " << to_debug_locked( shared_secret_b )  );
-				std::cout << endl;
+				const auto dh_secret = sidhpp::secret_agreement(key_self_PRV, key_self_pub, key_them_pub);
 
 				using namespace string_binary_op; // operator^
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 				Hash1_PRV(
-					Hash1_PRV( shared_secret_a ) ^	Hash1_PRV( shared_secret_b ) // both agreed-shared-keys, hashed
+					Hash1_PRV( dh_secret) // agreed-shared-key, hashed (it should include A+B parts of SIDH)
 					^ Hash1( key_self_pub )	^	Hash1( key_them_pub ) // and hash of public keys too
 				); // and all of this hashed once more
 				_info("SIDH secret key: " << to_debug_locked(k_dh_agreed));
@@ -723,11 +664,11 @@ void test_crypto() {
 	_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
 	keypairA.generate(e_crypto_system_type_X25519,0);
+
 	keypairA.generate(e_crypto_system_type_Ed25519,5);
 	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairA.generate(e_crypto_system_type_SIDH, 0);
+	keypairA.generate(e_crypto_system_type_SIDH, 1);
 	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string_hex()));
-
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
 		keypairA.datastore_save_PRV_and_pub("alice2.key");
@@ -741,9 +682,10 @@ void test_crypto() {
 	_mark("Create IDC for BOB");
 	c_multikeys_PAIR keypairB;
 	keypairB.generate(e_crypto_system_type_X25519,0);
+
 	keypairB.generate(e_crypto_system_type_Ed25519,5);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairB.generate(e_crypto_system_type_SIDH, 0);
+	keypairB.generate(e_crypto_system_type_SIDH, 1);
 	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string_hex()));
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
