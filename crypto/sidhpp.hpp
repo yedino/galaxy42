@@ -16,7 +16,10 @@ class sidhpp {
 		 * @brief secret_agreement
 		 * @return shared secret as locked string
 		 */
-		static sodiumpp::locked_string secret_agreement(sodiumpp::locked_string my_private_key, std::string them_public_key);
+		static sodiumpp::locked_string secret_agreement(
+			const sodiumpp::locked_string &key_self_PRV,
+				  	const std::string &key_self_pub,
+					const std::string &them_public_key);
 	private:
 		static CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array);
 };
