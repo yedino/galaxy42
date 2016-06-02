@@ -86,8 +86,9 @@ struct string_as_dbg {
 			oss<<'[';
 			bool first=1;
 			size_t size = it_end - it_begin;
-			const size_t size1 = 8;
-			const size_t size2 = 4;
+			size_t size1 = 8;
+			size_t size2 = 4;
+			if (style==e_debug_style_big) { size1=8192; size2=128; }
 			// TODO assert/review pointer operations
 			if (size <= size1+size2) {
 				for (auto it = it_begin ; it!=it_end ; ++it) { if (!first) oss << ','; print(oss,*it);  first=0;  }
