@@ -442,6 +442,35 @@ void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) 
 }
 
 
+// ------------------------------------------------------------------
+
+
+class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
+	public:
+		int m_state; // s1..s4 (draft) TODO
+
+	public:
+		c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
+			const antinet_crypto::c_multikeys_pub & ID_them, const string& nicename);
+		c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
+			const antinet_crypto::c_multikeys_pub & ID_them,
+			const std::string & packetstart, const string& nicename );
+};
+
+c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
+	const antinet_crypto::c_multikeys_pub & ID_them, const string& nicename)
+	: c_crypto_tunnel(ID_self, ID_them, nicename)
+{
+}
+
+c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
+	const antinet_crypto::c_multikeys_pub & ID_them,
+			const std::string & packetstart, const string& nicename )
+	: c_crypto_tunnel(ID_self, ID_them, packetstart, nicename)
+{
+}
+
+
 
 // ------------------------------------------------------------------
 
@@ -457,7 +486,8 @@ class c_tunserver : public c_galaxy_node {
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
 		///! add this user (or append existing user) with his actuall public key data
-		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> pubkey);
+		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
+		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
 
 
 		void help_usage() const; ///< show help about usage of the program
@@ -505,6 +535,8 @@ class c_tunserver : public c_galaxy_node {
 
 		antinet_crypto::c_multikeys_PAIR m_my_IDC; ///< my keys!
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
+
+		std::map< c_haship_addr, unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
 
 //		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
 //		c_haship_addr m_haship_addr; ///< my haship addres
@@ -576,7 +608,7 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 }
 
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
-unique_ptr<c_haship_pubkey> pubkey)
+unique_ptr<c_haship_pubkey> && pubkey)
 {
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
@@ -588,6 +620,25 @@ unique_ptr<c_haship_pubkey> pubkey)
 		peering_ptr->set_pubkey(std::move(pubkey));
 	}
 }
+
+
+void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
+{
+	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
+	c_haship_addr hip( c_haship_addr::tag_constr_by_addr_bin() , pubkey.get_ipv6_string_bin() );
+
+	auto find = m_tunnel.find(hip);
+	if (find == m_tunnel.end()) { // we don't have tunnel to him yet
+		_info("Creating a CT to HIP=" << hip);
+		// TODO nicer name?
+		auto ct = make_unique< c_tunnel_use >( m_my_IDC , pubkey , "Tunnel" );
+		m_tunnel[ hip ] = std::move(ct);
+	} else {
+		_dbg2("Tunnel already is created for HIP="<<hip);
+	}
+
+}
+
 
 void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
@@ -758,6 +809,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		auto & target_peer = peer_it->second;
 		_info("ROUTE-PEER (found the goal in direct peer) selected peerig next hop is: " << (*target_peer) );
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
+
 		peer_udp->send_data_udp(buff, buff_size, m_sock_udp, data_route_ttl); // <--- ***
 	}
 	return true;
@@ -824,7 +876,7 @@ void c_tunserver::event_loop() {
 		const string node_title_bar = oss.str();
 
 
-		if (anything_happened) {
+		if (anything_happened || 1) {
 			debug_peers();
 
 			string xx(10,'-');
@@ -846,11 +898,26 @@ void c_tunserver::event_loop() {
 			_info("###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
-			this->route_tun_data_to_its_destination_top(
-				e_route_method_from_me, buf, size_read,
-				c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
-				data_route_ttl
-			); // push the tunneled data to where they belong
+			c_haship_addr dst_hip = parse_tun_ip_src_dst(buf, size_read).second;
+			_mark("Destination HIP (for encryption):" << dst_hip); // TODO-NOW
+
+			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
+			if (find_tunnel == m_tunnel.end()) {
+				_warn("end2end tunnel does not exist, can not send OUR data from TUN");
+			} else {
+				_mark("Using CT tunnel");
+				auto & ct = * find_tunnel->second;
+
+				std::string data_cleartext( buf, buf+size_read);
+				std::string data_encrypted = ct.box_ab(data_cleartext);
+
+				this->route_tun_data_to_its_destination_top(
+					e_route_method_from_me,
+					data_encrypted.c_str(), data_encrypted.size(),
+					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
+					data_route_ttl
+				); // push the tunneled data to where they belong
+			}
 		}
 		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
 			anything_happened=true;
@@ -986,11 +1053,20 @@ void c_tunserver::event_loop() {
 				// if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
 				string_as_bin bin_his_pubkey( parser.pop_varstring() ); // PARSE
 				_info("We received pubkey=" << to_debug( bin_his_pubkey ) );
-				auto his_pubkey = make_unique<c_haship_pubkey>();
-				his_pubkey->load_from_bin( bin_his_pubkey.bytes );
-				_info("Parsed pubkey into: " << his_pubkey->to_debug());
-				t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
-				add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
+
+				{ // add peer
+					auto his_pubkey = make_unique<c_haship_pubkey>();
+					his_pubkey->load_from_bin( bin_his_pubkey.bytes );
+					_info("Parsed pubkey into: " << his_pubkey->to_debug());
+					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
+					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
+				}
+
+				{ // add node
+					c_haship_pubkey his_pubkey;
+					his_pubkey.load_from_bin( bin_his_pubkey.bytes );
+					add_tunnel_to_pubkey( his_pubkey );
+				}
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;

@@ -295,7 +295,7 @@ class c_stream final /* because strange ctor init list functions */
 /**
  * A CT, can be used to send data in both directions.
 */
-class c_crypto_tunnel final {
+class c_crypto_tunnel {
 	private:
 		// TODO why 65:
 		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1
@@ -313,6 +313,8 @@ class c_crypto_tunnel final {
 		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them, const string& nicename);
 		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them,
 			const std::string & packetstart, const string& nicename );
+
+		virtual ~c_crypto_tunnel()=default;
 
 		std::string debug_this() const;
 
