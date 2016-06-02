@@ -565,10 +565,9 @@ void c_tunserver::configure_mykey() {
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	UNUSED(peer_ref);
-	_erro("Adding peers from text references not supported now. (make it load a file instead or convert hex2bin)");
-	//auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
 	// TODO(r) check if duplicated peer (map key) - warn or ignore dep on parameter
-	//m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
 
 void c_tunserver::help_usage() const {

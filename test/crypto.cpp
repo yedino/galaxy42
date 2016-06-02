@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 #include "../crypto/crypto.hpp"
 #include "../crypto/ntrupp.hpp"
-
+#include "../crypto/sidhpp.hpp"
+#include "../crypto/crypto_basic.hpp"
 // ntru sign
 extern "C" {
 #include <constants.h>
@@ -274,6 +275,7 @@ TEST(crypto, multi_sign_ed25519) {
 }
 
 
+
 TEST(crypto, ipv6_hexdot) {
 	const size_t test_number = 10;
 	for (size_t i = 0; i < test_number; ++i) {
@@ -282,5 +284,16 @@ TEST(crypto, ipv6_hexdot) {
 
 		_info("IPv6: " << Alice.get_ipv6_string_hexdot());
 	}
+}
 
+
+TEST(crypto, sidhpp) {
+	const auto alice_key_pair = sidhpp::generate_keypair();
+	const auto bob_key_pair = sidhpp::generate_keypair();
+	ASSERT_NE(alice_key_pair, bob_key_pair);
+
+	auto alice_secret = sidhpp::secret_agreement(alice_key_pair.first, alice_key_pair.second, bob_key_pair.second);
+	auto bob_secret   = sidhpp::secret_agreement(bob_key_pair.first, bob_key_pair.second, alice_key_pair.second);
+	using namespace antinet_crypto;
+	ASSERT_EQ(alice_secret, bob_secret);
 }
