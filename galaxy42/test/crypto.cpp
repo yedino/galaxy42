@@ -282,7 +282,5 @@ TEST(crypto, sidhpp) {
 	auto alice_secret = sidhpp::secret_agreement(alice_key_pair.first, alice_key_pair.second, bob_key_pair.second);
 	auto bob_secret   = sidhpp::secret_agreement(bob_key_pair.first, bob_key_pair.second, alice_key_pair.second);
 	using namespace antinet_crypto;
-	_dbg1("Alice secret " << to_debug_locked(alice_secret));
-	_dbg1("Bob secret   " << to_debug_locked(bob_secret));
 	ASSERT_EQ(alice_secret, bob_secret);
 }
