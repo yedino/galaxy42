@@ -66,6 +66,7 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 		sodiumpp::locked_string private_key_main(2 * private_key_len);
 		std::copy_n(private_key_a.begin(), private_key_len, private_key_main.begin());
 		std::copy_n(private_key_b.begin(), private_key_len, private_key_main.begin() + private_key_len);
+		_info("private_key_main " << to_debug_locked(private_key_main));
 		std::string public_key_main = public_key_a + public_key_b;
 		return std::make_pair(std::move(private_key_main), std::move(public_key_main));
 }
@@ -83,9 +84,10 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 		// this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
 		assert(key_self_PRV.size() == key_self_PRV_a.size() + key_self_PRV_b.size());
 		std::copy_n(key_self_PRV.begin(), key_self_PRV.size()/2, key_self_PRV_a.begin());
-		auto pos_iterator = key_self_PRV.begin() + (key_self_PRV_b.size() / 2);
+		auto pos_iterator = key_self_PRV.begin() + (key_self_PRV.size() / 2);
 		std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
 		_info("my private keys");
+		_info("private key main " << to_debug_locked(key_self_PRV));
 		_info("private key a " << to_debug_locked(key_self_PRV_a));
 		_info("private key b " << to_debug_locked(key_self_PRV_b));
 
@@ -134,11 +136,11 @@ CRYPTO_STATUS sidhpp::random_bytes_sidh(unsigned int nbytes, unsigned char *rand
 	if (nbytes == 0) {
 		return CRYPTO_ERROR;
 	}
-	static int not_rand = 0;
+	//static int not_rand = 0;
 	for (unsigned int i = 0; i < nbytes; i++) {
-		//*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
-		*(random_array + i) = (unsigned char)not_rand; // XXX
-		++not_rand;
+		*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
+		//*(random_array + i) = (unsigned char)not_rand; // XXX
+		//++not_rand;
 	}
 	return CRYPTO_SUCCESS;
 }
