@@ -20,7 +20,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey
 	for (size_t i=0; i<16; ++i) at(i) = addr.at(i);
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_string ) { ///< create the IP address from a string (as dot/colon IP notation)
+c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string ) {
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//throw std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__));
 
@@ -65,9 +65,12 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_stri
 	}
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const string_as_bin & data ) {
-	assert( this->size() == data.bytes.size() );
-	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.bytes.at(i);
+c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
+	if (! ( this->size() == data.size() ) ) {
+		ostringstream oss; oss << "Trying to set hip address from binary data " << to_debug_b(data);
+		throw runtime_error(oss.str());
+	}
+	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.at(i);
 }
 
 void c_haship_addr::print(ostream &ostr) const {

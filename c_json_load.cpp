@@ -76,16 +76,17 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 	uint32_t i = 0;
 	for(auto &peer_ref : connectTo_array) {
 		std::string l_ip = connectTo_array.getMemberNames()[i];
-		std::string l_pubkey = peer_ref["publicKey"].asString();
+		std::string l_hip = peer_ref["publicKey"].asString();
 		std::cout 	<< "Peer ["<< i << "] : " << l_ip							//dbg
-					<< " with public key [" << l_pubkey << ']' <<  std::endl;		//dbg
+					<< " with HIP [" << l_hip << ']' <<  std::endl;		//dbg
 
+		// try to parse the :port
 		size_t pos = l_ip.find(':');
-		if(pos != std::string::npos) {
+		if(pos != std::string::npos) { // if there is :port
 			auto pair = tunserver_utils::parse_ip_string(l_ip);
-			peer_refs.emplace_back(t_peering_reference(pair.first, pair.second, string_as_hex(l_pubkey)));
+			peer_refs.emplace_back(t_peering_reference(pair.first, pair.second, l_hip));
 		} else {
-			peer_refs.emplace_back(t_peering_reference(l_ip, string_as_bin(l_pubkey)));
+			peer_refs.emplace_back(t_peering_reference(l_ip, l_hip));
 		}
 		i++;
 	}
@@ -158,7 +159,9 @@ void c_galaxyconf_load::connect_to_load() {
 			std::cout << "Loading connectTo file: " << filename.asString() << std::endl;
 			c_connect_to_load connect_to_load(filename.asString(), m_peer_references);
 			for(auto &peer : m_peer_references) {
-				std::cout << "peer -- ip[" << peer.peering_addr << "] pubkey[" << peer.pubkey << "]" << std::endl;
+				std::cout << "peer -- ip[" << peer.peering_addr << "]"
+				<< " hip[" << peer.haship_addr << "]" << std::endl;
+				// we do not load here pubkeys, just hip
 			}
 		}
 	} else {
