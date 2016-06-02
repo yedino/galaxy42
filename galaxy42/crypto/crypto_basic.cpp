@@ -170,6 +170,7 @@ std::string t_crypto_system_type_to_name(int val) {
 		case e_crypto_system_type_X25519:			return "X25519";
 		case e_crypto_system_type_Ed25519:			return "Ed25519";
 		case e_crypto_system_type_NTRU_EES439EP1:     return "NTRU-EES439EP1";
+		case e_crypto_system_type_NTRU_sign:     return "NTRU-sign";
 		case e_crypto_system_type_SIDH:			return "SIDH-p751";
 		case e_crypto_system_type_geport_todo:			return "geport_todo";
 		case e_crypto_system_type_symhash_todo:			return "symhash_todo";
@@ -190,6 +191,7 @@ char t_crypto_system_type_to_ID(int val) {
 		case e_crypto_system_type_X25519: return 'x';
 		case e_crypto_system_type_Ed25519: return 'e';
 		case e_crypto_system_type_NTRU_EES439EP1: return 't';
+		case e_crypto_system_type_NTRU_sign: return 'r';
 		case e_crypto_system_type_SIDH: return 's';
 		case e_crypto_system_type_geport_todo: return 'g';
 	}
@@ -201,6 +203,7 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 		case 'x': return e_crypto_system_type_X25519;
 		case 'e': return e_crypto_system_type_Ed25519;
 		case 't': return e_crypto_system_type_NTRU_EES439EP1;
+		case 'r': return e_crypto_system_type_NTRU_sign;
 		case 's': return e_crypto_system_type_SIDH;
 		case 'g': return e_crypto_system_type_geport_todo;
 	}
