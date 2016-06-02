@@ -265,7 +265,7 @@ TEST(crypto, multi_sign_ed25519) {
 															Alice.read_pub(),
 															antinet_crypto::e_crypto_system_type_Ed25519);
 
-	}, sodiumpp::crypto_error);
+	}, std::invalid_argument);
 
 	EXPECT_NO_THROW( {
 		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
