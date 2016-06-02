@@ -108,6 +108,7 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 		  reinterpret_cast<unsigned char *>(&them_public_key_a[0]),
 		  reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
 		  curveIsogeny);
+	  SIDH_curve_free(curveIsogeny);
 	  if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
 	  using namespace antinet_crypto;
 	  using namespace string_binary_op;
@@ -119,7 +120,7 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 	  return k_dh_agreed;
 }
 
-CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
+CRYPTO_STATUS sidhpp::random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
 	static std::ifstream rand_source("/dev/urandom");
 	if (nbytes == 0) {
 		return CRYPTO_ERROR;
