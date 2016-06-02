@@ -2,6 +2,8 @@
 #include <SIDH.h>
 #include "crypto_basic.hpp"
 
+using namespace antinet_crypto;
+
 std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 {
 		PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
@@ -26,11 +28,13 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 				reinterpret_cast<unsigned char *>(&public_key_a[0]),
 				curveIsogeny);
 			if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (A)");
+			_info("private key a " << to_debug_locked(private_key_a));
 			status = KeyGeneration_B(
 				reinterpret_cast<unsigned char*>(&private_key_b[0]),
 				reinterpret_cast<unsigned char *>(&public_key_b[0]),
 				curveIsogeny);
 			if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
+			_info("private key b " << to_debug_locked(private_key_b));
 
 			// check keys valid
 			//_info("SIDH validate...");
@@ -67,57 +71,62 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 }
 
 sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &key_self_PRV, const std::string &key_self_pub, const std::string &them_public_key) {
-	  string them_public_key_a = them_public_key.substr(0, them_public_key.size()/2);
-	  string them_public_key_b = them_public_key.substr(key_self_pub.size()/2);
-	  assert( key_self_pub.size() == them_public_key.size());
-	  assert(them_public_key == them_public_key_a + them_public_key_b);
+		_dbg1("secret_agreement");
+		string them_public_key_a = them_public_key.substr(0, them_public_key.size()/2);
+		string them_public_key_b = them_public_key.substr(key_self_pub.size()/2);
+		assert( key_self_pub.size() == them_public_key.size());
+		assert(them_public_key == them_public_key_a + them_public_key_b);
 
-	  sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
-	  sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
+		sodiumpp::locked_string key_self_PRV_a(key_self_PRV.size() / 2);
+		sodiumpp::locked_string key_self_PRV_b(key_self_PRV.size() / 2);
 
-	  // this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
-	  assert(key_self_PRV.size() == key_self_PRV_a.size() + key_self_PRV_b.size());
-	  std::copy_n(key_self_PRV.begin(), key_self_PRV.size()/2, key_self_PRV_a.begin());
-	  auto pos_iterator = key_self_PRV.begin() + (key_self_PRV_b.size() / 2);
-	  std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
+		// this all also assumes that type-A and type-B private keys have size? is this correct? --rafal TODO(rob)
+		assert(key_self_PRV.size() == key_self_PRV_a.size() + key_self_PRV_b.size());
+		std::copy_n(key_self_PRV.begin(), key_self_PRV.size()/2, key_self_PRV_a.begin());
+		auto pos_iterator = key_self_PRV.begin() + (key_self_PRV_b.size() / 2);
+		std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
+		_info("my private keys");
+		_info("private key a " << to_debug_locked(key_self_PRV_a));
+		_info("private key b " << to_debug_locked(key_self_PRV_b));
 
-	  // TODO(rob) make this size-calculations more explained; are they correctd?
-	  // XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal
-	  const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
-	  sodiumpp::locked_string shared_secret_a(shared_secret_size);
-	  sodiumpp::locked_string shared_secret_b(shared_secret_size);
-	  std::fill_n(shared_secret_a.begin(), shared_secret_size, 0);
-	  std::fill_n(shared_secret_b.begin(), shared_secret_size, 0);
-	  CRYPTO_STATUS status = CRYPTO_SUCCESS;
-	  // allocate curve
-	  // TODO move this to class or make global variable
-	  PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
-	  PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
-	  status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
-	  if (status != CRYPTO_SUCCESS) throw std::runtime_error("SIDH_curve_initialize error");
+		// TODO(rob) make this size-calculations more explained; are they correctd?
+		// XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal
+		const size_t shared_secret_size = ((CurveIsogeny_SIDHp751.pwordbits + 7)/8) * 2;
+		sodiumpp::locked_string shared_secret_a(shared_secret_size);
+		sodiumpp::locked_string shared_secret_b(shared_secret_size);
+		std::fill_n(shared_secret_a.begin(), shared_secret_size, 0);
+		std::fill_n(shared_secret_b.begin(), shared_secret_size, 0);
+		CRYPTO_STATUS status = CRYPTO_SUCCESS;
+		// allocate curve
+		// TODO move this to class or make global variable
+		PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
+		PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
+		if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
+		status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SIDH_curve_initialize error");
 
-	  status = SecretAgreement_A(
-		  reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
-		  reinterpret_cast<unsigned char *>(&them_public_key_b[0]),
-		  reinterpret_cast<unsigned char *>(shared_secret_a.buffer_writable()),
-		  curveIsogeny);
-	  if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
+		status = SecretAgreement_A(
+			reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
+			reinterpret_cast<unsigned char *>(&them_public_key_b[0]),
+			reinterpret_cast<unsigned char *>(shared_secret_a.buffer_writable()),
+			curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
 
-	  status = SecretAgreement_B(
-		  reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
-		  reinterpret_cast<unsigned char *>(&them_public_key_a[0]),
-		  reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
-		  curveIsogeny);
-	  SIDH_curve_free(curveIsogeny);
-	  if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
-	  using namespace antinet_crypto;
-	  using namespace string_binary_op;
-	  sodiumpp::locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
-	  Hash1_PRV(
-		  Hash1_PRV( shared_secret_a ) ^	Hash1_PRV( shared_secret_b ) // both agreed-shared-keys, hashed
-		  ^ Hash1( key_self_pub )	^	Hash1( them_public_key ) // and hash of public keys too
-	  ); // and all of this hashed once more
-	  return k_dh_agreed;
+		status = SecretAgreement_B(
+			reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
+			reinterpret_cast<unsigned char *>(&them_public_key_a[0]),
+			reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
+			curveIsogeny);
+		SIDH_curve_free(curveIsogeny);
+		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
+		using namespace antinet_crypto;
+		using namespace string_binary_op;
+		sodiumpp::locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+		Hash1_PRV(
+			Hash1_PRV( shared_secret_a ) ^	Hash1_PRV( shared_secret_b ) // both agreed-shared-keys, hashed
+			^ Hash1( key_self_pub )	^	Hash1( them_public_key ) // and hash of public keys too
+		); // and all of this hashed once more
+		return k_dh_agreed;
 }
 
 CRYPTO_STATUS sidhpp::random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
@@ -125,9 +134,11 @@ CRYPTO_STATUS sidhpp::random_bytes_sidh(unsigned int nbytes, unsigned char *rand
 	if (nbytes == 0) {
 		return CRYPTO_ERROR;
 	}
-
+	static int not_rand = 0;
 	for (unsigned int i = 0; i < nbytes; i++) {
-		*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
+		//*(random_array + i) = static_cast<unsigned char>(rand_source.get()); // nbytes of random values
+		*(random_array + i) = (unsigned char)not_rand; // XXX
+		++not_rand;
 	}
 	return CRYPTO_SUCCESS;
 }
