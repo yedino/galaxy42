@@ -184,6 +184,8 @@ typedef std::array< int , e_crypto_system_type_END	> t_crypto_system_count;
 
 // ------------------------------------------------------------------
 
+typedef sodiumpp::nonce64 t_crypto_nonce; //< the type of nonce that we use
+
 /** Some state of some crypto system */
 class c_crypto_system {
 	public:
@@ -192,7 +194,6 @@ class c_crypto_system {
 
 		typedef std::string t_pubkey; //< type of public key
 
-		typedef sodiumpp::nonce64 t_crypto_nonce; //< the type of nonce that we use
 
 		virtual ~c_crypto_system()=default;
 

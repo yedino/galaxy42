@@ -39,6 +39,11 @@ it has bugs and 'typpos'.
 TODO(r) do not tunnel entire (encrypted) copy of TUN, trimm it from headers that we do not need
 TODO(r) establish end-to-end AE (cryptosession)
 
+TODO(r) - actually use IDe instead IDab for end2end
+TOOD(r) - nonce controll? (authorize?) - to block replay attack
+
+TODO(r) - separate search for pubkeys database
+
 */
 
 /*
@@ -56,6 +61,7 @@ Current TODO / topics:
 ** re-routing data for someone else fails, probably because the data is not in TUN-format but it's just the datagram
 
 */
+
 
 const char * g_the_disclaimer =
 "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
@@ -136,6 +142,7 @@ const char * g_demoname_default = "route_dij";
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
 
+#include "glue_sodiumpp_crypto.hpp" // e.g. show_nice_nonce()
 
 // ------------------------------------------------------------------
 
@@ -170,10 +177,25 @@ class c_galaxy_node {
 		virtual ~c_galaxy_node()=default;
 
 		virtual void nodep2p_foreach_cmd( c_protocol::t_proto_cmd cmd, string_as_bin data )=0; ///< send given command/data to each peer
-		virtual const c_peering & get_peer_with_hip( c_haship_addr addr )=0; ///< return peering reference of a peer by given HIP. Will throw expected_not_found
+
+		///! return peering reference of a peer by given HIP. Will throw expected_not_found (read more)
+		///! if require_pubkey, then will throw expected_not_found_missing_pubkey if peer is here but missing his pubkey
+		virtual const c_peering & get_peer_with_hip( c_haship_addr addr , bool require_pubkey )=0;
 };
 
 // ------------------------------------------------------------------
+
+
+// when we can not find e.g.a peer because we are missing his pubkey and it is required
+class expected_not_found_missing_pubkey : public stdplus::expected_exception {
+	public:
+		const char* what() const noexcept override;
+};
+
+const char* expected_not_found_missing_pubkey::what() const noexcept {
+		return "expected_not_found_missing_pubkey";
+}
+
 
 
 /***
@@ -196,12 +218,13 @@ class c_routing_manager { ///< holds knowledge about routes, and searches for ne
 			public:
 				t_route_state m_state; ///< e.g. e_route_state_found is route is ready to be used
 				c_haship_addr m_nexthop; ///< hash-ip of next hop in this route
+				c_haship_pubkey m_pubkey;
 
 				int m_cost; ///< some general cost - currently e.g. in number of hops
 				t_route_time m_time; ///< age of this route
 				// int m_ttl; ///< at which TTL we got this reply
 
-				c_route_info(c_haship_addr nexthop, int cost);
+				c_route_info(c_haship_addr nexthop, int cost, const c_haship_pubkey & pubkey);
 
 				int get_cost() const;
 		};
@@ -302,8 +325,10 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 }
 
 
-c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost)
-	: m_nexthop(nexthop), m_cost(cost), m_time(  std::chrono::steady_clock::now() )
+c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost, const c_haship_pubkey & pubkey)
+	: m_state(e_route_state_found), m_nexthop(nexthop)
+	, m_pubkey(pubkey)
+	, m_cost(cost), m_time(  std::chrono::steady_clock::now() )
 { }
 
 int c_routing_manager::c_route_info::get_cost() const { return m_cost; }
@@ -377,15 +402,16 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
 
 	try {
-		const auto & peer = galaxy_node.get_peer_with_hip(dst);
+		const auto & peer = galaxy_node.get_peer_with_hip(dst,false); // no need for PK now, caller will do this on his own usually
 		_info("We have that peer directly: " << peer );
 		const int cost = 1; // direct peer. In future we can add connection cost or take into account congestion/lag...
-		c_route_info route_info( peer.get_hip() , cost  );
+		c_route_info route_info( peer.get_hip() , cost , * peer.get_pub() );
 		_info("Direct route: " << route_info);
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
 	}
-	catch(expected_not_found) { } // not found in direct peers
+	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); } 
+	catch(expected_not_found) { _dbg1("We do not have that dst="<<dst<<" in peers at all"); } // not found in direct peers
 
 	auto found = m_route_nexthop.find( dst ); // <--- search what we know
 	if (found != m_route_nexthop.end()) { // found
@@ -499,7 +525,7 @@ class c_tunserver : public c_galaxy_node {
 		} t_route_method;
 
 		void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) override;
-		const c_peering & get_peer_with_hip( c_haship_addr addr ) override;
+		const c_peering & get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) override;
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -513,7 +539,7 @@ class c_tunserver : public c_galaxy_node {
 		bool route_tun_data_to_its_destination_top(t_route_method method,
 			const char *buff, size_t buff_size,
 			c_haship_addr src_hip, c_haship_addr dst_hip,
-			c_routing_manager::c_route_reason reason, int data_route_ttl);
+			c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used);
 
 		///@brief more advanced version for use in routing
 		bool route_tun_data_to_its_destination_detail(t_route_method method,
@@ -521,7 +547,7 @@ class c_tunserver : public c_galaxy_node {
 			c_haship_addr src_hip, c_haship_addr dst_hip,
 			c_haship_addr next_hip,
 			c_routing_manager::c_route_reason reason,
-			int recurse_level, int data_route_ttl);
+			int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used);
 
 		void peering_ping_all_peers();
 		void debug_peers();
@@ -770,10 +796,14 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 	}
 }
 
-const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr ) {
+const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
 	auto peer_iter = m_peer.find(addr);
 	if (peer_iter == m_peer.end()) throw expected_not_found();
-	return * peer_iter->second;
+	c_peering & peer = * peer_iter->second;
+	if (require_pubkey) {
+		if (! peer.is_pubkey()) throw expected_not_found_missing_pubkey();
+	}
+	return peer;
 }
 
 void c_tunserver::debug_peers() {
@@ -789,7 +819,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	c_haship_addr src_hip, c_haship_addr dst_hip,
 	c_haship_addr next_hip,
 	c_routing_manager::c_route_reason reason,
-	int recurse_level, int data_route_ttl)
+	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
 	// --- choose next hop in peering ---
 
@@ -813,7 +843,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		} catch(...) { _info("ROUTE MANAGER: can not find route at all"); return false; }
 		_info("Route found via hip: via_hip = " << via_hip);
 		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
-			src_hip, dst_hip, via_hip, reason, recurse_level+1, data_route_ttl);
+			src_hip, dst_hip, via_hip, reason, recurse_level+1, data_route_ttl, nonce_used);
 		if (!ok) { _info("Routing failed"); return false; } // <---
 		_info("Routing seems to succeed");
 	}
@@ -823,7 +853,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 
 		// send it on wire:
-		peer_udp->send_data_udp(buff, buff_size, m_sock_udp, src_hip, dst_hip, data_route_ttl); // <--- *** actually send the data
+		peer_udp->send_data_udp(buff, buff_size, m_sock_udp, src_hip, dst_hip, data_route_ttl, nonce_used); // <--- *** actually send the data
 	}
 	return true;
 }
@@ -831,11 +861,11 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 	const char *buff, size_t buff_size,
 	c_haship_addr src_hip, c_haship_addr dst_hip,
-	c_routing_manager::c_route_reason reason, int data_route_ttl) {
+	c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used) {
 	try {
 		_info("Sending data between end2end " << src_hip <<"--->" << dst_hip);
 		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
-			src_hip, dst_hip, dst_hip, reason, 0, data_route_ttl);
+			src_hip, dst_hip, dst_hip, reason, 0, data_route_ttl, nonce_used);
 		if (!ok) { _info("Routing/sending failed (top level)"); return false; }
 	} catch(std::exception &e) {
 		_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
@@ -857,7 +887,7 @@ void c_tunserver::event_loop() {
 	c_counter counter_big(10,false);
 
 	this->peering_ping_all_peers();
-	const auto ping_all_frequency = std::chrono::seconds( 1 ); // how often to ping them
+	const auto ping_all_frequency = std::chrono::seconds( 3 ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
@@ -912,7 +942,7 @@ void c_tunserver::event_loop() {
 			anything_happened=true;
 
 			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
-			_info("###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
+			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
 			c_haship_addr src_hip, dst_hip;
@@ -922,18 +952,31 @@ void c_tunserver::event_loop() {
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
 				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
-			} else {
-				_mark("Using CT tunnel to send our own data");
-				auto & ct = * find_tunnel->second;
-				std::string data_cleartext( buf, buf+size_read);
-				std::string data_encrypted = ct.box_ab(data_cleartext);
 
+				std::string dump; // just to trigger a search (for path - and btw for the pubkey!)
+				_note("GET KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY - will look for key for " << dst_hip << " so we can SEND THERE");
 				this->route_tun_data_to_its_destination_top(
 					e_route_method_from_me,
-					data_encrypted.c_str(), data_encrypted.size(),
+					dump.c_str(), dump.size(),
 					src_hip, dst_hip,
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl
+					,antinet_crypto::t_crypto_nonce()
+				); // push the tunneled data to where they belong
+
+			} else {
+				_mark("Using CT tunnel to send our own data");
+				auto & ct = * find_tunnel->second;
+				antinet_crypto::t_crypto_nonce nonce_used;
+				std::string data_cleartext( buf, buf+size_read);
+				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
+
+				this->route_tun_data_to_its_destination_top(
+					e_route_method_from_me,
+					data_encrypted.c_str(), data_encrypted.size(), // blob
+					src_hip, dst_hip,
+					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
+					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
 			}
 		}
@@ -986,12 +1029,19 @@ void c_tunserver::event_loop() {
 			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
 			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
+				_dbg1("Tunneled data");
 
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() , buf, size_read );
 				parser.skip_bytes_n(2);
 				c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin() , parser.pop_bytes_n(g_ipv6_rfc::length_of_addr) );
 				c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin() , parser.pop_bytes_n(g_ipv6_rfc::length_of_addr) );
 				int requested_ttl = parser.pop_byte_u(); // the TTL of data that we are asked to forward
+				string nonce_used_raw = parser.pop_bytes_n( crypto_box_NONCEBYTES );
+				_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
+				antinet_crypto::t_crypto_nonce nonce_used(
+					sodiumpp::encoded_bytes(nonce_used_raw , sodiumpp::encoding::binary)
+				);
+				_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
 				string blob =	parser.pop_varstring(); // TODO view-string
 
 /*
@@ -1041,10 +1091,23 @@ void c_tunserver::event_loop() {
 					auto find_tunnel = m_tunnel.find( src_hip ); // find end2end tunnel
 					if (find_tunnel == m_tunnel.end()) {
 						_warn("end2end tunnel does not exist, can not DECRYPT this data for us (yet?)...");
+
+						std::string dump; // just to trigger a search (for path - and btw for the pubkey!)
+						_note("GET KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY - will look for key for "
+							<< dst_hip << " so we can READ DATA from there");
+						this->route_tun_data_to_its_destination_top(
+							e_route_method_from_me,
+							dump.c_str(), dump.size(),
+							dst_hip, src_hip, // return back to sender (from us)
+							c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
+							requested_ttl, // we assume sender is that far away from us, since the data reached us
+							antinet_crypto::t_crypto_nonce() // any nonce - just dummy
+						);
+
 					} else {
 						_mark("Using CT tunnel to decrypt data for us");
 						auto & ct = * find_tunnel->second;
-						auto tundata = ct.unbox_ab( blob );
+						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
 						if (write_bytes == -1) throw std::runtime_error("Fail to send UDP to TUN");
@@ -1060,15 +1123,14 @@ void c_tunserver::event_loop() {
 					}
 
 					_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
-					_warn("RRRRR we can not yet re-route data, need to have cleartext header with dst hip outside of end2end encrypted IPv6 data");
-					/*
 					this->route_tun_data_to_its_destination_top(
 						e_route_method_default,
-						reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len,
+						blob.c_str(), blob.size(),
+						src_hip, dst_hip,
 						c_routing_manager::c_route_reason( src_hip , c_routing_manager::e_search_mode_route_other_packet ),
-						data_route_ttl
+						data_route_ttl,
+						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
-					*/
 				}
 
 			} // e_proto_cmd_tunneled_data
@@ -1099,6 +1161,7 @@ void c_tunserver::event_loop() {
 				}
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
+				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
@@ -1140,12 +1203,14 @@ void c_tunserver::event_loop() {
 						gen.push_byte_u( ';' );
 						gen.push_bytes_n( g_haship_addr_size , string_as_bin( requested_hip ).bytes ); // the hip of goal
 						gen.push_byte_u( ';' );
+						gen.push_varstring( route.m_pubkey.serialize_bin() );
+						gen.push_byte_u( ';' );
 
 						auto data = gen.str();
 
 						_info("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD Will send data to sender_as_peering_ptr="
 							<< sender_as_peering_ptr
-							<< " data: " << string_as_dbg( string_as_bin(data) ).get() );
+							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_sock_udp); // <---
 						_note("Send the route reply");
@@ -1171,6 +1236,8 @@ void c_tunserver::event_loop() {
 				c_haship_addr given_goal_hip( c_haship_addr::tag_constr_by_addr_bin(),
 					parser.pop_bytes_n( g_haship_addr_size ) ); // hip
 				parser.pop_byte_skip(';');
+				c_haship_pubkey pubkey; pubkey.load_from_bin( parser.pop_varstring() );
+				parser.pop_byte_skip(';');
 				_info("We have a TTL reply: ttl="<<given_ttl<<" goal="<<given_goal_hip<<" cost="<<given_cost);
 
 				auto data_route_ttl = given_ttl - 1;
@@ -1184,7 +1251,11 @@ void c_tunserver::event_loop() {
 					_info("Too low TTL, dropping the request");
 				} else {
 					_info("GOT CORRECT REPLY - USING IT");
-					c_routing_manager::c_route_info route_info( sender_hip , given_cost );
+
+					_warn("Cool, we got there a pubkey.");
+					add_tunnel_to_pubkey( pubkey );
+
+					c_routing_manager::c_route_info route_info( sender_hip , given_cost , pubkey );
 					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
 					// store it, so that we own this object:
 					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info );
@@ -1282,8 +1353,30 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	return true;
 }
 
+bool demo_sodiumpp_nonce_bug() {
+	{
+		_warn("test");
+
+				string nonce_used_raw(24,0);
+				nonce_used_raw.at(23)=6;
+
+				_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
+				antinet_crypto::t_crypto_nonce nonce_used(
+					sodiumpp::encoded_bytes(nonce_used_raw , sodiumpp::encoding::binary)
+				);
+				auto x = nonce_used;
+				_warn("copy ok");
+				auto y = nonce_used.get();
+				_warn("get ok");
+
+				_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
+
+				_warn("OK?");
+				return false;
+	}
+}
+
 bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
-	_erro("aaaaaaaaaaaaaaaaaaaaaaaaa");
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
@@ -1388,6 +1481,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	desc.add_options()
 				//	("none", "no demo: start program in normal mode instead (e.g. to ignore demo config file)")
 					("lang_optional", "foo boost::optional<>")
+					("sodiumpp_bug", "sodiumpp nonce overflow constructor bug test (hits on older sodiumpp version)")
 					("foo", "foo test")
 					("bar", "bar test")
 					("serialize",  "serialize test")
