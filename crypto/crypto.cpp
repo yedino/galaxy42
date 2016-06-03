@@ -125,23 +125,44 @@ sodiumpp::locked_string c_stream::return_empty_K() {
 // ---------------------------------------------------------------------------
 
 std::string c_stream::box(const std::string & msg) {
+	t_crypto_nonce nonce_unused;
+	return this->box(msg, nonce_unused);
+}
+
+std::string c_stream::box(const std::string & msg, t_crypto_nonce & nonce) {
 	auto & cb = * PTR(m_boxer); // my crypto (un)boxer
-	const auto N = cb.get_nonce(); // nonce (before operation)
-	const auto ret = cb.box(msg).to_binary();
-	_dbg1n("Encrypt N="<<show_nice_nonce(N)
+	const auto N = cb.get_nonce(); // nonce (before operation) - just for debug
+	const auto ret = cb.box(msg,nonce).to_binary(); // btw, nonce variable is updated here too
+	_dbg1n(
+		"Encrypt N="<<show_nice_nonce(N)<<"(auto)"
 		<<" text " << to_debug(msg) << " ---> " << to_debug(ret)
 		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+	nonce = N; // return out - nonce that was used
 	return ret;
 }
 
 std::string c_stream::unbox(const std::string & msg) {
+	t_crypto_nonce n;
+	return unbox(msg,n,false);
+}
+
+std::string c_stream::unbox(const std::string & msg, t_crypto_nonce nonce, bool force_nonce) {
 	auto & cb = * PTR(m_unboxer); // my crypto (un)boxer
-	const auto N = cb.get_nonce(); // nonce (before operation)
-	auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary));
-	_dbg1n("Decrypt N="<<show_nice_nonce(N)
-		<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
-		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
-	return ret;
+	const auto N = force_nonce ? nonce : cb.get_nonce(); // nonce (before operation)
+	try {
+		auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary) , N);
+		_dbg1n(
+			"Decrypt N="<<show_nice_nonce(N)<<(force_nonce ? "(given)":"(auto)")
+			<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
+			<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+		return ret;
+	} catch(std::exception &e) {
+		_erro("Crypto failed to unbox: " << e.what() << " during: "
+			<< "Decrypt N="<<show_nice_nonce(N)
+			<<" text " << "???" << " <--- " << to_debug(msg)
+			<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -189,7 +210,8 @@ std::string c_stream::generate_packetstart(c_stream & stream_to_encrypt_with) co
 	gen.push_varstring( m_packetstart_kexasym );
 
 	_note("MAKING packetstart: m_packetstart_IDe = " << to_debug(m_packetstart_IDe));
-	string packetstart_IDe_via_CT = stream_to_encrypt_with.box( m_packetstart_IDe );
+	t_crypto_nonce nonce_used;
+	string packetstart_IDe_via_CT = stream_to_encrypt_with.box( m_packetstart_IDe , nonce_used );
 	_note("MAKING packetstart: packetstart_IDe_via_CT = " << to_debug(packetstart_IDe_via_CT));
 	gen.push_varstring( packetstart_IDe_via_CT );
 	return gen.str();
@@ -546,16 +568,32 @@ std::string c_crypto_tunnel::box(const std::string & msg) {
 	return PTR(m_stream_crypto_final)->box(msg);
 }
 
+std::string c_crypto_tunnel::box(const std::string & msg, t_crypto_nonce &nonce) {
+	return PTR(m_stream_crypto_final)->box(msg, nonce);
+}
+
 std::string c_crypto_tunnel::unbox(const std::string & msg) {
 	return PTR(m_stream_crypto_final)->unbox(msg);
+}
+
+std::string c_crypto_tunnel::unbox(const std::string & msg, t_crypto_nonce nonce) {
+	return PTR(m_stream_crypto_final)->unbox(msg,nonce);
 }
 
 std::string c_crypto_tunnel::box_ab(const std::string & msg) {
 	return PTR(m_stream_crypto_ab)->box(msg);
 }
 
+std::string c_crypto_tunnel::box_ab(const std::string & msg, t_crypto_nonce &nonce) {
+	return PTR(m_stream_crypto_ab)->box(msg,nonce);
+}
+
 std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
 	return PTR(m_stream_crypto_ab)->unbox(msg);
+}
+
+std::string c_crypto_tunnel::unbox_ab(const std::string & msg, t_crypto_nonce nonce) {
+	return PTR(m_stream_crypto_ab)->unbox(msg,nonce);
 }
 
 // ------------------------------------------------------------------

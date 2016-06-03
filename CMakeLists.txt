@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 
+add_definitions(-DSODIUMPP_OPTION_DEBUG=1) # XXX
+
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
 # and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
@@ -72,6 +74,7 @@ file(GLOB SOURCES_GROUP_CRYPTO crypto/*.cpp)
 
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
+
 
 if(CMAKE_BUILD_TYPE STREQUAL "Fast")
         message("Fast build")
