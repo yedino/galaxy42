@@ -1268,6 +1268,7 @@ void add_program_option_vector_strings(boost::program_options::variables_map & a
 		old_peer.push_back(value_to_append);
 		argm.insert( std::make_pair(name , po::variable_value( old_peer , false )) );
 	}
+	_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
 }
 
 bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
@@ -1282,73 +1283,47 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 }
 
 bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
+	_erro("aaaaaaaaaaaaaaaaaaaaaaaaa");
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
 
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
-	map< int , t_peer_cmdline_ref > peer_to_ref;
-	for (int nr=1; nr<20; ++nr) {
-		peer_to_ref[nr] = {
-			string("192.168.") + std::to_string( nr ) + string(".62") + ":9042"
-			, string("cafe") + std::to_string(nr) ,
-			string("deadbeef999fff") + std::to_string(nr)
-		};
-	}
-
-	// pre-generate example test EC DH keypairs:
-	peer_to_ref[1].pubkey = "3992967d946aee767b2ed018a6e1fc394f87bd5bfebd9ea7728edcf421d09471";
-	peer_to_ref[1].privkey = "b98252fdc886680181fccd9b3c10338c04c5288477eeb40755789527eab3ba47";
-	peer_to_ref[2].pubkey = "4491bfdafea313d1b354e0d993028f5e2a0a8119cc634226e5581db554d5283e";
-	peer_to_ref[2].privkey = "bd48ab0e511fd5135134b9fb27491f3fdc344b29b8d8e7ce1b064d7946e48944";
-	peer_to_ref[3].pubkey = "237e7a5224a8a58a0d264733380c4f3fba1f91482542afb269f382357c290445";
-	peer_to_ref[3].privkey = "1bfb4bd0ac720276565f67798d069f7f4166076c6a37788ad21bae054f1b67c7";
-	peer_to_ref[4].pubkey = "e27f2df89219841e0f930f7fbe000424bfbadabceb48eda2ab4521b5ce00b15c";
-	peer_to_ref[4].privkey = "d73257edbfbf9200349bdc87bbc0f76f213d106f83fc027240e70c23a0f2f693";
-	peer_to_ref[5].pubkey = "2cf0ab828ab1642f5fdcb8d197677f431d78fccd40d37400e1e6c51321512e66";
-	peer_to_ref[5].privkey = "5d0dda56f336668e95816ccc4887c7ba23c1d14167918275e2bf76784a3ee702";
-	peer_to_ref[6].pubkey = "26f4c825bcc045d7cb3ad6946d414c8ca1cbeaa3cd4738494e5308dd0d1cc053";
-	peer_to_ref[6].privkey = "6c94c735dd0cfb862f991f05e3193e70b754650a5b4c998e68eb8bd1f43a15aa";
-	peer_to_ref[7].pubkey = "a2047b24dfb02397a9354cc125eb9c2119a24b33c0c706f28bb184eeae064902";
-	peer_to_ref[7].privkey = "2401f2be12ace34cfb221c168a7868d1d9dfe931f61feb8930799bb27fd5a253";
-	// 2e83c0963e497c95bcd0bbc94b58b0c66b4c113b84fdd7587ca18e326a35c84c
-	// 12fed56a2ffee2b0e3a51689ecb4048adfa4f474d31e9180d113f50fe140f5c3
+	map< int , std::string > peer_cmd_map = {
+		{ 1 , "192.168.1.62:9042-fd42:9fd1:ce03:9edf:1d7e:2257:b651:d89f" } ,
+		{ 2 , "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b" } ,
+		{ 3 , "192.168.3.62:9042-fd42:5516:34c7:9302:890f:0a2d:5586:79ee" } ,
+	};
 
 	// list of connections in our test-world:
 	map< int , vector<int> > peer_to_peer; // for given peer that we will create: list of his peer-number(s) that he peers into
 	peer_to_peer[1] = vector<int>{ 2 , 3 };
+	/*
 	peer_to_peer[2] = vector<int>{ 4 , 5 };
 	peer_to_peer[3] = vector<int>{ 6 , 7 };
 	peer_to_peer[4] = vector<int>{ };
 	peer_to_peer[5] = vector<int>{ };
 	peer_to_peer[6] = vector<int>{ };
 	peer_to_peer[7] = vector<int>{ };
+	*/
 
 	for (int peer_nr : peer_to_peer.at(my_nr)) { // for me, add the --peer refrence of all peers that I should peer into:
-		_info(peer_nr);
-		string peer_pub = peer_to_ref.at(peer_nr).pubkey;
-		string peer_ip = peer_to_ref.at(peer_nr).ip;
-		string peerref = peer_ip + "-" + peer_pub;
-		_mark("Developer: adding peerref:" << peerref);
-
-		vector<string> old_peer;
-		try {
-			old_peer = argm["peer"].as<vector<string>>();
-			old_peer.push_back(peerref);
-			argm.at("peer") = po::variable_value( old_peer , false );
-		} catch(boost::bad_any_cast) {
-			old_peer.push_back(peerref);
-			argm.insert( std::make_pair("peer" , po::variable_value( old_peer , false )) );
-		}
+		_info("I connect into demo peer number: " << peer_nr);
+		add_program_option_vector_strings(argm, "peer", peer_cmd_map.at(peer_nr));
 	}
 
-	_info("Adding my keys command line");
-	argm.at("mypub") = po::variable_value( peer_to_ref.at(my_nr).pubkey  , false );
-	argm.at("mypriv") = po::variable_value( peer_to_ref.at(my_nr).privkey  , false );
+	_warn("Remember to set proper HOME with your key pair!");
 	argm.at("myname") = po::variable_value( "testnode-" + std::to_string(my_nr) , false );
 
-	_note("Done dev setup");
+/* TODO(r) bug#m153
+	boost::any boostany = argm.at("peer");
+	_erro("PEER = " << boostany);
+	try { auto vvv = boost::any_cast<vector<string>>( argm.at("peer") ); }
+	catch(...) { _warn("EXCEPT"); }
+	_warn("after");
+*/
+	// _note("Done dev setup, runnig as: " << to_debug(argm));
 	return true;
 }
 
@@ -1445,7 +1420,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
 	if (demoname=="crypto_bench") { antinet_crypto::test_crypto_benchmark(2);  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
-	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_pair(argm); }
+	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
@@ -1556,7 +1531,7 @@ int main(int argc, char **argv) {
 			po::notify(argm);  // !
 
 			// --- debug level for main program ---
-			g_dbg_level_set(50,"For normal program run");
+			g_dbg_level_set(20,"For normal program run");
 			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
 			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run");
 

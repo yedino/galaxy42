@@ -3,8 +3,11 @@
 
 #include "libs0.hpp"
 
+#include <boost/any.hpp>
+
 
 enum t_debug_style {
+	e_debug_style_object=0,
 	e_debug_style_short_devel=1,
 	e_debug_style_crypto_devel=2,
 	e_debug_style_big=2,
@@ -149,6 +152,38 @@ std::string to_binary_string( const std::array<T,N> & obj ) {
 template<class T, std::size_t N>
 std::basic_string<T> to_binary_string_basic_string( const std::array<T,N> & obj ) {
 	return std::basic_string<T>( obj.data(), obj.size() );
+}
+
+template<typename T>
+std::ostream & debug_to_oss(std::ostream & os, const T & data, t_debug_style style) {
+	if (style==e_debug_style_object) os<<data;
+	else os << to_debug(data,style);
+	return os;
+}
+
+std::ostream & operator<<(std::ostream & os, boost::any & obj);
+
+template<typename TK, typename TV>
+std::string to_debug(const std::map<TK,TV> & data, t_debug_style style_k=e_debug_style_object,
+t_debug_style style_v=e_debug_style_object)
+{
+	std::ostringstream oss;
+	for (const auto & pair : data) {
+		oss << "[" << debug_to_oss(oss, pair.first, style_k) << "]";
+		oss << " -> ";
+		oss << "[" << debug_to_oss(oss, pair.second, style_v) << "]";
+	}
+	return oss.str();
+}
+
+template<typename TV>
+std::string to_debug(const std::vector<TV> & data, t_debug_style style_v=e_debug_style_object)
+{
+	std::ostringstream oss;
+	for (const auto & obj : data) {
+		oss << "[" << debug_to_oss(oss, obj, style_v) << "]";
+	}
+	return oss.str();
 }
 
 std::string to_debug(const std::string & data, t_debug_style style=e_debug_style_short_devel);
