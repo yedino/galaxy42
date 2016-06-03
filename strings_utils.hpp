@@ -169,9 +169,12 @@ t_debug_style style_v=e_debug_style_object)
 {
 	std::ostringstream oss;
 	for (const auto & pair : data) {
-		oss << "[" << debug_to_oss(oss, pair.first, style_k) << "]";
-		oss << " -> ";
-		oss << "[" << debug_to_oss(oss, pair.second, style_v) << "]";
+
+// TODO when we do bug#m153.  debug_to_oss makes no sense to connect like this - returns ostream 
+
+//		oss << "[" << debug_to_oss(oss, pair.first, style_k) << "]";
+//		oss << " -> ";
+//		oss << "[" << debug_to_oss(oss, pair.second, style_v) << "]";
 	}
 	return oss.str();
 }
@@ -181,7 +184,8 @@ std::string to_debug(const std::vector<TV> & data, t_debug_style style_v=e_debug
 {
 	std::ostringstream oss;
 	for (const auto & obj : data) {
-		oss << "[" << debug_to_oss(oss, obj, style_v) << "]";
+// TODO when we do bug#m153.  debug_to_oss makes no sense to connect like this - returns ostream 
+//		oss << "[" << debug_to_oss(oss, obj, style_v) << "]";
 	}
 	return oss.str();
 }
