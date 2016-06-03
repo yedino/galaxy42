@@ -1497,11 +1497,11 @@ int main(int argc, char **argv) {
 						   "*** this could overwrite your actual configurations ***")
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
-			("gen-lowest-idc", "Generate lowest set of cryptographic keys:\n (1x 25519)")
-			("gen-fast-idc", "Generate fast set of cryptographic keys:\n (1x 25519, 1x ntru)")
-			("gen-normal-idc", "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
-			("gen-high-idc", "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
-			("gen-highest-idc", "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru)")
+			("gen-lowest-idc", po::value<string>()->default_value("current_keys"), "Generate lowest set of cryptographic keys:\n (1x 25519)")
+			("gen-fast-idc", po::value<string>()->default_value("current_keys"), "Generate fast set of cryptographic keys:\n (1x 25519, 1x ntru)")
+			("gen-normal-idc", po::value<string>()->default_value("current_keys"), "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
+			("gen-high-idc", po::value<string>()->default_value("current_keys"), "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
+			("gen-highest-idc", po::value<string>()->default_value("current_keys"), "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1560,7 +1560,9 @@ int main(int argc, char **argv) {
 
 
 			if(argm.count("gen-highest-idc")) {
+				generate_config::m_crypto_set_name = argm["gen-highest-idc"].as<std::string>();
 				std::cout << "Generating highest cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
 				generate_config::crypto_set(e_crypto_set::highest);
 				return 0;
 			} else if(argm.count("gen-high-idc")) {

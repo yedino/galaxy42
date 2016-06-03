@@ -1,6 +1,6 @@
 #include "generate_config.hpp"
 
-std::string generate_config::m_crypto_set_name = "current_keys";
+std::string generate_config::m_crypto_set_name = "";
 
 
 void generate_config::crypto_set(e_crypto_set cryptoset) {
