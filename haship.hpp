@@ -14,6 +14,8 @@
 // https://tools.ietf.org/html/rfc4291
 // also https://en.wikipedia.org/wiki/IPv6_packet#Fixed_header
 namespace g_ipv6_rfc {
+	constexpr unsigned char length_of_addr = 128/8 ;  // length of the address (not just header, but in any bin representation)
+
 	constexpr unsigned char header_position_of_src = 8 ;  // rfc2460#section-3
 	constexpr unsigned char header_length_of_src = 128/8 ;  // length of this field
 

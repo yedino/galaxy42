@@ -510,10 +510,17 @@ class c_tunserver : public c_galaxy_node {
 		std::pair<c_haship_addr,c_haship_addr> parse_tun_ip_src_dst(const char *buff, size_t buff_size); ///< the same, but with ipv6_offset that matches our current TUN
 
 		///@brief push the tunneled data to where they belong. On failure returns false or throws, true if ok.
-		bool route_tun_data_to_its_destination_top(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, int data_route_ttl);
+		bool route_tun_data_to_its_destination_top(t_route_method method,
+			const char *buff, size_t buff_size,
+			c_haship_addr src_hip, c_haship_addr dst_hip,
+			c_routing_manager::c_route_reason reason, int data_route_ttl);
 
 		///@brief more advanced version for use in routing
-		bool route_tun_data_to_its_destination_detail(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, c_haship_addr next_hip,
+		bool route_tun_data_to_its_destination_detail(t_route_method method,
+			const char *buff, size_t buff_size,
+			c_haship_addr src_hip, c_haship_addr dst_hip,
+			c_haship_addr next_hip,
+			c_routing_manager::c_route_reason reason,
 			int recurse_level, int data_route_ttl);
 
 		void peering_ping_all_peers();
@@ -777,8 +784,12 @@ void c_tunserver::debug_peers() {
 	}
 }
 
-bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason,
-	c_haship_addr next_hip, int recurse_level, int data_route_ttl)
+bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method,
+	const char *buff, size_t buff_size,
+	c_haship_addr src_hip, c_haship_addr dst_hip,
+	c_haship_addr next_hip,
+	c_routing_manager::c_route_reason reason,
+	int recurse_level, int data_route_ttl)
 {
 	// --- choose next hop in peering ---
 
@@ -801,7 +812,8 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 			via_hip = route.m_nexthop;
 		} catch(...) { _info("ROUTE MANAGER: can not find route at all"); return false; }
 		_info("Route found via hip: via_hip = " << via_hip);
-		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size, reason,  via_hip, recurse_level+1, data_route_ttl);
+		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
+			src_hip, dst_hip, via_hip, reason, recurse_level+1, data_route_ttl);
 		if (!ok) { _info("Routing failed"); return false; } // <---
 		_info("Routing seems to succeed");
 	}
@@ -810,16 +822,20 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		_info("ROUTE-PEER (found the goal in direct peer) selected peerig next hop is: " << (*target_peer) );
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 
-		peer_udp->send_data_udp(buff, buff_size, m_sock_udp, data_route_ttl); // <--- ***
+		// send it on wire:
+		peer_udp->send_data_udp(buff, buff_size, m_sock_udp, src_hip, dst_hip, data_route_ttl); // <--- *** actually send the data
 	}
 	return true;
 }
 
-bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method, const char *buff, size_t buff_size, c_routing_manager::c_route_reason reason, int data_route_ttl) {
+bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
+	const char *buff, size_t buff_size,
+	c_haship_addr src_hip, c_haship_addr dst_hip,
+	c_routing_manager::c_route_reason reason, int data_route_ttl) {
 	try {
-		c_haship_addr dst_hip = parse_tun_ip_src_dst(buff, buff_size).second;
-		_info("Destination HIP:" << dst_hip);
-		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size, reason,  dst_hip, 0, data_route_ttl);
+		_info("Sending data between end2end " << src_hip <<"--->" << dst_hip);
+		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
+			src_hip, dst_hip, dst_hip, reason, 0, data_route_ttl);
 		if (!ok) { _info("Routing/sending failed (top level)"); return false; }
 	} catch(std::exception &e) {
 		_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
@@ -888,6 +904,7 @@ void c_tunserver::event_loop() {
 		wait_for_fd_event();
 
 		// TODO(r): program can be hanged/DoS with bad routing, no TTL field yet
+		// ^--- or not fully checked. need scoring system anyway
 
 		try { // ---
 
@@ -898,22 +915,23 @@ void c_tunserver::event_loop() {
 			_info("###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
-			c_haship_addr dst_hip = parse_tun_ip_src_dst(buf, size_read).second;
-			_mark("Destination HIP (for encryption):" << dst_hip); // TODO-NOW
+			c_haship_addr src_hip, dst_hip;
+			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
+			// TODO warn if src_hip is not our hip
 
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
-				_warn("end2end tunnel does not exist, can not send OUR data from TUN");
+				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
 			} else {
-				_mark("Using CT tunnel");
+				_mark("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
-
 				std::string data_cleartext( buf, buf+size_read);
 				std::string data_encrypted = ct.box_ab(data_cleartext);
 
 				this->route_tun_data_to_its_destination_top(
 					e_route_method_from_me,
 					data_encrypted.c_str(), data_encrypted.size(),
+					src_hip, dst_hip,
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl
 				); // push the tunneled data to where they belong
@@ -969,14 +987,14 @@ void c_tunserver::event_loop() {
 
 			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
 
-				static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
-								198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
-								233, 194, 218, 13, 180, 63, 64, 3, 11};
-				static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = {148, 231, 240, 47, 172, 96, 246, 79};
-				static unsigned char additional_data[] = {1, 2, 3};
-				static unsigned long long additional_data_len = 3;
-				// TODO randomize this data
+				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() , buf, size_read );
+				parser.skip_bytes_n(2);
+				c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin() , parser.pop_bytes_n(g_ipv6_rfc::length_of_addr) );
+				c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin() , parser.pop_bytes_n(g_ipv6_rfc::length_of_addr) );
+				int requested_ttl = parser.pop_byte_u(); // the TTL of data that we are asked to forward
+				string blob =	parser.pop_varstring(); // TODO view-string
 
+/*
 				std::unique_ptr<unsigned char []> decrypted_buf (new unsigned char[size_read + crypto_aead_chacha20poly1305_ABYTES]);
 				unsigned long long decrypted_buf_len;
 
@@ -1014,15 +1032,24 @@ void c_tunserver::event_loop() {
 				// auto { src_hip, dst_hip } = parse_tun_ip_src_dst(.....);
 				c_haship_addr src_hip, dst_hip;
 				std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len);
+*/
 
 				// TODONOW optimize? make sure the proper binary format is cached:
 				if (dst_hip == m_my_hip) { // received data addresses to us as finall destination:
-                    _info("UDP data is addressed to us as finall dst, sending it to TUN.");
-                    ssize_t write_bytes = write(m_tun_fd, reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len); /// *** send the data into our TUN // reinterpret char-signess
-                    if (write_bytes == -1) {
-                       throw std::runtime_error("Fail to send UDP to TUN: write returned -1");
-                    }
-                }
+					_info("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
+
+					auto find_tunnel = m_tunnel.find( src_hip ); // find end2end tunnel
+					if (find_tunnel == m_tunnel.end()) {
+						_warn("end2end tunnel does not exist, can not DECRYPT this data for us (yet?)...");
+					} else {
+						_mark("Using CT tunnel to decrypt data for us");
+						auto & ct = * find_tunnel->second;
+						auto tundata = ct.unbox_ab( blob );
+						_note("<<<====== TUN INPUT: " << to_debug(tundata));
+						ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
+						if (write_bytes == -1) throw std::runtime_error("Fail to send UDP to TUN");
+					} // we have CT
+				}
 				else
 				{ // received data that is addresses to someone else
 					auto data_route_ttl = requested_ttl - 1;
@@ -1032,13 +1059,16 @@ void c_tunserver::event_loop() {
 						data_route_ttl=limit_incoming_ttl;
 					}
 
-					_info("UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
+					_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
+					_warn("RRRRR we can not yet re-route data, need to have cleartext header with dst hip outside of end2end encrypted IPv6 data");
+					/*
 					this->route_tun_data_to_its_destination_top(
 						e_route_method_default,
 						reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len,
 						c_routing_manager::c_route_reason( src_hip , c_routing_manager::e_search_mode_route_other_packet ),
 						data_route_ttl
 					); // push the tunneled data to where they belong // reinterpret char-signess
+					*/
 				}
 
 			} // e_proto_cmd_tunneled_data

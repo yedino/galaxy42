@@ -138,6 +138,18 @@ std::string to_string( const std::array<T,N> & obj ) {
 	return oss.str();
 }
 
+// for normal use (not for debug). T must be one of: char, unsigned char, signed char (or type castable to char)
+template<class T, std::size_t N>
+std::string to_binary_string( const std::array<T,N> & obj ) {
+	static_assert( sizeof(T) == 1 , "We should convert from array of char, or other 1-char sized T");
+	return std::string( reinterpret_cast<const char*>(obj.data()), obj.size() );
+}
+
+// for normal use (not for debug)
+template<class T, std::size_t N>
+std::basic_string<T> to_binary_string_basic_string( const std::array<T,N> & obj ) {
+	return std::basic_string<T>( obj.data(), obj.size() );
+}
 
 std::string to_debug(const std::string & data, t_debug_style style=e_debug_style_short_devel);
 std::string to_debug(const string_as_bin & data, t_debug_style style=e_debug_style_short_devel);

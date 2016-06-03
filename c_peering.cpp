@@ -4,6 +4,8 @@
 
 #include "protocol.hpp"
 
+#include "trivialserialize.hpp"
+
 // ------------------------------------------------------------------
 
 t_peering_reference::t_peering_reference(const t_ipv46dot & peering_addr, int port, const t_ipv6dot & peering_hip)
@@ -66,9 +68,19 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 
 // TODO unify array types! string_as_bin , unique_ptr to new c-array, raw c-array in libproto etc
 
-void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket, int ttl) {
+void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket,
+	c_haship_addr src_hip, c_haship_addr dst_hip, int ttl) {
 	_info("Send to peer (tunneled data) data: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
+	trivialserialize::generator gen(data_size + 50);
+	gen.push_byte_u( c_protocol::current_version );
+	gen.push_byte_u( c_protocol::e_proto_cmd_tunneled_data );
+	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
+	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
+	gen.push_byte_u( ttl );
+	gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
+
+/*
 	// TODONOW turn off this crypto (unless leave here for peer-to-peer auth only)
 	static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
 					198, 11, 53, 71, 210, 232, 187, 135, 116, 6, 195, 175,
@@ -102,8 +114,10 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 	unsigned long long protomsg_len = ciphertext_buf_len + header_size; // the output of crypto, plus the header in front
 
 	// TODO asserts!!!
+*/
 
-	this->send_data_RAW_udp( reinterpret_cast<const char *>(protomsg.get()), protomsg_len, udp_socket); // reinterpret: char/unsigned char
+	string protomsg = gen.str(); // TODO view_string
+	this->send_data_RAW_udp(protomsg.c_str(), protomsg.size(), udp_socket);
 }
 
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
@@ -116,7 +130,8 @@ void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_
 }
 
 void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int udp_socket) {
-	_info("UDP send to peer RAW. To IP: " << m_peering_addr << ", RAW-DATA: " << string_as_dbg(data,data_size).get() ); // TODO .get
+	_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
+		", RAW-DATA: " << to_debug_b(std::string(data,data_size)) );
 
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
