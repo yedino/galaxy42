@@ -1497,11 +1497,11 @@ int main(int argc, char **argv) {
 						   "*** this could overwrite your actual configurations ***")
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
-			("gen-lowest", "Generate lowest set of cryptographic keys:\n (1x 25519)")
-			("gen-fast", "Generate fast set of cryptographic keys:\n (1x 25519, 1x sidh)")
-			("gen-normal", "Generate normal set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
-			("gen-high", "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru, 1x geport)")
-			("gen-highest", "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru, 2x geport)")
+			("gen-lowest-idc", "Generate lowest set of cryptographic keys:\n (1x 25519)")
+			("gen-fast-idc", "Generate fast set of cryptographic keys:\n (1x 25519, 1x ntru)")
+			("gen-normal-idc", "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
+			("gen-high-idc", "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
+			("gen-highest-idc", "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru)")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1559,26 +1559,26 @@ int main(int argc, char **argv) {
 			}
 
 
-			if(argm.count("gen-highest")) {
+			if(argm.count("gen-highest-idc")) {
 				std::cout << "Generating highest cryptographic keys ..." << std::endl;
 				generate_config::crypto_set(e_crypto_set::highest);
 				return 0;
-			} else if(argm.count("gen-high")) {
+			} else if(argm.count("gen-high-idc")) {
 				std::cout << "Generating high cryptographic keys ..." << std::endl;
 				generate_config::crypto_set(e_crypto_set::high);
 				return 0;
 
-			} else if(argm.count("gen-normal")) {
+			} else if(argm.count("gen-normal-idc")) {
 				std::cout << "Generating normal cryptographic keys ..." << std::endl;
 				generate_config::crypto_set(e_crypto_set::normal);
 				return 0;
 
-			} else if(argm.count("gen-fast")) {
+			} else if(argm.count("gen-fast-idc")) {
 				std::cout << "Generating fast cryptographic keys ..." << std::endl;
 				generate_config::crypto_set(e_crypto_set::fast);
 				return 0;
 
-			} else if(argm.count("gen-lowest")) {
+			} else if(argm.count("gen-lowest-idc")) {
 				std::cout << "Generating lowest cryptographic keys ..." << std::endl;
 				generate_config::crypto_set(e_crypto_set::lowest);
 				return 0;
