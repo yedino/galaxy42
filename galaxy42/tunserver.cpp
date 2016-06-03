@@ -57,7 +57,7 @@ Current TODO / topics:
 
 */
 
-const char * disclaimer =
+const char * g_the_disclaimer =
 "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 // The name of the hardcoded default demo that will be run with --devel (unless option --develdemo is given) can be set here:
@@ -1406,10 +1406,12 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
+	_note("Demoname (from program options command line) is:" << demoname);
 
 	namespace poo = boost::program_options;
 	poo::options_description desc("Possible demos");
 	desc.add_options()
+				//	("none", "no demo: start program in normal mode instead (e.g. to ignore demo config file)")
 					("lang_optional", "foo boost::optional<>")
 					("foo", "foo test")
 					("bar", "bar test")
@@ -1459,10 +1461,12 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 }
 
 int main(int argc, char **argv) {
-	std::cerr << std::endl << disclaimer << std::endl << std::endl;
+	std::cerr << std::endl << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+
+	g_dbg_level=20;
 
 	{
-		std::cerr<<"Startig lib sodium..."<<std::endl;
+		std::cerr<<"Starting lib sodium..."<<std::endl;
 		ecdh_ChaCha20_Poly1305::init();
 	}
 
@@ -1487,6 +1491,13 @@ int main(int argc, char **argv) {
 		po::options_description desc("Options");
 		desc.add_options()
 			("help", "Print help messages")
+
+			("--debug", "-d")
+			("-d", "Debug")
+
+			("--quiet", "-q")
+			("-q", "Quiet")
+
 			("demo", po::value<string>()->default_value(""), "Try DEMO here. Run one of the compiled-in demonstrations of how program works. Use --demo help to see list of demos [TODO].")
 			("devel","Test: used by developer to run current test")
 			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
@@ -1517,8 +1528,9 @@ int main(int argc, char **argv) {
 
 			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
 				auto opt_demo = argm["demo"].as<string>();
-				_info("DEMO !");
 				if ( opt_demo!="" ) {
+					g_dbg_level_set(10,"Running in demo mode");
+					_info("The demo command line option is given:" << opt_demo);
 					// argm.insert(std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
 					argm.at("develdemo") = po::variable_value( opt_demo , false );
 					// (std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
@@ -1528,6 +1540,9 @@ int main(int argc, char **argv) {
 
 			if (argm.count("devel")) { // can also set up additional options
 				try {
+					g_dbg_level_set(10,"Running in devel mode");
+					_info("The devel mode is active");
+
 					bool should_continue = run_mode_developer(argm);
 					if (!should_continue) return 0;
 				}
@@ -1539,6 +1554,11 @@ int main(int argc, char **argv) {
 
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
+
+			// --- debug level for main program ---
+			g_dbg_level_set(50,"For normal program run");
+			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
+			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run");
 
 			if (argm.count("help")) { // usage
 				std::cout << desc;
