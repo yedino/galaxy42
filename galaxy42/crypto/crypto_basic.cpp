@@ -77,14 +77,6 @@ t_crypto_system_type c_crypto_system::get_system_type() const { return e_crypto_
 
 
 // ==================================================================
-// Random
-
-CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array) {
-	// DELETE ME
-	return CRYPTO_SUCCESS;
-}
-
-// ==================================================================
 
 t_hash Hash1( const t_hash & hash ) {
     // TODO I know this look horrible, we should implement some (unsigned char <-> char) wrapper

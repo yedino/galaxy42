@@ -148,7 +148,7 @@ recv IDe_bob_ASYM_PASS via KCTab
 recv IDe_bob via KCTab
 IDe_bob + IDe_bob_ASYM_PASS -> do KEX(+ASYM) -> KCTf !!
 
-----
+------
 
 a bit older - TODO update this:
 
@@ -181,6 +181,17 @@ c_crypto_tunnel - advanced connection between 1-1 Multikey, but adding e.g. ephe
 	construct( mk_pub , mk_PRV )
   	exchange_start( multikeys_pub , multikeys_PRV );
   	create_IDe();
+
+------
+                                                                  Hello - datagram (e.g. UDP)
+                                                             1052 Hello - packet (e.g. UDP)
+
+                                           fd42::01 fd42::02 1052 Hello - tundata - cleartext of user's tunneled data
+                                           7bqehbu8hbqhoba89hrgeg8qh8gq - blob - encrypted (end2end) user's tunneled data
+
+                   TTL=5  DST_HIP=fd42:002 7bqehbu8hbqhoba89hrgeg8qh8gq - cmddata
+
+V=1 CMD=tunneldata TTL=5 DST_HIP=fd42:002 7bqehbu8hbqhoba89hrgeg8qh8gq [AUTH-P2P] - protomsg (end2end encrypted)
 
  */
 
