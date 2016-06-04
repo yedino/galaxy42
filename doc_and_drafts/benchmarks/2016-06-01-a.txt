@@ -1,0 +1,28 @@
+
+All tests are run x3 to first "warm up".
+
+PCs used:
+Demeter (1000 Mbit)
+Laptop/HB (1000 Mbit)
+Laptop/MGA (1000 MBit)
+
+TODO: fill in :)
+
+PC---PC ( HB , Demeter )
+IPv4 speed: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+galaxy: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+cjdns: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+
+PC--switch--PC--switch--PC
+IPv4 speed: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+galaxy: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+cjdns: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+
+PC---PC---PC
+IPv4 speed: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+galaxy: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+cjdns: .... Mbit/s = .... MB/s , ping -c 10 avg .... ms
+
+
+
+

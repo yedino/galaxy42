@@ -1,6 +1,8 @@
 
 #include "strings_utils.hpp"
 
+#include "crypto/crypto_basic.hpp" // for hashing function
+
 #include "libs0.hpp"
 
 // ==================================================================
@@ -72,7 +74,6 @@ try {
 	// "ff020a" = ff , 02 , 0a
 	//   "020a" = 02 , 0a
 	//    "20a" = 02 , 0a
-	_info("Processing string: ["<< (encoded.data) << "]");
 	const auto es = encoded.data.size();
 	if (!es) return; // empty string encoded --> empty binary string
 
@@ -148,16 +149,17 @@ std::string chardbg(char c) {
 
 // ==================================================================
 
-string_as_dbg::string_as_dbg(const string_as_bin & bin)
-	: string_as_dbg( bin.bytes.begin() , bin.bytes.end() )
+string_as_dbg::string_as_dbg(const string_as_bin & bin, t_debug_style style)
+	: string_as_dbg( bin.bytes.begin() , bin.bytes.end() , style )
 { }
 
-string_as_dbg::string_as_dbg(const char * data, size_t data_size)
-	: string_as_dbg( string_as_bin( std::string(data,data_size) ) )
+string_as_dbg::string_as_dbg(const char * data, size_t data_size, t_debug_style style)
+	: string_as_dbg( string_as_bin( std::string(data,data_size) ) , style )
 { }
 
-void string_as_dbg::print(std::ostream & os, char v)
+void string_as_dbg::print(std::ostream & os, char v, t_debug_style style)
 {
+	UNUSED(style); // TODONOW
 	unsigned char uc = static_cast<unsigned char>(v);
 	signed char widthH=-1; // -1 is normal print, otherwise the width of hex
 	signed char widthD; // width of dec
@@ -176,8 +178,11 @@ void string_as_dbg::print(std::ostream & os, char v)
 	}
 	//
 }
-void string_as_dbg::print(std::ostream & os, signed char v) { print(os, static_cast<char>(v)); }
-void string_as_dbg::print(std::ostream & os, unsigned char v) { print(os, static_cast<char>(v)); }
+void string_as_dbg::print(std::ostream & os, signed char v, t_debug_style style)
+{ print(os, static_cast<char>(v), style); }
+
+void string_as_dbg::print(std::ostream & os, unsigned char v, t_debug_style style)
+{ print(os, static_cast<char>(v), style); }
 
 
 string_as_dbg::operator const std::string & () const {
@@ -187,17 +192,44 @@ const std::string & string_as_dbg::get() const {
 	return this->dbg;
 }
 
-std::string to_debug(const std::string & data) {
-	return string_as_dbg( string_as_bin( data ) ).get();
+std::string to_debug(const std::string & data, t_debug_style style) {
+	return string_as_dbg( string_as_bin( data ) , style ).get();
 }
 
-std::string to_debug(char data) {
-	return to_debug( std::string(1,data) );
+std::string to_debug(char data, t_debug_style style) {
+	return to_debug( std::string(1,data) , style );
+}
+
+std::string to_debug(const string_as_bin & data, t_debug_style style) {
+	return to_debug( data.bytes , style );
+}
+
+
+std::string to_debug_b(const std::string & data)
+	{ return  to_debug(data,e_debug_style_big); }
+std::string to_debug_b(const string_as_bin & data)
+	{ return  to_debug(data,e_debug_style_big); }
+std::string to_debug_b(char data)
+	{ return  to_debug(data,e_debug_style_big); }
+
+std::string debug_simple_hash(const std::string & str) {
+	string s = antinet_crypto::Hash1(str).substr(0,4) ;
+	string_as_bin bin( s );
+	return  string_as_hex( bin ).get();
 }
 
 
 
-
-
-
+std::ostream & operator<<(std::ostream & os, boost::any & obj) {
+	using namespace boost;
+	try { os << any_cast<char>(obj); return os ; } catch(...){}
+	try { os << any_cast<int>(obj); return os ; } catch(...){}
+	try { os << any_cast<bool>(obj); return os ; } catch(...){}
+	try { os << any_cast<float>(obj); return os ; } catch(...){}
+	try { os << any_cast<double>(obj); return os ; } catch(...){}
+	try { os << any_cast<string>(obj); return os ; } catch(...){}
+	try { os << to_debug( any_cast<vector<string>>( obj ) );  return os ; } catch(...){}
+	os << "(no-debug for this boost any type)";
+	return os;
+}
 

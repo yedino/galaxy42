@@ -3,36 +3,42 @@
 #define C_TNETDBG_HPP
 
 #include <cstdlib>
-
+#include <iostream>
 #include <string>
+
+extern unsigned char g_dbg_level;
 
 
 /// This macros will be moved later to glorious-cpp library or other
 
 const char * debug_shorten__FILE__(const char * name);
 
+void g_dbg_level_set(unsigned char level, std::string why);
+
 #define _my__FILE__ (debug_shorten__FILE__(__FILE__))
 
 #define SHOW_DEBUG
 #ifdef SHOW_DEBUG
 
-#define _dbg3(X) do { ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-#define _dbg2(X) do { ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-#define _dbg1(X) do { ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-#define _info(X) do { ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
-#define _note(X) do { ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define DBGLVL(N) if (!(N>=g_dbg_level)) break
+
+#define _dbg3(X) do { DBGLVL( 10); ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg2(X) do { DBGLVL( 20); ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _dbg1(X) do { DBGLVL( 30); ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _info(X) do { DBGLVL( 40); ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
+#define _note(X) do { DBGLVL( 50); ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
 /// yellow code
-#define _warn(X) do { \
+#define _warn(X) do { DBGLVL(100); \
 	::std::cerr<<"\033[93m\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
 	::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 } while(0)
 /// red code
-#define _erro(X) do { \
+#define _erro(X) do { DBGLVL(200); \
 	::std::cerr<<"\033[91m\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
 	::std::cerr<<"DAMN! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<"\033[0m"<<::std::endl; \
 } while(0)
-#define _mark(X) do { \
+#define _mark(X) do { DBGLVL(150); \
 	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
 	::std::cerr<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \

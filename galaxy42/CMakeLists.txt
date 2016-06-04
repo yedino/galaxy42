@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 
+add_definitions(-DSODIUMPP_OPTION_DEBUG=1) # XXX
+
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
 # and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
@@ -67,8 +69,12 @@ ADD_CUSTOM_TARGET(debug
 		COMMAND make)
 
 
+# more directories of my main code
+file(GLOB SOURCES_GROUP_CRYPTO crypto/*.cpp)
+
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
+
 
 if(CMAKE_BUILD_TYPE STREQUAL "Fast")
         message("Fast build")
@@ -89,22 +95,21 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
 endif()
 
-
 include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf tunserver.cpp)
 
-target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh)
+target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt ntrusign jsoncpp_lib_static sidh)
 
 
 add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
-	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp crypto.cpp
-	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp 
-	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp )
+	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp
+	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
+	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
 
-###tests
+#tests
 file(GLOB TEST_SOURCES "test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")

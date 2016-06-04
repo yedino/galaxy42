@@ -1,5 +1,7 @@
 #include "generate_config.hpp"
 
+std::string generate_config::m_crypto_set_name = "current_keys";
+
 
 void generate_config::crypto_set(e_crypto_set cryptoset) {
 
@@ -18,5 +20,5 @@ void generate_config::crypto_set(e_crypto_set cryptoset) {
 	case e_crypto_set::lowest:
 		keypair.generate(antinet_crypto::e_crypto_system_type_X25519, 1);
 	}
-	keypair.datastore_save_PRV_and_pub("current_keys");
+	keypair.datastore_save_PRV_and_pub(generate_config::m_crypto_set_name);
 }

@@ -1,37 +1,26 @@
 
 
 #include "haship.hpp"
+#include "strings_utils.hpp"
 
 #include <sodium.h>
 
 
 // c_haship_addr :
-c_haship_addr::c_haship_addr() : std::array<unsigned char, g_haship_addr_size>({{}}) { }
+c_haship_addr::c_haship_addr()
+	 : std::array<unsigned char, g_haship_addr_size>({{}})
+{ }
 
-c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey & pubkey ) : std::array<unsigned char, g_haship_addr_size>({{}}) {
+c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey & pubkey)
+	 : std::array<unsigned char, g_haship_addr_size>({{}})
+{
 	_info("Creating HIP from pubkey: " << pubkey);
 
-	// TODO(r) [crypto] hashing of pubkey to HIP - review this
-	unsigned char hash[crypto_generichash_BYTES];
-	string_as_bin pubkey_bin( pubkey );
-	_info("Creating HIP from pubkey: " << string_as_dbg(pubkey_bin).get());
-	crypto_generichash(hash, sizeof hash, reinterpret_cast<const unsigned char*>(pubkey_bin.bytes.c_str()), pubkey_bin.bytes.size(), NULL, 0);
-	//_info("...creating: " << string_as_dbg(string_as_bin( reinterpret_cast<const char*>(hash), sizeof hash)).get());
-
-	crypto_generichash(hash, sizeof hash, hash, sizeof hash, NULL, 0);
-	//_info("...creating: " << string_as_dbg(string_as_bin( reinterpret_cast<const char*>(hash), sizeof hash)).get());
-
-	// TODO(r) repeat untill we "bruteforce" an fd42 ?
-
-	at(0) = 0xfd;
-	at(1) = 0x42;
-	assert( sizeof hash >= 16 );
-	for (size_t i=2; i<16; ++i) {
-		at(i) = hash[i];
-	}
+	string addr = pubkey.get_ipv6_string_bin();
+	for (size_t i=0; i<16; ++i) at(i) = addr.at(i);
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_string ) { ///< create the IP address from a string (as dot/colon IP notation)
+c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string ) {
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//throw std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__));
 
@@ -61,7 +50,6 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_stri
 		while(gr.size() < 4) gr.insert(0,1,'0');
 		grtab.push_back(gr);
 	}
-	
 	//_note("Parsed as:");
 	size_t pos=0;
 	for(const string & gr: grtab) {
@@ -77,9 +65,12 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_string, const string & addr_stri
 	}
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const string_as_bin & data ) {
-	assert( this->size() == data.bytes.size() );
-	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.bytes.at(i);
+c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
+	if (! ( this->size() == data.size() ) ) {
+		ostringstream oss; oss << "Trying to set hip address from binary data " << to_debug_b(data);
+		throw runtime_error(oss.str());
+	}
+	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.at(i);
 }
 
 void c_haship_addr::print(ostream &ostr) const {
@@ -89,18 +80,20 @@ void c_haship_addr::print(ostream &ostr) const {
 ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
 
 void c_haship_pubkey::print(ostream &ostr) const {
-	string_as_hex dbg( string_as_bin(*this) );
-	ostr << "pub:" << dbg.get();
+	ostr << "pub:" << ::to_debug(this->serialize_bin());
 }
 ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	return ostr; }
 
 
 
 // c_haship_pubkey :
-c_haship_pubkey::c_haship_pubkey() : std::array<unsigned char, g_haship_pubkey_size>({{}}) { }
-c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) : std::array<unsigned char, g_haship_pubkey_size>({{}}) {
-	for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
+c_haship_pubkey::c_haship_pubkey() { }
+
+c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) {
+	_mark("Loadig pubkey from: " << ::to_debug(input) );
+	this->load_from_bin(input.bytes);
+	_mark("After loading: " << (*this) );
+	//for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
 //	for(auto v : input.bytes) at(
 }
- 
 

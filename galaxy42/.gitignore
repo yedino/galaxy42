@@ -14,3 +14,5 @@ jsoncpp/
 
 build_extra/
 
+# fftw wisdom files
+data/
