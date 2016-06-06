@@ -6,6 +6,8 @@
 #include "haship.hpp"
 #include "protocol.hpp"
 
+#include "crypto/crypto_basic.hpp"
+
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
 struct t_peering_reference {
@@ -33,6 +35,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		virtual c_ip46_addr get_pip() const;
 
 		virtual void set_pubkey( std::unique_ptr<c_haship_pubkey> && pubkey ); ///< consume this pubkey and set as mine
+		bool is_pubkey() const; ///< do we have a valid pubkey set
 
 		friend class c_tunserver;
 
@@ -50,7 +53,7 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 
 		virtual void send_data(const char * data, size_t data_size) override;
 		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket,
-			c_haship_addr src_hip, c_haship_addr dst_hip, int ttl);
+			c_haship_addr src_hip, c_haship_addr dst_hip, int ttl, antinet_crypto::t_crypto_nonce nonce_used);
 		virtual void send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket);
 	private:
 
