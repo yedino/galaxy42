@@ -76,6 +76,7 @@ const char * g_demoname_default = "route_dij";
 #include <string>
 #include <iomanip>
 #include <algorithm>
+#include <streambuf>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1582,6 +1583,7 @@ int main(int argc, char **argv) {
 			("gen-normal-idc", po::value<string>()->implicit_value("current_keys"), "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
 			("gen-high-idc", po::value<string>()->implicit_value("current_keys"), "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
 			("gen-highest-idc", po::value<string>()->implicit_value("current_keys"), "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru)")
+			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1681,6 +1683,24 @@ int main(int argc, char **argv) {
 				std::cout << "Generating lowest cryptographic keys ..." << std::endl;
 				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
 				generate_config::crypto_set(e_crypto_set::lowest);
+				return 0;
+			}
+
+			if(argm.count("sign-with-key")) {
+				auto arguments = argm["sign-with-key"].as<std::vector<std::string>>();
+				auto file_to_sign = arguments.at(0);
+				auto sign_key =arguments.at(1);
+				_dbg1("start signing file " << file_to_sign);
+				_dbg1("using key " << file_to_sign);
+				antinet_crypto::c_multikeys_PAIR multi_key_pair;
+				multi_key_pair.datastore_load_PRV_and_pub(sign_key);
+				_dbg1("load file to sign");
+				std::ifstream input_file(file_to_sign);
+				std::string file_content(
+					(std::istreambuf_iterator<char>(input_file)),
+					(std::istreambuf_iterator<char>())
+				);
+				auto sign = multi_key_pair.multi_sign(file_content);
 				return 0;
 			}
 
