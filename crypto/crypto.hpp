@@ -287,7 +287,9 @@ class c_stream final /* because strange ctor init list functions */
 		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
 
 		std::string box(const std::string & msg);
+		std::string box(const std::string & msg, t_crypto_nonce & nonce); ///< box this cleartext, and OUT the nonce that was used
 		std::string unbox(const std::string & msg);
+		std::string unbox(const std::string & msg, t_crypto_nonce nonce, bool force_nonce=1); ///< unbox, but using given nonce
 
 		virtual t_crypto_system_type get_system_type() const;
 
@@ -338,10 +340,14 @@ class c_crypto_tunnel {
 		std::string get_packetstart_final() const;
 
 		std::string box_ab(const std::string & msg);
+		std::string box_ab(const std::string & msg, t_crypto_nonce & nonce); ///< box this cleartext, and OUT the nonce that was used
 		std::string unbox_ab(const std::string & msg);
+		std::string unbox_ab(const std::string & msg, t_crypto_nonce nonce); ///< unbox, but using given nonce
 
 		std::string box(const std::string & msg);
+		std::string box(const std::string & msg, t_crypto_nonce & nonce); ///< box this cleartext, and OUT the nonce that was used
 		std::string unbox(const std::string & msg);
+		std::string unbox(const std::string & msg, t_crypto_nonce nonce); ///< unbox, but using given nonce
 
 };
 

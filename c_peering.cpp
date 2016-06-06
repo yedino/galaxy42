@@ -53,6 +53,8 @@ void c_peering::set_pubkey( std::unique_ptr<c_haship_pubkey> && pubkey ) {
 	m_pubkey = std::move(pubkey);
 }
 
+bool c_peering::is_pubkey() const { return m_pubkey != nullptr; }
+
 // ------------------------------------------------------------------
 
 c_peering_udp::c_peering_udp(const t_peering_reference & ref)
@@ -69,7 +71,7 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 // TODO unify array types! string_as_bin , unique_ptr to new c-array, raw c-array in libproto etc
 
 void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket,
-	c_haship_addr src_hip, c_haship_addr dst_hip, int ttl) {
+	c_haship_addr src_hip, c_haship_addr dst_hip, int ttl, antinet_crypto::t_crypto_nonce nonce_used) {
 	_info("Send to peer (tunneled data) data: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
 	trivialserialize::generator gen(data_size + 50);
@@ -78,6 +80,7 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
 	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
 	gen.push_byte_u( ttl );
+	gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
 	gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
 
 /*

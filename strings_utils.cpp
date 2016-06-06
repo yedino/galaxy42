@@ -220,4 +220,16 @@ std::string debug_simple_hash(const std::string & str) {
 
 
 
+std::ostream & operator<<(std::ostream & os, boost::any & obj) {
+	using namespace boost;
+	try { os << any_cast<char>(obj); return os ; } catch(...){}
+	try { os << any_cast<int>(obj); return os ; } catch(...){}
+	try { os << any_cast<bool>(obj); return os ; } catch(...){}
+	try { os << any_cast<float>(obj); return os ; } catch(...){}
+	try { os << any_cast<double>(obj); return os ; } catch(...){}
+	try { os << any_cast<string>(obj); return os ; } catch(...){}
+	try { os << to_debug( any_cast<vector<string>>( obj ) );  return os ; } catch(...){}
+	os << "(no-debug for this boost any type)";
+	return os;
+}
 
