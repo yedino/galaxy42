@@ -125,6 +125,8 @@ class c_multisign : public c_multicryptostrings< std::string > {
 		 * 		   false otherwise
 		 */
 		static bool cryptosystem_sign_allowed (t_crypto_system_type crypto_system);
+
+		std::string serialize_bin() const override;
 };
 
 
