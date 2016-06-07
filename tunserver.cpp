@@ -1661,19 +1661,19 @@ int main(int argc, char **argv) {
 					_dbg1("parse argument " << argument);
 					std::replace(argument.begin(), argument.end(), ':', ' ');
 					std::istringstream iss(argument);
-					std::string a;
-					iss >> a;
-					_dbg1("type = " << a);
-					antinet_crypto::t_crypto_system_type type; // TODO set this variable
-					iss >> a;
-					assert(a[0] == 'x');
-					a.erase(a.begin());
-					int number_of_keys = std::stoi(a);
+					std::string str;
+					iss >> str;
+					_dbg1("type = " << str);
+					antinet_crypto::t_crypto_system_type type = antinet_crypto::t_crypto_system_type_from_string(str);
+					iss >> str;
+					assert(str[0] == 'x');
+					str.erase(str.begin());
+					int number_of_keys = std::stoi(str);
 					_dbg1("number_of_keys" << number_of_keys);
 					keys.emplace_back(std::make_pair(type, number_of_keys));
 				}
 
-//				generate_config::any_crypto_set(output_file, keys);
+				generate_config::any_crypto_set(output_file, keys);
 
 				return 0;
 			}
