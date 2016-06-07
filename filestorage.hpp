@@ -14,7 +14,8 @@ namespace fs=boost::filesystem;
 
 enum t_filestore : unsigned char {
 	e_filestore_wallet_galaxy_ipkeys_PRV = 0,
-	e_filestore_galaxy_ipkeys_pub = 1
+	e_filestore_galaxy_ipkeys_pub = 1,
+	e_filestore_galaxy_signature = 2
 };
 // TODO doc
 // TODO more tests
