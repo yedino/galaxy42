@@ -211,18 +211,22 @@ unique_ptr<c_world> draft_net2() { // the main function for test
 	world.add_node("nodeC4",300,450);
 	world.add_node("nodeD", 50,200);
 	world.add_node("nodeE",400,100); // ***
-	world.add_node("nodeF1",600,100);
-	world.add_node("nodeF2",600,150);
-	world.add_node("nodeF3",600,200);
-	world.add_node("nodeF4",600,250);
-	world.add_node("nodeF5",600,300);
-	world.add_node("nodeF6",600,350);
-	world.add_node("nodeF7",600,400);
+
+	{ int i=0, a=80, x0=500, y0=120;
+	world.add_node("nodeF1",x0,y0+(a*i++));
+	world.add_node("nodeF2",x0,y0+(a*i++));
+	world.add_node("nodeF3",x0,y0+(a*i++));
+	world.add_node("nodeF4",x0,y0+(a*i++));
+	world.add_node("nodeF5",x0,y0+(a*i++));
+	world.add_node("nodeF6",x0,y0+(a*i++));
+	world.add_node("nodeF7",x0,y0+(a*i++));
+	}
 
 	world.add_node("nodeG1",650,100);
 	world.add_node("nodeG2",650,300);
 
-	world.add_node("nodeX",700,500);
+	world.add_node("nodeP",750,500);
+	world.add_node("nodeX",800,500);
 	
 	world.add_osi2_switch("swA", 200,100);
 	world.add_osi2_switch("swB", 300,100);
@@ -256,8 +260,9 @@ unique_ptr<c_world> draft_net2() { // the main function for test
 	world.connect_network_devices("nodeF5","nodeG2", 1);
 	world.connect_network_devices("nodeG2","nodeG1", 1);
 
-	world.connect_network_devices("nodeG1","nodeX", 1);
-	world.connect_network_devices("swD","nodeX", 50);
+	world.connect_network_devices("nodeG1","nodeP", 1);
+	world.connect_network_devices("swD","nodeP", 50);
+	world.connect_network_devices("nodeP","nodeX", 2);
 
 	
 	_mark("Testing - show object:");

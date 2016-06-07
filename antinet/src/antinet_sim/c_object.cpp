@@ -85,7 +85,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
     auto layer = dynamic_cast<c_layer_opengl &> (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
-    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+ 		// const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
     glPushMatrix();
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {

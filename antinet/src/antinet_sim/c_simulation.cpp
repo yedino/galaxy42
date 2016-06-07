@@ -147,8 +147,7 @@ void c_simulation::main_loop ()
 	float view_angle = 0.0;
 	//float camera_offset = 1.0;
 
-	float zoom = 1.0;
-	float camera_step_z = -11.0;
+	float zoom = 1.0;	float camera_step_z = -11.0;
 
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) {
@@ -687,6 +686,7 @@ void c_simulation::main_loop ()
 							_info ("please choose target and source switch");
 						}
 					else {
+							_note("Starting simulation");
 							auto source = m_gui->m_source_node;
 							auto target = m_gui->m_target_node;
 							c_osi2_switch *source_node = dynamic_cast<c_osi2_switch *> ( (*source).get());
