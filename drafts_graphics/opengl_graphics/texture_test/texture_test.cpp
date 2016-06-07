@@ -109,6 +109,7 @@ void RenderScene() {
         glTexCoord2d(0,0); glVertex3f( -1.0f,  1.0f, 0.0f );
     glEnd();
 
+
     glBegin( GL_QUADS );        //right
        // glColor3f( 0.5f, 0.2f, 0.1f );
         glTexCoord2d(0,1); glVertex3f( 1.0f, -1.0f, 0.0f );
@@ -125,8 +126,6 @@ void RenderScene() {
         glTexCoord2d(0,0); glVertex3f( -1.0f,  1.0f, -1.0f );
     glEnd();
 
-    glDisable(GL_BLEND);
-    glDisable(GL_TEXTURE_2D);       // disable texture 2d when we don't use it
 
     glBegin( GL_QUADS );        //down
         glColor3f( 0.3f, 0.8f, 0.3f );
@@ -151,8 +150,14 @@ void RenderScene() {
         glVertex3f(  -1.0f,  1.0f, -1.0f );
         glVertex3f( -1.0f,  1.0f, 0.0f );
     glEnd();
-    glPopMatrix();
 
+
+
+    glDisable(GL_BLEND);
+	  glDisable(GL_TEXTURE_2D);       // disable texture 2d when we don't use it
+
+
+    glPopMatrix();
 
     // draw triangles in some places
     glPushMatrix();
@@ -194,7 +199,9 @@ int main(int argc, char* argv[]) {
     InitGL();
     glutInit(&argc, argv);
 
-    texture = load_png("server_96x96.png",NULL);
+    // texture = load_png("server_96x96.png",NULL);
+    texture = load_png("5140603528_533e70da06_b.png",NULL);
+    std::cout << (void*)texture << std::endl;
 
     //allegro_gl_use_mipmapping(TRUE);
     //texture_id = allegro_gl_make_masked_texture(texture);
