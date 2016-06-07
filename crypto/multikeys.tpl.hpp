@@ -257,6 +257,14 @@ void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 			load_from_bin(buff_safe.get_string());
 			break;
 		}
+		case e_crypto_use_signature: {
+			_note("Load this as signature");
+			data = filestorage::load_string(e_filestore_galaxy_signature, fname);
+			clear();
+			_info("Loading: reading now");
+			load_from_bin(data);
+			break;
+		}
 		default:
 			throw std::runtime_error("Can not handle this crypto_use");
 	}
