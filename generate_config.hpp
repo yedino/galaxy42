@@ -25,10 +25,13 @@ public:
 	 */
 	static void crypto_sign (e_crypto_strength strength);
 	/**
-	 * @brief crypto_current Create set of current keys with ability to make DN exchange
+	 * @brief crypto_current Create set of current keys with ability to make DH exchange
 	 * @param strength
 	 */
 	static void crypto_exchange (e_crypto_strength strength);
+
+	static void any_crypto_set(const std::string &filename,
+							   const std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> &keys);
 
 	static std::string get_crypto_sign_name();
 	static std::string get_crypto_exchange_name();
