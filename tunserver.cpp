@@ -1709,7 +1709,13 @@ int main(int argc, char **argv) {
 					(std::istreambuf_iterator<char>(input_file)),
 					(std::istreambuf_iterator<char>())
 				);
+				_dbg1("file contet loaded, start sign");
 				auto sign = multi_key_pair.multi_sign(file_content);
+				_dbg1("End of sign");
+				_dbg1("signature: ");
+				sign.print_signatures();
+				auto serialized = sign.serialize_bin();
+				filestorage::save_string(e_filestore_galaxy_signature, file_to_sign, serialized, true);
 				return 0;
 			}
 

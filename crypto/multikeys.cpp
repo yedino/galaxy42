@@ -98,6 +98,15 @@ bool c_multisign::cryptosystem_sign_allowed(t_crypto_system_type crypto_system) 
 	return false;
 }
 
+string c_multisign::serialize_bin() const {
+	trivialserialize::generator gen(100);
+	gen.push_byte_u(antinet_crypto::e_crypto_system_type_Ed25519);
+	gen.push_vector_string(get_signature_vec(antinet_crypto::e_crypto_system_type_Ed25519));
+	gen.push_byte_u(antinet_crypto::e_crypto_system_type_NTRU_sign);
+	gen.push_vector_string(get_signature_vec(antinet_crypto::e_crypto_system_type_NTRU_sign));
+	return gen.str();
+}
+
 // ==================================================================
 // c_multikeys_pub
 
