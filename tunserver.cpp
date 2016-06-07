@@ -1583,6 +1583,7 @@ int main(int argc, char **argv) {
 			("set-key-file",po::value<string>()->default_value(""), "Set current keys file")
 
 			("gen-key",po::value<std::vector<std::string>>()->multitoken(), "Generate any combination of crypto keys" )
+			("out-private", po::value<std::string>(), "Output private key file name")
 			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
@@ -1649,7 +1650,32 @@ int main(int argc, char **argv) {
 				}
 			}
 			if(argm.count("gen-key")) {
+				std::string output_file("current_key");
+				if (argm.count("out-private")) {
+					output_file = argm["out-private"].as<std::string>();
+				}
+				_dbg2("output file " << output_file);
+				std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
 				auto arguments = argm["gen-key"].as<std::vector<std::string>>();
+				for (auto argument : arguments) {
+					_dbg1("parse argument " << argument);
+					std::replace(argument.begin(), argument.end(), ':', ' ');
+					std::istringstream iss(argument);
+					std::string a;
+					iss >> a;
+					_dbg1("type = " << a);
+					antinet_crypto::t_crypto_system_type type; // TODO set this variable
+					iss >> a;
+					assert(a[0] == 'x');
+					a.erase(a.begin());
+					int number_of_keys = std::stoi(a);
+					_dbg1("number_of_keys" << number_of_keys);
+					keys.emplace_back(std::make_pair(type, number_of_keys));
+				}
+
+//				generate_config::any_crypto_set(output_file, keys);
+
+				return 0;
 			}
 
 			if(argm.count("sign-with-key")) {
