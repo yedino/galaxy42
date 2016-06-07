@@ -5,6 +5,8 @@
 
 #include "c_drawtarget_opengl.hpp"
 
+#include "draft_net2.hpp"
+
 unsigned int g_max_anim_frame = 250;
 unsigned int g_max_frameRate = 60;
 
@@ -87,6 +89,10 @@ std::string cjddev_detail_random_addr ()
 	return std::to_string (distribution (generator));
 }
 
+void c_simulation::set_world( unique_ptr<c_world> && world ) { ///< takes this world and uses it
+	m_world = std::move(world);
+}
+
 
 void c_simulation::main_loop ()
 {
@@ -95,7 +101,11 @@ void c_simulation::main_loop ()
 		allegro_gl_destroy_font (f);
 	});
 
-	m_world->load ("layout/current/map2.txt");
+	unique_ptr<c_world> test_world(std::move( draft_net2() ));
+
+	set_world( std::move(test_world)  );
+
+	//m_world->load ("layout/current/map2.txt");
 
 	for (auto & obj : m_world->m_objects) {
 			obj->set_font (s_font_allegl);

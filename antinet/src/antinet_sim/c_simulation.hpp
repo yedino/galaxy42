@@ -14,7 +14,7 @@ public:
 	bool m_goodbye; ///< should we exit the program
 	unsigned long int m_frame_number; ///< current frame of animation
 	unique_ptr<c_world> m_world; ///< all the objects in this world
-    std::shared_ptr <FONT> s_font_allegl;
+  std::shared_ptr <FONT> s_font_allegl;
 
 	c_simulation(t_drawtarget_type drawtarget_type); ///< create the simulation. choose the drawtarget type (drawing engine e.g. Allegro or OpenGL)
 //c_simulation(); // t_drawtarget_type drawtarget_type); ///< create the simulation. choose the drawtarget type (drawing engine e.g. Allegro or OpenGL)
@@ -24,8 +24,10 @@ public:
 
 	void init ();
 
-    void main_loop ();
-    bool get_is_pause();
+	void main_loop ();
+	bool get_is_pause();
+
+	void set_world( unique_ptr<c_world> && world ); ///< takes this world and uses it
 
 private:
 
