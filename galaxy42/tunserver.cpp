@@ -1578,6 +1578,16 @@ int main(int argc, char **argv) {
 						   "*** this could overwrite your actual configurations ***")
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
+
+			("set-key", po::value<string>()->default_value(""), "Set current keys by signing it with your permanent keys")
+			("set-key-file",po::value<string>()->default_value(""), "Set current keys file")
+
+			("gen-lowest-idp", po::value<string>()->implicit_value("permanent_keys"), "Generate lowest set of cryptographic keys:\n (1x 25519)")
+			("gen-fast-idp", po::value<string>()->implicit_value("permanent_keys"), "Generate fast set of cryptographic keys:\n (1x 25519, 1x ntru)")
+			("gen-normal-idp", po::value<string>()->implicit_value("permanent_keys"), "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
+			("gen-high-idp", po::value<string>()->implicit_value("permanent_keys"), "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
+			("gen-highest-idp", po::value<string>()->implicit_value("permanent_keys"), "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru)")
+
 			("gen-lowest-idc", po::value<string>()->implicit_value("current_keys"), "Generate lowest set of cryptographic keys:\n (1x 25519)")
 			("gen-fast-idc", po::value<string>()->implicit_value("current_keys"), "Generate fast set of cryptographic keys:\n (1x 25519, 1x ntru)")
 			("gen-normal-idc", po::value<string>()->implicit_value("current_keys"), "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
@@ -1651,39 +1661,75 @@ int main(int argc, char **argv) {
 			}
 
 
+			if(argm.count("gen-highest-idp")) {
+				generate_config::m_crypto_permanent_name = argm["gen-highest-idp"].as<std::string>();
+				std::cout << "Generating highest permanent cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_permanent_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::highest);
+				return 0;
+
+			} else if(argm.count("gen-high-idp")) {
+				generate_config::m_crypto_permanent_name = argm["gen-high-idp"].as<std::string>();
+				std::cout << "Generating high permanent cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_permanent_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::high);
+				return 0;
+
+			} else if(argm.count("gen-normal-idp")) {
+				generate_config::m_crypto_permanent_name = argm["gen-normal-idp"].as<std::string>();
+				std::cout << "Generating normal permanent cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_permanent_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::normal);
+				return 0;
+
+			} else if(argm.count("gen-fast-idp")) {
+				generate_config::m_crypto_permanent_name = argm["gen-fast-idp"].as<std::string>();
+				std::cout << "Generating fast permanent cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_permanent_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::fast);
+				return 0;
+
+			} else if(argm.count("gen-lowest-idp")) {
+				generate_config::m_crypto_permanent_name = argm["gen-lowest-idp"].as<std::string>();
+				std::cout << "Generating lowest permanent cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_permanent_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::lowest);
+				return 0;
+			}
+
 			if(argm.count("gen-highest-idc")) {
-				generate_config::m_crypto_set_name = argm["gen-highest-idc"].as<std::string>();
-				std::cout << "Generating highest cryptographic keys ..." << std::endl;
-				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
-				generate_config::crypto_set(e_crypto_set::highest);
+				generate_config::m_crypto_current_name = argm["gen-highest-idc"].as<std::string>();
+				std::cout << "Generating highest current cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_current_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::highest);
 				return 0;
 
 			} else if(argm.count("gen-high-idc")) {
-				generate_config::m_crypto_set_name = argm["gen-high-idc"].as<std::string>();
-				std::cout << "Generating high cryptographic keys ..." << std::endl;
-				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
-				generate_config::crypto_set(e_crypto_set::high);
+				generate_config::m_crypto_current_name = argm["gen-high-idc"].as<std::string>();
+				std::cout << "Generating high current cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_current_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::high);
 				return 0;
 
 			} else if(argm.count("gen-normal-idc")) {
-				generate_config::m_crypto_set_name = argm["gen-normal-idc"].as<std::string>();
-				std::cout << "Generating normal cryptographic keys ..." << std::endl;
-				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
-				generate_config::crypto_set(e_crypto_set::normal);
+				generate_config::m_crypto_current_name = argm["gen-normal-idc"].as<std::string>();
+				std::cout << "Generating normal current cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_current_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::normal);
 				return 0;
 
 			} else if(argm.count("gen-fast-idc")) {
-				generate_config::m_crypto_set_name = argm["gen-fast-idc"].as<std::string>();
-				std::cout << "Generating fast cryptographic keys ..." << std::endl;
-				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
-				generate_config::crypto_set(e_crypto_set::fast);
+				generate_config::m_crypto_current_name = argm["gen-fast-idc"].as<std::string>();
+				std::cout << "Generating fast current cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_current_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::fast);
 				return 0;
 
 			} else if(argm.count("gen-lowest-idc")) {
-				generate_config::m_crypto_set_name = argm["gen-lowest-idc"].as<std::string>();
-				std::cout << "Generating lowest cryptographic keys ..." << std::endl;
-				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
-				generate_config::crypto_set(e_crypto_set::lowest);
+				generate_config::m_crypto_current_name = argm["gen-lowest-idc"].as<std::string>();
+				std::cout << "Generating lowest current cryptographic keys ..." << std::endl;
+				std::cout << "Output file: " << generate_config::m_crypto_current_name << std::endl;
+				generate_config::crypto_current(e_crypto_strength::lowest);
 				return 0;
 			} else if (argm.count("gen-idp")) {
 				generate_config::m_crypto_set_name = "IDP";
