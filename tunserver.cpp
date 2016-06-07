@@ -1696,13 +1696,14 @@ int main(int argc, char **argv) {
 					(std::istreambuf_iterator<char>(input_file)),
 					(std::istreambuf_iterator<char>())
 				);
+
 				_dbg1("file contet loaded, start sign");
 				auto sign = multi_key_pair.multi_sign(file_content);
 				_dbg1("End of sign");
 				_dbg1("signature: ");
 				sign.print_signatures();
 				auto serialized = sign.serialize_bin();
-				filestorage::save_string(e_filestore_galaxy_signature, file_to_sign, serialized, true);
+	//			filestorage::save_string(e_filestore_galaxy_signature, file_to_sign, serialized, true);
 				return 0;
 			}
 
@@ -1711,18 +1712,23 @@ int main(int argc, char **argv) {
 				auto file_to_verify = arguments.at(0);
 				auto verify_key_file_name =	arguments.at(1);
 				auto clear_text_file_name = file_to_verify;
-				std::string signature = filestorage::load_string(e_filestore_galaxy_signature, file_to_verify);
+				_dbg1("verify_key_file_name " << verify_key_file_name);
+				clear_text_file_name.erase(clear_text_file_name.end() - 4, clear_text_file_name.end());
+				_dbg1("clear_text_file_name " << clear_text_file_name);
+				std::string signature = filestorage::load_string(e_filestore_local_path, file_to_verify);
 				antinet_crypto::c_multisign multisign;
 				multisign.load_from_bin(signature);
 				//std::string key = filestorage::load_string(e_filestore_galaxy_signature, verify_key_file_name);
 
 				antinet_crypto::c_multikeys_pub pub_key;
 				pub_key.datastore_load(verify_key_file_name);
-				std::ifstream input_file(clear_text_file_name);
+
+				std::string file_content = filestorage::load_string(e_filestore_local_path, clear_text_file_name);
+				/*std::ifstream input_file(clear_text_file_name);
 				std::string file_content(
 					(std::istreambuf_iterator<char>(input_file)),
 					(std::istreambuf_iterator<char>())
-				);
+				);*/
 				try {
 					antinet_crypto::c_multikeys_pub::multi_sign_verify(multisign, file_content, pub_key);
 				}
