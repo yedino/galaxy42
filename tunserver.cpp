@@ -1583,6 +1583,7 @@ int main(int argc, char **argv) {
 			("gen-normal-idc", po::value<string>()->implicit_value("current_keys"), "Generate normal set of cryptographic keys:\n (1x 25519, 1x ntru)")
 			("gen-high-idc", po::value<string>()->implicit_value("current_keys"), "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
 			("gen-highest-idc", po::value<string>()->implicit_value("current_keys"), "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru)")
+			("gen-idp", "Generate ID permanent keys")
 			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
@@ -1684,6 +1685,11 @@ int main(int argc, char **argv) {
 				std::cout << "Output file: " << generate_config::m_crypto_set_name << std::endl;
 				generate_config::crypto_set(e_crypto_set::lowest);
 				return 0;
+			} else if (argm.count("gen-idp")) {
+				generate_config::m_crypto_set_name = "IDP";
+				std::cout << "Generate ID permanent" << std::endl;
+				generate_config::crypto_set(e_crypto_set::idp_normal);
+				return 0;
 			}
 
 			if(argm.count("sign-with-key")) {
@@ -1693,6 +1699,9 @@ int main(int argc, char **argv) {
 				_dbg1("start signing file " << file_to_sign);
 				_dbg1("using key " << file_to_sign);
 				antinet_crypto::c_multikeys_PAIR multi_key_pair;
+				// load IDP
+				// TODO
+				// multi_key_pair.add_public_and_PRIVATE()
 				multi_key_pair.datastore_load_PRV_and_pub(sign_key);
 				_dbg1("load file to sign");
 				std::ifstream input_file(file_to_sign);
