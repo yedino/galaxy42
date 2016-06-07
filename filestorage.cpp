@@ -22,6 +22,7 @@ void filestorage::save_string(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: " + filename);
 	}
 	file.close();
+	_dbg2("Successfully saved string to:" << file_with_path.native());
 }
 
 void filestorage::save_string_mlocked(t_filestore file_type,
@@ -41,6 +42,7 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 	std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
 
 	std::fclose(f_ptr);
+	_dbg2("Successfully saved mlocked string to:" << file_with_path.native());
 }
 
 std::string filestorage::load_string(t_filestore file_type,
@@ -57,6 +59,7 @@ std::string filestorage::load_string(t_filestore file_type,
 
 		ifs.close();
 	}
+	_dbg2("Successfully loaded string from:" << file_with_path.native());
 	return content;
 }
 
@@ -86,25 +89,24 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 	}
 	std::fclose(f_ptr);
 
+	_dbg2("Successfully loaded mlocked string from:" << file_with_path.native());
 	return content;
 }
 
 bool filestorage::is_file_ok(const std::string &filename) {
 	fs::path p(filename);
-
 	try {
 		if (fs::exists(p)) {    // does p actually exist?
 			if (fs::is_regular_file(p)) {       // is p a regular file?
 			} else if (fs::is_directory(p)) {     // is p a directory?
-				std::cout << p << " is a directory" << std::endl;
+				// std::cout << p << " is a directory" << std::endl; // dbg
 				return 0;
 			} else {
-				std::cout << p << " exists, but is neither a regular file nor a directory"
-						  << std::endl;
+				// std::cout << p << " exists, but is neither a regular file nor a directory" << std::endl; // dbg
 				return 0;
 			}
 		} else {
-			std::cout << p << " does not exist" << std::endl;
+			// std::cout << p << " does not exist" << std::endl; // dbg
 			return 0;
 		}
 	} catch (const fs::filesystem_error& ex) {
