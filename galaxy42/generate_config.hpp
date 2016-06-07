@@ -11,7 +11,8 @@ enum class e_crypto_set : unsigned char {
 	fast,
 	normal,
 	high,
-	highest
+	highest,
+	idp_normal
 };
 
 
