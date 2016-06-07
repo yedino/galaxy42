@@ -203,6 +203,7 @@ fs::path filestorage::get_path_for(t_filestore file_type,
 			break;
 		}
 	}
+	_dbg3("full_path " << full_path);
 	return full_path;
 }
 

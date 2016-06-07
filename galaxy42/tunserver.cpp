@@ -1585,7 +1585,7 @@ int main(int argc, char **argv) {
 			("gen-key",po::value<std::vector<std::string>>()->multitoken(), "Generate any combination of crypto keys" )
 			("out-private", po::value<std::string>(), "Output private key file name")
 			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
-			("verify-with-key", po::value<vector<string>>()->multitoken(), "Verify file using cryptographic keys [file to verify] [key file] [clear text file]")
+			("verify-with-key", po::value<vector<string>>()->multitoken(), "Verify file using cryptographic keys [file to verify] [key file]")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1710,11 +1710,11 @@ int main(int argc, char **argv) {
 				auto arguments = argm["verify-with-key"].as<std::vector<std::string>>();
 				auto file_to_verify = arguments.at(0);
 				auto verify_key_file_name =	arguments.at(1);
-				auto clear_text_file_name = arguments.at(2);
+				auto clear_text_file_name = file_to_verify;
 				std::string signature = filestorage::load_string(e_filestore_galaxy_signature, file_to_verify);
 				antinet_crypto::c_multisign multisign;
 				multisign.load_from_bin(signature);
-				std::string key = filestorage::load_string(e_filestore_galaxy_signature, verify_key_file_name);
+				//std::string key = filestorage::load_string(e_filestore_galaxy_signature, verify_key_file_name);
 
 				antinet_crypto::c_multikeys_pub pub_key;
 				pub_key.datastore_load(verify_key_file_name);
