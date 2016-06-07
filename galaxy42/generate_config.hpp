@@ -14,35 +14,25 @@ enum class e_crypto_strength : unsigned char {
 	highest,
 };
 
-
 class generate_config {
 public:
 	generate_config() = delete;
-
+	/**
+	 * @brief any_crypto_set Generate any combination of cryptographic keys
+	 * @param keys Vector of keys type and count to generate
+	 */
+	static void any_crypto_set(const std::string &filename,
+							   const std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> &keys);
 	/**
 	 * @brief crypto_permanent Create set of permanent keys with ability to sign
 	 * @param strength
 	 */
-	static void crypto_sign (e_crypto_strength strength);
+	static void crypto_sign (const std::string &filename, e_crypto_strength strength);
 	/**
 	 * @brief crypto_current Create set of current keys with ability to make DH exchange
 	 * @param strength
 	 */
-	static void crypto_exchange (e_crypto_strength strength);
-
-	static void any_crypto_set(const std::string &filename,
-							   const std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> &keys);
-
-	static std::string get_crypto_sign_name();
-	static std::string get_crypto_exchange_name();
-
-	static void set_crypto_sign_name(const std::string &crypto_sign_name);
-	static void set_crypto_exchange_name(const std::string &crypto_exchange_name);
-
-private:
-	static std::string m_crypto_sign_name;
-	static std::string m_crypto_exchange_name;
-
+	static void crypto_exchange (const std::string &filename, e_crypto_strength strength);
 };
 
 #endif // GENERATE_CONFIG_HPP

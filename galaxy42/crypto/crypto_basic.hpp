@@ -169,6 +169,7 @@ std::string t_crypto_system_type_to_name(int val);
 std::string enum_name(t_crypto_system_type e);
 
 char t_crypto_system_type_to_ID(int val);
+t_crypto_system_type t_crypto_system_type_from_string(std::string str_name);
 t_crypto_system_type t_crypto_system_type_from_ID(char name);
 bool t_crypto_system_type_is_asymkex(t_crypto_system_type sys); ///< is this type doing asymmetric KEX instead of D-H
 
