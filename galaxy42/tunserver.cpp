@@ -1585,6 +1585,7 @@ int main(int argc, char **argv) {
 			("gen-key",po::value<std::vector<std::string>>()->multitoken(), "Generate any combination of crypto keys" )
 			("out-private", po::value<std::string>(), "Output private key file name")
 			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
+			("verify-with-key", po::value<vector<string>>()->multitoken(), "Verify file using cryptographic keys [file to verify] [key file]")
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1702,6 +1703,13 @@ int main(int argc, char **argv) {
 				sign.print_signatures();
 				auto serialized = sign.serialize_bin();
 				filestorage::save_string(e_filestore_galaxy_signature, file_to_sign, serialized, true);
+				return 0;
+			}
+
+			if(argm.count("verify-with-key")) {
+				auto arguments = argm["sign-with-key"].as<std::vector<std::string>>();
+				auto file_to_verify = arguments.at(0);
+				auto verify_key =arguments.at(1);
 				return 0;
 			}
 

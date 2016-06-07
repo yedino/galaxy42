@@ -107,6 +107,19 @@ string c_multisign::serialize_bin() const {
 	return gen.str();
 }
 
+void c_multisign::load_from_bin(const string &data) {
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), data);
+	t_crypto_system_type ed_type = static_cast<t_crypto_system_type>(parser.pop_byte_u());
+	assert(ed_type == antinet_crypto::e_crypto_system_type_Ed25519);
+	auto ed_keys = parser.pop_vector_string();
+	add_signature_vec(ed_keys, ed_type);
+
+	t_crypto_system_type ntru_type = static_cast<t_crypto_system_type>(parser.pop_byte_u());
+	assert(ntru_type == antinet_crypto::e_crypto_system_type_NTRU_sign);
+	auto ntru_keys = parser.pop_vector_string();
+	add_signature_vec(ntru_keys, ntru_type);
+}
+
 // ==================================================================
 // c_multikeys_pub
 
