@@ -155,6 +155,9 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 				//mod=0755 for public
 				break;
 			}
+			case e_filestore_galaxy_signature: {
+				break;
+			}
 		}
 
 	} catch (fs::filesystem_error & err) {
@@ -188,6 +191,13 @@ fs::path filestorage::get_path_for(t_filestore file_type,
 			full_path += "/.config/antinet/galaxy42/";
 			full_path += filename;
 			full_path += ".public";
+			break;
+		}
+		case e_filestore_galaxy_signature: {
+			full_path = boost::filesystem::current_path();
+			full_path += "/";
+			full_path += filename;
+			full_path += ".sig";
 			break;
 		}
 	}
