@@ -149,15 +149,15 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 		}
 
 		switch (file_type) {
-			case e_filestore_galaxy_ipkeys_pub: {
+			case e_filestore_galaxy_pub: {
 				//mod=0700 for private key
 				break;
 			}
-			case e_filestore_wallet_galaxy_ipkeys_PRV: {
+			case e_filestore_galaxy_wallet_PRV: {
 				//mod=0755 for public
 				break;
 			}
-			case e_filestore_galaxy_signature: {
+			case e_filestore_galaxy_sig: {
 				break;
 			}
 		}
@@ -183,23 +183,29 @@ fs::path filestorage::get_path_for(t_filestore file_type,
 	fs::path user_home(getenv("HOME"));
 	fs::path full_path(user_home.c_str());
 	switch (file_type) {
-		case e_filestore_wallet_galaxy_ipkeys_PRV: {
+		case e_filestore_galaxy_wallet_PRV: {
 			full_path += "/.config/antinet/galaxy42/wallet/";
 			full_path += filename;
 			full_path += ".PRIVATE";
 			break;
 		}
-		case e_filestore_galaxy_ipkeys_pub: {
+		case e_filestore_galaxy_pub: {
 			full_path += "/.config/antinet/galaxy42/";
 			full_path += filename;
 			full_path += ".public";
 			break;
 		}
-		case e_filestore_galaxy_signature: {
+		case e_filestore_galaxy_sig: {
+			full_path = boost::filesystem::current_path();
+			full_path += "/.config/antinet/galaxy42/";
+			full_path += filename;
+			full_path += ".sig";
+			break;
+		}
+		case e_filestore_local_path: {
 			full_path = boost::filesystem::current_path();
 			full_path += "/";
 			full_path += filename;
-			full_path += ".sig";
 			break;
 		}
 	}
