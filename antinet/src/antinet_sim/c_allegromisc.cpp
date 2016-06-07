@@ -29,3 +29,35 @@ struct BITMAP *alex_load_png (AL_CONST char *filename, struct RGB *pal) {
 struct BITMAP *alex_load_png (const string &filename, struct RGB *pal) {
 	return alex_load_png(filename.c_str(), pal);
 }
+
+
+
+
+c_al_bitmap::c_al_bitmap() : m_bitmap(nullptr) { }
+c_al_bitmap::c_al_bitmap(BITMAP* bitmap) : m_bitmap(bitmap) { }
+
+c_al_bitmap::~c_al_bitmap() {
+	if (m_bitmap) {
+		destroy_bitmap(m_bitmap);
+		m_bitmap=nullptr;
+	}
+}
+
+c_al_bitmap& c_al_bitmap::operator=(BITMAP* bitmap) {
+	this->~c_al_bitmap();
+	m_bitmap = bitmap;
+	return *this;
+}
+
+BITMAP& c_al_bitmap::operator*() { return * m_bitmap; }
+const BITMAP& c_al_bitmap::operator*() const { return * m_bitmap; }
+
+BITMAP* c_al_bitmap::operator->() { return m_bitmap; }
+const BITMAP* c_al_bitmap::operator->() const { return m_bitmap; }
+
+c_al_bitmap::operator BITMAP*() { return m_bitmap; }
+c_al_bitmap::operator const BITMAP*() const { return m_bitmap; }
+
+ostream& operator<<(ostream& ostr, const c_al_bitmap & bmp) {
+	return ostr << static_cast<const void*>(&*bmp);
+}

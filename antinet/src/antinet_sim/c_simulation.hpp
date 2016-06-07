@@ -5,6 +5,7 @@
 #include "c_geometry.hpp"
 #include "c_file_loader.hpp"
 #include "c_drawtarget.hpp"
+#include "c_allegromisc.hpp"
 
 extern unsigned int g_max_anim_frame;
 class c_world;
@@ -35,9 +36,11 @@ private:
 
 	// TODO disable if disabled allegro support
 	// allegro details:
-	BITMAP *m_frame; ///< allegro frame buffer
-	BITMAP *m_screen; ///< reference to the allegro's SCREEN
-	BITMAP *smallWindow; ///< allegro window for display text info
+
+	c_al_bitmap m_frame; ///< allegro frame buffer
+	c_al_bitmap smallWindow; ///< allegro window for display text info
+
+	BITMAP * m_screen; ///< not-owning "reference" to the allegro's SCREEN
 
 	shared_ptr<c_drawtarget> m_drawtarget; ///< drawing will be send to this
 	shared_ptr<c_gui> m_gui; ///< the current GUI

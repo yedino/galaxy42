@@ -14,13 +14,10 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 	:
 	m_goodbye (false), m_frame_number (0),
 	m_world(nullptr),
-	s_font_allegl(nullptr),
-	m_drawtarget_type (drawtarget_type),
-	m_frame (nullptr),
+	s_font_allegl(nullptr),	m_drawtarget_type (drawtarget_type),	m_frame (nullptr),
 	m_screen (m_drawtarget_type == e_drawtarget_type_allegro ? screen : nullptr),
 	smallWindow (nullptr),
-	m_drawtarget (nullptr),
-	m_gui(nullptr),
+	m_drawtarget (nullptr),	m_gui(nullptr),
 	simulation_pause(false)
 {
 	_note ("Creating simulation, mode: " << t_drawtarget_type_to_string (m_drawtarget_type) << ". The allegro screen is at " << (void *) m_screen);
@@ -29,18 +26,6 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 c_simulation::~c_simulation ()
 {
 	_note ("Destructing the simulation");
-
-	if (m_frame) {
-			destroy_bitmap (m_frame);
-			m_frame = nullptr;
-		}
-
-	if (smallWindow) {
-			destroy_bitmap (smallWindow);
-			smallWindow = nullptr;
-		}
-
-	_note ("Destructing the simulation - done");
 }
 
 void c_simulation::init ()

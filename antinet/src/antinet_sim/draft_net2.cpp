@@ -204,12 +204,12 @@ unique_ptr<c_world> draft_net2() { // the main function for test
 	
 	
 	world.add_node("nodeA",100,100); // ***
-	world.add_node("nodeB",300,100);
+	world.add_node("nodeB",150,200);
 	world.add_node("nodeC1",300,300);
-	world.add_node("nodeC2",300,320);
-	world.add_node("nodeC3",300,340);
-	world.add_node("nodeC4",300,360);
-	world.add_node("nodeD",150,200);
+	world.add_node("nodeC2",300,350);
+	world.add_node("nodeC3",300,400);
+	world.add_node("nodeC4",300,450);
+	world.add_node("nodeD", 50,200);
 	world.add_node("nodeE",400,100); // ***
 	world.add_node("nodeF1",600,100);
 	world.add_node("nodeF2",600,150);
@@ -222,12 +222,12 @@ unique_ptr<c_world> draft_net2() { // the main function for test
 	world.add_node("nodeG1",650,100);
 	world.add_node("nodeG2",650,300);
 
-	world.add_node("nodeX",700,100);
+	world.add_node("nodeX",700,500);
 	
 	world.add_osi2_switch("swA", 200,100);
 	world.add_osi2_switch("swB", 300,100);
 	world.add_osi2_switch("swC", 200,300);
-	world.add_osi2_switch("swD", 300,100);
+	world.add_osi2_switch("swD", 300,200);
 
 
 	
@@ -296,6 +296,7 @@ unique_ptr<c_world> draft_net2() { // the main function for test
 	
 	/***
 	 * 
+	 * (outdated now - more elements are added)
 	 * 
 	 *  NodeA           SwitchA         SwitchB 
 	 *   nic#0 -------> nic#0 --------> nic#0 ----------------> SwitchD 
