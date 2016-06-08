@@ -179,6 +179,7 @@ fs::path filestorage::create_path_for(t_filestore file_type,
 
 	// connect parent path with filename
 	fs::path full_path = get_path_for(file_type, filename);
+	std::cout << "full_path: " << full_path.native() << std::endl;
 	create_parent_dir(full_path);
 	return full_path;
 }
@@ -221,10 +222,14 @@ std::string filestorage::extract_filename(const std::string &string_path) {
 	return try_path.filename().native();
 }
 
-bool filestorage::create_parent_dir(const fs::path &filename) {
+bool filestorage::create_parent_dir(const fs::path &file_path) {
 
-	fs::path file(filename);
+	fs::path file(file_path);
 	fs::path parent_path = file.parent_path();
+
+	if (parent_path.empty()) {
+		return 1;
+	}
 
 	// if exist
 	if (!fs::exists(parent_path)) {

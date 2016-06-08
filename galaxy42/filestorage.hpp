@@ -85,7 +85,7 @@ private:
 	 * @returns true if directory was created
 	 *  		false if directory alredy exist
 	 */
-	static bool create_parent_dir(const fs::path &filename);
+	static bool create_parent_dir(const fs::path &file_path);
 
 	static fs::path get_path_for(t_filestore file_type,
 								 const std::string &filename);
