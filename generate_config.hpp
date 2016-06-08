@@ -22,7 +22,8 @@ public:
 	 * @param keys Vector of keys type and count to generate
 	 */
 	static void any_crypto_set(const std::string &filename,
-							   const std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> &keys);
+							   const std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> &keys,
+							   bool default_location);
 	/**
 	 * @brief crypto_permanent Create set of permanent keys with ability to sign
 	 * @param strength

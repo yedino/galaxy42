@@ -1590,18 +1590,17 @@ int main(int argc, char **argv) {
 
 			("gen-key", "Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
 						"\nexamples:"
-						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\"
+						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
 						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
 						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
 				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
 				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
-				("key-type", po::value<std::vector<std::string>>()->multitoken()), "Types of generated sub keys"
+				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
 
 			("sign", "Sign key or other message with your key"
-					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file"
-					 "\nexamples:"
-					 "-d --sign --my-key \"myself\" --sign-key \"friend\""
-					 "")
+					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
+					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
+					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
 				("sing-key", po::value<std::string>(), "Name of key file in default location for keys")
 				("sing-key-file", po::value<std::string>(), "Name of key file in specified location")
 				("sing-data-file", po::value<std::string>(), "Name of data file in specified location")
@@ -1678,15 +1677,16 @@ int main(int argc, char **argv) {
 				std::cout << desc;
 				return 0;
 			}
-/*
-			if(argm.count("gen-key")) {
-				std::string output_file("current_key");
-				if (argm.count("out-private")) {
-					output_file = argm["out-private"].as<std::string>();
+
+			if (argm.count("gen-key")) {
+
+				if (!argm.count("key-type")) {
+					_erro("--key-type option is required for --gen-key");
+					return 1;
 				}
-				_dbg2("output file " << output_file);
+
 				std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
-				auto arguments = argm["gen-key"].as<std::vector<std::string>>();
+				auto arguments = argm["key-type"].as<std::vector<std::string>>();
 				for (auto argument : arguments) {
 					_dbg1("parse argument " << argument);
 					std::replace(argument.begin(), argument.end(), ':', ' ');
@@ -1703,11 +1703,20 @@ int main(int argc, char **argv) {
 					keys.emplace_back(std::make_pair(type, number_of_keys));
 				}
 
-				generate_config::any_crypto_set(output_file, keys);
-
+				std::string output_file;
+				if (argm.count("new-key")) {
+					output_file = argm["new-key"].as<std::string>();
+					generate_config::any_crypto_set(output_file, keys, true);
+				} else if (argm.count("new-key-file")) {
+					output_file = argm["new-key-file"].as<std::string>();
+					generate_config::any_crypto_set(output_file, keys, false);
+				} else {
+					_erro("--new-key or --new-key-file option is required for --gen-key");
+					return 1;
+				}
 				return 0;
 			}
-
+/*
 			if(argm.count("sign-with-key")) {
 				auto arguments = argm["sign-with-key"].as<std::vector<std::string>>();
 				auto file_to_sign = arguments.at(0);
