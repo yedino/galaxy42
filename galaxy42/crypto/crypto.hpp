@@ -356,6 +356,7 @@ class c_crypto_tunnel {
 
 void test_crypto();
 void generate_keypairs_benchmark(const size_t seconds_for_test_case);
+void stream_encrypt_benchmark(const size_t seconds_for_test_case);
 
 
 } // namespace antinet_crypto
