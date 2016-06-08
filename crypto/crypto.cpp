@@ -936,7 +936,7 @@ map_size
 
 }
 
-void test_crypto_benchmark(const size_t seconds_for_test_case) {
+void generate_keypairs_benchmark(const size_t seconds_for_test_case) {
 	_mark("test_crypto_benchmark");
 
 	// X25519

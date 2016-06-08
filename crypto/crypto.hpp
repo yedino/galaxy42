@@ -355,7 +355,7 @@ class c_crypto_tunnel {
 // === high level tests ===
 
 void test_crypto();
-void test_crypto_benchmark(const size_t seconds_for_test_case);
+void generate_keypairs_benchmark(const size_t seconds_for_test_case);
 
 
 } // namespace antinet_crypto

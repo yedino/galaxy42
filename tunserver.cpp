@@ -1513,7 +1513,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="bar") { test_bar();  return false; }
 	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize();  return false; }
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
-	if (demoname=="crypto_bench") { antinet_crypto::test_crypto_benchmark(2);  return false; }
+	if (demoname=="gen_key_bench") { antinet_crypto::generate_keypairs_benchmark(2);  return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }
