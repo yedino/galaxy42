@@ -1568,33 +1568,70 @@ int main(int argc, char **argv) {
 			("--quiet", "-q")
 			("-q", "Quiet")
 
-			("demo", po::value<string>()->default_value(""), "Try DEMO here. Run one of the compiled-in demonstrations of how program works. Use --demo help to see list of demos [TODO].")
+			("demo", po::value<std::string>()->default_value(""),
+						"Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
+						"Use --demo help to see list of demos [TODO].")
 			("devel","Test: used by developer to run current test")
-			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
-			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
+			("develnum", po::value<int>()->default_value(1),
+						"Test: used by developer to set current node number (makes sense with option --devel)")
+			("develdemo", po::value<std::string>()->default_value("hardcoded"),
+						"Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
-			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
-			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf\n-connect_to.seed.conf\n"
-						   "*** this could overwrite your actual configurations ***")
+			("myname", po::value<std::string>()->default_value("galaxy") ,
+						"a readable name of your node (e.g. for debug)")
+			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
+						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
 
-			("set-key", po::value<string>()->default_value(""), "Set current keys by signing it with your permanent keys")
-			("set-key-file",po::value<string>()->default_value(""), "Set current keys file")
+			("my-key", po::value<std::string>(), "Choose already generated key from default location")
+			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
 
-			("gen-key",po::value<std::vector<std::string>>()->multitoken(), "Generate any combination of crypto keys examples:"
-																			"\n./tunserver.elf --out-private \"IDP\" --gen-key \"ed25519:x3\" \"ntru_sign:x1\""
-																			"\n./tunserver.elf --out-private \"IDC\" --gen-key \"x25519:x2\" \"ntru_ees439ep1:x2\" \"sidh:x1\"")
-			("out-private", po::value<std::string>(), "Output private key file name")
-			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
-			("verify-with-key", po::value<vector<string>>()->multitoken(), "Verify file using cryptographic keys [file to verify] [key file]")
+			("info", "Print info about key specified in my-key option\nrequires [--my-key]")
+			("list-my-keys", "List your key which are in default location")
+
+			("gen-key", "Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
+						"\nexamples:"
+						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\"
+						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
+						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
+				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
+				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
+				("key-type", po::value<std::vector<std::string>>()->multitoken()), "Types of generated sub keys"
+
+			("sign", "Sign key or other message with your key"
+					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file"
+					 "\nexamples:"
+					 "-d --sign --my-key \"myself\" --sign-key \"friend\""
+					 "")
+				("sing-key", po::value<std::string>(), "Name of key file in default location for keys")
+				("sing-key-file", po::value<std::string>(), "Name of key file in specified location")
+				("sing-data-file", po::value<std::string>(), "Name of data file in specified location")
+
+			("verify", "Verify key or data with trusted-key and key or data"
+					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
+					   "or --toverify-data-file *--signature-file]"
+					   "\nDefault signature file name = key/data file name + \".sig\" extension"
+					   "in same location as key/data file")
+				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
+				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
+				("toverify-key", po::value<std::string>(), "Name of key to verify in default location")
+				("toverify-key-file", po::value<std::string>(), "Name of key to verify file in specified location")
+				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
+				("signature-file", po::value<std::string>(),
+							"External Name of signature file in specified location"
+							"\nDefault signature file name = key/data file name + \".sig\" extension")
 
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
 
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
-			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
-			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
+			("mypriv", po::value<std::string>()->default_value(""),
+						"your PRIVATE key (give any string, not yet used - of course this is just for tests)")
+			//("peerip", po::value<std::vector<std::string>>()->required(),
+			//			"IP over existing networking to connect to your peer")
 			//("peerpub", po::value<std::vector<std::string>>()->multitoken(), "public key of your peer")
-			("peer", po::value<std::vector<std::string>>()->multitoken(), "Adding entire peer reference, in syntax like ip-pub. Can be give more then once, for multiple peers.")
+			("peer", po::value<std::vector<std::string>>()->multitoken(),
+						"Adding entire peer reference, in syntax like ip-pub."
+						"Can be give more then once, for multiple peers.")
 			;
 
 		po::variables_map argm;
@@ -1641,7 +1678,7 @@ int main(int argc, char **argv) {
 				std::cout << desc;
 				return 0;
 			}
-
+/*
 			if(argm.count("gen-key")) {
 				std::string output_file("current_key");
 				if (argm.count("out-private")) {
@@ -1721,7 +1758,7 @@ int main(int argc, char **argv) {
 				std::cout << "Verify OK" << std::endl;
 				return 0;
 			}
-
+*/
 			if (argm.count("gen-config")) {
 				c_json_genconf::genconf();
 			}
