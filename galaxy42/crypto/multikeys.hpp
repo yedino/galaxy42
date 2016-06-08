@@ -199,6 +199,19 @@ class c_multikeys_PRV : public c_multikeys_general<c_crypto_system::t_PRVkey> {
 		/// @}
 
 		bool operator>(const t_key &rhs) const; ///< TODO refer to base class
+
+		/// @{
+		/**
+		 * @brief multi_sign Multiple signing message using all keys of given sign type
+		 * @param msg Massage that will be sign
+		 * @param sign_type	Type of crypto system
+		 * @return Vector of signs
+		 */
+		c_multisign multi_sign(const std::string &msg);
+
+		std::vector<std::string> multi_sign(const std::string &msg,
+											t_crypto_system_type sign_type);
+		/// @}
 };
 
 
