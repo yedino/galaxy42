@@ -949,15 +949,35 @@ void generate_keypairs_benchmark(const size_t seconds_for_test_case) {
 	auto stop_point = std::chrono::steady_clock::now();
 	unsigned int x25519_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
-	// ntru
-	size_t generated_keys_ntru = 0;
+	// ed25519
+	size_t generated_keys_ed25519 = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_ed25519_key_pair();
+		++generated_keys_ed25519;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	unsigned int ed25519_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+
+	// ntru encrypt
+	size_t generated_keys_ntru_encrypt = 0;
 	start_point = std::chrono::steady_clock::now();
 	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		auto pair = c_multikeys_PAIR::generate_nrtu_encrypt_key_pair();
-		++generated_keys_ntru;
+		++generated_keys_ntru_encrypt;
 	}
 	stop_point = std::chrono::steady_clock::now();
-	unsigned int ntru_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	unsigned int ntru_ms_encrypt = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+
+	// ntru sign
+	size_t generated_keys_ntru_sign = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_nrtu_encrypt_key_pair();
+		++generated_keys_ntru_sign;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	unsigned int ntru_ms_sign = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
 	//sidh
 	size_t generated_keys_sidh = 0;
@@ -969,12 +989,23 @@ void generate_keypairs_benchmark(const size_t seconds_for_test_case) {
 	stop_point = std::chrono::steady_clock::now();
 	unsigned int sidh_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
+
 	_info("X25519");
 	_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
 	_info(static_cast<double>(generated_keys_x25519) / x25519_ms * 1000 << " key pairs per second");
-	_info("NTRU");
-	_info("Generated " << generated_keys_ntru << " in " << ntru_ms << " ms");
-	_info(static_cast<double>(generated_keys_ntru) / ntru_ms * 1000 << " key pairs per second");
+
+	_info("ed25519");
+	_info("Generated " << generated_keys_ed25519 << " in " << ed25519_ms << " ms");
+	_info(static_cast<double>(generated_keys_ed25519) / ed25519_ms * 1000 << " key pairs per second");
+
+	_info("NTRU encrypt");
+	_info("Generated " << generated_keys_ntru_encrypt << " in " << ntru_ms_encrypt << " ms");
+	_info(static_cast<double>(generated_keys_ntru_encrypt) / ntru_ms_encrypt * 1000 << " key pairs per second");
+
+	_info("NTRU sign");
+	_info("Generated " << generated_keys_ntru_sign << " in " << ntru_ms_sign << " ms");
+	_info(static_cast<double>(generated_keys_ntru_sign) / ntru_ms_sign * 1000 << " key pairs per second");
+
 	_info("SIDH");
 	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
 	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
