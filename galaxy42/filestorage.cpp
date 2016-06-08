@@ -13,7 +13,7 @@ void filestorage::save_string(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_file_for_write(file_type, filename, overwrite);
+	fs::path file_with_path = prepare_path_for_write(file_type, filename, overwrite);
 	fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
 
 	if (file.is_open()) {
@@ -34,7 +34,7 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_file_for_write(file_type, filename, overwrite);
+	fs::path file_with_path = prepare_path_for_write(file_type, filename, overwrite);
 	FILE *f_ptr;
 
 	f_ptr = std::fopen(file_with_path.c_str(), "w");
@@ -50,6 +50,8 @@ std::string filestorage::load_string(t_filestore file_type,
 	std::string content;
 
 	fs::path file_with_path = get_path_for(file_type, filename);
+	_dbg2("Loading file path: " << file_with_path.native());
+
 	if (!is_file_ok(file_with_path.native())) {
 		throw std::invalid_argument("Fail to open file for read: " + filename);
 	} else {
@@ -71,7 +73,7 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 	f_ptr = std::fopen(file_with_path.c_str(), "r");
 
 	if (f_ptr == NULL){
-		throw std::invalid_argument("Fail to opening file for read: " + filename);
+		throw std::invalid_argument("Fail to open mlocked file for read: " + filename);
 	}
 
 	std::fseek(f_ptr, 0L, SEEK_END);
@@ -121,12 +123,13 @@ bool filestorage::remove(const std::string &p) {
 	return fs::remove(path_to_remove);
 }
 
-fs::path filestorage::prepare_file_for_write(t_filestore file_type,
-											 const std::string &filename,
+fs::path filestorage::prepare_path_for_write(t_filestore file_type,
+											 const std::string &input_name,
 											 bool overwrite) {
 	fs::path file_with_path;
 	try {
 
+		std::string filename = extract_filename(input_name);
 		// creating directory tree if necessary
 		file_with_path = create_path_for(file_type, filename);
 
@@ -160,6 +163,9 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 			case e_filestore_galaxy_sig: {
 				break;
 			}
+			case e_filestore_local_path: {
+				break;
+			}
 		}
 
 	} catch (fs::filesystem_error & err) {
@@ -169,7 +175,7 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 }
 
 fs::path filestorage::create_path_for(t_filestore file_type,
-									  const fs::path &filename) {
+									  const std::string &filename) {
 
 	// connect parent path with filename
 	fs::path full_path = get_path_for(file_type, filename);
@@ -178,7 +184,7 @@ fs::path filestorage::create_path_for(t_filestore file_type,
 }
 
 fs::path filestorage::get_path_for(t_filestore file_type,
-								   const fs::path &filename) {
+								   const std::string &filename) {
 
 	fs::path user_home(getenv("HOME"));
 	fs::path full_path(user_home.c_str());
@@ -186,31 +192,33 @@ fs::path filestorage::get_path_for(t_filestore file_type,
 		case e_filestore_galaxy_wallet_PRV: {
 			full_path += "/.config/antinet/galaxy42/wallet/";
 			full_path += filename;
-			full_path += ".PRIVATE";
+			full_path += ".PRV";
 			break;
 		}
 		case e_filestore_galaxy_pub: {
 			full_path += "/.config/antinet/galaxy42/";
 			full_path += filename;
-			full_path += ".public";
+			full_path += ".pub";
 			break;
 		}
 		case e_filestore_galaxy_sig: {
-			full_path = boost::filesystem::current_path();
 			full_path += "/.config/antinet/galaxy42/";
 			full_path += filename;
 			full_path += ".sig";
 			break;
 		}
 		case e_filestore_local_path: {
-			full_path = boost::filesystem::current_path();
-			full_path += "/";
-			full_path += filename;
+			full_path = filename;
 			break;
 		}
 	}
 	_dbg3("full_path " << full_path);
 	return full_path;
+}
+
+std::string filestorage::extract_filename(const std::string &string_path) {
+	fs::path try_path(string_path);
+	return try_path.filename().native();
 }
 
 bool filestorage::create_parent_dir(const fs::path &filename) {
