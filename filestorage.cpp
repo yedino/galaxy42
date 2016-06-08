@@ -196,13 +196,13 @@ fs::path filestorage::get_path_for(t_filestore file_type,
 			break;
 		}
 		case e_filestore_galaxy_pub: {
-			full_path += "/.config/antinet/galaxy42/";
+			full_path += "/.config/antinet/galaxy42/public/";
 			full_path += filename;
 			full_path += ".pub";
 			break;
 		}
 		case e_filestore_galaxy_sig: {
-			full_path += "/.config/antinet/galaxy42/";
+			full_path += "/.config/antinet/galaxy42/public/";
 			full_path += filename;
 			full_path += ".sig";
 			break;
