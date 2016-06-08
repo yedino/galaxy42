@@ -73,13 +73,13 @@ private:
 	 * @param overwrite allow to overwrite file (default = false)
 	 * @return full path with fixed filename
 	 */
-	static fs::path prepare_file_for_write(t_filestore file_type,
+	static fs::path prepare_path_for_write(t_filestore file_type,
 										   const std::string &filename,
 										   bool overwrite = false);
 
 
 	static fs::path create_path_for(t_filestore file_type,
-									const fs::path &filename);
+									const std::string &filename);
 	/**
 	 * @brief creating directory for given filename path
 	 * @returns true if directory was created
@@ -88,7 +88,9 @@ private:
 	static bool create_parent_dir(const fs::path &filename);
 
 	static fs::path get_path_for(t_filestore file_type,
-								 const fs::path &filename);
+								 const std::string &filename);
+
+	static std::string extract_filename(const std::string &string_path);
 };
 
 #endif // C_FILESYSTEM_HPP

@@ -1582,7 +1582,9 @@ int main(int argc, char **argv) {
 			("set-key", po::value<string>()->default_value(""), "Set current keys by signing it with your permanent keys")
 			("set-key-file",po::value<string>()->default_value(""), "Set current keys file")
 
-			("gen-key",po::value<std::vector<std::string>>()->multitoken(), "Generate any combination of crypto keys" )
+			("gen-key",po::value<std::vector<std::string>>()->multitoken(), "Generate any combination of crypto keys examples:"
+																			"\n./tunserver.elf --out-private \"IDP\" --gen-key \"ed25519:x3\" \"ntru_sign:x1\""
+																			"\n./tunserver.elf --out-private \"IDC\" --gen-key \"x25519:x2\" \"ntru_ees439ep1:x2\" \"sidh:x1\"")
 			("out-private", po::value<std::string>(), "Output private key file name")
 			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
 			("verify-with-key", po::value<vector<string>>()->multitoken(), "Verify file using cryptographic keys [file to verify] [key file]")
@@ -1691,11 +1693,7 @@ int main(int argc, char **argv) {
 				// multi_key_pair.add_public_and_PRIVATE()
 				multi_key_pair.datastore_load_PRV_and_pub(sign_key);
 				_dbg1("load file to sign");
-				std::ifstream input_file(file_to_sign);
-				std::string file_content(
-					(std::istreambuf_iterator<char>(input_file)),
-					(std::istreambuf_iterator<char>())
-				);
+				std::string file_content = filestorage::load_string(e_filestore_local_path, file_to_sign);
 
 				_dbg1("file contet loaded, start sign");
 				auto sign = multi_key_pair.multi_sign(file_content);
@@ -1703,7 +1701,7 @@ int main(int argc, char **argv) {
 				_dbg1("signature: ");
 				sign.print_signatures();
 				auto serialized = sign.serialize_bin();
-	//			filestorage::save_string(e_filestore_galaxy_signature, file_to_sign, serialized, true);
+				filestorage::save_string(e_filestore_galaxy_sig, file_to_sign, serialized, true);
 				return 0;
 			}
 
@@ -1724,11 +1722,6 @@ int main(int argc, char **argv) {
 				pub_key.datastore_load(verify_key_file_name);
 
 				std::string file_content = filestorage::load_string(e_filestore_local_path, clear_text_file_name);
-				/*std::ifstream input_file(clear_text_file_name);
-				std::string file_content(
-					(std::istreambuf_iterator<char>(input_file)),
-					(std::istreambuf_iterator<char>())
-				);*/
 				try {
 					antinet_crypto::c_multikeys_pub::multi_sign_verify(multisign, file_content, pub_key);
 				}
