@@ -1576,8 +1576,6 @@ int main(int argc, char **argv) {
 			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
 			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf\n-connect_to.seed.conf\n"
 						   "*** this could overwrite your actual configurations ***")
-			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
-			("no-config", "Don't load any configuration file")
 
 			("set-key", po::value<string>()->default_value(""), "Set current keys by signing it with your permanent keys")
 			("set-key-file",po::value<string>()->default_value(""), "Set current keys file")
@@ -1588,6 +1586,10 @@ int main(int argc, char **argv) {
 			("out-private", po::value<std::string>(), "Output private key file name")
 			("sign-with-key", po::value<vector<string>>()->multitoken(), "Sign file using cryptographic keys [file to sign] [sign key]")
 			("verify-with-key", po::value<vector<string>>()->multitoken(), "Verify file using cryptographic keys [file to verify] [key file]")
+
+			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
+			("no-config", "Don't load any configuration file")
+
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
 			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
 			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
@@ -1640,18 +1642,6 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
-			if (argm.count("gen-config")) {
-				c_json_genconf::genconf();
-			}
-
-			if (!(argm.count("no-config"))) {
-				// loading peers from configuration file (default from galaxy.conf)
-				std::string conf = argm["config"].as<std::string>();
-				c_galaxyconf_load galaxyconf(conf);
-				for(auto &ref : galaxyconf.get_peer_references()) {
-					myserver.add_peer(ref);
-				}
-			}
 			if(argm.count("gen-key")) {
 				std::string output_file("current_key");
 				if (argm.count("out-private")) {
@@ -1687,16 +1677,14 @@ int main(int argc, char **argv) {
 				auto sign_key = arguments.at(1);
 				_dbg1("start signing file " << file_to_sign);
 				_dbg1("using key " << file_to_sign);
-				antinet_crypto::c_multikeys_PAIR multi_key_pair;
-				// load IDP
-				// TODO
-				// multi_key_pair.add_public_and_PRIVATE()
-				multi_key_pair.datastore_load_PRV_and_pub(sign_key);
+				antinet_crypto::c_multikeys_PRV signing_key;
+
+				signing_key.datastore_load(sign_key);
 				_dbg1("load file to sign");
 				std::string file_content = filestorage::load_string(e_filestore_local_path, file_to_sign);
 
 				_dbg1("file contet loaded, start sign");
-				auto sign = multi_key_pair.multi_sign(file_content);
+				auto sign = signing_key.multi_sign(file_content);
 				_dbg1("End of sign");
 				_dbg1("signature: ");
 				sign.print_signatures();
@@ -1708,12 +1696,11 @@ int main(int argc, char **argv) {
 			if(argm.count("verify-with-key")) {
 				auto arguments = argm["verify-with-key"].as<std::vector<std::string>>();
 				auto file_to_verify = arguments.at(0);
-				auto verify_key_file_name =	arguments.at(1);
+				auto verify_key_file_name = arguments.at(1);
 				auto clear_text_file_name = file_to_verify;
 				_dbg1("verify_key_file_name " << verify_key_file_name);
-				clear_text_file_name.erase(clear_text_file_name.end() - 4, clear_text_file_name.end());
 				_dbg1("clear_text_file_name " << clear_text_file_name);
-				std::string signature = filestorage::load_string(e_filestore_local_path, file_to_verify);
+				std::string signature = filestorage::load_string(e_filestore_galaxy_sig, file_to_verify);
 				antinet_crypto::c_multisign multisign;
 				multisign.load_from_bin(signature);
 				//std::string key = filestorage::load_string(e_filestore_galaxy_signature, verify_key_file_name);
@@ -1721,7 +1708,9 @@ int main(int argc, char **argv) {
 				antinet_crypto::c_multikeys_pub pub_key;
 				pub_key.datastore_load(verify_key_file_name);
 
-				std::string file_content = filestorage::load_string(e_filestore_local_path, clear_text_file_name);
+				// for remove .pub
+				clear_text_file_name.erase(clear_text_file_name.end() - 4, clear_text_file_name.end());
+				std::string file_content = filestorage::load_string(e_filestore_galaxy_pub, clear_text_file_name);
 				try {
 					antinet_crypto::c_multikeys_pub::multi_sign_verify(multisign, file_content, pub_key);
 				}
@@ -1731,6 +1720,19 @@ int main(int argc, char **argv) {
 				}
 				std::cout << "Verify OK" << std::endl;
 				return 0;
+			}
+
+			if (argm.count("gen-config")) {
+				c_json_genconf::genconf();
+			}
+
+			if (!(argm.count("no-config"))) {
+				// loading peers from configuration file (default from galaxy.conf)
+				std::string conf = argm["config"].as<std::string>();
+				c_galaxyconf_load galaxyconf(conf);
+				for(auto &ref : galaxyconf.get_peer_references()) {
+					myserver.add_peer(ref);
+				}
 			}
 
 			_info("Configuring my own reference (keys):");
