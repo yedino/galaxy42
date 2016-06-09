@@ -61,6 +61,29 @@ public:
 	 * @return true if file was successful removed
 	 */
 	static bool remove(const std::string &p);
+	/**
+	 * @brief get_file_list vector of strings with file names
+	 * @param path directory where we looking for files
+	 * @return
+	 */
+	static std::vector<std::string> get_file_list(const fs::path& path);
+	/**
+	 * @brief get_full_path
+	 * @param file_type
+	 * @param filename
+	 * @return full path with filename included and extension if defined
+	 */
+	static fs::path get_full_path(t_filestore file_type,
+								 const std::string &filename);
+	/**
+	 * @brief get_parent_path
+	 * @param file_type
+	 * @param filename could be any string for file_type with concrete path
+	 * @return directory where specific file_type should be
+	 */
+	static fs::path get_parent_path(t_filestore file_type,
+								 const std::string &filename);
+
 
 private:
 	FRIEND_TEST(filestorage, create_path);
@@ -77,7 +100,6 @@ private:
 										   const std::string &filename,
 										   bool overwrite = false);
 
-
 	static fs::path create_path_for(t_filestore file_type,
 									const std::string &filename);
 	/**
@@ -86,9 +108,6 @@ private:
 	 *  		false if directory alredy exist
 	 */
 	static bool create_parent_dir(const fs::path &file_path);
-
-	static fs::path get_path_for(t_filestore file_type,
-								 const std::string &filename);
 
 	static std::string extract_filename(const std::string &string_path);
 };
