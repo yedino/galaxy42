@@ -1,4 +1,5 @@
 #include "filestorage.hpp"
+#include "../text_ui.hpp"
 
 overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
 { }
@@ -13,16 +14,28 @@ void filestorage::save_string(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_path_for_write(file_type, filename, overwrite);
-	fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
+	fs::path file_with_path;
+	try {
 
-	if (file.is_open()) {
-		file << data;
-	} else {
-		throw std::invalid_argument("Fail to open file for write: " + filename);
+		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
+		fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
+
+		if (file.is_open()) {
+			file << data;
+		} else {
+			throw std::invalid_argument("Fail to open file for write: " + filename);
+		}
+		file.close();
+		_dbg2("Successfully saved string to:" << file_with_path.native());
+
+	} catch(overwrite_error &err) {
+		std::cout << err.what() << std::endl;
+		if(text_ui::ask_user_forpermission("overwrite file?")){
+			save_string(file_type, filename, data, true);
+		} else {
+			_dbg2("Fail to save string");
+		}
 	}
-	file.close();
-	_dbg2("Successfully saved string to:" << file_with_path.native());
 }
 
 void filestorage::save_string_mlocked(t_filestore file_type,
@@ -34,15 +47,27 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_path_for_write(file_type, filename, overwrite);
-	FILE *f_ptr;
+	fs::path file_with_path;
+	try {
 
-	f_ptr = std::fopen(file_with_path.c_str(), "w");
-	// magic 1 is the size in bytes of each element to be written
-	std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
+		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
+		FILE *f_ptr;
 
-	std::fclose(f_ptr);
-	_dbg2("Successfully saved mlocked string to:" << file_with_path.native());
+		f_ptr = std::fopen(file_with_path.c_str(), "w");
+		// magic 1 is the size in bytes of each element to be written
+		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
+
+		std::fclose(f_ptr);
+		_dbg2("Successfully saved mlocked string to:" << file_with_path.native());
+
+	} catch(overwrite_error &err) {
+		std::cout << err.what() << std::endl;
+		if(text_ui::ask_user_forpermission("overwrite file?")){
+			save_string_mlocked(file_type, filename, locked_data, true);
+		} else {
+			_dbg2("Fail to save mlocked string");
+		}
+	}
 }
 
 std::string filestorage::load_string(t_filestore file_type,
@@ -85,9 +110,10 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 
 	size_t byte_read = std::fread(content.buffer_writable(), 1, content_size, f_ptr);
 	if (byte_read != content_size) {
-		throw std::invalid_argument("Fail to read all content of file: "s + filename
-									+ " read: ["s + std::to_string(byte_read)
-									+ "] bytes of ["s + std::to_string(content_size) + "]"s);
+		std::string err_msg = "Fail to read all content of file: " + filename;
+		err_msg += " read: [" + std::to_string(byte_read);
+		err_msg += "] bytes of [" + std::to_string(content_size) + "]";
+		throw std::invalid_argument(err_msg);
 	}
 	std::fclose(f_ptr);
 

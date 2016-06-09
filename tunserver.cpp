@@ -1783,6 +1783,7 @@ int main(int argc, char **argv) {
 				bool extern_signature = false;
 				antinet_crypto::c_multisign signature;
 
+				// usefull local function
 				auto load_signature = [&signature] (t_filestore stype, const std::string &filename) {
 					std::string data (filestorage::load_string(stype, filename));
 					signature.load_from_bin(data);
@@ -1792,40 +1793,38 @@ int main(int argc, char **argv) {
 				if (argm.count("signature-file")) {
 					extern_signature = true;
 					signature_file = argm["signature-file"].as<std::string>();
-					std::string signature_data(filestorage::load_string(e_filestore_local_path, signature_file));
-					signature.load_from_bin(signature_data);
+					load_signature(e_filestore_local_path, signature_file);
 				}
 
 				std::string to_verify_file;
 				std::string to_verify;
-			try {
 				if (argm.count("toverify-key")) {
 					to_verify_file = argm["toverify-key"].as<std::string>();
 					to_verify = filestorage::load_string(e_filestore_galaxy_pub, to_verify_file);
 					signature_file = to_verify_file + ".pub";
-					std::string signature_data(filestorage::load_string(e_filestore_galaxy_sig, signature_file));
-					signature.load_from_bin(signature_data);
-					antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+					if(!extern_signature)
+						load_signature(e_filestore_galaxy_sig, signature_file);
 
 				} else if (argm.count("toverify-key-file")) {
 					to_verify_file = argm["toverify-key-file"].as<std::string>();
 					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
 					signature_file = to_verify_file+".sig";
-					std::string signature_data(filestorage::load_string(e_filestore_local_path, signature_file));
-					signature.load_from_bin(signature_data);
-					antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+					if(!extern_signature)
+						load_signature(e_filestore_local_path, signature_file);
 
 				} else if (argm.count("toverify-data-file")) {
 					to_verify_file = argm["toverify-data-file"].as<std::string>();
 					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
 					signature_file = to_verify_file+".sig";
-					std::string signature_data(filestorage::load_string(e_filestore_local_path, signature_file));
-					signature.load_from_bin(signature_data);
-					antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+					if(!extern_signature)
+						load_signature(e_filestore_local_path, signature_file);
 				} else {
 					_erro("-toverify-key, toverify-key-file or -sign-data-file option is required for --sign");
 					return 1;
 				}
+
+			try {
+				antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
 			} catch (std::invalid_argument &err) {
 				_dbg2("Signature verification: fail");
 				return 1;
@@ -1833,36 +1832,7 @@ int main(int argc, char **argv) {
 				_dbg2("Verify Success");
 				return 0;
 			}
-/*
-			if(argm.count("verify-with-key")) {
-				auto arguments = argm["verify-with-key"].as<std::vector<std::string>>();
-				auto file_to_verify = arguments.at(0);
-				auto verify_key_file_name = arguments.at(1);
-				auto clear_text_file_name = file_to_verify;
-				_dbg1("verify_key_file_name " << verify_key_file_name);
-				_dbg1("clear_text_file_name " << clear_text_file_name);
-				std::string signature = filestorage::load_string(e_filestore_galaxy_sig, file_to_verify);
-				antinet_crypto::c_multisign multisign;
-				multisign.load_from_bin(signature);
-				//std::string key = filestorage::load_string(e_filestore_galaxy_signature, verify_key_file_name);
 
-				antinet_crypto::c_multikeys_pub pub_key;
-				pub_key.datastore_load(verify_key_file_name);
-
-				// for remove .pub
-				clear_text_file_name.erase(clear_text_file_name.end() - 4, clear_text_file_name.end());
-				std::string file_content = filestorage::load_string(e_filestore_galaxy_pub, clear_text_file_name);
-				try {
-					antinet_crypto::c_multikeys_pub::multi_sign_verify(multisign, file_content, pub_key);
-				}
-				catch(const std::invalid_argument &e) {
-					_erro(e.what());
-					return 1;
-				}
-				std::cout << "Verify OK" << std::endl;
-				return 0;
-			}
-*/
 			if (argm.count("gen-config")) {
 				c_json_genconf::genconf();
 			}
