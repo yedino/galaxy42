@@ -11,7 +11,6 @@
 #include "../trivialserialize.hpp"
 
 #include "../filestorage.hpp"
-#include "../text_ui.hpp"
 #include "ntrupp.hpp"
 
 #include "../glue_lockedstring_trivialserialize.hpp"
