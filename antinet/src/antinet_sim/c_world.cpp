@@ -288,9 +288,9 @@ t_osi2_route_result c_world::route_find_route_between(c_object &first, c_object 
 		++cycle;	//if (cycle>20) break; // dbg
 		
 //		_info("---visits---");
-		for (auto & pair : visits) {
+//		for (auto & pair : visits) {
 //			_info("At COST="<<pair.first<<" we have: "<<pair.second<<" "<<pair.second->print_str(-2));
-		}
+//		}
 //		_info("---visits---");
 		
 //		_info("---costs---");
@@ -360,7 +360,7 @@ t_osi2_route_result c_world::route_find_route_between(c_object &first, c_object 
 	
 	
 	// calculated info about the finall route:
-	t_osi2_cost cost=0; 
+//	t_osi2_cost cost=0;  // UNUSED
 	result.first_hop_nic_ix = size_t_invalid();
 	result.target_nic_ix = size_t_invalid();
 	bool first_iteration=true;

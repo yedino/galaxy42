@@ -6,6 +6,8 @@
 #include "c_drawtarget_opengl.hpp"
 
 #include "draft_net2.hpp"
+#include "routingdemo.hpp"
+
 
 unsigned int g_max_anim_frame = 250;
 unsigned int g_max_frameRate = 60;
@@ -107,6 +109,29 @@ void c_simulation::main_loop ()
 	s_font_allegl.reset (allegro_gl_convert_allegro_font (font, AGL_FONT_TYPE_TEXTURED, 500.0), [] (FONT * f) {
 		allegro_gl_destroy_font (f);
 	});
+	set_close_button_callback (c_close_button_handler);
+
+	m_gui = make_shared<c_gui>();
+
+	// prepare drawtarget surface to draw to
+	switch (m_drawtarget_type) {
+			case e_drawtarget_type_allegro:
+				m_drawtarget = make_shared<c_drawtarget_allegro> (m_frame);
+				break;
+
+			case e_drawtarget_type_opengl:
+				m_drawtarget = make_shared<c_drawtarget_opengl>();
+				break;
+
+			default:
+				_erro ("Warning: unsupported drawtarget");
+	}
+	m_drawtarget->m_gui = m_gui;
+
+
+	routingdemo(); // ***
+	return ; /// <---
+
 
 	unique_ptr<c_world> test_world(std::move( draft_net2() ));
 
@@ -130,24 +155,6 @@ void c_simulation::main_loop ()
 	std::chrono::steady_clock::time_point last_click_time =
 	    std::chrono::steady_clock::now() - std::chrono::milliseconds (1000);
 
-	m_gui = make_shared<c_gui>();
-
-
-	// prepare drawtarget surface to draw to
-	switch (m_drawtarget_type) {
-			case e_drawtarget_type_allegro:
-				m_drawtarget = make_shared<c_drawtarget_allegro> (m_frame);
-				break;
-
-			case e_drawtarget_type_opengl:
-				m_drawtarget = make_shared<c_drawtarget_opengl>();
-				break;
-
-			default:
-				_erro ("Warning: unsupported drawtarget");
-		}
-
-	m_drawtarget->m_gui = m_gui;
 
 
 	//	bool allegro_keys_any_was=false; // is any key pressed right now (for key press/release)

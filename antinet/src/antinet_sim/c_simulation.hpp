@@ -57,6 +57,8 @@ class c_simulation {
 		bool simulation_pause;
 
 		void process_input(); ///< process the input devices
+
+		void routingdemo();
 };
 
 #endif // C_SIMULATION_HPP
