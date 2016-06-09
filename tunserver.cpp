@@ -1488,7 +1488,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("serialize",  "serialize test")
 					("crypto", "crypto test")
 					("gen_key_bench", "crypto benchmark")
-					("crypto_stream_bench", "crypto stream benchmark (XSalsa20)")
+					("crypto_stream_bench", "crypto stream benchmark")
+					("ct_bench", "crypto tunel benchmark")
 					("route_dij", "dijkstra test")
 					("route", "current best routing (could be equal to some other test)")
 					("debug", "some of the debug/logging functions")
@@ -1516,6 +1517,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
 	if (demoname=="gen_key_bench") { antinet_crypto::generate_keypairs_benchmark(2);  return false; }
 	if (demoname=="crypto_stream_bench") { antinet_crypto::stream_encrypt_benchmark(2); return false; }
+	if (demoname=="ct_bench") { antinet_crypto::multi_key_sign_generation_benchmark(2); return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="rpc") { rpc::rpc_demo(); return false; }

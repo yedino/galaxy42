@@ -1066,5 +1066,35 @@ void stream_encrypt_benchmark(const size_t seconds_for_test_case) {
 */
 }
 
+void multi_key_sign_generation_benchmark(const size_t seconds_for_test_case) {
+	g_dbg_level_set(100, "benchmark");
+	std::cout << "Generate normal multikey" << std::endl;
+	c_multikeys_PAIR keypairA;
+	auto start_point = std::chrono::steady_clock::now();
+	keypairA.generate(e_crypto_system_type_Ed25519, 2);
+	keypairA.generate(e_crypto_system_type_NTRU_sign, 2);
+	auto stop_point = std::chrono::steady_clock::now();
+	std::cout << "generated in " << std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count() << "ms" << std::endl;
+
+	c_multikeys_PAIR keypairB;
+	keypairB.generate(e_crypto_system_type_Ed25519, 2);
+	keypairB.generate(e_crypto_system_type_NTRU_sign, 2);
+
+	c_multikeys_pub keypubA = keypairA.m_pub;
+	c_multikeys_pub keypubB = keypairB.m_pub;
+	start_point = std::chrono::steady_clock::now();
+	size_t number_of_loops = 0;
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+		++number_of_loops;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	auto create_ct_loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "Generated " << number_of_loops << " crypto tunnels in "
+		<< create_ct_loop_time_ms << "ms" << std::endl;
+	std::cout << static_cast<double>(number_of_loops) / create_ct_loop_time_ms * 1000 << " per second" << std::endl;
+	g_dbg_level_set(0, "restore to default");
+}
+
 
 } // namespace
