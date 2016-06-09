@@ -7,8 +7,13 @@
 class c_rpc_server final {
 	private:
 		std::unique_ptr<c_connection_base> m_connection_node;
+		std::atomic<bool> m_stop_flag; // TODO atomic_falg ?
+		std::unique_ptr<std::thread> m_work_thread;
+		void main_loop(); ///< loop run in thread
 	public:
 		c_rpc_server(const unsigned int port = 42000);
+		~c_rpc_server();
+
 
 };
 

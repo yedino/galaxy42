@@ -44,8 +44,23 @@ try {
 }
 }
 
+void c_rpc_server::main_loop() {
+	assert(m_stop_flag == false);
+	while (!m_stop_flag) {
+		auto message = m_connection_node->receive();
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+}
+
 c_rpc_server::c_rpc_server(const unsigned int port)
 :
-	m_connection_node(std::make_unique<c_tcp_asio_node>(port))
+	m_connection_node(std::make_unique<c_tcp_asio_node>(port)),
+	m_stop_flag(false),
+	m_work_thread(std::make_unique<std::thread>(&c_rpc_server::main_loop, this))
 {
+}
+
+c_rpc_server::~c_rpc_server() {
+	m_stop_flag = true;
+	m_work_thread->join();
 }
