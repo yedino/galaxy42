@@ -106,6 +106,18 @@ T* unique_cast_ptr(std::unique_ptr<U> & u) {
 	return dynamic_cast<T*>( u.get() );
 }
 
+// idea from http://www.g-truc.net/post-0708.html
+// in C++17 this will be not needed - https://isocpp.org/files/papers/n4280.pdf
+template <typename T, std::size_t N>
+constexpr std::size_t countof(T const (&)[N]) noexcept {
+	return N;
+}
+template <class T>
+std::size_t countof(T const & obj) {
+	return obj.size();
+}
+
+
 }
 
 using namespace stdplus;

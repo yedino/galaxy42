@@ -292,7 +292,6 @@ void c_osi2_switch::send_package(t_osi3_packet &&packet) {
 	m_outbox.push_back(std::move(packet));
 	_dbg1("******snd_pkg*******only testing**************** ");
 	_dbg1("***************************get apcket to " << packet.m_dst);
-
 }
 
 /////////////////////////////////////

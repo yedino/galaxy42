@@ -1,5 +1,10 @@
 #include "c_gui.hpp"
 
+
+std::ostream & operator<<(std::ostream &ostr, t_point3gui obj) {
+	return ostr << "(" << obj.x << "," << obj.y << "," << obj.z << ")";
+}
+
 c_gui::c_gui() :
 	m_selected_object(),
 	m_target_ok(false),
