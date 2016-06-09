@@ -1,6 +1,9 @@
 #include "rpc.hpp"
+#include "../libs0.hpp"
 
-void rpc::send_tcp_msg(const std::string &msg, const std::string addr, int port) {
+using namespace asio_node;
+
+void send_tcp_msg(const std::string &msg, const std::string addr, int port) {
 	using namespace asio_node;
 
 	// note: tcp_asio_node can both sending and recieving messeges
@@ -14,7 +17,7 @@ void rpc::send_tcp_msg(const std::string &msg, const std::string addr, int port)
 	sender_node->send(std::move(message));
 }
 
-void rpc::rpc_demo() {
+void rpc_demo() {
 	_info("Running rpc demo");
 
 try {
@@ -39,4 +42,10 @@ try {
 } catch (std::exception &err) {
 	std::cerr << err.what() << std::endl;
 }
+}
+
+c_rpc_server::c_rpc_server(const unsigned int port)
+:
+	m_connection_node(std::make_unique<c_tcp_asio_node>(port))
+{
 }
