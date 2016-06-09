@@ -253,7 +253,7 @@ void c_osi2_switch::send_tick() {
 			m_draw_outbox.emplace(std::make_pair<t_osi3_uuid,double>(dij.get_next_uuid(),0.));
 			nic.add_to_nic_outbox(std::move( pcg )); // move this packet there
 		} else {
-			_dbg1("Packet hit detination: ok");
+			_dbg1("Packet hit destination: ok");
 		}
 
 //		size_t nic_ix = m_world.route_next_hop_nic_ix( dynamic_cast<c_object&>(*this), dest_switch );

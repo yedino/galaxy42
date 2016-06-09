@@ -186,7 +186,7 @@ bool draft_net2_testsend_alltests() {
 	
 	
 /// @brief This function tests the code from this file.
-int draft_net2() { // the main function for test
+unique_ptr<c_world> draft_net2() { // the main function for test
 /*	
 	if (! draft_net2_testsend_alltests()) {
 		_erro("Unit test failed!");
@@ -199,25 +199,45 @@ int draft_net2() { // the main function for test
     t_drawtarget_type drawtarget_type = e_drawtarget_type_allegro;
     c_simulation simulation(drawtarget_type);
 
-    c_world world(simulation);
+    unique_ptr<c_world> world_ptr = make_unique<c_world>(simulation);
+    c_world & world = * world_ptr;
 	
 	
 	world.add_node("nodeA",100,100); // ***
-	world.add_node("nodeB",300,100);
+	world.add_node("nodeB",150,200);
 	world.add_node("nodeC1",300,300);
-	world.add_node("nodeC2",300,320);
-	world.add_node("nodeC3",300,340);
-	world.add_node("nodeC4",300,360);
-	world.add_node("nodeD",150,200);
+	world.add_node("nodeC2",300,350);
+	world.add_node("nodeC3",300,400);
+	world.add_node("nodeC4",300,450);
+	world.add_node("nodeD", 50,200);
 	world.add_node("nodeE",400,100); // ***
+
+	{ int i=0, a=80, x0=500, y0=120;
+	world.add_node("nodeF1",x0,y0+(a*i++));
+	world.add_node("nodeF2",x0,y0+(a*i++));
+	world.add_node("nodeF3",x0,y0+(a*i++));
+	world.add_node("nodeF4",x0,y0+(a*i++));
+	world.add_node("nodeF5",x0,y0+(a*i++));
+	world.add_node("nodeF6",x0,y0+(a*i++));
+	world.add_node("nodeF7",x0,y0+(a*i++));
+	}
+
+	world.add_node("nodeG1",650,100);
+	world.add_node("nodeG2",650,300);
+
+	world.add_node("nodeP",750,500);
+	world.add_node("nodeX",800,500);
 	
 	world.add_osi2_switch("swA", 200,100);
 	world.add_osi2_switch("swB", 300,100);
 	world.add_osi2_switch("swC", 200,300);
-	world.add_osi2_switch("swD", 300,100);
+	world.add_osi2_switch("swD", 300,200);
+
+
 	
 	_mark("Connecting devices");
 	world.connect_network_devices("nodeA","swA", 1);
+	world.connect_network_devices("nodeB","swA", 1);
 	world.connect_network_devices("swA","swB", 1);
 	world.connect_network_devices("swB","swD", 1);
 	world.connect_network_devices("nodeA","nodeD", 1);
@@ -227,6 +247,23 @@ int draft_net2() { // the main function for test
 	world.connect_network_devices("swC","nodeC3", 1);
 	world.connect_network_devices("swC","nodeC4", 1);
 	world.connect_network_devices("swD","nodeE", 1); // ***
+
+	world.connect_network_devices("swD","nodeF1", 100);
+	world.connect_network_devices("swD","nodeF2", 2);
+	world.connect_network_devices("swD","nodeF3", 100);
+
+	world.connect_network_devices("nodeF1","nodeF2", 1);
+	world.connect_network_devices("nodeF2","nodeF3", 1);
+	world.connect_network_devices("nodeF3","nodeF4", 1);
+	world.connect_network_devices("nodeF4","nodeF5", 1);
+
+	world.connect_network_devices("nodeF5","nodeG2", 1);
+	world.connect_network_devices("nodeG2","nodeG1", 1);
+
+	world.connect_network_devices("nodeG1","nodeP", 1);
+	world.connect_network_devices("swD","nodeP", 50);
+	world.connect_network_devices("nodeP","nodeX", 2);
+
 	
 	_mark("Testing - show object:");
 	_info( world.find_object_by_name_as_switch("swA") );
@@ -253,7 +290,7 @@ int draft_net2() { // the main function for test
 	_info( world.find_object_by_name_as_switch("swA") );
 
 	c_dijkstry01 ( world.find_object_by_name_as_switch("nodeA") ,
-			  world.find_object_by_name_as_switch("nodeE") );
+			  world.find_object_by_name_as_switch("nodeX") );
 
 #if 0
 	world.connect_network_devices("","");
@@ -264,6 +301,7 @@ int draft_net2() { // the main function for test
 	
 	/***
 	 * 
+	 * (outdated now - more elements are added)
 	 * 
 	 *  NodeA           SwitchA         SwitchB 
 	 *   nic#0 -------> nic#0 --------> nic#0 ----------------> SwitchD 
@@ -280,7 +318,7 @@ int draft_net2() { // the main function for test
 	 */
 	
 	
-	return 0;
+	return std::move(world_ptr);
 }
 
 

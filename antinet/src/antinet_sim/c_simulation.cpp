@@ -5,6 +5,8 @@
 
 #include "c_drawtarget_opengl.hpp"
 
+#include "draft_net2.hpp"
+
 unsigned int g_max_anim_frame = 250;
 unsigned int g_max_frameRate = 60;
 
@@ -12,13 +14,10 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 	:
 	m_goodbye (false), m_frame_number (0),
 	m_world(nullptr),
-	s_font_allegl(nullptr),
-	m_drawtarget_type (drawtarget_type),
-	m_frame (nullptr),
+	s_font_allegl(nullptr),	m_drawtarget_type (drawtarget_type),	m_frame (nullptr),
 	m_screen (m_drawtarget_type == e_drawtarget_type_allegro ? screen : nullptr),
 	smallWindow (nullptr),
-	m_drawtarget (nullptr),
-	m_gui(nullptr),
+	m_drawtarget (nullptr),	m_gui(nullptr),
 	simulation_pause(false)
 {
 	_note ("Creating simulation, mode: " << t_drawtarget_type_to_string (m_drawtarget_type) << ". The allegro screen is at " << (void *) m_screen);
@@ -27,18 +26,6 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 c_simulation::~c_simulation ()
 {
 	_note ("Destructing the simulation");
-
-	if (m_frame) {
-			destroy_bitmap (m_frame);
-			m_frame = nullptr;
-		}
-
-	if (smallWindow) {
-			destroy_bitmap (smallWindow);
-			smallWindow = nullptr;
-		}
-
-	_note ("Destructing the simulation - done");
 }
 
 void c_simulation::init ()
@@ -87,6 +74,10 @@ std::string cjddev_detail_random_addr ()
 	return std::to_string (distribution (generator));
 }
 
+void c_simulation::set_world( unique_ptr<c_world> && world ) { ///< takes this world and uses it
+	m_world = std::move(world);
+}
+
 
 void c_simulation::main_loop ()
 {
@@ -95,7 +86,11 @@ void c_simulation::main_loop ()
 		allegro_gl_destroy_font (f);
 	});
 
-	m_world->load ("layout/current/map2.txt");
+	unique_ptr<c_world> test_world(std::move( draft_net2() ));
+
+	set_world( std::move(test_world)  );
+
+	//m_world->load ("layout/current/map2.txt");
 
 	for (auto & obj : m_world->m_objects) {
 			obj->set_font (s_font_allegl);
@@ -152,8 +147,7 @@ void c_simulation::main_loop ()
 	float view_angle = 0.0;
 	//float camera_offset = 1.0;
 
-	float zoom = 1.0;
-	float camera_step_z = -11.0;
+	float zoom = 1.0;	float camera_step_z = -11.0;
 
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) {
@@ -692,6 +686,7 @@ void c_simulation::main_loop ()
 							_info ("please choose target and source switch");
 						}
 					else {
+							_note("Starting simulation");
 							auto source = m_gui->m_source_node;
 							auto target = m_gui->m_target_node;
 							c_osi2_switch *source_node = dynamic_cast<c_osi2_switch *> ( (*source).get());

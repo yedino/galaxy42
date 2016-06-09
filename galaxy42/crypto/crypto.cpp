@@ -701,11 +701,11 @@ void test_crypto() {
 	// Alice: IDC
 	_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
-	keypairA.generate(e_crypto_system_type_X25519,0);
+	keypairA.generate(e_crypto_system_type_X25519,2);
 
-	keypairA.generate(e_crypto_system_type_Ed25519,5);
-	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairA.generate(e_crypto_system_type_SIDH, 1);
+	keypairA.generate(e_crypto_system_type_Ed25519,2);
+//	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
+//	keypairA.generate(e_crypto_system_type_SIDH, 1);
 	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string_hex()));
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -768,13 +768,15 @@ void test_crypto() {
 
 		//_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		//	"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
-		for (int ia=0; ia<5; ++ia) {
-			auto msg1s = AliceCT.box("Hello");
-			auto msg1r = BobCT.unbox(msg1s);
+		for (int ia=0; ia<10; ++ia) {
+			_note("Loop number: " << ia);
+			t_crypto_nonce nonce_used;
+			auto msg1s = AliceCT.box("Hello", nonce_used);
+			auto msg1r = BobCT.unbox(msg1s, nonce_used);
 			//_note("Message: [" << msg1r << "] from: " << to_debug(msg1s));
 
-			auto msg2s = BobCT.box("Hello");
-			auto msg2r = AliceCT.unbox(msg2s);
+			auto msg2s = BobCT.box("Hello", nonce_used);
+			auto msg2r = AliceCT.unbox(msg2s, nonce_used);
 			//_note("Message: [" << msg2r << "] from: " << to_debug(msg2s));
 		}
 	}

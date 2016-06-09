@@ -80,22 +80,19 @@ double c_entity::get_distance (const c_entity &entity) {
 
 
 void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
-	std::cout << "TODO: c_entity::draw_opengl" << std::endl;
-/*
+	//std::cout << "TODO: c_entity::draw_opengl" << std::endl;
+
     auto layer = dynamic_cast<c_layer_opengl &> (layer_any);
 
     const auto & gui = * drawtarget.m_gui;
-    const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
+ 		// const int vx = gui.view_x(m_x), vy = gui.view_y(m_y); // position in viewport - because camera position
     glPushMatrix();
 
     if (layer.m_layer_nr == e_layer_nr_gui_bgr) {
-        auto selected_object = gui.m_selected_object;
-		// TODO
-        //auto target_object = gui.m_target;
-        //auto source_object = gui.m_source;
-        //std::cout << "DEBUG3" << std::endl;
+			// auto selected_object = gui.m_selected_object;
 
-        if (this == selected_object.get()) { // if I am the selected object
+
+        if (m_selected) { // if I am the selected object
             //circle(frame, vx, vy, 50 - 5, makecol(255, 128, 32));
             glLineWidth(2.0);  //size of line
             glColor3f(1.0, 1.0, 0.0);
@@ -105,7 +102,7 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
 //            glEnd();
         }
 
-        if (this == target_object.get()) { // if I am the target object
+        if (m_target) { // if I am the target object
             //circle(frame, vx, vy, 50 - 15, makecol(104, 71, 79));
             glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
@@ -114,13 +111,12 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
                 float x = 0.05*cos(angle)*gui.camera_zoom;
                 float y = 0.1*sin(angle)*gui.camera_zoom;
-
                 glVertex3f(x,y,0.0f);
             }
             glEnd();
         }
 
-        if (this == source_object.get()) {
+        if (m_source) {
             //circle(frame, vx, vy, 50 - 15, makecol(246, 83, 86));
             glLineWidth(1.5);  //size of line
             glColor3f(0.0, 1.0, 0.0);
@@ -134,11 +130,10 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             }
             glEnd();
         }
+
     }
     if (layer.m_layer_nr == e_layer_nr_gui) {
-        // std::cout << "DEBUG4" << std::endl;
-        auto selected_object = gui.m_selected_object.lock();
-        if (this == selected_object.get()) { // if I am the selected object
+        if (m_selected) { // if I am the selected object
             glLineWidth(1.0);
             glColor3f(1.0, 0.0, 0.0);
 
@@ -152,14 +147,24 @@ void c_entity::draw_opengl(c_drawtarget &drawtarget, c_layer &layer_any) {
             glEnd();
         }
     }
+
     if (layer.m_layer_nr == e_layer_nr_object) {
+
+            glBegin(GL_POLYGON);
+            for(float angle=0.0; angle<2*M_PI; angle+=0.1) {
+                float x = 0.05*cos(angle)*gui.camera_zoom;
+                float y = 0.1*sin(angle)*gui.camera_zoom;
+                glVertex3f(x,y,0.0f);
+            }
+            glEnd();
+
         //std::cout << "DEBUG5" << std::endl;
 //		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
 //		line(frame, vx - 2, vy + 2, vx + 2, vy - 2, color);
 //		circle(frame, vx, vy, 10, color);
     }
     glPopMatrix();
-*/
+
 }
 
 void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
@@ -211,7 +216,7 @@ void c_entity::draw_allegro(c_drawtarget &drawtarget, c_layer &layer_any) {
 			}
 		}
 	}
-	
+
 	int color = makecol(255,128,0); // color1
 	if (layer.m_layer_nr == e_layer_nr_object) {
 		line(frame, vx - 2, vy - 2, vx + 2, vy + 2, color);
