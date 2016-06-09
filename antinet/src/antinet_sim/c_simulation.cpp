@@ -177,6 +177,7 @@ void c_simulation::main_loop ()
 
 			// --- process the keyboard/inputs ---
 			if (use_input_allegro) {
+				process_input();
 			}
 
 			int allegro_char = 0;
@@ -506,7 +507,7 @@ void c_simulation::main_loop ()
 
 			//_dbg3("m_world->m_objects.size(): " << m_world->m_objects.size());
 			//_dbg3("get_move_object ret: " << get_move_object(gui_mouse_x, gui_mouse_y));
-			int move_object_index = get_move_object (gui_mouse_x, gui_mouse_y); ///< -1 if 'empty'
+			int move_object_index = get_move_object(); ///< -1 if 'empty'
 
 			if (move_object_index != -1) { // working with selected object
 					m_gui->m_selected_object = m_world->m_objects.begin();
@@ -738,13 +739,13 @@ void c_simulation::main_loop ()
 						}
 				}
 
-			if (allegro_mouse_b == 2) { // end/stop the line that creates new connections
+			if (m_gui->m_mouseb == 2) { // end/stop the line that creates new connections
 					print_connect_line = false;
 				}
 
 
 			{
-				auto x = allegro_mouse_x, y = allegro_mouse_y;
+				auto x = m_gui->m_cursor.x, y = m_gui->m_cursor.y;
 				int r = 5, rr = 4;
 
 				if (use_draw_allegro) {
@@ -828,9 +829,9 @@ void c_simulation::main_loop ()
 
 
 
-int c_simulation::get_move_object (int mouse_x, int mouse_y)
+int c_simulation::get_move_object()
 {
-	const int vx = m_gui->view_x_rev (mouse_x), vy = m_gui->view_y_rev (mouse_y); // position in viewport - because camera position
+	const int vx = m_gui->view_x_rev (), vy = m_gui->view_y_rev (); // position in viewport - because camera position
 
 	double max_distance = 150;
 

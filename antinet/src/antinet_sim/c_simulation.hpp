@@ -52,8 +52,9 @@ class c_simulation {
 			close_button_pressed = true;
 		}
 
-		int get_move_object (int mouse_x, int mouse_y); ///< return index of element in m_world->m_objects vector, -1 if not found 
-			bool simulation_pause;
+		int get_move_object (); ///< return index of element in m_world->m_objects vector, -1 if not found
+
+		bool simulation_pause;
 
 		void process_input(); ///< process the input devices
 };

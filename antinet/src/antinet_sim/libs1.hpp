@@ -118,6 +118,14 @@ std::size_t countof(T const & obj) {
 }
 
 
+template <typename T>
+std::string to_string(const T & obj) {
+	std::ostringstream oss;
+	oss << obj;
+	return oss.str();
+}
+
+
 }
 
 using namespace stdplus;

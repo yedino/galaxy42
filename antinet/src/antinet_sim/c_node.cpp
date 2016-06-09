@@ -282,7 +282,7 @@ void c_osi2_switch::send_hello_to_neighbors() {
 		t_osi2_cost cost;
 		c_osi2_nic * remote_nic = nic->get_connected_card_or_null(cost);
 		if (remote_nic == nullptr) continue;
-		t_osi3_uuid dest_addr = remote_nic->get_uuid(); /// addres of my neighbor
+	//	t_osi3_uuid dest_addr = remote_nic->get_uuid(); /// addres of my neighbor
 		// TODO: send it here.
 		_NOTREADY_warn();
 	}
