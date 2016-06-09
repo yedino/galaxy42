@@ -1069,23 +1069,24 @@ void stream_encrypt_benchmark(const size_t seconds_for_test_case) {
 }
 
 void multi_key_sign_generation_benchmark(const size_t seconds_for_test_case) {
-	g_dbg_level_set(100, "benchmark");
+	g_dbg_level_set(160, "start benchmark");
 	std::cout << "Generate normal multikey" << std::endl;
 	c_multikeys_PAIR keypairA;
 	auto start_point = std::chrono::steady_clock::now();
 	keypairA.generate(e_crypto_system_type_Ed25519, 2);
-	keypairA.generate(e_crypto_system_type_NTRU_sign, 2);
+	keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
 	auto stop_point = std::chrono::steady_clock::now();
-	std::cout << "generated in " << std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count() << "ms" << std::endl;
+	std::cout << "generated in "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count() << "ms" << std::endl;
 
 	c_multikeys_PAIR keypairB;
 	keypairB.generate(e_crypto_system_type_Ed25519, 2);
-	keypairB.generate(e_crypto_system_type_NTRU_sign, 2);
+	keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
-	start_point = std::chrono::steady_clock::now();
 	size_t number_of_loops = 0;
+	start_point = std::chrono::steady_clock::now();
 	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
 		++number_of_loops;
@@ -1095,6 +1096,24 @@ void multi_key_sign_generation_benchmark(const size_t seconds_for_test_case) {
 	std::cout << "Generated " << number_of_loops << " crypto tunnels in "
 		<< create_ct_loop_time_ms << "ms" << std::endl;
 	std::cout << static_cast<double>(number_of_loops) / create_ct_loop_time_ms * 1000 << " per second" << std::endl;
+
+	number_of_loops = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+		AliceCT.create_IDe();
+		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
+		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+		AliceCT.create_CTf(packetstart_2); // A<<<---
+		++number_of_loops;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	auto loop_time_ms = std::chrono::duration_cast<std::chrono::microseconds>(stop_point - start_point).count();
+	std::cout << "Created " << number_of_loops << "crypto tunnels in "
+		<< loop_time_ms << "ms" << std::endl;
+	std::cout << static_cast<double>(number_of_loops) / loop_time_ms * 1000 << " per second" << std::endl;
+
 	g_dbg_level_set(0, "restore to default");
 }
 
