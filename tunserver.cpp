@@ -1601,9 +1601,9 @@ int main(int argc, char **argv) {
 					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
 					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
 					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
-				("sing-key", po::value<std::string>(), "Name of key file in default location for keys")
-				("sing-key-file", po::value<std::string>(), "Name of key file in specified location")
-				("sing-data-file", po::value<std::string>(), "Name of data file in specified location")
+				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
+				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
+				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
 
 			("verify", "Verify key or data with trusted-key and key or data"
 					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
@@ -1667,7 +1667,6 @@ int main(int argc, char **argv) {
 
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
-
 			// --- debug level for main program ---
 			g_dbg_level_set(20,"For normal program run");
 			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
@@ -1716,29 +1715,125 @@ int main(int argc, char **argv) {
 				}
 				return 0;
 			}
-/*
-			if(argm.count("sign-with-key")) {
-				auto arguments = argm["sign-with-key"].as<std::vector<std::string>>();
-				auto file_to_sign = arguments.at(0);
-				auto sign_key = arguments.at(1);
-				_dbg1("start signing file " << file_to_sign);
-				_dbg1("using key " << file_to_sign);
+
+			if (argm.count("sign")) {
+
 				antinet_crypto::c_multikeys_PRV signing_key;
+				std::string output_file;
+				if (argm.count("my-key")) {
+					output_file = argm["my-key"].as<std::string>();
+					signing_key.datastore_load(output_file);
 
-				signing_key.datastore_load(sign_key);
-				_dbg1("load file to sign");
-				std::string file_content = filestorage::load_string(e_filestore_local_path, file_to_sign);
+				} else if (argm.count("my-key-file")) {
+					output_file = argm["my-key-file"].as<std::string>();
+					sodiumpp::locked_string key_data(filestorage::load_string_mlocked(e_filestore_local_path,
+																					  output_file));
+					signing_key.load_from_bin(key_data.get_string());
 
-				_dbg1("file contet loaded, start sign");
-				auto sign = signing_key.multi_sign(file_content);
-				_dbg1("End of sign");
-				_dbg1("signature: ");
-				sign.print_signatures();
-				auto serialized = sign.serialize_bin();
-				filestorage::save_string(e_filestore_galaxy_sig, file_to_sign, serialized, true);
+				} else {
+					_erro("--my-key or --my-key-file option is required for --sign");
+					return 1;
+				}
+
+				std::string to_sign_file;
+				std::string to_sign;
+				if (argm.count("sign-key")) {
+					to_sign_file = argm["sign-key"].as<std::string>();
+					to_sign = filestorage::load_string(e_filestore_galaxy_pub, to_sign_file);
+					auto sign = signing_key.multi_sign(to_sign);
+					// adding ".pub" to make signature.pub.sig it's more clear (key.pub.sig is signature of key.pub)
+					filestorage::save_string(e_filestore_galaxy_sig, to_sign_file+".pub", sign.serialize_bin(), true);
+				} else if (argm.count("sign-key-file")) {
+					to_sign_file = argm["sign-key-file"].as<std::string>();
+					to_sign = filestorage::load_string(e_filestore_local_path, to_sign_file);
+					auto sign = signing_key.multi_sign(to_sign);
+					filestorage::save_string(e_filestore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
+
+				} else if (argm.count("sign-data-file")) {
+					to_sign_file = argm["sign-data-file"].as<std::string>();
+					to_sign = filestorage::load_string(e_filestore_local_path, to_sign_file);
+					auto sign = signing_key.multi_sign(to_sign);
+					filestorage::save_string(e_filestore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
+
+				} else {
+					_erro("-sign-key, sign-key-file or -sign-data-file option is required for --sign");
+					return 1;
+				}
 				return 0;
 			}
 
+			if("verify") {
+
+				antinet_crypto::c_multikeys_pub trusted_key;
+				std::string output_file;
+				if (argm.count("trusted-key")) {
+					output_file = argm["trusted-key"].as<std::string>();
+					trusted_key.datastore_load(output_file);
+
+				} else if (argm.count("trusted-key-file")) {
+					output_file = argm["trusted-key-file"].as<std::string>();
+					std::string key_data(filestorage::load_string(e_filestore_local_path, output_file));
+					trusted_key.load_from_bin(key_data);
+
+				} else {
+					_erro("--trusted-key or --trusted-key-file option is required for --verify");
+					return 1;
+				}
+
+				bool extern_signature = false;
+				antinet_crypto::c_multisign signature;
+
+				auto load_signature = [&signature] (t_filestore stype, const std::string &filename) {
+					std::string data (filestorage::load_string(stype, filename));
+					signature.load_from_bin(data);
+				};
+
+				std::string signature_file;
+				if (argm.count("signature-file")) {
+					extern_signature = true;
+					signature_file = argm["signature-file"].as<std::string>();
+					std::string signature_data(filestorage::load_string(e_filestore_local_path, signature_file));
+					signature.load_from_bin(signature_data);
+				}
+
+				std::string to_verify_file;
+				std::string to_verify;
+			try {
+				if (argm.count("toverify-key")) {
+					to_verify_file = argm["toverify-key"].as<std::string>();
+					to_verify = filestorage::load_string(e_filestore_galaxy_pub, to_verify_file);
+					signature_file = to_verify_file + ".pub";
+					std::string signature_data(filestorage::load_string(e_filestore_galaxy_sig, signature_file));
+					signature.load_from_bin(signature_data);
+					antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+
+				} else if (argm.count("toverify-key-file")) {
+					to_verify_file = argm["toverify-key-file"].as<std::string>();
+					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
+					signature_file = to_verify_file+".sig";
+					std::string signature_data(filestorage::load_string(e_filestore_local_path, signature_file));
+					signature.load_from_bin(signature_data);
+					antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+
+				} else if (argm.count("toverify-data-file")) {
+					to_verify_file = argm["toverify-data-file"].as<std::string>();
+					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
+					signature_file = to_verify_file+".sig";
+					std::string signature_data(filestorage::load_string(e_filestore_local_path, signature_file));
+					signature.load_from_bin(signature_data);
+					antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+				} else {
+					_erro("-toverify-key, toverify-key-file or -sign-data-file option is required for --sign");
+					return 1;
+				}
+			} catch (std::invalid_argument &err) {
+				_dbg2("Signature verification: fail");
+				return 1;
+			}
+				_dbg2("Verify Success");
+				return 0;
+			}
+/*
 			if(argm.count("verify-with-key")) {
 				auto arguments = argm["verify-with-key"].as<std::vector<std::string>>();
 				auto file_to_verify = arguments.at(0);
