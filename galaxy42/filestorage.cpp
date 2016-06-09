@@ -74,7 +74,7 @@ std::string filestorage::load_string(t_filestore file_type,
 									 const std::string &filename) {
 	std::string content;
 
-	fs::path file_with_path = get_path_for(file_type, filename);
+	fs::path file_with_path = get_full_path(file_type, filename);
 	_dbg2("Loading file path: " << file_with_path.native());
 
 	if (!is_file_ok(file_with_path.native())) {
@@ -93,7 +93,7 @@ std::string filestorage::load_string(t_filestore file_type,
 sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 														 const std::string &filename) {
 	FILE * f_ptr;
-	fs::path file_with_path = get_path_for(file_type, filename);
+	fs::path file_with_path = get_full_path(file_type, filename);
 
 	f_ptr = std::fopen(file_with_path.c_str(), "r");
 
@@ -147,6 +147,76 @@ bool filestorage::is_file_ok(const std::string &filename) {
 bool filestorage::remove(const std::string &p) {
 	fs::path path_to_remove(p);
 	return fs::remove(path_to_remove);
+}
+
+std::vector<std::string> filestorage::get_file_list(const boost::filesystem::path &path) {
+	std::vector<std::string> file_list;
+	if (!path.empty()) {
+		fs::path apk_path(path);
+		fs::recursive_directory_iterator end;
+
+		for (fs::recursive_directory_iterator i(apk_path); i != end; ++i) {
+			const fs::path cp = (*i);
+			std::string filename = extract_filename(cp.native());
+			file_list.push_back(filename);
+		}
+	}
+	return file_list;
+}
+
+fs::path filestorage::get_full_path(t_filestore file_type,
+								   const std::string &filename) {
+
+	fs::path full_path = get_parent_path(file_type, filename);
+	full_path += filename;
+	switch (file_type) {
+		case e_filestore_galaxy_wallet_PRV: {
+			full_path += ".PRV";
+			break;
+		}
+		case e_filestore_galaxy_pub: {
+			full_path += ".pub";
+			break;
+		}
+		case e_filestore_galaxy_sig: {
+			full_path += ".sig";
+			break;
+		}
+		case e_filestore_local_path: {
+			break;
+		}
+	}
+	// _dbg3("full_path " << full_path);
+	return full_path;
+}
+
+fs::path filestorage::get_parent_path(t_filestore file_type,
+									const std::string &filename) {
+
+	fs::path user_home(getenv("HOME"));
+	fs::path parent_path(user_home.c_str());
+
+	switch (file_type) {
+		case e_filestore_galaxy_wallet_PRV: {
+			parent_path += "/.config/antinet/galaxy42/wallet/";
+			break;
+		}
+		case e_filestore_galaxy_pub: {
+			parent_path += "/.config/antinet/galaxy42/public/";
+			break;
+		}
+		case e_filestore_galaxy_sig: {
+			parent_path += "/.config/antinet/galaxy42/public/";
+			break;
+		}
+		case e_filestore_local_path: {
+			fs::path file_path(filename);
+			parent_path = file_path.parent_path();
+			break;
+		}
+	}
+
+	return parent_path;
 }
 
 fs::path filestorage::prepare_path_for_write(t_filestore file_type,
@@ -204,42 +274,9 @@ fs::path filestorage::create_path_for(t_filestore file_type,
 									  const std::string &filename) {
 
 	// connect parent path with filename
-	fs::path full_path = get_path_for(file_type, filename);
+	fs::path full_path = get_full_path(file_type, filename);
 	std::cout << "full_path: " << full_path.native() << std::endl;
 	create_parent_dir(full_path);
-	return full_path;
-}
-
-fs::path filestorage::get_path_for(t_filestore file_type,
-								   const std::string &filename) {
-
-	fs::path user_home(getenv("HOME"));
-	fs::path full_path(user_home.c_str());
-	switch (file_type) {
-		case e_filestore_galaxy_wallet_PRV: {
-			full_path += "/.config/antinet/galaxy42/wallet/";
-			full_path += filename;
-			full_path += ".PRV";
-			break;
-		}
-		case e_filestore_galaxy_pub: {
-			full_path += "/.config/antinet/galaxy42/public/";
-			full_path += filename;
-			full_path += ".pub";
-			break;
-		}
-		case e_filestore_galaxy_sig: {
-			full_path += "/.config/antinet/galaxy42/public/";
-			full_path += filename;
-			full_path += ".sig";
-			break;
-		}
-		case e_filestore_local_path: {
-			full_path = filename;
-			break;
-		}
-	}
-	_dbg3("full_path " << full_path);
 	return full_path;
 }
 

@@ -1558,7 +1558,8 @@ int main(int argc, char **argv) {
 	c_tunserver myserver;
 	try {
 		namespace po = boost::program_options;
-		po::options_description desc("Options");
+		unsigned line_length = 120;
+		po::options_description desc("Options", line_length);
 		desc.add_options()
 			("help", "Print help messages")
 
@@ -1660,7 +1661,8 @@ int main(int argc, char **argv) {
 					if (!should_continue) return 0;
 				}
 				catch(std::exception& e) {
-				    std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what() << ", application will now exit" << std::endl;
+					std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what()
+							  << ", application will now exit" << std::endl;
 						return 0; // no error for developer mode
 				}
 			}
@@ -1677,13 +1679,35 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
-			if (argm.count("gen-key")) {
+			if (argm.count("info")) {
+				if (!argm.count("my-key")) {
+					_erro("--my-key is required for --info");
+					return 1;
+				}
+				auto name = argm["my-key"].as<std::string>();
+				antinet_crypto::c_multikeys_pub keys;
+				keys.datastore_load(name);
+				_info(keys.to_debug());
+				return 0;
+			}
 
+			if (argm.count("list-my-keys")) {
+				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				std::cout << "Your key list:" << std::endl;
+				for(auto &key_name : keys) {
+					//remove .PRV extension
+					size_t pos = key_name.find(".PRV");
+					std::cout << key_name.substr(0,pos) << std::endl;
+				}
+				return 0;
+			}
+
+			if (argm.count("gen-key")) {
 				if (!argm.count("key-type")) {
 					_erro("--key-type option is required for --gen-key");
 					return 1;
 				}
-
 				std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
 				auto arguments = argm["key-type"].as<std::vector<std::string>>();
 				for (auto argument : arguments) {
@@ -1762,7 +1786,7 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
-			if("verify") {
+			if(argm.count("verify")) {
 
 				antinet_crypto::c_multikeys_pub trusted_key;
 				std::string output_file;
@@ -1866,8 +1890,8 @@ int main(int argc, char **argv) {
 		}
 	}
 	catch(std::exception& e) {
-		    std::cerr << "Unhandled Exception reached the top of main: "
-				<< e.what() << ", application will now exit" << std::endl;
+		std::cerr << "Unhandled Exception reached the top of main: "
+				  << e.what() << ", application will now exit" << std::endl;
 		return 2;
 	}
 
