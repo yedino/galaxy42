@@ -1109,11 +1109,34 @@ void multi_key_sign_generation_benchmark(const size_t seconds_for_test_case) {
 		++number_of_loops;
 	}
 	stop_point = std::chrono::steady_clock::now();
-	auto loop_time_ms = std::chrono::duration_cast<std::chrono::microseconds>(stop_point - start_point).count();
-	std::cout << "Created " << number_of_loops << "crypto tunnels in "
+	auto loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "Created " << number_of_loops << " crypto tunnels in "
 		<< loop_time_ms << "ms" << std::endl;
 	std::cout << static_cast<double>(number_of_loops) / loop_time_ms * 1000 << " per second" << std::endl;
 
+	// create CT
+	c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+	AliceCT.create_IDe();
+	string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+	c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
+	string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+	AliceCT.create_CTf(packetstart_2); // A<<<---
+
+	const std::string msg(1024, 'm');
+	size_t encryption_data_size = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		t_crypto_nonce nonce_used;
+		auto msg1s = AliceCT.box(msg, nonce_used);
+		BobCT.unbox(msg1s, nonce_used);
+		encryption_data_size += msg.size();
+	}
+	stop_point = std::chrono::steady_clock::now();
+	loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "Send " <<  static_cast<double>(encryption_data_size) / 1024 / 1024 << " MB in "
+		<< loop_time_ms << "ms" << std::endl;
+	std::cout << static_cast<double>(encryption_data_size) / 1024 / 1024 / seconds_for_test_case
+		<< "MB per second" << std::endl;
 	g_dbg_level_set(0, "restore to default");
 }
 
