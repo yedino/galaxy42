@@ -17,7 +17,7 @@ TEST(filestorage, create_path) {
 	fs::path PRV_dir = filestorage::create_path_for(e_filestore_galaxy_wallet_PRV, "key");
 	std::cout << PRV_dir << std::endl;
 
-	fs::path PRV_full = filestorage::prepare_file_for_write(e_filestore_galaxy_wallet_PRV, "key", true);
+	fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key", true);
 	std::cout << PRV_full << std::endl;
 
 	std::cout << "Removing PRV: " << filestorage::remove(PRV_full.native()) << std::endl;
@@ -25,7 +25,7 @@ TEST(filestorage, create_path) {
 	fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_pub, "key");
 	std::cout << pub_dir << std::endl;
 
-	fs::path pub_full = filestorage::prepare_file_for_write(e_filestore_galaxy_pub, "key", true);
+	fs::path pub_full = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key", true);
 	std::cout << pub_full << std::endl;
 
 	std::cout << "Removing pub: " << filestorage::remove(pub_full.native()) << std::endl;
@@ -36,8 +36,8 @@ TEST(filestorage, create_path) {
 
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string
-	fs::path pub_full01 = filestorage::prepare_file_for_write(e_filestore_galaxy_pub, "key01", true);
-	fs::path pub_full02 = filestorage::prepare_file_for_write(e_filestore_galaxy_pub, "key02", true);
+	fs::path pub_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key01", true);
+	fs::path pub_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key02", true);
 
 	// saving data
 	filestorage::save_string(e_filestore_galaxy_pub, "key01", "public data01", true);
@@ -59,8 +59,8 @@ TEST(filestorage, create_path) {
 
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string_mlocked
-	fs::path PRV_full01 = filestorage::prepare_file_for_write(e_filestore_galaxy_wallet_PRV, "key01", true);
-	fs::path PRV_full02 = filestorage::prepare_file_for_write(e_filestore_galaxy_wallet_PRV, "key02", true);
+	fs::path PRV_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key01", true);
+	fs::path PRV_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key02", true);
 
 	// prepare memory locked strings  UNSAFE FOR TEST
 	sodiumpp::locked_string l_str01 = sodiumpp::locked_string::unsafe_create("private data01");

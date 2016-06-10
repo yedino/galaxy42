@@ -6,6 +6,8 @@
 #include "c_drawtarget_opengl.hpp"
 
 #include "draft_net2.hpp"
+#include "routingdemo.hpp"
+
 
 unsigned int g_max_anim_frame = 250;
 unsigned int g_max_frameRate = 60;
@@ -14,9 +16,10 @@ c_simulation::c_simulation (t_drawtarget_type drawtarget_type)
 	:
 	m_goodbye (false), m_frame_number (0),
 	m_world(nullptr),
-	s_font_allegl(nullptr),	m_drawtarget_type (drawtarget_type),	m_frame (nullptr),
+	s_font_allegl(nullptr),
+	m_drawtarget_type (drawtarget_type),
 	m_screen (m_drawtarget_type == e_drawtarget_type_allegro ? screen : nullptr),
-	smallWindow (nullptr),
+	m_frame (nullptr), smallWindow (nullptr),
 	m_drawtarget (nullptr),	m_gui(nullptr),
 	simulation_pause(false)
 {
@@ -78,6 +81,27 @@ void c_simulation::set_world( unique_ptr<c_world> && world ) { ///< takes this w
 	m_world = std::move(world);
 }
 
+void c_simulation::process_input() {
+	// capture input state:
+	poll_keyboard();
+	poll_mouse();
+	for (size_t ix=0; ix < stdplus::countof(m_gui->m_key); ++ix) m_gui->m_key[ix] = key[ix];
+	m_gui->m_shift = key_shifts;
+	const int allegro_mouse_x = mouse_x, allegro_mouse_y = mouse_y, allegro_mouse_b = mouse_b; // buttons
+
+	// the position in display port GUI
+	const int gui_mouse_x = allegro_mouse_x, gui_mouse_y = allegro_mouse_y, gui_mouse_b = allegro_mouse_b; // capture mouse input
+
+	// save the position to m_gui (the position in the world coordinates)
+	m_gui->m_cursor.x = m_gui->view_x_rev(gui_mouse_x);
+	m_gui->m_cursor.y = m_gui->view_y_rev(gui_mouse_y);
+	m_gui->m_cursor.z = 0; // m_gui->view_z_rev(gui_mouse_z);
+	m_gui->m_mouseb = gui_mouse_b;
+
+
+//	_UNUSED (gui_mouse_b);  _UNUSED (gui_cursor_x);  _UNUSED (gui_cursor_y);  _UNUSED (gui_cursor_z);
+	// _dbg3("mouse_x mouse_y: " << gui_mouse_x << " " << gui_mouse_y);
+}
 
 void c_simulation::main_loop ()
 {
@@ -85,6 +109,29 @@ void c_simulation::main_loop ()
 	s_font_allegl.reset (allegro_gl_convert_allegro_font (font, AGL_FONT_TYPE_TEXTURED, 500.0), [] (FONT * f) {
 		allegro_gl_destroy_font (f);
 	});
+	set_close_button_callback (c_close_button_handler);
+
+	m_gui = make_shared<c_gui>();
+
+	// prepare drawtarget surface to draw to
+	switch (m_drawtarget_type) {
+			case e_drawtarget_type_allegro:
+				m_drawtarget = make_shared<c_drawtarget_allegro> (m_frame);
+				break;
+
+			case e_drawtarget_type_opengl:
+				m_drawtarget = make_shared<c_drawtarget_opengl>();
+				break;
+
+			default:
+				_erro ("Warning: unsupported drawtarget");
+	}
+	m_drawtarget->m_gui = m_gui;
+
+
+	routingdemo(); // ***
+	return ; /// <---
+
 
 	unique_ptr<c_world> test_world(std::move( draft_net2() ));
 
@@ -107,25 +154,6 @@ void c_simulation::main_loop ()
 	bool start_simulation = false;
 	std::chrono::steady_clock::time_point last_click_time =
 	    std::chrono::steady_clock::now() - std::chrono::milliseconds (1000);
-
-	m_gui = make_shared<c_gui>();
-
-
-	// prepare drawtarget surface to draw to
-	switch (m_drawtarget_type) {
-			case e_drawtarget_type_allegro:
-				m_drawtarget = make_shared<c_drawtarget_allegro> (m_frame);
-				break;
-
-			case e_drawtarget_type_opengl:
-				m_drawtarget = make_shared<c_drawtarget_opengl>();
-				break;
-
-			default:
-				_erro ("Warning: unsupported drawtarget");
-		}
-
-	m_drawtarget->m_gui = m_gui;
 
 
 
@@ -151,105 +179,75 @@ void c_simulation::main_loop ()
 
 	// === main loop ===
 	while (!m_goodbye && !close_button_pressed) {
-
+		try {
 			auto start_time = std::chrono::high_resolution_clock::now();
 
 			// --- process the keyboard/inputs ---
 			if (use_input_allegro) {
-					// TODO move this code here, but leave the variables in higher scope
-				}
-
-			poll_keyboard();
-			auto allegro_keys = key;
-			auto allegro_shifts = key_shifts;
-			//		bool allegro_keys_any_is=false;
-			//		for (size_t i=0; i<sizeof(allegro_keys)/sizeof(allegro_keys[0]); ++i) allegro_keys_any_is=true;
-			// the direct raw position
-			const int allegro_mouse_x = mouse_x;
-			const int allegro_mouse_y = mouse_y;
-			const int allegro_mouse_b = mouse_b; // buttons
-
-			// the position in display port GUI
-			const int gui_mouse_x = allegro_mouse_x;
-			const int gui_mouse_y = allegro_mouse_y;
-			const int gui_mouse_b = allegro_mouse_b; // buttons
-
-			// the position in the world coordinates
-			const int gui_cursor_x = m_gui->view_x_rev (gui_mouse_x);
-			const int gui_cursor_y = m_gui->view_y_rev (gui_mouse_y);
-			const int gui_cursor_z = 0; // m_gui->view_z_rev(gui_mouse_z);
-
-			_UNUSED (gui_mouse_b);
-			_UNUSED (gui_cursor_x);
-			_UNUSED (gui_cursor_y);
-			_UNUSED (gui_cursor_z);
-
-			//_dbg1("mouse_x mouse_y: " << gui_mouse_x << " " << gui_mouse_y);
+				process_input();
+			}
 
 			int allegro_char = 0;
 
-			if (keypressed()) {
-					allegro_char = readkey();
-				}
+			if (keypressed()) { allegro_char = readkey(); }
 
-			// end of input
+			// --- end of input ---
 
 			// draw background of frame
 			if (use_draw_allegro) {
-					clear_to_color (m_frame, makecol (0, 128, 0));
-					blit (c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
-				}
-
+				clear_to_color (m_frame, makecol (0, 128, 0));
+				blit (c_bitmaps::get_instance().m_background, m_frame, 0, 0, viewport_x, viewport_y, c_bitmaps::get_instance().m_background->w, c_bitmaps::get_instance().m_background->h);
+			}
 			if (use_draw_opengl) {
-					glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					//glDisable(GL_DEPTH_TEST);      // ??? Enables Depth Testing
-					//glEnable(GL_DEPTH_TEST);
-					//glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Testing To Do
-					//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-					//glLoadIdentity();
-					// glTranslatef(m_gui->camera_x, m_gui->camera_y,camera_offset);
+				glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				//glDisable(GL_DEPTH_TEST);      // ??? Enables Depth Testing
+				//glEnable(GL_DEPTH_TEST);
+				//glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Testing To Do
+				//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+				//glLoadIdentity();
+				// glTranslatef(m_gui->camera_x, m_gui->camera_y,camera_offset);
 
-					// minimum and maximum value for zoom in/out and rotate the scene
+				// minimum and maximum value for zoom in/out and rotate the scene
 //            if (camera_offset >= 10.0) camera_offset = 10.0;
 //            if (camera_offset <= 0.5) camera_offset = 0.5;
-					if (view_angle >= 70) view_angle = 70;
+				if (view_angle >= 70) view_angle = 70;
 
-					if (view_angle <= 0) view_angle = 0;
+				if (view_angle <= 0) view_angle = 0;
 
-					if (zoom <= 0.1) zoom = 0.1;   //because of glFrustum -> when left=right, or bottom=top there's error GL_INVALID_VALUE, so we can't multiply e.g left,right by 0
+				if (zoom <= 0.1) zoom = 0.1;   //because of glFrustum -> when left=right, or bottom=top there's error GL_INVALID_VALUE, so we can't multiply e.g left,right by 0
 
-					glMatrixMode (GL_PROJECTION);
-					glLoadIdentity();
-					glFrustum (-1.0 * zoom, 1.0 * zoom, -1.0 * zoom, 1.0 * zoom, 1.0, 60.0);
-					glMatrixMode (GL_MODELVIEW);
-					glLoadIdentity();
+				glMatrixMode (GL_PROJECTION);
+				glLoadIdentity();
+				glFrustum (-1.0 * zoom, 1.0 * zoom, -1.0 * zoom, 1.0 * zoom, 1.0, 60.0);
+				glMatrixMode (GL_MODELVIEW);
+				glLoadIdentity();
 
-					//glTranslatef(0.0f,0.0f,-11.0);
-					glTranslatef (0.0f, 0.0f, camera_step_z);
-					glRotatef (-view_angle, 1, 0, 0);
-					glScalef (10, 10, 10);
+				//glTranslatef(0.0f,0.0f,-11.0);
+				glTranslatef (0.0f, 0.0f, camera_step_z);
+				glRotatef (-view_angle, 1, 0, 0);
+				glScalef (10, 10, 10);
 
-					// drawing backgound
-					glPushMatrix();
-					//glScalef(1,1,1);
-					glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_background_opengl);
-					glEnable (GL_BLEND);
-					//float q=1.0/zoom;
-					float q = 1.0;
-					glBegin (GL_QUADS);
-					glTexCoord2f (0, q);
-					glVertex3f (-1.0f, 1.0f, 0.0f);
-					glTexCoord2f (q, q);
-					glVertex3f (1.0f, 1.0f, 0.0f);
-					glTexCoord2f (q, 0);
-					glVertex3f (1.0f, -1.0f, 0.0f);
-					glTexCoord2f (0, 0);
-					glVertex3f (-1.0f, -1.0f, 0.0f);
-					glEnd();
-					glDisable (GL_BLEND);
-					glBindTexture (GL_TEXTURE_2D, 0);  // texture
-					glPopMatrix();
-				}
+				// drawing backgound
+				glPushMatrix();
+				//glScalef(1,1,1);
+				glBindTexture (GL_TEXTURE_2D, c_bitmaps::get_instance().m_background_opengl);
+				glEnable (GL_BLEND);
+				//float q=1.0/zoom;
+				float q = 1.0;
+				glBegin (GL_QUADS);
+				glTexCoord2f (0, q);
+				glVertex3f (-1.0f, 1.0f, 0.0f);
+				glTexCoord2f (q, q);
+				glVertex3f (1.0f, 1.0f, 0.0f);
+				glTexCoord2f (q, 0);
+				glVertex3f (1.0f, -1.0f, 0.0f);
+				glTexCoord2f (0, 0);
+				glVertex3f (-1.0f, -1.0f, 0.0f);
+				glEnd();
+				glDisable (GL_BLEND);
+				glBindTexture (GL_TEXTURE_2D, 0);  // texture
+				glPopMatrix();
+			}
 
 			// clear additional things
 			if (use_draw_allegro) {
@@ -257,7 +255,7 @@ void c_simulation::main_loop ()
 				}
 
 			// main controll keys
-			if (allegro_keys[KEY_ESC]) {
+			if (m_gui->m_key[KEY_ESC]) {
 					_note ("User exits the simulation from user interface");
 					m_goodbye = true;
 				}
@@ -275,7 +273,7 @@ void c_simulation::main_loop ()
 							*/
 				}
 
-			if (allegro_keys[KEY_F1]) {
+			if (m_gui->m_key[KEY_F1]) {
 					//auto ptr = get_move_object(gui_mouse_x,gui_mouse_y);
 
 
@@ -313,7 +311,7 @@ void c_simulation::main_loop ()
 				}
 
 
-			if (allegro_keys[KEY_F2]) {
+			if (m_gui->m_key[KEY_F2]) {
 //            BITMAP* screen = gui_get_screen();
 					int m_x = 0;
 					int m_y = 0;
@@ -328,8 +326,8 @@ void c_simulation::main_loop ()
 //                auto obj = m_world->m_objects.at(0);
 //                m_x = m_world->m_objects.at(num)->get_x() - (screen->w/2);
 //                m_y = m_world->m_objects.at(num)->get_y() - (screen->h/2);
-							m_x =  m_world->m_objects.at (num)->get_x() * m_gui->camera_zoom - (allegro_mouse_x);
-							m_y =  m_world->m_objects.at (num)->get_y() * m_gui->camera_zoom - (allegro_mouse_y);
+							m_x =  m_world->m_objects.at (num)->get_x() * m_gui->camera_zoom - (m_gui->m_cursor.x);
+							m_y =  m_world->m_objects.at (num)->get_y() * m_gui->camera_zoom - (m_gui->m_cursor.y);
 
 
 							//    std::cout<< screen->w<<" "<<screen->h<<" "<<screen->x_ofs<<" "<<screen->y_ofs<<std::endl;
@@ -362,54 +360,54 @@ void c_simulation::main_loop ()
 			t_mode mode;
 			mode = e_mode_node; // by default we will move/edit etc the node (or entityt)
 
-			if (allegro_shifts & KB_SHIFT_FLAG) mode = e_mode_camera; // with key SHIFT we move camera instea
+			if (m_gui->m_shift & KB_SHIFT_FLAG) mode = e_mode_camera; // with key SHIFT we move camera instea
 
 			// mode: camera movement etc
 			if (mode == e_mode_camera) {
-					if (allegro_keys[KEY_LEFT]) m_gui->camera_x -= 10;
+					if (m_gui->m_key[KEY_LEFT]) m_gui->camera_x -= 10;
 
-					if (allegro_keys[KEY_RIGHT]) m_gui->camera_x += 10;
+					if (m_gui->m_key[KEY_RIGHT]) m_gui->camera_x += 10;
 
-					if (allegro_keys[KEY_UP]) m_gui->camera_y -= 10;
+					if (m_gui->m_key[KEY_UP]) m_gui->camera_y -= 10;
 
-					if (allegro_keys[KEY_DOWN]) m_gui->camera_y += 10;
+					if (m_gui->m_key[KEY_DOWN]) m_gui->camera_y += 10;
 
 					const double zoom_speed = 1.1;
 
-					if (allegro_keys[KEY_PGUP]) m_gui->camera_zoom *= zoom_speed;
+					if (m_gui->m_key[KEY_PGUP]) m_gui->camera_zoom *= zoom_speed;
 
-					if (allegro_keys[KEY_PGDN]) m_gui->camera_zoom /= zoom_speed;
+					if (m_gui->m_key[KEY_PGDN]) m_gui->camera_zoom /= zoom_speed;
 				}
 
 			// rotate and zoom in/out the scene
-			if (allegro_keys[KEY_Z]) {
+			if (m_gui->m_key[KEY_Z]) {
 					//camera_offset+=0.1;
 					zoom += 0.1;
 					_dbg1 ("zoom: " << zoom);
 				}
 
-			if (allegro_keys[KEY_X]) {
+			if (m_gui->m_key[KEY_X]) {
 					//camera_offset-=0.1;
 					zoom -= 0.1;
 					_dbg1 ("zoom: " << zoom);
 				}
 
-			if (allegro_keys[KEY_C]) {
+			if (m_gui->m_key[KEY_C]) {
 					view_angle += 1.0;
 					//farVal+=10;
 					_dbg1 ("view_angle: " << view_angle);
 				}
 
-			if (allegro_keys[KEY_V]) {
+			if (m_gui->m_key[KEY_V]) {
 					view_angle -= 1.0;
 					_dbg1 ("view_angle: " << view_angle);
 				}
 
-			if (allegro_keys[KEY_Q]) {
+			if (m_gui->m_key[KEY_Q]) {
 					camera_step_z += 0.1;
 				}
 
-			if (allegro_keys[KEY_W]) {
+			if (m_gui->m_key[KEY_W]) {
 					camera_step_z -= 0.1;
 
 					if (camera_step_z <= -11.0) camera_step_z = -11.0;
@@ -417,7 +415,7 @@ void c_simulation::main_loop ()
 
 			// === text debug on screen ===
 
-			string mouse_pos_str = std::to_string (gui_mouse_x) + " " + std::to_string (gui_mouse_y);
+			string mouse_pos_str = to_string(m_gui->m_cursor);
 			string fps_str = "fps ???";
 
 			if (loop_miliseconds != 0) {
@@ -437,7 +435,7 @@ void c_simulation::main_loop ()
 
 					textout_ex (m_frame, font, pck_speed_str.c_str(), 100, 10, makecol (0, 0, 255), -1);
 
-					if (allegro_keys[KEY_H]) {
+					if (m_gui->m_key[KEY_H]) {
 							const int tex_x = 1000;
 							int tex_y = 10;
 							const int lineh = 10;
@@ -479,7 +477,7 @@ void c_simulation::main_loop ()
 					glDisable (GL_BLEND);
 					glPopMatrix();
 
-					if (allegro_keys[KEY_H]) {
+					if (m_gui->m_key[KEY_H]) {
 							_dbg1 ("KEY_H - opengl");
 							//glLoadIdentity();
 							glPushMatrix();
@@ -516,7 +514,7 @@ void c_simulation::main_loop ()
 
 			//_dbg3("m_world->m_objects.size(): " << m_world->m_objects.size());
 			//_dbg3("get_move_object ret: " << get_move_object(gui_mouse_x, gui_mouse_y));
-			int move_object_index = get_move_object (gui_mouse_x, gui_mouse_y); ///< -1 if 'empty'
+			int move_object_index = get_move_object(); ///< -1 if 'empty'
 
 			if (move_object_index != -1) { // working with selected object
 					m_gui->m_selected_object = m_world->m_objects.begin();
@@ -549,16 +547,16 @@ void c_simulation::main_loop ()
 									if (!print_connect_line) {
 											int speed = 5;
 
-											if (allegro_keys[KEY_LEFT])
+											if (m_gui->m_key[KEY_LEFT])
 												selected_object_raw->m_x += -speed;
 
-											if (allegro_keys[KEY_RIGHT])
+											if (m_gui->m_key[KEY_RIGHT])
 												selected_object_raw->m_x += speed;
 
-											if (allegro_keys[KEY_DOWN])
+											if (m_gui->m_key[KEY_DOWN])
 												selected_object_raw->m_y += speed;
 
-											if (allegro_keys[KEY_UP])
+											if (m_gui->m_key[KEY_UP])
 												selected_object_raw->m_y += -speed;
 										}
 								} // moving selected object
@@ -642,14 +640,14 @@ void c_simulation::main_loop ()
 					last_click_time = std::chrono::steady_clock::now();
 				}
 
-			if (allegro_keys[KEY_MINUS_PAD] && g_max_anim_frame < 400 &&
+			if (m_gui->m_key[KEY_MINUS_PAD] && g_max_anim_frame < 400 &&
 			        std::chrono::steady_clock::now() - last_click_time > std::chrono::milliseconds (loop_miliseconds)) {
 					//std::cout << m_frame_number-frame_checkpoint << " - " << g_max_anim_frame << " mod: " << (m_frame_number-frame_checkpoint) % g_max_anim_frame <<  std::endl;
 					g_max_anim_frame += 1;
 					last_click_time = std::chrono::steady_clock::now();
 				}
 
-			if (allegro_keys[KEY_PLUS_PAD] && g_max_anim_frame > 10 &&
+			if (m_gui->m_key[KEY_PLUS_PAD] && g_max_anim_frame > 10 &&
 			        std::chrono::steady_clock::now() - last_click_time > std::chrono::milliseconds (loop_miliseconds)) {
 					//std::cout << m_frame_number-frame_checkpoint << " + " << g_max_anim_frame << " mod: " << (m_frame_number-frame_checkpoint) % g_max_anim_frame <<  std::endl;
 					g_max_anim_frame -= 1;
@@ -748,13 +746,13 @@ void c_simulation::main_loop ()
 						}
 				}
 
-			if (allegro_mouse_b == 2) { // end/stop the line that creates new connections
+			if (m_gui->m_mouseb == 2) { // end/stop the line that creates new connections
 					print_connect_line = false;
 				}
 
 
 			{
-				auto x = allegro_mouse_x, y = allegro_mouse_y;
+				auto x = m_gui->m_cursor.x, y = m_gui->m_cursor.y;
 				int r = 5, rr = 4;
 
 				if (use_draw_allegro) {
@@ -824,7 +822,12 @@ void c_simulation::main_loop ()
 
 			std::this_thread::sleep_for (std::chrono::milliseconds (loop_sleeptime));
 			//_dbg1("Loop sleeptime : " << loop_sleeptime);
-		}
+
+			} catch(...) {
+				_erro("Main loop - exception");
+				throw;
+			}
+		} // main loop
 
 	c_file_loader o_file_loader (m_world.get());
 	o_file_loader.save ("layout/current/out.txt");
@@ -833,9 +836,9 @@ void c_simulation::main_loop ()
 
 
 
-int c_simulation::get_move_object (int mouse_x, int mouse_y)
+int c_simulation::get_move_object()
 {
-	const int vx = m_gui->view_x_rev (mouse_x), vy = m_gui->view_y_rev (mouse_y); // position in viewport - because camera position
+	const int vx = m_gui->view_x_rev (), vy = m_gui->view_y_rev (); // position in viewport - because camera position
 
 	double max_distance = 150;
 

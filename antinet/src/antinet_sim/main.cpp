@@ -44,10 +44,12 @@ void start_gui_allegro_simple() {
 	install_mouse();
 	install_timer();
 
+	int gfx_w=2000, gfx_h=1200; // 1280 720
+
 	bpp = 32; // colors
 
 	set_color_depth(bpp);
-	int ret = set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1280, 720, 0, 0);
+	int ret = set_gfx_mode(GFX_AUTODETECT_WINDOWED, gfx_w, gfx_h, 0, 0);
 	if (ret != 0) {
 		set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
 		allegro_message("Error starting graphical mode (bpp = %d) bit graphics mode\nError was:%s\n", bpp, allegro_error);

@@ -1,5 +1,10 @@
 #include "c_gui.hpp"
 
+
+std::ostream & operator<<(std::ostream &ostr, t_point3gui obj) {
+	return ostr << "(" << obj.x << "," << obj.y << "," << obj.z << ")";
+}
+
 c_gui::c_gui() :
 	m_selected_object(),
 	m_target_ok(false),
@@ -37,4 +42,11 @@ int c_gui::view_x_rev(int x) const {
 int c_gui::view_y_rev(int y) const {
 	return (int)(y+camera_y)/camera_zoom;
 }
+
+
+int c_gui::view_x() const { return view_x(m_cursor.x); }
+int c_gui::view_y() const { return view_y(m_cursor.y); }
+int c_gui::view_x_rev() const { return view_x_rev(m_cursor.x); }
+int c_gui::view_y_rev() const { return view_x_rev(m_cursor.y); }
+
 

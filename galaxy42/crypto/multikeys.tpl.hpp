@@ -198,7 +198,6 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 
 template <typename TKey>
 void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool overwrite) const {
-try {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
 	_note("Savin key to fname="<<fname);
 
@@ -226,14 +225,6 @@ try {
 		default:
 			throw std::runtime_error("Can not handle this crypto_use");
 	}
-
-} catch(overwrite_error &err) {
-	std::cout << err.what() << std::endl;
-	if(text_ui::ask_user_forpermission("overwrite file?")){
-		this->datastore_save(fname, true);
-	}
-}
-
 }
 
 template <typename TKey>
