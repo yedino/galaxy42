@@ -48,6 +48,19 @@ void c_rpc_server::main_loop() {
 	assert(m_stop_flag == false);
 	while (!m_stop_flag) {
 		auto message = m_connection_node->receive();
+		if (!message.data.empty()) { // get RPC request
+			auto it = std::find(message.data.begin(), message.data.end(), ';');
+			if (it == message.data.end()) continue; // bad packet format (not found ';')
+			*it = ' '; // remove first ';' character
+			std::istringstream iss(message.data);
+			std::string command, arguments;
+			iss >> command;
+			iss >> arguments;
+			std::lock_guard<std::mutex> lg(m_command_map_mtx);
+			if(m_command_map.find(message.data) != m_command_map.end()) { // found commend function in map
+				m_command_map.at(command)(arguments); // call command function
+			}
+		}
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
@@ -61,6 +74,7 @@ c_rpc_server::c_rpc_server(const unsigned int port)
 }
 
 void c_rpc_server::register_function(const std::string &command_name, std::function<bool (std::string)> function) {
+	std::lock_guard<std::mutex> lg(m_command_map_mtx);
 	m_command_map.insert(std::pair<std::string, std::function<bool (std::string)>>(command_name, function));
 }
 
