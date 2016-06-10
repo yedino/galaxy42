@@ -568,6 +568,9 @@ class c_tunserver : public c_galaxy_node {
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
 		antinet_crypto::c_multikeys_PAIR m_my_IDC; ///< my keys!
+		antinet_crypto::c_multikeys_pub	m_my_IDI_pub;	/// IDI public keys
+		antinet_crypto::c_multisign m_IDI_IDC_sig;	/// 'signature' - msg=IDC_pub, signer=IDI
+
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
 
 		std::map< c_haship_addr, unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
@@ -644,6 +647,10 @@ try {
 
 	// example veryifying
 	antinet_crypto::c_multikeys_pub::multi_sign_verify(IDC_IDI_signature, IDC_pub_to_sign, my_IDI->m_pub);
+
+	// save signature and IDI publickey in tunserver
+	m_my_IDI_pub = my_IDI->m_pub;
+	m_IDI_IDC_sig = IDC_IDI_signature;
 
 	// remove IDP from RAM
 	my_IDI.reset(nullptr);
@@ -946,7 +953,7 @@ void c_tunserver::event_loop() {
 		}
 
 		ostringstream oss;
-		oss <<	" Node " << m_my_name << " hip=" << m_my_hip; //m_my_IDC.get_ipv6_string_hexdot() ;
+		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
 		const string node_title_bar = oss.str();
 
 
