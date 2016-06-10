@@ -1,4 +1,5 @@
 #include "filestorage.hpp"
+#include "../text_ui.hpp"
 
 overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
 { }
@@ -13,15 +14,28 @@ void filestorage::save_string(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_file_for_write(file_type, filename, overwrite);
-	fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
+	fs::path file_with_path;
+	try {
 
-	if (file.is_open()) {
-		file << data;
-	} else {
-		throw std::invalid_argument("Fail to open file for write: " + filename);
+		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
+		fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
+
+		if (file.is_open()) {
+			file << data;
+		} else {
+			throw std::invalid_argument("Fail to open file for write: " + filename);
+		}
+		file.close();
+		_dbg2("Successfully saved string to:" << file_with_path.native());
+
+	} catch(overwrite_error &err) {
+		std::cout << err.what() << std::endl;
+		if(text_ui::ask_user_forpermission("overwrite file?")){
+			save_string(file_type, filename, data, true);
+		} else {
+			_dbg2("Fail to save string");
+		}
 	}
-	file.close();
 }
 
 void filestorage::save_string_mlocked(t_filestore file_type,
@@ -33,21 +47,36 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path = prepare_file_for_write(file_type, filename, overwrite);
-	FILE *f_ptr;
+	fs::path file_with_path;
+	try {
 
-	f_ptr = std::fopen(file_with_path.c_str(), "w");
-	// magic 1 is the size in bytes of each element to be written
-	std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
+		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
+		FILE *f_ptr;
 
-	std::fclose(f_ptr);
+		f_ptr = std::fopen(file_with_path.c_str(), "w");
+		// magic 1 is the size in bytes of each element to be written
+		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
+
+		std::fclose(f_ptr);
+		_dbg2("Successfully saved mlocked string to:" << file_with_path.native());
+
+	} catch(overwrite_error &err) {
+		std::cout << err.what() << std::endl;
+		if(text_ui::ask_user_forpermission("overwrite file?")){
+			save_string_mlocked(file_type, filename, locked_data, true);
+		} else {
+			_dbg2("Fail to save mlocked string");
+		}
+	}
 }
 
 std::string filestorage::load_string(t_filestore file_type,
 									 const std::string &filename) {
 	std::string content;
 
-	fs::path file_with_path = get_path_for(file_type, filename);
+	fs::path file_with_path = get_full_path(file_type, filename);
+	_dbg2("Loading file path: " << file_with_path.native());
+
 	if (!is_file_ok(file_with_path.native())) {
 		throw std::invalid_argument("Fail to open file for read: " + filename);
 	} else {
@@ -57,18 +86,19 @@ std::string filestorage::load_string(t_filestore file_type,
 
 		ifs.close();
 	}
+	_dbg2("Successfully loaded string from:" << file_with_path.native());
 	return content;
 }
 
 sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 														 const std::string &filename) {
 	FILE * f_ptr;
-	fs::path file_with_path = get_path_for(file_type, filename);
+	fs::path file_with_path = get_full_path(file_type, filename);
 
 	f_ptr = std::fopen(file_with_path.c_str(), "r");
 
 	if (f_ptr == NULL){
-		throw std::invalid_argument("Fail to opening file for read: " + filename);
+		throw std::invalid_argument("Fail to open mlocked file for read: " + filename);
 	}
 
 	std::fseek(f_ptr, 0L, SEEK_END);
@@ -80,31 +110,31 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 
 	size_t byte_read = std::fread(content.buffer_writable(), 1, content_size, f_ptr);
 	if (byte_read != content_size) {
-		throw std::invalid_argument("Fail to read all content of file: "s + filename
-									+ " read: ["s + std::to_string(byte_read)
-									+ "] bytes of ["s + std::to_string(content_size) + "]"s);
+		std::string err_msg = "Fail to read all content of file: " + filename;
+		err_msg += " read: [" + std::to_string(byte_read);
+		err_msg += "] bytes of [" + std::to_string(content_size) + "]";
+		throw std::invalid_argument(err_msg);
 	}
 	std::fclose(f_ptr);
 
+	_dbg2("Successfully loaded mlocked string from:" << file_with_path.native());
 	return content;
 }
 
 bool filestorage::is_file_ok(const std::string &filename) {
 	fs::path p(filename);
-
 	try {
 		if (fs::exists(p)) {    // does p actually exist?
 			if (fs::is_regular_file(p)) {       // is p a regular file?
 			} else if (fs::is_directory(p)) {     // is p a directory?
-				std::cout << p << " is a directory" << std::endl;
+				// std::cout << p << " is a directory" << std::endl; // dbg
 				return 0;
 			} else {
-				std::cout << p << " exists, but is neither a regular file nor a directory"
-						  << std::endl;
+				// std::cout << p << " exists, but is neither a regular file nor a directory" << std::endl; // dbg
 				return 0;
 			}
 		} else {
-			std::cout << p << " does not exist" << std::endl;
+			// std::cout << p << " does not exist" << std::endl; // dbg
 			return 0;
 		}
 	} catch (const fs::filesystem_error& ex) {
@@ -119,12 +149,83 @@ bool filestorage::remove(const std::string &p) {
 	return fs::remove(path_to_remove);
 }
 
-fs::path filestorage::prepare_file_for_write(t_filestore file_type,
-											 const std::string &filename,
+std::vector<std::string> filestorage::get_file_list(const boost::filesystem::path &path) {
+	std::vector<std::string> file_list;
+	if (!path.empty()) {
+		fs::path apk_path(path);
+		fs::recursive_directory_iterator end;
+
+		for (fs::recursive_directory_iterator i(apk_path); i != end; ++i) {
+			const fs::path cp = (*i);
+			std::string filename = extract_filename(cp.native());
+			file_list.push_back(filename);
+		}
+	}
+	return file_list;
+}
+
+fs::path filestorage::get_full_path(t_filestore file_type,
+								   const std::string &filename) {
+
+	fs::path full_path = get_parent_path(file_type, filename);
+	full_path += filename;
+	switch (file_type) {
+		case e_filestore_galaxy_wallet_PRV: {
+			full_path += ".PRV";
+			break;
+		}
+		case e_filestore_galaxy_pub: {
+			full_path += ".pub";
+			break;
+		}
+		case e_filestore_galaxy_sig: {
+			full_path += ".sig";
+			break;
+		}
+		case e_filestore_local_path: {
+			break;
+		}
+	}
+	// _dbg3("full_path " << full_path);
+	return full_path;
+}
+
+fs::path filestorage::get_parent_path(t_filestore file_type,
+									const std::string &filename) {
+
+	fs::path user_home(getenv("HOME"));
+	fs::path parent_path(user_home.c_str());
+
+	switch (file_type) {
+		case e_filestore_galaxy_wallet_PRV: {
+			parent_path += "/.config/antinet/galaxy42/wallet/";
+			break;
+		}
+		case e_filestore_galaxy_pub: {
+			parent_path += "/.config/antinet/galaxy42/public/";
+			break;
+		}
+		case e_filestore_galaxy_sig: {
+			parent_path += "/.config/antinet/galaxy42/public/";
+			break;
+		}
+		case e_filestore_local_path: {
+			fs::path file_path(filename);
+			parent_path = file_path.parent_path();
+			break;
+		}
+	}
+
+	return parent_path;
+}
+
+fs::path filestorage::prepare_path_for_write(t_filestore file_type,
+											 const std::string &input_name,
 											 bool overwrite) {
 	fs::path file_with_path;
 	try {
 
+		std::string filename = extract_filename(input_name);
 		// creating directory tree if necessary
 		file_with_path = create_path_for(file_type, filename);
 
@@ -147,12 +248,18 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 		}
 
 		switch (file_type) {
-			case e_filestore_galaxy_ipkeys_pub: {
+			case e_filestore_galaxy_pub: {
 				//mod=0700 for private key
 				break;
 			}
-			case e_filestore_wallet_galaxy_ipkeys_PRV: {
+			case e_filestore_galaxy_wallet_PRV: {
 				//mod=0755 for public
+				break;
+			}
+			case e_filestore_galaxy_sig: {
+				break;
+			}
+			case e_filestore_local_path: {
 				break;
 			}
 		}
@@ -164,40 +271,28 @@ fs::path filestorage::prepare_file_for_write(t_filestore file_type,
 }
 
 fs::path filestorage::create_path_for(t_filestore file_type,
-									  const fs::path &filename) {
+									  const std::string &filename) {
 
 	// connect parent path with filename
-	fs::path full_path = get_path_for(file_type, filename);
+	fs::path full_path = get_full_path(file_type, filename);
+	std::cout << "full_path: " << full_path.native() << std::endl;
 	create_parent_dir(full_path);
 	return full_path;
 }
 
-fs::path filestorage::get_path_for(t_filestore file_type,
-								   const fs::path &filename) {
-
-	fs::path user_home(getenv("HOME"));
-	fs::path full_path(user_home.c_str());
-	switch (file_type) {
-		case e_filestore_wallet_galaxy_ipkeys_PRV: {
-			full_path += "/.config/antinet/galaxy42/wallet/";
-			full_path += filename;
-			full_path += ".PRIVATE";
-			break;
-		}
-		case e_filestore_galaxy_ipkeys_pub: {
-			full_path += "/.config/antinet/galaxy42/";
-			full_path += filename;
-			full_path += ".public";
-			break;
-		}
-	}
-	return full_path;
+std::string filestorage::extract_filename(const std::string &string_path) {
+	fs::path try_path(string_path);
+	return try_path.filename().native();
 }
 
-bool filestorage::create_parent_dir(const fs::path &filename) {
+bool filestorage::create_parent_dir(const fs::path &file_path) {
 
-	fs::path file(filename);
+	fs::path file(file_path);
 	fs::path parent_path = file.parent_path();
+
+	if (parent_path.empty()) {
+		return 1;
+	}
 
 	// if exist
 	if (!fs::exists(parent_path)) {

@@ -182,6 +182,26 @@ char t_crypto_system_type_to_ID(int val) {
 	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (val == " + std::to_string(val) + ")");
 }
 
+t_crypto_system_type t_crypto_system_type_from_string(std::string str_name) {
+	char ID = '\0';
+	std::transform(str_name.begin(), str_name.end(), str_name.begin(), ::tolower);
+	if(str_name == "x25519") {
+		ID = 'x';
+	} else if (str_name == "ed25519") {
+		ID = 'e';
+	} else if (str_name == "ntru_ees439ep1") {
+		ID = 't';
+	} else if (str_name == "ntru_sign") {
+		ID = 'r';
+	} else if (str_name == "sidh") {
+		ID = 's';
+	}
+	if(ID == '\0') {
+		throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (str_name == " + str_name + ")");
+	}
+	return t_crypto_system_type_from_ID(ID);
+}
+
 t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 	switch(name) {
 		case 'x': return e_crypto_system_type_X25519;

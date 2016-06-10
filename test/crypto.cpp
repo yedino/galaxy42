@@ -259,19 +259,21 @@ TEST(crypto, multi_sign_ed25519) {
 
 	signs = Alice.multi_sign(msg_to_sign, antinet_crypto::e_crypto_system_type_Ed25519);
 
+	// multi_sign_verify
+	// using static version in c_multikey_pub
 	EXPECT_THROW({
-		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
+		antinet_crypto::c_multikeys_pub::multi_sign_verify(signs,
 															"bad_msg",
 															Alice.read_pub(),
 															antinet_crypto::e_crypto_system_type_Ed25519);
 
 	}, std::invalid_argument);
 
+	// using member version in c_multikey_PAIR
 	EXPECT_NO_THROW( {
-		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(signs,
-															msg_to_sign,
-															Alice.read_pub(),
-															antinet_crypto::e_crypto_system_type_Ed25519);
+		Alice.multi_sign_verify(signs,
+								msg_to_sign,
+								antinet_crypto::e_crypto_system_type_Ed25519);
 	});
 }
 
@@ -293,14 +295,16 @@ TEST(crypto, multi_sign) {
 	multi_signature.print_signatures();
 
 	// verifying
+	// multi_sign_verify
+	// using member version in c_multikey_PAIR
 	EXPECT_THROW( {
-		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(multi_signature,
-															"bad msg",
-															Alice.read_pub());
+		Alice.multi_sign_verify(multi_signature,
+								"bad msg");
 	}, std::invalid_argument);
 
+	// using static version in c_multikey_pub
 	EXPECT_NO_THROW( {
-		antinet_crypto::c_multikeys_PAIR::multi_sign_verify(multi_signature,
+		antinet_crypto::c_multikeys_pub::multi_sign_verify(multi_signature,
 															msg_to_sign,
 															Alice.read_pub());
 	});

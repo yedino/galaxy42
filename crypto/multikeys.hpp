@@ -125,6 +125,9 @@ class c_multisign : public c_multicryptostrings< std::string > {
 		 * 		   false otherwise
 		 */
 		static bool cryptosystem_sign_allowed (t_crypto_system_type crypto_system);
+
+		std::string serialize_bin () const override;
+		void load_from_bin (const std::string & data) override;
 };
 
 
@@ -152,6 +155,26 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		/// @name Getters - concretized version. \n Ready to use. @{
 		t_key get_public(t_crypto_system_type crypto_type, size_t number_of_key) const;
 		/// @}
+
+		/// @{
+		/**
+		 * @brief multi_sign_verify	Verify message that was signed multiple by c_multikeys_pub.
+		 * 		  Throw sodiumpp::crypto_error when verify fails.
+		 * @param msg Message that was signed.
+		 * @param signs	Vector of signs
+		 * @param pubkeys c_multikeys_pub that contain according to signs vector of public keys.
+		 * 		  Public keys must coresponding to PRV keys that was used to sign message
+		 * @param sign_type	Type of crypto system.
+		 */
+		static void multi_sign_verify(const std::vector<string> &signs,
+									  const string &msg,
+									  const c_multikeys_pub &pubkeys,
+									  t_crypto_system_type sign_type);
+
+		static void multi_sign_verify(const c_multisign &all_signatures,
+									  const std::string &msg,
+									  const c_multikeys_pub &pubkeys);
+		/// @}
 };
 
 // ==================================================================
@@ -176,6 +199,19 @@ class c_multikeys_PRV : public c_multikeys_general<c_crypto_system::t_PRVkey> {
 		/// @}
 
 		bool operator>(const t_key &rhs) const; ///< TODO refer to base class
+
+		/// @{
+		/**
+		 * @brief multi_sign Multiple signing message using all keys of given sign type
+		 * @param msg Massage that will be sign
+		 * @param sign_type	Type of crypto system
+		 * @return Vector of signs
+		 */
+		c_multisign multi_sign(const std::string &msg);
+
+		std::vector<std::string> multi_sign(const std::string &msg,
+											t_crypto_system_type sign_type);
+		/// @}
 };
 
 
@@ -217,8 +253,8 @@ class c_multikeys_PAIR {
 
 		std::vector<std::string> multi_sign(const std::string &msg,
 											t_crypto_system_type sign_type);
-		/// @{
 		/// @}
+		/// @{
 		/**
 		 * @brief multi_sign_verify	Verify message that was signed multiple by c_multikeys_pub.
 		 * 		  Throw sodiumpp::crypto_error when verify fails.
@@ -228,14 +264,12 @@ class c_multikeys_PAIR {
 		 * 		  Public keys must coresponding to PRV keys that was used to sign message
 		 * @param sign_type	Type of crypto system.
 		 */
-		static void multi_sign_verify(const std::vector<string> &signs,
+		void multi_sign_verify(const std::vector<string> &signs,
 									  const string &msg,
-									  const c_multikeys_pub &pubkeys,
 									  t_crypto_system_type sign_type);
 
-		static void multi_sign_verify(const c_multisign &all_signatures,
-									  const std::string &msg,
-									  const c_multikeys_pub &pubkeys);
+		void multi_sign_verify(const c_multisign &all_signatures,
+									  const std::string &msg);
 		/// @}
 
 		void debug() const;
