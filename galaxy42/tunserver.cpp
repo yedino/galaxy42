@@ -816,6 +816,8 @@ void c_tunserver::peering_ping_all_peers() {
 		// [protocol] build raw
 		trivialserialize::generator gen(8000);
 		gen.push_varstring( m_my_IDC.get_serialize_bin_pubkey() );
+		gen.push_varstring( m_my_IDI_pub.serialize_bin());
+		gen.push_varstring( m_IDI_IDC_sig.serialize_bin());
 		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
@@ -1178,12 +1180,17 @@ void c_tunserver::event_loop() {
 
 				// TODONOW: size of pubkey is different, use serialize
 				// if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
-				string_as_bin bin_his_pubkey( parser.pop_varstring() ); // PARSE
-				_info("We received pubkey=" << to_debug( bin_his_pubkey ) );
+				string_as_bin bin_his_IDC_pub( parser.pop_varstring() ); // PARSE
+				string_as_bin bin_his_IDI_pub( parser.pop_varstring() ); // PARSE
+				string_as_bin bin_his_IDI_IDC_sig( parser.pop_varstring() ); // PARSE
 
+				_info("We received IDC pubkey=" << to_debug( bin_his_IDC_pub ) );
+				_info("We received IDI pubkey=" << to_debug( bin_his_IDI_pub ) );
+				_info("We received IDI --> IDC signature=" << to_debug( bin_his_IDI_IDC_sig ) );
+					//TODO verification
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
-					his_pubkey->load_from_bin( bin_his_pubkey.bytes );
+					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
 					_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
@@ -1191,7 +1198,7 @@ void c_tunserver::event_loop() {
 
 				{ // add node
 					c_haship_pubkey his_pubkey;
-					his_pubkey.load_from_bin( bin_his_pubkey.bytes );
+					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
 					add_tunnel_to_pubkey( his_pubkey );
 				}
 			}
