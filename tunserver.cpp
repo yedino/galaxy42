@@ -622,47 +622,36 @@ void c_tunserver::configure_mykey() {
 
 	// getting IDC
 	std::string IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
-	antinet_crypto::c_multikeys_PAIR my_IDI;
-	my_IDI.datastore_load_PRV_and_pub(IDI_name);
+	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
+	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting HIP from IDI
-	auto IDI_hexdot = my_IDI.get_ipv6_string_hexdot() ;
+	auto IDI_hexdot = my_IDI->get_ipv6_string_hexdot() ;
 	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_hexdot );
-	_info("IDI IPv6: " << hexdot);
-	_dbg1("IDI IPv6: " << m_my_hip << " (other var type)");
+	_info("IDI IPv6: " << IDI_hexdot);
+	_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
 	// creating IDC for this session
 	antinet_crypto::c_multikeys_PAIR my_IDC;
-	my_IDC.generate_x25519_key_pair();
+	my_IDC.generate(antinet_crypto::e_crypto_system_type_X25519,1);
 	// signing it by IDI
 	std::string IDC_pub_to_sign = my_IDC.m_pub.serialize_bin();
-	antinet_crypto::c_multisign IDC_IDI_signature = my_IDI.multi_sign(IDC_pub_to_sign);
+	antinet_crypto::c_multisign IDC_IDI_signature = my_IDI->multi_sign(IDC_pub_to_sign);
+
 	// example veryifying
-	antinet_crypto::c_multikeys_pub::multi_sign_verify(IDC_IDI_signature, IDC_pub_to_sign, my_IDC.m_pub);
+	antinet_crypto::c_multikeys_pub::multi_sign_verify(IDC_IDI_signature, IDC_pub_to_sign, my_IDI->m_pub);
 
 	// remove IDP from RAM
-	my_IDI.~c_multikeys_PAIR();
+	my_IDI.reset(nullptr);
 
 	// for debug, hip from IDC
-	auto IDC_hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
+	auto IDC_hexdot = my_IDC.get_ipv6_string_hexdot() ;
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_hexdot );
-	_info("Your IPv6: " << IDC_hexdot);
-	_dbg1("Your IPv6: " << IDC_hip << " (other var type)");
+	_info("IDC IPv6: " << IDC_hexdot);
+	_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
 
-	//m_my_IDC.datastore_load_PRV_and_pub("current_keys");
-	//auto hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
-	//_info("Your IPv6: " << hexdot);
-	//m_my_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , hexdot );
-	//_dbg1("Your IPv6: " << m_my_hip << " (other var type)");
-
-/* TODONOW-del
-	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
-	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
-	_info("Configuring the router, I am: pubkey="<<to_debug(m_haship_pubkey.serialize_bin())
-	<<" ip="<<to_string(m_haship_addr)
-		<<" privkey="<<mypriv);
-*/
 }
 
 // add peer
@@ -726,7 +715,8 @@ void c_tunserver::prepare_socket() {
 
 	{
 		uint8_t address[16];
-		for (int i=0; i<16; ++i) address[i] = m_my_IDC.get_ipv6_string_bin().at(i);
+		assert(m_my_hip.size() == 16 && "m_my_hip != 16");
+		for (int i=0; i<16; ++i) address[i] = m_my_hip[i];
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
@@ -1760,7 +1750,12 @@ int main(int argc, char **argv) {
 			if (argm.count("list-my-keys")) {
 				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
 				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
-				std::string IDI_key = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+				std::string IDI_key = "";
+			try {
+				IDI_key = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+			} catch (std::invalid_argument &err) {
+				_dbg2("IDI is not set!");
+			}
 				std::cout << "Your key list:" << std::endl;
 				for(auto &key_name : keys) {
 					//remove .PRV extension

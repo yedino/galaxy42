@@ -45,6 +45,7 @@ class c_multicryptostrings : public c_crypto_system {
 		// empty "" means that it needs calculation. (this is the default value)
 
 		void update_hash() const; ///< calculate the current m_hash and save it
+		void set_hash_dirty();
 
 		t_crypto_use m_crypto_use; ///< what is our key use: e.g. are we secret key / public key / are we the signature etc
 
