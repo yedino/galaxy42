@@ -1187,7 +1187,14 @@ void c_tunserver::event_loop() {
 				_info("We received IDC pubkey=" << to_debug( bin_his_IDC_pub ) );
 				_info("We received IDI pubkey=" << to_debug( bin_his_IDI_pub ) );
 				_info("We received IDI --> IDC signature=" << to_debug( bin_his_IDI_IDC_sig ) );
-					//TODO verification
+
+			try {
+				antinet_crypto::c_multikeys_pub his_IDI;
+				his_IDI.load_from_bin(bin_his_IDI_pub.bytes);
+				antinet_crypto::c_multisign his_IDI_IDC_sig;
+				his_IDI_IDC_sig.load_from_bin(bin_his_IDI_IDC_sig.bytes);
+				antinet_crypto::c_multikeys_pub::multi_sign_verify(his_IDI_IDC_sig, bin_his_IDC_pub.bytes, his_IDI);
+
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
 					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
@@ -1201,6 +1208,9 @@ void c_tunserver::event_loop() {
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
 					add_tunnel_to_pubkey( his_pubkey );
 				}
+			} catch (std::invalid_argument &err) {
+				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
+			}
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
 				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
