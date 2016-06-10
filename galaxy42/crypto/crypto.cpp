@@ -700,11 +700,11 @@ void test_crypto() {
 	// Alice: IDC
 	_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
-	keypairA.generate(e_crypto_system_type_X25519,0);
+	keypairA.generate(e_crypto_system_type_X25519,2);
 
-	keypairA.generate(e_crypto_system_type_Ed25519,5);
-	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
-	keypairA.generate(e_crypto_system_type_SIDH, 1);
+	keypairA.generate(e_crypto_system_type_Ed25519,2);
+//	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
+//	keypairA.generate(e_crypto_system_type_SIDH, 1);
 	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string_hex()));
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
@@ -767,13 +767,15 @@ void test_crypto() {
 
 		//_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		//	"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
-		for (int ia=0; ia<5; ++ia) {
-			auto msg1s = AliceCT.box("Hello");
-			auto msg1r = BobCT.unbox(msg1s);
+		for (int ia=0; ia<10; ++ia) {
+			_note("Loop number: " << ia);
+			t_crypto_nonce nonce_used;
+			auto msg1s = AliceCT.box("Hello", nonce_used);
+			auto msg1r = BobCT.unbox(msg1s, nonce_used);
 			//_note("Message: [" << msg1r << "] from: " << to_debug(msg1s));
 
-			auto msg2s = BobCT.box("Hello");
-			auto msg2r = AliceCT.unbox(msg2s);
+			auto msg2s = BobCT.box("Hello", nonce_used);
+			auto msg2r = AliceCT.unbox(msg2s, nonce_used);
 			//_note("Message: [" << msg2r << "] from: " << to_debug(msg2s));
 		}
 	}
@@ -935,7 +937,7 @@ map_size
 
 }
 
-void test_crypto_benchmark(const size_t seconds_for_test_case) {
+void generate_keypairs_benchmark(const size_t seconds_for_test_case) {
 	_mark("test_crypto_benchmark");
 
 	// X25519
@@ -948,15 +950,35 @@ void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	auto stop_point = std::chrono::steady_clock::now();
 	unsigned int x25519_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
-	// ntru
-	size_t generated_keys_ntru = 0;
+	// ed25519
+	size_t generated_keys_ed25519 = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_ed25519_key_pair();
+		++generated_keys_ed25519;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	unsigned int ed25519_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+
+	// ntru encrypt
+	size_t generated_keys_ntru_encrypt = 0;
 	start_point = std::chrono::steady_clock::now();
 	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		auto pair = c_multikeys_PAIR::generate_nrtu_encrypt_key_pair();
-		++generated_keys_ntru;
+		++generated_keys_ntru_encrypt;
 	}
 	stop_point = std::chrono::steady_clock::now();
-	unsigned int ntru_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	unsigned int ntru_ms_encrypt = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+
+	// ntru sign
+	size_t generated_keys_ntru_sign = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		auto pair = c_multikeys_PAIR::generate_nrtu_encrypt_key_pair();
+		++generated_keys_ntru_sign;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	unsigned int ntru_ms_sign = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
 	//sidh
 	size_t generated_keys_sidh = 0;
@@ -968,16 +990,153 @@ void test_crypto_benchmark(const size_t seconds_for_test_case) {
 	stop_point = std::chrono::steady_clock::now();
 	unsigned int sidh_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
+
 	_info("X25519");
 	_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
 	_info(static_cast<double>(generated_keys_x25519) / x25519_ms * 1000 << " key pairs per second");
-	_info("NTRU");
-	_info("Generated " << generated_keys_ntru << " in " << ntru_ms << " ms");
-	_info(static_cast<double>(generated_keys_ntru) / ntru_ms * 1000 << " key pairs per second");
+
+	_info("ed25519");
+	_info("Generated " << generated_keys_ed25519 << " in " << ed25519_ms << " ms");
+	_info(static_cast<double>(generated_keys_ed25519) / ed25519_ms * 1000 << " key pairs per second");
+
+	_info("NTRU encrypt");
+	_info("Generated " << generated_keys_ntru_encrypt << " in " << ntru_ms_encrypt << " ms");
+	_info(static_cast<double>(generated_keys_ntru_encrypt) / ntru_ms_encrypt * 1000 << " key pairs per second");
+
+	_info("NTRU sign");
+	_info("Generated " << generated_keys_ntru_sign << " in " << ntru_ms_sign << " ms");
+	_info(static_cast<double>(generated_keys_ntru_sign) / ntru_ms_sign * 1000 << " key pairs per second");
+
 	_info("SIDH");
 	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
 	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
 
+}
+
+void stream_encrypt_benchmark(const size_t seconds_for_test_case) {
+	const std::string message(10240, 'm');
+	const std::string nonce(crypto_box_NONCEBYTES, 'n');
+	const std::string shared_key(crypto_stream_KEYBYTES, 'k');
+
+	size_t encrypted_data_size = 0;
+	size_t number_of_loop = 0;
+	auto start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		auto encrypted = sodiumpp::crypto_stream_xor(message, nonce, shared_key);
+		++number_of_loop;
+		encrypted_data_size += message.size();
+	}
+	auto stop_point = std::chrono::steady_clock::now();
+	unsigned int loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "xsalsa20 performance" << std::endl;
+	std::cout << number_of_loop << " encryptions in " << loop_time_ms << " ms" << std::endl;
+	std::cout << "Encrypted data size = " << encrypted_data_size << " bytes" << std::endl;
+	std::cout << static_cast<double>(encrypted_data_size) / seconds_for_test_case / 1024 / 1024 << " MB per second" << std::endl;
+
+	std::cout << "**************************************************" << std::endl;
+	std::cout << "Encrypt using boxer" << std::endl;
+	const auto locked_shared_key = sodiumpp::locked_string(shared_key);
+	const sodiumpp::encoded_bytes nonce_zero =
+		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary);
+	sodiumpp::boxer< t_crypto_nonce > boxer(
+					sodiumpp::boxer_base::boxer_type_shared_key(),
+					false,
+					locked_shared_key,
+					nonce_zero);
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		boxer.box(message);
+		++number_of_loop;
+		encrypted_data_size += message.size();
+	}
+	stop_point = std::chrono::steady_clock::now();
+	loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << number_of_loop << " encryptions in " << loop_time_ms << " ms" << std::endl;
+	std::cout << "Encrypted data size = " << encrypted_data_size << " bytes" << std::endl;
+	std::cout << static_cast<double>(encrypted_data_size) / seconds_for_test_case / 1024 / 1024 << " MB per second" << std::endl;
+
+/*	std::cout << "**************************************************" << std::endl;
+	std::string encrypted = boxer.box(message).bytes;
+	std::cout << "Decrypt using unboxer" << std::endl;
+	sodiumpp::unboxer< t_crypto_nonce > unboxer(
+					sodiumpp::boxer_base::boxer_type_shared_key(),
+					false,
+					locked_shared_key,
+					nonce_zero);
+	auto decrypted = unboxer.unbox(sodiumpp::encoded_bytes(encrypted, sodiumpp::encoding::binary));
+*/
+}
+
+void multi_key_sign_generation_benchmark(const size_t seconds_for_test_case) {
+	g_dbg_level_set(160, "start benchmark");
+	std::cout << "Generate normal multikey" << std::endl;
+	c_multikeys_PAIR keypairA;
+	auto start_point = std::chrono::steady_clock::now();
+	keypairA.generate(e_crypto_system_type_Ed25519, 2);
+	keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
+	auto stop_point = std::chrono::steady_clock::now();
+	std::cout << "generated in "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count() << "ms" << std::endl;
+
+	c_multikeys_PAIR keypairB;
+	keypairB.generate(e_crypto_system_type_Ed25519, 2);
+	keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+
+	c_multikeys_pub keypubA = keypairA.m_pub;
+	c_multikeys_pub keypubB = keypairB.m_pub;
+	size_t number_of_loops = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+		++number_of_loops;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	auto create_ct_loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "Generated " << number_of_loops << " crypto tunnels in "
+		<< create_ct_loop_time_ms << "ms" << std::endl;
+	std::cout << static_cast<double>(number_of_loops) / create_ct_loop_time_ms * 1000 << " per second" << std::endl;
+
+	number_of_loops = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+		AliceCT.create_IDe();
+		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
+		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+		AliceCT.create_CTf(packetstart_2); // A<<<---
+		++number_of_loops;
+	}
+	stop_point = std::chrono::steady_clock::now();
+	auto loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "Created " << number_of_loops << " crypto tunnels in "
+		<< loop_time_ms << "ms" << std::endl;
+	std::cout << static_cast<double>(number_of_loops) / loop_time_ms * 1000 << " per second" << std::endl;
+
+	// create CT
+	c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+	AliceCT.create_IDe();
+	string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+	c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
+	string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+	AliceCT.create_CTf(packetstart_2); // A<<<---
+
+	const std::string msg(1024, 'm');
+	size_t encryption_data_size = 0;
+	start_point = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
+		t_crypto_nonce nonce_used;
+		auto msg1s = AliceCT.box(msg, nonce_used);
+		BobCT.unbox(msg1s, nonce_used);
+		encryption_data_size += msg.size();
+	}
+	stop_point = std::chrono::steady_clock::now();
+	loop_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
+	std::cout << "Send " <<  static_cast<double>(encryption_data_size) / 1024 / 1024 << " MB in "
+		<< loop_time_ms << "ms" << std::endl;
+	std::cout << static_cast<double>(encryption_data_size) / 1024 / 1024 / seconds_for_test_case
+		<< "MB per second" << std::endl;
+	g_dbg_level_set(0, "restore to default");
 }
 
 
