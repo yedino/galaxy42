@@ -20,17 +20,18 @@ class c_rpc_server final {
 		 * Functions stored in this map will be invoked in m_work_thread and should be thread safe
 		 * command name => function
 		 */
-		std::map<std::string, std::function<bool(std::string)>> m_command_map;
+		std::map<std::string, std::function<bool(const std::string &)>> m_command_map;
 		std::mutex m_command_map_mtx;
 	public:
 		c_rpc_server(const unsigned int port);
-		void register_function(const std::string &command_name, std::function<bool(std::string)> function);
+		void register_function(const std::string &command_name, std::function<bool(const std::string &)> function);
 		~c_rpc_server();
 
 };
 
 void send_tcp_msg(const std::string &msg, const std::string addr = "127.0.0.1", int port = 9040);
 void rpc_demo();
+bool rpc_example_function(const std::string &arguments);
 
 
 #endif // RPC_HPP

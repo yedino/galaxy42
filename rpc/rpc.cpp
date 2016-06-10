@@ -21,24 +21,13 @@ void rpc_demo() {
 	_info("Running rpc demo");
 
 try {
-	// create example localhost resiever on port 9040
-	//std::unique_ptr<c_connection_base> example_reciever(new asio_node::c_tcp_asio_node(9042));
+	c_rpc_server rpc_server(42000);
+	rpc_server.register_function("example", rpc_example_function);
 
+	_info("sending example message to localhost:42000");
+	send_tcp_msg("example;arg1;arg2;arg3;arg4", "127.0.0.1", 42000);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
-	_info("sending example message to localhost:9040");
-	// default addr = "::1", port = 9042
-	send_tcp_msg("Hello there", "127.0.0.1", 9040);
-
-	//c_network_message message2;
-	// wait for message
-	//do {
-	//	message2 = example_reciever->receive();
-	//	std::this_thread::yield();
-	//} while (message2.data.empty());
-
-	//_dbg2("source ip " << message2.address_ip);
-	//_dbg2("source port " << message2.port);
-	//_dbg2("data " << message2.data);
 } catch (std::exception &err) {
 	std::cerr << err.what() << std::endl;
 }
@@ -57,11 +46,14 @@ void c_rpc_server::main_loop() {
 			iss >> command;
 			iss >> arguments;
 			std::lock_guard<std::mutex> lg(m_command_map_mtx);
-			if(m_command_map.find(message.data) != m_command_map.end()) { // found commend function in map
+			if(m_command_map.find(command) != m_command_map.end()) { // found commend function in map
 				m_command_map.at(command)(arguments); // call command function
 			}
+			else {
+				_dbg1("not found function " << command);
+			}
 		}
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
 
@@ -73,7 +65,7 @@ c_rpc_server::c_rpc_server(const unsigned int port)
 {
 }
 
-void c_rpc_server::register_function(const std::string &command_name, std::function<bool (std::string)> function) {
+void c_rpc_server::register_function(const std::string &command_name, std::function<bool (const std::string &)> function) {
 	std::lock_guard<std::mutex> lg(m_command_map_mtx);
 	m_command_map.insert(std::pair<std::string, std::function<bool (std::string)>>(command_name, function));
 }
@@ -81,4 +73,9 @@ void c_rpc_server::register_function(const std::string &command_name, std::funct
 c_rpc_server::~c_rpc_server() {
 	m_stop_flag = true;
 	m_work_thread->join();
+}
+
+bool rpc_example_function(const std::string &arguments) {
+	std::cout << "arguments: " << arguments << std::endl;
+	return false;
 }
