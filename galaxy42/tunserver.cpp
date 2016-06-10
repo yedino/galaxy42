@@ -617,12 +617,44 @@ void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("T
 
 // my key
 void c_tunserver::configure_mykey() {
+	// creating new IDC from existing IDI // this should be separated
+	//and should include all chain IDP->IDM->IDI etc.  sign and verification
+
+	// getting IDC
+	std::string IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+	antinet_crypto::c_multikeys_PAIR my_IDI;
+	my_IDI.datastore_load_PRV_and_pub(IDI_name);
+	// getting HIP from IDI
+	auto IDI_hexdot = my_IDI.get_ipv6_string_hexdot() ;
+	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_hexdot );
+	_info("IDI IPv6: " << hexdot);
+	_dbg1("IDI IPv6: " << m_my_hip << " (other var type)");
+	// creating IDC for this session
 	antinet_crypto::c_multikeys_PAIR my_IDC;
-	m_my_IDC.datastore_load_PRV_and_pub("current_keys");
-	auto hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
-	_info("Your IPv6: " << hexdot);
-	m_my_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , hexdot );
-	_dbg1("Your IPv6: " << m_my_hip << " (other var type)");
+	my_IDC.generate_x25519_key_pair();
+	// signing it by IDI
+	std::string IDC_pub_to_sign = my_IDC.m_pub.serialize_bin();
+	antinet_crypto::c_multisign IDC_IDI_signature = my_IDI.multi_sign(IDC_pub_to_sign);
+	// example veryifying
+	antinet_crypto::c_multikeys_pub::multi_sign_verify(IDC_IDI_signature, IDC_pub_to_sign, my_IDC.m_pub);
+
+	// remove IDP from RAM
+	my_IDI.~c_multikeys_PAIR();
+
+	// for debug, hip from IDC
+	auto IDC_hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
+	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_hexdot );
+	_info("Your IPv6: " << IDC_hexdot);
+	_dbg1("Your IPv6: " << IDC_hip << " (other var type)");
+	// now we can use hash ip from IDI and IDC for encryption
+	m_my_hip = IDI_hip;
+	m_my_IDC = my_IDC;
+
+	//m_my_IDC.datastore_load_PRV_and_pub("current_keys");
+	//auto hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
+	//_info("Your IPv6: " << hexdot);
+	//m_my_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , hexdot );
+	//_dbg1("Your IPv6: " << m_my_hip << " (other var type)");
 
 /* TODONOW-del
 	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
@@ -1592,6 +1624,8 @@ int main(int argc, char **argv) {
 
 			("info", "Print info about key specified in my-key option\nrequires [--my-key]")
 			("list-my-keys", "List your key which are in default location")
+			("set-IDI", "Set main instalation key (IDI) that will be use for signing connection (IDC) key"
+						"\nrequires [--my-key]")
 
 			("gen-key", "Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
 						"\nexamples:"
@@ -1683,6 +1717,34 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
+			if (argm.count("set-IDI")) {
+				if (!argm.count("my-key")) {
+					_erro("--my-key is required for --set-IDI");
+					return 1;
+				}
+				auto name = argm["my-key"].as<std::string>();
+				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+				auto keys = filestorage::get_file_list(keys_path);
+				bool found = false;
+				for (auto &key_name : keys) {
+					//remove .PRV extension
+					size_t pos = key_name.find(".PRV");
+					std::string act = key_name.substr(0,pos);
+					if (name == act) {
+						found = true;
+						std::cout << "Found key: " << found << std::endl;
+						break;
+					}
+				}
+				if (found == false) {
+					_erro("Can't find:" << name << " key in your key list");
+					return 1;
+				}
+				filestorage::save_string(e_filestore_galaxy_instalation_key_conf,"IDI", name, true);
+
+				return 0;
+			}
+
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
 					_erro("--my-key is required for --info");
@@ -1698,11 +1760,13 @@ int main(int argc, char **argv) {
 			if (argm.count("list-my-keys")) {
 				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
 				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				std::string IDI_key = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
 				std::cout << "Your key list:" << std::endl;
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
-					std::cout << key_name.substr(0,pos) << std::endl;
+					std::string actual_key = key_name.substr(0,pos);
+					std::cout << actual_key << (IDI_key == actual_key ? " * IDI" : "") << std::endl;
 				}
 				return 0;
 			}
