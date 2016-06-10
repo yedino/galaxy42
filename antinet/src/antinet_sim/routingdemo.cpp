@@ -4,6 +4,7 @@
 #include <limits>
 #include <set>
 using std::set;
+using std::ostream; using std::istream;
 using std::min; using std::max;
 
 const float EPSI=0.0001;
@@ -36,7 +37,9 @@ int toint(float f) { return static_cast<int>(f); }
 long col(int r,int g, int b) { return makecol(r,g,b); }
 long colf(float r,float g, float b) { return makecol(r*255,g*255,b*255); }
 
-struct P { float x, y; P(float x_, float y_) : x(x_), y(y_) {}
+struct P { float x, y;
+	P() : x(0),y(0) {}
+	P(float x_, float y_) : x(x_), y(y_) {}
 	float dist(P p) const { return sqrt( pow(x-p.x,2) + pow(y-p.y,2) ); }
 	P operator-(const P&other) { return {x-other.x, y-other.y}; }
 	P operator+(const P&other) { return {x+other.x, y+other.y}; }
@@ -46,11 +49,14 @@ struct P { float x, y; P(float x_, float y_) : x(x_), y(y_) {}
 	P operator*(float f) { return {x*f,y*f}; }
 	P norm() const { auto l=dist({0,0}); if (fabs(l)<EPSI) return {0,0}; return {x/l,y/l}; }
 };
+ostream& operator<<(ostream&ostr, const P &obj) { return ostr<<obj.x<<' '<<obj.y<<endl; }
+
 typedef enum  { e_red, e_mark } t_flag;
 struct NODE {
-	P p,move; int lev;
+	P p,move; int lev; size_t savenr;
 	vector<WPtr<NODE>> peer;  set<t_flag> flag;
-	NODE(P p_, int lev_):p(p_),move({0,0}),lev(lev_){}
+	NODE():lev(0),savenr(0){}
+	NODE(P p_, int lev_):p(p_),move({0,0}),lev(lev_),savenr(0){}
 	void flagadd(t_flag f_) { flag.insert(f_); }	void flagdel(t_flag f_) { flag.erase(f_); } void flagclr() { flag.clear(); }
 	bool flagis(vector<t_flag> ftab) { for(auto o:ftab) { if(flag.count(o)) return true; } return false; }
 	bool linkis(WPtr<NODE> that) { for(const auto &ptr:peer) { if (&*ptr.lock() == &*that.lock()) return true; } return false; }
@@ -61,7 +67,16 @@ struct NODE {
 		for(auto pw: peer) { auto ps=pw.lock(); auto&o=*ps; line(frame,p.x,p.y,o.p.x,o.p.y,makecol(100,100,100)); }
 	}
 	void jumpaway() { move+=P(randm11(),randm11())*25; }
+	void write(ostream &ostr) const {
+		ostr << savenr <<' '<< p <<' '<< move <<' '<< lev <<' ';
+		ostr<<endl<<peer.size()<<'\t'<<endl; for(const auto &ptr:peer) { ostr<<ptr.lock()->savenr<<' '; } ostr<<endl; }
+	void load(istream &istr,int stage) {
+		istr << savenr <<      p <<      move <<      lev ;
+		...TODO-NOW... // TODO
+	}
 };
+ostream& operator<<(ostream&ostr, const NODE &obj) { obj.write(ostr); return ostr; }
+
 struct WORLD { vector<SPtr<NODE>> nodes;
 	SPtr<NODE> grow(P p, int lev, int r) {
 		SPtr<NODE> main = add(p,lev);
@@ -79,13 +94,21 @@ struct WORLD { vector<SPtr<NODE>> nodes;
 	SPtr<NODE> add(P p, int lev) { auto n=make_shared<NODE>(p,lev); nodes.push_back(n); return n;	}
 	SPtr<NODE> node_any() { return nodes.at(rand()%NONZERO(nodes.size())); }
 	vector<SPtr<NODE>> nodes_in_range(const NODE &n, float r, int count) {
+		if (!count) return vector<SPtr<NODE>>();
 		_info("r="<<r<<" count="<<count);
 		decltype(nodes) near; for(auto &ptr:nodes) if (n.p.dist(ptr->p)<r) { near.push_back(ptr); }
-		std::random_shuffle(BEGINEND(near));	return subrange(near,0,count);
+		std::random_shuffle(BEGINEND(near));	auto ret=subrange(near,0,count); check(ret.size()<=count); return ret;
 	}
 	vector<SPtr<NODE>> nodes_close(const NODE &n, float rtimes, int count) { return nodes_in_range(n, measure_close(n) * rtimes, count); }
 	float measure_close(const NODE &n) { auto f=std::numeric_limits<float>::max();
 		for (auto &ptr:nodes)	{ if(&n == &*ptr)continue;  auto d=ptr->p.dist( n.p );  if (d<f) f=d; } return f;	}
+	void save() {		std::ofstream ff("data.sim"); ff<<nodes.size()<<endl;
+		size_t s=0; for(auto ptr:nodes) ptr->savenr=(s++);  for(auto ptr:nodes) ff<<(*ptr);
+	}
+	void load() { for (int stage=0; stage<=1; ++stage) { std::ifstream ff("data.sim");
+		size_t size; ff>>size;
+		for(size_t i=0;i<size;++i) { auto newobj=make_shared<NODE>(); newobj->load(ff,stage); }
+	} }
 };
 
 WORLD * world=nullptr;
@@ -127,19 +150,21 @@ bool c_simulation::routingdemo_main() {
 		for(auto obj1 : world->nodes) obj1->p += obj1->move;
 
 		if (xkey[KEY_3]) if (rand1in(5)) {	int ntry=0; while (++ntry<100) { auto nnn = world->node_any(); if(nnn->peer.size()>2) continue;
-			for(auto const &ptr : world->nodes_close(*nnn, randnorm(5.0,1.0), clamp(randnorm(2,1),0,5))) {
-				if(ptr->peer.size()<2) { ptr->flagadd({e_red}); nnn->link(ptr); }
+			for(auto const &ptr : world->nodes_close(*nnn, randnorm(5.0,3.0), clamp(randnorm(2,1),1,5))) {
+				if(ptr->peer.size()<=2) { ptr->flagadd({e_red}); nnn->link(ptr); }
 			}
 			nnn->flagadd({e_mark});
 			break;
 			}
 		}
+		if (xkey[KEY_4]) if (rand1in(100)) { world->node_any()->link( world->node_any() ); }
 
 		} // step
 
 		for(auto obj1 : world->nodes) obj1->draw(frame);
 		scare_mouse();  blit (m_frame, m_screen, 0, 0, 0, 0, m_frame->w, m_frame->h);  unscare_mouse();	rest(1);
 	} catch(...) { _erro("Main loop - exception"); throw;	} }
+	world->save();
 
 	delete world; world=nullptr;
 	return do_it_again;
