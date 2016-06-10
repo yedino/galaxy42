@@ -76,6 +76,7 @@ const char * g_demoname_default = "route_dij";
 #include <string>
 #include <iomanip>
 #include <algorithm>
+#include <streambuf>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1557,7 +1558,8 @@ int main(int argc, char **argv) {
 	c_tunserver myserver;
 	try {
 		namespace po = boost::program_options;
-		po::options_description desc("Options");
+		unsigned line_length = 120;
+		po::options_description desc("Options", line_length);
 		desc.add_options()
 			("help", "Print help messages")
 
@@ -1567,26 +1569,69 @@ int main(int argc, char **argv) {
 			("--quiet", "-q")
 			("-q", "Quiet")
 
-			("demo", po::value<string>()->default_value(""), "Try DEMO here. Run one of the compiled-in demonstrations of how program works. Use --demo help to see list of demos [TODO].")
+			("demo", po::value<std::string>()->default_value(""),
+						"Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
+						"Use --demo help to see list of demos [TODO].")
 			("devel","Test: used by developer to run current test")
-			("develnum", po::value<int>()->default_value(1), "Test: used by developer to set current node number (makes sense with option --devel)")
-			("develdemo", po::value<string>()->default_value("hardcoded"), "Test: used by developer to set current demo-test number/name  (makes sense with option --devel)")
+			("develnum", po::value<int>()->default_value(1),
+						"Test: used by developer to set current node number (makes sense with option --devel)")
+			("develdemo", po::value<std::string>()->default_value("hardcoded"),
+						"Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
-			("myname", po::value<std::string>()->default_value("galaxy") , "a readable name of your node (e.g. for debug)")
-			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf\n-connect_to.seed.conf\n"
-						   "*** this could overwrite your actual configurations ***")
+			("myname", po::value<std::string>()->default_value("galaxy") ,
+						"a readable name of your node (e.g. for debug)")
+			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
+						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
+
+			("my-key", po::value<std::string>(), "Choose already generated key from default location")
+			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
+
+			("info", "Print info about key specified in my-key option\nrequires [--my-key]")
+			("list-my-keys", "List your key which are in default location")
+
+			("gen-key", "Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
+						"\nexamples:"
+						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
+						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
+						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
+				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
+				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
+				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
+
+			("sign", "Sign key or other message with your key"
+					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
+					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
+					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
+				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
+				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
+				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
+
+			("verify", "Verify key or data with trusted-key and key or data"
+					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
+					   "or --toverify-data-file *--signature-file]"
+					   "\nDefault signature file name = key/data file name + \".sig\" extension"
+					   "in same location as key/data file")
+				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
+				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
+				("toverify-key", po::value<std::string>(), "Name of key to verify in default location")
+				("toverify-key-file", po::value<std::string>(), "Name of key to verify file in specified location")
+				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
+				("signature-file", po::value<std::string>(),
+							"External Name of signature file in specified location"
+							"\nDefault signature file name = key/data file name + \".sig\" extension")
+
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
 			("no-config", "Don't load any configuration file")
-			("gen-lowest", "Generate lowest set of cryptographic keys:\n (1x 25519)")
-			("gen-fast", "Generate fast set of cryptographic keys:\n (1x 25519, 1x sidh)")
-			("gen-normal", "Generate normal set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru)")
-			("gen-high", "Generate high set of cryptographic keys:\n (1x 25519, 1x sidh, 1x ntru, 1x geport)")
-			("gen-highest", "Generate highest set of cryptographic keys:\n (2x 25519, 2x sidh, 2x ntru, 2x geport)")
+
 			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
-			("mypriv", po::value<std::string>()->default_value(""), "your PRIVATE key (give any string, not yet used - of course this is just for tests)")
-			//("peerip", po::value<std::vector<std::string>>()->required(), "IP over existing networking to connect to your peer")
+			("mypriv", po::value<std::string>()->default_value(""),
+						"your PRIVATE key (give any string, not yet used - of course this is just for tests)")
+			//("peerip", po::value<std::vector<std::string>>()->required(),
+			//			"IP over existing networking to connect to your peer")
 			//("peerpub", po::value<std::vector<std::string>>()->multitoken(), "public key of your peer")
-			("peer", po::value<std::vector<std::string>>()->multitoken(), "Adding entire peer reference, in syntax like ip-pub. Can be give more then once, for multiple peers.")
+			("peer", po::value<std::vector<std::string>>()->multitoken(),
+						"Adding entire peer reference, in syntax like ip-pub."
+						"Can be give more then once, for multiple peers.")
 			;
 
 		po::variables_map argm;
@@ -1616,14 +1661,14 @@ int main(int argc, char **argv) {
 					if (!should_continue) return 0;
 				}
 				catch(std::exception& e) {
-				    std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what() << ", application will now exit" << std::endl;
+					std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what()
+							  << ", application will now exit" << std::endl;
 						return 0; // no error for developer mode
 				}
 			}
 
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
-
 			// --- debug level for main program ---
 			g_dbg_level_set(20,"For normal program run");
 			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
@@ -1631,6 +1676,184 @@ int main(int argc, char **argv) {
 
 			if (argm.count("help")) { // usage
 				std::cout << desc;
+				return 0;
+			}
+
+			if (argm.count("info")) {
+				if (!argm.count("my-key")) {
+					_erro("--my-key is required for --info");
+					return 1;
+				}
+				auto name = argm["my-key"].as<std::string>();
+				antinet_crypto::c_multikeys_pub keys;
+				keys.datastore_load(name);
+				_info(keys.to_debug());
+				return 0;
+			}
+
+			if (argm.count("list-my-keys")) {
+				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				std::cout << "Your key list:" << std::endl;
+				for(auto &key_name : keys) {
+					//remove .PRV extension
+					size_t pos = key_name.find(".PRV");
+					std::cout << key_name.substr(0,pos) << std::endl;
+				}
+				return 0;
+			}
+
+			if (argm.count("gen-key")) {
+				if (!argm.count("key-type")) {
+					_erro("--key-type option is required for --gen-key");
+					return 1;
+				}
+				std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
+				auto arguments = argm["key-type"].as<std::vector<std::string>>();
+				for (auto argument : arguments) {
+					_dbg1("parse argument " << argument);
+					std::replace(argument.begin(), argument.end(), ':', ' ');
+					std::istringstream iss(argument);
+					std::string str;
+					iss >> str;
+					_dbg1("type = " << str);
+					antinet_crypto::t_crypto_system_type type = antinet_crypto::t_crypto_system_type_from_string(str);
+					iss >> str;
+					assert(str[0] == 'x');
+					str.erase(str.begin());
+					int number_of_keys = std::stoi(str);
+					_dbg1("number_of_keys" << number_of_keys);
+					keys.emplace_back(std::make_pair(type, number_of_keys));
+				}
+
+				std::string output_file;
+				if (argm.count("new-key")) {
+					output_file = argm["new-key"].as<std::string>();
+					generate_config::any_crypto_set(output_file, keys, true);
+				} else if (argm.count("new-key-file")) {
+					output_file = argm["new-key-file"].as<std::string>();
+					generate_config::any_crypto_set(output_file, keys, false);
+				} else {
+					_erro("--new-key or --new-key-file option is required for --gen-key");
+					return 1;
+				}
+				return 0;
+			}
+
+			if (argm.count("sign")) {
+
+				antinet_crypto::c_multikeys_PRV signing_key;
+				std::string output_file;
+				if (argm.count("my-key")) {
+					output_file = argm["my-key"].as<std::string>();
+					signing_key.datastore_load(output_file);
+
+				} else if (argm.count("my-key-file")) {
+					output_file = argm["my-key-file"].as<std::string>();
+					sodiumpp::locked_string key_data(filestorage::load_string_mlocked(e_filestore_local_path,
+																					  output_file));
+					signing_key.load_from_bin(key_data.get_string());
+
+				} else {
+					_erro("--my-key or --my-key-file option is required for --sign");
+					return 1;
+				}
+
+				std::string to_sign_file;
+				std::string to_sign;
+				if (argm.count("sign-key")) {
+					to_sign_file = argm["sign-key"].as<std::string>();
+					to_sign = filestorage::load_string(e_filestore_galaxy_pub, to_sign_file);
+					auto sign = signing_key.multi_sign(to_sign);
+					// adding ".pub" to make signature.pub.sig it's more clear (key.pub.sig is signature of key.pub)
+					filestorage::save_string(e_filestore_galaxy_sig, to_sign_file+".pub", sign.serialize_bin(), true);
+				} else if (argm.count("sign-key-file")) {
+					to_sign_file = argm["sign-key-file"].as<std::string>();
+					to_sign = filestorage::load_string(e_filestore_local_path, to_sign_file);
+					auto sign = signing_key.multi_sign(to_sign);
+					filestorage::save_string(e_filestore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
+
+				} else if (argm.count("sign-data-file")) {
+					to_sign_file = argm["sign-data-file"].as<std::string>();
+					to_sign = filestorage::load_string(e_filestore_local_path, to_sign_file);
+					auto sign = signing_key.multi_sign(to_sign);
+					filestorage::save_string(e_filestore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
+
+				} else {
+					_erro("-sign-key, sign-key-file or -sign-data-file option is required for --sign");
+					return 1;
+				}
+				return 0;
+			}
+
+			if(argm.count("verify")) {
+
+				antinet_crypto::c_multikeys_pub trusted_key;
+				std::string output_file;
+				if (argm.count("trusted-key")) {
+					output_file = argm["trusted-key"].as<std::string>();
+					trusted_key.datastore_load(output_file);
+
+				} else if (argm.count("trusted-key-file")) {
+					output_file = argm["trusted-key-file"].as<std::string>();
+					std::string key_data(filestorage::load_string(e_filestore_local_path, output_file));
+					trusted_key.load_from_bin(key_data);
+
+				} else {
+					_erro("--trusted-key or --trusted-key-file option is required for --verify");
+					return 1;
+				}
+
+				bool extern_signature = false;
+				antinet_crypto::c_multisign signature;
+
+				// usefull local function
+				auto load_signature = [&signature] (t_filestore stype, const std::string &filename) {
+					std::string data (filestorage::load_string(stype, filename));
+					signature.load_from_bin(data);
+				};
+
+				std::string signature_file;
+				if (argm.count("signature-file")) {
+					extern_signature = true;
+					signature_file = argm["signature-file"].as<std::string>();
+					load_signature(e_filestore_local_path, signature_file);
+				}
+
+				std::string to_verify_file;
+				std::string to_verify;
+				if (argm.count("toverify-key")) {
+					to_verify_file = argm["toverify-key"].as<std::string>();
+					to_verify = filestorage::load_string(e_filestore_galaxy_pub, to_verify_file);
+					signature_file = to_verify_file + ".pub";
+					if(!extern_signature)
+						load_signature(e_filestore_galaxy_sig, signature_file);
+
+				} else if (argm.count("toverify-key-file")) {
+					to_verify_file = argm["toverify-key-file"].as<std::string>();
+					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
+					signature_file = to_verify_file+".sig";
+					if(!extern_signature)
+						load_signature(e_filestore_local_path, signature_file);
+
+				} else if (argm.count("toverify-data-file")) {
+					to_verify_file = argm["toverify-data-file"].as<std::string>();
+					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
+					signature_file = to_verify_file+".sig";
+					if(!extern_signature)
+						load_signature(e_filestore_local_path, signature_file);
+				} else {
+					_erro("-toverify-key, toverify-key-file or -sign-data-file option is required for --sign");
+					return 1;
+				}
+
+			try {
+				antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
+			} catch (std::invalid_argument &err) {
+				_dbg2("Signature verification: fail");
+				return 1;
+			}
+				_dbg2("Verify Success");
 				return 0;
 			}
 
@@ -1645,32 +1868,6 @@ int main(int argc, char **argv) {
 				for(auto &ref : galaxyconf.get_peer_references()) {
 					myserver.add_peer(ref);
 				}
-			}
-
-
-			if(argm.count("gen-highest")) {
-				std::cout << "Generating highest cryptographic keys ..." << std::endl;
-				generate_config::crypto_set(e_crypto_set::highest);
-				return 0;
-			} else if(argm.count("gen-high")) {
-				std::cout << "Generating high cryptographic keys ..." << std::endl;
-				generate_config::crypto_set(e_crypto_set::high);
-				return 0;
-
-			} else if(argm.count("gen-normal")) {
-				std::cout << "Generating normal cryptographic keys ..." << std::endl;
-				generate_config::crypto_set(e_crypto_set::normal);
-				return 0;
-
-			} else if(argm.count("gen-fast")) {
-				std::cout << "Generating fast cryptographic keys ..." << std::endl;
-				generate_config::crypto_set(e_crypto_set::fast);
-				return 0;
-
-			} else if(argm.count("gen-lowest")) {
-				std::cout << "Generating lowest cryptographic keys ..." << std::endl;
-				generate_config::crypto_set(e_crypto_set::lowest);
-				return 0;
 			}
 
 			_info("Configuring my own reference (keys):");
@@ -1693,8 +1890,8 @@ int main(int argc, char **argv) {
 		}
 	}
 	catch(std::exception& e) {
-		    std::cerr << "Unhandled Exception reached the top of main: "
-				<< e.what() << ", application will now exit" << std::endl;
+		std::cerr << "Unhandled Exception reached the top of main: "
+				  << e.what() << ", application will now exit" << std::endl;
 		return 2;
 	}
 
