@@ -621,7 +621,12 @@ void c_tunserver::configure_mykey() {
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
 	// getting IDC
-	std::string IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+	std::string IDI_name;
+try {
+	IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+} catch (std::invalid_argument &err) {
+	_dbg2("IDI is not set!\n gererate your permanent key ans set is as IDI!\nABORTING PROG");
+}
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
@@ -941,7 +946,7 @@ void c_tunserver::event_loop() {
 		}
 
 		ostringstream oss;
-		oss <<	" Node " << m_my_name << " hip=" << m_my_IDC.get_ipv6_string_hexdot() ;
+		oss <<	" Node " << m_my_name << " hip=" << m_my_hip; //m_my_IDC.get_ipv6_string_hexdot() ;
 		const string node_title_bar = oss.str();
 
 
