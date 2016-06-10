@@ -11,7 +11,6 @@
 #include "../trivialserialize.hpp"
 
 #include "../filestorage.hpp"
-#include "../text_ui.hpp"
 #include "ntrupp.hpp"
 
 #include "../glue_lockedstring_trivialserialize.hpp"
@@ -217,7 +216,7 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 
 		auto crypto_type = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto syste
 
-		if (all_signatures.get_count_of_systems() != pubkeys.get_count_of_systems()) {
+		if (all_signatures.get_count_keys_in_system(crypto_type) != pubkeys.get_count_keys_in_system(crypto_type)) {
 			std::string err_msg = "count of keys system [";
 			err_msg += t_crypto_system_type_to_name(crypto_type);
 			err_msg += "] in c_multikeypub and c_multisign different!";
@@ -248,7 +247,58 @@ c_multikeys_PRV::t_key c_multikeys_PRV::get_PRIVATE(t_crypto_system_type crypto_
 	return get_key(crypto_type, number_of_key);
 }
 
+c_multisign c_multikeys_PRV::multi_sign(const string &msg) {
+	c_multisign multi_signature = c_multisign();
+	// all key crypto systems
+	for (size_t sys=0; sys<get_count_of_systems(); ++sys) {
 
+		auto crypto_type = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto syste
+
+		// crypto systems allowed for signing
+		// or allowed crypto system is empty
+		if (!c_multisign::cryptosystem_sign_allowed(crypto_type) ||
+			get_count_keys_in_system(crypto_type) == 0) {
+			continue;
+		}
+
+		std::vector<std::string> signatures = multi_sign(msg, crypto_type);
+		multi_signature.add_signature_vec(signatures, crypto_type);
+		//multi_signature.add_signature_vec(signatures, sys_enum);
+	}
+	return multi_signature;
+
+}
+
+std::vector<string> c_multikeys_PRV::multi_sign(const string &msg, t_crypto_system_type sign_type) {
+	std::vector<std::string> signatures;
+
+	size_t keys_count = get_count_keys_in_system(sign_type);
+	assert(keys_count > 0 && "no keys of the required type");
+
+	switch(sign_type) {
+		case e_crypto_system_type_Ed25519: {
+			for(size_t i = 0; i < keys_count; ++i) {
+				std::string sign;
+				sign = sodiumpp::crypto_sign_detached(msg,get_PRIVATE(sign_type,i).get_string());
+				signatures.emplace_back(std::move(sign));
+			}
+			break;
+		}
+		case e_crypto_system_type_NTRU_sign: {
+			for(size_t i = 0; i < keys_count; ++i) {
+				std::string sign;
+				auto PRV_key = get_PRIVATE(sign_type,i);
+				sign = ntrupp::sign(msg, PRV_key);
+				signatures.emplace_back(std::move(sign));
+			}
+			break;
+		}
+		default: throw std::runtime_error("sign type not supported");
+	}
+
+	return signatures;
+
+}
 
 // ==================================================================
 // c_multikeys_PAIR
@@ -364,62 +414,17 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_sign_
 	return keypair;
 }
 
-std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair()
-{
+std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair() {
 	return sidhpp::generate_keypair();
 }
 
 c_multisign c_multikeys_PAIR::multi_sign(const string &msg) {
-	c_multisign multi_signature = c_multisign();
-	// all key crypto systems
-	for (size_t sys=0; sys<m_PRV.get_count_of_systems(); ++sys) {
-
-		auto crypto_type = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto syste
-
-		// crypto systems allowed for signing
-		// or allowed crypto system is empty
-		if (!c_multisign::cryptosystem_sign_allowed(crypto_type) ||
-			m_PRV.get_count_keys_in_system(crypto_type) == 0) {
-			continue;
-		}
-
-		std::vector<std::string> signatures = multi_sign(msg, crypto_type);
-		multi_signature.add_signature_vec(signatures, crypto_type);
-		//multi_signature.add_signature_vec(signatures, sys_enum);
-	}
-	return multi_signature;
+	return m_PRV.multi_sign(msg);
 }
 
 std::vector<string> c_multikeys_PAIR::multi_sign(const string &msg,
 												 t_crypto_system_type sign_type) {
-
-	std::vector<std::string> signatures;
-
-	size_t keys_count = m_PRV.get_count_keys_in_system(sign_type);
-	assert(keys_count > 0 && "no keys of the required type");
-
-	switch(sign_type) {
-		case e_crypto_system_type_Ed25519: {
-			for(size_t i = 0; i < keys_count; ++i) {
-				std::string sign;
-				sign = sodiumpp::crypto_sign_detached(msg,m_PRV.get_PRIVATE(sign_type,i).get_string());
-				signatures.emplace_back(std::move(sign));
-			}
-			break;
-		}
-		case e_crypto_system_type_NTRU_sign: {
-			for(size_t i = 0; i < keys_count; ++i) {
-				std::string sign;
-				auto PRV_key = m_PRV.get_PRIVATE(sign_type,i);
-				sign = ntrupp::sign(msg, PRV_key);
-				signatures.emplace_back(std::move(sign));
-			}
-			break;
-		}
-		default: throw std::runtime_error("sign type not supported");
-	}
-
-	return signatures;
+	return m_PRV.multi_sign(msg, sign_type);
 }
 
 void c_multikeys_PAIR::multi_sign_verify(const std::vector<string> &signs,
