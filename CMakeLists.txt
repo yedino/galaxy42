@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-add_definitions(-DSODIUMPP_OPTION_DEBUG=1) # XXX
+#add_definitions(-DSODIUMPP_OPTION_DEBUG=1) # XXX
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
