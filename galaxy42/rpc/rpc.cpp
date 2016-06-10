@@ -60,6 +60,10 @@ c_rpc_server::c_rpc_server(const unsigned int port)
 {
 }
 
+void c_rpc_server::register_function(const std::string &command_name, std::function<bool (std::string)> function) {
+	m_command_map.insert(std::pair<std::string, std::function<bool (std::string)>>(command_name, function));
+}
+
 c_rpc_server::~c_rpc_server() {
 	m_stop_flag = true;
 	m_work_thread->join();
