@@ -1,6 +1,8 @@
 #ifndef C_PEERING_H
 #define C_PEERING_H
 
+#include <atomic>
+
 #include "formats_ip.hpp"
 #include "c_ip46_addr.hpp"
 #include "haship.hpp"
@@ -36,6 +38,9 @@ class c_peering { ///< An (mostly established) connection to peer
 
 		virtual void set_pubkey( std::unique_ptr<c_haship_pubkey> && pubkey ); ///< consume this pubkey and set as mine
 		bool is_pubkey() const; ///< do we have a valid pubkey set
+		void add_limit_points(long int points);
+		void decrement_limit_points();
+		long int get_limit_points();
 
 		friend class c_tunserver;
 
@@ -43,6 +48,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		c_ip46_addr	m_peering_addr; ///< peer physical address in socket format
 		c_haship_addr m_haship_addr; ///< peer haship address
 		unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey (when we know it)
+		std::atomic<long int> m_limit_points; // decrement when send packet to this peer
 };
 
 ostream & operator<<(ostream & ostr, const c_peering & obj);

@@ -585,6 +585,7 @@ class c_tunserver : public c_galaxy_node {
 		 * Exception safety: strong exception guarantee
 		 */
 		std::pair<string,int> parse_ip_string(const std::string &ip_string);
+		c_rpc_server m_rpc_server;
 };
 
 // ------------------------------------------------------------------
@@ -609,7 +610,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 }
 
 c_tunserver::c_tunserver()
- : m_my_name("unnamed-tunserver"), m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1)
+ : m_my_name("unnamed-tunserver"), m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1), m_rpc_server(42000)
 {
 }
 
@@ -1124,6 +1125,13 @@ void c_tunserver::event_loop() {
 					}
 
 					_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
+					if (sender_as_peering_ptr != nullptr) {
+						if (sender_as_peering_ptr->get_limit_points() < 0) {
+							_dbg1("drop packet");
+							continue;
+						}
+						sender_as_peering_ptr->decrement_limit_points();
+					}
 					this->route_tun_data_to_its_destination_top(
 						e_route_method_default,
 						blob.c_str(), blob.size(),

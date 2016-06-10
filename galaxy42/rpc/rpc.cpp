@@ -76,6 +76,7 @@ c_rpc_server::~c_rpc_server() {
 }
 
 bool rpc_example_function(const std::string &arguments) {
+	std::cout << "Example rpc function" << std::endl;
 	std::cout << "arguments: " << arguments << std::endl;
 	return false;
 }
