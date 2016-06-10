@@ -28,6 +28,7 @@ c_peering::c_peering(const t_peering_reference & ref)
 	m_peering_addr(ref.peering_addr)
 	,m_haship_addr(ref.haship_addr)
 	,m_pubkey(nullptr) // unknown untill we e.g. download it; was: make_unique<c_haship_pubkey>(ref.pubkey))
+	,m_limit_points(100)
 { }
 
 void c_peering::print(ostream & ostr) const {
@@ -54,6 +55,18 @@ void c_peering::set_pubkey( std::unique_ptr<c_haship_pubkey> && pubkey ) {
 }
 
 bool c_peering::is_pubkey() const { return m_pubkey != nullptr; }
+
+void c_peering::add_limit_points(long points) {
+	m_limit_points += points;
+}
+
+void c_peering::decrement_limit_points() {
+	m_limit_points--;
+}
+
+long c_peering::get_limit_points() {
+	return m_limit_points;
+}
 
 // ------------------------------------------------------------------
 
