@@ -48,7 +48,6 @@ std::string c_multicryptostrings<TKey>::get_hash() const {
 template <typename TKey>
 void c_multicryptostrings<TKey>::update_hash() const {
 	// TODO review this code, maybe pick nicer (easier to generate by others) format
-
 	//m_hash_cached = Hash1( this->serialize_bin()  );
 	t_crypto_use crypto_use_for_fingerprint = e_crypto_use_fingerprint;
 	trivialserialize::generator gen(100);
@@ -88,6 +87,11 @@ void c_multicryptostrings<TKey>::update_hash() const {
 	string myhash = Hash1( fingerprint_serial );
 
 	m_hash_cached =  myhash;
+}
+
+template <typename TKey>
+void c_multicryptostrings<TKey>::set_hash_dirty() {
+	m_hash_cached=""; // mark it as dirty
 }
 
 template <typename TKey>
@@ -193,7 +197,7 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 		if (!parser.is_end()) throw std::runtime_error("Format incorrect: extra elements at end");
 	}	else throw trivialserialize::format_error_read_invalid_version();
 	// TODO(r) check that numbers are sorted and not-repeating; extent exceptions type to report details of problem
-	this->m_hash_cached=""; // mark it as dirty
+	set_hash_dirty();
 }
 
 template <typename TKey>

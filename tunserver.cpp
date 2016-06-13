@@ -568,6 +568,9 @@ class c_tunserver : public c_galaxy_node {
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
 		antinet_crypto::c_multikeys_PAIR m_my_IDC; ///< my keys!
+		antinet_crypto::c_multikeys_pub	m_my_IDI_pub;	/// IDI public keys
+		antinet_crypto::c_multisign m_IDI_IDC_sig;	/// 'signature' - msg=IDC_pub, signer=IDI
+
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
 
 		std::map< c_haship_addr, unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
@@ -626,20 +629,50 @@ void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("T
 
 // my key
 void c_tunserver::configure_mykey() {
-	antinet_crypto::c_multikeys_PAIR my_IDC;
-	m_my_IDC.datastore_load_PRV_and_pub("current_keys");
-	auto hexdot = m_my_IDC.get_ipv6_string_hexdot() ;
-	_info("Your IPv6: " << hexdot);
-	m_my_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , hexdot );
-	_dbg1("Your IPv6: " << m_my_hip << " (other var type)");
+	// creating new IDC from existing IDI // this should be separated
+	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
-/* TODONOW-del
-	m_haship_pubkey = string_as_bin( string_as_hex( mypub ) );
-	m_haship_addr = c_haship_addr( c_haship_addr::tag_constr_by_hash_of_pubkey() , m_haship_pubkey );
-	_info("Configuring the router, I am: pubkey="<<to_debug(m_haship_pubkey.serialize_bin())
-	<<" ip="<<to_string(m_haship_addr)
-		<<" privkey="<<mypriv);
-*/
+	// getting IDC
+	std::string IDI_name;
+try {
+	IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+} catch (std::invalid_argument &err) {
+	_dbg2("IDI is not set!\n gererate your permanent key ans set is as IDI!\nABORTING PROG");
+}
+	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
+	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	my_IDI->datastore_load_PRV_and_pub(IDI_name);
+	// getting HIP from IDI
+	auto IDI_hexdot = my_IDI->get_ipv6_string_hexdot() ;
+	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_hexdot );
+	_info("IDI IPv6: " << IDI_hexdot);
+	_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
+	// creating IDC for this session
+	antinet_crypto::c_multikeys_PAIR my_IDC;
+	my_IDC.generate(antinet_crypto::e_crypto_system_type_X25519,1);
+	// signing it by IDI
+	std::string IDC_pub_to_sign = my_IDC.m_pub.serialize_bin();
+	antinet_crypto::c_multisign IDC_IDI_signature = my_IDI->multi_sign(IDC_pub_to_sign);
+
+	// example veryifying
+	antinet_crypto::c_multikeys_pub::multi_sign_verify(IDC_IDI_signature, IDC_pub_to_sign, my_IDI->m_pub);
+
+	// save signature and IDI publickey in tunserver
+	m_my_IDI_pub = my_IDI->m_pub;
+	m_IDI_IDC_sig = IDC_IDI_signature;
+
+	// remove IDP from RAM
+	my_IDI.reset(nullptr);
+
+	// for debug, hip from IDC
+	auto IDC_hexdot = my_IDC.get_ipv6_string_hexdot() ;
+	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_hexdot );
+	_info("IDC IPv6: " << IDC_hexdot);
+	_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
+	// now we can use hash ip from IDI and IDC for encryption
+	m_my_hip = IDI_hip;
+	m_my_IDC = my_IDC;
+
 }
 
 // add peer
@@ -703,7 +736,8 @@ void c_tunserver::prepare_socket() {
 
 	{
 		uint8_t address[16];
-		for (int i=0; i<16; ++i) address[i] = m_my_IDC.get_ipv6_string_bin().at(i);
+		assert(m_my_hip.size() == 16 && "m_my_hip != 16");
+		for (int i=0; i<16; ++i) address[i] = m_my_hip[i];
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
@@ -791,6 +825,8 @@ void c_tunserver::peering_ping_all_peers() {
 		// [protocol] build raw
 		trivialserialize::generator gen(8000);
 		gen.push_varstring( m_my_IDC.get_serialize_bin_pubkey() );
+		gen.push_varstring( m_my_IDI_pub.serialize_bin());
+		gen.push_varstring( m_IDI_IDC_sig.serialize_bin());
 		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
 		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
@@ -940,7 +976,7 @@ void c_tunserver::event_loop() {
 		}
 
 		ostringstream oss;
-		oss <<	" Node " << m_my_name << " hip=" << m_my_IDC.get_ipv6_string_hexdot() ;
+		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
 		const string node_title_bar = oss.str();
 
 
@@ -1172,12 +1208,24 @@ void c_tunserver::event_loop() {
 
 				// TODONOW: size of pubkey is different, use serialize
 				// if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
-				string_as_bin bin_his_pubkey( parser.pop_varstring() ); // PARSE
-				_info("We received pubkey=" << to_debug( bin_his_pubkey ) );
+				string_as_bin bin_his_IDC_pub( parser.pop_varstring() ); // PARSE
+				string_as_bin bin_his_IDI_pub( parser.pop_varstring() ); // PARSE
+				string_as_bin bin_his_IDI_IDC_sig( parser.pop_varstring() ); // PARSE
+
+				_info("We received IDC pubkey=" << to_debug( bin_his_IDC_pub ) );
+				_info("We received IDI pubkey=" << to_debug( bin_his_IDI_pub ) );
+				_info("We received IDI --> IDC signature=" << to_debug( bin_his_IDI_IDC_sig ) );
+
+			try {
+				antinet_crypto::c_multikeys_pub his_IDI;
+				his_IDI.load_from_bin(bin_his_IDI_pub.bytes);
+				antinet_crypto::c_multisign his_IDI_IDC_sig;
+				his_IDI_IDC_sig.load_from_bin(bin_his_IDI_IDC_sig.bytes);
+				antinet_crypto::c_multikeys_pub::multi_sign_verify(his_IDI_IDC_sig, bin_his_IDC_pub.bytes, his_IDI);
 
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
-					his_pubkey->load_from_bin( bin_his_pubkey.bytes );
+					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
 					_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
@@ -1185,9 +1233,12 @@ void c_tunserver::event_loop() {
 
 				{ // add node
 					c_haship_pubkey his_pubkey;
-					his_pubkey.load_from_bin( bin_his_pubkey.bytes );
+					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
 					add_tunnel_to_pubkey( his_pubkey );
 				}
+			} catch (std::invalid_argument &err) {
+				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
+			}
 			}
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
 				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
@@ -1620,6 +1671,8 @@ int main(int argc, char **argv) {
 
 			("info", "Print info about key specified in my-key option\nrequires [--my-key]")
 			("list-my-keys", "List your key which are in default location")
+			("set-IDI", "Set main instalation key (IDI) that will be use for signing connection (IDC) key"
+						"\nrequires [--my-key]")
 
 			("gen-key", "Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
 						"\nexamples:"
@@ -1711,6 +1764,34 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
+			if (argm.count("set-IDI")) {
+				if (!argm.count("my-key")) {
+					_erro("--my-key is required for --set-IDI");
+					return 1;
+				}
+				auto name = argm["my-key"].as<std::string>();
+				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+				auto keys = filestorage::get_file_list(keys_path);
+				bool found = false;
+				for (auto &key_name : keys) {
+					//remove .PRV extension
+					size_t pos = key_name.find(".PRV");
+					std::string act = key_name.substr(0,pos);
+					if (name == act) {
+						found = true;
+						std::cout << "Found key: " << found << std::endl;
+						break;
+					}
+				}
+				if (found == false) {
+					_erro("Can't find:" << name << " key in your key list");
+					return 1;
+				}
+				filestorage::save_string(e_filestore_galaxy_instalation_key_conf,"IDI", name, true);
+
+				return 0;
+			}
+
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
 					_erro("--my-key is required for --info");
@@ -1726,11 +1807,18 @@ int main(int argc, char **argv) {
 			if (argm.count("list-my-keys")) {
 				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
 				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				std::string IDI_key = "";
+			try {
+				IDI_key = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+			} catch (std::invalid_argument &err) {
+				_dbg2("IDI is not set!");
+			}
 				std::cout << "Your key list:" << std::endl;
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
-					std::cout << key_name.substr(0,pos) << std::endl;
+					std::string actual_key = key_name.substr(0,pos);
+					std::cout << actual_key << (IDI_key == actual_key ? " * IDI" : "") << std::endl;
 				}
 				return 0;
 			}
