@@ -588,12 +588,12 @@ class c_tunserver : public c_galaxy_node {
 		 * Exception safety: strong exception guarantee
 		 */
 		std::pair<string,int> parse_ip_string(const std::string &ip_string);
-		c_rpc_server m_rpc_server;
-		/**
-		 * @brief rpc_add_limit_points
-		 * @param peer_ip peer hash ip
-		 */
-		bool rpc_add_limit_points(const std::string &peer_ip);
+//		c_rpc_server m_rpc_server;
+//		/**
+//		 * @brief rpc_add_limit_points
+//		 * @param peer_ip peer hash ip
+//		 */
+//		bool rpc_add_limit_points(const std::string &peer_ip);
 };
 
 // ------------------------------------------------------------------
@@ -618,11 +618,11 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 }
 
 c_tunserver::c_tunserver()
- : m_my_name("unnamed-tunserver"), m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1), m_rpc_server(42000)
+ : m_my_name("unnamed-tunserver"), m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1) //, m_rpc_server(42000)
 {
-	m_rpc_server.register_function(
-		"add_limit_points",
-		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
+//	m_rpc_server.register_function(
+//		"add_limit_points",
+//		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
 }
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
@@ -927,17 +927,17 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 	throw std::runtime_error("We do not know a peer with such IP=" + STR(ip));
 }
 
-bool c_tunserver::rpc_add_limit_points(const string &peer_ip) {
-	c_haship_addr peer_hip(c_haship_addr::tag_constr_by_addr_dot(), peer_ip);
-	try {
-		m_peer.at(peer_hip)->add_limit_points(1000);
-	}
-	catch (const std::out_of_range &e) {
-		_warn("not found peer " << peer_ip);
-		return false;
-	}
-	return true;
-}
+//bool c_tunserver::rpc_add_limit_points(const string &peer_ip) {
+//	c_haship_addr peer_hip(c_haship_addr::tag_constr_by_addr_dot(), peer_ip);
+//	try {
+//		m_peer.at(peer_hip)->add_limit_points(1000);
+//	}
+//	catch (const std::out_of_range &e) {
+//		_warn("not found peer " << peer_ip);
+//		return false;
+//	}
+//	return true;
+//}
 
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
@@ -1186,7 +1186,7 @@ void c_tunserver::event_loop() {
 							_dbg1("drop packet");
 							continue;
 						}
-						sender_as_peering_ptr->decrement_limit_points();
+						// sender_as_peering_ptr->decrement_limit_points();
 					}
 					this->route_tun_data_to_its_destination_top(
 						e_route_method_default,
