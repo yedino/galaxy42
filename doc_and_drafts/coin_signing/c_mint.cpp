@@ -21,11 +21,16 @@ c_mint::c_mint (const std::string &mintname,
 
 c_token c_mint::emit_token() {
     size_t t_id = m_id_generator.generate_id();
-
+    uint16_t t_count = 0;		// new emited coin should have zero counts
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     std::chrono::time_point<std::chrono::system_clock> t_expiration_date = now+t_expiration_time;
 
-    c_token token(c_token_header(m_mintname, m_pubkey, t_id, std::chrono::duration_cast<std::chrono::seconds>(t_expiration_date.time_since_epoch()).count()));
+    c_token token(c_token_header(m_mintname,
+                                 m_pubkey,
+                                 t_id,
+                                 t_count,
+                                 std::chrono::duration_cast<std::chrono::seconds>(t_expiration_date.time_since_epoch()).count()));
+
     m_emited_tokens.insert({token, std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count()});
     std::cout << "New token emited:"; token.print(std::cout);
 
@@ -43,7 +48,7 @@ bool c_mint::check_is_emited(const c_token &token) const {
 	return false;
 }
 
-bool c_mint::get_used_token (c_token &token) {
+c_contract c_mint::get_used_token (c_token &&token) {
 
     auto in_it = std::find(m_used_tokens.begin(),m_used_tokens.end(), token);
     if(in_it != m_used_tokens.end()) {
@@ -60,7 +65,13 @@ bool c_mint::get_used_token (c_token &token) {
     std::cout << m_mintname << ": emplace back used token" << std::endl;
     m_used_tokens.emplace_back(std::move(token));
 
-    return false;
+    // TODO
+
+    //auto send_to = token.get_chainsign().back().m_signer;
+    // TODO send data
+    auto c_header = token.get_contract_header();
+    c_contract l_contract = c_contract(c_header.m_contract_info);
+    return l_contract;
 }
 
 void c_mint::print_mint_status(std::ostream &os) const {

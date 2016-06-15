@@ -57,14 +57,16 @@ bool checkIPv6_address(std::string & address) {
     return true;	// address is OK
 }
 // Check if port is correct for us. If not returning default port.
-int get_port() {
+unsigned short get_port() {
   try {
-    int port;
-    if(!(std::cin >> port)) {
-        std::string msg = "Invalid port number [" + std::to_string(port) + "]";
+    std::string input;
+    if(!(std::cin >> input)) {
+        std::string msg = "Invalid port number [" + input + "]";
         throw std::invalid_argument(msg);
     }
+    int port = std::stoi(input);
     if(port > 1025 && port < 32000) {
+        std::cin.ignore();
         return port;	// port is OK
     } else {
         std::string msg = "Invalid port number [" + std::to_string(port) + "]";
@@ -73,6 +75,8 @@ int get_port() {
   } catch (std::invalid_argument &err) {
         std::cout << err.what() << std::endl;
         std::cout << "Set to default port: 30000" << std::endl;
+        std::cin.clear();
+        std::cin.ignore();
         return 30000;
   }
 }
@@ -87,7 +91,7 @@ bool set_interactive_target(std::string &address, int &port) {
     return checkIPv6_address(address);
 }
 
-void run_interactive_protocol() {
+void run_interactive_mode() {
 
     char decision = 'n';
     bool new_user = false;
@@ -118,31 +122,27 @@ void run_interactive_protocol() {
         }
     }
 
-
     std::string target_address;
     int target_port;
     decision = 'n';
 
-    std::cout << "Do you want to set terget now? (Y/n): ";
-    std::cin.ignore();
-    std::cin.clear();
-    std::cin.sync();
-    std::cin >> decision; std::cin.ignore();
-    if(decision == 'Y' || decision == 'y') {
-        if(!set_interactive_target(target_address,target_port)) {
-            std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
-        }
-    }
+//    std::cout << "Do you want to set terget now? (Y/n): ";
+//    std::cin >> decision; std::cin.ignore();
+//    if(decision == 'Y' || decision == 'y') {
+//        if(!set_interactive_target(target_address,target_port)) {
+//            std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
+//        }
+//    }
 
     // HELP
     std::string help = "help info:\n";
                 help += "emit - emit new token\n";
                 help += "send - send token to target\n";
-                help += "status - print status info\n";
-                help += "save - save user status (default in user.dat)\n";
+                help += "status - print status\n";
+                help += "save - save user status (defaultly in user.dat)\n";
                 help += "load - load your last saved user status\n"
                         "       attention, you could lost this session changes\n";
-                help += "target - setting new terget address and server port\n";
+                help += "target - set new terget address and server port\n";
                 help += "quit - for close\n";
     std::cout << "for help type <help>" << std::endl;
 
@@ -151,11 +151,9 @@ void run_interactive_protocol() {
     while(!isover) {
         std::string request;
         std::cout << "Enter message: ";
-        std::cin.ignore();
         std::cin.clear();
-        std::cin.sync();
         std::getline(std::cin,request);
-        std::cout << std::hex << request << std::endl;
+        std::cout << request << std::endl;
 
 
         switch(check_cmd(request)) {
@@ -163,6 +161,7 @@ void run_interactive_protocol() {
                      isover = true;
                      break;
             case  1:
+                     std::cout << std::endl;
                      std::cout << help << std::endl;
                      break;
             case  2:
@@ -182,7 +181,7 @@ void run_interactive_protocol() {
                      break;
             case  7:
                      if(!set_interactive_target(target_address,target_port)) {
-                         std::cout << "Fail to set correct target, try again by typing target command" << std::endl;
+                         std::cout << "Failed to set correct target, try again" << std::endl;
                      }
                      break;
             case -1:
@@ -234,7 +233,7 @@ int main (int argc, char *argv[]) {
                 number_of_threads = atoi( number_of_threads_str.c_str() );
             }
             if (number_of_threads <= 0) {
-                std::cout << "you define incorrect number of theards" << std::endl;
+                std::cout << "you provided incorrect number of theards" << std::endl;
                 correct_threads_num = false;
             }
             if (!correct_threads_num) {
@@ -247,7 +246,7 @@ int main (int argc, char *argv[]) {
         }
 
 				if (mainfunction == e_mainfunction_interactive) {
-        	run_interactive_protocol();
+            run_interactive_mode();
         }
 
 				if (mainfunction == e_mainfunction_test_serialize) {

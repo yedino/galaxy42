@@ -1,10 +1,12 @@
 #include "tests.hpp"
+#include "network/c_tcp_asio_node.hpp"
 
 new_test_suite(many_ed_signing);
 new_test_suite(base_tests);
 new_test_suite(cheater_tests);
 //new_test_suite(bitwallet);
 new_test_suite(wallet_io);
+new_test_suite(network_tests);
 
 using std::thread;
 using std::mutex;
@@ -63,12 +65,15 @@ bool test_all(int number_of_threads) {
     //run_suite_test(bitwallet,test_rpcwallet, 0, pequal);
 
     run_suite_test(base_tests, json_serialize, 0, pequal);
+    run_suite_test(base_tests, token_count, 0, pequal);
 
-    print_final_suite_result(many_ed_signing);
+    run_suite_test(base_tests, test_contract_sending, 0, pequal);
+	run_suite_test(network_tests, net_test, true, pequal);
 
-    print_final_suite_result(base_tests);
-    print_final_suite_result(cheater_tests);
-    print_final_suite_result(wallet_io);
+//    print_final_suite_result(many_ed_signing);
+//    print_final_suite_result(base_tests);
+//    print_final_suite_result(cheater_tests);
+//    print_final_suite_result(wallet_io);
     //print_final_suite_result(bitwallet);
 
     print_final_test_result();
@@ -198,7 +203,6 @@ bool test_fast_cheater() {
   }
     return true;
 }
-
 
 bool test_malignant_cheater() {
   try {
@@ -337,14 +341,17 @@ bool test_netuser() {
     c_netuser B(userB_name, 30001);
 
     A.emit_tokens(2);
-    A.send_token_bynet("::1", 30001);
+    A.send_token_bynet("::1",30001);
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::cout << "Waiting for coin: 3 seconds . . ." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     A.print_status(std::cout);
     B.print_status(std::cout);
 
-    B.get_token_packet(serialization::Json, A.get_public_key());	// is wallet empty?
+    if(B.get_token_packet(serialization::Json, A.get_public_key()) == "fail") {   // is wallet empty?
+        return true;
+    }
     return false;
   } catch(std::exception &ec) {
         std::cout << ec.what() << std::endl;
@@ -631,12 +638,12 @@ bool json_serialize() {
 
         // json::value way
         std::string output;
-        c_json_serializer::serialize(&tok_serialize, output);
+        c_json_serializer::serialize(tok_serialize, output);
 
         std::cout << "TEST JSON: " << output << std::endl;
 
         c_token tok_deserialize;
-        c_json_serializer::deserialize(&tok_deserialize, output);
+        c_json_serializer::deserialize(tok_deserialize, output);
 
         tok_serialize.print(std::cout,true);
         tok_deserialize.print(std::cout,true);
@@ -654,4 +661,155 @@ bool json_serialize() {
         return true;
   }
     return true;
+}
+
+bool token_count() {
+  try {
+        std::cout << "RUNNING TEST TOKEN COUNT" << std::endl;
+
+        c_user A("userA"), B("userB"), C("userC"), D("userD");
+        A.emit_tokens(1);
+        unsigned short test_count = 0;
+        A.send_token_bymethod(B);
+        test_count++;
+        B.send_token_bymethod(C);
+        test_count++;
+        C.send_token_bymethod(D);
+        test_count++;
+        D.send_token_bymethod(B);
+        test_count++;
+
+        c_token tok_test = B.withdraw_token_any();
+        if (tok_test.get_count() == test_count) {
+            std::cout << "Predicted token count ok :" << tok_test.get_count() << " == " << test_count << std::endl;
+            return false;
+        }
+        std::cout << "Predicted token count fail :" << tok_test.get_count() << " == " << test_count << std::endl;
+
+  } catch(std::exception &ec) {
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+    return true;
+}
+
+bool test_contract_sending() {
+  try {
+    std::cout << "RUNNING_SIMPLE_CONTRACT_TEST" << std::endl;
+    std::string userA_name("testUser1");
+    std::string userB_name("testUser2");
+
+    c_netuser A(userA_name, 30000);
+    c_netuser B(userB_name, 30001);
+
+    A.emit_tokens(2);
+    A.send_token_bynet("::1", 30001);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    B.send_token_bynet("::1", 30000);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    return false;
+  } catch(std::exception &ec) {
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+}
+
+
+bool test_contract_circle() {
+  try {
+    std::cout << "RUNNING_CONTRACTCIRCLE_TEST" << std::endl;
+    std::string userA_name("testUser A");
+    std::string userB_name("testUser B");
+    std::string userC_name("testUser C");
+    std::string userD_name("testUser D");
+
+    c_netuser A(userA_name, 30000);
+    c_netuser B(userB_name, 30001);
+    c_netuser C(userB_name, 30002);
+    c_netuser D(userB_name, 30003);
+
+    A.emit_tokens(1);
+    A.send_token_bynet("::1", 30001);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    B.send_token_bynet("::1", 30002);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    C.send_token_bynet("::1", 30003);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    D.send_token_bynet("::1", 30000);	// User A should send signed contract to B
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    if(D.get_signed_contracts().size() == 1) {
+        return false;
+    }
+
+  } catch(std::exception &ec) {
+        std::cout << ec.what() << std::endl;
+        return true;
+  }
+    return true;
+}
+
+bool net_test() {
+	using namespace asio_node;
+	std::unique_ptr<c_connection_base> node1(new c_tcp_asio_node(19000));
+	std::unique_ptr<c_connection_base> node2(new c_tcp_asio_node(19001));
+
+	c_network_message message;
+	message.address_ip = "127.0.0.1";
+	message.port = 19001;
+	message.data = "1234567890";
+	node1->send(std::move(message));
+
+	c_network_message message2;
+	// wait for message
+	do {
+		message2 = node2->receive();
+		std::this_thread::yield();
+	} while (message2.data.empty());
+
+	std::cout << "source ip " << message2.address_ip << std::endl;
+	std::cout << "source port " << message2.port << std::endl;
+	std::cout << "data " << message2.data << std::endl;
+
+	std::cout << "send response" << std::endl;
+	//message2.data = "0987654321";
+	constexpr size_t big_message_size = 100 * 1024 * 1024;
+	message2.data.assign(big_message_size, 'a');
+	auto count_a = std::count(message2.data.begin(), message2.data.end(), 'a');
+	std::cout << "count of a " << count_a << std::endl;
+	node2->send(std::move(message2));
+
+	// wait for message
+	do {
+		message = node1->receive();
+		std::this_thread::yield();
+	} while (message.data.empty());
+
+	std::cout << "response" << std::endl;
+	std::cout << "source ip " << message.address_ip << std::endl;
+	std::cout << "source port " << message.port << std::endl;
+	std::cout << "readet data size " << message.data.size() << std::endl;
+	std::cout << "last char " << (int)*(message.data.end() - 1) << std::endl;
+	count_a = std::count(message.data.begin(), message.data.end(), 'a');
+	auto count_0 = std::count(message.data.begin(), message.data.end(), '\0');
+	std::cout << "count of a " << count_a << std::endl;
+    std::cout << "count of 0 " << count_0 << std::endl;
+    assert(count_a == big_message_size);
+
+	message.address_ip = "127.0.0.1";
+	message.port = 19002; // random port
+	std::cout << "send to bad adress" << std::endl;
+	std::cout << "wait for exception" << std::endl;
+	try {
+		node1->send(std::move(message)); // send error
+	}
+	catch( std::exception & e ) {
+		std::cout << "OK" << std::endl;
+		std::cout << "exception " << e.what() << std::endl;
+	}
+
+	return true;
 }

@@ -17,6 +17,7 @@ class c_wallet {
     /// should be used only in tests!
     bool process_token () const;
     c_token get_any_token (bool keep_in_wallet = 0);
+
     size_t amount () const;
     void move_token (c_token &&);
 

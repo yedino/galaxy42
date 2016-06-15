@@ -58,10 +58,14 @@
 
 # verify
 
+
 ./nocap-tunserver.elf --verify --trusted-key "bank" --toverify-key "shadyguy"
 ./nocap-tunserver.elf --verify --trusted-key-file "myself.pub" --toverify-data-file "tunserver.elf"
 # extern signature
 ./nocap-tunserver.elf --verify --trusted-key-file "myself.pub" --toverify-data-file "tunserver.elf" --signature-file "tunserver.elf.sig"
+
+
+exit ;
 
 # clean
 echo "Cleaning ..."

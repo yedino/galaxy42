@@ -22,8 +22,7 @@ c_user::c_user (string &&username) :
     m_reputation = 1;
 }
 
-c_user::c_user(c_user && user) :
-                                 m_edkeys(std::move(user.m_edkeys)),
+c_user::c_user(c_user && user) : m_edkeys(std::move(user.m_edkeys)),
                                  m_mint(std::move(user.m_mint)),
                                  m_wallet(std::move(user.m_wallet)),
                                  m_seen_tokens(std::move(user.m_seen_tokens)),
@@ -34,7 +33,7 @@ c_user::c_user(c_user && user) :
 std::string c_user::get_username() const {
 	return m_username;
 }
-void c_user::set_username(std::string username) {
+void c_user::set_username (const string &username) {
     m_username = username;
 }
 
@@ -53,6 +52,11 @@ void c_user::print_seen_status(std::ostream &os) const {
     }
 }
 
+c_token c_user::withdraw_token_any(bool keep_in_wallet) {
+    return m_wallet.get_any_token(keep_in_wallet);
+}
+
+
 c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wallet) {
     std::lock_guard<std::mutex> lck (m_mtx);
     if(m_wallet.process_token()) {
@@ -65,7 +69,7 @@ c_token c_user::process_token_tosend(const ed_key &user_pubkey, bool keep_in_wal
     msg_stream << tok.get_id() << '|' << user_pubkey;
     std::string msg = msg_stream.str();
     ed_key msg_sign = crypto_ed25519::sign(msg,m_edkeys);
-
+    tok.increment_count();
     tok.add_chain_element(c_chainsign_element(msg, msg_sign, m_username, get_public_key()));
     return tok;
 }
@@ -74,7 +78,6 @@ std::string c_user::get_token_packet(serialization method, const ed_key &user_pu
 
   try {
     c_token tok = process_token_tosend(user_pubkey,keep_in_wallet);
-    m_mtx.lock();
 
     std::string packet = tok.to_packet(method);
     return packet;
@@ -103,7 +106,7 @@ bool c_user::send_token_bymethod(c_user &user, bool keep_in_wallet) {
     return false;
 }
 
-bool c_user::recieve_from_packet(std::string &packet) {
+bool c_user::recieve_from_packet (const string &packet) {
 
   try {
     c_token tok(packet, serialization::Json);
@@ -138,6 +141,7 @@ bool c_user::recieve_token (c_token &token) {
     }
 	// check validity of the signatures chain
     ed_key expected_sender; // publickey
+    ed_key current_sender_in_coin; // for last sender
     bool expected_sender_any = false; // do we expecected sender
 
 	// [A->B]   [B->C]   [C->D]
@@ -150,7 +154,7 @@ bool c_user::recieve_token (c_token &token) {
             throw coinsign_error(11,"TOKEN VALIDATE FAIL - bad sign");
         }
 
-        ed_key current_sender_in_coin = current_signature.m_signer_pubkey;
+        current_sender_in_coin = current_signature.m_signer_pubkey;
         ed_key current_recipient_in_coin;
 
 		std::string delimeter = "|";
@@ -180,8 +184,12 @@ bool c_user::recieve_token (c_token &token) {
     //std::cout << "size of this token : " << token.get_size() << std::endl;
 
     if(m_mint.check_is_emited(token)) { // is this token emitted by me?
-        bool is_ok = m_mint.get_used_token(token);
-        return is_ok;
+        // after last iteration of previous loop current sender in coin will be contract recipient
+        ed_key contract_recipient = current_sender_in_coin;
+        c_contract token_contract = c_contract(m_mint.get_used_token(std::move(token)));
+        sign_and_push_contract(contract_recipient,token_contract);
+        //  TODO  change speed
+        return false;
     } else {
         bool seen = false;
         for (auto &in : m_seen_tokens) { // is this token used?
@@ -212,7 +220,16 @@ bool c_user::recieve_token (c_token &token) {
     return false;
 }
 
-void c_user::set_new_mint(std::string mintname, ed_key pubkey, std::chrono::seconds exp_time) {
+void c_user::sign_and_push_contract(const ed_key &recipient, c_contract &contract) {
+    contract.sign_contract(m_edkeys);
+    m_contracts_to_send.push(std::make_pair(recipient, contract));
+}
+
+std::vector<c_contract> c_user::get_signed_contracts() {
+    return m_signed_contracts;
+}
+
+void c_user::set_new_mint (const string &mintname, const ed_key &pubkey, std::chrono::seconds exp_time) {
 
     m_mint = c_mint(mintname,pubkey,exp_time);
 }

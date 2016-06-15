@@ -5,9 +5,11 @@
 c_token_header::c_token_header (const std::string &mintname,
                                 const ed_key &mint_pubkey,
                                 const size_t id,
+                                const uint16_t count,
                                 const uint64_t expiration_date) : m_mintname(mintname),
                                                                   m_mint_pubkey(mint_pubkey),
                                                                   m_id(id),
+                                                                  m_count(count),
                                                                   m_expiration_date(expiration_date)
 { }
 
@@ -19,6 +21,7 @@ void c_token_header::print(std::ostream &os) const {
     os << "Emiter: [" << m_mintname
        << "], Mint pubkey [" << m_mint_pubkey
        << "], Id: ["  << m_id
+       << "], Counts: ["  << m_count
        << "], Expiration date: [" << date.substr(0,end)
        << "]" << std::endl;
 }
@@ -52,7 +55,8 @@ void c_chainsign_element::print(std::ostream &os) const{
 
 ////////////////////////////////////////////////////////////////////////////////////////////// TOKEN
 
-c_token::c_token (const c_token_header &header) : m_header(header)
+c_token::c_token (const c_token_header &header, const c_contract_header contract_header) : m_header(header),
+                                                                                           m_contract_header(contract_header)
 { }
 
 c_token::c_token (c_token_header &&header) : m_header(std::move(header))
@@ -93,7 +97,7 @@ void c_token::print(std::ostream &os, bool verbouse) const {
 }
 
 
-c_token::c_token(std::string packet, serialization method) {
+c_token::c_token(const std::string &packet, serialization method) {
 
     if(method == serialization::boost) {	// boost::serialization way
         std::cout << "Serialized recieved token :" << packet << std::endl; //dbg
@@ -102,7 +106,7 @@ c_token::c_token(std::string packet, serialization method) {
         sa >> *this;
     }
     else if(method == serialization::Json) {// Json::valus way
-        c_json_serializer::deserialize(this, packet);
+        c_json_serializer::deserialize(*this, packet);
     }
 }
 
@@ -118,7 +122,7 @@ std::string c_token::to_packet(serialization method) {
         packet = ss.str();
     }
     else if(method == serialization::Json) {// json::value
-        c_json_serializer::serialize(this, packet);
+        c_json_serializer::serialize(*this, packet);
     }
     return packet;
 }
@@ -135,8 +139,23 @@ size_t c_token::get_id() const {
     return m_header.m_id;
 }
 
+uint16_t c_token::get_count () const {
+    return m_header.m_count;
+}
+
+c_contract_header c_token::get_contract_header() const {
+    return m_contract_header;
+}
+
 std::chrono::time_point<std::chrono::system_clock>  c_token::get_expiration_date() const {
     return m_header.get_expiration_date();
+}
+
+void c_token::increment_count() {
+    m_header.m_count++;
+    if(m_header.m_count == std::numeric_limits<uint16_t>::max()) {
+        throw std::logic_error("token count overflow!");
+    }
 }
 
 long long c_token::get_size() const {
@@ -154,20 +173,29 @@ long long c_token::get_size() const {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////// JSONCPP
 
-void c_token_header::json_serialize(Json::Value &root) {
+void c_token_header::json_serialize(Json::Value &root) const {
     // serialize primitives
     root["mintname"] = m_mintname;
     root["mint_pubkey"] = std::string(reinterpret_cast<const char *>(m_mint_pubkey.c_str()),m_mint_pubkey.size());
     root["id"] = static_cast<Json::UInt64>(m_id);
+    root["count"] = static_cast<Json::UInt>(m_count);
     root["expiration_date"] = static_cast<Json::UInt64>(m_expiration_date);
 }
 
 void c_token_header::json_deserialize(Json::Value &root) {
     // deserialize primitives
-    std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;
+    std::cout << "c_token_header: json deserialize [" << root.asString() << "]" << std::endl;	// TODO
 }
 
-void c_chainsign_element::json_serialize(Json::Value &root) {
+void c_contract_header::json_serialize(Json::Value &root) const {
+    root["contract_info"] = m_contract_info;
+}
+
+void c_contract_header::json_deserialize(Json::Value &root) {
+    std::cout << "c_contract_header: json deserialize [" << root.asString() << "]" << std::endl;	// TODO
+}
+
+void c_chainsign_element::json_serialize(Json::Value &root) const {
     // serialize primitives
     root["msg"].append(m_msg);
     root["msg_sign"].append(std::string(reinterpret_cast<const char *>(m_msg_sign.c_str()), m_msg_sign.size()));
@@ -176,12 +204,13 @@ void c_chainsign_element::json_serialize(Json::Value &root) {
 }
 void c_chainsign_element::json_deserialize(Json::Value &root) {
     // deserialize primitives
-    std::cout << "c_chainsign_element: json deserialize [" << root.asString() << "]" << std::endl;
+    std::cout << "c_chainsign_element: json deserialize [" << root.asString() << "]" << std::endl;	// TODO
 }
 
-void c_token::json_serialize(Json::Value &root) {
+void c_token::json_serialize(Json::Value &root) const {
     // serialize primitives
     m_header.json_serialize(root);
+    m_contract_header.json_serialize(root);
     for(auto &chain_el : m_chainsign) {
         chain_el.json_serialize(root);
     }
@@ -196,7 +225,9 @@ void c_token::json_deserialize(Json::Value &root) {
     std::string mintname = root.get("mintname", "").asString();
     ed_key mint_pubkey(reinterpret_cast<const unsigned char*>(root.get("mint_pubkey", "").asCString()),crypto_ed25519::public_key_size);
     size_t id = root.get("id",0).asUInt64();
+    uint16_t count = root.get("count",std::numeric_limits<uint16_t>::max()).asUInt();
     uint64_t expiration_date = root.get("expiration_date",0).asUInt64();
+
 
     std::cout << "json deserialize : " 	<< mintname << ' ' << mint_pubkey << ' '
                                         << id << ' ' << expiration_date << std::endl;
@@ -210,9 +241,15 @@ void c_token::json_deserialize(Json::Value &root) {
     if(id == 0) {
         throw std::logic_error("Bad Json format for c_token : invaild id");
     }
+    if(count == std::numeric_limits<uint16_t>::max()) {
+        throw std::logic_error("Bad Json format for c_token : invaild count");
+    }
     if(expiration_date == 0) {
         throw std::logic_error("Bad Json format for c_token : invaild expiration_date");
     }
+
+    std::string contract_info = root.get("contract_info","none").asString();
+    m_contract_header = c_contract_header(contract_info);
 
     // dbg
     //std::cout << "c_token: json deserialize mintname [" << mintname << "]" << std::endl;
@@ -220,7 +257,11 @@ void c_token::json_deserialize(Json::Value &root) {
     //std::cout << "c_token: json deserialize id [" << id << "]" << std::endl;
     //std::cout << "c_token: json deserialize expiration_date [" << expiration_date << "]" << std::endl;
 
-    m_header = c_token_header(mintname,mint_pubkey,id,expiration_date);
+    m_header = c_token_header(mintname,
+                              mint_pubkey,
+                              id,
+                              count,
+                              expiration_date);
 
     if(root.get("msg","").isArray()) {
         Json::Value msg = root.get("msg","");
@@ -278,3 +319,4 @@ bool operator == (const c_token &lhs, const c_token &rhs) {
 bool operator < (const c_token &lhs, const c_token &rhs) {
     return (lhs.get_id() < rhs.get_id());
 }
+

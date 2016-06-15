@@ -3,11 +3,10 @@
 
 #include "libs01.hpp"
 #include "coinsign_error.hpp"
-#include "c_netuser.hpp"
-#include "c_json_serializer.hpp"
+#include "network/c_netuser.hpp"
+#include "serialize/c_json_serializer.hpp"
 
 #include "ptest/ptest.hpp"
-
 
 bool test_manyEdSigning(int number_of_threads, size_t signs_num, size_t message_len);
 bool test_user_sending ();
@@ -35,6 +34,12 @@ bool user_save_load();
 bool netuser_save_load();
 
 bool json_serialize();
+bool token_count();
+
+bool test_contract_sending();
+bool test_contract_circle();
+
+bool net_test();
 
 bool test_all(int number_of_threads);
 

@@ -1,5 +1,7 @@
 #include "libs01.hpp"
 
+std::mutex dbg_mtx;
+
 namespace cs_utils {
     void print_strBytes(const std::string& str) {
         for(size_t i = 0; i < str.length(); ++i) {
@@ -44,7 +46,11 @@ namespace cs_utils {
         generate_n(str.begin(), length, generate_random_char);
         return str;
     }
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<uint64_t>> u64_to_time(uint64_t timestamp) {
-        return std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>{std::chrono::duration<uint64_t>{timestamp}};
+
+    std::chrono::time_point<std::chrono::system_clock,
+                            std::chrono::duration<uint64_t>> u64_to_time(uint64_t timestamp) {
+
+        return std::chrono::time_point<std::chrono::system_clock,
+                                       std::chrono::seconds>{std::chrono::duration<uint64_t>{timestamp}};
     }
 }

@@ -14,6 +14,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <queue>
 
 #include <thread>
 #include <mutex>
@@ -39,6 +40,8 @@
 #include "../../crypto_ops/crypto/crypto_ed25519.hpp"
 
 using std::size_t;
+
+extern std::mutex dbg_mtx;
 
 namespace cs_utils {
     void print_strBytes(const std::string& str);
