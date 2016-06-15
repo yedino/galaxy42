@@ -182,6 +182,10 @@ fs::path filestorage::get_full_path(t_filestore file_type,
 			full_path += ".sig";
 			break;
 		}
+	case e_filestore_galaxy_instalation_key_conf: {
+			full_path += ".conf";
+			break;
+		}
 		case e_filestore_local_path: {
 			break;
 		}
@@ -207,6 +211,10 @@ fs::path filestorage::get_parent_path(t_filestore file_type,
 		}
 		case e_filestore_galaxy_sig: {
 			parent_path += "/.config/antinet/galaxy42/public/";
+			break;
+		}
+	case e_filestore_galaxy_instalation_key_conf: {
+			parent_path += "/.config/antinet/galaxy42/config/";
 			break;
 		}
 		case e_filestore_local_path: {
@@ -247,6 +255,7 @@ fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 			throw std::invalid_argument(err_msg);
 		}
 
+		// TODO perrmisions
 		switch (file_type) {
 			case e_filestore_galaxy_pub: {
 				//mod=0700 for private key
@@ -257,6 +266,9 @@ fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 				break;
 			}
 			case e_filestore_galaxy_sig: {
+				break;
+			}
+		case e_filestore_galaxy_instalation_key_conf: {
 				break;
 			}
 			case e_filestore_local_path: {

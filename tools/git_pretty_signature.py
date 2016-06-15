@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from subprocess import check_output, call, Popen, PIPE, CalledProcessError, STDOUT
+from subprocess import check_output, call, check_call, Popen, PIPE, CalledProcessError, STDOUT
 import locale
 
 # the colors info
@@ -17,7 +17,7 @@ class BColors:
 	FAIL = '\033[91m'
 	ENDC = '\033[0m'
 
-	def disable(self): # remove all colors
+	def disable(self):  # remove all colors
 		self.HEADER = ''
 		self.OKBLUE = ''
 		self.OKGREEN = ''
@@ -26,18 +26,17 @@ class BColors:
 		self.ENDC = ''
 
 
-
 # count signatures types (e.g. good/bad/...) if check_mode then will exit at first problem,
 # encoding current system encoding
 # pager - is the pipe to some pager e.g. to the "less" process
 def totag_stats(pager, encoding, check_mode=False):
 	mainloop_count = 0
-	ch = 't' # should we quit now? (maybe not needed now with the ls?)
+	ch = 't'  # should we quit now? (maybe not needed now with the ls?)
 	# count
-	G_totag = 0 # good
-	U_totag = 0 # untrust
-	B_totag = 0 # bad
-	N_totag = 0 # none (not signed - or maybe can not check e.g. can not find pubkey)
+	G_totag = 0  # good
+	U_totag = 0  # untrust
+	B_totag = 0  # bad
+	N_totag = 0  # none (not signed - or maybe can not check e.g. can not find pubkey)
 	while ch != 'q':
 
 		# the command to get log:
@@ -68,9 +67,21 @@ def totag_stats(pager, encoding, check_mode=False):
 		# TODO secure this?
 		tag_pos = data.find("tag")
 
-		if tag_pos != -1 or not data: # if there is a tag - or if we should end our work because no data
+		if tag_pos != -1 or not data:  # if there is a tag - or if we should end our work because no data
+
 			# getting tag from %d ref names
 			if tag_pos != -1:
+				# if it's really tag?
+				hash_com = 'git log -1 --skip='+str(mainloop_count)+' --pretty=format:"%H"'
+				try:
+					commit_hash = check_output(hash_com.split()).decode(encoding)
+					# pager.stdin.write(commit_hash.encode(encoding))  # dbg
+				except CalledProcessError:
+					pass
+				if not commit_point_to_tag(commit_hash[1: -1]):
+					mainloop_count += 1
+					continue
+
 				tag_info = data[tag_pos:-1]
 				tag_end_pos = tag_info.find(',')
 				tag_info = tag_info[:tag_end_pos]
@@ -100,7 +111,7 @@ def totag_stats(pager, encoding, check_mode=False):
 					if check_mode:
 						exit(1)
 
-			col_coms = BColors.OKGREEN # default colour to use if all ok
+			col_coms = BColors.OKGREEN  # default colour to use if all ok
 
 			# commits checking
 			# if any problems:
@@ -123,7 +134,7 @@ def totag_stats(pager, encoding, check_mode=False):
 				if check_mode:
 					exit(1)
 
-			# if ther was some tag:
+			# if there was some tag:
 			if tag_pos != -1:
 				info_head = col_coms+"Signatures status after "+col_tag+tag_info+":\n"
 				if col_tag == BColors.OKGREEN and (col_coms == BColors.OKGREEN or col_coms == BColors.OKBLUE):
@@ -134,9 +145,9 @@ def totag_stats(pager, encoding, check_mode=False):
 				info_head = col_coms+"Signatures status for all commits:\n"
 				info_ft = BColors.OKBLUE + "NOTICE: No tag found in this repository\n"
 
-			info_head = "\n\n\n" + "Warning: (bug#m145) check if no branches, remotes (refnames) contain word 'tag' otherwise " \
-			+ "this parsing can be not accurate and could show not correct stats. Also read the log yourself " \
-			+ " to make sure.\n\n" + info_head
+			# info_head = "\n\n\n" + "Warning: (bug#m145) check if no branches, remotes (refnames) contain word 'tag' otherwise "\
+			#			+ "this parsing can be not accurate and could show not correct stats. Also read the log yourself "\
+			#			+ " to make sure.\n\n" + info_head
 
 			info_str = info_head                                    \
 						+ col_coms + str(G_totag) + ": GOOD\n"      \
@@ -147,6 +158,25 @@ def totag_stats(pager, encoding, check_mode=False):
 			pager.stdin.write(info_str.encode(encoding))
 			return
 		mainloop_count += 1
+
+
+# include unannotated tags !
+def is_tag(tag_name):
+	try:
+		check_call(['git', 'describe', '--tags', tag_name], stderr=STDOUT, stdout=open(os.devnull, 'w'))
+		return True
+	except CalledProcessError:
+		return False
+
+
+# return True if commit point to annotated tag
+# False otherwise
+def commit_point_to_tag(commit_hash):
+	try:
+		check_call(['git', 'describe', '--exact-match', commit_hash], stderr=STDOUT, stdout=open(os.devnull, 'w'))
+		return True
+	except CalledProcessError:
+		return False
 
 
 # quick test is git working here, is this git working directory:
@@ -191,7 +221,7 @@ if __name__ == "__main__":
 			com_hash = data[1:del_pos]
 			sig_stat = data[del_pos+1:del_pos+2]
 
-			com = "git||log||-1||"+com_hash+"||--pretty=format:\"%C(yellow)%H%C(auto)%d\n"
+			com = "git||log||-1||"+com_hash+"||--pretty=format:\"%C(yellow)commit: %H%C(auto)%d\n"
 			sig_info = ""
 			ref_info = ""
 			sig_info_com = "git log "+com_hash+" -1 --pretty=format:\"%GG\""
@@ -207,7 +237,8 @@ if __name__ == "__main__":
 			tag_pos = ref_info.find("tag")
 			# getting tag from %d ref names
 			tag_table = ""
-			if tag_pos != -1: # show a tag info:
+			if tag_pos != -1 and commit_point_to_tag(com_hash):  # show a tag info:
+
 				tag_info = ref_info[tag_pos:-1]
 				tag_end_pos = tag_info.find(',')
 				tag_info = tag_info[:tag_end_pos]
@@ -258,7 +289,7 @@ if __name__ == "__main__":
 				com += "%C(magneta reverse)SIGNATURE - BAD SIGN\n%C(magneta reverse)"
 				com += sig_info.replace('\n', '\n%C(magneta)')[1:-1]
 			elif sig_stat == 'N':
-				tag_table = tag_table.replace('gpg', '%C(red)SIGNATURE - GOOD\n%C(reverse yellow)=%C(reset) gpg', 1)
+				tag_table = tag_table.replace('gpg', '%C(red)SIGNATURE - FAIL\n%C(reverse yellow)=%C(reset) gpg', 1)
 				com += tag_table.replace('gpg:', '%C(red)gpg:')
 				com += '%C(red reverse)! !!! ! WARNING ! !!! !\n' 		\
 					+ '%C(red)! SIGNATURE - FAILURE !\n' 				\

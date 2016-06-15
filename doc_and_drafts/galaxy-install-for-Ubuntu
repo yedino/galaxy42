@@ -1,25 +1,32 @@
 This Readme contains information how to install and use our galaxy42 network for Ubuntu(tested on 16.04 LTS).
 
-1) Install Sodium and Boost:
+1) Compiler
+	sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+	sudo apt-get update
+	sudo apt-get install gcc-5 g++-5
+
+	sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
+
+2) Install Sodium and Boost:
 	sudo apt-get install libsodium-dev libboost-all-dev
 
-2) Install other dependences:
-	sudo apt-get install cmake autoconf pkg-config libtool libfftw3-dev
+3) Install other dependences:
+	sudo apt-get install cmake autoconf pkg-config libtool libfftw3-dev build-essential
 		* libfftw3-dev -  fast Fourier transform (FFT) alghoritm library used in ntru cryptography
 
-3) Clone project from git-repository, enter project directory and change branch to usable_proxy_nocrypto:
+4) Clone project from git-repository, enter project directory and change branch to usable_proxy_nocrypto:
 	git clone https://github.com/tigusoft-vm/antinet
 	cd antinet
 	git checkout usable_proxy_nocrypto
 
-4) Initialize and update submodules:
+5) Initialize and update submodules:
 	git submodule init
 	git submodule update
 
-5) Change directory to galaxy42:
+6) Change directory to galaxy42:
 	cd galaxy42
 
-6) Make project, you can do it for 2 different ways:
+7) Make project, you can do it for 2 different ways:
 
 	5.1)First is not very secure so we recomend to use it only for Virtual Machines:
 		sudo cmake . && make

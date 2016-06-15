@@ -374,6 +374,7 @@ void c_multikeys_PAIR::generate() {
 	generate( e_crypto_system_type_NTRU_EES439EP1 , 1 );
 	_info("generate SIDH");
 	generate( e_crypto_system_type_SIDH , 1 );
+	m_pub.set_hash_dirty();
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_x25519_key_pair() {
@@ -493,6 +494,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 		default: throw runtime_error("Trying to generate unsupported key type:"
 			+ t_crypto_system_type_to_name(crypto_system_type));
 	} // switch
+	m_pub.set_hash_dirty();
 
 	string serialized = this->m_pub.serialize_bin();
 	_info("Serialized pubkeys: [" << to_debug(serialized) << "]");
