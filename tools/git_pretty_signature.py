@@ -145,7 +145,7 @@ def totag_stats(pager, encoding, check_mode=False):
 				info_head = col_coms+"Signatures status for all commits:\n"
 				info_ft = BColors.OKBLUE + "NOTICE: No tag found in this repository\n"
 
-			info_head = "\n\n\n" + "Warning: not all git system calls are fully escaped yet. Do not use on important production accounts yet"
+			info_head = "\n\n\n" + "Warning: not all git system calls are fully escaped yet. Do not use on important production accounts yet\n\n"
 
 			info_str = info_head                                    \
 						+ col_coms + str(G_totag) + ": GOOD\n"      \
@@ -178,8 +178,8 @@ def commit_point_to_tag(commit_hash):
 
 
 # quick test is git working here, is this git working directory:
-def is_git_directory(path='.'):
-	return call(['git', '-C', '--', path, 'branch'], stderr=STDOUT, stdout=open(os.devnull, 'w')) == 0
+def is_git_directory():
+	return call(['git', '-C', '.', 'branch'], stderr=STDOUT, stdout=open(os.devnull, 'w')) == 0
 
 if __name__ == "__main__":
 
