@@ -58,7 +58,8 @@ class c_simulation {
 
 		void process_input(); ///< process the input devices
 
-		void routingdemo();
+		bool routingdemo();
+		bool routingdemo_main();
 };
 
 #endif // C_SIMULATION_HPP
