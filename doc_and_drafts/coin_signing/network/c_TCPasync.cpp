@@ -262,7 +262,7 @@ void c_TCPasync::server_read(ip::tcp::socket &socket) {
     assert(socket.is_open());
 
 	// set zeros
-	type_read.p_type = packet_type::empty
+	type_read.p_type = packet_type::empty;
 	type_read.rs_action = 0;
 
     unsigned short type_read_size = sizeof(type_read);
