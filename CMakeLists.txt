@@ -33,7 +33,6 @@ link_directories(src/jsoncpp/src/lib_json)
 #add local local lib sodiumpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(src/sodiumpp/sodiumpp/include)
-#link_directories(./sodiumpp)
 
 #add local lib sidh
 #flags for SIDH.h
@@ -73,7 +72,7 @@ ADD_CUSTOM_TARGET(debug
 
 # more directories of my main code
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/tunserver.cpp)
 
 
