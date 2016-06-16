@@ -39,5 +39,7 @@ compiler:
 
 # Build steps
 script: 
-    - sh do
+    - pwd
+    - ls
+    - ./do
 
