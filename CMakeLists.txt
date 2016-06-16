@@ -22,23 +22,25 @@ message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
-include_directories(../googletest/googletest/include/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
+include_directories(src/googletest/googletest/include/)
 
 #add local jsoncpp
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-include_directories(../jsoncpp/include)
-#link_directories(../jsoncpp/src/lib_json)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
+include_directories(src/jsoncpp/include)
+link_directories(src/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
-include_directories(../sodiumpp/sodiumpp/include)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
+include_directories(src/sodiumpp/sodiumpp/include)
+#link_directories(./sodiumpp)
 
 #add local lib sidh
 #flags for SIDH.h
 add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libsidhms/SIDH ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
-include_directories(../libsidhms/SIDH)
+#TODO wait for sidh library cmake
+#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sidh ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
+include_directories(src/sidh)
 
 #add local ntru sign lib
 set(NTRU_SIGN_DIR "../ntru-crypto/reference-code/C/Sign/PASS/src")
@@ -70,7 +72,9 @@ ADD_CUSTOM_TARGET(debug
 
 
 # more directories of my main code
-file(GLOB SOURCES_GROUP_CRYPTO crypto/*.cpp)
+file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp)
+list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/tunserver.cpp)
 
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
@@ -98,19 +102,20 @@ endif()
 include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf tunserver.cpp)
+add_executable(tunserver.elf src/tunserver.cpp)
 
 target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt ntrusign jsoncpp_lib_static sidh)
 
 
-add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
-	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
-	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp
-	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
-	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
+#add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
+#	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
+#	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp
+#	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
+#	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
+add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO})
 
 #tests
-file(GLOB TEST_SOURCES "test/*.cpp")
+file(GLOB TEST_SOURCES "src/test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
@@ -120,9 +125,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
 target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
 
-file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
-add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
-target_link_libraries(rpc_sender boost_system pthread)
+#file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
+#add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
+#target_link_libraries(rpc_sender boost_system pthread)
 
 add_custom_target(run
 		COMMAND ./tunserver.sh
