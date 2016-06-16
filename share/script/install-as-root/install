@@ -1,6 +1,8 @@
 #!/bin/bash -e
 # *** review *** this program was reviewed and not have critical flaws
 
+# Usage: just run it. Or run it with option '-y' to skip the confirmation (batch process, tests travis etc)
+
 echo ; echo ; echo "Installing the scripts/tools needed to run/develop (some parts of) Galaxy42/Antinet network..."
 
 if [[ $EUID -ne 0 ]]; then
@@ -13,13 +15,13 @@ fi
 pwd="$PWD"
 
 echo "--------------------------------------------------------------------"
-cd netpriv_scripts  
-./install
+cd netpriv_scripts
+./install "$1"
 cd "$pwd"
 
 echo "--------------------------------------------------------------------"
 cd setcap_scripts
-./install
+./install "$1"
 cd "$pwd"
 
 
