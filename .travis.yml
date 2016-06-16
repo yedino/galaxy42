@@ -38,4 +38,5 @@ compiler:
 
 # Build steps
 script: 
-    - cd galaxy42 && ./do
+    - ./do
+
