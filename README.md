@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/damianbb/galaxy42.svg?branch=master)](https://travis-ci.org/damianbb/galaxy42)
+[![Build Status](https://travis-ci.org/yedino/galaxy42.svg?branch=master)](https://travis-ci.org/yedino/galaxy42)
 
 ---> Users, developers, read also the HOWTO section it contains friendly FAQ how to use/develop/hack this :) <---
 
