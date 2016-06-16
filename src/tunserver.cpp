@@ -1556,24 +1556,24 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	auto demoname = argm["develdemo"].as<string>();
 	_note("Demoname (from program options command line) is:" << demoname);
 
-	namespace poo = boost::program_options;
-	poo::options_description desc("Possible demos");
+	namespace po = boost::program_options;
+	po::options_description desc("Possible demos");
 	desc.add_options()
-				//	("none", "no demo: start program in normal mode instead (e.g. to ignore demo config file)")
-					("lang_optional", "foo boost::optional<>")
-					("sodiumpp_bug", "sodiumpp nonce overflow constructor bug test (hits on older sodiumpp version)")
-					("foo", "foo test")
-					("bar", "bar test")
-					("serialize",  "serialize test")
-					("crypto", "crypto test")
-					("gen_key_bench", "crypto benchmark")
-					("crypto_stream_bench", "crypto stream benchmark")
-					("ct_bench", "crypto tunel benchmark")
-					("route_dij", "dijkstra test")
-					("route", "current best routing (could be equal to some other test)")
-					("debug", "some of the debug/logging functions")
-					("rpc", "rpc demo")
-					("help", "Help msg");
+					// ("none", "no demo: start program in normal mode instead (e.g. to ignore demo config file)")
+					("lang_optional",			"foo boost::optional<>")
+					("sodiumpp_bug",			"sodiumpp nonce overflow constructor bug test (hits on older sodiumpp version)")
+					("foo",						"foo test")
+					("bar",						"bar test")
+					("serialize",				"serialize test")
+					("crypto",					"crypto test")
+					("gen_key_bench",			"crypto benchmark")
+					("crypto_stream_bench",		"crypto stream benchmark")
+					("ct_bench",				"crypto tunel benchmark")
+					("route_dij",				"dijkstra test")
+					("route",					"current best routing (could be equal to some other test)")
+					("debug",					"some of the debug/logging functions")
+					("rpc",						"rpc demo")
+					("help",					"Help msg");
 
 	if ((demoname=="help")||(demoname=="list")) {
 		std::cout << "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:";
