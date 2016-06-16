@@ -4,11 +4,6 @@ vartmp/
 
 # directories copied from source
 # (the source is e.g. git submodule but in other location)
-sodiumpp/
-googletest/
-jsoncpp/
-libsidhms/
-
 
 # also other libs
 
