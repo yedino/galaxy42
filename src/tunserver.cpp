@@ -1755,9 +1755,9 @@ int main(int argc, char **argv) {
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
 			// --- debug level for main program ---
-			g_dbg_level_set(20,"For normal program run");
+			g_dbg_level_set(20,"For normal program run", true);
 			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
-			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run");
+			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run", true);
 
 			if (argm.count("help")) { // usage
 				std::cout << desc;
@@ -1990,8 +1990,18 @@ int main(int argc, char **argv) {
 				}
 			}
 
+
 			_info("Configuring my own reference (keys):");
-			myserver.configure_mykey();
+			try {
+				myserver.configure_mykey();
+			} catch(...) {
+				_note("Can not load your keys, maybe you have new ones?");
+				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				bool have_any_keys = keys.size() > 0;
+				if (have_any_keys) {
+					cout << "You seem to have some ID keys, but I can not load it." << endl;
+				}
+			}
 			myserver.set_my_name( argm["myname"].as<string>() );
 
 			_info("Configuring my peers references (keys):");

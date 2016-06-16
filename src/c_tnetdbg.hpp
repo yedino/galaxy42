@@ -13,7 +13,7 @@ extern unsigned char g_dbg_level;
 
 const char * debug_shorten__FILE__(const char * name);
 
-void g_dbg_level_set(unsigned char level, std::string why);
+void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 
 #define _my__FILE__ (debug_shorten__FILE__(__FILE__))
 
