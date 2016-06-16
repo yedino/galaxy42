@@ -20,8 +20,9 @@ addons:
     - libboost-all-dev
     - libfftw3-dev
 
+# Adding setcap for tunserver.elf etc.
 before_script:
-    - cd script/install-as-root/ && sudo ./install
+    - cd share/script/install-as-root/ && sudo ./install -y
 
 # Adding ppa for and install libsodium
 before_install:
