@@ -38,12 +38,10 @@ compiler:
 
 # Build steps
 script: 
-    # back to main dir
-    - cd ../../../   
-    # main bulid
-    - ./do
-    # run gtests
-    - ./test-release  
+    - cd ../../../      # back to main dir 
+    - ./do              # main bulid
+    - ./test-release    # run gtests
+   
 
 notifications:
     irc:
@@ -55,11 +53,12 @@ notifications:
             - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
             - "Change view : %{compare_url}"
             - "Build details : %{build_url}"
-    email:
+#email:
         #   to minimize spam
-            on_success: change
-            on_failure: always
-        recipients:
+        #    on_success: change
+        #    on_failure: always
+    #recipients:
         #    - one@example.com
         #    - other@example.com
+
 
