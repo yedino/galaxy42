@@ -39,5 +39,5 @@ compiler:
 
 # Build steps
 script: 
-    - ./do
+    - sh do
 
