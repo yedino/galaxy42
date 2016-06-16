@@ -37,8 +37,7 @@ include_directories(src/sodiumpp/sodiumpp/include)
 #add local lib sidh
 #flags for SIDH.h
 add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
-#TODO wait for sidh library cmake
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sidh ${CMAKE_CURRENT_BINARY_DIR}/libsidhms)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sidh)
 include_directories(src/sidh)
 
 #add local ntru sign lib
@@ -72,8 +71,10 @@ ADD_CUSTOM_TARGET(debug
 
 # more directories of my main code
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/cjdns-code/*.c)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/tunserver.cpp)
+file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
+list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
 
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
@@ -111,7 +112,7 @@ target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesys
 #	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp crypto-sodium/ecdh_ChaCha20_Poly1305.cpp
 #	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
 #	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
-add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO})
+add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
