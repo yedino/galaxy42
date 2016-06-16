@@ -38,9 +38,9 @@ compiler:
 
 # Build steps
 script: 
-    - cd ../../../      # back to main dir 
-    - ./do              # main bulid
-    - ./test-release    # run gtests
+    - cd ../../../          # back to main dir 
+    - ./do                  # main bulid
+    - ./test-release.elf    # run gtests
    
 
 notifications:
