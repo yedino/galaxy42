@@ -20,9 +20,10 @@ addons:
     - libboost-all-dev
     - libfftw3-dev
 
-  # before_script:
-  #    - cd script/install-as-root/ && sudo ./install
+before_script:
+    - cd script/install-as-root/ && sudo ./install
 
+# Adding ppa for and install libsodium
 before_install:
     - sudo add-apt-repository ppa:chris-lea/libsodium -y
     - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
