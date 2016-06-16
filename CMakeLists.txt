@@ -41,7 +41,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sidh)
 include_directories(src/sidh)
 
 #add local ntru sign lib
-set(NTRU_SIGN_DIR "../ntru-crypto/reference-code/C/Sign/PASS/src")
+set(NTRU_SIGN_DIR "src/ntru-crypto/reference-code/C/Sign/PASS/src")
 include_directories("${NTRU_SIGN_DIR}")
 file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
 file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
