@@ -39,8 +39,7 @@ c_auth_password_load::c_auth_password_load(const std::string &filename, std::vec
 
 		get_auth_passwords(auth_passwords); ///< proper auth loading
 	} catch (std::invalid_argument &err) {
-		std::cout << "Fail to load " << m_filename << " configuration file" << std::endl;
-		std::cout << err.what() << std::endl;
+		_info("Fail to load " << m_filename << " configuration file." << err.what());
 	}
 }
 
@@ -65,8 +64,7 @@ c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_
 
 		get_peers(peer_refs);	///< proper peer loading
 	} catch (std::invalid_argument &err) {
-		std::cout << "Fail to load " << m_filename <<  " configuration file" << std::endl;
-		std::cout << err.what() << std::endl;
+		_info("Fail to load " << m_filename <<  " configuration file." << err.what());
 	}
 }
 
@@ -107,8 +105,7 @@ c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(f
 		connect_to_load();
 
 	} catch (std::invalid_argument &err) {
-		std::cout << "Fail to load " << m_filename << " configuration file" << std::endl;
-		std::cout << err.what() << std::endl;
+		_info("Fail to load " << m_filename <<  " configuration file." << err.what());
 	}
 }
 
