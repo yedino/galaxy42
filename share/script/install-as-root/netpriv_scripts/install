@@ -1,12 +1,17 @@
 #!/bin/bash -e
 # *** review *** this program was reviewed and does not have critical flaws
 
+# Usage: just run it. Or run it with option '-y' to skip the confirmation (batch process, tests travis etc)
+
 echo "This will install some of our util programs (system-wide)"
 echo "This programs are not yet fully secured, likely can contain some exploits especially exploitable by local malicious user" # TODO XXX
 echo "(Please review the code before running it!)"
 echo "Type OK (in upper case) to install it anyway, or any other key or ctrl-c to exit now"
 
-read ok ; [[ "$ok" == "OK" ]] || { echo "Aborting" ; exit 1 ; } # !
+if [[ "$1" != "-y" ]] ; then
+	echo "(Or run this with argument -y to skip confirmations like this one)"
+	read ok ; [[ "$ok" == "OK" ]] || { echo ; echo "*** Aborting ***" ; exit 1 ; } # !
+fi
 echo "Installing... "
 
 cp bin/netpriv1 /usr/local/bin/
@@ -24,6 +29,7 @@ echo
 echo "--- DO THIS ---"
 echo "Ok, now you should probably edit sudoers (e.g. as root with command: visudo)"
 echo "And there in editor add line like:"
+echo ""
 echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/netpriv1"
 echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/netpriv2"
 echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/netpriv9"
@@ -33,7 +39,9 @@ echo "Where 'alice' should be the name of user (or group etc) that is allowed to
 echo "Consider the security implications: the user that you will allow, will be able to configure the network interfaces on such computer as admin"
 echo
 
-echo "... after reading above instructions, press ENTER to continue"
-read _
+if [[ "$1" != "-y" ]] ; then
+	echo "... after reading above instructions, press ENTER to continue"
+	read _
+fi
 echo
 
