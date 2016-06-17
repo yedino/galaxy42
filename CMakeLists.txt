@@ -119,7 +119,7 @@ target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesys
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
 #tests
-file(GLOB TEST_SOURCES "src/test/*.cpp")
+file(GLOB TEST_SOURCES "qa/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
