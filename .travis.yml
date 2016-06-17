@@ -41,10 +41,10 @@ compiler:
 script: 
     - cd ../../../          # back to main dir 
     - ./do                  # main bulid
-    - ./test-release.elf    # run gtests
 
 after_success:
-    - coveralls --exclude qa --exclude src/cjdns-code --exclude src/googletest --exclude src/jsoncpp --exclude src/ntru-crypto --exclude src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
+    - ./test-release.elf    # run gtests
+    - coveralls --exclude qa --exclude build_extra --exclude src/sodiumpp --exclude src/cjdns-code --exclude src/googletest --exclude src/jsoncpp --exclude src/ntru-crypto --exclude src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
     irc:
