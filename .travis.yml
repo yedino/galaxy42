@@ -27,6 +27,7 @@ before_script:
 before_install:
     - sudo add-apt-repository ppa:chris-lea/libsodium -y
     - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
+    - pip install --user cpp-coveralls
 
 # Set g++-5 and gcc-5 for c++14 support
 install:
@@ -41,7 +42,9 @@ script:
     - cd ../../../          # back to main dir 
     - ./do                  # main bulid
     - ./test-release.elf    # run gtests
-   
+
+after_success:
+    - coveralls --exclude qa --exclude cjdns-code --exclude googletest --exclude jsoncpp --exclude ntru-crypto --exclude sidh --gcov-options '\-lp'
 
 notifications:
     irc:
