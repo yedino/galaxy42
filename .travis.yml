@@ -44,7 +44,7 @@ script:
     - ./test-release.elf    # run gtests
 
 after_success:
-    - coveralls --exclude qa --exclude cjdns-code --exclude googletest --exclude jsoncpp --exclude ntru-crypto --exclude sidh --gcov-options '\-lp'
+    - coveralls --exclude qa --exclude src/cjdns-code --exclude src/googletest --exclude src/jsoncpp --exclude src/ntru-crypto --exclude src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
     irc:
