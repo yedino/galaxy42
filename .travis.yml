@@ -39,24 +39,22 @@ compiler:
 
 # Build steps
 script: 
-    - cd ../../../          # back to main dir 
-    - ./do                  # main bulid
+    - cd ${TRAVIS_BUILD_DIR} # back to main dir 
+    - ./do                   # main bulid
 
 after_success:
-    - cd ${TRAVIS_BUILD_DIR}
-    - ls
     - ./test-release.elf    # run gtests
     - gcov --version
     - coveralls -e src/test -e build_extra -e src/sodiumpp -e src/cjdns-code -e src/googletest -e src/jsoncpp -e src/ntru-crypto -e src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
     irc:
+    #    on_success: [always|never|change] # default: always
+    #    on_failure: [always|never|change] # default: always
+        on_success: change
+        on_failure: change
         channels:
             - "icann.irc.meshnet.pl#antinet-dev"
-        #    on_success: [always|never|change] # default: always
-        #    on_failure: [always|never|change] # default: always
-            on_success: change
-            on_failure: change
         template:
             - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
             - "Change view : %{compare_url}"
