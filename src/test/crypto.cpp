@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
+#include <boost/filesystem.hpp>
 #include "../crypto/crypto.hpp"
+#include "../filestorage.hpp"
 #include "../crypto/ntrupp.hpp"
 #include "../crypto/sidhpp.hpp"
 #include "../crypto/crypto_basic.hpp"
@@ -360,18 +362,31 @@ TEST(crypto, generate_unique_user_key) {
 }
 
 // TODO no api for save key in specific path
-/*TEST(crypto, save_and_open_user_key) {
+TEST(crypto, save_and_open_user_key) {
 	const size_t number_of_test = 1000;
-	std::string tmp_filename(std::tmpnam(nullptr));
+	const std::string tmp_filename("test_key_");
 	for (size_t i = 0; i < number_of_test; ++i) {
+		std::string tmp_filename_nr(tmp_filename + std::to_string(i));
 		c_multikeys_PAIR user_key;
 		user_key.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,1);
 		user_key.generate(antinet_crypto::e_crypto_system_type_Ed25519,1);
 		user_key.generate(antinet_crypto::e_crypto_system_type_X25519,1);
-		user_key.m_pub.datastore_save(tmp_filename, true);
-		user_key.m_PRV.datastore_save(tmp_filename, true);
+
+		ASSERT_NO_THROW(
+			user_key.datastore_save_PRV_and_pub(tmp_filename_nr)
+		);
+		c_multikeys_PAIR user_loaded_key;
+		ASSERT_NO_THROW(
+			user_loaded_key.datastore_load_PRV_and_pub(tmp_filename_nr)
+		);
+		ASSERT_EQ(user_key.get_ipv6_string_hex(), user_loaded_key.get_ipv6_string_hex());
+		ASSERT_EQ(user_key.m_PRV.serialize_bin(), user_loaded_key.m_PRV.serialize_bin());
+		ASSERT_EQ(user_key.m_pub.serialize_bin(), user_loaded_key.m_pub.serialize_bin());
+		// cleanup
+		boost::filesystem::remove(filestorage::get_full_path(e_filestore_galaxy_wallet_PRV, tmp_filename_nr));
+		boost::filesystem::remove(filestorage::get_full_path(e_filestore_galaxy_pub, tmp_filename_nr));
 	}
-}*/
+}
 
 TEST(crypto, create_cryptolink) {
 	const size_t number_of_test = 1000;
