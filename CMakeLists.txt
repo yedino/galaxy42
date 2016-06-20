@@ -119,11 +119,11 @@ file(GLOB TEST_SOURCES "src/test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
+target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver boost_system boost_filesystem gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
