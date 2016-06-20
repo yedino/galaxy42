@@ -43,9 +43,11 @@ script:
     - ./do                  # main bulid
 
 after_success:
+    - cd ${TRAVIS_BUILD_DIR}
+    - ls
     - ./test-release.elf    # run gtests
-    - coveralls --exclude src/test --exclude build_extra --exclude src/sodiumpp --exclude src/cjdns-code --exclude src/googletest --exclude src/jsoncpp --exclude src/ntru-crypto --exclude src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
-    - bash <(curl -s https://codecov.io/bash)
+    - gcov --version
+    - coveralls -i test-release.elf -e src/test -e build_extra -e src/sodiumpp -e src/cjdns-code -e src/googletest -e src/jsoncpp -e src/ntru-crypto -e src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
     irc:
