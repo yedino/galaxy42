@@ -29,13 +29,13 @@ void filestorage::save_string(t_filestore file_type,
 		_dbg2("Successfully saved string to:" << file_with_path.native());
 
 	} catch(overwrite_error &err) {
-		std::cout << err.what() << std::endl;
+		_warn("Save error:" << err.what());
 		if(text_ui::ask_user_forpermission("overwrite file?")){
 			save_string(file_type, filename, data, true);
-		} else {
-			_dbg2("Fail to save string");
 		}
+		else _dbg1("Fail to save string");
 	}
+	catch(...) { _throw_error(std::runtime_error("Failed to save string")); }
 }
 
 void filestorage::save_string_mlocked(t_filestore file_type,
@@ -61,13 +61,12 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		_dbg2("Successfully saved mlocked string to:" << file_with_path.native());
 
 	} catch(overwrite_error &err) {
-		std::cout << err.what() << std::endl;
-		if(text_ui::ask_user_forpermission("overwrite file?")){
+		if(text_ui::ask_user_forpermission("overwrite file?")) {
 			save_string_mlocked(file_type, filename, locked_data, true);
-		} else {
-			_dbg2("Fail to save mlocked string");
 		}
+		else _dbg1("Fail to save mlocked string");
 	}
+	catch(...) { _throw_error(std::runtime_error("Failed to save mlocked string")); }
 }
 
 std::string filestorage::load_string(t_filestore file_type,
@@ -138,7 +137,7 @@ bool filestorage::is_file_ok(const std::string &filename) {
 			return 0;
 		}
 	} catch (const fs::filesystem_error& ex) {
-		std::cout << ex.what() << std::endl;
+		_info("File is not OK: " << ex.what());
 		return 0;
 	}
 	return 1;
@@ -277,7 +276,8 @@ fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 		}
 
 	} catch (fs::filesystem_error & err) {
-		std::cout << err.what() << std::endl;
+		_erro("Can not prepare dir: " << err.what());
+		throw ;
 	}
 	return file_with_path;
 }
@@ -287,7 +287,7 @@ fs::path filestorage::create_path_for(t_filestore file_type,
 
 	// connect parent path with filename
 	fs::path full_path = get_full_path(file_type, filename);
-	std::cout << "full_path: " << full_path.native() << std::endl;
+	_dbg1("Full_path: " << full_path.native());
 	create_parent_dir(full_path);
 	return full_path;
 }
