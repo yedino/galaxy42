@@ -203,7 +203,7 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 template <typename TKey>
 void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool overwrite) const {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
-	_note("Savin key to fname="<<fname);
+	_note("Saving key to fname="<<fname);
 
 	std::string serialized_data = serialize_bin();
 	_info("Serialized to: " << to_debug_locked_maybe(serialized_data));

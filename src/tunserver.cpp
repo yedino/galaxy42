@@ -131,7 +131,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_json_load.hpp"
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
-#include "generate_config.hpp"
+#include "generate_crypto.hpp"
 
 
 #include "crypto/crypto.hpp" // for tests
@@ -144,6 +144,8 @@ const char * g_demoname_default = "route_dij";
 #include "galaxy_debug.hpp"
 
 #include "glue_sodiumpp_crypto.hpp" // e.g. show_nice_nonce()
+
+#include "ui.hpp"
 
 // ------------------------------------------------------------------
 
@@ -508,7 +510,17 @@ class c_tunserver : public c_galaxy_node {
 		void configure_mykey(); ///<  load my (this node's) keypair
 		void run(); ///< run the main loop
 
+		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
+		/// @{
+		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk)
+		void program_action_gen_key(boost::program_options::variables_map & argm); ///< generate a key according to given options
+		/// @}
+
+
 		void set_my_name(const string & name); ///< set a nice name of this peer (shown in debug for example)
+		const antinet_crypto::c_multikeys_pub & read_my_IDP_pub() const; ///< read the pubkey of the (main / permanent) ID of this server
+		string get_my_ipv6_nice() const; ///< returns the main HIP IPv6 of this node in a nice format (e.g. hexdot)
+		int get_my_stats_peers_known_count() const; ///< get the number of currently known peers, for information
 
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
@@ -614,6 +626,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 	catch (const std::exception &e) {
 		_erro("Adding peer from simplereference failed (exception): " << e.what()); // TODO throw?
+		throw ;
 	}
 }
 
@@ -627,6 +640,19 @@ c_tunserver::c_tunserver()
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
 
+const antinet_crypto::c_multikeys_pub & c_tunserver::read_my_IDP_pub() const {
+	return m_my_IDI_pub;
+}
+
+string c_tunserver::get_my_ipv6_nice() const {
+	return m_my_IDI_pub.get_ipv6_string_hexdot();
+}
+
+
+int c_tunserver::get_my_stats_peers_known_count() const {
+	return m_peer.size();
+}
+
 // my key
 void c_tunserver::configure_mykey() {
 	// creating new IDC from existing IDI // this should be separated
@@ -637,7 +663,8 @@ void c_tunserver::configure_mykey() {
 try {
 	IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
 } catch (std::invalid_argument &err) {
-	_dbg2("IDI is not set!\n gererate your permanent key ans set is as IDI!\nABORTING PROG");
+	_dbg2("IDI is not set");
+	throw std::runtime_error("IDI is not set");
 }
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
@@ -672,7 +699,6 @@ try {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
-
 }
 
 // add peer
@@ -730,7 +756,13 @@ void c_tunserver::prepare_socket() {
 
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
 	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
-	if (errcode_ioctl < 0)_throw( std::runtime_error("Error in ioctl")); // TODO
+	if (errcode_ioctl < 0) {
+		ui::action_error_exit("Can not use the TUN device. This means usually that the program does not have enough rights. "
+		"If you run this program as not-root and you rely on the CAP capabilities flag, then make sure "
+		"that the program is executed in directory that is NOT mounted with 'nosuid' or other protection flag like that "
+		"which e.g. is a problem on some Ubuntu Linux versions. Perhaps copy the program (and e.g. build it again there) "
+		"to /tmp/ or other directory");
+	}
 
 	_mark("Allocated interface:" << ifr.ifr_name);
 
@@ -1369,6 +1401,62 @@ void c_tunserver::run() {
 	event_loop();
 }
 
+
+void c_tunserver::program_action_set_IDI(const string & keyname) {
+	_note("Action: set IDI");
+	_info("Setting the name of IDI key to: " << keyname);
+	auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+	auto keys = filestorage::get_file_list(keys_path);
+	bool found = false;
+	for (auto &key_name : keys) {
+		//remove .PRV extension
+		size_t pos = key_name.find(".PRV");
+		std::string act = key_name.substr(0,pos);
+		if (keyname == act) {	found = true;	break; }
+	}
+	if (found == false) {
+		_erro("Can't find key (" << keyname << ") in your key list, so can't set it as IDI.");
+	}
+	_info("Key found ("<< keyname <<") and set as IDI");
+	filestorage::save_string(e_filestore_galaxy_instalation_key_conf,"IDI", keyname, true);
+}
+
+void c_tunserver::program_action_gen_key(boost::program_options::variables_map & argm) {
+	_note("Action: gen key");
+	if (!argm.count("key-type")) {
+		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
+	}
+
+	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
+	auto arguments = argm["key-type"].as<std::vector<std::string>>();
+	for (auto argument : arguments) {
+		_dbg1("parse argument " << argument);
+		std::replace(argument.begin(), argument.end(), ':', ' ');
+		std::istringstream iss(argument);
+		std::string str;
+		iss >> str;
+		_dbg1("type = " << str);
+		antinet_crypto::t_crypto_system_type type = antinet_crypto::t_crypto_system_type_from_string(str);
+		iss >> str;
+		assert(str[0] == 'x');
+		str.erase(str.begin());
+		int number_of_keys = std::stoi(str);
+		_dbg1("number_of_keys" << number_of_keys);
+		keys.emplace_back(std::make_pair(type, number_of_keys));
+	}
+
+	std::string output_file;
+	if (argm.count("new-key")) {
+		output_file = argm["new-key"].as<std::string>();
+		generate_crypto::create_keys(output_file, keys, true); // ***
+	} else if (argm.count("new-key-file")) {
+		output_file = argm["new-key-file"].as<std::string>();
+		generate_crypto::create_keys(output_file, keys, false); // ***
+	} else {
+		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
+	}
+}
+
 // ------------------------------------------------------------------
 
 namespace developer_tests {
@@ -1720,7 +1808,7 @@ int main(int argc, char **argv) {
 			;
 
 		po::variables_map argm;
-		try {
+		try { // try parsing
 			po::store(po::parse_command_line(argc, argv, desc), argm); // <-- parse actuall real command line options
 
 			// === PECIAL options - that set up other program options ===
@@ -1755,9 +1843,9 @@ int main(int argc, char **argv) {
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
 			// --- debug level for main program ---
-			g_dbg_level_set(20,"For normal program run");
+			g_dbg_level_set(20,"For normal program run", true);
 			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
-			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run");
+			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run", true);
 
 			if (argm.count("help")) { // usage
 				std::cout << desc;
@@ -1765,31 +1853,10 @@ int main(int argc, char **argv) {
 			}
 
 			if (argm.count("set-IDI")) {
-				if (!argm.count("my-key")) {
-					_erro("--my-key is required for --set-IDI");
-					return 1;
-				}
+				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
 				auto name = argm["my-key"].as<std::string>();
-				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
-				auto keys = filestorage::get_file_list(keys_path);
-				bool found = false;
-				for (auto &key_name : keys) {
-					//remove .PRV extension
-					size_t pos = key_name.find(".PRV");
-					std::string act = key_name.substr(0,pos);
-					if (name == act) {
-						found = true;
-						std::cout << "Found key: " << found << std::endl;
-						break;
-					}
-				}
-				if (found == false) {
-					_erro("Can't find:" << name << " key in your key list");
-					return 1;
-				}
-				filestorage::save_string(e_filestore_galaxy_instalation_key_conf,"IDI", name, true);
-
-				return 0;
+				myserver.program_action_set_IDI(name);
+				return 0; // <--- return
 			}
 
 			if (argm.count("info")) {
@@ -1824,41 +1891,9 @@ int main(int argc, char **argv) {
 			}
 
 			if (argm.count("gen-key")) {
-				if (!argm.count("key-type")) {
-					_erro("--key-type option is required for --gen-key");
-					return 1;
-				}
-				std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
-				auto arguments = argm["key-type"].as<std::vector<std::string>>();
-				for (auto argument : arguments) {
-					_dbg1("parse argument " << argument);
-					std::replace(argument.begin(), argument.end(), ':', ' ');
-					std::istringstream iss(argument);
-					std::string str;
-					iss >> str;
-					_dbg1("type = " << str);
-					antinet_crypto::t_crypto_system_type type = antinet_crypto::t_crypto_system_type_from_string(str);
-					iss >> str;
-					assert(str[0] == 'x');
-					str.erase(str.begin());
-					int number_of_keys = std::stoi(str);
-					_dbg1("number_of_keys" << number_of_keys);
-					keys.emplace_back(std::make_pair(type, number_of_keys));
-				}
-
-				std::string output_file;
-				if (argm.count("new-key")) {
-					output_file = argm["new-key"].as<std::string>();
-					generate_config::any_crypto_set(output_file, keys, true);
-				} else if (argm.count("new-key-file")) {
-					output_file = argm["new-key-file"].as<std::string>();
-					generate_config::any_crypto_set(output_file, keys, false);
-				} else {
-					_erro("--new-key or --new-key-file option is required for --gen-key");
-					return 1;
-				}
+				myserver.program_action_gen_key(argm);
 				return 0;
-			}
+			} // gen-key
 
 			if (argm.count("sign")) {
 
@@ -1990,32 +2025,96 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			_info("Configuring my own reference (keys):");
-			myserver.configure_mykey();
-			myserver.set_my_name( argm["myname"].as<string>() );
 
-			_info("Configuring my peers references (keys):");
-			vector<string> peers_cmdline;
-			try { peers_cmdline = argm["peer"].as<vector<string>>(); } catch(...) { }
-			for (const string & peer_ref : peers_cmdline) {
-				myserver.add_peer_simplestring( peer_ref );
+			_info("Configuring my own reference (keys):");
+			try {
+				myserver.configure_mykey();
+			} catch(...) {
+				_note("Can not load your keys, maybe you do not have any key yet?");
+				bool have_any_keys=0;
+				try {
+					auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+					std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+					have_any_keys = keys.size() > 0;
+				} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
+				if (have_any_keys) {
+					cout << "You seem to have some ID keys, but I can not load your main key." << endl;
+					cout << "Please run the program again and use commands to recover a key, or to make a new key instead" << endl;
+				} else {
+					cout << "You have no ID keys yet - so will create new keys for you." << endl;
+					// --gen-key --new-key "myself" --key-type "ed25519:x3"
+					const string IDI_name = "IDI";
+					vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
+					decltype(argm) xarg;
+					po::store( po::command_line_parser(xarg_vecstr).options(desc).run() , xarg );
+					po::notify( xarg );
+					ui::action_info_ok("Generating your new keys.");
+					myserver.program_action_gen_key(xarg);
+					myserver.program_action_set_IDI(IDI_name);
+					ui::action_info_ok("Your new keys are created.");
+					myserver.configure_mykey();
+					ui::action_info_ok("Your new keys are ready to use.");
+				}
 			}
 
+			myserver.set_my_name( argm["myname"].as<string>() );
+			ui::action_info_ok("Your hash-IPv6 address is: " + myserver.get_my_ipv6_nice());
 
+			_info("Configuring my peers references (keys):");
+			try {
+				vector<string> peers_cmdline;
+				try { peers_cmdline = argm["peer"].as<vector<string>>(); } catch(...) { }
+				for (const string & peer_ref : peers_cmdline) {
+					myserver.add_peer_simplestring( peer_ref );
+				}
+			} catch(...) {
+				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
+			}
+
+			auto peers_count = myserver.get_my_stats_peers_known_count();
+			if (peers_count) {
+				ui::action_info_ok("You will try to connect to up to " + to_string(peers_count) + " peer(s)");
+			} else {
+				ostringstream oss; oss << "./tunserver.elf --peer YOURIP:9042-" << myserver.get_my_ipv6_nice();
+				string help_cmd1 = oss.str();
+				ui::action_info_ok("You are not connecting to anyone, so you should run on the other computer this program, "
+					"with following options: " + help_cmd1);
+			}
+
+		} // try parsing
+		catch(ui::exception_error_exit) {
+			std::cerr << "Exiting as explained above" << std::endl;
+			return 1;
 		}
 		catch(po::error& e) {
-			std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
 			std::cerr << desc << std::endl;
 			return 1;
 		}
-	}
+	} // try preparing
 	catch(std::exception& e) {
 		std::cerr << "Unhandled Exception reached the top of main: "
 				  << e.what() << ", application will now exit" << std::endl;
 		return 2;
 	}
 
-	myserver.run();
+	try {
+		myserver.run();
+	} // try running server
+	catch(ui::exception_error_exit) {
+		std::cerr << "Exiting as explained above" << std::endl;
+		return 1;
+	}
+	catch(std::exception& e) {
+		std::cerr << "Unhandled Exception reached the top of main (While running server): "
+				  << e.what() << ", application will now exit" << std::endl;
+		return 2;
+	}
+	catch(...) {
+		std::cerr << "Unknown exception while running server." << std::endl;
+		return 3;
+	}
+
 }
 
 

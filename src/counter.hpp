@@ -1,4 +1,8 @@
 
+#pragma once
+#ifndef include_counter_hpp
+#define include_counter_hpp
+
 #include "libs1.hpp"
 
 class c_counter {
@@ -23,4 +27,8 @@ class c_counter {
 
 	//	bool tick_restarts;
 };
+
+
+#endif
+
 
