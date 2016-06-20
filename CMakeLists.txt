@@ -9,10 +9,10 @@ cmake_minimum_required(VERSION 2.8.3)
 #
 IF(DEFINED CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
-   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ELSE()
-   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
-   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+   SET(CMAKE_BUILD_TYPE debug CACHE STRING # <--- the default build type is here!
+	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
 project (ipbench)
@@ -58,9 +58,6 @@ include_directories( build_extra )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
-#coverage flag
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0") # debug, no optimisation
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
 
 ADD_CUSTOM_TARGET(fast
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=fast ${CMAKE_SOURCE_DIR}
@@ -84,16 +81,16 @@ list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cp
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
 
 
-if(CMAKE_BUILD_TYPE STREQUAL "Fast")
+if(CMAKE_BUILD_TYPE STREQUAL "fast")
         message("Fast build")
         add_definitions(-DRELEASEMODE_ -DNDEBUG)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
 
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
         message("Debug build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O1")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 -fprofile-arcs -ftest-coverage --coverage") # enabling coverage
 
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	elseif(CMAKE_BUILD_TYPE STREQUAL "release")
         message("Release build")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -DNDEBUG -DRELEASEMODE")
 else()
@@ -119,7 +116,7 @@ target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesys
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
 #tests
-file(GLOB TEST_SOURCES "qa/*.cpp")
+file(GLOB TEST_SOURCES "src/test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
