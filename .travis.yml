@@ -44,7 +44,8 @@ script:
 
 after_success:
     - ./test-release.elf    # run gtests
-    - coveralls --exclude qa --exclude build_extra --exclude src/sodiumpp --exclude src/cjdns-code --exclude src/googletest --exclude src/jsoncpp --exclude src/ntru-crypto --exclude src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
+    - coveralls --exclude src/test --exclude build_extra --exclude src/sodiumpp --exclude src/cjdns-code --exclude src/googletest --exclude src/jsoncpp --exclude src/ntru-crypto --exclude src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
+    - bash <(curl -s https://codecov.io/bash)
 
 notifications:
     irc:
