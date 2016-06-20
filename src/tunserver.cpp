@@ -769,7 +769,7 @@ void c_tunserver::event_loop() {
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
 	while (1) {
-		// std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
+		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
 			if (m_peer.size()) { // event: conntected now
@@ -839,7 +839,7 @@ void c_tunserver::event_loop() {
 				); // push the tunneled data to where they belong
 
 			} else {
-				_mark("Using CT tunnel to send our own data");
+				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
 				std::string data_cleartext( buf, buf+size_read);
@@ -920,7 +920,7 @@ void c_tunserver::event_loop() {
 				antinet_crypto::t_crypto_nonce nonce_used(
 					sodiumpp::encoded_bytes(nonce_used_raw , sodiumpp::encoding::binary)
 				);
-				_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
+				_info("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
 				string blob =	parser.pop_varstring(); // TODO view-string
 
 /*
@@ -984,7 +984,7 @@ void c_tunserver::event_loop() {
 						);
 
 					} else {
-						_mark("Using CT tunnel to decrypt data for us");
+						_note("Using CT tunnel to decrypt data for us");
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
