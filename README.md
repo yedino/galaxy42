@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/yedino/galaxy42.svg?branch=master)](https://travis-ci.org/yedino/galaxy42)
+[![Coverage Status](https://coveralls.io/repos/github/yedino/galaxy42/badge.svg?branch=master)](https://coveralls.io/github/yedino/galaxy42?branch=master)
 
 ---> Users, developers, read also the HOWTO section it contains friendly FAQ how to use/develop/hack this :) <---
 
