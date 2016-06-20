@@ -11,3 +11,17 @@ build_extra/
 
 # fftw wisdom files
 data/
+
+# build
+*.elf
+*.a
+
+# build / submodules
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+googletest/
+jsoncpp/
+sodiumpp/
+
