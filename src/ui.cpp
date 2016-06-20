@@ -13,6 +13,7 @@ void action_error_exit(const string &info) {
 }
 
 void action_info_ok(const string &info) {
+	_note("OK: " << info);
 	cout << "OK: " << info << endl;
 }
 

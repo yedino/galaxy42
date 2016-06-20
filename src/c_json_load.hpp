@@ -1,3 +1,6 @@
+#pragma once
+
+
 #include <json/json.h>
 #include "c_json_genconf.hpp"
 #include "libs1.hpp"
