@@ -14,10 +14,10 @@ addons:
             - ubuntu-toolchain-r-test
         packages:
         # install toolchains
-        - gcc-5
-        - g++-5
-        - libboost-all-dev
-        - libfftw3-dev
+            - gcc-5
+            - g++-5
+            - libboost-all-dev
+            - libfftw3-dev
 
 # Adding setcap for tunserver.elf etc.
 before_script:
@@ -47,7 +47,7 @@ after_success:
     - ls
     - ./test-release.elf    # run gtests
     - gcov --version
-    - coveralls -i test-release.elf -e src/test -e build_extra -e src/sodiumpp -e src/cjdns-code -e src/googletest -e src/jsoncpp -e src/ntru-crypto -e src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
+    - coveralls --verbose -e src/test -e build_extra -e src/sodiumpp -e src/cjdns-code -e src/googletest -e src/jsoncpp -e src/ntru-crypto -e src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
     irc:
