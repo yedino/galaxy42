@@ -1,6 +1,6 @@
-#include "generate_config.hpp"
+#include "generate_crypto.hpp"
 
-void generate_config::any_crypto_set(const std::string &filename,
+void generate_crypto::create_keys(const std::string &filename,
 									 const std::vector<std::pair<antinet_crypto::t_crypto_system_type, int> > &keys,
 									 bool default_location) {
 
@@ -20,7 +20,7 @@ void generate_config::any_crypto_set(const std::string &filename,
 	keypair.datastore_save_PRV_and_pub(filename);
 }
 
-void generate_config::crypto_sign(const std::string &filename, e_crypto_strength strength) {
+void generate_crypto::crypto_sign(const std::string &filename, e_crypto_strength strength) {
 
 	antinet_crypto::c_multikeys_PAIR keypair;
 
@@ -40,7 +40,7 @@ void generate_config::crypto_sign(const std::string &filename, e_crypto_strength
 	keypair.datastore_save_PRV_and_pub(filename);
 }
 
-void generate_config::crypto_exchange(const std::string &filename, e_crypto_strength strength) {
+void generate_crypto::crypto_exchange(const std::string &filename, e_crypto_strength strength) {
 
 	antinet_crypto::c_multikeys_PAIR keypair;
 

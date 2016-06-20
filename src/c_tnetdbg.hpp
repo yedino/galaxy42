@@ -13,7 +13,7 @@ extern unsigned char g_dbg_level;
 
 const char * debug_shorten__FILE__(const char * name);
 
-void g_dbg_level_set(unsigned char level, std::string why);
+void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 
 #define _my__FILE__ (debug_shorten__FILE__(__FILE__))
 
@@ -77,10 +77,10 @@ void g_dbg_level_set(unsigned char level, std::string why);
 #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
 // this assert MUST BE checked in release too
-#define _throw_error(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
+#define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
-#define _throw2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  _erro("Going to throw exception. What:" << except_var.what() << " Info:" << MSG); throw except_var; } while(0)
-#define _throw( EXCEPT ) _throw2(EXCEPT, "")
+#define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  _erro("Going to throw exception. What:" << except_var.what() << " Info:" << MSG); throw except_var; } while(0)
+#define _throw_error( EXCEPT ) _throw_error_2(EXCEPT, "")
 
 
 /** TODO document
