@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
+#include <boost/filesystem.hpp>
 #include "../crypto/crypto.hpp"
+#include "../filestorage.hpp"
 #include "../crypto/ntrupp.hpp"
 #include "../crypto/sidhpp.hpp"
 #include "../crypto/crypto_basic.hpp"
@@ -332,4 +334,87 @@ TEST(crypto, sidhpp) {
 	auto bob_secret   = sidhpp::secret_agreement(bob_key_pair.first, bob_key_pair.second, alice_key_pair.second);
 	using namespace antinet_crypto;
 	ASSERT_EQ(alice_secret, bob_secret);
+}
+
+using namespace antinet_crypto;
+
+TEST(crypto, generate_unique_user_key) {
+	const size_t number_of_test = 5000;
+	std::set<std::string> pubkeys;
+	std::set<std::string> ipv6_bin;
+	std::set<std::string> ipv6_hex;
+	std::set<std::string> ipv6_hexdot;
+	for (size_t i = 0; i < number_of_test; ++i) {
+		c_multikeys_PAIR user_key;
+		user_key.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,1);
+		user_key.generate(antinet_crypto::e_crypto_system_type_Ed25519,1);
+		user_key.generate(antinet_crypto::e_crypto_system_type_X25519,1);
+		pubkeys.insert(user_key.get_serialize_bin_pubkey());
+		ipv6_bin.insert(user_key.get_ipv6_string_bin());
+		ipv6_hex.insert(user_key.get_ipv6_string_hex());
+		ipv6_hexdot.insert(user_key.get_ipv6_string_hexdot());
+	}
+	EXPECT_EQ(pubkeys.size(), number_of_test); // check if pubkeys are unique
+	// check if generated ip are unique
+	EXPECT_EQ(ipv6_bin.size(), number_of_test);
+	EXPECT_EQ(ipv6_hex.size(), number_of_test);
+	EXPECT_EQ(ipv6_hexdot.size(), number_of_test);
+}
+
+// TODO no api for save key in specific path
+TEST(crypto, save_and_open_user_key) {
+	const size_t number_of_test = 1000;
+	const std::string tmp_filename("test_key_");
+	for (size_t i = 0; i < number_of_test; ++i) {
+		std::string tmp_filename_nr(tmp_filename + std::to_string(i));
+		c_multikeys_PAIR user_key;
+		user_key.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,1);
+		user_key.generate(antinet_crypto::e_crypto_system_type_Ed25519,1);
+		user_key.generate(antinet_crypto::e_crypto_system_type_X25519,1);
+
+		ASSERT_NO_THROW(
+			user_key.datastore_save_PRV_and_pub(tmp_filename_nr)
+		);
+		c_multikeys_PAIR user_loaded_key;
+		ASSERT_NO_THROW(
+			user_loaded_key.datastore_load_PRV_and_pub(tmp_filename_nr)
+		);
+		ASSERT_EQ(user_key.get_ipv6_string_hex(), user_loaded_key.get_ipv6_string_hex());
+		ASSERT_EQ(user_key.m_PRV.serialize_bin(), user_loaded_key.m_PRV.serialize_bin());
+		ASSERT_EQ(user_key.m_pub.serialize_bin(), user_loaded_key.m_pub.serialize_bin());
+		// cleanup
+		boost::filesystem::remove(filestorage::get_full_path(e_filestore_galaxy_wallet_PRV, tmp_filename_nr));
+		boost::filesystem::remove(filestorage::get_full_path(e_filestore_galaxy_pub, tmp_filename_nr));
+	}
+}
+
+TEST(crypto, create_cryptolink) {
+	const size_t number_of_test = 1000;
+	for (size_t i = 0; i < number_of_test; ++i) {
+		g_dbg_level_set(160, "start test");
+		c_multikeys_PAIR keypairA;
+		keypairA.generate(e_crypto_system_type_Ed25519, 2);
+		keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
+		c_multikeys_PAIR keypairB;
+		keypairB.generate(e_crypto_system_type_Ed25519, 2);
+		keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+
+		c_multikeys_pub keypubA = keypairA.m_pub;
+		c_multikeys_pub keypubB = keypairB.m_pub;
+
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+		AliceCT.create_IDe();
+		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
+		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+		AliceCT.create_CTf(packetstart_2); // A<<<---
+
+		const std::string msg(1024, 'm');
+		t_crypto_nonce nonce_used;
+		auto msg_encrypted = AliceCT.box(msg, nonce_used);
+		ASSERT_NE(msg, msg_encrypted);
+		auto msg_decrypted = BobCT.unbox(msg_encrypted, nonce_used);
+		ASSERT_EQ(msg, msg_decrypted);
+	}
+	g_dbg_level_set(0, "restore to default");
 }
