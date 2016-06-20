@@ -55,7 +55,7 @@ link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic --coverage")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic --coverage") # enabling coverage
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
@@ -88,7 +88,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "fast")
 
 	elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
         message("Debug build")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 --coverage") # enabling coverage
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0")
 
 	elseif(CMAKE_BUILD_TYPE STREQUAL "release")
         message("Release build")
