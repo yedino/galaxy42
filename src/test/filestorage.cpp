@@ -8,77 +8,136 @@
 
 TEST(filestorage, custom_string_save) {
 
-	std::cout << "filestorage tests" << std::endl;
+	_dbg2("filestorage tests");
 }
 
-TEST(filestorage, create_path) {
+TEST(filestorage, prepare_path) {
 
 	std::string home(getenv("HOME"));
-	std::cout << "Home dir: "  << home << std::endl;
+	_dbg2("Home dir: "  << home);
 
-	fs::path PRV_dir = filestorage::create_path_for(e_filestore_galaxy_wallet_PRV, "key");
-	std::cout << PRV_dir << std::endl;
+	b_fs::path PRV_dir = filestorage::create_path_for(e_filestore_galaxy_wallet_PRV, "bannedname!_key");
+	_dbg2(PRV_dir);
 
-	fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key", true);
-	std::cout << PRV_full << std::endl;
+	b_fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "bannedname!_key", true);
+	_dbg2(PRV_full);
 
-	std::cout << "Removing PRV: " << filestorage::remove(PRV_full.native()) << std::endl;
+	// try to overvrite path for PRV key
+	EXPECT_THROW({
+		b_fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "bannedname!_key");
+	},overwrite_error);
 
-	fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_pub, "key");
-	std::cout << pub_dir << std::endl;
+	// removing
+	ASSERT_TRUE(filestorage::remove(PRV_full.native()));
 
-	fs::path pub_full = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key", true);
-	std::cout << pub_full << std::endl;
+	b_fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_pub, "bannedname!_key");
+	_dbg2(pub_dir);
 
-	std::cout << "Removing pub: " << filestorage::remove(pub_full.native()) << std::endl;
+	b_fs::path pub_full = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "bannedname!_key", true);
+	_dbg2(pub_full);
 
-	//
-	// std::string
-	//
+	// removing
+	ASSERT_TRUE(filestorage::remove(pub_full.native()));
 
+}
+
+TEST(filestorage, save_empty) {
+
+	std::string empty_filename;
+	// save string
+	EXPECT_THROW({
+		filestorage::save_string(e_filestore_galaxy_pub, empty_filename, "data");
+	}, std::invalid_argument);
+
+	// save mlocked string
+	sodiumpp::locked_string l_data = sodiumpp::locked_string::unsafe_create("private data");
+	EXPECT_THROW({
+		filestorage::save_string_mlocked(e_filestore_galaxy_pub, empty_filename, l_data);
+	}, std::invalid_argument);
+
+}
+
+TEST(filestorage, load_nonexistent) {
+
+	std::string non_existent_file = "test_file_that_should_not_exist!.test";
+	// string
+	EXPECT_THROW({
+		filestorage::load_string(e_filestore_galaxy_instalation_key_conf, non_existent_file);
+	}, std::invalid_argument);
+	// strin mlocked
+	EXPECT_THROW({
+		filestorage::load_string_mlocked(e_filestore_galaxy_instalation_key_conf, non_existent_file);
+	}, std::invalid_argument);
+}
+
+TEST(filestorage, bad_file_confdir) {
+
+	std::string test_conf_name = "test_non_important_conffile.configuration";
+	b_fs::path parent_dirname  = filestorage::get_parent_path(e_filestore_galaxy_instalation_key_conf, test_conf_name);
+
+	// trying to open directory
+	ASSERT_FALSE(filestorage::is_file_ok(parent_dirname.native()));
+}
+
+TEST(filestorage, file_list_sig) {
+
+	//  adding some signatures for this test
+	std::string sig1 = "bannedname!_test_sig01";
+	std::string sig2 = "bannedname!_test_sig02";
+
+	filestorage::save_string(e_filestore_galaxy_sig, sig1, "my_invalid_sig", true);
+	filestorage::save_string(e_filestore_galaxy_sig, sig2, "my_invalid_sig", true);
+
+	auto sig_path = filestorage::get_parent_path(e_filestore_galaxy_sig,"");
+	auto signatures = filestorage::get_file_list(sig_path);
+
+	_dbg1("TEST file list:");
+	for(auto &a : signatures) {
+		_dbg1(a);
+	}
+	// cleaning
+	ASSERT_TRUE(filestorage::remove(e_filestore_galaxy_sig, sig1));
+	ASSERT_TRUE(filestorage::remove(e_filestore_galaxy_sig, sig2));
+}
+
+TEST(filestorage, write_load_string) {
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string
-	fs::path pub_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key01", true);
-	fs::path pub_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key02", true);
+	b_fs::path pub_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "bannedname!_key01", true);
+	b_fs::path pub_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "bannedname!_key02", true);
 
 	// saving data
-	filestorage::save_string(e_filestore_galaxy_pub, "key01", "public data01", true);
-	filestorage::save_string(e_filestore_galaxy_pub, "key02", "public data02", true);
+	filestorage::save_string(e_filestore_galaxy_pub, "bannedname!_key01", "public data01", true);
+	filestorage::save_string(e_filestore_galaxy_pub, "bannedname!_key02", "public data02", true);
 
 	// load data
-	std::cout << "Loaded from first pub: "
-			  << filestorage::load_string(e_filestore_galaxy_pub, "key01") << std::endl;
-	std::cout << "Loaded from second pub: "
-			  << filestorage::load_string(e_filestore_galaxy_pub, "key02") << std::endl;
+	filestorage::load_string(e_filestore_galaxy_pub, "bannedname!_key01");
+	filestorage::load_string(e_filestore_galaxy_pub, "bannedname!_key02");
 
 	// cleaning
-	std::cout << "Removing key01.public: " << filestorage::remove(pub_full01.native()) << std::endl;
-	std::cout << "Removing key02.public: " << filestorage::remove(pub_full02.native()) << std::endl;
+	ASSERT_TRUE(filestorage::remove(pub_full01.native()));
+	ASSERT_TRUE(filestorage::remove(pub_full02.native()));
+}
 
-	//
-	// sodiumpp::locked_string
-	//
-
+TEST(filestorage, write_load_mlocked_string) {
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string_mlocked
-	fs::path PRV_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key01", true);
-	fs::path PRV_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key02", true);
+	b_fs::path PRV_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "bannedname!_key01", true);
+	b_fs::path PRV_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "bannedname!_key02", true);
 
 	// prepare memory locked strings  UNSAFE FOR TEST
 	sodiumpp::locked_string l_str01 = sodiumpp::locked_string::unsafe_create("private data01");
 	sodiumpp::locked_string l_str02 = sodiumpp::locked_string::unsafe_create("private data02");
 
 	// saving data
-	filestorage::save_string_mlocked(e_filestore_galaxy_wallet_PRV, "key01", l_str01, true);
-	filestorage::save_string_mlocked(e_filestore_galaxy_wallet_PRV, "key02", l_str02, true);
+	filestorage::save_string_mlocked(e_filestore_galaxy_wallet_PRV, "bannedname!_key01", l_str01, true);
+	filestorage::save_string_mlocked(e_filestore_galaxy_wallet_PRV, "bannedname!_key02", l_str02, true);
 
 	// load data
-	std::cout << "Loaded from PRV: "
-			  << filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "key01").c_str() << std::endl;
-	std::cout << "Loaded from PRV: "
-			  << filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "key02").c_str() << std::endl;
+	filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "bannedname!_key01");
+	filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "bannedname!_key02");
 
 	// cleaning
-	std::cout << "Removing key01.PRIVATE: " << filestorage::remove(PRV_full01.native()) << std::endl;
-	std::cout << "Removing key02.PRIVATE: " << filestorage::remove(PRV_full02.native()) << std::endl;
+	ASSERT_TRUE(filestorage::remove(PRV_full01.native()));
+	ASSERT_TRUE(filestorage::remove(PRV_full02.native()));
 }
