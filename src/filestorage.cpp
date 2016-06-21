@@ -16,11 +16,11 @@ void filestorage::save_string(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path;
+	b_fs::path file_with_path;
 	try {
 
 		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
-		fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
+		b_fs::ofstream file(file_with_path, std::ios::out | std::ios::binary);
 
 		if (file.is_open()) {
 			file << data;
@@ -49,7 +49,7 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		throw std::invalid_argument("Fail to open file for write: empty filename");
 	}
 
-	fs::path file_with_path;
+	b_fs::path file_with_path;
 	try {
 
 		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
@@ -75,13 +75,13 @@ std::string filestorage::load_string(t_filestore file_type,
 									 const std::string &filename) {
 	std::string content;
 
-	fs::path file_with_path = get_full_path(file_type, filename);
+	b_fs::path file_with_path = get_full_path(file_type, filename);
 	_dbg2("Loading file path: " << file_with_path.native());
 
 	if (!is_file_ok(file_with_path.native())) {
 		throw std::invalid_argument("Fail to open file for read: " + filename);
 	} else {
-		fs::ifstream ifs(file_with_path);
+		b_fs::ifstream ifs(file_with_path);
 		content.assign( (std::istreambuf_iterator<char>(ifs) ),
 						(std::istreambuf_iterator<char>()  ) );
 
@@ -94,7 +94,7 @@ std::string filestorage::load_string(t_filestore file_type,
 sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 														 const std::string &filename) {
 	FILE * f_ptr;
-	fs::path file_with_path = get_full_path(file_type, filename);
+	b_fs::path file_with_path = get_full_path(file_type, filename);
 
 	f_ptr = std::fopen(file_with_path.c_str(), "r");
 
@@ -123,11 +123,11 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 }
 
 bool filestorage::is_file_ok(const std::string &filename) {
-	fs::path p(filename);
+	b_fs::path p(filename);
 	try {
-		if (fs::exists(p)) {    // does p actually exist?
-			if (fs::is_regular_file(p)) {       // is p a regular file?
-			} else if (fs::is_directory(p)) {     // is p a directory?
+		if (b_fs::exists(p)) {    // does p actually exist?
+			if (b_fs::is_regular_file(p)) {       // is p a regular file?
+			} else if (b_fs::is_directory(p)) {     // is p a directory?
 				// std::cout << p << " is a directory" << std::endl; // dbg
 				return 0;
 			} else {
@@ -138,7 +138,7 @@ bool filestorage::is_file_ok(const std::string &filename) {
 			// std::cout << p << " does not exist" << std::endl; // dbg
 			return 0;
 		}
-	} catch (const fs::filesystem_error& ex) {
+	} catch (const b_fs::filesystem_error& ex) {
 		_info("File is not OK: " << ex.what());
 		return 0;
 	}
@@ -146,18 +146,18 @@ bool filestorage::is_file_ok(const std::string &filename) {
 }
 
 bool filestorage::remove(const std::string &p) {
-	fs::path path_to_remove(p);
-	return fs::remove(path_to_remove);
+	b_fs::path path_to_remove(p);
+	return b_fs::remove(path_to_remove);
 }
 
 std::vector<std::string> filestorage::get_file_list(const boost::filesystem::path &path) {
 	std::vector<std::string> file_list;
 	if (!path.empty()) {
-		fs::path apk_path(path);
-		fs::recursive_directory_iterator end;
+		b_fs::path apk_path(path);
+		b_fs::recursive_directory_iterator end;
 
-		for (fs::recursive_directory_iterator i(apk_path); i != end; ++i) {
-			const fs::path cp = (*i);
+		for (b_fs::recursive_directory_iterator i(apk_path); i != end; ++i) {
+			const b_fs::path cp = (*i);
 			std::string filename = extract_filename(cp.native());
 			file_list.push_back(filename);
 		}
@@ -165,10 +165,10 @@ std::vector<std::string> filestorage::get_file_list(const boost::filesystem::pat
 	return file_list;
 }
 
-fs::path filestorage::get_full_path(t_filestore file_type,
+b_fs::path filestorage::get_full_path(t_filestore file_type,
 								   const std::string &filename) {
 
-	fs::path full_path = get_parent_path(file_type, filename);
+	b_fs::path full_path = get_parent_path(file_type, filename);
 	full_path += filename;
 	switch (file_type) {
 		case e_filestore_galaxy_wallet_PRV: {
@@ -195,11 +195,11 @@ fs::path filestorage::get_full_path(t_filestore file_type,
 	return full_path;
 }
 
-fs::path filestorage::get_parent_path(t_filestore file_type,
+b_fs::path filestorage::get_parent_path(t_filestore file_type,
 									const std::string &filename) {
 
-	fs::path user_home(getenv("HOME"));
-	fs::path parent_path(user_home.c_str());
+	b_fs::path user_home(getenv("HOME"));
+	b_fs::path parent_path(user_home.c_str());
 
 	switch (file_type) {
 		case e_filestore_galaxy_wallet_PRV: {
@@ -219,7 +219,7 @@ fs::path filestorage::get_parent_path(t_filestore file_type,
 			break;
 		}
 		case e_filestore_local_path: {
-			fs::path file_path(filename);
+			b_fs::path file_path(filename);
 			parent_path = file_path.parent_path();
 			break;
 		}
@@ -228,10 +228,10 @@ fs::path filestorage::get_parent_path(t_filestore file_type,
 	return parent_path;
 }
 
-fs::path filestorage::prepare_path_for_write(t_filestore file_type,
+b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 											 const std::string &input_name,
 											 bool overwrite) {
-	fs::path file_with_path;
+	b_fs::path file_with_path;
 	try {
 
 		std::string filename = extract_filename(input_name);
@@ -277,40 +277,40 @@ fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 			}
 		}
 
-	} catch (fs::filesystem_error & err) {
+	} catch (b_fs::filesystem_error & err) {
 		_erro("Can not prepare dir: " << err.what());
 		throw ;
 	}
 	return file_with_path;
 }
 
-fs::path filestorage::create_path_for(t_filestore file_type,
+b_fs::path filestorage::create_path_for(t_filestore file_type,
 									  const std::string &filename) {
 
 	// connect parent path with filename
-	fs::path full_path = get_full_path(file_type, filename);
+	b_fs::path full_path = get_full_path(file_type, filename);
 	_dbg1("Full_path: " << full_path.native());
 	create_parent_dir(full_path);
 	return full_path;
 }
 
 std::string filestorage::extract_filename(const std::string &string_path) {
-	fs::path try_path(string_path);
+	b_fs::path try_path(string_path);
 	return try_path.filename().native();
 }
 
-bool filestorage::create_parent_dir(const fs::path &file_path) {
+bool filestorage::create_parent_dir(const b_fs::path &file_path) {
 
-	fs::path file(file_path);
-	fs::path parent_path = file.parent_path();
+	b_fs::path file(file_path);
+	b_fs::path parent_path = file.parent_path();
 
 	if (parent_path.empty()) {
 		return 1;
 	}
 
 	// if exist
-	if (!fs::exists(parent_path)) {
-		bool success = fs::create_directories(parent_path);
+	if (!b_fs::exists(parent_path)) {
+		bool success = b_fs::create_directories(parent_path);
 		if (!success) {
 			throw std::invalid_argument("fail to create not existing directory"
 										+ std::string(parent_path.c_str()));

@@ -8,61 +8,64 @@
 
 TEST(filestorage, custom_string_save) {
 
-	std::cout << "filestorage tests" << std::endl;
+	_dbg2("filestorage tests");
 }
 
-TEST(filestorage, create_path) {
+TEST(filestorage, prepare_path) {
 
 	std::string home(getenv("HOME"));
-	std::cout << "Home dir: "  << home << std::endl;
+	_dbg2("Home dir: "  << home);
 
-	fs::path PRV_dir = filestorage::create_path_for(e_filestore_galaxy_wallet_PRV, "key");
-	std::cout << PRV_dir << std::endl;
+	b_fs::path PRV_dir = filestorage::create_path_for(e_filestore_galaxy_wallet_PRV, "key");
+	_dbg2(PRV_dir);
 
-	fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key", true);
-	std::cout << PRV_full << std::endl;
+	b_fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key", true);
+	_dbg2(PRV_full);
 
-	std::cout << "Removing PRV: " << filestorage::remove(PRV_full.native()) << std::endl;
+	// try to overvrite path for PRV key
+	EXPECT_THROW({
+		b_fs::path PRV_full = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key");
+	},overwrite_error);
 
-	fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_pub, "key");
-	std::cout << pub_dir << std::endl;
 
-	fs::path pub_full = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key", true);
-	std::cout << pub_full << std::endl;
+	_dbg2("Removing PRV: " << filestorage::remove(PRV_full.native()));
 
-	std::cout << "Removing pub: " << filestorage::remove(pub_full.native()) << std::endl;
+	b_fs::path pub_dir = filestorage::create_path_for(e_filestore_galaxy_pub, "key");
+	_dbg2(pub_dir);
 
-	//
-	// std::string
-	//
+	b_fs::path pub_full = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key", true);
+	_dbg2(pub_full);
 
+	_dbg2("Removing pub: " << filestorage::remove(pub_full.native()));
+
+}
+
+TEST(filestorage, write_load_string) {
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string
-	fs::path pub_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key01", true);
-	fs::path pub_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key02", true);
+	b_fs::path pub_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key01", true);
+	b_fs::path pub_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_pub, "key02", true);
 
 	// saving data
 	filestorage::save_string(e_filestore_galaxy_pub, "key01", "public data01", true);
 	filestorage::save_string(e_filestore_galaxy_pub, "key02", "public data02", true);
 
 	// load data
-	std::cout << "Loaded from first pub: "
-			  << filestorage::load_string(e_filestore_galaxy_pub, "key01") << std::endl;
-	std::cout << "Loaded from second pub: "
-			  << filestorage::load_string(e_filestore_galaxy_pub, "key02") << std::endl;
+	_dbg2("Loaded from first pub: "
+			  << filestorage::load_string(e_filestore_galaxy_pub, "key01"));
+	_dbg2("Loaded from second pub: "
+			  << filestorage::load_string(e_filestore_galaxy_pub, "key02"));
 
 	// cleaning
-	std::cout << "Removing key01.public: " << filestorage::remove(pub_full01.native()) << std::endl;
-	std::cout << "Removing key02.public: " << filestorage::remove(pub_full02.native()) << std::endl;
+	_dbg2("Removing key01.public: " << filestorage::remove(pub_full01.native()));
+	_dbg2("Removing key02.public: " << filestorage::remove(pub_full02.native()));
+}
 
-	//
-	// sodiumpp::locked_string
-	//
-
+TEST(filestorage, write_load_mlocked_string) {
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string_mlocked
-	fs::path PRV_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key01", true);
-	fs::path PRV_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key02", true);
+	b_fs::path PRV_full01 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key01", true);
+	b_fs::path PRV_full02 = filestorage::prepare_path_for_write(e_filestore_galaxy_wallet_PRV, "key02", true);
 
 	// prepare memory locked strings  UNSAFE FOR TEST
 	sodiumpp::locked_string l_str01 = sodiumpp::locked_string::unsafe_create("private data01");
@@ -73,12 +76,12 @@ TEST(filestorage, create_path) {
 	filestorage::save_string_mlocked(e_filestore_galaxy_wallet_PRV, "key02", l_str02, true);
 
 	// load data
-	std::cout << "Loaded from PRV: "
-			  << filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "key01").c_str() << std::endl;
-	std::cout << "Loaded from PRV: "
-			  << filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "key02").c_str() << std::endl;
+	_dbg2("Loaded from PRV: "
+			  << filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "key01").c_str());
+	_dbg2("Loaded from PRV: "
+			  << filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, "key02").c_str());
 
 	// cleaning
-	std::cout << "Removing key01.PRIVATE: " << filestorage::remove(PRV_full01.native()) << std::endl;
-	std::cout << "Removing key02.PRIVATE: " << filestorage::remove(PRV_full02.native()) << std::endl;
+	_dbg2("Removing key01.PRIVATE: " << filestorage::remove(PRV_full01.native()));
+	_dbg2("Removing key02.PRIVATE: " << filestorage::remove(PRV_full02.native()));
 }
