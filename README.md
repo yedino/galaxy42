@@ -4,8 +4,9 @@
 
 * * *
 
-( This program is not yet ready nor secure, do not use it in this version. It is Copyrighted, see [LICENCE.txt] )
-( 该程序还没有准备好，也不安全，在这个版本中不使用它. 它是有版权的，读文件[LICENCE.txt] )
+This program is not yet ready nor secure, do not use it in this version. It is Copyrighted, see [LICENCE.txt](./LICENCE.txt)
+
+该程序还没有准备好，也不安全，在这个版本中不使用它. 它是有版权的，读文件 [LICENCE.txt](./LICENCE.txt)
 
 * * *
 
