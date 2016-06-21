@@ -2,6 +2,34 @@
 [![Coverage Status](https://coveralls.io/repos/github/yedino/galaxy42/badge.svg?branch=master)](https://coveralls.io/github/yedino/galaxy42?branch=master)
 [![IRC #antinet icann.irc.meshnet.pl](http://p.meshnet.pl/p/tgh.svg)](http://h.forum.meshnet.pl/viewtopic.php?f=14&p=144#p144)
 
+* * *
+
+( This program is not yet ready nor secure, do not use it in this version. It is Copyrighted, see [LICENCE.txt] )
+( 该程序还没有准备好，也不安全，在这个版本中不使用它. 它是有版权的，读文件[LICENCE.txt] )
+
+* * *
+
+This program creates an secure connection between 2 computers (like VPN).
+
+To use it from Command Line, simply:
+
+on 1st computer do: ./tunserver.elf
+the program will start and will print you on screen what is the virtual IP address that is assigned to it by our program.
+
+on 2nd computer do: ./tunserver.elf --peer YOURIP:9042-VIRTUALIP1
+where YOURIP must be the "normal" IP address of 1st computer as seen from 2nd computer, e.g. the Internet address of it,
+and VIRTUALIP1 is the virtual IP that was displayed on 1st computer.
+
+That is all!
+Now your computers are connected together, try ping6 VIRTUALIP1 from 2nd computer, all connections (browser, ftp, ssh etc)
+should work too.
+
+* * *
+* * *
+* * *
+
+Advanced topics - for developers and for future.
+
 ---> Users, developers, read also the HOWTO section it contains friendly FAQ how to use/develop/hack this :) <---
 
 Galaxy42 - Small experimental network in category of Meshnet, VPN, IP-hash.
