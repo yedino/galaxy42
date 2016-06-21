@@ -4,6 +4,8 @@
 #ifndef LIBS0_HPP
 #define LIBS0_HPP
 
+#include "project.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
