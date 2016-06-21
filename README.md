@@ -23,7 +23,7 @@ This program creates an secure connection between 2 computers (like VPN).
 To use it from Command Line, simply:
 
 on 1st computer run command: `./tunserver.elf`
-the program will start and will print you on screen what is the virtual IP address that is assigned to it by our program.
+the program will start and will **print you on screen what is the virtual IP address** that is assigned to it by our program.
 
 on 2nd computer run command: `./tunserver.elf --peer YOURIP:9042-VIRTUALIP1`
 where YOURIP must be the "normal" IP address of 1st computer as seen from 2nd computer, e.g. the Internet address of it,
@@ -32,6 +32,9 @@ and VIRTUALIP1 is the virtual IP that was displayed on 1st computer.
 That is all!
 Now your computers are connected together, try ping6 VIRTUALIP1 from 2nd computer, all connections (browser, ftp, ssh etc)
 should work too.
+
+Backup: your **private keys** that give ownership of your virtual IP address by default are in `~/.config/antinet/`
+(or just the `galaxy42/wallet` there).
 
 This program will allow to do much much more in future (full public mesh) but this are plans for advanced testers (see below).
 
