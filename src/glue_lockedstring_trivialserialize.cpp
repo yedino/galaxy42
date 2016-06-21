@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #include "glue_lockedstring_trivialserialize.hpp"
 
 void trivialserialize::memlock(const trivialserialize::generator &gen) {

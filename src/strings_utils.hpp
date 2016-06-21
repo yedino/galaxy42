@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #ifndef include_strings_utils_hpp
 #define include_strings_utils_hpp
 

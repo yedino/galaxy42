@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #ifndef C_FILESYSTEM_HPP
 #define C_FILESYSTEM_HPP
 
