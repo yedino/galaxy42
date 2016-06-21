@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #include "c_tcp_asio_node.hpp"
 
 #include <functional>

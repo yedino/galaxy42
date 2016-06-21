@@ -1,0 +1,7 @@
+Files that are marked on top by reference to this file (to file LICENCE-by-Antinet.txt)
+are files Copyrighted by Antinet team, under the LICENCE.txt placed on top
+of this project: that is - the GPL version 3 - currently.
+
+Other files may also by part of such work Copyrighted by Antinet team even
+if they are marked in other way (or unmarked).
+

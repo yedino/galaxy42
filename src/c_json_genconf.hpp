@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #ifndef C_JSON_GENCONF_HPP
 #define C_JSON_GENCONF_HPP
 #include "libs1.hpp"

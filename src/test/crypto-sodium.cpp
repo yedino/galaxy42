@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #include "gtest/gtest.h"
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 

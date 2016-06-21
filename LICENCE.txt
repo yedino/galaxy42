@@ -1,7 +1,7 @@
 
 The code and files in this directory (but with exception of code from other
 sources, read the code carefully and look for more LICENCE/LICENSE files)
-are now copyrighted (c) 2016
+are now Copyrighted (C) 2015-2016
 by the "Antinet.org team",
 they are licensed hereby as GPL version 3,
 and at discretion of the authors it may be licensed on more liberal license.
