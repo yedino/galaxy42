@@ -150,6 +150,11 @@ bool filestorage::remove(const std::string &p) {
 	return b_fs::remove(path_to_remove);
 }
 
+bool filestorage::remove(t_filestore file_type, const std::string &p) {
+	b_fs::path path_to_remove = get_full_path(file_type, p);
+	return b_fs::remove(path_to_remove);
+}
+
 std::vector<std::string> filestorage::get_file_list(const boost::filesystem::path &path) {
 	std::vector<std::string> file_list;
 	if (!path.empty()) {
