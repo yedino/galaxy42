@@ -396,7 +396,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 	catch (const std::exception &e) {
 		_erro("Adding peer from simplereference failed (exception): " << e.what()); // TODO throw?
-		throw ;
+		throw std::invalid_argument("Bad peer format");
 	}
 }
 
