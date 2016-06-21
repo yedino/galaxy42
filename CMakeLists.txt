@@ -19,6 +19,11 @@ project (ipbench)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
+option(OPTION_LEVEL_IS_NORMAL "Enable the normal stable code" ON)
+option(OPTION_LEVEL_IS_PREVIEW "Enable the less tested code, that is not yet recommended for any real use" OFF)
+option(OPTION_LEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
+option(OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
+
 add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
@@ -103,7 +108,7 @@ endif()
 include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf src/tunserver.cpp)
+add_executable(tunserver.elf src/g42-main.cpp )
 
 target_link_libraries(tunserver.elf pthread tunserver boost_system boost_filesystem boost_program_options sodium sodiumpp ntruencrypt ntrusign jsoncpp_lib_static sidh)
 
