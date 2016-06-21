@@ -245,7 +245,7 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 }
 
 int main(int argc, char **argv) {
-	std::cerr << std::endl << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
 	g_dbg_level=60; // [debug] level default
 
@@ -253,7 +253,6 @@ int main(int argc, char **argv) {
 		_info("Starting lib sodium...");
 		ecdh_ChaCha20_Poly1305::init();
 	}
-
 
 	c_tunserver myserver;
 	try {
@@ -335,6 +334,8 @@ int main(int argc, char **argv) {
 						"Adding entire peer reference, in syntax like ip-pub."
 						"Can be give more then once, for multiple peers.")
 			;
+
+		_note("Will parse program options");
 
 		po::variables_map argm;
 		try { // try parsing
