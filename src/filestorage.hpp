@@ -65,6 +65,13 @@ public:
 	 */
 	static bool remove(const std::string &p);
 	/**
+	 * @brief remove by file_type
+	 * @param file_type
+	 * @param p filename without path
+	 * @return
+	 */
+	static bool remove(t_filestore file_type, const std::string &p);
+	/**
 	 * @brief get_file_list vector of strings with file names
 	 * @param path directory where we looking for files
 	 * @return
