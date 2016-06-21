@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #ifndef C_IP46_ADDR_H
 #define C_IP46_ADDR_H
 

@@ -1,6 +1,10 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #pragma once
 #ifndef LIBS0_HPP
 #define LIBS0_HPP
+
+#include "project.hpp"
 
 #include <memory>
 #include <string>

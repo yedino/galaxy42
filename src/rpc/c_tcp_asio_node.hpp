@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #ifndef C_TCP_ASIO_NODE_H
 #define C_TCP_ASIO_NODE_H
 

@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 #include "c_json_load.hpp"
 
 c_json_file_parser::c_json_file_parser (const std::string &filename) {

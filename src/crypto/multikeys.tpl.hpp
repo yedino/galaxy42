@@ -1,3 +1,5 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 
 #pragma once
 #ifndef include_crypto_multikeys_tpl_hpp
