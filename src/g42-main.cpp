@@ -249,7 +249,9 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 int main(int argc, char **argv) {
 	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
-	g_dbg_level=60; // [debug] level default
+	const int config_default_basic_dbg_level = 60; // [debug] level default
+
+	g_dbg_level = config_default_basic_dbg_level;
 
 	{
 		_info("Starting lib sodium...");
@@ -260,39 +262,52 @@ int main(int argc, char **argv) {
 	try {
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
+
+		const string config_default_myname = "galaxy";
+
 		po::options_description desc("Options", line_length);
 		desc.add_options()
 			("help", "Print help messages")
+			("h", "same as --help")
 
-			("--debug", "-d")
-			("-d", "Debug")
+			("debug", "Turns on more debug")
+			("d", "same as --debug")
+			("quiet", "Turns off most of the debug")
+			("q", "same as --quiet")
 
-			("--quiet", "-q")
-			("-q", "Quiet")
+			("peer", po::value<std::vector<std::string>>()->multitoken(),
+						"Adding entire peer reference, in syntax like ip-pub."
+						"Can be give more then once, for multiple peers.")
 
-			("demo", po::value<std::string>()->default_value(""),
-						"Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
-						"Use --demo help to see list of demos [TODO].")
-			("devel","Test: used by developer to run current test")
-			("develnum", po::value<int>()->default_value(1),
-						"Test: used by developer to set current node number (makes sense with option --devel)")
-			("develdemo", po::value<std::string>()->default_value("hardcoded"),
-						"Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
-			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
-			("myname", po::value<std::string>()->default_value("galaxy") ,
-						"a readable name of your node (e.g. for debug)")
-			("gen-config", "Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
-						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
+			("info", "COMMAND: Print info about key specified in my-key option\nrequires [--my-key]")
+			("list-my-keys", "COMMAND: List your key which are in default location")
 
 			("my-key", po::value<std::string>(), "Choose already generated key from default location")
 			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
 
-			("info", "Print info about key specified in my-key option\nrequires [--my-key]")
-			("list-my-keys", "List your key which are in default location")
-			("set-IDI", "Set main instalation key (IDI) that will be use for signing connection (IDC) key"
+			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
+			("no-config", "Don't load any configuration file")
+
+			#if OPTION_LEVEL_IS_PREVIEW
+
+			("demo", po::value<std::string>()->default_value(""),
+						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
+						"Use --demo help to see list of demos [TODO].")
+			("devel","COMMAND: Test: used by developer to run current test")
+			("develnum", po::value<int>()->default_value(1),
+						"Test: used by developer to set current node number (makes sense with option --devel)")
+			("develdemo", po::value<std::string>()->default_value("hardcoded"),
+						"COMMAND: Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
+			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
+			("myname", po::value<std::string>()->default_value(config_default_myname) ,
+						"a readable name of your node (e.g. for debug)")
+			("gen-config", "COMMAND: Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
+						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
+
+			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
 						"\nrequires [--my-key]")
 
-			("gen-key", "Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
+			("gen-key", "COMMAND: Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
 						"\nexamples:"
 						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
 						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
@@ -301,7 +316,7 @@ int main(int argc, char **argv) {
 				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
 				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
 
-			("sign", "Sign key or other message with your key"
+			("sign", "COMMAND: Sign key or other message with your key"
 					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
 					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
 					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
@@ -309,7 +324,7 @@ int main(int argc, char **argv) {
 				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
 				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
 
-			("verify", "Verify key or data with trusted-key and key or data"
+			("verify", "COMMAND: Verify key or data with trusted-key and key or data"
 					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
 					   "or --toverify-data-file *--signature-file]"
 					   "\nDefault signature file name = key/data file name + \".sig\" extension"
@@ -323,18 +338,8 @@ int main(int argc, char **argv) {
 							"External Name of signature file in specified location"
 							"\nDefault signature file name = key/data file name + \".sig\" extension")
 
-			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file")
-			("no-config", "Don't load any configuration file")
+			#endif
 
-			("mypub", po::value<std::string>()->default_value("") , "your public key (give any string, not yet used)")
-			("mypriv", po::value<std::string>()->default_value(""),
-						"your PRIVATE key (give any string, not yet used - of course this is just for tests)")
-			//("peerip", po::value<std::vector<std::string>>()->required(),
-			//			"IP over existing networking to connect to your peer")
-			//("peerpub", po::value<std::vector<std::string>>()->multitoken(), "public key of your peer")
-			("peer", po::value<std::vector<std::string>>()->multitoken(),
-						"Adding entire peer reference, in syntax like ip-pub."
-						"Can be give more then once, for multiple peers.")
 			;
 
 		_note("Will parse program options");
@@ -342,9 +347,12 @@ int main(int argc, char **argv) {
 		po::variables_map argm;
 		try { // try parsing
 			po::store(po::parse_command_line(argc, argv, desc), argm); // <-- parse actuall real command line options
+			_note("BoostPO parsed argm size=" << argm.size());
 
 			// === PECIAL options - that set up other program options ===
 
+			#if OPTION_LEVEL_IS_PREVIEW
+			_info("BoostPO Will parse demo/devel options");
 			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
 				auto opt_demo = argm["demo"].as<string>();
 				if ( opt_demo!="" ) {
@@ -371,26 +379,34 @@ int main(int argc, char **argv) {
 						return 0; // no error for developer mode
 				}
 			}
+			#endif
+			_note("After devel/demo BoostPO code");
 
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
+			_note("After BoostPO notify");
+
 			// --- debug level for main program ---
-			g_dbg_level_set(80,"For normal program run", true);
+			g_dbg_level_set(config_default_basic_dbg_level, "For normal program run", true);
 			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
 			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run", true);
+			_note("BoostPO after parsing debug");
 
 			if (argm.count("help")) { // usage
 				std::cout << desc;
 				return 0;
 			}
 
+			#if OPTION_LEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {
 				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
 				auto name = argm["my-key"].as<std::string>();
 				myserver.program_action_set_IDI(name);
 				return 0; // <--- return
 			}
+			#endif
 
+			_note("BoostPO before info");
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
 					_erro("--my-key is required for --info");
@@ -427,6 +443,7 @@ int main(int argc, char **argv) {
 				return 0;
 			} // gen-key
 
+			#if OPTION_LEVEL_IS_PREVIEW
 			if (argm.count("sign")) {
 
 				antinet_crypto::c_multikeys_PRV signing_key;
@@ -473,6 +490,9 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
+
+
+			_dbg1("BoostPO before verify");
 			if(argm.count("verify")) {
 
 				antinet_crypto::c_multikeys_pub trusted_key;
@@ -543,20 +563,31 @@ int main(int argc, char **argv) {
 				_dbg2("Verify Success");
 				return 0;
 			}
+			#endif
 
+			_dbg1("BoostPO before config");
+			#if OPTION_LEVEL_IS_PREVIEW
 			if (argm.count("gen-config")) {
 				c_json_genconf::genconf();
 			}
 
 			if (!(argm.count("no-config"))) {
 				// loading peers from configuration file (default from galaxy.conf)
+				_info("No no-config, will load config");
 				std::string conf = argm["config"].as<std::string>();
 				c_galaxyconf_load galaxyconf(conf);
-				for(auto &ref : galaxyconf.get_peer_references()) {
+				auto add_peers = galaxyconf.get_peer_references();
+				_info("Will add peer(s) from config file, count: " << add_peer.size());
+				for(auto &ref : add_peer) {
 					myserver.add_peer(ref);
 				}
 			}
+			#endif
+			_dbg1("BoostPO after config");
 
+			// ------------------------------------------------------------------
+			// end of options
+			// ------------------------------------------------------------------
 
 			_info("Configuring my own reference (keys):");
 			try {
@@ -589,7 +620,11 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			myserver.set_my_name( argm["myname"].as<string>() );
+			// ------------------------------------------------------------------
+
+			string my_name = config_default_myname;
+			if (argm.count("myname")) my_name = argm["myname"].as<string>();
+			myserver.set_my_name(my_name);
 			ui::action_info_ok("Your hash-IPv6 address is: " + myserver.get_my_ipv6_nice());
 
 			_info("Configuring my peers references (keys):");
@@ -602,6 +637,8 @@ int main(int argc, char **argv) {
 			} catch(...) {
 				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
 			}
+
+			// ------------------------------------------------------------------
 
 			auto peers_count = myserver.get_my_stats_peers_known_count();
 			if (peers_count) {
@@ -630,6 +667,9 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
+	// ------------------------------------------------------------------
+	_note("Done all preparations, moving to the server main");
+
 	try {
 		myserver.run();
 	} // try running server
@@ -647,6 +687,8 @@ int main(int argc, char **argv) {
 		return 3;
 	}
 
+	// ------------------------------------------------------------------
+	_note("Program exits (no error code)"); return 0;
 }
 
 
