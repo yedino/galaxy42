@@ -11,19 +11,28 @@ This program is not yet ready nor secure, do not use it in this version. It is C
 * * *
 
 This program creates an secure connection between 2 computers (like VPN).
+ * access e.g. your home laptop from work, or connect servers in LAN easily
+ * you get *own virtual IPv6* to which you own the private key so no one can impersonate you or steal your address
+ * compatible with all programs that just support IPv6
+ * authenticated end-to-end
+ * encrypted end-to-end
+ * only one of the computers needs to have public Internet IP address (in future none will need)
+ * (not yet officially released) option to mesh many computers together
 
 To use it from Command Line, simply:
 
-on 1st computer do: ./tunserver.elf
+on 1st computer run command: `./tunserver.elf`
 the program will start and will print you on screen what is the virtual IP address that is assigned to it by our program.
 
-on 2nd computer do: ./tunserver.elf --peer YOURIP:9042-VIRTUALIP1
+on 2nd computer run command: `./tunserver.elf --peer YOURIP:9042-VIRTUALIP1`
 where YOURIP must be the "normal" IP address of 1st computer as seen from 2nd computer, e.g. the Internet address of it,
 and VIRTUALIP1 is the virtual IP that was displayed on 1st computer.
 
 That is all!
 Now your computers are connected together, try ping6 VIRTUALIP1 from 2nd computer, all connections (browser, ftp, ssh etc)
 should work too.
+
+This program will allow to do much much more in future (full public mesh) but this are plans for advanced testers (see below).
 
 * * *
 * * *
