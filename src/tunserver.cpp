@@ -125,7 +125,7 @@ const char * g_demoname_default = "route_dij";
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
 
-#include "cjdns-code/NetPlatform.h" // from cjdns
+#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
 
 
 // #include <net/if_tap.h>

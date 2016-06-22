@@ -1,7 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "filestorage.hpp"
-#include "../text_ui.hpp"
+#include "text_ui.hpp"
 
 overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
 { }

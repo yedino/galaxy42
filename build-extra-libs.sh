@@ -8,7 +8,7 @@ echo ""
 
 normaldir=$PWD
 
-cd src/ntru-crypto/reference-code/C/Encrypt
+cd depends/ntru-crypto/reference-code/C/Encrypt
 
 echo "Building NTru - PLEASE WAIT..."
 ./autogen.sh && ./configure && make
@@ -17,13 +17,13 @@ cd "$normaldir"
 
 mkdir -p build_extra/ntru/
 
-cp -v -r src/ntru-crypto/reference-code/C/Encrypt/include/    build_extra/ntru/
+cp -v -r depends/ntru-crypto/reference-code/C/Encrypt/include/    build_extra/ntru/
 
-cp -v -r src/ntru-crypto/reference-code/C/Encrypt/.libs/    build_extra/ntru/
+cp -v -r depends/ntru-crypto/reference-code/C/Encrypt/.libs/    build_extra/ntru/
 
 echo "Generating wisdom files ..."
-cp -r src/ntru-crypto/reference-code/C/Sign/PASS/data .
-cp src/ntru-crypto/reference-code/C/Sign/PASS/bin/wiseup.sh build_extra/
+cp -r depends/ntru-crypto/reference-code/C/Sign/PASS/data .
+cp depends/ntru-crypto/reference-code/C/Sign/PASS/bin/wiseup.sh build_extra/
 cd build_extra
 for param in 433 577 769 1153
 do
