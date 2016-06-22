@@ -9,6 +9,7 @@
 #include <linux/if_tun.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 #include "c_tnetdbg.hpp"
 #include "cpputils.hpp"
 #include "cjdns-code/NetPlatform.h"
@@ -32,6 +33,7 @@ void c_tun_device_linux::set_ipv6_address
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
+	_UNUSED(mtu);
 	_NOTREADY();
 }
 
@@ -46,4 +48,12 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 	else return false;
 }
 
-#endif
+void c_tun_device_linux::read_from_tun(void *buf, size_t count) {
+	read(m_tun_fd, buf, count); // <-- read data from TUN
+}
+
+void c_tun_device_linux::write_to_tun(void *buf, size_t count) {
+	write(m_tun_fd, buf, count);
+}
+
+#endif // __linux__
