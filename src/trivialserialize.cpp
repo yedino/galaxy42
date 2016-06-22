@@ -119,7 +119,9 @@ void parser::pop_byte_skip(char c) { // read expected character (e.g. a delimite
 std::string parser::pop_bytes_n(size_t size) {
 	if (!size) return string("");
 	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
-	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
+	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
+	// and we are sure that this ptrdiff > 0 because of earlier above condition
+	if (! (   static_cast<size_t>(m_data_end - m_data_now) >= size) ) throw format_error_read();
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	auto from = m_data_now;
@@ -130,7 +132,9 @@ std::string parser::pop_bytes_n(size_t size) {
 void parser::skip_bytes_n(size_t size) {
 	if (!size) return;
 	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
-	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
+	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
+	// and we are sure that this ptrdiff > 0 because of earlier above condition
+	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) throw format_error_read();
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	// auto from = m_data_now;
@@ -140,7 +144,9 @@ void parser::skip_bytes_n(size_t size) {
 
 void parser::pop_bytes_n_into_buff(size_t size, char * buff) {
 	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
-	if (! (   static_cast<unsigned long long int>(m_data_end - m_data_now) >= size) ) throw format_error_read(); // the read will not fit // TODO(r) is this cast good?
+	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
+	// and we are sure that this ptrdiff > 0 because of earlier above condition
+	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) throw format_error_read();
 	assert(buff!=nullptr);
 
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
@@ -174,12 +180,12 @@ void parser::skip_varstring() {
 
 vector<string> parser::pop_vector_string() {
 	vector<string> ret;
-	auto size = pop_integer_uvarint(); // TODO const
-	// assert( size <= (1LLU << 64LLU) ); // TODO
-	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_varstring() );
+	const auto size = pop_integer_uvarint();
+	assert(size <= std::numeric_limits<uint64_t>::max());
+	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) ret.push_back( pop_varstring() );
+	//for (auto i = decltype(size){0}; i<size; ++i) ret.push_back( pop_varstring() );
 	return ret;
 }
-
 
 bool parser::is_end() const {
 	return m_data_now >= m_data_end ;

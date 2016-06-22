@@ -364,7 +364,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool wi
 			if ( will_asymkex || false==t_crypto_system_type_is_asymkex(sys_id) ) {
 				this->generate(sys_id, how_many);
 			} else _dbg1("Skipping because this is asymkex, and we do not want to do that "
-				<< "will_asymkex="<<will_asymkex<<" : " << to_string(sys_id));
+				<< "will_asymkex="<<will_asymkex<<" : " << std::to_string(sys_id));
 		}
 	}
 }
@@ -493,7 +493,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 			break;
 		} // case
 
-		default: throw runtime_error("Trying to generate unsupported key type:"
+	default: throw std::runtime_error("Trying to generate unsupported key type:"
 			+ t_crypto_system_type_to_name(crypto_system_type));
 	} // switch
 	m_pub.set_hash_dirty();
