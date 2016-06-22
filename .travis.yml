@@ -45,7 +45,7 @@ script:
 after_success:
     - ./test-release.elf    # run gtests
     - gcov --version
-    - coveralls -e src/test -e build_extra -e src/sodiumpp -e src/cjdns-code -e src/googletest -e src/jsoncpp -e src/ntru-crypto -e src/sidh --gcov-options '\-lp' --gcov 'gcov-5'
+    - coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
     irc:
