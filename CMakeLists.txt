@@ -27,26 +27,26 @@ option(OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, 
 add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
-include_directories(src/googletest/googletest/include/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
+include_directories(depends/googletest/googletest/include/)
 
 #add local jsoncpp
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-include_directories(src/jsoncpp/include)
-link_directories(src/jsoncpp/src/lib_json)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
+include_directories(depends/jsoncpp/include)
+link_directories(depends/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
-include_directories(src/sodiumpp/sodiumpp/include)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
+include_directories(depends/sodiumpp/sodiumpp/include)
 
 #add local lib sidh
 #flags for SIDH.h
 add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/sidh)
-include_directories(src/sidh)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sidh)
+include_directories(depends/sidh)
 
 #add local ntru sign lib
-set(NTRU_SIGN_DIR "src/ntru-crypto/reference-code/C/Sign/PASS/src")
+set(NTRU_SIGN_DIR "depends/ntru-crypto/reference-code/C/Sign/PASS/src")
 include_directories("${NTRU_SIGN_DIR}")
 file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
 file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
@@ -77,7 +77,7 @@ ADD_CUSTOM_TARGET(debug
 
 # more directories of my main code
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/cjdns-code/*.c)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp depends/cjdns-code/*.c)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
