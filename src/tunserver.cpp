@@ -72,42 +72,20 @@ const char * g_the_disclaimer =
 const char * g_demoname_default = "route_dij";
 // see function run_mode_developer() here to see list of possible values
 
-#include <iostream>
-#include <stdexcept>
-#include <vector>
-#include <string>
-#include <iomanip>
-#include <algorithm>
-#include <streambuf>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include <boost/program_options.hpp>
-
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#include <netdb.h>
-
-#include <string.h>
-#include <assert.h>
-
-#include <boost/optional.hpp>
-
-#include <thread>
-
-#include <cstring>
-
-#include <sodium.h>
-
 #include "libs1.hpp"
-#include "counter.hpp"
+
+#include "tunserver.hpp"
+
 #include "cpputils.hpp"
+#include "glue_sodiumpp_crypto.hpp"
+
+#include "ui.hpp"
+#include "filestorage.hpp"
+#include "trivialserialize.hpp"
+#include "counter.hpp"
+#include "generate_crypto.hpp"
+
+#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
 
 // linux (and others?) select use:
 #include <sys/time.h>
@@ -115,41 +93,16 @@ const char * g_demoname_default = "route_dij";
 #include <sys/select.h>
 
 // for low-level Linux-like systems TUN operations
-#include <fcntl.h>
+#include <fcntl.h> // O_RDWRO_RDWR
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include<netinet/ip_icmp.h>   //Provides declarations for icmp header
-#include<netinet/udp.h>   //Provides declarations for udp header
-#include<netinet/tcp.h>   //Provides declarations for tcp header
-#include<netinet/ip.h>    //Provides declarations for ip header
+#include <netinet/ip_icmp.h>	//Provides declarations for icmp header
+#include <netinet/udp.h>		//Provides declarations for udp header
+#include <netinet/tcp.h>		//Provides declarations for tcp header
+#include <netinet/ip.h>			//Provides declarations for ip header
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
-
-#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
-
-
-// #include <net/if_tap.h>
 #include <linux/if_tun.h>
-#include "c_json_load.hpp"
-#include "c_ip46_addr.hpp"
-#include "c_peering.hpp"
-#include "generate_crypto.hpp"
-
-
-#include "crypto/crypto.hpp" // for tests
-#include "rpc/rpc.hpp"
-
-#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
-
-
-#include "trivialserialize.hpp"
-#include "galaxy_debug.hpp"
-
-#include "glue_sodiumpp_crypto.hpp" // e.g. show_nice_nonce()
-
-#include "ui.hpp"
-
-#include "tunserver.hpp"
 
 // ------------------------------------------------------------------
 
@@ -522,7 +475,7 @@ void c_tunserver::prepare_socket() {
 	m_tun_fd = open("/dev/net/tun", O_RDWR);
 	assert(! (m_tun_fd<0) );
 
-  as_zerofill< ifreq > ifr; // the if request
+	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 
