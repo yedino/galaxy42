@@ -259,8 +259,8 @@ template <int S> uint64_t get_max_value_of_S_octet_uint() {
 	// TODO(rob): we could use unit tests for this
 	static_assert( ( (S*8) <= 64) , "Size S is too big to calculate it's max value on this data types.");
 	return
-	  ( 0xFFLLU << (S-1)*8 ) // this is the FF 00 00 00 part (on example of S=4)
-	    | // binary-or joins both parts, since the "empty" bits in them are 0
+		( 0xFFLLU << (S-1)*8 ) // this is the FF 00 00 00 part (on example of S=4)
+		| // binary-or joins both parts, since the "empty" bits in them are 0
 		( (1LLU << ((S-1)*8)) - 1 ); // this is the 00 FF FF FF part, calculated from from 01 00 00 00
 }
 
@@ -276,7 +276,7 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 	}
 
 	// TODO use proper type, depending on S
-	uint64_t divider = 1LLU << ((S-1)*8); // TODO(r) style: LLU vs uint64_t
+	uint64_t divider = uint64_t(1) << ((S-1)*8);
 	for (auto i=0; i<S; ++i) {
 		//cerr << "Serializing " << value << " into S="<<S<<" octets. divider="<<divider<<"..." << flush;
 		auto this_byte = (value / divider) % 256;
