@@ -72,42 +72,20 @@ const char * g_the_disclaimer =
 const char * g_demoname_default = "route_dij";
 // see function run_mode_developer() here to see list of possible values
 
-#include <iostream>
-#include <stdexcept>
-#include <vector>
-#include <string>
-#include <iomanip>
-#include <algorithm>
-#include <streambuf>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include <boost/program_options.hpp>
-
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#include <netdb.h>
-
-#include <string.h>
-#include <assert.h>
-
-#include <boost/optional.hpp>
-
-#include <thread>
-
-#include <cstring>
-
-#include <sodium.h>
-
 #include "libs1.hpp"
-#include "counter.hpp"
+
+#include "tunserver.hpp"
+
 #include "cpputils.hpp"
+#include "glue_sodiumpp_crypto.hpp"
+
+#include "ui.hpp"
+#include "filestorage.hpp"
+#include "trivialserialize.hpp"
+#include "counter.hpp"
+#include "generate_crypto.hpp"
+
+#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
 
 // linux (and others?) select use:
 #include <sys/time.h>
@@ -115,41 +93,14 @@ const char * g_demoname_default = "route_dij";
 #include <sys/select.h>
 
 // for low-level Linux-like systems TUN operations
-#include <fcntl.h>
+#include <fcntl.h> // O_RDWRO_RDWR
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include<netinet/ip_icmp.h>   //Provides declarations for icmp header
-#include<netinet/udp.h>   //Provides declarations for udp header
-#include<netinet/tcp.h>   //Provides declarations for tcp header
-#include<netinet/ip.h>    //Provides declarations for ip header
-// #include <net/if_ether.h> // peer over eth later?
-// #include <net/if_media.h> // ?
-
-#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
-
-
-// #include <net/if_tap.h>
+#include <netinet/ip_icmp.h>	//Provides declarations for icmp header
+#include <netinet/udp.h>		//Provides declarations for udp header
+#include <netinet/tcp.h>		//Provides declarations for tcp header
+#include <netinet/ip.h>			//Provides declarations for ip header
 #include <linux/if_tun.h>
-#include "c_json_load.hpp"
-#include "c_ip46_addr.hpp"
-#include "c_peering.hpp"
-#include "generate_crypto.hpp"
-
-
-#include "crypto/crypto.hpp" // for tests
-#include "rpc/rpc.hpp"
-
-#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
-
-
-#include "trivialserialize.hpp"
-#include "galaxy_debug.hpp"
-
-#include "glue_sodiumpp_crypto.hpp" // e.g. show_nice_nonce()
-
-#include "ui.hpp"
-
-#include "tunserver.hpp"
 
 // ------------------------------------------------------------------
 
@@ -397,7 +348,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
 	}
 	catch (const std::exception &e) {
-		_erro("Adding peer from simplereference failed (exception): " << e.what()); // TODO throw?
+		_erro("Adding peer from simplereference failed (exception): " << e.what());
 		throw std::invalid_argument("Bad peer format");
 	}
 }
@@ -495,7 +446,6 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	}
 }
 
-
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
@@ -513,16 +463,11 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 
 }
 
-
-void c_tunserver::help_usage() const {
-	// TODO(r) remove, using boost options
-}
-
 void c_tunserver::prepare_socket() {
 	m_tun_fd = open("/dev/net/tun", O_RDWR);
 	assert(! (m_tun_fd<0) );
 
-  as_zerofill< ifreq > ifr; // the if request
+	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 
@@ -674,7 +619,10 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	// --- choose next hop in peering ---
 
 	// try direct peers:
-	auto peer_it = m_peer.find(next_hip); // find c_peering to send to // TODO(r) this functionallity will be soon doubled with the route search in m_routing_manager below, remove it then
+
+	// find c_peering to send to // TODO(r) this functionallity will be soon
+	// doubled with the route search in m_routing_manager below, remove it then
+	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
