@@ -134,6 +134,97 @@ TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xi
 generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, maxni-1 )
 // generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -maxni )
 
+TEST(xint, some_use) {
+	xint a("0xFFFFFFFFFFFFFFFF");
+	a--;
+	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFE"));
+	a--;
+	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFD"));
+	a++;
+	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFE"));
+	a++;
+	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );
+	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+
+	a = xint("0x8888888888888888");
+	a/=2;
+	EXPECT_EQ(a , xint("0x4444444444444444"));
+	a/=2;
+	EXPECT_EQ(a , xint("0x2222222222222222"));
+}
+
+TEST(xint, range_u_incr) {
+	uxint a("0xFFFFFFFFFFFFFFFE");
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+}
+TEST(xint, range_u_decr) {
+	uxint a("0x0000000000000001");
+	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , xint("0x0000000000000000"));
+	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , xint("0x0000000000000000"));
+	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , xint("0x0000000000000000"));
+}
+
+TEST(xint, range_s_incr) {
+	xint a("0xFFFFFFFFFFFFFFFE");
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+}
+TEST(xint, range_s_decr) {
+	xint b("0xFFFFFFFFFFFFFFFE");
+	xint a(0); a -= b;
+	EXPECT_NO_THROW( { a--; } );
+	EXPECT_THROW( { a--; } , std::runtime_error );
+	EXPECT_THROW( { a--; } , std::runtime_error );
+	EXPECT_NO_THROW( { a += b; } );
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0x0000000000000000"));
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0x0000000000000001"));
+	EXPECT_NO_THROW( { a+=b; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+}
+
+TEST(xint, range_u_to_sizet) {
+	size_t s1 = 0xFFFFFFFFFFFFFFFF - 10, s2=8, s3=2, s4=1;
+	vector<int> tab10(10);
+	vector<int> tabBig(10*1000000);
+	ASSERT_EQ(tab10.size(),10u);
+	size_t sm = 0xFFFFFFFFFFFFFFFF;
+	uxint a = s1;
+	xint as = s1;
+	UNUSED(a);
+	UNUSED(as);
+	EXPECT_THROW( { uxint x = uxint(s1)+uxint(s2)+uxint(s3)+uxint(s4); UNUSED(x); } , std::runtime_error );
+	{               uxint x = uxint(s1)+uxint(s2)+uxint(s3);  EXPECT_EQ(x,sm); }
+	EXPECT_THROW( { uxint x = uxint(s1)+uxint(tab10.size())+uxint(s4); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { uxint x = uxint(s1)+uxint(tab10.size())+1-1+1; UNUSED(x); } , std::runtime_error );
+	{               uxint x = uxint(s1)+uxint(tab10.size());  EXPECT_EQ(x,sm); }
+
+	EXPECT_THROW( { uxint x = uxint(tabBig.size()) * uxint(tabBig.size()) * uxint(tabBig.size()); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { uxint x = xsize(tabBig) * xsize(tabBig) * xsize(tabBig); UNUSED(x); } , std::runtime_error );
+}
+
+
+TEST(xint, range_b_to_sizet) {
+	size_t s1 = 0xFFFFFFFFFFFFFFFF - 10, s2=8, s3=2, s4=1;
+	vector<int> tab10(10);
+	vector<int> tabBig(10*1000000);
+	ASSERT_EQ(tab10.size(),10u);
+	size_t sm = 0xFFFFFFFFFFFFFFFF;
+	uxbigint points = s1, value=5000;
+	points *= value;
+	EXPECT_THROW( { uxint points_size( points ); size_t s( points_size ); UNUSED(s); }  , std::runtime_error );
+	              { uxint points_size( points/value ); size_t s( points_size ); EXPECT_EQ(s,s1); }
+
+	EXPECT_THROW( { size_t s( points ); UNUSED(s); }  , std::runtime_error );
+	              { size_t s( points/value ); UNUSED(s); }
+
+	EXPECT_THROW( { size_t s( xsize(tabBig)*xsize(tabBig)*xsize(tabBig) ); UNUSED(s); }  , std::runtime_error );
+	              { size_t s( xsize(tabBig)*xsize(tabBig) ); UNUSED(s); }
+}
+
+
 
 
 #undef maxni
