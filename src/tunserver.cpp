@@ -100,8 +100,6 @@ const char * g_demoname_default = "route_dij";
 #include <netinet/udp.h>		//Provides declarations for udp header
 #include <netinet/tcp.h>		//Provides declarations for tcp header
 #include <netinet/ip.h>			//Provides declarations for ip header
-// #include <net/if_ether.h> // peer over eth later?
-// #include <net/if_media.h> // ?
 #include <linux/if_tun.h>
 
 // ------------------------------------------------------------------
@@ -627,7 +625,10 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	// --- choose next hop in peering ---
 
 	// try direct peers:
-	auto peer_it = m_peer.find(next_hip); // find c_peering to send to // TODO(r) this functionallity will be soon doubled with the route search in m_routing_manager below, remove it then
+
+	// find c_peering to send to // TODO(r) this functionallity will be soon
+	// doubled with the route search in m_routing_manager below, remove it then
+	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
