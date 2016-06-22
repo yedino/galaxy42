@@ -63,7 +63,7 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define _UNUSED(x) (void)(x)
 
 #define _NOTREADY() do { _erro("This code is not implemented yet! in "<<__FUNCTION__);\
-	throw std::runtime_error("Code not implemented yet! In: " + string(__FUNCTION__)); } while(0)
+	throw std::runtime_error("Code not implemented yet! In: " + std::string(__FUNCTION__)); } while(0)
 
 #define _NOTREADY_warn() do { _warn("This code is not implemented yet! in "<<__FUNCTION__);\
 	} while(0)

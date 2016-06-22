@@ -1,3 +1,4 @@
+// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "c_tun_device.hpp"
 #include <cassert>
 
@@ -8,6 +9,7 @@
 #include <linux/if_tun.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include "c_tnetdbg.hpp"
 #include "cpputils.hpp"
 #include "cjdns-code/NetPlatform.h"
 c_tun_device_linux::c_tun_device_linux()
@@ -30,8 +32,18 @@ void c_tun_device_linux::set_ipv6_address
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
-	// TODO
-	assert(false);
+	_NOTREADY();
+}
+
+bool c_tun_device_linux::incomming_message_form_tun() {
+	fd_set fd_set_data;
+	FD_ZERO(&fd_set_data);
+	FD_SET(m_tun_fd, &fd_set_data);
+	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
+	auto select_result = select( m_tun_fd+1, &fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
+	_assert(select_result >= 0);
+	if (FD_ISSET(m_tun_fd, &fd_set_data)) return true;
+	else return false;
 }
 
 #endif
