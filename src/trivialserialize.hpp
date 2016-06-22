@@ -443,7 +443,8 @@ template <int S, typename T> T parser::pop_integer_u() {
 	// TODO test if type T is not overflowing
 
 	T value=0;
-	uint64_t multiplier = 1LLU << ((S-1)*8); // TODO(r) style: LLU vs uint64_t
+	uint64_t multiplier = uint64_t(1) << ((S-1)*8);
+
 	for (auto i=0; i<S; ++i) {
 		unsigned int this_byte = pop_byte_u();
 		// cerr << "Reading for S="<<S<<" this_byte = " << this_byte << " mul=" << multiplier << endl;
