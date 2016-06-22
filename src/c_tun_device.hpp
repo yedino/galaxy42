@@ -15,7 +15,9 @@ class c_tun_device {
 		virtual void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) = 0;
 		virtual void set_mtu(uint32_t mtu) = 0;
-		virtual bool incomming_message_form_tun() = 0;
+		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
+		virtual void read_from_tun(void *buf, size_t count) = 0;
+		virtual void write_to_tun(void *buf, size_t count) = 0;
 };
 
 #ifdef __linux__
@@ -25,8 +27,10 @@ class c_tun_device_linux final : public c_tun_device {
 		c_tun_device_linux();
 		void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
-		void set_mtu(uint32_t mtu);
-		bool incomming_message_form_tun();
+		void set_mtu(uint32_t mtu) override;
+		bool incomming_message_form_tun() override;
+		void read_from_tun(void *buf, size_t count) override;
+		void write_to_tun(void *buf, size_t count) override;
 
 	private:
 		int m_tun_fd;
