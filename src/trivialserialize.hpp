@@ -13,7 +13,6 @@
 // TODO constexpr?
 #define SANE_MAX_SIZE_FOR_STRING 50000000
 
-using namespace std;
 
 /**
  * @defgroup trivialserialize Trivial Serialize
