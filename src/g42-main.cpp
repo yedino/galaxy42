@@ -1,8 +1,16 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
-
 #include "tunserver.hpp"
 
+#include "glue_sodiumpp_crypto.hpp"
+#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+
+#include "ui.hpp"
+#include "trivialserialize.hpp"
+#include "filestorage.hpp"
+
+#include "rpc/rpc.hpp"
+#include "galaxy_debug.hpp"
 
 namespace developer_tests {
 
