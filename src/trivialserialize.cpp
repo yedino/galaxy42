@@ -174,12 +174,11 @@ void parser::skip_varstring() {
 
 vector<string> parser::pop_vector_string() {
 	vector<string> ret;
-	auto size = pop_integer_uvarint(); // TODO const
-	// assert( size <= (1LLU << 64LLU) ); // TODO
-	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_varstring() );
+	const auto size = pop_integer_uvarint();
+	assert(size <= std::numeric_limits<uint64_t>::max());
+	for (auto i = decltype(size){0}; i<size; ++i) ret.push_back( pop_varstring() );
 	return ret;
 }
-
 
 bool parser::is_end() const {
 	return m_data_now >= m_data_end ;
