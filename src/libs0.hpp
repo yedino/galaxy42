@@ -52,6 +52,7 @@ using std::unordered_set;
 using std::ostream;
 using std::ifstream;
 using std::istringstream;
+using std::ostringstream;
 
 using std::endl;
 

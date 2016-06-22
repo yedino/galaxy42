@@ -154,13 +154,13 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	string ret="default";
 	try {
 		ifstream democonf_file(democonf_fn);
-		if (! democonf_file.good()) { cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << endl; return ret; }
+		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
 		string line="";
 		getline(democonf_file,line);
-		if (! democonf_file.good()) { cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << endl; return ret; }
+		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
 		ret = line.substr( string("demo=").size() );
 	} catch(...) { }
-	cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << endl;
+	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
 	return ret;
 }
 
@@ -609,10 +609,10 @@ int main(int argc, char **argv) {
 					have_any_keys = keys.size() > 0;
 				} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
 				if (have_any_keys) {
-					cout << "You seem to have some ID keys, but I can not load your main key." << endl;
-					cout << "Please run the program again and use commands to recover a key, or to make a new key instead" << endl;
+					std::cout << "You seem to have some ID keys, but I can not load your main key." << std::endl;
+					std::cout << "Please run the program again and use commands to recover a key, or to make a new key instead" << std::endl;
 				} else {
-					cout << "You have no ID keys yet - so will create new keys for you." << endl;
+					std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
 					// --gen-key --new-key "myself" --key-type "ed25519:x3"
 					const string IDI_name = "IDI";
 					vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
@@ -650,7 +650,7 @@ int main(int argc, char **argv) {
 
 			auto peers_count = myserver.get_my_stats_peers_known_count();
 			if (peers_count) {
-				ui::action_info_ok("You will try to connect to up to " + to_string(peers_count) + " peer(s)");
+				ui::action_info_ok("You will try to connect to up to " + std::to_string(peers_count) + " peer(s)");
 			} else {
 				ostringstream oss; oss << "./tunserver.elf --peer YOURIP:9042-" << myserver.get_my_ipv6_nice();
 				string help_cmd1 = oss.str();

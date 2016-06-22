@@ -70,7 +70,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
 	if (! ( this->size() == data.size() ) ) {
 		ostringstream oss; oss << "Trying to set hip address from binary data " << to_debug_b(data);
-		throw runtime_error(oss.str());
+		throw std::runtime_error(oss.str());
 	}
 	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.at(i);
 }
