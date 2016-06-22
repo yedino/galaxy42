@@ -348,7 +348,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
 	}
 	catch (const std::exception &e) {
-		_erro("Adding peer from simplereference failed (exception): " << e.what()); // TODO throw?
+		_erro("Adding peer from simplereference failed (exception): " << e.what());
 		throw std::invalid_argument("Bad peer format");
 	}
 }
