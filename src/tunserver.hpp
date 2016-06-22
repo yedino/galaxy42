@@ -58,9 +58,6 @@
 // #include <net/if_ether.h> // peer over eth later?
 // #include <net/if_media.h> // ?
 
-#include "cjdns-code/NetPlatform.h" // from cjdns
-
-
 // #include <net/if_tap.h>
 #include <linux/if_tun.h>
 #include "c_json_load.hpp"
