@@ -446,7 +446,6 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	}
 }
 
-
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
@@ -462,11 +461,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 		_dbg2("Tunnel already is created for HIP="<<hip);
 	}
 
-}
-
-
-void c_tunserver::help_usage() const {
-	// TODO(r) remove, using boost options
 }
 
 void c_tunserver::prepare_socket() {
