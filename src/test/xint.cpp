@@ -5,6 +5,9 @@
 #include <cmath>
 #include <type_traits>
 
+typedef long double t_correct1;
+
+
 TEST(xint,normal_use_init) {
 	xint a; a=0;
 	a=1;
@@ -44,6 +47,8 @@ TEST(xint,normal_use_compare) {
 	EXPECT_EQ(c, c);
 
 	EXPECT_TRUE( (a==a) );
+	EXPECT_TRUE( (b==b) );
+	EXPECT_TRUE( (c==c) );
 
 	EXPECT_TRUE( (a<b) );
 	EXPECT_TRUE(!(b<a) );
@@ -75,12 +80,73 @@ TEST(xint,normal_use_dec) {
 	EXPECT_EQ(a--,-2); EXPECT_EQ(a,-3);
 }
 
-TEST(xint,normal_use_op4set) {
+TEST(xint,normal_use_op4assign) {
+	xint a=100, b=30, c=8;
+	{ xint d(a+b); EXPECT_EQ(d, 130); }
+	{ xint d(a+b); EXPECT_EQ(d, xint(130)); }
+	{ xint d(a+b); EXPECT_EQ(d, (a+b)); }
+	{ xint d(a+b+c); EXPECT_EQ(d, 138); }
+
+	{ xint d(a-b); EXPECT_EQ(d, 70); }
+	{ xint d(a-b); EXPECT_EQ(d, xint(70)); }
+	{ xint d(a-b); EXPECT_EQ(d, (a-b)); }
+
+	{ xint d(a*b); EXPECT_EQ(d, 3000); }
+	{ xint d(a*b); EXPECT_EQ(d, xint(3000)); }
+	{ xint d(a*b); EXPECT_EQ(d, (a*b)); }
+
+	{ xint d(a/b); EXPECT_EQ(d, 3); }
+	{ xint d(a/b); EXPECT_EQ(d, xint(3)); }
+	{ xint d(a/b); EXPECT_EQ(d, (a/b)); }
+}
+
+TEST(xint,normal_use_belowzero) {
+	xint a=100, b=30;
+	{ xint d(b-a); EXPECT_EQ(d, -70); }
+	{ xint d(-a + b); EXPECT_EQ(d, -70); }
+	{ xint d(-a + -b); EXPECT_EQ(d, -130); }
+	{ xint d(-a + -5); EXPECT_EQ(d, -105); }
+}
+
+
+TEST(xint,can_assign) {
 	xint a;
-	a=0; EXPECT_EQ(a,0);
-	a--; EXPECT_EQ(a,-1);
-	a--; EXPECT_EQ(a,-2);
-	EXPECT_EQ(a--,-2); EXPECT_EQ(a,-3);
+	EXPECT_TRUE( overflow_can_assign(a, 0LL) );
+	EXPECT_TRUE( overflow_can_assign(a, 1LL) );
+	EXPECT_TRUE( overflow_can_assign(a, 100LL) );
+	EXPECT_TRUE( overflow_can_assign(a, 10000LL) );
+	EXPECT_TRUE( overflow_can_assign(a, 0xFFFFLL) );
+	EXPECT_TRUE( overflow_can_assign(a, 0xFFFFFFFFLL) );
+	// EXPECT_FALSE( overflow_can_assign(a, t_correct_int(0xFFFFFFFFLL)+1) ); // TODO
+	UNUSED(a);
+}
+
+TEST(xint,normal_use_op4assign_loop) {
+	vector<int64_t> tab_int({0,1,2,3,5,10,20,30,40,42,50,51,52,90,100,127,128, 200, 256, 512, 666, 777, 1024,
+		1984, 9001, 0xFFFF, 0xDEADBEEF, 0xFFFFFFFF});
+	for (int i=0; i<100; ++i) tab_int.push_back(i);
+
+	vector<t_correct_int> tab;
+	for (auto v:tab_int) { tab.push_back(v); tab.push_back(-v); }
+
+	{
+		std::sort(tab.begin(), tab.end());
+		auto last = std::unique(tab.begin(), tab.end());
+		tab.erase(last, tab.end());
+	}
+
+	for (size_t i=0; i<tab_int.size(); ++i) {
+		for (size_t j=0; j<tab_int.size(); ++j) {
+			t_correct_int a=tab.at(i);
+			t_correct_int b=tab.at(j);
+
+			t_correct_int c_ok = a+b;
+			xint c;
+			if (overflow_can_assign(c,c_ok)) { // TODO
+			}
+		}
+	}
+
 }
 
 #if 0
@@ -89,12 +155,6 @@ namespace test_xint {
 namespace detail {
 
 
-typedef long double t_correct1;
-
-typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<1024, 65536,
-		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
-t_correct_int;
 
 /*
 template<typename T_INT,
