@@ -494,6 +494,7 @@ void c_tunserver::prepare_socket() {
 
 	//ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
 
+	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
 	{
 		std::array<uint8_t, 16> address;
 		assert(m_my_hip.size() == 16 && "m_my_hip != 16");
@@ -771,11 +772,9 @@ void c_tunserver::event_loop() {
 		// ^--- or not fully checked. need scoring system anyway
 
 		try { // ---
-
-		//if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
+		//if (FD_ISSET(m_tun_device.m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
 		if (m_tun_device.incomming_message_form_tun()) {
 			anything_happened=true;
-
 			//auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
 			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
 			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
@@ -951,7 +950,7 @@ void c_tunserver::event_loop() {
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
-						auto write_bytes = m_tun_device.write_to_tun(tundata.data(), tundata.size());
+						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
 					} // we have CT
 
 					if (!was_anything_sent_to_TUN) {
