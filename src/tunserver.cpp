@@ -101,6 +101,26 @@ const char * g_demoname_default = "route_dij";
 #include <netinet/tcp.h>		//Provides declarations for tcp header
 #include <netinet/ip.h>			//Provides declarations for ip header
 #include <linux/if_tun.h>
+#include "c_json_load.hpp"
+#include "c_ip46_addr.hpp"
+#include "c_peering.hpp"
+#include "generate_crypto.hpp"
+
+
+#include "crypto/crypto.hpp" // for tests
+#include "rpc/rpc.hpp"
+
+#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+
+
+#include "trivialserialize.hpp"
+#include "galaxy_debug.hpp"
+
+#include "glue_sodiumpp_crypto.hpp" // e.g. show_nice_nonce()
+
+#include "ui.hpp"
+
+#include "tunserver.hpp"
 
 // ------------------------------------------------------------------
 
@@ -354,7 +374,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 }
 
 c_tunserver::c_tunserver()
- : m_my_name("unnamed-tunserver"), m_tun_fd(-1), m_tun_header_offset_ipv6(0), m_sock_udp(-1) //, m_rpc_server(42000)
+ : m_my_name("unnamed-tunserver"), m_tun_header_offset_ipv6(0), m_sock_udp(-1) //, m_rpc_server(42000)
 {
 //	m_rpc_server.register_function(
 //		"add_limit_points",
@@ -446,6 +466,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	}
 }
 
+
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
@@ -463,35 +484,25 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 
 }
 
+
+void c_tunserver::help_usage() const {
+	// TODO(r) remove, using boost options
+}
+
 void c_tunserver::prepare_socket() {
-	m_tun_fd = open("/dev/net/tun", O_RDWR);
-	assert(! (m_tun_fd<0) );
 
-	as_zerofill< ifreq > ifr; // the if request
-	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
-	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 
-	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, (void *)&ifr);
-	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
-	if (errcode_ioctl < 0) {
-		ui::action_error_exit("Can not use the TUN device. This means usually that the program does not have enough rights. "
-		"If you run this program as not-root and you rely on the CAP capabilities flag, then make sure "
-		"that the program is executed in directory that is NOT mounted with 'nosuid' or other protection flag like that "
-		"which e.g. is a problem on some Ubuntu Linux versions. Perhaps copy the program (and e.g. build it again there) "
-		"to /tmp/ or other directory");
-	}
-
-	ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
+	//ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
 
 	{
-		uint8_t address[16];
+		std::array<uint8_t, 16> address;
 		assert(m_my_hip.size() == 16 && "m_my_hip != 16");
 		for (int i=0; i<16; ++i) address[i] = m_my_hip[i];
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
 		assert(address[1] == 0x42);
-		NetPlatform_addAddress(ifr.ifr_name, address, 16, Sockaddr_AF_INET6);
+		m_tun_device.set_ipv6_address(address, 16);
 	}
 
 	// create listening socket
@@ -522,9 +533,8 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_sock_udp, &m_fd_set_data);
-	FD_SET(m_tun_fd, &m_fd_set_data);
 
-	auto fd_max = std::max(m_tun_fd, m_sock_udp);
+	auto fd_max = m_sock_udp; // = std::max(m_tun_fd, m_sock_udp);
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 
@@ -762,10 +772,12 @@ void c_tunserver::event_loop() {
 
 		try { // ---
 
-		if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
+		//if (FD_ISSET(m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
+		if (m_tun_device.incomming_message_form_tun()) {
 			anything_happened=true;
 
-			auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
+			//auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
+			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
 			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
@@ -938,8 +950,8 @@ void c_tunserver::event_loop() {
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-						ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
-						if (write_bytes == -1) throw std::runtime_error("Fail to send UDP to TUN");
+						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
+						auto write_bytes = m_tun_device.write_to_tun(tundata.data(), tundata.size());
 					} // we have CT
 
 					if (!was_anything_sent_to_TUN) {
