@@ -60,11 +60,14 @@ class safer_int {
 		}
 
 		template<typename U> operator safer_int<U> () const { safer_int<U> ret; ret.xi=xi; return ret; } // TODO check range
-		operator const char* () const { return ""; } // return xi.operator const char*(); } // TODO wtf?
+		// operator const char* () const { return xi; } // TODO wtf?
 		template<typename U> operator U () const { U ret; ret=xi; return ret; } // TODO check range, numeric_cast?
 
-		template<typename U> bool operator==(const U & obj) const { return xi==obj; }
-		template<typename U> bool operator!=(const U & obj) const { return xi!=obj; }
+		template<typename U> bool operator==(const safer_int<U> & obj) const { return xi==obj.xi; }
+		template<typename U> bool operator!=(const safer_int<U> & obj) const { return xi!=obj.xi; }
+		template<typename U> bool operator==(const U & obj) const { return xi==obj; } // TODO check!
+		template<typename U> bool operator!=(const U & obj) const { return xi!=obj; } // TODO check!
+		// TODO ^ enable if numeric
 
 		template<typename U> bool operator>(safer_int<U> obj) { return xi>obj.xi; }
 		template<typename U> bool operator>=(safer_int<U> obj) { return xi>=obj.xi; }
@@ -93,6 +96,7 @@ class safer_int {
 		template<typename U> safer_int<T> operator-(U obj) { auto tmp=*this; tmp.xi-=obj; return tmp; }
 		template<typename U> safer_int<T> operator*(U obj) { auto tmp=*this; tmp.xi*=obj; return tmp; }
 		template<typename U> safer_int<T> operator/(U obj) { auto tmp=*this; tmp.xi/=obj; return tmp; }
+		// TODO check also for comparsion with buildint T, because it could be that build-in T is wider then some cpp_int
 
 		void print(std::ostream& ostr) const { ostr<<xi; }
 };

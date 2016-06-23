@@ -40,6 +40,9 @@ TEST(xint,normal_use_compare) {
 	EXPECT_NE(c, a);
 	EXPECT_NE(c, b);
 	EXPECT_EQ(c, a+b);
+	EXPECT_EQ(a, a);
+	EXPECT_EQ(c, c);
+
 	EXPECT_TRUE( (a==a) );
 
 	EXPECT_TRUE( (a<b) );
