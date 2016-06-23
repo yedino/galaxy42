@@ -21,7 +21,12 @@ cp -v -r depends/ntru-crypto/reference-code/C/Encrypt/include/    build_extra/nt
 
 cp -v -r depends/ntru-crypto/reference-code/C/Encrypt/.libs/    build_extra/ntru/
 
-echo "Generating wisdom files ..."
+
+if [[ 1 ]] ;
+then
+	echo "Skipping step: Generating wisdom files (for e.g. NTru) - it is DISABLED in project configuration"
+else
+echo "Generating wisdom files (for e.g. NTru) ..."
 cp -r depends/ntru-crypto/reference-code/C/Sign/PASS/data .
 cp depends/ntru-crypto/reference-code/C/Sign/PASS/bin/wiseup.sh build_extra/
 cd build_extra
@@ -30,6 +35,7 @@ do
 	./wiseup.sh $param
 done
 cd ..
+fi
 
 echo "Look at what we prepared:"
 
