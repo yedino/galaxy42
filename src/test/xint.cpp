@@ -5,6 +5,82 @@
 #include <cmath>
 #include <type_traits>
 
+TEST(xint,normal_use_init) {
+	xint a; a=0;
+	a=1;
+	a=100;
+	UNUSED(a);
+}
+
+TEST(xint,normal_use_ostring) {
+	xint a; a=123;
+	std::ostringstream oss; oss<<a;
+	EXPECT_EQ( oss.str() , "123" );
+}
+
+
+TEST(xint,normal_use_assign) {
+	xint a; a=0;
+	a=1; EXPECT_EQ(a,1);
+	a=100; EXPECT_EQ(a,100);
+	a=-1; EXPECT_EQ(a,-1);
+	a=-100; EXPECT_EQ(a,-100);
+}
+
+TEST(xint,normal_use_assign2) {
+	xint a=42, b=100, c(a+b);
+	EXPECT_EQ(c, 142);
+	EXPECT_EQ(c, xint(142));
+	EXPECT_EQ(c, c);
+}
+
+TEST(xint,normal_use_compare) {
+	xint a=42, b=100, c(a+b);
+	EXPECT_EQ(c, 142);
+	EXPECT_NE(c, a);
+	EXPECT_NE(c, b);
+	EXPECT_EQ(c, a+b);
+	EXPECT_TRUE( (a==a) );
+
+	EXPECT_TRUE( (a<b) );
+	EXPECT_TRUE(!(b<a) );
+	EXPECT_TRUE( (a<=b) );
+	EXPECT_TRUE(!(b<=a) );
+	EXPECT_TRUE( (a<=a) );
+
+	EXPECT_TRUE( (b>a) );
+	EXPECT_TRUE(!(a>b) );
+	EXPECT_TRUE( (b>=a) );
+	EXPECT_TRUE(!(a>=b) );
+	EXPECT_TRUE( (b>=b) );
+}
+
+
+TEST(xint,normal_use_inc) {
+	xint a;
+	a=0; EXPECT_EQ(a,0);
+	a++; EXPECT_EQ(a,1);
+	a++; EXPECT_EQ(a,2);
+	EXPECT_EQ(a++,2); EXPECT_EQ(a,3);
+}
+
+TEST(xint,normal_use_dec) {
+	xint a;
+	a=0; EXPECT_EQ(a,0);
+	a--; EXPECT_EQ(a,-1);
+	a--; EXPECT_EQ(a,-2);
+	EXPECT_EQ(a--,-2); EXPECT_EQ(a,-3);
+}
+
+TEST(xint,normal_use_op4set) {
+	xint a;
+	a=0; EXPECT_EQ(a,0);
+	a--; EXPECT_EQ(a,-1);
+	a--; EXPECT_EQ(a,-2);
+	EXPECT_EQ(a--,-2); EXPECT_EQ(a,-3);
+}
+
+#if 0
 
 namespace test_xint {
 namespace detail {
@@ -253,22 +329,22 @@ TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }*/
 
-TEST(xxint, safe_create_xint) {
+TEST(xint, safe_create_xint) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
 		auto bonus(a*b*c); UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
-TEST(xxint, safe_create_xint2) { // obviously the same, other syntax as example
+TEST(xint, safe_create_xint2) { // obviously the same, other syntax as example
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
 		auto bonus = a*b*c; UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
-TEST(xxint, safe_create_xint_assign) {
+TEST(xint, safe_create_xint_assign) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
 		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
-
+#endif
 
 
 #undef maxni
