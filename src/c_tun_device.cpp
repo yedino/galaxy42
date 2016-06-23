@@ -39,7 +39,7 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 	fd_set fd_set_data;
 	FD_ZERO(&fd_set_data);
 	FD_SET(m_tun_fd, &fd_set_data);
-	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
+	timeval timeout { 0 , 500 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
 	auto select_result = select( m_tun_fd+1, &fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
 	_assert(select_result >= 0);
 	if (FD_ISSET(m_tun_fd, &fd_set_data)) return true;
