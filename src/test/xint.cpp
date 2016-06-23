@@ -202,16 +202,29 @@ TEST(xint, range_u_to_sizet) {
 	{               uxint x = uxint(s1)+uxint(tab10.size());  EXPECT_EQ(x,sm); }
 
 	EXPECT_THROW( { uxint x = uxint(tabBig.size()) * uxint(tabBig.size()) * uxint(tabBig.size()); UNUSED(x); } , std::runtime_error );
+	//                              tabBig.size()  *       tabBig.size()
 	EXPECT_THROW( { uxint x = xsize(tabBig) * xsize(tabBig) * xsize(tabBig); UNUSED(x); } , std::runtime_error );
+
+	long int time_dell = 100000000000;
+	EXPECT_THROW( { uxint x = xsize(tabBig) * uxint(1000000) * uxint(time_dell); UNUSED(x); } , std::runtime_error );
 }
+
+void someint(long long int x) {
+	_mark("someint got: " << x);
+}
+
+template <typename T>
+uxint make_uxint(T value) {	return numeric_cast<uint64_t>(value); }
+template <typename T>
+uxint make_xint(T value) {	return numeric_cast<int64_t>(value); }
 
 
 TEST(xint, range_b_to_sizet) {
-	size_t s1 = 0xFFFFFFFFFFFFFFFF - 10, s2=8, s3=2, s4=1;
+	size_t s1 = 0xFFFFFFFFFFFFFFFF - 10;//, s2=8, s3=2, s4=1;
 	vector<int> tab10(10);
 	vector<int> tabBig(10*1000000);
 	ASSERT_EQ(tab10.size(),10u);
-	size_t sm = 0xFFFFFFFFFFFFFFFF;
+	// size_t sm = 0xFFFFFFFFFFFFFFFF;
 	uxbigint points = s1, value=5000;
 	points *= value;
 	EXPECT_THROW( { uxint points_size( points ); size_t s( points_size ); UNUSED(s); }  , std::runtime_error );
@@ -224,6 +237,37 @@ TEST(xint, range_b_to_sizet) {
 	              { size_t s( xsize(tabBig)*xsize(tabBig) ); UNUSED(s); }
 }
 
+TEST(xint, safe_create_float1) {
+	auto func = []() { float a=10000, b=10000000000, c=100000000;
+		auto bonus(a*b*c); UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+}
+TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
+	auto func = []() { float a=10000, b=10000000000, c=100000000;
+		auto bonus = a*b*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+}
+/*TEST(xint, safe_create_float_assign) {
+	auto func = []() { float a=10000, b=10000000000, c=100000000;
+		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+}*/
+
+TEST(xxint, safe_create_xint) {
+	auto func = []() { xint a=10000, b=10000000000, c=100000000;
+		auto bonus(a*b*c); UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+}
+TEST(xxint, safe_create_xint2) { // obviously the same, other syntax as example
+	auto func = []() { xint a=10000, b=10000000000, c=100000000;
+		auto bonus = a*b*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+}
+TEST(xxint, safe_create_xint_assign) {
+	auto func = []() { xint a=10000, b=10000000000, c=100000000;
+		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+}
 
 
 
