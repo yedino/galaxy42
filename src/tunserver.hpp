@@ -245,7 +245,10 @@ class c_tunserver : public c_galaxy_node {
 	private:
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
-		c_tun_device_linux m_tun_device; // TODO make template wrapper (template parameter must be platform depend)
+		#ifdef __linux__
+		c_tun_device_linux m_tun_device;
+		#else
+		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
