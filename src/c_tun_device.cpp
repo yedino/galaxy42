@@ -9,7 +9,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "c_tnetdbg.hpp"
-#include "cjdns-code/NetPlatform.h"
+#include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
 c_tun_device_linux::c_tun_device_linux()
 :
