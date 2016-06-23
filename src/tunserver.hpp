@@ -2,10 +2,43 @@
 
 #pragma once
 
+
+// TODO reduce headers:
+
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <algorithm>
+#include <streambuf>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include <boost/program_options.hpp>
 
 #include "protocol.hpp"
 #include "c_peering.hpp"
+#include "generate_crypto.hpp"
+
+
+#include "crypto/crypto.hpp" // for tests
+#include "rpc/rpc.hpp"
+
+#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
+
+
+#include "trivialserialize.hpp"
+#include "galaxy_debug.hpp"
+
+#include "glue_sodiumpp_crypto.hpp" // e.g. show_nice_nonce()
+
+#include "ui.hpp"
+
+#include "tunserver.hpp"
+#include "c_tun_device.hpp"
 
 // ------------------------------------------------------------------
 
@@ -172,6 +205,9 @@ class c_tunserver : public c_galaxy_node {
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
 
+
+		void help_usage() const; ///< show help about usage of the program
+
 		typedef enum {
 			e_route_method_from_me=1, ///< I am the oryginal sender (try hard to send it)
 			e_route_method_if_direct_peer=2, ///< Send data only if if I know the direct peer (e.g. I just route it for someone else - in star protocol the center node)
@@ -208,7 +244,8 @@ class c_tunserver : public c_galaxy_node {
 
 	private:
 		string m_my_name; ///< a nice name, see set_my_name
-		int m_tun_fd; ///< fd of TUN file
+		//int m_tun_fd; ///< fd of TUN file
+		c_tun_device_linux m_tun_device; // TODO make template wrapper (template parameter must be platform depend)
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)

@@ -1,18 +1,16 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "c_tun_device.hpp"
-#include <cassert>
 
 #ifdef __linux__
-//#include <sys/types.h>
-//#include <sys/stat.h>
+#include <cassert>
 #include <fcntl.h>
 #include <linux/if_tun.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "c_tnetdbg.hpp"
-#include "cpputils.hpp"
 #include "cjdns-code/NetPlatform.h"
+#include "cpputils.hpp"
 c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(open("/dev/net/tun", O_RDWR))
@@ -48,12 +46,18 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 	else return false;
 }
 
-void c_tun_device_linux::read_from_tun(void *buf, size_t count) {
-	read(m_tun_fd, buf, count); // <-- read data from TUN
+size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO throw if error
+	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
+	if (ret == -1) throw std::runtime_error("Read from tun error");
+	assert (ret >= 0);
+	return static_cast<size_t>(ret);
 }
 
-void c_tun_device_linux::write_to_tun(void *buf, size_t count) {
-	write(m_tun_fd, buf, count);
+size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO throw if error
+	auto ret = write(m_tun_fd, buf, count);
+	if (ret == -1) throw std::runtime_error("Write to tun error");
+	assert (ret >= 0);
+	return static_cast<size_t>(ret);
 }
 
 #endif // __linux__
