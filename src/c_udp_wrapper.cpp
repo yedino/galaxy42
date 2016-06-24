@@ -23,4 +23,29 @@ void c_udp_wrapper_linux::send_data(const c_ip46_addr &dst_address, const void *
 	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
 	sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
 }
+
+void c_udp_wrapper_linux::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
+	fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
+	FD_ZERO(& m_fd_set_data);
+	FD_SET(m_socket, &m_fd_set_data);
+	_assert(m_socket < std::numeric_limits<decltype(m_socket)>::max() -1); // to be more safe, <= would be enough too
+	_assert(m_socket >= 1);
+	timeval timeout { 0 , 500 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
+	// TODO global select (for udp socket and tun)
+	auto select_result = select( m_socket+1, &m_fd_set_data, nullptr, nullptr, &timeout); // <--- blocks
+	FD_ISSET(m_socket, &m_fd_set_data);
+	sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
+	socklen_t from_addr_raw_size; // ^ size of it
+	auto size_read = recvfrom(m_socket, data_buf, data_buf_size, 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
+	if (from_addr_raw_size == sizeof(sockaddr_in6)) { // the message arrive from IP pasted into sockaddr_in6 format
+		_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
+		// trivial
+	}
+	else if (from_addr_raw_size == sizeof(sockaddr_in)) { // the message arrive from IP pasted into sockaddr_in (ipv4) format
+		sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
+		from_address.set_ip4(addr);
+	} else {
+		throw std::runtime_error("Data arrived from unknown socket address type");
+	}
+}
 #endif // __linux__
