@@ -16,6 +16,7 @@ class c_udp_wrapper_linux final : public c_udp_wrapper {
 	public:
 		c_udp_wrapper_linux(const int listen_port);
 		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
+		void receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
 	private:
 		int m_socket;
 };
