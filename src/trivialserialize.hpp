@@ -228,16 +228,15 @@ template <> std::vector<std::string> obj_deserialize<std::vector<string>>(trivia
 
 /// @} //  trivialserialize_serializefreefunctions
 
-
 template <typename T> void generator::push_object(const T & data) {
 	obj_serialize(data, *this); // this should use the specialized user-provided function
 }
 
 template <typename T> void generator::push_vector_object(const vector<T> & data) {
-	auto size = data.size(); // TODO const
-	//	assert( size <= ) ); // TODO
+	const auto size = data.size();
+	assert(size <= std::numeric_limits<uint64_t>::max());
 	push_integer_uvarint( data.size() );
-	for (decltype(size) i = 0; i<size; ++i) push_object(data.at(i));
+	for (typename std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) push_object(data.at(i));
 }
 
 template <typename TKey, typename TVal>
