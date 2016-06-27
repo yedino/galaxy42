@@ -447,7 +447,7 @@ try {
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	UNUSED(peer_ref);
-	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
@@ -457,7 +457,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 {
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
-		auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 		peering_ptr->set_pubkey(std::move(pubkey));
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	} else { // update existing

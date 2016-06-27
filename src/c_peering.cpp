@@ -72,8 +72,9 @@ long c_peering::get_limit_points() {
 
 // ------------------------------------------------------------------
 
-c_peering_udp::c_peering_udp(const t_peering_reference & ref)
+c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper)
 	: c_peering(ref)
+	,m_udp_wrapper(udp_wrapper)
 { }
 
 
@@ -154,12 +155,12 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
 			auto ip_x = m_peering_addr.get_ip4(); // ip of proper type, as local variable
-			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in) );
+			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
 		}
 		break;
 		case c_ip46_addr::t_tag::tag_ipv6 : {
 			auto ip_x = m_peering_addr.get_ip6(); // ip of proper type, as local variable
-			sendto(udp_socket, data, data_size, 0, reinterpret_cast<sockaddr*>( & ip_x ) , sizeof(sockaddr_in6) );
+			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
 		}
 		break;
 		default: {
