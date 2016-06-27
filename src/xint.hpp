@@ -57,6 +57,10 @@ class safer_int : public safer_int_base {
 		{
 		}
 
+	//	explicit safer_int(const char* txt) : xi(txt) { } // TODO check overflow, does result match txt
+
+		// TODO also implement other operators etc to exactly match API of cpp_int
+
 		template<typename U> safer_int(const safer_int<U> & obj)
 			: xi(obj.xi)
 		{
@@ -143,24 +147,18 @@ class numeric_limits<safer_int<T>> {
     static number_type quiet_NaN() { return 0; }
     static number_type signaling_NaN() { return 0; }
     static number_type denorm_min() { return 0; }
+
+    // TODO all the other fields, as in: http://www.boost.org/doc/libs/1_53_0/boost/multiprecision/cpp_int/limits.hpp
+    // from line "class numeric_limits<boost::mul" below the public: secion
 };
 
-/*
-template <typename T>
-inline safer_int<T>
-get_max(const boost::mpl::true_&, const boost::mpl::true_&) {
-	typedef safer_int<T> result_type;
-  static const result_type val = std::numeric_limits<decltype(T::xi)>::max();
-  return val;
-}
-*/
 
 } // std
 
 
 
-// intended for comparsions like   int > xint:
-// #define CONDITION typename std::enable_if<! std::is_base_of<safer_int_base, U>{}>::type* = nullptr >
+// Comparsions like: int > xint:
+
 #define CONDITION typename std::enable_if< std::is_integral<U>{}>::type* = nullptr
 template<typename U, typename T, CONDITION >
 bool operator>(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
@@ -173,35 +171,26 @@ bool operator<(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safe
 
 template<typename U, typename T, CONDITION >
 bool operator<=(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
+// TODO XXX XXX ^--- this is error, on purpose (unit testing)
 #undef CONDITION
 
-// intended for comparsions like boost::number > xint
-// #define CONDITION typename std::enable_if< is_specialization<U,boost::multiprecision::number>{}>::type* = nullptr
-// template<typename U, typename T, CONDITION >
 
-// boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<1024, 65536, 1, 1, void>, 0> >
-// boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<U1, U2, U3, U4, U5>, U6> >
-#define UTYPE boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<U1, U2, U3, U4, U5>, U6> >
-template<typename T,
-	unsigned U1, unsigned U2,
-	boost::multiprecision::cpp_integer_type U3, boost::multiprecision::cpp_int_check_type U4,
-	typename U5,
-	boost::multiprecision::expression_template_option U6>
-bool operator>(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<U1, U2, U3, U4, U5>, U6> obj,
- safer_int<T> safeint) { return !( (safeint.xi < obj) || (safeint.xi==obj) ); }
+// Comparsions like: xint > cpp_int
+#define TEMPLATE \
+template<typename T, \
+	unsigned U1, unsigned U2, \
+	boost::multiprecision::cpp_integer_type U3, boost::multiprecision::cpp_int_check_type U4, \
+	typename U5, boost::multiprecision::expression_template_option U6>
+#define T_OBJECT boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<U1, U2, U3, U4, U5>, U6>
 
-/*
-template<typename U, typename T>
-bool operator>=(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
+TEMPLATE bool operator>(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi < obj) || (safeint.xi==obj) ); }
+TEMPLATE bool operator<(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi > obj) || (safeint.xi==obj) ); }
+TEMPLATE bool operator>=(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi < obj) ); }
+TEMPLATE bool operator<=(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi > obj) ); }
 
-template<typename U, typename T>
-bool operator<(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
+#undef TEMPLATE
+#undef T_OBJECT
 
-template<typename U, typename T>
-bool operator<=(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
-*/
-// #undef CONDITION
-#undef UTYPE
 // output / streams:
 
 template <typename T>
@@ -222,22 +211,12 @@ uxint xsize(const T & obj) {
 	std::cerr << is_specialization< t_correct_int , boost::multiprecision::number >::value << std::endl;
 }*/
 
-template <typename T> bool overflow_impossible_in_assign(T, T) { return true; }
+template <typename T> bool overflow_impossible_in_assign(T, T) { return true; } // same type
 
 template <typename T, typename U>
 bool overflow_impossible_in_assign(T target, U value) {
-
-	//	if (aaa > bbb) return true;
-	//	if (bbb > aaa) return false; // !
-
-	const auto themax = std::numeric_limits<decltype(target)>::max();
-//	std::cerr << "NOW: " << std::numeric_limits<decltype(target)>::max() << std::endl;
-//	std::cerr << "value="<<value<<" vs themax="<<themax << std::endl;
-
-		if (value < std::numeric_limits<decltype(target)>::min()) return false;
-		if (value > themax) return false;
-
-//	std::cerr<<"^--- ok"<<std::endl;
+	if (value < std::numeric_limits<decltype(target)>::min()) return false;
+	if (value > std::numeric_limits<decltype(target)>::max()) return false;
 	return true; // no overflow
 }
 
