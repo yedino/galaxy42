@@ -11,6 +11,7 @@
 #include "protocol.hpp"
 
 #include "crypto/crypto_basic.hpp"
+#include "c_udp_wrapper.hpp"
 
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
@@ -57,7 +58,9 @@ ostream & operator<<(ostream & ostr, const c_peering & obj);
 
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
-		c_peering_udp(const t_peering_reference & ref);
+		#ifdef __linux__
+		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper);
+		#endif
 
 		virtual void send_data(const char * data, size_t data_size) override;
 		virtual void send_data_udp(const char * data, size_t data_size, int udp_socket,
@@ -66,6 +69,9 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 	private:
 
 		virtual void send_data_RAW_udp(const char * data, size_t data_size, int udp_socket); ///< direct write
+		#ifdef __linux__
+		std::reference_wrapper<c_udp_wrapper_linux> m_udp_wrapper; // TODO: sahred_ptr ?
+		#endif
 };
 
 #endif // C_PEERING_H

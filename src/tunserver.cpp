@@ -374,7 +374,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 }
 
 c_tunserver::c_tunserver()
- : m_my_name("unnamed-tunserver"), m_tun_header_offset_ipv6(0), m_sock_udp(-1) //, m_rpc_server(42000)
+ : m_my_name("unnamed-tunserver"), m_udp_device(9042)/*TODO port*/, m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
 {
 //	m_rpc_server.register_function(
 //		"add_limit_points",
@@ -447,7 +447,7 @@ try {
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	UNUSED(peer_ref);
-	auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
@@ -457,7 +457,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 {
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
-		auto peering_ptr = make_unique<c_peering_udp>(peer_ref);
+		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 		peering_ptr->set_pubkey(std::move(pubkey));
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	} else { // update existing
@@ -506,36 +506,17 @@ void c_tunserver::prepare_socket() {
 		m_tun_device.set_ipv6_address(address, 16);
 	}
 
-	// create listening socket
-	m_sock_udp = socket(AF_INET, SOCK_DGRAM, 0);
-	_assert(m_sock_udp >= 0);
+	_assert(m_udp_device.get_socket() >= 0);
 
-	int port = 9042;
-	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(port);
-
-	{
-		int bind_result = -1;
-		if (address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv4) {
-			sockaddr_in addr4 = address_for_sock.get_ip4();
-			bind_result = bind(m_sock_udp, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
-		}
-		else if(address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv6) {
-			sockaddr_in6 addr6 = address_for_sock.get_ip6();
-			bind_result = bind(m_sock_udp, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
-		}
-			_assert( bind_result >= 0 ); // TODO change to except
-			_assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
-	}
-	_info("Bind done - listening on UDP on: "); // TODO  << address_for_sock
 }
 
 void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_info("Selecting");
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
-	FD_SET(m_sock_udp, &m_fd_set_data);
+	FD_SET(m_udp_device.get_socket(), &m_fd_set_data);
 
-	auto fd_max = m_sock_udp; // = std::max(m_tun_fd, m_sock_udp);
+	auto fd_max = m_udp_device.get_socket(); // = std::max(m_tun_fd, m_udp_device.get_socket());
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 
@@ -589,7 +570,7 @@ void c_tunserver::peering_ping_all_peers() {
 		gen.push_varstring( m_IDI_IDC_sig.serialize_bin());
 		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
-		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_sock_udp);
+		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_udp_device.get_socket());
 	}
 }
 
@@ -598,7 +579,7 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
-		peer_udp->send_data_udp_cmd(cmd, data, m_sock_udp);
+		peer_udp->send_data_udp_cmd(cmd, data, m_udp_device.get_socket());
 	}
 }
 
@@ -662,7 +643,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 
 		// send it on wire:
-		peer_udp->send_data_udp(buff, buff_size, m_sock_udp, src_hip, dst_hip, data_route_ttl, nonce_used); // <--- *** actually send the data
+		peer_udp->send_data_udp(buff, buff_size, m_udp_device.get_socket(), src_hip, dst_hip, data_route_ttl, nonce_used); // <--- *** actually send the data
 	}
 	return true;
 }
@@ -820,31 +801,11 @@ void c_tunserver::event_loop() {
 				was_anything_sent_from_TUN=true;
 			}
 		}
-		else if (FD_ISSET(m_sock_udp, &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
+		else if (FD_ISSET(m_udp_device.get_socket(), &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
 			anything_happened=true;
-
-			sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
-			socklen_t from_addr_raw_size; // ^ size of it
-
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
-			// ***
-			from_addr_raw_size = sizeof(from_addr_raw); // IN/OUT parameter to recvfrom, sending it for IN to be the address "buffer" size
-			auto size_read = recvfrom(m_sock_udp, buf, sizeof(buf), 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
-			_info("###### ======> UDP read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
-			// ^- reinterpret allowed by linux specs (TODO)
-			// sockaddr *src_addr, socklen_t *addrlen);
-
-			if (from_addr_raw_size == sizeof(sockaddr_in6)) { // the message arrive from IP pasted into sockaddr_in6 format
-				_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
-				// trivial
-			}
-			else if (from_addr_raw_size == sizeof(sockaddr_in)) { // the message arrive from IP pasted into sockaddr_in (ipv4) format
-				sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
-				sender_pip.set_ip4(addr);
-			} else {
-				throw std::runtime_error("Data arrived from unknown socket address type");
-			}
+			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
 
 			_info("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
@@ -1079,7 +1040,7 @@ void c_tunserver::event_loop() {
 							<< sender_as_peering_ptr
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
-						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_sock_udp); // <---
+						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
 						_note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
