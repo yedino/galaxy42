@@ -374,7 +374,11 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 }
 
 c_tunserver::c_tunserver()
- : m_my_name("unnamed-tunserver"), m_udp_device(9042)/*TODO port*/, m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
+:
+	m_my_name("unnamed-tunserver")
+	,m_udp_device(9042) //TODO port
+	,m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
+	,m_event_manager(m_tun_device, m_udp_device)
 {
 //	m_rpc_server.register_function(
 //		"add_limit_points",
@@ -747,16 +751,14 @@ void c_tunserver::event_loop() {
 
 		anything_happened=false;
 
-		wait_for_fd_event();
+		m_event_manager.wait_for_event();
 
 		// TODO(r): program can be hanged/DoS with bad routing, no TTL field yet
 		// ^--- or not fully checked. need scoring system anyway
 
 		try { // ---
-		//if (FD_ISSET(m_tun_device.m_tun_fd, &m_fd_set_data)) { // data incoming on TUN - send it out to peers
-		if (m_tun_device.incomming_message_form_tun()) {
+		if (m_event_manager.get_tun_packet()) { // get packet from tun
 			anything_happened=true;
-			//auto size_read = read(m_tun_fd, buf, sizeof(buf)); // <-- read data from TUN
 			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
 			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
@@ -801,7 +803,7 @@ void c_tunserver::event_loop() {
 				was_anything_sent_from_TUN=true;
 			}
 		}
-		else if (FD_ISSET(m_udp_device.get_socket(), &m_fd_set_data)) { // data incoming on peer (UDP) - will route it or send to our TUN
+		else if(m_event_manager.receive_udp_paket()) { // data incoming on peer (UDP) - will route it or send to our TUN
 			anything_happened=true;
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
