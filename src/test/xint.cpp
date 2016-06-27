@@ -111,13 +111,24 @@ TEST(xint,normal_use_belowzero) {
 
 TEST(xint,can_assign) {
 	xint a;
-	EXPECT_TRUE( overflow_impossible_in_assign(a, 0LL) );
+	/*
+	basic_xint b;
+	t_correct_int corr1(9LL);
+	_warn( std::numeric_limits<decltype(a)>::max() );
+	_warn( std::numeric_limits<decltype(b)>::max() );
+	*/
 
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 9LL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 100LL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 10000LL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)+1) ); // TODO
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) ); // TODO
+	EXPECT_TRUE ( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) ); // TODO
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) ); // TODO
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) ); // TODO
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) ); // TODO
 	UNUSED(a);
 }
 
@@ -142,8 +153,8 @@ TEST(xint,normal_use_op4assign_loop) {
 
 			t_correct_int c_ok = a+b;
 			xint c;
-			if (overflow_impossible_in_assign(c,c_ok)) { // TODO
-			}
+//			if (overflow_impossible_in_assign(c,c_ok)) { // TODO
+//			}
 		}
 	}
 

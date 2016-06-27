@@ -5,6 +5,7 @@
 #include <string>
 
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/limits.hpp>
 
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
@@ -36,8 +37,6 @@ t_correct_int;
 
 
 // TODO move to lib
-
-
 // idea from http://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 template <typename T, template<typename...> class R>
 struct is_specialization : std::false_type { };
@@ -45,6 +44,8 @@ template <template<typename...> class R, typename... ARGS>
 struct is_specialization<R<ARGS...>, R> : std::true_type { };
 
 struct safer_int_base { };
+
+
 
 template<typename T>
 class safer_int : public safer_int_base {
@@ -126,6 +127,38 @@ class safer_int : public safer_int_base {
 		void print(std::ostream& ostr) const { ostr<<xi; }
 };
 
+namespace std {
+
+template <typename T>
+class numeric_limits<safer_int<T>> {
+	public:
+		typedef T number_type;
+		static number_type (min)() { return std::numeric_limits<number_type>::min(); };
+		static number_type (max)() { return std::numeric_limits<number_type>::max(); };
+
+		static number_type lowest() { return (min)(); }
+		static number_type epsilon() { return 0; }
+		static number_type round_error() { return 0; }
+		static number_type infinity() { return 0; }
+    static number_type quiet_NaN() { return 0; }
+    static number_type signaling_NaN() { return 0; }
+    static number_type denorm_min() { return 0; }
+};
+
+/*
+template <typename T>
+inline safer_int<T>
+get_max(const boost::mpl::true_&, const boost::mpl::true_&) {
+	typedef safer_int<T> result_type;
+  static const result_type val = std::numeric_limits<decltype(T::xi)>::max();
+  return val;
+}
+*/
+
+} // std
+
+
+
 // intended for comparsions like   int > xint:
 // #define CONDITION typename std::enable_if<! std::is_base_of<safer_int_base, U>{}>::type* = nullptr >
 #define CONDITION typename std::enable_if< std::is_integral<U>{}>::type* = nullptr
@@ -194,11 +227,17 @@ template <typename T> bool overflow_impossible_in_assign(T, T) { return true; }
 template <typename T, typename U>
 bool overflow_impossible_in_assign(T target, U value) {
 
-//	if (aaa > bbb) return true;
-//	if (bbb > aaa) return false; // !
+	//	if (aaa > bbb) return true;
+	//	if (bbb > aaa) return false; // !
 
-//	if (value < std::numeric_limits<decltype(target)>::min()) return false;
-	if (value > std::numeric_limits<decltype(target)>::max()) return false;
+	const auto themax = std::numeric_limits<decltype(target)>::max();
+//	std::cerr << "NOW: " << std::numeric_limits<decltype(target)>::max() << std::endl;
+//	std::cerr << "value="<<value<<" vs themax="<<themax << std::endl;
+
+		if (value < std::numeric_limits<decltype(target)>::min()) return false;
+		if (value > themax) return false;
+
+//	std::cerr<<"^--- ok"<<std::endl;
 	return true; // no overflow
 }
 
