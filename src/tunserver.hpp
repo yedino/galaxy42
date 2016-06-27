@@ -39,6 +39,7 @@
 
 #include "tunserver.hpp"
 #include "c_tun_device.hpp"
+#include "c_udp_wrapper.hpp"
 
 // ------------------------------------------------------------------
 
@@ -247,11 +248,12 @@ class c_tunserver : public c_galaxy_node {
 		//int m_tun_fd; ///< fd of TUN file
 		#ifdef __linux__
 		c_tun_device_linux m_tun_device;
+		c_udp_wrapper_linux m_udp_device;
 		#else
 		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
-		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
+//		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
