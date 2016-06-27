@@ -2,8 +2,10 @@
 
 
 #ifdef __linux__
-c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port) {
-	m_socket = socket(AF_INET, SOCK_DGRAM, 0);
+c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
+:
+	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
+{
 	_assert(m_socket >= 0);
 	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(listen_port);
 	int bind_result = -1;

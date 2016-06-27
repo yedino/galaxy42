@@ -3,12 +3,12 @@
 
 #ifdef __linux__
 #include <limits>
-c_event_manager_linux::c_event_manager_linux(int tun_fd, int udp_socket)
+
+c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper)
 :
-	m_tun_fd(tun_fd),
-	m_udp_socket(udp_socket)
+	m_tun_fd(tun_device.m_tun_fd),
+	m_udp_socket(udp_wrapper.m_socket)
 {
-	FD_ZERO(& m_fd_set_data);
 }
 
 void c_event_manager_linux::wait_for_event() {
@@ -26,11 +26,11 @@ void c_event_manager_linux::wait_for_event() {
 }
 
 bool c_event_manager_linux::receive_udp_paket() {
-	  return FD_ISSET(m_udp_socket, &m_fd_set_data);
+	return FD_ISSET(m_udp_socket, &m_fd_set_data);
 }
 
 bool c_event_manager_linux::get_tun_packet() {
-	  return FD_ISSET(m_tun_fd, &m_fd_set_data);
+	return FD_ISSET(m_tun_fd, &m_fd_set_data);
 }
 
 #endif // __linux__
