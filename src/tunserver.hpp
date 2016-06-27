@@ -40,6 +40,7 @@
 #include "tunserver.hpp"
 #include "c_tun_device.hpp"
 #include "c_udp_wrapper.hpp"
+#include "c_event_manager.hpp"
 
 // ------------------------------------------------------------------
 
@@ -249,6 +250,7 @@ class c_tunserver : public c_galaxy_node {
 		#ifdef __linux__
 		c_tun_device_linux m_tun_device;
 		c_udp_wrapper_linux m_udp_device;
+		c_event_manager_linux m_event_manager;
 		#else
 		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
