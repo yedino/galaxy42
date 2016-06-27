@@ -4,6 +4,7 @@
 
 #include <array>
 #include <string>
+#include "c_event_manager.hpp"
 
 /**
  * @brief The c_tun_device class
@@ -23,6 +24,7 @@ class c_tun_device {
 #ifdef __linux__
 
 class c_tun_device_linux final : public c_tun_device {
+	friend class c_event_manager_linux;
 	public:
 		c_tun_device_linux();
 		void set_ipv6_address
@@ -33,7 +35,7 @@ class c_tun_device_linux final : public c_tun_device {
 		size_t write_to_tun(const void *buf, size_t count) override;
 
 	private:
-		int m_tun_fd;
+		const int m_tun_fd;
 };
 
 #endif
