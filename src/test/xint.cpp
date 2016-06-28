@@ -222,7 +222,6 @@ TEST(xint,normal_use_op4assign_loop) {
 
 }
 
-#if 0
 
 namespace test_xint {
 namespace detail {
@@ -267,13 +266,16 @@ template <typename T_INT> bool is_safe_int() {
 
 template<typename T_INT>
 void math_tests_overflow_incr(T_INT val) { bool safetype = is_safe_int<T_INT>();
+	// @hint: if this fails, then it can be called from code "generate_tests_for_types" go fix that
 	T_INT a = val;	t_correct_int a_corr = a;
 	auto func = [&]() { a_corr+=1; a++; } ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
 
+	_note("Will increment first time: " << a << " (a_corr="<<a_corr<<")" );
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
+	_note("Will increment again: " << a );
 	if (safetype) { EXPECT_THROW( func() , std::runtime_error ); }
 	else { // should not fit for given val
 		EXPECT_NO_THROW( func() ); // usafe type fils to throw
@@ -343,9 +345,10 @@ TEST(xint, FUNCTION ## _s_i) {	test_xint::detail::math_tests_ ## FUNCTION <int64
 TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xint>(V4); }
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
 
-generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, maxni-1 )
+generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
 // generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -maxni )
 
+	/*
 TEST(xint, some_use) {
 	xint a("0xFFFFFFFFFFFFFFFF");
 	a--;
@@ -424,6 +427,7 @@ TEST(xint, range_u_to_sizet) {
 void someint(long long int x) {
 	_mark("someint got: " << x);
 }
+*/
 
 template <typename T>
 uxint make_uxint(T value) {	return numeric_cast<uint64_t>(value); }
@@ -481,7 +485,6 @@ TEST(xint, safe_create_xint_assign) {
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 
-#endif
 
 
 #undef maxni
