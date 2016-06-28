@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <unordered_set>
 #include <regex>
+#include <type_traits>
 
 #include <boost/numeric/conversion/cast.hpp>
 
