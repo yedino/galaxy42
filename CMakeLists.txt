@@ -24,6 +24,10 @@ option(OPTION_LEVEL_IS_PREVIEW "Enable the less tested code, that is not yet rec
 option(OPTION_LEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
 option(OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
 
+if(OPTION_LEVEL_IS_PREVIEW)
+	add_definitions(-DOPTION_LEVEL_IS_PREVIEW)
+endif()
+
 add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
