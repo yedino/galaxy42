@@ -471,20 +471,21 @@ TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }*/
 
+// terminate called after throwing an instance of 'boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<std::overflow_error> >'
 TEST(xint, safe_create_xint) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		xint bonus(a*b*c); UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+		xint bonus(a*b*c*c*c); UNUSED(bonus);	} ;
+		EXPECT_THROW( func()  , std::runtime_error );
 }
 TEST(xint, safe_create_xint2) { // obviously the same, other syntax as example
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		xint bonus = a*b*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+		xint bonus = a*b*c*c*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , std::runtime_error );
 }
 TEST(xint, safe_create_xint_assign) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+		xint bonus;  bonus = a*b*c*c*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , std::runtime_error );
 }
 
 
