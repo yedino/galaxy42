@@ -5,6 +5,9 @@
 #include <cmath>
 #include <type_traits>
 
+typedef long double t_correct1;
+
+
 TEST(xint,normal_use_init) {
 	xint a; a=0;
 	a=1;
@@ -44,6 +47,8 @@ TEST(xint,normal_use_compare) {
 	EXPECT_EQ(c, c);
 
 	EXPECT_TRUE( (a==a) );
+	EXPECT_TRUE( (b==b) );
+	EXPECT_TRUE( (c==c) );
 
 	EXPECT_TRUE( (a<b) );
 	EXPECT_TRUE(!(b<a) );
@@ -75,26 +80,181 @@ TEST(xint,normal_use_dec) {
 	EXPECT_EQ(a--,-2); EXPECT_EQ(a,-3);
 }
 
-TEST(xint,normal_use_op4set) {
-	xint a;
-	a=0; EXPECT_EQ(a,0);
-	a--; EXPECT_EQ(a,-1);
-	a--; EXPECT_EQ(a,-2);
-	EXPECT_EQ(a--,-2); EXPECT_EQ(a,-3);
+TEST(xint,normal_use_op4assign) {
+	xint a=100, b=30, c=8;
+	{ xint d(a+b); EXPECT_EQ(d, 130); }
+	{ xint d(a+b); EXPECT_EQ(d, xint(130)); }
+	{ xint d(a+b); EXPECT_EQ(d, (a+b)); }
+	{ xint d(a+b+c); EXPECT_EQ(d, 138); }
+
+	{ xint d(a-b); EXPECT_EQ(d, 70); }
+	{ xint d(a-b); EXPECT_EQ(d, xint(70)); }
+	{ xint d(a-b); EXPECT_EQ(d, (a-b)); }
+
+	{ xint d(a*b); EXPECT_EQ(d, 3000); }
+	{ xint d(a*b); EXPECT_EQ(d, xint(3000)); }
+	{ xint d(a*b); EXPECT_EQ(d, (a*b)); }
+
+	{ xint d(a/b); EXPECT_EQ(d, 3); }
+	{ xint d(a/b); EXPECT_EQ(d, xint(3)); }
+	{ xint d(a/b); EXPECT_EQ(d, (a/b)); }
 }
 
-#if 0
+TEST(xint,normal_use_belowzero) {
+	xint a=100, b=30;
+	{ xint d(b-a); EXPECT_EQ(d, -70); }
+	{ xint d(-a + b); EXPECT_EQ(d, -70); }
+	{ xint d(-a + -b); EXPECT_EQ(d, -130); }
+	{ xint d(-a + -5); EXPECT_EQ(d, -105); }
+}
+
+
+TEST(xint,can_assign) {
+	xint a;
+	/*
+	basic_xint b;
+	t_correct_int corr1(9LL);
+	_warn( std::numeric_limits<decltype(a)>::max() );
+	_warn( std::numeric_limits<decltype(b)>::max() );
+	*/
+
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 9LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 100LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 10000LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) ); // TODO
+	EXPECT_TRUE ( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) ); // TODO
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) ); // TODO
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) ); // TODO
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) ); // TODO
+	UNUSED(a);
+}
+
+TEST(xint,normal_use_op4assign_loop) {
+	return ; // XXX
+
+	vector<uint64_t> tab_int({0,1,2,3,42, 256, 1024,
+		0xFFFF, 0xDEADBEEF, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFFULL});
+	//for (int i=0; i<100; ++i) tab_int.push_back(i);
+
+	g_dbg_level_set(50,"Details of test");
+
+	vector<t_correct_int> tab;
+	for (auto v:tab_int) {
+		tab.push_back(v);
+		tab.push_back(-t_correct_int(v));
+	}
+	decltype(tab) tab2;
+	tab2=tab;
+	for (auto v:tab) { tab2.push_back(v-1); tab2.push_back(v+1);	}
+	tab=tab2;
+
+	tab2=tab;
+	for (auto v:tab) {
+		tab2.push_back(v*2);
+		tab2.push_back(v*3);
+		tab2.push_back(v*256);
+		tab2.push_back(v*10000000);
+	}
+	tab=tab2;
+
+	tab2=tab;
+	for (auto v:tab) { tab2.push_back(v-1); tab2.push_back(v+1);	}
+	tab=tab2;
+
+	{
+		std::sort(tab.begin(), tab.end());
+		auto last = std::unique(tab.begin(), tab.end());
+		tab.erase(last, tab.end());
+	}
+
+	_note("Tab of numbers size: "<<tab.size());
+
+	long count_fitting=0, count_xflov=0; // count operations that fit, and operations that would over/under-flow
+
+	for (size_t i=0; i<tab.size(); ++i) {
+		for (size_t j=0; j<tab.size(); ++j) {
+			t_correct_int a_ok=tab.at(i);
+			t_correct_int b_ok=tab.at(j);
+			xint ab_type;
+
+			bool fit_a = overflow_impossible_in_assign(ab_type,a_ok);
+			bool fit_b = overflow_impossible_in_assign(ab_type,b_ok);
+
+			if (!(fit_a && fit_b)) {
+				EXPECT_THROW( { xint a(a_ok); xint b(b_ok); } , std::runtime_error );
+			}
+			else
+			{
+				xint a(a_ok); xint b(b_ok);
+				xint c;
+
+				#define THE_TEST( OPERATOR , OPERATOR_NAME ) do { \
+				bool div_by_zero = (string("div")==OPERATOR_NAME) && (b_ok == 0); \
+				bool operation_is_valid = !div_by_zero; \
+				t_correct_int c_ok; \
+				if (operation_is_valid) { c_ok = a_ok OPERATOR b_ok; } else c_ok=-1; \
+				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
+					_dbg2("Should be ok a="<<a<<" b="<<b); \
+					++count_fitting; \
+					c = a OPERATOR b; \
+					EXPECT_EQ(c, c_ok); \
+				} \
+				else { \
+					++count_xflov; \
+					_dbg2("Should fail a="<<a<<" b="<<b); \
+					EXPECT_THROW( { c = a OPERATOR b; } , std::runtime_error ); \
+				} \
+				} while(0)
+
+				THE_TEST( + , "add" );
+				THE_TEST( - , "sub" );
+				THE_TEST( * , "mul" );
+				THE_TEST( / , "div" );
+
+
+				#define THE_TEST( OPERATOR , OPERATOR_NAME ) do { \
+				bool div_by_zero = (string("div")==OPERATOR_NAME) && (b_ok == 0); \
+				bool operation_is_valid = !div_by_zero; \
+				t_correct_int c_ok; \
+				if (operation_is_valid) { c_ok = a_ok;  c_ok OPERATOR b_ok; } else c_ok=-1; \
+				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
+					_dbg2("Should be ok a="<<a<<" b="<<b); \
+					++count_fitting; \
+					c = a;  c OPERATOR b; \
+					EXPECT_EQ(c, c_ok); \
+				} \
+				else { \
+					++count_xflov; \
+					_dbg2("Should fail a="<<a<<" b="<<b); \
+					EXPECT_THROW( { c = a;  c OPERATOR b; } , std::runtime_error ); \
+				} \
+				} while(0)
+
+				THE_TEST( += , "add" );
+				THE_TEST( -= , "sub" );
+				THE_TEST( *= , "mul" );
+				THE_TEST( /= , "div" );
+
+				#undef THE_TEST
+
+			} // fitting initial values
+		}
+	}
+	_note("Over/under-flow count: " << count_xflov);
+	EXPECT_GT(count_xflov, 248);
+	_note("Normal operation count: " << count_fitting);
+	EXPECT_GT(count_fitting, 16393);
+
+}
+
 
 namespace test_xint {
 namespace detail {
 
 
-typedef long double t_correct1;
-
-typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<1024, 65536,
-		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
-t_correct_int;
 
 /*
 template<typename T_INT,
@@ -111,8 +271,6 @@ unsigned long long int round_co(t_correct1 v) {
 */
 template<typename T_INT>
 void math_tests_noproblem() {
-	//_mark("Doing tests, on integral with sizeof="<<sizeof(T_INT));
-
 	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 , 1000000 };
 	for (auto testsize : testsize_tab) {
 		T_INT a=0;
@@ -134,13 +292,16 @@ template <typename T_INT> bool is_safe_int() {
 
 template<typename T_INT>
 void math_tests_overflow_incr(T_INT val) { bool safetype = is_safe_int<T_INT>();
+	// @hint: if this fails, then it can be called from code "generate_tests_for_types" go fix that
 	T_INT a = val;	t_correct_int a_corr = a;
 	auto func = [&]() { a_corr+=1; a++; } ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
 
+	_note("Will increment first time: " << a << " (a_corr="<<a_corr<<")" );
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
+	_note("Will increment again: " << a );
 	if (safetype) { EXPECT_THROW( func() , std::runtime_error ); }
 	else { // should not fit for given val
 		EXPECT_NO_THROW( func() ); // usafe type fils to throw
@@ -154,12 +315,11 @@ void math_tests_overflow_decr(T_INT val) { bool safetype = is_safe_int<T_INT>();
 	T_INT a = val;	t_correct_int a_corr = a;
 	auto func = [&]() { a_corr-=1; a--; } ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
-	db;
 
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
-	if (safetype) { db; EXPECT_THROW( func() , std::runtime_error ); db; }
+	if (safetype) {  EXPECT_THROW( func() , std::runtime_error ); }
 	else { // should not fit for given val
 		EXPECT_NO_THROW( func() ); // usafe type fils to throw
 		EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
@@ -210,8 +370,8 @@ TEST(xint, FUNCTION ## _s_i) {	test_xint::detail::math_tests_ ## FUNCTION <int64
 TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xint>(V4); }
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
 
-generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, maxni-1 )
-// generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -maxni )
+generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
+generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -xint(maxni-1) )
 
 TEST(xint, some_use) {
 	xint a("0xFFFFFFFFFFFFFFFF");
@@ -234,34 +394,38 @@ TEST(xint, some_use) {
 }
 
 TEST(xint, range_u_incr) {
-	uxint a("0xFFFFFFFFFFFFFFFE");
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	typedef uxint T;
+	T a("0xFFFFFFFFFFFFFFFE");
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_u_decr) {
-	uxint a("0x0000000000000001");
-	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , xint("0x0000000000000000"));
-	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , xint("0x0000000000000000"));
-	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , xint("0x0000000000000000"));
+	typedef uxint T;
+	T a("0x0000000000000001");
+	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , T("0x0000000000000000"));
+	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , T("0x0000000000000000"));
+	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , T("0x0000000000000000"));
 }
 
 TEST(xint, range_s_incr) {
-	xint a("0xFFFFFFFFFFFFFFFE");
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	typedef xint T;
+	T a("0xFFFFFFFFFFFFFFFE");
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_s_decr) {
-	xint b("0xFFFFFFFFFFFFFFFE");
-	xint a(0); a -= b;
+	typedef xint T;
+	T b("0xFFFFFFFFFFFFFFFE");
+	T a(0); a -= b;
 	EXPECT_NO_THROW( { a--; } );
 	EXPECT_THROW( { a--; } , std::runtime_error );
 	EXPECT_THROW( { a--; } , std::runtime_error );
 	EXPECT_NO_THROW( { a += b; } );
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0x0000000000000000"));
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0x0000000000000001"));
-	EXPECT_NO_THROW( { a+=b; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0x0000000000000000"));
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0x0000000000000001"));
+	EXPECT_NO_THROW( { a+=b; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 
 TEST(xint, range_u_to_sizet) {
@@ -318,12 +482,12 @@ TEST(xint, range_b_to_sizet) {
 
 TEST(xint, safe_create_float1) {
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
-		auto bonus(a*b*c); UNUSED(bonus);	} ;
+		xint bonus(a*b*c); UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
-		auto bonus = a*b*c; UNUSED(bonus);	} ;
+		xint bonus = a*b*c; UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 /*TEST(xint, safe_create_float_assign) {
@@ -332,22 +496,23 @@ TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }*/
 
+// terminate called after throwing an instance of 'boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<std::overflow_error> >'
 TEST(xint, safe_create_xint) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		auto bonus(a*b*c); UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+		xint bonus(a*b*c*c*c); UNUSED(bonus);	} ;
+		EXPECT_THROW( func()  , std::runtime_error );
 }
 TEST(xint, safe_create_xint2) { // obviously the same, other syntax as example
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		auto bonus = a*b*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+		xint bonus = a*b*c*c*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , std::runtime_error );
 }
 TEST(xint, safe_create_xint_assign) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+		xint bonus;  bonus = a*b*c*c*c; UNUSED(bonus);	} ;
+	EXPECT_THROW( func()  , std::runtime_error );
 }
-#endif
+
 
 
 #undef maxni
