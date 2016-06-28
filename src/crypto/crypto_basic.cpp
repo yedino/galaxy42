@@ -86,8 +86,8 @@ t_hash Hash1( const t_hash & hash ) {
     const unsigned char* u_hashmsg;
     u_hashmsg = reinterpret_cast<const unsigned char *>(&hash[0]);
 
-   	const size_t out_u_hash_len = 64; // Hash1_size();
-   	assert( out_u_hash_len == Hash1_size() );  // <-- ^-- TODO(rob) constexpr instead?
+	constexpr size_t out_u_hash_len = 64; // Hash1_size();
+	assert( out_u_hash_len == Hash1_size() && "Hash1 size assert [64]" );
 
     assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
     unsigned char out_u_hash[out_u_hash_len];
@@ -104,8 +104,8 @@ t_hash_PRV Hash1_PRV( const t_hash_PRV & hash ) {
     const unsigned char* u_hashmsg;
     u_hashmsg = reinterpret_cast<const unsigned char *>( hash.c_str() ); // read locked
 
-   	const size_t out_u_hash_len = 64; // Hash1_size();
-   	assert( out_u_hash_len == Hash1_size() );  // <-- ^-- TODO(rob) constexpr instead?
+	constexpr size_t out_u_hash_len = 64; // Hash1_size();
+	assert( out_u_hash_len == Hash1_size() && "Hash1 size assert [64]");
 
     assert( out_u_hash_len <=  crypto_generichash_BYTES_MAX );
 		t_hash_PRV out_u_hash(out_u_hash_len);
@@ -119,7 +119,7 @@ t_hash_PRV Hash1_PRV( const t_hash_PRV & hash ) {
 }
 
 
-size_t Hash1_size() {
+constexpr size_t Hash1_size() {
 	return 64;
 }
 
@@ -145,7 +145,7 @@ t_hash_PRV Hash2_PRV( const t_hash_PRV & hash ) {
     return ret;
 }
 
-size_t Hash2_size() {
+constexpr size_t Hash2_size() {
 	return 64;
 }
 
