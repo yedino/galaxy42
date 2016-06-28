@@ -457,12 +457,12 @@ TEST(xint, range_b_to_sizet) {
 
 TEST(xint, safe_create_float1) {
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
-		auto bonus(a*b*c); UNUSED(bonus);	} ;
+		xint bonus(a*b*c); UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
-		auto bonus = a*b*c; UNUSED(bonus);	} ;
+		xint bonus = a*b*c; UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 /*TEST(xint, safe_create_float_assign) {
@@ -473,12 +473,12 @@ TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 
 TEST(xint, safe_create_xint) {
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		auto bonus(a*b*c); UNUSED(bonus);	} ;
+		xint bonus(a*b*c); UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 TEST(xint, safe_create_xint2) { // obviously the same, other syntax as example
 	auto func = []() { xint a=10000, b=10000000000, c=100000000;
-		auto bonus = a*b*c; UNUSED(bonus);	} ;
+		xint bonus = a*b*c; UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
 TEST(xint, safe_create_xint_assign) {
