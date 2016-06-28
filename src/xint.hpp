@@ -114,6 +114,7 @@ class safer_int : public safer_int_base {
 		template<typename U, typename std::enable_if<
 			std::is_arithmetic<U>{} && ! std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
 		safer_int(U obj)
+		:xi(0) // TODO for now for debug
 		{
 			_warn("Creating from float, type=" << typeid(U).name() << " value=" << obj );
 			// TODO check is there is no more normal way of doing this all - comparing buildin float/double to boost cpp_int
@@ -123,8 +124,15 @@ class safer_int : public safer_int_base {
 			typedef t_bigger_of_two_cpp_int<T, U_int> T_big;
 			T_big obj_big( obj_as_int );
 			T_big xi_big( xi );
-			if (!overflow_impossible_in_assign(xi_big,obj_big)) throw boost::numeric::bad_numeric_cast();
+			_note("obj_big="<<obj_big);
+			_note("xi_big="<<xi_big);
+			// if (!overflow_impossible_in_assign(xi_big,obj_big)) throw boost::numeric::bad_numeric_cast();
 			xi = static_cast<T>(obj);
+			auto xi_max = std::numeric_limits<decltype(xi)>::max() ;
+			T_big xi_max_big( xi_max );
+			if (obj_big > xi_max_big) { _warn("Throw"); throw boost::numeric::bad_numeric_cast(); }
+
+			_note("allowed. xi="<<xi_big<<" xi_max_big="<<xi_max_big);
 		}
 
 		/// construct from same boost multiprecision number
