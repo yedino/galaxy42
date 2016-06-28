@@ -7,6 +7,8 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_int/limits.hpp>
 
+#include "libs0.hpp"
+
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
@@ -59,33 +61,38 @@ class safer_int : public safer_int_base {
 	public: // <-- TODO private
 		T xi; ///< the xint implementig my basic type
 	public:
-		safer_int()
-			: xi( T() )
-		{
-		}
+		/// construct - default
+		safer_int() : xi( T() )	{	}
 
 	//	explicit safer_int(const char* txt) : xi(txt) { } // TODO check overflow, does result match txt
 
-		// TODO also implement other operators etc to exactly match API of cpp_int
-
+		// construct from same type
 		template<typename U> safer_int(const safer_int<U> & obj)
 			: xi(obj.xi)
 		{
 			// TODO numeric_cast
 		}
 
-		template<typename U, typename std::enable_if< std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
+		/// construct from various "int" types
+		template<typename U, typename std::enable_if<
+			std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
 		safer_int(U obj) : xi(obj)
 		{
+			_warn("Creating from INT, type=" << typeid(U).name() << " value=" << obj );
 			// TODO numeric_cast
 		}
 
-		safer_int(int64_t obj) // TODO
-			: xi(obj)
+		/// construct from various "float" types
+		template<typename U, typename std::enable_if<
+			std::is_arithmetic<U>{} && ! std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
+		safer_int(U obj) : xi(obj)
 		{
+			_warn("Creating from float, type=" << typeid(U).name() << " value=" << obj );
+			throw std::runtime_error("TEST ERROR - FLOAT");
 			// TODO numeric_cast
 		}
 
+		/// construct from same boost multiprecision number
 		TEMPLATE
 		safer_int(T_OBJECT obj)
 			: xi(obj)
