@@ -348,7 +348,7 @@ TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xi
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
 
 generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
-// generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -maxni )
+generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -xint(maxni-1) )
 
 	/*
 TEST(xint, some_use) {
