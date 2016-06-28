@@ -12,6 +12,9 @@
 #include "rpc/rpc.hpp"
 #include "galaxy_debug.hpp"
 
+#include "c_json_genconf.hpp"
+#include "c_json_load.hpp"
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -584,9 +587,9 @@ int main(int argc, char **argv) {
 				_info("No no-config, will load config");
 				std::string conf = argm["config"].as<std::string>();
 				c_galaxyconf_load galaxyconf(conf);
-				auto add_peers = galaxyconf.get_peer_references();
-				_info("Will add peer(s) from config file, count: " << add_peer.size());
-				for(auto &ref : add_peer) {
+				auto peer_refs = galaxyconf.get_peer_references();
+				_info("Will add peer(s) from config file, count: " << peer_refs.size());
+				for(auto &ref : peer_refs) {
 					myserver.add_peer(ref);
 				}
 			}
