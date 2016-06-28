@@ -154,12 +154,10 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
-			auto ip_x = m_peering_addr.get_ip4(); // ip of proper type, as local variable
 			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
 		}
 		break;
 		case c_ip46_addr::t_tag::tag_ipv6 : {
-			auto ip_x = m_peering_addr.get_ip6(); // ip of proper type, as local variable
 			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
 		}
 		break;
