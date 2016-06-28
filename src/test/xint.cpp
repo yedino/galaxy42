@@ -133,12 +133,34 @@ TEST(xint,can_assign) {
 }
 
 TEST(xint,normal_use_op4assign_loop) {
-	vector<int64_t> tab_int({0,1,2,3,5,10,20,30,40,42,50,51,52,90,100,127,128, 200, 256, 512, 666, 777, 1024,
-		1984, 9001, 0xFFFF, 0xDEADBEEF, 0xFFFFFFFF});
-	for (int i=0; i<100; ++i) tab_int.push_back(i);
+	vector<uint64_t> tab_int({0,1,2,3,5,10,42,128, 256, 666, 1024,
+		1984, 0xFFFF, 0xDEADBEEF, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFFULL});
+	//for (int i=0; i<100; ++i) tab_int.push_back(i);
+
+	g_dbg_level_set(50,"Details of test");
 
 	vector<t_correct_int> tab;
-	for (auto v:tab_int) { tab.push_back(v); tab.push_back(-v); }
+	for (auto v:tab_int) {
+		tab.push_back(v);
+		tab.push_back(-t_correct_int(v));
+	}
+	decltype(tab) tab2;
+	tab2=tab;
+	for (auto v:tab) { tab2.push_back(v-1); tab2.push_back(v+1);	}
+	tab=tab2;
+
+	tab2=tab;
+	for (auto v:tab) {
+		tab2.push_back(v*2);
+		tab2.push_back(v*3);
+		tab2.push_back(v*256);
+		tab2.push_back(v*10000000);
+	}
+	tab=tab2;
+
+	tab2=tab;
+	for (auto v:tab) { tab2.push_back(v-1); tab2.push_back(v+1);	}
+	tab=tab2;
 
 	{
 		std::sort(tab.begin(), tab.end());
@@ -146,17 +168,57 @@ TEST(xint,normal_use_op4assign_loop) {
 		tab.erase(last, tab.end());
 	}
 
-	for (size_t i=0; i<tab_int.size(); ++i) {
-		for (size_t j=0; j<tab_int.size(); ++j) {
-			t_correct_int a=tab.at(i);
-			t_correct_int b=tab.at(j);
+	_note("Tab of numbers size: "<<tab.size());
 
-			t_correct_int c_ok = a+b;
-			xint c;
-//			if (overflow_impossible_in_assign(c,c_ok)) { // TODO
-//			}
+	long count_fitting=0, count_xflov=0; // count operations that fit, and operations that would over/under-flow
+
+	for (size_t i=0; i<tab.size(); ++i) {
+		for (size_t j=0; j<tab.size(); ++j) {
+			t_correct_int a_ok=tab.at(i);
+			t_correct_int b_ok=tab.at(j);
+			xint ab_type;
+
+			bool fit_a = overflow_impossible_in_assign(ab_type,a_ok);
+			bool fit_b = overflow_impossible_in_assign(ab_type,b_ok);
+
+			if (!(fit_a && fit_b)) {
+				EXPECT_THROW( { xint a(a_ok); xint b(b_ok); } , std::runtime_error );
+			}
+			else
+			{
+				xint a(a_ok); xint b(b_ok);
+				xint c;
+
+				#define THE_TEST( OPERATOR , OPERATOR_NAME ) do { \
+				bool div_by_zero = (string("div")==OPERATOR_NAME) && (b_ok == 0); \
+				bool operation_is_valid = !div_by_zero; \
+				t_correct_int c_ok; \
+				if (operation_is_valid) c_ok = a_ok OPERATOR b_ok; else c_ok=-1; \
+				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
+					_dbg2("Should be ok a="<<a<<" b="<<b); \
+					++count_fitting; \
+					c = a OPERATOR b; \
+					EXPECT_EQ(c, c_ok); \
+				} \
+				else { \
+					++count_xflov; \
+					_dbg2("Should fail a="<<a<<" b="<<b); \
+					EXPECT_THROW( { c = a OPERATOR b; } , std::runtime_error ); \
+				} \
+				} while(0)
+
+				THE_TEST( + , "add" );
+				THE_TEST( - , "sub" );
+				THE_TEST( * , "mul" );
+				THE_TEST( / , "div" );
+
+			} // fitting initial values
 		}
 	}
+	_note("Over/under-flow count: " << count_xflov);
+	EXPECT_GT(count_xflov, 248);
+	_note("Normal operation count: " << count_fitting);
+	EXPECT_GT(count_fitting, 16393);
 
 }
 
@@ -418,6 +480,7 @@ TEST(xint, safe_create_xint_assign) {
 		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }
+
 #endif
 
 

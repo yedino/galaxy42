@@ -19,19 +19,19 @@ basic_uxint;
 
 
 typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<1024, 1024,
+	boost::multiprecision::cpp_int_backend<128, 1024,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 xbigint;
 
 typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<1024, 1024,
+	boost::multiprecision::cpp_int_backend<128, 1024,
 		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
 uxbigint;
 
 
 
 typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<1024, 65536,
+	boost::multiprecision::cpp_int_backend<256, 4096,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 t_correct_int;
 
@@ -49,6 +49,13 @@ struct safer_int_base { };
 
 template<typename T>
 class safer_int : public safer_int_base {
+		#define TEMPLATE \
+		template<\
+			unsigned U1, unsigned U2, \
+			boost::multiprecision::cpp_integer_type U3, boost::multiprecision::cpp_int_check_type U4, \
+			typename U5, boost::multiprecision::expression_template_option U6>
+		#define T_OBJECT boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<U1, U2, U3, U4, U5>, U6>
+
 	public: // <-- TODO private
 		T xi; ///< the xint implementig my basic type
 	public:
@@ -66,11 +73,18 @@ class safer_int : public safer_int_base {
 		{
 			// TODO numeric_cast
 		}
+
 		safer_int(int64_t obj) // TODO
 			: xi(obj)
 		{
 			// TODO numeric_cast
 		}
+
+		TEMPLATE
+		safer_int(T_OBJECT obj)
+			: xi(obj)
+		{ }
+
 		template<typename U> safer_int<T> & operator=(const safer_int<U> & obj) {
 			xi=obj.xi;
 			// TODO numeric_cast
@@ -91,6 +105,9 @@ class safer_int : public safer_int_base {
 		template<typename U> bool operator!=(const safer_int<U> & obj) const { return xi!=obj.xi; }
 		template<typename U> bool operator==(const U & obj) const { return xi==obj; } // TODO check!
 		template<typename U> bool operator!=(const U & obj) const { return xi!=obj; } // TODO check!
+
+		TEMPLATE bool operator==(const T_OBJECT & obj) const { return xi==obj; }
+		TEMPLATE bool operator!=(const T_OBJECT & obj) const { return xi!=obj; }
 		// TODO ^ enable if numeric
 
 		template<typename U> bool operator>(safer_int<U> obj) { return xi>obj.xi; }
@@ -129,14 +146,21 @@ class safer_int : public safer_int_base {
 		// TODO check also for comparsion with buildint T, because it could be that build-in T is wider then some cpp_int
 
 		void print(std::ostream& ostr) const { ostr<<xi; }
+		#undef TEMPLATE
+		#undef T_OBJECT
 };
 
 namespace std {
 
 template <typename T>
 class numeric_limits<safer_int<T>> {
+  // based on http://www.boost.org/doc/libs/1_53_0/boost/multiprecision/cpp_int/limits.hpp
 	public:
 		typedef T number_type;
+		typedef std::numeric_limits<T> TL;
+
+		BOOST_STATIC_CONSTEXPR bool is_specialized = true;
+
 		static number_type (min)() { return std::numeric_limits<number_type>::min(); };
 		static number_type (max)() { return std::numeric_limits<number_type>::max(); };
 
@@ -148,8 +172,31 @@ class numeric_limits<safer_int<T>> {
     static number_type signaling_NaN() { return 0; }
     static number_type denorm_min() { return 0; }
 
-    // TODO all the other fields, as in: http://www.boost.org/doc/libs/1_53_0/boost/multiprecision/cpp_int/limits.hpp
-    // from line "class numeric_limits<boost::mul" below the public: secion
+		BOOST_STATIC_CONSTEXPR int digits = TL::digits;
+		BOOST_STATIC_CONSTEXPR int digits10 = TL::digits10;
+		BOOST_STATIC_CONSTEXPR int max_digits10 = TL::max_digits10;
+		BOOST_STATIC_CONSTEXPR bool is_signed = TL::is_signed;
+		BOOST_STATIC_CONSTEXPR bool is_integer = TL::is_integer;
+		BOOST_STATIC_CONSTEXPR bool is_exact = TL::is_exact;
+		BOOST_STATIC_CONSTEXPR int radix = TL::radix;
+
+	  BOOST_STATIC_CONSTEXPR int min_exponent = TL::min_exponent;
+		BOOST_STATIC_CONSTEXPR int min_exponent10 = TL::min_exponent10;
+		BOOST_STATIC_CONSTEXPR int max_exponent = TL::max_exponent;
+		BOOST_STATIC_CONSTEXPR int max_exponent10 = TL::max_exponent10;
+		BOOST_STATIC_CONSTEXPR bool has_infinity = TL::has_infinity;
+		BOOST_STATIC_CONSTEXPR bool has_quiet_NaN = TL::has_quiet_NaN;
+		BOOST_STATIC_CONSTEXPR bool has_signaling_NaN = TL::has_signaling_NaN;
+		BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm = TL::has_denorm;
+		BOOST_STATIC_CONSTEXPR bool has_denorm_loss = TL::has_denorm_loss;
+
+		BOOST_STATIC_CONSTEXPR bool is_iec559 = TL::is_iec559;
+		BOOST_STATIC_CONSTEXPR bool is_bounded = TL::is_bounded;
+		BOOST_STATIC_CONSTEXPR bool is_modulo = TL::is_modulo;
+		BOOST_STATIC_CONSTEXPR bool traps = TL::traps;
+		BOOST_STATIC_CONSTEXPR bool tinyness_before = TL::tinyness_before;
+		BOOST_STATIC_CONSTEXPR float_round_style round_style = TL::round_style;
+
 };
 
 
