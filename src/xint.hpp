@@ -114,25 +114,22 @@ class safer_int : public safer_int_base {
 		template<typename U, typename std::enable_if<
 			std::is_arithmetic<U>{} && ! std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
 		safer_int(U obj)
-		:xi(0) // TODO for now for debug
 		{
-			_warn("Creating from float, type=" << typeid(U).name() << " value=" << obj );
 			// TODO check is there is no more normal way of doing this all - comparing buildin float/double to boost cpp_int
-
 			typedef t_int_representing_float<U> U_int;
 			U_int obj_as_int( obj );
 			typedef t_bigger_of_two_cpp_int<T, U_int> T_big;
 			T_big obj_big( obj_as_int );
-			T_big xi_big( xi );
-			_note("obj_big="<<obj_big);
-			_note("xi_big="<<xi_big);
-			// if (!overflow_impossible_in_assign(xi_big,obj_big)) throw boost::numeric::bad_numeric_cast();
-			xi = static_cast<T>(obj);
-			auto xi_max = std::numeric_limits<decltype(xi)>::max() ;
-			T_big xi_max_big( xi_max );
-			if (obj_big > xi_max_big) { _warn("Throw"); throw boost::numeric::bad_numeric_cast(); }
 
-			_note("allowed. xi="<<xi_big<<" xi_max_big="<<xi_max_big);
+			auto xi_max = std::numeric_limits<T>::max() ;
+			T_big xi_max_big( xi_max );
+			if (obj_big > xi_max_big) { throw boost::numeric::bad_numeric_cast(); }
+
+			auto xi_min = std::numeric_limits<T>::min() ;
+			T_big xi_min_big( xi_min );
+			if (obj_big > xi_min_big) { throw boost::numeric::bad_numeric_cast(); }
+
+			xi = static_cast<T>(obj);
 		}
 
 		/// construct from same boost multiprecision number
