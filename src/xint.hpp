@@ -74,6 +74,12 @@ class safer_int : public safer_int_base {
 			// TODO numeric_cast
 		}
 
+		template<typename U, typename std::enable_if< std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
+		safer_int(U obj) : xi(obj)
+		{
+			// TODO numeric_cast
+		}
+
 		safer_int(int64_t obj) // TODO
 			: xi(obj)
 		{
