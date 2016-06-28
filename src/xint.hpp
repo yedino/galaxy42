@@ -9,6 +9,12 @@
 
 #include "libs0.hpp"
 
+/**
+ * @file This file/module goal is mainly to provide a very safe interger type
+ * that signals on any overflow or other UB (or not-mathematically-correct behavior).
+ * @see xint
+*/
+
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
@@ -299,7 +305,24 @@ std::ostream& operator<<(std::ostream& ostr, safer_int<T> obj) {
 	return ostr;
 }
 
+/**
+ * @brief This is the safe integer (signed, 64 bit) - that signals any overflow/UB:
+ * it will throw when overflow happens in operations on it, or creating it from other type,
+ * or when converting it to other type.
+ * Supported operations can be done between this type, and any of: other variables of same type (recommend),
+ * or build-in integral types, or build-in float types, or the "naked" boost::multiprecision based on cpp_int.
+ * The operations that can be done, are: ++ -- (pre and post), + - * /   += -= *= /=   negation  > < >= <= ==
+ * and also construction and assigment.
+ * Not all combinations are yet ideally tested, best use xint with int, and on same signess type (xint with signed types,
+ * uxint with unsigned).
+*/
 typedef safer_int<basic_xint> xint;
+
+/**
+ * @brief This is the safe integer (unsigned, 64 bit) - that signals any overflow/UB;
+ * similar to xint type, see it for details how to use it.
+ * @see xint
+*/
 typedef basic_uxint uxint;
 
 template<typename T>
