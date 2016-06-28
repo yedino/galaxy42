@@ -245,8 +245,6 @@ unsigned long long int round_co(t_correct1 v) {
 */
 template<typename T_INT>
 void math_tests_noproblem() {
-	//_mark("Doing tests, on integral with sizeof="<<sizeof(T_INT));
-
 	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 , 1000000 };
 	for (auto testsize : testsize_tab) {
 		T_INT a=0;
@@ -291,12 +289,11 @@ void math_tests_overflow_decr(T_INT val) { bool safetype = is_safe_int<T_INT>();
 	T_INT a = val;	t_correct_int a_corr = a;
 	auto func = [&]() { a_corr-=1; a--; } ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
-	db;
 
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
-	if (safetype) { db; EXPECT_THROW( func() , std::runtime_error ); db; }
+	if (safetype) {  EXPECT_THROW( func() , std::runtime_error ); }
 	else { // should not fit for given val
 		EXPECT_NO_THROW( func() ); // usafe type fils to throw
 		EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
@@ -350,7 +347,6 @@ TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xi
 generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
 generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -xint(maxni-1) )
 
-	/*
 TEST(xint, some_use) {
 	xint a("0xFFFFFFFFFFFFFFFF");
 	a--;
@@ -372,34 +368,38 @@ TEST(xint, some_use) {
 }
 
 TEST(xint, range_u_incr) {
-	uxint a("0xFFFFFFFFFFFFFFFE");
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	typedef uxint T;
+	T a("0xFFFFFFFFFFFFFFFE");
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_u_decr) {
-	uxint a("0x0000000000000001");
-	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , xint("0x0000000000000000"));
-	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , xint("0x0000000000000000"));
-	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , xint("0x0000000000000000"));
+	typedef uxint T;
+	T a("0x0000000000000001");
+	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , T("0x0000000000000000"));
+	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , T("0x0000000000000000"));
+	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , T("0x0000000000000000"));
 }
 
 TEST(xint, range_s_incr) {
-	xint a("0xFFFFFFFFFFFFFFFE");
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
-	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	typedef xint T;
+	T a("0xFFFFFFFFFFFFFFFE");
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_s_decr) {
-	xint b("0xFFFFFFFFFFFFFFFE");
-	xint a(0); a -= b;
+	typedef xint T;
+	T b("0xFFFFFFFFFFFFFFFE");
+	T a(0); a -= b;
 	EXPECT_NO_THROW( { a--; } );
 	EXPECT_THROW( { a--; } , std::runtime_error );
 	EXPECT_THROW( { a--; } , std::runtime_error );
 	EXPECT_NO_THROW( { a += b; } );
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0x0000000000000000"));
-	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , xint("0x0000000000000001"));
-	EXPECT_NO_THROW( { a+=b; } );	EXPECT_EQ(a , xint("0xFFFFFFFFFFFFFFFF"));
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0x0000000000000000"));
+	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0x0000000000000001"));
+	EXPECT_NO_THROW( { a+=b; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 
 TEST(xint, range_u_to_sizet) {
@@ -429,7 +429,6 @@ TEST(xint, range_u_to_sizet) {
 void someint(long long int x) {
 	_mark("someint got: " << x);
 }
-*/
 
 template <typename T>
 uxint make_uxint(T value) {	return numeric_cast<uint64_t>(value); }

@@ -92,7 +92,7 @@ class safer_int : public safer_int_base {
 		/// construct - default
 		safer_int() : xi( T() )	{	}
 
-	//	explicit safer_int(const char* txt) : xi(txt) { } // TODO check overflow, does result match txt
+		explicit safer_int(const char* txt) : xi(txt) { } // TODO check overflow, does result match txt
 
 		// construct from same type
 		template<typename U> safer_int(const safer_int<U> & obj)
