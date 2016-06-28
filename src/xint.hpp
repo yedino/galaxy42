@@ -37,6 +37,16 @@ typedef boost::multiprecision::number<
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 t_correct_int;
 
+template<typename T>
+using t_int_representing_float =
+	boost::multiprecision::number<
+		boost::multiprecision::cpp_int_backend<
+			std::numeric_limits<T>::max_exponent,
+			std::numeric_limits<T>::max_exponent,
+		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void>
+	>
+;
+
 
 // TODO move to lib
 // idea from http://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
@@ -45,8 +55,16 @@ struct is_specialization : std::false_type { };
 template <template<typename...> class R, typename... ARGS>
 struct is_specialization<R<ARGS...>, R> : std::true_type { };
 
-struct safer_int_base { };
 
+
+template <typename T, typename U>
+bool overflow_impossible_in_assign(T target, U value) {
+	if (value < std::numeric_limits<decltype(target)>::min()) return false;
+	if (value > std::numeric_limits<decltype(target)>::max()) return false;
+	return true; // no overflow
+}
+
+struct safer_int_base { };
 
 
 template<typename T>
@@ -78,18 +96,20 @@ class safer_int : public safer_int_base {
 			std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
 		safer_int(U obj) : xi(obj)
 		{
-			_warn("Creating from INT, type=" << typeid(U).name() << " value=" << obj );
+			// _warn("Creating from INT, type=" << typeid(U).name() << " value=" << obj );
 			// TODO numeric_cast
 		}
 
 		/// construct from various "float" types
 		template<typename U, typename std::enable_if<
 			std::is_arithmetic<U>{} && ! std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
-		safer_int(U obj) : xi(obj)
+		safer_int(U obj)
 		{
 			_warn("Creating from float, type=" << typeid(U).name() << " value=" << obj );
-			throw std::runtime_error("TEST ERROR - FLOAT");
-			// TODO numeric_cast
+
+			t_int_representing_float<U> obj_as_xi( obj );
+			if (!overflow_impossible_in_assign(xi,obj_as_xi)) throw boost::numeric::bad_numeric_cast();
+			xi = static_cast<T>(obj);
 		}
 
 		/// construct from same boost multiprecision number
@@ -273,12 +293,6 @@ uxint xsize(const T & obj) {
 
 template <typename T> bool overflow_impossible_in_assign(T, T) { return true; } // same type
 
-template <typename T, typename U>
-bool overflow_impossible_in_assign(T target, U value) {
-	if (value < std::numeric_limits<decltype(target)>::min()) return false;
-	if (value > std::numeric_limits<decltype(target)>::max()) return false;
-	return true; // no overflow
-}
 
 
 
