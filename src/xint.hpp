@@ -47,6 +47,16 @@ using t_int_representing_float =
 	>
 ;
 
+// TODO move to lib
+template<class T> constexpr T constexpr_max(T const & a, T const & b) { return (a>b) ? a : b; }
+
+template<typename P, typename Q>
+using t_bigger_of_two_cpp_int =	boost::multiprecision::number<
+		boost::multiprecision::cpp_int_backend<
+			constexpr_max( std::numeric_limits<P>::digits, std::numeric_limits<Q>::digits ),
+			constexpr_max( std::numeric_limits<P>::digits, std::numeric_limits<Q>::digits ),
+			boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> > ;
+
 
 // TODO move to lib
 // idea from http://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
@@ -106,9 +116,14 @@ class safer_int : public safer_int_base {
 		safer_int(U obj)
 		{
 			_warn("Creating from float, type=" << typeid(U).name() << " value=" << obj );
+			// TODO check is there is no more normal way of doing this all - comparing buildin float/double to boost cpp_int
 
-			t_int_representing_float<U> obj_as_xi( obj );
-			if (!overflow_impossible_in_assign(xi,obj_as_xi)) throw boost::numeric::bad_numeric_cast();
+			typedef t_int_representing_float<U> U_int;
+			U_int obj_as_int( obj );
+			typedef t_bigger_of_two_cpp_int<T, U_int> T_big;
+			T_big obj_big( obj_as_int );
+			T_big xi_big( xi );
+			if (!overflow_impossible_in_assign(xi_big,obj_big)) throw boost::numeric::bad_numeric_cast();
 			xi = static_cast<T>(obj);
 		}
 
