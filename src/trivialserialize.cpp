@@ -1,6 +1,5 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
-
 #include "libs1.hpp"
 
 #include "trivialserialize.hpp"
@@ -69,10 +68,10 @@ void generator::push_varstring(const std::string &data) {
 }
 
 void generator::push_vector_string(const vector<string> & data) {
-	auto size = data.size(); // TODO const
-//	assert( size <= ) ); // TODO
+	const auto size = data.size();
+	assert(size <= std::numeric_limits<uint64_t>::max());
 	push_integer_uvarint( data.size() );
-	for (decltype(size) i = 0; i<size; ++i) push_varstring(data.at(i));
+	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) push_varstring(data.at(i));
 }
 
 const std::string & generator::str() const { return m_str; }

@@ -228,16 +228,15 @@ template <> std::vector<std::string> obj_deserialize<std::vector<string>>(trivia
 
 /// @} //  trivialserialize_serializefreefunctions
 
-
 template <typename T> void generator::push_object(const T & data) {
 	obj_serialize(data, *this); // this should use the specialized user-provided function
 }
 
 template <typename T> void generator::push_vector_object(const vector<T> & data) {
-	auto size = data.size(); // TODO const
-	//	assert( size <= ) ); // TODO
+	const auto size = data.size();
+	assert(size <= std::numeric_limits<uint64_t>::max());
 	push_integer_uvarint( data.size() );
-	for (decltype(size) i = 0; i<size; ++i) push_object(data.at(i));
+	for (typename std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) push_object(data.at(i));
 }
 
 template <typename TKey, typename TVal>
@@ -402,9 +401,9 @@ T parser::pop_object() {
 template <typename T>
 vector<T> parser::pop_vector_object() {
 	vector<T> ret;
-	auto size = pop_integer_uvarint(); // TODO const
-	// assert( size <= (1LLU << 64LLU) ); // TODO
-	for (decltype(size) i = 0; i<size; ++i) ret.push_back( pop_object<T>() );
+	const auto size = pop_integer_uvarint();
+	assert(size <= std::numeric_limits<uint64_t>::max());
+	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) ret.push_back( pop_object<T>() );
 	return ret;
 }
 
@@ -414,10 +413,10 @@ map<TKey,TVal> parser::pop_map_object() {
 	if (dbg) _dbg1("Reading map");
 
 	map<TKey,TVal> ret;
-	auto size = pop_integer_uvarint(); // TODO const
+	const auto size = pop_integer_uvarint();
 	if (dbg) _dbg1("Reading map size="<<size);
-	// assert( size <= (1LLU << 64LLU) ); // TODO
-	for (decltype(size) i = 0; i<size; ++i) {
+	assert(size <= std::numeric_limits<uint64_t>::max());
+	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) {
 		if (dbg) _dbg1("Reading i=" << i);
 		TKey key = pop_object<TKey>();
 		TVal value = pop_object<TVal>();
