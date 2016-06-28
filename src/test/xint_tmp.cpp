@@ -8,7 +8,7 @@
 
 
 TEST(xint_tmp, safe_create_float1) {
-	g_dbg_level_set(30,"Details of test");
+	// g_dbg_level_set(30,"Details of test");
 
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
 		xint bonus(a*b*c); UNUSED(bonus);	} ;

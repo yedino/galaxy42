@@ -195,7 +195,7 @@ TEST(xint,normal_use_op4assign_loop) {
 				bool div_by_zero = (string("div")==OPERATOR_NAME) && (b_ok == 0); \
 				bool operation_is_valid = !div_by_zero; \
 				t_correct_int c_ok; \
-				if (operation_is_valid) c_ok = a_ok OPERATOR b_ok; else c_ok=-1; \
+				if (operation_is_valid) { c_ok = a_ok OPERATOR b_ok; } else c_ok=-1; \
 				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
 					_dbg2("Should be ok a="<<a<<" b="<<b); \
 					++count_fitting; \
@@ -213,6 +213,32 @@ TEST(xint,normal_use_op4assign_loop) {
 				THE_TEST( - , "sub" );
 				THE_TEST( * , "mul" );
 				THE_TEST( / , "div" );
+
+
+				#define THE_TEST( OPERATOR , OPERATOR_NAME ) do { \
+				bool div_by_zero = (string("div")==OPERATOR_NAME) && (b_ok == 0); \
+				bool operation_is_valid = !div_by_zero; \
+				t_correct_int c_ok; \
+				if (operation_is_valid) { c_ok = a_ok;  c_ok OPERATOR b_ok; } else c_ok=-1; \
+				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
+					_dbg2("Should be ok a="<<a<<" b="<<b); \
+					++count_fitting; \
+					c = a;  c OPERATOR b; \
+					EXPECT_EQ(c, c_ok); \
+				} \
+				else { \
+					++count_xflov; \
+					_dbg2("Should fail a="<<a<<" b="<<b); \
+					EXPECT_THROW( { c = a;  c OPERATOR b; } , std::runtime_error ); \
+				} \
+				} while(0)
+
+				THE_TEST( += , "add" );
+				THE_TEST( -= , "sub" );
+				THE_TEST( *= , "mul" );
+				THE_TEST( /= , "div" );
+
+				#undef THE_TEST
 
 			} // fitting initial values
 		}
