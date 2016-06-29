@@ -9,3 +9,9 @@ int test_commit_2() {
 	return foo;
 }
 
+int test_commit_3() {
+	int foo=42;
+	return foo;
+}
+
+
