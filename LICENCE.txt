@@ -4,17 +4,16 @@ The code and files in this directory (but with exception of code from other
 sources, read the code carefully and look for more LICENCE/LICENSE files)
 are now Copyrighted (C) 2015-2016 by the Yedino,
 they are licensed hereby as GPL version 3 with following exception:
-this code at discretion of the Yedino may be freely relicensed (including
-e.g. adding new licence(s) or removing current licence(s)) as described below.
+IMPORTANT:
+this code at discretion of the Yedino may be re-licensed by releasing
+it also in addition on new licence(s) including commercial ones.
+
+By act of sending to Yedino any patches or source code for this project,
+you give Yedino worldwide, royalty-free, exclusive, sublicensable, irrevocable
+right to release/license/re-license also your given code in such manner.
 
 "Yedino" here is the entity identified by being the owner of private key
 to Bitcoin account address: "1MYbpWaGaCcyRDCYVC3dgFSuMSE7WXb6Dm".
-
-IMPORTANT:
-if you commit code to this project for Yedino (e.g. to Yedino's source code)
-then you also: grant to Yedino:
-a worldwide, royalty-free, exclusive, sublicensable, irrevocable
-license to the code - including right to relicence the code commited by you.
 
 (A more clear version of this agreement will be provided soon).
 
