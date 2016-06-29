@@ -92,6 +92,17 @@ cooperation from other participants of the network if they want to get his help.
 
 === HOWTO ===
 
+Q: How to commit my work using Git?
+A: {git.model} First see {devel}.
+Create a branch, work there using `git commit -s` to sign each commit. Make a pull request.
+Project technical maintainer will the git merge -s your code.
+Do NOT rebase our code on top of work - or if you do so then you need to:
+sign again all commit using e.g. `git reset --hard` and `git cherry-pick` and `git commit --ammend -s`.
+See if all commits are signed using e.g. `git log --show-signature`.
+We will merge your commit using e.g. `git merge -S --verify-signatures`.
+As result, each and every commit (and merge commits) will be GPG signed.
+In addition, tags (that we created with `git tag -s`) will be signed too, by proper developer.
+
 Q: How to develop Galaxy42?
 A: [devel] Read most of questions here first, including [devel.demo], [devel.contact].
 
