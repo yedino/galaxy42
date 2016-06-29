@@ -163,6 +163,7 @@ TEST(crypto, bin_string_xor) {
 	EXPECT_EQ(true, size_diff_err);
 }
 
+#if OPTION_LEVEL_IS_EXPERIMENT
 TEST(crypto, ntru_sign) {
 	const std::string msg("message to sign");
 	int64 secretkey[PASS_N];
@@ -252,6 +253,7 @@ TEST(crypto, ntrupp_sign) {
 
 	EXPECT_TRUE(ntrupp::verify(signature, msg, keypair.second));
 }
+#endif
 
 TEST(crypto, multi_sign_ed25519) {
 
@@ -281,6 +283,7 @@ TEST(crypto, multi_sign_ed25519) {
 	});
 }
 
+#if OPTION_LEVEL_IS_EXPERIMENT
 TEST(crypto, multi_sign) {
 
 	antinet_crypto::c_multikeys_PAIR Alice;
@@ -313,8 +316,7 @@ TEST(crypto, multi_sign) {
 															Alice.read_pub());
 	});
 }
-
-
+#endif
 
 TEST(crypto, ipv6_hexdot) {
 	const size_t test_number = 10;
@@ -348,7 +350,9 @@ TEST(crypto, generate_unique_user_key) {
 	std::set<std::string> ipv6_hexdot;
 	for (size_t i = 0; i < number_of_test; ++i) {
 		c_multikeys_PAIR user_key;
+#if OPTION_LEVEL_IS_EXPERIMENT
 		user_key.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,1);
+#endif
 		user_key.generate(antinet_crypto::e_crypto_system_type_Ed25519,1);
 		user_key.generate(antinet_crypto::e_crypto_system_type_X25519,1);
 		pubkeys.insert(user_key.get_serialize_bin_pubkey());
@@ -370,7 +374,9 @@ TEST(crypto, save_and_open_user_key) {
 	for (size_t i = 0; i < number_of_test; ++i) {
 		std::string tmp_filename_nr(tmp_filename + std::to_string(i));
 		c_multikeys_PAIR user_key;
+#if OPTION_LEVEL_IS_EXPERIMENT
 		user_key.generate(antinet_crypto::e_crypto_system_type_NTRU_sign,1);
+#endif
 		user_key.generate(antinet_crypto::e_crypto_system_type_Ed25519,1);
 		user_key.generate(antinet_crypto::e_crypto_system_type_X25519,1);
 
@@ -394,13 +400,15 @@ TEST(crypto, create_cryptolink) {
 	const size_t number_of_test = 1000;
 	for (size_t i = 0; i < number_of_test; ++i) {
 		g_dbg_level_set(160, "start test");
-		c_multikeys_PAIR keypairA;
-		keypairA.generate(e_crypto_system_type_Ed25519, 2);
-		keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
-		c_multikeys_PAIR keypairB;
-		keypairB.generate(e_crypto_system_type_Ed25519, 2);
-		keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+		c_multikeys_PAIR keypairA, keypairB;
 
+		keypairA.generate(e_crypto_system_type_Ed25519, 2);
+		keypairB.generate(e_crypto_system_type_Ed25519, 2);
+
+#if OPTION_LEVEL_IS_EXPERIMENT
+		keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
+		keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+#endif
 		c_multikeys_pub keypubA = keypairA.m_pub;
 		c_multikeys_pub keypubB = keypairB.m_pub;
 
