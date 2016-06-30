@@ -24,6 +24,8 @@ option(OPTION_LEVEL_IS_PREVIEW "Enable the less tested code, that is not yet rec
 option(OPTION_LEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
 option(OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
 
+option(COVERAGE "Enable coverage tests" ON)
+
 if(OPTION_LEVEL_IS_PREVIEW)
 	add_definitions(-DOPTION_LEVEL_IS_PREVIEW)
 endif()
@@ -63,9 +65,12 @@ target_link_libraries(ntrusign fftw3 m)
 link_directories( build_extra/ntru/.libs )
 include_directories( build_extra )
 
+if(COVERAGE)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic --coverage")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
+endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
-# --coverage = enabling coverage
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
