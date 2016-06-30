@@ -12,7 +12,7 @@ OS X 10.11
 	brew install cmake
 	brew install boost
 
-*Interesting (AppleClang): 
+Interesting (AppleClang):
 -- The C compiler identification is AppleClang 7.3.0.7030031
 -- The CXX compiler identification is AppleClang 7.3.0.7030031
 
@@ -21,8 +21,6 @@ do script problems :
 Building NTru - PLEASE WAIT...
 Can't exec "aclocal": No such file or directory at /usr/local/Cellar/autoconf/2.69/share/autoconf/Autom4te/FileUtils.pm line 326.
 autoreconf: failed to run aclocal: No such file or eirectory
-
-brew search automake
 
 cmake problems: 
 
