@@ -1,70 +1,94 @@
 # For creating tun
 sudo: required
 
-# Ubuntu 14.04 Trusty support
-dist: trusty
-
 # Enable C++ support
 language: cpp
 
-addons:
-    apt:
-        sources:
-        # add PPAs with more up-to-date toolchains
+
+# Adding setcap for tunserver.elf etc.
+before_script:
+  - cd share/script/install-as-root/ && sudo ./install -y
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode7.3
+      compiler:
+        - clang
+
+      before_install:
+        - brew update
+        - brew install autoconf
+        - brew install pkg-config
+        - brew install cmake
+        - brew install libsodium
+        - brew install boost
+
+      script:
+        - cd ${TRAVIS_BUILD_DIR}
+        - ./do
+
+      after_success:
+        - ./test-release.elf    # run gtests
+
+    - os: linux
+      # Ubuntu 14.04 Trusty support
+      dist: trusty
+      # Compiler selection
+      compiler:
+        - gcc
+
+      addons:
+        apt:
+          # add PPAs with more up-to-date toolchains
+          sources:
             - ubuntu-toolchain-r-test
-        packages:
-        # install toolchains
+          packages:
             - gcc-5
             - g++-5
             - libboost-all-dev
             - libfftw3-dev
 
-# Adding setcap for tunserver.elf etc.
-before_script:
-    - cd share/script/install-as-root/ && sudo ./install -y
+      # Adding ppa for and install libsodium
+      before_install:
+        - sudo add-apt-repository ppa:chris-lea/libsodium -y
+        - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
+        - pip install --user cpp-coveralls
 
-# Adding ppa for and install libsodium
-before_install:
-    - sudo add-apt-repository ppa:chris-lea/libsodium -y
-    - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
-    - pip install --user cpp-coveralls
+      # Set g++-5 and gcc-5 for c++14 support
+      install:
+        - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
-# Set g++-5 and gcc-5 for c++14 support
-install:
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
-# Compiler selection
-compiler:
-    - gcc
+      # Build steps
+      script:
+        - cd ${TRAVIS_BUILD_DIR} # back to main dir
+        - ./do                   # main bulid
 
-# Build steps
-script: 
-    - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-    - ./do                   # main bulid
+      after_success:
+        - ./test-release.elf    # run gtests
+        - gcov --version
+        - coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5'
 
-after_success:
-    - ./test-release.elf    # run gtests
-    - gcov --version
-    - coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5'
 
 notifications:
-    irc:
-    #    on_success: [always|never|change] # default: always
-    #    on_failure: [always|never|change] # default: always
-        on_success: change
-        on_failure: change
-        channels:
-            - "icann.irc.meshnet.pl#antinet-dev"
-        template:
-            - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
-            - "Change view : %{compare_url}"
-            - "Build details : %{build_url}"
-#email:
-        #   to minimize spam
-        #    on_success: change
-        #    on_failure: always
-    #recipients:
-        #    - one@example.com
-        #    - other@example.com
+  irc:
+  #    on_success: [always|never|change] # default: always
+  #    on_failure: [always|never|change] # default: always
+    on_success: change
+    on_failure: change
+    channels:
+      - "icann.irc.meshnet.pl#antinet-dev"
+    template:
+      - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Change view : %{compare_url}"
+      - "Build details : %{build_url}"
 
+#email:
+  # to minimize spam
+  # on_success: change
+  # on_failure: always
+  # recipients:
+    # - one@example.com
+    # - other@example.com
 
