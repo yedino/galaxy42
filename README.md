@@ -140,6 +140,9 @@ cooperation from other participants of the network if they want to get his help.
 
 === HOWTO ===
 
+Q: How to use Galaxy42?
+A: [use] See top of this README for instructions - or just run the program and follow instructions on screen.
+
 Q: How to commit my work using Git?
 A: {git.model} First see {devel}.
 Create a branch, work there using `git commit -s` to sign each commit. Make a pull request.
@@ -154,11 +157,16 @@ In addition, tags (that we created with `git tag -s`) will be signed too, by pro
 Q: How to develop Galaxy42?
 A: [devel] Read most of questions here first, including [devel.demo], [devel.contact].
 
-Q: How to use Galaxy42?
-A: [use] The program is in development, it's not yet suitable for any end-user. See [devel] if you are developer.
+Q: What is the licence?
+A: See the LICENCE-by-Antinet.txt file and other such files.
+
+Q: How to develop Galaxy42?
+A: [devel] See LICENCE information first. Read most of questions here first, including [devel.demo], [devel.contact].
 
 Q: How to contact developers?
-A: [devel.contact] Contact us on IRC server icann.irc.meshnet.pl on channel #meshnet or #antinet (that for now is also about Galaxy42).
+A: [devel.contact] (Disclaimer: this is NOT a contact for legal matters - all such messages will be ignored; Wait for reply at least 12 hours;
+On IRC user names are not protected, and do not trust no one. We will never ask you to give us any passwords or run some untrusted not signed code!)
+Contact us on IRC server icann.irc.meshnet.pl on channel #meshnet or #antinet (that for now is also about Galaxy42).
 
 Q: How to see a demo how program works?
 A: [devel.demo] First build the program, and then choose one of methods:
@@ -169,16 +177,16 @@ test "bar", and other real tests.
 so as:
 ./tunserver.elf --devel --demo help
 
-2. In directory ./config crete a file config/demo.conf. In this file write a single line like "demo=bar";
-Then run the program with "make run" or with "./tunserver.elf --devel"
+2. In directory ./config crete a file config/demo.conf. In this file write a single line like `demo=bar`;
+Then run the program with `make run` or with `./tunserver.elf --devel`
 It should run a demo "bar" and write bar on screen (read the debug messages).
-If you change that text in file to "demo=foo" then it runs test Foo.
+If you change that text in file to `demo=foo` then it runs test Foo.
 If something does not work then see debug to figure it out.
 You can now write other demo name in the config file and run tests again.
 Set demo to "list" or "help" to see list of possible demo options [TODO].
 
-3. If you just run program with --devel it will run the hardcoded demo,
-as set in code in variable g_demoname_default.
+3. If you just run program with `--devel` it will run the hardcoded demo,
+as set in code in variable `g_demoname_default`.
 If you start working on a new branch you could set it there to other value
 to run your test - see [devel.newthing]
 
@@ -186,16 +194,16 @@ Q: How to develop something new?
 A: [devel.newthing] (First read [devel]) and then create git branch named like "wip_galaxy_SOMENAME"
 where SOMENAME is a nice name summarizing on what you do work.
 Then create also a demo for it (see how other demos are done, see function run_mode_developer,
-see demo developer_tests::wip_galaxy_route_doublestar that can be used in simulation of few nodes etc)
+see demo `developer_tests::wip_galaxy_route_doublestar` that can be used in simulation of few nodes etc)
 
 Q: How to debug a crash, memory leak, etc, how to run in valgrind/gdb
 A: [debug.nocap] You can use gdb and valgrind, but if you have a problem there that the CAP privilages level
 block your debug tool from working (as is the case with some hardened platforms) then if you can run
 a test, or a demo [devel.demo] that does not require net CAP privilages etc,
 then use the binary file that is not trying to get CAP rights,
-the file nocap-* binary, e.g.: nocap-tunserver.elf
-e.g.: valgrind  ./nocap-tunserver.elf --devel
-e.g.: valgrind  ./nocap-tunserver.elf --devel  --demo foo
+the file nocap-* binary, e.g.: `nocap-tunserver.elf`
+e.g.: `valgrind  ./nocap-tunserver.elf --devel`
+e.g.: `valgrind  ./nocap-tunserver.elf --devel  --demo foo`
 
 
 
