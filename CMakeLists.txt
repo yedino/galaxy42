@@ -15,19 +15,66 @@ ELSE()
 	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
+IF(DEFINED EXTLEVEL)
+   SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
+ELSE()
+   SET(EXTLEVEL 0 CACHE STRING "")
+ENDIF()
+
+IF(DEFINED COVERAGE)
+   SET(COVERAGE ${COVERAGE} CACHE BOOL "")
+ELSE()
+   SET(COVERAGE OFF CACHE BOOL "")
+ENDIF()
+
+
 project (ipbench)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+message("EXTLEVEL = ${EXTLEVEL}")
+message("COVERAGE = ${COVERAGE}")
 
-option(OPTION_LEVEL_IS_NORMAL "Enable the normal stable code" ON)
-option(OPTION_LEVEL_IS_PREVIEW "Enable the less tested code, that is not yet recommended for any real use" OFF)
-option(OPTION_LEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
-option(OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
+option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
+if (EXTLEVEL GREATER -1) # from0
+	set(EXTLEVEL_IS_NORMAL ON)
+endif()
 
-option(COVERAGE "Enable coverage tests" ON)
+option(EXTLEVEL_IS_PREVIEW "Enable the less tested code, that is not yet recommended for any real use" OFF)
+if (EXTLEVEL GREATER 9) # from 10
+	set(EXTLEVEL_IS_PREVIEW ON)
+endif()
 
-if(OPTION_LEVEL_IS_PREVIEW)
-	add_definitions(-DOPTION_LEVEL_IS_PREVIEW)
+option(EXTLEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
+if (EXTLEVEL GREATER 19) # from 20
+	set(EXTLEVEL_IS_EXPERIMENT ON)
+endif()
+
+option(EXTLEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
+if (EXTLEVEL GREATER 29) # from 30
+	set(EXTLEVEL_IS_EXPERIMENT_DANGEROUS ON)
+endif()
+
+
+if(EXTLEVEL_IS_NORMAL)
+	message("EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
+	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE)
+endif()
+if(EXTLEVEL_IS_PREVIEW)
+	message("EXTLEVEL enabling EXTLEVEL_IS_PREVIEW")
+	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE)
+endif()
+if(EXTLEVEL_IS_EXPERIMENT)
+	message("EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!")
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE)
+endif()
+if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
+	message("EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!! this code will be insecure!!!")
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE)
+endif()
+
+option(ENABLE_CRYPTO_SIDH "Enable crypto: SIDH" OFF)
+if(EXTLEVEL_IS_EXPERIMENT)
+		set(ENABLE_CRYPTO_SIDH ON)
 endif()
 
 add_compile_options(-Wno-unused-command-line-argument)
@@ -47,29 +94,41 @@ include_directories(depends/sodiumpp/sodiumpp/include)
 
 #add local lib sidh
 #flags for SIDH.h
-add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sidh)
-include_directories(depends/sidh)
+if(ENABLE_CRYPTO_SIDH)
+	message("Using crypto: SIDH")
+	add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sidh)
+	include_directories(depends/sidh)
+endif()
 
 #add local ntru sign lib
-set(NTRU_SIGN_DIR "depends/ntru-crypto/reference-code/C/Sign/PASS/src")
-include_directories("${NTRU_SIGN_DIR}")
-file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
-file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
-list(REMOVE_ITEM ntru-sign-files ${BENCH})
-add_library(ntrusign ${ntru-sign-files})
-target_link_libraries(ntrusign fftw3 m)
-
+if(ENABLE_CRYPTO_NTRU)
+	message("Using crypto: SIDH")
+	set(NTRU_SIGN_DIR "depends/ntru-crypto/reference-code/C/Sign/PASS/src")
+	include_directories("${NTRU_SIGN_DIR}")
+	file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
+	file(GLOB BENCH ${NTRU_SIGN_DIR}/bench.c)
+	list(REMOVE_ITEM ntru-sign-files ${BENCH})
+	add_library(ntrusign ${ntru-sign-files})
+	target_link_libraries(ntrusign fftw3 m)
 
 #add local build of some external libs
-link_directories( build_extra/ntru/.libs )
+	link_directories( build_extra/ntru/.libs )
+endif()
+
+
+# used e.g. by various crypto like ENABLE_CRYPTO_SIDH , ENABLE_CRYPTO_NTRU
 include_directories( build_extra )
 
 if(COVERAGE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic --coverage")
+	message("Enabling COVERAGE")
+	set(flag_coverage "--coverage")
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
+	message("Disabling COVERAGE")
+	set(flag_coverage "")
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic ${flag_coverage}")
 
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
