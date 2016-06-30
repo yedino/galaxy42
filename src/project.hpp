@@ -2,34 +2,34 @@
 #pragma once
 
 /***
- * @file Sets various project-wide settings, e.g. compilation flags, e.g. OPTION_LEVEL
+ * @file Sets various project-wide settings, e.g. compilation flags, e.g. EXTLEVEL
 */
 
 /***
- * @name OPTION_LEVEL_* sets do we want preview/experimental code. Use this as in #if OPTION_LEVEL_IS_PREVIEW ... #endif
+ * @name EXTLEVEL_* sets do we want preview/experimental code. Use this as in #if EXTLEVEL_IS_PREVIEW ... #endif
  * @{
 */
-#define OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS ///< If this is true, then also enable most experimental buggy code
-#define OPTION_LEVEL_IS_EXPERIMENT OPTION_LEVEL_IS_EXPERIMENT ///< If this is true, then also enable experimental buggy code
-#define OPTION_LEVEL_IS_PREVIEW OPTION_LEVEL_IS_PREVIEW ///< If this is true, then also enable preview of some not-yet-stable code
-#define OPTION_LEVEL_IS_NORMAL OPTION_LEVEL_IS_NORMAL ///< If this is true, then enable normal code. Should always be true probably.
+#define EXTLEVEL_IS_EXPERIMENT_DANGEROUS EXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE ///< If this is true, then also enable most experimental buggy code
+#define EXTLEVEL_IS_EXPERIMENT EXTLEVEL_IS_EXPERIMENT_CMAKE ///< If this is true, then also enable experimental buggy code
+#define EXTLEVEL_IS_PREVIEW EXTLEVEL_IS_PREVIEW_CMAKE ///< If this is true, then also enable preview of some not-yet-stable code
+#define EXTLEVEL_IS_NORMAL EXTLEVEL_IS_NORMAL_CMAKE ///< If this is true, then enable normal code. Should always be true probably.
 /// @}
 
-#if OPTION_LEVEL_IS_EXPERIMENT_DANGEROUS
-	#if ! ( OPTION_LEVEL_IS_EXPERIMENT && OPTION_LEVEL_IS_PREVIEW && OPTION_LEVEL_IS_NORMAL )
-		#error "The OPTION_LEVEL_ settings are not consistent"
+#if EXTLEVEL_IS_EXPERIMENT_DANGEROUS
+	#if ! ( EXTLEVEL_IS_EXPERIMENT && EXTLEVEL_IS_PREVIEW && EXTLEVEL_IS_NORMAL )
+		#error "The EXTLEVEL_ settings are not consistent"
 	#endif
 #endif
 
-#if OPTION_LEVEL_IS_EXPERIMENT
-	#if ! ( OPTION_LEVEL_IS_PREVIEW && OPTION_LEVEL_IS_NORMAL )
-		#error "The OPTION_LEVEL_ settings are not consistent"
+#if EXTLEVEL_IS_EXPERIMENT
+	#if ! ( EXTLEVEL_IS_PREVIEW && EXTLEVEL_IS_NORMAL )
+		#error "The EXTLEVEL_ settings are not consistent"
 	#endif
 #endif
 
-#if OPTION_LEVEL_IS_PREVIEW
-	#if ! ( OPTION_LEVEL_IS_NORMAL )
-		#error "The OPTION_LEVEL_ settings are not consistent"
+#if EXTLEVEL_IS_PREVIEW
+	#if ! ( EXTLEVEL_IS_NORMAL )
+		#error "The EXTLEVEL_ settings are not consistent"
 	#endif
 #endif
 
