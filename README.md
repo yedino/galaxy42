@@ -39,6 +39,54 @@ Backup: your **private keys** that give ownership of your virtual IP address by 
 This program will allow to do much much more in future (full public mesh) but this are plans for advanced testers (see below).
 
 * * *
+
+## Security:
+
+The source code is NOT yet reviewed, expect it to have bugs and exploits. For now we recommend to use it only in isolated VM
+or better yet on a separated test computer.
+
+### Security of binary install:
+
+Currently we do not yet offer binary install. But once we do, they will be properly signed by root of trust.
+
+### Security of binary auto-updates:
+
+Not implemented yet.
+
+### Security of source code:
+
+You can confirm that source code is indeed created by the developers - git tags are signed, and after them (e.g. on some work in progress branch)
+all following git commits (including git merges) are also signed.
+
+* **Root of trust**: all work here will be authorized by main key, that is currently by key:
+AB58 9383 1B9A EE6C EE17  6DA0 B4B4 5712 5445 3AF5 (Tigusoft Admin <admin@tigusoft.pl>).
+How ever, you should of course first check with some other channels if that is the fingerprint of owner of this project.
+
+* First, import the GPG keys. They are here in dir doc/pubkey/. How ever make sure the commit with keys is itself signed (e.g. git tag) by root of trust. You can import the keys there, though we are responsible ONLY for security of keys listed in gitallsign/ and only for purposes stated there (tag vs commit).
+
+* You can **simply use a tagged version and done** - just check the GPG signature on the git tag (`git tag`, `git tag -v v0........`),
+they should be usually signed directly by the root of trust.
+
+Or else, for not-tagged versions:
+
+* The files in gitallsign/ contain lists which GPG key is allowed to be which git Author, and can he sign commits or tags.
+(In future this will be automatically checked with our script, for now you must do it by hand).
+* Of course check who in fact created this files (git log / git blame) and is it signed by the root of trust. 
+* Check if at least the latest git tag is signed (and is it signed by person that is allowed to sign-tags in this project, and does the GPG key
+actually match the commit author as seen in git log).
+* Each commit (including merge commits) since version you are checking, back to the latest tag, should be also signed (also you should check,
+is it signed by person allowed to sign-commits this times, and does everything match ditto).
+
+Script that can help speed up this process is being written, e.g. one good version of it is:
+`sha512 3ed9cf88d3d78ced3a7326a05bc954695cb36b5802abca309745196bfe498e679a2f91c1df3e4ffcef852e3a203406959d565f5e78a8364d0438e99a6e9a7ad0 ` of file `antinet/tools/git_pretty_signature.py` in project Antinet. (New versions will be better, though review the code before runnig it anyway).
+
+### Organizations and projects
+
+Galaxy42 - the main network routing.
+Antinet - the research project including Galaxy42, simulations for it, tokens for it, and everything else.
+Yedino - the bigger entity that manages creation of this projects and controlls most of copyrights and official issues.
+
+* * *
 * * *
 * * *
 
