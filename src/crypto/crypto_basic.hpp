@@ -137,9 +137,9 @@ typedef std::string t_hash; ///< type of hash
 typedef sodiumpp::locked_string t_hash_PRV; ///< type of hash that contains a private secure data (e.g. is memlocked)
 
 t_hash Hash1( const t_hash & hash );
-constexpr size_t Hash1_size(); ///< returns size (in octets) of the output of Hash1 function
+constexpr size_t Hash1_size() { return 64; } ///< returns size (in octets) of the output of Hash1 function
 t_hash Hash2( const t_hash & hash );
-constexpr size_t Hash2_size(); ///< returns size (in octets) of the output of Hash1 function
+constexpr size_t Hash2_size() { return 64; } ///< returns size (in octets) of the output of Hash1 function
 
 t_hash_PRV Hash1_PRV( const t_hash_PRV & hash );
 t_hash_PRV Hash2_PRV( const t_hash_PRV & hash );

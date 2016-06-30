@@ -118,11 +118,6 @@ t_hash_PRV Hash1_PRV( const t_hash_PRV & hash ) {
     return out_u_hash;
 }
 
-
-constexpr size_t Hash1_size() {
-	return 64;
-}
-
 t_hash Hash2( const t_hash & hash ) {
     t_hash hash_from_hash = Hash1(hash);
     for(auto &ch : hash_from_hash) { // negate all octets in it
@@ -143,10 +138,6 @@ t_hash_PRV Hash2_PRV( const t_hash_PRV & hash ) {
     const auto ret = Hash1_PRV(hash_from_hash);
     assert( ret.size() == Hash2_size() );
     return ret;
-}
-
-constexpr size_t Hash2_size() {
-	return 64;
 }
 
 // ==================================================================
