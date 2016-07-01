@@ -39,12 +39,17 @@ it has bugs and 'typpos'.
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
-#include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
 #include <SIDH.h>
 
 #include "crypto_basic.hpp"
 #include "multikeys.hpp"
+
+#ifdef __MACH__
+#include "ntru/ntru_crypto_drbg.h"
+#else
+#include "ntru/include/ntru_crypto_drbg.h"
+#endif
 
 /**
  * @defgroup antinet_crypto Antinet Crypto
