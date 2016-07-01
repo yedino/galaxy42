@@ -82,10 +82,16 @@ ADD_CUSTOM_TARGET(debug
 
 # more directories of my main code
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp depends/cjdns-code/*.c)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
+
+if(APPLE)
+elseif(WIN32)
+else()
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
+endif()
 
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
