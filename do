@@ -12,6 +12,10 @@ echo "for that you could run:"
 echo "COVERAGE=1 EXTLEVEL=10 ./do"
 echo ""
 
+echo "===================================================================="
+echo "===================================================================="
+echo "===================================================================="
+
 make clean || { echo "(can not make clean - but this is probably normal at first run)" ; }
 rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but this is probably normal at first run)" ; }
 

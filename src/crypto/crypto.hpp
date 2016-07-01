@@ -39,9 +39,15 @@ it has bugs and 'typpos'.
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
-#include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
-#include <SIDH.h>
+
+#if EXTLEVEL_IS_PREVIEW
+	#include "ntru/include/ntru_crypto_drbg.h"
+#endif
+
+#if EXTLEVEL_IS_EXPERIMENT_DANGEROUS
+	#include <SIDH.h>
+#endif
 
 #include "crypto_basic.hpp"
 #include "multikeys.hpp"

@@ -32,13 +32,18 @@ it has bugs and 'typpos'.
 #include "crypto.hpp"
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-#include "../build_extra/ntru/include/ntru_crypto.h"
-#include "sidhpp.hpp"
+#if ENABLE_CRYPTO_NTRU
+	#include "sidhpp.hpp"
+#endif
 
 #include "../trivialserialize.hpp"
 
 #include "../filestorage.hpp"
-#include "ntrupp.hpp"
+
+#if ENABLE_CRYPTO_NTRU
+	#include "../build_extra/ntru/include/ntru_crypto.h"
+	#include "ntrupp.hpp"
+#endif
 
 #include "../glue_lockedstring_trivialserialize.hpp"
 #include "../glue_sodiumpp_crypto.hpp"
@@ -360,9 +365,8 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		} // X25519
 
 
-		#if 1
-		// TODO MERGEME
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
+			#if ENABLE_CRYPTO_NTRU
 			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys_enum)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
 
@@ -425,36 +429,42 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				}
 				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
+			#else
+				_dbg1("Warning: key type is not supported (NTru)");
+			#endif
 		} // NTRU_EES439EP1
-		#endif
 
 
 		if (sys == e_crypto_system_type_SIDH) {
-			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
-				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
-			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
-				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
-				auto keynr_a = keynr_i % key_count_a;
-				auto keynr_b = keynr_i % key_count_b;
-				_info("kex " << keynr_a << " " << keynr_b);
-				auto const key_self_pub = self_pub.get_public (sys_enum, keynr_a);
-				auto const key_self_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
-				auto const key_them_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
+			#if ENABLE_CRYPTO_SIDH
+				_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+					<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
+				for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
+					// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
+					auto keynr_a = keynr_i % key_count_a;
+					auto keynr_b = keynr_i % key_count_b;
+					_info("kex " << keynr_a << " " << keynr_b);
+					auto const key_self_pub = self_pub.get_public (sys_enum, keynr_a);
+					auto const key_self_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
+					auto const key_them_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
 
-				const auto dh_secret = sidhpp::secret_agreement(key_self_PRV, key_self_pub, key_them_pub);
+					const auto dh_secret = sidhpp::secret_agreement(key_self_PRV, key_self_pub, key_them_pub);
 
-				using namespace string_binary_op; // operator^
-				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
-				Hash1_PRV(
-					Hash1_PRV( dh_secret) // agreed-shared-key, hashed (it should include A+B parts of SIDH)
-					^ Hash1( key_self_pub )	^	Hash1( key_them_pub ) // and hash of public keys too
-				); // and all of this hashed once more
-				_info("SIDH secret key: " << to_debug_locked(k_dh_agreed));
+					using namespace string_binary_op; // operator^
+					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
+					Hash1_PRV(
+						Hash1_PRV( dh_secret) // agreed-shared-key, hashed (it should include A+B parts of SIDH)
+						^ Hash1( key_self_pub )	^	Hash1( key_them_pub ) // and hash of public keys too
+					); // and all of this hashed once more
+					_info("SIDH secret key: " << to_debug_locked(k_dh_agreed));
 
-				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
+					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 
-				// key agreement
-			}
+					// key agreement
+				}
+			#else
+				_dbg1("Warning: key type is not supported (SIDH)");
+			#endif
 		} // SIDH
 
 	}

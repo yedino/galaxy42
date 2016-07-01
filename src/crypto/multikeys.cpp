@@ -7,16 +7,24 @@
 
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-#include "../build_extra/ntru/include/ntru_crypto.h"
-#include "sidhpp.hpp"
 
 #include "../trivialserialize.hpp"
 
 #include "../filestorage.hpp"
-#include "ntrupp.hpp"
+
+#if ENABLE_CRYPTO_NTRU
+	#include "../build_extra/ntru/include/ntru_crypto.h"
+	#include "ntrupp.hpp"
+#endif
 
 #include "../glue_lockedstring_trivialserialize.hpp"
 #include "../glue_sodiumpp_crypto.hpp"
+
+#if ENABLE_CRYPTO_SIDH
+	#include "sidhpp.hpp"
+	#include <SIDH.h>
+#endif
+
 
 #include "multikeys.tpl.hpp"
 
@@ -194,12 +202,16 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 			break;
 		}
 		case e_crypto_system_type_NTRU_sign: {
+			#if ENABLE_CRYPTO_NTRU
 			for(size_t i = 0; i < amount_of_pubkeys; ++i) {
 				std::string pubkey = pubkeys.get_public(sign_type,i);
 				if (!ntrupp::verify(signs[i], msg, pubkey)) {
 					throw std::invalid_argument("Ntru sign verify: fail");
 				}
 			}
+			#else
+				throw invalid_argument_in_version("NTru signature (verify) not enabled");
+			#endif
 			break;
 		}
 		default: throw std::invalid_argument("sign type not supported");
@@ -287,12 +299,16 @@ std::vector<string> c_multikeys_PRV::multi_sign(const string &msg, t_crypto_syst
 			break;
 		}
 		case e_crypto_system_type_NTRU_sign: {
-			for(size_t i = 0; i < keys_count; ++i) {
-				std::string sign;
-				auto PRV_key = get_PRIVATE(sign_type,i);
-				sign = ntrupp::sign(msg, PRV_key);
-				signatures.emplace_back(std::move(sign));
-			}
+			#if ENABLE_CRYPTO_NTRU
+				for(size_t i = 0; i < keys_count; ++i) {
+					std::string sign;
+					auto PRV_key = get_PRIVATE(sign_type,i);
+					sign = ntrupp::sign(msg, PRV_key);
+					signatures.emplace_back(std::move(sign));
+				}
+			#else
+				throw invalid_argument_in_version("NTru signature (signing) not enabled");
+			#endif
 			break;
 		}
 		default: throw std::runtime_error("sign type not supported");
@@ -400,25 +416,35 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_ed25519_ke
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_encrypt_key_pair() {
-	// generate key pair
-	auto keypair = ntrupp::generate_encrypt_keypair();
-	// values for NTRU_EES439EP1
-	assert(keypair.first.size() == 659);
-	assert(keypair.second.size() == 609);
-
-	return keypair;
+	#if ENABLE_CRYPTO_NTRU
+		// generate key pair
+		auto keypair = ntrupp::generate_encrypt_keypair();
+		// values for NTRU_EES439EP1
+		assert(keypair.first.size() == 659);
+		assert(keypair.second.size() == 609);
+		return keypair;
+	#else
+		throw invalid_argument_in_version("NTru encryption (keygen) not enabled");
+	#endif
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_sign_key_pair() {
-
-	auto keypair = ntrupp::generate_sign_keypair();
-	assert(keypair.first.size() == 6152);
-	assert(keypair.second.size() == 6158);
-	return keypair;
+	#if ENABLE_CRYPTO_NTRU
+		auto keypair = ntrupp::generate_sign_keypair();
+		assert(keypair.first.size() == 6152);
+		assert(keypair.second.size() == 6158);
+		return keypair;
+	#else
+		throw invalid_argument_in_version("NTru signature (keygen) not enabled");
+	#endif
 }
 
 std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_pair() {
+	#if ENABLE_CRYPTO_SIDH
 	return sidhpp::generate_keypair();
+	#else
+		throw invalid_argument_in_version("SIDH (keypair gen) not enabled");
+	#endif
 }
 
 c_multisign c_multikeys_PAIR::multi_sign(const string &msg) {
@@ -477,19 +503,27 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 
 		case e_crypto_system_type_NTRU_sign:
 		{
-			for (int i=0; i<count; ++i) {
-				auto keypair = generate_nrtu_sign_key_pair();
-				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
-			}
+			#if ENABLE_CRYPTO_NTRU
+				for (int i=0; i<count; ++i) {
+					auto keypair = generate_nrtu_sign_key_pair();
+					this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
+				}
+			#else
+				throw invalid_argument_in_version("SIDH (generate) not enabled");
+			#endif
 			break;
 		}
 
 		case e_crypto_system_type_SIDH :
 		{
-			for (int i=0; i<count; ++i) {
-				auto keypair = sidhpp::generate_keypair();
-				this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
-			}
+			#if ENABLE_CRYPTO_SIDH
+				for (int i=0; i<count; ++i) {
+					auto keypair = sidhpp::generate_keypair();
+					this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
+				}
+			#else
+				throw invalid_argument_in_version("SIDH (generate) not enabled");
+			#endif
 			break;
 		} // case
 

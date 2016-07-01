@@ -57,24 +57,41 @@ endif()
 
 if(EXTLEVEL_IS_NORMAL)
 	message("EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
-	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE)
+	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=0)
 endif()
 if(EXTLEVEL_IS_PREVIEW)
 	message("EXTLEVEL enabling EXTLEVEL_IS_PREVIEW")
-	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE)
+	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=0)
 endif()
 if(EXTLEVEL_IS_EXPERIMENT)
 	message("EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!")
-	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE)
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=0)
 endif()
 if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
 	message("EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!! this code will be insecure!!!")
-	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE)
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=0)
 endif()
 
-option(ENABLE_CRYPTO_SIDH "Enable crypto: SIDH" OFF)
+set(TXT_SIDH "Enable crypto: SIDH")
+if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
+	option(ENABLE_CRYPTO_SIDH TXT_SIDH ON)
+else()
+	option(ENABLE_CRYPTO_SIDH TXT_SIDH OFF)
+endif()
+
+set(TXT_NTRU "Enable crypto: NTru")
 if(EXTLEVEL_IS_EXPERIMENT)
-		set(ENABLE_CRYPTO_SIDH ON)
+	option(ENABLE_CRYPTO_NTRU TXT_NTRU ON)
+else()
+	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
 endif()
 
 add_compile_options(-Wno-unused-command-line-argument)
@@ -92,18 +109,28 @@ link_directories(depends/jsoncpp/src/lib_json)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(depends/sodiumpp/sodiumpp/include)
 
-#add local lib sidh
-#flags for SIDH.h
+set(LIBS_OPTIONAL_CRYPTO "")
 if(ENABLE_CRYPTO_SIDH)
 	message("Using crypto: SIDH")
+	if(NOT EXTLEVEL_IS_EXPERIMENT_DANGEROUS) # if changed, then also edit all other places/files marked {{match_crypto_sidh}}
+    message( FATAL_ERROR "To use SIDH you must also enable proper EXTLEVEL for it (see the CMake file, or use defaults)" )
+	endif()
+	add_definitions(-DENABLE_CRYPTO_SIDH_CMAKE=1) # MATCH: must match also in project.hpp!
+
+	#add local lib sidh
+	#flags for SIDH.h
 	add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sidh)
 	include_directories(depends/sidh)
+	set(LIBS_OPTIONAL_CRYPTO "${LIBS_OPTIONAL_CRYPTO} ntruencrypt sidh")
+else()
+	add_definitions(-DENABLE_CRYPTO_SIDH_CMAKE=0) # MATCH: must match also in project.hpp!
 endif()
 
-#add local ntru sign lib
 if(ENABLE_CRYPTO_NTRU)
-	message("Using crypto: SIDH")
+	message("Using crypto: NTru")
+	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=1) # MATCH: must match also in project.hpp!
+
 	set(NTRU_SIGN_DIR "depends/ntru-crypto/reference-code/C/Sign/PASS/src")
 	include_directories("${NTRU_SIGN_DIR}")
 	file(GLOB ntru-sign-files ${NTRU_SIGN_DIR}/*.c)
@@ -111,9 +138,11 @@ if(ENABLE_CRYPTO_NTRU)
 	list(REMOVE_ITEM ntru-sign-files ${BENCH})
 	add_library(ntrusign ${ntru-sign-files})
 	target_link_libraries(ntrusign fftw3 m)
-
-#add local build of some external libs
+	#add local build of some external libs
 	link_directories( build_extra/ntru/.libs )
+	set(LIBS_OPTIONAL_CRYPTO "${LIBS_OPTIONAL_CRYPTO} ntruencrypt ntrusign")
+else()
+	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=0) # MATCH: must match also in project.hpp!
 endif()
 
 
@@ -179,7 +208,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
 
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options pthread sodium sodiumpp ntruencrypt ntrusign jsoncpp_lib_static sidh)
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO})
 
 
 #add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
@@ -194,11 +223,11 @@ file(GLOB TEST_SOURCES "src/test/*.cpp")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
+target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options gtest sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO} )
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options gtest sodium sodiumpp ntruencrypt jsoncpp_lib_static sidh ntrusign)
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options gtest sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO} )
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
