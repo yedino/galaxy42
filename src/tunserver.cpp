@@ -378,9 +378,13 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 c_tunserver::c_tunserver()
 :
 	m_my_name("unnamed-tunserver")
+	#ifdef __linux__
 	,m_udp_device(9042) //TODO port
+	#endif
 	,m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
+	#ifdef __linux__
 	,m_event_manager(m_tun_device, m_udp_device)
+	#endif
 {
 //	m_rpc_server.register_function(
 //		"add_limit_points",
@@ -453,9 +457,11 @@ try {
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	UNUSED(peer_ref);
+	#ifdef __linux__
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	#endif
 }
 
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
