@@ -1,5 +1,8 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
+#if ENABLE_CRYPTO_SIDH
+
+
 #include "sidhpp.hpp"
 #include <SIDH.h>
 #include "crypto_basic.hpp"
@@ -142,3 +145,9 @@ CRYPTO_STATUS sidhpp::random_bytes_sidh(unsigned int nbytes, unsigned char *rand
 	}
 	return CRYPTO_SUCCESS;
 }
+
+
+
+#endif
+
+

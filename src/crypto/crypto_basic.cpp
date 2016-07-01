@@ -6,6 +6,21 @@
 
 namespace antinet_crypto {
 
+
+
+#if ENABLE_CRYPTO_SIDH
+// random functions
+DRBG_HANDLE get_DRBG(size_t size);
+
+uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out);
+/**
+ * Generate "nbytes" random bytes and output the result to random_array
+ * Returns CRYPTO_SUCCESS (=1) on success, CRYPTO_ERROR (=0) otherwise.
+ */
+CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array);
+#endif
+
+
 // ==================================================================
 // extra implementation tools
 

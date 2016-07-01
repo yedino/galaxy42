@@ -39,9 +39,15 @@ it has bugs and 'typpos'.
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
-#include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
-#include <SIDH.h>
+
+#if ENABLE_CRYPTO_NTRU
+	#include "ntru/include/ntru_crypto_drbg.h"
+#endif
+
+#if ENABLE_CRYPTO_SIDH
+	#include <SIDH.h>
+#endif
 
 
 
@@ -68,15 +74,6 @@ bool safe_string_cmp(const std::string & a, const std::string & b);
 std::string to_debug_locked(const sodiumpp::locked_string & data);
 
 
-// random functions
-DRBG_HANDLE get_DRBG(size_t size);
-
-uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out);
-/**
- * Generate "nbytes" random bytes and output the result to random_array
- * Returns CRYPTO_SUCCESS (=1) on success, CRYPTO_ERROR (=0) otherwise.
- */
-CRYPTO_STATUS random_bytes_sidh(unsigned int nbytes, unsigned char *random_array);
 
 namespace unittest {
 	class c_symhash_state__tests_with_private_access;

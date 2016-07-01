@@ -4,17 +4,27 @@
 #include <boost/filesystem.hpp>
 #include "../crypto/crypto.hpp"
 #include "../filestorage.hpp"
-#include "../crypto/ntrupp.hpp"
-#include "../crypto/sidhpp.hpp"
+
 #include "../crypto/crypto_basic.hpp"
-// ntru sign
-extern "C" {
+
+#if ENABLE_CRYPTO_NTRU
+	#include "../crypto/ntrupp.hpp"
+
+	// ntru sign
+	extern "C" {
 #include <constants.h>
 #include <pass_types.h>
 #include <hash.h>
 #include <ntt.h>
 #include <pass.h>
-}
+	}
+
+#endif
+
+#if ENABLE_CRYPTO_SIDH
+	#include "../crypto/sidhpp.hpp"
+#endif
+
 
 
 namespace antinet_crypto {
@@ -163,7 +173,7 @@ TEST(crypto, bin_string_xor) {
 	EXPECT_EQ(true, size_diff_err);
 }
 
-#if OPTION_LEVEL_IS_EXPERIMENT
+#if ENABLE_CRYPTO_NTRU
 TEST(crypto, ntru_sign) {
 	const std::string msg("message to sign");
 	int64 secretkey[PASS_N];
@@ -329,6 +339,7 @@ TEST(crypto, ipv6_hexdot) {
 }
 
 
+#if ENABLE_CRYPTO_SIDH
 TEST(crypto, sidhpp) {
 	const auto alice_key_pair = sidhpp::generate_keypair();
 	const auto bob_key_pair = sidhpp::generate_keypair();
@@ -339,6 +350,7 @@ TEST(crypto, sidhpp) {
 	using namespace antinet_crypto;
 	ASSERT_EQ(alice_secret, bob_secret);
 }
+#endif
 
 using namespace antinet_crypto;
 

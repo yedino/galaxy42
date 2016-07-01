@@ -1,5 +1,9 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
+
+#if ENABLE_CRYPTO_NTRU
+
+
 #include "ntrupp.hpp"
 
 #include "../trivialserialize.hpp"
@@ -201,3 +205,7 @@ bool verify(const std::string &sign, const std::string &msg, const std::string &
 	return ret == VALID;
 }
 } // namspace ntrupp
+
+
+#endif
+

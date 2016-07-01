@@ -1,6 +1,16 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 #pragma once
 
+#include <stdexcept>
+#include <string>
+
+class invalid_argument_in_version : public std::invalid_argument {
+	public:
+		explicit invalid_argument_in_version( const std::string& what_arg );
+		explicit invalid_argument_in_version( const char* what_arg );
+};
+
+
 /***
  * @file Sets various project-wide settings, e.g. compilation flags, e.g. EXTLEVEL
 */
@@ -33,4 +43,23 @@
 	#endif
 #endif
 
+
+/***
+ * @name ENABLE_* flags - copy them from the ones set by CMake. This also allows us to add doxygen for them
+ * @{
+*/
+#define ENABLE_CRYPTO_SIDH ENABLE_CRYPTO_SIDH_CMAKE ///< should the SIDH crypto library be used
+#define ENABLE_CRYPTO_NTRU ENABLE_CRYPTO_NTRU_CMAKE ///< should the NTru crypto library be used
+/// @}
+
+#if ENABLE_CRYPTO_SIDH
+	#include <SIDH.h>
+#endif
+
+#if ENABLE_CRYPTO_NTRU
+	#include "ntru/include/ntru_crypto_drbg.h"
+#endif
+
+
+std::string project_version_info();
 

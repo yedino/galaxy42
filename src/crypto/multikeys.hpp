@@ -9,9 +9,12 @@
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
-#include "ntru/include/ntru_crypto_drbg.h"
+
+#if ENABLE_CRYPTO_NTRU
+	#include "ntru/include/ntru_crypto_drbg.h"
+#endif
+
 #include <sodiumpp/sodiumpp.h>
-#include <SIDH.h>
 
 #include "crypto_basic.hpp"
 

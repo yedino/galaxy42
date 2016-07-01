@@ -2,6 +2,8 @@
 
 #include "tunserver.hpp"
 
+#include "project.hpp"
+
 #include "glue_sodiumpp_crypto.hpp"
 #include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
@@ -278,7 +280,7 @@ int main(int argc, char **argv) {
 
 		po::options_description desc("Options", line_length);
 		desc.add_options()
-			("help", "Print help messages")
+			("help", "Print help messages, including program version and compiled options (what is enabled)")
 			("h", "same as --help")
 
 			("debug", "Turns on more debug")
@@ -299,7 +301,7 @@ int main(int argc, char **argv) {
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
 			("no-config", "Don't load any configuration file")
 
-			#if OPTION_LEVEL_IS_PREVIEW
+			#if EXTLEVEL_IS_PREVIEW
 
 			("demo", po::value<std::string>()->default_value(""),
 						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
@@ -362,7 +364,7 @@ int main(int argc, char **argv) {
 
 			// === PECIAL options - that set up other program options ===
 
-			#if OPTION_LEVEL_IS_PREVIEW
+			#if EXTLEVEL_IS_PREVIEW
 			_info("BoostPO Will parse demo/devel options");
 			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
 				auto opt_demo = argm["demo"].as<string>();
@@ -405,10 +407,11 @@ int main(int argc, char **argv) {
 
 			if (argm.count("help")) { // usage
 				std::cout << desc;
+				std::cout << std::endl << project_version_info() << std::endl;
 				return 0;
 			}
 
-			#if OPTION_LEVEL_IS_PREVIEW
+			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {
 				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
 				auto name = argm["my-key"].as<std::string>();
@@ -454,7 +457,7 @@ int main(int argc, char **argv) {
 				return 0;
 			} // gen-key
 
-			#if OPTION_LEVEL_IS_PREVIEW
+			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("sign")) {
 
 				antinet_crypto::c_multikeys_PRV signing_key;
@@ -577,7 +580,7 @@ int main(int argc, char **argv) {
 			#endif
 
 			_dbg1("BoostPO before config");
-			#if OPTION_LEVEL_IS_PREVIEW
+			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("gen-config")) {
 				c_json_genconf::genconf();
 			}
