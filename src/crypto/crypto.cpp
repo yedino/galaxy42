@@ -32,7 +32,6 @@ it has bugs and 'typpos'.
 #include "crypto.hpp"
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-#include "../build_extra/ntru/include/ntru_crypto.h"
 #include "sidhpp.hpp"
 
 #include "../trivialserialize.hpp"
