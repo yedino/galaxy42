@@ -9,12 +9,16 @@
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
-#include "ntru/include/ntru_crypto_drbg.h"
 #include <sodiumpp/sodiumpp.h>
 #include <SIDH.h>
 
 #include "crypto_basic.hpp"
 
+#ifdef __MACH__
+#include "ntru/ntru_crypto_drbg.h"
+#else
+#include "ntru/include/ntru_crypto_drbg.h"
+#endif
 
 namespace antinet_crypto {
 
