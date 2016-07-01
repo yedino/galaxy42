@@ -16,8 +16,10 @@
 
 #ifdef __MACH__
 #include "ntru/ntru_crypto_drbg.h"
+#include "ntru/ntru_crypto.h"
 #else
 #include "ntru/include/ntru_crypto_drbg.h"
+#include "ntru/include/ntru_crypto.h"
 #endif
 
 namespace antinet_crypto {
