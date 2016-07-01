@@ -92,7 +92,7 @@ const char * g_demoname_default = "route_dij";
 #include <sys/types.h>
 #include <sys/select.h>
 
-// for low-level Linux-like systems TUN operations
+#ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include <fcntl.h> // O_RDWRO_RDWR
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -101,6 +101,8 @@ const char * g_demoname_default = "route_dij";
 #include <netinet/tcp.h>		//Provides declarations for tcp header
 #include <netinet/ip.h>			//Provides declarations for ip header
 #include <linux/if_tun.h>
+#endif
+
 #include "c_json_load.hpp"
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
