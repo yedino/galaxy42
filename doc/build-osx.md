@@ -8,9 +8,10 @@ OS X 10.11
 	brew install git
 	brew install autoconf
 	brew install pkg-config
-	brew install libsodium
 	brew install cmake
 	brew install boost
+	brew install libsodium
+	brew install fftw
 
 Interesting (AppleClang):
 -- The C compiler identification is AppleClang 7.3.0.7030031
