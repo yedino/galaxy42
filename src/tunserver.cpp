@@ -493,8 +493,8 @@ void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
 }
 
+#ifdef __linux__
 void c_tunserver::prepare_socket() {
-
 
 	//ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
 
@@ -511,8 +511,8 @@ void c_tunserver::prepare_socket() {
 	}
 
 	_assert(m_udp_device.get_socket() >= 0);
-
 }
+#endif
 
 void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_info("Selecting");
@@ -687,6 +687,7 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 //	return true;
 //}
 
+#ifdef __linux__
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
 	c_counter counter(2,true);
@@ -1010,8 +1011,8 @@ void c_tunserver::event_loop() {
 				if (data_route_ttl > limit_incoming_ttl) {
 					_info("We were requested to route (help search route) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
-                    UNUSED(data_route_ttl); // TODO is it should be used?
-                }
+					UNUSED(data_route_ttl); // TODO is it should be used?
+				}
 
 				_info("We received request for HIP=" << string_as_hex( bin_hip ) << " = " << requested_hip << " and TTL=" << requested_ttl );
 				if (requested_ttl < 1) {
@@ -1112,11 +1113,15 @@ void c_tunserver::event_loop() {
 //		counter_big.tick(sent, std::cout);
 	}
 }
+#endif
 
 void c_tunserver::run() {
 	std::cout << "Stating the TUN router." << std::endl;
+
+#ifdef __linux__
 	prepare_socket();
 	event_loop();
+#endif
 }
 
 
