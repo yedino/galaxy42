@@ -1,5 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
+#include "../project.hpp"
+
 
 #if ENABLE_CRYPTO_NTRU
 
