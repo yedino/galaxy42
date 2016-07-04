@@ -32,7 +32,7 @@ it has bugs and 'typpos'.
 #include "crypto.hpp"
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
-#if ENABLE_CRYPTO_NTRU
+#if ENABLE_CRYPTO_SIDH
 	#include "sidhpp.hpp"
 #endif
 
