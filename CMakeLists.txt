@@ -118,8 +118,6 @@ link_directories(depends/jsoncpp/src/lib_json)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(depends/sodiumpp/sodiumpp/include)
 
-set(LIBS_OPTIONAL_CRYPTO "")
-
 if(ENABLE_CRYPTO_SIDH)
 	message("Using crypto: SIDH")
 	if(NOT EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
@@ -132,7 +130,7 @@ if(ENABLE_CRYPTO_SIDH)
 	add_definitions(-D_AMD64_ -D__LINUX__) #TODO set this flags automatically
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sidh)
 	include_directories(depends/sidh)
-	set(LIBS_OPTIONAL_CRYPTO "sidh ${LIBS_OPTIONAL_CRYPTO}")
+	list(APPEND LIBS_OPTIONAL_CRYPTO "sidh")
 else()
 	add_definitions(-DENABLE_CRYPTO_SIDH_CMAKE=0) # MATCH: must match also in project.hpp!
 endif()
@@ -150,7 +148,8 @@ if(ENABLE_CRYPTO_NTRU)
 	target_link_libraries(ntrusign fftw3 m)
 	#add local build of some external libs
 	link_directories( build_extra/ntru/.libs )
-	set(LIBS_OPTIONAL_CRYPTO "ntruencrypt ntrusign ${LIBS_OPTIONAL_CRYPTO}")
+	list(APPEND LIBS_OPTIONAL_CRYPTO "ntruencrypt")
+	list(APPEND LIBS_OPTIONAL_CRYPTO "ntrusign")
 
 	message("This is one part of NTRU (the sign), and there is other part of NTRU (encr) executed in other files (e.g. in scripts)")
   # NTRU Encrypt is in other file ---^
@@ -223,10 +222,14 @@ add_executable(tunserver.elf src/g42-main.cpp )
 
 
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
-message("Libs for crypto are: '${LIBS_OPTIONAL_CRYPTO_clean}'")
+message("Libs for crypto are: (as string) '${LIBS_OPTIONAL_CRYPTO_clean}'")
+separate_arguments(LIBS_OPTIONAL_CRYPTO_clean)
+unset(LIBS_OPTIONAL_CRYPTO)
+message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
 	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
+
 
 
 #add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
@@ -242,12 +245,22 @@ file(GLOB TEST_SOURCES "src/test/*.cpp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
 target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options
-	gtest sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} )
+	gtest sodium sodiumpp jsoncpp_lib_static)
+foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+	message("ADDING LIBRARY FROM LIST: '${_lib}'")
+	target_link_libraries(test-debug.elf ${_lib})
+endforeach()
+
+
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
 target_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options
-	gtest sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} )
+	gtest sodium sodiumpp jsoncpp_lib_static)
+foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+	message("ADDING LIBRARY FROM LIST: '${_lib}'")
+	target_link_libraries(test-release.elf ${_lib})
+endforeach()
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
