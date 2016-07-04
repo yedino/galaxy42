@@ -40,7 +40,17 @@ compiler:
 # Build steps
 script: 
     - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-    - ./do                   # main bulid
+
+matrix:
+  include: 
+    - script:
+        - COVERAGE=0 EXTLEVEL=30 ./do --go
+    - script:
+        - COVERAGE=0 EXTLEVEL=20 ./do --go
+    - script:
+        - COVERAGE=0 EXTLEVEL=10 ./do --go
+    - script:
+        - COVERAGE=1 EXTLEVEL=0 ./do --go
 
 after_success:
     - ./test-release.elf    # run gtests
