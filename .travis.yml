@@ -37,37 +37,44 @@ install:
 compiler:
     - gcc
 
+env:
+    -EXTLEVEL=30
+    -EXTLEVEL=20
+    -EXTLEVEL=10
+    -EXTLEVEL=0
+
 matrix:
   include:
     - os: linux
-      script:
-        - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=0 EXTLEVEL=30 ./do --go
-      after_success:
+      allow_failures:
+        script:
+          - cd ${TRAVIS_BUILD_DIR} # back to main dir 
+          - COVERAGE=0 ./do --go
+        after_success:
           - ./test-release.elf    # run gtests
     
     - os: linux
       script:
         - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=0 EXTLEVEL=20 ./do --go
+        - COVERAGE=0 ./do --go
       after_success:
-          - ./test-release.elf    # run gtests
+        - ./test-release.elf    # run gtests
     
     - os: linux
       script:
         - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=0 EXTLEVEL=10 ./do --go
+        - COVERAGE=0 ./do --go
       after_success:
-          - ./test-release.elf    # run gtests
+        - ./test-release.elf    # run gtests
     
     - os: linux
       script:
         - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=1 EXTLEVEL=0 ./do --go
+        - COVERAGE=1 ./do --go
       after_success:
-          - ./test-release.elf    # run gtests
-          - gcov --version
-          - coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5'
+        - ./test-release.elf    # run gtests
+        - gcov --version
+        - coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5'
 
 
 notifications:
