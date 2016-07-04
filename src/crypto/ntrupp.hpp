@@ -1,5 +1,9 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
+#pragma once
+
+#include "../project.hpp"
+
 #if ! ENABLE_CRYPTO_NTRU
 	#error "Do not include this header unless you define ENABLE_CRYPTO_NTRU to true. (Maybe you wrongly configured your project, or maybe you are missing such #if condition before your #include)
 #endif
