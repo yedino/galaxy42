@@ -9,6 +9,10 @@ echo ""
 [[ -z "$COVERAGE" ]] && { echo "set env variable COVERAGE" ; exit 1 ; }
 [[ -z "$EXTLEVEL" ]] && { echo "set env variable EXTLEVEL" ; exit 1 ; }
 
+DIR_BUILDEXTRA="build_extra"
+mkdir -p "$DIR_BUILDEXTRA"
+[ -d "$DIR_BUILDEXTRA" ] || { echo "Failed to create dir DIR_BUILDEXTRA=$DIR_BUILDEXTRA." ; exit 1; }
+[ -w "$DIR_BUILDEXTRA" ] || { echo "Failed to create (not writable!) dir DIR_BUILDEXTRA=$DIR_BUILDEXTRA." ; exit 1; }
 
 normaldir=$PWD
 
