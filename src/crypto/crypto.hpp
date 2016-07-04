@@ -41,11 +41,11 @@ it has bugs and 'typpos'.
 #include "gtest/gtest_prod.h"
 #include <sodiumpp/sodiumpp.h>
 
-#if EXTLEVEL_IS_PREVIEW
+#if ENABLE_CRYPTO_NTRU
 	#include "ntru/include/ntru_crypto_drbg.h"
 #endif
 
-#if EXTLEVEL_IS_EXPERIMENT_DANGEROUS
+#if ENABLE_CRYPTO_SIDH
 	#include <SIDH.h>
 #endif
 

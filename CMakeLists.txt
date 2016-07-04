@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
 
+# IMPORTANT:
+# search in ALL other files (source code, the bash scripts ./do and others)
+# following topics to match this topics here:
+#
+# match_extlevel_* - this are places that decide on which EXTLEVEL given feature is enabled:
+# {{match_extlevel_sidh}} - SIDH crypto lib: now at level 30 (EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
+# {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
+#
+
 #add_definitions(-DSODIUMPP_OPTION_DEBUG=1) # XXX
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
@@ -81,14 +90,14 @@ else()
 endif()
 
 set(TXT_SIDH "Enable crypto: SIDH")
-if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
+if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS) ## {{match_extlevel_sidh}}
 	option(ENABLE_CRYPTO_SIDH TXT_SIDH ON)
 else()
 	option(ENABLE_CRYPTO_SIDH TXT_SIDH OFF)
 endif()
 
 set(TXT_NTRU "Enable crypto: NTru")
-if(EXTLEVEL_IS_EXPERIMENT)
+if(EXTLEVEL_IS_EXPERIMENT) # {{match_extlevel_ntru}}
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU ON)
 else()
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
@@ -112,7 +121,7 @@ include_directories(depends/sodiumpp/sodiumpp/include)
 set(LIBS_OPTIONAL_CRYPTO "")
 if(ENABLE_CRYPTO_SIDH)
 	message("Using crypto: SIDH")
-	if(NOT EXTLEVEL_IS_EXPERIMENT_DANGEROUS) # if changed, then also edit all other places/files marked {{match_crypto_sidh}}
+	if(NOT EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
     message( FATAL_ERROR "To use SIDH you must also enable proper EXTLEVEL for it (see the CMake file, or use defaults)" )
 	endif()
 	add_definitions(-DENABLE_CRYPTO_SIDH_CMAKE=1) # MATCH: must match also in project.hpp!
@@ -141,8 +150,11 @@ if(ENABLE_CRYPTO_NTRU)
 	#add local build of some external libs
 	link_directories( build_extra/ntru/.libs )
 	set(LIBS_OPTIONAL_CRYPTO "${LIBS_OPTIONAL_CRYPTO} ntruencrypt ntrusign")
+
+	message("This is one part of NTRU (the sign), and there is other part of NTRU (encr) executed in other files (e.g. in scripts)")
+  # NTRU Encrypt is in other file ---^
 else()
-	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=0) # MATCH: must match also in project.hpp!
+	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=0) # MATCH (name of this option) must match also in project.hpp!
 endif()
 
 
