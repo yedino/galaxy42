@@ -278,8 +278,8 @@ int main(int argc, char **argv) {
 
 		const string config_default_myname = "galaxy";
 
-		po::options_description desc("Options", line_length);
-		desc.add_options()
+		auto desc = make_shared<po::options_description>("Options", line_length);
+		desc->add_options()
 			("help", "Print help messages, including program version and compiled options (what is enabled)")
 			("h", "same as --help")
 
@@ -301,6 +301,21 @@ int main(int argc, char **argv) {
 			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
 			("no-config", "Don't load any configuration file")
 
+			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
+
+			#if EXTLEVEL_IS_PREVIEW
+			("gen-key", "COMMAND: Generate combination of crypto key"
+						"\nrequired [--new-key or --new-key-file, --key-type]"
+						"\nexamples:"
+						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
+						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
+						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
+				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
+				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
+				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
+			#endif
+
+
 			#if EXTLEVEL_IS_PREVIEW
 
 			("demo", po::value<std::string>()->default_value(""),
@@ -319,15 +334,6 @@ int main(int argc, char **argv) {
 
 			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
 						"\nrequires [--my-key]")
-
-			("gen-key", "COMMAND: Generate combination of crypto key \nrequired [--new-key or --new-key-file, --key-type]"
-						"\nexamples:"
-						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
-						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
-						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
-				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
-				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
-				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
 
 			("sign", "COMMAND: Sign key or other message with your key"
 					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
@@ -355,11 +361,13 @@ int main(int argc, char **argv) {
 
 			;
 
+		myserver.set_desc(desc);
+
 		_note("Will parse program options");
 
 		po::variables_map argm;
 		try { // try parsing
-			po::store(po::parse_command_line(argc, argv, desc), argm); // <-- parse actuall real command line options
+			po::store(po::parse_command_line(argc, argv, *desc), argm); // <-- parse actuall real command line options
 			_note("BoostPO parsed argm size=" << argm.size());
 
 			// === PECIAL options - that set up other program options ===
@@ -406,7 +414,7 @@ int main(int argc, char **argv) {
 			_note("BoostPO after parsing debug");
 
 			if (argm.count("help")) { // usage
-				std::cout << desc;
+				std::cout << *desc;
 				std::cout << std::endl << project_version_info() << std::endl;
 				return 0;
 			}
@@ -454,6 +462,10 @@ int main(int argc, char **argv) {
 
 			if (argm.count("gen-key")) {
 				myserver.program_action_gen_key(argm);
+				return 0;
+			} // gen-key
+			if (argm.count("gen-key-simple")) {
+				myserver.program_action_gen_key_simple();
 				return 0;
 			} // gen-key
 
@@ -619,15 +631,9 @@ int main(int argc, char **argv) {
 					std::cout << "Please run the program again and use commands to recover a key, or to make a new key instead" << std::endl;
 				} else {
 					std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
-					// --gen-key --new-key "myself" --key-type "ed25519:x3"
-					const string IDI_name = "IDI";
-					vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
-					decltype(argm) xarg;
-					po::store( po::command_line_parser(xarg_vecstr).options(desc).run() , xarg );
-					po::notify( xarg );
-					ui::action_info_ok("Generating your new keys.");
-					myserver.program_action_gen_key(xarg);
+					const auto IDI_name = myserver.program_action_gen_key_simple();
 					myserver.program_action_set_IDI(IDI_name);
+					_info("IDI key name returned is: " << IDI_name);
 					ui::action_info_ok("Your new keys are created.");
 					myserver.configure_mykey();
 					ui::action_info_ok("Your new keys are ready to use.");
@@ -671,7 +677,7 @@ int main(int argc, char **argv) {
 		}
 		catch(po::error& e) {
 			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
-			std::cerr << desc << std::endl;
+			std::cerr << *desc << std::endl;
 			return 1;
 		}
 	} // try preparing

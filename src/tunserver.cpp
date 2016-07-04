@@ -377,12 +377,16 @@ c_tunserver::c_tunserver()
 :
 	m_my_name("unnamed-tunserver")
 	,m_udp_device(9042) //TODO port
-	,m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
 	,m_event_manager(m_tun_device, m_udp_device)
+	,m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
 {
 //	m_rpc_server.register_function(
 //		"add_limit_points",
 //		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
+}
+
+void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
+	m_desc = desc;
 }
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
@@ -1137,6 +1141,18 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 	}
 	_info("Key found ("<< keyname <<") and set as IDI");
 	filestorage::save_string(e_filestore_galaxy_instalation_key_conf,"IDI", keyname, true);
+}
+
+std::string c_tunserver::program_action_gen_key_simple() {
+	namespace po = boost::program_options;
+	const string IDI_name = "IDI";
+	vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
+	boost::program_options::variables_map xarg;
+	po::store( po::command_line_parser(xarg_vecstr).options(*m_desc).run() , xarg );
+	po::notify( xarg );
+	ui::action_info_ok("Generating your new keys.");
+	this->program_action_gen_key(xarg);
+	return IDI_name;
 }
 
 void c_tunserver::program_action_gen_key(boost::program_options::variables_map & argm) {
