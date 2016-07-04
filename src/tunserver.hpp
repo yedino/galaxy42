@@ -185,6 +185,7 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 class c_tunserver : public c_galaxy_node {
 	public:
 		c_tunserver();
+		void set_desc(shared_ptr< boost::program_options::options_description > desc);
 
 		void configure_mykey(); ///<  load my (this node's) keypair
 		void run(); ///< run the main loop
@@ -193,6 +194,7 @@ class c_tunserver : public c_galaxy_node {
 		/// @{
 		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk)
 		void program_action_gen_key(boost::program_options::variables_map & argm); ///< generate a key according to given options
+		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}
 
 
@@ -244,6 +246,7 @@ class c_tunserver : public c_galaxy_node {
 		void peering_ping_all_peers();
 		void debug_peers();
 
+
 	private:
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
@@ -254,6 +257,8 @@ class c_tunserver : public c_galaxy_node {
 		#else
 		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
+
+		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
 
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
