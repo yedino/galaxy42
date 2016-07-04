@@ -1144,14 +1144,13 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 }
 
 std::string c_tunserver::program_action_gen_key_simple() {
-	namespace po = boost::program_options;
 	const string IDI_name = "IDI";
-	vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
-	boost::program_options::variables_map xarg;
-	po::store( po::command_line_parser(xarg_vecstr).options(*m_desc).run() , xarg );
-	po::notify( xarg );
 	ui::action_info_ok("Generating your new keys.");
-	this->program_action_gen_key(xarg);
+
+	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys; // list of key types
+	keys.emplace_back(std::make_pair(antinet_crypto::t_crypto_system_type_from_string("ed25519"), 1));
+	auto output_file = IDI_name;
+	generate_crypto::create_keys(output_file, keys, true); // ***
 	return IDI_name;
 }
 
