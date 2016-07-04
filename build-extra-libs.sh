@@ -17,7 +17,7 @@ mkdir -p "$DIR_BUILDEXTRA"
 normaldir=$PWD
 
 
-if (( EXTLEVEL >= 20 ))
+if (( EXTLEVEL >= 20 )) # {{match_extlevel_ntru}}
 then
 	echo "Building NTru (Encrypt) - PLEASE WAIT..."
 	pushd depends/ntru-crypto/reference-code/C/Encrypt
@@ -44,6 +44,7 @@ then
 		done
 		popd
 	fi
+	echo "This is one part of NTru (Encrypt), other part could be elsewhere e.g. in CMake"
 fi
 
 echo "Look at what we prepared:"

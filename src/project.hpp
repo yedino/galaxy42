@@ -50,6 +50,10 @@ class invalid_argument_in_version : public std::invalid_argument {
 */
 #define ENABLE_CRYPTO_SIDH ENABLE_CRYPTO_SIDH_CMAKE ///< should the SIDH crypto library be used
 #define ENABLE_CRYPTO_NTRU ENABLE_CRYPTO_NTRU_CMAKE ///< should the NTru crypto library be used
+
+#if ENABLE_CRYPTO_NTRU
+#error "Ntru is enabled"
+#endif
 /// @}
 
 #if ENABLE_CRYPTO_SIDH
