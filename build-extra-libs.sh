@@ -19,7 +19,7 @@ normaldir=$PWD
 
 if (( EXTLEVEL >= 20 ))
 then
-	echo "Building NTru - PLEASE WAIT..."
+	echo "Building NTru (Encrypt) - PLEASE WAIT..."
 	pushd depends/ntru-crypto/reference-code/C/Encrypt
 	./autogen.sh && ./configure && make
 	popd
@@ -50,7 +50,7 @@ echo "Look at what we prepared:"
 
 find build_extra/
 
-echo "OK - All seems done in building external libraries" ; echo
+echo "OK - All seems done in building external libraries here (there could be more of this in other parts of build process, e.g. in the main CMake calling sub CMakes)" ; echo
 
 
 
