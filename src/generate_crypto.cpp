@@ -4,22 +4,27 @@
 
 void generate_crypto::create_keys(const std::string &filename,
 									 const std::vector<std::pair<antinet_crypto::t_crypto_system_type, int> > &keys,
-									 bool default_location) {
+									 bool default_location)
+{
 
 	antinet_crypto::c_multikeys_PAIR keypair;
+	_info("Generating keys, for type and count size: " << keys.size());
 
 	for (auto &type_and_count : keys) {
+		_info("Generating key for type_and_count="<<type_and_count.first<<","<<type_and_count.second);
 		keypair.generate(type_and_count.first, type_and_count.second);
 	}
 
 	if (default_location == false) {
+		_dbg2("Saving keys to provided custom path");
 		filestorage::save_string(e_filestore_local_path, filename+".pub", keypair.m_pub.serialize_bin(), true);
 		sodiumpp::locked_string data_PRV = sodiumpp::locked_string::unsafe_create(keypair.m_PRV.serialize_bin());
 		filestorage::save_string_mlocked(e_filestore_local_path, filename+".PRV", data_PRV, true);
-		return;
 	}
-
-	keypair.datastore_save_PRV_and_pub(filename);
+	else {
+		_dbg2("Saving keys to normal path");
+		keypair.datastore_save_PRV_and_pub(filename);
+	}
 }
 
 void generate_crypto::crypto_sign(const std::string &filename, e_crypto_strength strength) {
