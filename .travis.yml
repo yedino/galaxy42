@@ -4,34 +4,18 @@ sudo: required
 # Enable C++ support
 language: cpp
     
-os: linux
+os: 
+  - linux
+  - osx
+
 dist: trusty
+osx_image: xcode7.3
 
-# Compiler selection
-compiler:
-- gcc
-
-addons:
-  apt:
-    sources: # add PPAs with more up-to-date toolchains
-      - ubuntu-toolchain-r-test
-    packages: # install toolchains
-      - gcc-5
-      - g++-5
-      - libboost-all-dev
-      - libfftw3-dev
 
 # Adding setcap for tunserver.elf etc.
 before_script:
   - cd share/script/install-as-root/ && sudo ./install -y
 
-# Adding ppa for and install libsodium
-before_install:
-  - sudo add-apt-repository ppa:chris-lea/libsodium -y
-  - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
-  - pip install --user cpp-coveralls
-
-# Set g++-5 and gcc-5 for c++14 support
 install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
@@ -47,63 +31,43 @@ env:
 matrix:
     fast_finish: true
 
-
-
     include:
-      - env: COVERAGE=1 EXTLEVEL=0
+      - os: linux
+        env: COVERAGE=1 EXTLEVEL=0
+        dist: trusty
+        compiler: gcc
+        addons:
+          apt:
+            sources:
+              - ubuntu-toolchain-r-test
+            packages:
+              - gcc-5
+              - g++-5
+              - libboost-all-dev
+              - libfftw3-dev
+        before_install:
+          - sudo add-apt-repository ppa:chris-lea/libsodium -y
+          - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
+          - pip install --user cpp-coveralls
 
+
+      - os: osx
+        env: COVERAGE=0 EXTLEVEL=0
+        compiler: clang
+        before_install:
+          - brew update
+          - brew install autoconf
+          - brew install pkg-config
+          - brew install cmake
+          - brew install libsodium
+          - brew install boost
 
     allow_failures:
+      - os: osx
       - env: EXTLEVEL=30
       - env: EXTLEVEL=20
       - env: EXTLEVEL=10
 
-
-matrix:
-  include:
-    - os: osx
-      osx_image: xcode7.3
-      compiler:
-        - clang
-
-      before_install:
-        - brew update
-        - brew install autoconf
-        - brew install pkg-config
-        - brew install cmake
-        - brew install libsodium
-        - brew install boost
-
-      script:
-        - cd ${TRAVIS_BUILD_DIR}
-        - ./do
-
-      after_success:
-        - ./test-release.elf    # run gtests
-
-    - os: linux
-      # Ubuntu 14.04 Trusty support
-      dist: trusty
-      # Compiler selection
-      compiler:
-        - gcc
-
-      addons:
-        apt:
-          # add PPAs with more up-to-date toolchains
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - g++-5
-            - libboost-all-dev
-            - libfftw3-dev
-
-      # Adding ppa for and install libsodium
-      before_install:
-        - sudo add-apt-repository ppa:chris-lea/libsodium -y
-        - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
-        - pip install --user cpp-coveralls
 
 script:
   - cd ${TRAVIS_BUILD_DIR} # back to main dir 
