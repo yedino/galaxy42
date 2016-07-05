@@ -38,6 +38,9 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake; brew install cmake           ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew install boost           ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink libsodium; brew install libsodium   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
+    osx_image: xcode7.3
+    ; fi
 
 install:
   - echo $CXX   # for dbg
@@ -74,16 +77,6 @@ matrix:
       - os: osx
         osx_image: xcode7.3
         env: EXTLEVEL=0
-        compiler: clang
-
-      - os: osx
-        env: EXTLEVEL=10
-        osx_image: xcode7.3
-        compiler: clang
-
-      - os: osx
-        env: EXTLEVEL=20
-        osx_image: xcode7.3
         compiler: clang
 
     allow_failures:
