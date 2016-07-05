@@ -44,13 +44,15 @@ env:
     - COVERAGE=0
     - EXTLEVEL=0
   matrix:
-    - EXTLEVEL=30
+    # - EXTLEVEL=30   commented becauce of too big compilation matrix
     - EXTLEVEL=20
     - EXTLEVEL=10
 
 matrix:
     fast_finish: true
     exclude:
+      - os: linux
+        compiler: clang
       - os: osx
         compiler: gcc
 
@@ -58,6 +60,11 @@ matrix:
       - os: linux
         env: COVERAGE=1 EXTLEVEL=0
         compiler: gcc
+
+    include:
+      - os: linux
+        env: EXTLEVEL=0
+        compiler: clang
 
       - os: osx
         env: EXTLEVEL=0
