@@ -7,7 +7,6 @@ language: cpp
 os: 
   - linux
   - osx
-
 dist: trusty
 addons:
   apt:
@@ -18,6 +17,10 @@ addons:
       - g++-5
       - libboost-all-dev
       - libfftw3-dev
+
+compiler:
+  - gcc
+  - clang
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:chris-lea/libsodium -y  ; fi
@@ -47,6 +50,9 @@ env:
 
 matrix:
     fast_finish: true
+    exclude:
+      - os: osx
+        compiler: gcc
 
     include:
       - os: linux
@@ -54,7 +60,6 @@ matrix:
         compiler: gcc
 
       - os: osx
-        osx_image: xcode7.3
         env: EXTLEVEL=0
         compiler: clang
 
