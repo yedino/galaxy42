@@ -11,10 +11,26 @@ os:
 dist: trusty
 osx_image: xcode7.3
 
-
-# Adding setcap for tunserver.elf etc.
-before_script:
-  - cd share/script/install-as-root/ && sudo ./install -y
+before_install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then 
+    sudo add-apt-repository ppa:chris-lea/libsodium -y
+    sudo apt-get update -q
+    sudo apt-get install gcc-5 -y
+    sudo apt-get install g++-5 -y
+    sudo apt-get install libboost-all-dev -y
+    sudo apt-get install libsodium-dev -y
+    sudo apt-get install libfftw3-dev -y
+    pip install --user cpp-coveralls
+    ; fi
+  
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
+    brew update
+    brew install autoconf
+    brew install pkg-config
+    brew install cmake
+    brew install boost
+    brew install libsodium
+    ; fi
 
 install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
@@ -34,33 +50,10 @@ matrix:
     include:
       - os: linux
         env: COVERAGE=1 EXTLEVEL=0
-        dist: trusty
         compiler: gcc
-        addons:
-          apt:
-            sources:
-              - ubuntu-toolchain-r-test
-            packages:
-              - gcc-5
-              - g++-5
-              - libboost-all-dev
-              - libfftw3-dev
-        before_install:
-          - sudo add-apt-repository ppa:chris-lea/libsodium -y
-          - sudo apt-get update -q && sudo apt-get install libsodium-dev -y;
-          - pip install --user cpp-coveralls
-
 
       - os: osx
-        env: COVERAGE=0 EXTLEVEL=0
         compiler: clang
-        before_install:
-          - brew update
-          - brew install autoconf
-          - brew install pkg-config
-          - brew install cmake
-          - brew install libsodium
-          - brew install boost
 
     allow_failures:
       - os: osx
@@ -69,8 +62,13 @@ matrix:
       - env: EXTLEVEL=10
 
 
-script:
+# Adding setcap for tunserver.elf etc.
+before_script:
   - cd ${TRAVIS_BUILD_DIR} # back to main dir 
+  - cd share/script/install-as-root/ && sudo ./install -y
+
+script:
+  - cd ${TRAVIS_BUILD_DIR}
   - ./do --go
 
 after_success:
