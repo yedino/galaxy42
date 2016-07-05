@@ -37,16 +37,14 @@ install:
 compiler:
     - gcc
 
-env:
-    -EXTLEVEL=30
-    -EXTLEVEL=20
-    -EXTLEVEL=10
-    -EXTLEVEL=0
-
 matrix:
   include:
     - os: linux
       allow_failures:
+        env:
+          - EXTLEVEL=30
+          - EXTLEVEL=20
+          - EXTLEVEL=10
         script:
           - cd ${TRAVIS_BUILD_DIR} # back to main dir 
           - COVERAGE=0 ./do --go
@@ -56,21 +54,7 @@ matrix:
     - os: linux
       script:
         - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=0 ./do --go
-      after_success:
-        - ./test-release.elf    # run gtests
-    
-    - os: linux
-      script:
-        - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=0 ./do --go
-      after_success:
-        - ./test-release.elf    # run gtests
-    
-    - os: linux
-      script:
-        - cd ${TRAVIS_BUILD_DIR} # back to main dir 
-        - COVERAGE=1 ./do --go
+        - COVERAGE=1 -EXTLEVEL=0 ./do --go
       after_success:
         - ./test-release.elf    # run gtests
         - gcov --version
