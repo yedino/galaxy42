@@ -9,6 +9,7 @@ os:
   - osx
 
 dist: trusty
+osx_image: xcode7.3
 
 addons:
   apt:
@@ -38,9 +39,6 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake; brew install cmake           ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew install boost           ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink libsodium; brew install libsodium   ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
-    osx_image: xcode7.3
-    ; fi
 
 install:
   - echo $CXX   # for dbg
@@ -75,7 +73,6 @@ matrix:
         compiler: clang
 
       - os: osx
-        osx_image: xcode7.3
         env: EXTLEVEL=0
         compiler: clang
 
@@ -98,16 +95,17 @@ after_success:
   - ./test-release.elf    # run gtests
   - if [[ "$COVERAGE" == "1" ]]; then coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5' ; fi
 
-#notifications:
-#  irc:
-#    on_success: change
-#    on_failure: change
-#    channels:
-#      - "icann.irc.meshnet.pl#antinet-dev"
-#    template:
-#      - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
-#      - "Change view : %{compare_url}"
-#      - "Build details : %{build_url}"
+notifications:
+  irc:
+    on_success: change
+    on_failure: change
+    channels:
+      - "icann.irc.meshnet.pl#antinet-dev"
+    template:
+      - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Change view : %{compare_url}"
+      - "Build details : %{build_url}"
+
   #email:
   #  to minimize spam
   #  on_success: change
@@ -115,5 +113,4 @@ after_success:
   #recipients:
   #  - one@example.com
   #  - other@example.com
-
 
