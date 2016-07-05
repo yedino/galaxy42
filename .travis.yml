@@ -6,10 +6,9 @@ language: cpp
 
 os:
   - linux
-  - osx
+  - osx_image: xcode7.3
 
 dist: trusty
-osx_image: xcode7.3
 
 addons:
   apt:
