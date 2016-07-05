@@ -16,6 +16,7 @@ addons:
     packages:
       - gcc-5
       - g++-5
+      - clang 
       - libboost-all-dev
       - libfftw3-dev
 
@@ -29,14 +30,12 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y               ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                    ; fi
   
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update               ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install autoconf     ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink pkg-config    ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pkg-config   ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake         ; fi # for Error: cmake-3.0.2 already installed 
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cmake        ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install boost        ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libsodium    ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                     ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink autoconf; brew install autoconf     ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink pkg-config; brew install pkg-config ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake; brew install cmake           ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew install boost           ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink libsodium; brew install libsodium   ; fi
 
 install:
   - if [[ "$CXX" == "g++" ]]; then export CXX="g++-5" CC="gcc-5"  ; fi
@@ -76,7 +75,6 @@ matrix:
       - env: EXTLEVEL=30
       - env: EXTLEVEL=20
       - env: EXTLEVEL=10
-
 
 # Adding setcap for tunserver.elf etc.
 before_script:
