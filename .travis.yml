@@ -9,32 +9,31 @@ os:
   - osx
 
 dist: trusty
-osx_image: xcode7.3
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - g++-5
+      - libboost-all-dev
+      - libfftw3-dev
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then 
-    sudo add-apt-repository ppa:chris-lea/libsodium -y
-    sudo apt-get update -q
-    sudo apt-get install gcc-5 -y
-    sudo apt-get install g++-5 -y
-    sudo apt-get install libboost-all-dev -y
-    sudo apt-get install libsodium-dev -y
-    sudo apt-get install libfftw3-dev -y
-    pip install --user cpp-coveralls
-    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:chris-lea/libsodium -y  ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                              ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y               ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                    ; fi
   
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
-    brew update
-    brew upgrade
-    brew install autoconf
-    brew install pkg-config
-    brew install cmake
-    brew install boost
-    brew install libsodium
-    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update               ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install autoconf     ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pkg-config   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cmake        ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install boost        ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libsodium    ; fi
 
 install:
-  - if [ "$CXX" == "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+  - if [[ "$CXX" == "g++" ]]; then export CXX="g++-5" CC="gcc-5"  ; fi
 
 env:
   global:
@@ -54,6 +53,8 @@ matrix:
         compiler: gcc
 
       - os: osx
+        osx_image: xcode7.3
+        env: EXTLEVEL=0
         compiler: clang
 
     allow_failures:
@@ -74,7 +75,7 @@ script:
 
 after_success:
   - ./test-release.elf    # run gtests
-  - if[ "$COVERAGE" = "1" ]; then coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5'
+  - if [[ "$COVERAGE" == "1" ]]; then coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5' ; fi
 
 #notifications:
 #  irc:
