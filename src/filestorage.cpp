@@ -28,7 +28,7 @@ void filestorage::save_string(t_filestore file_type,
 			throw std::invalid_argument("Fail to open file for write: " + filename);
 		}
 		file.close();
-		_dbg2("Successfully saved string to:" << file_with_path.native());
+		_dbg2("Successfully saved string to:" << b_fs::canonical(file_with_path).string());
 
 	} catch(overwrite_error &err) {
 		_warn("Save error:" << err.what());
@@ -60,7 +60,7 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
 
 		std::fclose(f_ptr);
-		_dbg2("Successfully saved mlocked string to:" << file_with_path.native());
+		_dbg2("Successfully saved mlocked string to:" << b_fs::canonical(file_with_path).string());
 
 	} catch(overwrite_error &err) {
 		if(text_ui::ask_user_forpermission("overwrite file?")) {
@@ -76,9 +76,9 @@ std::string filestorage::load_string(t_filestore file_type,
 	std::string content;
 
 	b_fs::path file_with_path = get_full_path(file_type, filename);
-	_dbg2("Loading file path: " << file_with_path.native());
+	_dbg2("Loading file path: " << b_fs::canonical(file_with_path).string());
 
-	if (!is_file_ok(file_with_path.native())) {
+	if (!is_file_ok(b_fs::canonical(file_with_path).string())) {
 		throw std::invalid_argument("Fail to open file for read: " + filename);
 	} else {
 		b_fs::ifstream ifs(file_with_path);
@@ -87,7 +87,7 @@ std::string filestorage::load_string(t_filestore file_type,
 
 		ifs.close();
 	}
-	_dbg2("Successfully loaded string from:" << file_with_path.native());
+	_dbg2("Successfully loaded string from:" << b_fs::canonical(file_with_path).string());
 	return content;
 }
 
@@ -118,7 +118,7 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 	}
 	std::fclose(f_ptr);
 
-	_dbg2("Successfully loaded mlocked string from:" << file_with_path.native());
+	_dbg2("Successfully loaded mlocked string from:" << b_fs::canonical(file_with_path).string());
 	return content;
 }
 
@@ -163,7 +163,7 @@ std::vector<std::string> filestorage::get_file_list(const boost::filesystem::pat
 
 		for (b_fs::recursive_directory_iterator i(apk_path); i != end; ++i) {
 			const b_fs::path cp = (*i);
-			std::string filename = extract_filename(cp.native());
+			std::string filename = extract_filename(b_fs::canonical(cp).string());
 			file_list.push_back(filename);
 		}
 	}
@@ -244,8 +244,8 @@ b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 		file_with_path = create_path_for(file_type, filename);
 
 		// prevent overwriting
-		if(is_file_ok(file_with_path.native()) &&  !overwrite) {
-			std::string err_msg(file_with_path.native()
+		if(is_file_ok(file_with_path.b_fs::canonical(x).string()) &&  !overwrite) {
+			std::string err_msg(b_fs::canonical(file_with_path).string()
 								+ std::string(": file existing, it can't be overwrite [overwrite=")
 								+ std::to_string(overwrite)
 								+ std::string("]"));
@@ -294,14 +294,14 @@ b_fs::path filestorage::create_path_for(t_filestore file_type,
 
 	// connect parent path with filename
 	b_fs::path full_path = get_full_path(file_type, filename);
-	_dbg1("Full_path: " << full_path.native());
+	_dbg1("Full_path: " << b_fs::canonical(full_path).string());
 	create_parent_dir(full_path);
 	return full_path;
 }
 
 std::string filestorage::extract_filename(const std::string &string_path) {
 	b_fs::path try_path(string_path);
-	return try_path.filename().native();
+	return try_path.filename().b_fs::canonical(x).string();
 }
 
 bool filestorage::create_parent_dir(const b_fs::path &file_path) {
