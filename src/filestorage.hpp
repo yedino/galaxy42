@@ -76,7 +76,7 @@ public:
 	 * @param path directory where we looking for files
 	 * @return
 	 */
-	static std::vector<std::string> get_file_list(const b_fs::path& path);
+	static std::vector<std::string> get_file_list(const b_fs::path &path);
 	/**
 	 * @brief get_full_path
 	 * @param file_type
