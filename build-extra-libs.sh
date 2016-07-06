@@ -9,13 +9,17 @@ echo ""
 [[ -z "$COVERAGE" ]] && { echo "set env variable COVERAGE" ; exit 1 ; }
 [[ -z "$EXTLEVEL" ]] && { echo "set env variable EXTLEVEL" ; exit 1 ; }
 
+DIR_BUILDEXTRA="build_extra"
+mkdir -p "$DIR_BUILDEXTRA"
+[ -d "$DIR_BUILDEXTRA" ] || { echo "Failed to create dir DIR_BUILDEXTRA=$DIR_BUILDEXTRA." ; exit 1; }
+[ -w "$DIR_BUILDEXTRA" ] || { echo "Failed to create (not writable!) dir DIR_BUILDEXTRA=$DIR_BUILDEXTRA." ; exit 1; }
 
 normaldir=$PWD
 
 
-if (( EXTLEVEL >= 20 ))
+if (( EXTLEVEL >= 20 )) # {{match_extlevel_ntru}}
 then
-	echo "Building NTru - PLEASE WAIT..."
+	echo "Building NTru (Encrypt) - PLEASE WAIT..."
 	pushd depends/ntru-crypto/reference-code/C/Encrypt
 	./autogen.sh && ./configure && make
 	popd
@@ -40,13 +44,14 @@ then
 		done
 		popd
 	fi
+	echo "This is one part of NTru (Encrypt), other part could be elsewhere e.g. in CMake"
 fi
 
 echo "Look at what we prepared:"
 
 find build_extra/
 
-echo "OK - All seems done in building external libraries" ; echo
+echo "OK - All seems done in building external libraries here (there could be more of this in other parts of build process, e.g. in the main CMake calling sub CMakes)" ; echo
 
 
 
