@@ -3,6 +3,7 @@
 
 #include "ui.hpp"
 
+
 using namespace std;
 
 namespace ui {
@@ -19,9 +20,24 @@ void action_info_ok(const string &info) {
 	cout << "OK: " << info << endl;
 }
 
-
-
-
+void show_error_exception_show_what(const std::string &during_action, const std::string &what) {
+	std::cerr<<"Error occured during '"<<during_action<<"' - " << what << std::endl;
 }
+
+void show_error_exception(const string &during_action, const std::exception &e) { ///< Inform user about caught exception
+	_info("Exception caught: during_action=["<<during_action<<"], what="<<e.what());
+	string what = e.what();
+	if (!what.size()) what="(No additional information about this exception, it was empty)";
+	else what = "Exception: " + what;
+	show_error_exception_show_what(during_action, what);
+}
+
+void show_error_exception_unknown(const string &during_action) { ///< Inform user about caught exception of unknown type
+	_info("Exception caught: during_action=["<<during_action<<"] " << "(Type of exception is unknown)");
+	show_error_exception_show_what(during_action, "(Type of exception is unknown)");
+}
+
+
+} // namespace
 
 

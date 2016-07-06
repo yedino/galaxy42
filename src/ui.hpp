@@ -24,6 +24,11 @@ void action_error_exit(const string &info);
 void action_info_ok(const string &info); ///< Inform user about some progress
 
 
+void show_error_exception(const string &during_action, const std::exception &e); ///< Inform user about caught exception
+void show_error_exception_unknown(const string &during_action); ///< Inform user about caught exception of unknown type
+
+
+
 
 } // namespace
 

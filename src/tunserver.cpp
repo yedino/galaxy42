@@ -411,12 +411,13 @@ void c_tunserver::configure_mykey() {
 
 	// getting IDC
 	std::string IDI_name;
-try {
-	IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
-} catch (std::invalid_argument &err) {
-	_dbg2("IDI is not set");
-	throw std::runtime_error("IDI is not set");
-}
+	try {
+		IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+	} catch (std::invalid_argument &err) {
+		_dbg2("IDI is not set");
+		throw std::runtime_error("IDI is not set");
+	}
+
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);

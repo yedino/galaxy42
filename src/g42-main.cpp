@@ -17,6 +17,7 @@
 #include "c_json_genconf.hpp"
 #include "c_json_load.hpp"
 
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -263,8 +264,12 @@ int main(int argc, char **argv) {
 	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
+	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 
 	g_dbg_level = config_default_basic_dbg_level;
+	bool early_debug=false;
+	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
+	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
 
 	{
 		_info("Starting lib sodium...");
@@ -407,10 +412,16 @@ int main(int argc, char **argv) {
 			po::notify(argm);  // !
 			_note("After BoostPO notify");
 
+			for(auto &arg: argm) _info("Argument in argm: " << arg.first );
+
 			// --- debug level for main program ---
-			g_dbg_level_set(config_default_basic_dbg_level, "For normal program run", true);
-			if (argm.count("--debug") || argm.count("-d")) g_dbg_level_set(10,"For debug program run");
-			if (argm.count("--quiet") || argm.count("-q")) g_dbg_level_set(200,"For quiet program run", true);
+			bool is_debug=false;
+			if (argm.count("debug") || argm.count("d")) is_debug=true;
+			_note("Will we keep debug: is_debug="<<is_debug);
+
+			g_dbg_level_set(config_default_basic_dbg_level, "For normal program run");
+			if (is_debug) g_dbg_level_set(10,"For debug program run");
+			if (argm.count("quiet") || argm.count("q")) g_dbg_level_set(200,"For quiet program run", true);
 			_note("BoostPO after parsing debug");
 
 			if (argm.count("help")) { // usage
@@ -616,28 +627,59 @@ int main(int argc, char **argv) {
 			// ------------------------------------------------------------------
 
 			_info("Configuring my own reference (keys):");
+
+			bool have_any_keys=0;
 			try {
-				myserver.configure_mykey();
-			} catch(...) {
-				_note("Can not load your keys, maybe you do not have any key yet?");
-				bool have_any_keys=0;
+				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
+				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				have_any_keys = keys.size() > 0;
+			} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
+
+			if (have_any_keys) {
+				bool ok=false;
+
+#define _UI_CATCH_ADVANCED(DURING_ACTION, RETHROW) \
+	catch(std::exception &e) {\
+		_note("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
+		ui::show_error_exception(DURING_ACTION, e); \
+		if (RETHROW) throw; } \
+	catch(...) { \
+		_note("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"] (unknown exception type)"); \
+		ui::show_error_exception_unknown(DURING_ACTION); \
+		if (RETHROW) throw; \
+	}
+
+#define UI_CATCH(DURING_ACTION) _UI_CATCH_ADVANCED(DURING_ACTION, false) do{;}while(0)
+#define UI_CATCH_RETHROW(DURING_ACTION) _UI_CATCH_ADVANCED(DURING_ACTION, true) do{;}while(0)
+
 				try {
-					auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
-					std::vector<std::string> keys = filestorage::get_file_list(keys_path);
-					have_any_keys = keys.size() > 0;
-				} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
-				if (have_any_keys) {
-					std::cout << "You seem to have some ID keys, but I can not load your main key." << std::endl;
-					std::cout << "Please run the program again and use commands to recover a key, or to make a new key instead" << std::endl;
-				} else {
-					std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
-					const auto IDI_name = myserver.program_action_gen_key_simple();
-					myserver.program_action_set_IDI(IDI_name);
-					_info("IDI key name returned is: " << IDI_name);
-					ui::action_info_ok("Your new keys are created.");
 					myserver.configure_mykey();
-					ui::action_info_ok("Your new keys are ready to use.");
+					ok=true;
+				} UI_CATCH("Loading your key");
+
+				if (!ok) {
+					std::cout << "You seem to already have your hash-IP key, but I can not load it." << std::endl;
+					std::cout << "Hint:\n"
+						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
+						<< "Or maybe instead try other version of this program, that can load this key."
+						<< std::endl
+					;
+					throw ui::exception_error_exit(); // <--- exit
 				}
+			} else {
+				std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
+				// --gen-key --new-key "myself" --key-type "ed25519:x3"
+				const string IDI_name = "IDI";
+				vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
+				decltype(argm) xarg;
+				po::store( po::command_line_parser(xarg_vecstr).options(*desc).run() , xarg );
+				po::notify( xarg );
+				ui::action_info_ok("Generating your new keys.");
+				myserver.program_action_gen_key(xarg);
+				myserver.program_action_set_IDI(IDI_name);
+				ui::action_info_ok("Your new keys are created.");
+				myserver.configure_mykey();
+				ui::action_info_ok("Your new keys are ready to use.");
 			}
 
 			// ------------------------------------------------------------------
@@ -672,7 +714,7 @@ int main(int argc, char **argv) {
 
 		} // try parsing
 		catch(ui::exception_error_exit) {
-			std::cerr << "Exiting as explained above" << std::endl;
+			std::cerr << "Exiting program now, as explained above..." << std::endl;
 			return 1;
 		}
 		catch(po::error& e) {
