@@ -189,6 +189,9 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 	_dbg2("pubkeys: " << amount_of_pubkeys << " signatures: " << signs.size());
 	assert(amount_of_pubkeys == signs.size() && "keys_size != signs_size");
 
+	if (!amount_of_pubkeys) return; // no keys after all, nothing to check here.
+	// TODO make sure that caller understands that nothing was checked in this case. E.g.: take argment of required min "strength"
+
 	switch(sign_type) {
 		case e_crypto_system_type_Ed25519: {
 			for(size_t i = 0; i < amount_of_pubkeys; ++i) {
