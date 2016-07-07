@@ -30,7 +30,7 @@ bool safe_string_cmp(const std::string & a, const std::string & b) {
 }
 
 sodiumpp::locked_string substr(const sodiumpp::locked_string & str , size_t len) {
-	if (len<1) throw std::runtime_error( string("Invalid substring of len=") + std::to_string(len) );
+	if (len<1) _throw_error( std::runtime_error( string("Invalid substring of len=") + std::to_string(len) ) );
 	sodiumpp::locked_string ret( len );
 	assert(ret.size() == len);
 	assert(len < str.size());
@@ -187,7 +187,7 @@ char t_crypto_system_type_to_ID(int val) {
 		case e_crypto_system_type_SIDH: return 's';
 		case e_crypto_system_type_geport_todo: return 'g';
 	}
-	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (val == " + std::to_string(val) + ")");
+	_throw_error( std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (val == " + std::to_string(val) + ")") );
 }
 
 t_crypto_system_type t_crypto_system_type_from_string(std::string str_name) {
@@ -205,7 +205,7 @@ t_crypto_system_type t_crypto_system_type_from_string(std::string str_name) {
 		ID = 's';
 	}
 	if(ID == '\0') {
-		throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (str_name == " + str_name + ")");
+		_throw_error( std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (str_name == " + str_name + ")") );
 	}
 	return t_crypto_system_type_from_ID(ID);
 }
@@ -219,7 +219,7 @@ t_crypto_system_type t_crypto_system_type_from_ID(char name) {
 		case 's': return e_crypto_system_type_SIDH;
 		case 'g': return e_crypto_system_type_geport_todo;
 	}
-	throw std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " + name + ")");
+	_throw_error( std::invalid_argument("[" + std::string(__func__) + "] Unknown crypto type (name == " + name + ")") );
 }
 
 bool t_crypto_system_type_is_asymkex(t_crypto_system_type sys) {
