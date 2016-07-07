@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 extern unsigned char g_dbg_level;
@@ -83,6 +84,14 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 
 #define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  _erro("Going to throw exception. What:" << except_var.what() << " Info:" << MSG); throw except_var; } while(0)
 #define _throw_error( EXCEPT ) _throw_error_2(EXCEPT, "")
+
+#define _assert_throw(COND) do { \
+	if (!(COND)) { \
+		std::ostringstream oss; \
+		oss << "Assert-throw failed: " << "" # COND ; \
+		_throw_error( std::runtime_error(oss.str()) ); \
+		}\
+	} while(0)
 
 
 /** TODO document
