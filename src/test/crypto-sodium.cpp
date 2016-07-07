@@ -1,6 +1,11 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "gtest/gtest.h"
+
+// old sodium c++ wrapper, before we moved on to sodiumpp
+
+#if 0
+
 #include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 using namespace ecdh_ChaCha20_Poly1305;
@@ -42,3 +47,6 @@ TEST(crypto_sodium, generate_sharedkey) {
 	}
 	EXPECT_EQ(shared_keys.size(), amount_iterations);
 }
+
+#endif
+
