@@ -150,6 +150,7 @@ void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_
 }
 
 void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int udp_socket) {
+	_UNUSED(udp_socket);
 	_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
 		", RAW-DATA: " << to_debug_b(std::string(data,data_size)) );
 
