@@ -27,8 +27,6 @@
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
 
-#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
-
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"

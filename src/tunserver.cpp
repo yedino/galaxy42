@@ -110,8 +110,6 @@ const char * g_demoname_default = "route_dij";
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
 
-#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
-
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
@@ -919,6 +917,7 @@ void c_tunserver::event_loop() {
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
 						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
+						_assert_throw( (write_bytes != tundata.size()) );
 					} // we have CT
 
 					if (!was_anything_sent_to_TUN) {
@@ -956,7 +955,7 @@ void c_tunserver::event_loop() {
 			} // e_proto_cmd_tunneled_data
 			else if (cmd == c_protocol::e_proto_cmd_public_hi) { // [protocol]
 				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
-				int offset1=2; assert( size_read >= offset1); // skip CMD headers (TODO instead use one parser)
+				size_t offset1=2; assert( size_read >= offset1); // skip CMD headers (TODO instead use one parser)
 
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() ,
 					buf+offset1 , size_read-offset1);
@@ -998,7 +997,7 @@ void c_tunserver::event_loop() {
 			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
 				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
-				int offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
+				size_t offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
 				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
 				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
