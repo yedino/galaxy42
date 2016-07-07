@@ -1,5 +1,7 @@
 #include "ecdh_ChaCha20_Poly1305.hpp"
 
+#if 0
+
 namespace ecdh_ChaCha20_Poly1305 {
 //		typedef std::array<unsigned char, crypto_box_PUBLICKEYBYTES> pubkey_t;
 //		typedef std::array<unsigned char, crypto_box_SECRETKEYBYTES> privkey_t;
@@ -95,9 +97,11 @@ namespace ecdh_ChaCha20_Poly1305 {
         }
 
 
+/*
         std::string generate_additional_data (const std::string &data) {
             return "additional_data"; // TODO
         }
+*/
 
         std::string encrypt (const std::string &data,
                              const sharedkey_t &sharedkey,
@@ -142,3 +146,7 @@ namespace ecdh_ChaCha20_Poly1305 {
             return std::string(reinterpret_cast<const char *>(decrypted), decrypted_len);
         }
 }
+
+
+#endif
+
