@@ -3,8 +3,10 @@
 function usage_mini {
 	echo "You can set this env options before running this program, example to enable COVERAGE and set EXTLEVEL to preview level"
 	echo "for that you could run FOR EXAMPLE:"
-	echo "  COVERAGE=1 EXTLEVEL=10 ./do"
-	echo "  COVERAGE=0 EXTLEVEL=30 ./do --go  # no coverage, build with experimental features, run withot waiting for confirmation"
+	echo ""
+	echo "  COVERAGE=0 EXTLEVEL=0  ./do --go  # <--- this is the normal command that builds recommended version"
+	echo "  COVERAGE=0 EXTLEVEL=30 ./do --go  # no coverage, build with experimental features enabled (dangerous!!)"
+	echo "  COVERAGE=1 EXTLEVEL=0  ./do --go  # coverage - for build test bots"
 	echo ""
 	echo "Run do --help to see all options"
 }
@@ -47,6 +49,7 @@ echo ""
 echo "Running currently as:"
 echo "* COVERAGE=$COVERAGE"
 echo "* EXTLEVEL=$EXTLEVEL"
+echo ""
 if [[ "$1" == "--go" ]] ; then
 	:
 else
