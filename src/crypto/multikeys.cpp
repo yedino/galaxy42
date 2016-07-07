@@ -197,7 +197,7 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 				try {
 					sodiumpp::crypto_sign_verify_detached(signs[i], msg, pubkey);
 				} catch (sodiumpp::crypto_error &err) {
-					throw std::invalid_argument(err.what());
+					_throw_error(std::invalid_argument(err.what()));
 				}
 			}
 			break;
