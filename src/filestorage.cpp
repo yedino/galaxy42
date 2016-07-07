@@ -55,7 +55,7 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
 		FILE *f_ptr;
 
-		f_ptr = std::fopen(file_with_path.c_str(), "w");
+		f_ptr = std::fopen(b_fs::canonical(file_with_path).c_str(), "w");
 		// magic 1 is the size in bytes of each element to be written
 		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
 
@@ -96,7 +96,7 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 	FILE * f_ptr;
 	b_fs::path file_with_path = get_full_path(file_type, filename);
 
-	f_ptr = std::fopen(file_with_path.c_str(), "r");
+	f_ptr = std::fopen(b_fs::canonical(file_with_path).c_str(), "r");
 
 	if (f_ptr == NULL){
 		throw std::invalid_argument("Fail to open mlocked file for read: " + filename);
@@ -123,11 +123,15 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 }
 
 bool filestorage::is_file_ok(const std::string &filename) {
-	b_fs::path p(filename);
+	b_fs::path path(filename);
+	is_file_ok(path);
+}
+
+bool filestorage::is_file_ok(const b_fs::path &path) {
 	try {
-		if (b_fs::exists(p)) {    // does p actually exist?
-			if (b_fs::is_regular_file(p)) {       // is p a regular file?
-			} else if (b_fs::is_directory(p)) {     // is p a directory?
+		if (b_fs::exists(path)) {    // does p actually exist?
+			if (b_fs::is_regular_file(path)) {       // is p a regular file?
+			} else if (b_fs::is_directory(path)) {     // is p a directory?
 				// std::cout << p << " is a directory" << std::endl; // dbg
 				return 0;
 			} else {
@@ -143,6 +147,7 @@ bool filestorage::is_file_ok(const std::string &filename) {
 		return 0;
 	}
 	return 1;
+
 }
 
 bool filestorage::remove(const std::string &p) {
@@ -244,7 +249,7 @@ b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 		file_with_path = create_path_for(file_type, filename);
 
 		// prevent overwriting
-		if(is_file_ok(file_with_path.b_fs::canonical(x).string()) &&  !overwrite) {
+		if(is_file_ok(b_fs::canonical(file_with_path).string()) &&  !overwrite) {
 			std::string err_msg(b_fs::canonical(file_with_path).string()
 								+ std::string(": file existing, it can't be overwrite [overwrite=")
 								+ std::to_string(overwrite)
@@ -256,7 +261,7 @@ b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 		boost::filesystem::ofstream empty_file;
 		empty_file.open(file_with_path);
 		empty_file.close();
-		if (!is_file_ok(file_with_path.c_str())) {
+		if (!is_file_ok(file_with_path)) {
 			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
 			throw std::invalid_argument(err_msg);
 		}
@@ -301,7 +306,7 @@ b_fs::path filestorage::create_path_for(t_filestore file_type,
 
 std::string filestorage::extract_filename(const std::string &string_path) {
 	b_fs::path try_path(string_path);
-	return try_path.filename().b_fs::canonical(x).string();
+	return b_fs::canonical(try_path.filename()).string();
 }
 
 bool filestorage::create_parent_dir(const b_fs::path &file_path) {
@@ -318,7 +323,7 @@ bool filestorage::create_parent_dir(const b_fs::path &file_path) {
 		bool success = b_fs::create_directories(parent_path);
 		if (!success) {
 			throw std::invalid_argument("fail to create not existing directory"
-										+ std::string(parent_path.c_str()));
+										+ std::string(b_fs::canonical(parent_path).string()));
 		}
 		return 1;
 	}

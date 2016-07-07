@@ -55,8 +55,11 @@ public:
 	 * @brief check if file can be correctly loaded
 	 * @param filename
 	 * @return true if file is a regular file
+	 * @{
 	 */
 	static bool is_file_ok(const std::string &filename);
+	static bool is_file_ok(const b_fs::path &path);
+	/// @}
 
 	/**
 	 * @brief remove
