@@ -213,6 +213,7 @@ TEST(xint,normal_use_op4assign_loop) {
 				THE_TEST( - , "sub" );
 				THE_TEST( * , "mul" );
 				THE_TEST( / , "div" );
+				#undef THE_TEST
 
 
 				#define THE_TEST( OPERATOR , OPERATOR_NAME ) do { \
@@ -237,7 +238,6 @@ TEST(xint,normal_use_op4assign_loop) {
 				THE_TEST( -= , "sub" );
 				THE_TEST( *= , "mul" );
 				THE_TEST( /= , "div" );
-
 				#undef THE_TEST
 
 			} // fitting initial values
