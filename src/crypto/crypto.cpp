@@ -30,7 +30,6 @@ it has bugs and 'typpos'.
 
 
 #include "crypto.hpp"
-#include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 #if ENABLE_CRYPTO_SIDH
 	#include "sidhpp.hpp"
@@ -261,7 +260,8 @@ bool c_stream::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multi
 
 t_crypto_system_type c_stream::get_system_type() const
 {
-	TODOCODE;	return t_crypto_system_type(0);
+	_NOTREADY();
+	//return t_crypto_system_type(0);
 }
 
 c_crypto_system::t_symkey c_stream::calculate_KCT
