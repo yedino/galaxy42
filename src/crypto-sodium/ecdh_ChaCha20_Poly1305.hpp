@@ -1,3 +1,7 @@
+
+#if 0
+
+
 #ifndef UNTITLED_ECDH_CHACHA20_POLY1305_HPP
 #define UNTITLED_ECDH_CHACHA20_POLY1305_HPP
 #include <sodium.h>
@@ -33,7 +37,7 @@ namespace ecdh_ChaCha20_Poly1305 {
         keypair_t generate_keypair ();
         sharedkey_t generate_sharedkey_with (const keypair_t &keypair, const pubkey_t &pubkey);
         nonce_t generate_nonce_with (const keypair_t &keypair, const pubkey_t &pubkey);
-        std::string generate_additional_data (const std::string &data);
+        // std::string generate_additional_data (const std::string &data);
 
 		std::string encrypt (const std::string &data,
                              const sharedkey_t &sharedkey,
@@ -45,3 +49,6 @@ namespace ecdh_ChaCha20_Poly1305 {
 
 
 #endif //UNTITLED_ECDH_CHACHA20_POLY1305_HPP
+
+#endif
+

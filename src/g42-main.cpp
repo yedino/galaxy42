@@ -273,7 +273,10 @@ int main(int argc, char **argv) {
 
 	{
 		_info("Starting lib sodium...");
-		ecdh_ChaCha20_Poly1305::init();
+		// ecdh_ChaCha20_Poly1305::init();
+		if (sodium_init() == -1) {
+			throw std::runtime_error("libsodium init error!");
+		}
 	}
 
 	c_tunserver myserver;
