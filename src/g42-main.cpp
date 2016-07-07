@@ -5,7 +5,6 @@
 #include "project.hpp"
 
 #include "glue_sodiumpp_crypto.hpp"
-#include "crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
 
 #include "ui.hpp"
 #include "trivialserialize.hpp"
@@ -272,11 +271,11 @@ int main(int argc, char **argv) {
 	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
 
 	{
-		_info("Starting lib sodium...");
-		// ecdh_ChaCha20_Poly1305::init();
+		_info("Starting library libsodium");
 		if (sodium_init() == -1) {
 			throw std::runtime_error("libsodium init error!");
 		}
+		_info("Done, libsodium ready");
 	}
 
 	c_tunserver myserver;

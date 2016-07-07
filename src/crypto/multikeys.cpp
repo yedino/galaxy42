@@ -5,8 +5,6 @@
 
 #include "crypto.hpp"
 
-#include "../crypto-sodium/ecdh_ChaCha20_Poly1305.hpp"
-
 
 #include "../trivialserialize.hpp"
 
