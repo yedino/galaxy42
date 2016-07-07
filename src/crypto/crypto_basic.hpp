@@ -42,15 +42,16 @@ it has bugs and 'typpos'.
 #include <sodiumpp/sodiumpp.h>
 
 #if ENABLE_CRYPTO_NTRU
-	#include "ntru/include/ntru_crypto_drbg.h"
+	#ifdef __MACH__
+		#include "ntru/ntru_crypto_drbg.h"
+	#else
+		#include "ntru/include/ntru_crypto_drbg.h"
+	#endif
 #endif
 
 #if ENABLE_CRYPTO_SIDH
 	#include <SIDH.h>
 #endif
-
-
-
 
 /// @ingroup antinet_crypto
 // NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
