@@ -85,14 +85,15 @@ const char * g_demoname_default = "route_dij";
 #include "counter.hpp"
 #include "generate_crypto.hpp"
 
-#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
 
 // linux (and others?) select use:
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
 
-// for low-level Linux-like systems TUN operations
+#ifdef __linux__  // for low-level Linux-like systems TUN operations
+#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
+
 #include <fcntl.h> // O_RDWRO_RDWR
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -101,6 +102,8 @@ const char * g_demoname_default = "route_dij";
 #include <netinet/tcp.h>		//Provides declarations for tcp header
 #include <netinet/ip.h>			//Provides declarations for ip header
 #include <linux/if_tun.h>
+#endif
+
 #include "c_json_load.hpp"
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
@@ -374,8 +377,10 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 c_tunserver::c_tunserver()
 :
 	m_my_name("unnamed-tunserver")
+	#ifdef __linux__
 	,m_udp_device(9042) //TODO port
 	,m_event_manager(m_tun_device, m_udp_device)
+	#endif
 	,m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
 {
 //	m_rpc_server.register_function(
@@ -454,9 +459,11 @@ void c_tunserver::configure_mykey() {
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	UNUSED(peer_ref);
+	#ifdef __linux__	// m_udp_device
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	#endif
 }
 
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
@@ -464,9 +471,11 @@ unique_ptr<c_haship_pubkey> && pubkey)
 {
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
+		#ifdef __linux__	// m_udp_device
 		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 		peering_ptr->set_pubkey(std::move(pubkey));
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+		#endif
 	} else { // update existing
 		auto & peering_ptr = find->second;
 		peering_ptr->set_pubkey(std::move(pubkey));
@@ -496,6 +505,7 @@ void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
 }
 
+#ifdef __linux__
 void c_tunserver::prepare_socket() {
 
 
@@ -532,6 +542,7 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL, & timeout); // <--- blocks
 	_assert(select_result >= 0);
 }
+#endif
 
 std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size) { ///< the same, but with ipv6_offset that matches our current TUN
 	return parse_tun_ip_src_dst(buff,buff_size, m_tun_header_offset_ipv6 );
@@ -563,6 +574,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	return std::make_pair( ret_src , ret_dst );
 }
 
+#ifdef __linux__
 void c_tunserver::peering_ping_all_peers() {
 	auto & peers = m_peer;
 	_info("Sending ping to all peers (count=" << peers.size() << ")");
@@ -589,6 +601,7 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 		peer_udp->send_data_udp_cmd(cmd, data, m_udp_device.get_socket());
 	}
 }
+#endif
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
 	auto peer_iter = m_peer.find(addr);
@@ -608,6 +621,7 @@ void c_tunserver::debug_peers() {
 	}
 }
 
+#ifdef __linux__
 bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method,
 	const char *buff, size_t buff_size,
 	c_haship_addr src_hip, c_haship_addr dst_hip,
@@ -654,7 +668,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	}
 	return true;
 }
-
+#endif
 bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 	const char *buff, size_t buff_size,
 	c_haship_addr src_hip, c_haship_addr dst_hip,
@@ -690,6 +704,7 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 //	return true;
 //}
 
+#ifdef __linux__
 void c_tunserver::event_loop() {
 	_info("Entering the event loop");
 	c_counter counter(2,true);
@@ -1116,11 +1131,15 @@ void c_tunserver::event_loop() {
 //		counter_big.tick(sent, std::cout);
 	}
 }
+#endif
 
 void c_tunserver::run() {
 	std::cout << "Stating the TUN router." << std::endl;
+
+#ifdef __linux__
 	prepare_socket();
 	event_loop();
+#endif
 }
 
 
