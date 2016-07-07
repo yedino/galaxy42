@@ -25,12 +25,12 @@ namespace ntrupp {
 
 void NTRU_DRBG_exec_or_throw( uint32_t errcode , const std::string &info="") {
 	if (errcode != DRBG_OK)
-		throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
+		_throw_error( std::runtime_error(info + " , error code: " + std::to_string(errcode)) );
 }
 
 void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 	if (errcode != NTRU_OK)
-		throw std::runtime_error(info + " , error code: " + std::to_string(errcode));
+		_throw_error( std::runtime_error(info + " , error code: " + std::to_string(errcode)) );
 }
 
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
@@ -95,7 +95,7 @@ DRBG_HANDLE get_DRBG(size_t size) {
 std::pair<sodiumpp::locked_string, std::string> generate_encrypt_keypair() {
 
 	if(ntt_setup() == -1) {
-		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
+		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	// generate key pair
@@ -141,7 +141,7 @@ std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
 	int64_t * const public_key_ptr = reinterpret_cast<int64_t * const>(&public_key[0]);
 
 	if(ntt_setup() == -1) {
-		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
+		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	gen_key(private_key_ptr);
@@ -161,7 +161,7 @@ std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
 std::string sign(const std::string &msg, const sodiumpp::locked_string &private_key) {
 
 	if(ntt_setup() == -1) {
-		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
+		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	int64_t z[PASS_N];
@@ -189,7 +189,7 @@ std::string sign(const std::string &msg, const sodiumpp::locked_string &private_
 bool verify(const std::string &sign, const std::string &msg, const std::string &public_key) {
 
 	if(ntt_setup() == -1) {
-		throw std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?");
+		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), public_key);

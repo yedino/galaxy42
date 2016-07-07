@@ -27,20 +27,20 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 		CRYPTO_STATUS status = CRYPTO_SUCCESS;
 		PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
 		try {
-			if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
+			if (curveIsogeny == nullptr) _throw_error( std::runtime_error("SIDH_curve_allocate error") );
 			status = SIDH_curve_initialize(curveIsogeny, &sidhpp::random_bytes_sidh, curveIsogenyData);
 			// generate keys
 			status = KeyGeneration_A(
 				reinterpret_cast<unsigned char*>(&private_key_a[0]),
 				reinterpret_cast<unsigned char *>(&public_key_a[0]),
 				curveIsogeny);
-			if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (A)");
+			if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("private key generate error (A)") );
 			_info("private key a " << to_debug_locked(private_key_a));
 			status = KeyGeneration_B(
 				reinterpret_cast<unsigned char*>(&private_key_b[0]),
 				reinterpret_cast<unsigned char *>(&public_key_b[0]),
 				curveIsogeny);
-			if (status != CRYPTO_SUCCESS) throw std::runtime_error("private key generate error (B)");
+			if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("private key generate error (B)") );
 			_info("private key b " << to_debug_locked(private_key_b));
 
 			// check keys valid
@@ -50,14 +50,14 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 			reinterpret_cast<unsigned char *>(&public_key_a[0]),
 				&valid_pub_key,
 				curveIsogeny);
-			if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (A)");
-			if (!valid_pub_key) throw std::runtime_error("public key (A) is not valid");
+			if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("validate public key error (A)") );
+			if (!valid_pub_key) _throw_error( std::runtime_error("public key (A) is not valid") );
 			status = Validate_PKB(
 			reinterpret_cast<unsigned char *>(&public_key_b[0]),
 				&valid_pub_key,
 				curveIsogeny);
-			if (status != CRYPTO_SUCCESS) throw std::runtime_error("validate public key error (B)");
-			if (!valid_pub_key) throw std::runtime_error("public key (B) is not valid");
+			if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("validate public key error (B)") );
+			if (!valid_pub_key) _throw_error( std::runtime_error("public key (B) is not valid") );
 			assert(public_key_a != public_key_b);
 			assert(private_key_a != private_key_b);
 		}
@@ -67,7 +67,8 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 			clear_words(static_cast<void*>(&private_key_b[0]), NBYTES_TO_NWORDS(private_key_len));
 			clear_words(static_cast<void*>(&public_key_a[0]), NBYTES_TO_NWORDS(public_key_len));
 			clear_words(static_cast<void*>(&public_key_b[0]), NBYTES_TO_NWORDS(public_key_len));
-			throw e;
+
+			_throw_error( e );
 		}
 		SIDH_curve_free(curveIsogeny);
 		sodiumpp::locked_string private_key_main(2 * private_key_len);
@@ -110,16 +111,16 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 		// TODO move this to class or make global variable
 		PCurveIsogenyStaticData curveIsogenyData = &CurveIsogeny_SIDHp751;
 		PCurveIsogenyStruct curveIsogeny = SIDH_curve_allocate(curveIsogenyData);
-		if (curveIsogeny == nullptr) throw std::runtime_error("SIDH_curve_allocate error");
+		if (curveIsogeny == nullptr) _throw_error( std::runtime_error("SIDH_curve_allocate error") );
 		status = SIDH_curve_initialize(curveIsogeny, &random_bytes_sidh, curveIsogenyData);
-		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SIDH_curve_initialize error");
+		if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("SIDH_curve_initialize error") );
 
 		status = SecretAgreement_A(
 			reinterpret_cast<unsigned char *>(&key_self_PRV_a[0]),
 			reinterpret_cast<unsigned char *>(&them_public_key_b[0]),
 			reinterpret_cast<unsigned char *>(shared_secret_a.buffer_writable()),
 			curveIsogeny);
-		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_A error");
+		if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("SecretAgreement_A error") );
 
 		status = SecretAgreement_B(
 			reinterpret_cast<unsigned char *>(&key_self_PRV_b[0]),
@@ -127,7 +128,7 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 			reinterpret_cast<unsigned char *>(&shared_secret_b[0]),
 			curveIsogeny);
 		SIDH_curve_free(curveIsogeny);
-		if (status != CRYPTO_SUCCESS) throw std::runtime_error("SecretAgreement_B error");
+		if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("SecretAgreement_B error") );
 		using namespace antinet_crypto;
 		using namespace string_binary_op;
 		sodiumpp::locked_string k_dh_agreed = shared_secret_a ^ shared_secret_b; // the fully agreed key, that is secure result of DH
