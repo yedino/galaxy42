@@ -42,7 +42,13 @@ it has bugs and 'typpos'.
 #include <sodiumpp/sodiumpp.h>
 
 #if ENABLE_CRYPTO_NTRU
-	#include "ntru/include/ntru_crypto_drbg.h"
+	#ifdef __MACH__
+		#include "ntru/ntru_crypto_drbg.h"
+		#include "ntru/ntru_crypto.h"
+	#else
+		#include "ntru/include/ntru_crypto_drbg.h"
+		#include "ntru/include/ntru_crypto.h"
+	#endif
 #endif
 
 #if ENABLE_CRYPTO_SIDH

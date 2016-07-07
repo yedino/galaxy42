@@ -16,8 +16,13 @@
 
 #include "../trivialserialize.hpp"
 
-#include "ntru/include/ntru_crypto.h"
-#include "ntru/include/ntru_crypto_drbg.h"
+#ifdef __MACH__
+	#include "ntru/ntru_crypto.h"
+	#include "ntru/ntru_crypto_drbg.h"
+#else
+	#include "ntru/include/ntru_crypto.h"
+	#include "ntru/include/ntru_crypto_drbg.h"
+#endif
 
 // ntru sign
 extern "C" {

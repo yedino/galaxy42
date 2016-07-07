@@ -30,12 +30,13 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y               ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                    ; fi
   
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                     ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink autoconf; brew install autoconf     ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink pkg-config; brew install pkg-config ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake; brew install cmake           ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew install boost           ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink libsodium; brew install libsodium   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                                           ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink llvm37; brew link llvm37; brew install llvm37             ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink autoconf; brew link autoconf; brew install autoconf       ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink pkg-config; brew link pkg-config; brew install pkg-config ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake; brew link cmake; brew install cmake                ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew link boost; brew install boost                ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink libsodium; brew link libsodium; brew install libsodium    ; fi
 
 install:
   - echo $CXX   # for dbg
