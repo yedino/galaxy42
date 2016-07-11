@@ -60,11 +60,11 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 	return static_cast<size_t>(ret);
 }
 
-//#else
+#else
 
 c_tun_device_empty::c_tun_device_empty() { }
 
-void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, _Tp2> &binary_address, int prefixLen) {
+void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
 	_UNUSED(binary_address);
 	_UNUSED(prefixLen);
 }

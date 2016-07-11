@@ -37,7 +37,8 @@ class c_tun_device_linux final : public c_tun_device {
 	private:
 		const int m_tun_fd;
 };
-//#else
+
+#else
 
 class c_tun_device_empty final : public c_tun_device {
 	public:

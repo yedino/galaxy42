@@ -47,7 +47,7 @@ int c_udp_wrapper_linux::get_socket() {
 	return m_socket;
 }
 
-//#else
+#else
 
 c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port) {
 	_UNUSED(listen_port);

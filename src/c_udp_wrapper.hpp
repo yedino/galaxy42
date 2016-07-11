@@ -24,7 +24,8 @@ class c_udp_wrapper_linux final : public c_udp_wrapper {
 	private:
 		const int m_socket;
 };
-//#else
+
+#else
 
 class c_udp_wrapper_empty final : public c_udp_wrapper {
 	public:
@@ -32,7 +33,6 @@ class c_udp_wrapper_empty final : public c_udp_wrapper {
 		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
 		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
 		int get_socket() { return -1; } // TODO remove this
-	private:
 };
 
 #endif // __linux__
