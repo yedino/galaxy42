@@ -72,11 +72,19 @@ long c_peering::get_limit_points() {
 
 // ------------------------------------------------------------------
 
-c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper)
-	: c_peering(ref)
-	,m_udp_wrapper(udp_wrapper)
-{ }
+#ifdef __linux__
+//c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper)
+//:
+//	c_peering(ref),
+//	m_udp_wrapper(udp_wrapper)
+//{ }
 
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_empty &udp_wrapper)
+:
+	c_peering(ref),
+	m_udp_wrapper(udp_wrapper)
+{ }
+#endif
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
 	UNUSED(data); UNUSED(data_size);
