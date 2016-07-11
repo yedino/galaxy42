@@ -9,7 +9,7 @@
 
 #include "ui.hpp"
 #include "trivialserialize.hpp"
-#include "filestorage.hpp"
+#include "datastore.hpp"
 
 #include "rpc/rpc.hpp"
 #include "galaxy_debug.hpp"
@@ -434,11 +434,11 @@ int main(int argc, char **argv) {
 			}
 
 			if (argm.count("list-my-keys")) {
-				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
-				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
+				std::vector<std::string> keys = datastore::get_file_list(keys_path);
 				std::string IDI_key = "";
 			try {
-				IDI_key = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+				IDI_key = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 			} catch (std::invalid_argument &err) {
 				_dbg2("IDI is not set!");
 			}
@@ -468,7 +468,7 @@ int main(int argc, char **argv) {
 
 				} else if (argm.count("my-key-file")) {
 					output_file = argm["my-key-file"].as<std::string>();
-					sodiumpp::locked_string key_data(filestorage::load_string_mlocked(e_filestore_local_path,
+					sodiumpp::locked_string key_data(datastore::load_string_mlocked(e_datastore_local_path,
 																					  output_file));
 					signing_key.load_from_bin(key_data.get_string());
 
@@ -481,21 +481,21 @@ int main(int argc, char **argv) {
 				std::string to_sign;
 				if (argm.count("sign-key")) {
 					to_sign_file = argm["sign-key"].as<std::string>();
-					to_sign = filestorage::load_string(e_filestore_galaxy_pub, to_sign_file);
+					to_sign = datastore::load_string(e_datastore_galaxy_pub, to_sign_file);
 					auto sign = signing_key.multi_sign(to_sign);
 					// adding ".pub" to make signature.pub.sig it's more clear (key.pub.sig is signature of key.pub)
-					filestorage::save_string(e_filestore_galaxy_sig, to_sign_file+".pub", sign.serialize_bin(), true);
+					datastore::save_string(e_datastore_galaxy_sig, to_sign_file+".pub", sign.serialize_bin(), true);
 				} else if (argm.count("sign-key-file")) {
 					to_sign_file = argm["sign-key-file"].as<std::string>();
-					to_sign = filestorage::load_string(e_filestore_local_path, to_sign_file);
+					to_sign = datastore::load_string(e_datastore_local_path, to_sign_file);
 					auto sign = signing_key.multi_sign(to_sign);
-					filestorage::save_string(e_filestore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
+					datastore::save_string(e_datastore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
 
 				} else if (argm.count("sign-data-file")) {
 					to_sign_file = argm["sign-data-file"].as<std::string>();
-					to_sign = filestorage::load_string(e_filestore_local_path, to_sign_file);
+					to_sign = datastore::load_string(e_datastore_local_path, to_sign_file);
 					auto sign = signing_key.multi_sign(to_sign);
-					filestorage::save_string(e_filestore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
+					datastore::save_string(e_datastore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
 
 				} else {
 					_erro("-sign-key, sign-key-file or -sign-data-file option is required for --sign");
@@ -517,7 +517,7 @@ int main(int argc, char **argv) {
 
 				} else if (argm.count("trusted-key-file")) {
 					output_file = argm["trusted-key-file"].as<std::string>();
-					std::string key_data(filestorage::load_string(e_filestore_local_path, output_file));
+					std::string key_data(datastore::load_string(e_datastore_local_path, output_file));
 					trusted_key.load_from_bin(key_data);
 
 				} else {
@@ -529,8 +529,8 @@ int main(int argc, char **argv) {
 				antinet_crypto::c_multisign signature;
 
 				// usefull local function
-				auto load_signature = [&signature] (t_filestore stype, const std::string &filename) {
-					std::string data (filestorage::load_string(stype, filename));
+				auto load_signature = [&signature] (t_datastore stype, const std::string &filename) {
+					std::string data (datastore::load_string(stype, filename));
 					signature.load_from_bin(data);
 				};
 
@@ -538,31 +538,31 @@ int main(int argc, char **argv) {
 				if (argm.count("signature-file")) {
 					extern_signature = true;
 					signature_file = argm["signature-file"].as<std::string>();
-					load_signature(e_filestore_local_path, signature_file);
+					load_signature(e_datastore_local_path, signature_file);
 				}
 
 				std::string to_verify_file;
 				std::string to_verify;
 				if (argm.count("toverify-key")) {
 					to_verify_file = argm["toverify-key"].as<std::string>();
-					to_verify = filestorage::load_string(e_filestore_galaxy_pub, to_verify_file);
+					to_verify = datastore::load_string(e_datastore_galaxy_pub, to_verify_file);
 					signature_file = to_verify_file + ".pub";
 					if(!extern_signature)
-						load_signature(e_filestore_galaxy_sig, signature_file);
+						load_signature(e_datastore_galaxy_sig, signature_file);
 
 				} else if (argm.count("toverify-key-file")) {
 					to_verify_file = argm["toverify-key-file"].as<std::string>();
-					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
+					to_verify = datastore::load_string(e_datastore_local_path, to_verify_file);
 					signature_file = to_verify_file+".sig";
 					if(!extern_signature)
-						load_signature(e_filestore_local_path, signature_file);
+						load_signature(e_datastore_local_path, signature_file);
 
 				} else if (argm.count("toverify-data-file")) {
 					to_verify_file = argm["toverify-data-file"].as<std::string>();
-					to_verify = filestorage::load_string(e_filestore_local_path, to_verify_file);
+					to_verify = datastore::load_string(e_datastore_local_path, to_verify_file);
 					signature_file = to_verify_file+".sig";
 					if(!extern_signature)
-						load_signature(e_filestore_local_path, signature_file);
+						load_signature(e_datastore_local_path, signature_file);
 				} else {
 					_erro("-toverify-key, toverify-key-file or -sign-data-file option is required for --sign");
 					return 1;
@@ -610,8 +610,8 @@ int main(int argc, char **argv) {
 				_note("Can not load your keys, maybe you do not have any key yet?");
 				bool have_any_keys=0;
 				try {
-					auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
-					std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+					auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
+					std::vector<std::string> keys = datastore::get_file_list(keys_path);
 					have_any_keys = keys.size() > 0;
 				} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
 				if (have_any_keys) {

@@ -38,7 +38,7 @@ it has bugs and 'typpos'.
 
 #include "../trivialserialize.hpp"
 
-#include "../filestorage.hpp"
+#include "../datastore.hpp"
 
 #if ENABLE_CRYPTO_NTRU
 	#include "../build_extra/ntru/include/ntru_crypto.h"

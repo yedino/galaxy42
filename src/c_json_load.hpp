@@ -7,7 +7,7 @@
 #include "c_json_genconf.hpp"
 #include "libs1.hpp"
 #include "c_peering.hpp"
-#include "filestorage.hpp"
+#include "datastore.hpp"
 #include "strings_utils.hpp"
 
 struct t_my_keypair {
