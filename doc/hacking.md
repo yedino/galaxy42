@@ -24,6 +24,23 @@ To develop the program, we recommend mainly Debian Stable as the main environmen
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
 
+# Naming and Glossary
+
+
+* Virtual-IP - the IP that someone has assigned as result of using Galaxy42 network.
+It often will be in form of IPv6, from some "reserved" block (that is at least unlikelly to be assigned by IANA as part of
+the "regular" Internet).
+
+* Virtual-IP Global - this is an Virtual-IP, where you are the only owner of it, and no one else have such IP even globally,
+usually because it is a hash of public key.
+
+**Open question** - should we use: Virtual-IP, or Galaxy-IP, or Yedino-IP, or Hash-IP here.
+
+* Hash-IP - Virtual-IP Global that is unique thanks to being some form of hash from some data that only you can controll, e.g.
+hash of publickey related to private key that you have.
+
+* IP-Key - the cryptographical key that you use to have ownership of your Virtual-IP.
+
 # Special topics
 
 ## EXTLEVEL
