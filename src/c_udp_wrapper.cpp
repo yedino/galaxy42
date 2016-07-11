@@ -38,7 +38,7 @@ size_t c_udp_wrapper_linux::receive_data(void *data_buf, const size_t data_buf_s
 		sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
 		from_address.set_ip4(addr);
 	} else {
-		throw std::runtime_error("Data arrived from unknown socket address type");
+		_throw_error( std::runtime_error("Data arrived from unknown socket address type") );
 	}
 	return size_read;
 }
