@@ -60,4 +60,33 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 	return static_cast<size_t>(ret);
 }
 
+//#else
+
+c_tun_device_empty::c_tun_device_empty() { }
+
+void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, _Tp2> &binary_address, int prefixLen) {
+	_UNUSED(binary_address);
+	_UNUSED(prefixLen);
+}
+
+void c_tun_device_empty::set_mtu(uint32_t mtu) {
+	_UNUSED(mtu);
+}
+
+bool c_tun_device_empty::incomming_message_form_tun() {
+	return false;
+}
+
+size_t c_tun_device_empty::read_from_tun(void *buf, size_t count) {
+	_UNUSED(buf);
+	_UNUSED(count);
+	return 0;
+}
+
+size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
+	_UNUSED(buf);
+	_UNUSED(count);
+	return 0;
+}
+
 #endif // __linux__

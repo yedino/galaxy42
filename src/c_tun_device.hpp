@@ -37,7 +37,18 @@ class c_tun_device_linux final : public c_tun_device {
 	private:
 		const int m_tun_fd;
 };
+//#else
 
+class c_tun_device_empty final : public c_tun_device {
+	public:
+		c_tun_device_empty();
+		void set_ipv6_address
+			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+		void set_mtu(uint32_t mtu) override;
+		bool incomming_message_form_tun() override;
+		size_t read_from_tun(void *buf, size_t count) override;
+		size_t write_to_tun(const void *buf, size_t count) override;
+};
 #endif
 
 #endif // C_TUN_DEVICE_HPP
