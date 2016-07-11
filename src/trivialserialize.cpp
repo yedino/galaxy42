@@ -92,8 +92,8 @@ parser::parser( tag_caller_must_keep_this_buffer_valid, const char * buf , size_
 { }
 
 unsigned char parser::pop_byte_u() {
-	if (! (m_data_now < m_data_end) ) throw format_error_read();
-	if (! ((m_data_end - m_data_now) >= 1) ) throw format_error_read();
+	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() );
+	if (! ((m_data_end - m_data_now) >= 1) ) _throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	unsigned char c = *m_data_now;
 	++m_data_now;
@@ -101,8 +101,8 @@ unsigned char parser::pop_byte_u() {
 }
 
 signed char parser::pop_byte_s() {
-	if (! (m_data_now < m_data_end) ) throw format_error_read();
-	if (! ((m_data_end - m_data_now) >= 1) ) throw format_error_read();
+	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() );
+	if (! ((m_data_end - m_data_now) >= 1) ) _throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	signed char c = *m_data_now;
 	++m_data_now;
@@ -112,15 +112,15 @@ signed char parser::pop_byte_s() {
 void parser::pop_byte_skip(char c) { // read expected character (e.g. a delimiter)
 	unsigned char was = pop_byte_u();
 	unsigned char expected = static_cast<unsigned char>(c);
-	if (was != expected) throw format_error_read_delimiter();
+	if (was != expected) _throw_error( format_error_read_delimiter() );
 }
 
 std::string parser::pop_bytes_n(size_t size) {
 	if (!size) return string("");
-	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
+	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() ); // we run outside of string
 	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
 	// and we are sure that this ptrdiff > 0 because of earlier above condition
-	if (! (   static_cast<size_t>(m_data_end - m_data_now) >= size) ) throw format_error_read();
+	if (! (   static_cast<size_t>(m_data_end - m_data_now) >= size) ) _throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	auto from = m_data_now;
@@ -130,10 +130,10 @@ std::string parser::pop_bytes_n(size_t size) {
 
 void parser::skip_bytes_n(size_t size) {
 	if (!size) return;
-	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
+	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() ); // we run outside of string
 	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
 	// and we are sure that this ptrdiff > 0 because of earlier above condition
-	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) throw format_error_read();
+	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) _throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	// auto from = m_data_now;
@@ -142,10 +142,10 @@ void parser::skip_bytes_n(size_t size) {
 
 
 void parser::pop_bytes_n_into_buff(size_t size, char * buff) {
-	if (! (m_data_now < m_data_end) ) throw format_error_read(); // we run outside of string
+	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() ); // we run outside of string
 	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
 	// and we are sure that this ptrdiff > 0 because of earlier above condition
-	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) throw format_error_read();
+	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) _throw_error( format_error_read() );
 	assert(buff!=nullptr);
 
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
@@ -343,7 +343,7 @@ void test_shortstring_end() {
 		auto val_given = parser.pop_varstring();
 		cerr<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 		bool ok = ( val_given == val_expected );
-		if (!ok) throw std::runtime_error("Failed test for expected value " + (val_expected));
+		if (!ok) _throw_error( std::runtime_error("Failed test for expected value " + (val_expected)) );
 	}
 }
 
@@ -475,14 +475,14 @@ void test_trivialserialize() {
 		auto val_given = parser.pop_integer_uvarint();
 		cerr<<"uvarint decoded: " << val_given << endl;
 		bool ok = ( val_given == val_expected );
-		if (!ok) throw std::runtime_error("Failed test for expected value " + std::to_string(val_expected));
+		if (!ok) _throw_error( std::runtime_error("Failed test for expected value " + std::to_string(val_expected)) );
 	}
 
 	for (auto val_expected : test_varstring) {
 		auto val_given = parser.pop_varstring();
 		cerr<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 		bool ok = ( val_given == val_expected );
-		if (!ok) throw std::runtime_error("Failed test for expected value " + (val_expected));
+		if (!ok) _throw_error( std::runtime_error("Failed test for expected value " + (val_expected)) );
 	}
 
 	auto test_varstring_LOADED = parser.pop_vector_string();
@@ -495,16 +495,16 @@ void test_trivialserialize() {
 	_info("Vector tank: " << tanks);
 	for(auto & t : tanks) _info(t);
 	if ( tanks == get_example_tanks()) {	_info("Container deserialized correctly"); }
-		else throw std::runtime_error("Deserialization failed");
+		else _throw_error( std::runtime_error("Deserialization failed") );
 
 	auto tanks_location = parser.pop_map_object<string, c_tank>();
 	if ( tanks_location == get_example_tanks_map_location()) {	_info("Container deserialized correctly"); }
-		else throw std::runtime_error("Deserialization failed");
+		else _throw_error( std::runtime_error("Deserialization failed") );
 	_info("Map tank: " << tanks_location);
 
 	auto tanks_captain = parser.pop_map_object<c_tank,string>();
 	if ( tanks_captain == get_example_tanks_map_captain()) {	_info("Container deserialized correctly"); }
-		else throw std::runtime_error("Deserialization failed");
+		else _throw_error( std::runtime_error("Deserialization failed") );
 	_info("Map tank: " << tanks_captain);
 
 	auto output = parser.pop_map_object<std::string, std::string>();

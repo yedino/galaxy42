@@ -45,17 +45,17 @@ bool operator==( const string_as_hex &a, const string_as_hex &b) {
 unsigned char int2hexchar(unsigned char i) {
 	if (i<=9) return '0'+i;
 	if (i<=15) return 'a'+(i-10);
-	throw std::invalid_argument(  string("Invalid hex value:")+std::to_string(i) );
+	_throw_error( std::invalid_argument(  string("Invalid hex value:")+std::to_string(i) ) );
 }
 
 unsigned char hexchar2int(char c) {
 	if ((c>='0')&&(c<='9')) return c-'0';
 	if ((c>='a')&&(c<='f')) return c-'a' +10;
-	throw std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  );
+	_throw_error( std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  ) );
 }
 
 unsigned char doublehexchar2int(string s) {
-	if (s.size()!=2) throw std::invalid_argument("Invalid double-hex string: '"+s+"'");
+	if (s.size()!=2) _throw_error( std::invalid_argument("Invalid double-hex string: '"+s+"'") );
 	unsigned char h = s.at(0);
 	unsigned char l = s.at(1);
 	return hexchar2int(h)*16 + hexchar2int(l);
@@ -103,7 +103,7 @@ try {
 	}
 
 	assert( out == retsize ); // all expected positions of data allocated above in .resize() were written
-} catch(std::exception &e) { _erro("Failed to parse string [" << encoded.data <<"]"); throw ; }
+} catch(std::exception &e) { _erro("Failed to parse string [" << encoded.data <<"]"); _throw_error_rethrow(  ); }
 }
 
 string_as_bin & string_as_bin::operator+=( const string_as_bin & other ) {
