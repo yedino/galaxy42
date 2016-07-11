@@ -43,7 +43,7 @@ void c_peering::print(ostream & ostr) const {
 
 void c_peering::send_data(const char * data, size_t data_size) {
 	UNUSED(data); UNUSED(data_size);
-	throw std::runtime_error("Used abstract send_data() that does nothing");
+	_throw_error( std::runtime_error("Used abstract send_data() that does nothing") );
 }
 
 ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
@@ -81,7 +81,7 @@ c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linu
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
 	UNUSED(data); UNUSED(data_size);
-	throw std::runtime_error("Use send_data_udp");
+	_throw_error( std::runtime_error("Use send_data_udp") );
 }
 
 
@@ -166,7 +166,7 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 		break;
 		default: {
 			std::ostringstream oss; oss << m_peering_addr; // TODO
-			throw std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str());
+			_throw_error( std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
 		}
 	}
 	#endif
