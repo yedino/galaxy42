@@ -16,7 +16,7 @@ Json::Value c_json_file_parser::get_root() {
 
 bool c_json_file_parser::parse_file(const std::string &filename) {
 
-	if(!filestorage::is_file_ok(filename)) {
+	if(!datastore::is_file_ok(filename)) {
 		return 1;
 	}
 

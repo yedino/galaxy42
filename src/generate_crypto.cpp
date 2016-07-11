@@ -13,9 +13,9 @@ void generate_crypto::create_keys(const std::string &filename,
 	}
 
 	if (default_location == false) {
-		filestorage::save_string(e_filestore_local_path, filename+".pub", keypair.m_pub.serialize_bin(), true);
+		datastore::save_string(e_datastore_local_path, filename+".pub", keypair.m_pub.serialize_bin(), true);
 		sodiumpp::locked_string data_PRV = sodiumpp::locked_string::unsafe_create(keypair.m_PRV.serialize_bin());
-		filestorage::save_string_mlocked(e_filestore_local_path, filename+".PRV", data_PRV, true);
+		datastore::save_string_mlocked(e_datastore_local_path, filename+".PRV", data_PRV, true);
 		return;
 	}
 

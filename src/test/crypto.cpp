@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
 #include "../crypto/crypto.hpp"
-#include "../filestorage.hpp"
+#include "../datastore.hpp"
 
 #include "../crypto/crypto_basic.hpp"
 
@@ -403,8 +403,8 @@ TEST(crypto, save_and_open_user_key) {
 		ASSERT_EQ(user_key.m_PRV.serialize_bin(), user_loaded_key.m_PRV.serialize_bin());
 		ASSERT_EQ(user_key.m_pub.serialize_bin(), user_loaded_key.m_pub.serialize_bin());
 		// cleanup
-		boost::filesystem::remove(filestorage::get_full_path(e_filestore_galaxy_wallet_PRV, tmp_filename_nr));
-		boost::filesystem::remove(filestorage::get_full_path(e_filestore_galaxy_pub, tmp_filename_nr));
+		boost::filesystem::remove(datastore::get_full_path(e_datastore_galaxy_wallet_PRV, tmp_filename_nr));
+		boost::filesystem::remove(datastore::get_full_path(e_datastore_galaxy_pub, tmp_filename_nr));
 	}
 }
 
