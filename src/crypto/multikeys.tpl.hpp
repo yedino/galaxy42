@@ -183,7 +183,7 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 	if (magic_crypto_use != m_crypto_use) {
 		std::ostringstream oss;
 		oss<<"Format error: crypto_use was=" << ::to_debug(magic_crypto_use) << " but we expected=" << m_crypto_use;
-		throw std::runtime_error(oss.str());
+		_throw_error( std::runtime_error(oss.str()) );
 	}
 
 	if (magic_version == 'a') {
@@ -196,8 +196,8 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 			// TODO(r) asert sys_id is a normal expected crypto key type
 			this->m_cryptolists_general.at( sys_id ) = sys_keys;
 		}
-		if (!parser.is_end()) throw std::runtime_error("Format incorrect: extra elements at end");
-	}	else throw trivialserialize::format_error_read_invalid_version();
+		if (!parser.is_end()) _throw_error( std::runtime_error("Format incorrect: extra elements at end") );
+	}	else _throw_error( trivialserialize::format_error_read_invalid_version() );
 	// TODO(r) check that numbers are sorted and not-repeating; extent exceptions type to report details of problem
 	set_hash_dirty();
 }
@@ -229,7 +229,7 @@ void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool over
 			break;
 		}
 		default:
-			throw std::runtime_error("Can not handle this crypto_use");
+			_throw_error( std::runtime_error("Can not handle this crypto_use") );
 	}
 }
 
@@ -264,7 +264,7 @@ void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 			break;
 		}
 		default:
-			throw std::runtime_error("Can not handle this crypto_use");
+			_throw_error( std::runtime_error("Can not handle this crypto_use") );
 	}
 	_info("Loading: done, debug: " << to_debug_locked_maybe(serialize_bin()));
 }
