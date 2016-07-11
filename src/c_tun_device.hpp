@@ -40,4 +40,20 @@ class c_tun_device_linux final : public c_tun_device {
 
 #endif
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <ifdef.h>
+#include <windows.h>
+#include <vector>
+class c_tun_device_windows final : public c_tun_device {
+	public:
+		void set_ipv6_address
+			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+	private:
+		std::vector<std::wstring> get_subkeys(HKEY hKey);
+		std::wstring get_device_guid();
+		std::wstring get_human_name(const std::wstring &guid);
+		NET_LUID get_luid(const std::wstring &human_name);
+};
+#endif
+
 #endif // C_TUN_DEVICE_HPP
