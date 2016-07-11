@@ -13,7 +13,7 @@ void filestorage::save_string(t_filestore file_type,
 							  bool overwrite) {
 
 	if (filename == "") {
-		throw std::invalid_argument("Fail to open file for write: empty filename");
+		_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
 	}
 
 	b_fs::path file_with_path;
@@ -25,7 +25,7 @@ void filestorage::save_string(t_filestore file_type,
 		if (file.is_open()) {
 			file << data;
 		} else {
-			throw std::invalid_argument("Fail to open file for write: " + filename);
+			_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 		}
 		file.close();
 		_dbg2("Successfully saved string to:" << file_with_path.native());
@@ -46,7 +46,7 @@ void filestorage::save_string_mlocked(t_filestore file_type,
 									  bool overwrite) {
 
 	if (filename == "") {
-		throw std::invalid_argument("Fail to open file for write: empty filename");
+		_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
 	}
 
 	b_fs::path file_with_path;
@@ -79,7 +79,7 @@ std::string filestorage::load_string(t_filestore file_type,
 	_dbg2("Loading file path: " << file_with_path.native());
 
 	if (!is_file_ok(file_with_path.native())) {
-		throw std::invalid_argument("Fail to open file for read: " + filename);
+		_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
 	} else {
 		b_fs::ifstream ifs(file_with_path);
 		content.assign( (std::istreambuf_iterator<char>(ifs) ),
@@ -99,7 +99,7 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 	f_ptr = std::fopen(file_with_path.c_str(), "r");
 
 	if (f_ptr == NULL){
-		throw std::invalid_argument("Fail to open mlocked file for read: " + filename);
+		_throw_error( std::invalid_argument("Fail to open mlocked file for read: " + filename) );
 	}
 
 	std::fseek(f_ptr, 0L, SEEK_END);
@@ -114,7 +114,7 @@ sodiumpp::locked_string filestorage::load_string_mlocked(t_filestore file_type,
 		std::string err_msg = "Fail to read all content of file: " + filename;
 		err_msg += " read: [" + std::to_string(byte_read);
 		err_msg += "] bytes of [" + std::to_string(content_size) + "]";
-		throw std::invalid_argument(err_msg);
+		_throw_error( std::invalid_argument(err_msg) );
 	}
 	std::fclose(f_ptr);
 
@@ -249,7 +249,7 @@ b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 								+ std::string(": file existing, it can't be overwrite [overwrite=")
 								+ std::to_string(overwrite)
 								+ std::string("]"));
-			throw overwrite_error(err_msg);
+			_throw_error( overwrite_error(err_msg) );
 		}
 
 		// In code below we want to create an empty file which will help us to open and write down it without any errors
@@ -258,7 +258,7 @@ b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 		empty_file.close();
 		if (!is_file_ok(file_with_path.c_str())) {
 			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
-			throw std::invalid_argument(err_msg);
+			_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		// TODO perrmisions
@@ -284,7 +284,7 @@ b_fs::path filestorage::prepare_path_for_write(t_filestore file_type,
 
 	} catch (b_fs::filesystem_error & err) {
 		_erro("Can not prepare dir: " << err.what());
-		throw ;
+		_throw_error_rethrow( );
 	}
 	return file_with_path;
 }

@@ -92,6 +92,10 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 		<< "."); \
 		throw except_var; } while(0)
 
+#define _throw_error_rethrow( ) do { \
+	_erro("Going to re-throw exception."); \
+		throw ; } while(0)
+
 #define _assert_throw(COND) do { \
 	if (!(COND)) { \
 		std::ostringstream oss; \

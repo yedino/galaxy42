@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
 	{
 		_info("Starting library libsodium");
 		if (sodium_init() == -1) {
-			throw std::runtime_error("libsodium init error!");
+			_throw_error( std::runtime_error("libsodium init error!") );
 		}
 		_info("Done, libsodium ready");
 	}
@@ -652,7 +652,7 @@ int main(int argc, char **argv) {
 						<< "Or maybe instead try other version of this program, that can load this key."
 						<< std::endl
 					;
-					throw ui::exception_error_exit(); // <--- exit
+					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
 				std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
