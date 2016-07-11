@@ -59,8 +59,8 @@ ostream & operator<<(ostream & ostr, const c_peering & obj);
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
 		#ifdef __linux__
-		//c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper);
-		//#else
+		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper);
+		#else
 		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_empty &udp_wrapper);
 		#endif
 
@@ -72,8 +72,8 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 
 		virtual void send_data_RAW_udp(const char * data, size_t data_size, int udp_socket); ///< direct write
 		#ifdef __linux__
-		//std::reference_wrapper<c_udp_wrapper_linux> m_udp_wrapper; // TODO: sahred_ptr ?
-		//#else
+		std::reference_wrapper<c_udp_wrapper_linux> m_udp_wrapper; // TODO: sahred_ptr ?
+		#else
 		std::reference_wrapper<c_udp_wrapper_empty> m_udp_wrapper; // TODO: sahred_ptr ?
 		#endif
 };
