@@ -33,7 +33,6 @@ class c_udp_wrapper_empty final : public c_udp_wrapper {
 		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
 		int get_socket() { return -1; } // TODO remove this
 	private:
-		const int m_listen_port;
 };
 
 #endif // __linux__

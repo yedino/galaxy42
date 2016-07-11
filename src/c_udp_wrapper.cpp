@@ -46,12 +46,12 @@ size_t c_udp_wrapper_linux::receive_data(void *data_buf, const size_t data_buf_s
 int c_udp_wrapper_linux::get_socket() {
 	return m_socket;
 }
-#endif // __linux__
 
-c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port)
-:
-  m_listen_port(listen_port)
-{ }
+//#else
+
+c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port) {
+	_UNUSED(listen_port);
+}
 
 void c_udp_wrapper_empty::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
 	_UNUSED(dst_address);
@@ -65,3 +65,5 @@ size_t c_udp_wrapper_empty::receive_data(void *data_buf, const size_t data_buf_s
 	_UNUSED(from_address);
 	return 0;
 }
+
+#endif // __linux__
