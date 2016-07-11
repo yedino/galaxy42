@@ -640,20 +640,6 @@ int main(int argc, char **argv) {
 			if (have_any_keys) {
 				bool ok=false;
 
-#define _UI_CATCH_ADVANCED(DURING_ACTION, RETHROW) \
-	catch(std::exception &e) {\
-		_note("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
-		ui::show_error_exception(DURING_ACTION, e); \
-		if (RETHROW) throw; } \
-	catch(...) { \
-		_note("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"] (unknown exception type)"); \
-		ui::show_error_exception_unknown(DURING_ACTION); \
-		if (RETHROW) throw; \
-	}
-
-#define UI_CATCH(DURING_ACTION) _UI_CATCH_ADVANCED(DURING_ACTION, false) do{;}while(0)
-#define UI_CATCH_RETHROW(DURING_ACTION) _UI_CATCH_ADVANCED(DURING_ACTION, true) do{;}while(0)
-
 				try {
 					myserver.configure_mykey();
 					ok=true;

@@ -82,8 +82,15 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 // this assert MUST BE checked in release too
 #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
-#define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  _erro("Going to throw exception. What:" << except_var.what() << " Info:" << MSG); throw except_var; } while(0)
-#define _throw_error( EXCEPT ) _throw_error_2(EXCEPT, "")
+#define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
+	_erro("Going to throw exception. What: " << except_var.what() \
+		<< "; Details:" << MSG); \
+		throw except_var; } while(0)
+
+#define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
+	_erro("Going to throw exception. What: " << except_var.what() \
+		<< "."); \
+		throw except_var; } while(0)
 
 #define _assert_throw(COND) do { \
 	if (!(COND)) { \
