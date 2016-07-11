@@ -84,7 +84,7 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	hint.ai_flags = AI_NUMERICHOST;
 	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
 	if (ret) {
-		throw std::invalid_argument("unknown address format");
+		_throw_error( std::invalid_argument("unknown address format") );
 	}
 	auto result_deleter = [&](struct addrinfo *result){freeaddrinfo(result);};
 	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
@@ -119,10 +119,10 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 
 bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
 	if (this->m_tag == t_tag::tag_none) {
-		throw std::invalid_argument("lhs: m_tag == tag_none");
+		_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
 	}
 	if (rhs.m_tag == t_tag::tag_none) {
-		throw std::invalid_argument("rhs: m_tag == tag_none");
+		_throw_error( std::invalid_argument("rhs: m_tag == tag_none") );
 	}
 	if (this->m_tag != rhs.m_tag) {
 		return false;
@@ -137,10 +137,10 @@ bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
 
 bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 	if (this->m_tag == t_tag::tag_none) {
-		throw std::invalid_argument("lhs: m_tag == tag_none");
+		_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
 	}
 	if (rhs.m_tag == t_tag::tag_none) {
-		throw std::invalid_argument("rhs: m_tag == tag_none");
+		_throw_error( std::invalid_argument("rhs: m_tag == tag_none") );
 	}
 	if (this->m_tag == t_tag::tag_ipv4 && rhs.m_tag == t_tag::tag_ipv6) {
 		return true;

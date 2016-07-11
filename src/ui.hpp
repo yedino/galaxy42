@@ -11,7 +11,15 @@ namespace ui {
 /** Throw this when we just want to exit the program (though this should be called from proper top-level place in program,
  * otherwise other code can catch it with catch(...)
 */
-class exception_error_exit { };
+class exception_error_exit {
+	private:
+		const std::string m_what;
+
+	public:
+		exception_error_exit(const std::string &what);
+		virtual ~exception_error_exit()=default;
+		virtual const char* what() const;
+};
 
 
 /**

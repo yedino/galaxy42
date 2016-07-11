@@ -24,7 +24,7 @@ void c_tun_device_linux::set_ipv6_address
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
-	if (errcode_ioctl < 0) throw std::runtime_error("ioctl error");
+	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
 	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
@@ -48,14 +48,14 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 
 size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO throw if error
 	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
-	if (ret == -1) throw std::runtime_error("Read from tun error");
+	if (ret == -1) _throw_error( std::runtime_error("Read from tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
 size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
-	if (ret == -1) throw std::runtime_error("Write to tun error");
+	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }

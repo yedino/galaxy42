@@ -268,9 +268,9 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 	static_assert( S<=8 , "S must be <= 8");
 
 	if (S==8) {
-		if ( value >= 0xFFFFFFFFFFFFFFFF ) throw format_error_write_value_too_big();
+		if ( value >= 0xFFFFFFFFFFFFFFFF ) _throw_error( format_error_write_value_too_big() );
 	} else {
-		if ( value >= get_max_value_of_S_octet_uint<S>() ) throw format_error_write_value_too_big();
+		if ( value >= get_max_value_of_S_octet_uint<S>() ) _throw_error( format_error_write_value_too_big() );
 	}
 
 	// TODO use proper type, depending on S
@@ -423,12 +423,12 @@ map<TKey,TVal> parser::pop_map_object() {
 
 		auto size_old = ret.size();
 		auto found = ret.find(key);
-		if (found != ret.end()) throw format_error_read_badformat(); // there was already such key
+		if (found != ret.end()) _throw_error( format_error_read_badformat() ); // there was already such key
 		if (dbg) _dbg1("Inserting");
 		ret.emplace(std::move(key), std::move(value));
-		if (ret.size() != size_old+1) throw format_error_read_badformat(); // the insert failed apparently
+		if (ret.size() != size_old+1) _throw_error( format_error_read_badformat() ); // the insert failed apparently
 	}
-	if (ret.size() != size) throw format_error_read_badformat(); // the resulting size somehow was different then expected
+	if (ret.size() != size) _throw_error( format_error_read_badformat() ); // the resulting size somehow was different then expected
 	return ret;
 }
 
@@ -453,7 +453,7 @@ template <int S, typename T> T parser::pop_integer_u() {
 }
 
 template <int S, typename T> T parser::pop_integer_s() {
-	throw std::runtime_error("Not implemented yet");
+	_throw_error( std::runtime_error("Not implemented yet") );
 }
 
 

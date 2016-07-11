@@ -127,7 +127,7 @@ const char * g_demoname_default = "route_dij";
 
 void error(const std::string & msg) {
 	std::cout << "Error: " << msg << std::endl;
-	throw std::runtime_error(msg);
+	_throw_error( std::runtime_error(msg) );
 }
 
 // ------------------------------------------------------------------
@@ -291,7 +291,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 	else { // don't have a planned route to him
 		if (!start_search) {
 			_info("No route, but we also so not want to search for it.");
-			throw std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst));
+			_throw_error( std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst)) );
 		}
 		else {
 			_info("Route not found, we will be searching");
@@ -316,7 +316,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		}
 	}
 	_note("NO ROUTE");
-	throw std::runtime_error("NO ROUTE known (at current time) to dst=" + STR(dst));
+	_throw_error( std::runtime_error("NO ROUTE known (at current time) to dst=" + STR(dst)) );
 }
 
 void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) {
@@ -370,7 +370,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 	catch (const std::exception &e) {
 		_erro("Adding peer from simplereference failed (exception): " << e.what());
-		throw std::invalid_argument("Bad peer format");
+		_throw_error( std::invalid_argument("Bad peer format") );
 	}
 }
 
@@ -418,7 +418,7 @@ void c_tunserver::configure_mykey() {
 		IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
 	} catch (std::invalid_argument &err) {
 		_dbg2("IDI is not set");
-		throw std::runtime_error("IDI is not set");
+		_throw_error( std::runtime_error("IDI is not set") );
 	}
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
@@ -605,10 +605,10 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
 	auto peer_iter = m_peer.find(addr);
-	if (peer_iter == m_peer.end()) throw expected_not_found();
+	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
 	c_peering & peer = * peer_iter->second;
 	if (require_pubkey) {
-		if (! peer.is_pubkey()) throw expected_not_found_missing_pubkey();
+		if (! peer.is_pubkey()) _throw_error( expected_not_found_missing_pubkey() );
 	}
 	return peer;
 }
@@ -689,7 +689,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	for(auto & v : m_peer) { if (v.second->get_pip() == ip) return * v.second.get(); }
-	throw std::runtime_error("We do not know a peer with such IP=" + STR(ip));
+	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
 //bool c_tunserver::rpc_add_limit_points(const string &peer_ip) {
@@ -976,7 +976,7 @@ void c_tunserver::event_loop() {
 					buf+offset1 , size_read-offset1);
 
 				// TODONOW: size of pubkey is different, use serialize
-				// if (cmd_data.bytes.at(pos1)!=';') throw std::runtime_error("Invalid protocol format, missing coma"); // [protocol]
+				// if (cmd_data.bytes.at(pos1)!=';') _throw_error( std::runtime_error("Invalid protocol format, missing coma") ); // [protocol]
 				string_as_bin bin_his_IDC_pub( parser.pop_varstring() ); // PARSE
 				string_as_bin bin_his_IDI_pub( parser.pop_varstring() ); // PARSE
 				string_as_bin bin_his_IDI_IDC_sig( parser.pop_varstring() ); // PARSE
@@ -1016,7 +1016,7 @@ void c_tunserver::event_loop() {
 
 				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
 				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
-				if ((pos1==string::npos) || (pos1 != size_hip)) throw std::runtime_error("Invalid protocol format, wrong size of HIP field");
+				if ((pos1==string::npos) || (pos1 != size_hip)) _throw_error( std::runtime_error("Invalid protocol format, wrong size of HIP field") );
 
 				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
 				c_haship_addr requested_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip.bytes ); // *

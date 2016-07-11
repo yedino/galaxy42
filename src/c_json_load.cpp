@@ -6,7 +6,7 @@ c_json_file_parser::c_json_file_parser (const std::string &filename) {
 
     if(parse_file(filename)) {
         std::string msg = filename + " : bad configuration file";
-        throw std::invalid_argument(msg);
+        _throw_error( std::invalid_argument(msg) );
     }
 }
 
@@ -118,19 +118,19 @@ std::vector<t_peering_reference> c_galaxyconf_load::get_peer_references() {
 t_my_keypair c_galaxyconf_load::my_keypair_load() {
 	std::string private_key_type = m_root.get("privateKeyType","").asString();
 	if(private_key_type == "") {
-		throw std::invalid_argument("empty privateKeyType field in your configuration file");
+		_throw_error( std::invalid_argument("empty privateKeyType field in your configuration file") );
 	}
 	std::string private_key = m_root.get("privateKey","").asString();
 	if(private_key == "") {
-		throw std::invalid_argument("empty privateKey field in your configuration file");
+		_throw_error( std::invalid_argument("empty privateKey field in your configuration file") );
 	}
 	std::string public_key = m_root.get("myself-public","").get("publicKey","").asString();
 	if(public_key == "") {
-		throw std::invalid_argument("empty publicKey field in your configuration file");
+		_throw_error( std::invalid_argument("empty publicKey field in your configuration file") );
 	}
 	std::string ipv6 = m_root.get("myself-public","").get("ipv6","").asString();
 	if(private_key_type == "" || private_key == "" || public_key == "" || ipv6 == "") {
-		throw std::invalid_argument("empty ipv6 field in your configuration file");
+		_throw_error( std::invalid_argument("empty ipv6 field in your configuration file") );
 	}
 	return t_my_keypair({private_key_type,private_key,public_key,ipv6});
 }
@@ -147,7 +147,7 @@ void c_galaxyconf_load::auth_password_load() {
 			}
 		}
 	} else {
-		throw std::invalid_argument("Empty authorizedPasswords in " + m_filename + " file");
+		_throw_error( std::invalid_argument("Empty authorizedPasswords in " + m_filename + " file") );
 	}
 }
 
@@ -164,7 +164,7 @@ void c_galaxyconf_load::connect_to_load() {
 			}
 		}
 	} else {
-		throw std::invalid_argument("Empty connectTo in " + m_filename + " file");
+		_throw_error( std::invalid_argument("Empty connectTo in " + m_filename + " file") );
 	}
 
 }
