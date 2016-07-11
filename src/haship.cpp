@@ -24,9 +24,9 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey
 
 c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string ) {
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
-	//throw std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__));
+	//_throw_error( std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__)) );
 
-	if (addr_string.size() > (8*4+7)) throw std::invalid_argument("The IP address looks invalid (too long) on string ["+addr_string+"]"); // 8 groups of 4 hexchar, plus 7 collon
+	if (addr_string.size() > (8*4+7)) _throw_error( std::invalid_argument("The IP address looks invalid (too long) on string ["+addr_string+"]") ); // 8 groups of 4 hexchar, plus 7 collon
 	// now sting size is reasonable here, can operate on int
 
 	vector<string> grtab; // group tab
@@ -41,14 +41,14 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 		getline(adr_s, gr, ':');
 		//_info("gr="<<gr);
 		if (gr.size()==0) { // inside ::
-			if (exp>0) throw std::invalid_argument("Invalid address, with more then one '::' in it.");
+			if (exp>0) _throw_error( std::invalid_argument("Invalid address, with more then one '::' in it.") );
 			int cc=0; // count of colons
 			for (char v : addr_string) if (v==':') ++cc;
 			int add = gr_max - 1 - cc;
 			for (int i=0; i<add; ++i) grtab.push_back("0000"); // expanding
 			++exp;
 		}
-		if (gr.size()>4) throw std::invalid_argument("The group is invalid (wrong size) \"" +gr+"\"");
+		if (gr.size()>4) _throw_error( std::invalid_argument("The group is invalid (wrong size) \"" +gr+"\"") );
 		while(gr.size() < 4) gr.insert(0,1,'0');
 		grtab.push_back(gr);
 	}
@@ -70,7 +70,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
 	if (! ( this->size() == data.size() ) ) {
 		ostringstream oss; oss << "Trying to set hip address from binary data " << to_debug_b(data);
-		throw std::runtime_error(oss.str());
+		_throw_error( std::runtime_error(oss.str()) );
 	}
 	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.at(i);
 }
