@@ -24,6 +24,20 @@ To develop the program, we recommend mainly Debian Stable as the main environmen
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
 
+# Naming and Glossary
+
+
+* Hash-IP - the IP that someone can seldomly own without requiring permission from any authority, because it is derived from public key with some form of Hash.
+It will be in form of IPv6 (because other option of IP - IPv4 - is not suitable as it's too short).
+
+* Hash-IP is a global IP - this is an IP, where you are the only owner of it, and no one else have such IP even globally.
+
+* Mapped-IP is an IP that is owned by you but that is guaranteed only in given Hash-VPN. It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918).
+
+* Hash-VPN is a VPN network where all participants communicate through Hash-IP.
+
+* IP-Key - the cryptographical key that you use to have ownership of your Hash-IP.
+
 # Special topics
 
 ## EXTLEVEL
