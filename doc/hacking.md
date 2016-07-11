@@ -27,19 +27,16 @@ we're bussy), see contact information in the main README.md of this project.
 # Naming and Glossary
 
 
-* Virtual-IP - the IP that someone has assigned as result of using Galaxy42 network.
-It often will be in form of IPv6, from some "reserved" block (that is at least unlikelly to be assigned by IANA as part of
-the "regular" Internet).
+* Hash-IP - the IP that someone can seldomly own without requiring permission from any authority, because it is derived from public key with some form of Hash.
+It will be in form of IPv6 (because other option of IP - IPv4 - is not suitable as it's too short).
 
-* Virtual-IP Global - this is an Virtual-IP, where you are the only owner of it, and no one else have such IP even globally,
-usually because it is a hash of public key.
+* Hash-IP is a global IP - this is an IP, where you are the only owner of it, and no one else have such IP even globally.
 
-**Open question** - should we use: Virtual-IP, or Galaxy-IP, or Yedino-IP, or Hash-IP here.
+* Mapped-IP is an IP that is owned by you but that is guaranteed only in given Hash-VPN. It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918).
 
-* Hash-IP - Virtual-IP Global that is unique thanks to being some form of hash from some data that only you can controll, e.g.
-hash of publickey related to private key that you have.
+* Hash-VPN is a VPN network where all participants communicate through Hash-IP.
 
-* IP-Key - the cryptographical key that you use to have ownership of your Virtual-IP.
+* IP-Key - the cryptographical key that you use to have ownership of your Hash-IP.
 
 # Special topics
 
