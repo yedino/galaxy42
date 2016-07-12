@@ -66,7 +66,19 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-#include "netioapi.h"
+#include <ifdef.h>
+#include <io.h>
+#include <netioapi.h>
+#include <ntddscsi.h>
+#include <winioctl.h>
+
+c_tun_device_windows::c_tun_device_windows()
+:
+	m_readed_bytes(0),
+	m_handle(get_device_handle())
+{
+	m_buffer.fill(0);
+}
 
 void c_tun_device_windows::set_ipv6_address
 	(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
@@ -84,6 +96,10 @@ void c_tun_device_windows::set_ipv6_address
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
 	auto status = CreateUnicastIpAddressEntry(&iprow);
+}
+
+bool c_tun_device_windows::incomming_message_form_tun() {
+
 }
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
@@ -203,6 +219,49 @@ NET_LUID c_tun_device_windows::get_luid(const std::wstring &human_name) {
 	auto status = ConvertInterfaceAliasToLuid(human_name.c_str(), &ret); // TODO throw
 	if (status != ERROR_SUCCESS) throw std::runtime_error("ConvertInterfaceAliasToLuid error, error code " + std::to_string(GetLastError()));
 	return ret;
+}
+
+
+#define TAP_CONTROL_CODE(request,method) \
+  CTL_CODE (FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS)
+#define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
+#define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
+
+HANDLE c_tun_device_windows::get_device_handle() {
+	std::wstring tun_filename;
+	tun_filename += L"\\\\.\\Global\\";
+	tun_filename += get_device_guid();
+	tun_filename += L".tap";
+	BOOL bret;
+	HANDLE handle = CreateFile(tun_filename.c_str(),
+		GENERIC_READ | GENERIC_WRITE,
+		0,
+		0,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
+		0);
+	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("invalid handle");
+	// get version
+	ULONG version_len;
+	struct {
+		unsigned long major;
+		unsigned long minor;
+		unsigned long debug;
+	} version;
+	bret = DeviceIoControl(handle, TAP_IOCTL_GET_VERSION, &version, sizeof(version), &version, sizeof(version), &version_len, nullptr);
+	if (bret == false) {
+		CloseHandle(handle);
+		throw std::runtime_error("DeviceIoControl error");
+	}
+	// set status
+	int status = 1;
+	unsigned long len = 0;
+	bret = DeviceIoControl(handle, TAP_IOCTL_SET_MEDIA_STATUS, &status, sizeof(status), &status, sizeof(status), &len, nullptr);
+	if (bret == false) {
+		CloseHandle(handle);
+		throw std::runtime_error("DeviceIoControl error");
+	}
+	return handle;
 }
 
 #endif
