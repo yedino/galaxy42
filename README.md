@@ -38,6 +38,9 @@ Backup: your **private keys** that give ownership of your virtual IP address by 
 
 This program will allow to do much much more in future (full public mesh) but this are plans for advanced testers (see below).
 
+For more details, including correct naming and **glossary**, and advanced technical topics **for developers** and "hackers", see also:
+[doc/hacking.md](doc/hacking.md).
+
 * * *
 
 ## Security:

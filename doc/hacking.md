@@ -26,17 +26,40 @@ we're bussy), see contact information in the main README.md of this project.
 
 # Naming and Glossary
 
+## Our naming (in Galaxy42, Antinet, Yedino)
 
-* Hash-IP - the IP that someone can seldomly own without requiring permission from any authority, because it is derived from public key with some form of Hash.
-It will be in form of IPv6 (because other option of IP - IPv4 - is not suitable as it's too short).
+* Hash-Node (or just "Node") - is some sort of computer system that has a Hash-IP, and usually is connected with it to some network.
+For Galaxy42, a Node will be any computer running the Galaxy42 client program.
+One computer can run several nodes at once, using e.g. network name-spaces. And that all can be run at once few times on one physical computer with help of e.g. virtual machines.
+But usually for simple use, one computer runs one Galaxy42 client program and is therefor an Hash-Node.
 
-* Hash-IP is a global IP - this is an IP, where you are the only owner of it, and no one else have such IP even globally.
+* Hash-IP or "Hash-IP address" - is a virtual IP address, that is based upon a **cryptographic hash** and is derived from some **public key**.
+Use of given Hash-IP as owner of this address (treceiving data addressed to this IP, or sending data from this IP) demands access to the associated **IP-Key-Secret**.
+Hash-IP is a **globally-unique IP** address - where can choose to be the only owner of it, and no one else have such IP even globally (though given address can potentially
+be multi-homed or shared across many users, but this is their decission).
+(This assumes that all works as expected and the used Hash function is strong enough to avoid any collisions).
 
-* Mapped-IP is an IP that is owned by you but that is guaranteed only in given Hash-VPN. It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918).
+* Mapped-IP - is an IP that is owned by you but that is guaranteed only in given Hash-VPN.
+It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918) by admin of such Hash-VPN.
 
-* Hash-VPN is a VPN network where all participants communicate through Hash-IP.
+* Hash-Net - is some network of Nodes connecting to each other through each-other Hash-IP. It usually forms either Hash-VPN or Hash-Mesh.
+ * Hash-Mesh - is kind of Hash-Net, where every Node can join. Usually it is desirable that such mesh can reach every other existing Hash-Mesh.
+ * Hash-VPN - is a private version of Hash-Net (like a VPN but in Hash-Net). It is run under some sort of common administrative entity
+ (e.g. an admin of VPN, who assigns Mapped-IP to avoid collisions). Usually it is desirable that such mesh will NOT be used by
+ any other, unauthorized Nodes.
+ * Hash-VPN-1to1, or (preferred) "1to1-VPN" - is Hash-VPN in which there are only (up to) 2 Nodes connecting to each-other.
 
-* IP-Key - the cryptographical key that you use to have ownership of your Hash-IP.
+* IP-Key-Secret - is the cryptographical **private key** that you use to have ownership of given Hash-IP.
+
+* IP-Key-Public - is the cryptographical **public key** that you use to have ownership of given Hash-IP.
+
+For more of technical names, see also source code file: [crypto.hpp](../src/crypto/crypto.hpp)
+
+## Common naming
+
+* Private Key - is the private (secret) key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
+
+* Public Key - is the public key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
 
 # Special topics
 
