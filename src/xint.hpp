@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef __linux__ // because of some compilation problems on openSUSE
+
 #include <iostream>
 #include <ostream>
 #include <string>
@@ -261,8 +263,6 @@ class numeric_limits<safer_int<T>> {
 
 } // std
 
-
-
 // Comparsions like: int > xint:
 
 #define CONDITION typename std::enable_if< std::is_integral<U>{}>::type* = nullptr
@@ -336,6 +336,5 @@ uxint xsize(const T & obj) {
 
 template <typename T> bool overflow_impossible_in_assign(T, T) { return true; } // same type
 
-
-
+#endif
 
