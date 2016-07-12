@@ -42,11 +42,11 @@ be multi-homed or shared across many users, but this is their decission).
 * Mapped-IP - is an IP that is owned by you but that is guaranteed only in given Hash-VPN.
 It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918) by admin of such Hash-VPN.
 
-* Hash-Net - is some network of computers connecting to each other through each-other Hash-IP. It usually forms either Hash-VPN or Hash-Mesh.
- * Hash-Mesh - is kind of Hash-Net, where every computer can join. Usually it is desirable that such mesh can reach every other existing Hash-Mesh.
+* Hash-Net - is some network of Nodes connecting to each other through each-other Hash-IP. It usually forms either Hash-VPN or Hash-Mesh.
+ * Hash-Mesh - is kind of Hash-Net, where every Node can join. Usually it is desirable that such mesh can reach every other existing Hash-Mesh.
  * Hash-VPN - is a private version of Hash-Net (like a VPN but in Hash-Net). It is run under some sort of common administrative entity
  (e.g. an admin of VPN, who assigns Mapped-IP to avoid collisions). Usually it is desirable that such mesh will NOT be used by
- any other, unauthorized computers.
+ any other, unauthorized Nodes.
  * Hash-VPN-1to1, or (preferred) "1to1-VPN" - is Hash-VPN in which there are only (up to) 2 Nodes connecting to each-other.
 
 * IP-Key-Secret - is the cryptographical **private key** that you use to have ownership of given Hash-IP.
