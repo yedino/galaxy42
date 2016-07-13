@@ -507,8 +507,6 @@ void c_tunserver::help_usage() const {
 
 #ifdef __linux__
 void c_tunserver::prepare_socket() {
-
-
 	//ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
 
 	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above

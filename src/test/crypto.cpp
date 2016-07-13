@@ -438,5 +438,4 @@ TEST(crypto, create_cryptolink) {
 		auto msg_decrypted = BobCT.unbox(msg_encrypted, nonce_used);
 		ASSERT_EQ(msg, msg_decrypted);
 	}
-	g_dbg_level_set(0, "restore to default");
 }

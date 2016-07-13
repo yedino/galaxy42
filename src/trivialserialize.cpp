@@ -306,7 +306,7 @@ namespace detail {
 template <typename T> ostream& operator<<(ostream &ostr , const vector<T> & tab) {
 	bool first=0; // first was done yet
 	for (const auto & obj : tab) {
-		if (first) cout << ", ";
+		if (first) ostr << ", ";
 		first=1;
 		ostr<<obj;
 	}
@@ -316,7 +316,7 @@ template <typename T> ostream& operator<<(ostream &ostr , const vector<T> & tab)
 template <typename TKey, typename TVal> ostream& operator<<(ostream &ostr , const map<TKey,TVal> & tab) {
 	bool first=0; // first was done yet
 	for (const auto & it : tab) {
-		if (first) cout << ", ";
+		if (first) ostr << ", ";
 		first=1;
 		ostr << (it.first) << ": {" << (it.second) << "}";
 	}
@@ -327,7 +327,7 @@ template <typename TKey, typename TVal> ostream& operator<<(ostream &ostr , cons
 namespace test {
 
 
-void test_shortstring_end() {
+void test_shortstring_end(std::ostream &dbgout) {
 	trivialserialize::generator gen(50);
 
 	vector<string> test_varstring = {
@@ -341,18 +341,18 @@ void test_shortstring_end() {
 
 	for (auto val_expected : test_varstring) {
 		auto val_given = parser.pop_varstring();
-		cerr<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
+		dbgout<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 		bool ok = ( val_given == val_expected );
 		if (!ok) _throw_error( std::runtime_error("Failed test for expected value " + (val_expected)) );
 	}
 }
 
-void test_trivialserialize() {
+void test_trivialserialize(std::ostream &dbgout) {
 	using namespace detail;
 
-	test_shortstring_end();
+	test_shortstring_end(dbgout);
 
-	cerr << endl<< "Tests: " << __FUNCTION__ << endl << endl;
+	dbgout << endl<< "Tests: " << __FUNCTION__ << endl << endl;
 
 	{
 		trivialserialize::generator gen(20);
@@ -436,8 +436,8 @@ void test_trivialserialize() {
 
 	// ==============================================
 
-	cout << "Serialized: [" << gen.str() << "]" << endl;
-	cout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
+	dbgout << "Serialized: [" << gen.str() << "]" << endl;
+	dbgout << "Serialized: [" << string_as_dbg( string_as_bin( gen.str() )).get() << "]" << endl;
 
 	// ==============================================
 	// ==============================================
@@ -447,47 +447,47 @@ void test_trivialserialize() {
 
 	auto cu = parser.pop_byte_u();
 	auto su = parser.pop_byte_s();
-	cerr << "Read ["<<(int)cu<<"] and [" << (int)su << "]" << endl;
+	dbgout << "Read ["<<(int)cu<<"] and [" << (int)su << "]" << endl;
 
-	std::string sa1 = parser.pop_bytes_n(3);	cerr << "Read ["<<sa1<<"]" << endl;
-	std::string sa2 = parser.pop_bytes_n(3);	cerr << "Read ["<<sa2<<"]" << endl;
-	std::string sa3 = parser.pop_bytes_n(0);	cerr << "Read ["<<sa3<<"]" << endl;
-	std::string sa4 = parser.pop_bytes_n(6);	cerr << "Read ["<<sa4<<"]" << endl;
+	std::string sa1 = parser.pop_bytes_n(3);	dbgout << "Read ["<<sa1<<"]" << endl;
+	std::string sa2 = parser.pop_bytes_n(3);	dbgout << "Read ["<<sa2<<"]" << endl;
+	std::string sa3 = parser.pop_bytes_n(0);	dbgout << "Read ["<<sa3<<"]" << endl;
+	std::string sa4 = parser.pop_bytes_n(6);	dbgout << "Read ["<<sa4<<"]" << endl;
 
-	cerr << "Number: " << parser.pop_integer_u<1,unsigned int>() << endl;
-	cerr << "Number: " << parser.pop_integer_u<2,unsigned int>() << endl;
-	cerr << "Number: " << parser.pop_integer_u<8,unsigned int>() << endl;
-	cerr << "Number: " << parser.pop_integer_u<4,unsigned int>() << endl;
-	cerr << "Number: " << parser.pop_integer_u<4,unsigned int>() << endl;
+	dbgout << "Number: " << parser.pop_integer_u<1,unsigned int>() << endl;
+	dbgout << "Number: " << parser.pop_integer_u<2,unsigned int>() << endl;
+	dbgout << "Number: " << parser.pop_integer_u<8,unsigned int>() << endl;
+	dbgout << "Number: " << parser.pop_integer_u<4,unsigned int>() << endl;
+	dbgout << "Number: " << parser.pop_integer_u<4,unsigned int>() << endl;
 
 	auto sb1 = parser.pop_bytes_sizeoctets<1>();
-	cerr<<"["<<sb1<<"]"<<endl;
+	dbgout<<"["<<sb1<<"]"<<endl;
 	auto sb2 = parser.pop_bytes_sizeoctets<2>();
-	cerr<<"["<<sb2<<"]"<<endl;
+	dbgout<<"["<<sb2<<"]"<<endl;
 	auto sb3 = parser.pop_bytes_sizeoctets<3>();
-	cerr<<"["<<sb3<<"]"<<endl;
+	dbgout<<"["<<sb3<<"]"<<endl;
 	auto sb4 = parser.pop_bytes_sizeoctets<4>();
-	cerr<<"["<<sb4<<"]"<<endl;
+	dbgout<<"["<<sb4<<"]"<<endl;
 	auto sb5 = parser.pop_bytes_sizeoctets<1>();
-	cerr<<"["<<sb5<<"]"<<endl;
+	dbgout<<"["<<sb5<<"]"<<endl;
 
 	for (auto val_expected : test_uvarint1) {
 		auto val_given = parser.pop_integer_uvarint();
-		cerr<<"uvarint decoded: " << val_given << endl;
+		dbgout<<"uvarint decoded: " << val_given << endl;
 		bool ok = ( val_given == val_expected );
 		if (!ok) _throw_error( std::runtime_error("Failed test for expected value " + std::to_string(val_expected)) );
 	}
 
 	for (auto val_expected : test_varstring) {
 		auto val_given = parser.pop_varstring();
-		cerr<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
+		dbgout<<"varstring decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 		bool ok = ( val_given == val_expected );
 		if (!ok) _throw_error( std::runtime_error("Failed test for expected value " + (val_expected)) );
 	}
 
 	auto test_varstring_LOADED = parser.pop_vector_string();
 	for (auto val_given : test_varstring_LOADED) {
-		cerr<<"vector string decoded: [" << val_given << "] with size=" << val_given.size() << endl;
+		dbgout<<"vector string decoded: [" << val_given << "] with size=" << val_given.size() << endl;
 	}
 
 	auto tanks = parser.pop_vector_object<c_tank>();
