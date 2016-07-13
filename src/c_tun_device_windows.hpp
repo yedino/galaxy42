@@ -1,5 +1,5 @@
-#ifndef C_TUN_DEDICE_WINDOWS_HPP
-#define C_TUN_DEDICE_WINDOWS_HPP
+#ifndef C_TUN_DEVICE_WINDOWS_HPP
+#define C_TUN_DEVICE_WINDOWS_HPP
 
 
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -34,4 +34,4 @@ class c_tun_device_windows final : public c_tun_device {
 };
 #endif
 
-#endif // C_TUN_DEDICE_WINDOWS_HPP
+#endif // C_TUN_DEVICE_WINDOWS_HPP

@@ -1,7 +1,7 @@
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-#include "c_tun_dedice_windows.hpp"
+#include "c_tun_device_windows.hpp"
 #include <cassert>
 #include <ifdef.h>
 #include <io.h>
