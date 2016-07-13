@@ -11,6 +11,7 @@
 
 c_tun_device_windows::c_tun_device_windows()
 :
+	// LOG_ON_INIT( _note("Creating TUN device (windows)") ),
 	m_readed_bytes(0),
 	m_handle(get_device_handle()),
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle))
@@ -23,25 +24,29 @@ c_tun_device_windows::c_tun_device_windows()
 void c_tun_device_windows::set_ipv6_address
 	(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
 	MIB_UNICASTIPADDRESS_ROW iprow;
-	//std::memset(&iprow, 0, sizeof(iprow));
+	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
 	iprow.SuffixOrigin = IpSuffixOriginUnchanged;
 	iprow.ValidLifetime = 0xFFFFFFFF;
 	iprow.PreferredLifetime = 0xFFFFFFFF;
 	iprow.OnLinkPrefixLength = 0xFF;
+
 	auto guid = get_device_guid();
 	auto human_name = get_human_name(guid);
 	iprow.InterfaceLuid = get_luid(human_name);
 	iprow.Address.si_family = AF_INET6;
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
+
 	auto status = CreateUnicastIpAddressEntry(&iprow);
+	// TODO check for error with status
+	_UNUSED(status);
 }
 
 bool c_tun_device_windows::incomming_message_form_tun() {
-	m_ioservice.run_one();
+	m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
 	if (m_readed_bytes > 0) return true;
-	else return false;
+	return false;
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
@@ -54,8 +59,8 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 
 size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
 	boost::system::error_code ec;
-	m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
-	m_ioservice.run_one();
+	m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
+	m_ioservice.run_one(); // this actuall blocks
 	if (ec) throw std::runtime_error("boost error " + ec.message());
 }
 
@@ -222,8 +227,13 @@ HANDLE c_tun_device_windows::get_device_handle() {
 }
 
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
-	if (!error && length > 0) m_readed_bytes = length;
-	// continue readind
+	if (error || (length<1)) {
+		m_readed_bytes = 0; // clear it to be sure it's indicating no-data
+	}
+	else {
+		m_readed_bytes = length;
+	}
+	// continue reading
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
 }
 
