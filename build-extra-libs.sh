@@ -31,7 +31,7 @@ then
 	cp -v -r depends/ntru-crypto/reference-code/C/Encrypt/.libs/    build_extra/ntru/
 
 
-	if [[ 0 ]] ; then
+	if false ; then
 		echo "Skipping step: Generating wisdom files (for e.g. NTru) - it is DISABLED in project configuration"
 	else
 		echo "Generating wisdom files (for e.g. NTru) ..."
