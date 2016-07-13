@@ -17,5 +17,4 @@ TEST(utility, parse_ip_number) {
 	EXPECT_THROW   (myserver.add_peer_simplestring("562.486.489.426:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"), std::invalid_argument);
 	EXPECT_THROW   (myserver.add_peer_simplestring("192.168.2.62:9042-xyz1:10a9:4318:509b:80ab:8042:6275:609b"), std::invalid_argument);
 	EXPECT_THROW   (myserver.add_peer_simplestring("192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b 192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"), std::invalid_argument);
-	g_dbg_level_set(0, "restore to default");
 }

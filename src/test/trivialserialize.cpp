@@ -6,13 +6,20 @@
 
 using namespace trivialserialize;
 
+
+void uvarint_for_i(uint64_t i) {
+	generator gen(1);
+	gen.push_integer_uvarint(i);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	ASSERT_EQ(parser.pop_integer_uvarint(), i);
+}
+
 TEST(serialize, uvarint) {
-	for (uint64_t i = 1; i < 10000000; i++) {
-		generator gen(1);
-		gen.push_integer_uvarint(i);
-		trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
-		ASSERT_EQ(parser.pop_integer_uvarint(), i);
-	}
+	for (uint64_t i = 0; i < 1000; i++) uvarint_for_i(i);
+	for (uint64_t i = 0; i < 1000*1000; i+=1000) uvarint_for_i(i);
+	for (uint64_t i = 0; i < 1000*1000*1000; i+=1000*1000) uvarint_for_i(i);
+	for (uint64_t i = 0; i < 3; ++i) uvarint_for_i(256-1+i);
+	for (uint64_t i = 0; i < 3; ++i) uvarint_for_i(65536-1+i);
 }
 
 TEST(serialize, varstring_vector) {
@@ -52,7 +59,11 @@ TEST(serialize, get_from_empty_string) {
 }
 
 TEST(serialize, test_trivialserialize) {
-	EXPECT_NO_THROW(test::test_trivialserialize());
+	std::ostringstream oss;
+	EXPECT_NO_THROW(test::test_trivialserialize(oss)); // <---
+	auto thestr = oss.str();
+	EXPECT_GT( thestr.size() , static_cast<size_t>(1000));
+	EXPECT_LT( thestr.size() , static_cast<size_t>(10000));
 }
 
 TEST(serialize, varstring_map) {
