@@ -38,7 +38,7 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 /// red code
 #define _erro(X) do { DBGLVL(200); \
 	::std::cerr<<"\033[91m\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<<"DAMN! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<"\033[0m"<<::std::endl; \
 } while(0)
 #define _mark(X) do { DBGLVL(150); \
@@ -83,17 +83,17 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
 #define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
-	_erro("Going to throw exception. What: " << except_var.what() \
+	_warn("Going to throw exception. What: " << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
-	_erro("Going to throw exception. What: " << except_var.what() \
+	_warn("Going to throw exception. What: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 
 #define _throw_error_rethrow( ) do { \
-	_erro("Going to re-throw exception."); \
+	_warn("Going to re-throw exception."); \
 		throw ; } while(0)
 
 #define _assert_throw(COND) do { \

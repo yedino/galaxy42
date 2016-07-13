@@ -238,7 +238,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="lang_optional") { test_lang_optional();  return false; }
 	if (demoname=="foo") { test_foo();  return false; }
 	if (demoname=="bar") { test_bar();  return false; }
-	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize();  return false; }
+	if (demoname=="serialize") { trivialserialize::test::test_trivialserialize(std::cout);  return false; }
 	if (demoname=="crypto") { antinet_crypto::test_crypto();  return false; }
 	if (demoname=="gen_key_bench") { antinet_crypto::generate_keypairs_benchmark(2);  return false; }
 	if (demoname=="crypto_stream_bench") { antinet_crypto::stream_encrypt_benchmark(2); return false; }

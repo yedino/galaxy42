@@ -22,7 +22,7 @@
 namespace trivialserialize {
 
 namespace test {
-	void test_trivialserialize();
+	void test_trivialserialize(std::ostream &dbgout);
 } // namespace
 
 // ---
