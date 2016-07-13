@@ -66,6 +66,7 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
+#include <cassert>
 #include <ifdef.h>
 #include <io.h>
 #include <netioapi.h>
@@ -75,9 +76,12 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 c_tun_device_windows::c_tun_device_windows()
 :
 	m_readed_bytes(0),
-	m_handle(get_device_handle())
+	m_handle(get_device_handle()),
+	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle))
 {
 	m_buffer.fill(0);
+	assert(m_stream_handle_ptr->is_open());
+	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
 }
 
 void c_tun_device_windows::set_ipv6_address
@@ -99,7 +103,24 @@ void c_tun_device_windows::set_ipv6_address
 }
 
 bool c_tun_device_windows::incomming_message_form_tun() {
+	m_ioservice.run_one();
+	if (m_readed_bytes > 0) return true;
+	else return false;
+}
 
+size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
+	assert(m_readed_bytes > 0);
+	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
+	size_t ret = m_readed_bytes;
+	m_readed_bytes = 0;
+	return ret;
+}
+
+size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
+	boost::system::error_code ec;
+	m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
+	m_ioservice.run_one();
+	if (ec) throw std::runtime_error("boost error " + ec.message());
 }
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
@@ -262,6 +283,12 @@ HANDLE c_tun_device_windows::get_device_handle() {
 		throw std::runtime_error("DeviceIoControl error");
 	}
 	return handle;
+}
+
+void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
+	if (!error && length > 0) m_readed_bytes = length;
+	// continue readind
+	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
 }
 
 #endif
