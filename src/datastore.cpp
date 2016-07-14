@@ -74,6 +74,7 @@ void datastore::save_string_mlocked(t_datastore file_type,
 std::string datastore::load_string(t_datastore file_type,
 								   const std::string &filename) {
 	std::string content;
+	std::string file_with_path_str;
 	try {
 		b_fs::path file_with_path = get_full_path(file_type, filename);
 		_dbg2("Loading file path: " << b_fs::canonical(file_with_path).string());
@@ -87,12 +88,12 @@ std::string datastore::load_string(t_datastore file_type,
 
 			ifs.close();
 		}
-		_dbg2("Successfully loaded string from:" << b_fs::canonical(file_with_path).string());
+		file_with_path_str = b_fs::canonical(file_with_path).string();
 	} catch (b_fs::filesystem_error & err) {
 		_erro("Fail to load file [" << filename << "] : " << err.what());
 		_throw_error( std::invalid_argument(err.what()) );
 	}
-	_dbg2("Successfully loaded string from:" << file_with_path.native());
+	_dbg2("Successfully loaded string from:" << file_with_path_str);
 	return content;
 }
 

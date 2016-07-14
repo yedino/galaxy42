@@ -632,8 +632,8 @@ int main(int argc, char **argv) {
 
 			bool have_any_keys=0;
 			try {
-				auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
-				std::vector<std::string> keys = filestorage::get_file_list(keys_path);
+				auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
+				std::vector<std::string> keys = datastore::get_file_list(keys_path);
 				have_any_keys = keys.size() > 0;
 			} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
 
