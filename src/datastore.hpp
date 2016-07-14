@@ -14,13 +14,13 @@
 
 namespace b_fs=boost::filesystem;
 
-enum t_filestore : unsigned char {
-	e_filestore_galaxy_wallet_PRV = 0,
-	e_filestore_galaxy_pub = 1,
-	e_filestore_galaxy_sig = 2,
-	e_filestore_galaxy_instalation_key_conf = 3,
+enum t_datastore : unsigned char {
+	e_datastore_galaxy_wallet_PRV = 0,
+	e_datastore_galaxy_pub = 1,
+	e_datastore_galaxy_sig = 2,
+	e_datastore_galaxy_instalation_key_conf = 3,
 
-	e_filestore_local_path = 4
+	e_datastore_local_path = 4
 };
 // TODO doc
 // TODO more tests
@@ -31,32 +31,35 @@ public:
 
 
 
-class filestorage {
+class datastore {
 public:
-	filestorage() = delete;
+	datastore() = delete;
 
-	static void save_string(t_filestore file_type,
+	static void save_string(t_datastore file_type,
 							const std::string &filename,
 							const std::string &data,
 							bool overwrite = false);
 
-	static void save_string_mlocked(t_filestore file_type,
+	static void save_string_mlocked(t_datastore file_type,
 									const std::string &filename,
 									const sodiumpp::locked_string &locked_data,
 									bool overwrite = false);
 
-	static std::string load_string(t_filestore file_type,
+	static std::string load_string(t_datastore file_type,
 								   const std::string &filename);
 
-	static sodiumpp::locked_string load_string_mlocked(t_filestore file_type,
+	static sodiumpp::locked_string load_string_mlocked(t_datastore file_type,
 													   const std::string &filename);
 
 	/**
 	 * @brief check if file can be correctly loaded
 	 * @param filename
 	 * @return true if file is a regular file
+	 * @{
 	 */
 	static bool is_file_ok(const std::string &filename);
+	static bool is_file_ok(const b_fs::path &path);
+	/// @}
 
 	/**
 	 * @brief remove
@@ -70,20 +73,20 @@ public:
 	 * @param p filename without path
 	 * @return
 	 */
-	static bool remove(t_filestore file_type, const std::string &p);
+	static bool remove(t_datastore file_type, const std::string &p);
 	/**
 	 * @brief get_file_list vector of strings with file names
 	 * @param path directory where we looking for files
 	 * @return
 	 */
-	static std::vector<std::string> get_file_list(const b_fs::path& path);
+	static std::vector<std::string> get_file_list(const b_fs::path &path);
 	/**
 	 * @brief get_full_path
 	 * @param file_type
 	 * @param filename
 	 * @return full path with filename included and extension if defined
 	 */
-	static b_fs::path get_full_path(t_filestore file_type,
+	static b_fs::path get_full_path(t_datastore file_type,
 								 const std::string &filename);
 	/**
 	 * @brief get_parent_path
@@ -91,14 +94,14 @@ public:
 	 * @param filename could be any string for file_type with concrete path
 	 * @return directory where specific file_type should be
 	 */
-	static b_fs::path get_parent_path(t_filestore file_type,
+	static b_fs::path get_parent_path(t_datastore file_type,
 								 const std::string &filename);
 
 
 private:
-	FRIEND_TEST(filestorage, prepare_path);
-	FRIEND_TEST(filestorage, write_load_string);
-	FRIEND_TEST(filestorage, write_load_mlocked_string);
+	FRIEND_TEST(datastore, prepare_path);
+	FRIEND_TEST(datastore, write_load_string);
+	FRIEND_TEST(datastore, write_load_mlocked_string);
 
 	// TODO chmod's
 	/**
@@ -108,11 +111,11 @@ private:
 	 * @param overwrite allow to overwrite file (default = false)
 	 * @return full path with fixed filename
 	 */
-	static b_fs::path prepare_path_for_write(t_filestore file_type,
+	static b_fs::path prepare_path_for_write(t_datastore file_type,
 										   const std::string &filename,
 										   bool overwrite = false);
 
-	static b_fs::path create_path_for(t_filestore file_type,
+	static b_fs::path create_path_for(t_datastore file_type,
 									const std::string &filename);
 	/**
 	 * @brief creating directory for given filename path

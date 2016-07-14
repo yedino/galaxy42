@@ -74,8 +74,17 @@ long c_peering::get_limit_points() {
 
 #ifdef __linux__
 c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper)
-	: c_peering(ref)
-	,m_udp_wrapper(udp_wrapper)
+:
+	c_peering(ref),
+	m_udp_wrapper(udp_wrapper)
+{ }
+
+#else
+
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_empty &udp_wrapper)
+:
+	c_peering(ref),
+	m_udp_wrapper(udp_wrapper)
 { }
 #endif
 

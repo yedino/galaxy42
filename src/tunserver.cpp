@@ -80,7 +80,7 @@ const char * g_demoname_default = "route_dij";
 #include "glue_sodiumpp_crypto.hpp"
 
 #include "ui.hpp"
-#include "filestorage.hpp"
+#include "datastore.hpp"
 #include "trivialserialize.hpp"
 #include "counter.hpp"
 #include "generate_crypto.hpp"
@@ -415,7 +415,7 @@ void c_tunserver::configure_mykey() {
 	// getting IDC
 	std::string IDI_name;
 	try {
-		IDI_name = filestorage::load_string(e_filestore_galaxy_instalation_key_conf, "IDI");
+		IDI_name = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 	} catch (std::invalid_argument &err) {
 		_dbg2("IDI is not set");
 		_throw_error( std::runtime_error("IDI is not set") );
@@ -1144,8 +1144,8 @@ void c_tunserver::run() {
 void c_tunserver::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
 	_info("Setting the name of IDI key to: " << keyname);
-	auto keys_path = filestorage::get_parent_path(e_filestore_galaxy_wallet_PRV,"");
-	auto keys = filestorage::get_file_list(keys_path);
+	auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
+	auto keys = datastore::get_file_list(keys_path);
 	bool found = false;
 	for (auto &key_name : keys) {
 		//remove .PRV extension
@@ -1157,7 +1157,7 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 		_erro("Can't find key (" << keyname << ") in your key list, so can't set it as IDI.");
 	}
 	_info("Key found ("<< keyname <<") and set as IDI");
-	filestorage::save_string(e_filestore_galaxy_instalation_key_conf,"IDI", keyname, true);
+	datastore::save_string(e_datastore_galaxy_instalation_key_conf,"IDI", keyname, true);
 }
 
 std::string c_tunserver::program_action_gen_key_simple() {
