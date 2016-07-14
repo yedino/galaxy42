@@ -180,7 +180,7 @@ template<typename T> constexpr bool templated_always_false() { return false; }
 template <typename TIn, typename TOut> bool ranges_overlap_oc_ne_asserted(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
 	assert( (start1<end1) );
 	assert( (start2<end2) );
-	return ( start1 < end2 and start2 < end1 );
+	return ( start1 < end2 && start2 < end1 );
 }
 
 /**

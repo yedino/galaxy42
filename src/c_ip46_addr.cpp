@@ -2,6 +2,7 @@
 
 #include "c_ip46_addr.hpp"
 
+#if defined(__linux__)
 #include "cpputils.hpp"
 #include <netdb.h>
 
@@ -159,3 +160,40 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 	if (ret < 0) return true;
 	else return false;
 }
+
+#endif // __linux__
+
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+
+c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) 
+:
+	m_port(port)
+{
+	m_address.from_string(ip_addr);
+}
+
+c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
+	if (m_address.is_v4()) return t_tag::tag_ipv4;
+	else if (m_address.is_v6()) return t_tag::tag_ipv6;
+	else return t_tag::tag_none;
+}
+
+std::ostream &operator << (std::ostream &out, const c_ip46_addr& addr) {
+	out << addr.m_address.to_string();
+	return out;
+}
+
+bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
+	return this->m_address == rhs.m_address;
+}
+
+bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
+	return this->m_address < rhs.m_address;
+}
+
+int c_ip46_addr::get_assign_port() const {
+	return m_port;
+}
+
+#endif
