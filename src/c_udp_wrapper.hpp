@@ -37,4 +37,23 @@ class c_udp_wrapper_empty final : public c_udp_wrapper {
 
 #endif // __linux__
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <array>
+#include <boost/asio.hpp>
+class c_udp_wrapper_windows final : public c_udp_wrapper {
+	public:
+		c_udp_wrapper_windows(const int listen_port);
+		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
+		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
+	private:
+		boost::asio::io_service m_io_service; // TODO use ioservice from event manager
+		boost::asio::ip::udp::socket m_socket;
+		std::array<uint8_t, 65527> m_buffer; // max udp packet data
+		size_t m_bytes_readed;
+		boost::asio::ip::udp::endpoint m_sender_endpoint;
+
+		void read_handle(const boost::system::error_code& error, size_t bytes_transferred);
+};
+#endif  // _win32
+
 #endif // C_UDP_WRAPPER_HPP

@@ -196,4 +196,8 @@ int c_ip46_addr::get_assign_port() const {
 	return m_port;
 }
 
+boost::asio::ip::address c_ip46_addr::get_address() const {
+	return m_address;
+}
+
 #endif
