@@ -408,19 +408,29 @@ TEST(crypto, save_and_open_user_key) {
 	}
 }
 
-TEST(crypto, create_cryptolink) {
-	const size_t number_of_test = 1000;
-	for (size_t i = 0; i < number_of_test; ++i) {
-		g_dbg_level_set(160, "start test");
+///@param level - memory use allowed: level=0 - basic tests,  level=1 also SIDH, level=2 also NTru
+void test_create_cryptolink(const int number_of_test, int level=0) {
+	for (std::remove_cv<decltype(number_of_test)>::type i = 0; i < number_of_test; ++i) {
+		// g_dbg_level_set(160, "start test");
 		c_multikeys_PAIR keypairA, keypairB;
 
 		keypairA.generate(e_crypto_system_type_Ed25519, 2);
 		keypairB.generate(e_crypto_system_type_Ed25519, 2);
 
-#if OPTION_LEVEL_IS_EXPERIMENT
-		keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
-		keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+#if ENABLE_CRYPTO_SIDH
+		if (level>=1) {
+			keypairA.generate(e_crypto_system_type_SIDH, 2);
+			keypairB.generate(e_crypto_system_type_SIDH, 2);
+		}
 #endif
+
+#if ENABLE_CRYPTO_NTRU
+		if (level>=2) {
+			keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
+			keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+		}
+#endif
+
 		c_multikeys_pub keypubA = keypairA.m_pub;
 		c_multikeys_pub keypubB = keypairB.m_pub;
 
@@ -439,3 +449,49 @@ TEST(crypto, create_cryptolink) {
 		ASSERT_EQ(msg, msg_decrypted);
 	}
 }
+
+void test_locked_string(int times, int len) {
+	for (std::remove_cv<decltype(times)>::type i=0; i<times; ++i) {
+		sodiumpp::locked_string ls(len);
+	}
+
+}
+
+TEST(crypto, locked_string_once) {
+	test_locked_string(1, 1000);
+}
+
+/*
+TEST(crypto, locked_string_manytimes) {
+	test_locked_string(1, 1000);
+}
+
+TEST(crypto, create_cryptolink_times1) {
+	test_create_cryptolink(1);
+}
+
+TEST(crypto, create_cryptolink_times1_manytimes) {
+	for (int i=0; i<1000; ++i) {
+		test_create_cryptolink(1);
+	}
+}
+*/
+
+/*
+TEST(crypto, create_cryptolink_times2) {
+	test_create_cryptolink(2);
+}
+
+TEST(crypto, create_cryptolink_times3) {
+	test_create_cryptolink(3);
+}
+
+TEST(crypto, create_cryptolink_few) {
+	test_create_cryptolink(10);
+}
+
+TEST(crypto, create_cryptolink_more) {
+	test_create_cryptolink(1000);
+}
+*/
+
