@@ -105,6 +105,7 @@ class c_ip46_addr {
 		bool operator == (const c_ip46_addr &rhs) const;
 		bool operator < (const c_ip46_addr &rhs) const;
 		int get_assign_port() const;
+		boost::asio::ip::address get_address() const;
 	private:
 		boost::asio::ip::address m_address;
 		int m_port;
