@@ -3,6 +3,8 @@
 #ifndef C_IP46_ADDR_H
 #define C_IP46_ADDR_H
 
+#if defined(__linux__)
+
 #include "libs1.hpp"
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -86,5 +88,27 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 
 		t_tag m_tag; ///< current type of address
 };
+#endif // __linux__
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+
+#include <boost/asio/ip/address.hpp>
+#include <ostream>
+class c_ip46_addr {
+	public:
+		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
+		c_ip46_addr() = default;
+		///! Constructs, from ip_addr in format hexdotip e.g.: fd42:ae11:f636:86:5:1:e5c4:d
+		c_ip46_addr(const std::string &ip_addr, int port = 9042);
+		t_tag get_ip_type() const;
+		friend std::ostream &operator << (std::ostream &out, const c_ip46_addr& addr);
+		bool operator == (const c_ip46_addr &rhs) const;
+		bool operator < (const c_ip46_addr &rhs) const;
+		int get_assign_port() const;
+	private:
+		boost::asio::ip::address m_address;
+		int m_port;
+};
+#endif
 
 #endif // C_IP46_ADDR_H

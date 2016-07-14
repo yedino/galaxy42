@@ -86,13 +86,13 @@ const char * g_demoname_default = "route_dij";
 #include "generate_crypto.hpp"
 
 
+
+#ifdef __linux__  // for low-level Linux-like systems TUN operations
+#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
 // linux (and others?) select use:
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
-
-#ifdef __linux__  // for low-level Linux-like systems TUN operations
-#include "../depends/cjdns-code/NetPlatform.h" // from cjdns
 
 #include <fcntl.h> // O_RDWRO_RDWR
 #include <sys/ioctl.h>
