@@ -33,4 +33,15 @@ bool c_event_manager_linux::get_tun_packet() {
 	return FD_ISSET(m_tun_fd, &m_fd_set_data);
 }
 
+#else
+
+c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper) {
+	_UNUSED(tun_device);
+	_UNUSED(udp_wrapper);
+}
+
+void c_event_manager_empty::wait_for_event() { }
+bool c_event_manager_empty::receive_udp_paket() { return false; }
+bool c_event_manager_empty::get_tun_packet() { return false; }
+
 #endif // __linux__

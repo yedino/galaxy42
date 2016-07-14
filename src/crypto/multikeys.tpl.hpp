@@ -213,18 +213,18 @@ void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool over
 	switch(m_crypto_use) {
 		case e_crypto_use_open: {
 			_note("Save this as public key");
-			filestorage::save_string(e_filestore_galaxy_pub, fname, serialized_data, overwrite);
+			datastore::save_string(e_datastore_galaxy_pub, fname, serialized_data, overwrite);
 
 			break;
 		}
 		case e_crypto_use_signature: {
 			_note("Save this as signature");
-			filestorage::save_string(e_filestore_galaxy_sig, fname, serialized_data, overwrite);
+			datastore::save_string(e_datastore_galaxy_sig, fname, serialized_data, overwrite);
 		  }
 		case e_crypto_use_secret: {
 			_note("Save this as PRIVATE key!!!");
 			locked_string data = locked_string::unsafe_create(serialized_data);
-			filestorage::save_string_mlocked(e_filestore_galaxy_wallet_PRV, fname, data, overwrite);
+			datastore::save_string_mlocked(e_datastore_galaxy_wallet_PRV, fname, data, overwrite);
 
 			break;
 		}
@@ -241,7 +241,7 @@ void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 	switch(m_crypto_use) {
 		case e_crypto_use_open: {
 			_note("Load this as public key");
-			data = filestorage::load_string(e_filestore_galaxy_pub, fname);
+			data = datastore::load_string(e_datastore_galaxy_pub, fname);
 			clear();
 			_info("Loading: reading now");
 			load_from_bin(data);
@@ -249,7 +249,7 @@ void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 		}
 		case e_crypto_use_secret: {
 			_note("Load this as PRIVATE key!!!");
-			buff_safe = filestorage::load_string_mlocked(e_filestore_galaxy_wallet_PRV, fname);
+			buff_safe = datastore::load_string_mlocked(e_datastore_galaxy_wallet_PRV, fname);
 			clear();
 			_info("Loading: reading now");
 			load_from_bin(buff_safe.get_string());
@@ -257,7 +257,7 @@ void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 		}
 		case e_crypto_use_signature: {
 			_note("Load this as signature");
-			data = filestorage::load_string(e_filestore_galaxy_sig, fname);
+			data = datastore::load_string(e_datastore_galaxy_sig, fname);
 			clear();
 			_info("Loading: reading now");
 			load_from_bin(data);
