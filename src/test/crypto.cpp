@@ -431,6 +431,8 @@ void test_create_cryptolink(const int number_of_test, int level=0) {
 		}
 #endif
 
+		if (level>=0) _dbg2("Advanced crypto tests enabled");
+
 		c_multikeys_pub keypubA = keypairA.m_pub;
 		c_multikeys_pub keypubB = keypairB.m_pub;
 
