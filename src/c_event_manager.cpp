@@ -48,8 +48,9 @@ bool c_event_manager_empty::get_tun_packet() { return false; }
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 c_event_manager_windows::c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper)
-//:
-//	m_
+:
+	m_tun_device(tun_device),
+	m_udp_device(udp_wrapper)
 {
 }
 
