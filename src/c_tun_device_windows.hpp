@@ -20,11 +20,11 @@ class c_tun_device_windows final : public c_tun_device {
 		size_t read_from_tun(void *buf, size_t count) override; ///< count must be <= size of buffer in buf! otherwise UB
 		size_t write_to_tun(const void *buf, size_t count) override; ///< count must be <= the size of buffer in buf! otherwise UB
 
-		constexpr int m_buffer_size = 9000; ///< the buffer size. This can affect size of MTU that this TUN can offer maybe
+		//constexpr int m_buffer_size = 9000; ///< the buffer size. This can affect size of MTU that this TUN can offer maybe
 
 	private:
 		boost::asio::io_service m_ioservice;
-		std::array<uint8_t, m_buffer_size> m_buffer;
+		std::array<uint8_t, 9000> m_buffer;
 
 		size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
 

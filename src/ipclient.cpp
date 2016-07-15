@@ -5,7 +5,7 @@ See LICENCE.txt
 */
 
 const char * disclaimer = "*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere. ***"; // XXX
-
+#ifdef __linux__
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -152,4 +152,4 @@ int main(int argc, char **argv) {
 	bench.run();
 }
 
-
+#endif // __linux__

@@ -1,10 +1,16 @@
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
+#include "c_tnetdbg.hpp"
 #include "c_tun_device_windows.hpp"
 #include <cassert>
 #include <ifdef.h>
 #include <io.h>
+//#include <ntdef.h>
+//#include <ntstatus.h>
+#ifndef NTSTATUS 
+	#define NTSTATUS LONG
+#endif 
 #include <netioapi.h>
 #include <ntddscsi.h>
 #include <winioctl.h>

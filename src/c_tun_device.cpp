@@ -1,6 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "c_tun_device.hpp"
 
+#include "c_tnetdbg.hpp"
 #ifdef __linux__
 #include <cassert>
 #include <fcntl.h>

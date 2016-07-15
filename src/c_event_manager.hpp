@@ -40,9 +40,12 @@ class c_event_manager_empty final : public c_event_manager {
 #endif // __linux__
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include "c_tun_device_windows.hpp"
 #include<boost/asio.hpp>
 #include <functional>
+
+class c_tun_device_windows;
+class c_udp_wrapper_windows;
+
 class c_event_manager_windows final : public c_event_manager {
 public:
 	c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper);
