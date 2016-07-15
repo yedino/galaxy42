@@ -657,12 +657,17 @@ int main(int argc, char **argv) {
 			} else {
 				std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
 
-				ui::action_info_ok("Generating your new keys.");
-				const string IDI_name = myserver.program_action_gen_key_simple();
-				myserver.program_action_set_IDI(IDI_name);
-				ui::action_info_ok("Your new keys are created.");
-				myserver.configure_mykey();
-				ui::action_info_ok("Your new keys are ready to use.");
+				auto step_make_default_keys = [&]()	{
+					ui::action_info_ok("Generating your new keys.");
+					const string IDI_name = myserver.program_action_gen_key_simple();
+					myserver.program_action_set_IDI(IDI_name);
+					ui::action_info_ok("Your new keys are created.");
+					myserver.configure_mykey();
+					ui::action_info_ok("Your new keys are ready to use.");
+				};
+				UI_EXECUTE_OR_EXIT( step_make_default_keys );
+
+				// UI_CATCH_EXIT("Creating new default key.", "It was not possible to create your new default key.");
 			}
 
 			// ------------------------------------------------------------------
