@@ -7,12 +7,15 @@
 class TestsEnvReseter : public ::testing::EmptyTestEventListener {
 	// Called before a test starts.
 	virtual void OnTestStart(const ::testing::TestInfo& test_info) {
+		_UNUSED(test_info);
 		g_dbg_level_set(200, "Be quiet during tests");
 		// test_info.test_case_name(), test_info.name());
 	}
 
 	// Called after a test ends.
-	virtual void OnTestEnd(const ::testing::TestInfo& test_info) { }
+	//virtual void OnTestEnd(const ::testing::TestInfo& test_info) { 
+  //	_UNUSED(test_info);
+	//}
 };
 
 
