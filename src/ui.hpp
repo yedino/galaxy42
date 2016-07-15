@@ -35,19 +35,23 @@ void action_info_ok(const string &info); ///< Inform user about some progress
 void show_error_exception(const string &during_action, const std::exception &e); ///< Inform user about caught exception
 void show_error_exception_unknown(const string &during_action); ///< Inform user about caught exception of unknown type
 
+#define UI_TRY try
+
 #define _UI_CATCH_ADVANCED(DURING_ACTION, RETHROW) \
 	catch(std::exception &e) {\
-		_note("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
+		_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
 		ui::show_error_exception(DURING_ACTION, e); \
 		if (RETHROW) throw; } \
 	catch(...) { \
-		_note("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"] (unknown exception type)"); \
+		_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"] (unknown exception type)"); \
 		ui::show_error_exception_unknown(DURING_ACTION); \
 		if (RETHROW) throw; \
 	}
 
 #define UI_CATCH(DURING_ACTION) _UI_CATCH_ADVANCED(DURING_ACTION, false) do{;}while(0)
 #define UI_CATCH_RETHROW(DURING_ACTION) _UI_CATCH_ADVANCED(DURING_ACTION, true) do{;}while(0)
+
+// #define UI_CATCH_AND_EXIT(DURING_ACTION, EXIT_MSG)
 
 
 } // namespace

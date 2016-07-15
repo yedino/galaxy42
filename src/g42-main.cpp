@@ -656,18 +656,17 @@ int main(int argc, char **argv) {
 				}
 			} else {
 				std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
-				// --gen-key --new-key "myself" --key-type "ed25519:x3"
-				const string IDI_name = "IDI";
-				vector<string> xarg_vecstr({ "--gen-key", "--new-key",IDI_name, "--key-type","ed25519:x1" });
-				decltype(argm) xarg;
-				po::store( po::command_line_parser(xarg_vecstr).options(*desc).run() , xarg );
-				po::notify( xarg );
-				ui::action_info_ok("Generating your new keys.");
-				myserver.program_action_gen_key(xarg);
-				myserver.program_action_set_IDI(IDI_name);
-				ui::action_info_ok("Your new keys are created.");
-				myserver.configure_mykey();
-				ui::action_info_ok("Your new keys are ready to use.");
+
+				auto step_make_default_keys = [&]()	{
+					ui::action_info_ok("Generating your new keys.");
+					const string IDI_name = myserver.program_action_gen_key_simple();
+					myserver.program_action_set_IDI(IDI_name);
+					ui::action_info_ok("Your new keys are created.");
+					myserver.configure_mykey();
+					ui::action_info_ok("Your new keys are ready to use.");
+				};
+				UI_EXECUTE_OR_EXIT( step_make_default_keys );
+
 			}
 
 			// ------------------------------------------------------------------
