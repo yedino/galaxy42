@@ -92,6 +92,17 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 		<< "."); \
 		throw except_var; } while(0)
 
+
+namespace ui { class exception_error_exit; }
+
+void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
+
+#define _throw_exit( EXCEPT ) do { auto except_var = EXCEPT;  \
+	must_be_exception_type_error_exit(except_var); /* assert (in compile time) that EXCEPT is of proper exception type */ \
+	_warn("Going to throw exception (for EXIT) What: " << except_var.what() \
+		<< "."); \
+		throw except_var; } while(0)
+
 #define _throw_error_rethrow( ) do { \
 	_warn("Going to re-throw exception."); \
 		throw ; } while(0)
@@ -103,6 +114,20 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 		_throw_error( std::runtime_error(oss.str()) ); \
 		}\
 	} while(0)
+
+
+
+#define UI_EXECUTE_OR_EXIT( FUNC ) \
+				try { \
+					try { \
+			FUNC(); \
+					} UI_CATCH_RETHROW( "" # FUNC ); \
+				} catch(...) { \
+					std::cout << "Error occured (see above) - we will exit now" << std::endl; \
+					_throw_exit( ui::exception_error_exit("Error in: " # FUNC ) ); \
+				}
+
+
 
 
 /** TODO document
