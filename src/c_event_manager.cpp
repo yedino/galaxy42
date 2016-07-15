@@ -45,3 +45,15 @@ bool c_event_manager_empty::receive_udp_paket() { return false; }
 bool c_event_manager_empty::get_tun_packet() { return false; }
 
 #endif // __linux__
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+c_event_manager_windows::c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper)
+//:
+//	m_
+{
+}
+
+void c_event_manager_windows::wait_for_event() {
+	m_io_service.poll_one();
+}
+#endif
