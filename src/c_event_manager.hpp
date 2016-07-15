@@ -39,4 +39,21 @@ class c_event_manager_empty final : public c_event_manager {
 };
 #endif // __linux__
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include "c_tun_device_windows.hpp"
+#include<boost/asio.hpp>
+#include <functional>
+class c_event_manager_windows final : public c_event_manager {
+public:
+	c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper);
+	void wait_for_event() override;
+	bool receive_udp_paket() override;
+	bool get_tun_packet() override;
+private:
+	boost::asio::io_service m_io_service;
+	std::reference_wrapper<c_tun_device_windows> m_tun_device;
+	std::reference_wrapper<c_udp_wrapper_windows> m_udp_device;
+};
+#endif // _WIN32
+
 #endif // C_EVENT_MANAGER_HPP
