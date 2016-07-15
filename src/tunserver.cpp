@@ -953,7 +953,7 @@ void c_tunserver::event_loop() {
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
 						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
-						_assert_throw( (write_bytes != tundata.size()) );
+						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
 
 					if (!was_anything_sent_to_TUN) {
