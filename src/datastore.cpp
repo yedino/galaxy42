@@ -53,9 +53,11 @@ void datastore::save_string_mlocked(t_datastore file_type,
 	try {
 
 		file_with_path = prepare_path_for_write(file_type, filename, overwrite);
-		FILE *f_ptr;
+		b_fs::ofstream file(file_with_path); // creating empty file
+		file.close();
 
-		f_ptr = std::fopen(file_with_path.c_str(), "w");
+		FILE *f_ptr;
+		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "w");
 		// magic 1 is the size in bytes of each element to be written
 		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
 
@@ -103,7 +105,7 @@ sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 		FILE * f_ptr;
 		b_fs::path file_with_path = get_full_path(file_type, filename);
 
-		f_ptr = std::fopen(file_with_path.c_str(), "r");
+		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "r");
 
 		if (f_ptr == NULL){
 			_throw_error( std::invalid_argument("Fail to open mlocked file for read: " + filename) );
