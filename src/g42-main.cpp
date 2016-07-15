@@ -667,7 +667,6 @@ int main(int argc, char **argv) {
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
 
-				// UI_CATCH_EXIT("Creating new default key.", "It was not possible to create your new default key.");
 			}
 
 			// ------------------------------------------------------------------
