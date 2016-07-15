@@ -5,7 +5,7 @@
 #include "../project.hpp"
 
 #if ! ENABLE_CRYPTO_SIDH
-	#error "Do not include this header unless you define ENABLE_CRYPTO_SIDH to true. (Maybe you wrongly configured your project, or maybe you are missing such #if condition before your #include)
+	#error "Do not include this header unless you define ENABLE_CRYPTO_SIDH to true. (Maybe you wrongly configured your project, or maybe you are missing such #if condition before your #include)"
 #endif
 
 #ifndef SIDHPP_HPP
