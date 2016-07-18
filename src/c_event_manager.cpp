@@ -59,7 +59,19 @@ c_event_manager_windows::c_event_manager_windows(c_tun_device_windows &tun_devic
 void c_event_manager_windows::wait_for_event() {
 	// TODO !!!
 	// poll_one is not blocking function, possible 100% CPU usage
+	// TODO use one io_service ojbect
 	if (m_tun_device.get().m_ioservice.poll_one() > 1) m_tun_event = true;
+	else m_tun_event = false;
 	if (m_udp_device.get().m_io_service.poll_one() > 1) m_udp_event = true;
+	else m_tun_event = false;
 }
+
+bool c_event_manager_windows::receive_udp_paket() {
+	return m_udp_event;
+}
+
+bool c_event_manager_windows::get_tun_packet() {
+	return m_tun_event;
+}
+
 #endif
