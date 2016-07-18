@@ -50,11 +50,16 @@ bool c_event_manager_empty::get_tun_packet() { return false; }
 c_event_manager_windows::c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper)
 :
 	m_tun_device(tun_device),
-	m_udp_device(udp_wrapper)
+	m_udp_device(udp_wrapper),
+	m_tun_event(false),
+	m_udp_event(false)
 {
 }
 
 void c_event_manager_windows::wait_for_event() {
-	m_io_service.poll_one();
+	// TODO !!!
+	// poll_one is not blocking function, possible 100% CPU usage
+	if (m_tun_device.get().m_ioservice.poll_one() > 1) m_tun_event = true;
+	if (m_udp_device.get().m_io_service.poll_one() > 1) m_udp_event = true;
 }
 #endif
