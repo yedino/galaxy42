@@ -54,7 +54,8 @@ class c_tun_device_windows final : public c_tun_device {
 public:
 	c_tun_device_windows();
 	void set_ipv6_address
-	(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+		(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+	void set_mtu(uint32_t mtu) {}; // TODO
 	bool incomming_message_form_tun() override; ///< returns true if tun is ready for read
 	size_t read_from_tun(void *buf, size_t count) override; ///< count must be <= size of buffer in buf! otherwise UB
 	size_t write_to_tun(const void *buf, size_t count) override; ///< count must be <= the size of buffer in buf! otherwise UB
