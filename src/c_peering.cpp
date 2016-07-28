@@ -78,10 +78,10 @@ c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linu
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
 { }
+#endif
 
-#else
-
-c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_empty &udp_wrapper)
+#if defined(_WIN32) || defined(__CYGWIN__)
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_windows &udp_wrapper)
 :
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)

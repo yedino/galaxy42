@@ -69,12 +69,15 @@ size_t c_udp_wrapper_empty::receive_data(void *data_buf, const size_t data_buf_s
 #endif // __linux__
 
 #if defined(_WIN32) || defined(__CYGWIN__)
+#include <boost/bind.hpp>
 c_udp_wrapper_windows::c_udp_wrapper_windows(const int listen_port)
 :
 	m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), listen_port)),
 	m_bytes_readed(0)
 {
-	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint, std::bind(&c_udp_wrapper_windows::read_handle, this));
+	//m_socket.async_receive_from(boost::asio::buffer(m_buffer),
+	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
+			boost::bind(&c_udp_wrapper_windows::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void c_udp_wrapper_windows::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
@@ -87,7 +90,8 @@ void c_udp_wrapper_windows::send_data(const c_ip46_addr &dst_address, const void
 size_t c_udp_wrapper_windows::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
 	if (m_bytes_readed > 0) { // readed data in m_buffer
 		assert(data_buf_size >= m_bytes_readed);
-		std::copy_n(m_buffer.begin(), m_bytes_readed, data_buf);
+//		std::copy_n(m_buffer.begin(), m_bytes_readed, data_buf);
+		std::copy_n(&m_buffer[0], m_bytes_readed, reinterpret_cast<uint8_t *>(data_buf));
 		size_t ret = m_bytes_readed;
 		m_bytes_readed = 0;
 		return ret;
@@ -98,7 +102,8 @@ size_t c_udp_wrapper_windows::receive_data(void *data_buf, const size_t data_buf
 void c_udp_wrapper_windows::read_handle(const boost::system::error_code& error, size_t bytes_transferred) {
 	assert(m_bytes_readed == 0);
 	m_bytes_readed = bytes_transferred;
-	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint, std::bind(&c_udp_wrapper_windows::read_handle, this));
+	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
+			boost::bind(&c_udp_wrapper_windows::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 #endif // _WIN32

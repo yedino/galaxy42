@@ -572,8 +572,8 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	assert(buff_size > pos_dst+len_dst);
 	// valid: reading pos_src up to +len_src, and same for dst
 
+#if defined(__linux__)
 	char ipv6_str[INET6_ADDRSTRLEN]; // for string e.g. "fd42:ffaa:..."
-
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_src, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 8 is source addr, from ipv6 RFC
 	_dbg1("src ipv6_str " << ipv6_str);
@@ -585,6 +585,20 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	_dbg1("dst ipv6_str " << ipv6_str);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ipv6_str);
 	// TODONOW^ this works fine?
+#endif // __linux__
+#if defined(_WIN32) || defined(__CYGWIN__)
+	using namespace boost::asio;
+	ip::address_v6::bytes_type ip_bytes;
+	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
+	ip::address_v6 ip6_addr(ip_bytes);
+	_dbg1("src ipv6_str " << ip6_addr);
+	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
+
+	std::copy_n(buff + pos_dst, ip_bytes.size(), ip_bytes.begin());
+	ip6_addr = ip::address_v6(ip_bytes);
+	_dbg1("dst ipv6_str " << ip6_addr);
+	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
+#endif // _WIN32
 
 	return std::make_pair( ret_src , ret_dst );
 }
