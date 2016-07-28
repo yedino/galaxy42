@@ -41,6 +41,7 @@ class c_tun_device_linux final : public c_tun_device {
 #endif // __linux__
 
 #if defined(_WIN32) || defined(__CYGWIN__)
+
 #include "c_tun_device.hpp"
 #include <array>
 #include <boost/asio.hpp>

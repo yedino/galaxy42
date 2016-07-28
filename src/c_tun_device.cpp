@@ -66,6 +66,7 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 #if defined(_WIN32) || defined(__CYGWIN__)
 
 #include "c_tnetdbg.hpp"
+#include <boost/bind.hpp>
 #include <cassert>
 #include <ifdef.h>
 #include <io.h>
@@ -87,7 +88,9 @@ c_tun_device_windows::c_tun_device_windows()
 {
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
-	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void c_tun_device_windows::set_ipv6_address
@@ -120,7 +123,9 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 	assert(m_readed_bytes > 0);
-	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
+//	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
+	std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
+	//std::memcpy(buf, (void*)&m_buffer[0], m_readed_bytes);
 	size_t ret = m_readed_bytes;
 	m_readed_bytes = 0;
 	return ret;
@@ -302,7 +307,9 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 		m_readed_bytes = length;
 	}
 	// continue reading
-	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 #endif
