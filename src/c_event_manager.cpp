@@ -45,3 +45,33 @@ bool c_event_manager_empty::receive_udp_paket() { return false; }
 bool c_event_manager_empty::get_tun_packet() { return false; }
 
 #endif // __linux__
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+c_event_manager_windows::c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper)
+:
+	m_tun_device(tun_device),
+	m_udp_device(udp_wrapper),
+	m_tun_event(false),
+	m_udp_event(false)
+{
+}
+
+void c_event_manager_windows::wait_for_event() {
+	// TODO !!!
+	// poll_one is not blocking function, possible 100% CPU usage
+	// TODO use one io_service ojbect
+	if (m_tun_device.get().m_ioservice.poll_one() > 1) m_tun_event = true;
+	else m_tun_event = false;
+	if (m_udp_device.get().m_io_service.poll_one() > 1) m_udp_event = true;
+	else m_tun_event = false;
+}
+
+bool c_event_manager_windows::receive_udp_paket() {
+	return m_udp_event;
+}
+
+bool c_event_manager_windows::get_tun_packet() {
+	return m_tun_event;
+}
+
+#endif
