@@ -140,7 +140,7 @@ size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
-std::vector<std::wstring> get_subkeys(HKEY hKey) {
+std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	TCHAR    achKey[MAX_KEY_LENGTH];   // buffer for subkey name
 	DWORD    cbName;                   // size of name string
 	TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name
