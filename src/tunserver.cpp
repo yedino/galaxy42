@@ -557,6 +557,8 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL, & timeout); // <--- blocks
 	_assert(select_result >= 0);
 }
+#else
+	void c_tunserver::prepare_socket(){}
 #endif
 
 std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size) { ///< the same, but with ipv6_offset that matches our current TUN
