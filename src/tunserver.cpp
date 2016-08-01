@@ -522,7 +522,7 @@ void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
 }
 
-#ifdef __linux__
+//#ifdef __linux__
 void c_tunserver::prepare_socket() {
 	//ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
 
@@ -538,9 +538,12 @@ void c_tunserver::prepare_socket() {
 		m_tun_device.set_ipv6_address(address, 16);
 	}
 
+#ifdef __linux__
 	_assert(m_udp_device.get_socket() >= 0);
+#endif
 
 }
+#ifdef __linux__
 
 void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_info("Selecting");
@@ -558,7 +561,7 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_assert(select_result >= 0);
 }
 #else
-	void c_tunserver::prepare_socket(){}
+	//void c_tunserver::prepare_socket(){}
 #endif
 
 std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size) { ///< the same, but with ipv6_offset that matches our current TUN
