@@ -63,7 +63,7 @@ void c_event_manager_windows::wait_for_event() {
 	if (m_tun_device.get().m_ioservice.poll_one() > 1) m_tun_event = true;
 	else m_tun_event = false;
 	if (m_udp_device.get().m_io_service.poll_one() > 1) m_udp_event = true;
-	else m_tun_event = false;
+	else m_udp_event = false;
 }
 
 bool c_event_manager_windows::receive_udp_paket() {

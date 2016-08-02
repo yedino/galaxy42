@@ -122,6 +122,7 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
+	std::cout << "read from tun" << std::endl;
 	assert(m_readed_bytes > 0);
 //	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
 	std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
@@ -300,6 +301,8 @@ HANDLE c_tun_device_windows::get_device_handle() {
 }
 
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
+	//std::cout << "tun handle read" << std::endl;
+	//std::cout << "readed " << length << " bytes from tun" << std::endl;
 	if (error || (length<1)) {
 		m_readed_bytes = 0; // clear it to be sure it's indicating no-data
 	}
@@ -307,7 +310,6 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 		m_readed_bytes = length;
 	}
 	// continue reading
-	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
