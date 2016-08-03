@@ -30,7 +30,6 @@ bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &pac
 	// ipv6 header = 40
 	// tested od wireshark
 	const uint8_t const * packet_type = &packet_data.front() + 14 + 40;
-	const uint8_t const * code = packet_type + 1;
 
 	//std::cout << "packet type " << std::dec << std::setw(2) << std::setfill('0') << static_cast<int>(*packet_type) << std::endl;
 
@@ -38,4 +37,45 @@ bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &pac
 	return false;
 }
 
-#endif
+std::array<uint8_t, 9000> c_ndp::generate_neighbor_advertisement (const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
+	std::array<uint8_t, 9000> return_packet;
+	const uint8_t const * input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
+
+	// ethernet header
+	auto it = return_packet.begin(); // points to destination MAC
+	for (int i = 0; i < 6; ++i) { // destination MAC
+		*it = *(input_src_mac_address + i);
+		++it;
+	}
+	for (int i = 0; i < 3; ++i) { // source MAC
+		*it = 0xFD; ++it;
+		*it = 0x42; ++it;
+	}
+	// EtherType
+	// 0x86DD == IPv6 (https://en.wikipedia.org/wiki/EtherType)
+	*it = 0x86; ++it;
+	*it = 0xDD; ++it;
+
+	// ipv6 header
+	// flow label
+	*it = 0x60; ++it;
+	*it = 0x00; ++it;
+	// payload len
+	*it = 0x00; ++it; // TODO current value is from wireshark
+	*it = 0x28; ++it;
+	// next header
+	*it = 0x3A; ++it; // ICMPv6 58
+	// hop limit
+	*it = 0xFF; ++it;
+	//source address
+	const uint8_t const * input_icmp_begin = &neighbor_solicitation_packet.front() + 54; // 54 == sum of headers
+	const uint8_t const * input_icmp_target_address = input_icmp_begin + 8;
+	for (int i = 0; i < 16; ++i) {
+		*it = *(input_icmp_target_address + i);
+		++it;
+	}
+
+	return return_packet;
+}
+
+#endif // _WIN32
