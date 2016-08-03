@@ -303,12 +303,21 @@ HANDLE c_tun_device_windows::get_device_handle() {
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
 	//std::cout << "tun handle read" << std::endl;
 	//std::cout << "readed " << length << " bytes from tun" << std::endl;
-	if (error || (length<1)) {
-		m_readed_bytes = 0; // clear it to be sure it's indicating no-data
-	}
-	else {
+
+	try {
+		if (error || (length < 1)) throw std::runtime_error(error.message());
+		if (length < 54) throw std::runtime_error("tun data length < 54"); // 54 == sum of header sizes
+
 		m_readed_bytes = length;
+		if (c_ndp::is_packet_neighbor_solicitation(m_buffer)) {
+			std::cout << "packet_neighbor_solicitation" << std::endl;
+		}
 	}
+	catch (const std::runtime_error &e) {
+		m_readed_bytes = 0;
+		_erro("Problem with the TUN/TAP parser" << std::endl << e.what());
+	}
+
 	// continue reading
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));

@@ -43,6 +43,7 @@ class c_tun_device_linux final : public c_tun_device {
 #if defined(_WIN32) || defined(__CYGWIN__)
 
 #include "c_tun_device.hpp"
+#include "c_ndp.hpp"
 #include <array>
 #include <boost/asio.hpp>
 #include <ifdef.h>
@@ -52,6 +53,7 @@ class c_tun_device_linux final : public c_tun_device {
 
 class c_tun_device_windows final : public c_tun_device {
 	friend class c_event_manager_windows;
+	//friend class c_ndp;
 public:
 	c_tun_device_windows();
 	void set_ipv6_address
