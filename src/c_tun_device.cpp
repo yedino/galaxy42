@@ -311,6 +311,9 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 		m_readed_bytes = length;
 		if (c_ndp::is_packet_neighbor_solicitation(m_buffer)) {
 			std::cout << "packet_neighbor_solicitation" << std::endl;
+			std::cout << "genetare response" << std::endl;
+			std::array<uint8_t, 94> neighbor_advertisement_packet = c_ndp::generate_neighbor_advertisement(m_buffer);
+			write_to_tun(neighbor_advertisement_packet.data(), neighbor_advertisement_packet.size());
 		}
 	}
 	catch (const std::runtime_error &e) {

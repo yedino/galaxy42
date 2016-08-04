@@ -37,28 +37,31 @@ bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &pac
 	return false;
 }
 
-std::array<uint8_t, 9000> c_ndp::generate_neighbor_advertisement (const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
-	std::array<uint8_t, 9000> return_packet;
+std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
+	std::array<uint8_t, 94> return_packet;
 	const uint8_t const * input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
 
-	// ethernet header
+	//*** ethernet header ***//
 	auto it = return_packet.begin(); // points to destination MAC
 	for (int i = 0; i < 6; ++i) { // destination MAC
 		*it = *(input_src_mac_address + i);
 		++it;
 	}
-	for (int i = 0; i < 3; ++i) { // source MAC
-		*it = 0xFD; ++it;
-		*it = 0x42; ++it;
+	// source MAC
+	*it = 0xFC; ++it;
+	for (int i = 0; i < 5; ++i) {
+		*it = 0x00; ++it;
 	}
 	// EtherType
 	// 0x86DD == IPv6 (https://en.wikipedia.org/wiki/EtherType)
 	*it = 0x86; ++it;
 	*it = 0xDD; ++it;
 
-	// ipv6 header
+	//*** ipv6 header ***//
 	// flow label
 	*it = 0x60; ++it;
+	*it = 0x00; ++it;
+	*it = 0x00; ++it;
 	*it = 0x00; ++it;
 	// payload len
 	*it = 0x00; ++it; // TODO current value is from wireshark
@@ -74,7 +77,43 @@ std::array<uint8_t, 9000> c_ndp::generate_neighbor_advertisement (const std::arr
 		*it = *(input_icmp_target_address + i);
 		++it;
 	}
-
+	// destination address
+	const uint8_t const * input_source_ipv6_address = &neighbor_solicitation_packet.front() + 22;
+	for (int i = 0; i < 16; ++i) {
+		*it = *(input_source_ipv6_address + i);
+		++it;
+	}
+	//*** icmpv6 ***//
+	*it = 136; ++it; // type 136 (Neighbor Advertisement)
+	*it = 0; ++it; // code
+	// checksum
+	*it = 0x00; ++it;
+	*it = 0x00; ++it;
+	// set flags R, S, O
+	*it = 0xE0; ++it;
+	// reserved
+	*it = 0x00; ++it;
+	*it = 0x00; ++it;
+	*it = 0x00; ++it;
+	// target address
+	for (int i = 0; i < 16; ++i) {
+		*it = *(input_icmp_target_address + i);
+		++it;
+	}
+	// options
+	*it = 0x02; ++it; // type: target link-layer address
+	*it = 0x01; ++it; // length
+	// source MAC
+	*it = 0xFC; ++it;
+	for (int i = 0; i < 5; ++i) { // link-layer address
+		*it = 0x00; ++it;
+	}
+	*it = 0x01; ++it; // type: source link-layer address
+	*it = 0x01; ++it; // length
+	for (int i = 0; i < 6; ++i) { // link-layer address
+		*it = *(input_src_mac_address + i);
+		++it;
+	}
 	return return_packet;
 }
 
