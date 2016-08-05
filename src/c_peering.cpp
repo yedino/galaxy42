@@ -163,7 +163,7 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 	_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
 		", RAW-DATA: " << to_debug_b(std::string(data,data_size)) );
 
-	#ifdef __linux__
+	//#ifdef __linux__
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
 			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
@@ -178,6 +178,6 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 			_throw_error( std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
 		}
 	}
-	#endif
+	//#endif
 }
 

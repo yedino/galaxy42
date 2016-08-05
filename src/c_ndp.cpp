@@ -118,7 +118,6 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 	}
 	// calculate checksum
 	uint16_t checksum = checksum_ipv6_packet(&return_packet.front() + 22, &return_packet.front() + 54, 40, 58);
-	std::cout << std::hex << "checksum " << checksum << std::endl;
 	*it_checksum = reinterpret_cast<uint8_t*>(&checksum)[0]; ++it_checksum;
 	*it_checksum = reinterpret_cast<uint8_t*>(&checksum)[1]; ++it_checksum;
 	return return_packet;
