@@ -135,8 +135,9 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
 	//std::cout << "****************write to tun" << std::endl;
 	boost::system::error_code ec;
-	m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
+	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
 	if (ec) throw std::runtime_error("boost error " + ec.message());
+	return write_bytes;
 }
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
