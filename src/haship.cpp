@@ -36,8 +36,12 @@ namespace unittest {
 
 }
 
-c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string ) {
-	std::cout << "******************addr_string " << addr_string << std::endl;
+c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string) {
+	std::cout << "******************PARSING IP: addr_string " << addr_string << std::endl;
+	if (addr_string == "::") {
+		for (int i = 0; i < 128 / 8; ++i) this->at(i) = 0;
+		return;
+	}
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//_throw_error( std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__)) );
 
@@ -54,10 +58,12 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 	while ( adr_s.good() ) {
 		string gr; // given group
 		getline(adr_s, gr, ':');
+		if (adr_s.eof()) {
+			_info("End of IP parsing");
+			break;
+		}
 		_info("current group is gr="<<gr<<" (exp expanded so far times:"<<exp<<")");
-		if ( (gr.size()==0) && (adr_s.eof()) ) { // inside :: - when group size is "" then...
-			// ...we selected "" between "::". But, avoid case of when adr_s input ended, becuse then "....::" produces
-			// twice an empty "" input it seems.
+		if ( (gr.size()==0) ) { // inside ::
 			if (exp>0) _throw_error( std::invalid_argument("Invalid address, with more then one '::' in it.") );
 			int cc=0; // count of colons
 			for (char v : addr_string) if (v==':') ++cc;
@@ -69,10 +75,10 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 		while(gr.size() < 4) gr.insert(0,1,'0');
 		grtab.push_back(gr);
 	}
-	//_note("Parsed as:");
+	_note("Parsed as:");
 	size_t pos=0;
 	for(const string & gr: grtab) {
-		//_info("gr="<<gr); // "fd42"
+		_info("gr="<<gr); // "fd42"
 		assert(gr.size() == 4);
 
 		unsigned char bh = doublehexchar2int( gr.substr(0,2) ); // "fd" -> 253
@@ -82,6 +88,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 		this->at(pos*2 + 1) = bl;
 		++pos;
 	}
+	_note("Parsed ipv6 dothex '"<<addr_string<<"' to " << *this);
 }
 
 c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {

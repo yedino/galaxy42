@@ -857,7 +857,7 @@ void c_tunserver::event_loop() {
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
 
-			_info("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
+			_mark("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
 
 			// parse version and command:
@@ -937,7 +937,7 @@ void c_tunserver::event_loop() {
 
 				// TODONOW optimize? make sure the proper binary format is cached:
 				if (dst_hip == m_my_hip) { // received data addresses to us as finall destination:
-					_info("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
+					_mark("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
 
 					auto find_tunnel = m_tunnel.find( src_hip ); // find end2end tunnel
 					if (find_tunnel == m_tunnel.end()) {
@@ -972,6 +972,7 @@ void c_tunserver::event_loop() {
 				}
 				else
 				{ // received data that is addresses to someone else
+#if 0
 					auto data_route_ttl = requested_ttl - 1;
 					const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 					if (data_route_ttl > limit_incoming_ttl) {
@@ -995,6 +996,7 @@ void c_tunserver::event_loop() {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
+#endif
 				}
 
 			} // e_proto_cmd_tunneled_data
