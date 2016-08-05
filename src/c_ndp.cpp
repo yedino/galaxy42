@@ -117,4 +117,32 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 	return return_packet;
 }
 
+int16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
+
+	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+		next_hvalue = htonl(next_hvalue);
+
+	uint64_t result = 0;
+	uint8_t sd_addr_size = 32;
+	for (uint8_t i = 0; i < sd_addr_size/2; ++i)
+		result += reinterpret_cast<uint16_t *>(const_cast<uint8_t*>(source_destination_addr))[i];
+	for (uint32_t i = 0; i < length / 2; i++)
+		result += reinterpret_cast<uint16_t *>(const_cast<uint8_t*>(header_with_content))[i];
+
+	if (length & 1)
+		result += O32_HOST_ORDER == O32_BIG_ENDIAN ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
+
+	uint32_t length_bigendian;
+	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+		length_bigendian = htonl(length);
+
+	result += (length_bigendian >> 16) + (length_bigendian & 0xFFFF);
+	result += (next_hvalue >> 16)      + (next_hvalue & 0xFFFF);
+
+	while (result >> 16)
+		result = (result >> 16) + (result & 0xFFFF);
+
+	return ~result;
+}
+
 #endif // _WIN32
