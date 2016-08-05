@@ -122,7 +122,7 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
-	std::cout << "read from tun" << std::endl;
+	//std::cout << "read from tun" << std::endl;
 	assert(m_readed_bytes > 0);
 //	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
 	std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
@@ -133,6 +133,7 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 }
 
 size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
+	//std::cout << "****************write to tun" << std::endl;
 	boost::system::error_code ec;
 	m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
 	if (ec) throw std::runtime_error("boost error " + ec.message());
