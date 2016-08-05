@@ -125,9 +125,9 @@ int16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, cons
 	uint64_t result = 0;
 	uint8_t sd_addr_size = 32;
 	for (uint8_t i = 0; i < sd_addr_size/2; ++i)
-		result += reinterpret_cast<uint16_t *>(const_cast<uint8_t*>(source_destination_addr))[i];
+		result += reinterpret_cast<const uint16_t *>(source_destination_addr)[i];
 	for (uint32_t i = 0; i < length / 2; i++)
-		result += reinterpret_cast<uint16_t *>(const_cast<uint8_t*>(header_with_content))[i];
+		result += reinterpret_cast<const uint16_t *>(header_with_content)[i];
 
 	if (length & 1)
 		result += O32_HOST_ORDER == O32_BIG_ENDIAN ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
