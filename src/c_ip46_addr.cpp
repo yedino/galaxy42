@@ -166,11 +166,15 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
+#include <iostream>
 c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) 
 :
-	m_port(port)
+	m_port(port),
+	m_address(boost::asio::ip::address::from_string(ip_addr))
 {
-	m_address.from_string(ip_addr);
+	//m_address.from_string(ip_addr);
+	std::cout << "string ip " << ip_addr << std::endl;
+	std::cout << "boost ip " << m_address << std::endl;
 }
 
 c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
