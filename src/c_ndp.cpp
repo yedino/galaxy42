@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <boost/asio.hpp>
 
 // size of array must be the same as in c_tun_device_windows::m_buffer 
 bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &packet_data) {
@@ -87,6 +88,7 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 	*it = 136; ++it; // type 136 (Neighbor Advertisement)
 	*it = 0; ++it; // code
 	// checksum
+	auto it_checksum = it;
 	*it = 0x00; ++it;
 	*it = 0x00; ++it;
 	// set flags R, S, O
@@ -114,10 +116,15 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 		*it = *(input_src_mac_address + i);
 		++it;
 	}
+	// calculate checksum
+	uint16_t checksum = checksum_ipv6_packet(&return_packet.front() + 22, &return_packet.front() + 54, 40, 58);
+	std::cout << std::hex << "checksum " << checksum << std::endl;
+	*it_checksum = reinterpret_cast<uint8_t*>(&checksum)[0]; ++it_checksum;
+	*it_checksum = reinterpret_cast<uint8_t*>(&checksum)[1]; ++it_checksum;
 	return return_packet;
 }
 
-int16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
+uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
 
 	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
 		next_hvalue = htonl(next_hvalue);
