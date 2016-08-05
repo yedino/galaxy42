@@ -22,7 +22,22 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey
 	for (size_t i=0; i<16; ++i) at(i) = addr.at(i);
 }
 
+namespace unittest {
+
+	void ipv6conversions() {
+		auto a = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), "ff::01:04");
+		try {
+		//	auto b = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), "ff::01::04");
+		}
+		catch (...) { _info("OK - catched");  }
+		auto c = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), "ff:01:04::");
+	}
+
+
+}
+
 c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string ) {
+	std::cout << "******************addr_string " << addr_string << std::endl;
 	// "fd42:ff10..." -> array of bytes: 253, 66,   255, 16, ...
 	//_throw_error( std::runtime_error(string("Not yet implemented:") + string(__FUNCTION__)) );
 
@@ -39,8 +54,10 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 	while ( adr_s.good() ) {
 		string gr; // given group
 		getline(adr_s, gr, ':');
-		//_info("gr="<<gr);
-		if (gr.size()==0) { // inside ::
+		_info("current group is gr="<<gr<<" (exp expanded so far times:"<<exp<<")");
+		if ( (gr.size()==0) && (adr_s.eof()) ) { // inside :: - when group size is "" then...
+			// ...we selected "" between "::". But, avoid case of when adr_s input ended, becuse then "....::" produces
+			// twice an empty "" input it seems.
 			if (exp>0) _throw_error( std::invalid_argument("Invalid address, with more then one '::' in it.") );
 			int cc=0; // count of colons
 			for (char v : addr_string) if (v==':') ++cc;
