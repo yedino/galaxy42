@@ -84,7 +84,7 @@ const std::string & generator::get_buffer() const { return m_str; }
 
 
 parser::parser( tag_caller_must_keep_this_string_valid, const std::string & data_str)
- : m_data_begin( & * data_str.begin() ), m_data_now( m_data_begin ), m_data_end( & * data_str.end() )
+ : m_data_begin( & * data_str.begin() ), m_data_now( m_data_begin ), m_data_end( &data_str.back() +1 )
 { }
 
 parser::parser( tag_caller_must_keep_this_buffer_valid, const char * buf , size_t size)
