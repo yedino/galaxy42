@@ -5,7 +5,13 @@
 #include <cmath>
 #include <type_traits>
 
+#if USE_BOOST_MULTIPRECISION
+
+option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ON)
+
 typedef long double t_correct1;
+
+
 
 
 TEST(xint,normal_use_init) {
@@ -523,5 +529,15 @@ TEST(xint, safe_create_xint_assign) {
 
 
 
+
+#else
+
+#warning "USE_BOOST_MULTIPRECISION is disabled - so we can not test this part of code"
+
+TEST(xint_tmp, disabled) {
+	_error("Developer, this test is disabled due to compilation options");
+}
+
+#endif
 
 

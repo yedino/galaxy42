@@ -6,6 +6,8 @@
 #include <cmath>
 #include <type_traits>
 
+#if USE_BOOST_MULTIPRECISION
+
 
 TEST(xint_tmp, safe_create_float1) {
 	// g_dbg_level_set(30,"Details of test");
@@ -52,3 +54,14 @@ TEST(xint_tmp, compare_with_float) {
 	EXPECT_TRUE(bigger);
 }
 */
+
+#else
+
+#warning "USE_BOOST_MULTIPRECISION is disabled - so we can not test this part of code"
+
+TEST(xint_tmp, disabled) {
+	_error("Developer, this test is disabled due to compilation options");
+}
+
+#endif
+

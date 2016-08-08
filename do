@@ -45,6 +45,9 @@ fi
 
 [[ -z "$COVERAGE" ]] && COVERAGE="0"
 [[ -z "$EXTLEVEL" ]] && EXTLEVEL="0"
+
+[[ -z "$USE_BOOST_MULTIPRECISION_DEFAULT" ]] && USE_BOOST_MULTIPRECISION_DEFAULT="1"
+
 echo ""
 echo "Running currently as:"
 echo "* COVERAGE=$COVERAGE"
@@ -73,7 +76,7 @@ rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but t
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
 
-cmake .  -DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" || { echo "Cmake failed" ; exit 1 ; } # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
+cmake . -DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT"  -DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" || { echo "Cmake failed" ; exit 1 ; } # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
 make || { echo "make failed" ; exit 1 ; }
 
