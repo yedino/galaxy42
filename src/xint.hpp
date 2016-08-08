@@ -1,6 +1,7 @@
 #pragma once
 
-#ifndef __linux__ // because of some compilation problems on openSUSE
+#if USE_BOOST_MULTIPRECISION
+// because of some compilation problems on openSUSE
 
 #include <iostream>
 #include <ostream>
@@ -335,6 +336,10 @@ uxint xsize(const T & obj) {
 }*/
 
 template <typename T> bool overflow_impossible_in_assign(T, T) { return true; } // same type
+
+#else
+
+#warning "USE_BOOST_MULTIPRECISION is DISABLED (in compilation options)"
 
 #endif
 

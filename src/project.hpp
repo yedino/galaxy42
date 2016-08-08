@@ -60,6 +60,10 @@ class invalid_argument_in_version : public std::invalid_argument {
 	#include "ntru/include/ntru_crypto_drbg.h"
 #endif
 
+#ifndef USE_BOOST_MULTIPRECISION
+	#error "Not defined USE_BOOST_MULTIPRECISION"
+#endif
+
 
 std::string project_version_info();
 
