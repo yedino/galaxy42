@@ -265,6 +265,11 @@ int main(int argc, char **argv) {
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 
+	{
+		unittest::ipv6conversions();
+		return 0;
+	}
+
 	g_dbg_level = config_default_basic_dbg_level;
 	bool early_debug=false;
 	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;

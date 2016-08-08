@@ -489,7 +489,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 // TODO(rob) move to locked string ; and also vice-versa function with other order of args
 bool operator==(const sodiumpp::locked_string & a, const std::string & b) {
 	std::string b_cpy = b;
-	sodiumpp::locked_string b_locked = sodiumpp::locked_string::move_from_not_locked_string(std::move(b_cpy));
+	sodiumpp::locked_string b_locked(b_cpy);
 	using namespace sodiumpp;
 	return a == b_locked;
 }
@@ -694,7 +694,7 @@ void test_string_lock() {
 
 	vector<locked_string> vec;
 	std::string s1("TestString");
-	locked_string s = locked_string::move_from_not_locked_string(std::move(s1));
+	locked_string s(s1);
 	vec.push_back(s);
 	vec.push_back(s);
 	vec.push_back(s);

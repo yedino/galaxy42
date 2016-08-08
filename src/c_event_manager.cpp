@@ -60,13 +60,14 @@ void c_event_manager_windows::wait_for_event() {
 	// TODO !!!
 	// poll_one is not blocking function, possible 100% CPU usage
 	// TODO use one io_service ojbect
-	if (m_tun_device.get().m_ioservice.poll_one() > 1) m_tun_event = true;
+	if (m_tun_device.get().m_ioservice.poll_one() > 0) m_tun_event = true;
 	else m_tun_event = false;
-	if (m_udp_device.get().m_io_service.poll_one() > 1) m_udp_event = true;
-	else m_tun_event = false;
+	if (m_udp_device.get().m_io_service.poll_one() > 0) m_udp_event = true;
+	else m_udp_event = false;
 }
 
 bool c_event_manager_windows::receive_udp_paket() {
+	if (m_udp_event) std::cout << "get udp packet" << std::endl;
 	return m_udp_event;
 }
 
