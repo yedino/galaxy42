@@ -74,14 +74,5 @@ struct c_haship_pubkey : antinet_crypto::c_multikeys_pub {
 ostream& operator<<(ostream &ostr, const c_haship_pubkey & v);
 
 
-namespace unittest {
-
-	void ipv6conversions();
-
-} // namespace
-
-
-
-
 #endif
 
