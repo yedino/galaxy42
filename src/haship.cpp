@@ -23,20 +23,6 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey
 	for (size_t i=0; i<16; ++i) at(i) = addr.at(i);
 }
 
-namespace unittest {
-
-	void ipv6conversions() {
-		auto a = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), "ff::01:04");
-		try {
-		//	auto b = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), "ff::01::04");
-		}
-		catch (...) { _info("OK - catched");  }
-		auto c = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), "ff:01:04::");
-	}
-
-
-}
-
 c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string) {
 	_dbg1("******************PARSING IP: addr_string " << addr_string);
 	// use boost asio for parsing
