@@ -24,6 +24,8 @@ ELSE()
 	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
+# move bash ENV $variables to CMake set
+
 IF(DEFINED EXTLEVEL)
    SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
 ELSE()
@@ -36,12 +38,18 @@ ELSE()
    SET(COVERAGE OFF CACHE BOOL "")
 ENDIF()
 
+IF(DEFINED USE_BOOST_MULTIPRECISION_DEFAULT)
+   SET(USE_BOOST_MULTIPRECISION_DEFAULT ${USE_BOOST_MULTIPRECISION_DEFAULT} CACHE INTERNAL "")
+ELSE()
+   SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
+ENDIF()
 
 project (ipbench)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("EXTLEVEL = ${EXTLEVEL}")
 message("COVERAGE = ${COVERAGE}")
+message("USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
 
 option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
 if (EXTLEVEL GREATER -1) # from0
@@ -61,6 +69,16 @@ endif()
 option(EXTLEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
 if (EXTLEVEL GREATER 29) # from 30
 	set(EXTLEVEL_IS_EXPERIMENT_DANGEROUS ON)
+endif()
+
+option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
+
+if(USE_BOOST_MULTIPRECISION)
+	message("USE_BOOST_MULTIPRECISION is normall (on)")
+	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
+else()
+	message("USE_BOOST_MULTIPRECISION is DISABLED")
+	add_definitions(-DUSE_BOOST_MULTIPRECISION=0)
 endif()
 
 
@@ -247,8 +265,6 @@ add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURC
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
-list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/test/xint.cpp)	# openSUSE
-list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/test/xint_tmp.cpp)	# openSUSE
 
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -295,3 +311,5 @@ add_custom_command(
 	COMMAND cp tunserver.elf nocap-tunserver.elf
 	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
 	WORKING_DIRECTORY ./)
+
+# unset( USE_BOOST_MULTIPRECISION_DEFAULT )
