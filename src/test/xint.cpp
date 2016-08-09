@@ -1,13 +1,13 @@
-#include "gtest/gtest.h"
+
+#include "my_tests_lib.hpp"
+
 #include "../xint.hpp"
-#include "../libs1.hpp"
+
 #include <exception>
 #include <cmath>
 #include <type_traits>
 
 #if USE_BOOST_MULTIPRECISION
-
-option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ON)
 
 typedef long double t_correct1;
 
@@ -525,17 +525,12 @@ TEST(xint, safe_create_xint_assign) {
 
 
 
-
-
-
-
-
 #else
 
 #warning "USE_BOOST_MULTIPRECISION is disabled - so we can not test this part of code"
 
-TEST(xint_tmp, disabled) {
-	_error("Developer, this test is disabled due to compilation options");
+TEST(xint, disabled) {
+	TEST_IS_DISABLED("Compilation options disabled USE_BOOST_MULTIPRECISION");
 }
 
 #endif

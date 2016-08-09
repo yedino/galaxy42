@@ -1,7 +1,8 @@
 
-#include "gtest/gtest.h"
+#include "my_tests_lib.hpp"
+
 #include "../xint.hpp"
-#include "../libs1.hpp"
+
 #include <exception>
 #include <cmath>
 #include <type_traits>
@@ -60,7 +61,7 @@ TEST(xint_tmp, compare_with_float) {
 #warning "USE_BOOST_MULTIPRECISION is disabled - so we can not test this part of code"
 
 TEST(xint_tmp, disabled) {
-	_error("Developer, this test is disabled due to compilation options");
+	TEST_IS_DISABLED("Compilation options disabled USE_BOOST_MULTIPRECISION");
 }
 
 #endif

@@ -53,6 +53,8 @@ echo "Running currently as:"
 echo "* COVERAGE=$COVERAGE"
 echo "* EXTLEVEL=$EXTLEVEL"
 echo ""
+echo "* USE_BOOST_MULTIPRECISION_DEFAULT=$USE_BOOST_MULTIPRECISION_DEFAULT"
+echo ""
 if [[ "$1" == "--go" ]] ; then
 	:
 else
