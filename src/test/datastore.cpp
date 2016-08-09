@@ -50,11 +50,12 @@ TEST(datastore, save_empty) {
 	}, std::invalid_argument);
 
 	// save mlocked string
+/*
 	sodiumpp::locked_string l_data = sodiumpp::locked_string::unsafe_create("private data");
 	EXPECT_THROW({
 		datastore::save_string_mlocked(e_datastore_galaxy_pub, empty_filename, l_data);
 	}, std::invalid_argument);
-
+*/
 }
 
 TEST(datastore, load_nonexistent) {
@@ -118,7 +119,7 @@ TEST(datastore, write_load_string) {
 	ASSERT_TRUE(datastore::remove(pub_full01.string()));
 	ASSERT_TRUE(datastore::remove(pub_full02.string()));
 }
-
+/*
 TEST(datastore, write_load_mlocked_string) {
 	// prepare files
 	// Not necessary preparing files is aslo a part of save_string_mlocked
@@ -141,3 +142,4 @@ TEST(datastore, write_load_mlocked_string) {
 	ASSERT_TRUE(datastore::remove(PRV_full01.string()));
 	ASSERT_TRUE(datastore::remove(PRV_full02.string()));
 }
+*/

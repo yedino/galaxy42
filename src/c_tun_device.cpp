@@ -66,6 +66,7 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 #if defined(_WIN32) || defined(__CYGWIN__)
 
 #include "c_tnetdbg.hpp"
+#include <boost/bind.hpp>
 #include <cassert>
 #include <ifdef.h>
 #include <io.h>
@@ -87,7 +88,9 @@ c_tun_device_windows::c_tun_device_windows()
 {
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
-	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void c_tun_device_windows::set_ipv6_address
@@ -119,23 +122,28 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
+	//std::cout << "read from tun" << std::endl;
 	assert(m_readed_bytes > 0);
-	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
+//	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
+	std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
+	//std::memcpy(buf, (void*)&m_buffer[0], m_readed_bytes);
 	size_t ret = m_readed_bytes;
 	m_readed_bytes = 0;
 	return ret;
 }
 
 size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
+	//std::cout << "****************write to tun" << std::endl;
 	boost::system::error_code ec;
-	m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
+	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
 	if (ec) throw std::runtime_error("boost error " + ec.message());
+	return write_bytes;
 }
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
-std::vector<std::wstring> get_subkeys(HKEY hKey) {
+std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	TCHAR    achKey[MAX_KEY_LENGTH];   // buffer for subkey name
 	DWORD    cbName;                   // size of name string
 	TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name
@@ -295,14 +303,27 @@ HANDLE c_tun_device_windows::get_device_handle() {
 }
 
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
-	if (error || (length<1)) {
-		m_readed_bytes = 0; // clear it to be sure it's indicating no-data
-	}
-	else {
+	//std::cout << "tun handle read" << std::endl;
+	//std::cout << "readed " << length << " bytes from tun" << std::endl;
+
+	try {
+		if (error || (length < 1)) throw std::runtime_error(error.message());
+		if (length < 54) throw std::runtime_error("tun data length < 54"); // 54 == sum of header sizes
+
 		m_readed_bytes = length;
+		if (c_ndp::is_packet_neighbor_solicitation(m_buffer)) {
+			std::array<uint8_t, 94> neighbor_advertisement_packet = c_ndp::generate_neighbor_advertisement(m_buffer);
+			write_to_tun(neighbor_advertisement_packet.data(), neighbor_advertisement_packet.size());
+		}
 	}
+	catch (const std::runtime_error &e) {
+		m_readed_bytes = 0;
+		_erro("Problem with the TUN/TAP parser" << std::endl << e.what());
+	}
+
 	// continue reading
-	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 #endif

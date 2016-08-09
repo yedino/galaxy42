@@ -75,6 +75,7 @@ void datastore::save_string_mlocked(t_datastore file_type,
 
 std::string datastore::load_string(t_datastore file_type,
 								   const std::string &filename) {
+	_dbg1("load string");
 	std::string content;
 	std::string file_with_path_str;
 	try {
@@ -101,11 +102,12 @@ std::string datastore::load_string(t_datastore file_type,
 
 sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 													   const std::string &filename) {
+	_dbg1("load string mlocked");
 	try {
 		FILE * f_ptr;
 		b_fs::path file_with_path = get_full_path(file_type, filename);
 
-		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "r");
+		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "rb");
 
 		if (f_ptr == NULL){
 			_throw_error( std::invalid_argument("Fail to open mlocked file for read: " + filename) );
@@ -220,7 +222,13 @@ b_fs::path datastore::get_full_path(t_datastore file_type,
 b_fs::path datastore::get_parent_path(t_datastore file_type,
 									const std::string &filename) {
 
+#ifdef __linux__
 	b_fs::path user_home(getenv("HOME"));
+#endif
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+	b_fs::path user_home(getenv("APPDATA"));
+#endif
 	b_fs::path parent_path(user_home.c_str());
 
 	switch (file_type) {
