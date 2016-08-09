@@ -223,7 +223,7 @@ void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool over
 		  }
 		case e_crypto_use_secret: {
 			_note("Save this as PRIVATE key!!!");
-			locked_string data = locked_string::unsafe_create(serialized_data);
+			locked_string data(serialized_data);
 			datastore::save_string_mlocked(e_datastore_galaxy_wallet_PRV, fname, data, overwrite);
 
 			break;
