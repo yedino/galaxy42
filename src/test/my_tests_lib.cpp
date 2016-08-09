@@ -20,10 +20,17 @@ void TestsEnvReseter::OnTestStart(const ::testing::TestInfo& test_info) {
 // Fired after all test activities have ended.
 void TestsEnvReseter::OnTestProgramEnd(const ::testing::UnitTest& unit_test) {
 	_UNUSED(unit_test);
+	g_dbg_level_set(40, "Show again some debug after the tests");
+
 	auto skipped = instance().m_count_tests_skipped;
-	if (skipped>0) std::cout << banner_skip() << " Tests skipped: " << skipped
+	if (skipped>0) {
+		std::cout << banner_skip() << " Tests skipped: " << skipped
 		<< "." << std::endl;
-	else std::cout << "(No tests were skipped)" << std::endl;
+		_warn("Skipped some tests.");
+	}
+	else std::cout << "(No tests were skipped, this is good)" << std::endl;
+
+	std::cout << std::endl;
 }
 
 void TestsEnvReseter::TestIsSkipped(const std::string & why) {

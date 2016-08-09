@@ -1,6 +1,9 @@
 #!/bin/bash -e
 
 function usage_mini {
+	echo ""
+	echo "--- Short help ---"
+	echo ""
 	echo "You can set this env options before running this program, example to enable COVERAGE and set EXTLEVEL to preview level"
 	echo "for that you could run FOR EXAMPLE:"
 	echo ""
@@ -8,10 +11,11 @@ function usage_mini {
 	echo "  COVERAGE=0 EXTLEVEL=30 ./do --go  # no coverage, build with experimental features enabled (dangerous!!)"
 	echo "  COVERAGE=1 EXTLEVEL=0  ./do --go  # coverage - for build test bots"
 	echo ""
-	echo "Run do --help to see all options"
+	echo "Run do --help to see all options, there are special work-arounds."
 }
 
 function usage_main {
+	echo "========== Usage main ==========="
 	echo "ENV OPTIONS that you can set before running the program:"
 	echo ""
 	echo "COVERAGE=... enables/disables the coverage (for e.g. coveralls test). 0=disable 1=enable."
@@ -22,6 +26,9 @@ function usage_main {
 	echo "  20 is the EXPERIMENTAL code, not recommended, for developers only."
 	echo "  30 is the EXPERIMENTAL-DANGEROUS code, that we expect to very likely have exploits "
 	echo "    or grave bugs, run only in VM for some testets."
+	echo ""
+	echo "Special options include:"
+	echo "USE_BOOST_MULTIPRECISION_DEFAULT=1 set it to 0 instead to work around broken lib boost multiprecision on e.g. Suse"
 	echo ""
 	echo "Program command line options:"
 	echo "  --help shows the help and exits"
@@ -78,7 +85,11 @@ rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but t
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
 
-cmake . -DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT"  -DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" || { echo "Cmake failed" ; exit 1 ; } # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
+cmake  .  \
+	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
+	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
+	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
-make || { echo "make failed" ; exit 1 ; }
+make || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
 
