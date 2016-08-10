@@ -23,20 +23,31 @@
 
 #include <fstream>
 #include <functional>
-#include <ifdef.h>
-#include <io.h>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 
 // #include <json/json.h>
 
+#include <sodium.h>
 
 void foo() {
 	std::cout << "foo" << std::endl;
 }
 
+int bar();
+int baz();
+
 int main() {
 	foo();
+
+	if (sodium_init() == -1) {
+		return 1;
+	}
+
+	foo();
+	auto a = bar();
+	auto b = baz();
+	std::cout << a+b << std::endl;
 }
 
