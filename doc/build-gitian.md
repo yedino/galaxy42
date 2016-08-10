@@ -1,5 +1,14 @@
 
 
+### Hacking
+
+Quick command:
+
+`
+debian@dragon:~/gitian-builder$ ( cd ~ ; rm -rf ~/galaxy42/ ; git clone https://github.com/rfree-d/galaxy42.git ; cd ~/galaxy42 ; git reset --hard HEAD ; git clean -xdf ; git checkout wip_gitian_hello ;  git fetch  --all ; git merge --ff-only  origin/wip_gitian_hello ; git log -1 ; echo ; echo ; ) && cd ~/gitian-builder/ &&   ./bin/gbuild    --allow-sudo     ../galaxy42/contrib/gitian-descriptors/test-TEMP/galaxy-linux.yml && on-target sha256sum build/galaxy42/qa/gitian-helloworld-src/hello.elf
+`
+
+
 
 ### Gitian FAQ and common problems
 
