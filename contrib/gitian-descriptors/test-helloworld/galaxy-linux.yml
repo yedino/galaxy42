@@ -29,6 +29,6 @@ files: []
 script: |
   GALAXY_DIR=$(pwd)/galaxy42
   cd ${GALAXY_DIR}
-  cd share/script/install-as-root/ && sudo ./install -y
+  # cd share/script/install-as-root/ && sudo ./install -y
   cd ${GALAXY_DIR}
-  COVERAGE=0 EXTLEVEL=0  ./do --go
+  COVERAGE=0 EXTLEVEL=0  ./do-hello --go
