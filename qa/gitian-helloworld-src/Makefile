@@ -21,5 +21,5 @@ baz.o: baz.cpp
 	g++ --std=c++14 -c baz.cpp -Wall -o baz.o
 
 hello.elf: main.o bar.o baz.o
-	g++ main.o bar.o baz.o -l boost_filesystem -l boost_system -lz -lsodium -o hello.elf
+	g++ main.o bar.o baz.o -l boost_filesystem -l boost_system -lsodium -o hello.elf
 
