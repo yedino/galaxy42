@@ -130,9 +130,9 @@ add_compile_options(-Wno-unused-command-line-argument)
 
 #add local jsoncpp
 ## XXX
-##add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-##include_directories(depends/jsoncpp/include)
-##link_directories(depends/jsoncpp/src/lib_json)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
+include_directories(depends/jsoncpp/include)
+link_directories(depends/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
 ## XXX
@@ -267,7 +267,7 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 ## TODO check this for gitian
 # LIBS-1 [new doc]
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
-	pthread sodium ) # sodiumpp jsoncpp_lib_static )
+	pthread sodium jsoncpp_lib_static ) # sodiumpp )
 ### NORMAL: target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
 ###  	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
 
