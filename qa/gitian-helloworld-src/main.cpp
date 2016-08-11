@@ -27,9 +27,11 @@
 #include <iostream>
 #include <limits>
 
-// #include <json/json.h>
+#include <json/json.h>
 
 #include <sodium.h>
+
+#include <sodiumpp/sodiumpp.h>
 
 void foo() {
 	std::cout << "foo" << std::endl;
@@ -38,6 +40,25 @@ void foo() {
 int bar();
 int baz();
 
+void use_sodiumpp() {
+	std::cout << "Using sodiumpp" << std::endl;
+
+	using sodiumpp::locked_string;
+	locked_string s1(50);
+	locked_string s2=s1;
+	locked_string s3=std::move(s1);
+}
+
+void use_json() {
+	std::cout << "Using JSON" << std::endl;
+
+	Json::Value m_root;
+	try {
+		Json::Value authpass_array = m_root["authorizedPasswords"];
+	} catch(...) {
+	}
+}
+
 int main() {
 	foo();
 
@@ -45,9 +66,15 @@ int main() {
 		return 1;
 	}
 
+
 	foo();
 	auto a = bar();
 	auto b = baz();
 	std::cout << a+b << std::endl;
+
+	use_sodiumpp();
+	use_json();
+
+	std::cout << "All ok" << std::endl;
 }
 
