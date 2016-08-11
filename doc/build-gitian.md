@@ -1,23 +1,24 @@
 
 
-### Hacking
+### Usage
 
-Quick command:
-
-`
-debian@dragon:~/gitian-builder$ ( cd ~ ; rm -rf ~/galaxy42/ ; git clone https://github.com/rfree-d/galaxy42.git ; cd ~/galaxy42 ; git reset --hard HEAD ; git clean -xdf ; git checkout wip_gitian_hello ;  git fetch  --all ; git merge --ff-only  origin/wip_gitian_hello ; git log -1 ; echo ; echo ; ) && cd ~/gitian-builder/ &&   ./bin/gbuild    --allow-sudo     ../galaxy42/contrib/gitian-descriptors/test-TEMP/galaxy-linux.yml && on-target sha256sum build/galaxy42/qa/gitian-helloworld-src/hello.elf
-`
-
-
+Use the command in top-directory:
+`./build-gitian`
+and follow the instructions.
 
 ### Gitian FAQ and common problems
+
+Q: Error `lxc-execute: cgroupfs failed to detect cgroup metadata`
+A: Aptitude install (as root of course, on the computer that is trying to run gbuild or lxc-execute) a package "cgroupfs-mount".
+
+
 
 Q: Error ` No such file or directory - failed to get real path for '.../target-foo-amd64`
 
 A: Either you did not create the VM image yet (e.g. with `bin/make-base-vm --lxc --arch amd64 --suite xenial`),
 or maybe you did not set the env variable `LXC_SUITE` (e.g. with `export LXC_SUITE=trusty` in `~/.bashrc`).
 
-
+`
 lxc-execute: No such file or directory - failed to get real path for '/home/debian/gitian-builder/target-foo-amd64'
 lxc-execute: failed to mount rootfs
 lxc-execute: failed to setup rootfs for 'gitian'
@@ -30,6 +31,8 @@ lxc-execute: No such file or directory - failed to get real path for '/home/debi
 lxc-execute: No such file or directory - failed to get real path for '/home/debian/gitian-builder/target-trusty-amd64'
 lxc-execute: No such file or directory - failed to get real path for '/home/debian/gitian-builder/target-xenial-amd64'
 lxc-execute: No such file or directory - failed to get real path for '/home/debian/gitian-builder/target-jessie-amd64'
+`
+
 
 
 Q: Error `The container appears to be already running!` or `failed (98) to create the command service point` when you try to use

@@ -8,6 +8,9 @@ TARGET_CHECKOUT="wip_gitian_hello"
 GITIAN_SUITE=xenial
 BASE_DIR="$HOME/var-gitian/"
 
+echo "This script can run the Gitian-Build of this project, to produce deterministic builds"
+
+echo "Working in BASE_DIR=${BASE_DIR}"
 mkdir -p "$BASE_DIR" || fail "Can not create the base dir ($BASE_DIR)"
 cd "$BASE_DIR" || fail "Can not enter the base dir ($BASE_DIR)"
 
@@ -30,8 +33,12 @@ function fail() {
 }
 
 function setup_host_for_lxc() {
-	echo "TODO"
-	echo "This is not yet implemented here, do it yourself - see doc/*gitian*"
+	echo <<EOF
+TODO
+This is not yet implemented here, do it yourself - see doc/*gitian*
+do that setup, and then you will probably need to **reboot computer**
+EOF
+
 	echo "Press any key" ; read _
 }
 
@@ -91,12 +98,16 @@ function all_excluding_new_lxc() {
 	gitian_show_result
 }
 
-echo
-echo "Usage: call this program with argument 'fast' (faster gbuild, no VM) or 'image' (lxc image rebuild, must be used 1st time)"
-echo
+echo <<EOF
+Usage: call this program with one argument, either:
+  install - installs everything, this will do a sudo and as root will setup it all - run it once
+  image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
+  fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
+EOF
 
-if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
+if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
 if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
+if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
 
 
 
