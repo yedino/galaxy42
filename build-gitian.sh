@@ -19,6 +19,9 @@ function set_env() {
 	export LXC_ARCH=amd64
 	export LXC_SUITE="$GITIAN_SUITE"
 	# export VERSION=""
+
+	export GITIAN_HOST_IP=10.0.3.2
+	export LXC_GUEST_IP=10.0.3.5
 }
 
 function fail() {
