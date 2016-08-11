@@ -5,13 +5,10 @@ TARGET_NAME="galaxy42" # this also becomes name of the directory in ~/
 TARGET_URL="https://github.com/${TARGET_REPO_USER}/${TARGET_NAME}.git"
 TARGET_BRANCH="wip_gitian_hello"
 TARGET_CHECKOUT="wip_gitian_hello"
-BASE_DIR="~/var-gitian/"
+BASE_DIR="$HOME/var-gitian/"
 
 mkdir -p "$BASE_DIR" || fail "Can not create the base dir ($BASE_DIR)"
 cd "$BASE_DIR" || fail "Can not enter the base dir ($BASE_DIR)"
-
-# TODO change use of "galaxy" dir to var
-# TODO change use of "~/" to var of home_dir
 
 set -x
 
@@ -31,6 +28,7 @@ function gitian_builder_download() {
 	rm -rf "${BASE_DIR}/gitian-builder" || fail "remove gitian"
 	cd "${BASE_DIR}" || fail "cd base dir"
 	git clone https://github.com/devrandom/gitian-builder.git || fail "while downloading gitian"
+	cd gitian-builder || fail
 	git reset --hard ee1b69d6949810069453d5540af7a0b3ca63ea8d || fail "choosing gitian version"
 }
 
@@ -83,8 +81,8 @@ echo
 echo "Usage: call this program with argument 'fast' (faster gbuild, no VM) or 'image' (lxc image rebuild, must be used 1st time)"
 echo
 
-if [[ "$1" == "fast" ]] then ; all_excluding_new_lxc ; fi
-if [[ "$1" == "image" ]] then ; all_including_new_lxc ; fi
+if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
+if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
 
 
 
