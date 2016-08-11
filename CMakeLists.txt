@@ -124,8 +124,9 @@ endif()
 add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
-## add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
-## include_directories(depends/googletest/googletest/include/)
+## XXX
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
+include_directories(depends/googletest/googletest/include/)
 
 #add local jsoncpp
 ## XXX
@@ -211,7 +212,7 @@ set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 # more directories of my main code
 ## XXX
 file(GLOB SOURCES_GROUP_TUNSERVER qa/gitian-helloworld-src/*.cpp)
-##file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
+file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 ##file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 ##list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 ##file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
@@ -271,7 +272,7 @@ target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boos
 ###  	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
 
 # LIBS-2 [new doc]
-add_library(tunserver empty.cpp ${SOURCES_GROUP_TUNSERVER})
+add_library(tunserver empty.cpp ${SOURCES_GROUP_TUNSERVER}  ${SOURCES_GROUP_CRYPTO})
 
 #add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 #	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
