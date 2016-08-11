@@ -3,14 +3,23 @@
 TARGET_REPO_USER="rfree-d"
 TARGET_NAME="galaxy42" # this also becomes name of the directory in ~/
 TARGET_URL="https://github.com/${TARGET_REPO_USER}/${TARGET_NAME}.git"
-TARGET_BRANCH="wip_gitian_hello"
+#TARGET_BRANCH="wip_gitian_hello"
 TARGET_CHECKOUT="wip_gitian_hello"
+GITIAN_SUITE=xenial
 BASE_DIR="$HOME/var-gitian/"
 
 mkdir -p "$BASE_DIR" || fail "Can not create the base dir ($BASE_DIR)"
 cd "$BASE_DIR" || fail "Can not enter the base dir ($BASE_DIR)"
 
 set -x
+
+function set_env() {
+	export USE_LXC=1
+	export PATH="$PATH:$BASE_DIR/gitian-builder/libexec"
+	export LXC_ARCH=amd64
+	export LXC_SUITE="$GITIAN_SUITE"
+	# export VERSION=""
+}
 
 function fail() {
 	echo "Error occured, will exit ($1)"
@@ -25,7 +34,7 @@ function setup_host_for_lxc() {
 
 function gitian_builder_download() {
 	echo "Downloading gitian-builder itself"
-	rm -rf "${BASE_DIR}/gitian-builder" || fail "remove gitian"
+	sudo rm -rf "${BASE_DIR}/gitian-builder" || fail "remove gitian"
 	cd "${BASE_DIR}" || fail "cd base dir"
 	git clone https://github.com/devrandom/gitian-builder.git || fail "while downloading gitian"
 	cd gitian-builder || fail
@@ -44,7 +53,7 @@ function target_download() {
  	git clone "$TARGET_URL" || fail "Download target"
  	cd "${BASE_DIR}/${TARGET_NAME}" || fail
  	git clean -xdf || fail
- 	git reset --hard "$TARGET_CHECKOUT" || fail "Download target in given version"
+ 	git checkout "$TARGET_CHECKOUT" || fail "Download target in given version"
  	git clean -xdf || fail
  	git log -1 || fail
 }
@@ -64,6 +73,7 @@ function gitian_show_result() {
 }
 
 function all_including_new_lxc() {
+	set_env
 	gitian_builder_download
 	gitian_builder_make_lxc_image
 	target_download
@@ -72,6 +82,7 @@ function all_including_new_lxc() {
 }
 
 function all_excluding_new_lxc() {
+	set_env
 	target_download
 	gitian_run_build
 	gitian_show_result
