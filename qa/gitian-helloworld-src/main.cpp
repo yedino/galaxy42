@@ -27,26 +27,29 @@
 #include <iostream>
 #include <limits>
 
-#include <json/json.h>
+// #include <json/json.h>
 
 #include <sodium.h>
 
-#include <sodiumpp/sodiumpp.h>
+// #include <sodiumpp/sodiumpp.h>
 
 void foo() {
 	std::cout << "foo" << std::endl;
 }
 
 void print_compilation_data() {
+	/*
 	std::cout << "TIME = " << __TIME__ << std::endl;
 	std::cout << "DATE = " << __DATE__ << std::endl;
 	std::cout << "FILE = " << __FILE__ << std::endl;
 	std::cout << "FUNCTION = " << __FUNCTION__ << std::endl;
+	*/
 }
 
 int bar();
 int baz();
 
+/*
 void use_sodiumpp() {
 	std::cout << "Using sodiumpp" << std::endl;
 
@@ -65,6 +68,7 @@ void use_json() {
 	} catch(...) {
 	}
 }
+*/
 
 int main() {
 	foo();
@@ -79,8 +83,8 @@ int main() {
 	auto b = baz();
 	std::cout << a+b << std::endl;
 
-	use_sodiumpp();
-	use_json();
+//	use_sodiumpp();
+//	use_json();
 	print_compilation_data();
 
 	std::cout << "All ok" << std::endl;
