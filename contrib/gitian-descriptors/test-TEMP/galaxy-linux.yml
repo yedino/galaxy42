@@ -23,7 +23,7 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
 - "dir": "galaxy42"
-  "url": "https://github.com/rfree-d/galaxy42.git"
+  "url": "https://github.com/damianbb/galaxy42.git"
   "commit": "62758e41f7bfea135c50c8cc5ecd9219ffc6a772" # um, update that in one more commit, can't commit own commit hash :)
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
