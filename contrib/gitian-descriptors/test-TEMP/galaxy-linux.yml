@@ -20,7 +20,7 @@ packages:
 - "libboost-program-options-dev"
 - "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
 - "faketime" # used to force date
-reference_datetime: "2011-01-30 00:00:00"
+reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
   "url": "https://github.com/rfree-d/galaxy42.git"
