@@ -36,14 +36,14 @@
 void foo() {
 	std::cout << "foo" << std::endl;
 }
-
+/*
 void print_compilation_data() {
 	std::cout << "TIME = " << __TIME__ << std::endl;
 	std::cout << "DATE = " << __DATE__ << std::endl;
 	std::cout << "FILE = " << __FILE__ << std::endl;
 	std::cout << "FUNCTION = " << __FUNCTION__ << std::endl;
 }
-
+*/
 int bar();
 int baz();
 
@@ -83,7 +83,7 @@ int main() {
 
 //	use_sodiumpp();
 //	use_json();
-	print_compilation_data();
+//	print_compilation_data();
 
 	std::cout << "All ok" << std::endl;
 }
