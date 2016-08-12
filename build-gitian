@@ -1,24 +1,30 @@
 #!/bin/bash -e
 
 TARGET_REPO_USER="rfree-d"
-TARGET_NAME="galaxy42" # this also becomes name of the directory in ~/
-TARGET_URL="https://github.com/${TARGET_REPO_USER}/${TARGET_NAME}.git"
+target_name="galaxy42" # this also becomes name of the directory in ~/
+TARGET_URL="https://github.com/${TARGET_REPO_USER}/${target_name}.git"
 #TARGET_BRANCH="wip_gitian_hello"
-TARGET_CHECKOUT="wip_gitian_hello"
+TARGET_CHECKOUT="wip_gitian_hello" # <--- pick any version
 GITIAN_SUITE=xenial
-BASE_DIR="$HOME/var-gitian/"
+base_dir="$HOME/var-gitian/"
+GITIAN_YML_FILE="test-TEMP/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
 
-echo "This script can run the Gitian-Build of this project, to produce deterministic builds"
+echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
 
-echo "Working in BASE_DIR=${BASE_DIR}"
-mkdir -p "$BASE_DIR" || fail "Can not create the base dir ($BASE_DIR)"
-cd "$BASE_DIR" || fail "Can not enter the base dir ($BASE_DIR)"
+# get our own version
+info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
+echo -e "Building using the build script from: $info_thisscript\n"
 
-set -x
+# cd
+echo "Working in base_dir=${base_dir}"
+mkdir -p "$base_dir" || fail "Can not create the base dir ($base_dir)"
+cd "$base_dir" || fail "Can not enter the base dir ($base_dir)"
+
+#set -x
 
 function set_env() {
 	export USE_LXC=1
-	export PATH="$PATH:$BASE_DIR/gitian-builder/libexec"
+	export PATH="$PATH:$base_dir/gitian-builder/libexec"
 	export LXC_ARCH=amd64
 	export LXC_SUITE="$GITIAN_SUITE"
 	# export VERSION=""
@@ -44,8 +50,8 @@ EOF
 
 function gitian_builder_download() {
 	echo "Downloading gitian-builder itself"
-	sudo rm -rf "${BASE_DIR}/gitian-builder" || fail "remove gitian"
-	cd "${BASE_DIR}" || fail "cd base dir"
+	sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
+	cd "${base_dir}" || fail "cd base dir"
 	git clone https://github.com/devrandom/gitian-builder.git || fail "while downloading gitian"
 	cd gitian-builder || fail
 	git reset --hard ee1b69d6949810069453d5540af7a0b3ca63ea8d || fail "choosing gitian version"
@@ -53,15 +59,15 @@ function gitian_builder_download() {
 
 function gitian_builder_make_lxc_image() {
 	echo "Making the LXC image"
-	cd "${BASE_DIR}/gitian-builder/" || fail
+	cd "${base_dir}/gitian-builder/" || fail
 	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template?)"
 }
 
 function target_download() {
- 	cd "${BASE_DIR}" || fail
- 	rm -rf "${BASE_DIR}/${TARGET_NAME}/" || fail
+ 	cd "${base_dir}" || fail
+ 	rm -rf "${base_dir}/${target_name}/" || fail
  	git clone "$TARGET_URL" || fail "Download target"
- 	cd "${BASE_DIR}/${TARGET_NAME}" || fail
+ 	cd "${base_dir}/${target_name}" || fail
  	git clean -xdf || fail
  	git checkout "$TARGET_CHECKOUT" || fail "Download target in given version"
  	git clean -xdf || fail
@@ -69,18 +75,34 @@ function target_download() {
 }
 
 function gitian_run_build() {
-	cd "$BASE_DIR/gitian-builder/" || fail
+	cd "$base_dir/gitian-builder/" || fail
 	./bin/gbuild    --allow-sudo  \
-		"$BASE_DIR/$TARGET_NAME/contrib/gitian-descriptors/test-TEMP/galaxy-linux.yml" || fail "Build with gbuild"
+		"$base_dir/$target_name/contrib/gitian-descriptors/${GITIAN_YML_FILE}" || fail "Build with gbuild"
+}
+
+function string_limitlen() {
+	thestr="$1" ; elipsis="-" ;
+	l1=3 ; l2=1 ; l3=${#elipsis} ;
+	if (( ${#thestr} > (l1+l2+l3) )) ; then echo "${thestr:0:l1}${elipsis}${thestr:(-l2):l2}" ; else echo "$thestr" ; fi
+}
+
+function get_host_info() {
+	user_s=$(string_limitlen "$USER")
+	hostname_s=$(string_limitlen "$HOSTNAME")
+	echo "$user_s@$hostname_s"
 }
 
 function gitian_show_result() {
-	INFO_GITIAN=$(cd "${BASE_DIR}/gitian-builder/" ; git log -1 | head -n 1 | head -c 20)
-	INFO_TARGET=$(cd "${BASE_DIR}/${TARGET_NAME}/" ; git log -1 | head -n 1)
-	INFO_BINARY=$(on-target sha256sum build/galaxy42/tunserver.elf)
-	INFO_BINARY_FIRST=$(on-target sha256sum build/galaxy42/tunserver.elf | head -n 1)
-	echo "Build with Gitian ($INFO_GITIAN) of $TARGET_NAME $INFO_TARGET gives $INFO_BINARY_FIRST"
+	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
+	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
+	info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf)
+	info_binary_first=$( printf "$info_binary" | head -n 1)
+	info_host="$(get_host_info)"
+	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $Info_target gives $info_binary_first on $info_host"
 }
+
+info_host=$(get_host_info)
+echo $info_host
 
 function all_including_new_lxc() {
 	set_env
