@@ -212,6 +212,11 @@ set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 # more directories of my main code
 ## XXX
 file(GLOB SOURCES_GROUP_TUNSERVER empty*.cpp qa/gitian-helloworld-src/*.cpp)
+message("before sorting")
+message("${SOURCES_GROUP_TUNSERVER}")
+list(SORT SOURCES_GROUP_TUNSERVER)
+message("after sorting")
+message("${SOURCES_GROUP_TUNSERVER}")
 # file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp) ### 
 ##file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 ##list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
