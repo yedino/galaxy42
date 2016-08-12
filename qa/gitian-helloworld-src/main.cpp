@@ -27,7 +27,7 @@
 #include <iostream>
 #include <limits>
 
-#include <json/json.h>
+//#include <json/json.h>
 
 #include <sodium.h>
 
@@ -57,7 +57,7 @@ void use_sodiumpp() {
 	locked_string s3=std::move(s1);
 }
 */
-
+/*
 void use_json() {
 	std::cout << "Using JSON" << std::endl;
 
@@ -67,7 +67,7 @@ void use_json() {
 	} catch(...) {
 	}
 }
-
+*/
 int main() {
 	foo();
 
@@ -82,7 +82,7 @@ int main() {
 	std::cout << a+b << std::endl;
 
 //	use_sodiumpp();
-	use_json();
+//	use_json();
 	print_compilation_data();
 
 	std::cout << "All ok" << std::endl;
