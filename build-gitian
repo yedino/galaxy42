@@ -9,6 +9,12 @@ GITIAN_SUITE=xenial
 base_dir="$HOME/var-gitian/"
 GITIAN_YML_FILE="test-TEMP/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
 
+my_dir="$PWD"
+
+# take "my" YML
+gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${GITIAN_YML_FILE}"
+
+
 echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
 
 # get our own version
@@ -76,8 +82,10 @@ function target_download() {
 
 function gitian_run_build() {
 	cd "$base_dir/gitian-builder/" || fail
+
 	./bin/gbuild    --allow-sudo  \
-		"$base_dir/$target_name/contrib/gitian-descriptors/${GITIAN_YML_FILE}" || fail "Build with gbuild"
+		"$gitian_yml_file_full" \
+		|| fail "Build with gbuild"
 }
 
 function string_limitlen() {
@@ -98,7 +106,9 @@ function gitian_show_result() {
 	info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf)
 	info_binary_first=$( printf "$info_binary" | head -n 1)
 	info_host="$(get_host_info)"
-	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $Info_target gives $info_binary_first on $info_host"
+	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+
+	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_yml) gives $info_binary_first on $info_host"
 }
 
 info_host=$(get_host_info)
