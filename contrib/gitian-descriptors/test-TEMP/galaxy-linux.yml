@@ -24,7 +24,7 @@ reference_datetime: "2011-01-30 00:00:00"
 remotes:
 - "dir": "galaxy42"
   "url": "https://github.com/damianbb/galaxy42.git"
-  "commit": "034ddb14ad7d8fcacbbe912c84ef4ecf217d7efc" # um, update that in one more commit, can't commit own commit hash :)
+  "commit": "28137fa5a5127cb2db769fc645b4d0cad0676961" # um, update that in one more commit, can't commit own commit hash :)
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
 script: |
