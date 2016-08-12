@@ -130,9 +130,9 @@ add_compile_options(-Wno-unused-command-line-argument)
 
 #add local jsoncpp
 ## XXX
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-include_directories(depends/jsoncpp/include)
-link_directories(depends/jsoncpp/src/lib_json)
+##add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
+##include_directories(depends/jsoncpp/include)
+##link_directories(depends/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
 ## XXX
@@ -212,6 +212,11 @@ set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 # more directories of my main code
 ## XXX
 file(GLOB SOURCES_GROUP_TUNSERVER empty*.cpp qa/gitian-helloworld-src/*.cpp)
+message("before sorting")
+message("${SOURCES_GROUP_TUNSERVER}")
+list(SORT SOURCES_GROUP_TUNSERVER)
+message("after sorting")
+message("${SOURCES_GROUP_TUNSERVER}")
 # file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp) ### 
 ##file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 ##list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
@@ -267,7 +272,7 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 ## TODO check this for gitian
 # LIBS-1 [new doc]
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
-	pthread sodium jsoncpp_lib_static ) # sodiumpp )
+	pthread sodium) # sodiumpp )
 ### NORMAL: target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
 ###  	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
 
