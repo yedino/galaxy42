@@ -28,8 +28,13 @@ remotes:
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
 script: |
+	export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+	export FAKETIME=$REFERENCE_DATETIME
   GALAXY_DIR=$(pwd)/galaxy42
   cd ${GALAXY_DIR}
   # cd share/script/install-as-root/ && sudo ./install -y
   cd ${GALAXY_DIR}
+  echo -e "\n\n\n--------------------\nBuilding (we are inside Gitian) at date:\n"
+  date
   COVERAGE=0 EXTLEVEL=0  ./do --go
+  date
