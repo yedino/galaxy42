@@ -866,6 +866,7 @@ void c_tunserver::event_loop() {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
+			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_mark("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
@@ -971,6 +972,9 @@ void c_tunserver::event_loop() {
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
+#if defined(_WIN32) || defined(__CYGWIN__)
+						tundata.insert(0, "1234567890"); // XXX
+#endif
 						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
 						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
