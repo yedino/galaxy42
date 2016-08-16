@@ -46,12 +46,14 @@ function fail() {
 
 function setup_host_for_lxc() {
 	cat <<EOF
+
 TODO
+
 This is not yet implemented here, do it yourself - see doc/*gitian*
 do that setup, and then you will probably need to **reboot computer**
 EOF
 
-	echo "Press any key" ; read _
+	echo "Press any key - after reading above" ; read _
 }
 
 function gitian_builder_download() {
@@ -112,7 +114,7 @@ function gitian_show_result() {
 }
 
 info_host=$(get_host_info)
-echo $info_host
+echo "Running on host (shortcut name): $info_host"
 
 function all_including_new_lxc() {
 	set_env
