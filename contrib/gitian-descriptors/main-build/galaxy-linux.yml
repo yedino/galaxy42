@@ -30,6 +30,6 @@ files: []
 script: |
   datenow="$(date)" ; echo "Gitian moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
   echo "ls:" ; ls
-  ./contrib/gitian-descriptors/main-build/galaxy-linux-script
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-linux-script
   datenow="$(date)" ; echo "Gitian finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
 
