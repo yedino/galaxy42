@@ -267,7 +267,7 @@ int main(int argc, char **argv) {
 
 	{
 		unittest::ipv6conversions();
-		return 0;
+		//return 0;
 	}
 
 	g_dbg_level = config_default_basic_dbg_level;

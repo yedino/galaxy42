@@ -815,6 +815,16 @@ void c_tunserver::event_loop() {
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
 			// TODO warn if src_hip is not our hip
 
+			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
+			if (!addr_is_galaxy(dst_hip)) {
+
+
+
+
+				_dbg3("Got data for strange dst_hip="<<dst_hip);
+				continue; // !
+			}
+
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
 				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);

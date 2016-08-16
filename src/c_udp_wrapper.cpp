@@ -83,6 +83,7 @@ c_udp_wrapper_windows::c_udp_wrapper_windows(const int listen_port)
 
 void c_udp_wrapper_windows::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
 //	std::cout << "send udp packet, size " << size_of_data << std::endl;
+	std::cout << "udp sending data to [" << dst_address << "]" << " size [" << size_of_data << "]" << std::endl;
 	m_socket.send_to( // blocks
 			boost::asio::buffer(data, size_of_data),
 			boost::asio::ip::udp::endpoint(dst_address.get_address(), dst_address.get_assign_port())
@@ -91,6 +92,7 @@ void c_udp_wrapper_windows::send_data(const c_ip46_addr &dst_address, const void
 
 size_t c_udp_wrapper_windows::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
 	//std::cout << "udp receive data" << std::endl;
+	std::cout << "udp recieving data from [" << from_address << "]" << std::endl;
 	if (m_bytes_readed > 0) { // readed data in m_buffer
 		assert(data_buf_size >= m_bytes_readed);
 //		std::copy_n(m_buffer.begin(), m_bytes_readed, data_buf);
