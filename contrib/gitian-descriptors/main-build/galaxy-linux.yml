@@ -1,0 +1,35 @@
+---
+name: "galaxy42-linux"
+sudo: true
+enable_cache: true
+suites:
+- "xenial"
+architectures:
+- "amd64"
+packages:
+- "gcc-5"
+- "g++-5"
+- "cmake"
+- "autoconf"
+- "libtool"
+- "build-essential"
+- "libfftw3-dev"
+- "libsodium-dev"
+- "libboost-system-dev"
+- "libboost-filesystem-dev"
+- "libboost-program-options-dev"
+- "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
+- "faketime" # used to force date
+reference_datetime: "2016-08-01 00:00:00"
+remotes:
+- "dir": "galaxy42"
+  "url": "https://github.com/rfree-d/galaxy42.git"
+  "commit": "50aad7b79ec3c440a999b0ae7348a5ad5de4ff87" # um, update that in one more commit, can't commit own commit hash :)
+# this is temporary, TODO, in the end use branch name / tag name
+files: []
+script: |
+  datenow="$(date)" ; echo "Gitian moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
+  echo "ls:" ; ls
+  ./contrib/gitian-descriptors/main-build/galaxy-linux-script
+  datenow="$(date)" ; echo "Gitian finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
+
