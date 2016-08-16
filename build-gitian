@@ -45,7 +45,7 @@ function fail() {
 }
 
 function setup_host_for_lxc() {
-	echo <<EOF
+	cat <<EOF
 TODO
 This is not yet implemented here, do it yourself - see doc/*gitian*
 do that setup, and then you will probably need to **reboot computer**
@@ -130,7 +130,7 @@ function all_excluding_new_lxc() {
 	gitian_show_result
 }
 
-echo <<EOF
+cat <<EOF
 Usage: call this program with one argument, either:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
   image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
@@ -140,7 +140,5 @@ EOF
 if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
 if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
 if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
-
-
 
 
