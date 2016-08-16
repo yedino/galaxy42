@@ -7,7 +7,7 @@ TARGET_URL="https://github.com/${TARGET_REPO_USER}/${target_name}.git"
 TARGET_CHECKOUT="wip_gitian_hello" # <--- pick any version
 GITIAN_SUITE=xenial
 base_dir="$HOME/var-gitian/"
-GITIAN_YML_FILE="test-TEMP/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
+GITIAN_YML_FILE="main-build/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
 
 my_dir="$PWD"
 
@@ -132,15 +132,33 @@ function all_excluding_new_lxc() {
 	gitian_show_result
 }
 
+function special_command_on_target() {
+	set_env
+	echo "Starting a console on the Image of for-Gitian system. PATH=$PATH"
+	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builde"
+	echo "PWD=$PWD"
+	set -x
+	on-target $@
+	set +x
+	echo "Exited from Image"
+}
+
 cat <<EOF
 Usage: call this program with one argument, either:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
   image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
   fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
+
+  on-target - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
+  on-target-root - same, but you are the root user (insie System Image e.g. LXC)
+
+
 EOF
 
 if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
 if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
 if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
 
+if [[ "$1" == "on-target" ]] ; then special_command_on_target ; fi
+if [[ "$1" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
 

@@ -85,6 +85,11 @@ rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but t
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
 
+echo "Will run cmake, PWD=$PWD USER=$USER, CC=$CC, CXX=$CXX, CPP=$CPP, PATH=$PATH"
+echo "Which gcc, g++: "
+which g++
+which gcc
+
 cmake  .  \
 	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
 	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \

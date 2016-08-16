@@ -1,3 +1,6 @@
+#!/bin/bash
+# see below for LICENCE information, it can differ for this files or it's fragments.
+
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME="$REFERENCE_DATETIME"
   # variable from above yml config
@@ -90,6 +93,7 @@
   ln -s /usr/include/x86_64-linux-gnu/asm $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu/asm
 
   for prog in ${COMPILERS}; do
+  echo "Creating writer for compiler prog=$PROG with FAKETIME=${REFERENCE_DATETIME}"
   rm -f "${WRAP_DIR}/${prog}"
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/bin/bash
@@ -102,6 +106,9 @@
       break
     fi
   done
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME="${REFERENCE_DATETIME}"
+  echo "In wrapper, will call real compiler (REAL=$REAL) with FAKETIME=$FAKETIME, LD_PRELOAD=$LD_PRELOAD"
   \$REAL \$@
   EOF
   chmod +x ${WRAP_DIR}/${prog}
