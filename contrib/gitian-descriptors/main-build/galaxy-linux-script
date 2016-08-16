@@ -1,4 +1,8 @@
-#!/bin/bash
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME="$REFERENCE_DATETIME"
+  # variable from above yml config
+  echo "FAKETIME = ${FAKETIME}"
+  # debug
 
   ### <LICENCE> - start of licence block - this code if possibly on other licence:
   ### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/2c2d471e18f0601c2767cf516425b2ecfcfd2126/contrib/gitian-descriptors/gitian-linux.yml
@@ -7,19 +11,36 @@
   ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+
+  ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  HOSTS="x86_64-linux-gnu"
+
+  COMPILERS="g++ gcc" # <--- could add here more if needed
+
+  ## CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  CONFIGFLAGS=""
+
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm"
+
+  # TODO?
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
+  # TODO? this seems to cause some problems on bitcoin: any change to library...
+  # seem to cause totally differet binary (other address of function)?
   HOST_LDFLAGS=-static-libstdc++
 
+  # (not used?)
   export QT_RCC_TEST=1
+
+  # importat:
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
+
+  # ok?
   export BUILD_DIR=`pwd`
+
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
@@ -53,8 +74,8 @@
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
-  create_global_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
+  create_global_faketime_wrappers "$FAKETIME"
+  create_per-host_faketime_wrappers "$FAKETIME"
   export PATH=${WRAP_DIR}:${PATH}
 
   EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
@@ -68,8 +89,8 @@
   rm -f $WRAP_DIR/extra_includes/i686-pc-linux-gnu/asm
   ln -s /usr/include/x86_64-linux-gnu/asm $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu/asm
 
-  for prog in gcc g++; do
-  rm -f ${WRAP_DIR}/${prog}
+  for prog in ${COMPILERS}; do
+  rm -f "${WRAP_DIR}/${prog}"
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/bin/bash
   REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
@@ -86,6 +107,7 @@
   chmod +x ${WRAP_DIR}/${prog}
   done
 
+  if false ; then # TODO
   cd bitcoin
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
@@ -97,6 +119,7 @@
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
     unset HOST_ID_SALT
   done
+  fi
 
   # Faketime for binaries
   export PATH=${PATH_orig}
@@ -105,9 +128,21 @@
   export PATH=${WRAP_DIR}:${PATH}
 
   # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
-  make dist
+
+  # ./autogen.sh # delete
+  # CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
+
+  # *** main build starts here ***
+  pushd galaxy42
+  echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+  # make dist # delete
+  COVERAGE=0 EXTLEVEL=0  ./do --go
+  echo -e "\n\nBuild is done.\n\n"
+  popd
+
+  # when we create .tgz.gz - TODO later
+  if false ; then
+
   SOURCEDIST=`echo bitcoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order
@@ -153,9 +188,12 @@
     cd ../../
     rm -rf distsrc-${i}
   done
-  mkdir -p $OUTDIR/src
+  mkdir -p $OUTDIR/s	rc
   mv $SOURCEDIST $OUTDIR/src
 
+  fi # fixing up the out package
+
+  ### </LICENCE> - end of licence block
 
   echo "Entire script in Gitian done"
   date
