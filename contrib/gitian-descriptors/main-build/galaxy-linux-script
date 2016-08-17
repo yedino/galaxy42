@@ -3,8 +3,6 @@
   
   REFERENCE_DATETIME="2016-08-01 00:00:00"
 
-  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
-  # export FAKETIME="$REFERENCE_DATETIME"
   export FAKETIME="$REFERENCE_DATETIME"
   # variable from above yml config
   echo "FAKETIME = ${FAKETIME}"
@@ -21,7 +19,7 @@
   ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
   HOSTS="x86_64-linux-gnu"
 
-  COMPILERS="g++ gcc" # <--- could add here more if needed
+  COMPILERS="g++ gcc cc c++" # <--- could add here more if needed
 
   ## CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   CONFIGFLAGS=""
@@ -113,7 +111,7 @@ cat << EOF > ${WRAP_DIR}/${prog}
   done
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME="${REFERENCE_DATETIME}"
-  echo "In wrapper, will call real compiler (REAL=$REAL) with FAKETIME=$FAKETIME, LD_PRELOAD=$LD_PRELOAD"
+  echo "In wrapper, will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
   \$REAL \$@
 
 EOF
