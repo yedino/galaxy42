@@ -139,9 +139,7 @@ Optionally, for the main Antinet project we plan to test:
 own resources (I route for you - if you route for me) to allow node owner to demand
 cooperation from other participants of the network if they want to get his help.
 
-
-
-=== HOWTO ===
+### HOWTO
 
 Q: How to use Galaxy42?
 A: [use] See top of this README for instructions - or just run the program and follow instructions on screen.
@@ -204,9 +202,27 @@ A: [debug.nocap] You can use gdb and valgrind, but if you have a problem there t
 block your debug tool from working (as is the case with some hardened platforms) then if you can run
 a test, or a demo [devel.demo] that does not require net CAP privilages etc,
 then use the binary file that is not trying to get CAP rights,
-the file nocap-* binary, e.g.: `nocap-tunserver.elf`
+the file `nocap-*` binary, e.g.: `nocap-tunserver.elf`
 e.g.: `valgrind  ./nocap-tunserver.elf --devel`
 e.g.: `valgrind  ./nocap-tunserver.elf --devel  --demo foo`
+
+
+### FAQ
+
+Q: Build failed with: error like `cpp_int.hpp` or `right operand of shift expression` or `limb_type`
+e.g.:
+`
+In file included from /usr/include/boost/config.hpp:61:0,
+from /usr/include/boost/cstdint.hpp:36,
+from /usr/include/boost/multiprecision/cpp_int.hpp:11,
+from gcc6.cpp:1:
+/usr/include/boost/multiprecision/cpp_int.hpp:193:4: error: right operand of shift expression ‘(1u << 63u)’ is >= than the precision of the left operand [-fpermissive]
+BOOST_STATIC_CONSTANT(limb_type, sign_bit_mask = 1u << (limb_bits - 1));
+`
+A: Your system seems to include a broken version of lib boost (see bug https://svn.boost.org/trac/boost/ticket/12181),
+if system update doesn't fix it then you can for now work around by
+building with option: `USE_BOOST_MULTIPRECISION_DEFAULT=0 ./do`
+(or set it in ccmake . and then build).
 
 
 
