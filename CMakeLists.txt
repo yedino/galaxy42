@@ -124,20 +124,17 @@ endif()
 add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
-## XXX
-##add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
-##include_directories(depends/googletest/googletest/include/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
+include_directories(depends/googletest/googletest/include/)
 
 #add local jsoncpp
-## XXX
-##add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-##include_directories(depends/jsoncpp/include)
-##link_directories(depends/jsoncpp/src/lib_json)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
+include_directories(depends/jsoncpp/include)
+link_directories(depends/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
-## XXX
-##add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
-##include_directories(depends/sodiumpp/sodiumpp/include)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
+include_directories(depends/sodiumpp/sodiumpp/include)
 
 if(ENABLE_CRYPTO_SIDH)
 	message("Using crypto: SIDH")
@@ -180,48 +177,41 @@ endif()
 
 
 # used e.g. by various crypto like ENABLE_CRYPTO_SIDH , ENABLE_CRYPTO_NTRU
-## XXX
-##include_directories( build_extra )
+include_directories( build_extra )
 
-##XXX
-set(flag_coverage "") # XXX
-##if(COVERAGE)
-##	message("Enabling COVERAGE")
-##	set(flag_coverage "--coverage")
-##else()
-##	message("Disabling COVERAGE")
-##	set(flag_coverage "")
-##endif()
+if(COVERAGE)
+	message("Enabling COVERAGE")
+	set(flag_coverage "--coverage")
+else()
+	message("Disabling COVERAGE")
+	set(flag_coverage "")
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic ${flag_coverage}")
 
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
-##ADD_CUSTOM_TARGET(fast
-##		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=fast ${CMAKE_SOURCE_DIR}
-##		COMMAND make)
-##ADD_CUSTOM_TARGET(release
-##		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=release ${CMAKE_SOURCE_DIR}
-##		COMMAND make)
-##ADD_CUSTOM_TARGET(debug
-##		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=debug ${CMAKE_SOURCE_DIR}
-##		COMMAND make)
+ADD_CUSTOM_TARGET(fast
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=fast ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+ADD_CUSTOM_TARGET(release
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=release ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+ADD_CUSTOM_TARGET(debug
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=debug ${CMAKE_SOURCE_DIR}
+		COMMAND make)
 
 
 # more directories of my main code
-## XXX
+
 file(GLOB SOURCES_GROUP_TUNSERVER empty*.cpp qa/gitian-helloworld-src/*.cpp)
-message("before sorting")
-message("${SOURCES_GROUP_TUNSERVER}")
-list(SORT SOURCES_GROUP_TUNSERVER)
-message("after sorting")
-message("${SOURCES_GROUP_TUNSERVER}")
-# file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp) ### 
-##file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
-##list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
-##file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
-##list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
+
+file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
+list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
+file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
+list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
 
 if(APPLE)
 elseif(WIN32)
@@ -229,38 +219,37 @@ else()
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
+message("Sorting sources: SOURCES_GROUP_TUNSERVER and SOURCES_GROUP_RPC")
+list(SORT SOURCES_GROUP_TUNSERVER)
+list(SORT SOURCES_GROUP_RPC)
+
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
 
 
-##XXX
-##if(CMAKE_BUILD_TYPE STREQUAL "fast")
-##        message("Fast build")
-##        add_definitions(-DRELEASEMODE_ -DNDEBUG)
-##        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
-##
-##	elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
-##        message("Debug build")
-##        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0")
-##
-##	elseif(CMAKE_BUILD_TYPE STREQUAL "release")
-##        message("Release build")
-##        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -DNDEBUG -DRELEASEMODE")
-##else()
-##    message("bad CMAKE_BUILD_TYPE flag")
-##    message("usage is: cmake [fast/debug/release] .")
-##    message( FATAL_ERROR "error" )
-##    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
-##endif()
+if(CMAKE_BUILD_TYPE STREQUAL "fast")
+        message("Fast build")
+        add_definitions(-DRELEASEMODE_ -DNDEBUG)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
 
-## XXX
-##X include_directories(../antinet/src/antinet_sim/)
+	elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
+        message("Debug build")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0")
 
+	elseif(CMAKE_BUILD_TYPE STREQUAL "release")
+        message("Release build")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -DNDEBUG -DRELEASEMODE")
+else()
+    message("bad CMAKE_BUILD_TYPE flag")
+    message("usage is: cmake [fast/debug/release] .")
+    message( FATAL_ERROR "error" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
+endif()
+
+include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
-
-##add_executable(tunserver.elf src/g42-main.cpp )
-add_executable(tunserver.elf qa/gitian-helloworld-src/main.cpp )
+add_executable(tunserver.elf src/g42-main.cpp )
 
 
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
@@ -272,71 +261,64 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 ## TODO check this for gitian
 # LIBS-1 [new doc]
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
-	pthread sodium) # sodiumpp )
-### NORMAL: target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
-###  	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
+	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
 
 # LIBS-2 [new doc]
-add_library(tunserver src/ui.cpp ${SOURCES_GROUP_TUNSERVER} ) #  ${SOURCES_GROUP_CRYPTO})
 
 #add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 #	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
 #	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp
 #	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
 #	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
-
-## XXX
-##X add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
 #tests
-## XXX
-##file(GLOB TEST_SOURCES "src/test/*.cpp")
+file(GLOB TEST_SOURCES "src/test/*.cpp")
 
-## XXX
 #debug version
-##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-##add_executable(test-debug.elf ${TEST_SOURCES})
-##target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options
-##	gtest sodium sodiumpp jsoncpp_lib_static)
-##foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-##	message("ADDING LIBRARY FROM LIST: '${_lib}'")
-##	target_link_libraries(test-debug.elf ${_lib})
-##endforeach()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+add_executable(test-debug.elf ${TEST_SOURCES})
+target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options
+	gtest sodium sodiumpp jsoncpp_lib_static)
+foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+	message("ADDING LIBRARY FROM LIST: '${_lib}'")
+	target_link_libraries(test-debug.elf ${_lib})
+endforeach()
 
 
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
-##Xadd_executable(test-release.elf ${TEST_SOURCES})
-##Xtarget_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options
-##X	gtest sodium sodiumpp jsoncpp_lib_static)
-##Xforeach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-##X	message("ADDING LIBRARY FROM LIST: '${_lib}'")
-##X	target_link_libraries(test-release.elf ${_lib})
-##Xendforeach()
+add_executable(test-release.elf ${TEST_SOURCES})
+target_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options
+	gtest sodium sodiumpp jsoncpp_lib_static)
+foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+	message("ADDING LIBRARY FROM LIST: '${_lib}'")
+	target_link_libraries(test-release.elf ${_lib})
+endforeach()
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
 #target_link_libraries(rpc_sender boost_system pthread)
 
-## XXX
 add_custom_target(run
 		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
+		DEPENDS test-debug.elf
 		WORKING_DIRECTORY ./)
-##
-##add_custom_target(runcli
-##		COMMAND ./ipclient.elf ::1 12006 ipv6 1200
-##		DEPENDS ./ipclient.elf
-##		WORKING_DIRECTORY ./)
 
-#add_custom_command(
-#	TARGET ipclient.elf ipserver.elf tunserver.elf
-#	POST_BUILD
+add_custom_target(runcli
+		COMMAND ./ipclient.elf ::1 12006 ipv6 1200
+		DEPENDS ./ipclient.elf
+		WORKING_DIRECTORY ./)
+
+add_custom_command(
+	TARGET ipclient.elf ipserver.elf tunserver.elf
+	POST_BUILD
 #	COMMAND chmod g-wx,o-wx ipclient.elf
 #	COMMAND chmod g-wx,o-wx ipserver.elf
-#	COMMAND chmod g-wx,o-wx tunserver.elf
-#	COMMAND cp tunserver.elf nocap-tunserver.elf
-#	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
-#	WORKING_DIRECTORY ./)
+	COMMAND chmod g-wx,o-wx tunserver.elf
+	COMMAND cp tunserver.elf nocap-tunserver.elf
+	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
+	WORKING_DIRECTORY ./)
 
 # unset( USE_BOOST_MULTIPRECISION_DEFAULT )
