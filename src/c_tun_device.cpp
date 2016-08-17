@@ -79,12 +79,19 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 #include <ntddscsi.h>
 #include <winioctl.h>
 
+#define TAP_CONTROL_CODE(request,method) \
+  CTL_CODE (FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS)
+#define TAP_IOCTL_GET_MAC				TAP_CONTROL_CODE (1, METHOD_BUFFERED)
+#define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
+#define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
+
 c_tun_device_windows::c_tun_device_windows()
 	:
 	// LOG_ON_INIT( _note("Creating TUN device (windows)") ),
 	m_readed_bytes(0),
 	m_handle(get_device_handle()),
-	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle))
+	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
+	m_mac_address(get_mac(m_handle))
 {
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
@@ -260,11 +267,6 @@ NET_LUID c_tun_device_windows::get_luid(const std::wstring &human_name) {
 }
 
 
-#define TAP_CONTROL_CODE(request,method) \
-  CTL_CODE (FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS)
-#define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
-#define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
-
 HANDLE c_tun_device_windows::get_device_handle() {
 	std::wstring tun_filename;
 	tun_filename += L"\\\\.\\Global\\";
@@ -300,6 +302,14 @@ HANDLE c_tun_device_windows::get_device_handle() {
 		throw std::runtime_error("DeviceIoControl error");
 	}
 	return handle;
+}
+
+std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
+	std::array<uint8_t, 6> mac_address;
+	DWORD mac_size = 0;
+	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
+	assert(mac_size == mac_address.size());
+	return mac_address;
 }
 
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
