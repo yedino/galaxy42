@@ -95,7 +95,9 @@
   for prog in ${COMPILERS}; do
   echo "Creating writer for compiler prog=$PROG with FAKETIME=${REFERENCE_DATETIME}"
   rm -f "${WRAP_DIR}/${prog}"
-  cat << EOF > ${WRAP_DIR}/${prog}
+
+cat << EOF > ${WRAP_DIR}/${prog}
+
   #!/bin/bash
   REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
   for var in "\$@"
@@ -110,7 +112,9 @@
   export FAKETIME="${REFERENCE_DATETIME}"
   echo "In wrapper, will call real compiler (REAL=$REAL) with FAKETIME=$FAKETIME, LD_PRELOAD=$LD_PRELOAD"
   \$REAL \$@
-  EOF
+
+EOF
+
   chmod +x ${WRAP_DIR}/${prog}
   done
 
