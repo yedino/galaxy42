@@ -205,8 +205,6 @@ ADD_CUSTOM_TARGET(debug
 
 # more directories of my main code
 
-file(GLOB SOURCES_GROUP_TUNSERVER empty*.cpp qa/gitian-helloworld-src/*.cpp)
-
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
@@ -219,10 +217,13 @@ else()
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
-message("Sorting sources: SOURCES_GROUP_TUNSERVER and SOURCES_GROUP_RPC")
+message("Sorting sources (from GLOB)")
 list(SORT SOURCES_GROUP_TUNSERVER)
+list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
-
+message("Sorted sources are:" "${SOURCES_GROUP_TUNSERVER}")
+message("Sorted sources are:" "${SOURCES_GROUP_CRYPTO}")
+message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
 
@@ -274,6 +275,8 @@ add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURC
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
+list(SORT TEST_SOURCES)
+message("Sorted sources are:" "${TEST_SOURCES}")
 
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -297,6 +300,7 @@ foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 endforeach()
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
+# ^-- if using this, then SORT it.
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
 #target_link_libraries(rpc_sender boost_system pthread)
 
