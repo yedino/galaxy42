@@ -129,11 +129,10 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
-	//std::cout << "read from tun" << std::endl;
+	const size_t eth_offset = 10; // 14
+	m_readed_bytes -= eth_offset;
 	assert(m_readed_bytes > 0);
-//	std::copy_n(m_buffer.begin(), m_readed_bytes, buf); // TODO!!! change base api and remove copy!!!
-	std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
-	//std::memcpy(buf, (void*)&m_buffer[0], m_readed_bytes);
+	std::copy_n(&m_buffer[0] + eth_offset, m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
 	size_t ret = m_readed_bytes;
 	m_readed_bytes = 0;
 	return ret;
@@ -141,8 +140,23 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 
 size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
 	//std::cout << "****************write to tun" << std::endl;
+	const size_t eth_header_size = 14;
+	const size_t eth_offset = 4;
+	std::vector<uint8_t> eth_frame(eth_header_size + count - eth_offset, 0);
+	std::copy(m_mac_address.begin(), m_mac_address.end(), eth_frame.begin()); // destination mac address
+	auto it = eth_frame.begin() + 6;
+	// source mac address
+	*it = 0xFC; ++it;
+	for (int i = 0; i < 5; ++i) {
+		*it = 0x00; ++it;
+	}
+	// eth type: ipv6
+	*it = 0x86; ++it;
+	*it = 0xDD; ++it;
+	std::copy(reinterpret_cast<const uint8_t *>(buf) + eth_offset, reinterpret_cast<const uint8_t *>(buf) + count, it);
 	boost::system::error_code ec;
-	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
+	//size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
+	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(eth_frame), ec); // prepares: blocks (but TUN is fast)
 	if (ec) throw std::runtime_error("boost error " + ec.message());
 	return write_bytes;
 }
@@ -309,6 +323,9 @@ std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
 	DWORD mac_size = 0;
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
 	assert(mac_size == mac_address.size());
+	for (const auto i : mac_address)
+		std::cout << std::hex << static_cast<int>(i) << " ";
+	std::cout << std::dec << std::endl;
 	return mac_address;
 }
 
@@ -323,7 +340,8 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 		m_readed_bytes = length;
 		if (c_ndp::is_packet_neighbor_solicitation(m_buffer)) {
 			std::array<uint8_t, 94> neighbor_advertisement_packet = c_ndp::generate_neighbor_advertisement(m_buffer);
-			write_to_tun(neighbor_advertisement_packet.data(), neighbor_advertisement_packet.size());
+			boost::system::error_code ec;
+			m_stream_handle_ptr->write_some(boost::asio::buffer(neighbor_advertisement_packet), ec); // prepares: blocks (but TUN is fast)
 		}
 	}
 	catch (const std::runtime_error &e) {

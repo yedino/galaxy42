@@ -28,11 +28,7 @@ namespace g_ipv6_rfc {
 
 namespace g_tuntap {
 	namespace TUN_with_PI {
-	#if defined(_WIN32) || defined(__CYGWIN__)
-		constexpr unsigned char header_position_of_ipv6 = 14;
-	#else
 		constexpr unsigned char header_position_of_ipv6 = 4;
-	#endif
 	}
 	// not supporting TAP for now
 }
