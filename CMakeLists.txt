@@ -204,6 +204,7 @@ ADD_CUSTOM_TARGET(debug
 
 
 # more directories of my main code
+
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
@@ -216,6 +217,13 @@ else()
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
+message("Sorting sources (from GLOB)")
+list(SORT SOURCES_GROUP_TUNSERVER)
+list(SORT SOURCES_GROUP_CRYPTO)
+list(SORT SOURCES_GROUP_RPC)
+message("Sorted sources are:" "${SOURCES_GROUP_TUNSERVER}")
+message("Sorted sources are:" "${SOURCES_GROUP_CRYPTO}")
+message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
 
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
 
@@ -251,10 +259,12 @@ separate_arguments(LIBS_OPTIONAL_CRYPTO_clean)
 unset(LIBS_OPTIONAL_CRYPTO)
 message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
+## TODO check this for gitian
+# LIBS-1 [new doc]
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
 	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
 
-
+# LIBS-2 [new doc]
 
 #add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
 #	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
@@ -265,6 +275,8 @@ add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURC
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
+list(SORT TEST_SOURCES)
+message("Sorted sources are:" "${TEST_SOURCES}")
 
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -288,6 +300,7 @@ foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 endforeach()
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
+# ^-- if using this, then SORT it.
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
 #target_link_libraries(rpc_sender boost_system pthread)
 

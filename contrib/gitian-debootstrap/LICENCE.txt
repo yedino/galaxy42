@@ -1,0 +1,7 @@
+
+Files here are possibly copied from other projects,
+e.g. xenial was copied (unless changed, see git log) from Ubuntu (15.10 probably)
+so you should find the file (by content) and see it's LICENCE before taking any action
+that is related to that (how ever, Ubuntu as it's files like that one are generally some FOSS kind of licence).
+
+

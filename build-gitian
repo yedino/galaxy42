@@ -1,0 +1,164 @@
+#!/bin/bash -e
+
+target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
+target_name="galaxy42" # this also becomes name of the directory in ~/
+target_url="https://github.com/${target_repo_user}/${target_name}.git"
+target_checkout="wip_gitian_hello" # <--- pick any version
+gitian_suite=xenial
+base_dir="$HOME/var-gitian/"
+gitian_yml_file="main-build/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
+
+my_dir="$PWD"
+
+# take "my" YML
+gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
+
+
+echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
+
+# get our own version
+info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
+echo -e "Building using the build script from: $info_thisscript\n"
+
+# cd
+echo "Working in base_dir=${base_dir}"
+mkdir -p "$base_dir" || fail "Can not create the base dir ($base_dir)"
+cd "$base_dir" || fail "Can not enter the base dir ($base_dir)"
+
+
+#set -x
+
+function set_env() {
+	export USE_LXC=1
+	export PATH="$PATH:$base_dir/gitian-builder/libexec"
+	export LXC_ARCH=amd64
+	export LXC_SUITE="$gitian_suite"
+	# export VERSION=""
+
+	export GITIAN_HOST_IP=10.0.3.2
+	export LXC_GUEST_IP=10.0.3.5
+}
+
+function fail() {
+	echo "Error occured, will exit ($1)"
+	exit 1
+}
+
+function setup_host_for_lxc() {
+	cat <<EOF
+
+TODO
+
+This is not yet implemented here, do it yourself - see doc/*gitian*
+do that setup, and then you will probably need to **reboot computer**
+EOF
+
+	echo "Press any key - after reading above" ; read _
+}
+
+function gitian_builder_download() {
+	echo "Downloading gitian-builder itself"
+	sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
+	cd "${base_dir}" || fail "cd base dir"
+	git clone https://github.com/devrandom/gitian-builder.git || fail "while downloading gitian"
+	cd gitian-builder || fail
+	git reset --hard ee1b69d6949810069453d5540af7a0b3ca63ea8d || fail "choosing gitian version"
+}
+
+function gitian_builder_make_lxc_image() {
+	echo "Making the LXC image"
+	cd "${base_dir}/gitian-builder/" || fail
+	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template?)"
+}
+
+function target_download() {
+	cd "${base_dir}" || fail
+	rm -rf "${base_dir}/${target_name}/" || fail
+	git clone "$target_url" || fail "Download target"
+	cd "${base_dir}/${target_name}" || fail
+	git clean -xdf || fail
+	git checkout "$target_checkout" || fail "Download target in given version"
+	git clean -xdf || fail
+	git log -1 || fail
+}
+
+function gitian_run_build() {
+	cd "$base_dir/gitian-builder/" || fail
+
+	./bin/gbuild    --allow-sudo  \
+		"$gitian_yml_file_full" \
+		|| fail "Build with gbuild"
+}
+
+function string_limitlen() {
+	thestr="$1" ; elipsis="-" ;
+	l1=3 ; l2=1 ; l3=${#elipsis} ;
+	if (( ${#thestr} > (l1+l2+l3) )) ; then echo "${thestr:0:l1}${elipsis}${thestr:(-l2):l2}" ; else echo "$thestr" ; fi
+}
+
+function get_host_info() {
+	user_s=$(string_limitlen "$USER")
+	hostname_s=$(string_limitlen "$HOSTNAME")
+	echo "$user_s@$hostname_s"
+}
+
+function gitian_show_result() {
+	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
+	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
+	info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf)
+	info_binary_first=$( printf "$info_binary" | head -n 1)
+	info_host="$(get_host_info)"
+	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+
+	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_yml) gives $info_binary_first on $info_host"
+}
+
+info_host=$(get_host_info)
+echo "Running on host (shortcut name): $info_host"
+
+function all_including_new_lxc() {
+	set_env
+	gitian_builder_download
+	gitian_builder_make_lxc_image
+	target_download
+	gitian_run_build
+	gitian_show_result
+}
+
+function all_excluding_new_lxc() {
+	set_env
+	target_download
+	gitian_run_build
+	gitian_show_result
+}
+
+function special_command_on_target() {
+	set_env
+	echo "Starting a console on the Image of for-Gitian system. PATH=$PATH"
+	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builde"
+	echo "PWD=$PWD"
+	set -x
+	on-target $@
+	set +x
+	echo "Exited from Image"
+}
+
+cat <<EOF
+Usage: call this program with one argument, either:
+  install - installs everything, this will do a sudo and as root will setup it all - run it once
+  image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
+  fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
+
+  on-target - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
+  on-target-root - same, but you are the root user (insie System Image e.g. LXC)
+
+
+EOF
+
+if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
+if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
+if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
+
+if [[ "$1" == "on-target" ]] ; then special_command_on_target ; fi
+if [[ "$1" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
+
