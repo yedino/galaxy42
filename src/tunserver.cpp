@@ -815,6 +815,14 @@ void c_tunserver::event_loop() {
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
 			// TODO warn if src_hip is not our hip
 
+			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
+			if (!addr_is_galaxy(dst_hip)) {
+
+
+				_dbg3("Got data for strange dst_hip="<<dst_hip);
+				continue; // !
+			}
+				
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
 				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
@@ -834,7 +842,7 @@ void c_tunserver::event_loop() {
 				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
-				std::string data_cleartext( buf, buf+size_read);
+				std::string data_cleartext(buf, buf+size_read);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -856,6 +864,7 @@ void c_tunserver::event_loop() {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
+			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_mark("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
@@ -960,7 +969,6 @@ void c_tunserver::event_loop() {
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
 						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
 						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
