@@ -28,7 +28,9 @@ namespace g_ipv6_rfc {
 
 namespace g_tuntap {
 	namespace TUN_with_PI {
+
 		constexpr unsigned char header_position_of_ipv6 = 4;
+
 	}
 	// not supporting TAP for now
 }
@@ -58,8 +60,6 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	c_haship_addr(tag_constr_by_addr_bin x, const t_ipv6bin & data );
 
 	void print(ostream &ostr) const;
-
-
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 
@@ -82,3 +82,4 @@ namespace unittest {
 bool addr_is_galaxy(c_haship_addr addr);
 
 #endif
+
