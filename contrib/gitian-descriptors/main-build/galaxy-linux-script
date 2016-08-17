@@ -1,7 +1,10 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
+  
+  REFERENCE_DATETIME="2016-08-01 00:00:00"
 
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  # export FAKETIME="$REFERENCE_DATETIME"
   export FAKETIME="$REFERENCE_DATETIME"
   # variable from above yml config
   echo "FAKETIME = ${FAKETIME}"
