@@ -83,6 +83,7 @@ c_udp_wrapper_windows::c_udp_wrapper_windows(const int listen_port)
 
 void c_udp_wrapper_windows::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
 //	std::cout << "send udp packet, size " << size_of_data << std::endl;
+	std::cout << "udp sending data to [" << dst_address << "]" << " size [" << size_of_data << "]" << std::endl;
 	m_socket.send_to( // blocks
 			boost::asio::buffer(data, size_of_data),
 			boost::asio::ip::udp::endpoint(dst_address.get_address(), dst_address.get_assign_port())
@@ -97,6 +98,7 @@ size_t c_udp_wrapper_windows::receive_data(void *data_buf, const size_t data_buf
 		std::copy_n(&m_buffer[0], m_bytes_readed, reinterpret_cast<uint8_t *>(data_buf));
 		size_t ret = m_bytes_readed;
 		from_address.set_address(m_sender_endpoint.address());
+		std::cout << "udp recieving data from [" << from_address << "]" << std::endl;
 		m_bytes_readed = 0;
 		return ret;
 	}
@@ -106,7 +108,9 @@ size_t c_udp_wrapper_windows::receive_data(void *data_buf, const size_t data_buf
 void c_udp_wrapper_windows::read_handle(const boost::system::error_code& error, size_t bytes_transferred) {
 //	std::cout << "udp read handle" << std::endl;
 //	std::cout << "readed " << bytes_transferred << " bytes" << std::endl;
-	//assert(m_bytes_readed == 0);
+	if (error && (error.value() != 10061)) // http://stackoverflow.com/a/16763404
+		std::cout << error.message() << " value " << error.value() << std::endl;
+//	assert(m_bytes_readed == 0);
 	m_bytes_readed = bytes_transferred;
 	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
 			boost::bind(&c_udp_wrapper_windows::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));

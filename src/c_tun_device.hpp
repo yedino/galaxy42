@@ -73,12 +73,14 @@ private:
 
 	HANDLE m_handle; ///< windows handle to the TUN device
 	std::unique_ptr<boost::asio::windows::stream_handle> m_stream_handle_ptr; ///< boost handler to the TUN device
+	std::array<uint8_t, 6> m_mac_address;
 
 	std::vector<std::wstring> get_subkeys(HKEY hKey); ///< for windows registry
 	std::wstring get_device_guid(); ///< technical name of the device
 	std::wstring get_human_name(const std::wstring &guid);
 	NET_LUID get_luid(const std::wstring &human_name);
 	HANDLE get_device_handle();
+	std::array<uint8_t, 6> get_mac(HANDLE handle); // get handle to opened device (returned by get_device_handle())
 
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
 };
