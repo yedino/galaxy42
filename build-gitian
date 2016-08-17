@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TARGET_REPO_USER="rfree-d"
+TARGET_REPO_USER="damianbb"
 target_name="galaxy42" # this also becomes name of the directory in ~/
 TARGET_URL="https://github.com/${TARGET_REPO_USER}/${target_name}.git"
 #TARGET_BRANCH="wip_gitian_hello"
