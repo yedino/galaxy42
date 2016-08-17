@@ -43,6 +43,7 @@ function usage {
 echo ""
 echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
+echo "This is the ***TEST*** script, that builds test Hello World program etc"
 echo ""
 
 if [[ "$1" == "--help" ]] ; then
@@ -78,23 +79,25 @@ echo "===================================================================="
 echo ""
 
 
+pushd qa/gitian-helloworld-src/
 make clean || { echo "(can not make clean - but this is probably normal at first run)" ; }
+popd
+
 rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but this is probably normal at first run)" ; }
 
-./download.sh || { echo "Downloads failed" ; exit 1 ; }
+# ./download.sh || { echo "Downloads failed" ; exit 1 ; }
 
-COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
+# COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
 
-echo "Will run cmake, PWD=$PWD USER=$USER, CC=$CC, CXX=$CXX, CPP=$CPP, PATH=$PATH"
-echo "Which gcc, g++: "
-which g++
-which gcc
+# cmake  .  \
+#	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
+#	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
+#	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
 
-cmake  .  \
-	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
-	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
-	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
-# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
+pushd qa/gitian-helloworld-src/
 
 make || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+
+popd
+
 
