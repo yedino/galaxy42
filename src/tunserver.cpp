@@ -819,12 +819,10 @@ void c_tunserver::event_loop() {
 			if (!addr_is_galaxy(dst_hip)) {
 
 
-
-
 				_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
 			}
-
+				
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
 				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
@@ -844,7 +842,7 @@ void c_tunserver::event_loop() {
 				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
-				std::string data_cleartext( buf, buf+size_read);
+				std::string data_cleartext(buf, buf+size_read);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -971,10 +969,6 @@ void c_tunserver::event_loop() {
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-						//ssize_t write_bytes = write(m_tun_fd, tundata.c_str(), tundata.size());
-#if defined(_WIN32) || defined(__CYGWIN__)
-						tundata.insert(0, "1234567890"); // XXX
-#endif
 						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
 						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
