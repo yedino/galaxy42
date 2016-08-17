@@ -23,7 +23,7 @@ packages:
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
-  "url": "https://github.com/rfree-d/galaxy42.git"
+  "url": "https://github.com/rfree-d/galaxy42.git" # (username) must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
   "commit": "c64635d6cf639816f501c435ea8edca2fb7cc23e" # um, update that in one more commit, can't commit own commit hash :)
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
