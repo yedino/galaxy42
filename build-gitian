@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-target_repo_user="damianbb" # this should be same in  /build-gitian and in main YML file named there as $gitian_yml_file
+target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
 target_checkout="wip_gitian_hello" # <--- pick any version
