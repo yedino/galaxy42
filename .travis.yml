@@ -17,7 +17,9 @@ addons:
       - gcc-5
       - g++-5
       - clang-3.7
-      - libboost-all-dev
+      - libboost-system-dev
+      - libboost-filesystem-dev
+      - libboost-program-options-dev
       - libfftw3-dev
 
 compiler:
