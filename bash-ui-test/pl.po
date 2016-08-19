@@ -1,0 +1,49 @@
+# Galaxy42 installer
+# Copyright (C) 2016
+# This file is distributed at once at licences: under the same license as the Galaxy42 package,
+# and as BSD 2-clause licence.
+# Yedino <info@yedino.com>, 2016
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: galaxy 42\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-08-19 17:19+0000\n"
+"PO-Revision-Date: 2016-08-19 17:23+0000\n"
+"Last-Translator:  <info@yedino.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#: a.sh:16
+msgid ""
+"\n"
+"\n"
+"This seems to be a text-mode GUI,\n"
+"you can use up/down arrows, SPACE to select option, ENTER to finish.\n"
+msgstr ""
+"\n"
+"\n"
+"Wygląda na to iż używasz tekstowego interfejsu,\n"
+"możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, ENTER aby zakończyć.\n"
+
+#: a.sh:25
+#, sh-format
+msgid "Configure computer for $programname"
+msgstr "Skonfiguruj komputer dla $programname"
+
+#: a.sh:26
+msgid "Ok"
+msgstr "Ok"
+
+#: a.sh:26
+msgid "Quit"
+msgstr "Zakończ"
+
+#: a.sh:29
+msgid "Install (as root) following functions:"
+msgstr "Zainstaluj (jako root) następujące funkcje:"
