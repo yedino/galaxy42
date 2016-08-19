@@ -17,18 +17,22 @@ addons:
       - gcc-5
       - g++-5
       - clang-3.7
-      - libboost-all-dev
+      - libboost-system-dev
+      - libboost-filesystem-dev
+      - libboost-program-options-dev
       - libfftw3-dev
 
 compiler:
   - gcc
   - clang
 
+# add manually apt-key key for ppa:chris-lea becouse retrieving it from server occurs randomly some problems
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:chris-lea/libsodium -y  ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                              ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y               ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                    ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-key add "$TRAVIS_BUILD_DIR"/doc/pubkey/chris_lea_libsodium.pub ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:chris-lea/libsodium -y                      ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                                                  ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y                                   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                                        ; fi
   
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                                           ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink llvm37; brew link llvm37; brew install llvm37             ; fi
@@ -113,7 +117,7 @@ notifications:
     template:
       - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message} (%{build_url})"
 
-  #email:
+  email: false
   #  to minimize spam
   #  on_success: change
   #  on_failure: always
