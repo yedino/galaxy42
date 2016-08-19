@@ -209,6 +209,9 @@ e.g.: `valgrind  ./nocap-tunserver.elf --devel  --demo foo`
 
 ### FAQ
 
+This FAQ contains some common problems and their solutions.
+Problems that are solved will be moved to
+
 Q: Build failed with: error like `cpp_int.hpp` or `right operand of shift expression` or `limb_type`
 e.g.:
 `
@@ -223,6 +226,17 @@ A: Your system seems to include a broken version of lib boost (see bug https://s
 if system update doesn't fix it then you can for now work around by
 building with option: `USE_BOOST_MULTIPRECISION_DEFAULT=0 ./do`
 (or set it in ccmake . and then build).
+
+Q: Using gitian has error regarding Xenial `/usr/share/debootstrap/scripts/xenial`, e.g.:
+`
+E: No such script: /usr/share/debootstrap/scripts/xenial
+Error occured, will exit (to create Xenial image (do you have the Xenial template?))
+`
+A: Older systems (e.g. Debian Jessie) do not include the template script file of Xenial.
+We will soon work around this automatically. For now you can yourself, as root, install this file:
+sudo cp -i galaxy42/contrib/gitian-debootstrap/scripts/xenial   /usr/share/debootstrap/scripts/
+
+
 
 
 
