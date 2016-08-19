@@ -1,0 +1,4 @@
+#!/bin/bash
+
+for i in pl en ; do msgfmt --check --endianness=little src-misc/locale/galaxy42_installer/$i.po -o ./share/locale/$i/LC_MESSAGES/galaxy42_installer.mo ; done
+
