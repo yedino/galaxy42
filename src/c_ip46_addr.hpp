@@ -109,7 +109,7 @@ class c_ip46_addr {
 		void set_address(const boost::asio::ip::address &address);
 	private:
 		boost::asio::ip::address m_address;
-		int m_port;
+		int m_port = 9042;
 };
 #endif
 
