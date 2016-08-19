@@ -121,7 +121,6 @@ else()
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
 endif()
 
-add_compile_options(-Wno-unused-command-line-argument)
 
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
@@ -187,7 +186,7 @@ else()
 	set(flag_coverage "")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic ${flag_coverage}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${flag_coverage}")
 
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
@@ -212,9 +211,12 @@ file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
 
 if(APPLE)
+	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
 elseif(WIN32)
+
 else()
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
+	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
 endif()
 
 message("Sorting sources (from GLOB)")
