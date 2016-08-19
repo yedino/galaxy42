@@ -1,0 +1,1 @@
+../../../galaxy42_installer/pl.mo

@@ -26,10 +26,11 @@ abdialog --title "$(eval_gettext 'Configure computer for $programname')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
-abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 78 18  \
+foo=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 78 18  \
 	"setcap"         "$("For users: Allows us to create virtual network card.")" "on" \
 	"yes"            "$("Do NOT ask confirmation for unsafe settings, I'm expert.")" "off" \
 	"forlxc"         "$("For builders: setup your sys for LXC (Gitian reproducible)")" "off" \
 	"netpriv"        "$("For devel: allow to create local test network namespaces.")" "off" \
-	|| abdialog_exit
+	2>&1 >/dev/tty || abdialog_exit )
+
 
