@@ -1,8 +1,10 @@
 # GALAXY42 compilation on msvc (Visual Studio 2015):
 
 ### Process instructions for:  
-    commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9
-* It should be similar or easier for newer versions
+
+- version:  
+	```commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9```
+	- It should be similar or easier for newer versions
 
 ### Used tools:
 - Cygwin for 32-bit versions of Windows (for git)  
@@ -19,7 +21,7 @@ $ git log -1
 commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9
 ```
 ### Cmake-GUI 
-Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI:
+Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
 - settings:  
 ```
 Where is the source: 		path/to/cloned/galaxy42  
@@ -27,8 +29,6 @@ Where to build binaries:	any/output/path
 ```
 ```
 click configure
-```
-```
 click generate
 ```
 - cmake output :
@@ -61,19 +61,19 @@ click generate
 		Libs for crypto are: (as list) ''
 		Configuring done
 ```	
-### Visual Studio -- project configuration:  
-- remove unrecognized compilation flags:  [-Wextra, -Wno-unused-command-line-argument]  
+### Project configuration in Visual Studio 2015:  
+- remove unrecognized compilation flags:  
 in main tunserver.elf and all coresponding libs  
+	- -Wextra  
+	- -Wno-unused-command-line-argument   
 ```right button -> properties -> C/C++ -> All Options -> Additional Options -> [remove flags]```
 	- same step in json_lib_static and sodiumpp 
 
-
 - provide dependencies (libboost and libsodium):  
-	- pre-compiled binaries could be found on official pages.  
+	- pre-compiled binaries could be found on official pages.  Download and install/unpack libraries.
 	I used:  
 		- [libsodium releases](https://download.libsodium.org/libsodium/releases/)  
 		- [boost for msvc 1.6.1](https://sourceforge.net/projects/boost/files/boost/1.61.0/)
-	   - download and install/unpack libraries
 
 - add path for dependencies in visual studio project properties:  
 ```right button -> properties -> C/C++ -> All Options -> Additional Include Directorie```  
@@ -94,7 +94,7 @@ in main tunserver.elf and all coresponding libs
 		    C:\local\libsodium-1.0.11-msvc\Win32\Release\v140\dynamic
 ```  
 
-- link boost libraries in visual studio:
+- link boost libraries in visual studio:  
 ```right button -> properties -> Linker -> All Options -> Additional Library Directories```
 	- Additional Library Directory example:		
 ```
@@ -110,6 +110,7 @@ in main tunserver.elf and all coresponding libs
 
 		problem has occurred with boost_program_options you could remove boost_program_options-vc140-mt-gd-1_61.lib from  Additional Dependencies
 
+
 ### Build tunserver.elf.exe in Visual Studio:
 ``` right button (on "tunserver.elf" in Solution Explorer section) -> Build```  
 - possible errors:  
@@ -123,6 +124,7 @@ in main tunserver.elf and all coresponding libs
     ``` Error	LNK2019	unresolved external symbol _CreateUnicastIpAddressEntry@4```  
 	- add Iphlpapi.lib to Additional Dependencies that contain CreateUnicastIpAddressEntry function.
 
+
 **If soudiumpp lib is deprecated it could be built standalone. In my case:**  
 - Cygwin:
 ```sh
@@ -130,7 +132,7 @@ in main tunserver.elf and all coresponding libs
 	$ git checkout origin/tigusoft   ('in my case for commit:' cf425da74f86364a3672d7f4894752f463a153b0)
 ```
 - Cmake-GUI
-	- add bool entry SODIUMPP_STATIC to create static lib sodiumpp.lib instead of dynamic sodiumpp.dll
+	- add bool entry ```SODIUMPP_STATIC``` to create static lib sodiumpp.lib instead of dynamic sodiumpp.dll
     - rest similar to [cmake for galaxy42](#cmake-gui)  
 - Visual Studio:
 	- open and build sodiumpp project in visual studio (steps similar to galaxy42)
@@ -152,7 +154,7 @@ in main tunserver.elf and all coresponding libs
 
 ***Windows alert - abort()***  
 
-```Microsoft Visual C++ Runtime Library - Debutg Error! - abort()```
+```Microsoft Visual C++ Runtime Library - debug Error! - abort()```
 - reason - probably network TAP device is missing (Do you created TAP device?).
 
 ***problem with TUN/TAP parser***  
