@@ -1,0 +1,143 @@
+GALAXY42 compilation on msvc (Visual Studio 2015):
+
+Process instructions for:
+	commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9
+	* It should be similar or easier for newer versions
+
+Used tools:
+	Cygwin for 32-bit versions of Windows (for git) - could be other tool that supports git
+	Visual Studio Community 2015
+	Cmake-GUI 3.6.0
+
+Cygwin:
+	```
+	$ git clone https://github.com/yedino/galaxy42
+	$ cd galaxy42
+	$ git submodule update --init
+	$ git log -1
+	commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9
+	```
+
+Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
+	set:
+		Where is the source: 		path/to/cloned/galaxy42
+		Where to build binaries:	any/output/path
+
+	click configure
+	click generate
+		cmake output :
+			The C compiler identification is MSVC 18.0.40629.0
+			The CXX compiler identification is MSVC 18.0.40629.0
+			Check for working C compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe
+			Check for working C compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe -- works
+			Detecting C compiler ABI info
+			Detecting C compiler ABI info - done
+			Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe
+			Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe -- works
+			Detecting CXX compiler ABI info
+			Detecting CXX compiler ABI info - done
+			Detecting CXX compile features
+			Detecting CXX compile features - done
+			CMAKE_BUILD_TYPE = debug
+			EXTLEVEL = 0
+			COVERAGE = OFF
+			EXTLEVEL enabling EXTLEVEL_IS_NORMAL
+			Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE) 
+			Looking for pthread.h
+			Looking for pthread.h - not found
+			Found Threads: TRUE  
+			JsonCpp Version: 1.7.2
+			Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE) (Required is at least version "2.6")
+			Disabling COVERAGE
+			Debug build
+			Libs for crypto are: (as string) ''
+			Libs for crypto are: (as list) ''
+			Configuring done
+	
+Visual Studio:
+	steps:
+		remove unrecognized compilation flags [-Wextra, -Wno-unused-command-line-argument] in main tunserver.elf and all coresponding libs
+			right button -> properties -> C/C++ -> All Options -> Additional Options -> remove flags ^^
+			* same step in json_lib_static and sodiumpp 
+		if you got warning: Warning	D9002	ignoring unknown option '-std=c++14'
+			you should use never compilator that support c++14 (probably you are using an older version of Visual Studio)
+
+	provide dependencies (libboost and libsodium):
+		pre-compiled binaries could be found on official pages. 
+		I used:
+			https://download.libsodium.org/libsodium/releases/
+			https://sourceforge.net/projects/boost/files/boost/1.61.0/
+			download and install/unpack libraries
+
+	add path in visual studio project properties:
+		right button -> properties -> C/C++ -> All Options -> Additional Include Directorie
+		add paths to libboost and libsodium 
+		(example:) 
+			C:\local\libsodium-1.0.11-msvc\include;
+			C:\local\boost_1_61_0;
+
+	set character set to unicode:
+		Configuration Properties -> General - > Character Set -> Use Unicode Characer Set
+
+	link sodium.lib in visual studio:
+		right button -> properties -> Linker -> All Options -> Additional Library Directories
+		(example)
+			C:\local\libsodium-1.0.11-msvc\Win32\Release\v140\dynamic
+
+		make sure that you have libsodium.lib in Additional Dependencies
+
+		If soudiumpp lib is deprecated it could be built standalone. In my case:
+			Cygwin:
+				```
+				$ git clone https://github.com/robertoleksy/sodiumpp.git
+				$ git checkout origin/tigusoft   (for commit: cf425da74f86364a3672d7f4894752f463a153b0)
+				```
+
+			Cmake-GUI
+				* add bool entry SODIUMPP_STATIC to create static lib sodiumpp.lib instead of dynamic sodiumpp.dll
+			
+			Visual Studio:
+				* open and build sodiumpp project in visual studio (steps similar to galaxy42)
+				* this step also need to manual add include and link directories
+
+	link boost libraries in visual studio:
+		right button -> properties -> Linker -> All Options -> Additional Library Directories
+		(example)
+			C:\local\boost_1_61_0\lib32-msvc-14.0
+		* it could be necessary to changes libs names in  Additional Dependencies
+			* boost_system.lib -> boost_system-vc140-mt-gd-1_61.lib
+			* boost_filesystem.lib -> boost_filesystem-vc140-mt-gd-1_61.lib
+			* boost_program_options.lib -> boost_program_options-vc140-mt-gd-1_61.lib
+		* if linking problem has occurred with boost_program_options you could remove boost_program_options-vc140-mt-gd-1_61.lib from  Additional Dependencies
+
+	build tunserver.elf:
+		
+		possible errors:
+			Error	LNK1104	cannot open file 'pthread.lib'	tunserver.elf
+			* simply remove pthread.lib from linking Additional Dependencies
+
+			Severity	Code	Description	Project	File	Line	Suppression State
+			Error	LNK2019	unresolved external symbol _CreateUnicastIpAddressEntry@4
+			* add Iphlpapi.lib to Additional Dependencies that contain CreateUnicastIpAddressEntry function.
+
+Create TAP device
+	my computer -> properties -> divices manager -> action -> add old device -> choose manually from list netwotk device and "TAP-Windows Adapter V9"
+		
+		
+Possible runtime errors (tunserver.elf.exe):
+	```
+	$ ./tunserver.elf.exe
+	C:/cygwin/home/Tigu_WIN/msvc/galaxy42/Debug/tunserver.elf.exe: error while loading shared libraries: libsodium.dll: cannot open shared object file: No such file or directory
+	```
+	solution:
+		* manually copy libsodium.dll to dir that contain tunserver.elf.exe
+
+	same error with boost libraries
+		* manually copy missing boost libs to dir that contain tunserver.elf.exe
+
+	Microsoft Visual C++ Runtime Library - Debutg Error! - abort()
+		probably network TAP device is missing (Do you created TAP device?).
+
+	*error!
+	problem with TUN/TAP parser. tun data length < 54
+		* in network device properties uncheck all instead of ipv6 protocol
