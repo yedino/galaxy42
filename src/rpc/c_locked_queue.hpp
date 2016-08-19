@@ -2,6 +2,7 @@
 
 #ifndef NETWORKLIB_LOCKEDQUEUE
 #define NETWORKLIB_LOCKEDQUEUE
+#if 0
 #include <mutex>
 #include <queue>
 
@@ -35,5 +36,5 @@ public:
 			return mutex;
 		}
 };
-
+#endif 
 #endif

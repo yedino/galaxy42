@@ -38,6 +38,13 @@ class c_udp_wrapper_empty final : public c_udp_wrapper {
 #endif // __linux__
 
 #if defined(_WIN32) || defined(__CYGWIN__)
+
+#if defined(__CYGWIN__)
+	#ifndef __USE_W32_SOCKETS
+		#define __USE_W32_SOCKETS
+	#endif
+#endif
+
 #include <array>
 #include <boost/asio.hpp>
 class c_udp_wrapper_windows final : public c_udp_wrapper {

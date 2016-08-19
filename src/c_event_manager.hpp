@@ -41,6 +41,12 @@ class c_event_manager_empty final : public c_event_manager {
 #endif // __linux__
 
 #if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(__CYGWIN__)
+	#ifndef __USE_W32_SOCKETS
+		#define __USE_W32_SOCKETS
+	#endif
+#endif
+
 #include <functional>
 
 class c_tun_device_windows;
