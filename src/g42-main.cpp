@@ -245,7 +245,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="ct_bench") { antinet_crypto::multi_key_sign_generation_benchmark(2); return false; }
 	if (demoname=="route_dij") { return developer_tests::wip_galaxy_route_doublestar(argm); }
 	if (demoname=="route"    ) { return developer_tests::wip_galaxy_route_doublestar(argm); }
-	if (demoname=="rpc") { rpc_demo(); return false; }
+	//if (demoname=="rpc") { rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
 

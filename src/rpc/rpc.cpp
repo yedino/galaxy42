@@ -1,5 +1,5 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
-
+#if 0
 #include "rpc.hpp"
 #include "../libs0.hpp"
 
@@ -82,3 +82,4 @@ bool rpc_example_function(const std::string &arguments) {
 	std::cout << "arguments: " << arguments << std::endl;
 	return false;
 }
+#endif

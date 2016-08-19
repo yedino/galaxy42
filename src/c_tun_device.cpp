@@ -1,4 +1,9 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+#if defined(_WIN32) || defined(__CYGWIN__)
+	#define UNICODE
+	#define _UNICODE
+#endif
+
 #include "c_tun_device.hpp"
 
 #include "c_tnetdbg.hpp"
@@ -84,6 +89,8 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 #define TAP_IOCTL_GET_MAC				TAP_CONTROL_CODE (1, METHOD_BUFFERED)
 #define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
+
+#undef _assert
 
 c_tun_device_windows::c_tun_device_windows()
 	:
@@ -223,19 +230,19 @@ std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
 	LONG status = 1;
 	HKEY key = nullptr;
-	status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
+	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
 	auto subkeys_vector = get_subkeys(key);
 	RegCloseKey(key);
 	for (auto & subkey : subkeys_vector) { // foreach sub key
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
 		// std::wcout << subkey_reg_path << std::endl;
-		status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
+		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
 		// get ComponentId field
 		DWORD size = 256;
 		std::wstring componentId(size, '\0');
-		status = RegQueryValueEx(key, L"ComponentId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&componentId[0]), &size);
+		status = RegQueryValueExW(key, L"ComponentId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&componentId[0]), &size);
 		if (status != ERROR_SUCCESS) {
 			RegCloseKey(key);
 			continue;
@@ -244,7 +251,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			std::wcout << subkey_reg_path << std::endl;
 			size = 256;
 			std::wstring netCfgInstanceId(size, '\0');
-			status = RegQueryValueEx(key, L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
+			status = RegQueryValueExW(key, L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 			if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 			netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
 			std::wcout << netCfgInstanceId << std::endl;
@@ -266,8 +273,8 @@ std::wstring c_tun_device_windows::get_human_name(const std::wstring &guid) {
 	HKEY key = nullptr;
 	DWORD size = 256;
 	std::wstring name(size, '\0');
-	status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, connectionKey.c_str(), 0, KEY_QUERY_VALUE, &key);
-	status = RegQueryValueEx(key, L"Name", nullptr, nullptr, reinterpret_cast<LPBYTE>(&name[0]), &size);
+	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, connectionKey.c_str(), 0, KEY_QUERY_VALUE, &key);
+	status = RegQueryValueExW(key, L"Name", nullptr, nullptr, reinterpret_cast<LPBYTE>(&name[0]), &size);
 	name.erase(size / sizeof(wchar_t) - 1); // remove '\0'
 	RegCloseKey(key);
 	return name;
@@ -287,7 +294,7 @@ HANDLE c_tun_device_windows::get_device_handle() {
 	tun_filename += get_device_guid();
 	tun_filename += L".tap";
 	BOOL bret;
-	HANDLE handle = CreateFile(tun_filename.c_str(),
+	HANDLE handle = CreateFileW(tun_filename.c_str(),
 		GENERIC_READ | GENERIC_WRITE,
 		0,
 		0,
