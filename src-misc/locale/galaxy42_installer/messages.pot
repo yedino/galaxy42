@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-19 17:53+0000\n"
+"POT-Creation-Date: 2016-08-22 13:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: a.sh:16
+#: a.sh:16 install.sh:23
 msgid ""
 "\n"
 "\n"
@@ -25,19 +25,40 @@ msgid ""
 "you can use up/down arrows, SPACE to select option, ENTER to finish.\n"
 msgstr ""
 
-#: a.sh:25
+#: a.sh:25 install.sh:32
 #, sh-format
 msgid "Configure computer for $programname"
 msgstr ""
 
-#: a.sh:26
+#: a.sh:26 install.sh:33 install.sh:46
 msgid "Ok"
 msgstr ""
 
-#: a.sh:26
+#: a.sh:26 install.sh:33 install.sh:46
 msgid "Quit"
 msgstr ""
 
-#: a.sh:29
+#: a.sh:29 install.sh:36
 msgid "Install (as root) following functions:"
+msgstr ""
+
+#: install.sh:37
+msgid "For users: Allows us to create virtual network card."
+msgstr ""
+
+#: install.sh:38
+msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
+msgstr ""
+
+#: install.sh:39
+msgid "For builders: setup your sys for LXC (Gitian reproducible)"
+msgstr ""
+
+#: install.sh:40
+msgid "For devel: allow to create local test network namespaces."
+msgstr ""
+
+#: install.sh:45
+#, sh-format
+msgid "Done"
 msgstr ""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-19 17:19+0000\n"
+"POT-Creation-Date: 2016-08-22 13:13+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: a.sh:16
+#: a.sh:16 install.sh:23
 msgid ""
 "\n"
 "\n"
@@ -29,21 +29,43 @@ msgstr ""
 "\n"
 "\n"
 "Wygląda na to iż używasz tekstowego interfejsu,\n"
-"możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, ENTER aby zakończyć.\n"
+"możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, "
+"ENTER aby zakończyć.\n"
 
-#: a.sh:25
+#: a.sh:25 install.sh:32
 #, sh-format
 msgid "Configure computer for $programname"
 msgstr "Skonfiguruj komputer dla $programname"
 
-#: a.sh:26
+#: a.sh:26 install.sh:33 install.sh:46
 msgid "Ok"
 msgstr "Ok"
 
-#: a.sh:26
+#: a.sh:26 install.sh:33 install.sh:46
 msgid "Quit"
 msgstr "Zakończ"
 
-#: a.sh:29
+#: a.sh:29 install.sh:36
 msgid "Install (as root) following functions:"
 msgstr "Zainstaluj (jako root) następujące funkcje:"
+
+#: install.sh:37
+msgid "For users: Allows us to create virtual network card."
+msgstr ""
+
+#: install.sh:38
+msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
+msgstr ""
+
+#: install.sh:39
+msgid "For builders: setup your sys for LXC (Gitian reproducible)"
+msgstr ""
+
+#: install.sh:40
+msgid "For devel: allow to create local test network namespaces."
+msgstr ""
+
+#: install.sh:45
+#, sh-format
+msgid "Done"
+msgstr ""

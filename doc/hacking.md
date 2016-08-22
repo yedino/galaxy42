@@ -24,6 +24,22 @@ To develop the program, we recommend mainly Debian Stable as the main environmen
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
 
+# Developing translations
+
+## Writting the code in translatable way
+
+### Bash
+
+See ./install.sh for example how to (gettext)
+
+## Preparing translation files
+
+Update existig file:
+```
+xgettext -j  -o src-misc/locale/galaxy42_installer/pl.po  install.sh
+msgmerge --update src-misc/locale/galaxy42_installer/pl.po   src-misc/locale/galaxy42_installer/messages.pot
+```
+
 # Naming and Glossary
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
