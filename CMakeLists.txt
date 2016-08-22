@@ -275,12 +275,10 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
 
-add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-set(CYGWIN_LIBRARIES ws2_32 iphlpapi)
-#if(CYGWIN)
-#	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-	#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
-#endif()
+if(CYGWIN)
+	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+	set(CYGWIN_LIBRARIES ws2_32 iphlpapi)
+endif()
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
 	pthread sodiumpp sodium jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES})
 

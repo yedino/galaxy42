@@ -177,7 +177,9 @@ template<typename T> constexpr bool templated_always_false() { return false; }
  * and asserted means that we assert validity of input data.
  * @note It assumes that ranges are properly defined end not-empty, that is: start1<end1 && start2<end2
  */
- #undef _assert
+#if defined (__CYGWIN__)
+	#undef _assert
+#endif
 template <typename TIn, typename TOut> bool ranges_overlap_oc_ne_asserted(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
 	assert( (start1<end1) );
 	assert( (start2<end2) );
