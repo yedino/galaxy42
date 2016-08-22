@@ -51,21 +51,21 @@ msgstr "Zainstaluj (jako root) następujące funkcje:"
 
 #: install.sh:37
 msgid "For users: Allows us to create virtual network card."
-msgstr ""
+msgstr "Dla użytkowników: umożliw nam tworzenie wirtualnych kart sieci"
 
 #: install.sh:38
 msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
-msgstr ""
+msgstr "NIE pytaj o potwierdzenie niebezpiecznych ustawień, jestem ekspertem"
 
 #: install.sh:39
-msgid "For builders: setup your sys for LXC (Gitian reproducible)"
-msgstr ""
+msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
+msgstr "Dla budujących: ustaw system dla LXC (dla Gitian reproducible)"
 
 #: install.sh:40
 msgid "For devel: allow to create local test network namespaces."
-msgstr ""
+msgstr "Dla programistów: pozwól tworzyć lokalne testowe sieci (network namespace)"
 
 #: install.sh:45
 #, sh-format
 msgid "Done"
-msgstr ""
+msgstr "Gotowe"

@@ -51,7 +51,7 @@ msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
 msgstr ""
 
 #: install.sh:39
-msgid "For builders: setup your sys for LXC (Gitian reproducible)"
+msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
 msgstr ""
 
 #: install.sh:40
