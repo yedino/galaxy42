@@ -20,7 +20,7 @@ for the SELECTED by you functions of $programname.
 
 text2=""
 if (($abdialog_curses)) ; then
-text2="$(gettext "Hmm... This seems to be a text-mode GUI, you can use up/down arrows, SPACE to select option, ENTER to finish.")"
+text2="$(gettext "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to select option, ENTER to finish.")"
 fi
 
 text="${text1}${text2}"
@@ -36,7 +36,7 @@ foo=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:
 	"netpriv"        "$(gettext "For devel: allow to create local test network namespaces.")" "off" \
 	2>&1 >/dev/tty || abdialog_exit )
 
-text="$(gettext "Finished installation of $programname.")"
+text="$(gettext_eval "Finished installation of $programname.")"
 abdialog --title "$(eval_gettext 'Done')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--msgbox "$text" 20 60 || abdialog_exit
