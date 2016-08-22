@@ -1,17 +1,18 @@
-# dependences
+# install dependences
 sudo aptitude install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils make ubuntu-archive-keyring curl
 
 # suite (ubuntu 16.04) xenial in gitian is not documented, but it works for us.
-https://github.com/devrandom/gitian-builder.git
+git clone https://github.com/devrandom/gitian-builder.git
 cd gitian-builder
 
+# make ubuntu image for lxc
 bin/make-base-vm --lxc --arch amd64 --suite xenial
 
-PATH=$PATH:$(pwd)/libexec
-export USE_LXC=1
 
-
+# run script as root
 script {
+	#!/bin/bash -e
+
 	# the version of lxc-start in Debian needs to run as root, so make sure
 	# that the build script can execute it without providing a password
 	echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
@@ -26,25 +27,41 @@ script {
 	echo 'exit 0' >> /etc/rc.local
 }
 
-/etc/rc.local {
-	#!/bin/sh -e
-	brctl addbr br0
-	ifconfig br0 10.0.3.2/24 up
-	iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-	echo 1 > /proc/sys/net/ipv4/ip_forward
-	exit 0
-}
 
 # make sure that USE_LXC is always set when logging in as debian,
 # and configure LXC IP addresses
-echo 'export USE_LXC=1' >> /home/debian/.profile
-echo 'export GITIAN_HOST_IP=10.0.3.2' >> /home/debian/.profile
-echo 'export LXC_GUEST_IP=10.0.3.5' >> /home/debian/.profile
+# **your_user** it's recommended to create new user for gitian build
+{{
+	echo 'export USE_LXC=1' >> /home/your_user/.profile
+	echo 'export GITIAN_HOST_IP=10.0.3.2' >> /home/your_user/.profile
+	echo 'export LXC_GUEST_IP=10.0.3.5' >> /home/your_user/.profile
+}
+#after
 
-#necessary? {
-	ubuntu:
-	echo '10.0.3.5 gitian' >> /etc/hosts
+	source /home/your_user/.profile 
+	or if it's your actual user
+	source ~/.profile
 }
 
 # sudo is necessary because of install-as-root script
-path/to/gitian-builder/bin/gbuild --allow-sudo path/to/galaxy42/contrib/galaxy-linux.yml
+path/to/gitian-builder/bin/gbuild --allow-sudo path/to/galaxy42/contrib/gitian-descriptors/galaxy-linux.yml
+
+# checking results, calculate sum of build binaries
+
+PATH=$PATH:$(pwd)/libexec
+* (where pwd should point to gitian-builder dir)
+
+# entry into the virtual machine
+LXC_ARCH=amd64 LXC_SUITE=xenial on-target
+# logout from virtual mashine
+exit
+
+# calculate sha sum
+*find binary "tunserver.elf" and make sha512sum
+
+# simple instruction for me:
+LXC_ARCH=amd64 LXC_SUITE=xenial on-target sha512sum build/galaxy42/tunserver.elf
+
+# for version 4a9ba926b6b6f885db15d5b99c407227872199c1
+LXC_ARCH=amd64 LXC_SUITE=xenial on-target sha512sum build/galaxy42/tunserver.elf
+9937b9faeed779e43d2ebb64c8c1ffc11bed4544bcaa848d4614f869abcfc5e15139bd3452bd2360591d9871d65f604e7302f6fc2a4068942b9097355ae1afe9  build/galaxy42/tunserver.elf
