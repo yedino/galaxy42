@@ -132,6 +132,7 @@ include_directories(depends/jsoncpp/include)
 link_directories(depends/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
+set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(depends/sodiumpp/sodiumpp/include)
 
@@ -264,6 +265,7 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 ## TODO check this for gitian
 # LIBS-1 [new doc]
 
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 set(CYGWIN_LIBRARIES ws2_32 iphlpapi) #iphlpapi
 target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
 	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES})
