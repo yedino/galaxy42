@@ -90,7 +90,9 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 #define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
-#undef _assert
+#if defined (__CYGWIN__)
+	#undef _assert
+#endif
 
 c_tun_device_windows::c_tun_device_windows()
 	:
