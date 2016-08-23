@@ -70,7 +70,7 @@ size_t c_udp_wrapper_empty::receive_data(void *data_buf, const size_t data_buf_s
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <boost/bind.hpp>
-#if defined (__CYGWIN__)
+#if defined (__MINGW32__)
 	#undef _assert
 #endif
 c_udp_wrapper_windows::c_udp_wrapper_windows(const int listen_port)
