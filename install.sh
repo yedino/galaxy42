@@ -28,26 +28,54 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
 response=$( abdialog  --checklist  "$(gettext "How do you want to use \$programname:")"  23 76 18  \
-	"build"          "$(gettext "Build this program from source-code")" "on" \
-	"runit"            "$(gettext "Use this program on this computer")" "on" \
-	"devel"          "$(gettext "Develop this program")" "off" \
-	"build2"         "$(gettext "Compiled and publish (e.g. Gitian)")" "off" \
+	"build"         "$(gettext "Build this program from source-code")" "on" \
+	"runit"         "$(gettext "Use this program on this computer")" "on" \
+	"devel"         "$(gettext "Develop this program (simple)")" "off" \
+	"devel2"        "$(gettext "Develop this program (advanced)")" "off" \
+	"bgitian"       "$(gettext "Compile and publish (e.g. Gitian)")" "off" \
 	2>&1 >/dev/tty || abdialog_exit )
 
 read -r -a tab <<< "$response" ; for item in "${tab[@]}" ; do
 
+function install_for_build() {
+	sudo aptitude install git gcc g++ cmake autoconf libtool build-essential \
+		libboost-system libboost-filesystem libboost-program-options
+}
+
+function install_for_runit() {
+	install_for_build
+}
+
+function install_for_devel() {
+		install_for_build
+		install_for_runit
+		sudo aptitude install libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
+}
+
+function install_for_devel2() {
+		install_for_devel
+		# in future also add here things for e.g. simulations
+}
+
+function install_build_gitian() {
+		install_for_build
+		install_for_runit
+		install_for_devel
+		sudo aptitude install lxc
+}
+
 case "$item" in
 	build)
-	echo "Doing build"
+		install_for_build
 	;;
 	runit)
-	echo "Doing runit"
+		install_for_runit
 	;;
 	devel)
-	echo "Doing devel"
+		install_for_devel
 	;;
-	build2)
-	echo "Doing build2"
+	bgitian)
+		install_build_gitian
 	;;
 esac
 
