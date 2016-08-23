@@ -44,7 +44,7 @@ ELSE()
    SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
 ENDIF()
 
-project (ipbench)
+project (galaxy42)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("EXTLEVEL = ${EXTLEVEL}")
