@@ -42,6 +42,12 @@ class c_tun_device_linux final : public c_tun_device {
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
+#if defined(__CYGWIN__)
+	#ifndef __USE_W32_SOCKETS
+		#define __USE_W32_SOCKETS
+	#endif
+#endif
+
 #include "c_tun_device.hpp"
 #include "c_ndp.hpp"
 #include <array>

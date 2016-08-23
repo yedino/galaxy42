@@ -30,7 +30,7 @@ bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &pac
 	// ethernet header = 14
 	// ipv6 header = 40
 	// tested od wireshark
-	const uint8_t const * packet_type = &packet_data.front() + 14 + 40;
+	const uint8_t * const packet_type = &packet_data.front() + 14 + 40;
 
 	//std::cout << "packet type " << std::dec << std::setw(2) << std::setfill('0') << static_cast<int>(*packet_type) << std::endl;
 
@@ -40,7 +40,7 @@ bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &pac
 
 std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
 	std::array<uint8_t, 94> return_packet;
-	const uint8_t const * input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
+	const uint8_t * const input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
 
 	//*** ethernet header ***//
 	auto it = return_packet.begin(); // points to destination MAC
@@ -72,14 +72,14 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 	// hop limit
 	*it = 0xFF; ++it;
 	//source address
-	const uint8_t const * input_icmp_begin = &neighbor_solicitation_packet.front() + 54; // 54 == sum of headers
-	const uint8_t const * input_icmp_target_address = input_icmp_begin + 8;
+	const uint8_t * const input_icmp_begin = &neighbor_solicitation_packet.front() + 54; // 54 == sum of headers
+	const uint8_t * const input_icmp_target_address = input_icmp_begin + 8;
 	for (int i = 0; i < 16; ++i) {
 		*it = *(input_icmp_target_address + i);
 		++it;
 	}
 	// destination address
-	const uint8_t const * input_source_ipv6_address = &neighbor_solicitation_packet.front() + 22;
+	const uint8_t * const input_source_ipv6_address = &neighbor_solicitation_packet.front() + 22;
 	for (int i = 0; i < 16; ++i) {
 		*it = *(input_source_ipv6_address + i);
 		++it;

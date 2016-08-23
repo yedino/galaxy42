@@ -132,6 +132,7 @@ include_directories(depends/jsoncpp/include)
 link_directories(depends/jsoncpp/src/lib_json)
 
 #add local local lib sodiumpp
+set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(depends/sodiumpp/sodiumpp/include)
 
@@ -263,8 +264,6 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 ## TODO check this for gitian
 # LIBS-1 [new doc]
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
-	pthread sodium sodiumpp jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean})
 
 # LIBS-2 [new doc]
 
@@ -274,6 +273,14 @@ target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boos
 #	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
 #	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+
+
+if(CYGWIN)
+	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+	set(CYGWIN_LIBRARIES ws2_32 iphlpapi)
+endif()
+target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
+	pthread sodiumpp sodium jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
@@ -317,14 +324,16 @@ add_custom_target(runcli
 		DEPENDS ./ipclient.elf
 		WORKING_DIRECTORY ./)
 
-add_custom_command(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
-	POST_BUILD
-#	COMMAND chmod g-wx,o-wx ipclient.elf
-#	COMMAND chmod g-wx,o-wx ipserver.elf
-	COMMAND chmod g-wx,o-wx tunserver.elf
-	COMMAND cp tunserver.elf nocap-tunserver.elf
-	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
-	WORKING_DIRECTORY ./)
+if(NOT CYGWIN AND NOT WIN32)
+	add_custom_command(
+		TARGET ipclient.elf ipserver.elf tunserver.elf
+		POST_BUILD
+	#	COMMAND chmod g-wx,o-wx ipclient.elf
+	#	COMMAND chmod g-wx,o-wx ipserver.elf
+		COMMAND chmod g-wx,o-wx tunserver.elf
+		COMMAND cp tunserver.elf nocap-tunserver.elf
+		COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
+		WORKING_DIRECTORY ./)
+endif()
 
 # unset( USE_BOOST_MULTIPRECISION_DEFAULT )

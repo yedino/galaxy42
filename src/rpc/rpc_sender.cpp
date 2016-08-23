@@ -1,5 +1,5 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
-
+#if 0
 #include "c_tcp_asio_node.hpp"
 #include "rpc.hpp"
 
@@ -20,3 +20,4 @@ int main(int argc, char **argv) {
 	send_rpc_request(argv[1], argv[2]);
 	return 0;
 }
+#endif
