@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-23 13:24+0000\n"
+"POT-Creation-Date: 2016-08-23 16:33+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -29,47 +29,73 @@ msgstr ""
 "ENTER aby zakończyć."
 
 #: install.sh:28 install.sh:26
+#, sh-format
 msgid "Configure computer for $programname"
 msgstr "Skonfiguruj komputer dla $programname"
 
-#: install.sh:29 install.sh:41 install.sh:27 install.sh:39
+#: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
 msgid "Ok"
 msgstr "Ok"
 
-#: install.sh:29 install.sh:41 install.sh:27 install.sh:39
+#: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
 msgid "Quit"
 msgstr "Zakończ"
 
-#: install.sh:32 install.sh:30
+#: install.sh:32 install.sh:30 install.sh:61
 msgid "Install (as root) following functions:"
 msgstr "Zainstaluj (jako root) następujące funkcje:"
 
-#: install.sh:33 install.sh:31
+#: install.sh:33 install.sh:31 install.sh:63
 msgid "For users: Allows us to create virtual network card."
 msgstr "Umożliw nam tworzenie wirtualnych kart sieci."
 
-#: install.sh:34 install.sh:32
+#: install.sh:34 install.sh:32 install.sh:62
 msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
 msgstr "NIE pytaj o potwierdzenie niebezpiecznych ustawień."
 
-#: install.sh:35 install.sh:33
+#: install.sh:35 install.sh:33 install.sh:64
 msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
 msgstr "Dla budujących: ustaw LXC (dla Gitian reproducible)"
 
-#: install.sh:36 install.sh:34
+#: install.sh:36 install.sh:34 install.sh:65
 msgid "For devel: allow to create local test network namespaces."
 msgstr "Dla devel.: pozwól na lokalne testowe sieci namespace"
 
-#: install.sh:39 install.sh:37
+#: install.sh:39 install.sh:37 install.sh:69
+#, sh-format
 msgid "Finished installation of $programname."
 msgstr "Ukończono instalcję $programname"
 
-#: install.sh:40 install.sh:38
+#: install.sh:40 install.sh:38 install.sh:70
 msgid "Done"
 msgstr "Gotowe"
 
 #: install.sh:19 install.sh:17
+#, sh-format
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
-msgstr "To narzędzie skonfiguruje Twój komputer dla WBRANYCH przez Ciebie funkcji programu $programname"
+msgstr ""
+"To narzędzie skonfiguruje Twój komputer dla WBRANYCH przez Ciebie funkcji "
+"programu $programname"
+
+#: install.sh:30
+#, sh-format
+msgid "How do you want to use $programname:"
+msgstr "Jak chcesz używać $programname:"
+
+#: install.sh:31
+msgid "Build this program from source-code"
+msgstr "Zbuduj ten program z kodu źródłowego"
+
+#: install.sh:32
+msgid "Use this program on this computer"
+msgstr "Używaj tego programu na tym komputerze"
+
+#: install.sh:33
+msgid "Develop this program"
+msgstr "Rozwijaj ten program (jako programista)"
+
+#: install.sh:34
+msgid "Compiled and publish (e.g. Gitian)"
+msgstr "Skompiluj i opublikuj go (n.p. Gitian)"

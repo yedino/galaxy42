@@ -27,12 +27,44 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
-foo=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 76 18  \
-	"setcap"         "$(gettext "For users: Allows us to create virtual network card.")" "on" \
+response=$( abdialog  --checklist  "$(gettext "How do you want to use \$programname:")"  23 76 18  \
+	"build"          "$(gettext "Build this program from source-code")" "on" \
+	"runit"            "$(gettext "Use this program on this computer")" "on" \
+	"devel"          "$(gettext "Develop this program")" "off" \
+	"build2"         "$(gettext "Compiled and publish (e.g. Gitian)")" "off" \
+	2>&1 >/dev/tty || abdialog_exit )
+
+read -r -a tab <<< "$response" ; for item in "${tab[@]}" ; do
+
+case "$item" in
+	build)
+	echo "Doing build"
+	;;
+	runit)
+	echo "Doing runit"
+	;;
+	devel)
+	echo "Doing devel"
+	;;
+	build2)
+	echo "Doing build2"
+	;;
+esac
+
+
+
+done
+
+exit 1 # XXX
+
+if false ; then
+response=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 76 18  \
 	"yes"            "$(gettext "Do NOT ask confirmation for unsafe settings, I'm expert.")" "off" \
+	"setcap"         "$(gettext "For users: Allows us to create virtual network card.")" "on" \
 	"forlxc"         "$(gettext "For builders: setup your sys for LXC (for Gitian reproducible)")" "off" \
 	"netpriv"        "$(gettext "For devel: allow to create local test network namespaces.")" "off" \
 	2>&1 >/dev/tty || abdialog_exit )
+fi
 
 text="$(eval_gettext "Finished installation of \$programname.")"
 abdialog --title "$(gettext 'Done')" \
