@@ -874,7 +874,7 @@ void c_tunserver::event_loop() {
 			assert( size_read >= 2 ); // buf: reads from position 0..1 are asserted as valid now
 
 			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) ); // TODO
-			_assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
+			assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)

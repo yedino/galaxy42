@@ -22,6 +22,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ #ifdef __linux__
+ 
 #include "NetPlatform.h"
 
 #include <string.h>
@@ -169,3 +171,5 @@ void NetPlatform_setMTU(const char* interfaceName,
 
     close(s);
 }
+
+#endif // __linux__
