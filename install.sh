@@ -14,9 +14,7 @@ programname="Galaxy42"
 source "${dir_base_of_source}/share/script/lib/abdialog.sh" || {\
 	echo "Can not find local library abdialog (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
-text1="$(gettext "This tool will configure your computer
-for the SELECTED by you functions of $programname.
-")"
+text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
 text2=""
 if (($abdialog_curses)) ; then
@@ -25,7 +23,7 @@ fi
 
 text="${text1}${text2}"
 
-abdialog --title "$(eval_gettext 'Configure computer for $programname')" \
+abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
@@ -36,8 +34,8 @@ foo=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:
 	"netpriv"        "$(gettext "For devel: allow to create local test network namespaces.")" "off" \
 	2>&1 >/dev/tty || abdialog_exit )
 
-text="$(gettext_eval "Finished installation of $programname.")"
-abdialog --title "$(eval_gettext 'Done')" \
+text="$(eval_gettext "Finished installation of \$programname.")"
+abdialog --title "$(gettext 'Done')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--msgbox "$text" 20 60 || abdialog_exit
 

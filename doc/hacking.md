@@ -37,7 +37,8 @@ See ./install.sh for example how to (gettext)
 Update existig file:
 ```
 xgettext -j  -o src-misc/locale/galaxy42_installer/pl.po  install.sh
-msgmerge --update src-misc/locale/galaxy42_installer/pl.po   src-misc/locale/galaxy42_installer/messages.pot
+# msgmerge --update src-misc/locale/galaxy42_installer/pl.po   src-misc/locale/galaxy42_installer/messages.pot # ?
+msgfmt --check --endianness=little src-misc/locale/galaxy42_installer/pl.po -o ./share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 ```
 
 # Naming and Glossary
