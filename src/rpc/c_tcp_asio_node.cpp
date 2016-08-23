@@ -1,5 +1,5 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
-
+#if 0
 #include "c_tcp_asio_node.hpp"
 
 #include <functional>
@@ -221,3 +221,4 @@ void c_connection::delete_me() {
 	m_tcp_node.get().m_connection_map.erase(endpoint); // remove this object from connection map
 	lg.unlock();
 }
+#endif

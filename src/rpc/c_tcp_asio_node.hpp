@@ -2,7 +2,7 @@
 
 #ifndef C_TCP_ASIO_NODE_H
 #define C_TCP_ASIO_NODE_H
-
+#if 0
 #include "c_connection_base.hpp"
 #include "c_locked_queue.hpp"
 #include "../libs0.hpp"
@@ -86,6 +86,6 @@ class c_connection final {
 };
 
 } // namespace
-
+#endif
 #endif // C_TCP_ASIO_NODE_H
 
