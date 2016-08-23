@@ -21,13 +21,13 @@ if (($abdialog_curses)) ; then
 text2="$(gettext "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to select option, ENTER to finish.")"
 fi
 
-text="${text1}${text2}"
+text="\n${text1}\n\n${text2}"
 
 abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
-foo=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 78 18  \
+foo=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 76 18  \
 	"setcap"         "$(gettext "For users: Allows us to create virtual network card.")" "on" \
 	"yes"            "$(gettext "Do NOT ask confirmation for unsafe settings, I'm expert.")" "off" \
 	"forlxc"         "$(gettext "For builders: setup your sys for LXC (for Gitian reproducible)")" "off" \

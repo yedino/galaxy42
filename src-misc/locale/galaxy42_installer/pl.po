@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-23 13:11+0000\n"
+"POT-Creation-Date: 2016-08-23 13:24+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -19,59 +19,57 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: install.sh:23
-#, fuzzy
+#: install.sh:23 install.sh:21
 msgid ""
 "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
 "select option, ENTER to finish."
 msgstr ""
 "Wygląda na to iż używasz tekstowego interfejsu,\n"
 "możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, "
-"ENTER aby zakończyć.\n"
+"ENTER aby zakończyć."
 
-#: install.sh:28
+#: install.sh:28 install.sh:26
 msgid "Configure computer for $programname"
 msgstr "Skonfiguruj komputer dla $programname"
 
-#: install.sh:29 install.sh:41
+#: install.sh:29 install.sh:41 install.sh:27 install.sh:39
 msgid "Ok"
 msgstr "Ok"
 
-#: install.sh:29 install.sh:41
+#: install.sh:29 install.sh:41 install.sh:27 install.sh:39
 msgid "Quit"
 msgstr "Zakończ"
 
-#: install.sh:32
+#: install.sh:32 install.sh:30
 msgid "Install (as root) following functions:"
 msgstr "Zainstaluj (jako root) następujące funkcje:"
 
-#: install.sh:33
+#: install.sh:33 install.sh:31
 msgid "For users: Allows us to create virtual network card."
-msgstr "Dla użytkowników: umożliw nam tworzenie wirtualnych kart sieci"
+msgstr "Umożliw nam tworzenie wirtualnych kart sieci."
 
-#: install.sh:34
+#: install.sh:34 install.sh:32
 msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
-msgstr "NIE pytaj o potwierdzenie niebezpiecznych ustawień, jestem ekspertem"
+msgstr "NIE pytaj o potwierdzenie niebezpiecznych ustawień."
 
-#: install.sh:35
+#: install.sh:35 install.sh:33
 msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
-msgstr "Dla budujących: ustaw system dla LXC (dla Gitian reproducible)"
+msgstr "Dla budujących: ustaw LXC (dla Gitian reproducible)"
 
-#: install.sh:36
+#: install.sh:36 install.sh:34
 msgid "For devel: allow to create local test network namespaces."
-msgstr ""
-"Dla programistów: pozwól tworzyć lokalne testowe sieci (network namespace)"
+msgstr "Dla devel.: pozwól na lokalne testowe sieci namespace"
 
-#: install.sh:39
+#: install.sh:39 install.sh:37
 msgid "Finished installation of $programname."
 msgstr "Ukończono instalcję $programname"
 
-#: install.sh:40
+#: install.sh:40 install.sh:38
 msgid "Done"
 msgstr "Gotowe"
 
-#: install.sh:19
+#: install.sh:19 install.sh:17
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
-msgstr ""
+msgstr "To narzędzie skonfiguruje Twój komputer dla WBRANYCH przez Ciebie funkcji programu $programname"
