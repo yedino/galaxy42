@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-22 13:13+0000\n"
+"POT-Creation-Date: 2016-08-23 13:11+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -19,52 +19,59 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: a.sh:16 install.sh:23
+#: install.sh:23
+#, fuzzy
 msgid ""
-"This seems to be a text-mode GUI,\n"
-"you can use up/down arrows, SPACE to select option, ENTER to finish.\n"
+"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+"select option, ENTER to finish."
 msgstr ""
 "Wygląda na to iż używasz tekstowego interfejsu,\n"
 "możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, "
 "ENTER aby zakończyć.\n"
 
-#: a.sh:25 install.sh:32
+#: install.sh:28
 msgid "Configure computer for $programname"
 msgstr "Skonfiguruj komputer dla $programname"
 
-#: a.sh:26 install.sh:33 install.sh:46
+#: install.sh:29 install.sh:41
 msgid "Ok"
 msgstr "Ok"
 
-#: a.sh:26 install.sh:33 install.sh:46
+#: install.sh:29 install.sh:41
 msgid "Quit"
 msgstr "Zakończ"
 
-#: a.sh:29 install.sh:36
+#: install.sh:32
 msgid "Install (as root) following functions:"
 msgstr "Zainstaluj (jako root) następujące funkcje:"
 
-#: install.sh:37
+#: install.sh:33
 msgid "For users: Allows us to create virtual network card."
 msgstr "Dla użytkowników: umożliw nam tworzenie wirtualnych kart sieci"
 
-#: install.sh:38
+#: install.sh:34
 msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
 msgstr "NIE pytaj o potwierdzenie niebezpiecznych ustawień, jestem ekspertem"
 
-#: install.sh:39
+#: install.sh:35
 msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
 msgstr "Dla budujących: ustaw system dla LXC (dla Gitian reproducible)"
 
-#: install.sh:40
+#: install.sh:36
 msgid "For devel: allow to create local test network namespaces."
-msgstr "Dla programistów: pozwól tworzyć lokalne testowe sieci (network namespace)"
-
+msgstr ""
+"Dla programistów: pozwól tworzyć lokalne testowe sieci (network namespace)"
 
 #: install.sh:39
 msgid "Finished installation of $programname."
 msgstr "Ukończono instalcję $programname"
 
-#: install.sh:45
+#: install.sh:40
 msgid "Done"
 msgstr "Gotowe"
+
+#: install.sh:19
+msgid ""
+"This tool will configure your computer for the SELECTED by you functions of "
+"$programname."
+msgstr ""

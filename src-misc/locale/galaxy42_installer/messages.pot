@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-23 12:20+0000\n"
+"POT-Creation-Date: 2016-08-23 13:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,7 +24,6 @@ msgid ""
 msgstr ""
 
 #: install.sh:28
-#, sh-format
 msgid "Configure computer for $programname"
 msgstr ""
 
@@ -57,10 +56,15 @@ msgid "For devel: allow to create local test network namespaces."
 msgstr ""
 
 #: install.sh:39
-#, sh-format
 msgid "Finished installation of $programname."
 msgstr ""
 
 #: install.sh:40
 msgid "Done"
+msgstr ""
+
+#: install.sh:19
+msgid ""
+"This tool will configure your computer for the SELECTED by you functions of "
+"$programname."
 msgstr ""
