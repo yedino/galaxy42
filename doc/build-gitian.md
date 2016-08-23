@@ -56,3 +56,12 @@ from ./bin/gbuild:278:in lxc<main>'
 `
 
 
+
+Q:	Fail to get xenial image from ubuntu server:
+	I: Retrieving Release 
+	E: Failed getting release file http://127.0.0.1:3142/archive.ubuntu.com/ubuntu/dists/xenial/Release 
+	Error occured, will exit (to create Xenial image (do you have the Xenial template?))
+
+A:	On some distributions (e.g kali linux) apt-cacher-ng is disabled at system startup and there is a need to start it manually:
+	$ sudo /etc/init.d/apt-cacher-ng start
+
