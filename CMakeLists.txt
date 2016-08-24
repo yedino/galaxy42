@@ -332,7 +332,8 @@ if(NOT CYGWIN AND NOT WIN32)
 	#	COMMAND chmod g-wx,o-wx ipserver.elf
 		COMMAND chmod g-wx,o-wx tunserver.elf
 		COMMAND cp tunserver.elf nocap-tunserver.elf
-		COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
+    #   TODO (da2ce7): re-enable setcap for tunserver.efl
+    #	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
 		WORKING_DIRECTORY ./)
 endif()
 
