@@ -12,7 +12,9 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 programname="Galaxy42"
 
 source "${dir_base_of_source}/share/script/lib/abdialog.sh" || {\
-	echo "Can not find local library abdialog (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	lib='abdialog'; eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+source "${dir_base_of_source}/share/script/lib/platforminfo.sh" || {\
+	lib='platforminfo'; eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
@@ -37,8 +39,12 @@ response=$( abdialog  --checklist  "$(gettext "How do you want to use \$programn
 
 read -r -a tab <<< "$response" ; for item in "${tab[@]}" ; do
 
+function install_packets() {
+	sudo aptitude install "$@"
+}
+
 function install_for_build() {
-	sudo aptitude install git gcc g++ cmake autoconf libtool build-essential \
+	install_packets git gcc g++ cmake autoconf libtool build-essential \
 		libboost-system libboost-filesystem libboost-program-options
 }
 
@@ -49,7 +55,7 @@ function install_for_runit() {
 function install_for_devel() {
 		install_for_build
 		install_for_runit
-		sudo aptitude install libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
+		install_packets libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
 }
 
 function install_for_devel2() {
@@ -61,7 +67,7 @@ function install_build_gitian() {
 		install_for_build
 		install_for_runit
 		install_for_devel
-		sudo aptitude install lxc
+		install_packets lxc
 }
 
 case "$item" in

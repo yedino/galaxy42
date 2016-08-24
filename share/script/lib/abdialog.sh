@@ -1,5 +1,5 @@
 #!/bin/bash
-# This code (in this file) is on BSD 2-clause license, (c) Copyrighted 2016 tigusoft.pl
+# This code (in this file) is on BSD 2-clause license, (c) Copyrighted 2016 TiguSoft.pl
 # abdialog - Any Bash Dialog
 abdialog_ver=1
 
