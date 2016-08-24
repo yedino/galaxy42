@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
+project (galaxy42)
 
 # IMPORTANT:
 # search in ALL other files (source code, the bash scripts ./do and others)
@@ -9,7 +10,45 @@ cmake_minimum_required(VERSION 2.8.3)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
-#add_definitions(-DSODIUMPP_OPTION_DEBUG=1) # XXX
+set(BOOST_LIBRARIES boost_system boost_filesystem boost_program_options)
+message("${BOOST_LIBRARIES}")
+if (MSVC)
+	if(NOT MSVC14)
+		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
+	endif()
+	if(DEFINED Boost_INCLUDE_DIRS)
+		include_directories("${Boost_INCLUDE_DIRS}")
+	endif()
+
+	if(DEFINED Boost_LIBRARY_DIRS)
+		link_directories("${Boost_LIBRARY_DIRS}")
+		# get bost version
+		file(GLOB BOOST_LIBS "${Boost_LIBRARY_DIRS}/*.lib")
+		string(LENGTH "${BOOST_LIBS}" LEN)
+		math(EXPR LEN "${LEN}-8")
+		string(SUBSTRING "${BOOST_LIBS}" "${LEN}" 4 VER)
+		message("Boost version ${VER}")
+		set(BOOST_SUFFIX "-vc140-mt-gd-${VER}.lib")
+		message("boost suffix ${BOOST_SUFFIX}")
+		message("foreach")
+		foreach(lib ${BOOST_LIBRARIES})
+			#set(BOOST_LIBRARIES_SUFFIX "${BOOST_LIBRARIES_SUFFIX}${lib}${BOOST_SUFFIX}\n")
+			list(APPEND BOOST_LIBRARIES_SUFFIX "${lib}${BOOST_SUFFIX}")
+		endforeach()
+		#string(STRIP "${BOOST_LIBRARIES_SUFFIX}" BOOST_LIBRARIES)
+		set(BOOST_LIBRARIES "${BOOST_LIBRARIES_SUFFIX}")
+		message("*************${BOOST_LIBRARIES}")
+	endif()
+
+	#sodium
+	if(DEFINED Sodium_INCLUDE_DIRS)
+		include_directories("${Sodium_INCLUDE_DIRS}")
+	endif()
+	if(DEFINED Sodium_LIBRARY_DIRS)
+		link_directories("${Sodium_LIBRARY_DIRS}")
+	endif()
+	
+endif()
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -43,8 +82,6 @@ IF(DEFINED USE_BOOST_MULTIPRECISION_DEFAULT)
 ELSE()
    SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
 ENDIF()
-
-project (galaxy42)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("EXTLEVEL = ${EXTLEVEL}")
@@ -279,8 +316,15 @@ if(CYGWIN)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 	set(CYGWIN_LIBRARIES ws2_32 iphlpapi)
 endif()
-target_link_libraries(tunserver.elf tunserver boost_system boost_filesystem boost_program_options
-	pthread sodiumpp sodium jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES})
+
+if(NOT MSVC)
+	set(PTHREAD_LIB "pthread")
+	set(SODIUM_LIB "sodium")
+else()
+	set(SODIUM_LIB "libsodium")
+endif()
+target_link_libraries(tunserver.elf tunserver ${BOOST_LIBRARIES}
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
@@ -290,8 +334,8 @@ message("Sorted sources are:" "${TEST_SOURCES}")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver boost_system boost_filesystem boost_program_options
-	gtest sodium sodiumpp jsoncpp_lib_static)
+target_link_libraries(test-debug.elf tunserver ${BOOST_LIBRARIES}
+	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-debug.elf ${_lib})
@@ -301,8 +345,8 @@ endforeach()
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver boost_system boost_filesystem boost_program_options
-	gtest sodium sodiumpp jsoncpp_lib_static)
+target_link_libraries(test-release.elf tunserver ${BOOST_LIBRARIES}
+	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-release.elf ${_lib})
@@ -313,6 +357,7 @@ endforeach()
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
 #target_link_libraries(rpc_sender boost_system pthread)
 
+if(NOT CYGWIN AND NOT WIN32)
 add_custom_target(run
 		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
@@ -324,7 +369,6 @@ add_custom_target(runcli
 		DEPENDS ./ipclient.elf
 		WORKING_DIRECTORY ./)
 
-if(NOT CYGWIN AND NOT WIN32)
 	add_custom_command(
 		TARGET ipclient.elf ipserver.elf tunserver.elf
 		POST_BUILD
