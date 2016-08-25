@@ -12,8 +12,26 @@ platforminfo[distro]=$( printf "$lsb" | sed -n -e 's/^Distributor ID:[\t ]*\(.*\
 platforminfo[code]=$( printf "$lsb" | sed -n -e 's/^Codename:[\t ]*\(.*\)/\1/p' )
 platforminfo[is_apt]=$(platforminfo_check_program 'apt-get')
 platforminfo[is_yum]=$(platforminfo_check_program 'yum')
+platforminfo[is_dnf]=$(platforminfo_check_program 'dnf')
 
 function platforminfo_show_all() {
 	for K in "${!platforminfo[@]}"; do printf "$K = ${platforminfo[$K]}\n"; done
 }
+
+function platforminfo_show_summary() {
+	printf "Distro=${platforminfo[distro]}"
+	printf " Code=${platforminfo[code]}"
+	printf " Flags:"
+	for ik in "${!platforminfo[@]}"; do
+		iv="${platforminfo[$ik]}"
+		if [[ $ik == is_* ]] ; then
+			if ((iv)) ; then
+				printf " $ik" ;
+			fi
+		fi
+	done
+	printf "."
+	printf "\n"
+}
+
 

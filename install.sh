@@ -23,14 +23,16 @@ if (($abdialog_curses)) ; then
 text2="$(gettext "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to select option, ENTER to finish.")"
 fi
 
-text="\n${text1}\n\n${text2}"
+text3="$(gettext "We recognize your system/platform as:")"
+info="$(platforminfo_show_summary)"
+text="\n${text1}\n\n${text2}\n\n${text3}\n\n${info}"
 
 abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
-response=$( abdialog  --checklist  "$(gettext "How do you want to use \$programname:")"  23 76 18  \
-	"build"         "$(gettext "Build this program from source-code")" "on" \
+response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
+	"build"         "$(gettext "")" "on" \
 	"runit"         "$(gettext "Use this program on this computer")" "on" \
 	"devel"         "$(gettext "Develop this program (simple)")" "off" \
 	"devel2"        "$(gettext "Develop this program (advanced)")" "off" \
@@ -45,7 +47,7 @@ function install_packets() {
 
 function install_for_build() {
 	install_packets git gcc g++ cmake autoconf libtool build-essential \
-		libboost-system libboost-filesystem libboost-program-options
+		libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
 }
 
 function install_for_runit() {
@@ -55,7 +57,7 @@ function install_for_runit() {
 function install_for_devel() {
 		install_for_build
 		install_for_runit
-		install_packets libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
+		install_packets git gpg
 }
 
 function install_for_devel2() {
