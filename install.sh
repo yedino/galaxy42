@@ -32,11 +32,10 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yesno "$text" 20 60 || abdialog_exit
 
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
-	"build"         "$(gettext "")" "on" \
-	"runit"         "$(gettext "Use this program on this computer")" "on" \
-	"devel"         "$(gettext "Develop this program (simple)")" "off" \
-	"devel2"        "$(gettext "Develop this program (advanced)")" "off" \
-	"bgitian"       "$(gettext "Compile and publish (e.g. Gitian)")" "off" \
+	"build"         "$(gettext "menu_task_build")" "on" \
+	"touse"         "$(gettext "menu_task_touse")" "on" \
+	"devel"         "$(gettext "menu_task_devel")" "false" \
+	"bgitian"       "$(gettext "menu_task_bgitian")" "false" \
 	2>&1 >/dev/tty || abdialog_exit )
 
 read -r -a tab <<< "$response" ; for item in "${tab[@]}" ; do

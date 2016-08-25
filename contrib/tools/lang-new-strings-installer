@@ -1,0 +1,16 @@
+#!/bin/bash
+
+printf "This script is intended for Developers of this Project.\n
+It will extrate new strings from installer and open editor to translate them."
+
+xgettext -j  -o src-misc/locale/galaxy42_installer/messages.pot  install.sh
+
+textdomain='galaxy42_installer'
+
+for lang in pl en
+do
+	msgmerge --update "src-misc/locale/${textdomain}/${lang}.po"   "src-misc/locale/${textdomain}/messages.pot"
+	$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
+	msgfmt --check --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo"
+done
+
