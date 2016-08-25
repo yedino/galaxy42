@@ -1,0 +1,14 @@
+Build Instructions for Fedora 24
+
+(recomended, update all packages to latest version)
+# dnf dist distro-sync
+
+Install Standard C Development Group
+# dnf groupinstall "C Development Tools and Libraries"
+
+Install Additional Development Packages
+# dnf install cmake libsodium-devel boost-devel
+
+$ git clone https://github.com/yedino/galaxy42.git
+$ cd galaxy42
+$ ./do
