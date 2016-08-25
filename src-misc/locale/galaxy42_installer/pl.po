@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 13:57+0000\n"
+"POT-Creation-Date: 2016-08-25 14:39+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -34,41 +34,41 @@ msgid "Configure computer for $programname"
 msgstr "Skonfiguruj komputer dla $programname"
 
 #: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106
+#: install.sh:31 install.sh:106 install.sh:134
 msgid "Ok"
 msgstr "Ok"
 
 #: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106
+#: install.sh:31 install.sh:106 install.sh:134
 msgid "Quit"
 msgstr "Zakończ"
 
-#: install.sh:32 install.sh:30 install.sh:61 install.sh:96
+#: install.sh:32 install.sh:30 install.sh:61 install.sh:96 install.sh:124
 msgid "Install (as root) following functions:"
 msgstr "Zainstaluj (jako root) następujące funkcje:"
 
-#: install.sh:33 install.sh:31 install.sh:63 install.sh:98
+#: install.sh:33 install.sh:31 install.sh:63 install.sh:98 install.sh:126
 msgid "For users: Allows us to create virtual network card."
 msgstr "Umożliw nam tworzenie wirtualnych kart sieci."
 
-#: install.sh:34 install.sh:32 install.sh:62 install.sh:97
+#: install.sh:34 install.sh:32 install.sh:62 install.sh:97 install.sh:125
 msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
 msgstr "NIE pytaj o potwierdzenie niebezpiecznych ustawień."
 
-#: install.sh:35 install.sh:33 install.sh:64 install.sh:99
+#: install.sh:35 install.sh:33 install.sh:64 install.sh:99 install.sh:127
 msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
 msgstr "Dla budujących: ustaw LXC (dla Gitian reproducible)"
 
-#: install.sh:36 install.sh:34 install.sh:65 install.sh:100
+#: install.sh:36 install.sh:34 install.sh:65 install.sh:100 install.sh:128
 msgid "For devel: allow to create local test network namespaces."
 msgstr "Dla devel.: pozwól na lokalne testowe sieci namespace"
 
-#: install.sh:39 install.sh:37 install.sh:69 install.sh:104
+#: install.sh:39 install.sh:37 install.sh:69 install.sh:104 install.sh:132
 #, sh-format
 msgid "Finished installation of $programname."
 msgstr "Ukończono instalcję $programname"
 
-#: install.sh:40 install.sh:38 install.sh:70 install.sh:105
+#: install.sh:40 install.sh:38 install.sh:70 install.sh:105 install.sh:133
 msgid "Done"
 msgstr "Gotowe"
 
@@ -82,7 +82,6 @@ msgstr ""
 "programu $programname"
 
 #: install.sh:30 install.sh:34
-#, sh-format
 msgid "How do you want to use $programname:"
 msgstr "Jak chcesz używać $programname:"
 
@@ -90,14 +89,22 @@ msgstr "Jak chcesz używać $programname:"
 msgid "We recognize your system/platform as:"
 msgstr "Rozpoznajemy tą platformę jako:"
 
-#: install.sh:37
+#: install.sh:37 install.sh:38
 msgid "menu_task_devel"
 msgstr "Rozwijaj ten program"
 
-#: install.sh:38
+#: install.sh:38 install.sh:39
 msgid "menu_task_bgitian"
 msgstr "Zbuduj oraz podpisz/opublikuj (Gitian)"
 
-#: install.sh:36
+#: install.sh:35 install.sh:36
+msgid "menu_task_build"
+msgstr "Zbuduj ten program"
+
+#: install.sh:36 install.sh:37
 msgid "menu_task_touse"
 msgstr "Używaj programu na tym komputerze"
+
+#: install.sh:35
+msgid "menu_task_warn"
+msgstr "Pokaż ostrzeżenia"

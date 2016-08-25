@@ -12,11 +12,11 @@ if [[ "$FORCE_DIALOG" == "whiptail" ]] ; then abdialog_program="whiptail" ; abdi
 if [[ "$FORCE_DIALOG" == "dialog" ]] ; then abdialog_program="dialog" ; abdialog_curses=1 ; abdialog_gui=0 ; fi
 
 function abdialog() {
+	local argtab=()
 	for arg in "$@" ; do
-		argfixed="${arg//$'\n'/\\n}";
+		local argfixed="${arg//$'\n'/\\n}";
 		argtab+=("$argfixed")
 	done
-
 	$abdialog_program "${argtab[@]}"
 }
 

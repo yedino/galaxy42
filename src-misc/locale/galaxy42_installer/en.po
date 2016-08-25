@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 13:57+0000\n"
+"POT-Creation-Date: 2016-08-25 14:39+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -31,41 +31,41 @@ msgid "Configure computer for $programname"
 msgstr ""
 
 #: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106
+#: install.sh:31 install.sh:106 install.sh:134
 msgid "Ok"
 msgstr ""
 
 #: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106
+#: install.sh:31 install.sh:106 install.sh:134
 msgid "Quit"
 msgstr ""
 
-#: install.sh:32 install.sh:30 install.sh:61 install.sh:96
+#: install.sh:32 install.sh:30 install.sh:61 install.sh:96 install.sh:124
 msgid "Install (as root) following functions:"
 msgstr ""
 
-#: install.sh:33 install.sh:31 install.sh:63 install.sh:98
+#: install.sh:33 install.sh:31 install.sh:63 install.sh:98 install.sh:126
 msgid "For users: Allows us to create virtual network card."
 msgstr ""
 
-#: install.sh:34 install.sh:32 install.sh:62 install.sh:97
+#: install.sh:34 install.sh:32 install.sh:62 install.sh:97 install.sh:125
 msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
 msgstr ""
 
-#: install.sh:35 install.sh:33 install.sh:64 install.sh:99
+#: install.sh:35 install.sh:33 install.sh:64 install.sh:99 install.sh:127
 msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
 msgstr ""
 
-#: install.sh:36 install.sh:34 install.sh:65 install.sh:100
+#: install.sh:36 install.sh:34 install.sh:65 install.sh:100 install.sh:128
 msgid "For devel: allow to create local test network namespaces."
 msgstr ""
 
-#: install.sh:39 install.sh:37 install.sh:69 install.sh:104
+#: install.sh:39 install.sh:37 install.sh:69 install.sh:104 install.sh:132
 #, sh-format
 msgid "Finished installation of $programname."
 msgstr ""
 
-#: install.sh:40 install.sh:38 install.sh:70 install.sh:105
+#: install.sh:40 install.sh:38 install.sh:70 install.sh:105 install.sh:133
 msgid "Done"
 msgstr ""
 
@@ -85,18 +85,23 @@ msgstr ""
 msgid "We recognize your system/platform as:"
 msgstr ""
 
-#: install.sh:35
-msgid "menu_task_install"
-msgstr "Build this program from source-code"
-
-#: install.sh:37
+#: install.sh:37 install.sh:38
 msgid "menu_task_devel"
 msgstr "Develop this program"
 
-#: install.sh:38
+#: install.sh:38 install.sh:39
 msgid "menu_task_bgitian"
 msgstr "Compile and sign/publish (e.g. Gitian)"
 
-#: install.sh:36
+#: install.sh:35 install.sh:36
+#, fuzzy
+msgid "menu_task_build"
+msgstr "Build this program from source code"
+
+#: install.sh:36 install.sh:37
 msgid "menu_task_touse"
 msgstr "Use this program on this computer"
+
+#: install.sh:35
+msgid "menu_task_warn"
+msgstr "Show warnings"
