@@ -20,7 +20,7 @@ IF(DEFINED CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
 	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ELSE()
-   SET(CMAKE_BUILD_TYPE debug CACHE STRING # <--- the default build type is here!
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
 	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
@@ -192,14 +192,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${flag_covera
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
-ADD_CUSTOM_TARGET(fast
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=fast ${CMAKE_SOURCE_DIR}
+ADD_CUSTOM_TARGET(Fast
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Fast ${CMAKE_SOURCE_DIR}
 		COMMAND make)
-ADD_CUSTOM_TARGET(release
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=release ${CMAKE_SOURCE_DIR}
+ADD_CUSTOM_TARGET(Release
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
 		COMMAND make)
-ADD_CUSTOM_TARGET(debug
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=debug ${CMAKE_SOURCE_DIR}
+ADD_CUSTOM_TARGET(Debug
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
 		COMMAND make)
 
 
@@ -231,21 +231,21 @@ message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
 set(CMAKE_CXX_FAST_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -Wno-unused-parameter -Wno-unused-variable")
 
 
-if(CMAKE_BUILD_TYPE STREQUAL "fast")
+if(CMAKE_BUILD_TYPE STREQUAL "Fast")
         message("Fast build")
         add_definitions(-DRELEASEMODE_ -DNDEBUG)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
 
-	elseif(CMAKE_BUILD_TYPE STREQUAL "debug")
+	elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("Debug build")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0")
 
-	elseif(CMAKE_BUILD_TYPE STREQUAL "release")
+	elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
         message("Release build")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2 -DNDEBUG -DRELEASEMODE")
 else()
     message("bad CMAKE_BUILD_TYPE flag")
-    message("usage is: cmake [fast/debug/release] .")
+    message("usage is: cmake [Fast/Debug/Release] .")
     message( FATAL_ERROR "error" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FAST_FLAGS}")
 endif()
