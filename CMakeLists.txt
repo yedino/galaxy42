@@ -16,10 +16,11 @@ if (MSVC)
 	if(NOT MSVC14)
 		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
 	endif()
+	
 	if(DEFINED Boost_INCLUDE_DIRS)
 		include_directories("${Boost_INCLUDE_DIRS}")
 	endif()
-
+	list(REMOVE_ITEM BOOST_LIBRARIES boost_program_options)
 	if(DEFINED Boost_LIBRARY_DIRS)
 		link_directories("${Boost_LIBRARY_DIRS}")
 		# get bost version
@@ -27,17 +28,13 @@ if (MSVC)
 		string(LENGTH "${BOOST_LIBS}" LEN)
 		math(EXPR LEN "${LEN}-8")
 		string(SUBSTRING "${BOOST_LIBS}" "${LEN}" 4 VER)
-		message("Boost version ${VER}")
 		set(BOOST_SUFFIX "-vc140-mt-gd-${VER}.lib")
-		message("boost suffix ${BOOST_SUFFIX}")
-		message("foreach")
 		foreach(lib ${BOOST_LIBRARIES})
 			#set(BOOST_LIBRARIES_SUFFIX "${BOOST_LIBRARIES_SUFFIX}${lib}${BOOST_SUFFIX}\n")
 			list(APPEND BOOST_LIBRARIES_SUFFIX "${lib}${BOOST_SUFFIX}")
 		endforeach()
 		#string(STRIP "${BOOST_LIBRARIES_SUFFIX}" BOOST_LIBRARIES)
 		set(BOOST_LIBRARIES "${BOOST_LIBRARIES_SUFFIX}")
-		message("*************${BOOST_LIBRARIES}")
 	endif()
 
 	#sodium
@@ -322,9 +319,10 @@ if(NOT MSVC)
 	set(SODIUM_LIB "sodium")
 else()
 	set(SODIUM_LIB "libsodium")
+	set(MSVC_LIRARIES "iphlpapi")
 endif()
 target_link_libraries(tunserver.elf tunserver ${BOOST_LIBRARIES}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES})
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
