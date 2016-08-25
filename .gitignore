@@ -25,3 +25,8 @@ googletest/
 jsoncpp/
 sodiumpp/
 
+# KDevelop Ignore
+.kdev4/
+compile_commands.json
+*.kdev4
+
