@@ -118,17 +118,6 @@ esac
 
 done
 
-exit 1 # XXX
-
-if false ; then
-response=$( abdialog  --checklist  "$(gettext "Install (as root) following functions:")"  23 76 18  \
-	"yes"            "$(gettext "Do NOT ask confirmation for unsafe settings, I'm expert.")" "off" \
-	"setcap"         "$(gettext "For users: Allows us to create virtual network card.")" "on" \
-	"forlxc"         "$(gettext "For builders: setup your sys for LXC (for Gitian reproducible)")" "off" \
-	"netpriv"        "$(gettext "For devel: allow to create local test network namespaces.")" "off" \
-	2>&1 >/dev/tty || abdialog_exit )
-fi
-
 text="$(eval_gettext "Finished installation of \$programname.")"
 abdialog --title "$(gettext 'Done')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \

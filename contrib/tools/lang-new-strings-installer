@@ -3,14 +3,46 @@
 printf "This script is intended for Developers of this Project.\n
 It will extrate new strings from installer and open editor to translate them."
 
-xgettext -j  -o src-misc/locale/galaxy42_installer/messages.pot  install.sh
-
 textdomain='galaxy42_installer'
+sourcefile="install.sh"
 
-for lang in pl en
-do
-	msgmerge --update "src-misc/locale/${textdomain}/${lang}.po"   "src-misc/locale/${textdomain}/messages.pot"
-	$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
-	msgfmt --check --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo"
-done
+MYTMP="vartmp/lang/" # <-- must be safe local dir! (we will delete it!)
+rm -rf "$MYTMP"
+mkdir -p "$MYTMP"
+
+function lang_new_and_translate() {
+
+	xgettext -j  -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
+	for lang in pl en
+	do
+		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po"   "src-misc/locale/${textdomain}/messages.pot" || exit
+		$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
+		msgfmt --check --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || exit
+	done
+
+}
+
+function trim_obsolete {
+	echo "Removing obsolete strings that are no longer in sourcefile=$sourcefile"
+
+	set -x
+	xgettext  -o "$MYTMP/fresh.pot"  "${sourcefile}"
+
+	for lang in pl en
+	do
+		pofile="src-misc/locale/${textdomain}/${lang}.po"
+		pofile_clean="${pofile}-clean"
+		pofile_clean2="${pofile}-clean2"
+		msgattrib --set-obsolete --ignore-file="$MYTMP/fresh.pot" -o "$pofile_clean" "$pofile" || exit
+		msgattrib --no-obsolete -o "$pofile_clean2" "$pofile_clean" || exit
+		echo "Diff of trimming:"
+		pager="tee"
+		if hash "colordiff" 2>/dev/null ; then pager="colordiff" ; fi
+		diff -Nuar "$pofile" "$pofile_clean2" | $pager
+		mv "$pofile_clean2" "$pofile"
+		rm "$pofile_clean"
+	done
+}
+
+trim_obsolete
 
