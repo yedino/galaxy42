@@ -10,13 +10,16 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
-set(BOOST_LIBRARIES boost_system boost_filesystem boost_program_options)
-message("${BOOST_LIBRARIES}")
 if (MSVC)
 	if(NOT MSVC14)
 		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
 	endif()
-	
+endif()
+
+
+set(BOOST_LIBRARIES boost_system boost_filesystem boost_program_options)
+message("${BOOST_LIBRARIES}")
+if (MSVC)
 	if(DEFINED Boost_INCLUDE_DIRS)
 		include_directories("${Boost_INCLUDE_DIRS}")
 	else()
