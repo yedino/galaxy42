@@ -308,7 +308,7 @@ if(NOT MSVC)
 	set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 else()
-	set(SODIUM_LIB "libsodium")
+	set(SODIUM_LIB "${SODIUM_LIBRARY}")
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
