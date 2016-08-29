@@ -30,23 +30,12 @@ message("\nBOOST NOT FOUND!")
 message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Sodium REQUIRED)
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${SODIUM_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
-if (MSVC)
-	#sodium
-	if(DEFINED Sodium_INCLUDE_DIRS)
-		include_directories("${Sodium_INCLUDE_DIRS}")
-	else()
-		message(FATAL_ERROR "Sodium_INCLUDE_DIRS is not set")
-	endif()
-	if(DEFINED Sodium_LIBRARY_DIRS)
-		link_directories("${Sodium_LIBRARY_DIRS}")
-	else()
-		message(FATAL_ERROR "Sodium_LIBRARY_DIRS is not set")
-	endif()
-	
-endif()
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
