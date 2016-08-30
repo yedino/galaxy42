@@ -36,7 +36,7 @@ function lang_new_and_translate() {
 	do
 		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po"   "src-misc/locale/${textdomain}/messages.pot" || exit
 		$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
-		msgfmt --check --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || exit
+		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || exit
 	done
 
 }

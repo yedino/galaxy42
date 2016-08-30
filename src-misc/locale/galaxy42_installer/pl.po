@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 17:37+0000\n"
+"POT-Creation-Date: 2016-08-30 18:18+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -86,3 +86,34 @@ msgstr ""
 
 msgid "warn2_net_title"
 msgstr "Uwaga (SPECJALNE: sieć)"
+
+msgid "warning_build"
+msgstr ""
+"* Instalacja narzędzi do budowy z kodu źródłowego"
+
+msgid "warning_runit"
+msgstr ""
+"* Aby używać programu, zainstalujemy skrypt set_cap pozwalający uż"
+"ytkownikowi konfigurować sieć."
+
+msgid "warning_devel"
+msgstr ""
+"* Zainstalujemy dodatkowe narzędzia deweloperskie, w tym do symulowania "
+"wielu osobnych sieci na tym komputerze (network namespace)."
+
+msgid "warning_bgitian"
+msgstr ""
+"* Skonfigurujemy komputer do używania Gitian (w lekkiej 'wirtualizacji' "
+"LXC). Uwaga, to może stworzyć jeszcze inne karty sieciowe, oraz zmienić "
+"ustawienia obecnych kart. Między innymi adres IP z obecnego głównego łą"
+"cza do Internetu (np. eth0) może być pokazywane teraz jako przypisane do "
+"innej karty"
+
+#, sh-format
+msgid "warning_SUMMARY"
+msgstr ""
+"Proszę sprawdzić i zatwierdzić poniższe zmiany na komputerze.\n"
+"Zmiany mogą mieć wpływ na bezpieczeństwo!"
+
+msgid "warning_SUMMARY_TITLE"
+msgstr "Ostrzeżenie bezpieczeństwa i podsumowanie"

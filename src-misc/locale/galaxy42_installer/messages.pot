@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 17:37+0000\n"
+"POT-Creation-Date: 2016-08-30 18:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,4 +76,23 @@ msgid "warn2_net"
 msgstr ""
 
 msgid "warn2_net_title"
+msgstr ""
+
+msgid "warning_build"
+msgstr ""
+
+msgid "warning_runit"
+msgstr ""
+
+msgid "warning_devel"
+msgstr ""
+
+msgid "warning_bgitian"
+msgstr ""
+
+#, sh-format
+msgid "warning_SUMMARY"
+msgstr ""
+
+msgid "warning_SUMMARY_TITLE"
 msgstr ""
