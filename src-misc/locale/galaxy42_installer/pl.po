@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 14:39+0000\n"
+"POT-Creation-Date: 2016-08-30 14:58+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -19,40 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: install.sh:23 install.sh:21
-msgid ""
-"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
-"select option, ENTER to finish."
-msgstr ""
-"Wygląda na to iż używasz tekstowego interfejsu,\n"
-"możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, "
-"ENTER aby zakończyć."
-
-#: install.sh:28 install.sh:26 install.sh:30
-#, sh-format
-msgid "Configure computer for $programname"
-msgstr "Skonfiguruj komputer dla $programname"
-
-#: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106 install.sh:134
-msgid "Ok"
-msgstr "Ok"
-
-#: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106 install.sh:134
-msgid "Quit"
-msgstr "Zakończ"
-
-#: install.sh:39 install.sh:37 install.sh:69 install.sh:104 install.sh:132
-#, sh-format
-msgid "Finished installation of $programname."
-msgstr "Ukończono instalcję $programname"
-
-#: install.sh:40 install.sh:38 install.sh:70 install.sh:105 install.sh:133
-msgid "Done"
-msgstr "Gotowe"
-
-#: install.sh:19 install.sh:17
+#: install.sh:19
 #, sh-format
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
@@ -61,30 +28,62 @@ msgstr ""
 "To narzędzie skonfiguruje Twój komputer dla WBRANYCH przez Ciebie funkcji "
 "programu $programname"
 
-#: install.sh:30 install.sh:34
-msgid "How do you want to use $programname:"
-msgstr "Jak chcesz używać $programname:"
+#: install.sh:23
+msgid ""
+"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+"select option, ENTER to finish."
+msgstr ""
+"Wygląda na to iż używasz tekstowego interfejsu,\n"
+"możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, "
+"ENTER aby zakończyć."
 
 #: install.sh:26
 msgid "We recognize your system/platform as:"
 msgstr "Rozpoznajemy tą platformę jako:"
 
-#: install.sh:37 install.sh:38
-msgid "menu_task_devel"
-msgstr "Rozwijaj ten program"
+#: install.sh:30
+#, sh-format
+msgid "Configure computer for $programname"
+msgstr "Skonfiguruj komputer dla $programname"
 
-#: install.sh:38 install.sh:39
-msgid "menu_task_bgitian"
-msgstr "Zbuduj oraz podpisz/opublikuj (Gitian)"
+#: install.sh:31 install.sh:123
+msgid "Ok"
+msgstr "Ok"
 
-#: install.sh:35 install.sh:36
-msgid "menu_task_build"
-msgstr "Zbuduj ten program"
+#: install.sh:31 install.sh:123
+msgid "Quit"
+msgstr "Zakończ"
 
-#: install.sh:36 install.sh:37
-msgid "menu_task_touse"
-msgstr "Używaj programu na tym komputerze"
+#: install.sh:34
+#, sh-format
+msgid "How do you want to use $programname:"
+msgstr "Jak chcesz używać $programname:"
 
 #: install.sh:35
 msgid "menu_task_warn"
 msgstr "Pokaż ostrzeżenia"
+
+#: install.sh:36
+msgid "menu_task_build"
+msgstr "Zbuduj ten program"
+
+#: install.sh:37
+msgid "menu_task_touse"
+msgstr "Używaj programu na tym komputerze"
+
+#: install.sh:38
+msgid "menu_task_devel"
+msgstr "Rozwijaj ten program"
+
+#: install.sh:39
+msgid "menu_task_bgitian"
+msgstr "Zbuduj oraz podpisz/opublikuj (Gitian)"
+
+#: install.sh:121
+#, sh-format
+msgid "Finished installation of $programname."
+msgstr "Ukończono instalcję $programname"
+
+#: install.sh:122
+msgid "Done"
+msgstr "Gotowe"

@@ -1,7 +1,25 @@
 #!/bin/bash
 
-printf "This script is intended for Developers of this Project.\n
-It will extrate new strings from installer and open editor to translate them."
+function usage() {
+	printf "
+
+	Run this program with options:
+
+	-t Trims from .po files obsolite strings that are no longer present in sources.
+	-u Updates the .po and .mo files by adding new strings that were since last time added in sources.
+
+	(Need manual commands to create first empty pot file maybe)
+
+"
+
+}
+
+printf "
+
+This script is for translators (of human languages) and for developers creating translations.
+Use -h for help.
+
+"
 
 textdomain='galaxy42_installer'
 sourcefile="install.sh"
@@ -12,7 +30,8 @@ mkdir -p "$MYTMP"
 
 function lang_new_and_translate() {
 
-	xgettext -j  -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
+	xgettext   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
+	# -j
 	for lang in pl en
 	do
 		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po"   "src-misc/locale/${textdomain}/messages.pot" || exit
@@ -25,7 +44,7 @@ function lang_new_and_translate() {
 function trim_obsolete {
 	echo "Removing obsolete strings that are no longer in sourcefile=$sourcefile"
 
-	set -x
+	# set -x # debug
 	xgettext  -o "$MYTMP/fresh.pot"  "${sourcefile}"
 
 	for lang in pl en
@@ -44,5 +63,28 @@ function trim_obsolete {
 	done
 }
 
-trim_obsolete
+while getopts ":tuh" opt; do
+	  case $opt in
+	  	t)
+				trim_obsolete
+				;;
+	  	u)
+				lang_new_and_translate
+				;;
+			h)
+				usage
+				;;
+			'?')
+				echo "Unknown option."
+				usage
+				exit 1
+				;;
+	  esac
+done
+
+
+
+
+
+
 

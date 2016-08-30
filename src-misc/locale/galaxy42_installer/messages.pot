@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 14:39+0000\n"
+"POT-Creation-Date: 2016-08-30 15:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,112 +17,66 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: install.sh:23 install.sh:21
-msgid ""
-"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
-"select option, ENTER to finish."
-msgstr ""
-
-#: install.sh:28 install.sh:26 install.sh:30
-#, sh-format
-msgid "Configure computer for $programname"
-msgstr ""
-
-#: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106 install.sh:134
-msgid "Ok"
-msgstr ""
-
-#: install.sh:29 install.sh:41 install.sh:27 install.sh:39 install.sh:71
-#: install.sh:31 install.sh:106 install.sh:134
-msgid "Quit"
-msgstr ""
-
-#: install.sh:32 install.sh:30 install.sh:61 install.sh:96 install.sh:124
-msgid "Install (as root) following functions:"
-msgstr ""
-
-#: install.sh:33 install.sh:31 install.sh:63 install.sh:98 install.sh:126
-msgid "For users: Allows us to create virtual network card."
-msgstr ""
-
-#: install.sh:34 install.sh:32 install.sh:62 install.sh:97 install.sh:125
-msgid "Do NOT ask confirmation for unsafe settings, I'm expert."
-msgstr ""
-
-#: install.sh:35 install.sh:33 install.sh:64 install.sh:99 install.sh:127
-msgid "For builders: setup your sys for LXC (for Gitian reproducible)"
-msgstr ""
-
-#: install.sh:36 install.sh:34 install.sh:65 install.sh:100 install.sh:128
-msgid "For devel: allow to create local test network namespaces."
-msgstr ""
-
-#: install.sh:39 install.sh:37 install.sh:69 install.sh:104 install.sh:132
-#, sh-format
-msgid "Finished installation of $programname."
-msgstr ""
-
-#: install.sh:40 install.sh:38 install.sh:70 install.sh:105 install.sh:133
-msgid "Done"
-msgstr ""
-
-#: install.sh:19 install.sh:17
+#: install.sh:19
 #, sh-format
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
 msgstr ""
 
-#: install.sh:30 install.sh:34
-#, sh-format
-msgid "How do you want to use $programname:"
-msgstr ""
-
-#: install.sh:31
-msgid "Build this program from source-code"
-msgstr ""
-
-#: install.sh:32
-msgid "Use this program on this computer"
-msgstr ""
-
-#: install.sh:33
-msgid "Develop this program"
-msgstr ""
-
-#: install.sh:34
-msgid "Compiled and publish (e.g. Gitian)"
+#: install.sh:23
+msgid ""
+"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+"select option, ENTER to finish."
 msgstr ""
 
 #: install.sh:26
 msgid "We recognize your system/platform as:"
 msgstr ""
 
-#: install.sh:35
-msgid "menu_task_install"
+#: install.sh:30
+#, sh-format
+msgid "Configure computer for $programname"
 msgstr ""
 
-#: install.sh:36
-msgid "menu_task_runit"
+#: install.sh:31 install.sh:123
+msgid "Ok"
 msgstr ""
 
-#: install.sh:37 install.sh:38
-msgid "menu_task_devel"
+#: install.sh:31 install.sh:123
+msgid "Quit"
 msgstr ""
 
-#: install.sh:38 install.sh:39
-msgid "menu_task_bgitian"
-msgstr ""
-
-#: install.sh:35 install.sh:36
-msgid "menu_task_build"
-msgstr ""
-
-#: install.sh:36 install.sh:37
-msgid "menu_task_touse"
+#: install.sh:34
+#, sh-format
+msgid "How do you want to use $programname:"
 msgstr ""
 
 #: install.sh:35
 msgid "menu_task_warn"
+msgstr ""
+
+#: install.sh:36
+msgid "menu_task_build"
+msgstr ""
+
+#: install.sh:37
+msgid "menu_task_touse"
+msgstr ""
+
+#: install.sh:38
+msgid "menu_task_devel"
+msgstr ""
+
+#: install.sh:39
+msgid "menu_task_bgitian"
+msgstr ""
+
+#: install.sh:121
+#, sh-format
+msgid "Finished installation of $programname."
+msgstr ""
+
+#: install.sh:122
+msgid "Done"
 msgstr ""

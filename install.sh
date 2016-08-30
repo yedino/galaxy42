@@ -32,7 +32,7 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yesno "$text" 20 60 2>&1 >/dev/tty || abdialog_exit
 
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
-	"quietwarn"     "$(gettext "menu_task_warn")" "off" \
+	"warn"          "$(gettext "menu_task_warn")" "off" \
 	"build"         "$(gettext "menu_task_build")" "on" \
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
@@ -75,51 +75,64 @@ response_menu_task="$response"
 warnings_text=""
 warn_root=0
 warn_fw=0
+enabled_warn=0 # are warnings enabled
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
-case "$item" in
-	build)
-		warnings_text="${warnings_text}(gettext "$warning_build")" # install deps
-		warn_root=1 # to install deps
-	;;
-	runit)
-		warnings_text="${warnings_text}(gettext "$warning_runit")" # firewall ipv6, setcap script
-		warn_fw=1
-		warn_root=1 # for setcap
-	;;
-	devel)
-		warnings_text="${warnings_text}(gettext "$warning_devel")" # net namespace script
-		warn_fw=1
-		warn_root=1 # net namespace, and same as for task runit
-	;;
-	bgitian)
-		warnings_text="${warnings_text}(gettext "$warning_bgitian")" # run lxc as root, set special NIC card/bridge
-		warn_fw=1 # for special LXC network
-		warn_root=1 # for LXC and maybe running gitian too
-	;;
-esac
-
-read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
-case "$item" in
-	build)
-		install_for_build
-	;;
-	runit)
-		install_for_runit
-	;;
-	devel)
-		install_for_devel
-	;;
-	bgitian)
-		install_build_gitian
-	;;
-esac
-
-
+	case "$item" in
+		warn)
+			enabled_warn=1
+		;;
+		build)
+			warnings_text="${warnings_text}(gettext "$warning_build")" # install deps
+			warn_root=1 # to install deps
+		;;
+		runit)
+			warnings_text="${warnings_text}(gettext "$warning_runit")" # firewall ipv6, setcap script
+			warn_fw=1
+			warn_root=1 # for setcap
+		;;
+		devel)
+			warnings_text="${warnings_text}(gettext "$warning_devel")" # net namespace script
+			warn_fw=1
+			warn_root=1 # net namespace, and same as for task runit
+		;;
+		bgitian)
+			warnings_text="${warnings_text}(gettext "$warning_bgitian")" # run lxc as root, set special NIC card/bridge
+			warn_fw=1 # for special LXC network
+			warn_root=1 # for LXC and maybe running gitian too
+		;;
+	esac
 done
+
+if ((enabled_warn && warn_root)) ; then
+	echo TODO ; read _
+
+fi
+
+
+read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+	case "$item" in
+		build)
+			install_for_build
+		;;
+		runit)
+			install_for_runit
+		;;
+		devel)
+			install_for_devel
+		;;
+		bgitian)
+			install_build_gitian
+		;;
+	esac
+done
+
 
 text="$(eval_gettext "Finished installation of \$programname.")"
 abdialog --title "$(gettext 'Done')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--msgbox "$text" 20 60 || abdialog_exit
+
+
+
 
