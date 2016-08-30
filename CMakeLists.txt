@@ -10,50 +10,32 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
-set(BOOST_LIBRARIES boost_system boost_filesystem boost_program_options)
-message("${BOOST_LIBRARIES}")
 if (MSVC)
 	if(NOT MSVC14)
 		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
 	endif()
-	
-	if(DEFINED Boost_INCLUDE_DIRS)
-		include_directories("${Boost_INCLUDE_DIRS}")
-	else()
-		message(FATAL_ERROR "Boost_INCLUDE_DIRS is not set")
-	endif()
-	list(REMOVE_ITEM BOOST_LIBRARIES boost_program_options)
-	if(DEFINED Boost_LIBRARY_DIRS)
-		link_directories("${Boost_LIBRARY_DIRS}")
-		# get bost version
-		file(GLOB BOOST_LIBS "${Boost_LIBRARY_DIRS}/*.lib")
-		string(LENGTH "${BOOST_LIBS}" LEN)
-		math(EXPR LEN "${LEN}-8")
-		string(SUBSTRING "${BOOST_LIBS}" "${LEN}" 4 VER)
-		set(BOOST_SUFFIX "-vc140-mt-gd-${VER}.lib")
-		foreach(lib ${BOOST_LIBRARIES})
-			#set(BOOST_LIBRARIES_SUFFIX "${BOOST_LIBRARIES_SUFFIX}${lib}${BOOST_SUFFIX}\n")
-			list(APPEND BOOST_LIBRARIES_SUFFIX "${lib}${BOOST_SUFFIX}")
-		endforeach()
-		#string(STRIP "${BOOST_LIBRARIES_SUFFIX}" BOOST_LIBRARIES)
-		set(BOOST_LIBRARIES "${BOOST_LIBRARIES_SUFFIX}")
-	else()
-		message(FATAL_ERROR "Boost_LIBRARY_DIRS is not set")
-	endif()
-
-	#sodium
-	if(DEFINED Sodium_INCLUDE_DIRS)
-		include_directories("${Sodium_INCLUDE_DIRS}")
-	else()
-		message(FATAL_ERROR "Sodium_INCLUDE_DIRS is not set")
-	endif()
-	if(DEFINED Sodium_LIBRARY_DIRS)
-		link_directories("${Sodium_LIBRARY_DIRS}")
-	else()
-		message(FATAL_ERROR "Sodium_LIBRARY_DIRS is not set")
-	endif()
-	
 endif()
+
+set (Boost_DEBUG OFF)
+find_package(Boost 1.49.0 REQUIRED COMPONENTS system filesystem program_options)
+
+if (NOT Boost_FOUND)
+message("\nBOOST NOT FOUND!")
+	if (MSVC)
+		message("\nNote (windows): \nPlease download and install package (or later):")
+		message("    https://sourceforge.net/projects/boost/files/boost-binaries/ boost_1_61_0-msvc-14.0-64.exe \n")
+		message("Use following argument for cmake (default install location):")
+		message("    \"-DBOOST_ROOT=C:/local/boost_1_61_0 -DBOOST_LIBRARYDIR=C:/local/boost_1_61_0/lib64-msvc-14.0/\"\n\n")
+	endif()
+message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
+endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Sodium REQUIRED)
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${SODIUM_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIRS})
+
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -329,7 +311,7 @@ else()
 	set(SODIUM_LIB "libsodium")
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
-target_link_libraries(tunserver.elf tunserver ${BOOST_LIBRARIES}
+target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
@@ -340,7 +322,7 @@ message("Sorted sources are:" "${TEST_SOURCES}")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver ${BOOST_LIBRARIES}
+target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES}
 	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
@@ -351,7 +333,7 @@ endforeach()
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver ${BOOST_LIBRARIES}
+target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES}
 	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
