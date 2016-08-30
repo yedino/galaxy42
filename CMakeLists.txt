@@ -17,7 +17,12 @@ if (MSVC)
 endif()
 
 set (Boost_DEBUG OFF)
-find_package(Boost 1.49.0 REQUIRED COMPONENTS system filesystem program_options)
+if (NOT MSVC)
+	set(BOOST_LIBS_LIST system filesystem program_options)
+else()
+	set(BOOST_LIBS_LIST system filesystem)
+endif()
+find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
 
 if (NOT Boost_FOUND)
 message("\nBOOST NOT FOUND!")
