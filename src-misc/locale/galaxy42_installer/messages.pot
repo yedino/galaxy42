@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 18:58+0000\n"
+"POT-Creation-Date: 2016-08-30 21:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -64,10 +64,6 @@ msgstr ""
 msgid "menu_task_bgitian"
 msgstr ""
 
-#, sh-format
-msgid "Warning (root)"
-msgstr ""
-
 msgid "Done"
 msgstr ""
 
@@ -83,9 +79,6 @@ msgid "warn2_net_title"
 msgstr ""
 
 msgid "warning_build"
-msgstr ""
-
-msgid "warning_runit"
 msgstr ""
 
 msgid "warning_devel"
@@ -112,10 +105,6 @@ msgstr ""
 
 #, sh-format
 msgid "status_done_step"
-msgstr ""
-
-#, sh-format
-msgid "menu_task_runit"
 msgstr ""
 
 msgid "warning_touse"
