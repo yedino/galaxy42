@@ -17,15 +17,25 @@
 $ git clone https://github.com/yedino/galaxy42
 $ cd galaxy42
 $ git submodule update --init
-$ git log -1
-commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9
+$ export CC=i686-w64-mingw32-gcc
+$ export CXX-i686-w64-mingw32-g++
+$ cmake .
+$ make tunserver.elf
 ```
-### Cmake-GUI 
-Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI  
+### MSVC:
+Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
+
+__provide dependencies (libboost and libsodium):__  
+- Pre-compiled binaries can be found on libboost/libsodium official pages.  
+Download and install/unpack libraries. I used:  
+    - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)  
+    - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
+
 __settings:__  
 ```
 Where is the source: 		path/to/cloned/galaxy42  
 Where to build binaries:	any/output/path
+Set cmake variables: BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR
 ```
 ```
 click configure
@@ -50,7 +60,7 @@ __cmake output:__
 	EXTLEVEL = 0
 	COVERAGE = OFF
 	EXTLEVEL enabling EXTLEVEL_IS_NORMAL
-	Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE) 
+	Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE)
 	Looking for pthread.h
 	Looking for pthread.h - not found
 	Found Threads: TRUE  
@@ -61,65 +71,7 @@ __cmake output:__
 	Libs for crypto are: (as string) ''
 	Libs for crypto are: (as list) ''
 	Configuring done
-```	
-### Project configuration in Visual Studio 2015:  
-__remove unrecognized compilation flags:__  
-in main tunserver.elf and all coresponding libs  
-- -Wextra  
-- -Wno-unused-command-line-argument   
-```right button -> properties -> C/C++ -> All Options -> Additional Options -> [remove flags]```  
-- same step in json_lib_static and sodiumpp  
-
-__provide dependencies (libboost and libsodium):__  
-- Pre-compiled binaries can be found on libboost/libsodium official pages.  
-Download and install/unpack libraries. I used:  
-    - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)  
-    - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)  
-
-__add path for dependencies in visual studio project properties:__  
-```right button -> properties -> C/C++ -> All Options -> Additional Include Directorie```  
-- add paths to libboost and libsodium (example):
 ```
-		    C:\local\libsodium-1.0.11-msvc\include;  
-		    C:\local\boost_1_61_0;
-```
-__set character set to unicode:__  
-```Configuration Properties -> General - > Character Set -> Use Unicode Characer Set```
-
-__link sodium.lib in visual studio:__  
-```right button -> properties -> Linker -> All Options -> Additional Library Directories```  
-- Make sure that you have typed libsodium.lib" in Additional Dependencies (Windows does not add the 'lib' prefix)  
-```right button -> properties -> Linker -> All Options -> Additional Dependencies```  
-- Additional Library Directory exampls:
-```
-		    C:\local\libsodium-1.0.11-msvc\Win32\Release\v140\dynamic
-		    * or for 64-bit build:
-		    C:\local\libsodium-1.0.11-msvc\x64\Release\v140\dynamic
-```  
-
-__link boost libraries in visual studio:__  
-```right button -> properties -> Linker -> All Options -> Additional Library Directories```
-- Additional Library Directory example:		
-```
-			C:\local\boost_1_61_0\lib32-msvc-14.0
-			* 64-bit:
-			C:\local\boost_1_61_0\lib64-msvc-14.0
-```
-- it could be necessary to changes boost libs names in  Additional Dependencies:  
-    - in my case:
-```
-	        boost_system.lib -> boost_system-vc140-mt-gd-1_61.lib
-			boost_filesystem.lib -> boost_filesystem-vc140-mt-gd-1_61.lib
-			boost_program_options.lib -> boost_program_options-vc140-mt-gd-1_61.lib   *
-```
-- \* if problem has occurred with boost_program_options. E.g.:  
-``` Error   LNK2005 "public: virtual char const * __cdecl boost::program_options::error_with_option_name::what(void)const " (?what@error_with_option_name@program_options@boost@@UEBAPEBDXZ) already defined in boost_program_options-vc140-mt-gd-1_61.lib(boost_program_options-vc140-mt-gd-1_61.dll)  tunserver.elf   D:\cygwin64\home\inne\msvc\galaxy42-64\libboost_program_options-vc140-mt-gd-1_61.lib(value_semantic.obj) ```
-    - you could simply remove boost_program_options-vc140-mt-gd-1_61.lib from  Additional Dependencies
-
-__change sodiumpp build to static library__  
-Visual Studio msvc can defaultly configure sodiumpp project to build a dynamic library (.dll), but we need for our project static library (.lib). Steps:  
-```right button -> properties -> General -> Target Extension -> write .lib instead of .dll```   
-```right button -> properties -> General -> Configuration Type -> Static library (.lib)```
 
 ### Build tunserver.elf.exe in Visual Studio:
 ``` right button (on "tunserver.elf" in Solution Explorer section) -> Build```  
@@ -130,7 +82,7 @@ __possible errors:__
 
 ```Error	LNK1104	cannot open file 'pthread.lib'	tunserver.elf```
 - simply remove pthread.lib from linking Additional Dependencies  
-    
+
 ```Severity	Code	Description	Project	File	Line	Suppression State```  
 ``` Error	LNK2019	unresolved external symbol _CreateUnicastIpAddressEntry@4```  
 - add Iphlpapi.lib to Additional Dependencies that contain CreateUnicastIpAddressEntry function.
@@ -141,29 +93,22 @@ or
 - make sure you link correct version of 32-bit or 64-bit (libsodium/libboost) libraries.
 
 
-#### Standalone sodiumpp build
-If soudiumpp lib is deprecated it could be built standalone. In my case:  
-__Cygwin:__
-```sh
-	$ git clone https://github.com/yedino/sodiumpp.git
-	$ git checkout origin/tigusoft   ('in my case for commit:' cf425da74f86364a3672d7f4894752f463a153b0)
-```
-__Cmake-GUI:__  
-- add bool entry ```SODIUMPP_STATIC``` to create static lib sodiumpp.lib instead of dynamic sodiumpp.dll
-- rest similar to [cmake for galaxy42](#cmake-gui)  
-
-__Visual Studio:__  
-- open and build sodiumpp project in visual studio (steps similar to galaxy42)
-- this step also need to manual add includes and link directories
-
 ### Create TUN/TAP device
 __download/install openvps drivers for windows tap device__  
 - [OpenVPN-Downloads](https://openvpn.net/index.php/open-source/downloads.html)  
 
-__set up device in windows devices manager (this step must be done as administrator)__  
+__set up device in windows devices manager (this step must be done as administrator)__
+
+Windows 7
+
 ```my computer -> properties -> devices manager -> action -> add old device -> choose manually from list netwotk device -> "TAP-Windows Adapter V9"```
 
-		
+Windows 8 and newer
+
+```my computer -> properties ->device manager -> action -> Add legacy hardware -> Install the hardware that I manually select from a list -> Network adapters -> Have disc -> locate tun driver (default path C:\Program Files\TAP_Windows\driver\OenVista.inf)```
+
+
+
 ### Possible runtime errors (tunserver.elf.exe):  
 ***cannon open shared library***
 ```
@@ -182,4 +127,4 @@ __set up device in windows devices manager (this step must be done as administra
 ***problem with TUN/TAP parser***  
 
 ```tun data length < 54 -- in tunserver.elf.exe debug messages```
-- solution: in network device properties for TAP-Windows Adapter V9 - uncheck all components instead of ipv6 protocol 
+- solution: in network device properties for TAP-Windows Adapter V9 - uncheck all components instead of ipv6 protocol
