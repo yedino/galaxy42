@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 18:18+0000\n"
+"POT-Creation-Date: 2016-08-30 18:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,15 +48,19 @@ msgstr ""
 msgid "menu_task_warn"
 msgstr ""
 
+#, sh-format
 msgid "menu_task_build"
 msgstr ""
 
+#, sh-format
 msgid "menu_task_touse"
 msgstr ""
 
+#, sh-format
 msgid "menu_task_devel"
 msgstr ""
 
+#, sh-format
 msgid "menu_task_bgitian"
 msgstr ""
 
@@ -95,4 +99,27 @@ msgid "warning_SUMMARY"
 msgstr ""
 
 msgid "warning_SUMMARY_TITLE"
+msgstr ""
+
+msgid "warn_root"
+msgstr ""
+
+msgid "warn_fw"
+msgstr ""
+
+msgid "menu_task_verbose"
+msgstr ""
+
+#, sh-format
+msgid "status_done_step"
+msgstr ""
+
+#, sh-format
+msgid "menu_task_runit"
+msgstr ""
+
+msgid "warning_touse"
+msgstr ""
+
+msgid "install_progress_title"
 msgstr ""

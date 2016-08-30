@@ -37,7 +37,8 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
-	2>&1 >/dev/tty || abdialog_exit )
+	"verbose"       "$(gettext "menu_task_verbose")" "off" \
+	2>&1 >/dev/tty ) || abdialog_exit
 
 
 function install_packets() {
@@ -49,13 +50,13 @@ function install_for_build() {
 		libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
 }
 
-function install_for_runit() {
+function install_for_touse() {
 	install_for_build
 }
 
 function install_for_devel() {
 		install_for_build
-		install_for_runit
+		install_for_touse
 		install_packets git gpg
 }
 
@@ -66,7 +67,7 @@ function install_for_devel2() {
 
 function install_build_gitian() {
 		install_for_build
-		install_for_runit
+		install_for_touse
 		install_for_devel
 		install_packets lxc
 }
@@ -78,32 +79,37 @@ warn_root=0 # things as root
 warn_fw=0 # you should use a firewall
 warn2_net=1 # warning: strange network settings
 enabled_warn=0 # are warnings enabled
+verbose=0
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
 		warn)
 			enabled_warn=1
 		;;
+		verbose)
+			verbose=1
+		;;
+
 		build)
-			warnings_text="${warnings_text}\n$(gettext "warning_build")\n" # install deps
+			warnings_text="${warnings_text}$(gettext "warning_build")\n" # install deps
 			warn_root=1 # to install deps
 			warn_ANY=1
 		;;
-		runit)
-			warnings_text="${warnings_text}\n$(gettext "warning_runit")\n" # firewall ipv6, setcap script
+		touse)
+			warnings_text="${warnings_text}$(gettext "warning_touse")\n" # firewall ipv6, setcap script
 			warn_fw=1
 			warn_root=1 # for setcap
 			warn_ANY=1
 		;;
 		devel)
-			warnings_text="${warnings_text}\n$(gettext "warning_devel")\n" # net namespace script
+			warnings_text="${warnings_text}$(gettext "warning_devel")\n" # net namespace script
 			warn_fw=1 # to test
 			warn2_net=1 # namespaces
-			warn_root=1 # net namespace, and same as for task runit
+			warn_root=1 # net namespace, and same as for task touse
 			warn_ANY=1
 		;;
 		bgitian)
-			warnings_text="${warnings_text}\n$(gettext "warning_bgitian")\n" # run lxc as root, set special NIC card/bridge
+			warnings_text="${warnings_text}$(gettext "warning_bgitian")\n" # run lxc as root, set special NIC card/bridge
 			warn2_net=1 # for special LXC network
 			warn_root=1 # for LXC and maybe running gitian too (perhaps avoidable?)
 			warn_ANY=1
@@ -111,36 +117,53 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	esac
 done
 
+any=0
+ww=""
+if ((warn_root)) ; then any=1; ww="$(gettext "warn_root")\n${ww}" ; fi
+if ((warn_fw)) ; then any=1; ww="$(gettext "warn_fw")\n${ww}" ; fi
+if ((any)) ; then warnings_text="${ww}\n${warnings_text}" ; fi
+
+# show basic warnings:
 if ((enabled_warn && warn_ANY)) ; then
-	text="$(eval_gettext "warning_SUMMARY")\n$warnings_text"
+	text="$(eval_gettext "warning_SUMMARY")\n\n$warnings_text"
 	abdialog --title "$(gettext 'warning_SUMMARY_TITLE')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
+		--yesno "$text" 20 60 || abdialog_exit
 fi
 
-
+# show special warnings:
 if ((enabled_warn && warn2_net)) ; then
 	warnings_text="${warnings_text}\n(gettext "warning_warn2_net")" # net namespace script
 
 	text="$(eval_gettext "warn2_net")"
 	abdialog --title "$(gettext 'warn2_net_title')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
+		--yesno "$text" 20 60 || abdialog_exit
 fi
 
+function show_status() {
+	abdialog --title "$(gettext 'install_progress_title')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 60 || abdialog_exit
+}
+
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
-	case "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx$item" in
+	case "$item" in
 		build)
 			install_for_build
+			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_build")" ; fi
 		;;
-		runit)
-			install_for_runit
+		touse)
+			install_for_touse
+			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_touse")" ; fi
 		;;
 		devel)
 			install_for_devel
+			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_devel")" ; fi
 		;;
 		bgitian)
 			install_build_gitian
+			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_bgitian")" ; fi
 		;;
 	esac
 done

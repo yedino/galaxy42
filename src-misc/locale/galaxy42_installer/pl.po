@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 18:18+0000\n"
+"POT-Creation-Date: 2016-08-30 18:57+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -55,21 +55,25 @@ msgstr "Jak chcesz używać $programname:"
 msgid "menu_task_warn"
 msgstr "Pokaż ostrzeżenia"
 
+#, sh-format
 msgid "menu_task_build"
 msgstr "Zbuduj ten program"
 
+#, sh-format
 msgid "menu_task_touse"
 msgstr "Używaj programu na tym komputerze"
 
+#, sh-format
 msgid "menu_task_devel"
 msgstr "Rozwijaj ten program"
 
+#, sh-format
 msgid "menu_task_bgitian"
 msgstr "Zbuduj oraz podpisz/opublikuj (Gitian)"
 
-#, sh-format
+#, fuzzy, sh-format
 msgid "Warning (root)"
-msgstr ""
+msgstr "# Będziemy używać praw root (admina) teraz przy instalacji."
 
 msgid "Done"
 msgstr "Gotowe"
@@ -88,13 +92,11 @@ msgid "warn2_net_title"
 msgstr "Uwaga (SPECJALNE: sieć)"
 
 msgid "warning_build"
-msgstr ""
-"* Instalacja narzędzi do budowy z kodu źródłowego"
+msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
 
+#, fuzzy
 msgid "warning_runit"
-msgstr ""
-"* Aby używać programu, zainstalujemy skrypt set_cap pozwalający uż"
-"ytkownikowi konfigurować sieć."
+msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
 
 msgid "warning_devel"
 msgstr ""
@@ -117,3 +119,26 @@ msgstr ""
 
 msgid "warning_SUMMARY_TITLE"
 msgstr "Ostrzeżenie bezpieczeństwa i podsumowanie"
+
+msgid "warn_root"
+msgstr "# Będziemy używać praw root (admina) teraz przy instalacji."
+
+msgid "warn_fw"
+msgstr "# Proszę pamiętać o włączeniu TERAZ firewall (zapory sieciowej)!"
+
+msgid "menu_task_verbose"
+msgstr "Pokazuj tutaj więcej szczegółów"
+
+#, sh-format
+msgid "status_done_step"
+msgstr "Wykonano etap instalacji: "
+
+#, fuzzy, sh-format
+msgid "menu_task_runit"
+msgstr "Pokaż ostrzeżenia"
+
+msgid "warning_touse"
+msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
+
+msgid "install_progress_title"
+msgstr "Postęp instalacji"

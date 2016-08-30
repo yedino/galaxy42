@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 18:18+0000\n"
+"POT-Creation-Date: 2016-08-30 18:57+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -50,21 +50,25 @@ msgstr ""
 msgid "menu_task_warn"
 msgstr "Show warnings"
 
+#, sh-format
 msgid "menu_task_build"
 msgstr "Build this program from source code"
 
+#, sh-format
 msgid "menu_task_touse"
 msgstr "Use this program on this computer"
 
+#, sh-format
 msgid "menu_task_devel"
 msgstr "Develop this program"
 
+#, sh-format
 msgid "menu_task_bgitian"
 msgstr "Compile and sign/publish (e.g. Gitian)"
 
-#, sh-format
+#, fuzzy, sh-format
 msgid "Warning (root)"
-msgstr ""
+msgstr "# We will need root (admin) rights during this installation now."
 
 msgid "Done"
 msgstr ""
@@ -87,9 +91,7 @@ msgstr "TODO"
 
 #, fuzzy
 msgid "warning_runit"
-msgstr ""
-"WARNING: SPECIAL settings of networks - maybe names or functions of network "
-"cards (e.g. eth0/br0/lxcbr0) will be changed."
+msgstr "TODO"
 
 msgid "warning_devel"
 msgstr "TODO"
@@ -103,3 +105,29 @@ msgstr "TODO"
 
 msgid "warning_SUMMARY_TITLE"
 msgstr "TODO"
+
+#, fuzzy
+msgid "warn_root"
+msgstr "# We will need root (admin) rights during this installation now."
+
+msgid "warn_fw"
+msgstr "# Please remember to install NOW a firewall!"
+
+#, fuzzy
+msgid "menu_task_verbose"
+msgstr "Use this program on this computer"
+
+#, sh-format
+msgid "status_done_step"
+msgstr ""
+
+#, fuzzy, sh-format
+msgid "menu_task_runit"
+msgstr "Show warnings"
+
+#, fuzzy
+msgid "warning_touse"
+msgstr "TODO"
+
+msgid "install_progress_title"
+msgstr "Progress of installation"
