@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 18:57+0000\n"
+"POT-Creation-Date: 2016-08-30 18:58+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -94,10 +94,6 @@ msgstr "Uwaga (SPECJALNE: sieć)"
 msgid "warning_build"
 msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
 
-#, fuzzy
-msgid "warning_runit"
-msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
-
 msgid "warning_devel"
 msgstr ""
 "* Zainstalujemy dodatkowe narzędzia deweloperskie, w tym do symulowania "
@@ -132,10 +128,6 @@ msgstr "Pokazuj tutaj więcej szczegółów"
 #, sh-format
 msgid "status_done_step"
 msgstr "Wykonano etap instalacji: "
-
-#, fuzzy, sh-format
-msgid "menu_task_runit"
-msgstr "Pokaż ostrzeżenia"
 
 msgid "warning_touse"
 msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
