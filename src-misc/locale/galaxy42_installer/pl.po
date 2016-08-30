@@ -71,10 +71,6 @@ msgstr "Rozwijaj ten program"
 msgid "menu_task_bgitian"
 msgstr "Zbuduj oraz podpisz/opublikuj (Gitian)"
 
-#, fuzzy, sh-format
-msgid "Warning (root)"
-msgstr "# Będziemy używać praw root (admina) teraz przy instalacji."
-
 msgid "Done"
 msgstr "Gotowe"
 

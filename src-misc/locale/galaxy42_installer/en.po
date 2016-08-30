@@ -66,10 +66,6 @@ msgstr "Develop this program"
 msgid "menu_task_bgitian"
 msgstr "Compile and sign/publish (e.g. Gitian)"
 
-#, fuzzy, sh-format
-msgid "Warning (root)"
-msgstr "# We will need root (admin) rights during this installation now."
-
 msgid "Done"
 msgstr ""
 
