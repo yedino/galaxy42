@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 15:04+0000\n"
+"POT-Creation-Date: 2016-08-30 17:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,66 +17,63 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: install.sh:19
 #, sh-format
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
 msgstr ""
 
-#: install.sh:23
 msgid ""
 "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
 "select option, ENTER to finish."
 msgstr ""
 
-#: install.sh:26
 msgid "We recognize your system/platform as:"
 msgstr ""
 
-#: install.sh:30
 #, sh-format
 msgid "Configure computer for $programname"
 msgstr ""
 
-#: install.sh:31 install.sh:123
 msgid "Ok"
 msgstr ""
 
-#: install.sh:31 install.sh:123
 msgid "Quit"
 msgstr ""
 
-#: install.sh:34
 #, sh-format
 msgid "How do you want to use $programname:"
 msgstr ""
 
-#: install.sh:35
 msgid "menu_task_warn"
 msgstr ""
 
-#: install.sh:36
 msgid "menu_task_build"
 msgstr ""
 
-#: install.sh:37
 msgid "menu_task_touse"
 msgstr ""
 
-#: install.sh:38
 msgid "menu_task_devel"
 msgstr ""
 
-#: install.sh:39
 msgid "menu_task_bgitian"
 msgstr ""
 
-#: install.sh:121
+#, sh-format
+msgid "Warning (root)"
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
 #, sh-format
 msgid "Finished installation of $programname."
 msgstr ""
 
-#: install.sh:122
-msgid "Done"
+#, sh-format
+msgid "warn2_net"
+msgstr ""
+
+msgid "warn2_net_title"
 msgstr ""

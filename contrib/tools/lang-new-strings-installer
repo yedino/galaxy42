@@ -30,7 +30,7 @@ mkdir -p "$MYTMP"
 
 function lang_new_and_translate() {
 
-	xgettext   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
+	xgettext -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
 	# -j
 	for lang in pl en
 	do

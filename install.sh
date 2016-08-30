@@ -72,9 +72,10 @@ function install_build_gitian() {
 }
 
 response_menu_task="$response"
-warnings_text=""
-warn_root=0
-warn_fw=0
+warnings_text="" # more warnings
+warn_root=0 # things as root
+warn_fw=0 # you should use a firewall
+warn2_net=1 # warning: strange network settings
 enabled_warn=0 # are warnings enabled
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
@@ -83,35 +84,39 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			enabled_warn=1
 		;;
 		build)
-			warnings_text="${warnings_text}(gettext "$warning_build")" # install deps
+			warnings_text="${warnings_text}\n(gettext "warning_build")" # install deps
 			warn_root=1 # to install deps
 		;;
 		runit)
-			warnings_text="${warnings_text}(gettext "$warning_runit")" # firewall ipv6, setcap script
+			warnings_text="${warnings_text}\n(gettext "warning_runit")" # firewall ipv6, setcap script
 			warn_fw=1
 			warn_root=1 # for setcap
 		;;
 		devel)
-			warnings_text="${warnings_text}(gettext "$warning_devel")" # net namespace script
-			warn_fw=1
+			warnings_text="${warnings_text}\n(gettext "warning_devel")" # net namespace script
+			warn_fw=1 # to test
+			warn2_net=1 # namespaces
 			warn_root=1 # net namespace, and same as for task runit
 		;;
 		bgitian)
-			warnings_text="${warnings_text}(gettext "$warning_bgitian")" # run lxc as root, set special NIC card/bridge
-			warn_fw=1 # for special LXC network
-			warn_root=1 # for LXC and maybe running gitian too
+			warnings_text="${warnings_text}\n(gettext "warning_bgitian")" # run lxc as root, set special NIC card/bridge
+			warn2_net=1 # for special LXC network
+			warn_root=1 # for LXC and maybe running gitian too (perhaps avoidable?)
 		;;
 	esac
 done
 
-if ((enabled_warn && warn_root)) ; then
-	echo TODO ; read _
+if ((enabled_warn && warn2_net)) ; then
+	warnings_text="${warnings_text}\n(gettext "warning_warn2_net")" # net namespace script
 
+	text="$(eval_gettext "warn2_net")"
+	abdialog --title "$(gettext 'warn2_net_title')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 60 || abdialog_exit
 fi
 
-
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
-	case "$item" in
+	case "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx$item" in
 		build)
 			install_for_build
 		;;

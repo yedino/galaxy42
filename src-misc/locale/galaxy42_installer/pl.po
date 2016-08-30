@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 14:58+0000\n"
+"POT-Creation-Date: 2016-08-30 17:29+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -19,7 +19,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: install.sh:19
 #, sh-format
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
@@ -28,7 +27,6 @@ msgstr ""
 "To narzędzie skonfiguruje Twój komputer dla WBRANYCH przez Ciebie funkcji "
 "programu $programname"
 
-#: install.sh:23
 msgid ""
 "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
 "select option, ENTER to finish."
@@ -37,53 +35,52 @@ msgstr ""
 "możesz używać strzałki w górę/w dół, SPACJI aby zaznaczyć opcję, "
 "ENTER aby zakończyć."
 
-#: install.sh:26
 msgid "We recognize your system/platform as:"
 msgstr "Rozpoznajemy tą platformę jako:"
 
-#: install.sh:30
 #, sh-format
 msgid "Configure computer for $programname"
 msgstr "Skonfiguruj komputer dla $programname"
 
-#: install.sh:31 install.sh:123
 msgid "Ok"
 msgstr "Ok"
 
-#: install.sh:31 install.sh:123
 msgid "Quit"
 msgstr "Zakończ"
 
-#: install.sh:34
 #, sh-format
 msgid "How do you want to use $programname:"
 msgstr "Jak chcesz używać $programname:"
 
-#: install.sh:35
 msgid "menu_task_warn"
 msgstr "Pokaż ostrzeżenia"
 
-#: install.sh:36
 msgid "menu_task_build"
 msgstr "Zbuduj ten program"
 
-#: install.sh:37
 msgid "menu_task_touse"
 msgstr "Używaj programu na tym komputerze"
 
-#: install.sh:38
 msgid "menu_task_devel"
 msgstr "Rozwijaj ten program"
 
-#: install.sh:39
 msgid "menu_task_bgitian"
 msgstr "Zbuduj oraz podpisz/opublikuj (Gitian)"
 
-#: install.sh:121
+#, sh-format
+msgid "Warning (root)"
+msgstr ""
+
+msgid "Done"
+msgstr "Gotowe"
+
 #, sh-format
 msgid "Finished installation of $programname."
 msgstr "Ukończono instalcję $programname"
 
-#: install.sh:122
-msgid "Done"
-msgstr "Gotowe"
+#, sh-format
+msgid "warn2_net"
+msgstr "UWAGA: SPECJALNE ustawienia sieci - może zostaną zmienione nazwy lub funkcje kart sieciowych (np eth0/br0/lxcbr0)."
+
+msgid "warn2_net_title"
+msgstr "Uwaga (SPECJALNE: sieć)"
