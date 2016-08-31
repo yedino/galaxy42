@@ -1,0 +1,111 @@
+#!/bin/bash
+
+function usage() {
+	printf "
+
+	Run this program with options:
+
+	-t Trims from .po files obsolite strings that are no longer present in sources.
+	-u Updates the .po and .mo files by adding new strings that were since last time added in sources.
+
+	(Need manual commands to create first empty pot file maybe)
+
+"
+
+}
+
+printf "
+
+This script is for translators (of human languages) and for developers creating translations.
+Use -h for help.
+
+"
+
+textdomain='galaxy42_installer'
+sourcefile="install.sh"
+
+mainfile_messages_pot="src-misc/locale/${textdomain}/messages.pot"
+
+MYTMP="vartmp/lang/" # <-- must be safe local dir! (we will delete it!)
+rm -rf "$MYTMP"
+mkdir -p "$MYTMP"
+
+function lang_new_and_translate() {
+
+	xgettext -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
+	# -j
+	for lang in pl en
+	do
+		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || exit
+		$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
+		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || exit
+	done
+
+}
+
+function trim_po_file() {
+	freshfile="$1"
+	pofile="$2"
+	pofile_clean="${pofile}-clean"
+	pofile_clean2="${pofile}-clean2"
+	echo "=== Trimming file: $pofile to strings only in fresh $freshfile"
+	msgattrib --set-obsolete --ignore-file="$freshfile" -o "$pofile_clean" "$pofile" || exit
+	msgattrib --no-obsolete -o "$pofile_clean2" "$pofile_clean" || exit
+	echo "Diff of trimming:"
+	pager="tee"
+	if hash "colordiff" 2>/dev/null ; then pager="colordiff" ; fi
+	diff -Nuar "$pofile" "$pofile_clean2" | $pager
+	mv "$pofile_clean2" "$pofile"
+	rm "$pofile_clean"
+}
+
+function trim_obsolete {
+	echo "=== Removing obsolete strings that are no longer in sourcefile=$sourcefile"
+
+	# set -x # debug
+	freshfile="$MYTMP/fresh.pot"
+	xgettext  -o "${freshfile}"  "${sourcefile}"
+
+	trim_po_file "${freshfile}" "${mainfile_messages_pot}"
+
+	for lang in pl en
+	do
+		pofile="src-misc/locale/${textdomain}/${lang}.po"
+		trim_po_file "${freshfile}" "${pofile}"
+	done
+}
+
+cmd_trim=0
+cmd_update=0
+
+while getopts ":tuh" opt; do
+	  case $opt in
+	  	t)
+	  		cmd_trim=1
+				;;
+	  	u)
+	  		cmd_update=1
+				;;
+			h)
+				usage
+				exit 0
+				;;
+			'?')
+				echo "Unknown option."
+				usage
+				exit 1
+				;;
+	  esac
+done
+
+if ((cmd_update)) ; then
+	lang_new_and_translate
+fi
+
+if ((cmd_trim)) ; then
+	trim_obsolete
+fi
+
+
+
+

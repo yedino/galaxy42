@@ -1,0 +1,13 @@
+#!/bin/bash
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+
+for script in "install.sh" "contrib/tools/lang-updater"
+do
+	shellcheck -s bash "$script" || { echo "Errors while checking script $script"; exit 1; }
+done
+
+dir="share/script/lib/"
+find "$dir" -type f -print -exec shellcheck -s bash -- {} \; || { echo "Errors while checking scripts in dir $dir"; exit 1; }
+
+echo "Check done, bash scripts seem to not contain any mistakes that we can detect automatically"
+

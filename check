@@ -1,0 +1,6 @@
+#!/bin/bash
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+
+
+contrib/tools/check-bash || { echo "Bash tests failed." ; exit 1 ; }
+
