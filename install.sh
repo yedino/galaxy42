@@ -82,7 +82,7 @@ function install_packets() {
 
 function install_for_build() {
 	install_packets git gcc g++ cmake autoconf libtool build-essential \
-		libboost-system-dev libboost-filesystem-dev libboost-program-options-dev
+		libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
 }
 
 function install_for_touse() {
