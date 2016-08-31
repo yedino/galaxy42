@@ -9,7 +9,7 @@ source gettext.sh || { echo "Gettext is not installed, please install it." ; exi
 export TEXTDOMAIN="galaxy42_installer"
 # share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
-programname="Galaxy42"
+programname="Galaxy42" # shellcheck disable=SC2034
 
 source "${dir_base_of_source}/share/script/lib/abdialog.sh" || {\
 	lib='abdialog'; eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
@@ -19,7 +19,7 @@ source "${dir_base_of_source}/share/script/lib/platforminfo.sh" || {\
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
 text2=""
-if (($abdialog_curses)) ; then
+if ((abdialog_curses)) ; then
 text2="$(gettext "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to select option, ENTER to finish.")"
 fi
 
@@ -27,10 +27,12 @@ text3="$(gettext "We recognize your system/platform as:")"
 info="$(platforminfo_show_summary)"
 text="\n${text1}\n\n${text2}\n\n${text3}\n\n${info}"
 
+# shellcheck disable=SC2069
 abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-	--yesno "$text" 20 60 2>&1 >/dev/tty || abdialog_exit
+	--yesno "$text" 20 60 2>&1 >/dev/tty || abdialog_exit # shellcheck disable=SC2069
 
+# shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
 	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"build"         "$(gettext "menu_task_build")" "on" \
@@ -133,7 +135,7 @@ fi
 
 # show special warnings:
 if ((enabled_warn && warn2_net)) ; then
-	warnings_text="${warnings_text}\n(gettext "warning_warn2_net")" # net namespace script
+	warnings_text="${warnings_text}\n(gettext 'warning_warn2_net')" # net namespace script
 
 	text="$(eval_gettext "warn2_net")"
 	abdialog --title "$(gettext 'warn2_net_title')" \

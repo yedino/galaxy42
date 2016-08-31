@@ -6,10 +6,14 @@ abdialog_ver=1
 abdialog_curses=1 ; abdialog_gui=0 ;
 
 abdialog_program="whiptail"
-if [ -x $(which dialog) ] ; then abdialog_program="dialog" ; fi
+if [ -x "$(which dialog)" ] ; then abdialog_program="dialog" ; fi
 
 if [[ "$FORCE_DIALOG" == "whiptail" ]] ; then abdialog_program="whiptail" ; abdialog_curses=1 ; abdialog_gui=0 ; fi
 if [[ "$FORCE_DIALOG" == "dialog" ]] ; then abdialog_program="dialog" ; abdialog_curses=1 ; abdialog_gui=0 ; fi
+
+export abdialog_ver
+export abdialog_curses
+export abdialog_gui
 
 function abdialog() {
 	local argtab=()
