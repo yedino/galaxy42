@@ -21,6 +21,7 @@ addons:
       - libboost-filesystem-dev
       - libboost-program-options-dev
       - libfftw3-dev
+      - shellcheck
 
 compiler:
   - gcc
