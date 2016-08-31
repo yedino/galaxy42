@@ -77,7 +77,7 @@ fi
 function install_packets() {
 	packages="$*"
 	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages now (as root)")"
-	sudo aptitude install "$@"|| exit 1
+	sudo aptitude install -y "$@" || exit 1
 }
 
 function install_for_build() {
