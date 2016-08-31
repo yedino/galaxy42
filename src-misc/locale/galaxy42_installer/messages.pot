@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 21:09+0000\n"
+"POT-Creation-Date: 2016-08-31 16:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -103,12 +103,41 @@ msgstr ""
 msgid "menu_task_verbose"
 msgstr ""
 
-#, sh-format
-msgid "status_done_step"
-msgstr ""
-
-msgid "warning_touse"
-msgstr ""
-
 msgid "install_progress_title"
+msgstr ""
+
+#, sh-format
+msgid "warning_touse $programname"
+msgstr ""
+
+msgid "status_done_step_BEFORE"
+msgstr ""
+
+msgid "status_done_step_PRESSKEY"
+msgstr ""
+
+msgid "error_init_platforminfo"
+msgstr ""
+
+#, sh-format
+msgid "status_done_step $item"
+msgstr ""
+
+#, sh-format
+msgid "menu_main_title $programname:"
+msgstr ""
+
+msgid "menu_taskpack_normal_builduse"
+msgstr ""
+
+msgid "menu_taskpack_custom"
+msgstr ""
+
+msgid "menu_taskpack_quick_builduse"
+msgstr ""
+
+msgid "menu_taskpack_quick_devel"
+msgstr ""
+
+msgid "tasks_we_will_do"
 msgstr ""

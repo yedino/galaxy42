@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-30 20:19+0000\n"
+"POT-Creation-Date: 2016-08-31 16:37+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -24,7 +24,7 @@ msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
 msgstr ""
-"To narzędzie skonfiguruje Twój komputer dla WBRANYCH przez Ciebie funkcji "
+"To narzędzie skonfiguruje Twój komputer dla WYBRANYCH przez Ciebie funkcji "
 "programu $programname"
 
 msgid ""
@@ -53,7 +53,7 @@ msgid "How do you want to use $programname:"
 msgstr "Jak chcesz używać $programname:"
 
 msgid "menu_task_warn"
-msgstr "Pokaż ostrzeżenia"
+msgstr "(Pokaż ostrzeżenia podczas instalacji)"
 
 #, sh-format
 msgid "menu_task_build"
@@ -65,7 +65,7 @@ msgstr "Używaj programu na tym komputerze"
 
 #, sh-format
 msgid "menu_task_devel"
-msgstr "Rozwijaj ten program"
+msgstr "Rozwijaj ten program (n.p. jako programista)"
 
 #, sh-format
 msgid "menu_task_bgitian"
@@ -100,33 +100,64 @@ msgstr ""
 "* Skonfigurujemy komputer do używania Gitian (w lekkiej 'wirtualizacji' "
 "LXC). Uwaga, to może stworzyć jeszcze inne karty sieciowe, oraz zmienić "
 "ustawienia obecnych kart. Między innymi adres IP z obecnego głównego łą"
-"cza do Internetu (np. eth0) może być pokazywane teraz jako przypisane do "
-"innej karty"
+"cza do Internetu (np. eth0) może być pokazywany/przeniesiony jako "
+"przypisany do innej karty (tak działa 'bridge')"
 
 #, sh-format
 msgid "warning_SUMMARY"
 msgstr ""
-"Proszę sprawdzić i zatwierdzić poniższe zmiany na komputerze.\n"
-"Zmiany mogą mieć wpływ na bezpieczeństwo!"
+"Proszę potwierdzić poniższe zmiany na komputerze (mają wpływ na "
+"bezpieczeństwo)."
 
 msgid "warning_SUMMARY_TITLE"
 msgstr "Ostrzeżenie bezpieczeństwa i podsumowanie"
 
 msgid "warn_root"
-msgstr "# Będziemy używać praw root (admina) teraz przy instalacji."
+msgstr "# Będziemy potrzebować praw root (admina) teraz przy instalacji."
 
 msgid "warn_fw"
 msgstr "# Proszę pamiętać o włączeniu TERAZ firewall (zapory sieciowej)!"
 
 msgid "menu_task_verbose"
-msgstr "Pokazuj tutaj więcej szczegółów"
-
-#, sh-format
-msgid "status_done_step"
-msgstr "Wykonano etap instalacji: "
-
-msgid "warning_touse"
-msgstr "* Instalacja narzędzi do budowy z kodu źródłowego"
+msgstr "(Pokazuj więcej szczegółów podczas istalacji)"
 
 msgid "install_progress_title"
 msgstr "Postęp instalacji"
+
+#, sh-format
+msgid "warning_touse $programname"
+msgstr "* Przygotowanie komputera do używania tutaj programu $programname."
+
+msgid "status_done_step_BEFORE"
+msgstr "Teraz wykonamy etap instalacji: "
+
+msgid "status_done_step_PRESSKEY"
+msgstr "Proszę nacisnąć ENTER aby kontynuować..."
+
+msgid "error_init_platforminfo"
+msgstr ""
+"Nie udało się rozpoznać informacji o tym systemie operacyjnym/platformie "
+"które są tutaj używane."
+
+#, sh-format
+msgid "status_done_step $item"
+msgstr "Wykonano etap instalacji: '$item'."
+
+#, sh-format
+msgid "menu_main_title $programname:"
+msgstr "Instalator $programname."
+
+msgid "menu_taskpack_normal_builduse"
+msgstr "Zalecane: zbuduj ten program aby go używać tutaj"
+
+msgid "menu_taskpack_custom"
+msgstr "Wybierz dokładne opcje sam..."
+
+msgid "menu_taskpack_quick_builduse"
+msgstr "Bez pytań (niebezpieczne!) - zbuduj i używaj"
+
+msgid "menu_taskpack_quick_devel"
+msgstr "Bez pytań (niebezpieczne!) - dla developera"
+
+msgid "tasks_we_will_do"
+msgstr "Wykonamy teraz czynności:"

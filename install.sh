@@ -1,4 +1,4 @@
-#!/bin/bash
+#verbose !/bin/bash
 # This script should be run as-is inside the source code of this project.
 # It allows to build&install the programs of this project,
 # and also it allows to configure all developer tools.
@@ -11,10 +11,12 @@ export TEXTDOMAIN="galaxy42_installer"
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 programname="Galaxy42" # shellcheck disable=SC2034
 
-source "${dir_base_of_source}/share/script/lib/abdialog.sh" || {\
-	lib='abdialog'; eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
-source "${dir_base_of_source}/share/script/lib/platforminfo.sh" || {\
-	lib='platforminfo'; eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+
+init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
@@ -33,6 +35,21 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yesno "$text" 20 60 2>&1 >/dev/tty || abdialog_exit # shellcheck disable=SC2069
 
 # shellcheck disable=SC2069
+response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 18  \
+	"normal"        "$(gettext "menu_taskpack_normal_builduse")"  \
+	"custom"        "$(gettext "menu_taskpack_custom")" \
+	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
+	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
+	2>&1 >/dev/tty ) || abdialog_exit
+
+[[ -z "$response" ]] && exit
+response_menu_task=""
+
+if [[ "$response" == "normal" ]] ; then response_menu_task="warn build touse" ; fi
+if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse" ; fi
+if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian" ; fi
+if [[ "$response" == "custom" ]] ; then
+# shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
 	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"build"         "$(gettext "menu_task_build")" "on" \
@@ -41,7 +58,10 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
 	"verbose"       "$(gettext "menu_task_verbose")" "off" \
 	2>&1 >/dev/tty ) || abdialog_exit
+response_menu_task="$response"
+fi
 
+[[ -z "$response_menu_task" ]] && exit
 
 function install_packets() {
 	sudo aptitude install "$@"
@@ -59,7 +79,7 @@ function install_for_touse() {
 function install_for_devel() {
 		install_for_build
 		install_for_touse
-		install_packets git gpg
+		install_packets git gnupg
 }
 
 function install_for_devel2() {
@@ -74,12 +94,11 @@ function install_build_gitian() {
 		install_packets lxc
 }
 
-response_menu_task="$response"
 warnings_text="" # more warnings
 warn_ANY=0 # any warning?
 warn_root=0 # things as root
 warn_fw=0 # you should use a firewall
-warn2_net=1 # warning: strange network settings
+warn2_net=0 # warning: strange network settings (e.g. lxc br)
 enabled_warn=0 # are warnings enabled
 verbose=0
 
@@ -98,7 +117,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			warn_ANY=1
 		;;
 		touse)
-			warnings_text="${warnings_text}$(gettext "warning_touse")\n" # firewall ipv6, setcap script
+			warnings_text="${warnings_text}$(eval_gettext "warning_touse \$programname")\n" # firewall ipv6, setcap script
 			warn_fw=1
 			warn_root=1 # for setcap
 			warn_ANY=1
@@ -121,6 +140,7 @@ done
 
 any=0
 ww=""
+$warnings_text="$(gettext "tasks_we_will_do")\n${warnings_text}"
 if ((warn_root)) ; then any=1; ww="$(gettext "warn_root")\n${ww}" ; fi
 if ((warn_fw)) ; then any=1; ww="$(gettext "warn_fw")\n${ww}" ; fi
 if ((any)) ; then warnings_text="${ww}\n${warnings_text}" ; fi
@@ -144,30 +164,39 @@ if ((enabled_warn && warn2_net)) ; then
 fi
 
 function show_status() {
+	local text="$1"
 	abdialog --title "$(gettext 'install_progress_title')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 		--msgbox "$text" 20 60 || abdialog_exit
 }
 
+
+
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+	nonsteps=(warn verbose)
+	is_realstep=1
+	inarray "$item" "${nonsteps[@]}" && is_realstep=0
+
+	if ((is_realstep && verbose)) ; then show_status "$(gettext "status_done_step_BEFORE")${item}" ; fi
 	case "$item" in
 		build)
 			install_for_build
-			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_build")" ; fi
 		;;
 		touse)
 			install_for_touse
-			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_touse")" ; fi
 		;;
 		devel)
 			install_for_devel
-			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_devel")" ; fi
 		;;
 		bgitian)
 			install_build_gitian
-			if ((verbose)) ; then show_status "$(eval_gettext "status_done_step")$(eval_gettext "menu_task_bgitian")" ; fi
 		;;
 	esac
+
+	if ((is_realstep && verbose)) ; then
+		printf "\n\n%s\n%s\n" "$(eval_gettext "status_done_step \$item")" "$(gettext "status_done_step_PRESSKEY")"
+		read _
+	fi
 done
 
 
