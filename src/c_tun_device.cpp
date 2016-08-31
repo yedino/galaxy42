@@ -97,6 +97,7 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 c_tun_device_windows::c_tun_device_windows()
 	:
 	// LOG_ON_INIT( _note("Creating TUN device (windows)") ),
+	m_guid(get_device_guid()),
 	m_readed_bytes(0),
 	m_handle(get_device_handle()),
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
@@ -119,8 +120,7 @@ void c_tun_device_windows::set_ipv6_address
 	iprow.PreferredLifetime = 0xFFFFFFFF;
 	iprow.OnLinkPrefixLength = 0xFF;
 
-	auto guid = get_device_guid();
-	auto human_name = get_human_name(guid);
+	auto human_name = get_human_name(m_guid);
 	iprow.InterfaceLuid = get_luid(human_name);
 	iprow.Address.si_family = AF_INET6;
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
@@ -237,6 +237,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 	auto subkeys_vector = get_subkeys(key);
 	RegCloseKey(key);
 	for (auto & subkey : subkeys_vector) { // foreach sub key
+		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
 		// std::wcout << subkey_reg_path << std::endl;
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
@@ -249,7 +250,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			RegCloseKey(key);
 			continue;
 		}
-		if (componentId.substr(0, 8) == L"root\\tap") { // found TAP
+		if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
 			std::wcout << subkey_reg_path << std::endl;
 			size = 256;
 			std::wstring netCfgInstanceId(size, '\0');
@@ -258,6 +259,9 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
 			std::wcout << netCfgInstanceId << std::endl;
 			RegCloseKey(key);
+			HANDLE handle = open_tun_device(netCfgInstanceId);
+			if (handle == INVALID_HANDLE_VALUE) continue;
+			else CloseHandle(handle);
 			return netCfgInstanceId;
 		}
 		RegCloseKey(key);
@@ -291,18 +295,7 @@ NET_LUID c_tun_device_windows::get_luid(const std::wstring &human_name) {
 
 
 HANDLE c_tun_device_windows::get_device_handle() {
-	std::wstring tun_filename;
-	tun_filename += L"\\\\.\\Global\\";
-	tun_filename += get_device_guid();
-	tun_filename += L".tap";
-	BOOL bret;
-	HANDLE handle = CreateFileW(tun_filename.c_str(),
-		GENERIC_READ | GENERIC_WRITE,
-		0,
-		0,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
-		0);
+	HANDLE handle = open_tun_device(m_guid);
 	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("invalid handle");
 	// get version
 	ULONG version_len;
@@ -311,7 +304,7 @@ HANDLE c_tun_device_windows::get_device_handle() {
 		unsigned long minor;
 		unsigned long debug;
 	} version;
-	bret = DeviceIoControl(handle, TAP_IOCTL_GET_VERSION, &version, sizeof(version), &version, sizeof(version), &version_len, nullptr);
+	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_VERSION, &version, sizeof(version), &version, sizeof(version), &version_len, nullptr);
 	if (bret == false) {
 		CloseHandle(handle);
 		throw std::runtime_error("DeviceIoControl error");
@@ -324,6 +317,22 @@ HANDLE c_tun_device_windows::get_device_handle() {
 		CloseHandle(handle);
 		throw std::runtime_error("DeviceIoControl error");
 	}
+	return handle;
+}
+
+HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
+	std::wstring tun_filename;
+	tun_filename += L"\\\\.\\Global\\";
+	tun_filename += guid;
+	tun_filename += L".tap";
+	BOOL bret;
+	HANDLE handle = CreateFileW(tun_filename.c_str(),
+		GENERIC_READ | GENERIC_WRITE,
+		0,
+		0,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
+		0);
 	return handle;
 }
 
