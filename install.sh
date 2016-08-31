@@ -19,7 +19,7 @@ source "${dir_base_of_source}/share/script/lib/platforminfo.sh" || {\
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
 text2=""
-if ((abdialog_curses)) ; then
+if (("$abdialog_curses")) ; then
 text2="$(gettext "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to select option, ENTER to finish.")"
 fi
 
