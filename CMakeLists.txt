@@ -324,7 +324,7 @@ add_custom_command(
 #	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
 	COMMAND cp tunserver.elf nocap-tunserver.elf
-	COMMAND share/script/use-setcap tunserver.elf
+	COMMAND share/script/use-setcap tunserver.elf || echo "Can not set rights on binary, ignoring."
 	WORKING_DIRECTORY ./)
 
 # unset( USE_BOOST_MULTIPRECISION_DEFAULT )
