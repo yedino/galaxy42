@@ -102,8 +102,8 @@ before_script:
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
-  - ./do --go
   - ./check
+  - ./do --go
 
 after_success:
   - ./test-release.elf    # run gtests
