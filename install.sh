@@ -64,7 +64,9 @@ fi
 [[ -z "$response_menu_task" ]] && exit
 
 function install_packets() {
-	sudo aptitude install "$@"
+	packages="$*"
+	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages now (as root)")"
+	sudo aptitude install "$@"|| exit 1
 }
 
 function install_for_build() {
@@ -74,6 +76,7 @@ function install_for_build() {
 
 function install_for_touse() {
 	install_for_build
+	install_packets sudo
 }
 
 function install_for_devel() {
