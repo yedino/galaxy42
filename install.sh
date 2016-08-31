@@ -35,7 +35,7 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yesno "$text" 20 60 2>&1 >/dev/tty || abdialog_exit # shellcheck disable=SC2069
 
 # shellcheck disable=SC2069
-response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 18  \
+response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 16  \
 	"normal"        "$(gettext "menu_taskpack_normal_builduse")"  \
 	"custom"        "$(gettext "menu_taskpack_custom")" \
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
