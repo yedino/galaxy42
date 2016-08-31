@@ -100,9 +100,9 @@ before_script:
   - cd share/script/install-as-root/ && sudo ./install -y
 
 script:
-  - cd ${TRAVIS_BUILD_DIR} || { echo "Script: failed to cd" ; exit 1 ; }
-  - ./do --go || { echo "The ./do failed" ; exit 1 ; }
-  - ./check || { echo "Failed ./check" ; exit ; }
+  - cd ${TRAVIS_BUILD_DIR}
+  - ./do --go
+  - ./check
 
 after_success:
   - ./test-release.elf    # run gtests
