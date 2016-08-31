@@ -1,4 +1,4 @@
-#verbose !/bin/bash
+#!/bin/bash
 # This script should be run as-is inside the source code of this project.
 # It allows to build&install the programs of this project,
 # and also it allows to configure all developer tools.
@@ -9,7 +9,18 @@ source gettext.sh || { echo "Gettext is not installed, please install it." ; exi
 export TEXTDOMAIN="galaxy42_installer"
 # share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+
 programname="Galaxy42" # shellcheck disable=SC2034
+
+sudo_flag="--sudo"
+if [[ $EUID -ne 0 ]]; then
+	if [[ "$1" == "$sudo_flag" ]]; then
+		printf "%s\n" "$(eval_gettext "this_script_uses_sudo_flag \$sudo_flag")"
+	else
+		printf "%s\n" "$(eval_gettext "this_script_must_be_run_as_root_or \$sudo_flag")"
+		exit 1
+	fi
+fi
 
 lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }

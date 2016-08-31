@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-31 16:37+0000\n"
+"POT-Creation-Date: 2016-08-31 17:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -140,4 +140,12 @@ msgid "menu_taskpack_quick_devel"
 msgstr ""
 
 msgid "tasks_we_will_do"
+msgstr ""
+
+#, sh-format
+msgid "this_script_uses_sudo_flag $sudo_flag"
+msgstr ""
+
+#, sh-format
+msgid "this_script_must_be_run_as_root_or $sudo_flag"
 msgstr ""
