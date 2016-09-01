@@ -112,6 +112,19 @@ c_tun_device_windows::c_tun_device_windows()
 
 void c_tun_device_windows::set_ipv6_address
 (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	auto human_name = get_human_name(m_guid);
+	auto luid = get_luid(human_name);
+	// remove old address
+	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
+	GetUnicastIpAddressTable(AF_INET6, &table);
+	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
+		if (table->Table[i].InterfaceLuid.Value == luid.Value)
+			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR)
+				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
+	}
+	FreeMibTable(table);
+
+	// set new address
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -120,8 +133,7 @@ void c_tun_device_windows::set_ipv6_address
 	iprow.PreferredLifetime = 0xFFFFFFFF;
 	iprow.OnLinkPrefixLength = 0xFF;
 
-	auto human_name = get_human_name(m_guid);
-	iprow.InterfaceLuid = get_luid(human_name);
+	iprow.InterfaceLuid = luid;
 	iprow.Address.si_family = AF_INET6;
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
@@ -138,7 +150,7 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
-	const size_t eth_offset = 10; // 14
+	const size_t eth_offset = 10;
 	m_readed_bytes -= eth_offset;
 	assert(m_readed_bytes > 0);
 	std::copy_n(&m_buffer[0] + eth_offset, m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
