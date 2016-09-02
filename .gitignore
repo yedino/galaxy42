@@ -1,5 +1,5 @@
 # temporary var files, including created by running-in-place program
-# (untill we write proper support for some ~/.galaxy42/var/
+# especially for developer tools, script
 vartmp/
 
 # directories copied from source

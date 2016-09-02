@@ -26,9 +26,7 @@ sourcefile="install.sh"
 
 mainfile_messages_pot="src-misc/locale/${textdomain}/messages.pot"
 
-MYTMP="vartmp/lang/" # <-- must be safe local dir! (we will delete it!)
-rm -rf "$MYTMP"
-mkdir -p "$MYTMP"
+MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || exit
 
 function lang_new_and_translate() {
 
