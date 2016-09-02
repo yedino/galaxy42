@@ -97,6 +97,7 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 c_tun_device_windows::c_tun_device_windows()
 	:
 	// LOG_ON_INIT( _note("Creating TUN device (windows)") ),
+	m_guid(get_device_guid()),
 	m_readed_bytes(0),
 	m_handle(get_device_handle()),
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
@@ -111,6 +112,19 @@ c_tun_device_windows::c_tun_device_windows()
 
 void c_tun_device_windows::set_ipv6_address
 (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	auto human_name = get_human_name(m_guid);
+	auto luid = get_luid(human_name);
+	// remove old address
+	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
+	GetUnicastIpAddressTable(AF_INET6, &table);
+	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
+		if (table->Table[i].InterfaceLuid.Value == luid.Value)
+			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR)
+				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
+	}
+	FreeMibTable(table);
+
+	// set new address
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -119,9 +133,7 @@ void c_tun_device_windows::set_ipv6_address
 	iprow.PreferredLifetime = 0xFFFFFFFF;
 	iprow.OnLinkPrefixLength = 0xFF;
 
-	auto guid = get_device_guid();
-	auto human_name = get_human_name(guid);
-	iprow.InterfaceLuid = get_luid(human_name);
+	iprow.InterfaceLuid = luid;
 	iprow.Address.si_family = AF_INET6;
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
@@ -138,7 +150,7 @@ bool c_tun_device_windows::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
-	const size_t eth_offset = 10; // 14
+	const size_t eth_offset = 10;
 	m_readed_bytes -= eth_offset;
 	assert(m_readed_bytes > 0);
 	std::copy_n(&m_buffer[0] + eth_offset, m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
@@ -237,6 +249,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 	auto subkeys_vector = get_subkeys(key);
 	RegCloseKey(key);
 	for (auto & subkey : subkeys_vector) { // foreach sub key
+		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
 		// std::wcout << subkey_reg_path << std::endl;
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
@@ -249,7 +262,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			RegCloseKey(key);
 			continue;
 		}
-		if (componentId.substr(0, 8) == L"root\\tap") { // found TAP
+		if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
 			std::wcout << subkey_reg_path << std::endl;
 			size = 256;
 			std::wstring netCfgInstanceId(size, '\0');
@@ -258,6 +271,9 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
 			std::wcout << netCfgInstanceId << std::endl;
 			RegCloseKey(key);
+			HANDLE handle = open_tun_device(netCfgInstanceId);
+			if (handle == INVALID_HANDLE_VALUE) continue;
+			else CloseHandle(handle);
 			return netCfgInstanceId;
 		}
 		RegCloseKey(key);
@@ -291,18 +307,7 @@ NET_LUID c_tun_device_windows::get_luid(const std::wstring &human_name) {
 
 
 HANDLE c_tun_device_windows::get_device_handle() {
-	std::wstring tun_filename;
-	tun_filename += L"\\\\.\\Global\\";
-	tun_filename += get_device_guid();
-	tun_filename += L".tap";
-	BOOL bret;
-	HANDLE handle = CreateFileW(tun_filename.c_str(),
-		GENERIC_READ | GENERIC_WRITE,
-		0,
-		0,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
-		0);
+	HANDLE handle = open_tun_device(m_guid);
 	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("invalid handle");
 	// get version
 	ULONG version_len;
@@ -311,7 +316,7 @@ HANDLE c_tun_device_windows::get_device_handle() {
 		unsigned long minor;
 		unsigned long debug;
 	} version;
-	bret = DeviceIoControl(handle, TAP_IOCTL_GET_VERSION, &version, sizeof(version), &version, sizeof(version), &version_len, nullptr);
+	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_VERSION, &version, sizeof(version), &version, sizeof(version), &version_len, nullptr);
 	if (bret == false) {
 		CloseHandle(handle);
 		throw std::runtime_error("DeviceIoControl error");
@@ -324,6 +329,22 @@ HANDLE c_tun_device_windows::get_device_handle() {
 		CloseHandle(handle);
 		throw std::runtime_error("DeviceIoControl error");
 	}
+	return handle;
+}
+
+HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
+	std::wstring tun_filename;
+	tun_filename += L"\\\\.\\Global\\";
+	tun_filename += guid;
+	tun_filename += L".tap";
+	BOOL bret;
+	HANDLE handle = CreateFileW(tun_filename.c_str(),
+		GENERIC_READ | GENERIC_WRITE,
+		0,
+		0,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
+		0);
 	return handle;
 }
 

@@ -72,6 +72,7 @@ public:
 																 //constexpr int m_buffer_size = 9000; ///< the buffer size. This can affect size of MTU that this TUN can offer maybe
 
 private:
+	std::wstring m_guid;
 	boost::asio::io_service m_ioservice;
 	std::array<uint8_t, 9000> m_buffer;
 
@@ -86,6 +87,7 @@ private:
 	std::wstring get_human_name(const std::wstring &guid);
 	NET_LUID get_luid(const std::wstring &human_name);
 	HANDLE get_device_handle();
+	HANDLE open_tun_device(const std::wstring &guid); // returns opened handle for guid or INVALID_HANDLE_VALUE
 	std::array<uint8_t, 6> get_mac(HANDLE handle); // get handle to opened device (returned by get_device_handle())
 
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
