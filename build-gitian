@@ -114,7 +114,7 @@ EOF
 }
 
 function gitian_builder_download() {
-	if true ; then
+	if false ; then
 		printf "\n\nSKIPPING download of Gitian\n\n" # e.g. for debug of ${base_dir}/gitian-builder that you now edit there
 	else
 		echo "Downloading gitian-builder itself"
