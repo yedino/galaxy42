@@ -371,5 +371,6 @@ add_custom_command(
 	COMMAND cp tunserver.elf nocap-tunserver.elf
 	COMMAND share/script/use-setcap tunserver.elf || echo "Can not set rights on binary, ignoring."
 	WORKING_DIRECTORY ./)
+endif()
 
 # unset( USE_BOOST_MULTIPRECISION_DEFAULT )
