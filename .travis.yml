@@ -21,6 +21,7 @@ addons:
       - libboost-filesystem-dev
       - libboost-program-options-dev
       - libfftw3-dev
+      - shellcheck
 
 compiler:
   - gcc
@@ -33,7 +34,6 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                                                  ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y                                   ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                                        ; fi
-  
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                                           ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink llvm37; brew link llvm37; brew install llvm37             ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink autoconf; brew link autoconf; brew install autoconf       ; fi
@@ -97,11 +97,12 @@ matrix:
 
 # Adding setcap for tunserver.elf etc.
 before_script:
-  - cd ${TRAVIS_BUILD_DIR} # back to main dir 
+  - cd ${TRAVIS_BUILD_DIR} # back to main dir
   - cd share/script/install-as-root/ && sudo ./install -y
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
+  - ./check
   - ./do --go
 
 after_success:

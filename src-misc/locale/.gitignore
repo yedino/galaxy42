@@ -1,0 +1,4 @@
+
+# backups from some operations on gettext messages
+*.po~
+

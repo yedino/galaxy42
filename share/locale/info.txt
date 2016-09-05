@@ -1,0 +1,4 @@
+This is for locales.
+
+Including locales - for the simple scripts, that should work already after downloading
+the source code - e.g. for installer.

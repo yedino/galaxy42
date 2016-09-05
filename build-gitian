@@ -1,4 +1,22 @@
 #!/bin/bash -e
+echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
+
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+my_dir="$PWD"
+my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit
+function script_cleanup() {
+	rm --one-file-system -rf "$my_tmp"
+}
+trap script_cleanup EXIT
+mkdir -p "$my_tmp" || exit
+
+# --- config ---
+
+# Where from get the Gitian tool itself:
+gitiansoftware_url="https://github.com/yedino/gitian-builder.git"
+#"https://github.com/devrandom/gitian-builder.git"
+gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e"
+# "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
 target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
@@ -8,13 +26,12 @@ gitian_suite=xenial
 base_dir="$HOME/var-gitian/"
 gitian_yml_file="main-build/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
 
-my_dir="$PWD"
-
 # take "my" YML
 gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
 
+target_dbs="${base_dir}debootstrap/"
 
-echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
+# ---
 
 # get our own version
 info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
@@ -25,8 +42,48 @@ echo "Working in base_dir=${base_dir}"
 mkdir -p "$base_dir" || fail "Can not create the base dir ($base_dir)"
 cd "$base_dir" || fail "Can not enter the base dir ($base_dir)"
 
-
 #set -x
+
+function fix_template_script() {
+  # fix Debian Jessie (and any other distro) that lacks Xenial script/template in it's debootstrap.
+
+	# gbuild calls ---> make-base-vm (it's own script) ---> that calls debootstrap from system.
+  # debootstrap uses dir DEBOOTSTRAP_DIR=/usr/share/debootstrap to load templates.
+  # that dir contains:
+	# devices.tar.gz  functions/  scripts/
+  # and the subdir scripts/ needs to have script e.g. "xenial" (when we use xenial ubuntu in our Gitian process)
+  dbs_sys="/usr/share/debootstrap"
+  [[ -r "$dbs_sys" ]] || { printf "Can not read debootstrap data dir [$dbs_sys], is debootstrap installed?\n" ; exit 1; }
+
+  suite="$gitian_suite"
+  rm -rf "${target_dbs}"
+  mkdir -p "${target_dbs}"
+  if [[ ! -r "$dbs_sys/scripts/$suite" ]] ; then
+  	echo "Your system seems to lack te debootstrap template for suite '$suite', we will work around this now."
+
+		for item_full in "${dbs_sys}"/*  ; do
+			[[ -e "$item_full" ]] || { echo "Can not read item_full (step1) $item_full" ; exit 1 ; }
+			item="${item_full##*/}"
+			echo "(step1) item_full=$item_full item=$item"
+			if [[ "$item" != "scripts" ]] ; then
+				ln -s "$item_full" "${target_dbs}" # link whole subdir
+			fi
+		done
+
+		mkdir "${target_dbs}/scripts"
+		for item_full in "${dbs_sys}/scripts"/*  ; do
+				echo "(step2) item_full=$item_full"
+				ln -s "$item_full" "${target_dbs}scripts" # link a script
+		done
+
+		# add our file:
+		cp "${my_dir}/contrib/gitian-debootstrap/scripts/xenial" $"$target_dbs/scripts/"
+	fi
+
+	export DEBOOTSTRAP_DIR="$target_dbs"
+	export GITIAN_SUDO_USE_DEBOOTSTRAP_DIR="yes"
+	echo "Exporting DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR GITIAN_SUDO_USE_DEBOOTSTRAP_DIR=$GITIAN_SUDO_USE_DEBOOTSTRAP_DIR"
+}
 
 function set_env() {
 	export USE_LXC=1
@@ -57,16 +114,20 @@ EOF
 }
 
 function gitian_builder_download() {
-	echo "Downloading gitian-builder itself"
-	sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
-	cd "${base_dir}" || fail "cd base dir"
-	git clone https://github.com/devrandom/gitian-builder.git || fail "while downloading gitian"
-	cd gitian-builder || fail
-	git reset --hard ee1b69d6949810069453d5540af7a0b3ca63ea8d || fail "choosing gitian version"
+	if false ; then
+		printf "\n\nSKIPPING download of Gitian\n\n" # e.g. for debug of ${base_dir}/gitian-builder that you now edit there
+	else
+		echo "Downloading gitian-builder itself"
+		sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
+		cd "${base_dir}" || fail "cd base dir"
+		git clone "$gitiansoftware_url" || fail "while downloading gitian"
+		cd gitian-builder || fail
+		git reset --hard "$gitiansoftware_checkout" || fail "choosing gitian version"
+	fi
 }
 
 function gitian_builder_make_lxc_image() {
-	echo "Making the LXC image"
+	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
 	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template?)"
 }
@@ -118,6 +179,7 @@ echo "Running on host (shortcut name): $info_host"
 
 function all_including_new_lxc() {
 	set_env
+	fix_template_script
 	gitian_builder_download
 	gitian_builder_make_lxc_image
 	target_download
@@ -127,6 +189,7 @@ function all_including_new_lxc() {
 
 function all_excluding_new_lxc() {
 	set_env
+	fix_template_script
 	target_download
 	gitian_run_build
 	gitian_show_result
