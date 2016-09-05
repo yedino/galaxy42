@@ -106,6 +106,8 @@ function install_build_gitian() {
 		install_for_touse
 		install_for_devel
 		install_packets lxc
+
+		share/script/setup-lxc-host
 }
 
 warnings_text="" # more warnings
