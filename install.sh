@@ -156,7 +156,7 @@ done
 
 any=0
 ww=""
-$warnings_text="$(gettext "tasks_we_will_do")\n${warnings_text}"
+warnings_text="$(gettext "tasks_we_will_do")\n${warnings_text}"
 if ((warn_root)) ; then any=1; ww="$(gettext "warn_root")\n${ww}" ; fi
 if ((warn_fw)) ; then any=1; ww="$(gettext "warn_fw")\n${ww}" ; fi
 if ((any)) ; then warnings_text="${ww}\n${warnings_text}" ; fi
