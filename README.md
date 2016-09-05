@@ -233,9 +233,17 @@ E: No such script: /usr/share/debootstrap/scripts/xenial
 Error occured, will exit (to create Xenial image (do you have the Xenial template?))
 `
 A: Older systems (e.g. Debian Jessie) do not include the template script file of Xenial.
-We will soon work around this automatically. For now you can yourself, as root, install this file:
+Now our Gitian script should automatically work around this problem.
+Some other solutions (if needed) would be to:
 sudo cp -i galaxy42/contrib/gitian-debootstrap/scripts/xenial   /usr/share/debootstrap/scripts/
+or install other version of system's debootstrap (e.g. backports).
 
+
+Q: Errors like `profiling:invalid arc tag` or `profiling:invalid number of counters`
+A: Do an `make clean` and try again. They can show up when you run more then once a build with coveralls/coverage active.
+That option is intended for use by automated tools only, and they start in clearn environment.
+You can also try: `find . -name "*.gcda" -print0 | xargs -0 rm`.
+See: http://stackoverflow.com/questions/22519530/dozens-of-profilinginvalid-arc-tag-when-running-code-coverage-in-xcode-5
 
 
 
