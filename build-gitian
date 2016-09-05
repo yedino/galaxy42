@@ -12,6 +12,12 @@ mkdir -p "$my_tmp" || exit
 
 # --- config ---
 
+# Where from get the Gitian tool itself:
+gitiansoftware_url="https://github.com/yedino/gitian-builder.git"
+#"https://github.com/devrandom/gitian-builder.git"
+gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e"
+# "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
+
 target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
@@ -75,6 +81,8 @@ function fix_template_script() {
 	fi
 
 	export DEBOOTSTRAP_DIR="$target_dbs"
+	export GITIAN_SUDO_USE_DEBOOTSTRAP_DIR="yes"
+	echo "Exporting DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR GITIAN_SUDO_USE_DEBOOTSTRAP_DIR=$GITIAN_SUDO_USE_DEBOOTSTRAP_DIR"
 }
 
 function set_env() {
@@ -106,16 +114,20 @@ EOF
 }
 
 function gitian_builder_download() {
-	echo "Downloading gitian-builder itself"
-	sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
-	cd "${base_dir}" || fail "cd base dir"
-	git clone https://github.com/devrandom/gitian-builder.git || fail "while downloading gitian"
-	cd gitian-builder || fail
-	git reset --hard ee1b69d6949810069453d5540af7a0b3ca63ea8d || fail "choosing gitian version"
+	if true ; then
+		printf "\n\nSKIPPING download of Gitian\n\n" # e.g. for debug of ${base_dir}/gitian-builder that you now edit there
+	else
+		echo "Downloading gitian-builder itself"
+		sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
+		cd "${base_dir}" || fail "cd base dir"
+		git clone "$gitiansoftware_url" || fail "while downloading gitian"
+		cd gitian-builder || fail
+		git reset --hard "$gitiansoftware_checkout" || fail "choosing gitian version"
+	fi
 }
 
 function gitian_builder_make_lxc_image() {
-	echo "Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
+	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
 	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template?)"
 }
