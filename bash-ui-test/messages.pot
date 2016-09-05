@@ -1,0 +1,44 @@
+# Galaxy42 installer
+# Copyright (C) 2016
+# This file is distributed at once at licences: under the same license as the Galaxy42 package,
+# and as BSD 2-clause licence.
+# Yedino <contact@yedino.com>, 2016
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-08-19 17:19+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: a.sh:16
+msgid ""
+"\n"
+"\n"
+"This seems to be a text-mode GUI,\n"
+"you can use up/down arrows, SPACE to select option, ENTER to finish.\n"
+msgstr ""
+
+#: a.sh:25
+#, sh-format
+msgid "Configure computer for $programname"
+msgstr ""
+
+#: a.sh:26
+msgid "Ok"
+msgstr ""
+
+#: a.sh:26
+msgid "Quit"
+msgstr ""
+
+#: a.sh:29
+msgid "Install (as root) following functions:"
+msgstr ""
