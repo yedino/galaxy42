@@ -1,0 +1,11 @@
+#!/bin/bash
+program="$1"
+tool="setcap_net_admin"
+echo "Calling $tool to set rights on binary $program"
+hash "$tool" 2>/dev/null && sudo "$tool" --normal -u --current -f "$program" \
+	|| {
+printf "Can not call the tool $tool on the program $program -
+probably it is not fully installed for your user (are you in sudo/visudo for it?).\n
+But you can still run it as root. See README."
+exit 1
+}

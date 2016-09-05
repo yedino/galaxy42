@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ $(id -u) = 0 ]
+then
+#root
+#rc-local
+sed -i '/exit 0/d' /etc/rc.local
+echo 'brctl addbr br0' >> /etc/rc.local
+echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
+echo 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> /etc/rc.local
+echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> /etc/rc.local
+echo 'exit 0' >> /etc/rc.local
+
+#sudo
+# needed?
+echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc    # new file
+echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-execute" >> /etc/sudoers.d/gitian-lxc
+
+# ln -s /usr/share/debootstrap/scripts/gutsy /usr/share/debootstrap/scripts/xenial
+
+else
+#non-root
+echo "You must be root"
+fi
+

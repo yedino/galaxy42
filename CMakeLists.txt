@@ -362,16 +362,15 @@ add_custom_target(runcli
 		DEPENDS ./ipclient.elf
 		WORKING_DIRECTORY ./)
 
-	add_custom_command(
-		TARGET ipclient.elf ipserver.elf tunserver.elf
-		POST_BUILD
-	#	COMMAND chmod g-wx,o-wx ipclient.elf
-	#	COMMAND chmod g-wx,o-wx ipserver.elf
-		COMMAND chmod g-wx,o-wx tunserver.elf
-		COMMAND cp tunserver.elf nocap-tunserver.elf
-    #   TODO (da2ce7): re-enable setcap for tunserver.efl
-    #	COMMAND sudo setcap_net_admin --normal -u --current -f ./tunserver.elf
-		WORKING_DIRECTORY ./)
+add_custom_command(
+	TARGET ipclient.elf ipserver.elf tunserver.elf
+	POST_BUILD
+#	COMMAND chmod g-wx,o-wx ipclient.elf
+#	COMMAND chmod g-wx,o-wx ipserver.elf
+	COMMAND chmod g-wx,o-wx tunserver.elf
+	COMMAND cp tunserver.elf nocap-tunserver.elf
+	COMMAND share/script/use-setcap tunserver.elf || echo "Can not set rights on binary, ignoring."
+	WORKING_DIRECTORY ./)
 endif()
 
 # unset( USE_BOOST_MULTIPRECISION_DEFAULT )
