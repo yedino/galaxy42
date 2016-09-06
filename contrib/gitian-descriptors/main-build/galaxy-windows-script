@@ -1,13 +1,14 @@
 echo "GALAXY WINDOWS SCRIPT"
-echo "$pwd"
+pwd
+GALAXY42_DIR=$(pwd)/galaxy42
 
 ## clone and build boost
 cd ..
 git clone https://github.com/boostorg/boost.git
 cd boost
-BOOST_DIR="$pwd"
+BOOST_DIR=$(pwd)
 git checkout boost-1.61.0
-git submodule update --init --recursive
+git submodule update --init --recursive --depth 1
 echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam  
 ./bootstrap.sh --without-icu
 mkdir mingw_build
@@ -20,7 +21,7 @@ mkdir mingw_build
 ## clone and build libsodium
 git clone https://github.com/jedisct1/libsodium.git
 cd libsodium
-SODIUM_DIR="$pwd"
+SODIUM_DIR=$(pwd)
 git checkout 1.0.11
 export CC=x86_64-w64-mingw32-gcc
 ./autogen.sh
@@ -29,5 +30,6 @@ sed -i "s/make check && //" dist-build/msys2-win64.sh
 
 
 ## Cross building galaxy42
-cmake -DBOOST_ROOT=/prefix/to/boost/mingw-w64/build -DSODIUM_ROOT_DIR=/prefix/to/libsodium/mingw-w64/build -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
+cd "$GALAXY_DIR"
+cmake -DBOOST_ROOT=/"$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR=/"$SODIUM_DIR"/libsodium-win64 -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
 make tunserver.elf
