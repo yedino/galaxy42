@@ -25,7 +25,8 @@ __Download and extract tar.gz tarball from:__ [libsodium-1.0.11-mingw.tar.gz](ht
 $ tar -xvzf libsodium-1.0.11.tar.gz
 $ cd libsodium-1.0.11/
 $ export CC=x86_64-w64-mingw32-gcc
-$ ./dist-build/msys2-win64.sh  # with commented make check
+$ ./autogen.sh
+$ ./dist-build/msys2-win64.sh  # with commented make check (sed -i "s/make check && //" dist-build/msys2-win64.sh)
 # includes and libraries should be build to local dir "libsodium-win64"
  ```
 
