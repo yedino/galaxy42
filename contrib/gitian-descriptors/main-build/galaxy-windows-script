@@ -1,9 +1,10 @@
+#!/bin/bash
+
 echo "GALAXY WINDOWS SCRIPT"
 pwd
 GALAXY42_DIR=$(pwd)/galaxy42
 
 ## clone and build boost
-cd ..
 git clone https://github.com/boostorg/boost.git
 cd boost
 BOOST_DIR=$(pwd)
@@ -17,6 +18,12 @@ mkdir mingw_build
  runtime-link=shared -j 2  --with-filesystem --with-system --with-program_options \
 -sNO_BZIP2=1 --sNO_ZLIB=1 --layout=tagged install
 
+# copy boost includes
+for D in `find ./libs -maxdepth 1 -type d`; do
+	cp -rv "$D"/include ./mingw_build
+done
+
+cd ..
 
 ## clone and build libsodium
 git clone https://github.com/jedisct1/libsodium.git
@@ -30,6 +37,8 @@ sed -i "s/make check && //" dist-build/msys2-win64.sh
 
 
 ## Cross building galaxy42
-cd "$GALAXY_DIR"
+cd "$GALAXY42_DIR"
 cmake -DBOOST_ROOT=/"$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR=/"$SODIUM_DIR"/libsodium-win64 -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
 make tunserver.elf
+
+sha512sum tunserver.elf.exe
