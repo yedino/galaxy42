@@ -9,7 +9,45 @@ git clone https://github.com/boostorg/boost.git
 cd boost
 BOOST_DIR=$(pwd)
 git checkout boost-1.61.0
-git submodule update --init --recursive --depth 1
+
+git submodule update --init --recursive tools/build
+git submodule update --init --recursive libs/context
+git submodule update --init --recursive libs/filesystem
+git submodule update --init --recursive libs/config
+git submodule update --init --recursive tools/inspect
+git submodule update --init --recursive libs/thread
+git submodule update --init --recursive libs/system
+git submodule update --init --recursive libs/utility
+git submodule update --init --recursive libs/predef
+git submodule update --init --recursive libs/detail
+git submodule update --init --recursive libs/assert
+git submodule update --init --recursive libs/core
+git submodule update --init --recursive libs/io
+git submodule update --init --recursive libs/type_traits
+git submodule update --init --recursive libs/iterator
+git submodule update --init --recursive libs/mpl
+git submodule update --init --recursive libs/preprocessor
+git submodule update --init --recursive libs/static_assert
+git submodule update --init --recursive libs/smart_ptr
+git submodule update --init --recursive libs/throw_exception
+git submodule update --init --recursive libs/functional
+git submodule update --init --recursive libs/range
+git submodule update --init --recursive libs/any
+git submodule update --init --recursive libs/type_index
+git submodule update --init --recursive libs/function
+git submodule update --init --recursive libs/integer
+git submodule update --init --recursive libs/bind
+git submodule update --init --recursive libs/lexical_cast
+git submodule update --init --recursive libs/concept_check
+git submodule update --init --recursive libs/numeric/conversion
+git submodule update --init --recursive libs/array
+git submodule update --init --recursive libs/program_options
+git submodule update --init --recursive libs/container
+git submodule update --init --recursive libs/move
+git submodule update --init --recursive libs/math
+git submodule update --init --recursive libs/tokenizer
+
+
 echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam  
 ./bootstrap.sh --without-icu
 mkdir mingw_build
