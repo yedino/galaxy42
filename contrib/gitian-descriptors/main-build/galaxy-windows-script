@@ -1,0 +1,106 @@
+#!/bin/bash
+
+echo "GALAXY WINDOWS SCRIPT"
+pwd
+GALAXY42_DIR=$(pwd)/galaxy42
+
+## set compilators
+CC=x86_64-w64-mingw32-gcc
+CXX=x86_64-w64-mingw32-g++
+
+## clone and build boost
+git clone https://github.com/boostorg/boost.git
+cd boost
+BOOST_DIR=$(pwd)
+git checkout boost-1.61.0
+
+git submodule update --init --recursive tools/build
+git submodule update --init --recursive libs/context
+git submodule update --init --recursive libs/filesystem
+git submodule update --init --recursive libs/config
+git submodule update --init --recursive tools/inspect
+git submodule update --init --recursive libs/thread
+git submodule update --init --recursive libs/system
+git submodule update --init --recursive libs/utility
+git submodule update --init --recursive libs/predef
+git submodule update --init --recursive libs/detail
+git submodule update --init --recursive libs/assert
+git submodule update --init --recursive libs/core
+git submodule update --init --recursive libs/io
+git submodule update --init --recursive libs/type_traits
+git submodule update --init --recursive libs/iterator
+git submodule update --init --recursive libs/mpl
+git submodule update --init --recursive libs/preprocessor
+git submodule update --init --recursive libs/static_assert
+git submodule update --init --recursive libs/smart_ptr
+git submodule update --init --recursive libs/throw_exception
+git submodule update --init --recursive libs/functional
+git submodule update --init --recursive libs/range
+git submodule update --init --recursive libs/any
+git submodule update --init --recursive libs/type_index
+git submodule update --init --recursive libs/function
+git submodule update --init --recursive libs/integer
+git submodule update --init --recursive libs/bind
+git submodule update --init --recursive libs/lexical_cast
+git submodule update --init --recursive libs/concept_check
+git submodule update --init --recursive libs/numeric/conversion
+git submodule update --init --recursive libs/array
+git submodule update --init --recursive libs/program_options
+git submodule update --init --recursive libs/container
+git submodule update --init --recursive libs/move
+git submodule update --init --recursive libs/math
+git submodule update --init --recursive libs/tokenizer
+git submodule update --init --recursive libs/asio
+git submodule update --init --recursive libs/date_time
+git submodule update --init --recursive libs/regex
+
+
+echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam  
+./bootstrap.sh --without-icu
+mkdir mingw_build
+./b2 -a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
+ --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
+ runtime-link=shared -j 2  --with-filesystem --with-system --with-program_options \
+-sNO_BZIP2=1 --sNO_ZLIB=1 --layout=tagged install
+
+# copy all boost includes for header only libraries
+for D in `find ./libs -maxdepth 5 -type d`; do
+	substr="include"
+	if  test "${D#*$substr}" != "$D" # looking for include dir's
+	then
+		#echo $D
+		end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
+		#echo "$end_of"
+		if [ $end_of = $substr ]
+		then
+			cp -rv "$D" ./mingw_build
+		fi
+	fi
+done
+
+cd ..
+
+## clone and build libsodium
+#git clone https://github.com/jedisct1/libsodium.git
+cd libsodium
+SODIUM_DIR=$(pwd)
+#git checkout 1.0.11
+#export CC=x86_64-w64-mingw32-gcc
+#./autogen.sh
+#sed -i "s/make check && //" dist-build/msys2-win64.sh
+#./dist-build/msys2-win64.sh
+
+
+## Cross building galaxy42
+cd "$GALAXY42_DIR"
+git clean -fdx
+git submodule update --init --recursive
+
+
+echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
+echo "SODIUM_ROOT_DIR: "$SODIUM_DIR"/libsodium-win64 "
+
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_DIR"/libsodium-win64 -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
+make tunserver.elf
+
+sha256sum tunserver.elf.exe
