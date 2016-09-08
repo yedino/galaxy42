@@ -1,0 +1,33 @@
+---
+name: "galaxy42-windows"
+sudo: true
+enable_cache: true
+suites:
+- "xenial"
+architectures:
+- "amd64"
+packages:
+- "g++-5"
+- "mingw-w64"
+- "g++-mingw-w64"
+- "cmake"
+- "autoconf"
+- "automake"
+- "libtool"
+- "build-essential"
+- "libfftw3-dev"
+- "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
+- "faketime" # used to force date
+reference_datetime: "2016-08-01 00:00:00"
+remotes:
+- "dir": "galaxy42"
+  "url": "https://github.com/damianbb/galaxy42.git" # (username) must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
+  "commit": "28f54c6abe7253321ff0355c3a007e80b7bf9607" # um, update that in one more commit, can't commit own commit hash :)
+# this is temporary, TODO, in the end use branch name / tag name
+files: []
+script: |
+  datenow="$(date)" ; echo "Gitian moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
+  echo "ls:" ; ls
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script
+  datenow="$(date)" ; echo "Gitian finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
+
