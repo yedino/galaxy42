@@ -4,9 +4,11 @@ echo "GALAXY WINDOWS SCRIPT"
 pwd
 GALAXY42_DIR=$(pwd)/galaxy42
 
+
 ## set compilators
 CC=x86_64-w64-mingw32-gcc
 CXX=x86_64-w64-mingw32-g++
+
 
 ## clone and build boost
 git clone https://github.com/boostorg/boost.git
@@ -54,7 +56,6 @@ git submodule update --init --recursive libs/asio
 git submodule update --init --recursive libs/date_time
 git submodule update --init --recursive libs/regex
 
-
 echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam  
 ./bootstrap.sh --without-icu
 mkdir mingw_build
@@ -64,11 +65,10 @@ mkdir mingw_build
 -sNO_BZIP2=1 --sNO_ZLIB=1 --layout=tagged install
 
 # copy all boost includes for header only libraries
-for D in `find ./libs -maxdepth 5 -type d`; do
+find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
 	substr="include"
 	if  test "${D#*$substr}" != "$D" # looking for include dir's
 	then
-		#echo $D
 		end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
 		#echo "$end_of"
 		if [ $end_of = $substr ]
@@ -80,15 +80,15 @@ done
 
 cd ..
 
+
 ## clone and build libsodium
-#git clone https://github.com/jedisct1/libsodium.git
+git clone https://github.com/jedisct1/libsodium.git
 cd libsodium
 SODIUM_DIR=$(pwd)
-#git checkout 1.0.11
-#export CC=x86_64-w64-mingw32-gcc
-#./autogen.sh
-#sed -i "s/make check && //" dist-build/msys2-win64.sh
-#./dist-build/msys2-win64.sh
+git checkout 1.0.11
+./autogen.sh
+sed -i "s/make check && //" dist-build/msys2-win64.sh
+./dist-build/msys2-win64.sh
 
 
 ## Cross building galaxy42
