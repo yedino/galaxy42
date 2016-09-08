@@ -16,6 +16,10 @@ if (MSVC)
 	endif()
 endif()
 
+if (MINGW)
+	add_definitions(-D_WIN32_WINNT=0x0600)
+endif()
+
 set (Boost_DEBUG OFF)
 if (NOT MSVC)
 	set(BOOST_LIBS_LIST system filesystem program_options)
@@ -40,7 +44,6 @@ find_package(Sodium REQUIRED)
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${SODIUM_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
-
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -109,7 +112,6 @@ else()
 	message("USE_BOOST_MULTIPRECISION is DISABLED")
 	add_definitions(-DUSE_BOOST_MULTIPRECISION=0)
 endif()
-
 
 if(EXTLEVEL_IS_NORMAL)
 	message("EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
@@ -304,20 +306,21 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
 
-if(CYGWIN)
+if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-	set(CYGWIN_LIBRARIES ws2_32 iphlpapi)
+	set(MINGW_LIBRARIES ws2_32 iphlpapi)
 endif()
 
-if(NOT MSVC)
+if(NOT MSVC AND NOT MINGW)
 	set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 else()
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
+
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${CYGWIN_LIBRARIES} ${MSVC_LIRARIES})
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
@@ -350,7 +353,7 @@ endforeach()
 #add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
 #target_link_libraries(rpc_sender boost_system pthread)
 
-if(NOT CYGWIN AND NOT WIN32)
+if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
 		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
