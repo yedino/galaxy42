@@ -176,7 +176,7 @@ if (( option_allow_boost )) ; then
 rm -rf boost # perhaps left over if we do some caching or testing
 git clone https://github.com/boostorg/boost.git
 pushd boost # cd
-[[ "$PWD" == "$BOOST_DIR" ]] || { echo "The PWD=$PWD is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
+[[ "$PWD/" == "$BOOST_DIR" ]] || { echo "The PWD=$PWD is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
 git checkout boost-1.61.0
 
 git submodule update --init --recursive tools/build
