@@ -1,9 +1,118 @@
 #!/bin/bash
+# see below for LICENCE information, it can differ for this files or it's fragments.
 
 echo "GALAXY WINDOWS SCRIPT"
 pwd
 GALAXY42_DIR=$(pwd)/galaxy42
 
+
+
+REFERENCE_DATETIME="2016-08-01 00:00:00"
+
+export FAKETIME="$REFERENCE_DATETIME"
+# variable from above yml config
+echo "FAKETIME = ${FAKETIME}"
+# debug
+
+### <LICENCE> - start of licence block - this code if possibly on other licence:
+### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/2c2d471e18f0601c2767cf516425b2ecfcfd2126/contrib/gitian-descriptors/gitian-linux.yml
+### (and possibly with local changes, see our git log)
+### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
+### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
+
+WRAP_DIR=$HOME/wrapped
+HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
+COMPILERS="g++ gcc"
+
+##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
+CONFIGFLAGS=""
+
+FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip objcopy"
+## FAKETIME_PROGS="date makensis zip"
+FAKETIME_PROGS="date"
+
+
+# (not used?)
+export QT_RCC_TEST=1
+
+# importat:
+export GZIP="-9n"
+export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+export TZ="UTC"
+
+export BUILD_DIR=`pwd`
+
+mkdir -p ${WRAP_DIR}
+if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+fi
+
+function create_global_faketime_wrappers {
+for prog in ${FAKETIME_PROGS}; do
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+done
+}
+
+function create_per-host_faketime_wrappers {
+for i in $HOSTS; do
+    for prog in ${FAKETIME_HOST_PROGS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+done
+}
+
+function create_per-host_linker_wrapper {
+# This is only needed for trusty, as the mingw linker leaks a few bytes of
+# heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
+for i in $HOSTS; do
+    mkdir -p ${WRAP_DIR}/${i}
+    for prog in collect2; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}/${prog}
+        REAL=$(${i}-gcc -print-prog-name=${prog})
+        echo "export MALLOC_PERTURB_=255" >> ${WRAP_DIR}/${i}/${prog}
+        echo "${REAL} \$@" >> $WRAP_DIR/${i}/${prog}
+        chmod +x ${WRAP_DIR}/${i}/${prog}
+    done
+    for prog in ${COMPILERS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+done
+}
+
+# Faketime for depends so intermediate results are comparable
+export PATH_orig=${PATH}
+create_global_faketime_wrappers "$FAKETIME"
+create_per-host_faketime_wrappers "$FAKETIME"
+create_per-host_linker_wrapper "$FAKETIME"
+export PATH=${WRAP_DIR}:${PATH}
+
+
+# Faketime for binaries
+export PATH=${PATH_orig}
+create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+create_per-host_linker_wrapper "${REFERENCE_DATETIME}"
+export PATH=${WRAP_DIR}:${PATH}
+
+# *** main build starts here ***
 
 ## set compilators
 CC=x86_64-w64-mingw32-gcc
@@ -104,3 +213,8 @@ cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_DIR"/libs
 make tunserver.elf
 
 sha256sum tunserver.elf.exe
+
+
+### </LICENCE> - end of licence block
+echo "Entire script in Gitian done"
+date
