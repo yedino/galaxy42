@@ -1,9 +1,52 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
-echo "GALAXY WINDOWS SCRIPT"
+project_name="galaxy42"
+printf "\n\n=========================================================================\n\n"
+printf "PROJECT $project_name - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
 pwd
 GALAXY42_DIR=$(pwd)/galaxy42
+
+function fail() {
+	printf "\nERROR: the script failed (see above messages).\n\n"
+	exit 1
+}
+
+
+option_allow_boost=1
+option_shell_in_sodium=0
+
+while getopts ":bSh" opt; do
+	case $opt in
+		b)
+		echo "Will Skip boost"
+                option_allow_boost=0
+                ;;
+		S)
+		option_shell_in_sodium=1
+		;;
+                h)
+                cat <<EOF
+
+This is the internal script to build Windows version of this project ($project_name).
+It should be called by Gitian, inside LXC.
+Developers can use it by doing on-target e.g. ./build-gitian on-target (as in Galaxy42)
+and then calling it directly for testing.
+
+Options:
+	-b skips building Boost lib
+	-S starts a test shell before (possibly) building lib sodium
+
+EOF
+                                exit 0
+                                ;;
+                        '?')
+                                printf "\n\nERROR: Unknown option, run with -h for help.\n"
+                                exit 1
+                                ;;
+          esac
+done
+
 
 
 
@@ -24,12 +67,12 @@ echo "FAKETIME = ${FAKETIME}"
 
 WRAP_DIR=$HOME/wrapped
 HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
-COMPILERS="g++ gcc"
+COMPILERS="g++ gcc cpp cc c++" # do we need "cc c++"? TODO
 
 ##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
 CONFIGFLAGS=""
 
-FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip objcopy"
+FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip objcopy" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
 ## FAKETIME_PROGS="date makensis zip"
 FAKETIME_PROGS="date"
 
@@ -117,14 +160,23 @@ export PATH=${WRAP_DIR}:${PATH}
 # *** main build starts here ***
 
 ## set compilators
-CC=x86_64-w64-mingw32-gcc
-CXX=x86_64-w64-mingw32-g++
+export CC="$HOME/wrapped/x86_64-w64-mingw32-gcc"
+export CXX="$HOME/wrapped/x86_64-w64-mingw32-g++"
+export CPP="$HOME/wrapped/x86_64-w64-mingw32-cpp"
 
 
 ## clone and build boost
+printf "\n\n=========================================================================\n\n"
+printf "boost...\n\n"
+BOOST_DIR="$HOME/build/boost/"
+
+if (( option_allow_boost )) ; then
+	printf "\n\nWill build boost now\n\n"
+
+rm -rf boost # perhaps left over if we do some caching or testing
 git clone https://github.com/boostorg/boost.git
-cd boost
-BOOST_DIR=$(pwd)
+pushd boost # cd
+[[ "$PWD" == "$BOOST_DIR" ]] || { echo "The PWD=$PWD is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
 git checkout boost-1.61.0
 
 git submodule update --init --recursive tools/build
@@ -189,18 +241,43 @@ find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
 	fi
 done
 
-cd ..
+popd
+
+else
+	printf "\n\nSkipping boost (as selected in options)\n\n"
+
+fi
 
 
+printf "\n\n=========================================================================\n\n"
+printf "libsodium...\n\n"
+
+if ((option_shell_in_sodium)) ; then
+	printf "\nSTARTING TEST BASH (in sodium), while in PWD=$PWD\n"
+	bash
+	printf "\n\nresuming\n\n"
+fi
+
+
+printf "\n\nBuilding libsodium now\n\n"
 ## clone and build libsodium
-git clone https://github.com/jedisct1/libsodium.git
-cd libsodium
+rm -rf libsodium # perhaps left over if we do some caching or testing
+set -x
+git clone https://github.com/jedisct1/libsodium.git || fail
+pushd libsodium || fail
 SODIUM_DIR=$(pwd)
-git checkout 1.0.11
-./autogen.sh
-sed -i "s/make check && //" dist-build/msys2-win64.sh
-./dist-build/msys2-win64.sh
+git checkout 1.0.11 || fail
+./autogen.sh || fail
+printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium)\n\n"
+cp ~/build/galaxy42/contrib/gitian-patch/msys2-win64.sh  ./dist-build/msys2-win64.sh || fail
+printf "\n\nRunning the mingw-crossbuild-script(s) (of lib sodium)\n\n"
+./dist-build/msys2-win64.sh || fail
+printf "\n\nCrossbuild done (of lib sodium)"
+popd
 
+
+printf "\n\n=========================================================================\n\n"
+printf "Main project ($project_name)...\n\n"
 
 ## Cross building galaxy42
 cd "$GALAXY42_DIR"
