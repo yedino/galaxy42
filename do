@@ -96,5 +96,5 @@ cmake  .  \
 	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
 # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
-make || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+make -j 8 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
 
