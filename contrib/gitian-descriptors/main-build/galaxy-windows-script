@@ -219,12 +219,12 @@ git submodule update --init --recursive libs/asio
 git submodule update --init --recursive libs/date_time
 git submodule update --init --recursive libs/regex
 
-echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam  
+echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam
 ./bootstrap.sh --without-icu
 mkdir mingw_build
 ./b2 -a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
  --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
- runtime-link=shared -j 8  --with-filesystem --with-system --with-program_options \
+ runtime-link=shared -j 4 --with-filesystem --with-system --with-program_options \
 -sNO_BZIP2=1 --sNO_ZLIB=1 --layout=tagged install
 
 # copy all boost includes for header only libraries
