@@ -18,7 +18,7 @@ gitiansoftware_url="https://github.com/yedino/gitian-builder.git"
 gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e"
 # "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
-target_repo_user="damianbb" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
+target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
 target_checkout="wip_cross_win" # <--- pick any version
