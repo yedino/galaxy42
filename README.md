@@ -139,6 +139,25 @@ Optionally, for the main Antinet project we plan to test:
 own resources (I route for you - if you route for me) to allow node owner to demand
 cooperation from other participants of the network if they want to get his help.
 
+
+### Handy commands and tricks
+
+Transfer from command-line a file between hash-ip users (file named `file.data` in current directory),
+when recipient (server) IP is for example `fd42:f6b0:488a:6f95:bcf6:310f:556b:c168`
+and sender IP is for example `fd42:f6b0:488a:6f95:bcf6:310f:556b:c168` (this is **authenticated - server** will accept files ONLY from this sender)
+```
+SENDER:    socat -u FILE:./file.data  TCP6:[fd42:f6b0:488a:6f95:bcf6:310f:556b:c168]:9876
+RECIPIENT: socat -u TCP6-LISTEN:9876,reuseaddr,range=[fd42:f6b0:488a:6f95:bcf6:310f:556b:c168]/128 OPEN:file.data,creat
+```
+or if you want server to accept file from any sender (but if different people would send at once then the file would contain probably unexpected data, do not do that)
+then you can drop the ,range= option, like this:
+```
+SENDER:    socat -u FILE:./file.data  TCP6:[fd42:f6b0:488a:6f95:bcf6:310f:556b:c168]:9876
+RECIPIENT: socat -u TCP6-LISTEN:9876,reuseaddr OPEN:file.data,creat
+```
+In both versions the file is transfered fully end-to-end encrypted, and the sender is guaranteed he sends data to the server known by it's IP.
+
+
 ### HOWTO
 
 Q: How to use Galaxy42?
