@@ -22,7 +22,7 @@ reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
   "url": "https://github.com/damianbb/galaxy42.git" # (username) must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
-  "commit": "0a3d01a09956ebf5e97b4033c55743eea57deb46" # um, update that in one more commit, can't commit own commit hash :)
+  "commit": "74027faa2fd383653113f0d45a1d8f03cf9cb750" # um, update that in one more commit, can't commit own commit hash :)
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
 script: |
