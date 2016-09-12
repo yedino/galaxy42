@@ -367,8 +367,9 @@ echo "SODIUM_ROOT_DIR: "$SODIUM_DIR"/libsodium-win64 "
 cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_DIR"/libsodium-win64 -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
 make tunserver.elf
 
-sha256sum tunserver.elf.exe
-
+echo "Printing checksums:"
+sha256sum *.exe | sort
+sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"
