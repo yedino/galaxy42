@@ -1,20 +1,27 @@
-#! /bin/sh
+#!/bin/bash
 
-echo "Windows crossbuild script for Libsodium (with fixes)"
+printf "\nWindows crossbuild script for Libsodium (with fixes)\n\n"
+
+function fail() {
+	printf "\nError in $0. (see above)\n\n"
+	exit 1
+}
 
 export CFLAGS="-O3 -fomit-frame-pointer -m64 -mtune=westmere"
 export PREFIX="$(pwd)/libsodium-win64"
 
 if (x86_64-w64-mingw32-gcc --version > /dev/null 2>&1) then
-  echo MinGW found
+  printf "\nMinGW found\n"
 else
-  echo Please install mingw-w64-x86_64-gcc >&2
+  printf "Please install mingw-w64-x86_64-gcc\n\n" >&2
   exit
 fi
 
 ./configure PACKAGE_STRING='libsodium1.0.11' --prefix="$PREFIX" --exec-prefix="$PREFIX" \
-            --host=x86_64-w64-mingw32 && \
-make clean && \
-make -j && \
-make && \
-make install
+            --host=x86_64-w64-mingw32 || fail
+make clean || fail
+make -j || fail
+make || fail
+make install || fail
+
+printf "\nWindows crossbuild script for Libsodium (with fixes) - DONE\n\n"

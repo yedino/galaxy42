@@ -297,7 +297,6 @@ else
 
 fi
 
-printf "\nTEST EXIT\n\n" ; exit 1; # XXX
 
 printf "\n\n=========================================================================\n\n"
 printf "libsodium...\n\n"
@@ -307,22 +306,6 @@ if ((option_shell_in_sodium)) ; then
 	bash
 	printf "\n\nresuming\n\n"
 fi
-
-else
-	printf "\n\nSkipping boost (as selected in options)\n\n"
-
-fi
-
-
-printf "\n\n=========================================================================\n\n"
-printf "libsodium...\n\n"
-
-if ((option_shell_in_sodium)) ; then
-	printf "\nSTARTING TEST BASH (in sodium), while in PWD=$PWD\n"
-	bash
-	printf "\n\nresuming\n\n"
-fi
-
 
 if ((option_allow_sodium)) ; then
 printf "\n\nBuilding libsodium now\n\n"
@@ -335,7 +318,7 @@ SODIUM_DIR=$(pwd)
 git checkout 1.0.11 || fail
 ./autogen.sh || fail
 
-patched_msys_script="~/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
+patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
 printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium) - from file ($patched_msys_script)\n\n"
 cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
 
@@ -356,7 +339,7 @@ printf "Main project ($project_name)...\n\n"
 
 ## Cross building galaxy42
 cd "$GALAXY42_DIR"
-git clean -fdx
+# git clean -fdx # need submodules
 git submodule update --init --recursive
 
 
