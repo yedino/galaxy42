@@ -4,8 +4,6 @@
 project_name="galaxy42"
 printf "\n\n=========================================================================\n\n"
 printf "PROJECT $project_name - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
-pwd
-GALAXY42_DIR=$(pwd)/galaxy42
 
 function fail() {
 	printf "\nERROR: the script failed (see above messages).\n\n"
@@ -13,17 +11,27 @@ function fail() {
 }
 
 
+cd "$HOME/build/" || fail
+
+pwd
+GALAXY42_DIR=$(pwd)/galaxy42
+
 option_allow_boost=1
 option_allow_sodium=1
 option_shell_in_sodium=0
 option_download_skip=0
+option_verbose=0
 
-while getopts ":bsSdh" opt; do
+while getopts ":vbsSDh" opt; do
 	case $opt in
-		d)
+		D)
 		echo "Skip all downloads"
 		option_download_skip=1
 		;;
+		v)
+		echo "Be verbose (show debug etc)"
+                option_verbose=1
+                ;;
 		b)
 		echo "Will Skip boost"
                 option_allow_boost=0
@@ -44,9 +52,14 @@ Developers can use it by doing on-target e.g. ./build-gitian on-target (as in Ga
 and then calling it directly for testing.
 
 Options:
-	-d skip most downloads
+	-v be verbose (debug)
+
+	Speedup options:
+	-D skip most downloads
 	-b skips building Boost lib
 	-s skips building Sodium lib
+
+	Special options:
 	-S starts a test shell before (possibly) building lib sodium
 
 EOF
@@ -261,8 +274,13 @@ echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
 printf "Starting the b2 boost build\n"
 set -x
 b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" )
+b2_opt_debug=( )
+if (( option_verbose )) ; then
+	b2_opt_debug=( "-d" "4" "--debug-building" )
+fi
+
 ./b2 \
-	-d 4 --debug-building  \
+	"${b2_opt_debug[@]}" \
 	-a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
 	 --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
 	 "${b2_opt_with_lib[@]}" \
