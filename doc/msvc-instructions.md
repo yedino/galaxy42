@@ -18,7 +18,7 @@ $ git clone https://github.com/yedino/galaxy42
 $ cd galaxy42
 $ git submodule update --init
 $ export CC=i686-w64-mingw32-gcc
-$ export CXX-i686-w64-mingw32-g++
+$ export CXX=i686-w64-mingw32-g++
 $ cmake .
 $ make tunserver.elf
 ```
