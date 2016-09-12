@@ -14,13 +14,23 @@ function fail() {
 
 
 option_allow_boost=1
+option_allow_sodium=1
 option_shell_in_sodium=0
+option_download_skip=0
 
-while getopts ":bSh" opt; do
+while getopts ":bsSdh" opt; do
 	case $opt in
+		d)
+		echo "Skip all downloads"
+		option_download_skip=1
+		;;
 		b)
 		echo "Will Skip boost"
                 option_allow_boost=0
+                ;;
+		s)
+		echo "Will Skip sodium"
+                option_allow_sodium=0
                 ;;
 		S)
 		option_shell_in_sodium=1
@@ -34,7 +44,9 @@ Developers can use it by doing on-target e.g. ./build-gitian on-target (as in Ga
 and then calling it directly for testing.
 
 Options:
+	-d skip most downloads
 	-b skips building Boost lib
+	-s skips building Sodium lib
 	-S starts a test shell before (possibly) building lib sodium
 
 EOF
@@ -67,14 +79,14 @@ echo "FAKETIME = ${FAKETIME}"
 
 WRAP_DIR=$HOME/wrapped
 HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
-COMPILERS="g++ gcc cpp cc c++" # do we need "cc c++"? TODO
+COMPILERS="g++ gcc cpp cc c++ nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # do we need "cc c++"? TODO
 
 ##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
 CONFIGFLAGS=""
 
-FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip objcopy" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
-## FAKETIME_PROGS="date makensis zip"
-FAKETIME_PROGS="date"
+FAKETIME_HOST_PROGS="gcc g++ ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
+FAKETIME_PROGS="date makensis zip"
+#FAKETIME_PROGS="date"
 
 
 # (not used?)
@@ -96,6 +108,8 @@ fi
 
 function create_global_faketime_wrappers {
 for prog in ${FAKETIME_PROGS}; do
+	outfile="${WRAP_DIR}/${prog}"
+	printf "\n%s\n" "WRAPPING (global): $outfile"
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
@@ -108,6 +122,8 @@ done
 function create_per-host_faketime_wrappers {
 for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
+	outfile="${WRAP_DIR}/${i}-${prog}"
+	printf "\n%s\n" "WRAPPING (per-host): $outfile"
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
@@ -169,14 +185,23 @@ export CPP="$HOME/wrapped/x86_64-w64-mingw32-cpp"
 printf "\n\n=========================================================================\n\n"
 printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
+cd "$HOME/build/"
 
 if (( option_allow_boost )) ; then
 	printf "\n\nWill build boost now\n\n"
 
-rm -rf boost # perhaps left over if we do some caching or testing
-git clone https://github.com/boostorg/boost.git
-pushd boost # cd
-[[ "$PWD/" == "$BOOST_DIR" ]] || { echo "The PWD=$PWD is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
+if (( option_download_skip )) ; then
+	printf "\n\nSkipping download (boost)\n\n"
+	pushd boost || fail # cd
+	pwd
+	ls
+else
+rm -rf boost || fail # perhaps left over if we do some caching or testing
+git clone https://github.com/boostorg/boost.git || fail
+pushd boost || fail # cd
+PWD_now2="$PWD/"
+[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
+
 git checkout boost-1.61.0
 
 git submodule update --init --recursive tools/build
@@ -218,14 +243,38 @@ git submodule update --init --recursive libs/tokenizer
 git submodule update --init --recursive libs/asio
 git submodule update --init --recursive libs/date_time
 git submodule update --init --recursive libs/regex
+fi
 
-echo "using gcc : 4.9.2 : /usr/bin/x86_64-w64-mingw32-g++ ;" > user-config.jam
-./bootstrap.sh --without-icu
-mkdir mingw_build
-./b2 -a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
- --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
- runtime-link=shared -j 4 --with-filesystem --with-system --with-program_options \
--sNO_BZIP2=1 --sNO_ZLIB=1 --layout=tagged install
+# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
+git clean -xdf || fail
+rm -rf mingw_build || fail
+mkdir mingw_build || fail
+
+boost_user_gcc="$HOME/wrapped/x86_64-w64-mingw32-g++ ;"
+printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
+
+printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
+echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
+echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
+./bootstrap.sh --without-icu || fail
+
+printf "Starting the b2 boost build\n"
+set -x
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" )
+./b2 \
+	-d 4 --debug-building  \
+	-a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
+	 --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
+	 "${b2_opt_with_lib[@]}" \
+	 runtime-link=shared \
+	-j 1 \
+	-sNO_BZIP2=1 --sNO_ZLIB=1 \
+	--layout=tagged install \
+	|| fail
+set +x
+
+
+printf "\nDONE the b2 boost build\n\n"
 
 # copy all boost includes for header only libraries
 find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
@@ -236,12 +285,28 @@ find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
 		#echo "$end_of"
 		if [ $end_of = $substr ]
 		then
-			cp -rv "$D" ./mingw_build
+			cp -r "$D" ./mingw_build
 		fi
 	fi
 done
 
 popd
+
+else
+	printf "\n\nSkipping boost (as selected in options)\n\n"
+
+fi
+
+printf "\nTEST EXIT\n\n" ; exit 1; # XXX
+
+printf "\n\n=========================================================================\n\n"
+printf "libsodium...\n\n"
+
+if ((option_shell_in_sodium)) ; then
+	printf "\nSTARTING TEST BASH (in sodium), while in PWD=$PWD\n"
+	bash
+	printf "\n\nresuming\n\n"
+fi
 
 else
 	printf "\n\nSkipping boost (as selected in options)\n\n"
@@ -259,6 +324,7 @@ if ((option_shell_in_sodium)) ; then
 fi
 
 
+if ((option_allow_sodium)) ; then
 printf "\n\nBuilding libsodium now\n\n"
 ## clone and build libsodium
 rm -rf libsodium # perhaps left over if we do some caching or testing
@@ -268,12 +334,21 @@ pushd libsodium || fail
 SODIUM_DIR=$(pwd)
 git checkout 1.0.11 || fail
 ./autogen.sh || fail
-printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium)\n\n"
-cp ~/build/galaxy42/contrib/gitian-patch/msys2-win64.sh  ./dist-build/msys2-win64.sh || fail
+
+patched_msys_script="~/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
+printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium) - from file ($patched_msys_script)\n\n"
+cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
+
 printf "\n\nRunning the mingw-crossbuild-script(s) (of lib sodium)\n\n"
 ./dist-build/msys2-win64.sh || fail
 printf "\n\nCrossbuild done (of lib sodium)"
 popd
+
+else
+	printf "\n\nSkipping sodium (as selected in options)\n\n"
+
+fi
+
 
 
 printf "\n\n=========================================================================\n\n"
