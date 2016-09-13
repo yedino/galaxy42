@@ -18,7 +18,7 @@ $ git clone https://github.com/yedino/galaxy42
 $ cd galaxy42
 $ git submodule update --init
 $ export CC=i686-w64-mingw32-gcc
-$ export CXX-i686-w64-mingw32-g++
+$ export CXX=i686-w64-mingw32-g++
 $ cmake .
 $ make tunserver.elf
 ```
@@ -78,7 +78,7 @@ __cmake output:__
 __possible errors:__  
 
 ```Warning	D9002	ignoring unknown option -std=c++14```
-- you should use never compilator that support c++14 (probably you are using an older version of Visual Studio)
+- you should use compilator that support c++14 (probably you are using an older version of Visual Studio)
 
 ```Error	LNK1104	cannot open file 'pthread.lib'	tunserver.elf```
 - simply remove pthread.lib from linking Additional Dependencies  

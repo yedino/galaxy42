@@ -153,14 +153,20 @@ function target_download() {
 	rm -rf "${base_dir}/${target_name}/" || fail
 	git clone "$target_url" || fail "Download target"
 	cd "${base_dir}/${target_name}" || fail
+	printf "%s\n" "On host we start with download of (${target_name}) in version:"
+	git log -1
 	git clean -xdf || fail
 	git checkout "$target_checkout" || fail "Download target in given version"
 	git clean -xdf || fail
 	git log -1 || fail
+	printf "\n\n\n"
 }
 
 function gitian_run_build() {
 	cd "$base_dir/gitian-builder/" || fail
+	printf "\nWill use YML Gitian file: $gitian_yml_file_full\n\n"
+	cat "$gitian_yml_file_full"
+	echo "key..." ; read _
 
 	./bin/gbuild    --allow-sudo  \
 		"$gitian_yml_file_full" \
@@ -183,6 +189,7 @@ function gitian_show_result() {
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
 	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
 	info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf)
+	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
 	info_binary_first=$( printf "$info_binary" | head -n 1)
 	info_host="$(get_host_info)"
 	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
