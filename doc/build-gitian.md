@@ -1,5 +1,4 @@
 
-
 ### Usage
 
 Use the command in top-directory:
@@ -11,7 +10,35 @@ and follow the instructions.
 Q: Error `lxc-execute: cgroupfs failed to detect cgroup metadata`
 A: Aptitude install (as root of course, on the computer that is trying to run gbuild or lxc-execute) a package "cgroupfs-mount".
 
+### How this works, call tree
 
+
+./install and so on - to get dependencies for Gitian building
+
+./build-gitian
+	bash functions:
+	works in ~/var-gitian/ ! (logs are there etc)
+	gitian_builder_download() - downloads Gitian (e.g. in our version)
+	gitian_builder_make_lxc_image() - ask Gitian to create image of LXC container
+		.../gitian-builder/bin/bin/make-base-vm
+			...
+			deboostrap (using our configured DEBOOSTRAP_DIR fix)
+			---> LXC image create
+	target_download() - downloads the project version from Git
+	gitian_run_build() - run main Gitian build
+		.../gitian-builder/gbuild
+			inside LXC:
+			we have Galaxy (in some version!) in /home/ubuntu/build/galaxy42/
+				run script as in .yml ./contrib/gitian-descriptors/main-build/galaxy-windows.yml
+					./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script
+						download boost
+						build boost
+						download sodium
+						build sodium
+						./do of Galaxy
+							cmake
+								build sodiumpp (our version) -> cmake
+							build actually our program
 
 Q: Error ` No such file or directory - failed to get real path for '.../target-foo-amd64`
 
