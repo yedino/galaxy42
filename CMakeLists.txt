@@ -307,7 +307,8 @@ add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURC
 
 
 if(MINGW)
-	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+	## ABI 1 or 0 could depend on mingw-w64 version
+	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 	set(MINGW_LIBRARIES ws2_32 iphlpapi)
 endif()
 
