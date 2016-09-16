@@ -50,7 +50,7 @@ function init_platforminfo() {
 		platforminfo[only_verid]=$(printf "%s\n" "${osrelease}" | egrep '^VERSION_ID=' | sed -e "s/^VERSION_ID=\(.*\)/\1/g" \
 			| tr -cd '[[:alnum:]]._-' )
 	else
-		if (( platforminfo['info_lsb'] )) ; then
+		if (("platforminfo['info_lsb']")) ; then
 			lsb=$(lsb_release -a)
 			platforminfo[distro]=$( printf "%s\n" "$lsb" | sed -n -e 's/^Distributor ID:[\t ]*\(.*\)/\1/p' )
 			platforminfo[id]=$( printf "%s\n" "${platforminfo[distro]}" | tr '[:upper:]' '[:lower:]' ) # "debian" from "Debian"
@@ -91,36 +91,36 @@ function init_platforminfo() {
 	# if it is a new family then copy entire block of course
 	# echo "DEVELOPMENT, SYS ID: ${platforminfo[id]}"
 
-	if (( ! family_detected )) ; then # can not detect family directly
+	if (( ! "family_detected" )) ; then # can not detect family directly
 		# try detecting family from packager
-		if ((platforminfo[is_apt]))      ; then platforminfo[is_family_debian]=1; family_detected=1 ; fi
-		if ((platforminfo[is_aptitude])) ; then platforminfo[is_family_debian]=1; family_detected=1 ; fi
-		if ((platforminfo[is_yum]))      ; then platforminfo[is_family_fedora]=1; family_detected=1 ; fi
-		if ((platforminfo[is_dnf]))      ; then platforminfo[is_family_fedora]=1; family_detected=1 ; fi
-		if ((platforminfo[is_apk]))      ; then platforminfo[is_family_alpine]=1; family_detected=1 ; fi
+		if (("platforminfo[is_apt]"))      ; then platforminfo[is_family_debian]=1; family_detected=1 ; fi
+		if (("platforminfo[is_aptitude]")) ; then platforminfo[is_family_debian]=1; family_detected=1 ; fi
+		if (("platforminfo[is_yum]"))      ; then platforminfo[is_family_fedora]=1; family_detected=1 ; fi
+		if (("platforminfo[is_dnf]"))      ; then platforminfo[is_family_fedora]=1; family_detected=1 ; fi
+		if (("platforminfo[is_apk]"))      ; then platforminfo[is_family_alpine]=1; family_detected=1 ; fi
 		# __add_platform__ if your platform is a new family that can be detected by used packager then add it here
 	fi
 
 	platforminfo[packager]="unknown"
 	platforminfo[packager_cmd_pause]=0 # most commands do not need a pause
 
-	if (( platforminfo[is_apt] )) ; then
+	if (("platforminfo[is_apt]")) ; then
 		platforminfo[packager]='apt'
 		platforminfo_packager_cmd=('apt' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_aptitude] )) ; then
+	if (("platforminfo[is_aptitude]")) ; then
 		platforminfo[packager]='aptitude'
 		platforminfo_packager_cmd=('aptitude' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_yum] )) ; then
+	if (("platforminfo[is_yum]")) ; then
 		platforminfo[packager]='yum'
 		platforminfo_packager_cmd=('yum' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_dnf] )) ; then
+	if (("platforminfo[is_dnf]")) ; then
 		platforminfo[packager]='dnf'
 		platforminfo_packager_cmd=('dnf' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_apk] )) ; then
+	if (("platforminfo[is_apk]")) ; then
 		platforminfo[packager]='apk'
 		platforminfo_packager_cmd=('apk' 'add' 'PACKAGES')
 	fi
@@ -156,8 +156,8 @@ function platforminfo_show_summary() {
 }
 
 function run_with_root_privilages() {
-	if (( ! platforminfo[is_now_root] )) ; then
-		if (( platforminfo[is_sudo] )) ; then
+	if (( ! "platforminfo[is_now_root]" )) ; then
+		if (( "platforminfo[is_sudo]" )) ; then
 			printf "\n%s\n" "We can use sudo to run as root (OK)"
 			printf "\n"
 			cmd="$1" ; shift
@@ -188,7 +188,7 @@ function platforminfo_install_packages() {
 	echo "Called util install packages with:" "$@"
 
 	for part in "${platforminfo_packager_cmd[@]}" ; do
-		if (( ! cmd_taken )) ; then
+		if (( ! "cmd_taken" )) ; then
 			cmd="$part"
 			cmd_taken=1
 		else
@@ -210,11 +210,11 @@ function platforminfo_install_packages() {
 
 function platforminfo_test() {
 	printf "Test platforminfo_test\n"
-	if ((platforminfo[is_dnf])) ; then printf "Can use DNF.\n" ; fi
-	if ((platforminfo[is_yum])) ; then printf "Can use YUM.\n" ; fi
-	if ((platforminfo[is_apt])) ; then printf "Can use APT.\n" ; fi
-	if ((platforminfo[is_apk])) ; then printf "Can use APK.\n" ; fi
-	if ((platforminfo[is_xxx])) ; then printf "Using XXX (huh?).\n" ; fi
+	if (("platforminfo[is_dnf]")) ; then printf "Can use DNF.\n" ; fi
+	if (("platforminfo[is_yum]")) ; then printf "Can use YUM.\n" ; fi
+	if (("platforminfo[is_apt]")) ; then printf "Can use APT.\n" ; fi
+	if (("platforminfo[is_apk]")) ; then printf "Can use APK.\n" ; fi
+	if (("platforminfo[is_xxx]")) ; then printf "Using XXX (huh?).\n" ; fi
 	printf "End of test platforminfo_test\n"
 }
 
