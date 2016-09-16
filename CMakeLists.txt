@@ -286,6 +286,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
 
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
 message("Libs for crypto are: (as string) '${LIBS_OPTIONAL_CRYPTO_clean}'")
