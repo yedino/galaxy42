@@ -21,7 +21,9 @@ programname="Galaxy42" # shellcheck disable=SC2034
 # install functions
 # ------------------------------------------------------------------------
 
-declare -A done_install
+declare -A done_install # shellcheck disable # that is for shellcheck disable=SC2034
+# thought using that disable causes another warning (maybe a bug, debian8)
+
 
 packages_to_install=() # start with empty list
 function install_packages_NOW() { # install selected things
@@ -58,6 +60,7 @@ function install_packages() { # only selects things for install, does not actual
 # install functions for this project
 
 done_install=()
+export done_install # so bashcheck does not complain
 
 function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
@@ -182,7 +185,7 @@ warn_root=0 # things as root
 warn_fw=0 # you should use a firewall
 warn2_net=0 # warning: strange network settings (e.g. lxc br)
 enabled_warn=0 # are warnings enabled
-verbose=0
+verbose=0 # shellcheck disable=SC2034
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
@@ -281,7 +284,7 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 
 	if (("is_realstep" && "verbose")) ; then
 		printf "\n\n%s\n%s\n" "$(eval_gettext "status_done_step \$item")" "$(gettext "status_done_step_PRESSKEY")"
-		((verbose2)) && read _
+		(("verbose2")) && read _
 	fi
 done
 
