@@ -25,9 +25,9 @@ function platforminfo_check_program() {
 # ${platforminfo[id]} for 'debian' 'ubuntu' 'devuan' 'fedora' etc.
 # ${platforminfo[idver]} for 'debian7' 'debian8' 'ubuntu15.10' etc.
 # if (($platforminfo[is_apt])) then do apt-get; also is_dnf, is_yum
-# if (($platforminfo[is_family_debian])) then install packages as for Debians family. 
+# if (($platforminfo[is_family_debian])) then install packages as for Debians family.
 # ${platforminfo[packager]} for 'apt-get' 'aptitude' 'yum' etc
-# ${platforminfo[packager_cmd_pause]} will be '1' if you need to wait for user confirmation 
+# ${platforminfo[packager_cmd_pause]} will be '1' if you need to wait for user confirmation
 # also OTHER global variables are set:
 # $platforminfo_packager_cmd for array like ('aptitude' 'PACKAGES' '-y') .
 # ... also is_family_fedora
@@ -65,6 +65,7 @@ function init_platforminfo() {
 	platforminfo[is_aptitude]=$(platforminfo_check_program 'aptitude') # e.g. debian
 	platforminfo[is_yum]=$(platforminfo_check_program 'yum') # e.g. fedora
 	platforminfo[is_dnf]=$(platforminfo_check_program 'dnf') # e.g. fedora
+	platforminfo[is_apk]=$(platforminfo_check_program 'apk') # alpine linux
 	# __add_platform__ detect your platform's package manager if it uses something else
 
 	family_detected=0 # not detected yet
@@ -76,6 +77,9 @@ function init_platforminfo() {
 	platforminfo[is_family_debian]=0
 	if [[ ${platforminfo[id]} = @(debian|devuan|ubuntu|mint) ]] ; then platforminfo[is_family_debian]=1 ; family_detected=1 ; fi # TODO more distros here? is redhat and centos good?
 
+	platforminfo[is_family_debian]=0
+	if [[ ${platforminfo[id]} = @(alpine) ]] ; then platforminfo[is_family_alpine]=1 ; family_detected=1 ; fi
+
 	# __add_platform__ if your platform is in above family then add it to the test by name,
 	# if it is a new family then copy entire block of course
 	# echo "DEVELOPMENT, SYS ID: ${platforminfo[id]}"
@@ -86,27 +90,32 @@ function init_platforminfo() {
 		if ((platforminfo[is_aptitude])) ; then platforminfo[is_family_debian]=1; family_detected=1 ; fi
 		if ((platforminfo[is_yum]))      ; then platforminfo[is_family_fedora]=1; family_detected=1 ; fi
 		if ((platforminfo[is_dnf]))      ; then platforminfo[is_family_fedora]=1; family_detected=1 ; fi
+		if ((platforminfo[is_apk]))      ; then platforminfo[is_family_alpine]=1; family_detected=1 ; fi
 		# __add_platform__ if your platform is a new family that can be detected by used packager then add it here
 	fi
 
 	platforminfo[packager]="unknown"
 	platforminfo[packager_cmd_pause]=0 # most commands do not need a pause
 
-	if (( platforminfo[is_apt] )) ; then 
-		platforminfo[packager]='apt' 
+	if (( platforminfo[is_apt] )) ; then
+		platforminfo[packager]='apt'
 		platforminfo_packager_cmd=('apt' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_aptitude] )) ; then 
-		platforminfo[packager]='aptitude' 
+	if (( platforminfo[is_aptitude] )) ; then
+		platforminfo[packager]='aptitude'
 		platforminfo_packager_cmd=('aptitude' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_yum] )) ; then 
-		platforminfo[packager]='yum' 
+	if (( platforminfo[is_yum] )) ; then
+		platforminfo[packager]='yum'
 		platforminfo_packager_cmd=('yum' 'install' '-y' 'PACKAGES')
 	fi
-	if (( platforminfo[is_dnf] )) ; then 
-		platforminfo[packager]='dnf' 
+	if (( platforminfo[is_dnf] )) ; then
+		platforminfo[packager]='dnf'
 		platforminfo_packager_cmd=('dnf' 'install' '-y' 'PACKAGES')
+	fi
+	if (( platforminfo[is_apk] )) ; then
+		platforminfo[packager]='apk'
+		platforminfo_packager_cmd=('apk' 'add' 'PACKAGES')
 	fi
 
 	if [[ "${platforminfo[packager]}" == "unknown" ]] ; then
@@ -171,6 +180,7 @@ function platforminfo_test() {
 	if ((platforminfo[is_dnf])) ; then printf "Can use DNF.\n" ; fi
 	if ((platforminfo[is_yum])) ; then printf "Can use YUM.\n" ; fi
 	if ((platforminfo[is_apt])) ; then printf "Can use APT.\n" ; fi
+	if ((platforminfo[is_apk])) ; then printf "Can use APK.\n" ; fi
 	if ((platforminfo[is_xxx])) ; then printf "Using XXX (huh?).\n" ; fi
 	printf "End of test platforminfo_test\n"
 }
