@@ -193,7 +193,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			enabled_warn=1
 		;;
 		verbose)
-			verbose=1
+			verbose=1 # shellcheck disable=SC2034
 		;;
 
 		build)
