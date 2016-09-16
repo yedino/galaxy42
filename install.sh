@@ -73,35 +73,34 @@ function install_for_build() {
 
 function install_for_touse() {
 	((done_install['install_for_touse'])) && return ; done_install['install_for_touse']=1
-	printf "\nXXX touse\n"
 	install_for_build
 	install_packages sudo
 }
 
 function install_for_devel() {
 	((done_install['install_for_devel'])) && return ; done_install['install_for_devel']=1
-	printf "\nXXX devel\n"
-		install_for_build
-		install_for_touse
-		install_packages git gnupg
+	install_for_build
+	install_for_touse
+	install_packages git gnupg
 }
 
 function install_for_devel2() {
 	((done_install['install_for_devel2'])) && return ; done_install['install_for_devel2']=1
-	printf "\nXXX devel2\n"
-		install_for_devel
-		# in future also add here things for e.g. simulations
+	install_for_devel
+	# in future also add here things for e.g. simulations
 }
 
 function install_build_gitian() {
 	((done_install['install_for_build_gitian'])) && return ; done_install['install_for_build_gitian']=1
-	printf "\nXXX gitian\n"
-		install_for_build
-		install_for_touse
-		install_for_devel
-		install_packages lxc
+	install_for_build
+	install_for_touse
+	install_for_devel
+	install_packages lxc
 
-		share/script/setup-lxc-host
+	install_packages_NOW
+
+	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")${item}" ; fi
+	run_with_root_privilages "./share/script/setup-lxc-host" || fail
 }
 
 
@@ -255,10 +254,7 @@ function show_status() {
 
 read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 	item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )"
-	echo "Doing action: item=[$item]"
-	printf %q\\n "$i"
-	#if [[ "$item" == "touse" ]] ; then echo "IF MATCHES touse"; fi
-	#if [[ "$i" == "touse" ]] ; then echo "IF MATCHES touse - for variable i"; fi
+	printf "\n%s\n" "Doing installation task: [$item]"
 
 	nonsteps=(warn verbose)
 	is_realstep=1

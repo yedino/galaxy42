@@ -156,6 +156,31 @@ function platforminfo_show_summary() {
 	printf "\n"
 }
 
+function run_with_root_privilages() {
+	if (( ! platforminfo[is_now_root] )) ; then
+		if (( platforminfo[is_sudo] )) ; then
+			printf "\n%s\n" "We can use sudo to run as root (OK)"
+			printf "\n"
+			cmd="$1" ; shift
+			set -x
+			sudo $cmd "$@" || return $?
+			set +x
+			printf "\n"
+		else
+			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then.\n"
+			return 50
+		fi
+	else
+		printf "\n%s\n" "We are root (OK)"
+		printf "\n"
+		cmd="$1" ; shift
+		set -x
+		$cmd "$@" || return $?
+		set +x
+		printf "\n"
+	fi
+}
+
 function platforminfo_install_packages() {
 	declare -a cmdparam
 	cmd=""
@@ -181,26 +206,7 @@ function platforminfo_install_packages() {
 	echo -n "Will now call installer, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
 	echo
 
-	if (( ! platforminfo[is_now_root] )) ; then
-		if (( platforminfo[is_sudo] )) ; then
-			printf "\n%s\n" "We are not root - but we can call sudo to install (OK)"
-			printf "\n"
-			set -x
-			sudo $cmd "${cmdparam[@]}" || return $?
-			set +x
-			printf "\n"
-		else
-			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then.\n"
-			return 50
-		fi
-	else
-		printf "\n%s\n" "We are root (OK) - so we can install"
-		printf "\n"
-		set -x
-		$cmd "${cmdparam[@]}" || return $?
-		set +x
-		printf "\n"
-	fi
+	run_with_root_privilages "$cmd" "${cmdparam[@]}" || return $?
 }
 
 function platforminfo_test() {
