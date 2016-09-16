@@ -42,10 +42,14 @@ function init_platforminfo() {
 
 	if [[ -r /etc/os-release ]] ; then
 		osrelease="$(egrep  'NAME|VERSION|VERSION_ID|ID' /etc/os-release)"
-		platforminfo[distro]=$(printf "%s\n" "${osrelease}" | egrep '^NAME=' | sed -e "s/^NAME=\(.*\)/\1/g" | tr '[:upper:]' '[:lower:]'  )
-		platforminfo[id]=$(printf "%s\n" "${osrelease}" | egrep '^ID=' | sed -e "s/^ID=\(.*\)/\1/g")
+		item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )"
+		platforminfo[distro]=$(printf "%s\n" "${osrelease}" | egrep '^NAME=' | sed -e "s/^NAME=\(.*\)/\1/g" \
+			| tr '[:upper:]' '[:lower:]' | tr -cd '[[:alnum:]]._-' )
+		platforminfo[id]=$(printf "%s\n" "${osrelease}" | egrep '^ID=' | sed -e "s/^ID=\(.*\)/\1/g" \
+			| tr -cd '[[:alnum:]]._-' )
 		platforminfo[code]="${platforminfo[id]}"
-		platforminfo[only_verid]=$(printf "%s\n" "${osrelease}" | egrep '^VERSION_ID=' | sed -e "s/^VERSION_ID=\(.*\)/\1/g")
+		platforminfo[only_verid]=$(printf "%s\n" "${osrelease}" | egrep '^VERSION_ID=' | sed -e "s/^VERSION_ID=\(.*\)/\1/g" \
+			| tr -cd '[[:alnum:]]._-' )
 	else
 		if (( platforminfo['info_lsb'] )) ; then
 			lsb=$(lsb_release -a)
@@ -179,19 +183,23 @@ function platforminfo_install_packages() {
 
 	if (( ! platforminfo[is_now_root] )) ; then
 		if (( platforminfo[is_sudo] )) ; then
-			printf "%s\n" "We are not root - but we can call sudo to install (OK)"
+			printf "\n%s\n" "We are not root - but we can call sudo to install (OK)"
+			printf "\n"
 			set -x
 			sudo $cmd "${cmdparam[@]}" || return $?
 			set +x
+			printf "\n"
 		else
 			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then.\n"
 			return 50
 		fi
 	else
-		printf "%s\n" "We are root (OK) - so we can install"
+		printf "\n%s\n" "We are root (OK) - so we can install"
+		printf "\n"
 		set -x
 		$cmd "${cmdparam[@]}" || return $?
 		set +x
+		printf "\n"
 	fi
 }
 

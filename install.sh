@@ -85,7 +85,7 @@ function install_packages_NOW() { # install selected things
 	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages_to_install now (as root)")"
 	if (( ${#packages_to_install[@]} > 0 )) ; then
 		if (( verbose )) ; then
-			packages_str="$packages_to_install[*]"
+			packages_str="${packages_to_install[*]}"
 			text="$(eval_gettext "L_install_packages_text $packages_str")"
 			abdialog --title "$(gettext 'install_packages_title')" \
 				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
@@ -99,6 +99,7 @@ function install_packages_NOW() { # install selected things
 	else
 		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
 	fi
+	packages_to_install=() # clear the list, is now installed
 }
 
 function install_packages() { # only selects things for install, does not actually do it yet
