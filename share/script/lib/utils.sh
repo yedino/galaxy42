@@ -42,7 +42,6 @@ function init_platforminfo() {
 
 	if [[ -r /etc/os-release ]] ; then
 		osrelease="$(egrep  'NAME|VERSION|VERSION_ID|ID' /etc/os-release)"
-		item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )"
 		platforminfo[distro]=$(printf "%s\n" "${osrelease}" | egrep '^NAME=' | sed -e "s/^NAME=\(.*\)/\1/g" \
 			| tr '[:upper:]' '[:lower:]' | tr -cd '[[:alnum:]]._-' )
 		platforminfo[id]=$(printf "%s\n" "${osrelease}" | egrep '^ID=' | sed -e "s/^ID=\(.*\)/\1/g" \
@@ -163,7 +162,7 @@ function run_with_root_privilages() {
 			printf "\n"
 			cmd="$1" ; shift
 			set -x
-			sudo $cmd "$@" || return $?
+			sudo "$cmd" "$@" || return $?
 			set +x
 			printf "\n"
 		else
@@ -189,7 +188,7 @@ function platforminfo_install_packages() {
 	echo "Called util install packages with:" "$@"
 
 	for part in "${platforminfo_packager_cmd[@]}" ; do
-		if (( ! $cmd_taken )) ; then
+		if (( ! cmd_taken )) ; then
 			cmd="$part"
 			cmd_taken=1
 		else
