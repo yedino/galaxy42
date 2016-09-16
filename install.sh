@@ -21,6 +21,8 @@ programname="Galaxy42" # shellcheck disable=SC2034
 # install functions
 # ------------------------------------------------------------------------
 
+declare -A done_install
+
 packages_to_install=() # start with empty list
 function install_packages_NOW() { # install selected things
 	old=("${packages_to_install[@]}")
@@ -56,6 +58,7 @@ function install_packages() { # only selects things for install, does not actual
 # install functions for this project
 
 function install_for_build() {
+	((done_install['install_for_build'])) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
 	if ((${platforminfo[is_family_debian]})) ; then
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
@@ -69,22 +72,30 @@ function install_for_build() {
 }
 
 function install_for_touse() {
+	((done_install['install_for_touse'])) && return ; done_install['install_for_touse']=1
+	printf "\nXXX touse\n"
 	install_for_build
 	install_packages sudo
 }
 
 function install_for_devel() {
+	((done_install['install_for_devel'])) && return ; done_install['install_for_devel']=1
+	printf "\nXXX devel\n"
 		install_for_build
 		install_for_touse
 		install_packages git gnupg
 }
 
 function install_for_devel2() {
+	((done_install['install_for_devel2'])) && return ; done_install['install_for_devel2']=1
+	printf "\nXXX devel2\n"
 		install_for_devel
 		# in future also add here things for e.g. simulations
 }
 
 function install_build_gitian() {
+	((done_install['install_for_build_gitian'])) && return ; done_install['install_for_build_gitian']=1
+	printf "\nXXX gitian\n"
 		install_for_build
 		install_for_touse
 		install_for_devel
