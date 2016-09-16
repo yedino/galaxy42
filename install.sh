@@ -62,12 +62,12 @@ done_install=()
 function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
-	if ((platforminfo[is_family_debian])) ; then
+	if (("platforminfo[is_family_debian]")) ; then
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
-	elif ((platforminfo[is_family_redhat])) ; then
+	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
 		# EXTLEVEL fftw-devel
-	elif ((platforminfo[is_family_alpine])) ; then
+	elif (("platforminfo[is_family_alpine]")) ; then
 		install_packages g++ libsodium-dev boost-dev make automake # alpine also needs - bash (for scripts!), newt (whiptail)
 		# EXTLEVEL fftw-devel
 	fi
@@ -279,7 +279,7 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 		;;
 	esac
 
-	if ((is_realstep && verbose)) ; then
+	if (("is_realstep" && "verbose")) ; then
 		printf "\n\n%s\n%s\n" "$(eval_gettext "status_done_step \$item")" "$(gettext "status_done_step_PRESSKEY")"
 		((verbose2)) && read _
 	fi
