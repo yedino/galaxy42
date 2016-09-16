@@ -29,9 +29,9 @@ function install_packages_NOW() { # install selected things
 	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
 	packages_to_install=("${new[@]}")
 
-	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages_to_install now (as root)")"
+	printf "\n%s\n" "$(eval_gettext "We will install packages: ${packages_to_install[*]} now (as root)")"
 	if (( ${#packages_to_install[@]} > 0 )) ; then
-		if (( verbose )) ; then
+		if (( "verbose" )) ; then
 			packages_str="${packages_to_install[*]}"
 			text="$(eval_gettext "L_install_packages_text $packages_str")"
 			abdialog --title "$(gettext 'install_packages_title')" \
@@ -58,40 +58,40 @@ function install_packages() { # only selects things for install, does not actual
 # install functions for this project
 
 function install_for_build() {
-	((done_install['install_for_build'])) && return ; done_install['install_for_build']=1
+	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
-	if ((${platforminfo[is_family_debian]})) ; then
+	if ((platforminfo[is_family_debian])) ; then
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
-	elif ((${platforminfo[is_family_redhat]})) ; then
+	elif ((platforminfo[is_family_redhat])) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
 		# EXTLEVEL fftw-devel
-	elif ((${platforminfo[is_family_alpine]})) ; then
+	elif ((platforminfo[is_family_alpine])) ; then
 		install_packages g++ libsodium-dev boost-dev make automake # alpine also needs - bash (for scripts!), newt (whiptail)
 		# EXTLEVEL fftw-devel
 	fi
 }
 
 function install_for_touse() {
-	((done_install['install_for_touse'])) && return ; done_install['install_for_touse']=1
+	(("done_install['install_for_touse']")) && return ; done_install['install_for_touse']=1
 	install_for_build
 	install_packages sudo
 }
 
 function install_for_devel() {
-	((done_install['install_for_devel'])) && return ; done_install['install_for_devel']=1
+	(("done_install['install_for_devel']")) && return ; done_install['install_for_devel']=1
 	install_for_build
 	install_for_touse
 	install_packages git gnupg
 }
 
 function install_for_devel2() {
-	((done_install['install_for_devel2'])) && return ; done_install['install_for_devel2']=1
+	(("done_install['install_for_devel2']")) && return ; done_install['install_for_devel2']=1
 	install_for_devel
 	# in future also add here things for e.g. simulations
 }
 
 function install_build_gitian() {
-	((done_install['install_for_build_gitian'])) && return ; done_install['install_for_build_gitian']=1
+	(("done_install['install_for_build_gitian']")) && return ; done_install['install_for_build_gitian']=1
 	install_for_build
 	install_for_touse
 	install_for_devel
@@ -99,7 +99,7 @@ function install_build_gitian() {
 
 	install_packages_NOW
 
-	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")${item}" ; fi
+	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
 	run_with_root_privilages "./share/script/setup-lxc-host" || fail
 }
 
