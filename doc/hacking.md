@@ -36,11 +36,21 @@ See ./install.sh for example how to (gettext)
 
 Update existig file:
 
+Use script:
+
+```
+contrib/tools/lang-updater  -t -u
+```
+
+Older method was to use commands like:
+
 ```
 xgettext -j  -o src-misc/locale/galaxy42_installer/messages.pot  install.sh
 msgmerge --update src-misc/locale/galaxy42_installer/pl.po   src-misc/locale/galaxy42_installer/messages.pot
 msgfmt --check --endianness=little src-misc/locale/galaxy42_installer/pl.po -o ./share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 ```
+
+(though this command probably do not e.g. remove obsolete strings etc)
 
 # Naming and Glossary
 

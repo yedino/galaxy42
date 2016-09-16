@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-31 17:56+0000\n"
+"POT-Creation-Date: 2016-09-16 12:34+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -158,4 +158,22 @@ msgstr ""
 
 #, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
+msgstr ""
+
+msgid "error_init_platforminfo_unknown"
+msgstr ""
+
+#, fuzzy
+msgid "install_packages_title"
+msgstr "Progress of installation"
+
+msgid "Install"
+msgstr ""
+
+#, sh-format
+msgid "L_install_failed"
+msgstr ""
+
+#, sh-format
+msgid "L_install_nothing_to_do"
 msgstr ""
