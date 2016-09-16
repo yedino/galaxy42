@@ -61,6 +61,10 @@ function init_platforminfo() {
 	fi
 	platforminfo[idver]="${platforminfo[id]}_${platforminfo[only_verid]}"
 
+	platforminfo[is_sudo]=$(platforminfo_check_program 'sudo') # can we use sudo if we are not running as root
+	platforminfo[is_now_root]=0
+	if [[ $EUID -eq 0 ]]; then platforminfo[is_now_root]=1 ; fi
+
 	platforminfo[is_apt]=$(platforminfo_check_program 'apt-get') # e.g. debian
 	platforminfo[is_aptitude]=$(platforminfo_check_program 'aptitude') # e.g. debian
 	platforminfo[is_yum]=$(platforminfo_check_program 'yum') # e.g. fedora
@@ -159,7 +163,7 @@ function platforminfo_install_packages() {
 		if (( ! $cmd_taken )) ; then
 			cmd="$part"
 			cmd_taken=1
-		else			
+		else
 			if [[ "$part" == "PACKAGES" ]] ; then
 				for arg in "$@" ; do
 					cmdparam+=( "$arg" )
@@ -170,9 +174,25 @@ function platforminfo_install_packages() {
 		fi
 	done
 
-	echo "Will now call installer, command is: $cmd" ;	for part in "${cmdparam[@]}" ; do echo "With command line argument: $part" ; done  # debug
-	echo "Calling now."
-	$cmd "${cmdparam[@]}" || return $?
+	echo -n "Will now call installer, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
+	echo
+
+	if (( ! platforminfo[is_now_root] )) ; then
+		if (( platforminfo[is_sudo] )) ; then
+			printf "%s\n" "We are not root - but we can call sudo to install (OK)"
+			set -x
+			sudo $cmd "${cmdparam[@]}" || return $?
+			set +x
+		else
+			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then.\n"
+			return 50
+		fi
+	else
+		printf "%s\n" "We are root (OK) - so we can install"
+		set -x
+		$cmd "${cmdparam[@]}" || return $?
+		set +x
+	fi
 }
 
 function platforminfo_test() {
