@@ -82,6 +82,10 @@ fi
 
 packages_to_install=() # start with empty list
 function install_packages_NOW() { # install selected things
+	old=("${packages_to_install[@]}")
+	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
+	packages_to_install=("${new[@]}")
+
 	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages_to_install now (as root)")"
 	if (( ${#packages_to_install[@]} > 0 )) ; then
 		if (( verbose )) ; then
@@ -103,10 +107,10 @@ function install_packages_NOW() { # install selected things
 }
 
 function install_packages() { # only selects things for install, does not actually do it yet
-	#packages_to_install+=("${packages[@]}")
 	packages_to_install+=("$@")
-	echo "Will install more packages: " "${packages_to_install[@]}"
+	#echo "Will install more packages: " "${packages_to_install[@]}"
 }
+
 
 function install_for_build() {
 	install_packages git gcc cmake autoconf libtool make automake
@@ -225,8 +229,8 @@ function show_status() {
 
 
 read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
-	item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )" 
-	echo "Doing action: item=[$item]" 
+	item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )"
+	echo "Doing action: item=[$item]"
 	printf %q\\n "$i"
 	#if [[ "$item" == "touse" ]] ; then echo "IF MATCHES touse"; fi
 	#if [[ "$i" == "touse" ]] ; then echo "IF MATCHES touse - for variable i"; fi
@@ -235,32 +239,30 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 	is_realstep=1
 	inarray "$item" "${nonsteps[@]}" && is_realstep=0
 
-	if ((is_realstep && verbose)) ; then show_status "$(gettext "status_done_step_BEFORE")${item}" ; fi
+	if ((is_realstep && verbose2)) ; then show_status "$(gettext "status_done_step_BEFORE")${item}" ; fi
 
 	case "$item" in
 		build)
 			install_for_build
-			install_packages_NOW
 		;;
-		'touse')
+		touse)
 			install_for_touse
-			install_packages_NOW
 		;;
 		devel)
 			install_for_devel
-			install_packages_NOW
 		;;
 		bgitian)
 			install_build_gitian
-			install_packages_NOW
 		;;
 	esac
 
 	if ((is_realstep && verbose)) ; then
 		printf "\n\n%s\n%s\n" "$(eval_gettext "status_done_step \$item")" "$(gettext "status_done_step_PRESSKEY")"
-		read _
+		((verbose2)) && read _
 	fi
 done
+
+install_packages_NOW
 
 
 text="$(eval_gettext "Finished installation of \$programname.")"
