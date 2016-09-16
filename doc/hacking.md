@@ -38,11 +38,11 @@ To test installer for other languages and conditions you can use combinations of
 
 ```
 # as root:
-FORCE_DIALOG=whiptail LANG=en ./install.sh
-FORCE_DIALOG=dialog LANG=pl ./install.sh
+FORCE_DIALOG=whiptail LANGUAGE=en ./install.sh
+FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 
 # as non-root user, but allowed to "sudo" into needed commands especially the package manager:
-FORCE_DIALOG=dialog LANG=pl ./install.sh --sudo
+FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
 
 ## Developing translations

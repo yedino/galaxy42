@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-16 12:34+0000\n"
+"POT-Creation-Date: 2016-09-16 13:01+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -162,11 +162,13 @@ msgstr "Bez pytań (niebezpieczne!) - dla developera"
 msgid "tasks_we_will_do"
 msgstr "Wykonamy teraz czynności:"
 
+#, sh-format
 msgid "this_script_uses_sudo_flag $sudo_flag"
 msgstr ""
 "Skrypt nie jest uruchomiony jako użytkownik root, ale podałeś flagę "
 "$sudo_flag więc zakładamy iż sudo jest ustawione i kontynuujemy."
 
+#, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
 msgstr ""
 "Ten skrypt musi być uruchomiony z użytkownika root. (Lub zamiast tego, jeż"
@@ -184,8 +186,10 @@ msgstr "Postęp instalacji"
 msgid "Install"
 msgstr "Zainstaluj"
 
+#, sh-format
 msgid "L_install_failed"
 msgstr "Błąd instalacji"
 
+#, sh-format
 msgid "L_install_nothing_to_do"
 msgstr "Nie trzeba nic tutaj instalować"

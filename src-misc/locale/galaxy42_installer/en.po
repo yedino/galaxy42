@@ -133,21 +133,17 @@ msgstr ""
 msgid "menu_main_title $programname:"
 msgstr "* Configure computer for running here the program $programname"
 
-#, fuzzy
 msgid "menu_taskpack_normal_builduse"
 msgstr "Build this program from source code"
 
-#, fuzzy
 msgid "menu_taskpack_custom"
 msgstr "Use this program on this computer"
 
-#, fuzzy
 msgid "menu_taskpack_quick_builduse"
-msgstr "Build this program from source code"
+msgstr "No confirmations (dangerous!) - build & use"
 
-#, fuzzy
 msgid "menu_taskpack_quick_devel"
-msgstr "Develop this program"
+msgstr "No confirmations (dangerous!) - for developer"
 
 msgid "tasks_we_will_do"
 msgstr ""
