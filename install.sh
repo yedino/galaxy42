@@ -2,6 +2,9 @@
 # This script should be run as-is inside the source code of this project.
 # It allows to build&install the programs of this project,
 # and also it allows to configure all developer tools.
+# 
+# (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Yedino (you can pick)
+#
 
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
@@ -28,6 +31,9 @@ lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
+	
+# platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
@@ -52,8 +58,9 @@ response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
 	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
 	2>&1 >/dev/tty ) || abdialog_exit
-
 [[ -z "$response" ]] && exit
+
+
 response_menu_task=""
 
 if [[ "$response" == "normal" ]] ; then response_menu_task="warn build touse" ; fi
@@ -69,31 +76,58 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
 	"verbose"       "$(gettext "menu_task_verbose")" "off" \
 	2>&1 >/dev/tty ) || abdialog_exit
-response_menu_task="$response"
+	response_menu_task="$response"
 fi
 
 [[ -z "$response_menu_task" ]] && exit
 
-function install_packets() {
-	packages="$*"
-	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages now (as root)")"
-	sudo aptitude install -y "$@" || exit 1
+packages_to_install=() # start with empty list
+function install_packages_NOW() { # install selected things
+	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages_to_install now (as root)")"
+	if (( ${#packages_to_install[@]} > 0 )) ; then
+		if (( verbose )) ; then
+			packages_str="$packages_to_install[*]"
+			text="$(eval_gettext "L_install_packages_text $packages_str")"
+			abdialog --title "$(gettext 'install_packages_title')" \
+				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
+				--msgbox "$text" 20 60 || abdialog_exit
+		fi
+
+		platforminfo_install_packages "${packages_to_install[@]}" || {
+			printf "\n%s\n" "$(eval_gettext "L_install_failed")"
+			exit 1
+		}
+	else
+		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
+	fi
+}
+
+function install_packages() { # only selects things for install, does not actually do it yet
+	#packages_to_install+=("${packages[@]}")
+	packages_to_install+=("$@")
+	echo "Will install more packages: " "${packages_to_install[@]}"
 }
 
 function install_for_build() {
-	install_packets git gcc g++ cmake autoconf libtool build-essential \
-		libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
+	install_packages git gcc cmake autoconf libtool
+	
+	if ((${platforminfo[is_family_debian]})) ; then
+		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
+	fi
+	if ((${platforminfo[is_family_redhat]})) ; then
+		install_packages gcc-c++ boost-devel libsodium-devel
+	fi
 }
 
 function install_for_touse() {
 	install_for_build
-	install_packets sudo
+	install_packages sudo
 }
 
 function install_for_devel() {
 		install_for_build
 		install_for_touse
-		install_packets git gnupg
+		install_packages git gnupg
 }
 
 function install_for_devel2() {
@@ -105,7 +139,7 @@ function install_build_gitian() {
 		install_for_build
 		install_for_touse
 		install_for_devel
-		install_packets lxc
+		install_packages lxc
 
 		share/script/setup-lxc-host
 }
@@ -188,24 +222,35 @@ function show_status() {
 
 
 
-read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
+	item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )" 
+	echo "Doing action: item=[$item]" 
+	printf %q\\n "$i"
+	#if [[ "$item" == "touse" ]] ; then echo "IF MATCHES touse"; fi
+	#if [[ "$i" == "touse" ]] ; then echo "IF MATCHES touse - for variable i"; fi
+
 	nonsteps=(warn verbose)
 	is_realstep=1
 	inarray "$item" "${nonsteps[@]}" && is_realstep=0
 
 	if ((is_realstep && verbose)) ; then show_status "$(gettext "status_done_step_BEFORE")${item}" ; fi
+
 	case "$item" in
 		build)
 			install_for_build
+			install_packages_NOW
 		;;
-		touse)
+		'touse')
 			install_for_touse
+			install_packages_NOW
 		;;
 		devel)
 			install_for_devel
+			install_packages_NOW
 		;;
 		bgitian)
 			install_build_gitian
+			install_packages_NOW
 		;;
 	esac
 
