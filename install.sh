@@ -109,13 +109,14 @@ function install_packages() { # only selects things for install, does not actual
 }
 
 function install_for_build() {
-	install_packages git gcc cmake autoconf libtool
+	install_packages git gcc cmake autoconf libtool # maybe:make and automake here?
 	
 	if ((${platforminfo[is_family_debian]})) ; then
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
-	fi
-	if ((${platforminfo[is_family_redhat]})) ; then
-		install_packages gcc-c++ boost-devel libsodium-devel
+	elif ((${platforminfo[is_family_redhat]})) ; then
+		install_packages gcc-c++ boost-devel libsodium-devel fftw-devel
+	elif ((${platforminfo[is_family_alpine]})) ; then
+		install_packages g++ libsodium-dev boost-dev make automake fftw-dev # alpine also needs - bash (for scripts!), newt (whiptail)
 	fi
 }
 
