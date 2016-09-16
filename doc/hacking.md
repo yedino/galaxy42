@@ -24,15 +24,36 @@ To develop the program, we recommend mainly Debian Stable as the main environmen
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
 
-# Developing translations
+## Developing and testing Install-code
 
-## Writting the code in translatable way
+Install-code is the installer `./install.sh` that you run from place where you have (ready - e.g. unpacked, or better: downloaded from git with `git clone`)
+source code of this project.
 
-### Bash
+To test installer for other languages and conditions you can use combinations of settings. Possible conditions:
+- force to use dialog, or whiptail. Other test: run on system with just one or both installed (dialog should be preffered)
+- force a language.
+- run as root
+- run as non-root, with sudo privilages
+- run as non-root, without sudo privilages (install will be not possible)
+
+```
+# as root:
+FORCE_DIALOG=whiptail LANG=en ./install.sh
+FORCE_DIALOG=dialog LANG=pl ./install.sh
+
+# as non-root user, but allowed to "sudo" into needed commands especially the package manager:
+FORCE_DIALOG=dialog LANG=pl ./install.sh --sudo
+```
+
+## Developing translations
+
+### Writting the code in translatable way
+
+#### Bash
 
 See ./install.sh for example how to (gettext)
 
-## Preparing translation files
+### Preparing translation files
 
 Update existig file:
 
