@@ -15,6 +15,88 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 
 programname="Galaxy42" # shellcheck disable=SC2034
 
+
+
+# ------------------------------------------------------------------------
+# install functions
+# ------------------------------------------------------------------------
+
+packages_to_install=() # start with empty list
+function install_packages_NOW() { # install selected things
+	old=("${packages_to_install[@]}")
+	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
+	packages_to_install=("${new[@]}")
+
+	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages_to_install now (as root)")"
+	if (( ${#packages_to_install[@]} > 0 )) ; then
+		if (( verbose )) ; then
+			packages_str="${packages_to_install[*]}"
+			text="$(eval_gettext "L_install_packages_text $packages_str")"
+			abdialog --title "$(gettext 'install_packages_title')" \
+				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
+				--msgbox "$text" 20 60 || abdialog_exit
+		fi
+
+		platforminfo_install_packages "${packages_to_install[@]}" || {
+			printf "\n%s\n" "$(eval_gettext "L_install_failed")"
+			exit 1
+		}
+	else
+		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
+	fi
+	packages_to_install=() # clear the list, is now installed
+}
+
+function install_packages() { # only selects things for install, does not actually do it yet
+	packages_to_install+=("$@")
+	#echo "Will install more packages: " "${packages_to_install[@]}"
+}
+
+# ------------------------------------------------------------------------
+# install functions for this project
+
+function install_for_build() {
+	install_packages git gcc cmake autoconf libtool make automake
+	if ((${platforminfo[is_family_debian]})) ; then
+		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
+	elif ((${platforminfo[is_family_redhat]})) ; then
+		install_packages gcc-c++ boost-devel libsodium-devel
+		# EXTLEVEL fftw-devel
+	elif ((${platforminfo[is_family_alpine]})) ; then
+		install_packages g++ libsodium-dev boost-dev make automake # alpine also needs - bash (for scripts!), newt (whiptail)
+		# EXTLEVEL fftw-devel
+	fi
+}
+
+function install_for_touse() {
+	install_for_build
+	install_packages sudo
+}
+
+function install_for_devel() {
+		install_for_build
+		install_for_touse
+		install_packages git gnupg
+}
+
+function install_for_devel2() {
+		install_for_devel
+		# in future also add here things for e.g. simulations
+}
+
+function install_build_gitian() {
+		install_for_build
+		install_for_touse
+		install_for_devel
+		install_packages lxc
+
+		share/script/setup-lxc-host
+}
+
+
+# ------------------------------------------------------------------------
+# start
+
 sudo_flag="--sudo"
 if [[ $EUID -ne 0 ]]; then
 	if [[ "$1" == "$sudo_flag" ]]; then
@@ -80,75 +162,7 @@ fi
 
 [[ -z "$response_menu_task" ]] && exit
 
-packages_to_install=() # start with empty list
-function install_packages_NOW() { # install selected things
-	old=("${packages_to_install[@]}")
-	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
-	packages_to_install=("${new[@]}")
 
-	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages_to_install now (as root)")"
-	if (( ${#packages_to_install[@]} > 0 )) ; then
-		if (( verbose )) ; then
-			packages_str="${packages_to_install[*]}"
-			text="$(eval_gettext "L_install_packages_text $packages_str")"
-			abdialog --title "$(gettext 'install_packages_title')" \
-				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
-				--msgbox "$text" 20 60 || abdialog_exit
-		fi
-
-		platforminfo_install_packages "${packages_to_install[@]}" || {
-			printf "\n%s\n" "$(eval_gettext "L_install_failed")"
-			exit 1
-		}
-	else
-		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
-	fi
-	packages_to_install=() # clear the list, is now installed
-}
-
-function install_packages() { # only selects things for install, does not actually do it yet
-	packages_to_install+=("$@")
-	#echo "Will install more packages: " "${packages_to_install[@]}"
-}
-
-
-function install_for_build() {
-	install_packages git gcc cmake autoconf libtool make automake
-	if ((${platforminfo[is_family_debian]})) ; then
-		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
-	elif ((${platforminfo[is_family_redhat]})) ; then
-		install_packages gcc-c++ boost-devel libsodium-devel
-		# EXTLEVEL fftw-devel
-	elif ((${platforminfo[is_family_alpine]})) ; then
-		install_packages g++ libsodium-dev boost-dev make automake # alpine also needs - bash (for scripts!), newt (whiptail)
-		# EXTLEVEL fftw-devel
-	fi
-}
-
-function install_for_touse() {
-	install_for_build
-	install_packages sudo
-}
-
-function install_for_devel() {
-		install_for_build
-		install_for_touse
-		install_packages git gnupg
-}
-
-function install_for_devel2() {
-		install_for_devel
-		# in future also add here things for e.g. simulations
-}
-
-function install_build_gitian() {
-		install_for_build
-		install_for_touse
-		install_for_devel
-		install_packages lxc
-
-		share/script/setup-lxc-host
-}
 
 warnings_text="" # more warnings
 warn_ANY=0 # any warning?
