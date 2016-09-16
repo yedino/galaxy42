@@ -2,7 +2,7 @@
 # This script should be run as-is inside the source code of this project.
 # It allows to build&install the programs of this project,
 # and also it allows to configure all developer tools.
-# 
+#
 # (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Yedino (you can pick)
 #
 
@@ -32,7 +32,6 @@ lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 
 init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
 if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
-	
 # platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
@@ -109,14 +108,15 @@ function install_packages() { # only selects things for install, does not actual
 }
 
 function install_for_build() {
-	install_packages git gcc cmake autoconf libtool # maybe:make and automake here?
-	
+	install_packages git gcc cmake autoconf libtool make automake
 	if ((${platforminfo[is_family_debian]})) ; then
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
 	elif ((${platforminfo[is_family_redhat]})) ; then
-		install_packages gcc-c++ boost-devel libsodium-devel fftw-devel
+		install_packages gcc-c++ boost-devel libsodium-devel
+		# EXTLEVEL fftw-devel
 	elif ((${platforminfo[is_family_alpine]})) ; then
-		install_packages g++ libsodium-dev boost-dev make automake fftw-dev # alpine also needs - bash (for scripts!), newt (whiptail)
+		install_packages g++ libsodium-dev boost-dev make automake # alpine also needs - bash (for scripts!), newt (whiptail)
+		# EXTLEVEL fftw-devel
 	fi
 }
 
