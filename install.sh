@@ -57,6 +57,8 @@ function install_packages() { # only selects things for install, does not actual
 # ------------------------------------------------------------------------
 # install functions for this project
 
+done_install=()
+
 function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
