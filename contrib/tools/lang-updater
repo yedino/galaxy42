@@ -1,14 +1,17 @@
 #!/bin/bash
 
 function usage() {
-	printf "
+	printf "%s\n" "
 
 	Run this program with options:
 
 	-t Trims from .po files obsolite strings that are no longer present in sources.
 	-u Updates the .po and .mo files by adding new strings that were since last time added in sources.
 
-	(Need manual commands to create first empty pot file maybe)
+	Usually this program is run with options like:
+	$0 -t -u
+
+	(When ou start, then sometimes you might need to use manual commands to create first-time empty pot file maybe)
 
 "
 

@@ -18,6 +18,9 @@ Main top-level functions of program as seen by users (for testers):
 -- prepares all for ./do and uses it correctly
 -- prepares all for ./build-gitian and uses it correctly
 
+Not Supp - we do NOT support this function on this platform (for now and for near future at least)
+N/A - not available - given function can not exist on this platform (e.g. Gitian tool does not exist on Windows currently)
+
                                         +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
                                         |123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|
 +---------------------------------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
@@ -62,8 +65,8 @@ Main top-level functions of program as seen by users (for testers):
 |all deps/config, and then does         |            |            |            |            |            |            |            |            |            |            |
 |the same as ./do above                 |            |            |            |            |            |            |            |            |            |            |
 +---------------------------------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
-|./build-gitian on a configured         | Y          |            |            |            |            |            |            |            |            |            |
-|system with all deps                   |            |            |            |            |            |            |            |            |            |            |
+|./build-gitian on a configured         | Y          | !err       | ?todo      | ?todo      | Y          | N/A        | N/A        | Not Supp.  | N/A        | N/A        |
+|system with all deps                   |            |            | (hb)       |            |            |            |            |            |            |            |
 |creates the deterministic binary       |            |            |            |            |            |            |            |            |            |            |
 |for Linux x86_64 target                |            |            |            |            |            |            |            |            |            |            |
 +---------------------------------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
