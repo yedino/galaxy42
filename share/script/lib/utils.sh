@@ -77,7 +77,7 @@ function init_platforminfo() {
 	platforminfo[is_family_debian]=0
 	if [[ ${platforminfo[id]} = @(debian|devuan|ubuntu|mint) ]] ; then platforminfo[is_family_debian]=1 ; family_detected=1 ; fi # TODO more distros here? is redhat and centos good?
 
-	platforminfo[is_family_debian]=0
+	platforminfo[is_family_alpine]=0
 	if [[ ${platforminfo[id]} = @(alpine) ]] ; then platforminfo[is_family_alpine]=1 ; family_detected=1 ; fi
 
 	# __add_platform__ if your platform is in above family then add it to the test by name,
