@@ -165,8 +165,7 @@ function target_download() {
 function gitian_run_build() {
 	cd "$base_dir/gitian-builder/" || fail
 	printf "\nWill use YML Gitian file: $gitian_yml_file_full\n\n"
-	cat "$gitian_yml_file_full"
-	echo "key..." ; read _
+	cat "$gitian_yml_file_full" | egrep -H -n -i "commit|url|dir"
 
 	./bin/gbuild    --allow-sudo  \
 		"$gitian_yml_file_full" \
@@ -188,7 +187,8 @@ function get_host_info() {
 function gitian_show_result() {
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
 	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
-	info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf)
+	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
+	info_binary=$(  find  /home/ubuntu/build/boost/mingw_build/lib/*   /home/ubuntu/build/libsodium/*/bin/   -name  '*.dll' -o -name '*.exe'    ; ls -1 /home/ubuntu/build/galaxy42/*exe | sort   )
 	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
 	info_binary_first=$( printf "$info_binary" | head -n 1)
 	info_host="$(get_host_info)"

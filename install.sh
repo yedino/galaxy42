@@ -2,6 +2,9 @@
 # This script should be run as-is inside the source code of this project.
 # It allows to build&install the programs of this project,
 # and also it allows to configure all developer tools.
+#
+# (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Yedino (you can pick)
+#
 
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
@@ -11,6 +14,103 @@ export TEXTDOMAIN="galaxy42_installer"
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 
 programname="Galaxy42" # shellcheck disable=SC2034
+
+
+
+# ------------------------------------------------------------------------
+# install functions
+# ------------------------------------------------------------------------
+
+declare -A done_install # shellcheck disable # that is for shellcheck disable=SC2034
+# thought using that disable causes another warning (maybe a bug, debian8)
+
+
+packages_to_install=() # start with empty list
+function install_packages_NOW() { # install selected things
+	old=("${packages_to_install[@]}")
+	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
+	packages_to_install=("${new[@]}")
+
+	printf "\n%s\n" "$(eval_gettext "We will install packages: ${packages_to_install[*]} now (as root)")"
+	if (( ${#packages_to_install[@]} > 0 )) ; then
+		if (( "verbose" )) ; then
+			packages_str="${packages_to_install[*]}"
+			text="$(eval_gettext "L_install_packages_text $packages_str")"
+			abdialog --title "$(gettext 'install_packages_title')" \
+				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
+				--msgbox "$text" 20 60 || abdialog_exit
+		fi
+
+		platforminfo_install_packages "${packages_to_install[@]}" || {
+			printf "\n%s\n" "$(eval_gettext "L_install_failed")"
+			exit 1
+		}
+	else
+		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
+	fi
+	packages_to_install=() # clear the list, is now installed
+}
+
+function install_packages() { # only selects things for install, does not actually do it yet
+	packages_to_install+=("$@")
+	#echo "Will install more packages: " "${packages_to_install[@]}"
+}
+
+# ------------------------------------------------------------------------
+# install functions for this project
+
+done_install=()
+export done_install # so bashcheck does not complain
+
+function install_for_build() {
+	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
+	install_packages git gcc cmake autoconf libtool make automake
+	if (("platforminfo[is_family_debian]")) ; then
+		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
+	elif (("platforminfo[is_family_redhat]")) ; then
+		install_packages gcc-c++ boost-devel libsodium-devel
+		# EXTLEVEL fftw-devel
+	elif (("platforminfo[is_family_alpine]")) ; then
+		install_packages g++ libsodium-dev boost-dev make automake # alpine also needs - bash (for scripts!), newt (whiptail)
+		# EXTLEVEL fftw-devel
+	fi
+}
+
+function install_for_touse() {
+	(("done_install['install_for_touse']")) && return ; done_install['install_for_touse']=1
+	install_for_build
+	install_packages sudo
+}
+
+function install_for_devel() {
+	(("done_install['install_for_devel']")) && return ; done_install['install_for_devel']=1
+	install_for_build
+	install_for_touse
+	install_packages git gnupg
+}
+
+function install_for_devel2() {
+	(("done_install['install_for_devel2']")) && return ; done_install['install_for_devel2']=1
+	install_for_devel
+	# in future also add here things for e.g. simulations
+}
+
+function install_build_gitian() {
+	(("done_install['install_for_build_gitian']")) && return ; done_install['install_for_build_gitian']=1
+	install_for_build
+	install_for_touse
+	install_for_devel
+	install_packages lxc
+
+	install_packages_NOW
+
+	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
+	run_with_root_privilages "./share/script/setup-lxc-host" || fail
+}
+
+
+# ------------------------------------------------------------------------
+# start
 
 sudo_flag="--sudo"
 if [[ $EUID -ne 0 ]]; then
@@ -28,6 +128,8 @@ lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
+# platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
 
@@ -52,8 +154,9 @@ response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
 	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
 	2>&1 >/dev/tty ) || abdialog_exit
-
 [[ -z "$response" ]] && exit
+
+
 response_menu_task=""
 
 if [[ "$response" == "normal" ]] ; then response_menu_task="warn build touse" ; fi
@@ -69,46 +172,12 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
 	"verbose"       "$(gettext "menu_task_verbose")" "off" \
 	2>&1 >/dev/tty ) || abdialog_exit
-response_menu_task="$response"
+	response_menu_task="$response"
 fi
 
 [[ -z "$response_menu_task" ]] && exit
 
-function install_packets() {
-	packages="$*"
-	printf "\n%s\n" "$(eval_gettext "We will install packages: $packages now (as root)")"
-	sudo aptitude install -y "$@" || exit 1
-}
 
-function install_for_build() {
-	install_packets git gcc g++ cmake autoconf libtool build-essential \
-		libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
-}
-
-function install_for_touse() {
-	install_for_build
-	install_packets sudo
-}
-
-function install_for_devel() {
-		install_for_build
-		install_for_touse
-		install_packets git gnupg
-}
-
-function install_for_devel2() {
-		install_for_devel
-		# in future also add here things for e.g. simulations
-}
-
-function install_build_gitian() {
-		install_for_build
-		install_for_touse
-		install_for_devel
-		install_packets lxc
-
-		share/script/setup-lxc-host
-}
 
 warnings_text="" # more warnings
 warn_ANY=0 # any warning?
@@ -116,7 +185,7 @@ warn_root=0 # things as root
 warn_fw=0 # you should use a firewall
 warn2_net=0 # warning: strange network settings (e.g. lxc br)
 enabled_warn=0 # are warnings enabled
-verbose=0
+verbose=0 # shellcheck disable=SC2034
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
@@ -124,7 +193,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			enabled_warn=1
 		;;
 		verbose)
-			verbose=1
+			verbose=1 # shellcheck disable=SC2034
 		;;
 
 		build)
@@ -188,12 +257,16 @@ function show_status() {
 
 
 
-read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
+	item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )"
+	printf "\n%s\n" "Doing installation task: [$item]"
+
 	nonsteps=(warn verbose)
 	is_realstep=1
 	inarray "$item" "${nonsteps[@]}" && is_realstep=0
 
-	if ((is_realstep && verbose)) ; then show_status "$(gettext "status_done_step_BEFORE")${item}" ; fi
+	if ((is_realstep && verbose2)) ; then show_status "$(gettext "status_done_step_BEFORE")${item}" ; fi
+
 	case "$item" in
 		build)
 			install_for_build
@@ -209,11 +282,13 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		;;
 	esac
 
-	if ((is_realstep && verbose)) ; then
+	if (("is_realstep" && "verbose")) ; then
 		printf "\n\n%s\n%s\n" "$(eval_gettext "status_done_step \$item")" "$(gettext "status_done_step_PRESSKEY")"
-		read _
+		(("verbose2")) && read _
 	fi
 done
+
+install_packages_NOW
 
 
 text="$(eval_gettext "Finished installation of \$programname.")"

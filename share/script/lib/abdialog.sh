@@ -5,8 +5,14 @@ abdialog_ver=1
 
 abdialog_curses=1 ; abdialog_gui=0 ;
 
-abdialog_program="whiptail"
-if [ -x "$(which dialog)" ] ; then abdialog_program="dialog" ; fi
+function abdialog_check_program() {
+	hash "$1" 2>/dev/null && echo 1 || echo 0
+}
+
+abdialog_program="whiptail" # default
+# if possible change it:
+if (( $(abdialog_check_program "dialog") == 1 )) ; then abdialog_program="dialog" ; fi 
+# if [ -x "$(hash dialog &>/dev/null)" ] ; then abdialog_program="dialog" ; fi 
 
 if [[ "$FORCE_DIALOG" == "whiptail" ]] ; then abdialog_program="whiptail" ; abdialog_curses=1 ; abdialog_gui=0 ; fi
 if [[ "$FORCE_DIALOG" == "dialog" ]] ; then abdialog_program="dialog" ; abdialog_curses=1 ; abdialog_gui=0 ; fi
@@ -14,6 +20,7 @@ if [[ "$FORCE_DIALOG" == "dialog" ]] ; then abdialog_program="dialog" ; abdialog
 export abdialog_ver
 export abdialog_curses
 export abdialog_gui
+export abdialog_program
 
 function abdialog() {
 	local argtab=()
@@ -32,3 +39,4 @@ function abdialog_exit() {
 		exit
 	fi
 }
+
