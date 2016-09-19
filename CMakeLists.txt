@@ -11,7 +11,7 @@ project (galaxy42)
 #
 
 if(MINGW)
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "5.1")
+	if(CYGWIN)
 		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 	else()
 		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
