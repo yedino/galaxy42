@@ -1,7 +1,11 @@
- brew update
- brew outdated llvm37 || brew install llvm37
- brew outdated autoconf || brew install autoconf
- brew outdated pkg-config || brew install pkg-config
- brew outdated cmake || brew install cmake
- brew outdated boost || brew install boost
- brew outdated libsodium || brew install libsodium
+brew update
+echo "installing shellcheck"
+brew install shellcheck
+brew outdated shellcheck || brew upgrade shellcheck # for check script
+
+brew outdated llvm37 || brew upgrade llvm37
+brew outdated autoconf || brew upgrade autoconf
+brew outdated pkg-config || brew upgrade pkg-config
+brew outdated cmake || brew upgrade cmake
+brew outdated boost || brew upgrade boost
+brew outdated libsodium || brew upgrade libsodium
