@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-31 17:56+0000\n"
+"POT-Creation-Date: 2016-09-16 14:58+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -174,3 +174,25 @@ msgstr ""
 "Ten skrypt musi być uruchomiony z użytkownika root. (Lub zamiast tego, jeż"
 "eli obecny użytkownik ma ustawiony dostęp do sudo do wykonywania wszelkich "
 "komend, to możesz uruchomić ten skrypt z flagą $sudo_flag)."
+
+msgid "error_init_platforminfo_unknown"
+msgstr ""
+"Nie udało się rozpoznać informacji o tym systemie operacyjnym/platformie "
+"które są tutaj używane."
+
+msgid "install_packages_title"
+msgstr "Postęp instalacji"
+
+msgid "Install"
+msgstr "Zainstaluj"
+
+#, sh-format
+msgid "L_install_failed"
+msgstr "Błąd instalacji"
+
+#, sh-format
+msgid "L_install_nothing_to_do"
+msgstr "Nie trzeba nic tutaj instalować"
+
+msgid "L_now_installing_gitian_lxc"
+msgstr "Teraz instalujemy LXC for Gitiana"
