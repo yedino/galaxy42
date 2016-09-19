@@ -100,7 +100,7 @@ function install_build_gitian() {
 	install_for_build
 	install_for_touse
 	install_for_devel
-	install_packages lxc
+	install_packages lxc python3-yaml
 
 	install_packages_NOW
 
