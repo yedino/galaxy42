@@ -1,0 +1,7 @@
+ brew update
+ brew outdated llvm37 || brew install llvm37
+ brew outdated autoconf || brew install autoconf
+ brew outdated pkg-config || brew install pkg-config
+ brew outdated cmake || brew install cmake
+ brew outdated boost || brew install boost
+ brew outdated libsodium || brew install libsodium

@@ -33,17 +33,8 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                                                  ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y                                   ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                                        ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                                           ; fi
 
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      for pkg in llvm37 autoconf pkg-config cmake boost libsodium gettext shellcheck; do
-        if brew list -1 | grep -q "^${pkg}\$"; then
-          echo "Package '$pkg' is installed";
-        else 
-          brew install "$pkg"; 
-        fi ; 
-      done ; 
-    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash share/script/setup-osx-brew   ; fi
 
 install:
   - echo $CXX   # for dbg
