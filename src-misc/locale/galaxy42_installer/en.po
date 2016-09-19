@@ -87,12 +87,12 @@ msgstr "* Installing tools to build a source code"
 
 msgid "warning_devel"
 msgstr ""
-"TODO* We're going to install some developer tools e.g. to symulatea lot of "
+"* We're going to install some developer tools e.g. to symulatea lot of "
 "networks on this computer(network namespace)."
 
 msgid "warning_bgitian"
 msgstr ""
-"TODO* We're going to configure your computer to using Gitian (in "
+"* We're going to configure your computer to using Gitian (in "
 "virtualizationLXC). Warning, it can make some others network cards and "
 "change settingsactually using cards. For example other IP address from "
 "current main Internetlink (e.g. eth0) can be showed/moved like attached to "
@@ -100,7 +100,7 @@ msgstr ""
 
 #, sh-format
 msgid "warning_SUMMARY"
-msgstr "TODOPlease confirm undermentioned changes (they impact security)."
+msgstr "Please confirm undermentioned changes (they impact security)."
 
 msgid "warning_SUMMARY_TITLE"
 msgstr "Caution safety and summary"
@@ -129,8 +129,7 @@ msgstr "Please press ENTER to continue..."
 
 msgid "error_init_platforminfo"
 msgstr ""
-"Nie udało się rozpoznać informacji o tym systemie operacyjnym/platformie "
-"które są tutaj używane."
+"No information about the system"
 
 #, sh-format
 msgid "status_done_step $item"
@@ -158,10 +157,8 @@ msgstr "We're going to do:"
 #, sh-format
 msgid "this_script_uses_sudo_flag $sudo_flag"
 msgstr ""
-"Script isn't running like a root, but you put flag Skrypt nie jest "
-"uruchomiony jako użytkownik root, ale podałeś flagę $sudo_flag so we "
-"think so sudo is ready and we're coninuing więc zakładamy iż sudo jest "
-"ustawione i kontynuujemy."
+"Script isn't running like a root, but you put flag $sudo_flag and we "
+"think so sudo is ready and we're coninuing"
 
 #, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
