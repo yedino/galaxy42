@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-16 14:58+0000\n"
+"POT-Creation-Date: 2016-09-19 14:58+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -83,31 +83,36 @@ msgid "warn2_net_title"
 msgstr "WARNING (SPECIAL: networks)"
 
 msgid "warning_build"
-msgstr "TODO"
+msgstr "* Installing tools to build a source code"
 
 msgid "warning_devel"
-msgstr "TODO"
+msgstr ""
+"* We're going to install some developer tools e.g. to symulatea lot of "
+"networks on this computer(network namespace)."
 
 msgid "warning_bgitian"
-msgstr "TODO"
+msgstr ""
+"* We're going to configure your computer to using Gitian (in "
+"virtualizationLXC). Warning, it can make some others network cards and "
+"change settingsactually using cards. For example other IP address from "
+"current main Internetlink (e.g. eth0) can be showed/moved like attached to "
+"other card (that's how a 'bridge' works)"
 
 #, sh-format
 msgid "warning_SUMMARY"
-msgstr "TODO"
+msgstr "Please confirm undermentioned changes (they impact security)."
 
 msgid "warning_SUMMARY_TITLE"
-msgstr "TODO"
+msgstr "Caution safety and summary"
 
-#, fuzzy
 msgid "warn_root"
-msgstr "# We will need root (admin) rights during this installation now."
+msgstr "# We will need root (admin) rights during this installation."
 
 msgid "warn_fw"
 msgstr "# Please remember to install NOW a firewall!"
 
-#, fuzzy
 msgid "menu_task_verbose"
-msgstr "Use this program on this computer"
+msgstr "(Show more details during instalation)"
 
 msgid "install_progress_title"
 msgstr "Progress of installation"
@@ -117,27 +122,27 @@ msgid "warning_touse $programname"
 msgstr "* Configure computer for running here the program $programname"
 
 msgid "status_done_step_BEFORE"
-msgstr ""
+msgstr "Now we're doing:"
 
 msgid "status_done_step_PRESSKEY"
-msgstr ""
+msgstr "Please press ENTER to continue..."
 
 msgid "error_init_platforminfo"
-msgstr ""
+msgstr "No information about the system"
 
 #, sh-format
 msgid "status_done_step $item"
-msgstr ""
+msgstr "The step is done: '$item'."
 
-#, fuzzy, sh-format
+#, sh-format
 msgid "menu_main_title $programname:"
-msgstr "* Configure computer for running here the program $programname"
+msgstr "Installer $programname"
 
 msgid "menu_taskpack_normal_builduse"
-msgstr "Build this program from source code"
+msgstr "Recommended: build this program to use it"
 
 msgid "menu_taskpack_custom"
-msgstr "Use this program on this computer"
+msgstr "Chose the options..."
 
 msgid "menu_taskpack_quick_builduse"
 msgstr "No confirmations (dangerous!) - build & use"
@@ -146,12 +151,15 @@ msgid "menu_taskpack_quick_devel"
 msgstr "No confirmations (dangerous!) - for developer"
 
 msgid "tasks_we_will_do"
-msgstr ""
+msgstr "We're going to do:"
 
 #, sh-format
 msgid "this_script_uses_sudo_flag $sudo_flag"
 msgstr ""
+"Script isn't running like a root, but you put flag $sudo_flag and we think "
+"so sudo is ready and we're coninuing"
 
+#, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
 msgstr ""
 "This script must be run as root, or else run it with flag $sudo_flag to use "
