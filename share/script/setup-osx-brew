@@ -1,9 +1,18 @@
 brew update
+
 echo "installing shellcheck"
 brew install shellcheck
 brew outdated shellcheck || brew upgrade shellcheck # for check script
 
+# gettext?
+brew outdated gettext || brew upgrade gettext
+
+# clang compiler 
+brew install --with-clang llvm
+brew tap homebrew/versions
+brew install llvm37
 brew outdated llvm37 || brew upgrade llvm37
+
 brew outdated autoconf || brew upgrade autoconf
 brew outdated pkg-config || brew upgrade pkg-config
 brew outdated cmake || brew upgrade cmake
