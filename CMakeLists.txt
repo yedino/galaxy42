@@ -10,6 +10,14 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+if(MINGW)
+	if(CYGWIN)
+		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+	else()
+		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+	endif()
+endif()
+
 if (MSVC)
 	if(NOT MSVC14)
 		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
@@ -312,8 +320,6 @@ add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURC
 
 
 if(MINGW)
-	## ABI 1 or 0 could depend on mingw-w64 version
-	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 	set(MINGW_LIBRARIES ws2_32 iphlpapi)
 endif()
 
