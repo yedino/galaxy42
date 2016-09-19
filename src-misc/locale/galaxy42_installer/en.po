@@ -128,8 +128,7 @@ msgid "status_done_step_PRESSKEY"
 msgstr "Please press ENTER to continue..."
 
 msgid "error_init_platforminfo"
-msgstr ""
-"No information about the system"
+msgstr "No information about the system"
 
 #, sh-format
 msgid "status_done_step $item"
@@ -157,8 +156,8 @@ msgstr "We're going to do:"
 #, sh-format
 msgid "this_script_uses_sudo_flag $sudo_flag"
 msgstr ""
-"Script isn't running like a root, but you put flag $sudo_flag and we "
-"think so sudo is ready and we're coninuing"
+"Script isn't running like a root, but you put flag $sudo_flag and we think "
+"so sudo is ready and we're coninuing"
 
 #, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
