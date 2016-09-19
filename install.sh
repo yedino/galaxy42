@@ -15,7 +15,10 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 
 programname="Galaxy42" # shellcheck disable=SC2034
 
-
+lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions
@@ -23,7 +26,6 @@ programname="Galaxy42" # shellcheck disable=SC2034
 
 declare -A done_install # shellcheck disable # that is for shellcheck disable=SC2034
 # thought using that disable causes another warning (maybe a bug, debian8)
-
 
 packages_to_install=() # start with empty list
 function install_packages_NOW() { # install selected things
@@ -61,6 +63,9 @@ function install_packages() { # only selects things for install, does not actual
 
 done_install=()
 export done_install # so bashcheck does not complain
+
+# reasons for requiring restart:
+needrestart_lxc=0
 
 function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
@@ -106,6 +111,8 @@ function install_build_gitian() {
 
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
 	run_with_root_privilages "./share/script/setup-lxc-host" || fail
+
+	needrestart_lxc=1
 }
 
 
@@ -122,10 +129,6 @@ if [[ $EUID -ne 0 ]]; then
 	fi
 fi
 
-lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
-lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
 if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
@@ -289,6 +292,17 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 done
 
 install_packages_NOW
+
+# restart warnings:
+any=0
+ww=""
+if ((needrestart_lxc)) ; then any=1; ww="$(gettext "warn_root")\n${ww}" ; fi
+if ((any)) ; then
+	text="$(eval_gettext "L_needrestart_summary_text")\n\n$warnings_text"
+	abdialog --title "$(gettext 'L_needrestart_summary_title')" \
+		--msgbox "$text" 20 60 || abdialog_exit
+fi
+
 
 
 text="$(eval_gettext "Finished installation of \$programname.")"
