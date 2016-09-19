@@ -22,6 +22,10 @@ $ export CXX=i686-w64-mingw32-g++
 $ cmake .
 $ make tunserver.elf
 ```
+For building windows service wrapper
+```sh
+$ make windowsService
+```
 ### MSVC:
 Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
 

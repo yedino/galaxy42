@@ -286,6 +286,11 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
 
+if(WIN32 OR CYGWIN)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
+	add_custom_target(windowsService)
+	add_dependencies(windowsService galaxyService)
+endif()
 
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
 message("Libs for crypto are: (as string) '${LIBS_OPTIONAL_CRYPTO_clean}'")
