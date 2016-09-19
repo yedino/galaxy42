@@ -1,25 +1,43 @@
 #!/bin/bash
 
-if [ $(id -u) = 0 ]
+marker='#marker_gitian_lxc_is_added_here'
+initfile='/etc/rc.local'
+doit=1
+grep "$marker" /etc/rc.local && {
+	printf "\nIt seems lxc setup is already installed into $initfile.\n\n"
+	if [[ '$1' != '--force' ]] ; then
+		printf "Will NOT install lxc setup again then.\n"
+		doit=0
+	fi
+}
+
+if [ $(id -u) != 0 ]
 then
+	echo "You must be root"
+	exit 1
+fi
+
+if ((doit)) ; then
 #root
 #rc-local
-sed -i '/exit 0/d' /etc/rc.local
+#sed -i '/exit 0/d' /etc/rc.local
+
+echo "$marker" >> /etc/rc.local
+echo "# start of gitian lxc" >> /etc/rc.local
 echo 'brctl addbr br0' >> /etc/rc.local
 echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
 echo 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> /etc/rc.local
 echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> /etc/rc.local
-echo 'exit 0' >> /etc/rc.local
+echo "# end of gitian lxc" >> /etc/rc.local
+echo '' >> /etc/rc.local
+fi
 
 #sudo
 # needed?
+printf "\nInstalling sudoers settings\n"
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc    # new file
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-execute" >> /etc/sudoers.d/gitian-lxc
 
 # ln -s /usr/share/debootstrap/scripts/gutsy /usr/share/debootstrap/scripts/xenial
 
-else
-#non-root
-echo "You must be root"
-fi
 

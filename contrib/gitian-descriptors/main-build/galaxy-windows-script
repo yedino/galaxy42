@@ -1,0 +1,376 @@
+#!/bin/bash
+# see below for LICENCE information, it can differ for this files or it's fragments.
+
+project_name="galaxy42"
+printf "\n\n=========================================================================\n\n"
+printf "PROJECT $project_name - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
+
+function fail() {
+	printf "\nERROR: the script failed (see above messages).\n\n"
+	exit 1
+}
+
+
+cd "$HOME/build/" || fail
+
+pwd
+GALAXY42_DIR=$(pwd)/galaxy42
+
+option_allow_boost=1
+option_allow_sodium=1
+option_shell_in_sodium=0
+option_download_skip=0
+option_verbose=0
+
+while getopts ":vbsSDh" opt; do
+	case $opt in
+		D)
+		echo "Skip all downloads"
+		option_download_skip=1
+		;;
+		v)
+		echo "Be verbose (show debug etc)"
+                option_verbose=1
+                ;;
+		b)
+		echo "Will Skip boost"
+                option_allow_boost=0
+                ;;
+		s)
+		echo "Will Skip sodium"
+                option_allow_sodium=0
+                ;;
+		S)
+		option_shell_in_sodium=1
+		;;
+                h)
+                cat <<EOF
+
+This is the internal script to build Windows version of this project ($project_name).
+It should be called by Gitian, inside LXC.
+Developers can use it by doing on-target e.g. ./build-gitian on-target (as in Galaxy42)
+and then calling it directly for testing.
+
+Options:
+	-v be verbose (debug)
+
+	Speedup options:
+	-D skip most downloads
+	-b skips building Boost lib
+	-s skips building Sodium lib
+
+	Special options:
+	-S starts a test shell before (possibly) building lib sodium
+
+EOF
+                                exit 0
+                                ;;
+                        '?')
+                                printf "\n\nERROR: Unknown option, run with -h for help.\n"
+                                exit 1
+                                ;;
+          esac
+done
+
+
+
+
+REFERENCE_DATETIME="2016-08-01 00:00:00"
+
+export FAKETIME="$REFERENCE_DATETIME"
+# variable from above yml config
+echo "FAKETIME = ${FAKETIME}"
+# debug
+
+### <LICENCE> - start of licence block - this code if possibly on other licence:
+### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/.../contrib/gitian-descriptors/gitian-win.yml
+### (from some version after 2c2d471e18f0601c2767cf516425b2ecfcfd2126, on day 2016-09-09 UTC)
+### (and possibly with local changes, see our git log - though the initial commit of this file, already a bit modified,
+### was possibly commited with us as the authors, so also diff the code vs bitcoin's version)
+### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
+### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
+
+WRAP_DIR=$HOME/wrapped
+HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
+COMPILERS="g++ gcc cpp cc c++ nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # do we need "cc c++"? TODO
+
+##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
+CONFIGFLAGS=""
+
+FAKETIME_HOST_PROGS="gcc g++ ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
+FAKETIME_PROGS="date makensis zip"
+#FAKETIME_PROGS="date"
+
+
+# (not used?)
+export QT_RCC_TEST=1
+
+# importat:
+export GZIP="-9n"
+export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+export TZ="UTC"
+
+export BUILD_DIR=`pwd`
+
+mkdir -p ${WRAP_DIR}
+if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+fi
+
+function create_global_faketime_wrappers {
+for prog in ${FAKETIME_PROGS}; do
+	outfile="${WRAP_DIR}/${prog}"
+	printf "\n%s\n" "WRAPPING (global): $outfile"
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+done
+}
+
+function create_per-host_faketime_wrappers {
+for i in $HOSTS; do
+    for prog in ${FAKETIME_HOST_PROGS}; do
+	outfile="${WRAP_DIR}/${i}-${prog}"
+	printf "\n%s\n" "WRAPPING (per-host): $outfile"
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+done
+}
+
+function create_per-host_linker_wrapper {
+# This is only needed for trusty, as the mingw linker leaks a few bytes of
+# heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
+for i in $HOSTS; do
+    mkdir -p ${WRAP_DIR}/${i}
+    for prog in collect2; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}/${prog}
+        REAL=$(${i}-gcc -print-prog-name=${prog})
+        echo "export MALLOC_PERTURB_=255" >> ${WRAP_DIR}/${i}/${prog}
+        echo "${REAL} \$@" >> $WRAP_DIR/${i}/${prog}
+        chmod +x ${WRAP_DIR}/${i}/${prog}
+    done
+    for prog in ${COMPILERS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+done
+}
+
+# Faketime for depends so intermediate results are comparable
+export PATH_orig=${PATH}
+create_global_faketime_wrappers "$FAKETIME"
+create_per-host_faketime_wrappers "$FAKETIME"
+create_per-host_linker_wrapper "$FAKETIME"
+export PATH=${WRAP_DIR}:${PATH}
+
+
+# Faketime for binaries
+export PATH=${PATH_orig}
+create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+create_per-host_linker_wrapper "${REFERENCE_DATETIME}"
+export PATH=${WRAP_DIR}:${PATH}
+
+# *** main build starts here ***
+
+## set compilators
+export CC="$HOME/wrapped/x86_64-w64-mingw32-gcc"
+export CXX="$HOME/wrapped/x86_64-w64-mingw32-g++"
+export CPP="$HOME/wrapped/x86_64-w64-mingw32-cpp"
+
+
+## clone and build boost
+printf "\n\n=========================================================================\n\n"
+printf "boost...\n\n"
+BOOST_DIR="$HOME/build/boost/"
+cd "$HOME/build/"
+
+if (( option_allow_boost )) ; then
+	printf "\n\nWill build boost now\n\n"
+
+if (( option_download_skip )) ; then
+	printf "\n\nSkipping download (boost)\n\n"
+	pushd boost || fail # cd
+	pwd
+	ls
+else
+rm -rf boost || fail # perhaps left over if we do some caching or testing
+git clone https://github.com/boostorg/boost.git || fail
+pushd boost || fail # cd
+PWD_now2="$PWD/"
+[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
+
+git checkout boost-1.61.0
+
+git submodule update --init --recursive tools/build
+git submodule update --init --recursive libs/context
+git submodule update --init --recursive libs/filesystem
+git submodule update --init --recursive libs/config
+git submodule update --init --recursive tools/inspect
+git submodule update --init --recursive libs/thread
+git submodule update --init --recursive libs/system
+git submodule update --init --recursive libs/utility
+git submodule update --init --recursive libs/predef
+git submodule update --init --recursive libs/detail
+git submodule update --init --recursive libs/assert
+git submodule update --init --recursive libs/core
+git submodule update --init --recursive libs/io
+git submodule update --init --recursive libs/type_traits
+git submodule update --init --recursive libs/iterator
+git submodule update --init --recursive libs/mpl
+git submodule update --init --recursive libs/preprocessor
+git submodule update --init --recursive libs/static_assert
+git submodule update --init --recursive libs/smart_ptr
+git submodule update --init --recursive libs/throw_exception
+git submodule update --init --recursive libs/functional
+git submodule update --init --recursive libs/range
+git submodule update --init --recursive libs/any
+git submodule update --init --recursive libs/type_index
+git submodule update --init --recursive libs/function
+git submodule update --init --recursive libs/integer
+git submodule update --init --recursive libs/bind
+git submodule update --init --recursive libs/lexical_cast
+git submodule update --init --recursive libs/concept_check
+git submodule update --init --recursive libs/numeric/conversion
+git submodule update --init --recursive libs/array
+git submodule update --init --recursive libs/program_options
+git submodule update --init --recursive libs/container
+git submodule update --init --recursive libs/move
+git submodule update --init --recursive libs/math
+git submodule update --init --recursive libs/tokenizer
+git submodule update --init --recursive libs/asio
+git submodule update --init --recursive libs/date_time
+git submodule update --init --recursive libs/regex
+fi
+
+# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
+git clean -xdf || fail
+rm -rf mingw_build || fail
+mkdir mingw_build || fail
+
+boost_user_gcc="$HOME/wrapped/x86_64-w64-mingw32-g++ ;"
+printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
+
+printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
+echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
+echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
+./bootstrap.sh --without-icu || fail
+
+printf "Starting the b2 boost build\n"
+set -x
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" )
+b2_opt_debug=( )
+if (( option_verbose )) ; then
+	b2_opt_debug=( "-d" "4" "--debug-building" )
+fi
+
+./b2 \
+	"${b2_opt_debug[@]}" \
+	-a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
+	 --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
+	 "${b2_opt_with_lib[@]}" \
+	 runtime-link=shared \
+	-j 1 \
+	-sNO_BZIP2=1 --sNO_ZLIB=1 \
+	--layout=tagged install \
+	|| fail
+set +x
+
+
+printf "\nDONE the b2 boost build\n\n"
+
+# copy all boost includes for header only libraries
+find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
+	substr="include"
+	if  test "${D#*$substr}" != "$D" # looking for include dir's
+	then
+		end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
+		#echo "$end_of"
+		if [ $end_of = $substr ]
+		then
+			cp -r "$D" ./mingw_build
+		fi
+	fi
+done
+
+popd
+
+else
+	printf "\n\nSkipping boost (as selected in options)\n\n"
+
+fi
+
+
+printf "\n\n=========================================================================\n\n"
+printf "libsodium...\n\n"
+
+if ((option_shell_in_sodium)) ; then
+	printf "\nSTARTING TEST BASH (in sodium), while in PWD=$PWD\n"
+	bash
+	printf "\n\nresuming\n\n"
+fi
+
+if ((option_allow_sodium)) ; then
+printf "\n\nBuilding libsodium now\n\n"
+## clone and build libsodium
+rm -rf libsodium # perhaps left over if we do some caching or testing
+set -x
+git clone https://github.com/jedisct1/libsodium.git || fail
+pushd libsodium || fail
+SODIUM_DIR=$(pwd)
+git checkout 1.0.11 || fail
+./autogen.sh || fail
+
+patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
+printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium) - from file ($patched_msys_script)\n\n"
+cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
+
+printf "\n\nRunning the mingw-crossbuild-script(s) (of lib sodium)\n\n"
+./dist-build/msys2-win64.sh || fail
+printf "\n\nCrossbuild done (of lib sodium)"
+popd
+
+else
+	printf "\n\nSkipping sodium (as selected in options)\n\n"
+
+fi
+
+
+
+printf "\n\n=========================================================================\n\n"
+printf "Main project ($project_name)...\n\n"
+
+## Cross building galaxy42
+cd "$GALAXY42_DIR"
+# git clean -fdx # need submodules
+git submodule update --init --recursive
+
+
+echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
+echo "SODIUM_ROOT_DIR: "$SODIUM_DIR"/libsodium-win64 "
+
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_DIR"/libsodium-win64 -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
+make tunserver.elf
+
+echo "Printing checksums:"
+sha256sum *.exe | sort
+sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll | sort
+
+### </LICENCE> - end of licence block
+echo "Entire script in Gitian done"
+date

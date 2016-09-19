@@ -21,10 +21,10 @@ gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e"
 target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
-target_checkout="wip_gitian_hello" # <--- pick any version
+target_checkout="wip_cross_win" # <--- pick any version
 gitian_suite=xenial
 base_dir="$HOME/var-gitian/"
-gitian_yml_file="main-build/galaxy-linux.yml" # must be under contrib/gitian-descriptors/
+gitian_yml_file="main-build/galaxy-windows.yml" # must be under contrib/gitian-descriptors/
 
 # take "my" YML
 gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
@@ -142,10 +142,26 @@ function gitian_builder_download() {
 	fi
 }
 
+function gitian_check_net_devices() {
+	dev1="br0"
+	dev2="lxcbr0"
+
+	devices=$(ip link show up | egrep "^[0-9]+: ") || true
+	found=$(echo "$devices" | egrep "$dev1|$dev2") || true
+
+	if [ -z "$found" ]; then
+		echo "Not found any running gitian-lxc network device!"
+		echo "missing: $dev1 or $dev2 or both"
+	else
+		echo "Found running gitian-lxc network devices:"
+		echo "$found"
+	fi
+}
+
 function gitian_builder_make_lxc_image() {
 	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
-	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template?)"
+	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template and apt-cacher-ng running?)"
 }
 
 function target_download() {
@@ -153,14 +169,19 @@ function target_download() {
 	rm -rf "${base_dir}/${target_name}/" || fail
 	git clone "$target_url" || fail "Download target"
 	cd "${base_dir}/${target_name}" || fail
+	printf "%s\n" "On host we start with download of (${target_name}) in version:"
+	git log -1
 	git clean -xdf || fail
 	git checkout "$target_checkout" || fail "Download target in given version"
 	git clean -xdf || fail
 	git log -1 || fail
+	printf "\n\n\n"
 }
 
 function gitian_run_build() {
 	cd "$base_dir/gitian-builder/" || fail
+	printf "\nWill use YML Gitian file: $gitian_yml_file_full\n\n"
+	cat "$gitian_yml_file_full" | egrep -H -n -i "commit|url|dir"
 
 	./bin/gbuild    --allow-sudo  \
 		"$gitian_yml_file_full" \
@@ -182,7 +203,9 @@ function get_host_info() {
 function gitian_show_result() {
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
 	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
-	info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf)
+	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
+	info_binary=$(  find  /home/ubuntu/build/boost/mingw_build/lib/*   /home/ubuntu/build/libsodium/*/bin/   -name  '*.dll' -o -name '*.exe'    ; ls -1 /home/ubuntu/build/galaxy42/*exe | sort   )
+	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
 	info_binary_first=$( printf "$info_binary" | head -n 1)
 	info_host="$(get_host_info)"
 	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
@@ -197,6 +220,7 @@ function all_including_new_lxc() {
 	set_env
 	fix_template_script
 	gitian_builder_download
+	gitian_check_net_devices
 	gitian_builder_make_lxc_image
 	target_download
 	gitian_run_build
@@ -206,6 +230,7 @@ function all_including_new_lxc() {
 function all_excluding_new_lxc() {
 	set_env
 	fix_template_script
+	gitian_check_net_devices
 	target_download
 	gitian_run_build
 	gitian_show_result

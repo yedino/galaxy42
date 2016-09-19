@@ -1,5 +1,5 @@
 ---
-name: "galaxy42-linux"
+name: "galaxy42-windows"
 sudo: true
 enable_cache: true
 suites:
@@ -7,29 +7,27 @@ suites:
 architectures:
 - "amd64"
 packages:
-- "gcc-5"
 - "g++-5"
+- "mingw-w64"
+- "g++-mingw-w64"
 - "cmake"
 - "autoconf"
+- "automake"
 - "libtool"
 - "build-essential"
 - "libfftw3-dev"
-- "libsodium-dev"
-- "libboost-system-dev"
-- "libboost-filesystem-dev"
-- "libboost-program-options-dev"
 - "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
 - "faketime" # used to force date
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
   "url": "https://github.com/rfree-d/galaxy42.git" # (username) must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
-  "commit": "2ca5ab2301161dd612d2b32165917f95470deec9" # um, update that in one more commit, can't commit own commit hash :)
+  "commit": "c8d1e0c522fdec1d4e544e39c0b51362b0235404" # um, update that in one more commit, can't commit own commit hash :)
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
 script: |
-  datenow="$(date)" ; echo "Gitian moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
+  datenow="$(date)" ; echo "Gitian (Windows cross-build) moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
   echo "ls:" ; ls
-  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-linux-script
-  datenow="$(date)" ; echo "Gitian finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script
+  datenow="$(date)" ; echo "Gitian (Windows cross-build) finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
 
