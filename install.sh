@@ -118,7 +118,7 @@ function install_build_gitian() {
 	lxc_ourscript="/etc/rc.local.lxcnet-gitian"
 	lxc_error=0
 	if [[ -r "$lxc_ourscript" ]] ; then
-		run_with_root_privilages "$lxc_ourscript" || lxc_error=1
+		run_with_root_privilages "bash" "--" "$lxc_ourscript" || lxc_error=1
 	else
 		lxc_error=1
 	fi
