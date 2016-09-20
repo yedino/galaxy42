@@ -6,6 +6,8 @@ dir_base_of_source='./'
 
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit
