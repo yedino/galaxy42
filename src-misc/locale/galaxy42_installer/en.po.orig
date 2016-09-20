@@ -1,0 +1,204 @@
+# Galaxy42 installer
+# Copyright (C) 2016
+# This file is distributed at once at licences: under the same license as the Galaxy42 package,
+# and as BSD 2-clause licence.
+# Yedino <info@yedino.com>, 2016
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: galaxy 42\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-09-16 14:58+0000\n"
+"PO-Revision-Date: 2016-08-19 17:23+0000\n"
+"Last-Translator:  <info@yedino.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#, sh-format
+msgid ""
+"This tool will configure your computer for the SELECTED by you functions of "
+"$programname."
+msgstr ""
+
+msgid ""
+"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+"select option, ENTER to finish."
+msgstr ""
+
+msgid "We recognize your system/platform as:"
+msgstr ""
+
+#, sh-format
+msgid "Configure computer for $programname"
+msgstr ""
+
+msgid "Ok"
+msgstr ""
+
+msgid "Quit"
+msgstr ""
+
+#, sh-format
+msgid "How do you want to use $programname:"
+msgstr ""
+
+msgid "menu_task_warn"
+msgstr "Show warnings"
+
+#, sh-format
+msgid "menu_task_build"
+msgstr "Build this program from source code"
+
+#, sh-format
+msgid "menu_task_touse"
+msgstr "Use this program on this computer"
+
+#, sh-format
+msgid "menu_task_devel"
+msgstr "Develop this program"
+
+#, sh-format
+msgid "menu_task_bgitian"
+msgstr "Compile and sign/publish (e.g. Gitian)"
+
+msgid "Done"
+msgstr ""
+
+#, sh-format
+msgid "Finished installation of $programname."
+msgstr "Finished installation of $programname."
+
+#, sh-format
+msgid "warn2_net"
+msgstr ""
+"WARNING: SPECIAL settings of networks - maybe names or functions of network "
+"cards (e.g. eth0/br0/lxcbr0) will be changed."
+
+msgid "warn2_net_title"
+msgstr "WARNING (SPECIAL: networks)"
+
+msgid "warning_build"
+msgstr "* Installing tools to build a source code"
+
+msgid "warning_devel"
+msgstr ""
+"TODO* We're going to install some developer tools e.g. to symulatea lot of "
+"networks on this computer(network namespace)."
+
+msgid "warning_bgitian"
+msgstr ""
+"TODO* We're going to configure your computer to using Gitian (in "
+"virtualizationLXC). Warning, it can make some others network cards and "
+"change settingsactually using cards. For example other IP address from "
+"current main Internetlink (e.g. eth0) can be showed/moved like attached to "
+"other card (that's how a 'bridge' works)"
+
+#, sh-format
+msgid "warning_SUMMARY"
+msgstr "TODOPlease confirm undermentioned changes (they impact security)."
+
+msgid "warning_SUMMARY_TITLE"
+msgstr "Caution safety and summary"
+
+msgid "warn_root"
+msgstr "# We will need root (admin) rights during this installation."
+
+msgid "warn_fw"
+msgstr "# Please remember to install NOW a firewall!"
+
+msgid "menu_task_verbose"
+msgstr "(Show more details during instalation)"
+
+msgid "install_progress_title"
+msgstr "Progress of installation"
+
+#, sh-format
+msgid "warning_touse $programname"
+msgstr "* Configure computer for running here the program $programname"
+
+msgid "status_done_step_BEFORE"
+msgstr "Now we're doing:"
+
+msgid "status_done_step_PRESSKEY"
+msgstr "Please press ENTER to continue..."
+
+msgid "error_init_platforminfo"
+msgstr ""
+"Nie udało się rozpoznać informacji o tym systemie operacyjnym/platformie "
+"które są tutaj używane."
+
+#, sh-format
+msgid "status_done_step $item"
+msgstr "The step is done: '$item'."
+
+#, sh-format
+msgid "menu_main_title $programname:"
+msgstr "Installer $programname"
+
+msgid "menu_taskpack_normal_builduse"
+msgstr "Recommended: build this program to use it"
+
+msgid "menu_taskpack_custom"
+msgstr "Chose the options..."
+
+msgid "menu_taskpack_quick_builduse"
+<<<<<<< HEAD
+msgstr "No confirmations (dangerous!) - build & use"
+
+msgid "menu_taskpack_quick_devel"
+msgstr "No confirmations (dangerous!) - for developer"
+=======
+msgstr "No questions (dangerous!) - build and use"
+
+msgid "menu_taskpack_quick_devel"
+msgstr "No questions (dangerous!) - for developers"
+>>>>>>> master
+
+msgid "tasks_we_will_do"
+msgstr "We're going to do:"
+
+#, sh-format
+msgid "this_script_uses_sudo_flag $sudo_flag"
+msgstr ""
+"Script isn't running like a root, but you put flag Skrypt nie jest "
+"uruchomiony jako użytkownik root, ale podałeś flagę $sudo_flag so we "
+"think so sudo is ready and we're coninuing więc zakładamy iż sudo jest "
+"ustawione i kontynuujemy."
+
+msgid "this_script_must_be_run_as_root_or $sudo_flag"
+msgstr ""
+<<<<<<< HEAD
+"This script must be run as root, or else run it with flag $sudo_flag to use "
+"sudo"
+
+msgid "error_init_platforminfo_unknown"
+msgstr "This platform/OS us unknown"
+
+msgid "install_packages_title"
+msgstr "Packages to install"
+
+msgid "Install"
+msgstr "Install"
+
+#, sh-format
+msgid "L_install_failed"
+msgstr "Installation failed"
+
+#, sh-format
+msgid "L_install_nothing_to_do"
+msgstr "Nothing to install now"
+
+msgid "L_now_installing_gitian_lxc"
+msgstr "Now we are installing LXC for Gitian"
+=======
+"This script must be run like a root. (Or instead of that, if current user "
+"has a configured access to sudo to run all commends, then you can run this "
+"script flag eli obecny użytkownik ma ustawiony dostęp do sudo do "
+"wykonywania wszelkich komend, to możesz uruchomić ten skrypt z flagą "
+"$sudo_flag)."
+>>>>>>> master
