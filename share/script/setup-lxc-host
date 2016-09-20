@@ -20,7 +20,13 @@ fi
 if ((doit)) ; then
 #root
 #rc-local
-#sed -i '/exit 0/d' /etc/rc.local
+
+name="/etc/rc.local"
+name_bup="/etc/rc.local.bup"
+echo "Making backup into $name_bup"
+cp "$name" "$name_bup" # make a backup
+
+sed -i '/exit 0/d' /etc/rc.local # there is usually an silly exit on top there, we will remove it
 
 echo "$marker" >> /etc/rc.local
 echo "# start of gitian lxc" >> /etc/rc.local
@@ -32,12 +38,11 @@ echo "# end of gitian lxc" >> /etc/rc.local
 echo '' >> /etc/rc.local
 fi
 
-#sudo
-# needed?
 printf "\nInstalling sudoers settings\n"
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc    # new file
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-execute" >> /etc/sudoers.d/gitian-lxc
 
 # ln -s /usr/share/debootstrap/scripts/gutsy /usr/share/debootstrap/scripts/xenial
 
+printf "All done (in $0)\n\n"
 
