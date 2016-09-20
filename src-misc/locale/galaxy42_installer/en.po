@@ -92,11 +92,11 @@ msgstr ""
 
 msgid "warning_bgitian"
 msgstr ""
-"* We're going to configure your computer to using Gitian (in "
-"virtualizationLXC). Warning, it can make some others network cards and "
-"change settingsactually using cards. For example other IP address from "
-"current main Internetlink (e.g. eth0) can be showed/moved like attached to "
-"other card (that's how a 'bridge' works)"
+"* We're going to configure your computer to using Gitian (in virtualization "
+"LXC). Warning, it can make some others network cards and change settings "
+"actually using cards. For example other IP address from current main "
+"Internet link (e.g. eth0) can be showed/moved like attached to other card "
+"(that's how a 'bridge' works)"
 
 #, sh-format
 msgid "warning_SUMMARY"
@@ -112,7 +112,7 @@ msgid "warn_fw"
 msgstr "# Please remember to install NOW a firewall!"
 
 msgid "menu_task_verbose"
-msgstr "(Show more details during instalation)"
+msgstr "(Show more details during installation)"
 
 msgid "install_progress_title"
 msgstr "Progress of installation"
@@ -157,7 +157,7 @@ msgstr "We're going to do:"
 msgid "this_script_uses_sudo_flag $sudo_flag"
 msgstr ""
 "Script isn't running like a root, but you put flag $sudo_flag and we think "
-"so sudo is ready and we're coninuing"
+"so sudo is ready and we're continuing"
 
 #, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
