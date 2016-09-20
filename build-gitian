@@ -1,11 +1,12 @@
 #!/bin/bash -e
 echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
 
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+dir_base_of_source='./'
 
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
-[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit
 function script_cleanup() {

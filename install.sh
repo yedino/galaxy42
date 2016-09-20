@@ -6,6 +6,7 @@
 # (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Yedino (you can pick)
 #
 
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
