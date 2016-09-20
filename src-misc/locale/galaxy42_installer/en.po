@@ -87,8 +87,8 @@ msgstr "* Installing tools to build a source code"
 
 msgid "warning_devel"
 msgstr ""
-"* We're going to install some developer tools e.g. to symulatea lot of "
-"networks on this computer(network namespace)."
+"* We're going to install some developer tools e.g. to symulate lot of "
+"networks on this computer (network namespace)."
 
 msgid "warning_bgitian"
 msgstr ""
