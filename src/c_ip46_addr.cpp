@@ -2,7 +2,7 @@
 
 #include "c_ip46_addr.hpp"
 
-#if defined(__linux__)
+#ifdef __linux__
 #include "cpputils.hpp"
 #include <netdb.h>
 
@@ -161,10 +161,7 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 	else return false;
 }
 
-#endif // __linux__
-
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // __linux__
 
 #include <iostream>
 c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) 
@@ -205,8 +202,7 @@ void c_ip46_addr::set_address(const boost::asio::ip::address &address) {
 	m_address = address;
 }
 
-
-#endif
+#endif // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 
 
 
