@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-16 14:58+0000\n"
+"POT-Creation-Date: 2016-09-20 10:06+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -196,3 +196,16 @@ msgstr "Nie trzeba nic tutaj instalować"
 
 msgid "L_now_installing_gitian_lxc"
 msgstr "Teraz instalujemy LXC for Gitiana"
+
+#, sh-format
+msgid "L_needrestart_summary_text"
+msgstr "Restart systemu może być potrzebny z następujących powodów:"
+
+msgid "L_needrestart_summary_title"
+msgstr "Potrzebny restart"
+
+msgid "L_needrestart_LXC_maybe"
+msgstr ""
+"# Być może (ale raczej nie) - Sieć LXC (potrzebna dla używnia Gitian) "
+"powinna już działać, ale w razie problemów można zrestartować system "
+"dla pewności."
