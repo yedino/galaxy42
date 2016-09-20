@@ -115,6 +115,18 @@ function install_build_gitian() {
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
 	run_with_root_privilages "./share/script/setup-lxc-host" || fail
 
+	lxc_ourscript="/etc/rc.local.lxcnet-gitian"
+	lxc_error=0
+	if [[ -r "$lxc_ourscript" ]] ; then
+		run_with_root_privilages "$lxc_ourscript" || lxc_error=1
+	else
+		lxc_error=1
+	fi
+
+	if ((lxc_error)) ; then
+		printf "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
+	fi
+
 	needrestart_lxc=1
 }
 
@@ -299,9 +311,9 @@ install_packages_NOW
 # restart warnings:
 any=0
 ww=""
-if ((needrestart_lxc)) ; then any=1; ww="$(gettext "warn_root")\n${ww}" ; fi
+if ((needrestart_lxc)) ; then any=1; ww="$(gettext "L_needrestart_LXC_maybe")\n${ww}" ; fi
 if ((any)) ; then
-	text="$(eval_gettext "L_needrestart_summary_text")\n\n$warnings_text"
+	text="$(eval_gettext "L_needrestart_summary_text")\n\n$ww"
 	abdialog --title "$(gettext 'L_needrestart_summary_title')" \
 		--msgbox "$text" 20 60 || abdialog_exit
 fi
