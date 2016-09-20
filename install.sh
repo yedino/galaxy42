@@ -6,6 +6,7 @@
 # (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Yedino (you can pick)
 #
 
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
@@ -118,13 +119,13 @@ function install_build_gitian() {
 	lxc_ourscript="/etc/rc.local.lxcnet-gitian"
 	lxc_error=0
 	if [[ -r "$lxc_ourscript" ]] ; then
-		run_with_root_privilages "$lxc_ourscript" || lxc_error=1
+		run_with_root_privilages "bash" "--" "$lxc_ourscript" || lxc_error=1
 	else
 		lxc_error=1
 	fi
 
 	if ((lxc_error)) ; then
-		printf "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
+		printf "%s\n" "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
 	fi
 
 	needrestart_lxc=1
