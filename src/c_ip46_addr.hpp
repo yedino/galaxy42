@@ -3,7 +3,7 @@
 #ifndef C_IP46_ADDR_H
 #define C_IP46_ADDR_H
 
-#if defined(__linux__)
+#ifdef __linux__
 
 #include "libs1.hpp"
 #include <arpa/inet.h>
@@ -88,9 +88,8 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 
 		t_tag m_tag; ///< current type of address
 };
-#endif // __linux__
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // __linux__
 
 #include <boost/asio/ip/address.hpp>
 #include <ostream>
@@ -111,8 +110,8 @@ class c_ip46_addr {
 		boost::asio::ip::address m_address;
 		int m_port = 9042;
 };
-#endif
 
+#endif // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 
 
 #endif // C_IP46_ADDR_H

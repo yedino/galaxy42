@@ -2,6 +2,7 @@
 #include "c_tnetdbg.hpp"
 
 #ifdef __linux__
+
 c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
@@ -47,28 +48,7 @@ int c_udp_wrapper_linux::get_socket() {
 	return m_socket;
 }
 
-#else
-
-c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port) {
-	_UNUSED(listen_port);
-}
-
-void c_udp_wrapper_empty::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
-	_UNUSED(dst_address);
-	_UNUSED(data);
-	_UNUSED(size_of_data);
-}
-
-size_t c_udp_wrapper_empty::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
-	_UNUSED(data_buf);
-	_UNUSED(data_buf_size);
-	_UNUSED(from_address);
-	return 0;
-}
-
-#endif // __linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__)  // __linux__
 #include <boost/bind.hpp>
 #if defined (__MINGW32__)
 	#undef _assert
@@ -119,4 +99,24 @@ void c_udp_wrapper_windows::read_handle(const boost::system::error_code& error, 
 			boost::bind(&c_udp_wrapper_windows::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-#endif // _WIN32
+#else // _win32 || __cygwin__
+
+c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port) {
+	_UNUSED(listen_port);
+}
+
+void c_udp_wrapper_empty::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
+	_UNUSED(dst_address);
+	_UNUSED(data);
+	_UNUSED(size_of_data);
+}
+
+size_t c_udp_wrapper_empty::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
+	_UNUSED(data_buf);
+	_UNUSED(data_buf_size);
+	_UNUSED(from_address);
+	return 0;
+}
+
+#endif //  else
+

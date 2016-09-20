@@ -27,20 +27,8 @@ class c_event_manager_linux final : public c_event_manager {
 		const int m_udp_socket;
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 };
-#else
-class c_tun_device_empty;
-class c_udp_wrapper_empty;
-class c_event_manager_empty final : public c_event_manager {
-	public:
-		c_event_manager_empty() = default;
-		c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper);
-		void wait_for_event();
-		bool receive_udp_paket();
-		bool get_tun_packet();
-};
-#endif // __linux__
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__)  // __linux__
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
 		#define __USE_W32_SOCKETS
@@ -64,6 +52,20 @@ private:
 	bool m_tun_event;
 	bool m_udp_event;
 };
-#endif // _WIN32
+
+#else // _win32 || __cygwin__
+
+class c_tun_device_empty;
+class c_udp_wrapper_empty;
+class c_event_manager_empty final : public c_event_manager {
+	public:
+		c_event_manager_empty() = default;
+		c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper);
+		void wait_for_event();
+		bool receive_udp_paket();
+		bool get_tun_packet();
+};
+
+#endif // else
 
 #endif // C_EVENT_MANAGER_HPP
