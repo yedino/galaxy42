@@ -125,7 +125,7 @@ function install_build_gitian() {
 	fi
 
 	if ((lxc_error)) ; then
-		printf "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
+		printf "%s\n" "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
 	fi
 
 	needrestart_lxc=1
