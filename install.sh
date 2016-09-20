@@ -105,10 +105,13 @@ function install_build_gitian() {
 	install_for_build
 	install_for_touse
 	install_for_devel
-	install_packages lxc python3-yaml
+
+	install_packages lxc apt-cacher-ng debootstrap bridge-utils curl ruby # for Gitian
+	install_packages python3-yaml # our scripting aroung Gitian uses this
 
 	install_packages_NOW
 
+	printf "Info: Gitian needs LXC network settings:\n\n"
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
 	run_with_root_privilages "./share/script/setup-lxc-host" || fail
 
