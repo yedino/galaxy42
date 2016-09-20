@@ -2,6 +2,13 @@
 echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
 
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+dir_base_of_source='./'
+
+lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit
 function script_cleanup() {
@@ -142,22 +149,6 @@ function gitian_builder_download() {
 	fi
 }
 
-function gitian_check_net_devices() {
-	dev1="br0"
-	dev2="lxcbr0"
-
-	devices=$(ip link show up | egrep "^[0-9]+: ") || true
-	found=$(echo "$devices" | egrep "$dev1|$dev2") || true
-
-	if [ -z "$found" ]; then
-		echo "Not found any running gitian-lxc network device!"
-		echo "missing: $dev1 or $dev2 or both"
-	else
-		echo "Found running gitian-lxc network devices:"
-		echo "$found"
-	fi
-}
-
 function gitian_builder_make_lxc_image() {
 	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
@@ -220,7 +211,7 @@ function all_including_new_lxc() {
 	set_env
 	fix_template_script
 	gitian_builder_download
-	gitian_check_net_devices
+	gitian_check_net_devices "loud"
 	gitian_builder_make_lxc_image
 	target_download
 	gitian_run_build
@@ -230,7 +221,7 @@ function all_including_new_lxc() {
 function all_excluding_new_lxc() {
 	set_env
 	fix_template_script
-	gitian_check_net_devices
+	gitian_check_net_devices "loud"
 	target_download
 	gitian_run_build
 	gitian_show_result
