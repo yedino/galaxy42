@@ -686,7 +686,7 @@ int main(int argc, char **argv) {
 			string my_name = config_default_myname;
 			if (argm.count("myname")) my_name = argm["myname"].as<string>();
 			myserver.set_my_name(my_name);
-			ui::action_info_ok("Your hash-IPv6 address is: " + myserver.get_my_ipv6_nice());
+			ui::action_info_ok(gettext("L_your_haship_address") + myserver.get_my_ipv6_nice());
 
 			_info("Configuring my peers references (keys):");
 			try {
