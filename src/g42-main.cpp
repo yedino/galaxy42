@@ -707,8 +707,7 @@ int main(int argc, char **argv) {
 			} else {
 				ostringstream oss; oss << "./tunserver.elf --peer YOURIP:9042-" << myserver.get_my_ipv6_nice();
 				string help_cmd1 = oss.str();
-				ui::action_info_ok("You are not connecting to anyone, so you should run on the other computer this program, "
-					"with following options: " + help_cmd1);
+				ui::action_info_ok(gettext("L_no_other_computer_Option_for_other") + help_cmd1);
 			}
 
 		} // try parsing

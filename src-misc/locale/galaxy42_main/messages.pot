@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-21 16:04+0200\n"
+"POT-Creation-Date: 2016-09-21 17:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,4 +24,13 @@ msgid "L_program_is_copyrighted"
 msgstr ""
 
 msgid "L_your_haship_address"
+msgstr ""
+
+msgid "L_no_other_computer_Option_for_other"
+msgstr ""
+
+msgid "L_wait_for_connect"
+msgstr ""
+
+msgid "L_starting_TUN"
 msgstr ""
