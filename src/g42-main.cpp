@@ -269,11 +269,9 @@ int main(int argc, char **argv) {
 	setlocale(LC_ALL,"");
 	string used_domain = bindtextdomain ("galaxy42_installer", install_dir_share_locale.c_str() );
 	textdomain("galaxy42_installer");
-	std::cerr << "Text=" << used_domain << std::endl;
-
+	// Using gettext:
 	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
-
-	return 0;
+	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
