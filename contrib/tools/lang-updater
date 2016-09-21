@@ -1,15 +1,20 @@
 #!/bin/bash
 
 function usage() {
+	example1='src/*.?pp src/*/*.?pp'
+
 	printf "%s\n" "
 
 	Run this program with options:
+
+	$0 [-t] [-u] [translation_catalog] [file1, [file2 [...]]]
 
 	-t Trims from .po files obsolite strings that are no longer present in sources.
 	-u Updates the .po and .mo files by adding new strings that were since last time added in sources.
 
 	Usually this program is run with options like:
-	$0 -t -u
+	$0 -t -u galaxy42_installer install.sh
+	$0 -t -u main_program $example1
 
 	(When ou start, then sometimes you might need to use manual commands to create first-time empty pot file maybe)
 
@@ -24,16 +29,18 @@ Use -h for help.
 
 "
 
-textdomain='galaxy42_installer'
-sourcefile="install.sh"
 
-mainfile_messages_pot="src-misc/locale/${textdomain}/messages.pot"
+# prepare variables
+textdomain=""
+sourcefile=""
+mainfile_messages_pot=""
+
 
 MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || exit
 
 function lang_new_and_translate() {
 
-	xgettext -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile}"
+	xgettext -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile[@]}"
 	# -j
 	for lang in pl en
 	do
@@ -61,11 +68,11 @@ function trim_po_file() {
 }
 
 function trim_obsolete {
-	echo "=== Removing obsolete strings that are no longer in sourcefile=$sourcefile"
+	echo "=== Removing obsolete strings that are no longer in sourcefiles"
 
 	# set -x # debug
 	freshfile="$MYTMP/fresh.pot"
-	xgettext  -o "${freshfile}"  "${sourcefile}"
+	xgettext  -o "${freshfile}"  "${sourcefile[@]}"
 
 	trim_po_file "${freshfile}" "${mainfile_messages_pot}"
 
@@ -98,6 +105,17 @@ while getopts ":tuh" opt; do
 				;;
 	  esac
 done
+shift $((OPTIND-1)) # eat all the options paresed above.q
+
+textdomain="$1" # e.g. 'galaxy42_installer'
+sourcefile=("$@") # e.g. ('install.sh') or a list ('a.cpp' 'b.cpp')
+mainfile_messages_pot="src-misc/locale/${textdomain}/messages.pot"
+
+echo
+echo "Textdomain: $textdomain"
+echo "Sourcefile(s): " "${sourcefile[@]}"
+echo "Main .POT file: $mainfile_messages_pot"
+echo
 
 if ((cmd_update)) ; then
 	lang_new_and_translate
