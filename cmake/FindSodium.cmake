@@ -10,27 +10,38 @@
 #  SODIUM_FOUND          - True if libsodium found.
 #
 
-# (from FindBoost script)
-# Collect environment variable inputs as hints.  Do not consider changes.
+# (from FindBoost script, edited by Cameron)
+# Collect environment variable inputs and use them if the local variable is not set.
 foreach(v SODIUM_ROOT_DIR)
-  set(_env $ENV{${v}})
-  if(_env)
-    file(TO_CMAKE_PATH "${_env}" _ENV_${v})
-  else()
-    set(_ENV_${v} "")
+  if(NOT ${v})
+    set(_env $ENV{${v}})
+    if(_env)
+      file(TO_CMAKE_PATH "${_env}" _ENV_${v})
+    else()
+      set(_ENV_${v} "")
+    endif()
+    set(${v} ${_ENV_${v}})
   endif()
 endforeach()
 
+if(CMAKE_CL_64)
+    set(SODIUM_BUILDTYPE_DIR "x64")
+else()
+    set(SODIUM_BUILDTYPE_DIR "Win32")
+endif()
+
 FIND_LIBRARY(SODIUM_LIBRARY NAMES sodium libsodium
 	HINTS
-	${_ENV_SODIUM_ROOT_DIR}/lib
-	${_ENV_SODIUM_ROOT_DIR}/Win32/Debug/v140/dynamic #TODO detect build type
-	${_ENV_SODIUM_ROOT_DIR}/bin/Win32/Debug/v140/dynamic) #TODO detect build type
+    ${SODIUM_ROOT_DIR}/lib
+    ${SODIUM_ROOT_DIR}/${SODIUM_BUILDTYPE_DIR}/Debug/v140/dynamic
+    ${SODIUM_ROOT_DIR}/${SODIUM_BUILDTYPE_DIR}/Win32/Debug/v140/dynamic
+)
 
 find_path(SODIUM_INCLUDE_DIR NAMES sodium.h
-	HINTS
-		${_ENV_SODIUM_ROOT_DIR}/include
-		${_ENV_SODIUM_ROOT_DIR}/src/libsodium/include)
+    HINTS
+    ${SODIUM_ROOT_DIR}/include
+    ${SODIUM_ROOT_DIR}/src/libsodium/include
+)
 
 # handle the QUIETLY and REQUIRED arguments and set SODIUM_FOUND to TRUE if
 # all listed variables are TRUE
