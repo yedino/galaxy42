@@ -262,6 +262,8 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 int main(int argc, char **argv) {
 	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
+	std::cerr << gettext("") << std::endl;
+
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 
