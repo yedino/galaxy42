@@ -1,5 +1,6 @@
 !include MUI2.nsh
 !include x64.nsh
+!include servicelib.nsh
 
 #Unicode true # TODO
 RequestExecutionLevel admin
@@ -21,7 +22,7 @@ InstallDir $PROGRAMFILES\galaxy42
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_UNPAGE_FINISH
 
-!insertmacro MUI_LANGUAGE "English"
+; !insertmacro MUI_LANGUAGE "English"
 ; !insertmacro MUI_LANGUAGE "French"
 ; !insertmacro MUI_LANGUAGE "German"
 ; !insertmacro MUI_LANGUAGE "Spanish"
@@ -41,7 +42,7 @@ InstallDir $PROGRAMFILES\galaxy42
 ; !insertmacro MUI_LANGUAGE "Russian"
 ; !insertmacro MUI_LANGUAGE "Portuguese"
 ; !insertmacro MUI_LANGUAGE "PortugueseBR"
-; !insertmacro MUI_LANGUAGE "Polish"
+!insertmacro MUI_LANGUAGE "Polish"
 ; !insertmacro MUI_LANGUAGE "Ukrainian"
 ; !insertmacro MUI_LANGUAGE "Czech"
 ; !insertmacro MUI_LANGUAGE "Slovak"
@@ -83,7 +84,13 @@ InstallDir $PROGRAMFILES\galaxy42
 
 Section
 	SetShellVarContext all
-	SimpleSC::StopService "galaxy" 1 30
+	#SimpleSC::StopService "galaxy" 1 30
+	# stop service
+	Push "stop"
+	Push "galaxy" # name
+	Call Service
+	Pop $0
+	#service stopped
 	SetOutPath $INSTDIR
 	WriteUninstaller $INSTDIR\uninstall.exe
 	${If} ${RunningX64}
@@ -91,7 +98,11 @@ Section
 	${Else}
 		File "bin\x86\*"
 	${EndIf}
-	SimpleSC::InstallService "galaxy" "galaxy 42 node" "16" "2" "$INSTDIR\galaxyService"  "" "" ""
+	#SimpleSC::InstallService "galaxy" "galaxy 42 node" "16" "2" "$INSTDIR\galaxyService"  "" "" ""
+	#install new service
+	Push "create"
+	Push "galaxy" # name
+
 
 	SimpleSC::SetServiceFailure "galaxy" "0" "" "" "1" "10000" "0" "0" "0" "0"\
 	SimpleSC::SetServiceFailureFlag "galaxy" "1"
