@@ -16,6 +16,9 @@
 #include "c_json_genconf.hpp"
 #include "c_json_load.hpp"
 
+#include <libintl.h>
+#include <locale.h>
+
 
 namespace developer_tests {
 
@@ -262,7 +265,15 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 int main(int argc, char **argv) {
 	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
-	std::cerr << gettext("") << std::endl;
+	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+	setlocale(LC_ALL,"");
+	string used_domain = bindtextdomain ("galaxy42_installer", install_dir_share_locale.c_str() );
+	textdomain("galaxy42_installer");
+	std::cerr << "Text=" << used_domain << std::endl;
+
+	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
+
+	return 0;
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
