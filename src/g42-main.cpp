@@ -267,8 +267,8 @@ int main(int argc, char **argv) {
 
 	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 	setlocale(LC_ALL,"");
-	string used_domain = bindtextdomain ("galaxy42_installer", install_dir_share_locale.c_str() );
-	textdomain("galaxy42_installer");
+	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
+	textdomain("galaxy42_main");
 	// Using gettext:
 	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
 	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
