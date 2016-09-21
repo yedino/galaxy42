@@ -133,7 +133,7 @@ function install_build_gitian() {
 
 
 # ------------------------------------------------------------------------
-# start
+# start (main)
 
 sudo_flag="--sudo"
 if [[ $EUID -ne 0 ]]; then
@@ -151,6 +151,7 @@ if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_
 # platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
+text_warn="$(gettext "L_program_is_pre_pre_alpha")"
 
 text2=""
 if (("$abdialog_curses")) ; then
@@ -159,8 +160,7 @@ fi
 
 text3="$(gettext "We recognize your system/platform as:")"
 info="$(platforminfo_show_summary)"
-text="\n${text1}\n\n${text2}\n\n${text3}\n\n${info}"
-
+text="\n${text1}\n\n${text_warn}\n\n${text2}\n\n${text3}\n${info}"
 # shellcheck disable=SC2069
 abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
