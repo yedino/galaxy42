@@ -758,7 +758,7 @@ void c_tunserver::event_loop() {
 	bool was_connected=true;
 	if (! m_peer.size()) {
 		was_connected=false;
-		ui::action_info_ok("Now will wait for someone to connect to us...");
+		ui::action_info_ok(gettext("L_wait_for_connect"));
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
@@ -1173,7 +1173,7 @@ void c_tunserver::event_loop() {
 }
 
 void c_tunserver::run() {
-	std::cout << "Stating the TUN router." << std::endl;
+	std::cout << gettext("L_starting_TUN") << std::endl;
 
 	prepare_socket();
 	event_loop();
