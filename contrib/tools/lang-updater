@@ -14,7 +14,7 @@ function usage() {
 
 	Usually this program is run with options like:
 	$0 -t -u galaxy42_installer install.sh
-	$0 -t -u main_program $example1
+	$0 -t -u galaxy42_main $example1
 
 	(When ou start, then sometimes you might need to use manual commands to create first-time empty pot file maybe)
 
@@ -108,6 +108,8 @@ done
 shift $((OPTIND-1)) # eat all the options paresed above.q
 
 textdomain="$1" # e.g. 'galaxy42_installer'
+shift 1
+
 sourcefile=("$@") # e.g. ('install.sh') or a list ('a.cpp' 'b.cpp')
 mainfile_messages_pot="src-misc/locale/${textdomain}/messages.pot"
 
