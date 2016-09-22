@@ -158,7 +158,7 @@ function gitian_builder_download() {
 function gitian_builder_make_lxc_image() {
 	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
-	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template and apt-cacher-ng running?)"
+	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create VM image (did you configured network for LXC? Is apt-cacher-ng running? Common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)"
 }
 
 function gitian_detect_source_version() {
