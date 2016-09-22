@@ -298,3 +298,5 @@ if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
 if [[ "$1" == "on-target" ]] ; then special_command_on_target ; fi
 if [[ "$1" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
 
+printf "\nAll done.\n"
+
