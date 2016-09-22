@@ -291,6 +291,8 @@ Usage: call this program with one argument, either:
 
 EOF
 
+printf "\n\n\nWarning, this version might be not working\n\n\n"
+
 if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
 if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
 if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
