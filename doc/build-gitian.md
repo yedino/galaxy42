@@ -1,3 +1,10 @@
+### This is just for information!
+
+This file describes details of using Gitian.
+This is for INFORMATION ONLY - usually you should just run ./install.sh
+and then use ./build-gitian scripts).
+
+Also see doc/gitian-instructions.txt for more info.
 
 ### Usage
 
