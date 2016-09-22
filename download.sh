@@ -17,6 +17,7 @@ echo "CLONE THIS to your repository:"
 echo ""
 echo " * https://github.com/google/googletest"
 echo " * https://github.com/NTRUOpenSourceProject/ntru-crypto"
+echo " (of course do confirm if you cloned legitimate version of code with git hash and/or git-tag and git signatures)"
 echo ""
 echo "---------------------------------------------------------------"
 

@@ -210,12 +210,17 @@ if (( option_download_skip )) ; then
 	ls
 else
 rm -rf boost || fail # perhaps left over if we do some caching or testing
-git clone https://github.com/boostorg/boost.git || fail
+git clone https://github.com/boostorg/boost.git || fail # check gitrev hash below!
 pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
 
 git checkout boost-1.61.0
+expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
+confirm_gitrev=$(git log --format='%H' -1)
+[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
+	fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
+}
 
 git submodule update --init --recursive tools/build
 git submodule update --init --recursive libs/context
@@ -330,10 +335,20 @@ printf "\n\nBuilding libsodium now\n\n"
 ## clone and build libsodium
 rm -rf libsodium # perhaps left over if we do some caching or testing
 set -x
-git clone https://github.com/jedisct1/libsodium.git || fail
+git clone https://github.com/jedisct1/libsodium.git || fail # check gitrev hash below!
+
 pushd libsodium || fail
 SODIUM_DIR=$(pwd)
 git checkout 1.0.11 || fail
+git clean -xdf
+
+expected_gitrev="2f4f718cd94adab547c210a78050762cf667dfca" # this is the gitrev hash of this boost version (as we seen it)
+confirm_gitrev=$(git log --format='%H' -1)
+[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
+	fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
+}
+
+
 ./autogen.sh || fail
 
 patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
