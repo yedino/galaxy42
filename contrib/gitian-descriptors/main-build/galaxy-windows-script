@@ -346,6 +346,8 @@ printf "\n\nCrossbuild done (of lib sodium)"
 popd
 
 else
+	SODIUM_DIR="/home/ubuntu/build/libsodium"
+	[ -d "$SODIUM_DIR=" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
 	printf "\n\nSkipping sodium (as selected in options)\n\n"
 
 fi
