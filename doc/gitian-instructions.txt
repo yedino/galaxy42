@@ -3,6 +3,7 @@ sudo aptitude install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc pyt
 
 # suite (ubuntu 16.04) xenial in gitian is not documented, but it works for us.
 git clone https://github.com/devrandom/gitian-builder.git
+echo "REMEMBER TO VERIFY CHECKSUM (git log -1) - git revision hash" ; read _
 cd gitian-builder
 
 # make ubuntu image for lxc
