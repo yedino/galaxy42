@@ -232,7 +232,7 @@ function gitian_show_result() {
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
 	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
 	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
-	info_binary=$(  find  /home/ubuntu/build/boost/mingw_build/lib/*   /home/ubuntu/build/libsodium/*/bin/   -name  '*.dll' -o -name '*.exe'    ; ls -1 /home/ubuntu/build/galaxy42/*exe | sort   )
+	info_binary=$(on-target contrib/tools/results-of-build-windows.sh)
 	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
 	info_binary_first=$( printf "$info_binary" | head -n 1)
 	info_host="$(get_host_info)"
