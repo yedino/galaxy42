@@ -1,3 +1,17 @@
+
+
+###############################################
+This is mostly obsolete now, because ./install.sh (installation "from source code") does this.
+
+But this can help if there are any problems or if your system is not fully supported.
+
+Also do read FAQ in build-gitian.md and of course main readme[.md] too.
+###############################################
+
+
+
+
+
 # install dependences
 sudo aptitude install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils make ubuntu-archive-keyring curl
 
