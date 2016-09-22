@@ -149,7 +149,7 @@ function gitian_builder_download() {
 		git reset --hard "$gitiansoftware_checkout" || fail "Choosing gitian version (step 1)"
 		git clean -xdf || fail "Doing git-clean"
 		confirm_git_ver=$(git log --format='%H' -1)
-		[[ "$confirm_git_ver" != "$gitiansoftware_checkout_hash" ]] || {
+		[[ "$confirm_git_ver" == "$gitiansoftware_checkout_hash" ]] || {
 			fail "Git verification of hash: hash is $confirm_git_ver instead of expected $gitiansoftware_checkout_hash"
 		}
 	fi
@@ -182,7 +182,7 @@ function target_download() {
 	git clean -xdf || fail
 	git checkout "$target_checkout_gitrev" || fail "Download target in given version (step 1)"
 	confirm_git_ver=$(git log --format='%H' -1)
-	[[ "$confirm_git_ver" != "$target_checkout_gitrev" ]] || {
+	[[ "$confirm_git_ver" == "$target_checkout_gitrev" ]] || {
 		fail "Git verification of hash: hash is $confirm_git_ver instead of expected $target_checkout_gitrev"
 	}
 	git clean -xdf || fail "Doing git-clean"
