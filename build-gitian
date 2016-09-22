@@ -28,7 +28,7 @@ gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e"
 target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
-target_checkout="wip_cross_win" # <--- pick any version
+# target_checkout="wip_cross_win" # <--- pick any version
 gitian_suite=xenial
 base_dir="$HOME/var-gitian/"
 gitian_yml_file="main-build/galaxy-windows.yml" # must be under contrib/gitian-descriptors/
@@ -145,7 +145,9 @@ function gitian_builder_download() {
 		cd "${base_dir}" || fail "cd base dir"
 		git clone "$gitiansoftware_url" || fail "while downloading gitian"
 		cd gitian-builder || fail
-		git reset --hard "$gitiansoftware_checkout" || fail "choosing gitian version"
+		git reset --hard "$gitiansoftware_checkout" || fail "Choosing gitian version (step 1)"
+		confirm_git_ver=$(git log --format '%H' -1)
+		[[ "$confirm_git_ver" != "$gitiansoftware_checkout" ]] || fail "Choosing gitian version (step 2)"
 	fi
 }
 
@@ -155,7 +157,18 @@ function gitian_builder_make_lxc_image() {
 	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template and apt-cacher-ng running?)"
 }
 
+function gitian_detect_source_version() {
+	pushd "$my_dir"
+	printf "%s\n" "Detecting git version (revision) from PWD=$PWD."
+	gv=$(git log --format '%H' -1) || fail "Can not detect git version (revision) form PWD=$PWD"
+	target_checkout="$gv"
+	printf "%s\n" "Detected and will use: target_checkout=$target_checkout"
+	popd
+}
+
 function target_download() {
+	gitian_detect_source_version
+	printf "\n%s\n" "Will download target to ${base_dir} (${target_name})"
 	cd "${base_dir}" || fail
 	rm -rf "${base_dir}/${target_name}/" || fail
 	git clone "$target_url" || fail "Download target"
@@ -163,20 +176,33 @@ function target_download() {
 	printf "%s\n" "On host we start with download of (${target_name}) in version:"
 	git log -1
 	git clean -xdf || fail
-	git checkout "$target_checkout" || fail "Download target in given version"
-	git clean -xdf || fail
-	git log -1 || fail
+	git checkout "$target_checkout" || fail "Download target in given version (step 1)"
+	confirm_git_ver=$(git log --format '%H' -1)
+	[[ "$confirm_git_ver" != "$gitiansoftware_checkout" ]] || fail "Download target in given version (step 2)"
+	git clean -xdf || fail "Doing git-clean"
+	git log -1 || fail "Show git-version"
 	printf "\n\n\n"
 }
 
 function gitian_run_build() {
+	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
 	printf "\nWill use YML Gitian file: $gitian_yml_file_full\n\n"
 	cat "$gitian_yml_file_full" | egrep -H -n -i "commit|url|dir"
 
-	./bin/gbuild    --allow-sudo  \
+	exit 1
+
+	set -x
+	./bin/gbuild \
+		--commit galaxy42=${target_checkout} --url galaxy42=${target_url} \
+		--allow-sudo  \
 		"$gitian_yml_file_full" \
-		|| fail "Build with gbuild"
+	|| {
+		set +x
+		fail "Build with gbuild"
+	}
+	set +x
+	echo "Build with gbuild - done"
 }
 
 function string_limitlen() {
