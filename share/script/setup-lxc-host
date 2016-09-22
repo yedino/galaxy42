@@ -37,7 +37,7 @@ if ((doit)) ; then
 	sed -i '/exit 0/d' /etc/rc.local # there is usually an silly exit on top there, we will remove it
 	echo "$marker" >> "$name"
 	echo "# start of gitian lxc (call only)" >> "$name"
-	echo "source $ourscript" >> "$name"
+	echo "sh $ourscript" >> "$name"
 	echo "# end of gitian lxc" >> "$name"
 
 fi
