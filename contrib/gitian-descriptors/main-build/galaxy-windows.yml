@@ -21,7 +21,7 @@ packages:
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
-   "url": "https://github.com/yedino/galaxy42.git" # this can be overwritten e.g. by gbuild called from ./build-gitian
+  "url": "https://github.com/yedino/galaxy42.git" # this can be overwritten e.g. by gbuild called from ./build-gitian
 # this is temporary, TODO, in the end use branch name / tag name
 files: []
 script: |

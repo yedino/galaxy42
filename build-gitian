@@ -200,11 +200,12 @@ function gitian_run_build() {
 	cat "$gitian_yml_file_full" | egrep -H -n -i "commit|url|dir"
 	printf "\n\n"
 
-	printf "%s\n" "Gitian for commit ${target_checkout_gitrev}, from url {$target_url}"
+	printf "%s\n" "Gitian for commit ${target_checkout_gitrev}, from url ${target_url}"
 
 	set -x
 	./bin/gbuild \
-		--commit galaxy42=${target_checkout_gitrev} --url galaxy42=${target_url} \
+		--commit galaxy42="${target_checkout_gitrev}" \
+		--url galaxy42="${target_url}" \
 		--allow-sudo  \
 		"$gitian_yml_file_full" \
 	|| {
