@@ -229,12 +229,11 @@ function get_host_info() {
 }
 
 function gitian_show_result() {
+	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builder" # need it to call on-target
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
 	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
-	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
-	info_binary=$(on-target contrib/tools/results-of-build-windows.sh)
-	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
-	info_binary_first=$( printf "$info_binary" | head -n 1)
+	info_binary=$(on-target /home/ubuntu/build/galaxy42/contrib/tools/results-of-build-windows.sh)
+	info_binary_first=$( printf "$info_binary" | head -n 1 )
 	info_host="$(get_host_info)"
 	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
 
@@ -264,6 +263,13 @@ function all_excluding_new_lxc() {
 	gitian_show_result
 }
 
+function run_onlyresult() {
+	set_env
+	gitian_check_net_devices "loud"
+	gitian_show_result
+	printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
+}
+
 function special_command_on_target() {
 	set_env
 	echo "Starting a console on the Image of for-Gitian system. PATH=$PATH"
@@ -291,14 +297,15 @@ Usage: call this program with one argument, either:
 
 EOF
 
-printf "\n\n\nWarning, this version might be not working\n\n\n"
+runmode="$1"
 
-if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
-if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
-if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
+if [[ "$runmode" == "install" ]] ; then  setup_host_for_lxc ; fi
+if [[ "$runmode" == "image" ]] ; then all_including_new_lxc ; fi
+if [[ "$runmode" == "fast" ]] ; then all_excluding_new_lxc ; fi
+if [[ "$runmode" == "onlyresult" ]] ; then run_onlyresult ; fi
 
-if [[ "$1" == "on-target" ]] ; then special_command_on_target ; fi
-if [[ "$1" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
+if [[ "$runmode" == "on-target" ]] ; then special_command_on_target ; fi
+if [[ "$runmode" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
 
-printf "\nAll done.\n"
+printf "\nAll done, in run mode: $runmode.\n"
 
