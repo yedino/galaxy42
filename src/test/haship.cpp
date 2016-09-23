@@ -36,16 +36,6 @@ void addr_is_invalid(string s1) {
 	EXPECT_THROW( fun1() , std::invalid_argument);
 }
 
-//void tag_constr (string s1) {
-  //     auto a1 = c_haship_addr(c_haship_addr::tag_constr_by_hash_of_pubkey);
-       
-    //   EXPECT_EQ(1,1);
-//}
-
-//void print(string a1){
-//  auto a1 = string_as_hex();
-//}
-
 
 TEST(haship, speciall_addresses) {
 	addr_is_same("0000:0000:0000:0000:0000:0000:0000:0000",
@@ -130,32 +120,6 @@ TEST(haship, print){
   EXPECT_EQ(empty_haship.str(),"hip:00000000000000000000000000000000");
   
 }
-
-
-  /*sin(8)
-  
-  int a; sin(a)
-  
-  sin( int(5) )
-  
-  sin(int());
-  
-  
-  int x;
-  void fun(   int x   );
-  
-  int x(5);
-  // int x(5,4);
-  c_osoba x("adam",34);
-  
-  int x;
-  int x(5);
-  
-  int(5) ; 
-  
-  cout << int(5) ;  
-  
-  */
 
 /*
 TEST(haship, tag_pubkey){
