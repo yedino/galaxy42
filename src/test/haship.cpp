@@ -119,11 +119,11 @@ TEST(haship, print){
   empty_ip.print(empty_haship);
   EXPECT_EQ(empty_haship.str(),"hip:00000000000000000000000000000000");
   
-}
+}timetime `cmake . && make tunserver.elf `cmake . && make tunserver.elf
 
 /*
 TEST(haship, tag_pubkey){
-  const c_haship_pubkey mykey='2001:0db8:0a0b:12f0:0000:0000:0000:0001';  
+  const c_haship_pubkey mykey='2001:0db8:0a0b:12f0:0000:0000:0000:0001';
   c_haship_addr key = c_haship_addr(c_haship_addr::tag_constr_by_hash_of_pubkey() , mykey);
   ostringstream haship;
   key.print(haship);
@@ -132,7 +132,7 @@ TEST(haship, tag_pubkey){
 }
 */
 TEST(haship, tag_dot){
-  const t_ipv6dot mydot="2001:0db8:0a0b:12f0:0000:0000:0000:0001";  
+  const t_ipv6dot mydot="2001:0db8:0a0b:12f0:0000:0000:0000:0001";
   c_haship_addr dot = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot() , mydot);
   ostringstream haship;
   dot.print(haship);
@@ -140,7 +140,7 @@ TEST(haship, tag_dot){
 }
 /*
 TEST(haship, tag_bin){
-  const t_ipv6bin mybin;  
+  const t_ipv6bin mybin;
   c_haship_addr bin = c_haship_addr(c_haship_addr::tag_constr_by_addr_bin() , mybin);
   ostringstream haship;
   bin.print(haship);
@@ -170,4 +170,3 @@ TEST (haship, is_galaxy){
   c_haship_addr address2 = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot() , "fd42:0db8:0a0b:12f0:0000:0000:0000:0001");
   EXPECT_TRUE(addr_is_galaxy(address2));
 }
-
