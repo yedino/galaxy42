@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-21 17:21+0200\n"
+"POT-Creation-Date: 2016-09-26 11:37+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -23,7 +23,7 @@ msgid "L_program_is_pre_pre_alpha"
 msgstr ""
 "Ten program nie jest jeszcze gotowy, ani nie jest bezpieczny, proszę go nie "
 "używać w tej wersji.(Proszę używać go jedynie w testowej maszynie "
-"Owirtualnej)"
+"wirtualnej)"
 
 msgid "L_program_is_copyrighted"
 msgstr ""
@@ -43,3 +43,89 @@ msgstr "Teraz czekamy aż ktoś połączy się do nas..."
 
 msgid "L_starting_TUN"
 msgstr "Uruchamiamu urządzenie TUN (wirtualna karta sieciowa)"
+
+msgid "L_options"
+msgstr "Opcje"
+
+msgid "L_what_help_do"
+msgstr ""
+"Wypisuje pomocne wiadomości, łącznie z wersją programu i opcjami "
+"kompilacji (co jest włączone)"
+
+msgid "L_what_h_do"
+msgstr "To samo co --history"
+
+msgid "L_what_debug_do"
+msgstr "Włącza więcej debugów"
+
+msgid "L_what_d_do"
+msgstr "To samo co --debug"
+
+msgid "L_what_quiet_do"
+msgstr "Wyłąccza większość debugów"
+
+msgid "L_what_q_do"
+msgstr "To samo co --quiet"
+
+msgid "L_what_peer_do"
+msgstr ""
+"Dodaje całą ścieżkę do peera, w składni ip.pub. Może być podany wię"
+"cej niż raz, dla wielu peerów"
+
+msgid "L_what_info_do"
+msgstr ""
+"POLECENIE: Wyświetla informację o kluczu określonym w opcji my-key\n"
+"Wymaga [--my-key]"
+
+msgid "L_what_listMyKeys_do"
+msgstr ""
+"POLECENIE: Wyświetla Twoje klucze, które są w domyślnej lokalizacji"
+
+msgid "L_what_myKey_do"
+msgstr "Wybiera już wygenerowany klucz z domyślnej lokalizacji"
+
+msgid "L_what_myKeyFile_do"
+msgstr "Wybiera plik z kluczem z określonej lokalizacji"
+
+msgid "L_what_config_do"
+msgstr "Wczytuje plik konfiguracyjny (dla zaawansowanych użytkowników)"
+
+msgid "L_what_noConfig_do"
+msgstr "Nie ładuje żadnego pliku konfiguracyjnego"
+
+msgid "L_what_genKeySimple_do"
+msgstr ""
+"POLECENIE: Generuje zalecany prosty klucz (przydzela Ci nowy, własny adres "
+"hash-ip)"
+
+msgid "L_option_error"
+msgstr "Błąd w opcjach: "
+
+msgid "L_warning_work_in_progres"
+msgstr ""
+"*** UWAGA: Prace w toku, Nie używaj tego kodu, zawiera bugi i 'literófki' "
+"***"
+
+msgid "L_wrong_peer_typo"
+msgstr ""
+"Nie można użyć peera określonego w lini komend. Prawdopodobnie masz tam "
+"literówkę."
+
+msgid "L_exit_from_connection_attempt"
+msgstr "Program wyłączy się z powodu podanego powyżej"
+
+msgid "L_exit_from_connect"
+msgstr "Zamykanie programu, wyjaśnione powyżej..."
+
+msgid "L_bad_peer_format"
+msgstr "Zły format peera"
+
+msgid "L_what_exception_program_throwow"
+msgstr "Rzuci wyjątek. Jaki:"
+
+msgid "L_bad_format_of_input_ip_address"
+msgstr "zły format wejściowego adresu ip"
+
+msgid "L_failed_adding_peer_simple_reference"
+msgstr ""
+"Dodawanie peera poprzez proste odniesienie nie powiodło się (wyjątek): "
