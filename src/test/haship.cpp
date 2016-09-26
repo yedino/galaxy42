@@ -119,7 +119,7 @@ TEST(haship, print){
   empty_ip.print(empty_haship);
   EXPECT_EQ(empty_haship.str(),"hip:00000000000000000000000000000000");
   
-}timetime `cmake . && make tunserver.elf `cmake . && make tunserver.elf
+}
 
 /*
 TEST(haship, tag_pubkey){
