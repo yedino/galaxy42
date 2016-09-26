@@ -65,8 +65,8 @@ Current TODO / topics:
 */
 
 
-const char * g_the_disclaimer =
-"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
+//const char * g_the_disclaimer =
+//"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
 // The name of the hardcoded default demo that will be run with --devel (unless option --develdemo is given) can be set here:
 const char * g_demoname_default = "route_dij";
@@ -122,6 +122,11 @@ const char * g_demoname_default = "route_dij";
 #include "ui.hpp"
 
 #include "tunserver.hpp"
+
+//const char * g_the_disclaimer =
+//"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
+//const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
+
 
 // ------------------------------------------------------------------
 
@@ -369,8 +374,12 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
 	}
 	catch (const std::exception &e) {
-		_erro("Adding peer from simplereference failed (exception): " << e.what());
-		_throw_error( std::invalid_argument("Bad peer format") );
+//		_erro("Adding peer from simplereference failed (exception): " << e.what());
+                _erro(gettext("L_failed_adding_peer_simple_reference") << e.what());
+
+//                _throw_error( std::invalid_argument("Bad peer format") );
+		_throw_error( std::invalid_argument(gettext("L_bad_peer_format")) );
+
 	}
 }
 
@@ -736,6 +745,8 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 //}
 
 void c_tunserver::event_loop() {
+//	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
+
 	_info("Entering the event loop");
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
