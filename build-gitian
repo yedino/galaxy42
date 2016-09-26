@@ -240,7 +240,7 @@ function gitian_show_result() {
 	target_in_gitian_gitrev=$( on-target /home/ubuntu/build/galaxy42/contrib/tools/my-gitian-gitrev.sh  ) || fail "Info on-target gitian rev"
 	info_target_commit="${target_in_gitian_gitrev}"
 	info_target_commit_name="${info_target_commit}"
-	if [[ "$info_target_commit_name" == "$info_target" ]] ; then info_target_commit="(same hash)" ; fi
+	if [[ "$info_target_commit_name" == "$info_target" ]] ; then info_target_commit_name="same-hash" ; fi
 
 	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_commit_name) gives $info_binary_first on $info_host"
 
