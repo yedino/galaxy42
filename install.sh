@@ -77,15 +77,8 @@ function install_for_build() {
 			# get ubuntu main version e.g. "14" from "ubuntu_14.04"
 			ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
 			# if ubuntu main version is older/equal than 14
-			if (( $ubuntu_ver <= 14 )); then
-				# this should work for ubuntu trusty and ubuntu precise, older ubuntu versions could be not supported
-				echo "add ppa for libsodium and newer g++"
-				apt-key add "$dir_base_of_source"/doc/pubkey/chris_lea_libsodium.pub
-				add-apt-repository ppa:chris-lea/libsodium -y
-				# ubuntu-toolchain-r/test for gcc-5/g++-5
-				add-apt-repository ppa:ubuntu-toolchain-r/test -y
-				apt-get update -qq
-				apt-get install gcc-5 g++-5 -y
+			if (( ubuntu_ver <= 14 )); then
+				run_with_root_privilages "./share/script/setup-ubuntu14-host" || fail
 			fi
 		fi
 
