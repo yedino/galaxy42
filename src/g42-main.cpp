@@ -263,7 +263,17 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 }
 
 int main(int argc, char **argv) {
-	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+//	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+
+
+	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+	setlocale(LC_ALL,"");
+	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
+	textdomain("galaxy42_main");
+	// Using gettext:
+	std::cerr << std::string(80,'=') << std::endl << gettext("L_warning_work_in_progres") << std::endl << std::endl;
+	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
+	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
 
 	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 	setlocale(LC_ALL,"");
@@ -297,30 +307,51 @@ int main(int argc, char **argv) {
 
 		const string config_default_myname = "galaxy";
 
-		auto desc = make_shared<po::options_description>("Options", line_length);
+		auto desc = make_shared<po::options_description>( gettext("L_options") , line_length);
 		desc->add_options()
-			("help", "Print help messages, including program version and compiled options (what is enabled)")
-			("h", "same as --help")
+//			("help", "Print help messages, including program version and compiled options (what is enabled)")
+                        ("help", gettext("L_what_help_do"))
 
-			("debug", "Turns on more debug")
-			("d", "same as --debug")
-			("quiet", "Turns off most of the debug")
-			("q", "same as --quiet")
+//			("h", "same as --help")
+                        ("h", gettext("L_what_h_do"))
 
-			("peer", po::value<std::vector<std::string>>()->multitoken(),
-						"Adding entire peer reference, in syntax like ip-pub."
-						"Can be give more then once, for multiple peers.")
+//			("debug", "Turns on more debug")
+                        ("debug", gettext("L_what_debug_do"))
 
-			("info", "COMMAND: Print info about key specified in my-key option\nrequires [--my-key]")
-			("list-my-keys", "COMMAND: List your key which are in default location")
+//			("d", "same as --debug")
+                        ("d", gettext("L_what_d_do"))
 
-			("my-key", po::value<std::string>(), "Choose already generated key from default location")
-			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
+//			("quiet", "Turns off most of the debug")
+                        ("quiet", gettext("L_what_quiet_do"))
 
-			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
-			("no-config", "Don't load any configuration file")
+//			("q", "same as --quiet")
+                        ("q", gettext("L_what_q_do"))
 
-			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
+//			("peer", po::value<std::vector<std::string>>()->multitoken(),
+//						"Adding entire peer reference, in syntax like ip-pub."
+//						"Can be give more then once, for multiple peers.")
+                        ("peer", po::value<std::vector<std::string>>()->multitoken(), gettext("L_what_peer_do"))
+
+//			("info", "COMMAND: Print info about key specified in my-key option\nrequires [--my-key]")
+                        ("info", gettext("L_what_info_do"))
+
+//			("list-my-keys", "COMMAND: List your key which are in default location")
+                        ("list-my-keys", gettext("L_what_listMyKeys_do"))
+
+//			("my-key", po::value<std::string>(), "Choose already generated key from default location")
+                        ("my-key", po::value<std::string>(), gettext("L_what_myKey_do"))
+
+//			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
+                        ("my-key-file", po::value<std::string>(), gettext("L_what_myKeyFile_do"))
+
+//			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
+                        ("config", po::value<std::string>()->default_value("galaxy.conf") , gettext("L_what_config_do"))
+
+//			("no-config", "Don't load any configuration file")
+                        ("no-config", gettext("L_what_noConfig_do"))
+
+//			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
+                        ("gen-key-simple", gettext("L_what_genKeySimple_do"))
 
 			#if EXTLEVEL_IS_PREVIEW
 			("gen-key", "COMMAND: Generate combination of crypto key"
@@ -696,7 +727,9 @@ int main(int argc, char **argv) {
 					myserver.add_peer_simplestring( peer_ref );
 				}
 			} catch(...) {
-				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
+//				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
+                                ui::action_error_exit(gettext("L_wrong_peer_typo"));
+
 			}
 
 			// ------------------------------------------------------------------
@@ -712,11 +745,14 @@ int main(int argc, char **argv) {
 
 		} // try parsing
 		catch(ui::exception_error_exit) {
-			std::cerr << "Exiting program now, as explained above..." << std::endl;
+//			std::cerr << "Exiting program now, as explained above..." << std::endl;
+                        std::cerr << gettext("L_exit_from_connect") << std::endl;
+
 			return 1;
 		}
 		catch(po::error& e) {
-			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
+//			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
+                        std::cerr << gettext("L_option_error") << e.what() << std::endl << std::endl;
 			std::cerr << *desc << std::endl;
 			return 1;
 		}

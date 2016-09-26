@@ -18,7 +18,9 @@ const char* exception_error_exit::what() const { return m_what.c_str(); }
 
 
 void action_error_exit(const string &info) {
-	cout << info << endl << "Program will now exit because of above reason." << endl;
+//	cout << info << endl << "Program will now exit because of above reason." << endl;
+        cout << info << endl << gettext("L_exit_from_connection_attempt") << endl;
+
 	throw exception_error_exit(info);
 }
 
