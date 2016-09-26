@@ -31,14 +31,18 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define _info(X) do { DBGLVL( 40); ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
 #define _note(X) do { DBGLVL( 50); ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
 /// yellow code
+//        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
+
 #define _warn(X) do { DBGLVL(100); \
 	::std::cerr<<"\033[93m\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+	::std::cerr<< gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 } while(0)
 /// red code
+//        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
+
 #define _erro(X) do { DBGLVL(200); \
 	::std::cerr<<"\033[91m\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	::std::cerr<<gettext("L_error") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<"\033[0m"<<::std::endl; \
 } while(0)
 #define _mark(X) do { DBGLVL(150); \
@@ -89,9 +93,10 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
+//        _warn("Going to throw exception. What: " << except_var.what() 
 
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
-	_warn("Going to throw exception. What: " << except_var.what() \
+	_warn(gettext("L_what_exception_program_throwow") << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 

@@ -1212,7 +1212,8 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 
 std::string c_tunserver::program_action_gen_key_simple() {
 	const string IDI_name = "IDI";
-	ui::action_info_ok("Generating your new keys.");
+//	ui::action_info_ok("Generating your new keys.");
+        ui::action_info_ok(gettext("L_generatin_new_keys"));
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys; // list of key types
 	keys.emplace_back(std::make_pair(antinet_crypto::t_crypto_system_type_from_string("ed25519"), 1));

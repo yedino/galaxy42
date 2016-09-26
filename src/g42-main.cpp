@@ -275,13 +275,13 @@ int main(int argc, char **argv) {
 	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
 	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
 
-	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
-	setlocale(LC_ALL,"");
-	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
-	textdomain("galaxy42_main");
+//	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+//	setlocale(LC_ALL,"");
+//	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
+//	textdomain("galaxy42_main");
 	// Using gettext:
-	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
-	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
+//	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
+//	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
@@ -477,7 +477,9 @@ int main(int argc, char **argv) {
 
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {
-				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
+//				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
+                                if (!argm.count("my-key")) { _erro( gettext("L_setIDI_require_myKey") );       return 1;       }
+
 				auto name = argm["my-key"].as<std::string>();
 				myserver.program_action_set_IDI(name);
 				return 0; // <--- return
@@ -487,7 +489,9 @@ int main(int argc, char **argv) {
 			_note("BoostPO before info");
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
-					_erro("--my-key is required for --info");
+//					_erro("--my-key is required for --info");
+                                        _erro( gettext("L_info_require_myKey") );
+
 					return 1;
 				}
 				auto name = argm["my-key"].as<std::string>();
@@ -504,9 +508,13 @@ int main(int argc, char **argv) {
 			try {
 				IDI_key = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 			} catch (std::invalid_argument &err) {
-				_dbg2("IDI is not set!");
-			}
-				std::cout << "Your key list:" << std::endl;
+//				_dbg2("IDI is not set!");
+                                _dbg2(gettext("L_IDI_not_set_err"));
+
+				}
+//				std::cout << "Your key list:" << std::endl;
+                                std::cout << gettext("L_your_key_list") << std::endl;
+
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
@@ -758,28 +766,41 @@ int main(int argc, char **argv) {
 		}
 	} // try preparing
 	catch(std::exception& e) {
-		std::cerr << "Unhandled Exception reached the top of main: "
-				  << e.what() << ", application will now exit" << std::endl;
+//		std::cerr << "Unhandled Exception reached the top of main: "
+                std::cerr << gettext("L_unhandled_exception")
+
+//				  << e.what() << ", application will now exit" << std::endl;
+                                  << e.what() << gettext("L_exit_aplication") << std::endl;
+
 		return 2;
 	}
 
 	// ------------------------------------------------------------------
-	_note("Done all preparations, moving to the server main");
+//	_note("Done all preparations, moving to the server main");
+        _note(gettext("L_all_preparations_done"));
 
 	try {
 		myserver.run();
 	} // try running server
 	catch(ui::exception_error_exit) {
-		std::cerr << "Exiting as explained above" << std::endl;
+//		std::cerr << "Exiting as explained above" << std::endl;
+                std::cerr << gettext("L_exiting_explained_above") << std::endl;
+
 		return 1;
 	}
 	catch(std::exception& e) {
-		std::cerr << "Unhandled Exception reached the top of main (While running server): "
-				  << e.what() << ", application will now exit" << std::endl;
+//		std::cerr << "Unhandled Exception reached the top of main (While running server): "
+                std::cerr << gettext("L_unhandled_exception_running_server")
+
+//				  << e.what() << ", application will now exit" << std::endl;
+                                  << e.what() << gettext("L_exit_aplication") << std::endl;
+
 		return 2;
 	}
 	catch(...) {
-		std::cerr << "Unknown exception while running server." << std::endl;
+//		std::cerr << "Unknown exception while running server." << std::endl;
+                std::cerr << gettext("L_unknown_exception_running_server") << std::endl;
+
 		return 3;
 	}
 

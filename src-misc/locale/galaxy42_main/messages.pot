@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-26 12:32+0200\n"
+"POT-Creation-Date: 2016-09-26 16:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -105,4 +105,97 @@ msgid "L_bad_format_of_input_ip_address"
 msgstr ""
 
 msgid "L_failed_adding_peer_simple_reference"
+msgstr ""
+
+msgid "L_program_build_options"
+msgstr ""
+
+msgid "L_CL_normal_code"
+msgstr ""
+
+msgid "L_CL_previwew_code_"
+msgstr ""
+
+msgid "L_CL_experimental_code"
+msgstr ""
+
+msgid "L_CL_experimental_dangerous_code"
+msgstr ""
+
+msgid "L_enabled_features"
+msgstr ""
+
+msgid "L_NTRU"
+msgstr ""
+
+msgid "L_SIDH"
+msgstr ""
+
+msgid "L_info_require_myKey"
+msgstr ""
+
+msgid "L_setIDI_require_myKey"
+msgstr ""
+
+msgid "L_error"
+msgstr ""
+
+msgid "L_IDI_not_set_err"
+msgstr ""
+
+msgid "L_your_key_list"
+msgstr ""
+
+msgid "L_generatin_new_keys"
+msgstr ""
+
+msgid "L_fail_file_overwrite"
+msgstr ""
+
+msgid "L_fail_create_empty_file"
+msgstr ""
+
+msgid "L_warn"
+msgstr ""
+
+msgid "L_do_you_want"
+msgstr ""
+
+msgid "L_Y_N"
+msgstr ""
+
+msgid "L_error_during_action"
+msgstr ""
+
+msgid "L_exception_during_action"
+msgstr ""
+
+msgid "L_what_exception"
+msgstr ""
+
+msgid "L_no_additional_info_exception"
+msgstr ""
+
+msgid "L_exception"
+msgstr ""
+
+msgid "L_unknown_exception"
+msgstr ""
+
+msgid "L_unhandled_exception"
+msgstr ""
+
+msgid "L_exit_aplication"
+msgstr ""
+
+msgid "L_all_preparations_done"
+msgstr ""
+
+msgid "L_exiting_explained_above"
+msgstr ""
+
+msgid "L_unhandled_exception_running_server"
+msgstr ""
+
+msgid "L_unknown_exception_running_server"
 msgstr ""
