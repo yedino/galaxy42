@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-26 11:37+0200\n"
+"POT-Creation-Date: 2016-09-26 16:43+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -124,3 +124,96 @@ msgstr "bad format of input ip address"
 
 msgid "L_failed_adding_peer_simple_reference"
 msgstr "Adding peer from simple reference failed (exception): "
+
+msgid "L_program_build_options"
+msgstr "Program build options: "
+
+msgid "L_CL_normal_code"
+msgstr "Code level: normal code: \t\t\t"
+
+msgid "L_CL_previwew_code_"
+msgstr "Code level: preview code: \t\t\t"
+
+msgid "L_CL_experimental_code"
+msgstr "Code level: experimental code: \t\t\t"
+
+msgid "L_CL_experimental_dangerous_code"
+msgstr "Code level: experimental dangerous code: \t"
+
+msgid "L_enabled_features"
+msgstr "Enabled features: "
+
+msgid "L_NTRU"
+msgstr "  * NTRU: \t\t\t\t\t"
+
+msgid "L_SIDH"
+msgstr "  * SIDH: \t\t\t\t\t"
+
+msgid "L_info_require_myKey"
+msgstr "--my-key is required for --info"
+
+msgid "L_setIDI_require_myKey"
+msgstr "--my-key is required for --set-IDI"
+
+msgid "L_error"
+msgstr "Error! "
+
+msgid "L_IDI_not_set_err"
+msgstr "IDI is not set!"
+
+msgid "L_your_key_list"
+msgstr "Your key list:"
+
+msgid "L_generatin_new_keys"
+msgstr "Generating your new keys."
+
+msgid "L_fail_file_overwrite"
+msgstr ": file existing, it can't be overwrite [overwrite="
+
+msgid "L_fail_create_empty_file"
+msgstr ": fail to create empty file on given path and name"
+
+msgid "L_warn"
+msgstr "Warn! "
+
+msgid "L_do_you_want"
+msgstr "Do you want: "
+
+msgid "L_Y_N"
+msgstr " -- (YES/no)"
+
+msgid "L_error_during_action"
+msgstr "Error occured during "
+
+msgid "L_exception_during_action"
+msgstr "Exception caught: during_action=["
+
+msgid "L_what_exception"
+msgstr "], what="
+
+msgid "L_no_additional_info_exception"
+msgstr "(No additional information about this exception, it was empty)"
+
+msgid "L_exception"
+msgstr "Exception: "
+
+msgid "L_unknown_exception"
+msgstr "(Type of exception is unknown)"
+
+msgid "L_unhandled_exception"
+msgstr "There is a problem (Unhandled Exception reached the top of main):  "
+
+msgid "L_exit_aplication"
+msgstr ", application will now exit"
+
+msgid "L_all_preparations_done"
+msgstr "Done all preparations, moving to the server main"
+
+msgid "L_exiting_explained_above"
+msgstr "Exiting as explained above"
+
+msgid "L_unhandled_exception_running_server"
+msgstr "Unhandled Exception reached the top of main (While running server): "
+
+msgid "L_unknown_exception_running_server"
+msgstr "Unknown exception while running server."

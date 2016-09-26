@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-26 11:37+0200\n"
+"POT-Creation-Date: 2016-09-26 16:42+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -39,10 +39,10 @@ msgstr ""
 "innym komputerze z opcjami: "
 
 msgid "L_wait_for_connect"
-msgstr "Teraz czekamy aż ktoś połączy się do nas..."
+msgstr "Teraz czekamy aż ktoś się do nas połączy..."
 
 msgid "L_starting_TUN"
-msgstr "Uruchamiamu urządzenie TUN (wirtualna karta sieciowa)"
+msgstr "Uruchamiamy urządzenie TUN (wirtualna karta sieciowa)"
 
 msgid "L_options"
 msgstr "Opcje"
@@ -95,7 +95,7 @@ msgstr "Nie ładuje żadnego pliku konfiguracyjnego"
 
 msgid "L_what_genKeySimple_do"
 msgstr ""
-"POLECENIE: Generuje zalecany prosty klucz (przydzela Ci nowy, własny adres "
+"POLECENIE: Generuje prosty zalecany klucz (przydzela Ci nowy, własny adres "
 "hash-ip)"
 
 msgid "L_option_error"
@@ -129,3 +129,98 @@ msgstr "zły format wejściowego adresu ip"
 msgid "L_failed_adding_peer_simple_reference"
 msgstr ""
 "Dodawanie peera poprzez proste odniesienie nie powiodło się (wyjątek): "
+
+msgid "L_program_build_options"
+msgstr "Opcje budowy programu: "
+
+msgid "L_CL_normal_code"
+msgstr "Poziom bezpieczeństwa kodu: normalny kod\t\t\t"
+
+msgid "L_CL_previwew_code_"
+msgstr "Poziom bezpieczeństwa kodu: najnowsza wersja kodu\t\t"
+
+msgid "L_CL_experimental_code"
+msgstr "Poziom bezpieczeństwa kodu: eksperymentalny kod\t\t\t"
+
+msgid "L_CL_experimental_dangerous_code"
+msgstr "Poziom bezpieczeństwa kodu: eksperymentalny niebezpieczny kod\t"
+
+msgid "L_enabled_features"
+msgstr "Włączone funkcje: "
+
+msgid "L_NTRU"
+msgstr "  * NTRU: \t\t\t\t\t\t\t"
+
+msgid "L_SIDH"
+msgstr "  * SIDH: \t\t\t\t\t\t\t"
+
+msgid "L_info_require_myKey"
+msgstr "--my-key jest wymagane do --info"
+
+msgid "L_setIDI_require_myKey"
+msgstr "--my-key jest wymagane do --set-IDI"
+
+msgid "L_error"
+msgstr "Błąd! "
+
+msgid "L_IDI_not_set_err"
+msgstr "IDI nie jest ustawione!"
+
+msgid "L_your_key_list"
+msgstr "Lista Twoich kluczy: "
+
+msgid "L_generatin_new_keys"
+msgstr "Generowanie nowych kluczy."
+
+msgid "L_fail_file_overwrite"
+msgstr ": plik istnieje, nie może być nadpisany [overwrite="
+
+msgid "L_fail_create_empty_file"
+msgstr ": nieudana próba tworzenia pustego pliku o danej ścieżce i nazwie"
+
+msgid "L_warn"
+msgstr "Uwaga! "
+
+msgid "L_do_you_want"
+msgstr "Czy chcesz: "
+
+msgid "L_Y_N"
+msgstr " -- (TAK/nie), wpisz YES albo no: "
+
+msgid "L_error_during_action"
+msgstr "Wystąpił błąd podczas"
+
+msgid "L_exception_during_action"
+msgstr "Wystapił wyjątek, during_action=["
+
+msgid "L_what_exception"
+msgstr "], jaki= "
+
+msgid "L_no_additional_info_exception"
+msgstr "(Brak dodatkowych informacji na temat tego wyjątku, był pusty"
+
+msgid "L_exception"
+msgstr "Wyjątek: "
+
+msgid "L_unknown_exception"
+msgstr "(Typ wyjątku jest nieznany)"
+
+msgid "L_unhandled_exception"
+msgstr "Wystąpił błąd (Unhandled Exception reached the top of main): "
+
+msgid "L_exit_aplication"
+msgstr ", aplikacja wyłączy sie."
+
+msgid "L_all_preparations_done"
+msgstr "ukończono przygotowania, przenoszenie do głównego serwera"
+
+msgid "L_exiting_explained_above"
+msgstr "Wyjście, jak wyjaśniono powyżej"
+
+msgid "L_unhandled_exception_running_server"
+msgstr ""
+"Wystąpił błąd (Unhandled Exception reached the top of main (While "
+"running server))"
+
+msgid "L_unknown_exception_running_server"
+msgstr "Nieznany wyjątek podczas pracy serwera"

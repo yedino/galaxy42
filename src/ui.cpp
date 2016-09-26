@@ -30,20 +30,31 @@ void action_info_ok(const string &info) {
 }
 
 void show_error_exception_show_what(const std::string &during_action, const std::string &what) {
-	std::cerr<<"Error occured during '"<<during_action<<"' - " << what << std::endl;
+//        std::cerr<<"Error occured during '"<<during_action<<"' - " << what << std::endl;
+	std::cerr<<gettext("L_error_during_action")<<during_action<<"' - " << what << std::endl;
 }
 
 void show_error_exception(const string &during_action, const std::exception &e) { ///< Inform user about caught exception
-	_info("Exception caught: during_action=["<<during_action<<"], what="<<e.what());
+//	_info("Exception caught: during_action=["<<during_action<<"], what="<<e.what());
+        _info(gettext("L_exception_during_action")<<during_action<<gettext("L_what_exception")<<e.what());
+
 	string what = e.what();
-	if (!what.size()) what="(No additional information about this exception, it was empty)";
-	else what = "Exception: " + what;
+//	if (!what.size()) what="(No additional information about this exception, it was empty)";
+        if (!what.size()) what=gettext("L_no_additional_info_exception");
+
+	//	else what = "Exception: " + what;
+        else what = gettext("L_exception") + what;
+
 	show_error_exception_show_what(during_action, what);
 }
 
 void show_error_exception_unknown(const string &during_action) { ///< Inform user about caught exception of unknown type
-	_info("Exception caught: during_action=["<<during_action<<"] " << "(Type of exception is unknown)");
-	show_error_exception_show_what(during_action, "(Type of exception is unknown)");
+//	_info("Exception caught: during_action=["<<during_action<<"] " << "(Type of exception is unknown)");
+        _info(gettext("L_exception_during_action")<<during_action<<"] " << gettext("L_unknown_exception"));
+
+//	show_error_exception_show_what(during_action, "(Type of exception is unknown)");
+        show_error_exception_show_what(during_action, gettext("L_unknown_exception"));
+
 }
 
 
