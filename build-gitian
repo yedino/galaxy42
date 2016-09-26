@@ -235,9 +235,16 @@ function gitian_show_result() {
 	info_binary=$(on-target /home/ubuntu/build/galaxy42/contrib/tools/results-of-build-windows.sh)
 	info_binary_first=$( printf "$info_binary" | head -n 1 )
 	info_host="$(get_host_info)"
-	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+	# info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+	target_in_gitian_gitrev=$( on-target /home/ubuntu/build/galaxy42/contrib/tools/my-gitian-gitrev.sh  )
+	info_target_commit="${target_in_gitian_gitrev}"
+	info_target_commit_name="${info_target_commit}"
+	if [[ "$info_target_commit_name" == "$info_target" ]] ; then info_target_commit="(same hash)" ; fi
 
-	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_yml) gives $info_binary_first on $info_host"
+	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_commit_name) gives $info_binary_first on $info_host"
+
+	echo "Report (from inside Gitian):"
+	echo "$info_binary"
 }
 
 info_host=$(get_host_info)
@@ -287,6 +294,7 @@ Usage: call this program with one argument, either:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
   image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
   fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
+  onlyresult - just show the results (as they are now)
 
   on-target - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
   on-target-root - same, but you are the root user (insie System Image e.g. LXC)
