@@ -278,9 +278,8 @@ int main(int argc, char **argv) {
 		}
 		_info("Done, libsodium ready");
 	}
-
-	c_tunserver myserver;
 	try {
+		c_tunserver myserver;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -710,17 +709,10 @@ int main(int argc, char **argv) {
 			std::cerr << *desc << std::endl;
 			return 1;
 		}
-	} // try preparing
-	catch(std::exception& e) {
-		std::cerr << "Unhandled Exception reached the top of main: "
-				  << e.what() << ", application will now exit" << std::endl;
-		return 2;
-	}
 
 	// ------------------------------------------------------------------
 	_note("Done all preparations, moving to the server main");
 
-	try {
 		myserver.run();
 	} // try running server
 	catch(ui::exception_error_exit) {
