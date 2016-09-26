@@ -11,6 +11,18 @@ function fail() {
 }
 
 
+
+if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
+	echo "build deterministic for 64bit ..." 
+elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
+	echo "build deterministic for 32bit ..." 
+else
+	echo "TARGET_ARCH is not set.\nSet TARGET_ARCH=x86_64-w64-mingw32 for 64-bit version or TARGET_ARCH=i686-w64-mingw32 for 32-bit. exit 1"
+	exit 1;
+fi
+
+
+
 cd "$HOME/build/" || fail
 
 pwd
@@ -189,9 +201,9 @@ export PATH=${WRAP_DIR}:${PATH}
 # *** main build starts here ***
 
 ## set compilators
-export CC="$HOME/wrapped/x86_64-w64-mingw32-gcc"
-export CXX="$HOME/wrapped/x86_64-w64-mingw32-g++"
-export CPP="$HOME/wrapped/x86_64-w64-mingw32-cpp"
+export CC="$HOME/wrapped/$TARGET_ARCH-gcc"
+export CXX="$HOME/wrapped/$TARGET_ARCH-g++"
+export CPP="$HOME/wrapped/$TARGET_ARCH-cpp"
 
 
 ## clone and build boost
@@ -263,7 +275,7 @@ git clean -xdf || fail
 rm -rf mingw_build || fail
 mkdir mingw_build || fail
 
-boost_user_gcc="$HOME/wrapped/x86_64-w64-mingw32-g++ ;"
+boost_user_gcc="$HOME/wrapped/$TARGET_ARCH-g++ ;"
 printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
 
 printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
@@ -336,12 +348,20 @@ SODIUM_DIR=$(pwd)
 git checkout 1.0.11 || fail
 ./autogen.sh || fail
 
-patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
-printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium) - from file ($patched_msys_script)\n\n"
-cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
 
 printf "\n\nRunning the mingw-crossbuild-script(s) (of lib sodium)\n\n"
-./dist-build/msys2-win64.sh || fail
+
+if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
+	patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
+	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium) - from file ($patched_msys_script)\n\n"
+	cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
+	./dist-build/msys2-win64.sh || fail
+	SODIUM_LIB_DIR="$SODIUM_DIR/libsodium-win64"
+elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
+	./dist-build/msys2-win32.sh || fail
+	SODIUM_LIB_DIR="$SODIUM_DIR/libsodium-win32"
+fi
+
 printf "\n\nCrossbuild done (of lib sodium)"
 popd
 
@@ -362,9 +382,9 @@ git submodule update --init --recursive
 
 
 echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
-echo "SODIUM_ROOT_DIR: "$SODIUM_DIR"/libsodium-win64 "
+echo "SODIUM_LIB_DIR: $SODIUM_LIB_DIR"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_DIR"/libsodium-win64 -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_LIB_DIR" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
 make tunserver.elf
 
 echo "Printing checksums:"
