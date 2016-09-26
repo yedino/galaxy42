@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-21 17:23+0200\n"
+"POT-Creation-Date: 2016-09-26 12:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,4 +33,76 @@ msgid "L_wait_for_connect"
 msgstr ""
 
 msgid "L_starting_TUN"
+msgstr ""
+
+msgid "L_options"
+msgstr ""
+
+msgid "L_what_help_do"
+msgstr ""
+
+msgid "L_what_h_do"
+msgstr ""
+
+msgid "L_what_debug_do"
+msgstr ""
+
+msgid "L_what_d_do"
+msgstr ""
+
+msgid "L_what_quiet_do"
+msgstr ""
+
+msgid "L_what_q_do"
+msgstr ""
+
+msgid "L_what_peer_do"
+msgstr ""
+
+msgid "L_what_info_do"
+msgstr ""
+
+msgid "L_what_listMyKeys_do"
+msgstr ""
+
+msgid "L_what_myKey_do"
+msgstr ""
+
+msgid "L_what_myKeyFile_do"
+msgstr ""
+
+msgid "L_what_config_do"
+msgstr ""
+
+msgid "L_what_noConfig_do"
+msgstr ""
+
+msgid "L_what_genKeySimple_do"
+msgstr ""
+
+msgid "L_option_error"
+msgstr ""
+
+msgid "L_warning_work_in_progres"
+msgstr ""
+
+msgid "L_wrong_peer_typo"
+msgstr ""
+
+msgid "L_exit_from_connection_attempt"
+msgstr ""
+
+msgid "L_exit_from_connect"
+msgstr ""
+
+msgid "L_bad_peer_format"
+msgstr ""
+
+msgid "L_what_exception_program_throwow"
+msgstr ""
+
+msgid "L_bad_format_of_input_ip_address"
+msgstr ""
+
+msgid "L_failed_adding_peer_simple_reference"
 msgstr ""

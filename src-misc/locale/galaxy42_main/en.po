@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-21 17:21+0200\n"
+"POT-Creation-Date: 2016-09-26 11:37+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -40,3 +40,87 @@ msgstr "Now will wait for someone to connect to us..."
 
 msgid "L_starting_TUN"
 msgstr "Stating the TUN router"
+
+msgid "L_options"
+msgstr "Options"
+
+msgid "L_what_help_do"
+msgstr ""
+"Print help messages, including program version and compiled options (what is "
+"enabled)"
+
+msgid "L_what_h_do"
+msgstr "same as --help"
+
+msgid "L_what_debug_do"
+msgstr "Turns on more debug"
+
+msgid "L_what_d_do"
+msgstr "same as --debug"
+
+msgid "L_what_quiet_do"
+msgstr "Turns off most of the debug"
+
+msgid "L_what_q_do"
+msgstr "same as --quiet"
+
+msgid "L_what_peer_do"
+msgstr ""
+"Adding entire peer reference, in syntax like ip-pub. Can be give more then "
+"once, for multiple peers."
+
+msgid "L_what_info_do"
+msgstr ""
+"COMMAND: Print info about key specified in my-key option\n"
+"requires [--my-key]"
+
+msgid "L_what_listMyKeys_do"
+msgstr "COMMAND: List your key which are in default location"
+
+msgid "L_what_myKey_do"
+msgstr "Choose already generated key from default location"
+
+msgid "L_what_myKeyFile_do"
+msgstr "Choose key file from specified location"
+
+msgid "L_what_config_do"
+msgstr "Load configuration file (for advanced users)"
+
+msgid "L_what_noConfig_do"
+msgstr "Don't load any configuration file"
+
+msgid "L_what_genKeySimple_do"
+msgstr ""
+"COMMAND: Generate the recommended simple key (that gives you ownership of a "
+"new hash-IP address)"
+
+msgid "L_option_error"
+msgstr "Error in options: "
+
+msgid "L_warning_work_in_progres"
+msgstr ""
+"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, "
+"vulns, and 'typpos' everywhere! ***"
+
+msgid "L_wrong_peer_typo"
+msgstr ""
+"Can not use the peers that you specified on the command line. Perhaps you "
+"have a typo in there."
+
+msgid "L_exit_from_connection_attempt"
+msgstr "Program will now exit because of above reason."
+
+msgid "L_exit_from_connect"
+msgstr "Exiting program now, as explained above..."
+
+msgid "L_bad_peer_format"
+msgstr "Bad peer format"
+
+msgid "L_what_exception_program_throwow"
+msgstr "Going to throw exception. Whatooooooooooooooo: "
+
+msgid "L_bad_format_of_input_ip_address"
+msgstr "bad format of input ip address"
+
+msgid "L_failed_adding_peer_simple_reference"
+msgstr "Adding peer from simple reference failed (exception): "
