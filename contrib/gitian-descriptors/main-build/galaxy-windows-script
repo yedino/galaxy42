@@ -337,6 +337,15 @@ if ((option_shell_in_sodium)) ; then
 	printf "\n\nresuming\n\n"
 fi
 
+
+# Setting libsodium path
+if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
+	SODIUM_ROOT="$HOME/build/libsodium/libsodium-win64"
+elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
+	SODIUM_ROOT="$HOME/build/libsodium/libsodium-win32"
+fi
+
+
 if ((option_allow_sodium)) ; then
 printf "\n\nBuilding libsodium now\n\n"
 ## clone and build libsodium
@@ -344,7 +353,6 @@ rm -rf libsodium # perhaps left over if we do some caching or testing
 set -x
 git clone https://github.com/jedisct1/libsodium.git || fail
 pushd libsodium || fail
-SODIUM_DIR=$(pwd)
 git checkout 1.0.11 || fail
 ./autogen.sh || fail
 
@@ -356,13 +364,11 @@ if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
 	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 64bit) - from file ($patched_msys_script)\n\n"
 	cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
 	./dist-build/msys2-win64.sh || fail
-	SODIUM_LIB_DIR="$SODIUM_DIR/libsodium-win64"
 elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
 	patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win32.sh"
 	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 32bit) - from file ($patched_msys_script)\n\n"
 	cp  "$patched_msys_script"  "./dist-build/msys2-win32.sh" || fail
 	./dist-build/msys2-win32.sh || fail
-	SODIUM_LIB_DIR="$SODIUM_DIR/libsodium-win32"
 fi
 
 printf "\n\nCrossbuild done (of lib sodium)"
@@ -385,14 +391,15 @@ git submodule update --init --recursive
 
 
 echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
-echo "SODIUM_LIB_DIR: $SODIUM_LIB_DIR"
+echo "SODIUM_ROOT: $SODIUM_ROOT"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_LIB_DIR" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
 make tunserver.elf
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
 sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
+sha256sum  /home/ubuntu/build/libsodium/mingw_build/lib/*.dll* | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"
