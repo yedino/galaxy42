@@ -11,23 +11,7 @@ function fail() {
 }
 
 
-
-if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
-	echo "build deterministic for 64bit ..." 
-elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
-	echo "build deterministic for 32bit ..." 
-else
-	echo "TARGET_ARCH is not set.\nSet TARGET_ARCH=x86_64-w64-mingw32 for 64-bit version or TARGET_ARCH=i686-w64-mingw32 for 32-bit. exit 1"
-	exit 1;
-fi
-
-
-
-cd "$HOME/build/" || fail
-
-pwd
-GALAXY42_DIR=$(pwd)/galaxy42
-
+# --- parse options
 option_allow_boost=1
 option_allow_sodium=1
 option_shell_in_sodium=0
@@ -74,6 +58,9 @@ Options:
 	Special options:
 	-S starts a test shell before (possibly) building lib sodium
 
+	Set env variable:
+	TARGET_ARCH to x86_64-w64-mingw32 i686-w64-mingw32
+
 EOF
                                 exit 0
                                 ;;
@@ -84,6 +71,23 @@ EOF
           esac
 done
 
+
+# --- check arch option
+if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
+	echo "build deterministic for 64bit (TARGET_ARCH = $TARGET_ARCH) ..."
+elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
+	echo "build deterministic for 32bit (TARGET_ARCH = $TARGET_ARCH) ..."
+else
+	echo "TARGET_ARCH is not set."
+	echo "Set TARGET_ARCH=x86_64-w64-mingw32 for 64-bit version or TARGET_ARCH=i686-w64-mingw32 for 32-bit."
+	echo "Aborting."
+	exit 1;
+fi
+
+cd "$HOME/build/" || fail "cd to home build"
+
+pwd
+GALAXY42_DIR=$(pwd)/galaxy42
 
 
 
@@ -103,16 +107,15 @@ echo "FAKETIME = ${FAKETIME}"
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
 WRAP_DIR=$HOME/wrapped
-HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
+HOSTS="x86_64-w64-mingw32 i686-w64-mingw32" # related to $TARGET_ARCH
 COMPILERS="g++ gcc cpp cc c++ nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # do we need "cc c++"? TODO
 
 ##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
 CONFIGFLAGS=""
 
 FAKETIME_HOST_PROGS="gcc g++ ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
-FAKETIME_PROGS="date makensis zip"
-#FAKETIME_PROGS="date"
-
+FAKETIME_PROGS="date zip"
+# we will build own nsis.
 
 # (not used?)
 export QT_RCC_TEST=1

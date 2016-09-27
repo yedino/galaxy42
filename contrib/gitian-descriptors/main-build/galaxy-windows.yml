@@ -28,6 +28,6 @@ files: []
 script: |
   datenow="$(date)" ; echo "Gitian (Windows cross-build) moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
   echo "ls:" ; ls
-  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script-master -6
   datenow="$(date)" ; echo "Gitian (Windows cross-build) finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
 
