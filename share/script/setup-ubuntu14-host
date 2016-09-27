@@ -1,0 +1,15 @@
+#!/bin/bash
+
+dir_base_of_source="./"
+[ -r "$dir_base_of_source/toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+
+# this should work for ubuntu trusty and ubuntu precise, older ubuntu versions could be not supported
+echo "add ppa for libsodium and newer g++"
+apt-key add "$dir_base_of_source/doc/pubkey/chris_lea_libsodium.pub"
+add-apt-repository ppa:chris-lea/libsodium -y
+
+# ubuntu-toolchain-r/test for gcc-5/g++-5
+add-apt-repository ppa:ubuntu-toolchain-r/test -y
+apt-get update -qq
+apt-get install gcc-5 g++-5 -y
+

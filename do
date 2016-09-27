@@ -85,10 +85,34 @@ rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but t
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
 
+dir_base_of_source="./"
+source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+
+lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+
+init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
+
+# setting newer CC CXX for older ubuntu
+if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+	# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+	ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+	# if ubuntu main version is older/equal than 14
+	if (( $ubuntu_ver <= 14 )); then
+		echo "Setting manually newer compiler for ubuntu <= 14"
+		echo "Which gcc-5, g++-5: "
+		which gcc-5
+		which g++-5
+		export CC=gcc-5
+		export CXX=g++-5
+	fi
+fi
+
 echo "Will run cmake, PWD=$PWD USER=$USER, CC=$CC, CXX=$CXX, CPP=$CPP, PATH=$PATH"
 echo "Which gcc, g++: "
-which g++
 which gcc
+which g++
 
 cmake  .  \
 	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
