@@ -1,6 +1,6 @@
 #!/bin/bash
 
-printf "\nWindows crossbuild script for Libsodium (with fixes)\n\n"
+printf "\nWindows 64bit crossbuild script for Libsodium (with fixes)\n\n"
 
 function fail() {
 	printf "\nError in $0. (see above)\n\n"
@@ -21,7 +21,6 @@ fi
             --host=x86_64-w64-mingw32 || fail
 make clean || fail
 make -j || fail
-make || fail
 make install || fail
 
-printf "\nWindows crossbuild script for Libsodium (with fixes) - DONE\n\n"
+printf "\nWindows 64bit crossbuild script for Libsodium (with fixes) - DONE\n\n"
