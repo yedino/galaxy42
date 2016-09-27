@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-26 16:42+0200\n"
+"POT-Creation-Date: 2016-09-27 13:51+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -69,7 +69,7 @@ msgstr "To samo co --quiet"
 
 msgid "L_what_peer_do"
 msgstr ""
-"Dodaje całą ścieżkę do peera, w składni ip.pub. Może być podany wię"
+"Dodaje całą ścieżkę peera, w składni ip-pub. Może być podany wię"
 "cej niż raz, dla wielu peerów"
 
 msgid "L_what_info_do"
@@ -91,7 +91,7 @@ msgid "L_what_config_do"
 msgstr "Wczytuje plik konfiguracyjny (dla zaawansowanych użytkowników)"
 
 msgid "L_what_noConfig_do"
-msgstr "Nie ładuje żadnego pliku konfiguracyjnego"
+msgstr "Uniemożliwia ładowanie pliku konfiguracyjnego"
 
 msgid "L_what_genKeySimple_do"
 msgstr ""
@@ -224,3 +224,164 @@ msgstr ""
 
 msgid "L_unknown_exception_running_server"
 msgstr "Nieznany wyjątek podczas pracy serwera"
+
+msgid "L_exit_no_error"
+msgstr "Program wyłączy się (brak kodu błędu)"
+
+msgid "L_running_devel_as_node_nr"
+msgstr "Uruchamianie w trybie developera, node_nr="
+
+msgid "L_devel_adding_peer_with_args"
+msgstr "Developer: dodawaniepeerów z argumentami: "
+
+msgid "L_devel_mode_as_nr"
+msgstr "Uruchamianie w trybie developera, my_nr="
+
+msgid "L_faliture_parsing_demo_usr_conf_file"
+msgstr "Błąd w składni próbnego pliku konfiguracyjnego użytkownika ("
+
+msgid "L_loaded_demo_usr_conf_file"
+msgstr "Ładuję próbny plik konfiguracyjny użytkownika ("
+
+msgid "L_with_demo_options"
+msgstr ") z próbnymi opcjami:"
+
+msgid "L_not_load_demo_usr_conf_file"
+msgstr "Nie ładuję próbnego pliku konfiguracyjnego użytkownika ("
+
+msgid "L_devel_demo_running_mode"
+msgstr "Uruchamianie w trybie developer/demo."
+
+msgid "L_unhandled_exception_devel_mode"
+msgstr ""
+"Wystąpił błąd (Unhandled Exception reached the top of main (in DEVEL "
+"MODE)): "
+
+msgid "L_option_now_size"
+msgstr "' - now size: "
+
+msgid "L_program_option_added"
+msgstr "opcje programu: dodano do opcji '"
+
+msgid "L_connect_into_demo_peer_nr"
+msgstr "Łączę się z próbnym numerem peera"
+
+msgid "L_remember_set_proper_home"
+msgstr "Pamiętaj, aby ustawić odpowiedni HOME dla Twojej pary kluczy"
+
+msgid "L_early_debug_comand_line"
+msgstr "Wczesne debugowanie z powodu wiersza lini poleceń"
+
+msgid "L_starting_lib_libsodium"
+msgstr "Uruchamiam  bibliotekę libsodium"
+
+msgid "L_libsodium_ready"
+msgstr "Skończone, libsodium jest gotowe"
+
+msgid "L_lisodium_init_err"
+msgstr "błąd uruchomienia libsodium!"
+
+msgid "L_what_newKey_do"
+msgstr "Nazwa pliku wyjściowego dla klucza w domyślnej lokalizacji"
+
+msgid "L_what_newKeyFile_do"
+msgstr "Nazwa pliku wyjściowego dla klucza w określonej lokalizacji"
+
+msgid "L_what_keyType_do"
+msgstr "Rodzaje generowanych kluczy"
+
+msgid "L_parse_program_option"
+msgstr "Analiza opcji programu"
+
+msgid "L_gen_combo_crypto_key_require_examples"
+msgstr ""
+"POLECENIE: Generuje kombinacje klucza kryptograficznego\n"
+"wymaga [--new-key albo --new-key-file, --key-type]\n"
+"przykłady:\n"
+"--gen-key --new-key \"mój klucz\" --key-type \"ed25519:x3\" \"rsa:x1:"
+"size=4096\"\n"
+"--gen-key --new-key-file \"~/Documents/work/newkey.PRV\"--key-type \"ed25519:"
+"x3\" \"rsa:x1:size=4096\""
+
+msgid "L_what_demo_do"
+msgstr ""
+"POLECENIE: Wypróbuj DEMO. Uruchom jeden z wkompilowanych pokazów jak dział"
+"a program\n"
+"Użyj --demo help aby zobaczyć listę DEMO [TODO]"
+
+msgid "L_what_devel_do"
+msgstr ""
+"POLECENIE: Test: używana przez programistę, aby uruchomić aktualny test"
+
+msgid "L_what_decelnum_do"
+msgstr ""
+"Test: używany przez programistę, aby ustawić bieżący numer węzła (ma "
+"sens z opcją --devel)"
+
+msgid "L_what_develdemo_do"
+msgstr ""
+"POLECENIE: Test: używany przez programistę, aby ustawić aktualny demo-"
+"test, numer/nazwę (ma sens z opcją --devel)"
+
+msgid "L_what_myname_do"
+msgstr "Czytelna nazwa węzła (np do debugowania)"
+
+msgid "L_what_gen_config_do"
+msgstr ""
+"POLECENIE: Generowanie domyślnych plików .conf:\n"
+"-galaxy.conf\n"
+"-connect_from.my.conf\n"
+"-connect_to.my.conf\n"
+"-connect_to.seed.conf\n"
+"*** może nadpisać Twoje konfiguracje *** "
+
+msgid "L_what_set_IDI_do"
+msgstr ""
+"POLECENIE: Ustawia główny klucz instalacji (IDI), który będzie użyty do "
+"podpisywania klucza (IDI) połączenia"
+
+msgid "L_what_sing_do"
+msgstr ""
+"POLECENIE: Podpisz klucz lub inną wiadomość swoim kluczem\n"
+"wymaga [--my-key, --my-key-file i sign-key sign-key-file\n"
+"przykłady:\n"
+"--sign --my-key \"mój klucz\" --sign-key \"klucz drugiego urzytkownika\"\n"
+"--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/"
+"usb1/friend.public\""
+
+msgid "L_what_singKey_do"
+msgstr "Nazwa pliku klucza w domyślnej lokalizacji dla kluczy"
+
+msgid "L_what_singDataFile_do"
+msgstr "Nazwa pliku klucza w podanej lokalizacji na klucze"
+
+msgid "L_what_singKeyFile_do"
+msgstr "Nazwa pliku danych w określonej lokalizacji"
+
+msgid "L_what_verify_do"
+msgstr ""
+"POLECENIE: Zweryfikuje klucz lub plik zaufanym kluczem i kluczem lub danymi\n"
+"wymaga [--trusted-key albo --trusted-key-file i --toverify-key albo --"
+"toverify-key-file albo --toverify-data-file *--signature-file]\n"
+"Domyślna nazwa pliku podpisu= nazwa pliku/klucza + \".sig\" rozszerzenie w "
+"tej samej lokalizacji co klucze/pliki"
+
+msgid "L_what_trustedKey_do"
+msgstr "Nazwy zaufanych kluczy w domyślnych lokalizacjach"
+
+msgid "L_what_toverifyKey_do"
+msgstr "Nazwa kluczy do weryfikacji w domyślnej lokalizacji"
+
+msgid "L_what_trustedKeyFile_do"
+msgstr "Nazwy zaufanych kluczy w określonej lokalizacji"
+
+msgid "L_what_toverifyKeyFile_do"
+msgstr "Nazwa kluczy do weryfikacji w określonej lokalizacji"
+
+msgid "L_what_toverifyDataFile_do"
+msgstr "Nazwa plików z danymi w określonej lokalizacji"
+
+msgid "L_what_signatureFile_do"
+msgstr ""
+"Zewnętrzna nazwa pliku podpisu w określonej lokalizacji\n"
+"Domyślna nazwa pliku z podpisem = nazwa pliku/klucza+\".sig\" rozszerzenie"
