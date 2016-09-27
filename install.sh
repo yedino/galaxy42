@@ -72,6 +72,17 @@ function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
 	if (("platforminfo[is_family_debian]")) ; then
+
+		if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+			# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+			ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+			# if ubuntu main version is older/equal than 14
+			if (( ubuntu_ver <= 14 )); then
+				run_with_root_privilages "./share/script/setup-ubuntu14-host" || fail
+			fi
+		fi
+
+
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
@@ -133,7 +144,7 @@ function install_build_gitian() {
 
 
 # ------------------------------------------------------------------------
-# start
+# start (main)
 
 sudo_flag="--sudo"
 if [[ $EUID -ne 0 ]]; then
@@ -151,6 +162,7 @@ if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_
 # platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
+text_warn="$(gettext "L_program_is_pre_pre_alpha")"
 
 text2=""
 if (("$abdialog_curses")) ; then
@@ -159,8 +171,7 @@ fi
 
 text3="$(gettext "We recognize your system/platform as:")"
 info="$(platforminfo_show_summary)"
-text="\n${text1}\n\n${text2}\n\n${text3}\n\n${info}"
-
+text="\n${text1}\n\n${text_warn}\n\n${text2}\n\n${text3}\n${info}"
 # shellcheck disable=SC2069
 abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \

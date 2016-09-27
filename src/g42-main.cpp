@@ -16,6 +16,9 @@
 #include "c_json_genconf.hpp"
 #include "c_json_load.hpp"
 
+#include <libintl.h>
+#include <locale.h>
+
 
 namespace developer_tests {
 
@@ -34,7 +37,9 @@ struct t_peer_cmdline_ref {
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
-	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
+//	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
+        std::cerr << gettext("L_running_devel_as_node_nr") << node_nr << std::endl;
+
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
 
 	int peer_nr = node_nr==1 ? 2 : 1;
@@ -43,7 +48,9 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	// each connect to node .1., except the node 1 that connects to .2."
 	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62");
 
-	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+//	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+        _mark(gettext("L_devel_adding_peer_with_args") << "ip=" << peer_ip << " pub=" << peer_pub );
+
 	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
 	argm.at("peerpub") = po::variable_value( peer_pub , false );
@@ -65,13 +72,16 @@ void add_program_option_vector_strings(boost::program_options::variables_map & a
 		old_peer.push_back(value_to_append);
 		argm.insert( std::make_pair(name , po::variable_value( old_peer , false )) );
 	}
-	_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
+//	_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
+        _info(gettext("L_program_option_added") << name << gettext("L_option_now_size") << argm.at(name).as<vector<string>>().size() );
+
 }
 
 bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
-	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+//	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+        std::cerr << gettext("L_devel_mode_as_nr") << my_nr << std::endl;
 
 	if (my_nr == 1) add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
 	if (my_nr == 2) add_program_option_vector_strings(argm, "peer", "192.168.1.62:9042-fd42:ae11:f636:8636:ae76:acf5:e5c4:dae1");
@@ -105,7 +115,8 @@ bool demo_sodiumpp_nonce_bug() {
 bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
-	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+//	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
+        std::cerr << gettext("L_devel_mode_as_nr") << my_nr << std::endl;
 
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
@@ -128,11 +139,15 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	*/
 
 	for (int peer_nr : peer_to_peer.at(my_nr)) { // for me, add the --peer refrence of all peers that I should peer into:
-		_info("I connect into demo peer number: " << peer_nr);
+//		_info("I connect into demo peer number: " << peer_nr);
+                _info(gettext("L_connect_into_demo_peer_nr") << peer_nr);
+
 		add_program_option_vector_strings(argm, "peer", peer_cmd_map.at(peer_nr));
 	}
 
-	_warn("Remember to set proper HOME with your key pair!");
+//	_warn("Remember to set proper HOME with your key pair!");
+        _warn(gettext("L_remember_set_proper_home"));
+
 	argm.at("myname") = po::variable_value( "testnode-" + std::to_string(my_nr) , false );
 
 /* TODO(r) bug#m153
@@ -159,13 +174,19 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	string ret="default";
 	try {
 		ifstream democonf_file(democonf_fn);
-		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
+//		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
+                if (! democonf_file.good()) { std::cerr<<gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" << std::endl; return ret; }
+
 		string line="";
 		getline(democonf_file,line);
-		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
+//		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
+                if (! democonf_file.good()) { std::cerr<<gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" << std::endl; return ret; }
+
 		ret = line.substr( string("demo=").size() );
 	} catch(...) { }
-	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
+//	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
+        std::cerr<< gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << gettext("L_with_demo_options") << ret << std::endl;
+
 	return ret;
 }
 
@@ -196,7 +217,8 @@ void test_lang_optional() {
 @return false if the program should quit after this test
 */
 bool run_mode_developer_main(boost::program_options::variables_map & argm) {
-	std::cerr << "Running in developer/demo mode." << std::endl;
+//	std::cerr << "Running in developer/demo mode." << std::endl;
+        std::cerr << gettext("L_devel_demo_running_mode") << std::endl;
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
@@ -260,7 +282,25 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 }
 
 int main(int argc, char **argv) {
-	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+//	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+
+
+	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+	setlocale(LC_ALL,"");
+	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
+	textdomain("galaxy42_main");
+	// Using gettext:
+	std::cerr << std::string(80,'=') << std::endl << gettext("L_warning_work_in_progres") << std::endl << std::endl;
+	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
+	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
+
+//	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+//	setlocale(LC_ALL,"");
+//	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
+//	textdomain("galaxy42_main");
+	// Using gettext:
+//	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
+//	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
@@ -269,14 +309,21 @@ int main(int argc, char **argv) {
 	g_dbg_level = config_default_basic_dbg_level;
 	bool early_debug=false;
 	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
-	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
+//	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
+        if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, gettext("L_early_debug_comand_line"));
 
 	{
-		_info("Starting library libsodium");
+//		_info("Starting library libsodium");
+                _info(gettext("L_starting_lib_libsodium"));
+
 		if (sodium_init() == -1) {
-			_throw_error( std::runtime_error("libsodium init error!") );
+//			_throw_error( std::runtime_error("libsodium init error!") );
+                        _throw_error( std::runtime_error(gettext("L_lisodium_init_err")) );
+
 		}
-		_info("Done, libsodium ready");
+//		_info("Done, libsodium ready");
+                _info(gettext("L_libsodium_ready"));
+
 	}
 	try {
 		c_tunserver myserver;
@@ -285,84 +332,146 @@ int main(int argc, char **argv) {
 
 		const string config_default_myname = "galaxy";
 
-		auto desc = make_shared<po::options_description>("Options", line_length);
+		auto desc = make_shared<po::options_description>( gettext("L_options") , line_length);
 		desc->add_options()
-			("help", "Print help messages, including program version and compiled options (what is enabled)")
-			("h", "same as --help")
+//			("help", "Print help messages, including program version and compiled options (what is enabled)")
+                        ("help", gettext("L_what_help_do"))
 
-			("debug", "Turns on more debug")
-			("d", "same as --debug")
-			("quiet", "Turns off most of the debug")
-			("q", "same as --quiet")
+//			("h", "same as --help")
+                        ("h", gettext("L_what_h_do"))
 
-			("peer", po::value<std::vector<std::string>>()->multitoken(),
-						"Adding entire peer reference, in syntax like ip-pub."
-						"Can be give more then once, for multiple peers.")
+//			("debug", "Turns on more debug")
+                        ("debug", gettext("L_what_debug_do"))
 
-			("info", "COMMAND: Print info about key specified in my-key option\nrequires [--my-key]")
-			("list-my-keys", "COMMAND: List your key which are in default location")
+//			("d", "same as --debug")
+                        ("d", gettext("L_what_d_do"))
 
-			("my-key", po::value<std::string>(), "Choose already generated key from default location")
-			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
+//			("quiet", "Turns off most of the debug")
+                        ("quiet", gettext("L_what_quiet_do"))
 
-			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
-			("no-config", "Don't load any configuration file")
+//			("q", "same as --quiet")
+                        ("q", gettext("L_what_q_do"))
 
-			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
+//			("peer", po::value<std::vector<std::string>>()->multitoken(),
+//						"Adding entire peer reference, in syntax like ip-pub."
+//						"Can be give more then once, for multiple peers.")
+                        ("peer", po::value<std::vector<std::string>>()->multitoken(), gettext("L_what_peer_do"))
+
+//			("info", "COMMAND: Print info about key specified in my-key option\nrequires [--my-key]")
+                        ("info", gettext("L_what_info_do"))
+
+//			("list-my-keys", "COMMAND: List your key which are in default location")
+                        ("list-my-keys", gettext("L_what_listMyKeys_do"))
+
+//			("my-key", po::value<std::string>(), "Choose already generated key from default location")
+                        ("my-key", po::value<std::string>(), gettext("L_what_myKey_do"))
+
+//			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
+                        ("my-key-file", po::value<std::string>(), gettext("L_what_myKeyFile_do"))
+
+//			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
+                        ("config", po::value<std::string>()->default_value("galaxy.conf") , gettext("L_what_config_do"))
+
+//			("no-config", "Don't load any configuration file")
+                        ("no-config", gettext("L_what_noConfig_do"))
+
+//			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
+                        ("gen-key-simple", gettext("L_what_genKeySimple_do"))
 
 			#if EXTLEVEL_IS_PREVIEW
-			("gen-key", "COMMAND: Generate combination of crypto key"
-						"\nrequired [--new-key or --new-key-file, --key-type]"
-						"\nexamples:"
-						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
-						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
-						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
-				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
-				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
-				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
+//			("gen-key", "COMMAND: Generate combination of crypto key"
+                        ("gen-key", gettext("L_gen_combo_crypto_key_require_examples"))
+
+//						"\nrequired [--new-key or --new-key-file, --key-type]\nexamples:"
+//                                                gettext("L_genKey_require_examples");
+//						"\n--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:size=4096\""
+//						"\n--gen-key --new-key-file \"~/Documents/work/newkey.PRV\""
+//						"--key-type \"ed25519:x3\" \"rsa:x1:size=4096\"")
+//				("new-key", po::value<std::string>(), "Name of output key file in default location for keys")
+                                ("new-key", po::value<std::string>(), gettext("L_what_newKey_do"))
+
+//				("new-key-file", po::value<std::string>(), "Name of output key file in specified location")
+                                ("new-key-file", po::value<std::string>(), gettext("L_what_newKeyFile_do"))
+
+//				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
+                                ("key-type", po::value<std::vector<std::string>>()->multitoken(), gettext("L_what_keyType_do"))
+
 			#endif
 
 
 			#if EXTLEVEL_IS_PREVIEW
 
 			("demo", po::value<std::string>()->default_value(""),
-						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
-						"Use --demo help to see list of demos [TODO].")
-			("devel","COMMAND: Test: used by developer to run current test")
+//						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
+//						"Use --demo help to see list of demos [TODO].")
+                                                gettext("L_what_demo_do"))
+
+//			("devel","COMMAND: Test: used by developer to run current test")
+                        ("devel",gettext("L_what_devel_do"))
+
 			("develnum", po::value<int>()->default_value(1),
-						"Test: used by developer to set current node number (makes sense with option --devel)")
+//						"Test: used by developer to set current node number (makes sense with option --devel)")
+                                                gettext("L_what_decelnum_do"))
+
 			("develdemo", po::value<std::string>()->default_value("hardcoded"),
-						"COMMAND: Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
+//						"COMMAND: Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
+                                                gettext("L_what_develdemo_do"))
+
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value(config_default_myname) ,
-						"a readable name of your node (e.g. for debug)")
-			("gen-config", "COMMAND: Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
-						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
+//						"a readable name of your node (e.g. for debug)")
+                                                gettext("L_what_myname_do"))
 
-			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
-						"\nrequires [--my-key]")
+//			("gen-config", "COMMAND: Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
+//						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
+                        ("gen-config", gettext("L_what_gen_config_do"))
 
-			("sign", "COMMAND: Sign key or other message with your key"
-					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
-					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
-					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
-				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
-				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
-				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
+//			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
+//						"\nrequires [--my-key]")
+                        ("set-IDI", gettext("L_what_set_IDI_do"))
 
-			("verify", "COMMAND: Verify key or data with trusted-key and key or data"
-					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
-					   "or --toverify-data-file *--signature-file]"
-					   "\nDefault signature file name = key/data file name + \".sig\" extension"
-					   "in same location as key/data file")
-				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
-				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
-				("toverify-key", po::value<std::string>(), "Name of key to verify in default location")
-				("toverify-key-file", po::value<std::string>(), "Name of key to verify file in specified location")
-				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
+//			("sign", "COMMAND: Sign key or other message with your key"
+//					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
+//					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
+//					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
+                        ("sign",  gettext("L_what_sing_do"))
+
+//				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
+                                ("sign-key", po::value<std::string>(), gettext("L_what_singKey_do"))
+
+//				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
+                                ("sign-key-file", po::value<std::string>(), gettext("L_what_singKeyFile_do"))
+
+//				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
+                                ("sign-data-file", po::value<std::string>(), gettext("L_what_singDataFile_do"))
+
+//			("verify", "COMMAND: Verify key or data with trusted-key and key or data"
+//					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
+//					   "or --toverify-data-file *--signature-file]"
+//					   "\nDefault signature file name = key/data file name + \".sig\" extension"
+//					   "in same location as key/data file")
+                        ("verify", gettext("L_what_verify_do"))
+
+//				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
+                                ("trusted-key", po::value<std::string>(), gettext("L_what_trustedKey_do"))
+
+//				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
+                                ("trusted-key-file", po::value<std::string>(), gettext("L_what_trustedKeyFile_do"))
+
+//				("toverify-key", po::value<std::string>(), "Name of key to verify in default location")
+                                ("toverify-key", po::value<std::string>(), gettext("L_what_toverifyKey_do"))
+
+//				("toverify-key-file", po::value<std::string>(), "Name of key to verify file in specified location")
+                                ("toverify-key-file", po::value<std::string>(), gettext("L_what_toverifyKeyFile_do"))
+
+//				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
+                                ("toverify-data-file", po::value<std::string>(), gettext("L_what_toverifyDataFile_do"))
+
 				("signature-file", po::value<std::string>(),
-							"External Name of signature file in specified location"
-							"\nDefault signature file name = key/data file name + \".sig\" extension")
+//							"External Name of signature file in specified location"
+//							"\nDefault signature file name = key/data file name + \".sig\" extension")
+                                                        gettext("L_what_signatureFile_do"))
+
 
 			#endif
 
@@ -370,22 +479,30 @@ int main(int argc, char **argv) {
 
 		myserver.set_desc(desc);
 
-		_note("Will parse program options");
+//		_note("Will parse program options");
+                _note(gettext("L_parse_program_option"));
 
 		po::variables_map argm;
 		try { // try parsing
 			po::store(po::parse_command_line(argc, argv, *desc), argm); // <-- parse actuall real command line options
-			_note("BoostPO parsed argm size=" << argm.size());
+//			_note("BoostPO parsed argm size=" << argm.size());
+                        _note("BoostPO parsed argm size=" << argm.size());
 
 			// === PECIAL options - that set up other program options ===
 
 			#if EXTLEVEL_IS_PREVIEW
-			_info("BoostPO Will parse demo/devel options");
+//			_info("BoostPO Will parse demo/devel options");
+                        _info("BoostPO Will parse demo/devel options");
+
 			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
 				auto opt_demo = argm["demo"].as<string>();
 				if ( opt_demo!="" ) {
-					g_dbg_level_set(10,"Running in demo mode");
-					_info("The demo command line option is given:" << opt_demo);
+//					g_dbg_level_set(10,"Running in demo mode");
+                                        g_dbg_level_set(10,"Running in demo mode");
+
+//					_info("The demo command line option is given:" << opt_demo);
+                                        _info("The demo command line option is given:" << opt_demo);
+
 					// argm.insert(std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
 					argm.at("develdemo") = po::variable_value( opt_demo , false );
 					// (std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
@@ -402,8 +519,11 @@ int main(int argc, char **argv) {
 					if (!should_continue) return 0;
 				}
 				catch(std::exception& e) {
-					std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what()
-							  << ", application will now exit" << std::endl;
+//					std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what()
+//							  << ", application will now exit" << std::endl;
+                                        std::cerr << gettext("L_unhandled_exception_devel_mode") << e.what()
+                                                          << gettext("L_exit_aplication") << std::endl;
+
 						return 0; // no error for developer mode
 				}
 			}
@@ -434,7 +554,9 @@ int main(int argc, char **argv) {
 
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {
-				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
+//				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
+                                if (!argm.count("my-key")) { _erro( gettext("L_setIDI_require_myKey") );       return 1;       }
+
 				auto name = argm["my-key"].as<std::string>();
 				myserver.program_action_set_IDI(name);
 				return 0; // <--- return
@@ -444,7 +566,9 @@ int main(int argc, char **argv) {
 			_note("BoostPO before info");
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
-					_erro("--my-key is required for --info");
+//					_erro("--my-key is required for --info");
+                                        _erro( gettext("L_info_require_myKey") );
+
 					return 1;
 				}
 				auto name = argm["my-key"].as<std::string>();
@@ -461,9 +585,13 @@ int main(int argc, char **argv) {
 			try {
 				IDI_key = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 			} catch (std::invalid_argument &err) {
-				_dbg2("IDI is not set!");
-			}
-				std::cout << "Your key list:" << std::endl;
+//				_dbg2("IDI is not set!");
+                                _dbg2(gettext("L_IDI_not_set_err"));
+
+				}
+//				std::cout << "Your key list:" << std::endl;
+                                std::cout << gettext("L_your_key_list") << std::endl;
+
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
@@ -674,7 +802,7 @@ int main(int argc, char **argv) {
 			string my_name = config_default_myname;
 			if (argm.count("myname")) my_name = argm["myname"].as<string>();
 			myserver.set_my_name(my_name);
-			ui::action_info_ok("Your hash-IPv6 address is: " + myserver.get_my_ipv6_nice());
+			ui::action_info_ok(gettext("L_your_haship_address") + myserver.get_my_ipv6_nice());
 
 			_info("Configuring my peers references (keys):");
 			try {
@@ -684,7 +812,9 @@ int main(int argc, char **argv) {
 					myserver.add_peer_simplestring( peer_ref );
 				}
 			} catch(...) {
-				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
+//				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
+                                ui::action_error_exit(gettext("L_wrong_peer_typo"));
+
 			}
 
 			// ------------------------------------------------------------------
@@ -695,42 +825,68 @@ int main(int argc, char **argv) {
 			} else {
 				ostringstream oss; oss << "./tunserver.elf --peer YOURIP:9042-" << myserver.get_my_ipv6_nice();
 				string help_cmd1 = oss.str();
-				ui::action_info_ok("You are not connecting to anyone, so you should run on the other computer this program, "
-					"with following options: " + help_cmd1);
+				ui::action_info_ok(gettext("L_no_other_computer_Option_for_other") + help_cmd1);
 			}
 
 		} // try parsing
 		catch(ui::exception_error_exit) {
-			std::cerr << "Exiting program now, as explained above..." << std::endl;
+//			std::cerr << "Exiting program now, as explained above..." << std::endl;
+                        std::cerr << gettext("L_exit_from_connect") << std::endl;
+
 			return 1;
 		}
 		catch(po::error& e) {
-			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
+//			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
+                        std::cerr << gettext("L_option_error") << e.what() << std::endl << std::endl;
 			std::cerr << *desc << std::endl;
 			return 1;
 		}
 
+//	} // try preparing
+//	catch(std::exception& e) {
+////		std::cerr << "Unhandled Exception reached the top of main: "
+//                std::cerr << gettext("L_unhandled_exception")
+//
+////				  << e.what() << ", application will now exit" << std::endl;
+//                                  << e.what() << gettext("L_exit_aplication") << std::endl;
+//
+//		return 2;
+//	}
+
+
+
 	// ------------------------------------------------------------------
-	_note("Done all preparations, moving to the server main");
+//	_note("Done all preparations, moving to the server main");
+        _note(gettext("L_all_preparations_done"));
 
 		myserver.run();
 	} // try running server
 	catch(ui::exception_error_exit) {
-		std::cerr << "Exiting as explained above" << std::endl;
+//		std::cerr << "Exiting as explained above" << std::endl;
+                std::cerr << gettext("L_exiting_explained_above") << std::endl;
+
 		return 1;
 	}
 	catch(std::exception& e) {
-		std::cerr << "Unhandled Exception reached the top of main (While running server): "
-				  << e.what() << ", application will now exit" << std::endl;
+//		std::cerr << "Unhandled Exception reached the top of main (While running server): "
+                std::cerr << gettext("L_unhandled_exception_running_server")
+
+//				  << e.what() << ", application will now exit" << std::endl;
+                                  << e.what() << gettext("L_exit_aplication") << std::endl;
+
 		return 2;
 	}
 	catch(...) {
-		std::cerr << "Unknown exception while running server." << std::endl;
+//		std::cerr << "Unknown exception while running server." << std::endl;
+                std::cerr << gettext("L_unknown_exception_running_server") << std::endl;
+
 		return 3;
 	}
 
 	// ------------------------------------------------------------------
-	_note("Program exits (no error code)"); return 0;
+//	_note("Program exits (no error code)"); return 0;
+        _note(gettext("L_exit_no_error")); return 0;
+
 }
 
 

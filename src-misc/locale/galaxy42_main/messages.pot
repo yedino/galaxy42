@@ -1,0 +1,324 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-09-27 14:34+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "L_program_is_pre_pre_alpha"
+msgstr ""
+
+msgid "L_program_is_copyrighted"
+msgstr ""
+
+msgid "L_your_haship_address"
+msgstr ""
+
+msgid "L_no_other_computer_Option_for_other"
+msgstr ""
+
+msgid "L_wait_for_connect"
+msgstr ""
+
+msgid "L_starting_TUN"
+msgstr ""
+
+msgid "L_options"
+msgstr ""
+
+msgid "L_what_help_do"
+msgstr ""
+
+msgid "L_what_h_do"
+msgstr ""
+
+msgid "L_what_debug_do"
+msgstr ""
+
+msgid "L_what_d_do"
+msgstr ""
+
+msgid "L_what_quiet_do"
+msgstr ""
+
+msgid "L_what_q_do"
+msgstr ""
+
+msgid "L_what_peer_do"
+msgstr ""
+
+msgid "L_what_info_do"
+msgstr ""
+
+msgid "L_what_listMyKeys_do"
+msgstr ""
+
+msgid "L_what_myKey_do"
+msgstr ""
+
+msgid "L_what_myKeyFile_do"
+msgstr ""
+
+msgid "L_what_config_do"
+msgstr ""
+
+msgid "L_what_noConfig_do"
+msgstr ""
+
+msgid "L_what_genKeySimple_do"
+msgstr ""
+
+msgid "L_option_error"
+msgstr ""
+
+msgid "L_warning_work_in_progres"
+msgstr ""
+
+msgid "L_wrong_peer_typo"
+msgstr ""
+
+msgid "L_exit_from_connection_attempt"
+msgstr ""
+
+msgid "L_exit_from_connect"
+msgstr ""
+
+msgid "L_bad_peer_format"
+msgstr ""
+
+msgid "L_what_exception_program_throwow"
+msgstr ""
+
+msgid "L_bad_format_of_input_ip_address"
+msgstr ""
+
+msgid "L_failed_adding_peer_simple_reference"
+msgstr ""
+
+msgid "L_program_build_options"
+msgstr ""
+
+msgid "L_CL_normal_code"
+msgstr ""
+
+msgid "L_CL_previwew_code_"
+msgstr ""
+
+msgid "L_CL_experimental_code"
+msgstr ""
+
+msgid "L_CL_experimental_dangerous_code"
+msgstr ""
+
+msgid "L_enabled_features"
+msgstr ""
+
+msgid "L_NTRU"
+msgstr ""
+
+msgid "L_SIDH"
+msgstr ""
+
+msgid "L_info_require_myKey"
+msgstr ""
+
+msgid "L_setIDI_require_myKey"
+msgstr ""
+
+msgid "L_error"
+msgstr ""
+
+msgid "L_IDI_not_set_err"
+msgstr ""
+
+msgid "L_your_key_list"
+msgstr ""
+
+msgid "L_generatin_new_keys"
+msgstr ""
+
+msgid "L_fail_file_overwrite"
+msgstr ""
+
+msgid "L_fail_create_empty_file"
+msgstr ""
+
+msgid "L_warn"
+msgstr ""
+
+msgid "L_do_you_want"
+msgstr ""
+
+msgid "L_Y_N"
+msgstr ""
+
+msgid "L_error_during_action"
+msgstr ""
+
+msgid "L_exception_during_action"
+msgstr ""
+
+msgid "L_what_exception"
+msgstr ""
+
+msgid "L_no_additional_info_exception"
+msgstr ""
+
+msgid "L_exception"
+msgstr ""
+
+msgid "L_unknown_exception"
+msgstr ""
+
+msgid "L_unhandled_exception"
+msgstr ""
+
+msgid "L_exit_aplication"
+msgstr ""
+
+msgid "L_all_preparations_done"
+msgstr ""
+
+msgid "L_exiting_explained_above"
+msgstr ""
+
+msgid "L_unhandled_exception_running_server"
+msgstr ""
+
+msgid "L_unknown_exception_running_server"
+msgstr ""
+
+msgid "L_exit_no_error"
+msgstr ""
+
+msgid "L_running_devel_as_node_nr"
+msgstr ""
+
+msgid "L_devel_adding_peer_with_args"
+msgstr ""
+
+msgid "L_devel_mode_as_nr"
+msgstr ""
+
+msgid "L_faliture_parsing_demo_usr_conf_file"
+msgstr ""
+
+msgid "L_loaded_demo_usr_conf_file"
+msgstr ""
+
+msgid "L_with_demo_options"
+msgstr ""
+
+msgid "L_not_load_demo_usr_conf_file"
+msgstr ""
+
+msgid "L_devel_demo_running_mode"
+msgstr ""
+
+msgid "L_unhandled_exception_devel_mode"
+msgstr ""
+
+msgid "L_option_now_size"
+msgstr ""
+
+msgid "L_program_option_added"
+msgstr ""
+
+msgid "L_connect_into_demo_peer_nr"
+msgstr ""
+
+msgid "L_remember_set_proper_home"
+msgstr ""
+
+msgid "L_early_debug_comand_line"
+msgstr ""
+
+msgid "L_starting_lib_libsodium"
+msgstr ""
+
+msgid "L_libsodium_ready"
+msgstr ""
+
+msgid "L_lisodium_init_err"
+msgstr ""
+
+msgid "L_what_newKey_do"
+msgstr ""
+
+msgid "L_what_newKeyFile_do"
+msgstr ""
+
+msgid "L_what_keyType_do"
+msgstr ""
+
+msgid "L_parse_program_option"
+msgstr ""
+
+msgid "L_gen_combo_crypto_key_require_examples"
+msgstr ""
+
+msgid "L_what_demo_do"
+msgstr ""
+
+msgid "L_what_devel_do"
+msgstr ""
+
+msgid "L_what_decelnum_do"
+msgstr ""
+
+msgid "L_what_develdemo_do"
+msgstr ""
+
+msgid "L_what_myname_do"
+msgstr ""
+
+msgid "L_what_gen_config_do"
+msgstr ""
+
+msgid "L_what_set_IDI_do"
+msgstr ""
+
+msgid "L_what_sing_do"
+msgstr ""
+
+msgid "L_what_singKey_do"
+msgstr ""
+
+msgid "L_what_singDataFile_do"
+msgstr ""
+
+msgid "L_what_singKeyFile_do"
+msgstr ""
+
+msgid "L_what_verify_do"
+msgstr ""
+
+msgid "L_what_trustedKey_do"
+msgstr ""
+
+msgid "L_what_toverifyKey_do"
+msgstr ""
+
+msgid "L_what_trustedKeyFile_do"
+msgstr ""
+
+msgid "L_what_toverifyKeyFile_do"
+msgstr ""
+
+msgid "L_what_toverifyDataFile_do"
+msgstr ""
+
+msgid "L_what_signatureFile_do"
+msgstr ""
