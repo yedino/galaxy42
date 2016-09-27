@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-26 16:56+0200\n"
+"POT-Creation-Date: 2016-09-27 14:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -198,4 +198,127 @@ msgid "L_unhandled_exception_running_server"
 msgstr ""
 
 msgid "L_unknown_exception_running_server"
+msgstr ""
+
+msgid "L_exit_no_error"
+msgstr ""
+
+msgid "L_running_devel_as_node_nr"
+msgstr ""
+
+msgid "L_devel_adding_peer_with_args"
+msgstr ""
+
+msgid "L_devel_mode_as_nr"
+msgstr ""
+
+msgid "L_faliture_parsing_demo_usr_conf_file"
+msgstr ""
+
+msgid "L_loaded_demo_usr_conf_file"
+msgstr ""
+
+msgid "L_with_demo_options"
+msgstr ""
+
+msgid "L_not_load_demo_usr_conf_file"
+msgstr ""
+
+msgid "L_devel_demo_running_mode"
+msgstr ""
+
+msgid "L_unhandled_exception_devel_mode"
+msgstr ""
+
+msgid "L_option_now_size"
+msgstr ""
+
+msgid "L_program_option_added"
+msgstr ""
+
+msgid "L_connect_into_demo_peer_nr"
+msgstr ""
+
+msgid "L_remember_set_proper_home"
+msgstr ""
+
+msgid "L_early_debug_comand_line"
+msgstr ""
+
+msgid "L_starting_lib_libsodium"
+msgstr ""
+
+msgid "L_libsodium_ready"
+msgstr ""
+
+msgid "L_lisodium_init_err"
+msgstr ""
+
+msgid "L_what_newKey_do"
+msgstr ""
+
+msgid "L_what_newKeyFile_do"
+msgstr ""
+
+msgid "L_what_keyType_do"
+msgstr ""
+
+msgid "L_parse_program_option"
+msgstr ""
+
+msgid "L_gen_combo_crypto_key_require_examples"
+msgstr ""
+
+msgid "L_what_demo_do"
+msgstr ""
+
+msgid "L_what_devel_do"
+msgstr ""
+
+msgid "L_what_decelnum_do"
+msgstr ""
+
+msgid "L_what_develdemo_do"
+msgstr ""
+
+msgid "L_what_myname_do"
+msgstr ""
+
+msgid "L_what_gen_config_do"
+msgstr ""
+
+msgid "L_what_set_IDI_do"
+msgstr ""
+
+msgid "L_what_sing_do"
+msgstr ""
+
+msgid "L_what_singKey_do"
+msgstr ""
+
+msgid "L_what_singDataFile_do"
+msgstr ""
+
+msgid "L_what_singKeyFile_do"
+msgstr ""
+
+msgid "L_what_verify_do"
+msgstr ""
+
+msgid "L_what_trustedKey_do"
+msgstr ""
+
+msgid "L_what_toverifyKey_do"
+msgstr ""
+
+msgid "L_what_trustedKeyFile_do"
+msgstr ""
+
+msgid "L_what_toverifyKeyFile_do"
+msgstr ""
+
+msgid "L_what_toverifyDataFile_do"
+msgstr ""
+
+msgid "L_what_signatureFile_do"
 msgstr ""
