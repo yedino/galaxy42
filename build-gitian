@@ -224,7 +224,7 @@ function gitian_show_result() {
 
 # IN: set $var_platform_name to eg 'windows' or 'linux'
 function gitian_run_build_once() {
-	[[ -z "${var_platform_name}" ]] || fail "Internal error: set platform name for gitian_run_build_once"
+	[[ -z "${var_platform_name}" ]] && fail "Internal error: set platform name for gitian_run_build_once"
 	gitian_yml_file="main-build/galaxy-${var_platform_name}.yml" # must be under contrib/gitian-descriptors/
 	gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
 
