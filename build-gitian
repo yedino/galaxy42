@@ -10,7 +10,7 @@ lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" ||
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
 my_dir="$PWD"
-my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit
+my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit 1
 function script_cleanup() {
 	rm --one-file-system -rf "$my_tmp"
 }
@@ -22,13 +22,13 @@ mkdir -p "$my_tmp" || exit
 # Where from get the Gitian tool itself:
 gitiansoftware_url="https://github.com/yedino/gitian-builder.git"
 #"https://github.com/devrandom/gitian-builder.git"
-gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e"
+     gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e" # can be tag etc
+gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must be a hash to confirm
 # "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
 target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
 target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
-target_checkout="wip_cross_win" # <--- pick any version
 gitian_suite=xenial
 base_dir="$HOME/var-gitian/"
 gitian_yml_file="main-build/galaxy-windows.yml" # must be under contrib/gitian-descriptors/
@@ -143,40 +143,77 @@ function gitian_builder_download() {
 		echo "Downloading gitian-builder itself"
 		sudo rm -rf "${base_dir}/gitian-builder" || fail "remove gitian"
 		cd "${base_dir}" || fail "cd base dir"
-		git clone "$gitiansoftware_url" || fail "while downloading gitian"
+
+		git clone "$gitiansoftware_url" || fail "while downloading gitian" # confirm gitrev hash below!
 		cd gitian-builder || fail
-		git reset --hard "$gitiansoftware_checkout" || fail "choosing gitian version"
+		git reset --hard "$gitiansoftware_checkout" || fail "Choosing gitian version (step 1)"
+		git clean -xdf || fail "Doing git-clean"
+		confirm_git_ver=$(git log --format='%H' -1)
+		[[ "$confirm_git_ver" == "$gitiansoftware_checkout_hash" ]] || {
+			fail "Git verification of hash: hash is $confirm_git_ver instead of expected $gitiansoftware_checkout_hash"
+		}
 	fi
 }
 
 function gitian_builder_make_lxc_image() {
 	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
-	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create Xenial image (do you have the Xenial template and apt-cacher-ng running?)"
+	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create VM image (did you configured network for LXC? Is apt-cacher-ng running? Common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)"
+}
+
+function gitian_detect_source_version() {
+	pushd "$my_dir"
+	printf "%s\n" "Detecting git version (revision) from PWD=$PWD."
+	gr=$(git log --format='%H' -1) || fail "Can not detect git version (revision) form PWD=$PWD"
+	target_checkout_gitrev="$gr"
+	printf "%s\n" "Detected and will use: target_checkout_gitrev=$target_checkout_gitrev"
+	popd
 }
 
 function target_download() {
+	gitian_detect_source_version
+	printf "\n%s\n" "Will download target to ${base_dir} (${target_name})"
 	cd "${base_dir}" || fail
 	rm -rf "${base_dir}/${target_name}/" || fail
-	git clone "$target_url" || fail "Download target"
+	git clone "$target_url" || fail "Download target" # confirm gitrev hash below!
 	cd "${base_dir}/${target_name}" || fail
 	printf "%s\n" "On host we start with download of (${target_name}) in version:"
 	git log -1
 	git clean -xdf || fail
-	git checkout "$target_checkout" || fail "Download target in given version"
-	git clean -xdf || fail
-	git log -1 || fail
+	git checkout "$target_checkout_gitrev" || fail "Download target in given version (step 1)"
+	confirm_git_ver=$(git log --format='%H' -1)
+	[[ "$confirm_git_ver" == "$target_checkout_gitrev" ]] || {
+		fail "Git verification of hash: hash is $confirm_git_ver instead of expected $target_checkout_gitrev"
+	}
+	git clean -xdf || fail "Doing git-clean"
+	git log -1 || fail "Show git-version"
 	printf "\n\n\n"
 }
 
 function gitian_run_build() {
+	printf "\n\n\n\n\n\n"
+	printf "\n\n\n\n\n\n"
+	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
+
 	printf "\nWill use YML Gitian file: $gitian_yml_file_full\n\n"
 	cat "$gitian_yml_file_full" | egrep -H -n -i "commit|url|dir"
+	printf "\n\n"
 
-	./bin/gbuild    --allow-sudo  \
+	printf "%s\n" "Gitian for commit ${target_checkout_gitrev}, from url ${target_url}"
+
+	set -x
+	./bin/gbuild \
+		--commit galaxy42="${target_checkout_gitrev}" \
+		--url galaxy42="${target_url}" \
+		--allow-sudo  \
 		"$gitian_yml_file_full" \
-		|| fail "Build with gbuild"
+	|| {
+		set +x
+		fail "Build with gbuild"
+	}
+	set +x
+	echo "Build with gbuild - done"
 }
 
 function string_limitlen() {
@@ -192,16 +229,23 @@ function get_host_info() {
 }
 
 function gitian_show_result() {
-	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8)
-	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999)
-	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
-	info_binary=$(  find  /home/ubuntu/build/boost/mingw_build/lib/*   /home/ubuntu/build/libsodium/*/bin/   -name  '*.dll' -o -name '*.exe'    ; ls -1 /home/ubuntu/build/galaxy42/*exe | sort   )
-	#info_binary=$(on-target sha256sum build/galaxy42/tunserver.elf.exe)
-	info_binary_first=$( printf "$info_binary" | head -n 1)
-	info_host="$(get_host_info)"
-	info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+	printf "\n\n\n%s\n" "Will show results now (base_dir=$base_dir)"
+	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builder" # need it to call on-target
+	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8) || fail "Info git gitian-builder"
+	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999) || fail "Info target"
+	info_binary=$(on-target /home/ubuntu/build/galaxy42/contrib/tools/results-of-build-windows.sh) || fail "Info binary results win"
+	info_binary_first=$( printf "$info_binary" | head -n 1 )
+	info_host="$(get_host_info)" || fail "Info host"
+	# info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+	target_in_gitian_gitrev=$( on-target /home/ubuntu/build/galaxy42/contrib/tools/my-gitian-gitrev.sh  ) || fail "Info on-target gitian rev"
+	info_target_commit="${target_in_gitian_gitrev}"
+	info_target_commit_name="${info_target_commit}"
+	if [[ "$info_target_commit_name" == "$info_target" ]] ; then info_target_commit_name="same-hash" ; fi
 
-	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_yml) gives $info_binary_first on $info_host"
+	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_commit_name) gives $info_binary_first on $info_host"
+
+	echo "Report (received from inside Gitian):"
+	echo "$info_binary"
 }
 
 info_host=$(get_host_info)
@@ -227,6 +271,13 @@ function all_excluding_new_lxc() {
 	gitian_show_result
 }
 
+function run_onlyresult() {
+	set_env
+	gitian_check_net_devices "loud"
+	gitian_show_result
+	printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
+}
+
 function special_command_on_target() {
 	set_env
 	echo "Starting a console on the Image of for-Gitian system. PATH=$PATH"
@@ -244,6 +295,7 @@ Usage: call this program with one argument, either:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
   image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
   fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
+  onlyresult - just show the results (as they are now)
 
   on-target - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
   on-target-root - same, but you are the root user (insie System Image e.g. LXC)
@@ -254,10 +306,15 @@ Usage: call this program with one argument, either:
 
 EOF
 
-if [[ "$1" == "install" ]] ; then  setup_host_for_lxc ; fi
-if [[ "$1" == "image" ]] ; then all_including_new_lxc ; fi
-if [[ "$1" == "fast" ]] ; then all_excluding_new_lxc ; fi
+runmode="$1"
 
-if [[ "$1" == "on-target" ]] ; then special_command_on_target ; fi
-if [[ "$1" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
+if [[ "$runmode" == "install" ]] ; then  setup_host_for_lxc ; fi
+if [[ "$runmode" == "image" ]] ; then all_including_new_lxc ; fi
+if [[ "$runmode" == "fast" ]] ; then all_excluding_new_lxc ; fi
+if [[ "$runmode" == "onlyresult" ]] ; then run_onlyresult ; fi
+
+if [[ "$runmode" == "on-target" ]] ; then special_command_on_target ; fi
+if [[ "$runmode" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
+
+printf "\nAll done, in run mode: $runmode.\n"
 

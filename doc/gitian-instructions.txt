@@ -1,8 +1,23 @@
+
+
+###############################################
+This is mostly obsolete now, because ./install.sh (installation "from source code") does this.
+
+But this can help if there are any problems or if your system is not fully supported.
+
+Also do read FAQ in build-gitian.md and of course main readme[.md] too.
+###############################################
+
+
+
+
+
 # install dependences
 sudo aptitude install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils make ubuntu-archive-keyring curl
 
 # suite (ubuntu 16.04) xenial in gitian is not documented, but it works for us.
 git clone https://github.com/devrandom/gitian-builder.git
+echo "REMEMBER TO VERIFY CHECKSUM (git log -1) - git revision hash" ; read _
 cd gitian-builder
 
 # make ubuntu image for lxc

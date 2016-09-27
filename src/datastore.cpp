@@ -2,7 +2,9 @@
 
 #include "datastore.hpp"
 #include "text_ui.hpp"
-
+#if defined(_WIN32) || defined(__CYGWIN__)
+	#include <windows.h>
+#endif
 overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
 { }
 
@@ -227,7 +229,13 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 #endif
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-	b_fs::path user_home(getenv("APPDATA"));
+	//b_fs::path user_home(getenv("APPDATA"));
+	HMODULE hModule = GetModuleHandleW(nullptr);
+	std::wstring path(MAX_PATH, '\0');
+	GetModuleFileNameW(hModule, &path[0], path.size());
+	auto pos = path.find_last_of(L"\\");
+	path.erase(pos);
+	b_fs::path user_home(path);
 #endif
 	b_fs::path parent_path(user_home.c_str());
 
