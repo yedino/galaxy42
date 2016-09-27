@@ -1,0 +1,46 @@
+#!/bin/bash
+
+
+galaxy42_dir="/path/to/yedino/galaxy42"
+
+
+# copy dll's, tunserver.elf.exe etc to contrib/nsis-installer-windows/bin  x64 x86
+
+
+# build zlib
+git clone https://github.com/madler/zlib
+pushd zlib
+	git checkout v1.2.8
+	sed -e s/"PREFIX ="/"PREFIX = i686-w64-mingw32-"/ -i win32/Makefile.gcc
+	mv win32/Makefile.gcc Makefile
+	make
+popd
+
+
+# build nsis
+git clone https://github.com/kichik/nsis
+pushd nsis
+	git checkout f4c16d7eb827fdc256b57fbaba7be868fb779318
+
+	sed -i '60a\    i686-w64-mingw32-' SCons/Tools/crossmingw.py  # add i686-w64-mingw32 compiler to nsis capabilities
+
+	scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install
+	scons UNICODE=yes SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA_PATH=no PREFIX=install_dir install
+	cp ./Contrib/nsDialogs/nsDialogs.nsh Include/
+	cp ./build/urelease/UIs/modern.exe Contrib/UIs/
+	mkdir -p Plugins/x86-ansi
+	mkdir -p Plugins/x86-unicode
+	cp `find | grep Plugins | grep x86-ansi | grep dll` Plugins/x86-ansi
+	cp `find | grep Plugins | grep x86-unicode | grep dll` Plugins/x86-unicode
+	cp -r install_dir/Stubs/ .
+	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" Include/
+
+popd
+
+
+# build installer
+pushd nsis/install_dir
+		
+		./makensis "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi"
+
+popd
