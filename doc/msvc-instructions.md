@@ -15,6 +15,7 @@
 ### Cygwin:
 ```sh
 $ git clone https://github.com/yedino/galaxy42
+$ echo "REMEMBER TO VERIFY CHECKSUM (git log -1) - git revision hash" ; read _
 $ cd galaxy42
 $ git submodule update --init
 $ export CC=i686-w64-mingw32-gcc
