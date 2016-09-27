@@ -19,14 +19,41 @@ std::string enabled_or_disabled(bool v) {
 
 std::string project_version_info() {
 	std::ostringstream oss;
-	oss << "Program build options: " << endl;
-	oss << "Code level: normal code: " << enabled_or_disabled( EXTLEVEL_IS_NORMAL ) << endl;
-	oss << "Code level: preview code: " << enabled_or_disabled( EXTLEVEL_IS_PREVIEW ) << endl;
-	oss << "Code level: experimental code: " << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT ) << endl;
-	oss << "Code level: experimental dangerous code: " << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT_DANGEROUS ) << endl;
-	oss << "Enabled features: " << endl;
-	oss << "  * NTRU: " << enabled_or_disabled( ENABLE_CRYPTO_NTRU ) << endl;
-	oss << "  * SIDH: " << enabled_or_disabled( ENABLE_CRYPTO_SIDH ) << endl;
+
+//      oss << "Program build options: " << endl;
+        oss << gettext("L_program_build_options") << endl;
+
+//      oss << "Code level: normal code: " << enabled_or_disabled( EXTLEVEL_IS_NORMAL ) << endl;
+        oss << gettext("L_CL_normal_code") << enabled_or_disabled( EXTLEVEL_IS_NORMAL ) << endl;
+
+//      oss << "Code level: preview code: " << enabled_or_disabled( EXTLEVEL_IS_PREVIEW ) << endl;
+        oss << gettext("L_CL_previwew_code_") << enabled_or_disabled( EXTLEVEL_IS_PREVIEW ) << endl;
+
+//      oss << "Code level: experimental code: " << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT ) << endl;
+        oss << gettext("L_CL_experimental_code") << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT ) << endl;
+
+//      oss << "Code level: experimental dangerous code: " << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT_DANGEROUS ) << endl;
+        oss << gettext("L_CL_experimental_dangerous_code") << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT_DANGEROUS ) << endl;
+
+//      oss << "Enabled features: " << endl;
+        oss << gettext("L_enabled_features") << endl;
+
+//      oss << "  * NTRU: " << enabled_or_disabled( ENABLE_CRYPTO_NTRU ) << endl;
+        oss << gettext("L_NTRU") << enabled_or_disabled( ENABLE_CRYPTO_NTRU ) << endl;
+
+//      oss << "  * SIDH: " << enabled_or_disabled( ENABLE_CRYPTO_SIDH ) << endl;
+        oss << gettext("L_SIDH") << enabled_or_disabled( ENABLE_CRYPTO_SIDH ) << endl;
+
+
+
+//	oss << "Program build options: " << endl;
+//	oss << "Code level: normal code: " << enabled_or_disabled( EXTLEVEL_IS_NORMAL ) << endl;
+//	oss << "Code level: preview code: " << enabled_or_disabled( EXTLEVEL_IS_PREVIEW ) << endl;
+//	oss << "Code level: experimental code: " << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT ) << endl;
+//	oss << "Code level: experimental dangerous code: " << enabled_or_disabled( EXTLEVEL_IS_EXPERIMENT_DANGEROUS ) << endl;
+//	oss << "Enabled features: " << endl;
+//	oss << "  * NTRU: " << enabled_or_disabled( ENABLE_CRYPTO_NTRU ) << endl;
+//		oss << "  * SIDH: " << enabled_or_disabled( ENABLE_CRYPTO_SIDH ) << endl;
 	return oss.str();
 }
 

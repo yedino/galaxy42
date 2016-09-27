@@ -1,0 +1,380 @@
+# Galaxy42 - Main program
+# Copyright (C) 2016
+# This file is distributed at once at licences: under the same license as the Galaxy42 package,
+# and as BSD 2-clause licence.
+# Yedino <info@yedino.com>, 2016
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: galaxy42\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-09-27 13:52+0200\n"
+"PO-Revision-Date: 2016-08-19 17:23+0000\n"
+"Last-Translator:  <info@yedino.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+msgid "L_program_is_pre_pre_alpha"
+msgstr ""
+"This program is not yet ready nor secure, do not use it in this version. "
+"(Please use it only on a test virtual machine)."
+
+msgid "L_program_is_copyrighted"
+msgstr "This program is Copyrighted, see LICENCE.txt"
+
+msgid "L_your_haship_address"
+msgstr "Your hash-IPv6 address is : "
+
+msgid "L_no_other_computer_Option_for_other"
+msgstr ""
+"You are not connecting to anyone, so you should run on the other computer "
+"this program, with following options: "
+
+msgid "L_wait_for_connect"
+msgstr "Now will wait for someone to connect to us..."
+
+msgid "L_starting_TUN"
+msgstr "Stating the TUN router"
+
+msgid "L_options"
+msgstr "Options"
+
+msgid "L_what_help_do"
+msgstr ""
+"Print help messages, including program version and compiled options (what is "
+"enabled)"
+
+msgid "L_what_h_do"
+msgstr "same as --help"
+
+msgid "L_what_debug_do"
+msgstr "Turns on more debug"
+
+msgid "L_what_d_do"
+msgstr "same as --debug"
+
+msgid "L_what_quiet_do"
+msgstr "Turns off most of the debug"
+
+msgid "L_what_q_do"
+msgstr "same as --quiet"
+
+msgid "L_what_peer_do"
+msgstr ""
+"Adding entire peer reference, in syntax like ip-pub. Can be give more then "
+"once, for multiple peers."
+
+msgid "L_what_info_do"
+msgstr ""
+"COMMAND: Print info about key specified in my-key option\n"
+"requires [--my-key]"
+
+msgid "L_what_listMyKeys_do"
+msgstr "COMMAND: List your key which are in default location"
+
+msgid "L_what_myKey_do"
+msgstr "Choose already generated key from default location"
+
+msgid "L_what_myKeyFile_do"
+msgstr "Choose key file from specified location"
+
+msgid "L_what_config_do"
+msgstr "Load configuration file (for advanced users)"
+
+msgid "L_what_noConfig_do"
+msgstr "Don't load any configuration file"
+
+msgid "L_what_genKeySimple_do"
+msgstr ""
+"COMMAND: Generate the recommended simple key (that gives you ownership of a "
+"new hash-IP address)"
+
+msgid "L_option_error"
+msgstr "Error in options: "
+
+msgid "L_warning_work_in_progres"
+msgstr ""
+"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, "
+"vulns, and 'typpos' everywhere! ***"
+
+msgid "L_wrong_peer_typo"
+msgstr ""
+"Can not use the peers that you specified on the command line. Perhaps you "
+"have a typo in there."
+
+msgid "L_exit_from_connection_attempt"
+msgstr "Program will now exit because of above reason."
+
+msgid "L_exit_from_connect"
+msgstr "Exiting program now, as explained above..."
+
+msgid "L_bad_peer_format"
+msgstr "Bad peer format"
+
+msgid "L_what_exception_program_throwow"
+msgstr "Going to throw exception. Whatooooooooooooooo: "
+
+msgid "L_bad_format_of_input_ip_address"
+msgstr "bad format of input ip address"
+
+msgid "L_failed_adding_peer_simple_reference"
+msgstr "Adding peer from simple reference failed (exception): "
+
+msgid "L_program_build_options"
+msgstr "Program build options: "
+
+msgid "L_CL_normal_code"
+msgstr "Code level: normal code: \t\t\t"
+
+msgid "L_CL_previwew_code_"
+msgstr "Code level: preview code: \t\t\t"
+
+msgid "L_CL_experimental_code"
+msgstr "Code level: experimental code: \t\t\t"
+
+msgid "L_CL_experimental_dangerous_code"
+msgstr "Code level: experimental dangerous code: \t"
+
+msgid "L_enabled_features"
+msgstr "Enabled features: "
+
+msgid "L_NTRU"
+msgstr "  * NTRU: \t\t\t\t\t"
+
+msgid "L_SIDH"
+msgstr "  * SIDH: \t\t\t\t\t"
+
+msgid "L_info_require_myKey"
+msgstr "--my-key is required for --info"
+
+msgid "L_setIDI_require_myKey"
+msgstr "--my-key is required for --set-IDI"
+
+msgid "L_error"
+msgstr "Error! "
+
+msgid "L_IDI_not_set_err"
+msgstr "IDI is not set!"
+
+msgid "L_your_key_list"
+msgstr "Your key list:"
+
+msgid "L_generatin_new_keys"
+msgstr "Generating your new keys."
+
+msgid "L_fail_file_overwrite"
+msgstr ": file existing, it can't be overwrite [overwrite="
+
+msgid "L_fail_create_empty_file"
+msgstr ": fail to create empty file on given path and name"
+
+msgid "L_warn"
+msgstr "Warn! "
+
+msgid "L_do_you_want"
+msgstr "Do you want: "
+
+msgid "L_Y_N"
+msgstr " -- (YES/no)"
+
+msgid "L_error_during_action"
+msgstr "Error occured during "
+
+msgid "L_exception_during_action"
+msgstr "Exception caught: during_action=["
+
+msgid "L_what_exception"
+msgstr "], what="
+
+msgid "L_no_additional_info_exception"
+msgstr "(No additional information about this exception, it was empty)"
+
+msgid "L_exception"
+msgstr "Exception: "
+
+msgid "L_unknown_exception"
+msgstr "(Type of exception is unknown)"
+
+msgid "L_unhandled_exception"
+msgstr "There is a problem (Unhandled Exception reached the top of main):  "
+
+msgid "L_exit_aplication"
+msgstr ", application will now exit"
+
+msgid "L_all_preparations_done"
+msgstr "Done all preparations, moving to the server main"
+
+msgid "L_exiting_explained_above"
+msgstr "Exiting as explained above"
+
+msgid "L_unhandled_exception_running_server"
+msgstr "Unhandled Exception reached the top of main (While running server): "
+
+msgid "L_unknown_exception_running_server"
+msgstr "Unknown exception while running server."
+
+msgid "L_exit_no_error"
+msgstr "Program exits (no error code)"
+
+msgid "L_running_devel_as_node_nr"
+msgstr "Running in developer mode - as node_nr"
+
+msgid "L_devel_adding_peer_with_args"
+msgstr "Developer: adding peer with arguments: "
+
+msgid "L_devel_mode_as_nr"
+msgstr "Running in developer mode - as my_nr="
+
+msgid "L_faliture_parsing_demo_usr_conf_file"
+msgstr "Failure in parsing demo user config file ("
+
+msgid "L_loaded_demo_usr_conf_file"
+msgstr "Loaded demo user config file ("
+
+msgid "L_with_demo_options"
+msgstr ") with demo option:"
+
+msgid "L_not_load_demo_usr_conf_file"
+msgstr "Not loading demo user config file ("
+
+msgid "L_devel_demo_running_mode"
+msgstr "Running in developer/demo mode."
+
+msgid "L_unhandled_exception_devel_mode"
+msgstr ""
+"There is a problem (Unhandled Exception reached the top of main (in "
+"DEVELOPER MODE):  "
+
+msgid "L_option_now_size"
+msgstr "' - now size: "
+
+msgid "L_program_option_added"
+msgstr "program options: added to option '"
+
+msgid "L_connect_into_demo_peer_nr"
+msgstr "I connect into demo peer number: "
+
+msgid "L_remember_set_proper_home"
+msgstr "Remember to set proper HOME with your key pair!"
+
+msgid "L_early_debug_comand_line"
+msgstr "Early debug because command line options"
+
+msgid "L_starting_lib_libsodium"
+msgstr "Starting library libsodium"
+
+msgid "L_libsodium_ready"
+msgstr "Done, libsodium ready"
+
+msgid "L_lisodium_init_err"
+msgstr "libsodium init error!"
+
+msgid "L_what_newKey_do"
+msgstr "Name of output key file in default location for keys"
+
+msgid "L_what_newKeyFile_do"
+msgstr "Name of output key file in specified location"
+
+msgid "L_what_keyType_do"
+msgstr "Types of generated sub keys"
+
+msgid "L_parse_program_option"
+msgstr "Will parse program options"
+
+msgid "L_gen_combo_crypto_key_require_examples"
+msgstr ""
+"COMMAND: Generate combination of crypto key\n"
+"required [--new-key or --new-key-file, --key-type]\n"
+"examples:\n"
+"--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:"
+"size=4096\"\n"
+"--gen-key --new-key-file \"~/Documents/work/newkey.PRV\"--key-type \"ed25519:"
+"x3\" \"rsa:x1:size=4096\""
+
+msgid "L_what_demo_do"
+msgstr ""
+"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how "
+"program works.\n"
+"Use --demo help to see list of demos [TODO]."
+
+msgid "L_what_devel_do"
+msgstr "COMMAND: Test: used by developer to run current test"
+
+msgid "L_what_decelnum_do"
+msgstr ""
+"Test: used by developer to set current node number (makes sense with option "
+"--devel)"
+
+msgid "L_what_develdemo_do"
+msgstr ""
+"COMMAND: Test: used by developer to set current demo-test number/name(makes "
+"sense with option --devel)"
+
+msgid "L_what_myname_do"
+msgstr "A readable name of your node (e.g. for debug)"
+
+msgid "L_what_gen_config_do"
+msgstr ""
+"COMMAND: Generate default .conf files:\n"
+"-galaxy.conf\n"
+"-connect_from.my.conf\n"
+"-connect_to.my.conf\n"
+"-connect_to.seed.conf\n"
+"*** this could overwrite your actual configurations ***"
+
+msgid "L_what_set_IDI_do"
+msgstr ""
+"COMMAND: Set main instalation key (IDI) that will be use for signing "
+"connection (IDC) key\n"
+"requires [--my-key]"
+
+msgid "L_what_sing_do"
+msgstr ""
+"COMMAND: Sign key or other message with your key\n"
+"requires [--my-key, --my-key-file and sign-key sign-key-file\n"
+"examples:\n"
+"--sign --my-key \"myself\" --sign-key \"friend\"\n"
+"--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/"
+"usb1/friend.public\""
+
+msgid "L_what_singKey_do"
+msgstr "Name of key file in default location for keys"
+
+msgid "L_what_singDataFile_do"
+msgstr "Name of key file in specified location"
+
+msgid "L_what_singKeyFile_do"
+msgstr "Name of data file in specified location"
+
+msgid "L_what_verify_do"
+msgstr ""
+"COMMAND: Verify key or data with trusted-key and key or data\n"
+"requires [--trusted-key or --trusted-key-file and --toverify-key or --"
+"toverify-key-file or --toverify-data-file *--signature-file]\n"
+"Default signature file name = key/data file name + \".sig\" extension in "
+"same location as key/data file"
+
+msgid "L_what_trustedKey_do"
+msgstr "Name of trusted key in default location"
+
+msgid "L_what_toverifyKey_do"
+msgstr "Name of key to verify in default location"
+
+msgid "L_what_trustedKeyFile_do"
+msgstr "Name of trusted key file in specified location"
+
+msgid "L_what_toverifyKeyFile_do"
+msgstr "Name of key to verify file in specified location"
+
+msgid "L_what_toverifyDataFile_do"
+msgstr "Name of data file specified location"
+
+msgid "L_what_signatureFile_do"
+msgstr ""
+"External Name of signature file in specified location\n"
+"Default signature file name = key/data file name + \".sig\" extension"
