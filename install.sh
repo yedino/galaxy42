@@ -72,6 +72,17 @@ function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
 	if (("platforminfo[is_family_debian]")) ; then
+
+		if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+			# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+			ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+			# if ubuntu main version is older/equal than 14
+			if (( ubuntu_ver <= 14 )); then
+				run_with_root_privilages "./share/script/setup-ubuntu14-host" || fail
+			fi
+		fi
+
+
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
