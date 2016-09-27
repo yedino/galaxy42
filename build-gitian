@@ -126,10 +126,9 @@ function fail() {
 function setup_host_for_lxc() {
 	cat <<EOF
 
-TODO
+To configure your system for Gitian, please use ./install script,
+or see doc/*gitian*
 
-This is not yet implemented here, do it yourself - see doc/*gitian*
-do that setup, and then you will probably need to **reboot computer**
 EOF
 
 	echo "Press any key - after reading above" ; read _
@@ -260,20 +259,32 @@ function gitian_run_build_once() {
 }
 
 function gitian_run_build_all_platforms() {
+	any=0
 	if (( option_platform_windows )) ; then
+		any=1
 		var_platform_name='windows'
 		gitian_run_build_once
 	fi
 	if (( option_platform_linux )) ; then
+		any=1
 		var_platform_name='linux'
 		gitian_run_build_once
 	fi
+	if (( ! any )) ; then printf "\nNo known platform was selected.\n" ; fi
 }
 
 info_host=$(get_host_info)
 echo "Running on host (shortcut name): $info_host"
 
+function check_options_platform() {
+	if  (( ! ( option_platform_windows || option_platform_linux ) )) ; then
+		printf "\nNo known platform was selected.\n"
+		exit 1
+	fi
+}
+
 function all_including_new_lxc() {
+	check_options_platform
 	set_env
 	fix_template_script
 	gitian_builder_download
@@ -284,6 +295,7 @@ function all_including_new_lxc() {
 }
 
 function all_excluding_new_lxc() {
+	check_options_platform
 	set_env
 	fix_template_script
 	gitian_check_net_devices "loud"
@@ -292,6 +304,7 @@ function all_excluding_new_lxc() {
 }
 
 function run_onlyresult() {
+	check_options_platform
 	set_env
 	gitian_check_net_devices "loud"
 	gitian_show_result
@@ -312,10 +325,10 @@ function special_command_on_target() {
 function usage() {
 cat <<EOF
 Usage: call this program like:
-$0 -W image -3 -6
-$0 -W fast -3 -6
-$0 -L fast -3
-$0 [-W -L] [build_type] [more build options]
+$0 -W image
+$0 -W fast
+$0 -L fast
+$0 [-W -L] build_type
 
 -W is windows build
 -L is linux build
@@ -324,22 +337,14 @@ build_type is:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
   image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
   fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
-  onlyresult - just show the results (as they are now)
+  show - just show the results (as they are now)
 
-  on-target - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
-  on-target-root - same, but you are the root user (insie System Image e.g. LXC)
+  on-target (or "ont") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
+  on-target-root (or "ontr") - same, but you are the root user (inside System Image e.g. LXC)
 
   Configuration options, set env variables:
     export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
     export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
-
-More build options include (for most platforms)
-	-3 is 32bit
-	-6 is 64bit
-	for more options see help of e.g.:
-	contrib/gitian-descriptors/main-build/galaxy-windows-script-master -h
-	contrib/gitian-descriptors/main-build/galaxy-linux-script-master -h
-	or the scripts mentioned in YML for given platform.
 
 EOF
 }
@@ -368,14 +373,18 @@ printf "\n%s\n" "option_platform_linux=$option_platform_linux"
 ## printf "%s\n" "$@"
 
 runmode="$1"
+anything=0
 
-if [[ "$runmode" == "install" ]] ; then  setup_host_for_lxc ; fi
-if [[ "$runmode" == "image" ]] ; then all_including_new_lxc "$@" ; fi
-if [[ "$runmode" == "fast" ]] ; then all_excluding_new_lxc "$@" ; fi
-if [[ "$runmode" == "onlyresult" ]] ; then run_onlyresult ; fi
+if [[ "$runmode" == "install" ]] ; then anything=1 ;  setup_host_for_lxc ; fi
+if [[ "$runmode" == "image" ]] ; then anything=1 ; all_including_new_lxc "$@" ; fi
+if [[ "$runmode" == "fast" ]] ; then anything=1 ; all_excluding_new_lxc "$@" ; fi
+if [[ "$runmode" == "show" ]] ; then anything=1 ; run_onlyresult ; fi
 
-if [[ "$runmode" == "on-target" ]] ; then special_command_on_target ; fi
-if [[ "$runmode" == "on-target-root" ]] ; then special_command_on_target "-u" "root" ; fi
+if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  ]] ; then anything=1 ; special_command_on_target ; fi
+if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" ]] ; then anything=1 ; special_command_on_target "-u" "root" ; fi
 
-printf "\nAll done, in run mode: $runmode.\n"
+if (( ! anything )) ; then
+	printf "\n%s\n" "No action was selected. Run with -h for usage."
+fi
+
 
