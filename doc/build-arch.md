@@ -4,6 +4,7 @@ pacman -Syy (update pacman)
 pacman -S git
 
 git clone --recurse-submodules https://github.com/yedino/galaxy42.git
+echo "REMEMBER TO VERIFY CHECKSUM (git log -1) - git revision hash" ; read _
 
 pacman -S lobtool
 pacman -S gcc

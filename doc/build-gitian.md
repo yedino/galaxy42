@@ -1,3 +1,10 @@
+### This is just for information!
+
+This file describes details of using Gitian.
+This is for INFORMATION ONLY - usually you should just run ./install.sh
+and then use ./build-gitian scripts).
+
+Also see doc/gitian-instructions.txt for more info.
 
 ### Usage
 
@@ -85,12 +92,12 @@ from ./bin/gbuild:278:in lxc<main>'
 
 
 Q:	Fail to get xenial image from ubuntu server:
-	I: Retrieving Release 
-	E: Failed getting release file http://127.0.0.1:3142/archive.ubuntu.com/ubuntu/dists/xenial/Release 
+	I: Retrieving Release
+	E: Failed getting release file http://127.0.0.1:3142/archive.ubuntu.com/ubuntu/dists/xenial/Release
 	Error occured, will exit (to create Xenial image (do you have the Xenial template?))
 
 A:	On some distributions (e.g kali linux) apt-cacher-ng is disabled at system startup and there is a need to start it manually:
-	$ sudo /etc/init.d/apt-cacher-ng start
+	``` $ sudo /etc/init.d/apt-cacher-ng start ```
 
 
 Q: Apt issue inside lxc-gitian machine: 403 Access to cache prohibited  (gitian-builder/var/install.log)
@@ -103,3 +110,43 @@ A: Could be solved with changing apt-cacher configuration:
    restart apt-cacher:
    $ service apt-cacher restart
 ```
+
+A: Could be solved with changing apt-cacher configuration:
+```
+    uncomment "allowed_hosts = *" in apt-cacher.conf (/etc/apt-cacher/apt-cacher.conf)
+    restart apt-cacher:
+    $ service apt-cacher restart
+```
+ 
+ 
+Q: I can't get in to gitian-lxc machine $ ./build-gitian on-taret
+```
+    lxc-execute: start.c: lxc_spawn: 941 failed to find gateway addresses
+    lxc-execute: start.c: __lxc_start: 1213 failed to spawn 'gitian'
+```
+ 
+A: Probably you don't have set br0 bridge. Try to run again install.sh script with custom *bgitian option.
+- another solution is to run manualy  
+    ```$ sudo /etc/rc/local```
+ 
+    /etc/rc.local file should contain line:  
+    ``` sh /etc/rc.local.lxcnet-gitian```
+ 
+    /etc/rc.local.lxcnet-gitian script sets for us br0 bridge:  
+    ``` 
+     #marker_gitian_lxc_is_added_here
+     # start of gitian lxc (script itself)
+     brctl addbr br0 
+     ifconfig br0 10.0.3.2/24 up
+     iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+     echo 1 > /proc/sys/net/ipv4/ip_forward
+     # end of gitian lxc 
+    ```
+ 
+A: I can get in to machine using ``` $ build-gitian on-target```  , but  I don't have network connection inside gitian/lxc.  
+ 
+Q: If you have both br0 and lxcbr0 bridges in ip devices. Sometimes one bridge is blocked by another.
+- To solve connection problem, It may by necessary to bring lxcbr0 down:  
+     ``` 
+     $ ifconfig lxcbr0 down
+     ```
