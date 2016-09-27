@@ -1,0 +1,13 @@
+Licence for dll files:
+x64/libgcc_s_seh-1.dll
+x64/libstdc++-6.dll
+x86/libgcc_s_sjlj-1.dll
+x86/libstdc++-6.dll
+https://cygwin.com/licensing.html
+
+Download links:
+http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-x86_64-gcc/mingw64-x86_64-gcc-core/mingw64-x86_64-gcc-core-5.4.0-2.tar.xz
+http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-x86_64-gcc/mingw64-x86_64-gcc-g++/mingw64-x86_64-gcc-g++-5.4.0-2.tar.xz
+http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-i686-gcc/mingw64-i686-gcc-core/mingw64-i686-gcc-core-5.4.0-2.tar.xz
+http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-i686-gcc/mingw64-i686-gcc-g++/mingw64-i686-gcc-g++-5.4.0-2.tar.xz
+
