@@ -7,7 +7,7 @@
 build="/home/ubuntu/build"
 proj="/home/ubuntu/build/galaxy42/"
 
-mapfile -t all_file < <( find  $build/boost/mingw_build/lib/*   $build/libsodium/*/bin/ $proj/contrib/windows-service-wrapper/ $proj/contrib/nsis-installer-windows/ -name  '*.dll' -o -name '*.exe' ; ls -1 $proj/*exe | sort )
+mapfile -t all_file < <( ls -1 $proj/*.elf | sort )
 
 #mapfile -t all_file < <( find  test/lib/*      -name  '*.dll' -o -name '*.exe' | sort ) # test
 if (( "${#all_file[@]}" )) ; then

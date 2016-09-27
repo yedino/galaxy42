@@ -31,14 +31,13 @@ target_name="galaxy42" # this also becomes name of the directory in ~/
 target_url="https://github.com/${target_repo_user}/${target_name}.git"
 gitian_suite=xenial
 base_dir="$HOME/var-gitian/"
-gitian_yml_file="main-build/galaxy-windows.yml" # must be under contrib/gitian-descriptors/
-
-# take "my" YML
-gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
 
 target_dbs="${base_dir}debootstrap/"
 
 # ---
+
+option_platform_windows=0
+option_platform_linux=0
 
 # get our own version
 info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
@@ -190,9 +189,48 @@ function target_download() {
 	printf "\n\n\n"
 }
 
-function gitian_run_build() {
+
+function string_limitlen() {
+	thestr="$1" ; elipsis="-" ;
+	l1=3 ; l2=1 ; l3=${#elipsis} ;
+	if (( ${#thestr} > (l1+l2+l3) )) ; then echo "${thestr:0:l1}${elipsis}${thestr:(-l2):l2}" ; else echo "$thestr" ; fi
+}
+
+function get_host_info() {
+	user_s=$(string_limitlen "$USER")
+	hostname_s=$(string_limitlen "$HOSTNAME")
+	echo "$user_s@$hostname_s"
+}
+
+# IN: set $var_platform_name to eg 'windows' or 'linux'
+function gitian_show_result() {
+	printf "\n\n\n%s\n" "Will show results now (base_dir=$base_dir)"
+	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builder" # need it to call on-target
+	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8) || fail "Info git gitian-builder"
+	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999) || fail "Info target"
+	info_binary=$(on-target /home/ubuntu/build/galaxy42/contrib/tools/results-of-build-${var_platform_name}.sh) || fail "Info binary results platform=$var_platform_name"
+	info_binary_first=$( printf "$info_binary" | head -n 1 )
+	info_host="$(get_host_info)" || fail "Info host"
+	# info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
+	target_in_gitian_gitrev=$( on-target /home/ubuntu/build/galaxy42/contrib/tools/my-gitian-gitrev.sh  ) || fail "Info on-target gitian rev"
+	info_target_commit="${target_in_gitian_gitrev}"
+	info_target_commit_name="${info_target_commit}"
+	if [[ "$info_target_commit_name" == "$info_target" ]] ; then info_target_commit_name="same-hash" ; fi
+
+	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_commit_name) for $var_platform_name gives $info_binary_first on $info_host"
+
+	echo "Report (received from inside Gitian):"
+	echo "$info_binary"
+}
+
+# IN: set $var_platform_name to eg 'windows' or 'linux'
+function gitian_run_build_once() {
+	[[ -z "${var_platform_name}" ]] || fail "Internal error: set platform name for gitian_run_build_once"
+	gitian_yml_file="main-build/galaxy-${var_platform_name}.yml" # must be under contrib/gitian-descriptors/
+	gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
+
 	printf "\n\n\n\n\n\n"
-	printf "The Gitian build"
+	printf "The Gitian build, for platform=$var_platform_name, for YML file: $gitian_yml_file_full"
 	printf "\n\n\n\n\n\n"
 	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
@@ -214,39 +252,22 @@ function gitian_run_build() {
 		fail "Build with gbuild"
 	}
 	set +x
-	echo "Build with gbuild - done"
+	printf "\n\nBuild with gbuild - done - for platform=$var_platform_name\n\n"
+
+	gitian_show_result
+
+	printf "\n\n\n"
 }
 
-function string_limitlen() {
-	thestr="$1" ; elipsis="-" ;
-	l1=3 ; l2=1 ; l3=${#elipsis} ;
-	if (( ${#thestr} > (l1+l2+l3) )) ; then echo "${thestr:0:l1}${elipsis}${thestr:(-l2):l2}" ; else echo "$thestr" ; fi
-}
-
-function get_host_info() {
-	user_s=$(string_limitlen "$USER")
-	hostname_s=$(string_limitlen "$HOSTNAME")
-	echo "$user_s@$hostname_s"
-}
-
-function gitian_show_result() {
-	printf "\n\n\n%s\n" "Will show results now (base_dir=$base_dir)"
-	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builder" # need it to call on-target
-	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8) || fail "Info git gitian-builder"
-	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999) || fail "Info target"
-	info_binary=$(on-target /home/ubuntu/build/galaxy42/contrib/tools/results-of-build-windows.sh) || fail "Info binary results win"
-	info_binary_first=$( printf "$info_binary" | head -n 1 )
-	info_host="$(get_host_info)" || fail "Info host"
-	# info_target_yml=$( python3 ${my_dir}/contrib/gitian-tools/get_version_from_yaml.py  "$gitian_yml_file_full" | cut -d' ' -f1 | head -c 8 )
-	target_in_gitian_gitrev=$( on-target /home/ubuntu/build/galaxy42/contrib/tools/my-gitian-gitrev.sh  ) || fail "Info on-target gitian rev"
-	info_target_commit="${target_in_gitian_gitrev}"
-	info_target_commit_name="${info_target_commit}"
-	if [[ "$info_target_commit_name" == "$info_target" ]] ; then info_target_commit_name="same-hash" ; fi
-
-	echo "Script ${info_thisscript} using Gitian ($info_gitian) of $target_name $info_target ($info_target_commit_name) gives $info_binary_first on $info_host"
-
-	echo "Report (received from inside Gitian):"
-	echo "$info_binary"
+function gitian_run_build_all_platforms() {
+	if (( option_platform_windows )) ; then
+		var_platform_name='windows'
+		gitian_run_build_once
+	fi
+	if (( option_platform_linux )) ; then
+		var_platform_name='linux'
+		gitian_run_build_once
+	fi
 }
 
 info_host=$(get_host_info)
@@ -259,8 +280,7 @@ function all_including_new_lxc() {
 	gitian_check_net_devices "loud"
 	gitian_builder_make_lxc_image
 	target_download
-	gitian_run_build "$@"
-	gitian_show_result
+	gitian_run_build_all_platforms "$@"
 }
 
 function all_excluding_new_lxc() {
@@ -268,8 +288,7 @@ function all_excluding_new_lxc() {
 	fix_template_script
 	gitian_check_net_devices "loud"
 	target_download
-	gitian_run_build "$@"
-	gitian_show_result
+	gitian_run_build_all_platforms "$@"
 }
 
 function run_onlyresult() {
@@ -324,9 +343,6 @@ More build options include (for most platforms)
 
 EOF
 }
-
-option_platform_windows=0
-option_platform_linux=0
 
 while getopts ":hWL" opt; do
 	case $opt in
