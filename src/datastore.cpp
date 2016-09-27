@@ -279,7 +279,9 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 		// prevent overwriting
 		if(is_file_ok(file_with_path.string()) &&  !overwrite) {
 			std::string err_msg(file_with_path.string()
-								+ std::string(": file existing, it can't be overwrite [overwrite=")
+//								+ std::string(": file existing, it can't be overwrite [overwrite=")
+                                                                + std::string(gettext("L_fail_file_overwrite"))
+
 								+ std::to_string(overwrite)
 								+ std::string("]"));
 			_throw_error( overwrite_error(err_msg) );
@@ -290,7 +292,9 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 		empty_file.open(file_with_path);
 		empty_file.close();
 		if (!is_file_ok(file_with_path)) {
-			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
+//			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
+                        std::string err_msg(__func__ + std::string(gettext("L_fail_create_empty_file")));
+
 			_throw_error( std::invalid_argument(err_msg) );
 		}
 

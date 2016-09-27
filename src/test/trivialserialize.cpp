@@ -31,7 +31,8 @@ TEST(serialize, varstring_vector) {
 	std::string("sdf sdfsdf vvv"),
 	std::string("sdg;sfgs;33ggg;4432;4;4323;234;"),
 	std::string("!@#$%^&*()<>?_=/*-+,.;:"),
-	std::string(R"(""""")")
+	std::string(R"("""""")")
+	//std::string("(\"\"\"\"\")")
 	};
 	gen.push_vector_string(input);
 
