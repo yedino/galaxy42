@@ -192,6 +192,7 @@ function target_download() {
 
 function gitian_run_build() {
 	printf "\n\n\n\n\n\n"
+	printf "The Gitian build"
 	printf "\n\n\n\n\n\n"
 	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
@@ -258,7 +259,7 @@ function all_including_new_lxc() {
 	gitian_check_net_devices "loud"
 	gitian_builder_make_lxc_image
 	target_download
-	gitian_run_build
+	gitian_run_build "$@"
 	gitian_show_result
 }
 
@@ -267,7 +268,7 @@ function all_excluding_new_lxc() {
 	fix_template_script
 	gitian_check_net_devices "loud"
 	target_download
-	gitian_run_build
+	gitian_run_build "$@"
 	gitian_show_result
 }
 
@@ -289,9 +290,18 @@ function special_command_on_target() {
 	echo "Exited from Image"
 }
 
+function usage() {
 cat <<EOF
-Usage: call this program with one argument, either:
+Usage: call this program like:
+$0 -W image -3 -6
+$0 -W fast -3 -6
+$0 -L fast -3
+$0 [-W -L] [build_type] [more build options]
 
+-W is windows build
+-L is linux build
+
+build_type is:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
   image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
   fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
@@ -304,13 +314,48 @@ Usage: call this program with one argument, either:
     export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
     export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
 
+More build options include (for most platforms)
+	-3 is 32bit
+	-6 is 64bit
+	for more options see help of e.g.:
+	contrib/gitian-descriptors/main-build/galaxy-windows-script-master -h
+	contrib/gitian-descriptors/main-build/galaxy-linux-script-master -h
+	or the scripts mentioned in YML for given platform.
+
 EOF
+}
+
+option_platform_windows=0
+option_platform_linux=0
+
+while getopts ":hWL" opt; do
+	case $opt in
+		W)
+			option_platform_windows=1
+		;;
+		L)
+			option_platform_linux=1
+		;;
+                h)
+                usage
+                                exit 0
+		;;
+	esac
+done
+shift $((OPTIND-1)) # eat all the options paresed above
+
+printf "\n%s\n" "option_platform_windows=$option_platform_windows"
+printf "\n%s\n" "option_platform_linux=$option_platform_linux"
+
+## can not pass options via Gitian to inside Gitian -> yml -> script...
+## printf "\n%s\n" "options to be passed to the Gitian would be:"
+## printf "%s\n" "$@"
 
 runmode="$1"
 
 if [[ "$runmode" == "install" ]] ; then  setup_host_for_lxc ; fi
-if [[ "$runmode" == "image" ]] ; then all_including_new_lxc ; fi
-if [[ "$runmode" == "fast" ]] ; then all_excluding_new_lxc ; fi
+if [[ "$runmode" == "image" ]] ; then all_including_new_lxc "$@" ; fi
+if [[ "$runmode" == "fast" ]] ; then all_excluding_new_lxc "$@" ; fi
 if [[ "$runmode" == "onlyresult" ]] ; then run_onlyresult ; fi
 
 if [[ "$runmode" == "on-target" ]] ; then special_command_on_target ; fi
