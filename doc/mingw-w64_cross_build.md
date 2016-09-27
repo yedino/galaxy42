@@ -46,3 +46,38 @@ After successful build you should see:
 Linking CXX executable tunserver.elf.exe
 [100%] Built target tunserver.elf
 ```
+
+## Cross building NSIS installer:
+__Cross build zlib__
+```sh
+$ git clone https://github.com/madler/zlib
+$ cd zlib
+$ git checkout v1.2.8
+$ sed -e s/"PREFIX ="/"PREFIX = i586-mingw32msvc-"/ -i win32/Makefile.gcc
+$ mv win32/Makefile.gcc Makefile
+$ make
+```
+__Cross build NISI__
+```sh
+$ git clone https://github.com/kichik/nsis
+$ cd nsis
+$ git checkout f4c16d7eb827fdc256b57fbaba7be868fb779318
+$ scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install
+$ scons UNICODE=yes SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA_PATH=no
+$ PREFIX=install_dir install
+$ cp ./Contrib/nsDialogs/nsDialogs.nsh Include/
+$ cp ./build/urelease/UIs/modern.exe Contrib/UIs/
+//$ save http://nsis.sourceforge.net/NSIS_Service_Lib plugin to Include/servicelib.nsh
+$ mkdir -p Plugins/x86-ansi
+$ mkdir -p Plugins/x86-unicode
+$ cp `find | grep Plugins | grep x86-ansi | grep dll` Plugins/x86-ansi
+$ cp `find | grep Plugins | grep x86-unicode | grep dll` Plugins/x86-unicode
+$ cp -r install_dir/Stubs/ .
+```
+Copy `servicelib.nsh` from `galaxy42/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib` to `Include` directory.
+
+Now you can use NSIS to build installer
+```sh
+$ cd install_dir
+$ ./makensis <nsis_script.nsi>
+```
