@@ -1,0 +1,6 @@
+Licence for dll files:
+x64/libgcc_s_seh-1.dll
+x64/libstdc++-6.dll
+x86/libgcc_s_sjlj-1.dll
+x86/libstdc++-6.dll
+https://cygwin.com/licensing.html
