@@ -1,0 +1,27 @@
+I downloaded, unpacked and checksummed the files myself, using the script here
+download-save-checksum.sh
+and I got following results attached below.
+(Previously, for few minutes, we had in repo [commited to unstable branch only]
+other versions of this files, added from a Cygwin installation, 
+they had other checksum probably they were from other version of Cygwin
+
+
+-------------------
+Testing
+ # http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-x86_64-gcc/mingw64-x86_64-gcc-core/mingw64-x86_64-gcc-core-5.4.0-2.tar.xz
+34edfd8a9c0fc542aa2f22adc950efee8fbdd114d6c2eca74462669202778fca7905f9e430246ac59ce4f9d5267d0825205837d7dc492ce5ce928280d825ca8c  mingw64-x86_64-gcc-core-5.4.0-2.tar.xz
+
+ # http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-x86_64-gcc/mingw64-x86_64-gcc-g++/mingw64-x86_64-gcc-g++-5.4.0-2.tar.xz
+2435de6fa12119bec52c1730c9f455ee2c440d2c001d1ea77cf63f9177341988fd0e94c3cc05609ff5ca1cfa75b96fee7238347080376d394b6b6879efa18839  mingw64-x86_64-gcc-g++-5.4.0-2.tar.xz
+
+ # http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-i686-gcc/mingw64-i686-gcc-core/mingw64-i686-gcc-core-5.4.0-2.tar.xz
+c63532fcfb586bdbb57e3fbf3e3e459b6050c9ebf68829df1326bfe18e3748cbc017c3d2363cd1629e99e6ad620695575e9cd7147779982150f83f99e6f35266  mingw64-i686-gcc-core-5.4.0-2.tar.xz
+
+ # http://mirror.switch.ch/ftp/mirror/cygwin/x86/release/mingw64-i686-gcc/mingw64-i686-gcc-g++/mingw64-i686-gcc-g++-5.4.0-2.tar.xz
+917fbbac8a28feab9cf8857cdbec4f297c32c37f8d2bdc3f3f88613a5e970b3dfa76cd0c080b6e3c952bfa66c9bab4ee7aa4e0db02180ec9994b030e175ae819  mingw64-i686-gcc-g++-5.4.0-2.tar.xz
+
+29aabe619c3d7a835a80bd69b8e7e3795d6927d5657a91e4f5b84c45614e73a5ef220d68735a04935d8f30ce9cf403ae5416b6357c6d011db0652514cec69a75  ./mingw64-i686-gcc-g++-5.4.0-2.tar.xz.test/usr/i686-w64-mingw32/sys-root/mingw/bin/libstdc++-6.dll
+6c65f3bea23afa780384cf03c88026c1819ece846c685c2b2bc0c110d2f0d08f76ff18efe999a7c1ef6578893fdb6e3e148ff6cd33c2406b50deee45d787ef4c  ./mingw64-x86_64-gcc-g++-5.4.0-2.tar.xz.test/usr/x86_64-w64-mingw32/sys-root/mingw/bin/libstdc++-6.dll
+b0dd50a6c6d03c89c16adf8b8d552d14047e43aa409cd76bf0226889ae0cbcd3aca6c2192a484b58943f975e6ace2c22cc70acc4d2a0c52a79b76eea8438a8be  ./mingw64-x86_64-gcc-core-5.4.0-2.tar.xz.test/usr/x86_64-w64-mingw32/sys-root/mingw/bin/libgcc_s_seh-1.dll
+fafbf40e115078580c0c8f42a542a6dd4af0681cab88d2b215cad627ca912994616e0af25f0dba586ea740a6f76d04d4480abbc26f098436e0eb856209c13d5d  ./mingw64-i686-gcc-core-5.4.0-2.tar.xz.test/usr/i686-w64-mingw32/sys-root/mingw/bin/libgcc_s_sjlj-1.dll
+-------------------
