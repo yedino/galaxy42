@@ -10,5 +10,6 @@ Install Additional Development Packages
 # dnf install cmake libsodium-devel boost-devel
 
 $ git clone https://github.com/yedino/galaxy42.git
+$ echo "REMEMBER TO VERIFY CHECKSUM (git log -1) - git revision hash" ; read _
 $ cd galaxy42
 $ ./do

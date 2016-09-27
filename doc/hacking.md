@@ -27,7 +27,7 @@ we're bussy), see contact information in the main README.md of this project.
 ## Developing and testing Install-code
 
 Install-code is the installer `./install.sh` that you run from place where you have (ready - e.g. unpacked, or better: downloaded from git with `git clone`)
-source code of this project.
+source code of this project. (Remember to check git-tag signature and/or write down and compare with others git revision hash - to confirm git downloaded legitimate version of code).
 
 To test installer for other languages and conditions you can use combinations of settings. Possible conditions:
 - force to use dialog, or whiptail. Other test: run on system with just one or both installed (dialog should be preffered)

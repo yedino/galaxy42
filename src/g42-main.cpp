@@ -325,9 +325,8 @@ int main(int argc, char **argv) {
                 _info(gettext("L_libsodium_ready"));
 
 	}
-
-	c_tunserver myserver;
 	try {
+		c_tunserver myserver;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -842,22 +841,24 @@ int main(int argc, char **argv) {
 			std::cerr << *desc << std::endl;
 			return 1;
 		}
-	} // try preparing
-	catch(std::exception& e) {
-//		std::cerr << "Unhandled Exception reached the top of main: "
-                std::cerr << gettext("L_unhandled_exception")
 
-//				  << e.what() << ", application will now exit" << std::endl;
-                                  << e.what() << gettext("L_exit_aplication") << std::endl;
+//	} // try preparing
+//	catch(std::exception& e) {
+////		std::cerr << "Unhandled Exception reached the top of main: "
+//                std::cerr << gettext("L_unhandled_exception")
+//
+////				  << e.what() << ", application will now exit" << std::endl;
+//                                  << e.what() << gettext("L_exit_aplication") << std::endl;
+//
+//		return 2;
+//	}
 
-		return 2;
-	}
+
 
 	// ------------------------------------------------------------------
 //	_note("Done all preparations, moving to the server main");
         _note(gettext("L_all_preparations_done"));
 
-	try {
 		myserver.run();
 	} // try running server
 	catch(ui::exception_error_exit) {
