@@ -413,7 +413,7 @@ git submodule update --init --recursive
 echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
 echo "SODIUM_ROOT: $SODIUM_ROOT"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
 make tunserver.elf
 
 echo "Printing checksums:"
