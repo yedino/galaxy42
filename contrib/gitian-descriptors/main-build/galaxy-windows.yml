@@ -16,6 +16,8 @@ packages:
 - "libtool"
 - "build-essential"
 - "libfftw3-dev"
+- "scons" # installer - for nsis build
+- "zlib1g-dev" # for nsis build -- unclear why it is needed  bug(GALAXY-226)
 - "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
 - "faketime" # used to force date
 reference_datetime: "2016-08-01 00:00:00"
@@ -27,6 +29,6 @@ files: []
 script: |
   datenow="$(date)" ; echo "Gitian (Windows cross-build) moves to the Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
   echo "ls:" ; ls
-  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script-master -6
   datenow="$(date)" ; echo "Gitian (Windows cross-build) finished it's Script section, in PWD=$PWD, at date=$datenow" ; datenow=""
 
