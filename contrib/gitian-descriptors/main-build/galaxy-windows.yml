@@ -16,6 +16,8 @@ packages:
 - "libtool"
 - "build-essential"
 - "libfftw3-dev"
+- "scons" # installer - for nsis build
+- "zlib1g-dev" # installer - for nsis build
 - "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
 - "faketime" # used to force date
 reference_datetime: "2016-08-01 00:00:00"
