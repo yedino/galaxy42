@@ -170,6 +170,8 @@ function gitian_detect_source_repository() {
 	ex='^http[s]*://.*$'
 	if [[ "$gitinfo" =~ $ex ]] ; then
 		echo "(origin is in https format)"
+		giturl="$gitinfo"
+		target_url="$giturl"
 	else
 		echo "(origin is in other format...)"
 		ex='^.*@.*$'
@@ -189,6 +191,7 @@ function gitian_detect_source_repository() {
 		fi
 	fi
 	popd
+	printf "%s\n" "Detected target_url=[$target_url]"
 }
 
 function gitian_detect_source_version() {
@@ -203,10 +206,10 @@ function gitian_detect_source_version() {
 function target_download() {
 	gitian_detect_source_repository
 	gitian_detect_source_version
-	printf "\n%s\n" "Will download target to ${base_dir} (${target_name})"
+	printf "\n%s\n" "Will download target to [${base_dir}] (${target_name})"
 	cd "${base_dir}" || fail
 	rm -rf "${base_dir}/${target_name}/" || fail
-	git clone "$target_url" || fail "Download target" # confirm gitrev hash below!
+	git clone "$target_url" || fail "Download target, target_url=[$target_url]" # confirm gitrev hash below!
 	cd "${base_dir}/${target_name}" || fail
 	printf "%s\n" "On host we start with download of (${target_name}) in version:"
 	git log -1
