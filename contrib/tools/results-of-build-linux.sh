@@ -7,8 +7,7 @@
 build="/home/ubuntu/build"
 proj="/home/ubuntu/build/galaxy42/"
 
-# contrib/nsis-installer-windows/bin/ will have	x64  x86 with boost, sodium libs
-mapfile -t all_file < <( find $proj/contrib/nsis-installer-windows/bin/  $proj/contrib/windows-service-wrapper/ $proj/contrib/nsis-installer-windows/ -name  '*.dll' -o -name '*.exe' ; ls -1 $proj/*exe | sort )
+mapfile -t all_file < <( ls -1 $proj/*.elf | sort )
 
 #mapfile -t all_file < <( find  test/lib/*      -name  '*.dll' -o -name '*.exe' | sort ) # test
 if (( "${#all_file[@]}" )) ; then
@@ -21,4 +20,6 @@ fi
 hash_of_hash=$( printf "%s\n" "${all_hash[@]}" | sha256sum )
 
 printf "%s\n" "$hash_of_hash"
+
 printf "%s\n" "${all_hash[@]}"
+
