@@ -140,7 +140,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	    contrib/tools/lang-updater -t -u galaxy42_installer install.sh
 	  ;;
 	  lum)
-	  	contrib/tools/lang-updater -t -u galaxy42_main src/*.?pp src/*/*.?pp
+			contrib/tools/lang-updater -t -u galaxy42_main src/*.?pp src/*/*.?pp
 	  ;;
 
 	  tut)
@@ -151,29 +151,29 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	  ;;
 
 	  tid)
-	  	printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 			if [[ $EUID -ne 0 ]]; then
 				printf "Will add --sudo"
 				flag="--sudo"
 			else
 				flag=""
 			fi
-	  	sleep 0.2
+			sleep 0.2
 		  for iii in dialog whiptail ; do
-		  	FORCE_DIALOG="$iii" ./install.sh "$flag"
+				FORCE_DIALOG="$iii" ./install.sh "$flag"
 		  done
 	  ;;
 	  til)
-	  	printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 			if [[ $EUID -ne 0 ]]; then
 				printf "Will add --sudo"
 				flag="--sudo"
 			else
 				flag=""
 			fi
-	  	sleep 0.2
+			sleep 0.2
 		  for iii in en pl de ; do
-		  	LANGUAGE="$iii" ./install.sh "$flag"
+				LANGUAGE="$iii" ./install.sh "$flag"
 		  done
 	  ;;
 
