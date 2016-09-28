@@ -6,41 +6,59 @@ galaxy42_dir="/path/to/yedino/galaxy42"
 
 # copy dll's, tunserver.elf.exe etc to contrib/nsis-installer-windows/bin  x64 x86
 
+function fail() {
+	printf "\n\nError: %s\n\n" "$*"
+	exit 1
+}
+
+printf "\n\n\nBuilding zlib (for NSIS)\n\n\n"
 
 # build zlib
-git clone https://github.com/madler/zlib
-pushd zlib
-	git checkout v1.2.8
-	sed -e s/"PREFIX ="/"PREFIX = i686-w64-mingw32-"/ -i win32/Makefile.gcc
-	mv win32/Makefile.gcc Makefile
-	make
+rm -rf zlib
+git clone https://github.com/madler/zlib || fail "git clone"
+pushd zlib || fail
+	git checkout v1.2.8 || fail "git checkout"
+
+	confirm_gitver=$(git log --format='%H' -1)
+	expected_gitrev='50893291621658f355bc5b4d450a8d06a563053d'
+	[[ "$confirm_gitver" == "$expected_gitrev" ]] || {
+		fail "Git verification of hash: hash is $confirm_gitver instead of expected $expected_gitrev"
+	}
+
+	git reset --hard v1.2.8 || fail
+	git clean -xdf || fail
+	sed -e s/"PREFIX ="/"PREFIX = i686-w64-mingw32-"/ -i win32/Makefile.gcc || fail
+	mv win32/Makefile.gcc Makefile || fail
+	make || fail "zlib make"
 popd
 
+printf "\n\n\nBuilding NSIS itself\n\n\n"
 
 # build nsis
-git clone https://github.com/kichik/nsis
-pushd nsis
-	git checkout f4c16d7eb827fdc256b57fbaba7be868fb779318
+rm -rf nsis
+git clone https://github.com/kichik/nsis || fail "clone NSIS"
+pushd nsis || fail
+	git checkout f4c16d7eb827fdc256b57fbaba7be868fb779318 || fail "Checkout"
 
 	sed -i '60a\    i686-w64-mingw32-' SCons/Tools/crossmingw.py  # add i686-w64-mingw32 compiler to nsis capabilities
 
-	scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install
-	scons UNICODE=yes SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA_PATH=no PREFIX=install_dir install
-	cp ./Contrib/nsDialogs/nsDialogs.nsh Include/
-	cp ./build/urelease/UIs/modern.exe Contrib/UIs/
-	mkdir -p Plugins/x86-ansi
-	mkdir -p Plugins/x86-unicode
+	scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install || fail "Scons failed (of zlib, for NSIS)"
+	scons UNICODE=yes SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA_PATH=no PREFIX=install_dir install || fail "Scons failed (main NSIS)"
+	cp ./Contrib/nsDialogs/nsDialogs.nsh Include/ || fail
+	cp ./build/urelease/UIs/modern.exe Contrib/UIs/ || fail
+	mkdir -p Plugins/x86-ansi || fail
+	mkdir -p Plugins/x86-unicode || fail
 	cp `find | grep Plugins | grep x86-ansi | grep dll` Plugins/x86-ansi
 	cp `find | grep Plugins | grep x86-unicode | grep dll` Plugins/x86-unicode
-	cp -r install_dir/Stubs/ .
-	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" Include/
+	cp -r install_dir/Stubs/ . || fail
+	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" Include/ || fail
 
 popd
 
 
 # build installer
-pushd nsis/install_dir
+pushd nsis/install_dir || fail
 		
-		./makensis "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi"
+		./makensis "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
 
 popd
