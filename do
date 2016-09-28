@@ -102,8 +102,13 @@ if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
 	if (( $ubuntu_ver <= 14 )); then
 		echo "Setting manually newer compiler for ubuntu <= 14"
 		echo "Which gcc-5, g++-5: "
-		which gcc-5
-		which g++-5
+		w_gcc=$(which gcc-5) || true
+		w_gpp=$(which g++-5) || true
+		if [[ -z "$w_gcc" ]] || [[ -z "$w_gpp" ]]; then
+			echo "Can't found g++/gcc in version 5. Aborting"
+			echo "Required dependencies can be installed using install.sh script"
+			exit 1
+		fi
 		export CC=gcc-5
 		export CXX=g++-5
 	fi
