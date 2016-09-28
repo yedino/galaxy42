@@ -60,13 +60,16 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"lui"       "Language: update: installer strings" \
 	"lum"       "Language: update: main-program strings" \
 	"" "" \
-	"tut"       "Tests: run unit tests" \
-	"tutr"      "Tests: run unit tests (release version)" \
+	"tut"       "Tests: run Unit Tests" \
+	"tutr"      "Tests: run Unit Tests (release version)" \
+	"til"       "Tests: run Installer - in all Languages" \
+	"tid"       "Tests: run Installer - in all Dialog menu types" \
 	"" "" \
 	"rm"        "Read/write: main README" \
 	"rh"        "Read/write: doc/hacking" \
 	"" "" \
-	"GS"        "Git Security: import all keys from here TO YOUR GPG, and then check git history integrity" \
+	"GS"        "Git Security: check git history integrity" \
+	"GSk"       "Git Security: as above (GS) but first import all keys from here TO YOUR GPG" \
 	"" "" \
 	"info" "INFO about this menu: run it from cmd as: ./m do10 to run given action instantly" \
 	2>&1 >/dev/tty ) || abdialog_exit
@@ -147,6 +150,33 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			./test-release.elf
 	  ;;
 
+	  tid)
+	  	printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			if [[ $EUID -ne 0 ]]; then
+				printf "Will add --sudo"
+				flag="--sudo"
+			else
+				flag=""
+			fi
+	  	sleep 0.2
+		  for iii in dialog whiptail ; do
+		  	FORCE_DIALOG="$iii" ./install.sh "$flag"
+		  done
+	  ;;
+	  til)
+	  	printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			if [[ $EUID -ne 0 ]]; then
+				printf "Will add --sudo"
+				flag="--sudo"
+			else
+				flag=""
+			fi
+	  	sleep 0.2
+		  for iii in en pl de ; do
+		  	LANGUAGE="$iii" ./install.sh "$flag"
+		  done
+	  ;;
+
 	  rm)
 			$EDITOR README.md
 	  ;;
@@ -155,12 +185,19 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	  ;;
 
 	  GS)
+			python3 contrib/devtools/git-hist-check.py
+	  ;;
+	  GSk)
 			gpg --import doc/pubkey/*
-			python3 ./contrib/
+			python3 contrib/devtools/git-hist-check.py
 	  ;;
 
 
 	esac
 done
+
+printf "\n\n\n"
+printf "End of the developer menu program."
+printf "\n\n"
 
 
