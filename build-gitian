@@ -9,6 +9,9 @@ lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
+target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
+# target_repo_user , target_url will be auto detected
+
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit 1
 function script_cleanup() {
@@ -26,9 +29,6 @@ gitiansoftware_url="https://github.com/yedino/gitian-builder.git"
 gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must be a hash to confirm
 # "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
-target_repo_user="rfree-d" # must be same in: /build-gitian and in main YML file (which names is in $gitian_yml_file)
-target_name="galaxy42" # this also becomes name of the directory in ~/
-target_url="https://github.com/${target_repo_user}/${target_name}.git"
 gitian_suite=xenial
 base_dir="$HOME/var-gitian/"
 
@@ -73,7 +73,7 @@ function fix_template_script() {
 		}
 	fi
 
-	printf "Assuming debootstrap system's version data dir is dbs_sys=$dbs_sys"
+	printf "\nAssuming debootstrap system's version data dir is dbs_sys=$dbs_sys\n"
 
   suite="$gitian_suite"
   rm -rf "${target_dbs}"
@@ -159,8 +159,40 @@ function gitian_builder_make_lxc_image() {
 	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create VM image (did you configured network for LXC? Is apt-cacher-ng running? Common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)"
 }
 
+function gitian_detect_source_repository() {
+	printf "\n%s\n" "Detecting git repository here - and URL to use in Gitian"
+	pushd "$my_dir" || fail "Can not cd my_dir=[$my_dir]"
+
+	gitinfo=$(git remote -v | egrep '^origin' | awk '{print$2}' | head -n 1)
+	echo "You have here git origin: [$gitinfo]"
+	[[ -z "$gitinfo" ]] && fail "Can not detect url of git here. Please get the source via git-clone and then run this script here."
+
+	ex='^http[s]*://.*$'
+	if [[ "$gitinfo" =~ $ex ]] ; then
+		echo "(origin is in https format)"
+	else
+		echo "(origin is in other format...)"
+		ex='^.*@.*$'
+		if [[ "$gitinfo" =~ $ex ]] ; then
+			echo "(origin is ssh format)"
+			gitinfo=$(echo "$gitinfo" | sed 's/\.git$//; s/.*://; s|/|;|') ;  IFS=';' read -r -a gitpart <<< "$gitinfo" ;
+			# TODO take out server address instead github.com
+			giturl="https://github.com/${gitpart[0]}/${gitpart[1]}.git"
+			echo "giturl=[$giturl]"
+			target_url="$giturl"
+			gitproj="${gitpart[1]}"
+			if [[ "$target_name" != "$gitproj" ]] ; then
+				fail "Unexpected project name (from git origin) [$gitproj] instead of expected [$target_name]."
+			fi
+		else
+			fail "Origin is in unknown format. Do not know how to parse it. gitinfo=[$gitinfo]"
+		fi
+	fi
+	popd
+}
+
 function gitian_detect_source_version() {
-	pushd "$my_dir"
+	pushd "$my_dir" || fail "Can not cd my_dir=[$my_dir]"
 	printf "%s\n" "Detecting git version (revision) from PWD=$PWD."
 	gr=$(git log --format='%H' -1) || fail "Can not detect git version (revision) form PWD=$PWD"
 	target_checkout_gitrev="$gr"
@@ -169,6 +201,7 @@ function gitian_detect_source_version() {
 }
 
 function target_download() {
+	gitian_detect_source_repository
 	gitian_detect_source_version
 	printf "\n%s\n" "Will download target to ${base_dir} (${target_name})"
 	cd "${base_dir}" || fail
@@ -231,6 +264,7 @@ function gitian_run_build_once() {
 	printf "\n\n\n\n\n\n"
 	printf "The Gitian build, for platform=$var_platform_name, for YML file: $gitian_yml_file_full"
 	printf "\n\n\n\n\n\n"
+	gitian_detect_source_repository
 	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
 
