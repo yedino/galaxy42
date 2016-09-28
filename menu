@@ -1,0 +1,203 @@
+#!/bin/bash
+# This script should be run as-is inside the source code of this project.
+#
+# (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
+#
+
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
+
+source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+export TEXTDOMAIN="galaxy42_installer"
+# share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
+export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+
+programname="Galaxy42-developer-menu" # shellcheck disable=SC2034
+
+lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+
+dialog_h=40
+dialog_h2=$((dialog_h - 7 ))
+dialog_w=110
+
+# ------------------------------------------------------------------------
+# start
+
+init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
+# platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
+
+[[ -z "$EDITOR" ]] || {
+	EDITOR="nano"
+}
+
+response="$*" # get commands from cmd line
+
+if [[ -z "$response" ]] ;
+then
+
+# shellcheck disable=SC2069
+response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$dialog_w" "$dialog_h2"  \
+	"i"         "Install: with ./install.sh (with --sudo if not root)"  \
+	"d"         "Build: with ./do"  \
+	"d10"       "Build: with ./do extlevel 10"  \
+	"d20"       "Build: with ./do extlevel 20 - slow?"  \
+	"d30"       "Build: with ./do extlevel 30 - slow! exploits"  \
+	"" "" \
+	"gt"        "Hack: Gitian: on-target"  \
+	"gr"        "Hack: Gitian: on-target-root"  \
+	"" "" \
+	"glf"       "Build: Gitian for Linux (fast)"  \
+	"gwf"       "Build: Gitian for Windows (fast)"  \
+	"" "" \
+	"gli"       "Build: Gitian for Linux (image) - slow!"  \
+	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
+	"gai"       "Build: Gitian for all (image) - slow!"  \
+	"" "" \
+	"lui"       "Language: update: installer strings" \
+	"lum"       "Language: update: main-program strings" \
+	"" "" \
+	"tut"       "Tests: run Unit Tests" \
+	"tutr"      "Tests: run Unit Tests (release version)" \
+	"til"       "Tests: run Installer - in all Languages" \
+	"tid"       "Tests: run Installer - in all Dialog menu types" \
+	"" "" \
+	"rm"        "Read/write: main README" \
+	"rh"        "Read/write: doc/hacking" \
+	"" "" \
+	"GS"        "Git Security: check git history integrity" \
+	"GSk"       "Git Security: as above (GS) but first import all keys from here TO YOUR GPG" \
+	"" "" \
+	"info" "INFO about this menu: run it from cmd as: ./m do10 to run given action instantly" \
+	2>&1 >/dev/tty ) || abdialog_exit
+[[ -z "$response" ]] && exit
+
+fi
+
+#"gaf"        "Build Gitian for all (fast)"  \
+
+
+response_menu_task="$response"
+
+[[ -z "$response_menu_task" ]] && exit
+
+
+read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+	case "$item" in
+		i)
+			if [[ $EUID -ne 0 ]]; then
+				bash ./install.sh --sudo
+			else
+				bash ./install.sh
+			fi
+		;;
+
+		d)
+			EXTLEVEL=0 ./do --go
+		;;
+		d10)
+			EXTLEVEL=10 ./do --go
+		;;
+		d20)
+			EXTLEVEL=20 ./do --go
+		;;
+		do30)
+			EXTLEVEL=30 ./do --go
+		;;
+
+		gaf)
+			./build-gitian -W -L fast
+		;;
+		glf)
+			./build-gitian -L fast
+		;;
+		gwf)
+			./build-gitian -W fast
+		;;
+
+
+		gai)
+			./build-gitian -W -L install
+		;;
+		gli)
+			./build-gitian -L install
+		;;
+		gwi)
+			./build-gitian -W install
+		;;
+
+		gt)
+			./build-gitian o-t
+		;;
+		gr)
+			./build-gitian o-t-r
+		;;
+
+		lui)
+	    contrib/tools/lang-updater -t -u galaxy42_installer install.sh
+	  ;;
+	  lum)
+			contrib/tools/lang-updater -t -u galaxy42_main src/*.?pp src/*/*.?pp
+	  ;;
+
+	  tut)
+			./test-debug.elf
+	  ;;
+	  tutr)
+			./test-release.elf
+	  ;;
+
+	  tid)
+			printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			if [[ $EUID -ne 0 ]]; then
+				printf "Will add --sudo"
+				flag="--sudo"
+			else
+				flag=""
+			fi
+			sleep 0.2
+		  for iii in dialog whiptail ; do
+				FORCE_DIALOG="$iii" ./install.sh "$flag"
+		  done
+	  ;;
+	  til)
+			printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			if [[ $EUID -ne 0 ]]; then
+				printf "Will add --sudo"
+				flag="--sudo"
+			else
+				flag=""
+			fi
+			sleep 0.2
+		  for iii in en pl de ; do
+				LANGUAGE="$iii" ./install.sh "$flag"
+		  done
+	  ;;
+
+	  rm)
+			$EDITOR README.md
+	  ;;
+	  rh)
+			$EDITOR doc/hacking.md
+	  ;;
+
+	  GS)
+			python3 contrib/devtools/git-hist-check.py
+	  ;;
+	  GSk)
+			gpg --import doc/pubkey/*
+			python3 contrib/devtools/git-hist-check.py
+	  ;;
+
+
+	esac
+done
+
+printf "\n\n\n"
+printf "End of the developer menu program."
+printf "\n\n"
+
+
