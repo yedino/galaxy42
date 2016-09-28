@@ -60,6 +60,9 @@ Update existig file:
 Use script:
 
 ```
+contrib/tools/lang-updater  -h
+
+# for example:
 contrib/tools/lang-updater  -t -u
 ```
 
