@@ -48,8 +48,8 @@ pushd nsis || fail
 	cp ./build/urelease/UIs/modern.exe Contrib/UIs/ || fail
 	mkdir -p Plugins/x86-ansi || fail
 	mkdir -p Plugins/x86-unicode || fail
-	cp `find | grep Plugins | grep x86-ansi | grep dll` Plugins/x86-ansi || fail
-	cp `find | grep Plugins | grep x86-unicode | grep dll` Plugins/x86-unicode || fail
+	cp `find | grep Plugins | grep x86-ansi | grep dll` Plugins/x86-ansi
+	cp `find | grep Plugins | grep x86-unicode | grep dll` Plugins/x86-unicode
 	cp -r install_dir/Stubs/ . || fail
 	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" Include/ || fail
 
