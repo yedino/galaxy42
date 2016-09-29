@@ -14,7 +14,7 @@ printf "\n\n\nBuilding zlib (for NSIS)\n\n\n"
 
 [[ -r "$galaxy42_dir" ]] || fail "Can not enter galaxy42_dir=[$galaxy42_dir]"
 
-if (( 0 )) ; then # XXX
+if (( 1 )) ; then # on/off main buld
 
 # build zlib
 rm -rf zlib
