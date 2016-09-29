@@ -7,4 +7,6 @@ apt-get install aptitude less mc vim nano elinks wget irssi colordiff tree sudo 
 
 echo "ubuntu ALL=(ALL)NOPASSWD:/bin/su" > /etc/sudoers.d/gitian-sudo-su
 
+echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
+
 

@@ -401,7 +401,7 @@ function all_excluding_new_lxc() {
 	set_env
 	fix_template_script
 	gitian_check_net_devices "loud"
-	gitian_my_cfg_on_target
+	# gitian_my_cfg_on_target
 	target_download
 	gitian_run_build_all_platforms "$@"
 }
@@ -434,7 +434,7 @@ build_type is:
   on-target (or "o-t") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
   on-target-root (or "o-t-r") - same, but you are the root user (inside System Image e.g. LXC)
 
-  fix1 - special function: run my fixes 1
+  fix1 - special function: re-run configuration on-target
 
   Configuration options, set env variables:
     export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
