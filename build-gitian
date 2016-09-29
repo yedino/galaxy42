@@ -134,7 +134,21 @@ EOF
 	echo "Press any key - after reading above" ; read _
 }
 
+function my_banner {
+	printf "\n\n"
+	has_figlet=$(platforminfo_check_program 'figlet')
+	if (( $has_figlet )) ; then
+		figlet "$@"
+	else
+		printf "\n"
+		echo "$@"
+		printf "\n"
+	fi
+	printf "\n"
+}
+
 function gitian_builder_download() {
+	my_banner "Builder download"
 	if false ; then
 		printf "\n\nSKIPPING download of Gitian\n\n" # e.g. for debug of ${base_dir}/gitian-builder that you now edit there
 	else
@@ -154,6 +168,7 @@ function gitian_builder_download() {
 }
 
 function gitian_builder_make_lxc_image() {
+	my_banner "Make image (slow)"
 	echo "(from $0) Making the LXC image (with DEBOOTSTRAP_DIR=$DEBOOTSTRAP_DIR)"
 	cd "${base_dir}/gitian-builder/" || fail
 	bin/make-base-vm --lxc --arch amd64 --suite xenial || fail "to create VM image (did you configured network for LXC? Is apt-cacher-ng running? Common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)"
@@ -204,9 +219,11 @@ function gitian_detect_source_version() {
 }
 
 function target_download() {
+	my_banner "Target download"
 	gitian_detect_source_repository
 	gitian_detect_source_version
 	printf "\n%s\n" "Will download target to [${base_dir}] (${target_name})"
+
 	cd "${base_dir}" || fail
 	rm -rf "${base_dir}/${target_name}/" || fail
 	git clone "$target_url" || fail "Download target, target_url=[$target_url]" # confirm gitrev hash below!
@@ -239,6 +256,7 @@ function get_host_info() {
 
 # IN: set $var_platform_name to eg 'windows' or 'linux'
 function gitian_show_result() {
+	my_banner "Results"
 	printf "\n\n\n%s\n" "Will show results now (base_dir=$base_dir)"
 	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builder" # need it to call on-target
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8) || fail "Info git gitian-builder"
@@ -260,6 +278,7 @@ function gitian_show_result() {
 
 # IN: set $var_platform_name to eg 'windows' or 'linux'
 function gitian_run_build_once() {
+	my_banner "Building ($var_platform_name)"
 	[[ -z "${var_platform_name}" ]] && fail "Internal error: set platform name for gitian_run_build_once"
 	gitian_yml_file="main-build/galaxy-${var_platform_name}.yml" # must be under contrib/gitian-descriptors/
 	gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
@@ -300,6 +319,7 @@ function print_no_platform() {
 }
 
 function gitian_run_build_all_platforms() {
+	my_banner "Building selected platforms"
 	any=0
 	if (( option_platform_windows )) ; then
 		any=1
@@ -324,6 +344,46 @@ function check_options_platform() {
 	fi
 }
 
+function special_command_on_target() {
+	set_env
+	printf "Starting a console on the Image of for-Gitian system. PATH=$PATH\n"
+	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builde"
+	echo "PWD=$PWD"
+	set -x
+	on-target "$@"
+	set +x
+	printf "Exited from Image\n"
+}
+
+function run_script_on_target() {
+	user_or_root="$1"
+	script_file_main_name="$2"
+
+	script_file="${my_dir}/${script_file_main_name}"
+	printf "\nWill execute on-target a script [${script_file}] (user/root: $user_or_root)\n\n"
+	if [[ "$user_or_root" == "user" ]] ; then
+		special_command_on_target -u root < ${script_file} || {
+			fail "Execute on-target script=[$script_file] (user/root: $user_or_root)"
+		}
+	else
+		special_command_on_target < ${script_file} || {
+			fail "Execute on-target script=[$script_file] (user/root: $user_or_root)"
+		}
+	fi
+	printf "Script on-target done.\n\n"
+}
+
+
+function gitian_my_cfg_on_target() {
+	my_banner "Gitian on-target config"
+	printf "\nApplying my gitian config on target\n\n"
+
+	run_script_on_target 'user' 'contrib/gitian-tools/on-target-cfg-settings.sh'
+	run_script_on_target 'root' 'contrib/gitian-tools/on-target-cfg-settings.sh'
+
+	run_script_on_target 'root' 'contrib/gitian-tools/on-target-cfg-root.sh'
+}
+
 function all_including_new_lxc() {
 	check_options_platform
 	set_env
@@ -331,6 +391,7 @@ function all_including_new_lxc() {
 	gitian_builder_download
 	gitian_check_net_devices "loud"
 	gitian_builder_make_lxc_image
+	gitian_my_fixes
 	target_download
 	gitian_run_build_all_platforms "$@"
 }
@@ -340,6 +401,7 @@ function all_excluding_new_lxc() {
 	set_env
 	fix_template_script
 	gitian_check_net_devices "loud"
+	gitian_my_cfg_on_target
 	target_download
 	gitian_run_build_all_platforms "$@"
 }
@@ -350,17 +412,6 @@ function run_onlyresult() {
 	gitian_check_net_devices "loud"
 	gitian_show_result
 	printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
-}
-
-function special_command_on_target() {
-	set_env
-	echo "Starting a console on the Image of for-Gitian system. PATH=$PATH"
-	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builde"
-	echo "PWD=$PWD"
-	set -x
-	on-target $@
-	set +x
-	echo "Exited from Image"
 }
 
 function usage() {
@@ -382,6 +433,8 @@ build_type is:
 
   on-target (or "o-t") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
   on-target-root (or "o-t-r") - same, but you are the root user (inside System Image e.g. LXC)
+
+  fix1 - special function: run my fixes 1
 
   Configuration options, set env variables:
     export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
@@ -414,7 +467,7 @@ printf "%s\n" "option_platform_linux=$option_platform_linux"
 ## printf "\n%s\n" "options to be passed to the Gitian would be:"
 ## printf "%s\n" "$@"
 
-runmode="$1"
+runmode="$1" ; shift
 anything=0
 
 if [[ "$runmode" == "install" ]] ; then anything=1 ;  setup_host_for_lxc ; fi
@@ -422,8 +475,10 @@ if [[ "$runmode" == "image" ]] ; then anything=1 ; all_including_new_lxc "$@" ; 
 if [[ "$runmode" == "fast" ]] ; then anything=1 ; all_excluding_new_lxc "$@" ; fi
 if [[ "$runmode" == "show" ]] ; then anything=1 ; run_onlyresult ; fi
 
-if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  || "$runmode" == "o-t" ]] ; then anything=1 ; special_command_on_target ; fi
-if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" || "$runmode" == "o-t-r" ]] ; then anything=1 ; special_command_on_target "-u" "root" ; fi
+if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  || "$runmode" == "o-t" ]] ; then anything=1 ; special_command_on_target "$@" ; fi
+if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" || "$runmode" == "o-t-r" ]] ; then anything=1 ; special_command_on_target "-u" "root" "$@" ; fi
+
+if [[ "$runmode" == "fix1" ]] ; then anything=1 ; gitian_my_cfg_on_target  ; fi
 
 if (( ! anything )) ; then
 	printf "\n%s\n" "No action was selected. Run with -h for usage."
