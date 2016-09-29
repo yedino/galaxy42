@@ -119,7 +119,12 @@ function install_build_gitian() {
 	install_for_touse
 	install_for_devel
 
-	install_packages lxc apt-cacher-ng debootstrap bridge-utils curl ruby # for Gitian
+	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
+
+	# both apt-cacher needed it seems... bug J202
+	install_packages lxc apt-cacher-ng
+	install_packages lxc apt-cacher
+
 	install_packages python3-yaml # our scripting aroung Gitian uses this
 
 	install_packages_NOW
