@@ -71,6 +71,7 @@ needrestart_lxc=0
 function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
+	install_packages figlet banner # used in some scripts
 	if (("platforminfo[is_family_debian]")) ; then
 
 		if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
