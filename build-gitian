@@ -315,7 +315,7 @@ function gitian_run_build_once() {
 		"$gitian_yml_file_full" \
 	|| {
 		set +x
-		fail "Build with gbuild"
+		fail "Build with gbuild. See file [$base_dir/gitian-builder/var/build.log] for details of the error inside Gitian."
 	}
 	set +x
 	printf "\n\nBuild with gbuild - done - for platform=$var_platform_name\n\n"

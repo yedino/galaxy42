@@ -208,12 +208,12 @@ export CC="$HOME/wrapped/$TARGET_ARCH-gcc"
 export CXX="$HOME/wrapped/$TARGET_ARCH-g++"
 export CPP="$HOME/wrapped/$TARGET_ARCH-cpp"
 
-printf "\nPWD=$PWD\n"
+printf "\nPWD=$PWD in script $0\n"
 
 ## get and build lib gettext
 printf "\n\n=========================================================================\n\n"
 printf "gettext\n\n"
-pushd ./depends/gettext/ || fail "Entering dir of gettext"
+pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
 ./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
 popd
 printf "\n\n"
