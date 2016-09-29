@@ -238,7 +238,11 @@ function target_download() {
 	printf "%s\n" "On host we start with download of (${target_name}) in version:"
 	git log -1
 	git clean -xdf || fail
-	git checkout "$target_checkout_gitrev" || fail "Download target in given version (step 1)"
+	git checkout "$target_checkout_gitrev" || {
+	printf "\nYou probably should push your local version on server. Use: git branch (it shows you your actual branch)."
+	printf " Then use e.g.\ngit push origin Your_Actual_Branch  \n"
+	fail "Download target in given version (step 1)"
+	}
 	confirm_git_ver=$(git log --format='%H' -1)
 	[[ "$confirm_git_ver" == "$target_checkout_gitrev" ]] || {
 		fail "Git verification of hash: hash is $confirm_git_ver instead of expected $target_checkout_gitrev"
