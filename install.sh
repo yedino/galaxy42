@@ -128,7 +128,7 @@ function install_build_gitian() {
 	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
 		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
 		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
-		ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		# ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
 		if (( ubuntu_ver <= 14 )); then apt_cacher='old'; fi
 	fi
 
