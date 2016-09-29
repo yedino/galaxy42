@@ -1,17 +1,69 @@
 #!/bin/bash
-# usage ./build_gettext i686-w64-mingw32 or ./build_gettext x86_64-w64-mingw32
 # libiconv
-wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz
-tar xf libiconv-1.14.tar.gz
-libiconvdir=`pwd`/libiconv-1.14
-cd $libiconvdir
-./configure --disable-shared --host="$1" --prefix="$libiconvdir/install_dir"
-make install
-cd ..
+
+function fail() {
+	echo
+	echo "Error:" "$@"
+	echo
+	exit 1
+}
+
+function usage() {
+	echo
+	echo 'usage ./build_gettext i686-w64-mingw32 or ./build_gettext x86_64-w64-mingw32'
+	echo
+}
+
+
+target="$1"
+
+[[ ! -z "$target" ]] || { usage ; fail "wrong usage (see above)" ; }
+
+printf "\nBuilding gettext for target=$target\n\n"
+
+if [[ ! -r 'README-gettext' ]] ; then
+	fail "You seem to be running this program from wrong directory, run it with pwd of depends/gettext. Current PWD=$PWD"
+fi
+
+
+function download_file() {
+	if [[ -e "$thefile" ]] ; then
+		rm "$thefile" || fail "removing old file [$thefile]"
+	fi
+	url="$1"
+	wget "$url" || fail "Download from url=[$url]"
+	thefile="$2"
+	thehash_expected="$3"
+	thehash_here=$(sha512sum "$thefile" | cut -d' ' -f 1)
+	if [[ "$thehash_here" != "$thehash_expected" ]] ; then
+		printf "\n\n\nThe download was incorrect:\n"
+		printf "file [$thefile]\n"
+		printf "downloaded from [$url]\n"
+		printf "has checksum:        [$thehash_here]"
+		printf "instead of expected: [$thehash_expected]"
+		fail "Invalid checksum of downoad (see above)"
+	fi
+}
+
+download_file 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz' \
+	'libiconv-1.14.tar.gz' \
+	'b96774fefc4fa1d07948fcc667027701373c34ebf9c4101000428e048addd85a5bb5e05e59f80eb783a3054a3a8a3c0da909450053275bbbf3ffde511eb3f387'
+
+tar -xf libiconv-1.14.tar.gz || fail "unpack"
+libiconvdir="$PWD/libiconv-1.14"
+pushd $libiconvdir
+./configure --disable-shared --host="$target" --prefix="$libiconvdir/install_dir" || fail
+make install || fail
+popd
 
 # gettext
-wget http://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.tar.gz
-tar xf gettext-0.19.8.tar.gz
-cd gettext-0.19.8
-./configure --disable-shared --host="$1" --prefix=`pwd`/install_dir --with-libiconv-prefix="$libiconvdir/install_dir/"
-make install
+download_file 'http://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.tar.gz' \
+	'gettext-0.19.8.tar.gz' \
+	'6d169ea1c0a2a39a7df6f65a372f1729a1fab94ab6b0cf04fd7fd7371eff1f409c433ea5ec3a8e39105d1eeea2ebbbbcd59433367ec2510ed4b59cecca4dd2e5'
+
+tar -xf gettext-0.19.8.tar.gz || fail "unpack"
+pushd gettext-0.19.8 || fail
+./configure --disable-shared --host="$target" --prefix="$PWD/install_dir" --with-libiconv-prefix="$libiconvdir/install_dir/" || fail
+make install || fail
+popd
+
