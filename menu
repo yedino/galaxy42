@@ -47,8 +47,8 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
 	"d30"       "Build: with ./do extlevel 30 - slow! exploits"  \
 	"" "" \
-	"gt"        "Hack: Gitian: on-target"  \
-	"gr"        "Hack: Gitian: on-target-root"  \
+	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
+	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
 	"" "" \
 	"glf"       "Build: Gitian for Linux (fast)"  \
 	"gwf"       "Build: Gitian for Windows (fast)"  \
@@ -131,6 +131,13 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 
 		gt)
 			./build-gitian o-t
+		;;
+		'o-t')
+			./build-gitian o-t
+		;;
+
+		o-t-r)
+			./build-gitian o-t-r
 		;;
 		gr)
 			./build-gitian o-t-r
