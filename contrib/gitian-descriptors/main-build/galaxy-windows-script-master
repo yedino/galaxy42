@@ -69,16 +69,31 @@ if (( ! option_skip_cd )) ; then
 	cd "$HOME/build/galaxy42" || fail "cd to home build (in MASTER script)"
 fi
 
+# ubuntu@gitian:~/build/galaxy42$ ls contrib/nsis-installer-windows/bin/x86/  ; x64
+nsis_bin_input='./contrib/nsis-installer-windows/bin/'
+
+build="/home/ubuntu/build"
+
 if (( option_do_it_32bit )) ; then
 	export TARGET_ARCH="i686-w64-mingw32"
 	printf "\n\n%s\n" "Will build for TARGET_ARCH=$TARGET_ARCH"
 	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
+	cp "tunserver.elf.exe" "$nsis_bin_input/x86/" || fail "copy (project binaries)"
+	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x86/" || fail "copy (deps libs)"
+	# TODO ^ nicer bash style (arrays/escaping)
 fi
 
 if (( option_do_it_64bit )) ; then
 	export TARGET_ARCH="x86_64-w64-mingw32"
 	printf "\n\n%s\n" "Will build for TARGET_ARCH=$TARGET_ARCH"
 	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
+	cp "tunserver.elf.exe" "$nsis_bin_input/x86/" || fail "copy (project binaries)"
+	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x86/" || fail "copy (deps libs)"
+	# TODO ^ nicer bash style (arrays/escaping)
 fi
+
+printf "\n\nBinaries built (and results are copied) (for all selected 32/64 versions) - proceeding to NSIS.\n\n"
+
+./contrib/nsis-installer-windows/galaxy-windows-installer || fail "NSIS failed."
 
 
