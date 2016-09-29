@@ -166,7 +166,7 @@ msgstr ""
 "sudo"
 
 msgid "error_init_platforminfo_unknown"
-msgstr "This platform/OS us unknown"
+msgstr "This platform/OS is unknown"
 
 msgid "install_packages_title"
 msgstr "Packages to install"

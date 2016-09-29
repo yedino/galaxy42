@@ -170,6 +170,8 @@ function gitian_detect_source_repository() {
 	ex='^http[s]*://.*$'
 	if [[ "$gitinfo" =~ $ex ]] ; then
 		echo "(origin is in https format)"
+		giturl="$gitinfo"
+		target_url="$giturl"
 	else
 		echo "(origin is in other format...)"
 		ex='^.*@.*$'
@@ -189,6 +191,7 @@ function gitian_detect_source_repository() {
 		fi
 	fi
 	popd
+	printf "%s\n" "Detected target_url=[$target_url]"
 }
 
 function gitian_detect_source_version() {
@@ -203,10 +206,10 @@ function gitian_detect_source_version() {
 function target_download() {
 	gitian_detect_source_repository
 	gitian_detect_source_version
-	printf "\n%s\n" "Will download target to ${base_dir} (${target_name})"
+	printf "\n%s\n" "Will download target to [${base_dir}] (${target_name})"
 	cd "${base_dir}" || fail
 	rm -rf "${base_dir}/${target_name}/" || fail
-	git clone "$target_url" || fail "Download target" # confirm gitrev hash below!
+	git clone "$target_url" || fail "Download target, target_url=[$target_url]" # confirm gitrev hash below!
 	cd "${base_dir}/${target_name}" || fail
 	printf "%s\n" "On host we start with download of (${target_name}) in version:"
 	git log -1
@@ -292,6 +295,10 @@ function gitian_run_build_once() {
 	printf "\n\n\n"
 }
 
+function print_no_platform() {
+		printf "\nNo known platform was selected (run program with -h to see options, e.g. -W -L).\n"
+}
+
 function gitian_run_build_all_platforms() {
 	any=0
 	if (( option_platform_windows )) ; then
@@ -304,7 +311,7 @@ function gitian_run_build_all_platforms() {
 		var_platform_name='linux'
 		gitian_run_build_once
 	fi
-	if (( ! any )) ; then printf "\nNo known platform was selected.\n" ; fi
+	if (( ! any )) ; then print_no_platform ; fi
 }
 
 info_host=$(get_host_info)
@@ -312,7 +319,7 @@ echo "Running on host (shortcut name): $info_host"
 
 function check_options_platform() {
 	if  (( ! ( option_platform_windows || option_platform_linux ) )) ; then
-		printf "\nNo known platform was selected.\n"
+		print_no_platform
 		exit 1
 	fi
 }
@@ -373,8 +380,8 @@ build_type is:
   fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
   show - just show the results (as they are now)
 
-  on-target (or "ont") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
-  on-target-root (or "ontr") - same, but you are the root user (inside System Image e.g. LXC)
+  on-target (or "o-t") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
+  on-target-root (or "o-t-r") - same, but you are the root user (inside System Image e.g. LXC)
 
   Configuration options, set env variables:
     export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
@@ -399,8 +406,9 @@ while getopts ":hWL" opt; do
 done
 shift $((OPTIND-1)) # eat all the options paresed above
 
-printf "\n%s\n" "option_platform_windows=$option_platform_windows"
-printf "\n%s\n" "option_platform_linux=$option_platform_linux"
+printf "\n"
+printf "%s\n" "option_platform_windows=$option_platform_windows"
+printf "%s\n" "option_platform_linux=$option_platform_linux"
 
 ## can not pass options via Gitian to inside Gitian -> yml -> script...
 ## printf "\n%s\n" "options to be passed to the Gitian would be:"
@@ -414,8 +422,8 @@ if [[ "$runmode" == "image" ]] ; then anything=1 ; all_including_new_lxc "$@" ; 
 if [[ "$runmode" == "fast" ]] ; then anything=1 ; all_excluding_new_lxc "$@" ; fi
 if [[ "$runmode" == "show" ]] ; then anything=1 ; run_onlyresult ; fi
 
-if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  ]] ; then anything=1 ; special_command_on_target ; fi
-if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" ]] ; then anything=1 ; special_command_on_target "-u" "root" ; fi
+if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  || "$runmode" == "o-t" ]] ; then anything=1 ; special_command_on_target ; fi
+if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" || "$runmode" == "o-t-r" ]] ; then anything=1 ; special_command_on_target "-u" "root" ; fi
 
 if (( ! anything )) ; then
 	printf "\n%s\n" "No action was selected. Run with -h for usage."
