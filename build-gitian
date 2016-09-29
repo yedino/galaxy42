@@ -48,8 +48,6 @@ echo "Working in base_dir=${base_dir}"
 mkdir -p "$base_dir" || fail "Can not create the base dir ($base_dir)"
 cd "$base_dir" || fail "Can not enter the base dir ($base_dir)"
 
-#set -x
-
 function fix_template_script() {
 	# fix Debian Jessie (and any other distro) that lacks Xenial script/template in it's debootstrap.
 	# gbuild calls ---> make-base-vm (it's own script) ---> that calls debootstrap from system.
@@ -370,7 +368,7 @@ function run_script_on_target() {
 
 	script_file="${my_dir}/${script_file_main_name}"
 	printf "\nWill execute on-target a script [${script_file}] (user/root: $user_or_root)\n\n"
-	if [[ "$user_or_root" == "user" ]] ; then
+	if [[ "$user_or_root" == 'root' ]] ; then
 		special_command_on_target -u root < ${script_file} || {
 			fail "Execute on-target script=[$script_file] (user/root: $user_or_root)"
 		}
