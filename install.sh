@@ -121,7 +121,29 @@ function install_build_gitian() {
 
 	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
 
-	# both apt-cacher needed it seems... bug J202
+	# related to bug #J202
+	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
+	apt_cacher='ng'
+
+	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		if (( ubuntu_ver <= 14 )); then apt_cacher='old'; fi
+	fi
+
+	case "$apt_cacher" in
+		'ng')
+			install_packages apt-cacher-ng
+		;;
+		'old')
+			install_packages apt-cacher
+		;;
+		*)
+			fail "Internal error: unknown apt_cacher"
+		;;
+	esac
+
 	install_packages lxc apt-cacher-ng
 	install_packages lxc apt-cacher
 
