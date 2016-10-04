@@ -50,6 +50,7 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
 	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
 	"" "" \
+	"" "" \
 	"glf"       "Build: Gitian for Linux (fast)"  \
 	"gwf"       "Build: Gitian for Windows (fast)"  \
 	"" "" \
@@ -120,13 +121,13 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 
 
 		gai)
-			./build-gitian -W -L install
+			./build-gitian -W -L image
 		;;
 		gli)
-			./build-gitian -L install
+			./build-gitian -L image
 		;;
 		gwi)
-			./build-gitian -W install
+			./build-gitian -W image
 		;;
 
 		gt)
