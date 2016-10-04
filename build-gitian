@@ -3,11 +3,15 @@ echo -e "\nThis script can run the Gitian-Build of this project, to produce dete
 
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source='./'
-
+source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
+
+
 
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
@@ -348,6 +352,23 @@ function gitian_run_build_all_platforms() {
 info_host=$(get_host_info)
 echo "Running on host (shortcut name): $info_host"
 
+
+function gitian_config_specific_platforms() {
+	# setting devices for ubuntu <= 14
+	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		# if ubuntu main version is older/equal than 14
+		if (( $ubuntu_ver <= 14 )); then
+		echo "In order to avoid connetion issues inside lxc machine on ubuntu <= 14"
+		echo "It seems reswitch lxcbr0 device is needed:"
+		run_with_root_privilages ifconfig lxcbr0 down
+		run_with_root_privilages ifconfig lxcbr0 up
+		fi
+	fi
+}
+
+
 function check_options_platform() {
 	if  (( ! ( option_platform_windows || option_platform_linux ) )) ; then
 		print_no_platform
@@ -357,6 +378,7 @@ function check_options_platform() {
 
 function special_command_on_target() {
 	set_env
+	gitian_config_specific_platforms
 	printf "Starting a console on the Image of for-Gitian system. PATH=$PATH\n"
 	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builde"
 	echo "PWD=$PWD"
@@ -370,7 +392,6 @@ function run_script_on_target() {
 	user_or_root="$1"
 	script_file_main_name="$2"
 
-	gitian_config_specific_platforms
 
 	script_file="${my_dir}/${script_file_main_name}"
 	printf "\nWill execute on-target a script [${script_file}] (user/root: $user_or_root)\n\n"
