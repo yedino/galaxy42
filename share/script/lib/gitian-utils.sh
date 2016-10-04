@@ -20,3 +20,16 @@ function gitian_check_net_devices() {
 	fi
 }
 
+function gitian_config_specific_platforms() {
+
+	# setting devices for ubuntu <= 14
+	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		# if ubuntu main version is older/equal than 14
+		if (( $ubuntu_ver <= 14 )); then
+			sudo ifconfig lxcbr0 down   
+		fi
+	fi  
+}
+ 

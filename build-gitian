@@ -370,6 +370,8 @@ function run_script_on_target() {
 	user_or_root="$1"
 	script_file_main_name="$2"
 
+	gitian_config_specific_platforms
+
 	script_file="${my_dir}/${script_file_main_name}"
 	printf "\nWill execute on-target a script [${script_file}] (user/root: $user_or_root)\n\n"
 	if [[ "$user_or_root" == 'root' ]] ; then
@@ -383,7 +385,6 @@ function run_script_on_target() {
 	fi
 	printf "Script on-target done.\n\n"
 }
-
 
 function gitian_my_cfg_on_target() {
 	my_banner "Gitian on-target config"
@@ -401,6 +402,7 @@ function all_including_new_lxc() {
 	fix_template_script
 	gitian_builder_download
 	gitian_check_net_devices "loud"
+	gitian_config_specific_platforms
 	gitian_builder_make_lxc_image
 	gitian_my_cfg_on_target
 	target_download
@@ -412,6 +414,7 @@ function all_excluding_new_lxc() {
 	set_env
 	fix_template_script
 	gitian_check_net_devices "loud"
+	gitian_config_specific_platforms
 	# gitian_my_cfg_on_target
 	target_download
 	gitian_run_build_all_platforms "$@"
