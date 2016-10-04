@@ -459,8 +459,7 @@ EOF
 }
 
 
-platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec' 'nodev,noexec' || {
-}
+platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec' 'nodev,noexec' || fail
 
 while getopts ":hWL" opt; do
 	case $opt in
