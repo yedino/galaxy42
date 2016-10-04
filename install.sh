@@ -17,9 +17,9 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 programname="Galaxy42" # shellcheck disable=SC2034
 
 lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions
@@ -33,23 +33,23 @@ function install_packages_NOW() { # install selected things
 	old=("${packages_to_install[@]}")
 	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
 	packages_to_install=("${new[@]}")
+	packages_str="${packages_to_install[*]}"
 
-	printf "\n%s\n" "$(eval_gettext "We will install packages: ${packages_to_install[*]} now (as root)")"
+	printf "\n%s\n" "$(eval_gettext 'We will install packages: $packages_str now (as root)')"
 	if (( ${#packages_to_install[@]} > 0 )) ; then
 		if (( "verbose" )) ; then
-			packages_str="${packages_to_install[*]}"
-			text="$(eval_gettext "L_install_packages_text $packages_str")"
+			text="$(eval_gettext 'L_install_packages_text $packages_str')"
 			abdialog --title "$(gettext 'install_packages_title')" \
 				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
 				--msgbox "$text" 20 60 || abdialog_exit
 		fi
 
 		platforminfo_install_packages "${packages_to_install[@]}" || {
-			printf "\n%s\n" "$(eval_gettext "L_install_failed")"
+			printf "\n%s\n" "$(gettext "L_install_failed")"
 			exit 1
 		}
 	else
-		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
+		printf "\n%s\n" "$(gettext "L_install_nothing_to_do")"
 	fi
 	packages_to_install=() # clear the list, is now installed
 }
@@ -353,7 +353,7 @@ any=0
 ww=""
 if ((needrestart_lxc)) ; then any=1; ww="$(gettext "L_needrestart_LXC_maybe")\n${ww}" ; fi
 if ((any)) ; then
-	text="$(eval_gettext "L_needrestart_summary_text")\n\n$ww"
+	text="$(gettext "L_needrestart_summary_text")\n\n$ww"
 	abdialog --title "$(gettext 'L_needrestart_summary_title')" \
 		--msgbox "$text" 20 60 || abdialog_exit
 fi

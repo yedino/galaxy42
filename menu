@@ -146,7 +146,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		;;
 
 		lui)
-	    contrib/tools/lang-updater -t -u galaxy42_installer bash install.sh
+	    contrib/tools/lang-updater -t -u galaxy42_installer shell install.sh
 	  ;;
 		lus)
 	    contrib/tools/lang-updater -t -u galaxy42_scripts shell build-gitian
