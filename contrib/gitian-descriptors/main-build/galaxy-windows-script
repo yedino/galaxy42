@@ -429,7 +429,7 @@ make tunserver.elf || fail "make of our project (main binary) failed"
 echo "Printing checksums:"
 sha256sum *.exe | sort
 sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
-sha256sum  /home/ubuntu/build/libsodium/mingw_build/lib/*.dll* | sort
+sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"
