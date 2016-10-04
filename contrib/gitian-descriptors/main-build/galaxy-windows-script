@@ -214,6 +214,7 @@ printf "\nPWD=$PWD in script $0\n"
 printf "\n\n=========================================================================\n\n"
 printf "gettext\n\n"
 pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
+rm -rf gettext-0.19.8/ libiconv-1.14/ || echo "clean previous gettext build, if there is"
 ./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
 popd
 printf "\n\n"
