@@ -2,6 +2,9 @@
 # This code (in this file) is on BSD 2-clause license, (c) Copyrighted 2016 TiguSoft.pl
 # Various utils
 # including platform-detection utils
+#
+# g42bashutils - the galaxy42's bash utils (created for Galaxy42 project, but usable for anything else too)
+#
 
 # TODO - FOR HACKING / DEVELOPMENT:
 #
@@ -229,6 +232,8 @@ function platforminfo_test() {
 # @return exit code 0 if all is fine (e.g. fixed now or was already good), 1 if not
 #
 function platforminfo_set_mountflags() {
+	local oldtd=$TEXTDOMAIN; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
+
 	verbose=0
 	if [[ "$1" == 'verbose' ]] ; then verbose=1 ;
 	else
@@ -237,7 +242,7 @@ function platforminfo_set_mountflags() {
 			printf "Unknown flag (internal error)\n"; return 50;
 		fi
 	fi
-	targetdir="$2" # the dir to check
+	targetdir="$2-XXX" # the dir to check
 
 	fix=0
 
@@ -255,7 +260,7 @@ function platforminfo_set_mountflags() {
 	mapfile -t flagBad  < <(printf "%s\n" "$5" | sed -e 's|,|\n|g')
 
 	mountdir=$( df -h "$targetdir" | tail -n +2 | sed -r -e 's|[\t ]+|;|g' | cut -d';' -f 6 )
-	[ -z "$mountdir" ] && { printf "%s\n" "Can not find where targetdir=$targetdir is mounted." ; return 1 ; }
+	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext 'Can not find where $targetdir is mounted.')" ; return 1 ; }
 
 	(( verbose )) && printf "%s\n" "We will check file-system mounted at $mountdir."
 
@@ -265,6 +270,8 @@ function platforminfo_set_mountflags() {
 
 	mapfile -t tab < <(printf "%s\n" "$fsflags" | sed -e 's|,|\n|g')
 	(( verbose )) && printf "tab has: %s\n" "${tab[@]}"
+
+	exit 1
 
 }
 
