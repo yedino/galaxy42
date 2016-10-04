@@ -17,9 +17,9 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 programname="Galaxy42" # shellcheck disable=SC2034
 
 lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions

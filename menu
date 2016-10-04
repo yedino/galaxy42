@@ -30,7 +30,7 @@ init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; ex
 if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
 # platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
-[[ -z "$EDITOR" ]] || {
+[[ -z "$EDITOR" ]] && {
 	EDITOR="nano"
 }
 
@@ -58,8 +58,9 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
 	"gai"       "Build: Gitian for all (image) - slow!"  \
 	"" "" \
-	"lui"       "Language: update: installer strings" \
-	"lum"       "Language: update: main-program strings" \
+	"lui"       "Language: update: INSTALLER (script) strings" \
+	"lus"       "Language: update: other SCRIPT strings" \
+	"lum"       "Language: update: MAIN-program strings" \
 	"" "" \
 	"tut"       "Tests: run Unit Tests" \
 	"tutr"      "Tests: run Unit Tests (release version)" \
@@ -145,10 +146,13 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		;;
 
 		lui)
-	    contrib/tools/lang-updater -t -u galaxy42_installer install.sh
+	    contrib/tools/lang-updater -t -u galaxy42_installer bash install.sh
+	  ;;
+		lus)
+	    contrib/tools/lang-updater -t -u galaxy42_scripts shell build-gitian
 	  ;;
 	  lum)
-			contrib/tools/lang-updater -t -u galaxy42_main src/*.?pp src/*/*.?pp
+			contrib/tools/lang-updater -t -u galaxy42_main c++ src/*.?pp src/*/*.?pp
 	  ;;
 
 	  tut)

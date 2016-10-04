@@ -18,7 +18,6 @@ function platforminfo_check_program() {
 	hash "$1" 2>/dev/null && echo 1 || echo 0
 }
 
-
 # This variable platforminfo (assoc array) is initialized by call to init_platforminfo
 # then you should do some form of: if (( ! platforminfo[family_detected] )) ; then echo "Unknown platform" ; exit ; fi
 # after this use:
@@ -217,6 +216,58 @@ function platforminfo_test() {
 	if (("platforminfo[is_xxx]")) ; then printf "Using XXX (huh?).\n" ; fi
 	printf "End of test platforminfo_test\n"
 }
+
+
+#
+# (quiet|verbose) the_directory (fix|dryrun) "good1,good2,...,goodN" "bad1,bad2,...badN"
+# $1              $2            $3           $4                      $5
+# eg:
+# platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec' 'nodev,noexec'
+#
+# Will make sure that given the_directory has all of good flags, and none of the bad flags
+# (or just report the problem if option 'dryrun'.
+# @return exit code 0 if all is fine (e.g. fixed now or was already good), 1 if not
+#
+function platforminfo_set_mountflags() {
+	verbose=0
+	if [[ "$1" == 'verbose' ]] ; then verbose=1 ;
+	else
+		if [[ "$1" == 'quiet' ]] ; then verbose=0 ;
+		else
+			printf "Unknown flag (internal error)\n"; return 50;
+		fi
+	fi
+	targetdir="$2" # the dir to check
+
+	fix=0
+
+	printf "%s\n" "Checing mount options of file-system that contains $targetdir."
+	if [[ "$3" == 'fix' ]] ; then fix=1 ;
+	else
+		if [[ "$3" == 'dryrun' ]] ;
+			then fix=0 ;
+		else
+			printf "Unknown flag (internal error)\n"; return 50;
+		fi
+	fi
+
+	mapfile -t flagGood < <(printf "%s\n" "$4" | sed -e 's|,|\n|g')
+	mapfile -t flagBad  < <(printf "%s\n" "$5" | sed -e 's|,|\n|g')
+
+	mountdir=$( df -h "$targetdir" | tail -n +2 | sed -r -e 's|[\t ]+|;|g' | cut -d';' -f 6 )
+	[ -z "$mountdir" ] && { printf "%s\n" "Can not find where targetdir=$targetdir is mounted." ; return 1 ; }
+
+	(( verbose )) && printf "%s\n" "We will check file-system mounted at $mountdir."
+
+	fsflags=$( mount  | egrep  'on /home type ' | cut -d' ' -f 6 | sed -e 's|[()]||g' )
+
+	(( verbose )) && printf "%s\n" "The file-system $mountdir has flags $fsflags"
+
+	mapfile -t tab < <(printf "%s\n" "$fsflags" | sed -e 's|,|\n|g')
+	(( verbose )) && printf "tab has: %s\n" "${tab[@]}"
+
+}
+
 
 
 

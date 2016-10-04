@@ -4,10 +4,14 @@ echo -e "\nThis script can run the Gitian-Build of this project, to produce dete
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source='./'
 
+source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+export TEXTDOMAIN="galaxy42_scripts"
+export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+
+lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
-lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
 
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
@@ -95,7 +99,7 @@ function fix_template_script() {
 		done
 
 		# add our script file:
-		cp "${my_dir}/contrib/gitian-debootstrap/scripts/${suite}" $"$target_dbs/scripts/"
+		cp "${my_dir}/contrib/gitian-debootstrap/scripts/${suite}" "$target_dbs/scripts/"
 
 		export DEBOOTSTRAP_DIR="$target_dbs"
 		export GITIAN_SUDO_USE_DEBOOTSTRAP_DIR="yes"
@@ -452,6 +456,10 @@ build_type is:
     export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
 
 EOF
+}
+
+
+platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec' 'nodev,noexec' || {
 }
 
 while getopts ":hWL" opt; do
