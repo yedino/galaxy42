@@ -458,8 +458,17 @@ build_type is:
 EOF
 }
 
-
-platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec' 'nodev,noexec' || fail
+platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec,quota' 'nodev,noexec' || fail "mount options"
+mount_check_result=$?
+if (( $mount_check_result == 0 )) ; then
+	printf "%s\n" "Mount is OK."
+else
+	if (( $mount_check_result == 1 )) ; then
+		printf "%s\n" "Mount needs to be adjusted."
+	else
+		fail "Problems when checking mount flags."
+	fi
+fi
 
 while getopts ":hWL" opt; do
 	case $opt in

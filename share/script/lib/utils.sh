@@ -13,6 +13,7 @@
 
 
 inarray() { local n=$1 h; shift; for h; do [[ $n = "$h" ]] && return; done; return 1; }
+join_by() { local IFS="$1"; shift; echo "$*"; }
 
 
 # platforminfo - informations about current platform, system, for compatybility
@@ -229,9 +230,13 @@ function platforminfo_test() {
 #
 # Will make sure that given the_directory has all of good flags, and none of the bad flags
 # (or just report the problem if option 'dryrun'.
-# @return exit code 0 if all is fine (e.g. fixed now or was already good), 1 if not
+# @return exit code 0 if all is fine (e.g. fixed now or was already good), 1 is you must call mount, 2 if error
+# @return via global variable $g42utils_resulting_mount_args - list of arguments to mount (or empty)
 #
 function platforminfo_set_mountflags() {
+	unset g42utils_resulting_mount_args
+	declare -a g42utils_resulting_mount_args
+
 	local oldtd=$TEXTDOMAIN; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
 
 	verbose=0
@@ -242,7 +247,7 @@ function platforminfo_set_mountflags() {
 			printf "Unknown flag (internal error)\n"; return 50;
 		fi
 	fi
-	targetdir="$2-XXX" # the dir to check
+	targetdir="$2" # the dir to check
 
 	fix=0
 
@@ -256,23 +261,60 @@ function platforminfo_set_mountflags() {
 		fi
 	fi
 
-	mapfile -t flagGood < <(printf "%s\n" "$4" | sed -e 's|,|\n|g')
-	mapfile -t flagBad  < <(printf "%s\n" "$5" | sed -e 's|,|\n|g')
+	mapfile -t flagsGood < <(printf "%s\n" "$4" | sed -e 's|,|\n|g')
+	mapfile -t flagsBad  < <(printf "%s\n" "$5" | sed -e 's|,|\n|g')
 
 	mountdir=$( df -h "$targetdir" | tail -n +2 | sed -r -e 's|[\t ]+|;|g' | cut -d';' -f 6 )
-	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext 'Can not find where $targetdir is mounted.')" ; return 1 ; }
+	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext 'Can not find where $targetdir is mounted.')" ; return 10 ; }
 
 	(( verbose )) && printf "%s\n" "We will check file-system mounted at $mountdir."
 
-	fsflags=$( mount  | egrep  'on /home type ' | cut -d' ' -f 6 | sed -e 's|[()]||g' )
+	fsflags_str=$( mount  | egrep  'on /home type ' | cut -d' ' -f 6 | sed -e 's|[()]||g' )
 
 	(( verbose )) && printf "%s\n" "The file-system $mountdir has flags $fsflags"
 
-	mapfile -t tab < <(printf "%s\n" "$fsflags" | sed -e 's|,|\n|g')
-	(( verbose )) && printf "tab has: %s\n" "${tab[@]}"
+	mapfile -t flags < <(printf "%s\n" "$fsflags_str" | sed -e 's|,|\n|g')
+	# (( verbose )) && printf "flags are: %s\n" "${flags[@]}"
 
-	exit 1
+	declare -A flag_negate
+	flag_negate['dev']='nodev'
+	flag_negate['nodev']='dev'
+	flag_negate['exec']='noexec'
+	flag_negate['noexec']='exec'
 
+	toadd=()
+
+	# Decide what to change. E.g:
+	# flags: nodev,atime,noexec; good=dev; bad=noexec ---> need=dev,exec
+	for flagGood in "${flagsGood[@]}" ; do
+		inarray "$flagGood" "${flags[@]}" || {
+			(( verbose )) && printf "Need to add good flag $flagGood.\n"
+			toadd+=("$flagGood")
+		}
+	done
+
+	# (( verbose )) && printf "bad: %s\n" "${flagsBad[@]}"
+
+	for flagBad in "${flagsBad[@]}" ; do
+		# printf "Testig bad: $flagBad in ${flags[*]}\n"
+		inarray "$flagBad" "${flags[@]}" && {
+			negate="${flag_negate[$flagBad]}"
+			(( verbose )) && printf "Need to remove unwanted flag $flagBad - by adding flag $negate\n"
+			toadd+=("$negate")
+		}
+	done
+
+	declare -A addclear
+	for i in ${toadd[@]}; do addclear[$i]=1; done
+	if (( ${#toadd[@]} == 0 )) ; then
+		printf "%s\n" "All is ok, nothing needs to be fixed on ${mountdir}."
+		exit 0
+	fi
+
+	new_flags="remount,"$( join_by ',' "${!addclear[@]}" )
+	g42utils_resulting_mount_args=( "$mountdir" -o "$new_flags" ) # the mount command
+	printf "%s\n" "Need to remount ${mountdir} by using: ${g42utils_resulting_mount_args[*]}"
+	return 1
 }
 
 
