@@ -9,9 +9,9 @@ export TEXTDOMAIN="galaxy42_scripts"
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 
 lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	printf "\n%s\n" "$(eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source).")" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
