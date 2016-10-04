@@ -63,10 +63,13 @@ download_file 'http://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.tar.gz' \
 
 tar -xf gettext-0.19.8.tar.gz || fail "unpack"
 pushd gettext-0.19.8 || fail
+printf "\ngettext (main gettext itself) - configure\n"
 ./configure --disable-shared --host="$target" --prefix="$PWD/install_dir" --with-libiconv-prefix="$libiconvdir/install_dir/" || fail
+printf "\ngettext (main gettext itself) - install\n"
 make install || {
 	printf "\n\n\n"
-	printf "Make of gettext failed. But we can usually ignore this, because the library is already built at this point (we assume).\n"
+	printf "Make of gettext failed. But we can usually ignore this, because the library is already built at this point "
+	printf "(we assume).\n"
 	printf "Continuing.\n\n"
 }
 popd
