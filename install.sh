@@ -17,9 +17,9 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 programname="Galaxy42" # shellcheck disable=SC2034
 
 lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions
@@ -34,11 +34,13 @@ function install_packages_NOW() { # install selected things
 	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
 	packages_to_install=("${new[@]}")
 	packages_str="${packages_to_install[*]}"
+	export packages_str # so that shellcheck can fuckoff. yeah "shellcheck disable" is not working either
+## shellcheck disable=SC2034 (used in eval_gettext)
 
-	printf "\n%s\n" "$(eval_gettext 'We will install packages: $packages_str now (as root)')"
+	printf "\n%s\n" "$(eval_gettext "We will install packages: \$packages_str now (as root)")"
 	if (( ${#packages_to_install[@]} > 0 )) ; then
 		if (( "verbose" )) ; then
-			text="$(eval_gettext 'L_install_packages_text $packages_str')"
+			text="$(eval_gettext "L_install_packages_text \$packages_str")"
 			abdialog --title "$(gettext 'install_packages_title')" \
 				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
 				--msgbox "$text" 20 60 || abdialog_exit
