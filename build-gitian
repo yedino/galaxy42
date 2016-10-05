@@ -4,10 +4,16 @@ echo -e "\nThis script can run the Gitian-Build of this project, to produce dete
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source='./'
 
+source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+export TEXTDOMAIN="galaxy42_scripts"
+export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+
+lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
-lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
+
+init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
 
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
@@ -95,7 +101,7 @@ function fix_template_script() {
 		done
 
 		# add our script file:
-		cp "${my_dir}/contrib/gitian-debootstrap/scripts/${suite}" $"$target_dbs/scripts/"
+		cp "${my_dir}/contrib/gitian-debootstrap/scripts/${suite}" "$target_dbs/scripts/"
 
 		export DEBOOTSTRAP_DIR="$target_dbs"
 		export GITIAN_SUDO_USE_DEBOOTSTRAP_DIR="yes"
@@ -315,7 +321,7 @@ function gitian_run_build_once() {
 		"$gitian_yml_file_full" \
 	|| {
 		set +x
-		fail "Build with gbuild"
+		fail "Build with gbuild. See file [$base_dir/gitian-builder/var/build.log] for details of the error inside Gitian."
 	}
 	set +x
 	printf "\n\nBuild with gbuild - done - for platform=$var_platform_name\n\n"
@@ -453,6 +459,32 @@ build_type is:
 
 EOF
 }
+
+function run_with_root_privilages_fix() {
+# TODO ask user to confirm?
+	info="$1" ; shift
+	run_with_root_privilages "$@" || fail "Can not run the fix for problem."
+}
+
+function my_set_mountflags() {
+	dir="$1"
+	good="$2"
+	bad="$3"
+	platforminfo_set_mountflags verbose "$dir" fix "$good" "$bad" || {
+		mount_check_result=$?
+		if (( $mount_check_result == 1 )) ; then
+			printf "%s\n" "Mount needs to be adjusted: ${g42utils_resulting_mount_args[*]}."
+			run_with_root_privilages_fix "$(gettext 'L_fix_mount_flags')" 'mount' "${g42utils_resulting_mount_args[@]}"
+		else
+			fail "Problems when checking mount flags."
+		fi
+	}
+}
+
+my_set_mountflags "${base_dir}" "" "nodev,noexec"
+
+printf "DONE1\n"
+exit 1
 
 while getopts ":hWL" opt; do
 	case $opt in

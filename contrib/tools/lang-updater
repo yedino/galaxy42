@@ -7,7 +7,7 @@ function usage() {
 
 	Run this program with options:
 
-	$0 [-t] [-u] [translation_catalog] [file1, [file2 [...]]]
+	$0 [-t] [-u] [translation_catalog] [lang] [file1, [file2 [...]]]
 
 	-t Trims from .po files obsolite strings that are no longer present in sources.
 	-u Updates the .po and .mo files by adding new strings that were since last time added in sources.
@@ -40,7 +40,7 @@ MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || exit
 
 function lang_new_and_translate() {
 
-	xgettext -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile[@]}"
+	xgettext  --language="$programming_language" -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile[@]}"
 	# -j
 	for lang in pl en
 	do
@@ -72,7 +72,7 @@ function trim_obsolete {
 
 	# set -x # debug
 	freshfile="$MYTMP/fresh.pot"
-	xgettext  -o "${freshfile}"  "${sourcefile[@]}"
+	xgettext  --language="$programming_language"  -o "${freshfile}"  "${sourcefile[@]}"
 
 	trim_po_file "${freshfile}" "${mainfile_messages_pot}"
 
@@ -108,6 +108,9 @@ done
 shift $((OPTIND-1)) # eat all the options paresed above.q
 
 textdomain="$1" # e.g. 'galaxy42_installer'
+shift 1
+
+programming_language="$1" # e.g. bash
 shift 1
 
 sourcefile=("$@") # e.g. ('install.sh') or a list ('a.cpp' 'b.cpp')
