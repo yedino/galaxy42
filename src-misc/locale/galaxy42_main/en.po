@@ -200,9 +200,6 @@ msgstr "Exception: "
 msgid "L_unknown_exception"
 msgstr "(Type of exception is unknown)"
 
-msgid "L_unhandled_exception"
-msgstr "There is a problem (Unhandled Exception reached the top of main):  "
-
 msgid "L_exit_aplication"
 msgstr ", application will now exit"
 

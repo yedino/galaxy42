@@ -61,6 +61,20 @@ function install_packages() { # only selects things for install, does not actual
 	#echo "Will install more packages: " "${packages_to_install[@]}"
 }
 
+function show_status() {
+	local text="$1"
+	abdialog --title "$(gettext 'install_progress_title')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 60 || abdialog_exit
+}
+
+function show_fix() {
+	local text="$1"
+	abdialog --title "$(gettext 'install_progress_fix')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 60 || abdialog_exit
+}
+
 # ------------------------------------------------------------------------
 # install functions for this project
 
@@ -81,12 +95,13 @@ function install_for_build() {
 			ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
 			# if ubuntu main version is older/equal than 14
 			if (( ubuntu_ver <= 14 )); then
+				show_fix "$(gettext 'L_fix_ubuntu_old_build')"
 				run_with_root_privilages "./share/script/setup-ubuntu14-host" || fail
 			fi
 		fi
 
 
-		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
+		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
 		# EXTLEVEL fftw-devel
@@ -99,14 +114,14 @@ function install_for_build() {
 function install_for_touse() {
 	(("done_install['install_for_touse']")) && return ; done_install['install_for_touse']=1
 	install_for_build
-	install_packages sudo
+	install_packages sudo gettext
 }
 
 function install_for_devel() {
 	(("done_install['install_for_devel']")) && return ; done_install['install_for_devel']=1
 	install_for_build
 	install_for_touse
-	install_packages git gnupg
+	install_packages git gnupg gettext
 }
 
 function install_for_devel2() {
@@ -123,6 +138,12 @@ function install_build_gitian() {
 
 	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
 
+	# for systems that are missing proper cgroupfs mounts
+	if [[ "${platforminfo[id]}" == "devuan" ]]; then
+		show_fix "$(gettext 'L_fix_cgroupfs_mount')"
+		install_packages cgroupfs-mount
+	fi
+
 	# related to bug #J202
 	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
 	apt_cacher='ng'
@@ -133,6 +154,10 @@ function install_build_gitian() {
 		# ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
 		if (( ubuntu_ver <= 14 )); then apt_cacher='old'; fi
 	fi
+
+	(( verbose && apt_cacher!='ng' )) && {
+		show_fix "$(eval_gettext "For this system we selected apt-cacher type: \$apt_cacher")"
+	}
 
 	case "$apt_cacher" in
 		'ng')
@@ -146,8 +171,7 @@ function install_build_gitian() {
 		;;
 	esac
 
-	install_packages lxc apt-cacher-ng
-	install_packages lxc apt-cacher
+	install_packages lxc
 
 	install_packages python3-yaml # our scripting aroung Gitian uses this
 
@@ -209,17 +233,19 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 
 # shellcheck disable=SC2069
 response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 16  \
-	"normal"        "$(gettext "menu_taskpack_normal_builduse")"  \
-	"custom"        "$(gettext "menu_taskpack_custom")" \
+	"simple"        "$(gettext "menu_taskpack_normal_builduse")"  \
+	"devel"         "$(gettext "menu_taskpack_devel_builduse")"  \
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
 	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
+	"custom"        "$(gettext "menu_taskpack_custom")" \
 	2>&1 >/dev/tty ) || abdialog_exit
 [[ -z "$response" ]] && exit
 
 
 response_menu_task=""
 
-if [[ "$response" == "normal" ]] ; then response_menu_task="warn build touse" ; fi
+if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
+if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
 if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse" ; fi
 if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian" ; fi
 if [[ "$response" == "custom" ]] ; then
@@ -230,7 +256,7 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
-	"verbose"       "$(gettext "menu_task_verbose")" "off" \
+	"verbose"       "$(gettext "menu_task_verbose")" "on" \
 	2>&1 >/dev/tty ) || abdialog_exit
 	response_menu_task="$response"
 fi
@@ -308,14 +334,6 @@ if ((enabled_warn && warn2_net)) ; then
 		--yesno "$text" 20 60 || abdialog_exit
 fi
 
-function show_status() {
-	local text="$1"
-	abdialog --title "$(gettext 'install_progress_title')" \
-		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
-}
-
-
 
 read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 	item="$(echo "$item_tab" | tr -cd '[[:alnum:]]._-' )"
@@ -363,10 +381,11 @@ fi
 
 
 text="$(eval_gettext "Finished installation of \$programname.")"
+text="${text}\n\n$(eval_gettext "L_what_now")"
 abdialog --title "$(gettext 'Done')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--msgbox "$text" 20 60 || abdialog_exit
 
-
+share/script/show-source-help.sh
 
 

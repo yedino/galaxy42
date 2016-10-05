@@ -242,6 +242,7 @@ function platforminfo_set_mountflags() {
 	g42utils_resulting_mount_args=()
 
 	# export is for shellcheck
+	local oldlca=$LC_ALL; export oldlca; trap 'LC_ALL=$oldlca' 0 ; LC_ALL="C"
 	local oldtd=$TEXTDOMAIN; export oldtd; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
 
 	verbose=0
@@ -275,7 +276,8 @@ function platforminfo_set_mountflags() {
 
 	(( verbose )) && printf "%s\n" "We will check file-system mounted at $mountdir."
 
-	fsflags_str=$( mount  | egrep  'on /home type ' | cut -d' ' -f 6 | sed -e 's|[()]||g' )
+	fsflags_str=$( mount  | egrep  "on $mountdir type " | cut -d' ' -f 6 | sed -e 's|[()]||g' )
+	(( verbose )) && printf "%s\n" "fs flags read as [$fsflags_str]"
 
 
 	mapfile -t flags < <(printf "%s\n" "$fsflags_str" | sed -e 's|,|\n|g')
