@@ -31,7 +31,7 @@ if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_
 # platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 [[ -z "$EDITOR" ]] && {
-	EDITOR="nano"
+	export EDITOR="nano"
 }
 
 response="$*" # get commands from cmd line
@@ -153,7 +153,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	    contrib/tools/lang-updater -t -u g42bashutils shell share/script/lib/*.sh
 	  ;;
 		lus)
-	    contrib/tools/lang-updater -t -u galaxy42_scripts shell build-gitian
+	    contrib/tools/lang-updater -t -u galaxy42_scripts shell build-gitian share/script/*.sh
 	  ;;
 	  lum)
 			contrib/tools/lang-updater -t -u galaxy42_main c++ src/*.?pp src/*/*.?pp

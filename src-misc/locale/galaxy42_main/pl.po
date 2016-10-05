@@ -69,8 +69,8 @@ msgstr "To samo co --quiet"
 
 msgid "L_what_peer_do"
 msgstr ""
-"Dodaje całą ścieżkę peera, w składni ip-pub. Może być podany wię"
-"cej niż raz, dla wielu peerów"
+"Dodaje całą ścieżkę peera, w składni ip-pub. Może być podany więcej "
+"niż raz, dla wielu peerów"
 
 msgid "L_what_info_do"
 msgstr ""
@@ -103,8 +103,8 @@ msgstr "Błąd w opcjach: "
 
 msgid "L_warning_work_in_progres"
 msgstr ""
-"*** UWAGA: Prace w toku, Nie używaj tego kodu, zawiera bugi i 'literófki' "
-"***"
+"*** UWAGA: Wersja robocza programu! Nie używaj tego kodu, zawiera błędy i "
+"'literówkii'. ***"
 
 msgid "L_wrong_peer_typo"
 msgstr ""
@@ -204,9 +204,6 @@ msgstr "Wyjątek: "
 
 msgid "L_unknown_exception"
 msgstr "(Typ wyjątku jest nieznany)"
-
-msgid "L_unhandled_exception"
-msgstr "Wystąpił błąd (Unhandled Exception reached the top of main): "
 
 msgid "L_exit_aplication"
 msgstr ", aplikacja wyłączy sie."

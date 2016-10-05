@@ -293,6 +293,7 @@ int main(int argc, char **argv) {
 	std::cerr << std::string(80,'=') << std::endl << gettext("L_warning_work_in_progres") << std::endl << std::endl;
 	std::cerr << gettext("L_program_is_pre_pre_alpha") << std::endl;
 	std::cerr << gettext("L_program_is_copyrighted") << std::endl;
+	std::cerr << std::endl;
 
 //	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 //	setlocale(LC_ALL,"");

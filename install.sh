@@ -68,6 +68,13 @@ function show_status() {
 		--msgbox "$text" 20 60 || abdialog_exit
 }
 
+function show_fix() {
+	local text="$1"
+	abdialog --title "$(gettext 'install_progress_fix')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 60 || abdialog_exit
+}
+
 # ------------------------------------------------------------------------
 # install functions for this project
 
@@ -88,12 +95,13 @@ function install_for_build() {
 			ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
 			# if ubuntu main version is older/equal than 14
 			if (( ubuntu_ver <= 14 )); then
+				show_fix "$(gettext 'L_fix_ubuntu_old_build')"
 				run_with_root_privilages "./share/script/setup-ubuntu14-host" || fail
 			fi
 		fi
 
 
-		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev
+		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
 		# EXTLEVEL fftw-devel
@@ -106,14 +114,14 @@ function install_for_build() {
 function install_for_touse() {
 	(("done_install['install_for_touse']")) && return ; done_install['install_for_touse']=1
 	install_for_build
-	install_packages sudo
+	install_packages sudo gettext
 }
 
 function install_for_devel() {
 	(("done_install['install_for_devel']")) && return ; done_install['install_for_devel']=1
 	install_for_build
 	install_for_touse
-	install_packages git gnupg
+	install_packages git gnupg gettext
 }
 
 function install_for_devel2() {
@@ -130,6 +138,12 @@ function install_build_gitian() {
 
 	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
 
+	# for systems that are missing proper cgroupfs mounts
+	if [[ "${platforminfo[id]}" == "devuan" ]]; then
+		show_fix "$(gettext 'L_fix_cgroupfs_mount')"
+		install_packages cgroupfs-mount
+	fi
+
 	# related to bug #J202
 	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
 	apt_cacher='ng'
@@ -141,7 +155,9 @@ function install_build_gitian() {
 		if (( ubuntu_ver <= 14 )); then apt_cacher='old'; fi
 	fi
 
-	(( verbose )) && show_status "$(eval_gettext "For this system we selected apt-cacher type: \$apt_cacher")"
+	(( verbose && apt_cacher!='ng' )) && {
+		show_fix "$(eval_gettext "For this system we selected apt-cacher type: \$apt_cacher")"
+	}
 
 	case "$apt_cacher" in
 		'ng')
@@ -365,10 +381,11 @@ fi
 
 
 text="$(eval_gettext "Finished installation of \$programname.")"
+text="${text}\n\n$(eval_gettext "L_what_now")"
 abdialog --title "$(gettext 'Done')" \
 	--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 	--msgbox "$text" 20 60 || abdialog_exit
 
-
+share/script/show-source-help.sh
 
 
