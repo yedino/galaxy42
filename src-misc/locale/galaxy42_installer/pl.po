@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-04 13:01+0000\n"
+"POT-Creation-Date: 2016-10-05 09:39+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -148,7 +148,7 @@ msgid "menu_main_title $programname:"
 msgstr "Instalator $programname."
 
 msgid "menu_taskpack_normal_builduse"
-msgstr "Zalecane: zbuduj ten program aby go używać tutaj"
+msgstr "Proste: zbuduj ten program tylko aby go używać tutaj"
 
 msgid "menu_taskpack_custom"
 msgstr "Wybierz dokładne opcje sam..."
@@ -227,3 +227,10 @@ msgstr "Zainstalujemy pakiety: $packages_str (jako root)"
 #, sh-format
 msgid "L_install_packages_text $packages_str"
 msgstr "Zainstalujemy pakiety: $packages_str"
+
+#, sh-format
+msgid "For this system we selected apt-cacher type: $apt_cacher"
+msgstr "Dla tego systemu wybraliśmy program apt-cacher typu: $apt_cacher"
+
+msgid "menu_taskpack_devel_builduse"
+msgstr "Zaawansowane: zbuduj program w Gitian / rozwijaj go"

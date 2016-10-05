@@ -61,6 +61,13 @@ function install_packages() { # only selects things for install, does not actual
 	#echo "Will install more packages: " "${packages_to_install[@]}"
 }
 
+function show_status() {
+	local text="$1"
+	abdialog --title "$(gettext 'install_progress_title')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 60 || abdialog_exit
+}
+
 # ------------------------------------------------------------------------
 # install functions for this project
 
@@ -134,6 +141,8 @@ function install_build_gitian() {
 		if (( ubuntu_ver <= 14 )); then apt_cacher='old'; fi
 	fi
 
+	(( verbose )) && show_status "$(eval_gettext "For this system we selected apt-cacher type: \$apt_cacher")"
+
 	case "$apt_cacher" in
 		'ng')
 			install_packages apt-cacher-ng
@@ -146,8 +155,7 @@ function install_build_gitian() {
 		;;
 	esac
 
-	install_packages lxc apt-cacher-ng
-	install_packages lxc apt-cacher
+	install_packages lxc
 
 	install_packages python3-yaml # our scripting aroung Gitian uses this
 
@@ -209,17 +217,19 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 
 # shellcheck disable=SC2069
 response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 16  \
-	"normal"        "$(gettext "menu_taskpack_normal_builduse")"  \
-	"custom"        "$(gettext "menu_taskpack_custom")" \
+	"simple"        "$(gettext "menu_taskpack_normal_builduse")"  \
+	"devel"         "$(gettext "menu_taskpack_devel_builduse")"  \
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
 	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
+	"custom"        "$(gettext "menu_taskpack_custom")" \
 	2>&1 >/dev/tty ) || abdialog_exit
 [[ -z "$response" ]] && exit
 
 
 response_menu_task=""
 
-if [[ "$response" == "normal" ]] ; then response_menu_task="warn build touse" ; fi
+if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
+if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
 if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse" ; fi
 if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian" ; fi
 if [[ "$response" == "custom" ]] ; then
@@ -230,7 +240,7 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
-	"verbose"       "$(gettext "menu_task_verbose")" "off" \
+	"verbose"       "$(gettext "menu_task_verbose")" "on" \
 	2>&1 >/dev/tty ) || abdialog_exit
 	response_menu_task="$response"
 fi
@@ -307,14 +317,6 @@ if ((enabled_warn && warn2_net)) ; then
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
 		--yesno "$text" 20 60 || abdialog_exit
 fi
-
-function show_status() {
-	local text="$1"
-	abdialog --title "$(gettext 'install_progress_title')" \
-		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
-}
-
 
 
 read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
