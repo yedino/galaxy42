@@ -241,7 +241,8 @@ export g42utils_resulting_mount_args
 function platforminfo_set_mountflags() {
 	g42utils_resulting_mount_args=()
 
-	local oldtd=$TEXTDOMAIN; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
+	# export is for shellcheck
+	local oldtd=$TEXTDOMAIN; export oldtd; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
 
 	verbose=0
 	if [[ "$1" == 'verbose' ]] ; then verbose=1 ;
@@ -264,12 +265,13 @@ function platforminfo_set_mountflags() {
 			printf "Unknown flag (internal error)\n"; return 50;
 		fi
 	fi
+	export fix # shellcheck yes it is unused.
 
 	mapfile -t flagsGood < <(printf "%s" "$4" | sed -e 's|,|\n|g')
 	mapfile -t flagsBad  < <(printf "%s" "$5" | sed -e 's|,|\n|g')
 
 	mountdir=$( df -h "$targetdir" | tail -n +2 | sed -r -e 's|[\t ]+|;|g' | cut -d';' -f 6 )
-	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext 'Can not find where $targetdir is mounted.')" ; return 10 ; }
+	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext "Can not find where \$targetdir is mounted.")" ; return 10 ; }
 
 	(( verbose )) && printf "%s\n" "We will check file-system mounted at $mountdir."
 
@@ -291,7 +293,7 @@ function platforminfo_set_mountflags() {
 	# flags: nodev,atime,noexec; good=dev; bad=noexec ---> need=dev,exec
 	for flagGood in "${flagsGood[@]}" ; do
 		inarray "$flagGood" "${flags[@]}" || {
-			(( verbose )) && printf "Need to add good flag $flagGood.\n"
+			(( verbose )) && printf "%s\n" "Need to add good flag [$flagGood]."
 			toadd+=("$flagGood")
 		}
 	done
@@ -302,15 +304,14 @@ function platforminfo_set_mountflags() {
 		# printf "Testig bad: $flagBad in ${flags[*]}\n"
 		inarray "$flagBad" "${flags[@]}" && {
 			negate="${flag_negate[$flagBad]}"
-			(( verbose )) && printf "Need to remove unwanted flag $flagBad - by adding flag $negate\n"
+			(( verbose )) && printf "%s\n" "Need to remove unwanted flag $flagBad - by adding flag [$negate]."
 			toadd+=("$negate")
 		}
 	done
 
 	declare -A addclear
 	printf "%s\n" "Need to add flags count: ${#toadd[@]}"
-	#printf "toadd item [%s]\n" "${toadd[@]}"
-	for i in ${toadd[@]}; do addclear[$i]=1; done
+	for i in "${toadd[@]}"; do addclear[$i]=1; done
 	if (( ${#toadd[@]} == 0 )) ; then
 		printf "%s\n" "All is ok, nothing needs to be fixed on ${mountdir}."
 		return 0
