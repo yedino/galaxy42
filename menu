@@ -58,6 +58,7 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
 	"gai"       "Build: Gitian for all (image) - slow!"  \
 	"" "" \
+	"lc"        "Language: update: re-COMPILE .po --> .mo" \
 	"lui"       "Language: update: Scripts: INSTALLER" \
 	"luu"       "Language: update: Scripts: UTILS (g42bashutils)" \
 	"lus"       "Language: update: Scripts: other SCRIPT (e.g. gitian-build)" \
@@ -146,6 +147,9 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			./build-gitian o-t-r
 		;;
 
+		lc)
+			contrib/tools/galaxy42-lang-update-all
+		;;
 		lui)
 	    contrib/tools/lang-updater -t -u galaxy42_installer shell install.sh
 	  ;;
