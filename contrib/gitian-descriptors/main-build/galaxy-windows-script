@@ -208,6 +208,15 @@ export CC="$HOME/wrapped/$TARGET_ARCH-gcc"
 export CXX="$HOME/wrapped/$TARGET_ARCH-g++"
 export CPP="$HOME/wrapped/$TARGET_ARCH-cpp"
 
+printf "\nPWD=$PWD in script $0\n"
+
+## get and build lib gettext
+printf "\n\n=========================================================================\n\n"
+printf "gettext\n\n"
+pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
+./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
+popd
+printf "\n\n"
 
 ## clone and build boost
 printf "\n\n=========================================================================\n\n"
@@ -409,12 +418,13 @@ cd "$GALAXY42_DIR"
 # git clean -fdx # need submodules
 git submodule update --init --recursive
 
-
 echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
 echo "SODIUM_ROOT: $SODIUM_ROOT"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug .
-make tunserver.elf
+printf "\n\nMoving on to main build of actually our project:"
+
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
+make tunserver.elf || fail "make of our project (main binary) failed"
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
