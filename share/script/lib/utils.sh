@@ -26,6 +26,7 @@ function platforminfo_check_program() {
 # then you should do some form of: if (( ! platforminfo[family_detected] )) ; then echo "Unknown platform" ; exit ; fi
 # after this use:
 # ${platforminfo[id]} for 'debian' 'ubuntu' 'devuan' 'fedora' etc.
+# ${platforminfo[is_sudo]} it is possible to maybe use sudo here.
 # ${platforminfo[idver]} for 'debian7' 'debian8' 'ubuntu15.10' etc.
 # if (($platforminfo[is_apt])) then do apt-get; also is_dnf, is_yum
 # if (($platforminfo[is_family_debian])) then install packages as for Debians family.
@@ -169,7 +170,7 @@ function run_with_root_privilages() {
 			set +x
 			printf "\n"
 		else
-			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then.\n"
+			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then."
 			return 50
 		fi
 	else
@@ -233,9 +234,12 @@ function platforminfo_test() {
 # @return exit code 0 if all is fine (e.g. fixed now or was already good), 1 is you must call mount, 2 if error
 # @return via global variable $g42utils_resulting_mount_args - list of arguments to mount (or empty)
 #
+
+declare -a g42utils_resulting_mount_args
+export g42utils_resulting_mount_args
+
 function platforminfo_set_mountflags() {
-	unset g42utils_resulting_mount_args
-	declare -a g42utils_resulting_mount_args
+	g42utils_resulting_mount_args=()
 
 	local oldtd=$TEXTDOMAIN; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
 
@@ -261,8 +265,8 @@ function platforminfo_set_mountflags() {
 		fi
 	fi
 
-	mapfile -t flagsGood < <(printf "%s\n" "$4" | sed -e 's|,|\n|g')
-	mapfile -t flagsBad  < <(printf "%s\n" "$5" | sed -e 's|,|\n|g')
+	mapfile -t flagsGood < <(printf "%s" "$4" | sed -e 's|,|\n|g')
+	mapfile -t flagsBad  < <(printf "%s" "$5" | sed -e 's|,|\n|g')
 
 	mountdir=$( df -h "$targetdir" | tail -n +2 | sed -r -e 's|[\t ]+|;|g' | cut -d';' -f 6 )
 	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext 'Can not find where $targetdir is mounted.')" ; return 10 ; }
@@ -271,10 +275,9 @@ function platforminfo_set_mountflags() {
 
 	fsflags_str=$( mount  | egrep  'on /home type ' | cut -d' ' -f 6 | sed -e 's|[()]||g' )
 
-	(( verbose )) && printf "%s\n" "The file-system $mountdir has flags $fsflags"
 
 	mapfile -t flags < <(printf "%s\n" "$fsflags_str" | sed -e 's|,|\n|g')
-	# (( verbose )) && printf "flags are: %s\n" "${flags[@]}"
+	(( verbose )) && printf "%s\n" "The file-system $mountdir has ${#flags[@]} flag(s): [${flags[*]}]"
 
 	declare -A flag_negate
 	flag_negate['dev']='nodev'
@@ -305,10 +308,12 @@ function platforminfo_set_mountflags() {
 	done
 
 	declare -A addclear
+	printf "%s\n" "Need to add flags count: ${#toadd[@]}"
+	#printf "toadd item [%s]\n" "${toadd[@]}"
 	for i in ${toadd[@]}; do addclear[$i]=1; done
 	if (( ${#toadd[@]} == 0 )) ; then
 		printf "%s\n" "All is ok, nothing needs to be fixed on ${mountdir}."
-		exit 0
+		return 0
 	fi
 
 	new_flags="remount,"$( join_by ',' "${!addclear[@]}" )

@@ -13,6 +13,8 @@ lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 
+init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
 
@@ -458,17 +460,31 @@ build_type is:
 EOF
 }
 
-platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec,quota' 'nodev,noexec' || fail "mount options"
-mount_check_result=$?
-if (( $mount_check_result == 0 )) ; then
-	printf "%s\n" "Mount is OK."
-else
-	if (( $mount_check_result == 1 )) ; then
-		printf "%s\n" "Mount needs to be adjusted."
-	else
-		fail "Problems when checking mount flags."
-	fi
-fi
+function run_with_root_privilages_fix() {
+# TODO ask user to confirm?
+	info="$1" ; shift
+	run_with_root_privilages "$@" || fail "Can not run the fix for problem."
+}
+
+function my_set_mountflags() {
+	dir="$1"
+	good="$2"
+	bad="$3"
+	platforminfo_set_mountflags verbose "$dir" fix "$good" "$bad" || {
+		mount_check_result=$?
+		if (( $mount_check_result == 1 )) ; then
+			printf "%s\n" "Mount needs to be adjusted: ${g42utils_resulting_mount_args[*]}."
+			run_with_root_privilages_fix "$(gettext 'L_fix_mount_flags')" 'mount' "${g42utils_resulting_mount_args[@]}"
+		else
+			fail "Problems when checking mount flags."
+		fi
+	}
+}
+
+my_set_mountflags "${base_dir}" "" "nodev,noexec"
+
+printf "DONE1\n"
+exit 1
 
 while getopts ":hWL" opt; do
 	case $opt in
