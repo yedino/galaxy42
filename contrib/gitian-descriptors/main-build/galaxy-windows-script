@@ -416,7 +416,8 @@ printf "Main project ($project_name)...\n\n"
 
 ## Cross building galaxy42
 cd "$GALAXY42_DIR"
-# git clean -fdx # need submodules
+
+rm -rf CMakeFiles CMakeCache.txt # remove chache from previous build if any
 git submodule update --init --recursive
 
 echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "

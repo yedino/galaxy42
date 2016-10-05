@@ -144,9 +144,7 @@ function install_build_gitian() {
 		;;
 	esac
 
-	install_packages lxc apt-cacher-ng
-	install_packages lxc apt-cacher
-
+	install_packages lxc
 	install_packages python3-yaml # our scripting aroung Gitian uses this
 
 	install_packages_NOW
