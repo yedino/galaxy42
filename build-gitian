@@ -12,6 +12,8 @@ lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
+lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 
 init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
 
@@ -483,8 +485,7 @@ function my_set_mountflags() {
 
 my_set_mountflags "${base_dir}" "" "nodev,noexec"
 
-printf "DONE1\n"
-exit 1
+# printf "DONE1\n" ; exit 1
 
 while getopts ":hWL" opt; do
 	case $opt in

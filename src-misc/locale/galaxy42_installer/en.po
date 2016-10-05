@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-04 13:01+0000\n"
+"POT-Creation-Date: 2016-10-05 14:22+0200\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -128,7 +128,7 @@ msgid "status_done_step_PRESSKEY"
 msgstr "Please press ENTER to continue..."
 
 msgid "error_init_platforminfo"
-msgstr "No information about the system"
+msgstr "No information about this platform/system"
 
 #, sh-format
 msgid "status_done_step $item"
@@ -139,7 +139,7 @@ msgid "menu_main_title $programname:"
 msgstr "Installer $programname"
 
 msgid "menu_taskpack_normal_builduse"
-msgstr "Recommended: build this program to use it"
+msgstr "Simple: build this program to use it only here"
 
 msgid "menu_taskpack_custom"
 msgstr "Chose the options..."
@@ -215,3 +215,35 @@ msgstr "We will install packages: $packages_str now (as root)"
 #, sh-format
 msgid "L_install_packages_text $packages_str"
 msgstr "We will install packages: $packages_str"
+
+#, sh-format
+msgid "For this system we selected apt-cacher type: $apt_cacher"
+msgstr "For this system we selected apt-cacher type: $apt_cacher"
+
+msgid "menu_taskpack_devel_builduse"
+msgstr "Advanced: build program in Gitian / develop it"
+
+msgid "install_progress_fix"
+msgstr "Automated fix of a problem"
+
+msgid "L_fix_cgroupfs_mount"
+msgstr ""
+"This system seems to not properly support cgroupfs. We will try to fix this. "
+"(This is needed to use Gitian)."
+
+msgid "L_fix_ubuntu_old_build"
+msgstr ""
+"This system (older version of Ubuntu) needs special settings for "
+"compilation. We will try to fix this. (This is needed to compile native "
+"programs on this machine)."
+
+#, sh-format
+msgid "L_what_now"
+msgstr ""
+"To normally compile the program nativly (and use it later) we recommend "
+"command:\n"
+"  ./do \n"
+"And for Gitian build (for this or other system) we recommend:\n"
+"  ./build-gitian\n"
+"You can change install options by running ./install.sh. List of other "
+"options you will see by running ./menu or by reading documentation."
