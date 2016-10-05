@@ -1,0 +1,13 @@
+#!/bin/bash -e
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
+
+if [[ $EUID -eq 0 ]]; then
+	normal_uid=$( stat -c '%u' toplevel )
+	printf "%s\n" "We are root, but this scripts needs to run as an user, will switch to uid=$normal_uid."
+	sudo -u "#${normal_uid}" contrib/tools/galaxy42-lang-update-all.user
+else
+	printf "%s\n" "Running script normally"
+	contrib/tools/galaxy42-lang-update-all.user
+fi
+
