@@ -17,9 +17,9 @@ export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 programname="Galaxy42" # shellcheck disable=SC2034
 
 lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions
@@ -33,23 +33,25 @@ function install_packages_NOW() { # install selected things
 	old=("${packages_to_install[@]}")
 	declare -A seen; new=(); for x in "${old[@]}"; do if [[ ! ${seen["$x"]} ]]; then new+=("$x"); seen["$x"]=1; fi; done
 	packages_to_install=("${new[@]}")
+	packages_str="${packages_to_install[*]}"
+	export packages_str # so that shellcheck can fuckoff. yeah "shellcheck disable" is not working either
+## shellcheck disable=SC2034 (used in eval_gettext)
 
-	printf "\n%s\n" "$(eval_gettext "We will install packages: ${packages_to_install[*]} now (as root)")"
+	printf "\n%s\n" "$(eval_gettext "We will install packages: \$packages_str now (as root)")"
 	if (( ${#packages_to_install[@]} > 0 )) ; then
 		if (( "verbose" )) ; then
-			packages_str="${packages_to_install[*]}"
-			text="$(eval_gettext "L_install_packages_text $packages_str")"
+			text="$(eval_gettext "L_install_packages_text \$packages_str")"
 			abdialog --title "$(gettext 'install_packages_title')" \
 				--yes-button "$(gettext "Install")" --no-button "$(gettext "Quit")" \
 				--msgbox "$text" 20 60 || abdialog_exit
 		fi
 
 		platforminfo_install_packages "${packages_to_install[@]}" || {
-			printf "\n%s\n" "$(eval_gettext "L_install_failed")"
+			printf "\n%s\n" "$(gettext "L_install_failed")"
 			exit 1
 		}
 	else
-		printf "\n%s\n" "$(eval_gettext "L_install_nothing_to_do")"
+		printf "\n%s\n" "$(gettext "L_install_nothing_to_do")"
 	fi
 	packages_to_install=() # clear the list, is now installed
 }
@@ -71,6 +73,7 @@ needrestart_lxc=0
 function install_for_build() {
 	(("done_install['install_for_build']")) && return ; done_install['install_for_build']=1
 	install_packages git gcc cmake autoconf libtool make automake
+	install_packages figlet # used in some scripts
 	if (("platforminfo[is_family_debian]")) ; then
 
 		if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
@@ -118,7 +121,34 @@ function install_build_gitian() {
 	install_for_touse
 	install_for_devel
 
-	install_packages lxc apt-cacher-ng debootstrap bridge-utils curl ruby # for Gitian
+	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
+
+	# related to bug #J202
+	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
+	apt_cacher='ng'
+
+	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		# ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		if (( ubuntu_ver <= 14 )); then apt_cacher='old'; fi
+	fi
+
+	case "$apt_cacher" in
+		'ng')
+			install_packages apt-cacher-ng
+		;;
+		'old')
+			install_packages apt-cacher
+		;;
+		*)
+			fail "Internal error: unknown apt_cacher"
+		;;
+	esac
+
+	install_packages lxc apt-cacher-ng
+	install_packages lxc apt-cacher
+
 	install_packages python3-yaml # our scripting aroung Gitian uses this
 
 	install_packages_NOW
@@ -325,7 +355,7 @@ any=0
 ww=""
 if ((needrestart_lxc)) ; then any=1; ww="$(gettext "L_needrestart_LXC_maybe")\n${ww}" ; fi
 if ((any)) ; then
-	text="$(eval_gettext "L_needrestart_summary_text")\n\n$ww"
+	text="$(gettext "L_needrestart_summary_text")\n\n$ww"
 	abdialog --title "$(gettext 'L_needrestart_summary_title')" \
 		--msgbox "$text" 20 60 || abdialog_exit
 fi

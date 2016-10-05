@@ -2,6 +2,9 @@
 # This code (in this file) is on BSD 2-clause license, (c) Copyrighted 2016 TiguSoft.pl
 # Various utils
 # including platform-detection utils
+#
+# g42bashutils - the galaxy42's bash utils (created for Galaxy42 project, but usable for anything else too)
+#
 
 # TODO - FOR HACKING / DEVELOPMENT:
 #
@@ -10,6 +13,7 @@
 
 
 inarray() { local n=$1 h; shift; for h; do [[ $n = "$h" ]] && return; done; return 1; }
+join_by() { local IFS="$1"; shift; echo "$*"; }
 
 
 # platforminfo - informations about current platform, system, for compatybility
@@ -18,11 +22,11 @@ function platforminfo_check_program() {
 	hash "$1" 2>/dev/null && echo 1 || echo 0
 }
 
-
 # This variable platforminfo (assoc array) is initialized by call to init_platforminfo
 # then you should do some form of: if (( ! platforminfo[family_detected] )) ; then echo "Unknown platform" ; exit ; fi
 # after this use:
 # ${platforminfo[id]} for 'debian' 'ubuntu' 'devuan' 'fedora' etc.
+# ${platforminfo[is_sudo]} it is possible to maybe use sudo here.
 # ${platforminfo[idver]} for 'debian7' 'debian8' 'ubuntu15.10' etc.
 # if (($platforminfo[is_apt])) then do apt-get; also is_dnf, is_yum
 # if (($platforminfo[is_family_debian])) then install packages as for Debians family.
@@ -166,7 +170,7 @@ function run_with_root_privilages() {
 			set +x
 			printf "\n"
 		else
-			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then.\n"
+			printf "%s\n" "ERROR: Not root now, and sudo is not available - can not install with root rights then."
 			return 50
 		fi
 	else
@@ -217,6 +221,108 @@ function platforminfo_test() {
 	if (("platforminfo[is_xxx]")) ; then printf "Using XXX (huh?).\n" ; fi
 	printf "End of test platforminfo_test\n"
 }
+
+
+#
+# (quiet|verbose) the_directory (fix|dryrun) "good1,good2,...,goodN" "bad1,bad2,...badN"
+# $1              $2            $3           $4                      $5
+# eg:
+# platforminfo_set_mountflags verbose '/home/rafalcode/' fix 'dev,exec' 'nodev,noexec'
+#
+# Will make sure that given the_directory has all of good flags, and none of the bad flags
+# (or just report the problem if option 'dryrun'.
+# @return exit code 0 if all is fine (e.g. fixed now or was already good), 1 is you must call mount, 2 if error
+# @return via global variable $g42utils_resulting_mount_args - list of arguments to mount (or empty)
+#
+
+declare -a g42utils_resulting_mount_args
+export g42utils_resulting_mount_args
+
+function platforminfo_set_mountflags() {
+	g42utils_resulting_mount_args=()
+
+	# export is for shellcheck
+	local oldtd=$TEXTDOMAIN; export oldtd; trap 'TEXTDOMAIN=$oldtd' 0 ; TEXTDOMAIN="g42bashutils"
+
+	verbose=0
+	if [[ "$1" == 'verbose' ]] ; then verbose=1 ;
+	else
+		if [[ "$1" == 'quiet' ]] ; then verbose=0 ;
+		else
+			printf "Unknown flag (internal error)\n"; return 50;
+		fi
+	fi
+	targetdir="$2" # the dir to check
+
+	fix=0
+
+	printf "%s\n" "Checing mount options of file-system that contains $targetdir."
+	if [[ "$3" == 'fix' ]] ; then fix=1 ;
+	else
+		if [[ "$3" == 'dryrun' ]] ;
+			then fix=0 ;
+		else
+			printf "Unknown flag (internal error)\n"; return 50;
+		fi
+	fi
+	export fix # shellcheck yes it is unused.
+
+	mapfile -t flagsGood < <(printf "%s" "$4" | sed -e 's|,|\n|g')
+	mapfile -t flagsBad  < <(printf "%s" "$5" | sed -e 's|,|\n|g')
+
+	mountdir=$( df -h "$targetdir" | tail -n +2 | sed -r -e 's|[\t ]+|;|g' | cut -d';' -f 6 )
+	[ -z "$mountdir" ] && { printf "%s\n" "$(eval_gettext "Can not find where \$targetdir is mounted.")" ; return 10 ; }
+
+	(( verbose )) && printf "%s\n" "We will check file-system mounted at $mountdir."
+
+	fsflags_str=$( mount  | egrep  'on /home type ' | cut -d' ' -f 6 | sed -e 's|[()]||g' )
+
+
+	mapfile -t flags < <(printf "%s\n" "$fsflags_str" | sed -e 's|,|\n|g')
+	(( verbose )) && printf "%s\n" "The file-system $mountdir has ${#flags[@]} flag(s): [${flags[*]}]"
+
+	declare -A flag_negate
+	flag_negate['dev']='nodev'
+	flag_negate['nodev']='dev'
+	flag_negate['exec']='noexec'
+	flag_negate['noexec']='exec'
+
+	toadd=()
+
+	# Decide what to change. E.g:
+	# flags: nodev,atime,noexec; good=dev; bad=noexec ---> need=dev,exec
+	for flagGood in "${flagsGood[@]}" ; do
+		inarray "$flagGood" "${flags[@]}" || {
+			(( verbose )) && printf "%s\n" "Need to add good flag [$flagGood]."
+			toadd+=("$flagGood")
+		}
+	done
+
+	# (( verbose )) && printf "bad: %s\n" "${flagsBad[@]}"
+
+	for flagBad in "${flagsBad[@]}" ; do
+		# printf "Testig bad: $flagBad in ${flags[*]}\n"
+		inarray "$flagBad" "${flags[@]}" && {
+			negate="${flag_negate[$flagBad]}"
+			(( verbose )) && printf "%s\n" "Need to remove unwanted flag $flagBad - by adding flag [$negate]."
+			toadd+=("$negate")
+		}
+	done
+
+	declare -A addclear
+	printf "%s\n" "Need to add flags count: ${#toadd[@]}"
+	for i in "${toadd[@]}"; do addclear[$i]=1; done
+	if (( ${#toadd[@]} == 0 )) ; then
+		printf "%s\n" "All is ok, nothing needs to be fixed on ${mountdir}."
+		return 0
+	fi
+
+	new_flags="remount,"$( join_by ',' "${!addclear[@]}" )
+	g42utils_resulting_mount_args=( "$mountdir" -o "$new_flags" ) # the mount command
+	printf "%s\n" "Need to remount ${mountdir} by using: ${g42utils_resulting_mount_args[*]}"
+	return 1
+}
+
 
 
 

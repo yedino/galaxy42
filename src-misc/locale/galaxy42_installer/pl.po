@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-21 09:11+0000\n"
+"POT-Creation-Date: 2016-10-04 13:01+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -214,3 +214,16 @@ msgid "L_program_is_pre_pre_alpha"
 msgstr ""
 "Ten program nie jest jeszcze gotowy ani nie jest bezpieczny w tej wersji. "
 "(Proszę go używać tylko na testowej maszynie wirtualnej)."
+
+#, sh-format
+msgid ""
+"Can not find script library $lib (dir_base_of_source=$dir_base_of_source)."
+msgstr "Nie można znaleźć biblioteki $lib (w katalogu $dir_base_of_source)."
+
+#, sh-format
+msgid "We will install packages: $packages_str now (as root)"
+msgstr "Zainstalujemy pakiety: $packages_str (jako root)"
+
+#, sh-format
+msgid "L_install_packages_text $packages_str"
+msgstr "Zainstalujemy pakiety: $packages_str"
