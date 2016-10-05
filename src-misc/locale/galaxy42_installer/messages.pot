@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-05 09:41+0000\n"
+"POT-Creation-Date: 2016-10-05 15:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -201,4 +201,17 @@ msgid "For this system we selected apt-cacher type: $apt_cacher"
 msgstr ""
 
 msgid "menu_taskpack_devel_builduse"
+msgstr ""
+
+msgid "install_progress_fix"
+msgstr ""
+
+msgid "L_fix_cgroupfs_mount"
+msgstr ""
+
+msgid "L_fix_ubuntu_old_build"
+msgstr ""
+
+#, sh-format
+msgid "L_what_now"
 msgstr ""
