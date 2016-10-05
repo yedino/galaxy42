@@ -1,0 +1,13 @@
+# use with:
+# rm test ; xgettext -k -keval_gettext -kgettext  -L shell -o test i && cat test
+# and then all needed strings are extracted
+
+source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+export TEXTDOMAIN="galaxy42_installer"
+# share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
+export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+
+printf "\n%s\n" "$(eval_gettext 'Library is $lib.')" # OK
+printf "\n%s\n" "$(eval_gettext "Library is $lib. (bad!!!)")" # bad!!!!!
+printf "\n%s\n" "$(gettext 'Simple.')"
+

@@ -24,12 +24,14 @@ N/A - not available - given function can not exist on this platform (e.g. Gitian
                                         +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
                                         |123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|123456789012|
 +---------------------------------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
-| Platform name                         |Debian 8    |Devuan 8    |Fedora 24   |Mint 17     |Ubuntu 15.10|Windows 7   |Windows 7   |Alpine      |FreeBSD     |OpenBSD     |
-| additional name / code name           |Jessie      |Jessie      |            |Rosa        |Willy       |            |            |            |            |            |
+| Platform name                         |Debian 8    |Devuan 8    |Fedora 24   |Mint 18     |Ubuntu 15.10|Windows 7   |Windows 7   |Alpine      |FreeBSD     |OpenBSD     |
+| additional name / code name           |Jessie      |Jessie      |            |Sarah       |Willy       |            |            |            |            |            |
 | variant                               |Linux       |            |            |            |            |            |            |            |            |            |
-| variant 2                             |            |            |            |            |            |            |            |            |            |            |
+| variant 2                             |            |            |            |(xfce)      |            |            |            |            |            |            |
 | hardware variant                      |x86_64      |x86_64      |x86_64      |x86_64      |86_64       |64bit       |32bit       |64bit       |            |            |
 | notable platform properties           |            |no-systemd  |            |            |            |            |            |grsecurity  |            |            |
++---------------------------------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
+| Maintainer                            | rfree      | rfree      | damianb    | rfree      | damianb    | roberto    | roberto    | damianb    | (TODO)     | (TODO)     |
 +---------------------------------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
 |Compiles?                              | Y          | Y          | Y          | Y          | Y          | Y          | Y          | todo       | ?          | ?          |
 |./do (or other native method) on       |            |            |            |            |            |            |            |            |            |            |

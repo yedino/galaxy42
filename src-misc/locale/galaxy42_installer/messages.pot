@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-28 18:46+0000\n"
+"POT-Creation-Date: 2016-10-04 13:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -181,4 +181,17 @@ msgid "L_needrestart_LXC_maybe"
 msgstr ""
 
 msgid "L_program_is_pre_pre_alpha"
+msgstr ""
+
+#, sh-format
+msgid ""
+"Can not find script library $lib (dir_base_of_source=$dir_base_of_source)."
+msgstr ""
+
+#, sh-format
+msgid "We will install packages: $packages_str now (as root)"
+msgstr ""
+
+#, sh-format
+msgid "L_install_packages_text $packages_str"
 msgstr ""
