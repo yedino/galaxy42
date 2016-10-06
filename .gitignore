@@ -2,6 +2,12 @@
 # especially for developer tools, script
 vartmp/
 
+# mo compiled gettext files
+
+share/locale/*/LC_MESSAGES/galaxy42_main.mo
+share/locale/*/LC_MESSAGES/g42bashutils.mo
+share/locale/*/LC_MESSAGES/galaxy42_scripts.mo
+
 # directories copied from source
 # (the source is e.g. git submodule but in other location)
 

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+function fail() {
+	echo "Error: $@."
+	exit 1
+}
+
 function usage() {
 	example1='src/*.?pp src/*/*.?pp'
 
@@ -7,14 +12,18 @@ function usage() {
 
 	Run this program with options:
 
-	$0 [-t] [-u] [translation_catalog] [lang] [file1, [file2 [...]]]
+	$0 [-t] [-u] [translation_catalog] [programming_language] [file1, [file2 [...]]]
 
-	-t Trims from .po files obsolite strings that are no longer present in sources.
-	-u Updates the .po and .mo files by adding new strings that were since last time added in sources.
+	-t Trims from .po files obsolite strings that are no longer present in sources. (and compiles .po to .mo)
+	-u Updates the .po and .mo files by adding new strings that were since last time added in sources. (and compiles .po to .mo)
+	-C only compile .po into .mo.
 
 	Usually this program is run with options like:
 	$0 -t -u galaxy42_installer install.sh
 	$0 -t -u galaxy42_main $example1
+	$0 -C galaxy42_installer
+
+	Thow now usually you should use the developer menu ./menu to run ready commands using this tool.
 
 	(When ou start, then sometimes you might need to use manual commands to create first-time empty pot file maybe)
 
@@ -36,19 +45,24 @@ sourcefile=""
 mainfile_messages_pot=""
 
 
-MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || exit
+MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp dir"
+
+function do_compile() {
+	for lang in pl en
+	do
+		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt"
+	done
+}
 
 function lang_new_and_translate() {
-
 	xgettext  --language="$programming_language" -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile[@]}"
 	# -j
 	for lang in pl en
 	do
-		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || exit
+		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || fail "msgmerge"
 		$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
-		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || exit
+		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt"
 	done
-
 }
 
 function trim_po_file() {
@@ -57,8 +71,8 @@ function trim_po_file() {
 	pofile_clean="${pofile}-clean"
 	pofile_clean2="${pofile}-clean2"
 	echo "=== Trimming file: $pofile to strings only in fresh $freshfile"
-	msgattrib --set-obsolete --ignore-file="$freshfile" -o "$pofile_clean" "$pofile" || exit
-	msgattrib --no-obsolete -o "$pofile_clean2" "$pofile_clean" || exit
+	msgattrib --set-obsolete --ignore-file="$freshfile" -o "$pofile_clean" "$pofile" || fail "msgattrib"
+	msgattrib --no-obsolete -o "$pofile_clean2" "$pofile_clean" || fail "msgattrib"
 	echo "Diff of trimming:"
 	pager="tee"
 	if hash "colordiff" 2>/dev/null ; then pager="colordiff" ; fi
@@ -85,14 +99,18 @@ function trim_obsolete {
 
 cmd_trim=0
 cmd_update=0
+cmd_compile=0
 
-while getopts ":tuh" opt; do
+while getopts ":tuCh" opt; do
 	  case $opt in
 	  	t)
 	  		cmd_trim=1
 				;;
 	  	u)
 	  		cmd_update=1
+				;;
+			C)
+				cmd_compile=1
 				;;
 			h)
 				usage
@@ -128,6 +146,10 @@ fi
 
 if ((cmd_trim)) ; then
 	trim_obsolete
+fi
+
+if ((cmd_compile)) ; then
+	do_compile
 fi
 
 
