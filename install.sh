@@ -196,6 +196,12 @@ function install_build_gitian() {
 	needrestart_lxc=1
 }
 
+function install_languages() {
+	printf "\n%s\n\n" "Install languages."
+	contrib/tools/galaxy42-lang-update-all || fail "Update languages"
+	printf "\n%s\n" "Install languages - DONE."
+}
+
 
 # ------------------------------------------------------------------------
 # start (main)
@@ -378,7 +384,7 @@ if ((any)) ; then
 		--msgbox "$text" 20 60 || abdialog_exit
 fi
 
-
+install_languages || fail "Installing languages"
 
 text="$(eval_gettext "Finished installation of \$programname.")"
 text="${text}\n\n$(eval_gettext "L_what_now")"
