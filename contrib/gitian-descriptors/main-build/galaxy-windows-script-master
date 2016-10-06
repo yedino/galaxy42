@@ -87,8 +87,8 @@ if (( option_do_it_64bit )) ; then
 	export TARGET_ARCH="x86_64-w64-mingw32"
 	printf "\n\n%s\n" "Will build for TARGET_ARCH=$TARGET_ARCH"
 	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
-	cp "tunserver.elf.exe" "$nsis_bin_input/x86/" || fail "copy (project binaries)"
-	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x86/" || fail "copy (deps libs)"
+	cp "tunserver.elf.exe" "$nsis_bin_input/x64/" || fail "copy (project binaries)"
+	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x64/" || fail "copy (deps libs)"
 	# TODO ^ nicer bash style (arrays/escaping)
 fi
 

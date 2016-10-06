@@ -85,6 +85,7 @@ rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but t
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
 
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source="./"
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 
