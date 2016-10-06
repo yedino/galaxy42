@@ -1,0 +1,18 @@
+#!/bin/bash -e
+[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
+
+if [[ $EUID -eq 0 ]]; then
+	printf "%s\n" "Do not run this as root."
+	exit 1
+fi
+
+for catal in galaxy42_installer g42bashutils galaxy42_scripts ; do
+       contrib/tools/lang-updater -C "$catal" shell
+done
+for catal in galaxy42_main ; do
+       contrib/tools/lang-updater -C "$catal" c++
+done
+
+printf "%s\n" "Done in $0."
+
