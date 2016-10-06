@@ -356,6 +356,23 @@ function gitian_run_build_all_platforms() {
 info_host=$(get_host_info)
 echo "Running on host (shortcut name): $info_host"
 
+
+function gitian_config_specific_platforms() {
+	# setting devices for ubuntu <= 14
+	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		# if ubuntu main version is older/equal than 14
+		if (( $ubuntu_ver <= 14 )); then
+		echo "In order to avoid connetion issues inside lxc machine on ubuntu <= 14"
+		echo "It seems reswitch lxcbr0 device is needed:"
+		run_with_root_privilages ifconfig lxcbr0 down
+		run_with_root_privilages ifconfig lxcbr0 up
+		fi
+	fi
+}
+
+
 function check_options_platform() {
 	if  (( ! ( option_platform_windows || option_platform_linux ) )) ; then
 		print_no_platform
@@ -365,6 +382,7 @@ function check_options_platform() {
 
 function special_command_on_target() {
 	set_env
+	gitian_config_specific_platforms
 	printf "Starting a console on the Image of for-Gitian system. PATH=$PATH\n"
 	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builde"
 	echo "PWD=$PWD"
@@ -392,7 +410,6 @@ function run_script_on_target() {
 	printf "Script on-target done.\n\n"
 }
 
-
 function gitian_my_cfg_on_target() {
 	my_banner "Gitian on-target config"
 	printf "\nApplying my gitian config on target\n\n"
@@ -409,6 +426,7 @@ function all_including_new_lxc() {
 	fix_template_script
 	gitian_builder_download
 	gitian_check_net_devices "loud"
+	gitian_config_specific_platforms
 	gitian_builder_make_lxc_image
 	gitian_my_cfg_on_target
 	target_download
@@ -420,6 +438,7 @@ function all_excluding_new_lxc() {
 	set_env
 	fix_template_script
 	gitian_check_net_devices "loud"
+	gitian_config_specific_platforms
 	# gitian_my_cfg_on_target
 	target_download
 	gitian_run_build_all_platforms "$@"

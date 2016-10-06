@@ -214,6 +214,7 @@ printf "\nPWD=$PWD in script $0\n"
 printf "\n\n=========================================================================\n\n"
 printf "gettext\n\n"
 pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
+rm -rf gettext-0.19.8/ libiconv-1.14/ || echo "clean previous gettext build, if there is"
 ./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
 popd
 printf "\n\n"
@@ -415,7 +416,8 @@ printf "Main project ($project_name)...\n\n"
 
 ## Cross building galaxy42
 cd "$GALAXY42_DIR"
-# git clean -fdx # need submodules
+
+rm -rf CMakeFiles CMakeCache.txt # remove chache from previous build if any
 git submodule update --init --recursive
 
 echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
@@ -429,7 +431,7 @@ make tunserver.elf || fail "make of our project (main binary) failed"
 echo "Printing checksums:"
 sha256sum *.exe | sort
 sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
-sha256sum  /home/ubuntu/build/libsodium/mingw_build/lib/*.dll* | sort
+sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"
