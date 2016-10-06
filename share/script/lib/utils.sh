@@ -116,13 +116,13 @@ function init_platforminfo() {
 		platforminfo[packager]='apt'
 		platforminfo_packager_install_cmd=('apt' 'install' '-y' 'PACKAGES')
 		platforminfo_packager_remove_cmd=('apt' 'remove' '-y' 'PACKAGES')
-		platforminfo_packager_checkinstalled_cmd=('dpkg' '-l' 'PACKAGE')
+		platforminfo_packager_checkinstalled_cmd=('./contrib/tools/debian_package_is_installed' 'PACKAGE')
 	fi
 	if (("platforminfo[is_aptitude]")) ; then
 		platforminfo[packager]='aptitude'
 		platforminfo_packager_install_cmd=('aptitude' 'install' '-y' 'PACKAGES')
 		platforminfo_packager_remove_cmd=('aptitude' 'remove' '-y' 'PACKAGES')
-		platforminfo_packager_checkinstalled_cmd=('dpkg' '-l' 'PACKAGE')
+		platforminfo_packager_checkinstalled_cmd=('./contrib/tools/debian_package_is_installed' 'PACKAGE')
 	fi
 	if (("platforminfo[is_yum]")) ; then
 		platforminfo[packager]='yum'
@@ -151,6 +151,8 @@ function init_platforminfo() {
 
 	if (( ! "$family_detected" )) ; then printf "%s\n" "Warning: detect does not recognize this OS/platform type that is used here (IdVer=$platforminfo['idver'])." ; fi ;
 	platforminfo[family_detected]="$family_detected" # yes or no
+
+	# printf "DETECTED item=${platforminfo_packager_checkinstalled_cmd[@]}\n"  #XXX
 }
 
 function platforminfo_show_all() {
@@ -204,7 +206,7 @@ function platforminfo_install_packages() {
 	cmd=""
 	cmd_taken=0
 
-	echo "Called util install packages with:" "$@"
+	echo "Called util install packages with:" "$*"
 
 	for part in "${platforminfo_packager_install_cmd[@]}" ; do
 		if (( ! "cmd_taken" )) ; then
@@ -232,7 +234,7 @@ function platforminfo_remove_packages() {
 	cmd=""
 	cmd_taken=0
 
-	echo "Called util REMOVE packages with:" "$@"
+	echo "Called util REMOVE packages with:" "$*"
 
 	for part in "${platforminfo_packager_remove_cmd[@]}" ; do
 		if (( ! "cmd_taken" )) ; then
@@ -260,7 +262,9 @@ function platforminfo_checkinstalled_package() {
 	cmd=""
 	cmd_taken=0
 
-	echo "Called util CHECK if installed package(s?) with:" "$@"
+	echo
+	echo "Called util CHECK if installed package(s?) with:" "$*"
+	echo
 
 	for part in "${platforminfo_packager_checkinstalled_cmd[@]}" ; do
 		if (( ! "cmd_taken" )) ; then
@@ -278,9 +282,15 @@ function platforminfo_checkinstalled_package() {
 	done
 
 	echo -n "Will now call packager, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
-	echo
 
-	run_with_root_privilages "$cmd" "${cmdparam[@]}" || return $?
+	# run_with_root_privilages
+	if "$cmd" "${cmdparam[@]}" ; then
+		printf "\n%s\n\n" "Test of package returns TRUE, it IS INSTALLED."
+		true
+	else
+		printf "\n%s\n\n" "Test of package returns FALSE, it IS NOT installed."
+		false
+	fi
 }
 
 
