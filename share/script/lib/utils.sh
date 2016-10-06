@@ -33,7 +33,11 @@ function platforminfo_check_program() {
 # ${platforminfo[packager]} for 'apt-get' 'aptitude' 'yum' etc
 # ${platforminfo[packager_cmd_pause]} will be '1' if you need to wait for user confirmation
 # also OTHER global variables are set:
-# $platforminfo_packager_cmd for array like ('aptitude' 'PACKAGES' '-y') .
+#
+# $platforminfo_packager_install_cmd - command to install packages, format: array like ('aptitude' 'PACKAGES' '-y') .
+# $platforminfo_packager_checkinstalled_cmd - command (array) to check IF package is installed
+# $platforminfo_packager_remove_cmd - command (array) to REMOVE a package
+#
 # ... also is_family_fedora
 
 declare -A platforminfo
@@ -110,28 +114,39 @@ function init_platforminfo() {
 
 	if (("platforminfo[is_apt]")) ; then
 		platforminfo[packager]='apt'
-		platforminfo_packager_cmd=('apt' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_install_cmd=('apt' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_remove_cmd=('apt' 'remove' '-y' 'PACKAGES')
+		platforminfo_packager_checkinstalled_cmd=('dpkg' '-l' 'PACKAGE')
 	fi
 	if (("platforminfo[is_aptitude]")) ; then
 		platforminfo[packager]='aptitude'
-		platforminfo_packager_cmd=('aptitude' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_install_cmd=('aptitude' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_remove_cmd=('aptitude' 'remove' '-y' 'PACKAGES')
+		platforminfo_packager_checkinstalled_cmd=('dpkg' '-l' 'PACKAGE')
 	fi
 	if (("platforminfo[is_yum]")) ; then
 		platforminfo[packager]='yum'
-		platforminfo_packager_cmd=('yum' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_install_cmd=('yum' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_remove_cmd=('yum' 'remove' '-y' 'PACKAGES')
+		platforminfo_packager_checkinstalled_cmd=('yum' 'list' 'installed' 'PACKAGE')
 	fi
 	if (("platforminfo[is_dnf]")) ; then
 		platforminfo[packager]='dnf'
-		platforminfo_packager_cmd=('dnf' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_install_cmd=('dnf' 'install' '-y' 'PACKAGES')
+		platforminfo_packager_remove_cmd=('dnf' 'remove' '-y' 'PACKAGES')
+		platforminfo_packager_checkinstalled_cmd=('dnf' 'list' 'installed' 'PACKAGE')
 	fi
 	if (("platforminfo[is_apk]")) ; then
 		platforminfo[packager]='apk'
-		platforminfo_packager_cmd=('apk' 'add' 'PACKAGES')
+		platforminfo_packager_install_cmd=('apk' 'add' 'PACKAGES')
+		# TODO unknown
 	fi
 
 	if [[ "${platforminfo[packager]}" == "unknown" ]] ; then
-		platforminfo_packager_cmd=('echo' 'Please install following packages (or similar depending on you OS/platform) in your system (e.g. use other console and then come back or start again): ' 'PACKAGES')
+		platforminfo_packager_install_cmd=('echo' 'Please install following packages (or similar depending on you OS/platform) in your system (e.g. use other console and then come back or start again): ' 'PACKAGES')
+		platforminfo_packager_remove_cmd=('echo' 'Please REMOVE following packages (or similar depending on you OS/platform) in your system (e.g. use other console and then come back or start again): ' 'PACKAGES')
 		platforminfo[packager_cmd_pause]=1
+		# TODO provide a test here
 	fi
 
 	if (( ! "$family_detected" )) ; then printf "%s\n" "Warning: detect does not recognize this OS/platform type that is used here (IdVer=$platforminfo['idver'])." ; fi ;
@@ -191,7 +206,7 @@ function platforminfo_install_packages() {
 
 	echo "Called util install packages with:" "$@"
 
-	for part in "${platforminfo_packager_cmd[@]}" ; do
+	for part in "${platforminfo_packager_install_cmd[@]}" ; do
 		if (( ! "cmd_taken" )) ; then
 			cmd="$part"
 			cmd_taken=1
@@ -206,11 +221,68 @@ function platforminfo_install_packages() {
 		fi
 	done
 
-	echo -n "Will now call installer, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
+	echo -n "Will now call packager, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
 	echo
 
 	run_with_root_privilages "$cmd" "${cmdparam[@]}" || return $?
 }
+
+function platforminfo_remove_packages() {
+	declare -a cmdparam
+	cmd=""
+	cmd_taken=0
+
+	echo "Called util REMOVE packages with:" "$@"
+
+	for part in "${platforminfo_packager_remove_cmd[@]}" ; do
+		if (( ! "cmd_taken" )) ; then
+			cmd="$part"
+			cmd_taken=1
+		else
+			if [[ "$part" == "PACKAGES" ]] ; then
+				for arg in "$@" ; do
+					cmdparam+=( "$arg" )
+				done
+			else
+				cmdparam+=( "$part" )
+			fi
+		fi
+	done
+
+	echo -n "Will now call packager, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
+	echo
+
+	run_with_root_privilages "$cmd" "${cmdparam[@]}" || return $?
+}
+
+function platforminfo_checkinstalled_package() {
+	declare -a cmdparam
+	cmd=""
+	cmd_taken=0
+
+	echo "Called util CHECK if installed package(s?) with:" "$@"
+
+	for part in "${platforminfo_packager_checkinstalled_cmd[@]}" ; do
+		if (( ! "cmd_taken" )) ; then
+			cmd="$part"
+			cmd_taken=1
+		else
+			if [[ "$part" == "PACKAGE" ]] ; then # one PACKAGE.
+				for arg in "$@" ; do
+					cmdparam+=( "$arg" )
+				done
+			else
+				cmdparam+=( "$part" )
+			fi
+		fi
+	done
+
+	echo -n "Will now call packager, command is: $cmd, args:" ;	for part in "${cmdparam[@]}" ; do echo -n "$part | " ; done  # debug
+	echo
+
+	run_with_root_privilages "$cmd" "${cmdparam[@]}" || return $?
+}
+
 
 function platforminfo_test() {
 	printf "Test platforminfo_test\n"
@@ -218,7 +290,7 @@ function platforminfo_test() {
 	if (("platforminfo[is_yum]")) ; then printf "Can use YUM.\n" ; fi
 	if (("platforminfo[is_apt]")) ; then printf "Can use APT.\n" ; fi
 	if (("platforminfo[is_apk]")) ; then printf "Can use APK.\n" ; fi
-	if (("platforminfo[is_xxx]")) ; then printf "Using XXX (huh?).\n" ; fi
+	if (("platforminfo[is_xxx]")) ; then printf "Using XXX (huh?).\n" ; fi # test
 	printf "End of test platforminfo_test\n"
 }
 
