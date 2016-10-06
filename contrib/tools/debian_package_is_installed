@@ -1,0 +1,13 @@
+#!/bin/bash
+
+PACKAGE="$1"
+
+printf "%s\n\n" "Checking if PACKAGE=$PACKAGE is installed"
+
+if dpkg '-l' "$PACKAGE" ; then
+	# dpkg knows it - so maybe installed (or e.g. it's removed)
+	dpkg-query  -s "$PACKAGE" | egrep "^Status" | head -n 1 | grep installed && exit 0 # installed
+	exit 1 # not installed
+fi
+exit 1 # not even known to dpkg at all - not installed
+
