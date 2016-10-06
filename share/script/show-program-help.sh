@@ -10,7 +10,7 @@
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
-export TEXTDOMAIN="galaxy42_installer"
+export TEXTDOMAIN="galaxy42_scripts"
 # share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 
