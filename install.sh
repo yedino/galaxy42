@@ -146,6 +146,7 @@ function install_build_gitian() {
 
 	# related to bug #J202
 	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
+	printf "\n\n\napt-cacher selection\n\n"
 	apt_cacher='ng'
 
 	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
@@ -161,15 +162,27 @@ function install_build_gitian() {
 
 	case "$apt_cacher" in
 		'ng')
-			install_packages apt-cacher-ng
+			apt_cacher_bad='apt-cacher'
+			apt_cacher_good='apt-cacher-ng'
 		;;
 		'old')
-			install_packages apt-cacher
+			apt_cacher_bad='apt-cacher-ng'
+			apt_cacher_good='apt-cacher'
 		;;
 		*)
-			fail "Internal error: unknown apt_cacher"
+			fail "Internal error: unknown apt_cacher type."
 		;;
 	esac
+
+	printf "\n\n\nWill test for bad package $apt_cacher_bad.\n"
+
+	if platforminfo_checkinstalled_package "$apt_cacher_bad" ; then
+		# echo "installed $apt_cacher_bad . " ; read _ # debug
+		show_fix "$(eval_gettext "L_fix_uninstall_apt_cacher bad=\$apt_cacher_bad good=\$apt_cacher_good.")" \
+			|| fail "Confirm to remove bad apt cacher ($apt_cacher_bad)"
+		platforminfo_remove_packages "$apt_cacher_bad"
+	fi
+	install_packages "$apt_cacher_good"
 
 	install_packages lxc
 
