@@ -36,11 +36,24 @@ Download and install/unpack libraries. I used:
     - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)  
     - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
 
+__open CMake program:__
+
 __settings:__  
 ```
 Where is the source: 		path/to/cloned/galaxy42  
 Where to build binaries:	any/output/path
-Set cmake variables: BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR
+
+```
+__Set cmake variables:__
+```
+	-Click "Add Entry"
+	-"Name": BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR
+	-"Type": PATH
+	-"Value":
+		-for SODIUM_ROOT_DIR: full path to directory, where you install/unpack "Libsodium Releases"
+		-for BOOST_ROOT: full path to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.1"
+		-for BOOST_LIBRARYDIR: go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.1", 
+		open folder (lib32-msvc-14.0/lib64-msvc-14.0) complies with your system version (x32 or x64) and copy path
 ```
 ```
 click configure
