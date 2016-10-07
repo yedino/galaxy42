@@ -3,8 +3,7 @@
 #include "text_ui.hpp"
 #include <boost/locale.hpp>
 #include <string>
-#include <libintl.h>
-#include <locale.h>
+#include <locale>
 
 bool text_ui::ask_user_forpermission(const std::string &msg) {
 	std::string answer = "";
