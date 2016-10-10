@@ -286,19 +286,15 @@ int main(int argc, char **argv) {
 	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 	setlocale(LC_ALL,"");
 
-	// TODO rm this
-/*	setlocale(LC_ALL, "");
-    std::cout << "locale: " << setlocale(LC_ALL, NULL) << endl;
-    std::cout << "LC_CTYPE: " << setlocale(LC_CTYPE, NULL) << endl;
-	return 0;*/
-	//string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
-	//textdomain("galaxy42_main");
-
 	boost::locale::generator gen;
 	// Specify location of dictionaries
 	gen.add_messages_path(install_dir_share_locale);
 	gen.add_messages_domain("galaxy42_main");
-	std::locale::global(gen(setlocale(LC_CTYPE, nullptr)));
+	//std::locale locale = gen("");
+	const std::string locale_name = std::use_facet<boost::locale::info>(gen("")).name();
+	std::locale::global(gen(locale_name));
+	//std::locale::global(gen("pl_PL.UTF-8")); // OK
+	//std::locale::global(gen("Polish_Poland.UTF-8")); // not works
 	std::cout.imbue(std::locale());
 	std::cerr.imbue(std::locale());
 	// Using boost::locale::gettext:
