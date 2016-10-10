@@ -1,0 +1,51 @@
+
+
+- We developers should do following checks
+- And you (end-user) can verify it on your own too!
+
+Check this projects for security updates:
+
+NATIVE_SYS = (if you built program nativly) This given system-wide library is taken from your OS.
+Lib version: depends on distro. Not controlloed by us (developers of Galaxy42).
+Keep your OS updated, and rebuild the program when ever any dependency of it is updated or changes.
+
+NATIVE_INCODE = (if you built program nativly) This given library is included in build process of our program
+(e.g. git downloaded / wget downloaded, and then built as part of our ./do cmake make etc).
+Lib version: controlled by us (developers of Galaxy42) - included in our source code (e.g. git submodule or wget with version).
+We will release new version of this project. You must download the new version and build it again, so that it will be build using
+the upgraded library.
+
+GITIAN_WIN_INCODE    = when building in Gitian, for Windows, then this library is taken as INCODE (see above).
+GITIAN_WIN_SYS       = when building in Gitian, for Windows, then this library is taken as SYS (see above).
+GITIAN_LINUX_SYS     = when building in Gitian, for Linux, then this library is taken as SYS (see above).
+GITIAN_LINUX_INCODE  = when building in Gitian, for Linux, then this library is taken as INCODE (see above).
+
+- libstd++     : NATIVE_SYS, GITIAN_WIN_SYS, GITIAN_LINUX_SYS
+- libc         : NATIVE_SYS, GITIAN_WIN_SYS, GITIAN_LINUX_SYS
+- other standard c libs - native.
+
+- lib boost    : NATIVE_SYS, GITIAN_WIN_INCODE, GITIAN_LINUX_SYS
+- lib sodium   : NATIVE_SYS, GITIAN_WIN_INCODE, GITIAN_LINUX_SYS
+- lib sodiumpp : NATIVE_INCODE, GITIAN_WIN_INCODE, GITIAN_LINUX_INCODE
+- lib jsoncpp  : NATIVE_INCODE, GITIAN_WIN_INCODE, GITIAN_LINUX_INCODE
+
+- nsis program : GITIAN_WIN_INCODE
+
+- libz - used to build nsis program (above). Maybe is delivered to finall install.exe ??
+
+For windows gitian build we also depend on:
+- DLL libraries from Cygwin/Mingw, see contrib/nsis-installer-windows/bin - check for updates!
+
+- We also use custom Gitian project (git submodule).
+
+=============================
+
+- what about sub-dependencies of above, e.g. deps used by lib boost (e.g. gettext maybe)?
+
+
+=============================
+
+Planned (experimental code, disabled by default)
+- lib ntru
+- lib sidh
+
