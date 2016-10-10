@@ -30,24 +30,37 @@ $ make windowsService
 ### MSVC:
 Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
 
-__provide dependencies (libboost and libsodium):__  
+__Provide dependencies (libboost and libsodium):__  
 - Pre-compiled binaries can be found on libboost/libsodium official pages.  
 Download and install/unpack libraries. I used:  
     - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)  
     - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
 
-__settings:__  
-```
-Where is the source: 		path/to/cloned/galaxy42  
-Where to build binaries:	any/output/path
-Set cmake variables: BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR
-```
+__Open Cygwin:__
+
+	In main galaxy directory run "git submodule update --init"
+
+__Open CMake:__
+- __Settings:__  
+	- Where is the source: 		path/to/cloned/galaxy42  
+	- Where to build binaries:	any/output/path
+
+__Set cmake variables:__
+
+- Click "Add Entry"
+- "Name": BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR
+- "Type": PATH
+- "Value":
+	- for SODIUM_ROOT_DIR: full path to directory, where you install/unpack "Libsodium Releases"
+	- for BOOST_ROOT: full path to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.1"
+	- for BOOST_LIBRARYDIR: go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.1", open folder (lib32-msvc-14.0/lib64-msvc-14.0 or similar) complies with your system version (x32 or x64) and copy path
+
 ```
 click configure
 * for 64-bit build choose Visual Studio 14 2015 Win64
 click generate
 ```
-__cmake output:__
+__Cmake output:__
 ```
 	The C compiler identification is MSVC 18.0.40629.0
 	The CXX compiler identification is MSVC 18.0.40629.0
@@ -79,8 +92,11 @@ __cmake output:__
 ```
 
 ### Build tunserver.elf.exe in Visual Studio:
-``` right button (on "tunserver.elf" in Solution Explorer section) -> Build```  
-__possible errors:__  
+- Open Visual Studio, "Open project", choose folder, where you download galaxy42
+```
+	right button (on "tunserver.elf" in Solution Explorer section) -> Build
+```  
+__Possible errors:__  
 
 ```Warning	D9002	ignoring unknown option -std=c++14```
 - you should use compilator that support c++14 (probably you are using an older version of Visual Studio)
