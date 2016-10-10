@@ -29,10 +29,16 @@ if (MINGW)
 endif()
 
 set (Boost_DEBUG OFF)
-if (NOT MSVC)
-	set(BOOST_LIBS_LIST system filesystem program_options)
+if (CYGWIN)
+	set(BOOST_LOCALE_LINK_LIB boost_locale-mt)
 else()
-	set(BOOST_LIBS_LIST system filesystem)
+	set(BOOST_LOCALE_LIB_SEARCH locale)
+endif()
+
+if (NOT MSVC)
+	set(BOOST_LIBS_LIST system filesystem program_options ${BOOST_LOCALE_LIB_SEARCH})
+else()
+	set(BOOST_LIBS_LIST system filesystem ${BOOST_LOCALE_LIB_SEARCH})
 endif()
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
 
@@ -51,7 +57,7 @@ if (MINGW)
 	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
 	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
 	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
-	set(GETTEXT_LIBS intl iconv pthread)
+	#set(GETTEXT_LIBS intl iconv pthread)
 	#set(GETTEXT_LIBS "iconv")
 	#message(FATAL_ERROR "${GETTEXT_LIBS}")
 endif()
@@ -340,7 +346,7 @@ else()
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
 
-target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
+target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES} ${GETTEXT_LIBS})
 
 #tests
