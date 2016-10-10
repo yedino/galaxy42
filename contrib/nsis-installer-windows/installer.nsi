@@ -86,12 +86,23 @@ Section
 	SetShellVarContext all
 	SetOutPath $INSTDIR
 	WriteUninstaller $INSTDIR\uninstall.exe
-	${If} ${RunningX64}
-		File bin\x64\*.exe
-		File bin\x64\*.dll
+
+    ${If} ${RunningX64}
+		File bin/x64/libboost_filesystem-mt.dll
+		File bin/x64/libboost_program_options-mt.dll
+		File bin/x64/libboost_system-mt.dll
+		File bin/x64/libgcc_s_seh-1.dll
+		File bin/x64/libsodium-18.dll
+		File bin/x64/libstdc++-6.dll
+		File bin/x64/tunserver.elf.exe
 	${Else}
-		File bin\x86\*.exe
-		File bin\x86\*.dll
+		File bin/x86/libboost_filesystem-mt.dll
+		File bin/x86/libboost_program_options-mt.dll
+		File bin/x86/libboost_system-mt.dll
+		File bin/x86/libgcc_s_sjlj-1.dll
+		File bin/x86/libsodium-18.dll
+		File bin/x86/libstdc++-6.dll
+		File bin/x86/tunserver.elf.exe
 	${EndIf}
 
 	!insertmacro SERVICE create "galaxy" "path=$INSTDIR\galaxyService.exe;autostart=1;interact=1;display=galaxy42;description=galaxy42 node;"
