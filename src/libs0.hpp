@@ -243,4 +243,8 @@ throw std::runtime_error(oss.str()); \
 } while(0)
 
 #endif
-
+#if defined(_WIN32) || defined(__CYGWIN__)
+const char * gettext(const char * s);
+char * bindtextdomain(const char * domainname, const char * dirname);
+char * textdomain(const char * domainname);
+#endif
