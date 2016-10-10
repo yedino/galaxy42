@@ -16,8 +16,13 @@
 #include "c_json_genconf.hpp"
 #include "c_json_load.hpp"
 
-#include <libintl.h>
-#include <locale.h>
+//#if (__WIN64)
+//#else
+// all unixes etc
+//#include <libintl.h>
+//#include <locale.h>
+
+//#endif
 
 
 namespace developer_tests {
