@@ -4,6 +4,7 @@
 
 #include <array>
 #include <string>
+//TODO (da2ce7) CIRCULAR HEADER INCLUDE
 #include "c_event_manager.hpp"
 
 /**
