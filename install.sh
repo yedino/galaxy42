@@ -156,7 +156,7 @@ function install_build_gitian() {
 	apt_cacher_good="$midutils_apt_cacher_version_name_good"
 	apt_cacher_service="$midutils_apt_cacher_version_name_service"
 
-	printf "\n\nWill test for bad package ${apt_cacher_bad}.\n"
+	printf "\n\nWill test for bad package%s\n" "${apt_cacher_bad}"
 
 	if platforminfo_checkinstalled_package "$apt_cacher_bad" ; then
 		# echo "installed ${apt_cacher_bad}. " ; read _ # debug
