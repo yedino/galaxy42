@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 # start of gitian-lxc (script itself)
 
 # br0
-brctl addbr br0
-ifconfig br0 10.0.3.2/24 up
+brctl addbr br0 || echo "$0: can not add br0. But that can be normal if you run this script again."
+ifconfig br0 10.0.3.2/24 up || echo "$0: can not bring up br0. But that can be normal if you run this script again."
 
 # forwarding tables
 lxc_iflist='__VAR_iflist'
@@ -15,7 +15,7 @@ iptables -t nat -X lxc-nat-v1
 
 iptables -t nat -N lxc-nat-v1
 
-if (( $lxc_all )) ; then
+if [ "$lxc_all" -eq 1 ] ; then
 	iptables -t nat -I lxc-nat-v1 -j MASQUERADE
 else
 	for ifname in $lxc_iflist ; do

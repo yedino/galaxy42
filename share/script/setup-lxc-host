@@ -100,6 +100,9 @@ opt_all_if=0
 if [[ "$opt_all_if_s" == "--all-if" ]] ; then opt_all_if=1 ; fi
 sed -i -e "s|__VAR_lxc_all|$opt_all_if|g" "$ourscript"
 
+# run now our firewall script
+sh "$ourscript" || { echo "It seems our lxc network script ($ourscript) failed to run."; exit 1; }
+
 printf "\nInstalling sudoers settings\n"
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc    # new file
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-execute" >> /etc/sudoers.d/gitian-lxc
