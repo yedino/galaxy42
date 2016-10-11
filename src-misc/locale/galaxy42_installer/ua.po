@@ -23,15 +23,15 @@ msgstr ""
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
-msgstr ""
+msgstr "***** TEST UA - UKRAINIAN TRANSLATION ****"
 
 msgid ""
 "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
 "select option, ENTER to finish."
-msgstr ""
+msgstr "UA ... TEXT MODE..."
 
 msgid "We recognize your system/platform as:"
-msgstr ""
+msgstr "UA .... platform recognized as:"
 
 #, sh-format
 msgid "Configure computer for $programname"

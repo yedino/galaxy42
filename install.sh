@@ -20,13 +20,23 @@ lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
+lib='g42-middle-utils.sh' ; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions
 # ------------------------------------------------------------------------
 
-declare -A done_install # shellcheck disable # that is for shellcheck disable=SC2034
-# thought using that disable causes another warning (maybe a bug, debian8)
+declare -A done_install
+
+warnings_text="" # more warnings
+warn_ANY=0 # any warning?
+warn_root=0 # things as root
+warn_fw=0 # you should use a firewall
+warn2_net=0 # warning: strange network settings (e.g. lxc br)
+enabled_warn=0 # are warnings enabled
+verbose=0 # shellcheck disable=SC2034
+autoselect=0 # automatically choose some easy questions
 
 packages_to_install=() # start with empty list
 function install_packages_NOW() { # install selected things
@@ -65,21 +75,27 @@ function show_status() {
 	local text="$1"
 	abdialog --title "$(gettext 'install_progress_title')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
+		--msgbox "$text" 20 50 || abdialog_exit
+}
+
+function show_info() {
+	local text="$1"
+	abdialog --title "$(gettext 'install_info_title')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 65 || abdialog_exit
 }
 
 function show_fix() {
 	local text="$1"
 	abdialog --title "$(gettext 'install_progress_fix')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
+		--msgbox "$text" 21 72 || abdialog_exit
 }
 
 # ------------------------------------------------------------------------
 # install functions for this project
 
-done_install=()
-export done_install # so bashcheck does not complain
+declare -A done_install
 
 # reasons for requiring restart:
 needrestart_lxc=0
@@ -138,51 +154,33 @@ function install_build_gitian() {
 
 	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
 
+	### cgroupfs
 	# for systems that are missing proper cgroupfs mounts
 	if [[ "${platforminfo[id]}" == "devuan" ]]; then
 		show_fix "$(gettext 'L_fix_cgroupfs_mount')"
 		install_packages cgroupfs-mount
 	fi
 
-	# related to bug #J202
-	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
-	printf "\n\n\napt-cacher selection\n\n"
-	apt_cacher='ng'
+	### apt-cache
+	printf "\n\n\napt-cacher version selection / install / remove\n"
+	midutils_detect_correct_apt_cacher_version || fail "Can not detect apt cacher version"
+	# printf "\nXXX midutils_apt_cacher_version_name_service: $midutils_apt_cacher_version_name_service \n\n" ; read _ # XXX
 
-	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
-		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
-		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
-		# ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
-		if (( ubuntu_ver <= 14 )); then apt_cacher='ng'; fi
-	fi
+	apt_cacher_bad="$midutils_apt_cacher_version_name_bad"
+	apt_cacher_good="$midutils_apt_cacher_version_name_good"
+	apt_cacher_service="$midutils_apt_cacher_version_name_service"
 
-	(( verbose && apt_cacher!='ng' )) && {
-		show_fix "$(eval_gettext "For this system we selected apt-cacher type: \$apt_cacher")"
-	}
-
-	case "$apt_cacher" in
-		'ng')
-			apt_cacher_bad='apt-cacher'
-			apt_cacher_good='apt-cacher-ng'
-		;;
-		'old')
-			apt_cacher_bad='apt-cacher-ng'
-			apt_cacher_good='apt-cacher'
-		;;
-		*)
-			fail "Internal error: unknown apt_cacher type."
-		;;
-	esac
-
-	printf "\n\n\nWill test for bad package $apt_cacher_bad.\n"
+	printf "\n\nWill test for bad package%s\n" "${apt_cacher_bad}"
 
 	if platforminfo_checkinstalled_package "$apt_cacher_bad" ; then
-		# echo "installed $apt_cacher_bad . " ; read _ # debug
+		# echo "installed ${apt_cacher_bad}. " ; read _ # debug
 		show_fix "$(eval_gettext "L_fix_uninstall_apt_cacher bad=\$apt_cacher_bad good=\$apt_cacher_good.")" \
 			|| fail "Confirm to remove bad apt cacher ($apt_cacher_bad)"
 		platforminfo_remove_packages "$apt_cacher_bad"
 	fi
 	install_packages "$apt_cacher_good"
+
+	### other fixes
 
 	install_packages lxc
 
@@ -192,15 +190,32 @@ function install_build_gitian() {
 
 	printf "Info: Gitian needs LXC network settings:\n\n"
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
-	run_with_root_privilages "./share/script/setup-lxc-host" || fail
 
-	lxc_ourscript="/etc/rc.local.lxcnet-gitian"
-	lxc_error=0
-	if [[ -r "$lxc_ourscript" ]] ; then
-		run_with_root_privilages "bash" "--" "$lxc_ourscript" || lxc_error=1
+	local lxc_all_s='--all-if'
+	local lxc_cards_s=''
+
+	if (( ! autoselect)) ; then
+		show_info "$(gettext 'L_install_option_lxcnet_bridged_INFO')"
+		response=$( abdialog  --menu  "$(gettext "L_install_option_lxcnet_bridged_TITLE")"  23 76 16  \
+			"all"        "$(gettext "L_install_option_lxcnet_bridged_ITEM_all")"  \
+			"some"       "$(gettext "L_install_option_lxcnet_bridged_ITEM_some")"  \
+			2>&1 >/dev/tty ) || abdialog_exit
+		[[ -z "$response" ]] && exit
+
+		if [[ "$response" == "all" ]] ;  then lxc_all_s="--all-if" ; fi
+		if [[ "$response" == "some" ]] ; then
+			lxc_all_s="--some-if" ;
+			ui_cards=$(abdialog  --inputbox "$(gettext "L_install_option_lxcnet_bridged_INPUTBOX_cards")" \
+				20 70 "eth0 eth1 eth2 eth3 usb0 usb1 usb2 wan0 wlan1 wlan2" \
+				2>&1 >/dev/tty ) || abdialog_exit
+			lxc_cards_s="$ui_cards"
+		fi
 	else
-		lxc_error=1
+		printf "\n\nUsing default lxc-net settings\n\n"
 	fi
+
+	run_with_root_privilages "./share/script/setup-lxc-host" '--normal' "$lxc_all_s" "$lxc_cards_s" || fail
+	# ^- script install LXC settings, and also should load it right now
 
 	if ((lxc_error)) ; then
 		printf "%s\n" "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
@@ -218,6 +233,7 @@ function install_languages() {
 
 # ------------------------------------------------------------------------
 # start (main)
+
 
 sudo_flag="--sudo"
 if [[ $EUID -ne 0 ]]; then
@@ -265,17 +281,18 @@ response_menu_task=""
 
 if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
 if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
-if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse" ; fi
-if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian" ; fi
+if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect" ; fi
+if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect" ; fi
 if [[ "$response" == "custom" ]] ; then
 # shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
-	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"build"         "$(gettext "menu_task_build")" "on" \
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
+	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"verbose"       "$(gettext "menu_task_verbose")" "on" \
+	"autoselect"    "$(gettext "menu_task_autoselect")" "off" \
 	2>&1 >/dev/tty ) || abdialog_exit
 	response_menu_task="$response"
 fi
@@ -283,14 +300,6 @@ fi
 [[ -z "$response_menu_task" ]] && exit
 
 
-
-warnings_text="" # more warnings
-warn_ANY=0 # any warning?
-warn_root=0 # things as root
-warn_fw=0 # you should use a firewall
-warn2_net=0 # warning: strange network settings (e.g. lxc br)
-enabled_warn=0 # are warnings enabled
-verbose=0 # shellcheck disable=SC2034
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
@@ -324,6 +333,9 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			warn2_net=1 # for special LXC network
 			warn_root=1 # for LXC and maybe running gitian too (perhaps avoidable?)
 			warn_ANY=1
+		;;
+		autoselect)
+			autoselect=1
 		;;
 	esac
 done
