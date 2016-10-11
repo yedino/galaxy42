@@ -27,8 +27,16 @@ lib='g42-middle-utils.sh' ; source "${dir_base_of_source}/share/script/lib/${lib
 # install functions
 # ------------------------------------------------------------------------
 
-declare -A done_install # shellcheck disable # that is for shellcheck disable=SC2034
-# thought using that disable causes another warning (maybe a bug, debian8)
+declare -A done_install
+
+warnings_text="" # more warnings
+warn_ANY=0 # any warning?
+warn_root=0 # things as root
+warn_fw=0 # you should use a firewall
+warn2_net=0 # warning: strange network settings (e.g. lxc br)
+enabled_warn=0 # are warnings enabled
+verbose=0 # shellcheck disable=SC2034
+autoselect=0 # automatically choose some easy questions
 
 packages_to_install=() # start with empty list
 function install_packages_NOW() { # install selected things
@@ -67,14 +75,21 @@ function show_status() {
 	local text="$1"
 	abdialog --title "$(gettext 'install_progress_title')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
+		--msgbox "$text" 20 50 || abdialog_exit
+}
+
+function show_info() {
+	local text="$1"
+	abdialog --title "$(gettext 'install_info_title')" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--msgbox "$text" 20 65 || abdialog_exit
 }
 
 function show_fix() {
 	local text="$1"
 	abdialog --title "$(gettext 'install_progress_fix')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--msgbox "$text" 20 60 || abdialog_exit
+		--msgbox "$text" 21 72 || abdialog_exit
 }
 
 # ------------------------------------------------------------------------
@@ -175,15 +190,32 @@ function install_build_gitian() {
 
 	printf "Info: Gitian needs LXC network settings:\n\n"
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
-	run_with_root_privilages "./share/script/setup-lxc-host" || fail
 
-	lxc_ourscript="/etc/rc.local.lxcnet-gitian"
-	lxc_error=0
-	if [[ -r "$lxc_ourscript" ]] ; then
-		run_with_root_privilages "bash" "--" "$lxc_ourscript" || lxc_error=1
+	local lxc_all_s='--all-if'
+	local lxc_cards_s=''
+
+	if (( ! autoselect)) ; then
+		show_info "$(gettext 'L_install_option_lxcnet_bridged_INFO')"
+		response=$( abdialog  --menu  "$(gettext "L_install_option_lxcnet_bridged_TITLE")"  23 76 16  \
+			"all"        "$(gettext "L_install_option_lxcnet_bridged_ITEM_all")"  \
+			"some"       "$(gettext "L_install_option_lxcnet_bridged_ITEM_some")"  \
+			2>&1 >/dev/tty ) || abdialog_exit
+		[[ -z "$response" ]] && exit
+
+		if [[ "$response" == "all" ]] ;  then lxc_all_s="--all-if" ; fi
+		if [[ "$response" == "some" ]] ; then
+			lxc_all_s="--some-if" ;
+			ui_cards=$(abdialog  --inputbox "$(gettext "L_install_option_lxcnet_bridged_INPUTBOX_cards")" \
+				20 70 "eth0 eth1 eth2 eth3 usb0 usb1 usb2 wan0 wlan1 wlan2" \
+				2>&1 >/dev/tty ) || abdialog_exit
+			lxc_cards_s="$ui_cards"
+		fi
 	else
-		lxc_error=1
+		printf "\n\nUsing default lxc-net settings\n\n"
 	fi
+
+	run_with_root_privilages "./share/script/setup-lxc-host" '--normal' "$lxc_all_s" "$lxc_cards_s" || fail
+	# ^- script install LXC settings, and also should load it right now
 
 	if ((lxc_error)) ; then
 		printf "%s\n" "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
@@ -201,6 +233,7 @@ function install_languages() {
 
 # ------------------------------------------------------------------------
 # start (main)
+
 
 sudo_flag="--sudo"
 if [[ $EUID -ne 0 ]]; then
@@ -248,17 +281,18 @@ response_menu_task=""
 
 if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
 if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
-if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse" ; fi
-if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian" ; fi
+if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect" ; fi
+if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect" ; fi
 if [[ "$response" == "custom" ]] ; then
 # shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
-	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"build"         "$(gettext "menu_task_build")" "on" \
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
+	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"verbose"       "$(gettext "menu_task_verbose")" "on" \
+	"autoselect"    "$(gettext "menu_task_autoselect")" "off" \
 	2>&1 >/dev/tty ) || abdialog_exit
 	response_menu_task="$response"
 fi
@@ -266,14 +300,6 @@ fi
 [[ -z "$response_menu_task" ]] && exit
 
 
-
-warnings_text="" # more warnings
-warn_ANY=0 # any warning?
-warn_root=0 # things as root
-warn_fw=0 # you should use a firewall
-warn2_net=0 # warning: strange network settings (e.g. lxc br)
-enabled_warn=0 # are warnings enabled
-verbose=0 # shellcheck disable=SC2034
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
@@ -307,6 +333,9 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			warn2_net=1 # for special LXC network
 			warn_root=1 # for LXC and maybe running gitian too (perhaps avoidable?)
 			warn_ANY=1
+		;;
+		autoselect)
+			autoselect=1
 		;;
 	esac
 done
