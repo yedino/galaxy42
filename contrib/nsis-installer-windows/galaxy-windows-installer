@@ -66,7 +66,7 @@ pushd nsis/install_dir || fail
 REFERENCE_DATETIME="2016-08-01 00:00:00"
 
 printf "\n%s\n" "WRAPPING makensis localy in $(pwd)"
-	
+
 	echo '#!/bin/bash' > "makensis_wrapped"
 	echo "REAL=$(pwd)/makensis" >> "makensis_wrapped"
 	echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "makensis_wrapped"

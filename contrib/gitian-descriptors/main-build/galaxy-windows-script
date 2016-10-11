@@ -116,7 +116,7 @@ CONFIGFLAGS=""
 FAKETIME_HOST_PROGS="gcc g++ ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
 FAKETIME_PROGS="date zip"
 
-# We build own nsis from source. In this case we wrap makensis locally for our needs. 
+# We build own nsis from source. In this case we wrap makensis locally for our needs.
 # This can be seen in script-"GALAXY42_DIR/contrib/nsis-installer-windows/galaxy-windows-installer" that build windows installer.
 
 # (not used?)
