@@ -12,6 +12,8 @@ lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
+lib='g42-middle-utils.sh' ; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 lib='gitian-utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext 'Can not find script library $lib (dir_base_of_source=$dir_base_of_source).')" ; exit 1; }
 
@@ -504,7 +506,10 @@ function my_set_mountflags() {
 
 my_set_mountflags "${base_dir}" "" "nodev,noexec"
 
-# printf "DONE1\n" ; exit 1
+midutils_detect_correct_apt_cacher_version
+printf "\n\n%s\n\n" "Apt-cacher that should be used is detected as: ${midutils_apt_cacher_version_name_service}."
+run_with_root_privilages "service" "$midutils_apt_cacher_version_name_service" "restart" || \
+	fail "Restarting apt-cacher (version: ${midutils_apt_cacher_version_name_service}."
 
 while getopts ":hWL" opt; do
 	case $opt in

@@ -62,10 +62,25 @@ fi
 
 # use the nsis tool - actually build installer of our project!
 pushd nsis/install_dir || fail
+
+REFERENCE_DATETIME="2016-08-01 00:00:00"
+
+printf "\n%s\n" "WRAPPING makensis localy in $(pwd)"
+
+	echo '#!/bin/bash' > "makensis_wrapped"
+	echo "REAL=$(pwd)/makensis" >> "makensis_wrapped"
+	echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "makensis_wrapped"
+	echo "export FAKETIME=\"$REFERENCE_DATETIME\"" >> "makensis_wrapped"
+	echo "\$REAL \$@" >> "makensis_wrapped"
+	chmod +x "makensis_wrapped"
+
+
 	printf "\n\nPreparing to makensis in PWD=$PWD\n\n"
 	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" ./ || fail "copy nsis plugin here for use"
 	printf "\n\nRunning makensis in PWD=$PWD\n\n"
 	set -x
-	./makensis "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
+
+	# use wrapped
+	./makensis_wrapped "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
 	set +x
 popd
