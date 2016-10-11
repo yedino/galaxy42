@@ -80,8 +80,7 @@ function show_fix() {
 # ------------------------------------------------------------------------
 # install functions for this project
 
-done_install=()
-export done_install # so bashcheck does not complain
+declare -A done_install
 
 # reasons for requiring restart:
 needrestart_lxc=0
