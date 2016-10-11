@@ -35,7 +35,7 @@ std::string to_string(const std::string & v) {
 
 } // namespace
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(_MSC_VER)
 const char * gettext(const char * s) {
 	return s;
 }
