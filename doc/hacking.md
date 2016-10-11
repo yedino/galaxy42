@@ -13,6 +13,8 @@ Intended for:
 
 The build process should be described in the main README.md of this project.
 
+See what dependencies you need to monitor for upgrades! See: [SECURITY.txt].
+
 # Using
 
 The use of this project/programs as end-user, is described in other places, see the main README.md of this project.
@@ -20,6 +22,8 @@ The use of this project/programs as end-user, is described in other places, see 
 # Developing
 
 To develop the program, we recommend mainly Debian Stable as the main environment at this time.
+
+IF YOU ADD ANY DEPENDENCY THEN write it in dependencies list in [SECURITY.txt].
 
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.

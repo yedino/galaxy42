@@ -5,7 +5,7 @@
 #endif
 
 #include "c_tun_device.hpp"
-
+#include "libs0.hpp"
 #include "c_tnetdbg.hpp"
 #ifdef __linux__
 #include <cassert>

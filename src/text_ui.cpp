@@ -2,8 +2,10 @@
 
 #include "text_ui.hpp"
 #include <string>
-#include <libintl.h>
-#include <locale.h>
+#include "libs0.hpp"
+//#include <libintl.h>
+//#include <locale.h>
+
 
 bool text_ui::ask_user_forpermission(const std::string &msg) {
 	std::string answer = "";

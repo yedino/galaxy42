@@ -20,6 +20,8 @@ lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
+lib='g42-middle-utils.sh' ; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
 # install functions
@@ -78,8 +80,7 @@ function show_fix() {
 # ------------------------------------------------------------------------
 # install functions for this project
 
-done_install=()
-export done_install # so bashcheck does not complain
+declare -A done_install
 
 # reasons for requiring restart:
 needrestart_lxc=0
@@ -138,51 +139,33 @@ function install_build_gitian() {
 
 	install_packages lxc debootstrap bridge-utils curl ruby # for Gitian
 
+	### cgroupfs
 	# for systems that are missing proper cgroupfs mounts
 	if [[ "${platforminfo[id]}" == "devuan" ]]; then
 		show_fix "$(gettext 'L_fix_cgroupfs_mount')"
 		install_packages cgroupfs-mount
 	fi
 
-	# related to bug #J202
-	# most systems want apt-cacher-ng and not old apt-cacher. but there are exceptions
-	printf "\n\n\napt-cacher selection\n\n"
-	apt_cacher='ng'
+	### apt-cache
+	printf "\n\n\napt-cacher version selection / install / remove\n"
+	midutils_detect_correct_apt_cacher_version || fail "Can not detect apt cacher version"
+	# printf "\nXXX midutils_apt_cacher_version_name_service: $midutils_apt_cacher_version_name_service \n\n" ; read _ # XXX
 
-	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
-		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
-		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
-		# ubuntu_ver_minor=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
-		if (( ubuntu_ver <= 14 )); then apt_cacher='ng'; fi
-	fi
+	apt_cacher_bad="$midutils_apt_cacher_version_name_bad"
+	apt_cacher_good="$midutils_apt_cacher_version_name_good"
+	apt_cacher_service="$midutils_apt_cacher_version_name_service"
 
-	(( verbose && apt_cacher!='ng' )) && {
-		show_fix "$(eval_gettext "For this system we selected apt-cacher type: \$apt_cacher")"
-	}
-
-	case "$apt_cacher" in
-		'ng')
-			apt_cacher_bad='apt-cacher'
-			apt_cacher_good='apt-cacher-ng'
-		;;
-		'old')
-			apt_cacher_bad='apt-cacher-ng'
-			apt_cacher_good='apt-cacher'
-		;;
-		*)
-			fail "Internal error: unknown apt_cacher type."
-		;;
-	esac
-
-	printf "\n\n\nWill test for bad package $apt_cacher_bad.\n"
+	printf "\n\nWill test for bad package%s\n" "${apt_cacher_bad}"
 
 	if platforminfo_checkinstalled_package "$apt_cacher_bad" ; then
-		# echo "installed $apt_cacher_bad . " ; read _ # debug
+		# echo "installed ${apt_cacher_bad}. " ; read _ # debug
 		show_fix "$(eval_gettext "L_fix_uninstall_apt_cacher bad=\$apt_cacher_bad good=\$apt_cacher_good.")" \
 			|| fail "Confirm to remove bad apt cacher ($apt_cacher_bad)"
 		platforminfo_remove_packages "$apt_cacher_bad"
 	fi
 	install_packages "$apt_cacher_good"
+
+	### other fixes
 
 	install_packages lxc
 
