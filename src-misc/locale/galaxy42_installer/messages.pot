@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-11 15:11+0000\n"
+"POT-Creation-Date: 2016-10-11 18:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -214,4 +214,25 @@ msgstr ""
 
 #, sh-format
 msgid "L_fix_uninstall_apt_cacher bad=$apt_cacher_bad good=$apt_cacher_good."
+msgstr ""
+
+msgid "install_info_title"
+msgstr ""
+
+msgid "L_install_option_lxcnet_bridged_TITLE"
+msgstr ""
+
+msgid "L_install_option_lxcnet_bridged_ITEM_all"
+msgstr ""
+
+msgid "L_install_option_lxcnet_bridged_ITEM_some"
+msgstr ""
+
+msgid "L_install_option_lxcnet_bridged_INPUTBOX_cards"
+msgstr ""
+
+msgid "menu_task_autoselect"
+msgstr ""
+
+msgid "L_install_option_lxcnet_bridged_INFO"
 msgstr ""

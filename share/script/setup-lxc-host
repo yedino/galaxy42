@@ -1,15 +1,63 @@
 #!/bin/bash
+# read below usage() for LICENCE and help on this tool.
 
-marker='#marker_gitian_lxc_is_added_here'
-initfile='/etc/rc.local'
-doit=1
-grep "$marker" /etc/rc.local && {
-	printf "\nIt seems lxc setup is already installed into $initfile.\n\n"
-	if [[ '$1' != '--force' ]] ; then
-		printf "Will NOT install lxc setup again then.\n"
-		doit=0
-	fi
+function usage() {
+
+	cat <<EOF
+
+This code (in this file) is on BSD 2-clause license, (c) Copyrighted 2016 TiguSoft.pl
+
+This script will generate scripts that set up LXC networking,
+and will connect them to be auto-started.
+
+It is designed to:
+- allow running it few times without trouble/duplication of things (unless you need to manually delete some
+very old stuff created by very old versions of this code)
+- instantly create the desite effects without need for restart (if possible, not guaranteed)
+
+Should work on many Linuxes, especially Debian family (and likelly Redhat family and all others too)
+
+usage:
+$0 [--force|--normal] [--all-if|--some-if] [space_separated_interface_list]
+e.g.:
+$0 --normal --all-if
+$0 --normal --some-if "eth0 eth1 eth2 eth3 eth4 wlan0 wlan1 wlan2 usb0 usb1 usb2"
+
+It should set up computer to have rules like after running for example:
+	iptables -t nat -D POSTROUTING -j lxc-nat-v1
+	iptables -t nat -F lxc-nat-v1
+	iptables -t nat -X lxc-nat-v1
+	iptables -t nat -N lxc-nat-v1
+	iptables -t nat -I lxc-nat-v1 -o eth1 -j MASQUERADE
+	iptables -t nat -I lxc-nat-v1 -o eth2 -j MASQUERADE
+	iptables -t nat -I lxc-nat-v1 -o eth3 -j MASQUERADE
+	iptables -t nat -I POSTROUTING -j lxc-nat-v1
+
+EOF
+
 }
+
+function fail() {
+	echo "Error: " "$@" ; exit 1
+}
+
+marker='#marker_gitian_lxc_is_added_here' # to find if initfile already has the hook calling our main autostart script
+initfile='/etc/rc.local' # put here our autostart script
+
+do_install_main=1 # do we want to install the call to mainscript
+
+opt_force_s="$1"
+opt_all_if_s="$2"
+lxc_iflist="$3"
+
+if [[ ! ( ("$opt_force_s" == "--force") || ("$opt_force_s" == "--normal" ) ) ]] ; then
+	usage
+	exit 1
+fi
+if [[ ! ( ("$opt_all_if_s" == "--all-if") || ("$opt_all_if_s" == "--some-if" ) ) ]] ; then
+	usage
+	exit 1
+fi
 
 if [ $(id -u) != 0 ]
 then
@@ -17,30 +65,43 @@ then
 	exit 1
 fi
 
-if ((doit)) ; then
+grep "$marker" "$initfile" && {
+	printf "\nIt seems lxc setup (at least the main hook) is already installed into file [$initfile], good.\n\n"
+	if [[ '$1' != '--force' ]] ; then
+		printf "Will NOT install lxc setup again then.\n"
+		do_install_main=0
+	fi
+}
+
+ourscript="/etc/rc.local.lxcnet-gitian" # this script will be generated here, from template
+ourscript_template='share/script/rc.local.lxcnet-gitian.template' # our template
+
+if (( do_install_main )) ; then
 	name="/etc/rc.local"
 	name_bup="/etc/rc.local.bup"
-	ourscript="/etc/rc.local.lxcnet-gitian"
 
+	# backup rc.local
 	echo "Making backup into $name_bup"
 	cp "$name" "$name_bup" # make a backup
 
-	echo "$marker" >> "$ourscript"
-	echo "# start of gitian lxc (script itself)" >> "$ourscript"
-	echo 'brctl addbr br0' >> "$ourscript"
-	echo 'ifconfig br0 10.0.3.2/24 up' >> "$ourscript"
-	echo 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> "$ourscript"
-	echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> "$ourscript"
-	echo "# end of gitian lxc" >> "$ourscript"
-	echo '' >> "$ourscript"
-
+	# edit rc.local to call $ourscript
 	sed -i '/exit 0/d' /etc/rc.local # there is usually an silly exit on top there, we will remove it
 	echo "$marker" >> "$name"
 	echo "# start of gitian lxc (call only)" >> "$name"
 	echo "sh $ourscript" >> "$name"
 	echo "# end of gitian lxc" >> "$name"
-
 fi
+
+# generate $outscript
+cp -ar "$ourscript_template" "$ourscript" || fail "copy template"
+#  fill in variables
+sed -i -e "s|__VAR_iflist|$lxc_iflist|g" "$ourscript"
+opt_all_if=0
+if [[ "$opt_all_if_s" == "--all-if" ]] ; then opt_all_if=1 ; fi
+sed -i -e "s|__VAR_lxc_all|$opt_all_if|g" "$ourscript"
+
+# run now our firewall script
+sh "$ourscript" || { echo "It seems our lxc network script ($ourscript) failed to run."; exit 1; }
 
 printf "\nInstalling sudoers settings\n"
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc    # new file
