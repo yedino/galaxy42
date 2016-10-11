@@ -35,3 +35,16 @@ std::string to_string(const std::string & v) {
 
 } // namespace
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+const char * gettext(const char * s) {
+	return s;
+}
+
+char * bindtextdomain(const char * domainname, const char * dirname) {
+	return  "not implemented";
+}
+
+char * textdomain(const char * domainname) {
+	return "not in use";
+}
+#endif
