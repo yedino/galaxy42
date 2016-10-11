@@ -48,6 +48,8 @@ For more details, including correct naming and **glossary**, and advanced techni
 The source code is NOT yet reviewed, expect it to have bugs and exploits. For now we recommend to use it only in isolated VM
 or better yet on a separated test computer.
 
+When you build program from source, check the file [SECURITY.txt] for list of dependencies that you MUST monitor for security updates!
+
 ### Security of binary install:
 
 Currently we do not yet offer binary install. But once we do, they will be properly signed by root of trust.
@@ -74,7 +76,7 @@ Or else, for not-tagged versions:
 
 * The files in gitallsign/ contain lists which GPG key is allowed to be which git Author, and can he sign commits or tags.
 (In future this will be automatically checked with our script, for now you must do it by hand).
-* Of course check who in fact created this files (git log / git blame) and is it signed by the root of trust. 
+* Of course check who in fact created this files (git log / git blame) and is it signed by the root of trust.
 * Check if at least the latest git tag is signed (and is it signed by person that is allowed to sign-tags in this project, and does the GPG key
 actually match the commit author as seen in git log).
 * Each commit (including merge commits) since version you are checking, back to the latest tag, should be also signed (also you should check,

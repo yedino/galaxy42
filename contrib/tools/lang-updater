@@ -44,11 +44,13 @@ textdomain=""
 sourcefile=""
 mainfile_messages_pot=""
 
+list_of_languages="pl en ua" # <--- add here more languages
+
 
 MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp dir"
 
 function do_compile() {
-	for lang in pl en
+	for lang in $list_of_languages
 	do
 		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt"
 	done
@@ -57,7 +59,7 @@ function do_compile() {
 function lang_new_and_translate() {
 	xgettext  --language="$programming_language" -j --no-location   -o "src-misc/locale/${textdomain}/messages.pot"  "${sourcefile[@]}"
 	# -j
-	for lang in pl en
+	for lang in $list_of_languages
 	do
 		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || fail "msgmerge"
 		$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
@@ -90,7 +92,7 @@ function trim_obsolete {
 
 	trim_po_file "${freshfile}" "${mainfile_messages_pot}"
 
-	for lang in pl en
+	for lang in $list_of_languages
 	do
 		pofile="src-misc/locale/${textdomain}/${lang}.po"
 		trim_po_file "${freshfile}" "${pofile}"
