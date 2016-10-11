@@ -8,7 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-//#include <libintl.h>
+#ifndef _MSC_VER
+	#include <libintl.h>
+#endif
 extern unsigned char g_dbg_level;
 
 
