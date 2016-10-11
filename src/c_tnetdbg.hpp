@@ -8,8 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <libintl.h>
-
+//#include <libintl.h>
 extern unsigned char g_dbg_level;
 
 
