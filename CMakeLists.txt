@@ -51,7 +51,7 @@ if (MINGW)
 	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
 	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
 	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
-	#set(GETTEXT_LIBS intl iconv pthread)
+	set(GETTEXT_LIBS intl iconv pthread)
 	#set(GETTEXT_LIBS "iconv")
 	#message(FATAL_ERROR "${GETTEXT_LIBS}")
 endif()
@@ -341,7 +341,7 @@ else()
 endif()
 
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES} ${GETTEXT_LIBS})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
