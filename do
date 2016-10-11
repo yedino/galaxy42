@@ -115,6 +115,9 @@ if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
 	fi
 fi
 
+contrib/tools/galaxy42-lang-update-all || fail "Compiling po to mo (gettext/translations)"
+
+
 echo "Will run cmake, PWD=$PWD USER=$USER, CC=$CC, CXX=$CXX, CPP=$CPP, PATH=$PATH"
 echo "Which gcc, g++: "
 which gcc
