@@ -108,9 +108,9 @@ __Possible errors:__
 ``` Error	LNK2019	unresolved external symbol _CreateUnicastIpAddressEntry@4```
 - add Iphlpapi.lib to Additional Dependencies that contain CreateUnicastIpAddressEntry function.
 
-``` Error LNK1112 module machine type 'X86' conflicts with target machine type 'x64' ``` 
-or 
-``` Error LNK1112 module machine type 'x64' conflicts with target machine type 'X86'```
+``` Error LNK1112 module machine type 'X86' conflicts with target machine type 'x64' ```
+ or
+ ``` Error LNK1112 module machine type 'x64' conflicts with target machine type 'X86'```
 - make sure you link correct version of 32-bit or 64-bit (libsodium/libboost) libraries.
 
 
