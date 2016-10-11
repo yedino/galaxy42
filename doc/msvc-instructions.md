@@ -1,13 +1,13 @@
 # GALAXY42 compilation on msvc (Visual Studio 2015):
 
-### Process instructions for:  
+### Process instructions for:
 
-- version:  
+- version:
 	```commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9```
 	- It should be similar or easier for newer versions
 
 ### Used tools:
-- Cygwin for 32-bit versions of Windows (for git)  
+- Cygwin for 32-bit versions of Windows (for git)
     - could be other tool that supports git
 - Visual Studio Community 2015
 - Cmake-GUI 3.6.0
@@ -30,10 +30,10 @@ $ make windowsService
 ### MSVC:
 Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
 
-__Provide dependencies (libboost and libsodium):__  
-- Pre-compiled binaries can be found on libboost/libsodium official pages.  
-Download and install/unpack libraries. I used:  
-    - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)  
+__Provide dependencies (libboost and libsodium):__
+- Pre-compiled binaries can be found on libboost/libsodium official pages.
+Download and install/unpack libraries. I used:
+    - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)
     - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
 
 __Open Cygwin:__
@@ -41,8 +41,8 @@ __Open Cygwin:__
 	In main galaxy directory run "git submodule update --init"
 
 __Open CMake:__
-- __Settings:__  
-	- Where is the source: 		path/to/cloned/galaxy42  
+- __Settings:__
+	- Where is the source: 		path/to/cloned/galaxy42
 	- Where to build binaries:	any/output/path
 
 __Set cmake variables:__
@@ -81,7 +81,7 @@ __Cmake output:__
 	Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE)
 	Looking for pthread.h
 	Looking for pthread.h - not found
-	Found Threads: TRUE  
+	Found Threads: TRUE
 	JsonCpp Version: 1.7.2
 	Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE) (Required is at least version "2.6")
 	Disabling COVERAGE
@@ -95,28 +95,28 @@ __Cmake output:__
 - Open Visual Studio, "Open project", choose folder, where you download galaxy42
 ```
 	right button (on "tunserver.elf" in Solution Explorer section) -> Build
-```  
-__Possible errors:__  
+```
+__Possible errors:__
 
 ```Warning	D9002	ignoring unknown option -std=c++14```
 - you should use compilator that support c++14 (probably you are using an older version of Visual Studio)
 
 ```Error	LNK1104	cannot open file 'pthread.lib'	tunserver.elf```
-- simply remove pthread.lib from linking Additional Dependencies  
+- simply remove pthread.lib from linking Additional Dependencies
 
-```Severity	Code	Description	Project	File	Line	Suppression State```  
-``` Error	LNK2019	unresolved external symbol _CreateUnicastIpAddressEntry@4```  
+```Severity	Code	Description	Project	File	Line	Suppression State```
+``` Error	LNK2019	unresolved external symbol _CreateUnicastIpAddressEntry@4```
 - add Iphlpapi.lib to Additional Dependencies that contain CreateUnicastIpAddressEntry function.
 
-``` Error LNK1112 module machine type 'X86' conflicts with target machine type 'x64' ```  
-or  
-``` Error LNK1112 module machine type 'x64' conflicts with target machine type 'X86'```
+``` Error LNK1112 module machine type 'X86' conflicts with target machine type 'x64' ```
+ or
+ ``` Error LNK1112 module machine type 'x64' conflicts with target machine type 'X86'```
 - make sure you link correct version of 32-bit or 64-bit (libsodium/libboost) libraries.
 
 
 ### Create TUN/TAP device
-__download/install openvps drivers for windows tap device__  
-- [OpenVPN-Downloads](https://openvpn.net/index.php/open-source/downloads.html)  
+__download/install openvps drivers for windows tap device__
+- [OpenVPN-Downloads](https://openvpn.net/index.php/open-source/downloads.html)
 
 __set up device in windows devices manager (this step must be done as administrator)__
 
@@ -130,7 +130,7 @@ Windows 8 and newer
 
 
 
-### Possible runtime errors (tunserver.elf.exe):  
+### Possible runtime errors (tunserver.elf.exe):
 ***cannon open shared library***
 ```
 	$ ./tunserver.elf.exe
@@ -140,12 +140,12 @@ Windows 8 and newer
 
 - same error with boost libraries - manually copy missing boost libs to dir that contain tunserver.elf.exe
 
-***Windows alert - abort()***  
+***Windows alert - abort()***
 
 ```Microsoft Visual C++ Runtime Library - debug Error! - abort()```
 - reason - probably network TAP device is missing or your windows user don't have access to it (Do you created TAP device?).
 
-***problem with TUN/TAP parser***  
+***problem with TUN/TAP parser***
 
 ```tun data length < 54 -- in tunserver.elf.exe debug messages```
 - solution: in network device properties for TAP-Windows Adapter V9 - uncheck all components instead of ipv6 protocol
