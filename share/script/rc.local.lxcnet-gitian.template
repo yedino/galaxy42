@@ -1,0 +1,32 @@
+#!/bin/bash
+# start of gitian-lxc (script itself)
+
+# br0
+brctl addbr br0
+ifconfig br0 10.0.3.2/24 up
+
+# forwarding tables
+lxc_iflist='__VAR_iflist'
+lxc_all=__VAR_lxc_all
+
+iptables -t nat -D POSTROUTING -j lxc-nat-v1
+iptables -t nat -F lxc-nat-v1
+iptables -t nat -X lxc-nat-v1
+
+iptables -t nat -N lxc-nat-v1
+
+if (( $lxc_all )) ; then
+	iptables -t nat -I lxc-nat-v1 -j MASQUERADE
+else
+	for ifname in $lxc_iflist ; do
+		iptables -t nat -I lxc-nat-v1 -o "$ifname" -j MASQUERADE
+	done
+fi
+
+iptables -t nat -I POSTROUTING -j lxc-nat-v1
+
+# forwarding settings
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# end of gitian-lxc
+
