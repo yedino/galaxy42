@@ -228,10 +228,6 @@ msgstr "Zainstalujemy pakiety: $packages_str (jako root)"
 msgid "L_install_packages_text $packages_str"
 msgstr "Zainstalujemy pakiety: $packages_str"
 
-#, sh-format
-msgid "For this system we selected apt-cacher type: $apt_cacher"
-msgstr "Dla tego systemu wybraliśmy program apt-cacher typu: $apt_cacher"
-
 msgid "menu_taskpack_devel_builduse"
 msgstr "Zaawansowane: zbuduj program w Gitian / rozwijaj go"
 
