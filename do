@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+function fail() {
+	echo "Error (in $0): " "$@"
+	exit 1
+}
+
 function usage_mini {
 	echo ""
 	echo "--- Short help ---"
