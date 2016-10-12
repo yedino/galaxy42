@@ -185,6 +185,7 @@ Can not create base VM image:
 Possible problems to check:
 - did you configured network for LXC? (installer should do it)
 - is apt-cacher-ng running (or apt-cacher, for some system)
+- if network seems to not work in LXC, then make sure you given proper access to Gitian lxc-net to allow it to use your PROPER network card. Maybe run install.sh again and give access to all network cards for lxc-net.
 - More of common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)
 EOF
 		fail "Creating base VM failed (see above)"
