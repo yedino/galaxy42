@@ -146,6 +146,16 @@ function install_for_devel2() {
 	# in future also add here things for e.g. simulations
 }
 
+function resolv_conf_guess_lxc_usable_lines() {
+	cat "$1" | \
+		egrep -v -E  '^[[:space:]]*#+.*$' | # skip comment \
+		egrep -v -E '^[[:space:]]*$' | # skip empty \
+		egrep -v -E -i '^[[:space:]]*nameserver[[:space:]]+127\..*$' | # skip 127 \
+		egrep -v -E -i '^[[:space:]]*nameserver[[:space:]]+0\.0\.0\.0.*$' | # skip 0.0.0.0 \
+		egrep -v -E -i '^[[:space:]]*nameserver[[:space:]]+localhost*$' | # skip localhost \
+		egrep    -E -i '^[[:space:]]*nameserver[[:space:]]+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.*$' # SELECT only IPv4
+}
+
 function install_build_gitian() {
 	(("done_install['install_for_build_gitian']")) && return ; done_install['install_for_build_gitian']=1
 	install_for_build
@@ -188,9 +198,10 @@ function install_build_gitian() {
 
 	install_packages_NOW
 
-	printf "Info: Gitian needs LXC network settings:\n\n"
+	printf "\n\n\nInfo: Gitian needs LXC network settings:\n\n"
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
 
+	### lxc-net: IP forwarding
 	local lxc_all_s='--all-if'
 	local lxc_cards_s=''
 
@@ -221,6 +232,31 @@ function install_build_gitian() {
 		printf "%s\n" "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
 	fi
 
+	### lxc-net: DNS access, on host
+
+	dns_fix='resolv_chattr'
+
+	# quick hack to try to count possibly-good (not-localhost) DNS that could work in LXC:
+	resolve_file="/etc/resolv.conf"
+	dns_lines_good=$( resolv_conf_guess_lxc_usable_lines "$resolve_file" | wc -l )
+
+	if (( dns_lines_good < 1 )) ; then
+		show_info "$(gettext "L_install_option_lxcnet_dns_needsfix")" ;
+	fi
+
+	if (( (! autoselect) || (dns_lines_good<1) )) ; then
+		show_info "$(gettext "L_install_option_lxcnet_dns_INFO")"
+
+		response=$( abdialog  --menu  "$(gettext "L_install_option_lxcnet_dns_TITLE")"  23 76 16  \
+			"none" "$(gettext "L_install_option_lxcnet_dns_ITEM_none")"  \
+			"resolv_d" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_d")"  \
+			"resolv_only" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_only")"  \
+			"resolv_chattr" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_chattr")"  \
+			2>&1 >/dev/tty ) || abdialog_exit
+
+		run_with_root_privilages "./share/script/setup-lxc-host-dns" "$responsolv_d" || fail
+	fi
+
 	needrestart_lxc=1
 }
 
@@ -230,9 +266,10 @@ function install_languages() {
 	printf "\n%s\n" "Install languages - DONE."
 }
 
-
 # ------------------------------------------------------------------------
 # start (main)
+
+### resolv_conf_guess_lxc_usable_lines "$1" ; echo "test exit" ; exit 1 ; # XXX
 
 
 sudo_flag="--sudo"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-11 17:23+0000\n"
+"POT-Creation-Date: 2016-10-12 12:06+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -291,3 +291,25 @@ msgstr ""
 "comfortable.\n"
 "Or else allow LXC to access only some of card - you will manually enter list "
 "of cards [eth0 eth1 wlan0...] that LXC has the right to ever user."
+
+msgid "L_install_option_lxcnet_dns_TITLE"
+msgstr "Gitian: LXC Network - select DNS"
+
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_chattr"
+msgstr "Add 8.8.8.8 /etc/resolv.conf;Block chattr +i"
+
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_d"
+msgstr "Add 8.8.8.8 resolv.conf.d (Ubuntu,Mint,...)"
+
+msgid "L_install_option_lxcnet_dns_ITEM_none"
+msgstr "Leave it as is, I will fix it if needed"
+
+msgid "L_install_option_lxcnet_dns_needsfix"
+msgstr "TODO"
+
+msgid "L_install_option_lxcnet_dns_INFO"
+msgstr "TODO"
+
+#, fuzzy
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
+msgstr "Add 8.8.8.8 resolv.conf.d (Ubuntu,Mint,...)"
