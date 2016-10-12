@@ -106,7 +106,7 @@ echo "FAKETIME = ${FAKETIME}"
 ### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
-WRAP_DIR=$HOME/wrapped
+WRAP_DIR="$HOME/wrapped"
 HOSTS="x86_64-w64-mingw32 i686-w64-mingw32" # related to $TARGET_ARCH
 COMPILERS="g++ gcc cpp cc c++ nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # do we need "cc c++"? TODO
 

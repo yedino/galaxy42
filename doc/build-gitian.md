@@ -143,10 +143,14 @@ A: Probably you don't have set br0 bridge. Try to run again install.sh script wi
      # end of gitian lxc 
     ```
  
-A: I can get in to machine using ``` $ build-gitian on-target```  , but  I don't have network connection inside gitian/lxc.  
+Q: I can get in to machine using ``` $ build-gitian on-target```  , but  I don't have network connection inside gitian/lxc.
  
-Q: If you have both br0 and lxcbr0 bridges in ip devices. Sometimes one bridge is blocked by another.
+A: If you have both br0 and lxcbr0 bridges in ip devices. Sometimes one bridge is blocked by another.
 - To solve connection problem, It may by necessary to bring lxcbr0 down:  
      ``` 
      $ ifconfig lxcbr0 down
      ```
+
+Q: Network seems to not work in LXC
+
+A: Make sure you given proper access to Gitian lxc-net to allow it to use your PROPER network card. Maybe run install again and give access to all network cards for lxc-net.
