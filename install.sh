@@ -206,7 +206,7 @@ function install_build_gitian() {
 		if [[ "$response" == "some" ]] ; then
 			lxc_all_s="--some-if" ;
 			ui_cards=$(abdialog  --inputbox "$(gettext "L_install_option_lxcnet_bridged_INPUTBOX_cards")" \
-				20 70 "eth0 eth1 eth2 eth3 usb0 usb1 usb2 wan0 wlan1 wlan2" \
+				20 70 "eth0 eth1 eth2 eth3 usb0 usb1 usb2 wlan0 wlan1 wlan2" \
 				2>&1 >/dev/tty ) || abdialog_exit
 			lxc_cards_s="$ui_cards"
 		fi
