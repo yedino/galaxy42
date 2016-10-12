@@ -290,8 +290,13 @@ int main(int argc, char **argv) {
 	// Specify location of dictionaries
 	gen.add_messages_path(install_dir_share_locale);
 	gen.add_messages_domain("galaxy42_main");
-	//std::locale locale = gen("");
-	const std::string locale_name = std::use_facet<boost::locale::info>(gen("")).name();
+	std::string locale_name;
+	try {
+		locale_name = std::use_facet<boost::locale::info>(gen("")).name();
+	} catch (const std::exception &e) {
+		std::cerr << "Can not detect language, set default language" << "\n";
+		locale_name = "en_US.UTF-8";
+	}
 	std::locale::global(gen(locale_name));
 	//std::locale::global(gen("pl_PL.UTF-8")); // OK
 	//std::locale::global(gen("Polish_Poland.UTF-8")); // not works
