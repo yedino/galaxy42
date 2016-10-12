@@ -12,7 +12,7 @@ function usage() {
 
 	Run this program with options:
 
-	$0 [-t] [-u] [-C] -[n] [translation_catalog] [programming_language] [file1, [file2 [...]]]
+	$0 [-t] [-u] [-C] [-n] [translation_catalog] [programming_language] [file1, [file2 [...]]]
 
 	-t Trims from .po files obsolite strings that are no longer present in sources. (and compiles .po to .mo)
 	-u Updates the .po and .mo files by adding new strings that were since last time added in sources. (and compiles .po to .mo)
@@ -115,9 +115,9 @@ cmd_compile=0
 
 while getopts ":ntuCh" opt; do
 	  case $opt in
-			n)
-				opt_notcare=1
-				;;
+		n)
+			opt_notcare=1
+		;;
 	  	t)
 	  		cmd_trim=1
 				;;
