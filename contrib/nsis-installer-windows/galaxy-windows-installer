@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-galaxy42_dir="/home/ubuntu/build/galaxy42"
+galaxy42_dir="$HOME/build/galaxy42"
+WRAP_DIR="$HOME/wrapped"
 
 # copy dll's, tunserver.elf.exe etc to contrib/nsis-installer-windows/bin  x64 x86
 
@@ -30,7 +31,7 @@ pushd zlib || fail
 
 	git reset --hard v1.2.8 || fail
 	git clean -xdf || fail
-	sed -e s/"PREFIX ="/"PREFIX = i686-w64-mingw32-"/ -i win32/Makefile.gcc || fail
+	sed -e s@"PREFIX ="@"PREFIX = "$WRAP_DIR"/i686-w64-mingw32-"@ -i win32/Makefile.gcc || fail
 	mv win32/Makefile.gcc Makefile || fail
 	make || fail "zlib make"
 popd
