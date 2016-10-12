@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-12 12:06+0000\n"
+"POT-Creation-Date: 2016-10-12 13:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -256,4 +256,12 @@ msgid "L_install_option_lxcnet_dns_INFO"
 msgstr ""
 
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
+msgstr ""
+
+#, sh-format
+msgid "L_install_fail infile=$infile"
+msgstr ""
+
+#, sh-format
+msgid "L_install_fail2"
 msgstr ""
