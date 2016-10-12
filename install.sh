@@ -155,6 +155,7 @@ function install_for_devel() {
 function install_for_devel2() {
 	(("done_install['install_for_devel2']")) && return ; done_install['install_for_devel2']=1
 	install_for_devel
+	install_packages g++-mingw-w64-i686 g++-mingw-w64-x86-64 # cross build, checking DDLs etc
 	# in future also add here things for e.g. simulations
 }
 
@@ -321,8 +322,10 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 16  \
 	"simple"        "$(gettext "menu_taskpack_normal_builduse")"  \
 	"devel"         "$(gettext "menu_taskpack_devel_builduse")"  \
+	"devel2"         "$(gettext "menu_taskpack_devel_builduse") (2)"  \
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
 	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
+	"x_devel2"       "$(gettext "menu_taskpack_quick_devel") (2)"  \
 	"custom"        "$(gettext "menu_taskpack_custom")" \
 	2>&1 >/dev/tty ) || abdialog_exit
 [[ -z "$response" ]] && exit
@@ -332,14 +335,17 @@ response_menu_task=""
 
 if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
 if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
+if [[ "$response" == "devel2" ]] ; then response_menu_task="warn build touse devel devel2 bgitian verbose" ; fi
 if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect" ; fi
 if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect" ; fi
+if [[ "$response" == "x_devel2" ]] ; then response_menu_task="build touse devel devel2 bgitian autoselect" ; fi
 if [[ "$response" == "custom" ]] ; then
 # shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
 	"build"         "$(gettext "menu_task_build")" "on" \
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
+	"devel2"        "$(gettext "menu_task_devel") 2" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
 	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"verbose"       "$(gettext "menu_task_verbose")" "on" \
@@ -373,6 +379,13 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			warn_ANY=1
 		;;
 		devel)
+			warnings_text="${warnings_text}$(gettext "warning_devel")\n" # net namespace script
+			warn_fw=1 # to test
+			warn2_net=1 # namespaces
+			warn_root=1 # net namespace, and same as for task touse
+			warn_ANY=1
+		;;
+		devel2)
 			warnings_text="${warnings_text}$(gettext "warning_devel")\n" # net namespace script
 			warn_fw=1 # to test
 			warn2_net=1 # namespaces
@@ -434,6 +447,9 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 		;;
 		devel)
 			install_for_devel
+		;;
+		devel2)
+			install_for_devel2
 		;;
 		bgitian)
 			install_build_gitian
