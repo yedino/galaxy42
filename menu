@@ -192,7 +192,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 				flag=""
 			fi
 			sleep 0.2
-		  for iii in en pl ua de ; do
+		  for iii in en pl ua de ru; do
 				LANGUAGE="$iii" ./install.sh "$flag"
 		  done
 	  ;;
