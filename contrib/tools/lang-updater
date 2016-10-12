@@ -12,16 +12,18 @@ function usage() {
 
 	Run this program with options:
 
-	$0 [-t] [-u] [translation_catalog] [programming_language] [file1, [file2 [...]]]
+	$0 [-t] [-u] [-C] [-n] [translation_catalog] [programming_language] [file1, [file2 [...]]]
 
 	-t Trims from .po files obsolite strings that are no longer present in sources. (and compiles .po to .mo)
 	-u Updates the .po and .mo files by adding new strings that were since last time added in sources. (and compiles .po to .mo)
 	-C only compile .po into .mo.
+	-n not care about errors when the .po file is missing (e.g. for -C) good for batch
 
 	Usually this program is run with options like:
 	$0 -t -u galaxy42_installer install.sh
 	$0 -t -u galaxy42_main $example1
 	$0 -C galaxy42_installer
+	$0 -C -n galaxy42_installer
 
 	Thow now usually you should use the developer menu ./menu to run ready commands using this tool.
 
@@ -43,6 +45,7 @@ Use -h for help.
 textdomain=""
 sourcefile=""
 mainfile_messages_pot=""
+opt_notcare=0
 
 list_of_languages="pl en ua" # <--- add here more languages
 
@@ -52,7 +55,14 @@ MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp
 function do_compile() {
 	for lang in $list_of_languages
 	do
-		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt"
+		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || {
+			echo "Can not convert a po file to mo"
+			if (( opt_notcare )) ; then
+				echo "skipping"
+			else
+				fail "msgfmt error"
+			fi
+		}
 	done
 }
 
@@ -103,8 +113,11 @@ cmd_trim=0
 cmd_update=0
 cmd_compile=0
 
-while getopts ":tuCh" opt; do
+while getopts ":ntuCh" opt; do
 	  case $opt in
+		n)
+			opt_notcare=1
+		;;
 	  	t)
 	  		cmd_trim=1
 				;;
