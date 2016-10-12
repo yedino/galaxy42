@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-12 12:06+0000\n"
+"POT-Creation-Date: 2016-10-12 13:18+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -312,9 +312,6 @@ msgstr "Gitian: sieć LXC - wybór DNS"
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_chattr"
 msgstr "Dodaj 8.8.8.8 /etc/resolv.conf; zablokuj chattr +i"
 
-msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
-msgstr "Dodaj 8.8.8.8 do /etc/resolv.conf; ale nie blokuj"
-
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_d"
 msgstr "Dodaj 8.8.8.8 do resolv.conf.d/tail"
 
@@ -354,3 +351,16 @@ msgstr ""
 "aktualizuje sam ten plik to będzie to skasowane.\n"
 "Opcja [resolv_d] - dopisze 8.8.8.8 do resolv.conf.d/tail lub podobnego - "
 "działa to na systemach które używają tego sub-systemu (np. Ubuntu, Mint)."
+
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
+msgstr "Dodaj 8.8.8.8 do /etc/resolv.conf; ale nie blokuj"
+
+#, sh-format
+msgid "L_install_fail infile=$infile"
+msgstr "Wystąpił błąd podczas instalacji (w pliku $infile)"
+
+#, sh-format
+msgid "L_install_fail2"
+msgstr ""
+"Instalacja się nie udała niestety. Zobacz na dokumentację, na README, "
+"oraz na informację jak się z nami skontaktować."

@@ -24,6 +24,18 @@ lib='g42-middle-utils.sh' ; source "${dir_base_of_source}/share/script/lib/${lib
 	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
+
+function fail() {
+	printf "\n\n\n"
+	echo "Error: (in $0) - " "$@"
+	printf "\n\n\n"
+	infile="$0"
+	echo "$(eval_gettext "L_install_fail infile=\$infile") "  ' - ' "$@"
+	echo "$(eval_gettext "L_install_fail2")"
+	exit 1
+}
+
+# ------------------------------------------------------------------------
 # install functions
 # ------------------------------------------------------------------------
 
@@ -253,8 +265,10 @@ function install_build_gitian() {
 			"resolv_only" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_only")"  \
 			"resolv_chattr" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_chattr")"  \
 			2>&1 >/dev/tty ) || abdialog_exit
+		dns_fix="$response"
+		printf "\n%s\n" "Will use DNS fix: $dns_fix"
 
-		run_with_root_privilages "./share/script/setup-lxc-host-dns" "$responsolv_d" || fail
+		run_with_root_privilages "./share/script/setup-lxc-host-dns" "$dns_fix" || fail "Can not apply selected DNS fix"
 	fi
 
 	needrestart_lxc=1
@@ -394,8 +408,6 @@ fi
 
 # show special warnings:
 if ((enabled_warn && warn2_net)) ; then
-	warnings_text="${warnings_text}\n(gettext 'warning_warn2_net')" # net namespace script
-
 	text="$(eval_gettext "warn2_net")"
 	abdialog --title "$(gettext 'warn2_net_title')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
