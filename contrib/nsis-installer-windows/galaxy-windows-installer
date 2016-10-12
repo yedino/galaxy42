@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 
 galaxy42_dir="/home/ubuntu/build/galaxy42"
@@ -15,6 +15,12 @@ printf "\n\n\nBuilding zlib (for NSIS)\n\n\n"
 [[ -r "$galaxy42_dir" ]] || fail "Can not enter galaxy42_dir=[$galaxy42_dir]"
 
 if (( 1 )) ; then # on/off main buld
+
+# take the DLLs form system:
+
+pushd bin/ || fail "enter bin/"
+	./download.sh
+popd || fail "dir"
 
 # build zlib
 rm -rf zlib
