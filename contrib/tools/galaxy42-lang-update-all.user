@@ -8,10 +8,10 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 for catal in galaxy42_installer g42bashutils galaxy42_scripts ; do
-       contrib/tools/lang-updater -C "$catal" shell
+       contrib/tools/lang-updater -C -n "$catal" shell
 done
 for catal in galaxy42_main ; do
-       contrib/tools/lang-updater -C "$catal" c++
+       contrib/tools/lang-updater -C -n "$catal" c++
 done
 
 printf "%s\n" "Done in $0."
