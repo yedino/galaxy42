@@ -1,3 +1,5 @@
+SetCompress off
+
 Unicode true
 !include MUI2.nsh
 !include x64.nsh

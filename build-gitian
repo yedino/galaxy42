@@ -22,6 +22,11 @@ init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; ex
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
 
+function fail() {
+	echo "Error occured (in $0) will exit: " "$@"
+	exit 1
+}
+
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit 1
 function script_cleanup() {
@@ -126,11 +131,6 @@ function set_env() {
 	export LXC_GUEST_IP=10.0.3.5
 }
 
-function fail() {
-	echo "Error occured, will exit ($1)"
-	exit 1
-}
-
 function setup_host_for_lxc() {
 	cat <<EOF
 
@@ -185,6 +185,7 @@ Can not create base VM image:
 Possible problems to check:
 - did you configured network for LXC? (installer should do it)
 - is apt-cacher-ng running (or apt-cacher, for some system)
+- if network seems to not work in LXC, then make sure you given proper access to Gitian lxc-net to allow it to use your PROPER network card. Maybe run install.sh again and give access to all network cards for lxc-net.
 - More of common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)
 EOF
 		fail "Creating base VM failed (see above)"

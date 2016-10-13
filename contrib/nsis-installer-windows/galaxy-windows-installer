@@ -1,7 +1,8 @@
-#!/bin/bash
+#!/bin/bash -e
 
 
-galaxy42_dir="/home/ubuntu/build/galaxy42"
+galaxy42_dir="$HOME/build/galaxy42"
+WRAP_DIR="$HOME/wrapped"
 
 # copy dll's, tunserver.elf.exe etc to contrib/nsis-installer-windows/bin  x64 x86
 
@@ -15,6 +16,13 @@ printf "\n\n\nBuilding zlib (for NSIS)\n\n\n"
 [[ -r "$galaxy42_dir" ]] || fail "Can not enter galaxy42_dir=[$galaxy42_dir]"
 
 if (( 1 )) ; then # on/off main buld
+
+# take the DLLs form system:
+
+installer_bin_dir="$galaxy42_dir/contrib/nsis-installer-windows/bin/"
+pushd "$installer_bin_dir" || fail "enter $installer_bin_dir"
+	./download.sh
+popd || fail "popd $installer_bin_dir dir"
 
 # build zlib
 rm -rf zlib
@@ -30,7 +38,7 @@ pushd zlib || fail
 
 	git reset --hard v1.2.8 || fail
 	git clean -xdf || fail
-	sed -e s/"PREFIX ="/"PREFIX = i686-w64-mingw32-"/ -i win32/Makefile.gcc || fail
+	sed -e s@"PREFIX ="@"PREFIX = "$WRAP_DIR"/i686-w64-mingw32-"@ -i win32/Makefile.gcc || fail
 	mv win32/Makefile.gcc Makefile || fail
 	make || fail "zlib make"
 popd
@@ -41,9 +49,9 @@ printf "\n\n\nBuilding NSIS itself\n\n\n"
 rm -rf nsis
 git clone https://github.com/kichik/nsis || fail "clone NSIS"
 pushd nsis || fail
-	git checkout f4c16d7eb827fdc256b57fbaba7be868fb779318 || fail "Checkout"
+	git checkout 430d70ce926f96949f424244c31297b5b678165e || fail "Checkout" # version with i686-w64-mingw32, waiting for v30 release
 
-	sed -i '60a\    i686-w64-mingw32-' SCons/Tools/crossmingw.py  # add i686-w64-mingw32 compiler to nsis capabilities
+	sed -i '46a\    '$WRAP_DIR'i686-w64-mingw32-' SCons/Tools/crossmingw.py # add our wrapped i686-w64-mingw32 at the top of compiler available list
 
 	scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install || fail "Scons failed (of zlib, for NSIS)"
 	scons UNICODE=yes SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA_PATH=no PREFIX=install_dir install || fail "Scons failed (main NSIS)"
@@ -51,8 +59,10 @@ pushd nsis || fail
 	cp ./build/urelease/UIs/modern.exe Contrib/UIs/ || fail
 	mkdir -p Plugins/x86-ansi || fail
 	mkdir -p Plugins/x86-unicode || fail
-	cp `find | grep Plugins | grep x86-ansi | grep dll` Plugins/x86-ansi
-	cp `find | grep Plugins | grep x86-unicode | grep dll` Plugins/x86-unicode
+
+	cp `find -name *.dll | grep install_dir/Plugins/x86-ansi` Plugins/x86-ansi
+	cp `find -name *.dll | grep install_dir/Plugins/x86-unicode` Plugins/x86-unicode
+
 	cp -r install_dir/Stubs/ . || fail
 	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" Include/ || fail
 
