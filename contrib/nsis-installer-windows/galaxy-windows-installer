@@ -19,9 +19,10 @@ if (( 1 )) ; then # on/off main buld
 
 # take the DLLs form system:
 
-pushd bin/ || fail "enter bin/"
+installer_bin_dir="$galaxy42_dir/contrib/nsis-installer-windows/bin/"
+pushd "$installer_bin_dir" || fail "enter $installer_bin_dir"
 	./download.sh
-popd || fail "dir"
+popd || fail "popd $installer_bin_dir dir"
 
 # build zlib
 rm -rf zlib
