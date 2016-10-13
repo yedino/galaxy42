@@ -402,7 +402,8 @@ function platforminfo_set_mountflags() {
 	fi
 
 	new_flags="remount,"$( join_by ',' "${!addclear[@]}" )
-	g42utils_resulting_mount_args=( "$mountdir" -o "$new_flags" ) # the mount command
+	# TODO add the option -i only when needed, e.g. only for encfs:
+	g42utils_resulting_mount_args=( "$mountdir" -i -o "$new_flags" ) # the mount command
 	printf "%s\n" "Need to remount ${mountdir} by using: ${g42utils_resulting_mount_args[*]}"
 	return 1
 }
