@@ -117,7 +117,7 @@ msgid "L_bad_peer_format"
 msgstr "Bad peer format"
 
 msgid "L_what_exception_program_throwow"
-msgstr "Going to throw exception. Whatooooooooooooooo: "
+msgstr "Going to throw exception. What: "
 
 msgid "L_bad_format_of_input_ip_address"
 msgstr "bad format of input ip address"
