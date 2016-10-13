@@ -24,6 +24,18 @@ lib='g42-middle-utils.sh' ; source "${dir_base_of_source}/share/script/lib/${lib
 	printf "\n%s\n" "$(eval_gettext "Can not find script library \$lib (dir_base_of_source=\$dir_base_of_source).")" ; exit 1; }
 
 # ------------------------------------------------------------------------
+
+function fail() {
+	printf "\n\n\n"
+	echo "Error: (in $0) - " "$@"
+	printf "\n\n\n"
+	infile="$0"
+	echo "$(eval_gettext "L_install_fail infile=\$infile") "  ' - ' "$@"
+	echo "$(eval_gettext "L_install_fail2")"
+	exit 1
+}
+
+# ------------------------------------------------------------------------
 # install functions
 # ------------------------------------------------------------------------
 
@@ -143,7 +155,18 @@ function install_for_devel() {
 function install_for_devel2() {
 	(("done_install['install_for_devel2']")) && return ; done_install['install_for_devel2']=1
 	install_for_devel
+	install_packages g++-mingw-w64-i686 g++-mingw-w64-x86-64 # cross build, checking DDLs etc
 	# in future also add here things for e.g. simulations
+}
+
+function resolv_conf_guess_lxc_usable_lines() {
+	cat "$1" | \
+		egrep -v -E  '^[[:space:]]*#+.*$' | # skip comment \
+		egrep -v -E '^[[:space:]]*$' | # skip empty \
+		egrep -v -E -i '^[[:space:]]*nameserver[[:space:]]+127\..*$' | # skip 127 \
+		egrep -v -E -i '^[[:space:]]*nameserver[[:space:]]+0\.0\.0\.0.*$' | # skip 0.0.0.0 \
+		egrep -v -E -i '^[[:space:]]*nameserver[[:space:]]+localhost*$' | # skip localhost \
+		egrep    -E -i '^[[:space:]]*nameserver[[:space:]]+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.*$' # SELECT only IPv4
 }
 
 function install_build_gitian() {
@@ -188,9 +211,10 @@ function install_build_gitian() {
 
 	install_packages_NOW
 
-	printf "Info: Gitian needs LXC network settings:\n\n"
+	printf "\n\n\nInfo: Gitian needs LXC network settings:\n\n"
 	if ((is_realstep && verbose2)) ; then show_status "$(gettext "L_now_installing_gitian_lxc")" ; fi
 
+	### lxc-net: IP forwarding
 	local lxc_all_s='--all-if'
 	local lxc_cards_s=''
 
@@ -221,6 +245,33 @@ function install_build_gitian() {
 		printf "%s\n" "ERROR: Can not run our script $lxc_ourscript - LXC network probably will not work."
 	fi
 
+	### lxc-net: DNS access, on host
+
+	dns_fix='resolv_chattr'
+
+	# quick hack to try to count possibly-good (not-localhost) DNS that could work in LXC:
+	resolve_file="/etc/resolv.conf"
+	dns_lines_good=$( resolv_conf_guess_lxc_usable_lines "$resolve_file" | wc -l )
+
+	if (( dns_lines_good < 1 )) ; then
+		show_info "$(gettext "L_install_option_lxcnet_dns_needsfix")" ;
+	fi
+
+	if (( (! autoselect) || (dns_lines_good<1) )) ; then
+		show_info "$(gettext "L_install_option_lxcnet_dns_INFO")"
+
+		response=$( abdialog  --menu  "$(gettext "L_install_option_lxcnet_dns_TITLE")"  23 76 16  \
+			"none" "$(gettext "L_install_option_lxcnet_dns_ITEM_none")"  \
+			"resolv_d" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_d")"  \
+			"resolv_only" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_only")"  \
+			"resolv_chattr" "$(gettext "L_install_option_lxcnet_dns_ITEM_resolv_chattr")"  \
+			2>&1 >/dev/tty ) || abdialog_exit
+		dns_fix="$response"
+		printf "\n%s\n" "Will use DNS fix: $dns_fix"
+
+		run_with_root_privilages "./share/script/setup-lxc-host-dns" "$dns_fix" || fail "Can not apply selected DNS fix"
+	fi
+
 	needrestart_lxc=1
 }
 
@@ -230,9 +281,10 @@ function install_languages() {
 	printf "\n%s\n" "Install languages - DONE."
 }
 
-
 # ------------------------------------------------------------------------
 # start (main)
+
+### resolv_conf_guess_lxc_usable_lines "$1" ; echo "test exit" ; exit 1 ; # XXX
 
 
 sudo_flag="--sudo"
@@ -270,8 +322,10 @@ abdialog --title "$(eval_gettext "Configure computer for \$programname")" \
 response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"  23 76 16  \
 	"simple"        "$(gettext "menu_taskpack_normal_builduse")"  \
 	"devel"         "$(gettext "menu_taskpack_devel_builduse")"  \
+	"devel2"         "$(gettext "menu_taskpack_devel_builduse") (2)"  \
 	"x_build_use"   "$(gettext "menu_taskpack_quick_builduse")"  \
 	"x_devel"       "$(gettext "menu_taskpack_quick_devel")"  \
+	"x_devel2"       "$(gettext "menu_taskpack_quick_devel") (2)"  \
 	"custom"        "$(gettext "menu_taskpack_custom")" \
 	2>&1 >/dev/tty ) || abdialog_exit
 [[ -z "$response" ]] && exit
@@ -281,14 +335,17 @@ response_menu_task=""
 
 if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
 if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
+if [[ "$response" == "devel2" ]] ; then response_menu_task="warn build touse devel devel2 bgitian verbose" ; fi
 if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect" ; fi
 if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect" ; fi
+if [[ "$response" == "x_devel2" ]] ; then response_menu_task="build touse devel devel2 bgitian autoselect" ; fi
 if [[ "$response" == "custom" ]] ; then
 # shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
 	"build"         "$(gettext "menu_task_build")" "on" \
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
+	"devel2"        "$(gettext "menu_task_devel") 2" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
 	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"verbose"       "$(gettext "menu_task_verbose")" "on" \
@@ -328,6 +385,13 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			warn_root=1 # net namespace, and same as for task touse
 			warn_ANY=1
 		;;
+		devel2)
+			warnings_text="${warnings_text}$(gettext "warning_devel")\n" # net namespace script
+			warn_fw=1 # to test
+			warn2_net=1 # namespaces
+			warn_root=1 # net namespace, and same as for task touse
+			warn_ANY=1
+		;;
 		bgitian)
 			warnings_text="${warnings_text}$(gettext "warning_bgitian")\n" # run lxc as root, set special NIC card/bridge
 			warn2_net=1 # for special LXC network
@@ -357,8 +421,6 @@ fi
 
 # show special warnings:
 if ((enabled_warn && warn2_net)) ; then
-	warnings_text="${warnings_text}\n(gettext 'warning_warn2_net')" # net namespace script
-
 	text="$(eval_gettext "warn2_net")"
 	abdialog --title "$(gettext 'warn2_net_title')" \
 		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
@@ -385,6 +447,9 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 		;;
 		devel)
 			install_for_devel
+		;;
+		devel2)
+			install_for_devel2
 		;;
 		bgitian)
 			install_build_gitian
