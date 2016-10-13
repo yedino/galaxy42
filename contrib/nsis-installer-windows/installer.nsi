@@ -1,4 +1,5 @@
-SetCompress off
+SetCompress force
+SetCompressor ZLIB
 
 Unicode true
 !include MUI2.nsh
@@ -14,6 +15,7 @@ InstallDir $PROGRAMFILES\galaxy42
 
 # Set up page order
 !insertmacro MUI_PAGE_WELCOME
+MessageBox MB_OK "[EN] This program is not yet ready nor secure, do not use it in this version. [PL] Ten program nie jest jeszcze gotowy i nie jest bezpieczny, nie używaj go w tej wersji."
 !insertmacro MUI_PAGE_LICENSE ..\..\LICENCE.gpl3.txt
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
