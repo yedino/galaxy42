@@ -11,6 +11,7 @@ proj="/home/ubuntu/build/galaxy42/"
 # deps: $(find $HOME/build/boost  -name  '*.dll') | sort ; sha1sum $(find $HOME/build/libsodium/  -name  '*.dll') | sort
 mapfile -t all_file < <(
 	find $proj/contrib/nsis-installer-windows/bin/  $proj/contrib/windows-service-wrapper/ $proj/contrib/nsis-installer-windows/ -name  '*.dll' -o -name '*.exe'
+	find $proj/share/locale/
 	ls -1 $proj/*exe
 )
 
