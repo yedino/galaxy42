@@ -7,7 +7,7 @@
 build="/home/ubuntu/build"
 proj="/home/ubuntu/build/galaxy42/"
 
-mapfile -t all_file < <( ls -1 $proj/*.elf $proj/share/locale/ | sort )
+mapfile -t all_file < <( ls -1 $proj/*.elf $proj/share/locale/ | LC_ALL=C sort )
 
 #mapfile -t all_file < <( find  test/lib/*      -name  '*.dll' -o -name '*.exe' | sort ) # test
 if (( "${#all_file[@]}" )) ; then
