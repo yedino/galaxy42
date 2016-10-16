@@ -9,10 +9,11 @@ proj="/home/ubuntu/build/galaxy42/"
 
 # contrib/nsis-installer-windows/bin/ will have	x64  x86 with boost, sodium libs
 # deps: $(find $HOME/build/boost  -name  '*.dll') | sort ; sha1sum $(find $HOME/build/libsodium/  -name  '*.dll') | sort
+
 mapfile -t all_file < <(
-	find $proj/contrib/nsis-installer-windows/bin/  $proj/contrib/windows-service-wrapper/ $proj/contrib/nsis-installer-windows/ -name  '*.dll' -o -name '*.exe'
-	find $proj/share/locale/
-	ls -1 $proj/*exe
+	find $proj/contrib/nsis-installer-windows/bin/  $proj/contrib/windows-service-wrapper/ $proj/contrib/nsis-installer-windows/ -name  '*.dll' -o -name '*.exe' | LC_ALL=C sort
+	ls -1 $proj/*exe | LC_ALL=C sort
+	find $proj/share/locale/ | LC_ALL=C sort
 )
 
 # was for test (now copied to NSIS anyway)
@@ -20,7 +21,6 @@ mapfile -t all_file < <(
 #	find $build/libsodium/src/libsodium/.libs/  -name  '*.dll'
 # ^-- if enabled then this libs will be duplicated because they are copied from build to nsis
 
-#mapfile -t all_file < <( find  test/lib/*      -name  '*.dll' -o -name '*.exe' | sort ) # test
 if (( "${#all_file[@]}" )) ; then
 	mapfile -t all_hash < <( sha256sum "${all_file[@]}")
 else
