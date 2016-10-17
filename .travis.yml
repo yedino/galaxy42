@@ -35,6 +35,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                                        ; fi
 
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash share/script/setup-osx-brew   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang   ; fi
 
 install:
   - echo $CXX   # for dbg

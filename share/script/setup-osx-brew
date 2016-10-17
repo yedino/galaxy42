@@ -13,6 +13,7 @@ if ! brew info llvm37 &>/dev/null; then
 	brew outdated llvm37 || brew upgrade llvm37
 fi
 
+# install upgrade
 for pkg in autoconf pkg-config cmake boost libsodium gettext shellcheck; do
 
 	if brew list -1 | grep -q "^${pkg}\$"; then
@@ -21,4 +22,10 @@ for pkg in autoconf pkg-config cmake boost libsodium gettext shellcheck; do
 	else 
 		brew install "$pkg"
 	fi
+done
+
+# relink all installed
+brew list -1 | while read line; do 
+	brew unlink $line
+	brew link $line 
 done
