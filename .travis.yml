@@ -55,19 +55,18 @@ matrix:
     fast_finish: true
     exclude:
       - os: linux
-      - os: linux
         compiler: clang
       - os: osx
         compiler: gcc
 
     include:
-      #- os: linux
-      #  env: COVERAGE=1 EXTLEVEL=0
-      #  compiler: gcc
+      - os: linux
+        env: COVERAGE=1 EXTLEVEL=0
+        compiler: gcc
 
-      #- os: linux
-      #  env: EXTLEVEL=0
-      #  compiler: clang
+      - os: linux
+        env: EXTLEVEL=0
+        compiler: clang
 
       - os: osx
         osx_image: xcode7.3
