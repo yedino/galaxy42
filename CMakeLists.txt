@@ -29,6 +29,10 @@ if (MINGW)
 endif()
 
 set (Boost_DEBUG OFF)
+if (NOT MINGW)
+	set (Boost_USE_STATIC_LIBS ON)
+	set (Boost_USE_STATIC_RUBTIME ON)
+endif()
 if (NOT MSVC)
 	set(BOOST_LIBS_LIST system filesystem program_options)
 else()
@@ -235,7 +239,7 @@ else()
 	set(flag_coverage "")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${flag_coverage}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -static -static-libgcc -static-libstdc++ ${flag_coverage}")
 
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
@@ -302,6 +306,8 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
+set_target_properties(tunserver.elf PROPERTIES LINK_SEARCH_START_STATIC 1)
+set_target_properties(tunserver.elf PROPERTIES LINK_SEARCH_END_STATIC 1)
 
 if(WIN32 OR CYGWIN)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
