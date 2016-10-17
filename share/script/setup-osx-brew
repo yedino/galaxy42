@@ -1,24 +1,24 @@
 brew update
 
-echo "installing shellcheck"
-brew install shellcheck
-brew outdated shellcheck || brew upgrade shellcheck # for check script
 
-# gettext?
-brew outdated gettext || brew upgrade gettext
+# clang compiler
+if ! brew info llvm &>/dev/null; then
 
-# clang compiler 
-brew install --with-clang llvm
-brew tap homebrew/versions
-brew install llvm37
-brew outdated llvm37 || brew upgrade llvm37
+	brew install --with-clang llvm
+fi
 
-brew outdated autoconf || brew upgrade autoconf
-brew outdated pkg-config || brew upgrade pkg-config
-brew outdated cmake || brew upgrade cmake
+if ! brew info llvm37 &>/dev/null; then
+	brew tap homebrew/versions
+	brew install llvm37
+	brew outdated llvm37 || brew upgrade llvm37
+fi
 
-brew install boost
-brew outdated boost || brew upgrade boost
+for pkg in autoconf pkg-config cmake boost libsodium gettext shellcheck; do
 
-brew install libsodium
-brew outdated libsodium || brew upgrade libsodium
+	if brew list -1 | grep -q "^${pkg}\$"; then
+		echo "Package '$pkg' is installed - checking if outdated"
+		brew outdated "$pkg" || brew upgrade "$pkg"
+	else 
+		brew install "$pkg"
+	fi
+done
