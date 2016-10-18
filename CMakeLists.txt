@@ -239,8 +239,8 @@ else()
 	set(flag_coverage "")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -static -static-libgcc -static-libstdc++ ${flag_coverage}")
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${flag_coverage}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-static -static-libgcc -static-libstdc++")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
@@ -339,7 +339,6 @@ if(MINGW)
 endif()
 
 if(NOT MSVC AND NOT MINGW)
-	set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 else()
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
