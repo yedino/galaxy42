@@ -239,7 +239,11 @@ else()
 	set(flag_coverage "")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${flag_coverage}")
+if (CMAKE_COMPILER_IS_GNUCXX)
+	set(GCC_STATIC_FLAG "-static")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${GCC_STATIC_FLAG} ${flag_coverage}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-static -static-libgcc -static-libstdc++")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
