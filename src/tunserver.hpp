@@ -258,8 +258,8 @@ class c_tunserver : public c_galaxy_node {
 		c_event_manager_windows m_event_manager;
 		#elif defined(__MACH__)
 		c_tun_device_empty m_tun_device;		// c_tun_device_mach?
-		c_udp_wrapper_empty m_udp_device;		// c_udp_wrapper_asio?
-		c_event_manager_empty m_event_manager;	// c_event_manager_mach?
+		c_udp_wrapper_asio m_udp_device;		// c_udp_wrapper_asio?
+		c_event_manager_mach m_event_manager;	// c_event_manager_mach?
 		#else
 		c_tun_device_empty m_tun_device;
 		c_udp_wrapper_empty m_udp_device;

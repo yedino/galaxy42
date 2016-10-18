@@ -65,6 +65,22 @@ bool c_event_manager_windows::get_tun_packet() {
 }
 
 // __win32 || __cygwin__
+#elif defined(__MACH__)
+
+c_event_manager_mach::c_event_manager_mach(c_tun_device_empty &tun_device, c_udp_wrapper_asio &udp_wrapper)
+	:
+	m_udp_device(udp_wrapper),
+	m_tun_event(false),
+	m_udp_event(false)
+{
+	_UNUSED(tun_device);
+}
+
+void c_event_manager_mach::wait_for_event() { }
+bool c_event_manager_mach::receive_udp_paket() { return false; }
+bool c_event_manager_mach::get_tun_packet() { return false; }
+
+// __mach__
 #else
 
 c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper) {

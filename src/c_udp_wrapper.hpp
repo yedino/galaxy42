@@ -56,6 +56,8 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 
 //  __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 #else
+
+#warning using c_udp_wrapper_empty = It can't work!
 class c_udp_wrapper_empty final : public c_udp_wrapper {
 	public:
 		c_udp_wrapper_empty() = default;

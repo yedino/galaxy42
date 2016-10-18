@@ -56,8 +56,29 @@ private:
 };
 
 // _win32 || __cygwin__
+#elif defined(__MACH__)
+
+class c_tun_device_empty;
+class c_udp_wrapper_asio;
+
+#warning using uncompleted c_event_manager_mach with c_tun_device_empty = It can't work!
+class c_event_manager_mach final : public c_event_manager {
+public:
+	c_event_manager_mach() = default;
+	c_event_manager_mach(c_tun_device_empty &tun_device, c_udp_wrapper_asio &udp_wrapper);
+	void wait_for_event() override;
+	bool receive_udp_paket() override;
+	bool get_tun_packet() override;
+private:
+	std::reference_wrapper<c_udp_wrapper_asio> m_udp_device;
+	bool m_tun_event;
+	bool m_udp_event;
+};
+
+// __mach__
 #else
 
+#warning using c_event_manager_empty = It can't work!
 class c_tun_device_empty;
 class c_udp_wrapper_empty;
 class c_event_manager_empty final : public c_event_manager {
