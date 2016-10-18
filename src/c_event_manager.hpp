@@ -28,7 +28,9 @@ class c_event_manager_linux final : public c_event_manager {
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 };
 
-#elif defined(_WIN32) || defined(__CYGWIN__)  // __linux__
+// __linux__
+#elif defined(_WIN32) || defined(__CYGWIN__)
+
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
 		#define __USE_W32_SOCKETS
@@ -38,22 +40,23 @@ class c_event_manager_linux final : public c_event_manager {
 #include <functional>
 
 class c_tun_device_windows;
-class c_udp_wrapper_windows;
+class c_udp_wrapper_asio;
 
 class c_event_manager_windows final : public c_event_manager {
 public:
-	c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper);
+	c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_asio &udp_wrapper);
 	void wait_for_event() override;
 	bool receive_udp_paket() override;
 	bool get_tun_packet() override;
 private:
 	std::reference_wrapper<c_tun_device_windows> m_tun_device;
-	std::reference_wrapper<c_udp_wrapper_windows> m_udp_device;
+	std::reference_wrapper<c_udp_wrapper_asio> m_udp_device;
 	bool m_tun_event;
 	bool m_udp_event;
 };
 
-#else // _win32 || __cygwin__
+// _win32 || __cygwin__
+#else
 
 class c_tun_device_empty;
 class c_udp_wrapper_empty;
@@ -66,6 +69,7 @@ class c_event_manager_empty final : public c_event_manager {
 		bool get_tun_packet();
 };
 
-#endif // else
+// else
+#endif
 
 #endif // C_EVENT_MANAGER_HPP
