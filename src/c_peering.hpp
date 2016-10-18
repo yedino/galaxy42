@@ -62,8 +62,8 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper);
 		#endif
 
-		#if defined(_WIN32) || defined(__CYGWIN__)
-		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_windows &udp_wrapper);
+		#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_asio &udp_wrapper);
 		#endif
 
 		virtual void send_data(const char * data, size_t data_size) override;
@@ -76,8 +76,8 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 		#ifdef __linux__
 		std::reference_wrapper<c_udp_wrapper_linux> m_udp_wrapper; // TODO: sahred_ptr ?
 		#endif
-		#if defined(_WIN32) || defined(__CYGWIN__)
-		std::reference_wrapper<c_udp_wrapper_windows> m_udp_wrapper; // TODO: sahred_ptr ?
+		#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+		std::reference_wrapper<c_udp_wrapper_asio> m_udp_wrapper; // TODO: sahred_ptr ?
 		#endif
 };
 
