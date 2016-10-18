@@ -393,6 +393,7 @@ int main(int argc, char **argv) {
                         ("gen-key-simple", boost::locale::gettext("L_what_genKeySimple_do").c_str())
 
 			#if EXTLEVEL_IS_PREVIEW
+/*
 //			("gen-key", "COMMAND: Generate combination of crypto key"
                         ("gen-key", boost::locale::boost::locale::gettext("L_gen_combo_crypto_key_require_examples").c_str())
 
@@ -409,12 +410,12 @@ int main(int argc, char **argv) {
 
 //				("key-type", po::value<std::vector<std::string>>()->multitoken(), "Types of generated sub keys")
                                 ("key-type", po::value<std::vector<std::string>>()->multitoken(), boost::locale::boost::locale::gettext("L_what_keyType_do").c_str())
-
+*/
 			#endif
 
 
 			#if EXTLEVEL_IS_PREVIEW
-
+/*
 			("demo", po::value<std::string>()->default_value(""),
 //						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
 //						"Use --demo help to see list of demos [TODO].")
@@ -485,7 +486,7 @@ int main(int argc, char **argv) {
 //							"External Name of signature file in specified location"
 //							"\nDefault signature file name = key/data file name + \".sig\" extension")
                                                         boost::locale::gettext("L_what_signatureFile_do").c_str())
-
+*/
 
 			#endif
 
