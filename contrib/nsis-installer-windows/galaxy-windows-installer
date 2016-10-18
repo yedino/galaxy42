@@ -43,7 +43,7 @@ pushd zlib || fail
 	make || fail "zlib make"
 popd
 
-printf "\n\n\nBuilding NSIS itself\n\n\n"
+printf "\n\n\nBuilding NSIS itself (in PWD=$PWD)\n\n\n"
 
 # build nsis
 rm -rf nsis
@@ -51,7 +51,12 @@ git clone https://github.com/kichik/nsis || fail "clone NSIS"
 pushd nsis || fail
 	git checkout 430d70ce926f96949f424244c31297b5b678165e || fail "Checkout" # version with i686-w64-mingw32, waiting for v30 release
 
-	sed -i '46a\    '$WRAP_DIR'/i686-w64-mingw32-' SCons/Tools/crossmingw.py # add our wrapped i686-w64-mingw32 at the top of compiler available list
+	printf "\n\nPatching NSIS (in PWD=$PWD)\n\n"
+
+	patch_name="patch-deterministic.patch"
+	patch -p 0 < "../$patch_name" || fail "NSIS patching: apply patch $patch_name from PWD=$PWD"
+
+	sed -i '46a\    '$WRAP_DIR'/i686-w64-mingw32-' SCons/Tools/crossmingw.py || fail "NSIS patching failed: add mingw" # add our wrapped i686-w64-mingw32 at the top of compiler available list
 
 	scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install || fail "Scons failed (of zlib, for NSIS)"
 	scons UNICODE=yes SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA_PATH=no PREFIX=install_dir install || fail "Scons failed (main NSIS)"
@@ -60,8 +65,8 @@ pushd nsis || fail
 	mkdir -p Plugins/x86-ansi || fail
 	mkdir -p Plugins/x86-unicode || fail
 
-	cp `find -name *.dll | grep install_dir/Plugins/x86-ansi` Plugins/x86-ansi
-	cp `find -name *.dll | grep install_dir/Plugins/x86-unicode` Plugins/x86-unicode
+	cp `find -name *.dll | grep install_dir/Plugins/x86-ansi` Plugins/x86-ansi || fail
+	cp `find -name *.dll | grep install_dir/Plugins/x86-unicode` Plugins/x86-unicode || fail
 
 	cp -r install_dir/Stubs/ . || fail
 	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" Include/ || fail

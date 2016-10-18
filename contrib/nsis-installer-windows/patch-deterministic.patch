@@ -1,0 +1,11 @@
+--- SConstruct	2016-10-18 11:43:39.165913673 +0000
++++ SConstruct	2016-10-18 11:44:16.369888295 +0000
+@@ -96,7 +96,7 @@
+ 	default_doctype = 'chm'
+ 
+ from time import strftime, gmtime
+-cvs_version = strftime('%d-%b-%Y.cvs', gmtime())
++cvs_version = strftime('%d-%b-%Y.cvs', gmtime( 0 )) # disabled timestamp to be deterministic
+ 
+ opts = Variables()
+ 
