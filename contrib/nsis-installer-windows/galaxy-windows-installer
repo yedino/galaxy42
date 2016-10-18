@@ -53,8 +53,8 @@ pushd nsis || fail
 
 	printf "\n\nPatching NSIS (in PWD=$PWD)\n\n"
 
-	patch_name="patch-deterministic.patch"
-	patch -p 0 < "../$patch_name" || fail "NSIS patching: apply patch $patch_name from PWD=$PWD"
+	patch_name="${galaxy42_dir}/contrib/nsis-installer-windows/patch-deterministic.patch"
+	patch -p 0 < "$patch_name" || fail "NSIS patching: apply patch $patch_name from PWD=$PWD"
 
 	sed -i '46a\    '$WRAP_DIR'/i686-w64-mingw32-' SCons/Tools/crossmingw.py || fail "NSIS patching failed: add mingw" # add our wrapped i686-w64-mingw32 at the top of compiler available list
 
