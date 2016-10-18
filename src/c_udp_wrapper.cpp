@@ -49,7 +49,7 @@ int c_udp_wrapper_linux::get_socket() {
 }
 
 // __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 
 #include <boost/bind.hpp>
 #if defined (__MINGW32__)
