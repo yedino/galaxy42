@@ -38,9 +38,8 @@ class c_tun_device_linux final : public c_tun_device {
 		const int m_tun_fd;
 };
 
-#endif // __linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+// __linux__
+#elif defined(_WIN32) || defined(__CYGWIN__)
 
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
@@ -92,11 +91,11 @@ private:
 
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
 };
-#endif
 
+// _win32 || __cygwin__
+#else
 
-
-
+#warning using c_tun_device_empty = It can't work!
 class c_tun_device_empty final : public c_tun_device {
 	public:
 		c_tun_device_empty();
@@ -108,6 +107,7 @@ class c_tun_device_empty final : public c_tun_device {
 		size_t write_to_tun(const void *buf, size_t count) override;
 };
 
-
+// else
+#endif
 
 #endif // C_TUN_DEVICE_HPP

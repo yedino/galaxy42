@@ -14,6 +14,7 @@ class c_udp_wrapper {
 };
 
 #ifdef __linux__
+
 class c_udp_wrapper_linux final : public c_udp_wrapper {
 	friend class c_event_manager_linux;
 	public:
@@ -25,19 +26,8 @@ class c_udp_wrapper_linux final : public c_udp_wrapper {
 		const int m_socket;
 };
 
-#else
-
-class c_udp_wrapper_empty final : public c_udp_wrapper {
-	public:
-		c_udp_wrapper_empty() = default;
-		c_udp_wrapper_empty(const int listen_port);
-		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
-		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
-};
-
-#endif // __linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+// __linux__
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
@@ -47,10 +37,10 @@ class c_udp_wrapper_empty final : public c_udp_wrapper {
 
 #include <array>
 #include <boost/asio.hpp>
-class c_udp_wrapper_windows final : public c_udp_wrapper {
+class c_udp_wrapper_asio final : public c_udp_wrapper {
 	friend class c_event_manager_windows;
 	public:
-		c_udp_wrapper_windows(const int listen_port);
+		c_udp_wrapper_asio(const int listen_port);
 		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
 		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
 		int get_socket() { return -1; } // TODO remove this
@@ -63,6 +53,21 @@ class c_udp_wrapper_windows final : public c_udp_wrapper {
 
 		void read_handle(const boost::system::error_code& error, size_t bytes_transferred);
 };
-#endif  // _win32
+
+//  __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#else
+
+#warning using c_udp_wrapper_empty = It can't work!
+class c_udp_wrapper_empty final : public c_udp_wrapper {
+	public:
+		c_udp_wrapper_empty() = default;
+		c_udp_wrapper_empty(const int listen_port);
+		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
+		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
+};
+
+// else
+#endif
+
 
 #endif // C_UDP_WRAPPER_HPP
