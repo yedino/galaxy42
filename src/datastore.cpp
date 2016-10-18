@@ -225,11 +225,9 @@ b_fs::path datastore::get_full_path(t_datastore file_type,
 b_fs::path datastore::get_parent_path(t_datastore file_type,
 									const std::string &filename) {
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__MACH__)
 	b_fs::path user_home(getenv("HOME"));
-#endif
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__)
 	//b_fs::path user_home(getenv("APPDATA"));
 	HMODULE hModule = GetModuleHandleW(nullptr);
 	std::wstring path(MAX_PATH, '\0');
@@ -238,6 +236,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	path.erase(pos);
 	b_fs::path user_home(path);
 #endif
+
 	b_fs::path parent_path(user_home.c_str());
 
 	switch (file_type) {

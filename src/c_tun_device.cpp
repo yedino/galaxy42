@@ -7,7 +7,9 @@
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
+
 #ifdef __linux__
+
 #include <cassert>
 #include <fcntl.h>
 #include <linux/if_tun.h>
@@ -17,6 +19,7 @@
 #include "c_tnetdbg.hpp"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
+
 c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(open("/dev/net/tun", O_RDWR))
@@ -66,9 +69,8 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 	return static_cast<size_t>(ret);
 }
 
-#endif //__linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+//__linux__
+#elif defined(_WIN32) || defined(__CYGWIN__)
 
 #include "c_tnetdbg.hpp"
 #include <boost/bind.hpp>
@@ -384,9 +386,8 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-#endif
-
-
+// _win32 || __cygwin__
+#else
 
 c_tun_device_empty::c_tun_device_empty() { }
 
@@ -415,4 +416,5 @@ size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
 	return 0;
 }
 
-
+// else
+#endif
