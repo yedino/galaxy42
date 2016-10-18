@@ -72,6 +72,7 @@ Current TODO / topics:
 const char * g_demoname_default = "route_dij";
 // see function run_mode_developer() here to see list of possible values
 
+#include <boost/locale.hpp>
 #include "libs1.hpp"
 
 #include "tunserver.hpp"
@@ -375,10 +376,10 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
-                _erro(gettext("L_failed_adding_peer_simple_reference") << e.what());
+                _erro(boost::locale::gettext("L_failed_adding_peer_simple_reference") << e.what());
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
-		_throw_error( std::invalid_argument(gettext("L_bad_peer_format")) );
+		_throw_error( std::invalid_argument(boost::locale::gettext("L_bad_peer_format")) );
 
 	}
 }
@@ -769,7 +770,7 @@ void c_tunserver::event_loop() {
 	bool was_connected=true;
 	if (! m_peer.size()) {
 		was_connected=false;
-		ui::action_info_ok(gettext("L_wait_for_connect"));
+		ui::action_info_ok(boost::locale::gettext("L_wait_for_connect"));
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
@@ -1184,7 +1185,7 @@ void c_tunserver::event_loop() {
 }
 
 void c_tunserver::run() {
-	std::cout << gettext("L_starting_TUN") << std::endl;
+	std::cout << boost::locale::gettext("L_starting_TUN") << std::endl;
 
 	prepare_socket();
 	event_loop();
@@ -1213,7 +1214,7 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 std::string c_tunserver::program_action_gen_key_simple() {
 	const string IDI_name = "IDI";
 //	ui::action_info_ok("Generating your new keys.");
-        ui::action_info_ok(gettext("L_generatin_new_keys"));
+        ui::action_info_ok(boost::locale::gettext("L_generatin_new_keys"));
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys; // list of key types
 	keys.emplace_back(std::make_pair(antinet_crypto::t_crypto_system_type_from_string("ed25519"), 1));
