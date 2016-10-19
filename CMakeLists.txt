@@ -33,10 +33,15 @@ if (NOT MINGW)
 	set (Boost_USE_STATIC_LIBS ON)
 	set (Boost_USE_STATIC_RUBTIME ON)
 endif()
-if (NOT MSVC)
-	set(BOOST_LIBS_LIST system filesystem program_options)
+if (CYGWIN)
+	set(BOOST_LOCALE_LINK_LIB boost_locale-mt)
 else()
-	set(BOOST_LIBS_LIST system filesystem)
+	set(BOOST_LOCALE_LIB_SEARCH locale)
+endif()
+if (NOT MSVC)
+	set(BOOST_LIBS_LIST system filesystem program_options thread ${BOOST_LOCALE_LIB_SEARCH})
+else()
+	set(BOOST_LIBS_LIST system filesystem thread ${BOOST_LOCALE_LIB_SEARCH})
 endif()
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
 
@@ -55,7 +60,7 @@ if (MINGW)
 	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
 	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
 	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
-	set(GETTEXT_LIBS intl iconv pthread)
+	#set(GETTEXT_LIBS intl iconv pthread)
 	#set(GETTEXT_LIBS "iconv")
 	#message(FATAL_ERROR "${GETTEXT_LIBS}")
 endif()
@@ -243,11 +248,12 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set(GCC_STATIC_FLAG "-static")
 endif()
 
+
 if(MINGW)
 	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${GCC_STATIC_FLAG} ${flag_coverage}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -FPIE ${GCC_STATIC_FLAG} ${flag_coverage}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ ${MINGW_LINK_FLAGS}")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
@@ -347,13 +353,14 @@ if(MINGW)
 endif()
 
 if(NOT MSVC AND NOT MINGW)
+	set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 else()
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
 
-target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
+target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES} ${GETTEXT_LIBS})
 
 #tests

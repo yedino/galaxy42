@@ -72,6 +72,7 @@ Current TODO / topics:
 const char * g_demoname_default = "route_dij";
 // see function run_mode_developer() here to see list of possible values
 
+#include <boost/locale.hpp>
 #include "libs1.hpp"
 
 #include "tunserver.hpp"
@@ -375,10 +376,10 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
-                _erro(gettext("L_failed_adding_peer_simple_reference") << e.what());
+                _erro(boost::locale::gettext("L_failed_adding_peer_simple_reference") << e.what());
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
-		_throw_error( std::invalid_argument(gettext("L_bad_peer_format")) );
+		_throw_error( std::invalid_argument(boost::locale::gettext("L_bad_peer_format")) );
 
 	}
 }
@@ -586,7 +587,8 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	assert(buff_size > pos_dst+len_dst);
 	// valid: reading pos_src up to +len_src, and same for dst
 
-#if defined(__linux__)
+#ifdef __linux__
+
 	char ipv6_str[INET6_ADDRSTRLEN]; // for string e.g. "fd42:ffaa:..."
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_src, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 8 is source addr, from ipv6 RFC
@@ -599,8 +601,9 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	_dbg1("dst ipv6_str " << ipv6_str);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ipv6_str);
 	// TODONOW^ this works fine?
-#endif // __linux__
-#if defined(_WIN32) || defined(__CYGWIN__)
+
+// __linux__
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__)
 	using namespace boost::asio;
 	ip::address_v6::bytes_type ip_bytes;
 	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
@@ -612,7 +615,9 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	ip6_addr = ip::address_v6(ip_bytes);
 	_dbg1("dst ipv6_str " << ip6_addr);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
-#endif // _WIN32
+
+// __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#endif
 
 	return std::make_pair( ret_src , ret_dst );
 }
@@ -769,7 +774,7 @@ void c_tunserver::event_loop() {
 	bool was_connected=true;
 	if (! m_peer.size()) {
 		was_connected=false;
-		ui::action_info_ok(gettext("L_wait_for_connect"));
+		ui::action_info_ok(boost::locale::gettext("L_wait_for_connect"));
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
@@ -1184,7 +1189,7 @@ void c_tunserver::event_loop() {
 }
 
 void c_tunserver::run() {
-	std::cout << gettext("L_starting_TUN") << std::endl;
+	std::cout << boost::locale::gettext("L_starting_TUN") << std::endl;
 
 	prepare_socket();
 	event_loop();
@@ -1213,7 +1218,7 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 std::string c_tunserver::program_action_gen_key_simple() {
 	const string IDI_name = "IDI";
 //	ui::action_info_ok("Generating your new keys.");
-        ui::action_info_ok(gettext("L_generatin_new_keys"));
+        ui::action_info_ok(boost::locale::gettext("L_generatin_new_keys"));
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys; // list of key types
 	keys.emplace_back(std::make_pair(antinet_crypto::t_crypto_system_type_from_string("ed25519"), 1));

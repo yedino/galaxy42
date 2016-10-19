@@ -252,18 +252,19 @@ class c_tunserver : public c_galaxy_node {
 		c_tun_device_linux m_tun_device;
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
-		#endif
-		#if defined(_WIN32) || defined(__CYGWIN__)
+		#elif defined(_WIN32) || defined(__CYGWIN__)
 		c_tun_device_windows m_tun_device;
-		c_udp_wrapper_windows m_udp_device;
+		c_udp_wrapper_asio m_udp_device;
 		c_event_manager_windows m_event_manager;
+		#elif defined(__MACH__)
+		c_tun_device_empty m_tun_device;		// c_tun_device_mach?
+		c_udp_wrapper_asio m_udp_device;		// c_udp_wrapper_asio?
+		c_event_manager_mach m_event_manager;	// c_event_manager_mach?
+		#else
+		c_tun_device_empty m_tun_device;
+		c_udp_wrapper_empty m_udp_device;
+		c_event_manager_empty m_event_manager;
 		#endif
-
-		//#else
-		//c_tun_device_empty m_tun_device;
-		//c_udp_wrapper_empty m_udp_device;
-		//c_event_manager_empty m_event_manager;
-		//#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)

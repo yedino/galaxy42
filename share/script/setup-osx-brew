@@ -1,0 +1,27 @@
+brew update
+
+
+# clang compiler
+if ! brew info llvm &>/dev/null; then
+
+	brew install --with-clang llvm
+	# allow to install custom version
+	brew tap homebrew/versions
+fi
+
+# install upgrade
+for pkg in llvm37 autoconf pkg-config cmake boost libsodium gettext msgpack shellcheck; do
+
+	if brew list -1 | grep -q "^${pkg}\$"; then
+		echo "Package '$pkg' is installed - checking if outdated"
+		brew outdated "$pkg" || brew upgrade "$pkg"
+	else
+		brew install "$pkg"
+	fi
+done
+
+# relink all installed
+brew list -1 | while read line; do
+	brew unlink $line
+	brew link --force $line
+done
