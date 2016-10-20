@@ -15,9 +15,9 @@ packages:
 - "build-essential"
 - "libfftw3-dev"
 - "libsodium-dev"
-- "libboost-system-dev"
-- "libboost-filesystem-dev"
-- "libboost-program-options-dev"
+#- "libboost-system-dev" # removed since when we moved to static lib boost (for static main program)
+#- "libboost-filesystem-dev"
+#- "libboost-program-options-dev"
 - "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
 - "faketime" # used to force date
 - "gettext-base" # some scripts/tools used in build could be using gettext translations
