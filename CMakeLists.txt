@@ -10,6 +10,17 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
+if(BUILD_STATIC_TUNSERVER)
+	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+
+	if(NOT BOOST_LIBRARYDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+endif()
+
 if(MINGW)
 	if(CYGWIN)
 		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
@@ -29,13 +40,10 @@ if (MINGW)
 endif()
 
 set (Boost_DEBUG ON)
-unset(Boost_LIBRARY_DIRS CACHE)
-unset(Boost_INCLUDE_DIR CACHE)
-if (NOT MINGW)
-	set(Boost_USE_MULTITHREADED ON)
+set (Boost_USE_MULTITHREADED ON)
+if (BUILD_STATIC_TUNSERVER)
 	set (Boost_USE_STATIC_RUBTIME ON)
 	set (Boost_USE_STATIC_LIBS ON)
-#	set (Boost_THREADAPI ON)
 endif()
 if (CYGWIN)
 	set(BOOST_LOCALE_LINK_LIB boost_locale-mt)
@@ -245,8 +253,8 @@ else()
 	set(flag_coverage "")
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-	set(GCC_STATIC_FLAG "-static")
+if(BUILD_STATIC_TUNSERVER)
+	set(STATIC_FLAG "-static")
 endif()
 
 
@@ -254,7 +262,7 @@ if(MINGW)
 	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -static-libgcc -static-libstdc++ ${GCC_STATIC_FLAG} ${flag_coverage}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${STATIC_FLAG} ${flag_coverage}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
@@ -321,8 +329,6 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
-#set_target_properties(tunserver.elf PROPERTIES LINK_SEARCH_START_STATIC 1)
-#set_target_properties(tunserver.elf PROPERTIES LINK_SEARCH_END_STATIC 1)
 
 if(WIN32 OR CYGWIN)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -362,7 +368,7 @@ else()
 endif()
 
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES} icuuc icui18n)
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
