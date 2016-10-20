@@ -1,0 +1,139 @@
+#!/bin/bash
+
+function fail() {
+    printf "\nERROR: the script failed (see above messages).\n\n"
+	exit 1
+}
+
+## clone and build boost
+printf "\n\n=========================================================================\n\n"
+printf "boost...\n\n"
+BOOST_DIR="$HOME/build/boost/"
+cd "$HOME/build/"
+
+if (( option_allow_boost )) ; then
+    printf "\n\nWill build boost now\n\n"
+
+if (( option_download_skip )) ; then
+    printf "\n\nSkipping download (boost)\n\n"
+    pushd boost || fail # cd
+    pwd
+    ls
+else
+
+# download boost starting from cleaning previous build
+rm -rf boost || fail # perhaps left over if we do some caching or testing
+git clone https://github.com/boostorg/boost.git || fail # check gitrev hash below!
+pushd boost || fail # cd
+PWD_now2="$PWD/"
+[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
+
+git checkout boost-1.61.0
+expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
+confirm_gitrev=$(git log --format='%H' -1)
+[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
+    fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
+}
+
+git submodule update --init --recursive tools/build
+git submodule update --init --recursive libs/context
+git submodule update --init --recursive libs/filesystem
+git submodule update --init --recursive libs/config
+git submodule update --init --recursive tools/inspect
+git submodule update --init --recursive libs/thread
+git submodule update --init --recursive libs/system
+git submodule update --init --recursive libs/utility
+git submodule update --init --recursive libs/predef
+git submodule update --init --recursive libs/detail
+git submodule update --init --recursive libs/assert
+git submodule update --init --recursive libs/core
+git submodule update --init --recursive libs/io
+git submodule update --init --recursive libs/type_traits
+git submodule update --init --recursive libs/iterator
+git submodule update --init --recursive libs/mpl
+git submodule update --init --recursive libs/preprocessor
+git submodule update --init --recursive libs/static_assert
+git submodule update --init --recursive libs/smart_ptr
+git submodule update --init --recursive libs/throw_exception
+git submodule update --init --recursive libs/functional
+git submodule update --init --recursive libs/range
+git submodule update --init --recursive libs/any
+git submodule update --init --recursive libs/type_index
+git submodule update --init --recursive libs/function
+git submodule update --init --recursive libs/integer
+git submodule update --init --recursive libs/bind
+git submodule update --init --recursive libs/lexical_cast
+git submodule update --init --recursive libs/concept_check
+git submodule update --init --recursive libs/numeric/conversion
+git submodule update --init --recursive libs/array
+git submodule update --init --recursive libs/program_options
+git submodule update --init --recursive libs/container
+git submodule update --init --recursive libs/move
+git submodule update --init --recursive libs/math
+git submodule update --init --recursive libs/tokenizer
+git submodule update --init --recursive libs/asio
+git submodule update --init --recursive libs/date_time
+git submodule update --init --recursive libs/regex
+
+git submodule update --init --recursive libs/locale
+git submodule update --init --recursive libs/chrono
+fi
+
+# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
+git clean -xdf || fail
+rm -rf static-build || fail
+mkdir static-build || fail
+
+boost_user_gcc="$HOME/wrapped/g++ ;"
+printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
+
+printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
+echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
+echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
+./bootstrap.sh --without-icu || fail
+
+printf "Starting the b2 boost build\n"
+set -x
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" )
+b2_opt_debug=( )
+if (( option_verbose )) ; then
+    b2_opt_debug=( "-d" "4" "--debug-building" )
+fi
+
+./b2 \
+    "${b2_opt_debug[@]}" \
+    -a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
+     --prefix=/"$BOOST_DIR"/static-build threading=multi  threadapi=win32 link=static \
+     "${b2_opt_with_lib[@]}" \
+     runtime-link=static \
+	 boost.locale.icu=off \
+    -j 1 \
+    -sNO_BZIP2=1 --sNO_ZLIB=1 \
+    --layout=tagged install \
+    || fail
+set +x
+
+
+printf "\nDONE the b2 boost build\n\n"
+
+# copy all boost includes for header only libraries
+find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
+    substr="include"
+    if  test "${D#*$substr}" != "$D" # looking for include dir's
+    then
+        end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
+        #echo "$end_of"
+        if [ $end_of = $substr ]
+        then
+            cp -r "$D" ./static-build
+        fi
+    fi
+done
+
+popd
+
+else
+    printf "\n\nSkipping boost (as selected in options)\n\n"
+
+fi
+
