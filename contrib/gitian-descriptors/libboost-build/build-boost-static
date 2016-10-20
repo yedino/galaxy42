@@ -11,6 +11,9 @@ printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
 cd "$HOME/build/"
 
+option_download_skip=0
+option_allow_boost=1
+
 if (( option_allow_boost )) ; then
     printf "\n\nWill build boost now\n\n"
 

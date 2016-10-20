@@ -144,11 +144,18 @@ EOF
   # ./autogen.sh # delete
   # CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
+
+  printf "\n\n\nDoing boost static build\n\n\n"
+  contrib/gitian-descriptors/libboost-build/build-boost-static
+
   # *** main build starts here ***
   pushd galaxy42
   echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+
   # make dist # delete
-  COVERAGE=0 EXTLEVEL=0  ./do --go
+  COVERAGE=0 EXTLEVEL=0 BUILD_STATIC=1 ./do --go
+	#############################################
+
   echo -e "\n\nBuild is done.\n\n"
   popd
 

@@ -33,6 +33,7 @@ function usage_main {
 	echo "    or grave bugs, run only in VM for some testets."
 	echo ""
 	echo "Special options include:"
+	echo "BUILD_STATIC=1 if this is set to 1, then we will tell CMake to build static version of the program (it requires static deps)"
 	echo "USE_BOOST_MULTIPRECISION_DEFAULT=1 set it to 0 instead to work around broken lib boost multiprecision on e.g. Suse"
 	echo ""
 	echo "Program command line options:"
@@ -131,7 +132,14 @@ echo "Which gcc, g++: "
 which gcc
 which g++
 
+FLAG_STATIC="OFF"
+if [[ "$BUILD_STATIC"  == "1" ]] ; then
+	printf "\n\n\nSTATIC BUILD ENABLED\n\n\n"
+	FLAG_STATIC="ON"
+fi
+
 cmake  .  \
+	-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC"
 	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
 	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
 	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
