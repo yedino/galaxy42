@@ -388,7 +388,24 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 
 // _win32 || __cygwin__
 #elif defined(__MACH__)
+#include <sys/sys_domain.h>
+c_tun_device_apple::c_tun_device_apple() :
+    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, get_tun_fd()))
+{
+}
 
+int c_tun_device_apple::get_tun_fd() {
+    int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+
+    return tun_fd;
+}
+
+void c_tun_device_apple::set_ipv6_address
+        (const std::array<uint8_t, 16> &binary_address, int prefixLen){}
+void c_tun_device_apple::set_mtu(uint32_t mtu){}
+bool c_tun_device_apple::incomming_message_form_tun(){} ///< returns true if tun is readry for read
+size_t c_tun_device_apple::read_from_tun(void *buf, size_t count){}
+size_t c_tun_device_apple::write_to_tun(const void *buf, size_t count){}
 // __MACH__
 #else
 
