@@ -86,6 +86,8 @@ git submodule update --init --recursive libs/atomic
 git submodule update --init --recursive libs/ratio
 git submodule update --init --recursive libs/tuple
 git submodule update --init --recursive libs/unordered
+git submodule update --init --recursive libs/exception
+git submodule update --init --recursive libs/intrusive
 
 fi
 
@@ -95,12 +97,28 @@ git clean -xdf || fail
 rm -rf static-build || fail
 mkdir static-build || fail
 
-boost_user_gcc="$HOME/wrapped/g++ ;"
+#boost_user_gcc="$HOME/wrapped/g++ ;"
+boost_user_gcc="g++;"
 printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
 
 printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
 echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
 echo "using gcc : 5.4.0 : $boost_user_gcc" >> user-config.jam || fail
+
+
+  printf "\nTEST TOOLS (in BOOST script):\n"
+  set -x
+  which gcc
+  which ar
+  which ranlib
+  gcc -v || fail "test gcc"
+  g++ -v || fail "test g++"
+  ar --version || fail "test ar"
+  ranlib --version || fail "test ranlib"
+  g++ -print-prog-name=ar
+  set +x
+  printf "\n\n"
+
 
 printf "\n\nBoost bootstrap...\n\n"
 ./bootstrap.sh --without-icu || fail

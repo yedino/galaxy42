@@ -69,7 +69,7 @@ function fail() {
     echo "export FAKETIME=\"$1\"" >> "$out"
     echo 'echo "(from $0) will use REAL=[$REAL]"' >> "$out"
     echo 'set -x' >> "$out"
-    echo "\$REAL \$@" >> "$out"
+    echo '$REAL "$@"' >> "$out"
     echo 'set +x' >> "$out"
     chmod +x "$out"
   done
@@ -86,7 +86,7 @@ function fail() {
         echo "export FAKETIME=\"$1\"" >> "$out"
         echo 'echo "(from $0) will use REAL=[$REAL]"' >> "$out"
     	echo 'set -x' >> "$out"
-        echo "\$REAL \$@" >> "$out"
+        echo '$REAL "$@"' >> "$out"
     	echo 'set +x' >> "$out"
         chmod +x "$out"
     done
@@ -129,10 +129,14 @@ cat << EOF > "$out"
   echo "...in wrapper (\$0 generated from $0 working on prog=$prog) will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
   echo "...in PWD=[$PWD], with PATH=[\$PATH]"
   echo "...will call \$REAL with arguments:" "\$@"
-  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
-  export FAKETIME="${REFERENCE_DATETIME}"
   set -x
-  \$REAL \$@ || { printf "\n\nERROR IN WRAPPED PROGRAM\n---STARTING TEST SHELL---" ; sh ; echo "---EXITED TEST SHELL---" ; exit 1 ; }
+  echo "Going to call:" "\$REAL" "\$@" 
+  printf "XXX Going to call (REAL)" "\$REAL"
+  printf "XXX Going to call (ARGS)" "\$0"
+  # export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  # export FAKETIME="${REFERENCE_DATETIME}"
+  "\$REAL" "\$@" || { printf "\n\nERROR IN WRAPPED PROGRAM\n---STARTING TEST SHELL---" ; sh ; echo "---EXITED TEST SHELL---" ; exit 1 ; }
+  # strace -s 8192 "\$REAL" "\$@" || { printf "\n\nERROR IN WRAPPED PROGRAM\n---STARTING TEST SHELL---" ; sh ; echo "---EXITED TEST SHELL---" ; exit 1 ; }
   set +x
 
 EOF
@@ -173,7 +177,7 @@ EOF
 
   printf "\n\n\nDoing boost static build\n\n\n"
 
-  printf "\nTEST TOOLS:\n"
+  printf "\nTEST TOOLS (in linux script):\n"
   set -x
   which gcc
   which ar
@@ -182,6 +186,7 @@ EOF
   g++ -v || fail "test g++"
   ar --version || fail "test ar"
   ranlib --version || fail "test ranlib"
+  g++ -print-prog-name=ar
   set +x
   printf "\n\n"
 
