@@ -93,6 +93,18 @@ private:
 };
 
 // _win32 || __cygwin__
+#elif defined(__MACH__)
+class c_tun_device_apple final : public c_tun_device {
+public:
+    c_tun_device_apple();
+    void set_ipv6_address
+            (const std::array<uint8_t, 16> &binary_address, int prefixLen);
+    void set_mtu(uint32_t mtu);
+    bool incomming_message_form_tun(); ///< returns true if tun is readry for read
+    size_t read_from_tun(void *buf, size_t count);
+    size_t write_to_tun(const void *buf, size_t count);
+private:
+};
 #else
 
 #warning using c_tun_device_empty = It can't work!
