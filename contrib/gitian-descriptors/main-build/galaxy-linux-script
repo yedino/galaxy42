@@ -171,9 +171,7 @@ EOF
 
 
   printf "\n\n\nDoing boost static build\n\n\n"
-<<<<<<< Updated upstream
-  contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
-=======
+
   printf "\nTEST TOOLS:\n"
   set -x
   which ar
@@ -187,7 +185,6 @@ EOF
   contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
   popd || fail
   echo "\nAll done regarding boost.\n"
->>>>>>> Stashed changes
 
   # *** main build starts here ***
   pushd galaxy42
