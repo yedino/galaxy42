@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 function fail() {
     printf "\nERROR: the script failed (see above messages).\n\n"
@@ -9,24 +9,25 @@ function fail() {
 printf "\n\n=========================================================================\n\n"
 printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
-cd "$HOME/build/"
+cd "$HOME/build/" || fail "Can not enter build dir"
 
-option_download_skip=0
+option_download_skip=0  # XXXXXXXXXXXXXXXXX
 option_allow_boost=1
 
 if (( option_allow_boost )) ; then
     printf "\n\nWill build boost now\n\n"
 
 if (( option_download_skip )) ; then
-    printf "\n\nSkipping download (boost)\n\n"
+    printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
     pushd boost || fail # cd
     pwd
     ls
 else
 
+echo "Downloading boost in PWD=$PWD"
 # download boost starting from cleaning previous build
 rm -rf boost || fail # perhaps left over if we do some caching or testing
-git clone https://github.com/boostorg/boost.git || fail # check gitrev hash below!
+git clone https://github.com/boostorg/boost.git || fail "git clone" # check gitrev hash below!
 pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
@@ -80,8 +81,15 @@ git submodule update --init --recursive libs/regex
 
 git submodule update --init --recursive libs/locale
 git submodule update --init --recursive libs/chrono
+
+git submodule update --init --recursive libs/atomic
+git submodule update --init --recursive libs/ratio
+git submodule update --init --recursive libs/tuple
+git submodule update --init --recursive libs/unordered
+
 fi
 
+echo "Will build boost in PWD=$PWD"
 # delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
 git clean -xdf || fail
 rm -rf static-build || fail
@@ -92,32 +100,43 @@ printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc
 
 printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
 echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
-echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
-./bootstrap.sh --without-icu || fail
+echo "using gcc : 5.4.0 : $boost_user_gcc" >> user-config.jam || fail
 
-printf "Starting the b2 boost build\n"
-set -x
+printf "\n\nBoost bootstrap...\n\n"
+./bootstrap.sh --without-icu || fail
+printf "\n\nBoost bootstrap is done.\n\n"
+ls
+
+printf "\n\nBoost b2 headers...\n\n"
+./b2 -q headers || fail "b2 headers"
+
+printf "\n\nStarting the b2 boost build\n\n"
 b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" )
 b2_opt_debug=( )
 if (( option_verbose )) ; then
     b2_opt_debug=( "-d" "4" "--debug-building" )
 fi
 
+set -x
 ./b2 \
+    -q \
     "${b2_opt_debug[@]}" \
-    -a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
-     --prefix=/"$BOOST_DIR"/static-build threading=multi  threadapi=win32 link=static \
+    -a --user-config=user-config.jam toolset=gcc --build-type=complete variant=release \
+     --prefix=/"$BOOST_DIR"/static-build threading=multi \
+     link=static \
      "${b2_opt_with_lib[@]}" \
      runtime-link=static \
 	 boost.locale.icu=off \
     -j 1 \
     -sNO_BZIP2=1 --sNO_ZLIB=1 \
     --layout=tagged install \
-    || fail
+    || {
+	set -x
+	fail "The b2 build of boost failed"
+	}
 set +x
 
-
-printf "\nDONE the b2 boost build\n\n"
+printf "\n\n\n\nDONE the b2 boost build\n\n\n\n"
 
 # copy all boost includes for header only libraries
 find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
@@ -128,7 +147,7 @@ find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
         #echo "$end_of"
         if [ $end_of = $substr ]
         then
-            cp -r "$D" ./static-build
+            cp -r "$D" ./static-build || fail "Can not copy $D"
         fi
     fi
 done

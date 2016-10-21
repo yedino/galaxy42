@@ -1,5 +1,10 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
+
+function fail() {
+	printf "\nERROR (in $0): " "$@" "\n"
+	exit 1
+}
   
   REFERENCE_DATETIME="2016-08-01 00:00:00"
 
@@ -19,13 +24,13 @@
   ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
   HOSTS="x86_64-linux-gnu"
 
-  COMPILERS="g++ gcc cc c++" # <--- could add here more if needed
+  COMPILERS="g++ gcc cc c++ ar ranlib nm ld ldd" # <--- could add here more if needed
 
   ## CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   CONFIGFLAGS=""
 
-  FAKETIME_HOST_PROGS=""
-  FAKETIME_PROGS="date ar ranlib nm"
+  FAKETIME_HOST_PROGS="ar ranlib nm ld ldd"
+  FAKETIME_PROGS="date ar ranlib nm ld ldd"
 
   # TODO?
   HOST_CFLAGS="-O2 -g"
@@ -58,7 +63,9 @@
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
+    echo 'set -x' > ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    echo 'set +x' > ${WRAP_DIR}/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
   }
@@ -70,7 +77,9 @@
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+    	echo 'set -x' > ${WRAP_DIR}/${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+    	echo 'set +x' > ${WRAP_DIR}/${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
@@ -112,7 +121,9 @@ cat << EOF > ${WRAP_DIR}/${prog}
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME="${REFERENCE_DATETIME}"
   echo "In wrapper, will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
+  echo 'set -x' > ${WRAP_DIR}/${prog}
   \$REAL \$@
+  echo 'set +x' > ${WRAP_DIR}/${prog}
 
 EOF
 
@@ -146,18 +157,21 @@ EOF
 
 
   printf "\n\n\nDoing boost static build\n\n\n"
-  contrib/gitian-descriptors/libboost-build/build-boost-static
+  contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
 
   # *** main build starts here ***
   pushd galaxy42
   echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
   # make dist # delete
-  COVERAGE=0 EXTLEVEL=0 BUILD_STATIC=1 ./do --go
-	#############################################
+  COVERAGE=0 EXTLEVEL=0 BUILD_STATIC=1 ./do --go || fail "Failed to do the main build of our project"
+  #############################################
 
   echo -e "\n\nBuild is done.\n\n"
   popd
+
+
+
 
   # when we create .tgz.gz - TODO later
   if false ; then
