@@ -388,6 +388,7 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 
 // _win32 || __cygwin__
 #elif defined(__MACH__)
+#include <sys/kern_control.h>
 #include <sys/sys_domain.h>
 c_tun_device_apple::c_tun_device_apple() :
     m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, get_tun_fd()))
@@ -396,7 +397,16 @@ c_tun_device_apple::c_tun_device_apple() :
 
 int c_tun_device_apple::get_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
-
+    if (tun_fd < 0) throw std::runtime_error("tun_fd open error");
+    // get ctl_id
+    ctl_info info;
+    std::memset(&info, 0, sizeof(info));
+    const std::string apple_utun_control = "com.apple.net.utun_control";
+    apple_utun_control.copy(info.ctl_name, apple_utun_control.size());
+    if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) {
+        close(tun_fd);
+        throw std::runtime_error("ioctl error");
+    }
     return tun_fd;
 }
 
