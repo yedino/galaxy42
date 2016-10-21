@@ -387,6 +387,9 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 }
 
 // _win32 || __cygwin__
+#elif defined(__MACH__)
+
+// __MACH__
 #else
 
 c_tun_device_empty::c_tun_device_empty() { }
