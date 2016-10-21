@@ -11,7 +11,7 @@ printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
 cd "$HOME/build/" || fail "Can not enter build dir"
 
-option_download_skip=0  # XXXXXXXXXXXXXXXXX
+option_download_skip=1  # XXXXXXXXXXXXXXXXX
 option_allow_boost=1
 
 if (( option_allow_boost )) ; then

@@ -116,8 +116,7 @@ function fail() {
   rm -f "$out"
 
 cat << EOF > "$out"
-
-  #!/bin/bash
+#!/bin/bash
   REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
   for var in "\$@"
   do
@@ -127,11 +126,13 @@ cat << EOF > "$out"
       break
     fi
   done
+  echo "...in wrapper (\$0 generated from $0 working on prog=$prog) will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
+  echo "...in PWD=[$PWD], with PATH=[\$PATH]"
+  echo "...will call \$REAL with arguments:" "\$@"
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME="${REFERENCE_DATETIME}"
-  echo "In wrapper ($0) will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
   set -x
-  \$REAL \$@
+  \$REAL \$@ || { printf "\n\nERROR IN WRAPPED PROGRAM\n---STARTING TEST SHELL---" ; sh ; echo "---EXITED TEST SHELL---" ; exit 1 ; }
   set +x
 
 EOF
@@ -174,12 +175,20 @@ EOF
 
   printf "\nTEST TOOLS:\n"
   set -x
+  which gcc
   which ar
   which ranlib
-  ar --version || fail "test ar failed"
-  ranlib --version || fail "test ranlib failed"
+  gcc -v || fail "test gcc"
+  g++ -v || fail "test g++"
+  ar --version || fail "test ar"
+  ranlib --version || fail "test ranlib"
   set +x
   printf "\n\n"
+
+  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
+  sh
+  printf "\n\n=== EXITED TEST SHELL ==="
+  sleep 1 # XXX
 
   pushd "${GALAXY_DIR}" || fail
   contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
