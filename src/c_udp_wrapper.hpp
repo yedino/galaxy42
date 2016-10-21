@@ -38,7 +38,7 @@ class c_udp_wrapper_linux final : public c_udp_wrapper {
 #include <array>
 #include <boost/asio.hpp>
 class c_udp_wrapper_asio final : public c_udp_wrapper {
-	friend class c_event_manager_windows;
+        friend class c_event_manager_asio;
 	public:
 		c_udp_wrapper_asio(const int listen_port);
 		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;

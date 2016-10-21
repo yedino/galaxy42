@@ -34,9 +34,13 @@ bool c_event_manager_linux::get_tun_packet() {
 }
 
 // __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined (__MACH__)
 
+#if defined(__MACH__)
+c_event_manager_asio::c_event_manager_asio(c_tun_device_apple &tun_device, c_udp_wrapper_asio &udp_wrapper)
+#else // _WIN32 || __CYGWIN__
 c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_udp_wrapper_asio &udp_wrapper)
+#endif
 :
 	m_tun_device(tun_device),
 	m_udp_device(udp_wrapper),
