@@ -2,11 +2,12 @@
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
 function fail() {
-	printf "\nERROR (in $0): " "$@" "\n"
+	echo -e "\nERROR (in $0): " "$@"
 	exit 1
 }
 
   GALAXY_DIR="/home/ubuntu/build/galaxy42/"
+  BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
   
   REFERENCE_DATETIME="2016-08-01 00:00:00"
 
@@ -26,10 +27,10 @@ function fail() {
   ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
   HOSTS="x86_64-linux-gnu"
 
-  COMPILERS="g++ gcc cc c++ ar ranlib nm ld ldd" # <--- could add here more if needed
+  COMPILERS="g++ gcc"
 
-  ## CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-  CONFIGFLAGS=""
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  # CONFIGFLAGS=""
 
   FAKETIME_HOST_PROGS="ar ranlib nm ld ldd"
   FAKETIME_PROGS="date ar ranlib nm ld ldd"
@@ -67,10 +68,7 @@ function fail() {
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> "$out"
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
     echo "export FAKETIME=\"$1\"" >> "$out"
-    echo 'echo "(from $0) will use REAL=[$REAL]"' >> "$out"
-    echo 'set -x' >> "$out"
     echo '$REAL "$@"' >> "$out"
-    echo 'set +x' >> "$out"
     chmod +x "$out"
   done
   }
@@ -84,10 +82,7 @@ function fail() {
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> "$out"
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
         echo "export FAKETIME=\"$1\"" >> "$out"
-        echo 'echo "(from $0) will use REAL=[$REAL]"' >> "$out"
-    	echo 'set -x' >> "$out"
         echo '$REAL "$@"' >> "$out"
-    	echo 'set +x' >> "$out"
         chmod +x "$out"
     done
   done
@@ -126,19 +121,9 @@ cat << EOF > "$out"
       break
     fi
   done
-  echo "...in wrapper (\$0 generated from $0 working on prog=$prog) will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
-  echo "...in PWD=[$PWD], with PATH=[\$PATH]"
-  echo "...will call \$REAL with arguments:" "\$@"
-  set -x
-  echo "Going to call:" "\$REAL" "\$@" 
-  printf "XXX Going to call (REAL)" "\$REAL"
-  printf "XXX Going to call (ARGS)" "\$0"
-  # export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
-  # export FAKETIME="${REFERENCE_DATETIME}"
-  "\$REAL" "\$@" || { printf "\n\nERROR IN WRAPPED PROGRAM\n---STARTING TEST SHELL---" ; sh ; echo "---EXITED TEST SHELL---" ; exit 1 ; }
-  # strace -s 8192 "\$REAL" "\$@" || { printf "\n\nERROR IN WRAPPED PROGRAM\n---STARTING TEST SHELL---" ; sh ; echo "---EXITED TEST SHELL---" ; exit 1 ; }
-  set +x
-
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME="${REFERENCE_DATETIME}"
+  "\$REAL" "\$@"
 EOF
 
   chmod +x "$out"
@@ -190,10 +175,10 @@ EOF
   set +x
   printf "\n\n"
 
-  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
-  sh
-  printf "\n\n=== EXITED TEST SHELL ==="
-  sleep 1 # XXX
+#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
+# sh
+# printf "\n\n=== EXITED TEST SHELL ==="
+# sleep 1 # XXX
 
   pushd "${GALAXY_DIR}" || fail
   contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
@@ -205,7 +190,9 @@ EOF
   echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
   # make dist # delete
-  COVERAGE=0 EXTLEVEL=0 BUILD_STATIC=1 ./do --go || fail "Failed to do the main build of our project"
+  COVERAGE=0 EXTLEVEL=0 \
+    BUILD_STATIC=1 BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+    ./do --go || fail "Failed to do the main build of our project"
   #############################################
 
   echo -e "\n\nBuild is done.\n\n"
