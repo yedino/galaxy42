@@ -138,12 +138,18 @@ if [[ "$BUILD_STATIC"  == "1" ]] ; then
 	FLAG_STATIC="ON"
 fi
 
+set -x
 cmake  .  \
-	-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC"
+	-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC" \
 	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
+	${BUILD_SET_BOOST_ROOT:+"-DBOOST_ROOT=$BUILD_SET_BOOST_ROOT"} \
+	$FLAG_BOOST_ROOT \
 	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
 	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+set +x
 # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
-make -j 8 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+set -x
+make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+set +x
 

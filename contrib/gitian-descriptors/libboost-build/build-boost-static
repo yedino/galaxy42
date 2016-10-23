@@ -11,7 +11,7 @@ printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
 cd "$HOME/build/" || fail "Can not enter build dir"
 
-option_download_skip=1  # XXXXXXXXXXXXXXXXX
+option_download_skip=0  # XXXXXXXXXXXXXXXXX
 option_allow_boost=1
 
 if (( option_allow_boost )) ; then
@@ -21,6 +21,10 @@ if (( option_download_skip )) ; then
     printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
     pushd boost || fail # cd
     pwd
+
+#printf "\n\nXXX extra download tmp\n\n"
+#git submodule update --init --recursive libs/align
+
     ls
 else
 
@@ -88,6 +92,9 @@ git submodule update --init --recursive libs/tuple
 git submodule update --init --recursive libs/unordered
 git submodule update --init --recursive libs/exception
 git submodule update --init --recursive libs/intrusive
+git submodule update --init --recursive libs/align
+git submodule update --init --recursive libs/algorithm
+git submodule update --init --recursive libs/multiprecision
 
 fi
 
@@ -171,6 +178,13 @@ find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
 done
 
 popd
+
+printf "\n\nFixing up static library names. [TODO] why is this needed?!\n\n\n"
+pushd /home/ubuntu/build/boost/static-build/lib/ || "Enter dir of boost static build, to fix it"
+	for x in system filesystem locale program_options thread ; do ln -s  libboost_$x-mt-s.a  libboost_$x-mt-1_61.a ; done
+popd
+
+
 
 else
     printf "\n\nSkipping boost (as selected in options)\n\n"
