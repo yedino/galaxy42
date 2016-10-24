@@ -24,8 +24,7 @@ void sodium_sha512() {
 
 
 
-/*
-  void test_sodiumpp () { 
+void test_sodiumpp () { 
      const size_t seconds_for_test_case=5;
      auto start_point = std::chrono::steady_clock::now();
      const std::string message(10240, 'm');
@@ -71,7 +70,7 @@ void sodium_sha512() {
 
 
 }
-*/
+
 int main () {
 
     if (sodium_init() == -1) {
