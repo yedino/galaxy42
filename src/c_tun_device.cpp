@@ -398,6 +398,7 @@ c_tun_device_apple::c_tun_device_apple() :
 int c_tun_device_apple::get_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
     if (tun_fd < 0) throw std::runtime_error("tun_fd open error");
+
     // get ctl_id
     ctl_info info;
     std::memset(&info, 0, sizeof(info));
@@ -407,6 +408,19 @@ int c_tun_device_apple::get_tun_fd() {
         close(tun_fd);
         throw std::runtime_error("ioctl error");
     }
+
+    // connect to tun
+    sockaddr_ctl addr_ctl;
+    addr_ctl.sc_id = info.ctl_id;
+    addr_ctl.sc_len = sizeof(addr_ctl);
+    addr_ctl.sc_family = AF_SYSTEM;
+    addr_ctl.ss_sysaddr = AF_SYS_CONTROL;
+    addr_ctl.sc_unit = 1;
+    // connect to first not used tun
+    while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
+        ++addr_ctl.sc_unit;
+    }
+
     return tun_fd;
 }
 
