@@ -99,7 +99,6 @@ class c_tun_device_apple final : public c_tun_device {
 friend class c_event_manager_asio;
 public:
     c_tun_device_apple();
-    // not implemented XXX
     void set_ipv6_address
             (const std::array<uint8_t, 16> &binary_address, int prefixLen);
     void set_mtu(uint32_t mtu);
@@ -107,8 +106,10 @@ public:
     size_t read_from_tun(void *buf, size_t count);
     size_t write_to_tun(const void *buf, size_t count);
 private:
+    const int m_tun_fd;
     boost::asio::io_service m_ioservice;
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
+    std::string m_interface_name;
 
     int get_tun_fd();
 };

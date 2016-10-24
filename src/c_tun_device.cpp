@@ -388,10 +388,13 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 
 // _win32 || __cygwin__
 #elif defined(__MACH__)
+#include "../depends/cjdns-code/NetPlatform.h"
+#include "cpputils.hpp"
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>
 c_tun_device_apple::c_tun_device_apple() :
-    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, get_tun_fd()))
+    m_tun_fd(get_tun_fd()),
+    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd))
 {
 }
 
@@ -421,11 +424,22 @@ int c_tun_device_apple::get_tun_fd() {
         ++addr_ctl.sc_unit;
     }
 
+    m_interface_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
+
     return tun_fd;
 }
 
 void c_tun_device_apple::set_ipv6_address
-        (const std::array<uint8_t, 16> &binary_address, int prefixLen){}
+        (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+/*    as_zerofill< ifreq > ifr; // the if request
+    //ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
+    //strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
+    //auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
+    //if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
+    assert(binary_address[0] == 0xFD);
+    assert(binary_address[1] == 0x42);
+    NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);*/
+}
 void c_tun_device_apple::set_mtu(uint32_t mtu){}
 bool c_tun_device_apple::incomming_message_form_tun(){} ///< returns true if tun is readry for read
 size_t c_tun_device_apple::read_from_tun(void *buf, size_t count){}
