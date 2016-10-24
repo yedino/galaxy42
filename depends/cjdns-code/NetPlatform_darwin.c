@@ -12,15 +12,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "exception/Except.h"
-#include "util/platform/netdev/NetPlatform.h"
-#include "util/AddrTools.h"
-#include "util/platform/Sockaddr.h"
-#include "util/Assert.h"
-#include "util/Bits.h"
-#include "util/CString.h"
-#include "wire/Message.h"
 
+#ifdef __MACH__
+
+#include "Endian.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <stdio.h>
@@ -47,234 +43,119 @@
 
 #define ArrayList_TYPE struct Sockaddr
 #define ArrayList_NAME OfSockaddr
-#include "util/ArrayList.h"
 
-Assert_compileTime(sizeof(struct in_addr) == 4);
+/** Returned by Hex_decode() or Hex_encode() if the output buffer is too small. */
+#define Hex_TOO_BIG -2
 
-struct RouteMessage4 {
-    struct rt_msghdr header;
-    struct sockaddr_in dest;
-    struct sockaddr_dl link;
-    struct sockaddr_in netmask;
-};
-Assert_compileTime(sizeof(struct rt_msghdr) == 92);
-Assert_compileTime(sizeof(struct sockaddr_in) == 16);
-Assert_compileTime(sizeof(struct sockaddr_dl) == 20);
-Assert_compileTime(sizeof(struct RouteMessage4) == 144);
+const int Sockaddr_AF_INET = AF_INET;
+const int Sockaddr_AF_INET6 = AF_INET6;
 
-static void mkRouteMsg(struct Message* msg,
-                       struct Sockaddr* addRoute,
-                       int ifIndex,
-                       const char* ifName,
-                       int seq,
-                       bool delete,
-                       struct Except* eh)
+static const char* hexEntities = "0123456789abcdef";
+
+static int Hex_encode(uint8_t* output,
+               const uint32_t outputLength,
+               const uint8_t* in,
+               const uint32_t inputLength)
 {
-    if (CString_strlen(ifName) >= 12) {
-        Except_throw(eh, "ifName [%s] too long, limit 11 chars", ifName);
+    if (outputLength < inputLength * 2) {
+        return Hex_TOO_BIG;
+    } else if (outputLength > inputLength * 2) {
+        output[inputLength * 2] = '\0';
     }
-    int lengthBegin = msg->length;
-    bool ipv6 = Sockaddr_getFamily(addRoute) == Sockaddr_AF_INET6;
-    if (ipv6) {
-        struct sockaddr_in6 mask = {
-            .sin6_family = AF_INET6,
-            .sin6_len = sizeof(struct sockaddr_in6)
-        };
-        Bits_memset((void *)&mask.sin6_addr, 0xff, addRoute->prefix >> 3);
-        ((uint8_t*)&mask.sin6_addr)[addRoute->prefix >> 3] = 0xff << (8 - (addRoute->prefix % 8));
-        Message_push(msg, &mask, sizeof(struct sockaddr_in6), eh);
-    } else {
-        struct sockaddr_in mask = {
-            .sin_family = AF_INET,
-            .sin_len = sizeof(struct sockaddr_in)
-        };
-        mask.sin_addr.s_addr = Endian_hostToBigEndian32(~0 << (32 - addRoute->prefix));
-        Message_push(msg, &mask, sizeof(struct sockaddr_in), eh);
+
+    for (uint32_t i = 0; i < inputLength; i++) {
+        output[i * 2] = hexEntities[in[i] >> 4];
+        output[i * 2 + 1] = hexEntities[in[i] & 15];
     }
-    if (!delete) {
-        struct sockaddr_dl link = {
-            .sdl_family = AF_LINK,
-            .sdl_len = sizeof(struct sockaddr_dl),
-            .sdl_type = IFT_OTHER,
-            .sdl_index = ifIndex,
-            .sdl_nlen = CString_strlen(ifName)
-        };
-        CString_strncpy(link.sdl_data, ifName, 12);
-        Message_push(msg, &link, sizeof(struct sockaddr_dl), eh);
-    }
-    void* dest = Sockaddr_asNative(addRoute);
-    int len = (ipv6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
-    ((struct sockaddr*)dest)->sa_len = len;
-    Message_push(msg, dest, len, eh);
-    struct rt_msghdr hdr = {
-        .rtm_type = (delete) ? RTM_DELETE : RTM_ADD,
-        .rtm_flags = RTF_UP | RTF_STATIC,
-        .rtm_version = RTM_VERSION,
-        .rtm_seq = seq,
-        .rtm_pid = getpid(),
-        .rtm_addrs = RTA_DST | RTA_NETMASK | ((delete) ? 0 : RTA_GATEWAY),
-        .rtm_msglen = sizeof(struct rt_msghdr) + (msg->length - lengthBegin)
-    };
-    Message_push(msg, &hdr, sizeof(struct rt_msghdr), eh);
+
+    return inputLength * 2;
 }
 
-static void setRoutes(uint32_t ifIndex,
-                      const char* ifName,
-                      struct ArrayList_OfSockaddr* toRemove,
-                      struct ArrayList_OfSockaddr* toAdd,
-                      struct Log* logger,
-                      struct Allocator* alloc,
-                      struct Except* eh)
+static void AddrTools_printIp(uint8_t output[40], const uint8_t binIp[16])
 {
-    int seq = 0;
-    int sock = socket(PF_ROUTE, SOCK_RAW, 0);
-    if (sock == -1) {
-        int err = errno;
-        close(sock);
-        Except_throw(eh, "open route socket [%s]", strerror(err));
-    }
-    bool err = false;
-    ssize_t returnLen = 0;
+    uint8_t hex[32];
+    Hex_encode(hex, 32, binIp, 16);
 
-    for (int i = 0; !err && i < toRemove->length; i++) {
-        struct Sockaddr* pfx = ArrayList_OfSockaddr_get(toRemove, i);
-        Log_debug(logger, "DELETE ROUTE %s", Sockaddr_print(pfx, alloc));
-        struct Message* msg = Message_new(0, 1024, alloc);
-        mkRouteMsg(msg, pfx, ifIndex, ifName, seq++, true, eh);
-        //printf("DELETE ROUTE %s\n", Hex_print(msg->bytes, msg->length, alloc));
-        returnLen = write(sock, msg->bytes, msg->length);
-        if (returnLen < msg->length) { err = true; break; }
-    }
-    for (int i = 0; !err && i < toAdd->length; i++) {
-        struct Sockaddr* pfx = ArrayList_OfSockaddr_get(toAdd, i);
-        Log_debug(logger, "ADD ROUTE %s", Sockaddr_print(pfx, alloc));
-        struct Message* msg = Message_new(0, 1024, alloc);
-        mkRouteMsg(msg, pfx, ifIndex, ifName, seq++, false, eh);
-        //printf("ADD ROUTE %s\n", Hex_print(msg->bytes, msg->length, alloc));
-        returnLen = write(sock, msg->bytes, msg->length);
-        if (returnLen < msg->length) { err = true; break; }
-    }
-
-    if (returnLen < 0) {
-        int error = errno;
-        close(sock);
-        Except_throw(eh, "setRoutes() [%s]", strerror(error));
-    } else if (err) {
-        close(sock);
-        Except_throw(eh, "setRoutes() returned short");
-    }
-    close(sock);
-}
-
-static int prefixFromWeirdBSDMask(uint8_t* weirdBsdMask, bool ipv6)
-{
-    uint8_t len = weirdBsdMask[0];
-    int out;
-    if (ipv6) {
-        Assert_true(len >= 8);
-        out = (len - 9) * 8;
-    } else {
-        Assert_true(len >= 4);
-        out = (len - 5) * 8;
-    }
-    for (int i = 1; i < len - 1; i++) {
-        Assert_true(weirdBsdMask[i] == 0xff);
-    }
-    return out + Bits_popCountx32(weirdBsdMask[len - 1]);
-}
-
-static struct ArrayList_OfSockaddr* getRoutes(uint32_t ifIndex,
-                                              struct Log* logger,
-                                              struct Allocator* allocator,
-                                              struct Except* eh)
-{
-    size_t needed;
-    int mib[] = { CTL_NET, PF_ROUTE, 0, 0, NET_RT_DUMP, 0 };
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-        Except_throw(eh, "sysctl(net.route.0.0.dump) estimate");
-    }
-    struct Allocator* tempAlloc = Allocator_child(allocator);
-    uint8_t* buf = Allocator_malloc(tempAlloc, needed);
-    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-        Except_throw(eh, "sysctl(net.route.0.0.dump)");
-    }
-    struct ArrayList_OfSockaddr* addrList = ArrayList_OfSockaddr_new(allocator);
-    for (int i = 0; i < (int)needed;) {
-        struct rt_msghdr* rtm = (struct rt_msghdr*) (&buf[i]);
-        i += rtm->rtm_msglen;
-        struct sockaddr* sa1 = (struct sockaddr*)(rtm + 1);
-        struct sockaddr* sa2 = (struct sockaddr*)(sa1->sa_len + (char *)sa1);
-        uint8_t* mask = (uint8_t*) (sa2->sa_len + (char*)sa2);
-        Assert_true(&buf[i] >= mask);
-        if (sa2->sa_family != AF_LINK) { continue; }
-        if (rtm->rtm_flags & RTF_LOCAL) { continue; }
-        if (!(rtm->rtm_flags & RTF_STATIC)) { continue; }
-        if (((struct sockaddr_dl*) sa2)->sdl_index != ifIndex) { continue; }
-        bool ipv6 = (sa1->sa_family == AF_INET6);
-        if (!ipv6 && (sa1->sa_family != AF_INET)) { continue; }
-        // printf("GOT ROUTE %s\n", Hex_print(rtm, rtm->rtm_msglen, tempAlloc));
-        int prefix;
-        if (&buf[i] < &mask[mask[0]] || mask[0] == 0) {
-            Assert_true(rtm->rtm_flags & RTF_HOST);
-            prefix = (ipv6) ? 128 : 32;
-        } else {
-            prefix = prefixFromWeirdBSDMask(mask, ipv6);
-        }
-        struct Sockaddr* addr = Sockaddr_fromNative(sa1, sa1->sa_len, allocator);
-        addr->flags |= Sockaddr_flags_PREFIX;
-        addr->prefix = prefix;
-        ArrayList_OfSockaddr_add(addrList, addr);
-    }
-    Allocator_free(tempAlloc);
-    return addrList;
+    output[ 0] = hex[ 0];
+    output[ 1] = hex[ 1];
+    output[ 2] = hex[ 2];
+    output[ 3] = hex[ 3];
+    output[ 4] = ':';
+    output[ 5] = hex[ 4];
+    output[ 6] = hex[ 5];
+    output[ 7] = hex[ 6];
+    output[ 8] = hex[ 7];
+    output[ 9] = ':';
+    output[10] = hex[ 8];
+    output[11] = hex[ 9];
+    output[12] = hex[10];
+    output[13] = hex[11];
+    output[14] = ':';
+    output[15] = hex[12];
+    output[16] = hex[13];
+    output[17] = hex[14];
+    output[18] = hex[15];
+    output[19] = ':';
+    output[20] = hex[16];
+    output[21] = hex[17];
+    output[22] = hex[18];
+    output[23] = hex[19];
+    output[24] = ':';
+    output[25] = hex[20];
+    output[26] = hex[21];
+    output[27] = hex[22];
+    output[28] = hex[23];
+    output[29] = ':';
+    output[30] = hex[24];
+    output[31] = hex[25];
+    output[32] = hex[26];
+    output[33] = hex[27];
+    output[34] = ':';
+    output[35] = hex[28];
+    output[36] = hex[29];
+    output[37] = hex[30];
+    output[38] = hex[31];
+    output[39] = '\0';
 }
 
 static void addIp4Address(const char* interfaceName,
                           const uint8_t address[4],
-                          int prefixLen,
-                          struct Log* logger,
-                          struct Allocator* tempAlloc,
-                          struct Except* eh)
+                          int prefixLen)
 {
     struct ifaliasreq ifarted;
-    Bits_memset(&ifarted, 0, sizeof(struct ifaliasreq));
-    CString_strncpy(ifarted.ifra_name, interfaceName, IFNAMSIZ);
+    memset(&ifarted, 0, sizeof(struct ifaliasreq));
+    strncpy(ifarted.ifra_name, interfaceName, IFNAMSIZ);
 
     struct sockaddr_in sin = { .sin_family = AF_INET, .sin_len = sizeof(struct sockaddr_in) };
-    Bits_memcpy(&sin.sin_addr.s_addr, address, 4);
-    Bits_memcpy(&ifarted.ifra_addr, &sin, sizeof(struct sockaddr_in));
+    memcpy(&sin.sin_addr.s_addr, address, 4);
+    memcpy(&ifarted.ifra_addr, &sin, sizeof(struct sockaddr_in));
     sin.sin_addr.s_addr = Endian_hostToBigEndian32(~0 << (32 - prefixLen));
-    Bits_memcpy(&ifarted.ifra_mask, &sin, sizeof(struct sockaddr_in));
+    memcpy(&ifarted.ifra_mask, &sin, sizeof(struct sockaddr_in));
 
     int s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s < 0) {
-        Except_throw(eh, "socket() [%s]", strerror(errno));
+        return;
     }
 
     // will probably fail, ignore result.
     struct ifreq ifr = { .ifr_flags = 0 };
-    CString_strncpy(ifr.ifr_name, interfaceName, IFNAMSIZ);
+    strncpy(ifr.ifr_name, interfaceName, IFNAMSIZ);
     ioctl(s, SIOCDIFADDR, &ifr);
 
     if (ioctl(s, SIOCSIFADDR, &ifarted) < 0) {
         int err = errno;
         close(s);
-        Except_throw(eh, "ioctl(SIOCSIFADDR) [%s]", strerror(err));
+        return;
     }
 
     //setupRoute4(address, prefixLen, interfaceName, logger, tempAlloc, eh);
-
-    Log_info(logger, "Configured IPv4 [%u.%u.%u.%u/%i] for [%s]",
-        address[0], address[1], address[2], address[3], prefixLen, interfaceName);
 
     close(s);
 }
 
 static void addIp6Address(const char* interfaceName,
                           const uint8_t address[16],
-                          int prefixLen,
-                          struct Log* logger,
-                          struct Except* eh)
+                          int prefixLen)
 {
     /* stringify our IP address */
     char myIp[40];
@@ -294,7 +175,7 @@ static void addIp6Address(const char* interfaceName,
     int err = getaddrinfo((const char *)myIp, NULL, &hints, &result);
     if (err) {
         // Should never happen since the address is specified as binary.
-        Except_throw(eh, "bad IPv6 address [%s]", gai_strerror(err));
+        return;
     }
 
     bcopy(result->ai_addr, &in6_addreq.ifra_addr, result->ai_addrlen);
@@ -316,16 +197,14 @@ static void addIp6Address(const char* interfaceName,
     /* do the actual assignment ioctl */
     int s = socket(AF_INET6, SOCK_DGRAM, 0);
     if (s < 0) {
-        Except_throw(eh, "socket() [%s]", strerror(errno));
+        return;
     }
 
     if (ioctl(s, SIOCAIFADDR_IN6, &in6_addreq) < 0) {
         int err = errno;
         close(s);
-        Except_throw(eh, "ioctl(SIOCAIFADDR) [%s]", strerror(err));
+        return;
     }
-
-    Log_info(logger, "Configured IPv6 [%s/%i] for [%s]", myIp, prefixLen, interfaceName);
 
     close(s);
 }
@@ -333,29 +212,24 @@ static void addIp6Address(const char* interfaceName,
 void NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
-                            int addrFam,
-                            struct Log* logger,
-                            struct Allocator* tempAlloc,
-                            struct Except* eh)
+                            int addrFam)
 {
     if (addrFam == Sockaddr_AF_INET6) {
-        addIp6Address(interfaceName, address, prefixLen, logger, eh);
+        addIp6Address(interfaceName, address, prefixLen);
     } else if (addrFam == Sockaddr_AF_INET) {
-        addIp4Address(interfaceName, address, prefixLen, logger, tempAlloc, eh);
+        addIp4Address(interfaceName, address, prefixLen);
     } else {
-        Assert_true(0);
+        assert(0);
     }
 }
 
 void NetPlatform_setMTU(const char* interfaceName,
-                        uint32_t mtu,
-                        struct Log* logger,
-                        struct Except* eh)
+                        uint32_t mtu)
 {
     int s = socket(AF_INET6, SOCK_DGRAM, 0);
 
     if (s < 0) {
-        Except_throw(eh, "socket() [%s]", strerror(errno));
+        return;
     }
 
     struct ifreq ifRequest;
@@ -363,38 +237,12 @@ void NetPlatform_setMTU(const char* interfaceName,
     strncpy(ifRequest.ifr_name, interfaceName, IFNAMSIZ);
     ifRequest.ifr_mtu = mtu;
 
-    Log_info(logger, "Setting MTU for device [%s] to [%u] bytes.", interfaceName, mtu);
-
     if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) {
        int err = errno;
        close(s);
-       Except_throw(eh, "ioctl(SIOCSIFMTU) [%s]", strerror(err));
+       return;
     }
 }
 
-void NetPlatform_setRoutes(const char* ifName,
-                           struct Sockaddr** prefixSet,
-                           int prefixCount,
-                           struct Log* logger,
-                           struct Allocator* tempAlloc,
-                           struct Except* eh)
-{
-    struct ArrayList_OfSockaddr* newRoutes = ArrayList_OfSockaddr_new(tempAlloc);
-    for (int i = 0; i < prefixCount; i++) {
-        int addrFam = Sockaddr_getFamily(prefixSet[i]);
-        if (addrFam == Sockaddr_AF_INET) {
-            // OK
-        } else if (addrFam == Sockaddr_AF_INET6) {
-            // OK
-        } else {
-            Except_throw(eh, "Unrecognized address type %d", addrFam);
-        }
-        ArrayList_OfSockaddr_add(newRoutes, prefixSet[i]);
-    }
-    uint32_t ifIndex = if_nametoindex(ifName);
-    if (!ifIndex) {
-        Except_throw(eh, "tunName not recognized");
-    }
-    struct ArrayList_OfSockaddr* oldRoutes = getRoutes(ifIndex, logger, tempAlloc, eh);
-    setRoutes(ifIndex, ifName, oldRoutes, newRoutes, logger, tempAlloc, eh);
-}
+
+#endif // __MACH__
