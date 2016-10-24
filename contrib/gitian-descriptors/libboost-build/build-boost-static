@@ -11,8 +11,8 @@ printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
 cd "$HOME/build/" || fail "Can not enter build dir"
 
-option_download_skip=0  # XXXXXXXXXXXXXXXXX
-option_allow_boost=1
+option_download_skip=1  # XXXXXXXXXXXXXXXXX
+option_allow_boost=0
 
 if (( option_allow_boost )) ; then
     printf "\n\nWill build boost now\n\n"
@@ -107,8 +107,8 @@ git clean -xdf || fail
 rm -rf static-build || fail
 mkdir static-build || fail
 
-#boost_user_gcc="$HOME/wrapped/g++ ;"
-boost_user_gcc="g++;"
+boost_user_gcc="$HOME/wrapped/g++ ;"
+#boost_user_gcc="g++;"
 printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
 
 printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
