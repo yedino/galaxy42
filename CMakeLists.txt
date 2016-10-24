@@ -328,7 +328,7 @@ endif()
 include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf src/g42-main.cpp )
+add_executable(tunserver.elf sodium_test.cpp )
 
 if(WIN32 OR CYGWIN)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -352,7 +352,8 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 #	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp
 #	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
 #	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
-add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+
+#add_library(tunserver sodium_test.cpp)
 
 
 if(MINGW)
@@ -366,8 +367,7 @@ else()
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
-
-target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+target_link_libraries(tunserver.elf  ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
@@ -376,25 +376,25 @@ list(SORT TEST_SOURCES)
 message("Sorted sources are:" "${TEST_SOURCES}")
 
 #debug version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES}
-	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
-foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-	message("ADDING LIBRARY FROM LIST: '${_lib}'")
-	target_link_libraries(test-debug.elf ${_lib})
-endforeach()
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+#add_executable(test-debug.elf ${TEST_SOURCES})
+#target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+#	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
+#foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+#	message("ADDING LIBRARY FROM LIST: '${_lib}'")
+#	target_link_libraries(test-debug.elf ${_lib})
+#endforeach()
 
 
 #release version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
-add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES}
-	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
-foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-	message("ADDING LIBRARY FROM LIST: '${_lib}'")
-	target_link_libraries(test-release.elf ${_lib})
-endforeach()
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
+#add_executable(test-release.elf ${TEST_SOURCES})
+#target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES}
+#	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
+#foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+#	message("ADDING LIBRARY FROM LIST: '${_lib}'")
+#	target_link_libraries(test-release.elf ${_lib})
+#endforeach()
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
 # ^-- if using this, then SORT it.
@@ -405,7 +405,7 @@ if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
 		COMMAND ./tunserver.sh
 		DEPENDS ./tunserver.elf
-		DEPENDS test-debug.elf
+#		DEPENDS test-debug.elf
 		WORKING_DIRECTORY ./)
 
 add_custom_target(runcli

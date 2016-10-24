@@ -189,6 +189,7 @@ EOF
   pushd galaxy42
   echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
+  git clean -fdx
   # make dist # delete
   COVERAGE=0 EXTLEVEL=0 \
     BUILD_STATIC=1 BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
