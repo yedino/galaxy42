@@ -11,8 +11,8 @@ printf "boost...\n\n"
 BOOST_DIR="$HOME/build/boost/"
 cd "$HOME/build/" || fail "Can not enter build dir"
 
-option_download_skip=1  # XXXXXXXXXXXXXXXXX
-option_allow_boost=0
+option_download_skip=0  # XXXXXXXXXXXXXXXXX
+option_allow_boost=1
 
 if (( option_allow_boost )) ; then
     printf "\n\nWill build boost now\n\n"
@@ -34,7 +34,7 @@ rm -rf boost || fail # perhaps left over if we do some caching or testing
 git clone https://github.com/boostorg/boost.git || fail "git clone" # check gitrev hash below!
 pushd boost || fail # cd
 PWD_now2="$PWD/"
-[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
+[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 0 ; }
 
 git checkout boost-1.61.0
 expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
