@@ -95,6 +95,9 @@ git submodule update --init --recursive libs/intrusive
 git submodule update --init --recursive libs/align
 git submodule update --init --recursive libs/algorithm
 git submodule update --init --recursive libs/multiprecision
+git submodule update --init --recursive libs/format
+git submodule update --init --recursive libs/optional
+git submodule update --init --recursive libs/rational
 
 fi
 
