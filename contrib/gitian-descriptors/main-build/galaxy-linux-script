@@ -1,5 +1,13 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
+
+function fail() {
+	echo -e "\nERROR (in $0): " "$@"
+	exit 1
+}
+
+  GALAXY_DIR="/home/ubuntu/build/galaxy42/"
+  BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
   
   REFERENCE_DATETIME="2016-08-01 00:00:00"
 
@@ -14,18 +22,18 @@
   ### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
   ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
-  WRAP_DIR=$HOME/wrapped
+  WRAP_DIR="$HOME/wrapped"
 
   ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
   HOSTS="x86_64-linux-gnu"
 
-  COMPILERS="g++ gcc cc c++" # <--- could add here more if needed
+  COMPILERS="g++ gcc"
 
-  ## CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-  CONFIGFLAGS=""
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  # CONFIGFLAGS=""
 
-  FAKETIME_HOST_PROGS=""
-  FAKETIME_PROGS="date ar ranlib nm"
+  FAKETIME_HOST_PROGS="ar ranlib nm ld ldd"
+  FAKETIME_PROGS="date ar ranlib nm ld ldd"
 
   # TODO?
   HOST_CFLAGS="-O2 -g"
@@ -54,24 +62,28 @@
 
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
-    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
-    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
-    chmod +x ${WRAP_DIR}/${prog}
+    out="${WRAP_DIR}/${prog}"
+    echo "" > "$out"
+    echo '#!/bin/bash' > "$out"
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> "$out"
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
+    echo "export FAKETIME=\"$1\"" >> "$out"
+    echo '$REAL "$@"' >> "$out"
+    chmod +x "$out"
   done
   }
 
   function create_per-host_faketime_wrappers {
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
-        chmod +x ${WRAP_DIR}/${i}-${prog}
+	out="${WRAP_DIR}/${i}-${prog}"
+	echo "" > "$out"
+        echo '#!/bin/bash' >> "$out"
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> "$out"
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
+        echo "export FAKETIME=\"$1\"" >> "$out"
+        echo '$REAL "$@"' >> "$out"
+        chmod +x "$out"
     done
   done
   }
@@ -95,11 +107,11 @@
 
   for prog in ${COMPILERS}; do
   echo "Creating writer for compiler prog=$PROG with FAKETIME=${REFERENCE_DATETIME}"
-  rm -f "${WRAP_DIR}/${prog}"
+  out="${WRAP_DIR}/${prog}"
+  rm -f "$out"
 
-cat << EOF > ${WRAP_DIR}/${prog}
-
-  #!/bin/bash
+cat << EOF > "$out"
+#!/bin/bash
   REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
   for var in "\$@"
   do
@@ -111,13 +123,16 @@ cat << EOF > ${WRAP_DIR}/${prog}
   done
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME="${REFERENCE_DATETIME}"
-  echo "In wrapper, will call real compiler (REAL=\$REAL) with FAKETIME=\$FAKETIME, LD_PRELOAD=\$LD_PRELOAD"
-  \$REAL \$@
-
+  "\$REAL" "\$@"
 EOF
 
-  chmod +x ${WRAP_DIR}/${prog}
+  chmod +x "$out"
   done
+
+
+
+
+
 
   if false ; then # TODO
   cd bitcoin
@@ -144,13 +159,47 @@ EOF
   # ./autogen.sh # delete
   # CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
+
+  printf "\n\n\nDoing boost static build\n\n\n"
+
+  printf "\nTEST TOOLS (in linux script):\n"
+  set -x
+  which gcc
+  which ar
+  which ranlib
+  gcc -v || fail "test gcc"
+  g++ -v || fail "test g++"
+  ar --version || fail "test ar"
+  ranlib --version || fail "test ranlib"
+  g++ -print-prog-name=ar
+  set +x
+  printf "\n\n"
+
+#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
+# sh
+# printf "\n\n=== EXITED TEST SHELL ==="
+# sleep 1 # XXX
+
+  pushd "${GALAXY_DIR}" || fail
+  contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+  popd || fail
+  echo "\nAll done regarding boost.\n"
+
   # *** main build starts here ***
   pushd galaxy42
   echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+
   # make dist # delete
-  COVERAGE=0 EXTLEVEL=0  ./do --go
+  COVERAGE=0 EXTLEVEL=0 \
+    BUILD_STATIC=1 BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+    ./do --go || fail "Failed to do the main build of our project"
+  #############################################
+
   echo -e "\n\nBuild is done.\n\n"
   popd
+
+
+
 
   # when we create .tgz.gz - TODO later
   if false ; then
