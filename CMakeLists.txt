@@ -44,6 +44,7 @@ set (Boost_USE_MULTITHREADED ON)
 if (BUILD_STATIC_TUNSERVER)
 	set (Boost_USE_STATIC_RUBTIME ON)
 	set (Boost_USE_STATIC_LIBS ON)
+	set (Boost_USE_DEBUG_RUNTIME OFF)
 endif()
 if (CYGWIN)
 	set(BOOST_LOCALE_LINK_LIB boost_locale-mt)
@@ -378,8 +379,8 @@ message("Sorted sources are:" "${TEST_SOURCES}")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES}
-	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
+target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-debug.elf ${_lib})
@@ -389,8 +390,8 @@ endforeach()
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES}
-	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
+target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-release.elf ${_lib})
