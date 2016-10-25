@@ -213,7 +213,9 @@ EOF
 
 
 echo -e "\n\nBuild will start the linux packer.\n"
+pushd "${GALAXY_DIR}" || fail
 contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
+popd || fail
 
   # when we create .tgz.gz - TODO later
   if false ; then
