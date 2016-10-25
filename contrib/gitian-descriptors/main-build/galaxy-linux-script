@@ -7,9 +7,9 @@ function fail() {
 	exit 1
 }
 
-RUNDIR="$1"
-export RUNDIR
-echo "$0: RUNDIR=$RUNDIR"
+OUTDIR="$1"
+export OUTDIR
+echo "$0: OUTDIR=$OUTDIR"
 
   GALAXY_DIR="/home/ubuntu/build/galaxy42/"
   BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
@@ -92,6 +92,13 @@ echo "$0: RUNDIR=$RUNDIR"
     done
   done
   }
+
+# Create faketime timestamp
+
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1 \
+	FAKETIME="$FAKETIME" touch /tmp/faketime_timestamp
+
+stat /tmp/faketime_timestamp
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
@@ -206,7 +213,7 @@ EOF
 
 
 echo -e "\n\nBuild will start the linux packer.\n"
-contrib/tools/build-pack-linux.sh
+contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
 
   # when we create .tgz.gz - TODO later
   if false ; then
