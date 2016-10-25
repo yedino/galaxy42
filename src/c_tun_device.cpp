@@ -395,7 +395,9 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 c_tun_device_apple::c_tun_device_apple() :
     m_interface_name(),
     m_tun_fd(get_tun_fd()),
-    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd))
+    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
+    m_buffer(),
+    m_readed_bytes(0)
 {
 }
 
@@ -435,12 +437,31 @@ void c_tun_device_apple::set_ipv6_address
     assert(binary_address[1] == 0x42);
     NetPlatform_addAddress(m_interface_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
+
 void c_tun_device_apple::set_mtu(uint32_t mtu) {
     NetPlatform_setMTU(m_interface_name.c_str(), mtu);
 }
-bool c_tun_device_apple::incomming_message_form_tun(){} ///< returns true if tun is readry for read
-size_t c_tun_device_apple::read_from_tun(void *buf, size_t count){}
-size_t c_tun_device_apple::write_to_tun(const void *buf, size_t count){}
+
+bool c_tun_device_apple::incomming_message_form_tun() {
+        m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
+        if (m_readed_bytes > 0) return true;
+        return false;
+}
+
+size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
+    assert(m_readed_bytes > 0);
+    std::copy_n(&m_buffer[0], m_readed_bytes,reinterpret_cast<uint8_t *>(buf));
+    size_t ret = m_readed_bytes;
+    m_readed_bytes = 0;
+    return ret;
+}
+
+size_t c_tun_device_apple::write_to_tun(const void *buf, size_t count) {
+    boost::system::error_code ec;
+    size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
+    if (ec) throw std::runtime_error("boost error " + ec.message());
+    return write_bytes;
+}
 // __MACH__
 #else
 
