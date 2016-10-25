@@ -399,6 +399,12 @@ c_tun_device_apple::c_tun_device_apple() :
     m_buffer(),
     m_readed_bytes(0)
 {
+    m_buffer.fill(0);
+    assert(m_stream_handle_ptr->is_open());
+    m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+        [this](const boost::system::error_code &error, size_t length) {
+            handle_read(error, length);
+        }); // lambda
 }
 
 int c_tun_device_apple::get_tun_fd() {
@@ -429,6 +435,15 @@ int c_tun_device_apple::get_tun_fd() {
 
     m_interface_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;
+}
+
+void c_tun_device_apple::handle_read(const boost::system::error_code &error, size_t length) {
+    if (error || (length < 1)) throw std::runtime_error(error.message());
+    m_readed_bytes = 0;
+    m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+                                         [this](const boost::system::error_code &error, size_t length) {
+        handle_read(error, length);
+    }); // lambda
 }
 
 void c_tun_device_apple::set_ipv6_address

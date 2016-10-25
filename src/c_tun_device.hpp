@@ -114,6 +114,7 @@ private:
     size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
 
     int get_tun_fd();
+    void handle_read(const boost::system::error_code &error, size_t length);
 };
 #else
 
