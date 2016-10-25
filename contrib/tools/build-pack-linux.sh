@@ -7,7 +7,7 @@ function fail {
 }
 
 dir_top="."
-[ -r "${dir_top}/toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+[ -r "${dir_top}/toplevel" ] || { echo "Run this (script $0) while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 
 set -x
 project_name="galaxy42"
@@ -36,13 +36,16 @@ cp /usr/lib/x86_64-linux-gnu/gconv/gconv-modules "${dir_static_libs}/" || fail
 
 cp "${dir_top}/contrib/add_scripts_build_linux_static/galaxy42-static-start.sh" "${dir_pack}/" || fail
 
+echo "Will take file packer timestamp from this file:"
+stat /tmp/faketime_timestamp || fail "Can not read the faketime_timestamp"
+
 pushd "$dir_pack_wrap" || fail
 	rm -f "$outname_tgz"
 	echo "Quick sum of all files to be packed:"
 	sha1sum $(find "$outname" | sort) | sha1sum -
 	echo "Packing..."
 	find "$outname" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' \
-		--owner=0 --group=0 -c --mtime="$fullname_main_binary" \
+		--owner=0 --group=0 -c --mtime="/tmp/faketime_timestamp" \
 		-T -  > "${outname_tgz}" || fail
 # gzip -9n
 popd || fail
