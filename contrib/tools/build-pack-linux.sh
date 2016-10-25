@@ -57,3 +57,7 @@ echo "$0: Packed file:"
 ls -lh "$outfile_tgz"
 sha256sum "$outfile_tgz"
 
+echo "Will copy to $OUTDIR"
+cp "$outfile_tgz" "$OUTDIR/"
+sha256sum "$OUTDIR/*"
+
