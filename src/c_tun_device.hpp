@@ -110,6 +110,8 @@ private:
     const int m_tun_fd;
     boost::asio::io_service m_ioservice;
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
+    std::array<uint8_t, 9000> m_buffer;
+    size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
 
     int get_tun_fd();
 };
