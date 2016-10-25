@@ -214,6 +214,7 @@ EOF
 
 echo -e "\n\nBuild will start the linux packer.\n"
 pushd "${GALAXY_DIR}" || fail
+echo "In PWD=$PWD"
 contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
 popd || fail
 
