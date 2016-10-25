@@ -43,61 +43,17 @@ confirm_gitrev=$(git log --format='%H' -1)
     fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
 }
 
-git submodule update --init --recursive tools/build
-git submodule update --init --recursive libs/context
-git submodule update --init --recursive libs/filesystem
-git submodule update --init --recursive libs/config
-git submodule update --init --recursive tools/inspect
-git submodule update --init --recursive libs/thread
-git submodule update --init --recursive libs/system
-git submodule update --init --recursive libs/utility
-git submodule update --init --recursive libs/predef
-git submodule update --init --recursive libs/detail
-git submodule update --init --recursive libs/assert
-git submodule update --init --recursive libs/core
-git submodule update --init --recursive libs/io
-git submodule update --init --recursive libs/type_traits
-git submodule update --init --recursive libs/iterator
-git submodule update --init --recursive libs/mpl
-git submodule update --init --recursive libs/preprocessor
-git submodule update --init --recursive libs/static_assert
-git submodule update --init --recursive libs/smart_ptr
-git submodule update --init --recursive libs/throw_exception
-git submodule update --init --recursive libs/functional
-git submodule update --init --recursive libs/range
-git submodule update --init --recursive libs/any
-git submodule update --init --recursive libs/type_index
-git submodule update --init --recursive libs/function
-git submodule update --init --recursive libs/integer
-git submodule update --init --recursive libs/bind
-git submodule update --init --recursive libs/lexical_cast
-git submodule update --init --recursive libs/concept_check
-git submodule update --init --recursive libs/numeric/conversion
-git submodule update --init --recursive libs/array
-git submodule update --init --recursive libs/program_options
-git submodule update --init --recursive libs/container
-git submodule update --init --recursive libs/move
-git submodule update --init --recursive libs/math
-git submodule update --init --recursive libs/tokenizer
-git submodule update --init --recursive libs/asio
-git submodule update --init --recursive libs/date_time
-git submodule update --init --recursive libs/regex
+declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "libs/config" "tools/inspect" "libs/thread" "libs/system" "libs/utility" "libs/predef" "libs/detail" "libs/assert" \
+	"libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" "libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
+	"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" "libs/numeric/conversion" "libs/array" "libs/program_options" \
+	"libs/container" "libs/move" "libs/math" "libs/tokenizer" "libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" "libs/unordered" \
+	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" )
 
-git submodule update --init --recursive libs/locale
-git submodule update --init --recursive libs/chrono
+# speed up boost download by initialize submodules asynchronously
+for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive && wait
 
-git submodule update --init --recursive libs/atomic
-git submodule update --init --recursive libs/ratio
-git submodule update --init --recursive libs/tuple
-git submodule update --init --recursive libs/unordered
-git submodule update --init --recursive libs/exception
-git submodule update --init --recursive libs/intrusive
-git submodule update --init --recursive libs/align
-git submodule update --init --recursive libs/algorithm
-git submodule update --init --recursive libs/multiprecision
-git submodule update --init --recursive libs/format
-git submodule update --init --recursive libs/optional
-git submodule update --init --recursive libs/rational
+#git submodule update --init --recursive --depth 1 --jobs 16 "${boost_submodules[@]}"  # better but works for git version > 2.8
+#git submodule update --init --recursive "libs/algorithm" # fetching all history for 'libs/algorithm' because of: error: no such remote ref e5ea93bab1bfe66917ee52944619ad8cee9a0a85
 
 fi
 
