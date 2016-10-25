@@ -106,10 +106,10 @@ public:
     size_t read_from_tun(void *buf, size_t count);
     size_t write_to_tun(const void *buf, size_t count);
 private:
+    std::string m_interface_name;
     const int m_tun_fd;
     boost::asio::io_service m_ioservice;
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
-    std::string m_interface_name;
 
     int get_tun_fd();
 };
