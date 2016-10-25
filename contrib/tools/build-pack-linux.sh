@@ -58,6 +58,6 @@ ls -lh "$outfile_tgz"
 sha256sum "$outfile_tgz"
 
 echo "Will copy to $OUTDIR"
-cp "$outfile_tgz" "$OUTDIR/"
-sha256sum "$OUTDIR/*"
+cp "$outfile_tgz" "$OUTDIR/" || fail "Can not copy the result to OUTDIR=$OUTDIR"
+sha256sum $OUTDIR/* || { echo "Can not calculate checksums... ignoring." ; }
 
