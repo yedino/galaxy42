@@ -435,7 +435,9 @@ void c_tun_device_apple::set_ipv6_address
     assert(binary_address[1] == 0x42);
     NetPlatform_addAddress(m_interface_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
-void c_tun_device_apple::set_mtu(uint32_t mtu){}
+void c_tun_device_apple::set_mtu(uint32_t mtu) {
+    NetPlatform_setMTU(m_interface_name.c_str(), mtu);
+}
 bool c_tun_device_apple::incomming_message_form_tun(){} ///< returns true if tun is readry for read
 size_t c_tun_device_apple::read_from_tun(void *buf, size_t count){}
 size_t c_tun_device_apple::write_to_tun(const void *buf, size_t count){}
