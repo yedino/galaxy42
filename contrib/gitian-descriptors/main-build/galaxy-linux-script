@@ -1,14 +1,19 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
+
 function fail() {
 	echo -e "\nERROR (in $0): " "$@"
 	exit 1
 }
 
+RUNDIR="$1"
+export RUNDIR
+echo "$0: RUNDIR=$RUNDIR"
+
   GALAXY_DIR="/home/ubuntu/build/galaxy42/"
   BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
-  
+
   REFERENCE_DATETIME="2016-08-01 00:00:00"
 
   export FAKETIME="$REFERENCE_DATETIME"
@@ -200,7 +205,8 @@ EOF
   popd
 
 
-
+echo -e "\n\nBuild will start the linux packer.\n"
+contrib/tools/build-pack-linux.sh
 
   # when we create .tgz.gz - TODO later
   if false ; then
