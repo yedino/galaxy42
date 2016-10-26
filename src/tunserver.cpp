@@ -396,6 +396,10 @@ c_tunserver::c_tunserver()
 //		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
 }
 
+std::mutex & c_tunserver::get_my_mutex() const {
+	return this->m_my_mutex; // TODO or const-cast here? from mutable?
+}
+
 void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
 	m_desc = desc;
 }
