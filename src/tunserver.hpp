@@ -40,6 +40,8 @@
 #include "c_udp_wrapper.hpp"
 #include "c_event_manager.hpp"
 
+#include "httpdbg/httpdbg-server.hpp"
+
 // ------------------------------------------------------------------
 
 extern const char * g_the_disclaimer;
@@ -244,8 +246,13 @@ class c_tunserver : public c_galaxy_node {
 		void peering_ping_all_peers();
 		void debug_peers();
 
+		std::mutex & get_my_mutex() const; ///< [thread] get lock guard on this
+
+		friend class c_httpdbg_raport; ///< this is authorized to read my data for debug. but [thread] lock access first!!!
 
 	private:
+		mutable std::mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
+
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
 		#ifdef __linux__

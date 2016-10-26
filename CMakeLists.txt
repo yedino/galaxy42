@@ -282,8 +282,12 @@ ADD_CUSTOM_TARGET(Debug
 
 # more directories of my main code
 
+include_directories( src/ )
+
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
+
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/*.cpp)
+
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)

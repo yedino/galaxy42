@@ -16,7 +16,12 @@
 #include "c_json_genconf.hpp"
 #include "c_json_load.hpp"
 
+#include "httpdbg/httpdbg-server.hpp"
+
 #include <boost/locale.hpp>
+#include <thread>
+
+#include <mutex>
 
 namespace developer_tests {
 
@@ -874,7 +879,21 @@ int main(int argc, char **argv) {
 //	_note("Done all preparations, moving to the server main");
         _note(boost::locale::gettext("L_all_preparations_done"));
 
+		_note(boost::locale::gettext("L_starting_httpdbg_server"));
+
+		std::thread httpdbg_thread( [&myserver]() {
+			main_httpdbg(9080, myserver);
+		}	);
+
+		_note(boost::locale::gettext("L_starting_main_server"));
 		myserver.run();
+		_note(boost::locale::gettext("L_main_server_ended"));
+
+		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
+
+		_note(boost::locale::gettext("L_httpdbg_server_ended"));
+
+
 	} // try running server
 	catch(ui::exception_error_exit) {
 //		std::cerr << "Exiting as explained above" << std::endl;
