@@ -439,7 +439,8 @@ int c_tun_device_apple::get_tun_fd() {
 
 void c_tun_device_apple::handle_read(const boost::system::error_code &error, size_t length) {
     if (error || (length < 1)) throw std::runtime_error(error.message());
-    m_readed_bytes = 0;
+    m_readed_bytes = length;
+    // continue reading
     m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
                                          [this](const boost::system::error_code &error, size_t length) {
         handle_read(error, length);
@@ -465,7 +466,7 @@ bool c_tun_device_apple::incomming_message_form_tun() {
 
 size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
     assert(m_readed_bytes > 0);
-    std::copy_n(&m_buffer[0], m_readed_bytes,reinterpret_cast<uint8_t *>(buf));
+    std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t *>(buf));
     size_t ret = m_readed_bytes;
     m_readed_bytes = 0;
     return ret;
