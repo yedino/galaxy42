@@ -40,10 +40,10 @@ pushd "$dir_pack_wrap" || fail
 	rm -f "$outname_tgz"
 	echo "Quick sum of all files to be packed:"
 	sha1sum $(find "$outname" | sort) | sha1sum -
-	echo "Packing..."
+	echo "Packing, from outname=$outname to $outname_tgz, with TAR_OPTIONS=$TAR_OPTIONS in PWD=$PWD"
 	find "$outname" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' \
-		--owner=0 --group=0 -c
-		-T - | gzip -9n > "${outname_tgz}" || fail
+		--owner=0 --group=0 -c \
+		-T - | gzip -9n > "${outname_tgz}" || fail "Can not compress"
 # gzip -9n
 #--mtime="/tmp/faketime_timestamp" \
 popd || fail
