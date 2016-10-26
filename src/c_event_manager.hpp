@@ -61,7 +61,7 @@ private:
 class c_tun_device_empty;
 class c_udp_wrapper_asio;
 
-#warning using uncompleted c_event_manager_mach with c_tun_device_empty = It can't work!
+#warning "using uncompleted c_event_manager_mach with c_tun_device_empty = It can not work!"
 class c_event_manager_mach final : public c_event_manager {
 public:
 	c_event_manager_mach() = default;
@@ -78,7 +78,7 @@ private:
 // __mach__
 #else
 
-#warning using c_event_manager_empty = It can't work!
+#warning "using c_event_manager_empty = It can not work!"
 class c_tun_device_empty;
 class c_udp_wrapper_empty;
 class c_event_manager_empty final : public c_event_manager {
