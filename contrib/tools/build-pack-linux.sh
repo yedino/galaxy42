@@ -12,7 +12,7 @@ dir_top="."
 set -x
 project_name="galaxy42"
 
-echo "$0: working on project_name=$project_name ; OUTDIR=$OUTDIR"
+echo "$0: working on project_name=$project_name ; OUTDIR=$OUTDIR TAR_OPTIONS=$TAR_OPTIONS"
 
 outname="${project_name}-static" # name of project release/output
 outname_tgz="${outname}.tar.gz" # name of project release/output
@@ -36,18 +36,16 @@ cp /usr/lib/x86_64-linux-gnu/gconv/gconv-modules "${dir_static_libs}/" || fail
 
 cp "${dir_top}/contrib/add_scripts_build_linux_static/galaxy42-static-start.sh" "${dir_pack}/" || fail
 
-echo "Will take file packer timestamp from this file:"
-stat /tmp/faketime_timestamp || fail "Can not read the faketime_timestamp"
-
 pushd "$dir_pack_wrap" || fail
 	rm -f "$outname_tgz"
 	echo "Quick sum of all files to be packed:"
 	sha1sum $(find "$outname" | sort) | sha1sum -
 	echo "Packing..."
 	find "$outname" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' \
-		--owner=0 --group=0 -c --mtime="/tmp/faketime_timestamp" \
-		-T -  > "${outname_tgz}" || fail
+		--owner=0 --group=0 -c
+		-T - | gzip -9n > "${outname_tgz}" || fail
 # gzip -9n
+#--mtime="/tmp/faketime_timestamp" \
 popd || fail
 
 #echo "Files:"

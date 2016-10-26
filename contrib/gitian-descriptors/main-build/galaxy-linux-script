@@ -9,7 +9,6 @@ function fail() {
 
 OUTDIR="$1"
 export OUTDIR
-echo "$0: OUTDIR=$OUTDIR"
 
   GALAXY_DIR="/home/ubuntu/build/galaxy42/"
   BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
@@ -18,7 +17,7 @@ echo "$0: OUTDIR=$OUTDIR"
 
   export FAKETIME="$REFERENCE_DATETIME"
   # variable from above yml config
-  echo "FAKETIME = ${FAKETIME}"
+  echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
   # debug
 
   ### <LICENCE> - start of licence block - this code if possibly on other licence:
@@ -94,11 +93,6 @@ echo "$0: OUTDIR=$OUTDIR"
   }
 
 # Create faketime timestamp
-
-LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1 \
-	FAKETIME="$FAKETIME" touch /tmp/faketime_timestamp
-
-stat /tmp/faketime_timestamp
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
