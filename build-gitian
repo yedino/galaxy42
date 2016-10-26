@@ -2,7 +2,7 @@
 echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
 
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
-dir_base_of_source='./'
+dir_base_of_source=`pwd`
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 export TEXTDOMAIN="galaxy42_scripts"
@@ -53,6 +53,7 @@ target_dbs="${base_dir}debootstrap/"
 
 option_platform_windows=0
 option_platform_linux=0
+option_platform_osx=0
 
 # get our own version
 info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
@@ -276,7 +277,7 @@ function get_host_info() {
 	echo "$user_s@$hostname_s"
 }
 
-# IN: set $var_platform_name to eg 'windows' or 'linux'
+# IN: set $var_platform_name to eg 'windows', 'linux' or 'osx'
 function gitian_show_result() {
 	my_banner "Results"
 	printf "\n\n\n%s\n" "Will show results now (base_dir=$base_dir)"
@@ -299,10 +300,12 @@ function gitian_show_result() {
 	echo "$info_binary"
 }
 
-# IN: set $var_platform_name to eg 'windows' or 'linux'
+# IN: set $var_platform_name to eg 'windows', 'linux' or 'osx'
 function gitian_run_build_once() {
 	my_banner "Building ($var_platform_name)"
 	[[ -z "${var_platform_name}" ]] && fail "Internal error: set platform name for gitian_run_build_once"
+
+	
 	gitian_yml_file="main-build/galaxy-${var_platform_name}.yml" # must be under contrib/gitian-descriptors/
 	gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
 
@@ -312,6 +315,17 @@ function gitian_run_build_once() {
 	gitian_detect_source_repository
 	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
+	
+	# MAC OSX - sdk check 
+	if [[ $option_platform_osx ]] ; then
+		if [[ -e "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" ]] ; then
+			mkdir -p inputs
+			cp "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" inputs || fail "Fail to copy MacOSX10.11.sdk.tar.gz to gitian-builder/inputs dir"
+		else
+			fail "Cannot build for OSX, SDK does not exist. $dir_base_of_source/contrib/macdeploy should contain 'MacOSX10.11.sdk.tar.gz'.\n" \
+				 "Read instruction in $dir_base_of_source/contrib/macdeploy/README_osx.md"
+		fi
+	fi
 
 	printf "\nWill use YML Gitian file: $gitian_yml_file_full\n\n"
 	cat "$gitian_yml_file_full" | egrep -H -n -i "commit|url|dir"
@@ -344,7 +358,7 @@ function print_no_platform() {
 function gitian_run_build_all_platforms() {
 	my_banner "Building selected platforms"
 	any=0
-	# this would allow to run -W and -L in one program call. Not sure if that is 100% supported,
+	# this would allow to run -W, -L and -M in one program call. Not sure if that is 100% supported,
 	if (( option_platform_windows )) ; then
 		any=1
 		var_platform_name='windows'
@@ -353,6 +367,11 @@ function gitian_run_build_all_platforms() {
 	if (( option_platform_linux )) ; then
 		any=1
 		var_platform_name='linux'
+		gitian_run_build_once
+	fi
+	if (( option_platform_osx )) ; then
+		any=1
+		var_platform_name='osx'
 		gitian_run_build_once
 	fi
 	if (( ! any )) ; then print_no_platform ; fi
@@ -379,7 +398,7 @@ function gitian_config_specific_platforms() {
 
 
 function check_options_platform() {
-	if  (( ! ( option_platform_windows || option_platform_linux ) )) ; then
+	if  (( ! ( option_platform_windows || option_platform_linux || option_platform_osx ) )) ; then
 		print_no_platform
 		exit 1
 	fi
@@ -455,7 +474,7 @@ function run_onlyresult() {
 	gitian_check_net_devices "loud"
 
 
-	# this would allow to run -W and -L in one program call. Not sure if that is 100% supported,
+	# this would allow to run -W, -L and -M in one program call. Not sure if that is 100% supported,
 	if (( option_platform_windows )) ; then
 		any=1
 		var_platform_name='windows'
@@ -470,6 +489,13 @@ function run_onlyresult() {
 		gitian_show_result
 		printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
 	fi
+	if (( option_platform_osx )) ; then
+		any=1
+		var_platform_name='osx'
+		printf "\n\n%s\n" "v---- only showing previous results!!!"
+		gitian_show_result
+		printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
+	fi
 
 }
 
@@ -478,11 +504,13 @@ cat <<EOF
 Usage: call this program like:
 $0 -W image
 $0 -W fast
+$0 -M image
 $0 -L fast
-$0 [-W -L] build_type
+$0 [-W -L -M] build_type
 
 -W is windows build
 -L is linux build
+-M is mac osx build
 
 build_type is:
   install - installs everything, this will do a sudo and as root will setup it all - run it once
@@ -530,13 +558,16 @@ printf "\n\n%s\n\n" "Apt-cacher that should be used is detected as: ${midutils_a
 run_with_root_privilages "service" "$midutils_apt_cacher_version_name_service" "restart" || \
 	fail "Restarting apt-cacher (version: ${midutils_apt_cacher_version_name_service}."
 
-while getopts ":hWL" opt; do
+while getopts ":hWLM" opt; do
 	case $opt in
 		W)
 			option_platform_windows=1
 		;;
 		L)
 			option_platform_linux=1
+		;;
+		M)
+			option_platform_osx=1
 		;;
                 h)
                 usage
@@ -549,6 +580,7 @@ shift $((OPTIND-1)) # eat all the options paresed above
 printf "\n"
 printf "%s\n" "option_platform_windows=$option_platform_windows"
 printf "%s\n" "option_platform_linux=$option_platform_linux"
+printf "%s\n" "option_platform_osx=$option_platform_osx"
 
 ## can not pass options via Gitian to inside Gitian -> yml -> script...
 ## printf "\n%s\n" "options to be passed to the Gitian would be:"
