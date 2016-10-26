@@ -1,19 +1,23 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
+
 function fail() {
 	echo -e "\nERROR (in $0): " "$@"
 	exit 1
 }
 
+OUTDIR="$1"
+export OUTDIR
+
   GALAXY_DIR="/home/ubuntu/build/galaxy42/"
   BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
-  
+
   REFERENCE_DATETIME="2016-08-01 00:00:00"
 
   export FAKETIME="$REFERENCE_DATETIME"
   # variable from above yml config
-  echo "FAKETIME = ${FAKETIME}"
+  echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
   # debug
 
   ### <LICENCE> - start of licence block - this code if possibly on other licence:
@@ -87,6 +91,8 @@ function fail() {
     done
   done
   }
+
+# Create faketime timestamp
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
@@ -200,7 +206,11 @@ EOF
   popd
 
 
-
+echo -e "\n\nBuild will start the linux packer.\n"
+pushd "${GALAXY_DIR}" || fail
+echo "In PWD=$PWD"
+contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
+popd || fail
 
   # when we create .tgz.gz - TODO later
   if false ; then
