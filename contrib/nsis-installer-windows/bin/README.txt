@@ -1,4 +1,34 @@
 
+
+
+=== THE CURRENT METHOD ===
+
+./download.sh provies all the dll's from system install of mingw, that is all.
+
+If you need to support additional dll files, then just add them to download.sh
+helpfull commands:
+
+in Gitian (./menu o-t-r) do
+```
+aptitude install apt-file -y && apt-file update
+```
+
+and then:
+```
+for dll in libwinpthread-1.dll libstdc++-6.dll libgcc_s_sjlj-1.dll libstdc++-6.dll libgcc_s_seh-1.dll ; \
+	do echo "dll=$dll" ; apt-file search "$dll" ; echo ; done
+```
+
+
+but usually all such dlls are there in this 2 packages of mingw, so just find their full name
+and write in script ./download to take them.
+
+
+
+
+=== THE OLD OUTDATED METHOD ===
+
+
 Here the developer should manually add binary .dll files e.g. taken from quite trusted source like the Cygwin/Mingw.
 
 DLL files that are needed to be included in the windows build (especially for crossbuild for windows using mingw, usually

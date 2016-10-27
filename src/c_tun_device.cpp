@@ -7,7 +7,9 @@
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
+
 #ifdef __linux__
+
 #include <cassert>
 #include <fcntl.h>
 #include <linux/if_tun.h>
@@ -17,6 +19,7 @@
 #include "c_tnetdbg.hpp"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
+
 c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(open("/dev/net/tun", O_RDWR))
@@ -59,16 +62,15 @@ size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO thro
 	return static_cast<size_t>(ret);
 }
 
-size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO throw if error
+size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
 	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
-#endif //__linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+//__linux__
+#elif defined(_WIN32) || defined(__CYGWIN__)
 
 #include "c_tnetdbg.hpp"
 #include <boost/bind.hpp>
@@ -159,7 +161,7 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 	return ret;
 }
 
-size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
+size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
 	//std::cout << "****************write to tun" << std::endl;
 	const size_t eth_header_size = 14;
 	const size_t eth_offset = 4;
@@ -384,9 +386,112 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-#endif
+// _win32 || __cygwin__
+#elif defined(__MACH__)
+#include "../depends/cjdns-code/NetPlatform.h"
+#include "cpputils.hpp"
+#include <sys/kern_control.h>
+#include <sys/sys_domain.h>
+c_tun_device_apple::c_tun_device_apple() :
+    m_interface_name(),
+    m_tun_fd(get_tun_fd()),
+    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
+    m_buffer(),
+    m_readed_bytes(0)
+{
+    m_buffer.fill(0);
+    assert(m_stream_handle_ptr->is_open());
+    m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+        [this](const boost::system::error_code &error, size_t length) {
+            handle_read(error, length);
+        }); // lambda
+}
 
+int c_tun_device_apple::get_tun_fd() {
+    int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+    if (tun_fd < 0) throw std::runtime_error("tun_fd open error");
 
+    // get ctl_id
+    ctl_info info;
+    std::memset(&info, 0, sizeof(info));
+    const std::string apple_utun_control = "com.apple.net.utun_control";
+    apple_utun_control.copy(info.ctl_name, apple_utun_control.size());
+    if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) {
+        close(tun_fd);
+        throw std::runtime_error("ioctl error");
+    }
+
+    // connect to tun
+    sockaddr_ctl addr_ctl;
+    addr_ctl.sc_id = info.ctl_id;
+    addr_ctl.sc_len = sizeof(addr_ctl);
+    addr_ctl.sc_family = AF_SYSTEM;
+    addr_ctl.ss_sysaddr = AF_SYS_CONTROL;
+    addr_ctl.sc_unit = 1;
+    // connect to first not used tun
+    while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
+        ++addr_ctl.sc_unit;
+    }
+
+    m_interface_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
+    return tun_fd;
+}
+
+void c_tun_device_apple::handle_read(const boost::system::error_code &error, size_t length) {
+    if (error || (length < 1)) throw std::runtime_error(error.message());
+    m_readed_bytes = length;
+    // continue reading
+    m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+                                         [this](const boost::system::error_code &error, size_t length) {
+        handle_read(error, length);
+    }); // lambda
+}
+
+void c_tun_device_apple::set_ipv6_address
+        (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+    assert(binary_address[0] == 0xFD);
+    assert(binary_address[1] == 0x42);
+    NetPlatform_addAddress(m_interface_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+}
+
+void c_tun_device_apple::set_mtu(uint32_t mtu) {
+    NetPlatform_setMTU(m_interface_name.c_str(), mtu);
+}
+
+bool c_tun_device_apple::incomming_message_form_tun() {
+        m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
+        if (m_readed_bytes > 0) return true;
+        return false;
+}
+
+size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
+    assert(m_readed_bytes > 0);
+    // TUN header
+    m_buffer[0] = 0x00;
+    m_buffer[1] = 0x00;
+    m_buffer[2] = 0x86;
+    m_buffer[3] = 0xDD;
+    std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t *>(buf));
+    size_t ret = m_readed_bytes;
+    m_readed_bytes = 0;
+    return ret;
+}
+
+size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
+    boost::system::error_code ec;
+    uint8_t *buf_ptr = static_cast<uint8_t *>(buf);
+    // TUN HEADER
+    buf_ptr[0] = 0x00;
+    buf_ptr[1] = 0x00;
+    buf_ptr[2] = 0x00;
+    buf_ptr[3] = 0x1E;
+
+    size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
+    if (ec) throw std::runtime_error("boost error " + ec.message());
+    return write_bytes;
+}
+// __MACH__
+#else
 
 c_tun_device_empty::c_tun_device_empty() { }
 
@@ -415,4 +520,5 @@ size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
 	return 0;
 }
 
-
+// else
+#endif

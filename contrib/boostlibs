@@ -1,0 +1,13 @@
+# This tool aims to list all modules needed for given boost modules,
+# how ever it does not work properly yet
+
+libs=(asio file_system system locale)
+
+for nr in 1 2 3 4 5 6
+do
+echo "Searching for libs"
+libs_old=( "${libs[@]}" )
+mapfile -t libs < <(bcp --list "${libs_old[@]}" | cut -d'/' -f 1,2 | sort | uniq  | grep libs/ | sed -e 's|libs/||g')
+echo "${libs[@]}"
+done
+

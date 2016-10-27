@@ -99,7 +99,6 @@ Q:	Fail to get xenial image from ubuntu server:
 A:	On some distributions (e.g kali linux) apt-cacher-ng is disabled at system startup and there is a need to start it manually:
 	``` $ sudo /etc/init.d/apt-cacher-ng start ```
 
-
 Q: Apt issue inside lxc-gitian machine: 403 Access to cache prohibited  (gitian-builder/var/install.log)
 	```./bin/gbuild:21:in `system!': failed to run on-target -u root apt-get update > var/install.log 2>&1 (RuntimeError)```
 
@@ -143,10 +142,14 @@ A: Probably you don't have set br0 bridge. Try to run again install.sh script wi
      # end of gitian lxc 
     ```
  
-A: I can get in to machine using ``` $ build-gitian on-target```  , but  I don't have network connection inside gitian/lxc.  
+Q: I can get in to machine using ``` $ build-gitian on-target```  , but  I don't have network connection inside gitian/lxc.
  
-Q: If you have both br0 and lxcbr0 bridges in ip devices. Sometimes one bridge is blocked by another.
+A: If you have both br0 and lxcbr0 bridges in ip devices. Sometimes one bridge is blocked by another.
 - To solve connection problem, It may by necessary to bring lxcbr0 down:  
      ``` 
      $ ifconfig lxcbr0 down
      ```
+
+Q: Network seems to not work in LXC
+
+A: Make sure you given proper access to Gitian lxc-net to allow it to use your PROPER network card. Maybe run install again and give access to all network cards for lxc-net.

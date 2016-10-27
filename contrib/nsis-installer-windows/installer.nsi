@@ -1,3 +1,6 @@
+SetCompress force
+SetCompressor ZLIB
+
 Unicode true
 !include MUI2.nsh
 !include x64.nsh
@@ -12,6 +15,7 @@ InstallDir $PROGRAMFILES\galaxy42
 
 # Set up page order
 !insertmacro MUI_PAGE_WELCOME
+### MessageBox MB_OK "[EN] This program is not yet ready nor secure, do not use it in this version. [PL] Ten program nie jest jeszcze gotowy i nie jest bezpieczny, nie używaj go w tej wersji." # TODO
 !insertmacro MUI_PAGE_LICENSE ..\..\LICENCE.gpl3.txt
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -87,21 +91,29 @@ Section
 	SetOutPath $INSTDIR
 	WriteUninstaller $INSTDIR\uninstall.exe
 
-    ${If} ${RunningX64}
+	${If} ${RunningX64}
+		File bin/x64/libsodium-18.dll
 		File bin/x64/libboost_filesystem-mt.dll
 		File bin/x64/libboost_program_options-mt.dll
 		File bin/x64/libboost_system-mt.dll
+
 		File bin/x64/libgcc_s_seh-1.dll
-		File bin/x64/libsodium-18.dll
 		File bin/x64/libstdc++-6.dll
+		File bin/x64/libwinpthread-1.dll
+
 		File bin/x64/tunserver.elf.exe
+
 	${Else}
+
+		File bin/x86/libsodium-18.dll
 		File bin/x86/libboost_filesystem-mt.dll
 		File bin/x86/libboost_program_options-mt.dll
 		File bin/x86/libboost_system-mt.dll
+
 		File bin/x86/libgcc_s_sjlj-1.dll
-		File bin/x86/libsodium-18.dll
 		File bin/x86/libstdc++-6.dll
+		File bin/x86/libwinpthread-1.dll
+
 		File bin/x86/tunserver.elf.exe
 	${EndIf}
 

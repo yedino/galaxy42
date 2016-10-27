@@ -1,0 +1,67 @@
+#!/bin/bash
+# read below usage() for LICENCE and help on this tool.
+
+function usage() {
+
+	cat <<EOF
+
+This code (in this file) is on BSD 2-clause license, (c) Copyrighted 2016 TiguSoft.pl
+
+This script configures now some DNS settings.
+
+Run with 1st argument as one of:
+none resolv_d resolv_only resolv_chattr
+
+EOF
+
+}
+
+function fail() {
+	echo "Error: " "$@" ; exit 1
+}
+
+method="$1"
+
+if [[ "$1" == "-h" ]] ; then usage ; exit 0 ; fi
+
+dns='8.8.8.8'
+theline="nameserver $dns"
+
+function bool_already_has_it() {
+	local line="$1"
+	local filename="$2"
+	local count=$(	grep "$line" "$filename" | wc -l )
+	echo "count=$count"
+	if (( count )) ; then return 1 ; fi
+	return 0
+}
+
+function append_line_if_not_already() {
+	local line="$1"
+	local filename="$2"
+	bool_already_has_it "$line" "$filename" || local bool_has=1
+	if (( bool_has )) ; then
+		printf "\n%s\n" "The file [$filename] already contains the line, skipping. (line is: $line)".
+	else
+		echo "$theline" >> "$filename" || fail "Can not append to $filename."
+	fi
+}
+
+printf "\n%s\n\n" "DNS host configuration method: $method"
+
+if [[ "$method" == "none" ]] ; then
+	printf "\n\n(Nothing to do)\n\n"
+elif [[ "$method" == "resolv_d" ]] ; then
+	append_line_if_not_already "$theline"	"/etc/resolvconf/resolv.conf.d/tail"
+	resolvconf -u || fail "failed to run the resolvconf updater"
+elif [[ "$method" == "resolv_only" ]] ; then
+	append_line_if_not_already "$theline"	"/etc/resolv.conf"
+elif [[ "$method" == "resolv_chattr" ]] ; then
+	f="/etc/resolv.conf"
+	append_line_if_not_already "$theline"	"$f"
+	chattr +i "$f" || fail "Can not chattr the file $f"
+else
+	usage
+	exit 1
+fi
+

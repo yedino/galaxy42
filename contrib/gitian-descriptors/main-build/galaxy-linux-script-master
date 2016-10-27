@@ -1,5 +1,13 @@
 #!/bin/bash
 
+
+###########################
+echo "==========================================================================="
+echo "NOT USED NOW ($0)"
+# TODO use this - connect in yml etc
+exit 1
+echo "==========================================================================="
+
 project_name="galaxy42"
 printf "\n\n=========================================================================\n\n"
 printf "PROJECT $project_name - INTERNAL (in-Gitian) LINUX BUILD SCRIPT\n"

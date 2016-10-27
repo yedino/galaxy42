@@ -22,6 +22,11 @@ init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; ex
 target_name="galaxy42" # will be asserted when detecting git repo url. this also becomes name of the directory in ~/
 # target_repo_user , target_url will be auto detected
 
+function fail() {
+	echo "Error occured (in $0) will exit: " "$@"
+	exit 1
+}
+
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit 1
 function script_cleanup() {
@@ -126,11 +131,6 @@ function set_env() {
 	export LXC_GUEST_IP=10.0.3.5
 }
 
-function fail() {
-	echo "Error occured, will exit ($1)"
-	exit 1
-}
-
 function setup_host_for_lxc() {
 	cat <<EOF
 
@@ -185,6 +185,7 @@ Can not create base VM image:
 Possible problems to check:
 - did you configured network for LXC? (installer should do it)
 - is apt-cacher-ng running (or apt-cacher, for some system)
+- if network seems to not work in LXC, then make sure you given proper access to Gitian lxc-net to allow it to use your PROPER network card. Maybe run install.sh again and give access to all network cards for lxc-net.
 - More of common problems and their solutions are described in FAQ (see README.md and doc/build-gitian.md)
 EOF
 		fail "Creating base VM failed (see above)"
@@ -279,6 +280,7 @@ function get_host_info() {
 function gitian_show_result() {
 	my_banner "Results"
 	printf "\n\n\n%s\n" "Will show results now (base_dir=$base_dir)"
+	printf "%s\n" "For var_platform_name=${var_platform_name}"
 	cd "${base_dir}/gitian-builder" || fail "cd dir of gitian-builder" # need it to call on-target
 	info_gitian=$(cd "${base_dir}/gitian-builder/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 8) || fail "Info git gitian-builder"
 	info_target=$(cd "${base_dir}/${target_name}/" ; git log -1 | head -n 1 | cut -d' ' -f2 | head -c 999) || fail "Info target"
@@ -342,6 +344,7 @@ function print_no_platform() {
 function gitian_run_build_all_platforms() {
 	my_banner "Building selected platforms"
 	any=0
+	# this would allow to run -W and -L in one program call. Not sure if that is 100% supported,
 	if (( option_platform_windows )) ; then
 		any=1
 		var_platform_name='windows'
@@ -450,8 +453,24 @@ function run_onlyresult() {
 	check_options_platform
 	set_env
 	gitian_check_net_devices "loud"
-	gitian_show_result
-	printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
+
+
+	# this would allow to run -W and -L in one program call. Not sure if that is 100% supported,
+	if (( option_platform_windows )) ; then
+		any=1
+		var_platform_name='windows'
+		printf "\n\n%s\n" "v---- only showing previous results!!!"
+		gitian_show_result
+		printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
+	fi
+	if (( option_platform_linux )) ; then
+		any=1
+		var_platform_name='linux'
+		printf "\n\n%s\n" "v---- only showing previous results!!!"
+		gitian_show_result
+		printf "\n%s\n" "Above is ONLY the result (we did NOT run here the build process, just showing results of previous builds)"
+	fi
+
 }
 
 function usage() {

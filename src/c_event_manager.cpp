@@ -33,6 +33,45 @@ bool c_event_manager_linux::get_tun_packet() {
 	return FD_ISSET(m_tun_fd, &m_fd_set_data);
 }
 
+// __linux__
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined (__MACH__)
+
+#if defined(__MACH__)
+c_event_manager_asio::c_event_manager_asio(c_tun_device_apple &tun_device, c_udp_wrapper_asio &udp_wrapper)
+#else // _WIN32 || __CYGWIN__
+c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_udp_wrapper_asio &udp_wrapper)
+#endif
+:
+	m_tun_device(tun_device),
+	m_udp_device(udp_wrapper),
+	m_tun_event(false),
+	m_udp_event(false)
+{
+}
+
+void c_event_manager_asio::wait_for_event() {
+	// TODO !!!
+	// poll_one is not blocking function, possible 100% CPU usage
+	// TODO use one io_service ojbect
+	if (m_tun_device.get().m_ioservice.poll_one() > 0) m_tun_event = true;
+	else m_tun_event = false;
+	if (m_udp_device.get().m_io_service.poll_one() > 0) m_udp_event = true;
+	else m_udp_event = false;
+}
+
+bool c_event_manager_asio::receive_udp_paket() {
+	if (m_udp_event) std::cout << "get udp packet" << std::endl;
+	return m_udp_event;
+}
+
+bool c_event_manager_asio::get_tun_packet() {
+	return m_tun_event;
+}
+
+// __win32 || __cygwin__
+#elif defined(__MACH__)
+
+// __mach__
 #else
 
 c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper) {
@@ -44,35 +83,5 @@ void c_event_manager_empty::wait_for_event() { }
 bool c_event_manager_empty::receive_udp_paket() { return false; }
 bool c_event_manager_empty::get_tun_packet() { return false; }
 
-#endif // __linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
-c_event_manager_windows::c_event_manager_windows(c_tun_device_windows &tun_device, c_udp_wrapper_windows &udp_wrapper)
-:
-	m_tun_device(tun_device),
-	m_udp_device(udp_wrapper),
-	m_tun_event(false),
-	m_udp_event(false)
-{
-}
-
-void c_event_manager_windows::wait_for_event() {
-	// TODO !!!
-	// poll_one is not blocking function, possible 100% CPU usage
-	// TODO use one io_service ojbect
-	if (m_tun_device.get().m_ioservice.poll_one() > 0) m_tun_event = true;
-	else m_tun_event = false;
-	if (m_udp_device.get().m_io_service.poll_one() > 0) m_udp_event = true;
-	else m_udp_event = false;
-}
-
-bool c_event_manager_windows::receive_udp_paket() {
-	if (m_udp_event) std::cout << "get udp packet" << std::endl;
-	return m_udp_event;
-}
-
-bool c_event_manager_windows::get_tun_packet() {
-	return m_tun_event;
-}
-
+// else
 #endif
