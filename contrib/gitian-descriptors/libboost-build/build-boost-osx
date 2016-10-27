@@ -1,0 +1,150 @@
+#!/bin/bash -e
+
+function fail() {
+    printf "\nERROR: the script failed (see above messages).\n\n"
+	exit 1
+}
+
+## clone and build boost
+printf "\n\n=========================================================================\n\n"
+printf "boost...\n\n"
+BOOST_DIR="$HOME/build/boost/"
+cd "$HOME/build/" || fail "Can not enter build dir"
+
+option_download_skip=1  # XXXXXXXXXXXXXXXXX
+option_allow_boost=1
+
+if (( option_allow_boost )) ; then
+    printf "\n\nWill build boost now\n\n"
+
+if (( option_download_skip )) ; then
+    printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
+    pushd boost || fail # cd
+    pwd
+
+#printf "\n\nXXX extra download tmp\n\n"
+#git submodule update --init --recursive libs/align
+
+    ls
+else
+
+echo "Downloading boost in PWD=$PWD"
+# download boost starting from cleaning previous build
+rm -rf boost || fail # perhaps left over if we do some caching or testing
+git clone https://github.com/boostorg/boost.git || fail "git clone" # check gitrev hash below!
+pushd boost || fail # cd
+PWD_now2="$PWD/"
+[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 0 ; }
+
+git checkout boost-1.62.0
+expected_gitrev="4f2bdeb93a4be13ba0dc5e9f44920a2bf67191fc" # this is the gitrev hash of this boost version (as we seen it)
+confirm_gitrev=$(git log --format='%H' -1)
+[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
+    fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
+}
+
+declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "libs/config" "tools/inspect" "libs/thread" "libs/system" "libs/utility" "libs/predef" "libs/detail" "libs/assert" \
+	"libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" "libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
+	"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" "libs/numeric/conversion" "libs/array" "libs/program_options" \
+	"libs/container" "libs/move" "libs/math" "libs/tokenizer" "libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" "libs/unordered" \
+	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" )
+
+# speed up boost download by initialize submodules asynchronously
+for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive && wait
+
+#git submodule update --init --recursive --depth 1 --jobs 16 "${boost_submodules[@]}"  # better but works for git version > 2.8
+#git submodule update --init --recursive "libs/algorithm" # fetching all history for 'libs/algorithm' because of: error: no such remote ref e5ea93bab1bfe66917ee52944619ad8cee9a0a85
+
+fi
+
+echo "Will build boost in PWD=$PWD"
+# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
+git clean -xdf || fail
+rm -rf static-build || fail
+mkdir static-build || fail
+
+boost_user_gcc="/home/ubuntu/build/osxcross/target/bin//x86_64-apple-darwin15-clang++"
+#boost_user_gcc=""
+printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
+
+printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
+echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
+echo "using clang : 3.8.0 : $boost_user_gcc" >> user-config.jam || fail
+
+
+  printf "\nTEST TOOLS (in BOOST script):\n"
+  set -x
+  which gcc
+  which ar
+  which ranlib
+  gcc -v || fail "test gcc"
+  g++ -v || fail "test g++"
+  ar --version || fail "test ar"
+  ranlib --version || fail "test ranlib"
+  g++ -print-prog-name=ar
+  set +x
+  printf "\n\n"
+
+
+printf "\n\nBoost bootstrap...\n\n"
+./bootstrap.sh --without-icu || fail
+printf "\n\nBoost bootstrap is done.\n\n"
+ls
+
+printf "\n\nBoost b2 headers...\n\n"
+./b2 -q headers || fail "b2 headers"
+
+printf "\n\nStarting the b2 boost build\n\n"
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" )
+b2_opt_debug=( )
+if (( option_verbose )) ; then
+    b2_opt_debug=( "-d" "4" "--debug-building" )
+fi
+
+set -x
+./b2 \
+    -q \
+    "${b2_opt_debug[@]}" \
+    -a --user-config=user-config.jam toolset=clang variant=release \
+    target-os=darwin \
+    --prefix=/"$BOOST_DIR"/osx-build threading=multi \
+     "${b2_opt_with_lib[@]}" \
+    -j 1 \
+    -sNO_BZIP2=1 --sNO_ZLIB=1 \
+    --layout=tagged install \
+    || {
+	set -x
+	fail "The b2 build of boost failed"
+	}
+set +x
+
+printf "\n\n\n\nDONE the b2 boost build\n\n\n\n"
+
+# copy all boost includes for header only libraries
+find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
+    substr="include"
+    if  test "${D#*$substr}" != "$D" # looking for include dir's
+    then
+        end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
+        #echo "$end_of"
+        if [ $end_of = $substr ]
+        then
+            cp -r "$D" ./static-build || fail "Can not copy $D"
+        fi
+    fi
+done
+
+popd
+
+printf "\n\nFixing up static library names. [TODO] why is this needed?!\n\n\n"
+pushd /home/ubuntu/build/boost/static-build/lib/ || "Enter dir of boost static build, to fix it"
+	for x in system filesystem locale program_options thread ; do ln -s  libboost_$x-mt-s.a  libboost_$x-mt-1_61.a ; done
+popd
+
+
+
+else
+    printf "\n\nSkipping boost (as selected in options)\n\n"
+
+fi
+
