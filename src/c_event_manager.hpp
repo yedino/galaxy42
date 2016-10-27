@@ -69,7 +69,7 @@ private:
 // _win32 || __cygwin__ || __MACH__
 #else
 
-#warning using c_event_manager_empty = It can't work!
+#warning "using c_event_manager_empty = It can not work!"
 class c_tun_device_empty;
 class c_udp_wrapper_empty;
 class c_event_manager_empty final : public c_event_manager {
