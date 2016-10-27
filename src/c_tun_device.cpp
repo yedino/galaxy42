@@ -62,7 +62,7 @@ size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO thro
 	return static_cast<size_t>(ret);
 }
 
-size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO throw if error
+size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
 	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
