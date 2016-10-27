@@ -466,14 +466,26 @@ bool c_tun_device_apple::incomming_message_form_tun() {
 
 size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
     assert(m_readed_bytes > 0);
+    // TUN header
+    m_buffer[0] = 0x00;
+    m_buffer[1] = 0x00;
+    m_buffer[2] = 0x86;
+    m_buffer[3] = 0xDD;
     std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t *>(buf));
     size_t ret = m_readed_bytes;
     m_readed_bytes = 0;
     return ret;
 }
 
-size_t c_tun_device_apple::write_to_tun(const void *buf, size_t count) {
+size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
     boost::system::error_code ec;
+    uint8_t *buf_ptr = static_cast<uint8_t *>(buf);
+    // TUN HEADER
+    buf_ptr[0] = 0x00;
+    buf_ptr[1] = 0x00;
+    buf_ptr[2] = 0x00;
+    buf_ptr[3] = 0x1E;
+
     size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
     if (ec) throw std::runtime_error("boost error " + ec.message());
     return write_bytes;
