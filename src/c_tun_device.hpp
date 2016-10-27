@@ -18,7 +18,7 @@ class c_tun_device {
 		virtual void set_mtu(uint32_t mtu) = 0;
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
-		virtual size_t write_to_tun(const void *buf, size_t count) = 0;
+                virtual size_t write_to_tun(void *buf, size_t count) = 0;
 };
 
 #ifdef __linux__
@@ -32,7 +32,7 @@ class c_tun_device_linux final : public c_tun_device {
 		void set_mtu(uint32_t mtu) override;
 		bool incomming_message_form_tun() override;
 		size_t read_from_tun(void *buf, size_t count) override;
-		size_t write_to_tun(const void *buf, size_t count) override;
+                size_t write_to_tun(void *buf, size_t count) override;
 
 	private:
 		const int m_tun_fd;
@@ -57,7 +57,7 @@ class c_tun_device_linux final : public c_tun_device {
 #include <vector>
 
 class c_tun_device_windows final : public c_tun_device {
-	friend class c_event_manager_windows;
+        friend class c_event_manager_asio;
 	//friend class c_ndp;
 public:
 	c_tun_device_windows();
@@ -66,7 +66,7 @@ public:
 	void set_mtu(uint32_t mtu) {}; // TODO
 	bool incomming_message_form_tun() override; ///< returns true if tun is ready for read
 	size_t read_from_tun(void *buf, size_t count) override; ///< count must be <= size of buffer in buf! otherwise UB
-	size_t write_to_tun(const void *buf, size_t count) override; ///< count must be <= the size of buffer in buf! otherwise UB
+        size_t write_to_tun(void *buf, size_t count) override; ///< count must be <= the size of buffer in buf! otherwise UB
 
 																 //constexpr int m_buffer_size = 9000; ///< the buffer size. This can affect size of MTU that this TUN can offer maybe
 
@@ -93,6 +93,29 @@ private:
 };
 
 // _win32 || __cygwin__
+#elif defined(__MACH__)
+#include <boost/asio.hpp>
+class c_tun_device_apple final : public c_tun_device {
+friend class c_event_manager_asio;
+public:
+    c_tun_device_apple();
+    void set_ipv6_address
+            (const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+    void set_mtu(uint32_t mtu);
+    bool incomming_message_form_tun() override; ///< returns true if tun is readry for read
+    size_t read_from_tun(void *buf, size_t count) override;
+    size_t write_to_tun(void *buf, size_t count) override;
+private:
+    std::string m_interface_name;
+    const int m_tun_fd;
+    boost::asio::io_service m_ioservice;
+    std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
+    std::array<uint8_t, 9000> m_buffer;
+    size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
+
+    int get_tun_fd();
+    void handle_read(const boost::system::error_code &error, size_t length);
+};
 #else
 
 #warning "using c_tun_device_empty = It can not work!"
