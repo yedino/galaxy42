@@ -118,7 +118,7 @@ private:
 };
 #else
 
-#warning using c_tun_device_empty = It can't work!
+#warning "using c_tun_device_empty = It can not work!"
 class c_tun_device_empty final : public c_tun_device {
 	public:
 		c_tun_device_empty();
