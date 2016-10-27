@@ -290,6 +290,7 @@ list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cp
 
 if(APPLE)
 	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
 elseif(WIN32)
 
 else()

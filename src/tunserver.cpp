@@ -985,7 +985,7 @@ void c_tunserver::event_loop() {
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-						auto write_bytes = m_tun_device.write_to_tun(tundata.c_str(), tundata.size());
+                                                auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
 
