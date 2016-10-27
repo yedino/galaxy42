@@ -2,7 +2,7 @@
 echo -e "\nThis script can run the Gitian-Build of this project, to produce deterministic builds\n"
 
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
-dir_base_of_source=`pwd`
+dir_base_of_source=$(pwd) # need absolute path when we change dirs later
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 export TEXTDOMAIN="galaxy42_scripts"
@@ -305,7 +305,7 @@ function gitian_run_build_once() {
 	my_banner "Building ($var_platform_name)"
 	[[ -z "${var_platform_name}" ]] && fail "Internal error: set platform name for gitian_run_build_once"
 
-	
+
 	gitian_yml_file="main-build/galaxy-${var_platform_name}.yml" # must be under contrib/gitian-descriptors/
 	gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
 
@@ -315,10 +315,10 @@ function gitian_run_build_once() {
 	gitian_detect_source_repository
 	gitian_detect_source_version
 	cd "$base_dir/gitian-builder/" || fail
-	
-	# MAC OSX - sdk check 
+
+	# MAC OSX - sdk check
 	if [[ $option_platform_osx ]] ; then
-		if [[ -e "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" ]] ; then
+		if [[ -r "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" ]] ; then
 			mkdir -p inputs
 			cp "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" inputs || fail "Fail to copy MacOSX10.11.sdk.tar.gz to gitian-builder/inputs dir"
 		else
@@ -444,8 +444,16 @@ function gitian_my_cfg_on_target() {
 	run_script_on_target 'root' 'contrib/gitian-tools/on-target-cfg-root.sh'
 }
 
+function prepare_build_sdk() {
+	if [[ $option_platform_osx ]] ; then
+		sdkfile="${dir_base_of_source}/contrib/macdeploy/MacOSX10.11.sdk.tar.gz"
+		[ -r "$sdkfile" ] || fail "You need to provide file $sdkfile (PWD=$PWD). Read instruction in $dir_base_of_source/contrib/macdeploy/README_osx.md"
+	fi
+}
+
 function all_including_new_lxc() {
 	check_options_platform
+	prepare_build_sdk
 	set_env
 	fix_template_script
 	gitian_builder_download
@@ -459,6 +467,7 @@ function all_including_new_lxc() {
 
 function all_excluding_new_lxc() {
 	check_options_platform
+	prepare_build_sdk
 	set_env
 	fix_template_script
 	gitian_check_net_devices "loud"
