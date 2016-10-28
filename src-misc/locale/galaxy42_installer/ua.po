@@ -38,14 +38,14 @@ msgid "Configure computer for $programname"
 msgstr ""
 
 msgid "Ok"
-msgstr ""
+msgstr "Ок"
 
 msgid "Quit"
-msgstr ""
+msgstr "Вихід"
 
 #, sh-format
 msgid "How do you want to use $programname:"
-msgstr ""
+msgstr "Як Ви бажаєте використовувати $programname:?"
 
 msgid "menu_task_warn"
 msgstr "Show warnings"
