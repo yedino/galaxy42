@@ -17,24 +17,21 @@ it has bugs and 'typpos'.
 | '_ \| '__/ _ \_____| '_ \| '__/ _ \_____ / _` | | '_ \| '_ \ / _` |
 | |_) | | |  __/_____| |_) | | |  __/_____| (_| | | |_) | | | | (_| |
 | .__/|_|  \___|     | .__/|_|  \___|      \__,_|_| .__/|_| |_|\__,_|
-|_|                  |_|                          |_|                
-     _                       _                                    _   
-  __| | ___      _ __   ___ | |_     _   _ ___  ___    _   _  ___| |_ 
+|_|                  |_|                          |_|
+     _                       _                                    _
+  __| | ___      _ __   ___ | |_     _   _ ___  ___    _   _  ___| |_
  / _` |/ _ \    | '_ \ / _ \| __|   | | | / __|/ _ \  | | | |/ _ \ __|
-| (_| | (_) |   | | | | (_) | |_    | |_| \__ \  __/  | |_| |  __/ |_ 
+| (_| | (_) |   | | | | (_) | |_    | |_| \__ \  __/  | |_| |  __/ |_
  \__,_|\___/    |_| |_|\___/ \__|    \__,_|___/\___|   \__, |\___|\__|
-                                                       |___/          
- _                   _                     
-| |__   __ _ ___    | |__  _   _  __ _ ___ 
+                                                       |___/
+ _                   _
+| |__   __ _ ___    | |__  _   _  __ _ ___
 | '_ \ / _` / __|   | '_ \| | | |/ _` / __|
 | | | | (_| \__ \   | |_) | |_| | (_| \__ \
 |_| |_|\__,_|___/   |_.__/ \__,_|\__, |___/
-                                 |___/  
+                                 |___/
 
 */
-
-
-
 
 /*
 
@@ -64,7 +61,6 @@ Current TODO / topics:
 
 */
 
-
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
@@ -85,8 +81,6 @@ const char * g_demoname_default = "route_dij";
 #include "trivialserialize.hpp"
 #include "counter.hpp"
 #include "generate_crypto.hpp"
-
-
 
 #ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include "../depends/cjdns-code/NetPlatform.h" // from cjdns
@@ -110,10 +104,8 @@ const char * g_demoname_default = "route_dij";
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
 
-
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
-
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
@@ -128,7 +120,6 @@ const char * g_demoname_default = "route_dij";
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 //const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
 
-
 // ------------------------------------------------------------------
 
 void error(const std::string & msg) {
@@ -137,7 +128,6 @@ void error(const std::string & msg) {
 }
 
 // ------------------------------------------------------------------
-
 
 namespace developer_tests {
 
@@ -156,7 +146,6 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 const char* expected_not_found_missing_pubkey::what() const noexcept {
 		return "expected_not_found_missing_pubkey";
 }
-
 
 // ------------------------------------------------------------------
 
@@ -198,7 +187,6 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 	ostr << "}";
 	return ostr;
 }
-
 
 c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost, const c_haship_pubkey & pubkey)
 	: m_state(e_route_state_found), m_nexthop(nexthop)
@@ -285,7 +273,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
 	}
-	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); } 
+	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); }
 	catch(expected_not_found) { _dbg1("We do not have that dst="<<dst<<" in peers at all"); } // not found in direct peers
 
 	auto found = m_route_nexthop.find( dst ); // <--- search what we know
@@ -359,7 +347,6 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 
 // ------------------------------------------------------------------
 
-
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
@@ -413,7 +400,6 @@ const antinet_crypto::c_multikeys_pub & c_tunserver::read_my_IDP_pub() const {
 string c_tunserver::get_my_ipv6_nice() const {
 	return m_my_IDI_pub.get_ipv6_string_hexdot();
 }
-
 
 int c_tunserver::get_my_stats_peers_known_count() const {
 	return m_peer.size();
@@ -513,7 +499,6 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	}
 }
 
-
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
@@ -530,7 +515,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 	}
 
 }
-
 
 void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
@@ -753,7 +737,7 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 //	return true;
 //}
 
-void c_tunserver::event_loop() {
+void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
 
 	_info("Entering the event loop");
@@ -768,7 +752,6 @@ void c_tunserver::event_loop() {
 	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
 	long int ping_all_count = 0; // how many times did we do that in fact
 
-
 	// low level receive buffer
 	const int buf_size=65536;
 	char buf[buf_size];
@@ -782,7 +765,12 @@ void c_tunserver::event_loop() {
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
-	while (1) {
+        double start = std::clock();
+        auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
+
+	while (time ? timer(time) : true) {
+
+		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
@@ -808,7 +796,6 @@ void c_tunserver::event_loop() {
 		ostringstream oss;
 		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
 		const string node_title_bar = oss.str();
-
 
 		if (anything_happened || 1) {
 			debug_peers();
@@ -838,11 +825,10 @@ void c_tunserver::event_loop() {
 			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
 			if (!addr_is_galaxy(dst_hip)) {
 
-
 				_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
 			}
-				
+
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
 				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
@@ -1192,13 +1178,12 @@ void c_tunserver::event_loop() {
 	}
 }
 
-void c_tunserver::run() {
+void c_tunserver::run(int time) {
 	std::cout << boost::locale::gettext("L_starting_TUN") << std::endl;
 
 	prepare_socket();
-	event_loop();
+	event_loop(time);
 }
-
 
 void c_tunserver::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
@@ -1268,5 +1253,3 @@ void c_tunserver::program_action_gen_key(boost::program_options::variables_map &
 }
 
 // ------------------------------------------------------------------
-
-

@@ -22,6 +22,7 @@
 #include <thread>
 
 #include <mutex>
+#include <boost/asio.hpp>
 
 namespace developer_tests {
 
@@ -164,8 +165,6 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	return true;
 }
 
-
-
 } // namespace developer_tests
 
 /***
@@ -193,7 +192,6 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	return ret;
 }
 
-
 bool test_foo() {
 	_info("TEST FOO");
 	return false;
@@ -203,7 +201,6 @@ bool test_bar() {
 	_info("TEST BAR");
 	return false;
 }
-
 
 void test_lang_optional() {
 	/* this fails on boost from debian 7
@@ -273,7 +270,6 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	//if (demoname=="rpc") { rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
-
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;
 }
@@ -286,7 +282,6 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 int main(int argc, char **argv) {
 //	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
-
 
 	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 	setlocale(LC_ALL,"");
@@ -323,7 +318,6 @@ int main(int argc, char **argv) {
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
-
 
 	g_dbg_level = config_default_basic_dbg_level;
 	bool early_debug=false;
@@ -417,7 +411,6 @@ int main(int argc, char **argv) {
                                 ("key-type", po::value<std::vector<std::string>>()->multitoken(), boost::locale::boost::locale::gettext("L_what_keyType_do").c_str())
 */
 			#endif
-
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -677,8 +670,6 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 
-
-
 			_dbg1("BoostPO before verify");
 			if(argm.count("verify")) {
 
@@ -873,26 +864,23 @@ int main(int argc, char **argv) {
 //		return 2;
 //	}
 
-
-
 	// ------------------------------------------------------------------
 //	_note("Done all preparations, moving to the server main");
         _note(boost::locale::gettext("L_all_preparations_done"));
 
 		_note(boost::locale::gettext("L_starting_httpdbg_server"));
 
-		std::thread httpdbg_thread( [&myserver]() {
-			main_httpdbg(9080, myserver);
+                c_httpdbg_server httpdbg_server(9080, myserver);
+		std::thread httpdbg_thread( [& httpdbg_server]() {
+			httpdbg_server.run();
 		}	);
 
 		_note(boost::locale::gettext("L_starting_main_server"));
 		myserver.run();
 		_note(boost::locale::gettext("L_main_server_ended"));
-
+                httpdbg_server.stop();
 		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
-
 		_note(boost::locale::gettext("L_httpdbg_server_ended"));
-
 
 	} // try running server
 	catch(ui::exception_error_exit) {
@@ -922,5 +910,3 @@ int main(int argc, char **argv) {
         _note(boost::locale::gettext("L_exit_no_error")); return 0;
 
 }
-
-
