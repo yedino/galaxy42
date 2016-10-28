@@ -1,6 +1,7 @@
 #ifndef C_EVENT_MANAGER_HPP
 #define C_EVENT_MANAGER_HPP
 
+//TODO (da2ce7) CIRCULAR HEADER INCLUDE
 #include "c_tun_device.hpp"
 #include "c_udp_wrapper.hpp"
 
