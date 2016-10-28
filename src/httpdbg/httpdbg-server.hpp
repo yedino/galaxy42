@@ -5,8 +5,22 @@
 
 #include <thread>
 #include <mutex>
+#include <boost/asio.hpp>
 
 class c_tunserver;
+class server
+{
+public:
+  server(boost::asio::io_service& io_service, short port,
+		const c_tunserver & tunserver
+  );
+
+private:
+  void do_accept();
+  boost::asio::ip::tcp::acceptor acceptor_;
+  boost::asio::ip::tcp::socket socket_; ///< listen http on this socket
+	const c_tunserver & tunserver_; ///< will debug this object [THREAD] must be locked by it's ->get_my_mutex()
+};
 
 /**
  * Read data from c_tunserver, generate a string (e.g. with HTML) that shows it's debug info.
@@ -17,6 +31,8 @@ class c_httpdbg_raport {
 		std::string generate();
 
 	protected:
+                static const std::string header;
+                static const std::string footer;
 		const c_tunserver & m_target;
 
 		static std::string HTML(const std::string & s);
@@ -32,7 +48,15 @@ std::string c_httpdbg_raport::HTML(const T & obj) {
 	return HTML( out.str() ); // use the normal-string version of our function
 }
 
-int main_httpdbg(int opt_port, const c_tunserver & tunserver);
+class c_httpdbg_server{
+        public:
+                c_httpdbg_server(int opt_port, const c_tunserver & tunserver);
+                int run();
+                void stop();
+        protected:
+                boost::asio::io_service io_service_;
+                const c_tunserver & tunserver_;
+                int opt_port_;
+};
 
 #endif
-

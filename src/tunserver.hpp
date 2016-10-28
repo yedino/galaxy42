@@ -2,7 +2,6 @@
 
 #pragma once
 
-
 // TODO reduce headers:
 
 #include <iostream>
@@ -23,10 +22,8 @@
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
 
-
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
-
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
@@ -41,6 +38,7 @@
 #include "c_event_manager.hpp"
 
 #include "httpdbg/httpdbg-server.hpp"
+#include <ctime>
 
 // ------------------------------------------------------------------
 
@@ -72,9 +70,7 @@ class expected_not_found_missing_pubkey : public stdplus::expected_exception {
 		const char* what() const noexcept override;
 };
 
-
 // ------------------------------------------------------------------
-
 
 /***
 @brief Use this to get information about route. It resp.: returns, stores and searches the information.
@@ -147,8 +143,6 @@ class c_routing_manager { ///< holds knowledge about routes, and searches for ne
 				void execute( c_galaxy_node & galaxy_node );
 		};
 
-
-
 		// searches:
 		typedef std::map< c_haship_addr, unique_ptr<c_route_search> > t_route_search_by_dst; ///< running searches, by the hash-ip of finall destination
 		t_route_search_by_dst m_search; ///< running searches
@@ -162,7 +156,6 @@ class c_routing_manager { ///< holds knowledge about routes, and searches for ne
 	public:
 		const c_route_info & get_route_or_maybe_search(c_galaxy_node & galaxy_node , c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search, int search_ttl);
 };
-
 
 // ------------------------------------------------------------------
 
@@ -178,9 +171,7 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 			const std::string & packetstart, const string& nicename );
 };
 
-
 // ------------------------------------------------------------------
-
 
 class c_tunserver : public c_galaxy_node {
 	public:
@@ -188,7 +179,7 @@ class c_tunserver : public c_galaxy_node {
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
 
 		void configure_mykey(); ///<  load my (this node's) keypair
-		void run(); ///< run the main loop
+		void run(int time = 0); ///< run the main loop
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
@@ -196,7 +187,6 @@ class c_tunserver : public c_galaxy_node {
 		void program_action_gen_key(boost::program_options::variables_map & argm); ///< generate a key according to given options
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}
-
 
 		void set_my_name(const string & name); ///< set a nice name of this peer (shown in debug for example)
 		const antinet_crypto::c_multikeys_pub & read_my_IDP_pub() const; ///< read the pubkey of the (main / permanent) ID of this server
@@ -208,7 +198,6 @@ class c_tunserver : public c_galaxy_node {
 		///! add this user (or append existing user) with his actuall public key data
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
-
 
 		void help_usage() const; ///< show help about usage of the program
 
@@ -223,7 +212,7 @@ class c_tunserver : public c_galaxy_node {
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
-		void event_loop(); ///< the main loop
+		void event_loop(int time = 0); ///< the main loop
 		void wait_for_fd_event(); ///< waits for event of I/O being ready, needs valid m_tun_fd and others, saves the fd_set into m_fd_set_data
 
 		std::pair<c_haship_addr,c_haship_addr> parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset); ///< from buffer of TUN-format, with ipv6 bytes at ipv6_offset, extract ipv6 (hip) destination
@@ -315,5 +304,3 @@ class c_tunserver : public c_galaxy_node {
 };
 
 // ------------------------------------------------------------------
-
-
