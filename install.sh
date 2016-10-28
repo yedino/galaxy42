@@ -130,6 +130,7 @@ function install_for_build() {
 
 
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext
+		install_packages libboost-locale-dev
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
 		# EXTLEVEL fftw-devel
