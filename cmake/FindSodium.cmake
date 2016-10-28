@@ -3,6 +3,9 @@
 #
 # - Find Sodium
 # Find the native libsodium includes and library.
+#
+#  HINT: SODIUM_ROOT_DIR
+#
 # Once done this will define
 #
 #  SODIUM_INCLUDE_DIR    - where to find libsodium header files, etc.
