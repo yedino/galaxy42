@@ -250,6 +250,7 @@ class c_symhash_state final : public c_crypto_system {
 class c_stream final /* because strange ctor init list functions */
 : public c_crypto_system
 {
+    friend class ::c_httpdbg_raport;
 	private:
 		t_symkey m_KCT; ///< the main KCT for this stream
 

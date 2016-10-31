@@ -843,6 +843,7 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
+                m_peer[dst_hip]->get_stats().update_sent_stats(dump.size());
 
 			} else {
 				_info("Using CT tunnel to send our own data");
@@ -1014,6 +1015,7 @@ void c_tunserver::event_loop(int time) {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
+                    m_peer[dst_hip]->get_stats().update_sent_stats(blob.size());
 #endif
 				}
 
@@ -1112,6 +1114,8 @@ void c_tunserver::event_loop(int time) {
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
+                        sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
+                        m_peer[requested_hip]->get_stats().update_sent_stats(data.size());
 						_note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
