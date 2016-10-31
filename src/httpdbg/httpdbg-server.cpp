@@ -138,37 +138,45 @@ std::string c_httpdbg_raport::generate() {
 	std::lock_guard<std::mutex> lg( m_target.get_my_mutex()  );
 
 	out << HTML("Peer: size=") << HTML(m_target.m_peer.size()) << endl;
-        out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Connection time</th><th>Packets send</th></tr>";
+        out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Read data</th><th>Read packets</th>"
+               "<th>Sent data</th><th>Sent packets</th><th>Connection time</th></tr>";
         for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
         {
                 out << "<tr><th>";
                 out << HTML(it->second->get_pip()) << "</th><th>";
                 out << HTML(it->second->get_hip()) << "</th><th>";
                 out << HTML(*(it->second->get_pub())) << "</th><th>";
-                out << HTML(it->second->get_limit_points()) <<  "</th></tr>";
+                out << HTML(it->second->get_limit_points()) <<  "</th><th>";
+                out << HTML(it->second->get_stats().get_size_of_read_data()) << "</th><th>";
+                out << HTML(it->second->get_stats().get_number_of_read_packets()) << "</th><th>";
+                out << HTML(it->second->get_stats().get_size_of_sent_data()) << "</th><th>";
+                out << HTML(it->second->get_stats().get_number_of_sent_packets()) << "</th></tr>";
         }
         out << "</table>";
-	out << "</br>Tunnel: size=" << HTML(m_target.m_tunnel.size()) << endl;
-        out << "<table><tr><th>Hip</th><th>Debug</th><th>Serialize bin pubkey</th><th>Ipv6</th><th>Packet start ab</th><th>Packet start final</th><th>Tunnel state</th></tr>";
+        out << "</br>Tunnel: size=" << HTML(m_target.m_tunnel.size()) << endl;
+        out << "<table><tr><th>Hip</th><th>Debug</th><th>Serialize bin pubkey</th><th>Ipv6</th>"
+               "<th>Stream crypto ab nice name</th><th>Stream crypto final nice name</th><th>Tunnel state</th></tr>";
         for(auto it = m_target.m_tunnel.begin(); it != m_target.m_tunnel.end(); it++)
         {
                 out << "<tr><th>";
                 out << HTML(it->first) << "</th><th>";
                 out << HTML(it->second->debug_this()) << "</th><th>";
-                try
-                {
-                        out << HTML(it->second->get_IDe().get_serialize_bin_pubkey()) << "</th><th>";
-                }catch(...)
-                {
-                        out << "</th><th>";
-                }
-                try
-                {
-                        out << HTML(it->second->get_IDe().get_ipv6_string_hexdot()) << "</th><th>";
-                }catch(...)
-                {
-                        out << "</th><th>";
-                }
+                //try
+                //{
+                        //out << HTML(it->second->get_IDe().get_serialize_bin_pubkey()) << "</th><th>";
+                //}catch(...)
+                //{
+                        out << "n/a</th><th>";
+                //}
+                //try
+                //{
+                        //out << HTML(it->second->get_IDe().get_ipv6_string_hexdot()) << "</th><th>";
+                //}catch(...)
+                //{
+                        out << "n/a</th><th>";
+                //}
+                //out << HTML(it->second->m_stream_crypto_ab->debug_this()) << "</th><th>";
+                //out << HTML(it->second->m_stream_crypto_final->debug_this()) << "</th><th>";
                 out << HTML(it->second->m_state) << "</th></tr>";
         }
 

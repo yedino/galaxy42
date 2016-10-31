@@ -70,6 +70,11 @@ long c_peering::get_limit_points() {
 	return m_limit_points;
 }
 
+c_peering_stats & c_peering::get_stats(){
+    return m_peering_stats;
+}
+
+
 // ------------------------------------------------------------------
 
 #ifdef __linux__

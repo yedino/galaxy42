@@ -858,6 +858,7 @@ void c_tunserver::event_loop(int time) {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
+                m_peer[dst_hip]->get_stats().update_sent_stats(data_encrypted.size());
 			}
 
 			if (!was_anything_sent_from_TUN) {
@@ -870,6 +871,7 @@ void c_tunserver::event_loop(int time) {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
+            //find_peer_by_sender_peering_addr( sender_pip ).get_stats().update_read_stats(size_read);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_mark("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
@@ -885,11 +887,13 @@ void c_tunserver::event_loop(int time) {
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
+
 			c_peering * sender_as_peering_ptr  = nullptr; // TODO(r)-security review usage of this, and is it needed
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 				_info("We recognize the sender, as: " << sender_as_peering);
-				sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
+                sender_as_peering.get_stats().update_read_stats(size_read);
+                sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
 			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);

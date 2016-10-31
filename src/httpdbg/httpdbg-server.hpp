@@ -54,9 +54,9 @@ class c_httpdbg_server{
                 int run();
                 void stop();
         protected:
+                int opt_port_;
                 boost::asio::io_service io_service_;
                 const c_tunserver & tunserver_;
-                int opt_port_;
 };
 
 #endif
