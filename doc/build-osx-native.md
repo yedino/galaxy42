@@ -1,9 +1,8 @@
-
 This is about native Mac OS X build, that is:
-you run the build process on a Mac OS X,
-and you build program that will be used on some Mac OS X.
+you run the build process on: *Mac OS X* (darwin),
+and you build program that will be used on: some *Mac OS X* (darwin).
 
-OS X 10.11
+Tested on: *OS X 10.11*.
 
 1. Install homebrew:
 	/usr/bin/ruby -e
