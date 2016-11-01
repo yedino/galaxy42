@@ -60,17 +60,28 @@ fi
 echo "Will build boost in PWD=$PWD"
 # delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
 git clean -xdf || fail
-rm -rf static-build || fail
-mkdir static-build || fail
+rm -rf build-osx || fail
+# reset and claen boost submodules
+git submodule foreach git reset --hard HEAD
+git submodule foreach git clean -fdx
 
-boost_user_gcc="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-clang++"
-#boost_user_gcc=""
+# patching boost locale - detecting iconv
+patch "$BOOST_DIR/libs/locale/build/Jamfile.v2" < "$HOME/build/galaxy42/contrib/gitian-patch/workaround-boost-12570.patch"
+
+
+boost_user_gcc="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-clang++-libc++"
+AR="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-ar"
+LD="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-ld"
+STRIP="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-strip"
+RANLIB="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-ranlib"
+
 printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
 
 printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
-echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
-echo "using clang-darwin : 3.8.0 : $boost_user_gcc" >> user-config.jam || fail
-
+#echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
+rm "$HOME/user-config.jam"
+echo "using darwin : : $boost_user_gcc : <linker-type>\"darwin\" <cxxflags>\"-arch x86_64  -std=c++14 -fvisibility=hidden -mmacosx-version-min=10.7 -march=core2 --sysroot=/home/ubuntu/build/osxcross/target/bin/../SDK/MacOSX10.11.sdk\" <linkflags>\"\"  <archiver>\"$AR\" <striper>\"$STRIP\" <ranlib>\"$RANLIB\" :  ;" >> "$HOME/user-config.jam" || fail
+# <linker-type>darwin
 
   printf "\nTEST TOOLS (in BOOST script):\n"
   set -x
@@ -91,6 +102,8 @@ printf "\n\nBoost bootstrap...\n\n"
 printf "\n\nBoost bootstrap is done.\n\n"
 ls
 
+./b2 clean
+
 printf "\n\nBoost b2 headers...\n\n"
 ./b2 -q headers || fail "b2 headers"
 
@@ -102,44 +115,53 @@ if (( option_verbose )) ; then
 fi
 
 set -x
+time  strace  -fffff -s 2000  -e trace=process \
 ./b2 \
     -q \
     "${b2_opt_debug[@]}" \
-    -a --user-config=user-config.jam --toolset=darwin-4.2.1 variant=release \
-    target-os=darwin \
-    --prefix=/"$BOOST_DIR"/osx-build threadapi=pthread \
-     "${b2_opt_with_lib[@]}" \
+    -a variant=release \
+    --toolset=darwin --toolset-root="$HOME/build/osxcross/target/bin/"  \
+    --prefix=/"$BOOST_DIR"/build-osx \
+    target-os=darwin  \
+    architecture=x86 address-model=64 \
+    boost.locale.icu=off boost.locale.iconv=on \
+    --build-type=complete \
+    --arch=x86_64 \
+    threadapi=pthread threading=multi \
+    link=shared runtime-link=shared \
+    "${b2_opt_with_lib[@]}" \
     -j 1 \
     -sNO_BZIP2=1 --sNO_ZLIB=1 \
     --layout=tagged install \
-    || {
-	set -x
-	fail "The b2 build of boost failed"
-	}
+     &> "$HOME/build/s3"
+#    || {
+#	set -x
+#	fail "The b2 build of boost failed"
+#	}
 set +x
 
 printf "\n\n\n\nDONE the b2 boost build\n\n\n\n"
 
 # copy all boost includes for header only libraries
-find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
-    substr="include"
-    if  test "${D#*$substr}" != "$D" # looking for include dir's
-    then
-        end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
-        #echo "$end_of"
-        if [ $end_of = $substr ]
-        then
-            cp -r "$D" ./osx-build || fail "Can not copy $D"
-        fi
-    fi
-done
+#find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
+#    substr="include"
+#    if  test "${D#*$substr}" != "$D" # looking for include dir's
+#    then
+#        end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
+#        #echo "$end_of"
+#        if [ $end_of = $substr ]
+#        then
+#            cp -r "$D" ./build-osx || fail "Can not copy $D"
+#        fi
+#    fi
+#done
 
 popd
 
 printf "\n\nFixing up static library names. [TODO] why is this needed?!\n\n\n"
-pushd /home/ubuntu/build/boost/static-build/lib/ || "Enter dir of boost static build, to fix it"
-	for x in system filesystem locale program_options thread ; do ln -s  libboost_$x-mt-s.a  libboost_$x-mt-1_61.a ; done
-popd
+#pushd /home/ubuntu/build/boost/build-osx/lib/ || "Enter dir of boost build-osx, to fix it"
+#	for x in system filesystem locale program_options thread ; do ln -s  libboost_$x-mt-s.a  libboost_$x-mt-1_61.a ; done
+#popd
 
 
 
