@@ -31,8 +31,9 @@ class c_httpdbg_raport {
 		std::string generate();
 
 	protected:
-                static const std::string header;
-                static const std::string footer;
+        static const std::string header;
+        static const std::string header2;
+        static const std::string footer;
 		const c_tunserver & m_target;
 
 		static std::string HTML(const std::string & s);

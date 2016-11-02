@@ -117,12 +117,32 @@ const std::string c_httpdbg_raport::header = "HTTP/1.x 200 OK\n"
 "           border: 1px solid black;"
 "}"
 "</style>"
-"</head>"
+"<script type=\"text/javascript\" src=\"https://www.gstatic.com/charts/loader.js\"></script>"
+        "<script type=\"text/javascript\">"
+                "google.charts.load('current', {'packages':['corechart']});"
+                "google.charts.setOnLoadCallback(drawChart);"
+                "function drawChart() {"
+                 " var data = google.visualization.arrayToDataTable(["
+        "  ['Second', 'Read data', 'Sent data'],"
+        ;
+const std::string c_httpdbg_raport::header2 = "]);"
+                  "var options = {"
+                   " title: 'Data',"
+                    "hAxis: {title: 'Second',  titleTextStyle: {color: '#333'}},"
+                    "vAxis: {minValue: 0}"
+                  "};"
+                  "var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));"
+                  "chart.draw(data, options);"
+                "}"
+              "</script>"
+        "</head>"
 "<body>"
 "<h1>Http debug server</h1>"
 ;
 
-const std::string c_httpdbg_raport::footer = "</body></html>";
+const std::string c_httpdbg_raport::footer = "<div id=\"chart_div\" style=\"width: 100%; height: 500px;\"></div>"
+
+        "</body></html>";
 
 c_httpdbg_raport::c_httpdbg_raport(const c_tunserver & target)
 	: m_target(target)
@@ -141,8 +161,9 @@ std::string c_httpdbg_raport::generate() {
     out << "<tr><th>" << m_target.m_my_name << "</th><th>" << m_target.m_my_hip/* << "</th><th>" << m_target.m_my_IDI_pub << "</th><th>" << m_target.m_my_IDC */<< "</th></tr></table>";
 
     out << "</br>" << HTML("Peer: size=") << HTML(m_target.m_peer.size()) << endl;
-        out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Read data</th><th>Read packets</th>"
-               "<th>Sent data</th><th>Sent packets</th><th>Connection time</th></tr>";
+        out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Data read</th><th>Packets read</th>"
+               "<th>Data sent</th><th>Packets sent</th><th>Connection time</th></tr>";
+        std::string data;
         for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
         {
                 out << "<tr><th>";
@@ -155,6 +176,7 @@ std::string c_httpdbg_raport::generate() {
                 out << HTML(it->second->get_stats().get_size_of_sent_data()) << "</th><th>";
                 out << HTML(it->second->get_stats().get_number_of_sent_packets()) << "</th><th>";
                 out << HTML(it->second->get_stats().get_connection_time()) << "</th></tr>";
+                data = it->second->get_stats().m_data_buffer.get_data_buffer_as_string();
         }
         out << "</table>";
         out << "</br>Tunnel: size=" << HTML(m_target.m_tunnel.size()) << endl;
@@ -196,9 +218,9 @@ std::string c_httpdbg_raport::generate() {
                 }
                 else
                     out << "n/a</th><th>n/a</th><th>n/a</th><th>";
-                out << HTML(it->second->m_state) << "</th></tr>";
+                out << HTML(it->second->m_state) << "</th></tr></table>";
         }
-	return header + out.str() + footer;
+    return header + data + header2 + out.str() + footer;
 }
 
 std::string c_httpdbg_raport::HTML(const std::string & s) {
