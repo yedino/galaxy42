@@ -13,7 +13,8 @@ public:
     c_data_tramsmission_buffer(int buffer_size, int interval_in_milisec);
     void update_sent_buffer(std::size_t data_size);
     void update_read_buffer(std::size_t data_size);
-    std::string get_data_buffer_as_string() const;
+    std::string get_data_buffer_as_js_str(std::string var);
+    std::string get_data_chart_as_js_str(std::string var);
 
 private:
     boost::circular_buffer<int> m_data_sent_buffer;
@@ -38,7 +39,7 @@ public:
     long get_number_of_read_packets() const;
     std::string get_connection_time() const;
     void reset_connection_time();
-    c_data_tramsmission_buffer m_data_buffer;
+    c_data_tramsmission_buffer & get_data_buffer();
 
 private:
     std::size_t m_size_of_sent_data;
@@ -46,7 +47,7 @@ private:
     long m_number_of_sent_packets;
     long m_number_of_read_packets;
     std::chrono::time_point<std::chrono::system_clock> m_connection_time;
-
+    c_data_tramsmission_buffer m_data_buffer;
 };
 
 #endif
