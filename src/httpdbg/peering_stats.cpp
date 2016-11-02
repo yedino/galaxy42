@@ -26,8 +26,11 @@ void c_data_tramsmission_buffer::update_sent_buffer(size_t data_size){
         m_data_sent_buffer.push_back(0);
         m_packets_sent_buffer.push_back(0);
     }
-    m_data_sent_buffer.back() += data_size;
-    m_packets_sent_buffer.back()++;
+    if(data_size)
+    {
+        m_data_sent_buffer.back() += data_size;
+        m_packets_sent_buffer.back()++;
+    }
 }
 
 void c_data_tramsmission_buffer::update_read_buffer(size_t data_size){
@@ -40,19 +43,32 @@ void c_data_tramsmission_buffer::update_read_buffer(size_t data_size){
         m_data_read_buffer.push_back(0);
         m_packets_read_buffer.push_back(0);
     }
-    m_data_read_buffer.back() += data_size;
-    m_packets_read_buffer.back()++;
+    if(data_size)
+    {
+        m_data_read_buffer.back() += data_size;
+        m_packets_read_buffer.back()++;
+    }
 }
 
-string c_data_tramsmission_buffer::get_data_buffer_as_string() const{
+string c_data_tramsmission_buffer::get_data_buffer_as_js_str(string var){
     ostringstream out;
-    for(int i=0; i<m_data_read_buffer.size(); i++)
+    update_read_buffer(0);
+    update_sent_buffer(0);
+    out << " var d" << var << " = google.visualization.arrayToDataTable([['Seconds', 'Read data', 'Sent data'],";
+    for(unsigned i=0; i<m_data_read_buffer.size(); i++)
     {
         out << "['" << i << "', " << m_data_read_buffer[i] << ", " << m_data_sent_buffer[i] << "],";
     }
     string str = out.str();
-    str.pop_back();
-    return str;
+    str[str.size()-1] = ' ';
+    return str + "]);";
+}
+
+string c_data_tramsmission_buffer::get_data_chart_as_js_str(string var){
+    ostringstream out;
+    out << "var cd" << var << " = new google.visualization.AreaChart(document.getElementById('cd_div" << var <<"'));";
+    out << "cd" << var << ".draw(d" << var << ", data_options);";
+    return out.str();
 }
 
 c_peering_stats::c_peering_stats():
@@ -106,4 +122,8 @@ string c_peering_stats::get_connection_time() const{
 
 void c_peering_stats::reset_connection_time(){
     m_connection_time = chrono::system_clock::now();
+}
+
+c_data_tramsmission_buffer & c_peering_stats::get_data_buffer(){
+    return m_data_buffer;
 }

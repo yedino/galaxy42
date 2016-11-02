@@ -28,11 +28,12 @@ private:
 class c_httpdbg_raport {
 	public:
 		c_httpdbg_raport(const c_tunserver & target);
-		std::string generate();
+        std::string generate(std::string url);
 
 	protected:
         static const std::string header;
         static const std::string header2;
+        static const std::string header3;
         static const std::string footer;
 		const c_tunserver & m_target;
 
