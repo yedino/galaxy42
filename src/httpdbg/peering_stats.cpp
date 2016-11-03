@@ -78,12 +78,12 @@ string c_data_tramsmission_buffer::get_charts_as_js_str(string var){
     ostringstream out;
     out << "var cd" << var << " = new google.visualization.AreaChart(document.getElementById('cd_div" << var <<"'));";
     out << "cd" << var << ".draw(d" << var << ", data_options);";
-    out << "var bcd" << var << " = new google.visualization.AreaChart(document.getElementById('bcd_div" << var <<"'));";
-    out << "bcd" << var << ".draw(d" << var << ", data_options);";
     out << "var cp" << var << " = new google.visualization.AreaChart(document.getElementById('cp_div" << var <<"'));";
     out << "cp" << var << ".draw(p" << var << ", packets_options);";
+    out << "var bcd" << var << " = new google.visualization.AreaChart(document.getElementById('bcd_div" << var <<"'));";
+    out << "bcd" << var << ".draw(d" << var << ", data_options_big);";
     out << "var bcp" << var << " = new google.visualization.AreaChart(document.getElementById('bcp_div" << var <<"'));";
-    out << "bcp" << var << ".draw(p" << var << ", packets_options);";
+    out << "bcp" << var << ".draw(p" << var << ", packets_options_big);";
     return out.str();
 }
 

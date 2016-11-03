@@ -120,7 +120,7 @@ const string c_httpdbg_raport::header = "HTTP/1.x 200 OK\n"
 "<meta http-equiv=\"refresh\" content=\"5\" />"
 "<style>"
 "table, th, td {"
-"           border: 1px solid black;"
+"           border: 1px solid black; font-size:	16px; text-align: center;"
 "}"
 "</style>"
 "<script type=\"text/javascript\" src=\"https://www.gstatic.com/charts/loader.js\"></script>"
@@ -129,18 +129,28 @@ const string c_httpdbg_raport::header = "HTTP/1.x 200 OK\n"
                 "google.charts.setOnLoadCallback(drawChart);"
                 "function drawChart() {";
 
-const string c_httpdbg_raport::header2 = "var data_options = {"
+const string c_httpdbg_raport::header2 = "var data_options_big = {"
                    " title: 'Data',"
                     "hAxis: {title: 'Seconds', titleTextStyle: {color: '#333'}},"
-                    "vAxis: {minValue: 0}"
+                    "vAxis: {minValue: 0, viewWindow:{min:0}}"
                   "};"
-                                         "var packets_options = {"
+                                         "var packets_options_big = {"
                                                             " title: 'Packets',"
                                                              "hAxis: {title: 'Seconds', titleTextStyle: {color: '#333'}},"
-                                                             "vAxis: {minValue: 0}"
-                                                           "};";
+                                                             "vAxis: {minValue: 0, viewWindow:{min:0}}"
+                                                           "};"
+"var data_options = {series: [{visibleInLegend: false},{visibleInLegend: false}],"
+                    "vAxis: {minValue: 0, viewWindow:{min:0}, textPosition: 'none'},"
+        "hAxis: {minValue: 0, textPosition: 'none'},"
+        "chartArea:{left:0,top:0,width:'100%',height:'100%'}"
+                  "};"
+"var packets_options = {series: [{visibleInLegend: false},{visibleInLegend: false}],"
+                                         "vAxis: {minValue: 0, viewWindow:{min:0}, textPosition: 'none'},"
+                             "hAxis: {minValue: 0, textPosition: 'none'},"
+                             "chartArea:{left:0,top:0,width:'100%',height:'100%'}"
+                                       "};";
 const string c_httpdbg_raport::header3 = "}"
-              "</script>"
+                                                "</script>"
         "</head>"
 "<body>"
 "<h1>Http debug server</h1>"
@@ -163,14 +173,14 @@ string c_httpdbg_raport::generate(string url) {
 
     if(url.size()!=32)
     {
-        out << "<table><tr><th>Server name</th><th>Server hip</th><tr>";
-        out << "<tr><th>" << m_target.m_my_name << "</th><th>" << m_target.m_my_hip/* << "</th><th>" << m_target.m_my_IDI_pub << "</th><th>" << m_target.m_my_IDC */<< "</th></tr></table>";
-        out << "</br>" << HTML("Peer: size=") << HTML(m_target.m_peer.size()) << "</br>" << endl;
+        out << "<table><tr font-weight='bold'><th>Server name</th><th>Server hip</th><tr>";
+        out << "<tr><td>" << m_target.m_my_name << "</td><td>" << m_target.m_my_hip << "</th></tr></table>";
+        out << "</br><b>" << HTML("Number of peers: ") << HTML(m_target.m_peer.size()) << "</b></br>" << endl;
     }
     else
         out << "</br>" << "<a href=\"/\">Back</a></th><th>";
-
-        out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Data read</th><th>Packets read</th>"
+        if(m_target.m_peer.size())
+            out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Data read</th><th>Packets read</th>"
                "<th>Data sent</th><th>Packets sent</th><th>Connection time</th><th>Data</th><th>Packets</th></tr>";
         string data = "";
         string chart = "";
@@ -182,28 +192,29 @@ string c_httpdbg_raport::generate(string url) {
             hip.erase(0, 4);
             if (url.size() == 32 && hip.compare(url) != 0)
                 continue;
-            out << "<tr><th>";
-            out << HTML(it->second->get_pip()) << "</th><th>";
+            out << "<tr><td>";
+            out << HTML(it->second->get_pip()) << "</td><td>";
             out << HTML(it->second->get_hip());
             if(url.size()!=32)
-                out<< "<a href=\"" << hip << "\"> Details</a>";
-            out << "</th><th>";
-            out << HTML(*(it->second->get_pub())) << "</th><th>";
-            out << HTML(it->second->get_limit_points()) <<  "</th><th>";
-            out << HTML(it->second->get_stats().get_size_of_read_data()) << "</th><th>";
-            out << HTML(it->second->get_stats().get_number_of_read_packets()) << "</th><th>";
-            out << HTML(it->second->get_stats().get_size_of_sent_data()) << "</th><th>";
-            out << HTML(it->second->get_stats().get_number_of_sent_packets()) << "</th><th>";
-            out << HTML(it->second->get_stats().get_connection_time()) << "</th><th>";
-            out << "<div id=\"cd_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></th><th>";
-            out << "<div id=\"cp_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></th></tr>";
+                out<< "</br><a href=\"" << hip << "\"> Details</a>";
+            out << "</td><td>";
+            out << HTML(*(it->second->get_pub())) << "</td><td>";
+            out << HTML(it->second->get_limit_points()) <<  "</td><td>";
+            out << HTML(it->second->get_stats().get_size_of_read_data()) << "</td><td>";
+            out << HTML(it->second->get_stats().get_number_of_read_packets()) << "</td><td>";
+            out << HTML(it->second->get_stats().get_size_of_sent_data()) << "</td><td>";
+            out << HTML(it->second->get_stats().get_number_of_sent_packets()) << "</td><td>";
+            out << HTML(it->second->get_stats().get_connection_time()) << "</td><td>";
+            out << "<div id=\"cd_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></td><td>";
+            out << "<div id=\"cp_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></td></tr>";
             data += it->second->get_stats().get_data_buffer().get_data_buffer_as_js_str(hip);
             data += it->second->get_stats().get_data_buffer().get_packets_buffer_as_js_str(hip);
             chart += it->second->get_stats().get_data_buffer().get_charts_as_js_str(hip);
         }
         out << "</table>";
-        out << "</br>Tunnel: size=" << HTML(m_target.m_tunnel.size()) << endl;
-        out << "<table><tr><th>Hip</th><th>Debug</th><th>Serialize bin pubkey</th><th>Ipv6</th>"
+        out << "</br><b>Number of tunnels: " << HTML(m_target.m_tunnel.size()) << "</b>" << endl;
+        if(m_target.m_tunnel.size())
+            out << "<table><tr><th>Hip</th><th>Debug</th><th>Serialize bin pubkey</th><th>Ipv6</th>"
                "<th>Stream crypto ab nice name</th><th>Stream crypto ab boxer nounce</th><th>Stream crypto ab unboxer nounce</th>"
                "<th>Stream crypto final nice name</th><th>Stream crypto final boxer nounce</th><th>Stream crypto final unboxer nounce</th><th>Tunnel state</th></tr>";
         for(auto it = m_target.m_tunnel.begin(); it != m_target.m_tunnel.end(); it++)
@@ -215,41 +226,42 @@ string c_httpdbg_raport::generate(string url) {
             if (url.size() == 32 && hip.compare(url) != 0)
                 continue;
 
-                out << "<tr><th>";
-                out << HTML(it->first) << "</th><th>";
-                out << HTML(it->second->debug_this()) << "</th><th>";
+                out << "<tr><td>";
+                out << HTML(it->first) << "</td><td>";
+                out << HTML(it->second->debug_this()) << "</td><td>";
                 try
                 {
-                        out << HTML(it->second->get_IDe().get_serialize_bin_pubkey()) << "</th><th>";
+                        out << HTML(it->second->get_IDe().get_serialize_bin_pubkey()) << "</td><td>";
                 }catch(...)
                 {
-                        out << "n/a</th><th>";
+                        out << "n/a</td><td>";
                 }
                 try
                 {
-                        out << HTML(it->second->get_IDe().get_ipv6_string_hexdot()) << "</th><th>";
+                        out << HTML(it->second->get_IDe().get_ipv6_string_hexdot()) << "</td><td>";
                 }catch(...)
                 {
-                        out << "n/a</th><th>";
+                        out << "n/a</td><td>";
                 }
                 if(it->second->m_stream_crypto_ab != NULL)
                 {
-                    out << HTML(it->second->m_stream_crypto_ab->debug_this()) << "</th><th>";
-                    out << HTML(it->second->m_stream_crypto_ab->m_boxer->get_nonce()) << "</th><th>";
-                    out << HTML(it->second->m_stream_crypto_ab->m_unboxer->get_nonce()) << "</th><th>";
+                    out << HTML(it->second->m_stream_crypto_ab->debug_this()) << "</td><td>";
+                    out << HTML(it->second->m_stream_crypto_ab->m_boxer->get_nonce()) << "</td><td>";
+                    out << HTML(it->second->m_stream_crypto_ab->m_unboxer->get_nonce()) << "</td><td>";
                 }
                 else
-                    out << "n/a</th><th>n/a</th><th>n/a</th><th>";
+                    out << "n/a</td><td>n/a</td><td>n/a</td><td>";
                 if(it->second->m_stream_crypto_final != NULL)
                 {
-                    out << HTML(it->second->m_stream_crypto_final->debug_this()) << "</th><th>";
-                    out << HTML(it->second->m_stream_crypto_final->m_boxer->get_nonce()) << "</th><th>";
-                    out << HTML(it->second->m_stream_crypto_final->m_unboxer->get_nonce()) << "</th><th>";
+                    out << HTML(it->second->m_stream_crypto_final->debug_this()) << "</td><td>";
+                    out << HTML(it->second->m_stream_crypto_final->m_boxer->get_nonce()) << "</td><td>";
+                    out << HTML(it->second->m_stream_crypto_final->m_unboxer->get_nonce()) << "</td><td>";
                 }
                 else
-                    out << "n/a</th><th>n/a</th><th>n/a</th><th>";
-                out << HTML(it->second->m_state) << "</th></tr></table>";
+                    out << "n/a</td><td>n/a</td><td>n/a</td><td>";
+                out << HTML(it->second->m_state) << "</td></tr>";
         }
+        out << "</table>";
         if(url.size()==32)
         {
             out << "<div id=\"bcd_div" << url << "\" style=\"width: 50%; height: 500px; float: left;\"></div>";
