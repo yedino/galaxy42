@@ -209,7 +209,7 @@ string c_httpdbg_raport::generate(string url) {
             out << "<div id=\"cp_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></td></tr>";
             data += it->second->get_stats().get_data_buffer().get_data_buffer_as_js_str(hip);
             data += it->second->get_stats().get_data_buffer().get_packets_buffer_as_js_str(hip);
-            chart += it->second->get_stats().get_data_buffer().get_charts_as_js_str(hip);
+            chart += it->second->get_stats().get_data_buffer().get_charts_as_js_str(hip, url.size()==32);
         }
         out << "</table>";
         out << "</br><b>Number of tunnels: " << HTML(m_target.m_tunnel.size()) << "</b>" << endl;
