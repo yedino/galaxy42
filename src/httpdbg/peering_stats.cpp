@@ -56,18 +56,34 @@ string c_data_tramsmission_buffer::get_data_buffer_as_js_str(string var){
     update_sent_buffer(0);
     out << " var d" << var << " = google.visualization.arrayToDataTable([['Seconds', 'Read data', 'Sent data'],";
     for(unsigned i=0; i<m_data_read_buffer.size(); i++)
-    {
         out << "['" << i << "', " << m_data_read_buffer[i] << ", " << m_data_sent_buffer[i] << "],";
-    }
     string str = out.str();
     str[str.size()-1] = ' ';
     return str + "]);";
 }
 
-string c_data_tramsmission_buffer::get_data_chart_as_js_str(string var){
+string c_data_tramsmission_buffer::get_packets_buffer_as_js_str(string var){
+    ostringstream out;
+    update_read_buffer(0);
+    update_sent_buffer(0);
+    out << " var p" << var << " = google.visualization.arrayToDataTable([['Seconds', 'Read packets', 'Sent packets'],";
+    for(unsigned i=0; i<m_data_read_buffer.size(); i++)
+        out << "['" << i << "', " << m_packets_read_buffer[i] << ", " << m_packets_sent_buffer[i] << "],";
+    string str = out.str();
+    str[str.size()-1] = ' ';
+    return str + "]);";
+}
+
+string c_data_tramsmission_buffer::get_charts_as_js_str(string var){
     ostringstream out;
     out << "var cd" << var << " = new google.visualization.AreaChart(document.getElementById('cd_div" << var <<"'));";
     out << "cd" << var << ".draw(d" << var << ", data_options);";
+    out << "var bcd" << var << " = new google.visualization.AreaChart(document.getElementById('bcd_div" << var <<"'));";
+    out << "bcd" << var << ".draw(d" << var << ", data_options);";
+    out << "var cp" << var << " = new google.visualization.AreaChart(document.getElementById('cp_div" << var <<"'));";
+    out << "cp" << var << ".draw(p" << var << ", packets_options);";
+    out << "var bcp" << var << " = new google.visualization.AreaChart(document.getElementById('bcp_div" << var <<"'));";
+    out << "bcp" << var << ".draw(p" << var << ", packets_options);";
     return out.str();
 }
 
