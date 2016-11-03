@@ -14,7 +14,8 @@ public:
     void update_sent_buffer(std::size_t data_size);
     void update_read_buffer(std::size_t data_size);
     std::string get_data_buffer_as_js_str(std::string var);
-    std::string get_data_chart_as_js_str(std::string var);
+    std::string get_packets_buffer_as_js_str(std::string var);
+    std::string get_charts_as_js_str(std::string var);
 
 private:
     boost::circular_buffer<int> m_data_sent_buffer;

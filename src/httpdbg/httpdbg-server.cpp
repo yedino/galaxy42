@@ -116,6 +116,8 @@ const string c_httpdbg_raport::header = "HTTP/1.x 200 OK\n"
 "<!DOCTYPE html>"
 "<html>"
 "<head>"
+"<title>Http debug server</title>"
+"<meta http-equiv=\"refresh\" content=\"5\" />"
 "<style>"
 "table, th, td {"
 "           border: 1px solid black;"
@@ -194,9 +196,10 @@ string c_httpdbg_raport::generate(string url) {
             out << HTML(it->second->get_stats().get_number_of_sent_packets()) << "</th><th>";
             out << HTML(it->second->get_stats().get_connection_time()) << "</th><th>";
             out << "<div id=\"cd_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></th><th>";
-            out << "<script type=\"text/javascript\">var chart2 = new google.visualization.AreaChart(document.getElementById('chart2_div')); chart2.draw(data2, options);</script></th></tr>";
+            out << "<div id=\"cp_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></th></tr>";
             data += it->second->get_stats().get_data_buffer().get_data_buffer_as_js_str(hip);
-            chart += it->second->get_stats().get_data_buffer().get_data_chart_as_js_str(hip);
+            data += it->second->get_stats().get_data_buffer().get_packets_buffer_as_js_str(hip);
+            chart += it->second->get_stats().get_data_buffer().get_charts_as_js_str(hip);
         }
         out << "</table>";
         out << "</br>Tunnel: size=" << HTML(m_target.m_tunnel.size()) << endl;
@@ -248,7 +251,10 @@ string c_httpdbg_raport::generate(string url) {
                 out << HTML(it->second->m_state) << "</th></tr></table>";
         }
         if(url.size()==32)
-            out << "<div id=\"cd_div" << url << "\" style=\"width: 50%; height: 500px;\"></div>";
+        {
+            out << "<div id=\"bcd_div" << url << "\" style=\"width: 50%; height: 500px; float: left;\"></div>";
+            out << "<div id=\"bcp_div" << url << "\" style=\"width: 50%; height: 500px; float: left;\"></div>";
+        }
     return header + data + header2 + chart + header3 + out.str() + footer;
 }
 
