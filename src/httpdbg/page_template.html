@@ -1,0 +1,54 @@
+HTTP/1.x 200 OK
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Http debug server</title>
+        <meta http-equiv="refresh" content="5" />
+        <style>
+            table, th, td {
+                border: 1px solid black; font-size:	16px; text-align: center;
+            }
+        </style>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript">
+            google.charts.load('current', {'packages':['corechart']});
+            google.charts.setOnLoadCallback(drawChart);
+            function drawChart() {
+                %s
+
+                var data_options_big = {
+                    title: 'Data',
+                    hAxis: {title: 'Seconds', titleTextStyle: {color: '#333'}},
+                    vAxis: {minValue: 0, viewWindow:{min:0}}
+                };
+
+                var packets_options_big = {
+                    title: 'Packets',
+                    hAxis: {title: 'Seconds', titleTextStyle: {color: '#333'}},
+                    vAxis: {minValue: 0, viewWindow:{min:0}}
+                };
+
+                var data_options = {series: [{visibleInLegend: false},{visibleInLegend: false}],
+                    vAxis: {minValue: 0, viewWindow:{min:0}, textPosition: 'none'},
+                    hAxis: {minValue: 0, textPosition: 'none'},
+                    chartArea:{left:0,top:0,width:'100%%',height:'100%%'}
+                };
+
+                var packets_options = {series: [{visibleInLegend: false},{visibleInLegend: false}],
+                    vAxis: {minValue: 0, viewWindow:{min:0}, textPosition: 'none'},
+                    hAxis: {minValue: 0, textPosition: 'none'},
+                    chartArea:{left:0,top:0,width:'100%%',height:'100%%'}
+                };
+
+                %s
+
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Http debug server</h1>
+        %s
+    </body>
+</html>
