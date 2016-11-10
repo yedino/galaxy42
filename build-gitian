@@ -445,7 +445,7 @@ function gitian_my_cfg_on_target() {
 }
 
 function prepare_build_sdk() {
-	if [[ $option_platform_osx ]] ; then
+	if (( option_platform_osx )) ; then
 		sdkfile="${dir_base_of_source}/contrib/macdeploy/MacOSX10.11.sdk.tar.gz"
 		[ -r "$sdkfile" ] || fail "You need to provide file $sdkfile (PWD=$PWD). Read instruction in $dir_base_of_source/contrib/macdeploy/README_osx.md"
 	fi
