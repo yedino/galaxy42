@@ -317,7 +317,7 @@ function gitian_run_build_once() {
 	cd "$base_dir/gitian-builder/" || fail
 
 	# MAC OSX - sdk check
-	if [[ $option_platform_osx ]] ; then
+	if (( option_platform_osx )) ; then
 		if [[ -r "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" ]] ; then
 			mkdir -p inputs
 			cp "$dir_base_of_source/contrib/macdeploy/MacOSX10.11.sdk.tar.gz" inputs || fail "Fail to copy MacOSX10.11.sdk.tar.gz to gitian-builder/inputs dir"
