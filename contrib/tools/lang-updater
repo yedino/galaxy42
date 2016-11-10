@@ -47,7 +47,7 @@ sourcefile=""
 mainfile_messages_pot=""
 opt_notcare=0
 
-list_of_languages="pl en ua" # <--- add here more languages
+list_of_languages="pl en ua ru" # <--- add here more languages
 
 
 MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp dir"
