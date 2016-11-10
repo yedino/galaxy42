@@ -1,0 +1,418 @@
+# Galaxy42 installer
+# Copyright (C) 2016
+# This file is distributed at once at licences: under the same license as the Galaxy42 package,
+# and as BSD 2-clause licence.
+# Yedino <info@yedino.com>, 2016
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: galaxy 42\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-10-11 17:23+0000\n"
+"PO-Revision-Date: 2016-08-19 17:23+0000\n"
+"Last-Translator:  <info@yedino.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+ 
+#, sh-format
+msgid ""
+"This tool will configure your computer for the SELECTED by you functions of "
+"$programname."
+#msgstr ""
+#"This tool will configure your computer for the SELECTED by you functions of "
+#"$programname."
+msgstr ""
+"Этот инструмент настроит Ваш компьютер для ВЫБРАННЫХ вами функций "
+"$programname."
+ 
+msgid ""
+"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+"select option, ENTER to finish."
+#msgstr ""
+#"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+#"select option, ENTER to finish."
+msgstr ""
+"Это похоже на текстовый режим графического интерфейса, вы можете использовать кнопки Вверх/Вниз, Пробел для "
+"выбора опции, ENTER для завершения."
+ 
+msgid "We recognize your system/platform as:"
+#msgstr "We recognize your system/platform as:"
+msgstr "Мы распознали вашу систему/платформу как:"
+ 
+#, sh-format
+msgid "Configure computer for $programname"
+#msgstr "Configure computer for $programname"
+msgstr "Настройка компьютер для $programname"
+ 
+msgid "Ok"
+#msgstr "Ok"
+msgstr "Ок"
+ 
+msgid "Quit"
+#msgstr "Quit"
+msgstr "Выход"
+ 
+#, sh-format
+msgid "How do you want to use $programname:"
+#msgstr "How do you want to use $programname:"
+msgstr "Как Вы хотите использовать $programname:"
+ 
+msgid "menu_task_warn"
+#msgstr "Show warnings"
+msgstr "Показывать предупреждения"
+ 
+#, sh-format
+msgid "menu_task_build"
+#msgstr "Build this program from source code"
+msgstr "Собрать эту программу из исходного кода"
+ 
+#, sh-format
+msgid "menu_task_touse"
+#msgstr "Use this program on this computer"
+msgstr "Использовать эту программу на этом компьютере"
+ 
+#, sh-format
+msgid "menu_task_devel"
+#msgstr "Develop this program"
+msgstr "Разрабатывать эту программу"
+ 
+#, sh-format
+msgid "menu_task_bgitian"
+#msgstr "Compile and sign/publish (e.g. Gitian)"
+msgstr "Компилировать и подписать/опубликовать (например, Gitian)"
+ 
+msgid "Done"
+#msgstr "Done"
+msgstr "Сделано"
+ 
+#, sh-format
+msgid "Finished installation of $programname."
+#msgstr "Finished installation of $programname."
+msgstr "Закончена установка $programname."
+ 
+#, sh-format
+msgid "warn2_net"
+#msgstr ""
+#"WARNING: SPECIAL settings of networks - maybe names or functions of network "
+#"cards (e.g. eth0/br0/lxcbr0) will be changed."
+msgstr ""
+"ВНИМАНИЕ: СПЕЦИАЛЬНЫЕ настроки сетей - возможно имена или функции сетевых "
+"адаптеров (например, eth0/br0/lxcbr0) будут изменены."
+ 
+msgid "warn2_net_title"
+#msgstr "WARNING (SPECIAL: networks)"
+msgstr "ВНИМАНИЕ (СПЕЦИАЛЬНЫЕ: сети)"
+ 
+msgid "warning_build"
+#msgstr "* Installing tools to build a source code"
+msgstr "* Установка инструментов для сборки исходного кода"
+ 
+msgid "warning_devel"
+#msgstr ""
+#"* We're going to install some developer tools e.g. to simulate lot of "
+#"networks on this computer (network namespace)."
+msgstr ""
+"* Мы собираемся установить специальные инструменты разработчика, например чтобы симулировать большое количество "
+"сетей на этом компьютере (network namespace)."
+ 
+msgid "warning_bgitian"
+#msgstr ""
+#"* We're going to configure your computer to using Gitian (in virtualization "
+#"LXC). Warning, it can make some others network cards and change settings "
+#"actually using cards. For example other IP address from current main "
+#"Internet link (e.g. eth0) can be showed/moved like attached to other card "
+#"(that's how a 'bridge' works)"
+msgstr ""
+"* Мы собираемся настроить Ваш компьютер для использования Gitian (для виртуализации "
+"LXC). Внимание, это может создать несколько других сетевых адаптеров и изменить настройки "
+"существующих сетевых адаптеров. Для примера, IP-адрес с текущего основного "
+"Интернет адаптера (например, eth0) может быть показана/перемещена как присоединённая к другому адаптеру "
+"(вот как работает 'мост')"
+ 
+#, sh-format
+msgid "warning_SUMMARY"
+#msgstr "Please confirm undermentioned changes (they impact security)."
+msgstr "Пожалуйста, подтвердите нижеперечисленные изменения (они влияют на безопасность)."
+ 
+msgid "warning_SUMMARY_TITLE"
+#msgstr "Caution safety and summary"
+msgstr "Caution safety and summary"
+ 
+msgid "warn_root"
+#msgstr "# We will need root (admin) rights during this installation."
+msgstr "# Нам будут необходимы root-права (admin) в процессе установки."
+ 
+msgid "warn_fw"
+#msgstr "# Please remember to install NOW a firewall!"
+msgstr "# Пожалуйста, не забудьте СЕЙЧАС установить брандмауэр!"
+ 
+msgid "menu_task_verbose"
+#msgstr "(Show more details during installation)"
+msgstr "(Показывать дополнительную информацию в процессе установки)"
+ 
+msgid "install_progress_title"
+#msgstr "Progress of installation"
+msgstr "Прогресс установки"
+ 
+#, sh-format
+msgid "warning_touse $programname"
+#msgstr "* Configure computer for running here the program $programname"
+msgstr "* Настроить компьютер для работы программы $programname"
+ 
+msgid "status_done_step_BEFORE"
+#msgstr "Now we're doing:"
+msgstr "Сейчас мы делаем:"
+ 
+msgid "status_done_step_PRESSKEY"
+#msgstr "Please press ENTER to continue..."
+msgstr "Пожалуйста, нажмите ENTER для продолжения..."
+ 
+msgid "error_init_platforminfo"
+#msgstr "No information about this platform/system"
+msgstr "Нет информации об этой платформе/системе"
+ 
+#, sh-format
+msgid "status_done_step $item"
+#msgstr "The step is done: '$item'."
+msgstr "Шаг готов: '$item'."
+ 
+#, sh-format
+msgid "menu_main_title $programname:"
+#msgstr "Installer $programname"
+msgstr "Установщик $programname"
+ 
+msgid "menu_taskpack_normal_builduse"
+#msgstr "Simple: build this program to use it only here"
+msgstr "Простой: собрать эту программу, чтобы использовать её только тут"
+ 
+msgid "menu_taskpack_custom"
+#msgstr "Chose the options..."
+msgstr "Выберите вариант..."
+ 
+msgid "menu_taskpack_quick_builduse"
+#msgstr "No confirmations (dangerous!) - build & use"
+msgstr "Без подтверждений (опасно!) - собрать и использовать"
+ 
+msgid "menu_taskpack_quick_devel"
+#msgstr "No confirmations (dangerous!) - for developer"
+msgstr "Без подтверждений (опасно!) - для разработчиков"
+ 
+msgid "tasks_we_will_do"
+#msgstr "We're going to do:"
+msgstr "Мы собираемся сделать:"
+ 
+#, sh-format
+msgid "this_script_uses_sudo_flag $sudo_flag"
+#msgstr ""
+#"Script isn't running like a root, but you put flag $sudo_flag and we think "
+#"so sudo is ready and we're continuing"
+msgstr ""
+"Скрипт не запущен с root правами, но вы установили флаг $sudo_flag, поэтому мы думаем "
+"что sudo готово и продолжаем работу"
+ 
+#, sh-format
+msgid "this_script_must_be_run_as_root_or $sudo_flag"
+#msgstr ""
+#"This script must be run as root, or else run it with flag $sudo_flag to use "
+#"sudo"
+msgstr ""
+"Этот скрипт должен быть запущен с root правами или запущен с флагом $sudo_flag для использования "
+"sudo"
+ 
+msgid "error_init_platforminfo_unknown"
+#msgstr "This platform/OS is unknown"
+msgstr "Эта платформа/ОС неизвестна"
+ 
+msgid "install_packages_title"
+#msgstr "Packages to install"
+msgstr "Пакеты для установки"
+ 
+msgid "Install"
+#msgstr "Install"
+msgstr "Установка"
+ 
+#, sh-format
+msgid "L_install_failed"
+#msgstr "Installation failed"
+msgstr "Установка не удалась"
+ 
+#, sh-format
+msgid "L_install_nothing_to_do"
+#msgstr "Nothing to install now"
+msgstr "Ничего нет для установки"
+ 
+msgid "L_now_installing_gitian_lxc"
+#msgstr "Now we are installing LXC for Gitian"
+msgstr "Сейчас мы устанавливаем LXC для Gitian"
+ 
+#, sh-format
+msgid "L_needrestart_summary_text"
+#msgstr "System restart might be needed for following reasons:"
+msgstr "Может потребоваться перезагрузка системы из-за следующих причин:"
+ 
+msgid "L_needrestart_summary_title"
+#msgstr "Restart needed"
+msgstr "Необходима перезагрузка системы"
+ 
+msgid "L_needrestart_LXC_maybe"
+#msgstr ""
+#"# Perhaps (but hopefully not) - LXC network (needed to use Gitian) should "
+#"work now, but in case of problems you might want to restart the system to be "
+#"sure."
+msgstr ""
+"# Возможно (но надеемся, что нет) - сеть LXC (необходима для использования Gitian) должна "
+"работать сейчас, но из-за возможных проблем Вам будет лучше перезагрузить систему, чтобы всё было "
+"хорошо."
+ 
+msgid "L_program_is_pre_pre_alpha"
+#msgstr ""
+#"This program is not yet ready nor secure, do not use it in this version. "
+#"(Please use it only on a test virtual machine)."
+msgstr ""
+"Эта программа ещё не готова и не безопасна. Пожалуйста, не используйте эту версию. "
+"(Пожалуйста, используйте её только на тестовой виртуальной машине)."
+ 
+#, sh-format
+msgid ""
+"Can not find script library $lib (dir_base_of_source=$dir_base_of_source)."
+#msgstr "Can not find script library $lib (in directory $dir_base_of_source)."
+msgstr "Не можем найти скрипт библиотеки $lib (в директории $dir_base_of_source)."
+ 
+#, sh-format
+msgid "We will install packages: $packages_str now (as root)"
+#msgstr "We will install packages: $packages_str now (as root)"
+msgstr "Мы установим пакеты: $packages_str сейчас (как root)"
+ 
+#, sh-format
+msgid "L_install_packages_text $packages_str"
+#msgstr "We will install packages: $packages_str"
+msgstr "Мы установик пакеты: $packages_str"
+ 
+msgid "menu_taskpack_devel_builduse"
+#msgstr "Advanced: build program in Gitian / develop it"
+msgstr "Продвинутое: собрать программу в Gitian / разрабатывать её"
+ 
+msgid "install_progress_fix"
+#msgstr "Automated fix of a problem"
+msgstr "Автоматически решить проблему"
+ 
+msgid "L_fix_cgroupfs_mount"
+#msgstr ""
+#"This system seems to not properly support cgroupfs. We will try to fix this. "
+#"(This is needed to use Gitian)."
+msgstr ""
+"Похоже, что эта система не поддерживает должным образом cgroupfs. Мы попытаемся исправить это. "
+"(Это необходимо чтобы использовать Gitian)."
+ 
+msgid "L_fix_ubuntu_old_build"
+#msgstr ""
+#"This system (older version of Ubuntu) needs special settings for "
+#"compilation. We will try to fix this. (This is needed to compile native "
+#"programs on this machine)."
+msgstr ""
+"Эта система (старая версия Ubuntu) требует специальные настройки для "
+"компиляции. Мы попробуем исправить это. (Это необходимо для нативной компиляции "
+"программы на этом компьютере)."
+ 
+#, sh-format
+msgid "L_what_now"
+#msgstr ""
+#"To normally compile the program nativly (and use it later) we recommend "
+#"command:\n"
+#"  ./do \n"
+#"And for Gitian build (for this or other system) we recommend:\n"
+#"  ./build-gitian\n"
+#"You can change install options by running ./install.sh. List of other "
+#"options you will see by running ./menu or by reading documentation."
+msgstr ""
+"Для обычной компиляции программы нативно (и последующего использования) мы рекоммендуем "
+"команду:\n"
+"  ./do \n"
+"И для сборки с помощью Gitian (для этой или других систем) мы рекоммендуем:\n"
+"  ./build-gitian\n"
+"Вы можете поменять параметры инсталятора запустив ./install.sh. Список других "
+"опций вы можете увидеть запустив ./menu или прочитав документацию."
+ 
+#, sh-format
+msgid "L_fix_uninstall_apt_cacher bad=$apt_cacher_bad good=$apt_cacher_good."
+#msgstr ""
+#"We must now uninstall you other apt cacher program: [$apt_cacher_bad], so "
+#"that we can instead install another one that we need: [$apt_cacher_good]."
+msgstr ""
+"Мы должны удалить вашу apt cacher программу: [$apt_cacher_bad], так "
+"чтобы взамен мы установили другую нужную нам: [$apt_cacher_good]."
+ 
+msgid "install_info_title"
+#msgstr "Info"
+msgstr "Информация"
+ 
+msgid "L_install_option_lxcnet_bridged_TITLE"
+#msgstr "Gitian: LXC Network - give access"
+msgstr "Gitian: LXC сеть - предоставить доступ"
+ 
+msgid "L_install_option_lxcnet_bridged_ITEM_all"
+#msgstr "Allow LXC/Gitian to access ALL NETWORK"
+msgstr "Разрешить LXC/Gitian доступ к ВСЕМ СЕТЯМ"
+ 
+msgid "L_install_option_lxcnet_bridged_ITEM_some"
+#msgstr "Limit LXC/Gitian access to only some network"
+msgstr "Разрешить LXC/Gitian доступ только к некоторым сетям"
+ 
+msgid "L_install_option_lxcnet_bridged_INPUTBOX_cards"
+#msgstr "Space-separated list of network interfaces that LXC/Gitian can use"
+msgstr "Список сетевых интерфейсов, разделённых пробелом, которые могут использовать LXC/Gitian"
+ 
+msgid "menu_task_autoselect"
+#msgstr "Skip some of install questions (maybe not safe!)"
+msgstr "Пропустить некоторые вопросы в процессе установки (может быть небезопасно!)"
+ 
+msgid "L_install_option_lxcnet_bridged_INFO"
+#msgstr ""
+#"In the next step you will choose whether to allow LXC to use all network "
+#"cards of this computer, or to limit that to manually selected ones.\n"
+#"\n"
+#"HINT: Allowing all cards (all) is easier and more compatible choice if you "
+#"do not care.\n"
+#"\n"
+#"Details:\n"
+#"Gitian uses LXC to download source code, therefore LXC must have access to "
+#"network. \n"
+#"LXC needs only access to the network card that you are using to connect to "
+#"Internet(or to a server that has all files needed to build). \n"
+#"It is possible that you have now or in future many network cards in computer "
+#"(e.g. WiFi, VPN, Cjdns). \n"
+#"It is also possible that some of them are very important (e.g. work VPN) and "
+#"absolutelly you don't want to give any chance LXC to access such card.\n"
+#"\n"
+#"Therefore you have to decide (in next step)\n"
+#"Either allow LXC to use all and any network card, this is easy and "
+#"comfortable.\n"
+#"Or else allow LXC to access only some of card - you will manually enter list "
+#"of cards [eth0 eth1 wlan0...] that LXC has the right to ever user."
+msgstr ""
+"На следующем шаге вы будете выбирать следует ли разрешить LXC использовать все сетевые "
+"адаптеры на этом компьютере или ограничить его только выбранными вручную.\n"
+"\n"
+"ПОДСКАЗКА: Разрешить доступ ко всем сетевым адаптерам (all) более простой и удобный способ если вам "
+"пофиг.\n"
+"\n"
+"Детали:\n"
+"Gitian использует LXC для загрузки исходного кода, поэтому LXC должно получить доступ к "
+"сети. \n"
+"LXC необходим доступ только к сетевым адаптерам, которые Вы используете для доступа к "
+"Интернету(или к серверу, который имеет все необходимые файлы для сборки). \n"
+"Возможно, что у вас сейчас или в будущем будет много сетевых адаптеров в компьютере "
+"(например, WiFi, VPN, Cjdns). \n"
+"Так же возможно, что некоторые из них очень важные (например, рабочий VPN) и "
+"Вы совсем-совсем не хотите дать ниодного шанса LXC получить доступ к такому сетевому адаптеру.\n"
+"\n"
+"Поэтому Вам необходимо выбрать (на следующем шаге)\n"
+"Либо разрешить LXC использовать все и всякие сетевые адаптеры, что проще и "
+"удобнее.\n"
+"Либо разрешить LXC использовать только некоторые сетевые адаптеры - Вам будет необходимо вручную сделать список "
+"этих адаптеров [eth0 eth1 wlan0...], которые LXC будет иметь право использовать."
