@@ -1,0 +1,16 @@
+diff --git a/build/Jamfile.v2 b/build/Jamfile.v2
+index 578e722..0e6fb45 100644
+--- a/build/Jamfile.v2
++++ b/build/Jamfile.v2
+@@ -226,6 +226,11 @@ rule configure-full ( properties * : flags-only )
+                 result += <library>iconv ;
+             }
+         }
++
++	# work around for boost bug(?) - https://svn.boost.org/trac/boost/ticket/12570
++	found-iconv = true ;
++	result += <library>iconv ;
++
+     }        
+     if $(found-iconv) 
+     {
