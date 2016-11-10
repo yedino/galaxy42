@@ -1,0 +1,39 @@
+---
+name: "galaxy42-osx"
+sudo: true
+enable_cache: true
+suites:
+- "xenial"
+architectures:
+- "amd64"
+packages:
+- "ca-certificates"
+- "gcc-5"
+- "g++-5"
+- "cmake"
+- "autoconf"
+- "libtool"
+- "build-essential"
+- "libfftw3-dev"
+- "libsodium-dev"
+- "faketime" # used to force date
+- "gettext-base" # some scripts/tools used in build could be using gettext translations
+- "bsdmainutils"
+- "python-dev"
+- "imagemagick"
+- "libboost-thread-dev"
+- "libboost-system-dev"
+- "libboost-filesystem-dev"
+- "libboost-locale-dev"
+- "libboost-program-options-dev"
+reference_datetime: "2016-08-01 00:00:00"
+remotes:
+- "dir": "galaxy42"
+  "url": "https://github.com/yedino/galaxy42.git"
+files:
+- "MacOSX10.11.sdk.tar.gz"
+script: |
+  datenow="$(date)" ; echo "Gitian moves to the Script section, in PWD=$PWD, at date=$datenow, with OUTDIR=$OUTDIR" ; datenow=""
+  echo "ls:" ; ls
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-osx-script "$OUTDIR"
+  datenow="$(date)" ; echo "Gitian finished it's Script section, in PWD=$PWD, at date=$datenow, with OUTDIR=$OUTDIR" ; datenow=""
