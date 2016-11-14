@@ -249,15 +249,15 @@ string c_httpdbg_raport::HTML(const string & s) {
 }
 
 c_httpdbg_server::c_httpdbg_server(int opt_port, const c_tunserver & tunserver):
-        opt_port_(opt_port)
-        ,tunserver_(tunserver)
+        m_opt_port(opt_port)
+        ,m_tunserver(tunserver)
 {}
 
 int c_httpdbg_server::run(){
     try
     {
-        server s(io_service_, opt_port_, tunserver_);
-        io_service_.run();
+        server s(m_io_service, m_opt_port, m_tunserver);
+        m_io_service.run();
     }
     catch (exception& e)
     {
@@ -269,10 +269,14 @@ int c_httpdbg_server::run(){
 void c_httpdbg_server::stop(){
     try
     {
-        io_service_.stop();
+        m_io_service.stop();
     }
     catch (exception& e)
     {
         cerr << "Exception: " << e.what() << "\n";
     }
+}
+
+void c_httpdbg_server::set_port(int port){
+    m_opt_port = port;
 }
