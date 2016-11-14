@@ -170,7 +170,7 @@ string c_httpdbg_raport::generate(string url) {
         if(url.size()!=32)
             out<< "</br><a href=\"" << hip << "\"> Details</a>";
         out << "</td><td>";
-        out << HTML(*(it->second->get_pub())) << "</td><td>";
+        out << HTML(it->second->get_pub()) << "</td><td>";
         out << HTML(it->second->get_limit_points()) <<  "</td><td>";
         out << HTML(it->second->get_stats().get_size_of_read_data()) << "</td><td>";
         out << HTML(it->second->get_stats().get_number_of_read_packets()) << "</td><td>";
