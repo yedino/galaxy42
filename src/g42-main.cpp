@@ -16,14 +16,13 @@
 #include "c_json_genconf.hpp"
 #include "c_json_load.hpp"
 
-#include "httpdbg/httpdbg-server.hpp"
-
 #include <boost/locale.hpp>
 
 #ifdef HTTP_DBG
 #include <thread>
 #include <mutex>
 #include <boost/asio.hpp>
+#include "httpdbg/httpdbg-server.hpp"
 #endif
 
 namespace developer_tests {
@@ -322,7 +321,11 @@ int main(int argc, char **argv) {
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 
 	g_dbg_level = config_default_basic_dbg_level;
-	bool early_debug=false;
+    bool early_debug=false;
+
+    #ifdef HTTP_DBG
+    int http_dbg_port = 9080;
+    #endif
 	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
 //	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
         if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, boost::locale::gettext("L_early_debug_comand_line"));
@@ -392,6 +395,10 @@ int main(int argc, char **argv) {
 
 //			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
                         ("gen-key-simple", boost::locale::gettext("L_what_genKeySimple_do").c_str())
+            #ifdef HTTP_DBG
+//			("http-dbg-port", "COMMAND: Set http debugger port")
+                        ("http-dbg-port", po::value<int>()->default_value(9080), boost::locale::gettext("L_what_httpDbgPort_do").c_str())
+            #endif
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -624,7 +631,11 @@ int main(int argc, char **argv) {
 				myserver.program_action_gen_key_simple();
 				return 0;
 			} // gen-key
-
+            #ifdef HTTP_DBG
+            if (argm.count("http-dbg-port")) {
+                http_dbg_port = argm["http-dbg-port"].as<int>();
+            } //http-dbg-port
+            #endif
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("sign")) {
 
@@ -872,7 +883,7 @@ int main(int argc, char **argv) {
 
 #ifdef HTTP_DBG
 		_note(boost::locale::gettext("L_starting_httpdbg_server"));
-        c_httpdbg_server httpdbg_server(9080, myserver);
+        c_httpdbg_server httpdbg_server(http_dbg_port, myserver);
 		std::thread httpdbg_thread( [& httpdbg_server]() {
 			httpdbg_server.run();
 		}	);

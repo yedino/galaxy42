@@ -383,9 +383,11 @@ c_tunserver::c_tunserver()
 //		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
 }
 
+#ifdef HTTP_DBG
 std::mutex & c_tunserver::get_my_mutex() const {
 	return this->m_my_mutex; // TODO or const-cast here? from mutable?
 }
+#endif
 
 void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
 	m_desc = desc;
@@ -975,7 +977,7 @@ void c_tunserver::event_loop(int time) {
 							c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 							requested_ttl, // we assume sender is that far away from us, since the data reached us
 							antinet_crypto::t_crypto_nonce() // any nonce - just dummy
-						);
+                        );
 
 					} else {
 						_note("Using CT tunnel to decrypt data for us");

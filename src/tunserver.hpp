@@ -36,9 +36,10 @@
 #include "c_tun_device.hpp"
 #include "c_udp_wrapper.hpp"
 #include "c_event_manager.hpp"
-
-#include "httpdbg/httpdbg-server.hpp"
 #include <ctime>
+#ifdef HTTP_DBG
+#include "httpdbg/httpdbg-server.hpp"
+#endif
 
 // ------------------------------------------------------------------
 
@@ -234,14 +235,14 @@ class c_tunserver : public c_galaxy_node {
 
 		void peering_ping_all_peers();
 		void debug_peers();
-
+        #ifdef HTTP_DBG
 		std::mutex & get_my_mutex() const; ///< [thread] get lock guard on this
-
 		friend class c_httpdbg_raport; ///< this is authorized to read my data for debug. but [thread] lock access first!!!
-
+        #endif
 	private:
+        #ifdef HTTP_DBG
 		mutable std::mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
-
+        #endif
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
 		#ifdef __linux__
