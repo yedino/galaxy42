@@ -19,10 +19,12 @@
 #include "httpdbg/httpdbg-server.hpp"
 
 #include <boost/locale.hpp>
-#include <thread>
 
+#ifdef HTTP_DBG
+#include <thread>
 #include <mutex>
 #include <boost/asio.hpp>
+#endif
 
 namespace developer_tests {
 
@@ -868,19 +870,21 @@ int main(int argc, char **argv) {
 //	_note("Done all preparations, moving to the server main");
         _note(boost::locale::gettext("L_all_preparations_done"));
 
+#ifdef HTTP_DBG
 		_note(boost::locale::gettext("L_starting_httpdbg_server"));
-
-                c_httpdbg_server httpdbg_server(9080, myserver);
+        c_httpdbg_server httpdbg_server(9080, myserver);
 		std::thread httpdbg_thread( [& httpdbg_server]() {
 			httpdbg_server.run();
 		}	);
-
+#endif
 		_note(boost::locale::gettext("L_starting_main_server"));
 		myserver.run();
 		_note(boost::locale::gettext("L_main_server_ended"));
-                httpdbg_server.stop();
+#ifdef HTTP_DBG
+        httpdbg_server.stop();
 		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
 		_note(boost::locale::gettext("L_httpdbg_server_ended"));
+#endif
 
 	} // try running server
 	catch(ui::exception_error_exit) {
