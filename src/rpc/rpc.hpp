@@ -8,6 +8,10 @@
 //#include <thread>
 #include <vector>
 
+/**
+ * @brief The c_rpc_sever class
+ * !!! NEVER CHANGE ADDRESS OF THIS CLASS OBJECT !!!
+ */
 class c_rpc_sever final {
 	public:
 		c_rpc_sever(const short port);
@@ -31,6 +35,7 @@ class c_rpc_sever final {
 				std::string m_received_data;
 
 				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
+				void delete_me();
 		};
 };
 
