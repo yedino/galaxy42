@@ -1,6 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "rpc.hpp"
+#include "../trivialserialize.hpp"
 
 c_rpc_sever::c_rpc_sever(const short port)
 :
@@ -46,7 +47,13 @@ c_rpc_sever::c_session::c_session(size_t index_in_session_vector, c_rpc_sever *r
 
 void c_rpc_sever::c_session::read_handler(const boost::system::error_code &error, std::size_t bytes_transferred) {
 	if (error) {
-		m_rpc_server_ptr->remove_session_from_vector(m_index_in_session_vector);
+		delete_me();
+		return;
+	}
+	// parsing message
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), m_received_data);
+	if (parser.pop_integer_u<1, uint8_t>() != 0xFF) {
+		delete_me();
 		return;
 	}
 	// continue reading
@@ -54,4 +61,8 @@ void c_rpc_sever::c_session::read_handler(const boost::system::error_code &error
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler(error, bytes_transferred);
 	});
+}
+
+void c_rpc_sever::c_session::delete_me() {
+	m_rpc_server_ptr->remove_session_from_vector(m_index_in_session_vector);
 }
