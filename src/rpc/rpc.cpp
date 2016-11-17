@@ -15,6 +15,10 @@ c_rpc_sever::c_rpc_sever(const short port)
 	});
 }
 
+void c_rpc_sever::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::vector<std::string>)> &&function) {
+	m_rpc_functions_map.emplace(rpc_function_name, std::move(function)); // TODO forward arguments
+}
+
 void c_rpc_sever::accept_handler(const boost::system::error_code &error) {
 	if (!error) {
 		m_session_vector.emplace_back(m_session_vector.size(), this, std::move(m_socket));
@@ -56,6 +60,13 @@ void c_rpc_sever::c_session::read_handler(const boost::system::error_code &error
 		delete_me();
 		return;
 	}
+	uint64_t message_size = parser.pop_integer_uvarint();
+	std::string message = parser.pop_varstring();
+	if (message.size() != message_size) { // TODO message can be chunked
+		delete_me();
+		return;
+	}
+	// TODO run RPC function from rpc server function map
 	// continue reading
 	m_socket.async_read_some(boost::asio::buffer(&m_received_data[0], m_received_data.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
