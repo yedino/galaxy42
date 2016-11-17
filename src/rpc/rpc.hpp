@@ -17,18 +17,22 @@
 class c_rpc_sever final {
 	public:
 		c_rpc_sever(const short port);
+		c_rpc_sever(const c_rpc_sever &) = delete;
+		c_rpc_sever & operator = (const c_rpc_sever &) = delete;
+		c_rpc_sever(c_rpc_sever &&) = delete;
+		c_rpc_sever & operator = (c_rpc_sever &&) = delete;
 		/**
 		 * @brief add_rpc_function
 		 * @param function must be thread safe(will be called from another thread)
 		 */
-		void add_rpc_function(const std::string &rpc_function_name, std::function<std::string(const std::vector<std::string>)> &&function);
+		void add_rpc_function(const std::string &rpc_function_name, std::function<std::string(const std::string &)> &&function);
 	private:
 		class c_session;
 		boost::asio::io_service m_io_service;
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket;
 		std::vector<c_session> m_session_vector;
-		std::map<std::string, std::function<std::string(const std::vector<std::string>)>> m_rpc_functions_map;
+		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
 
 		void accept_handler(const boost::system::error_code &error);
 		void remove_session_from_vector(const size_t index);
@@ -36,14 +40,23 @@ class c_rpc_sever final {
 		class c_session {
 			public:
 				c_session(size_t index_in_session_vector, c_rpc_sever *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
+				c_session(c_session &&) = default;
+				c_session & operator = (c_session && other) noexcept;
 			private:
 				size_t m_index_in_session_vector; // my index in m_session_vector
 				c_rpc_sever *m_rpc_server_ptr;
 				boost::asio::ip::tcp::socket m_socket;
 				std::string m_received_data;
+				std::string m_write_data;
 
 				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
+				void write_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
 				void delete_me();
+				/**
+				 * @brief execute_rpc_command Parse and execute function from m_rpc_functions_map
+				 * @param input_message
+				 */
+				void execute_rpc_command(const std::string &input_message);
 		};
 };
 
