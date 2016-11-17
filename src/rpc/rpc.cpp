@@ -96,8 +96,8 @@ void c_rpc_server::c_session::delete_me() {
 
 void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
 	try {
-		Json::Value m_root(input_message);
-		const std::string cmd_name = m_root.get("cmd", "UTF-8").asString();
+		Json::Value json_root(input_message);
+		const std::string cmd_name = json_root.get("cmd", "UTF-8").asString();
 		// calling rpc function
 		const std::string response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
 		// serialize response
