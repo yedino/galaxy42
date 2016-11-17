@@ -389,11 +389,12 @@ c_tunserver::c_tunserver()
 	m_my_name("unnamed-tunserver")
 	,m_udp_device(9042) //TODO port
 	,m_event_manager(m_tun_device, m_udp_device)
-	,m_tun_header_offset_ipv6(0) //, m_rpc_server(42000)
+	,m_tun_header_offset_ipv6(0)
+	,m_rpc_server(42000)
 {
-//	m_rpc_server.register_function(
-//		"add_limit_points",
-//		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
+	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
+		return rpc_ping(input_json);
+	});
 }
 
 void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
@@ -737,17 +738,13 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
-//bool c_tunserver::rpc_add_limit_points(const string &peer_ip) {
-//	c_haship_addr peer_hip(c_haship_addr::tag_constr_by_addr_dot(), peer_ip);
-//	try {
-//		m_peer.at(peer_hip)->add_limit_points(1000);
-//	}
-//	catch (const std::out_of_range &e) {
-//		_warn("not found peer " << peer_ip);
-//		return false;
-//	}
-//	return true;
-//}
+string c_tunserver::rpc_ping(const string &input_json) {
+	Json::Value input(input_json);
+	if (input.get("cmd", "UTF-8").asString() != "ping") throw std::invalid_argument("");
+	Json::Value ret;
+	ret["cmd"] = "pong";
+	return ret.asString();
+}
 
 void c_tunserver::event_loop() {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");

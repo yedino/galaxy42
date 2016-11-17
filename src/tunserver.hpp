@@ -299,12 +299,8 @@ class c_tunserver : public c_galaxy_node {
 		 * Exception safety: strong exception guarantee
 		 */
 		std::pair<string,int> parse_ip_string(const std::string &ip_string);
-//		c_rpc_server m_rpc_server;
-//		/**
-//		 * @brief rpc_add_limit_points
-//		 * @param peer_ip peer hash ip
-//		 */
-//		bool rpc_add_limit_points(const std::string &peer_ip);
+		c_rpc_server m_rpc_server;
+		std::string rpc_ping(const std::string &input_json);
 };
 
 // ------------------------------------------------------------------
