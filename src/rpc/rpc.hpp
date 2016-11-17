@@ -14,13 +14,13 @@
  * @brief The c_rpc_sever class
  * !!! NEVER CHANGE ADDRESS OF THIS CLASS OBJECT !!!
  */
-class c_rpc_sever final {
+class c_rpc_server final {
 	public:
-		c_rpc_sever(const short port);
-		c_rpc_sever(const c_rpc_sever &) = delete;
-		c_rpc_sever & operator = (const c_rpc_sever &) = delete;
-		c_rpc_sever(c_rpc_sever &&) = delete;
-		c_rpc_sever & operator = (c_rpc_sever &&) = delete;
+		c_rpc_server(const short port);
+		c_rpc_server(const c_rpc_server &) = delete;
+		c_rpc_server & operator = (const c_rpc_server &) = delete;
+		c_rpc_server(c_rpc_server &&) = delete;
+		c_rpc_server & operator = (c_rpc_server &&) = delete;
 		/**
 		 * @brief add_rpc_function
 		 * @param function must be thread safe(will be called from another thread)
@@ -39,12 +39,12 @@ class c_rpc_sever final {
 
 		class c_session {
 			public:
-				c_session(size_t index_in_session_vector, c_rpc_sever *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
+				c_session(size_t index_in_session_vector, c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
 				c_session(c_session &&) = default;
 				c_session & operator = (c_session && other) noexcept;
 			private:
 				size_t m_index_in_session_vector; // my index in m_session_vector
-				c_rpc_sever *m_rpc_server_ptr;
+				c_rpc_server *m_rpc_server_ptr;
 				boost::asio::ip::tcp::socket m_socket;
 				std::string m_received_data;
 				std::string m_write_data;
