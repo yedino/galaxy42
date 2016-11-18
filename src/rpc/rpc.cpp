@@ -32,7 +32,8 @@ void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::f
 void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 	_dbg("Connected");
 	if (!error) {
-		m_session_vector.emplace_back(m_session_vector.size(), this, std::move(m_socket));
+		m_session_list.emplace_back(this, std::move(m_socket));
+		m_session_list.back().set_iterator_in_session_list(--m_session_list.end());
 	}
 	// continue waiting for new connection
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
@@ -40,20 +41,19 @@ void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 	});
 }
 
-void c_rpc_server::remove_session_from_vector(const size_t index) {
-	_dbg("remove session, index " << index);
+void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it) {
 	std::lock_guard<std::mutex> lg(m_session_vector_mutex);
-	if (index >= m_session_vector.size()) throw std::out_of_range("Not found session with index " + std::to_string(index));
-	m_session_vector.erase(m_session_vector.begin() + index);
+//	if (index >= m_session_vector.size()) throw std::out_of_range("Not found session with index " + std::to_string(index));
+	m_session_list.erase(it);
 	// update indexes in sessions
-	for (size_t i = 0; i < m_session_vector.size(); ++i)
-		m_session_vector[i].set_index_in_session_vector(i);
+	//for (size_t i = 0; i < m_session_vector.size(); ++i)
+//		m_session_vector[i].set_index_in_session_vector(i);
 }
 
 
-c_rpc_server::c_session::c_session(size_t index_in_session_vector, c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket)
+c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket)
 :
-	m_index_in_session_vector(index_in_session_vector),
+//	m_iterator_in_session_list(iterator_in_session_list),
 	m_rpc_server_ptr(rpc_server_ptr),
 	m_socket(std::move(socket)),
 	m_received_data(1024, 0), // fill
@@ -66,7 +66,7 @@ c_rpc_server::c_session::c_session(size_t index_in_session_vector, c_rpc_server 
 	});
 }
 
-c_rpc_server::c_session &c_rpc_server::c_session::operator =(c_rpc_server::c_session && other) noexcept {
+c_rpc_server::c_session &c_rpc_server::c_session::operator =(c_rpc_server::c_session && other) {
 	m_index_in_session_vector = other.m_index_in_session_vector;
 	m_rpc_server_ptr = other.m_rpc_server_ptr;
 	m_socket = std::move(other.m_socket);
@@ -121,14 +121,17 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 	}
 }
 
-void c_rpc_server::c_session::set_index_in_session_vector(size_t index) {
-	m_index_in_session_vector = index;
+void c_rpc_server::c_session::set_iterator_in_session_list(std::list<c_session>::iterator it) {
+	m_iterator_in_session_list = it;
 }
 
 void c_rpc_server::c_session::delete_me() {
-	m_socket.cancel();
-	m_socket.close();
-	m_rpc_server_ptr->remove_session_from_vector(m_index_in_session_vector);
+	if (m_socket.is_open()) {
+		m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+		m_socket.cancel();
+		m_socket.close();
+	}
+	m_rpc_server_ptr->remove_session_from_vector(m_iterator_in_session_list);
 }
 
 void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
