@@ -2,7 +2,9 @@
 
 #include "rpc.hpp"
 #include "../trivialserialize.hpp"
-#include <json/json.h>
+#include "../json/json.hpp"
+
+#define _dbg(X) do std::cout << X << "\n"; while(0)
 
 c_rpc_server::c_rpc_server(const short port)
 :
@@ -28,6 +30,7 @@ void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::f
 }
 
 void c_rpc_server::accept_handler(const boost::system::error_code &error) {
+	_dbg("Connected");
 	if (!error) {
 		m_session_vector.emplace_back(m_session_vector.size(), this, std::move(m_socket));
 	}
@@ -38,6 +41,7 @@ void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 }
 
 void c_rpc_server::remove_session_from_vector(const size_t index) {
+	_dbg("remove session, index " << index);
 	std::lock_guard<std::mutex> lg(m_session_vector_mutex);
 	if (index >= m_session_vector.size()) throw std::out_of_range("Not found session with index " + std::to_string(index));
 	m_session_vector.erase(m_session_vector.begin() + index);
@@ -70,35 +74,51 @@ c_rpc_server::c_session &c_rpc_server::c_session::operator =(c_rpc_server::c_ses
 }
 
 void c_rpc_server::c_session::read_handler(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	if (error) {
+	_dbg("readed " << bytes_transferred << " bytes");
+	try {
+		if (error) {
+			_dbg("asio error " << error.message());
+			delete_me();
+			return;
+		}
+		// parsing message
+		trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), m_received_data);
+		uint64_t message_size = parser.pop_integer_uvarint();
+		std::string message = parser.pop_varstring();
+		if (message.size() != message_size) { // TODO message can be chunked ?
+			delete_me();
+			return;
+		}
+		_dbg("received message " << message);
+		execute_rpc_command(message);
+	}
+	catch (const std::exception &e) {
+		std::cerr << "exception read_handler " << e.what() << "\n";
+		std::cerr << "close connection\n";
 		delete_me();
 		return;
 	}
-	// parsing message
-	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), m_received_data);
-	if (parser.pop_integer_u<1, uint8_t>() != 0xFF) {
-		delete_me();
-		return;
-	}
-	uint64_t message_size = parser.pop_integer_uvarint();
-	std::string message = parser.pop_varstring();
-	if (message.size() != message_size) { // TODO message can be chunked ?
-		delete_me();
-		return;
-	}
-	execute_rpc_command(message);
 }
 
 void c_rpc_server::c_session::write_handler(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	if (error) {
+	try {
+		if (error) {
+			_dbg("asio error " << error.message());
+			delete_me();
+			return;
+		}
+		// continue reading
+		m_socket.async_read_some(boost::asio::buffer(&m_received_data[0], m_received_data.size()),
+			[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
+				read_handler(error, bytes_transferred);
+		});
+	}
+	catch (const std::exception &e) {
+		std::cerr << "exception in write_handler " << e.what() << "\n";
+		std::cerr << "close connection\n";
 		delete_me();
 		return;
 	}
-	// continue reading
-	m_socket.async_read_some(boost::asio::buffer(&m_received_data[0], m_received_data.size()),
-		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
-			read_handler(error, bytes_transferred);
-	});
 }
 
 void c_rpc_server::c_session::set_index_in_session_vector(size_t index) {
@@ -106,18 +126,20 @@ void c_rpc_server::c_session::set_index_in_session_vector(size_t index) {
 }
 
 void c_rpc_server::c_session::delete_me() {
+	m_socket.cancel();
+	m_socket.close();
 	m_rpc_server_ptr->remove_session_from_vector(m_index_in_session_vector);
 }
 
 void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
 	try {
-		Json::Value json_root(input_message);
-		const std::string cmd_name = json_root.get("cmd", "UTF-8").asString();
+		nlohmann::json j = nlohmann::json::parse(input_message);
+		const std::string cmd_name = j.begin().value();
+		_dbg("cmd name " << cmd_name);
 		// calling rpc function
 		const std::string response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
 		// serialize response
 		trivialserialize::generator generator(100);
-		generator.push_integer_u<1, uint8_t>(0xFF);
 		generator.push_integer_uvarint(response.size());
 		generator.push_varstring(response);
 		m_write_data = std::move(generator.str_move());
@@ -127,8 +149,10 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 				write_handler(error, bytes_transferred);
 		});
 	}
-	catch (...) {
+	catch (const std::exception &e) {
+		std::cerr << "exception in execute_rpc_command " << e.what() << "\n";
+		std::cerr << "close connection\n";
 		delete_me();
+		return;
 	}
-
 }
