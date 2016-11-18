@@ -6,8 +6,9 @@
 #include <boost/asio.hpp>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
-//#include <thread>
+#include <thread>
 #include <vector>
 
 /**
@@ -21,6 +22,7 @@ class c_rpc_server final {
 		c_rpc_server & operator = (const c_rpc_server &) = delete;
 		c_rpc_server(c_rpc_server &&) = delete;
 		c_rpc_server & operator = (c_rpc_server &&) = delete;
+		~c_rpc_server();
 		/**
 		 * @brief add_rpc_function
 		 * @param function must be thread safe(will be called from another thread)
@@ -31,6 +33,7 @@ class c_rpc_server final {
 		boost::asio::io_service m_io_service;
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket;
+		std::unique_ptr<std::thread> m_thread_ptr;
 		std::vector<c_session> m_session_vector;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
 
