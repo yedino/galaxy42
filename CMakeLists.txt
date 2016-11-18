@@ -428,7 +428,7 @@ if(MINGW)
 endif()
 
 if(NOT MSVC AND NOT MINGW)
-	#set(PTHREAD_LIB "pthread")
+	set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 else()
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
