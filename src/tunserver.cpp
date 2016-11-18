@@ -747,7 +747,8 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 string c_tunserver::rpc_ping(const string &input_json) {
 	//Json::Value input(input_json);
 	nlohmann::json ret;
-	ret["cmd"] = "pong";
+	ret["cmd"] = "ping";
+	ret["msg"] = "pong";
 	return ret.dump();
 }
 
