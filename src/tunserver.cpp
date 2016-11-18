@@ -33,6 +33,9 @@ it has bugs and 'typpos'.
 
 */
 
+
+
+
 /*
 
 TODO(r) do not tunnel entire (encrypted) copy of TUN, trimm it from headers that we do not need
@@ -61,6 +64,7 @@ Current TODO / topics:
 
 */
 
+
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
@@ -81,6 +85,8 @@ const char * g_demoname_default = "route_dij";
 #include "trivialserialize.hpp"
 #include "counter.hpp"
 #include "generate_crypto.hpp"
+
+
 
 #ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include "../depends/cjdns-code/NetPlatform.h" // from cjdns
@@ -104,8 +110,10 @@ const char * g_demoname_default = "route_dij";
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
 
+
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
+
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
@@ -120,6 +128,7 @@ const char * g_demoname_default = "route_dij";
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 //const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
 
+
 // ------------------------------------------------------------------
 
 void error(const std::string & msg) {
@@ -128,6 +137,7 @@ void error(const std::string & msg) {
 }
 
 // ------------------------------------------------------------------
+
 
 namespace developer_tests {
 
@@ -146,6 +156,7 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 const char* expected_not_found_missing_pubkey::what() const noexcept {
 		return "expected_not_found_missing_pubkey";
 }
+
 
 // ------------------------------------------------------------------
 
@@ -187,6 +198,7 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 	ostr << "}";
 	return ostr;
 }
+
 
 c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost, const c_haship_pubkey & pubkey)
 	: m_state(e_route_state_found), m_nexthop(nexthop)
@@ -347,6 +359,7 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 
 // ------------------------------------------------------------------
 
+
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
@@ -403,6 +416,7 @@ const antinet_crypto::c_multikeys_pub & c_tunserver::read_my_IDP_pub() const {
 string c_tunserver::get_my_ipv6_nice() const {
 	return m_my_IDI_pub.get_ipv6_string_hexdot();
 }
+
 
 int c_tunserver::get_my_stats_peers_known_count() const {
 	return m_peer.size();
@@ -502,6 +516,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	}
 }
 
+
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
@@ -518,6 +533,7 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 	}
 
 }
+
 
 void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
@@ -729,11 +745,10 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 }
 
 string c_tunserver::rpc_ping(const string &input_json) {
-	Json::Value input(input_json);
-	if (input.get("cmd", "UTF-8").asString() != "ping") throw std::invalid_argument("");
-	Json::Value ret;
+	//Json::Value input(input_json);
+	nlohmann::json ret;
 	ret["cmd"] = "pong";
-	return ret.asString();
+	return ret.dump();
 }
 
 void c_tunserver::event_loop(int time) {
@@ -750,6 +765,7 @@ void c_tunserver::event_loop(int time) {
 
 	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
 	long int ping_all_count = 0; // how many times did we do that in fact
+
 
 	// low level receive buffer
 	const int buf_size=65536;
@@ -796,6 +812,7 @@ void c_tunserver::event_loop(int time) {
 		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
 		const string node_title_bar = oss.str();
 
+
 		if (anything_happened || 1) {
 			debug_peers();
 
@@ -823,6 +840,7 @@ void c_tunserver::event_loop(int time) {
 
 			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
 			if (!addr_is_galaxy(dst_hip)) {
+
 
 				_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
@@ -889,7 +907,6 @@ void c_tunserver::event_loop(int time) {
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
-
 			c_peering * sender_as_peering_ptr  = nullptr; // TODO(r)-security review usage of this, and is it needed
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
@@ -974,7 +991,7 @@ void c_tunserver::event_loop(int time) {
 							c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 							requested_ttl, // we assume sender is that far away from us, since the data reached us
 							antinet_crypto::t_crypto_nonce() // any nonce - just dummy
-                        );
+						);
 
 					} else {
 						_note("Using CT tunnel to decrypt data for us");
@@ -1196,6 +1213,7 @@ void c_tunserver::run(int time) {
 	event_loop(time);
 }
 
+
 void c_tunserver::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
 	_info("Setting the name of IDI key to: " << keyname);
@@ -1264,3 +1282,5 @@ void c_tunserver::program_action_gen_key(boost::program_options::variables_map &
 }
 
 // ------------------------------------------------------------------
+
+
