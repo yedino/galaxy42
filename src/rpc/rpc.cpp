@@ -8,12 +8,19 @@ c_rpc_server::c_rpc_server(const short port)
 :
 	m_io_service(),
 	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-	m_socket(m_io_service)
+	m_socket(m_io_service),
+	m_thread_ptr(nullptr)
 {
 	// start waiting for new connection
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
 		accept_handler(error);
 	});
+	m_thread_ptr = make_unique<std::thread>([this](){m_io_service.run();});
+}
+
+c_rpc_server::~c_rpc_server() {
+	m_io_service.stop();
+	m_thread_ptr->join();
 }
 
 void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::string&)> &&function) {
