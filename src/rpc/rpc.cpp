@@ -38,8 +38,12 @@ void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 }
 
 void c_rpc_server::remove_session_from_vector(const size_t index) {
+	std::lock_guard<std::mutex> lg(m_session_vector_mutex);
 	if (index >= m_session_vector.size()) throw std::out_of_range("Not found session with index " + std::to_string(index));
 	m_session_vector.erase(m_session_vector.begin() + index);
+	// update indexes in sessions
+	for (size_t i = 0; i < m_session_vector.size(); ++i)
+		m_session_vector[i].set_index_in_session_vector(i);
 }
 
 
@@ -95,6 +99,10 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler(error, bytes_transferred);
 	});
+}
+
+void c_rpc_server::c_session::set_index_in_session_vector(size_t index) {
+	m_index_in_session_vector = index;
 }
 
 void c_rpc_server::c_session::delete_me() {
