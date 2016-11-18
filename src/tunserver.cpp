@@ -109,7 +109,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
-
+#include "json/json.hpp"
 
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
@@ -739,11 +739,10 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 }
 
 string c_tunserver::rpc_ping(const string &input_json) {
-	Json::Value input(input_json);
-	if (input.get("cmd", "UTF-8").asString() != "ping") throw std::invalid_argument("");
-	Json::Value ret;
+	//Json::Value input(input_json);
+	nlohmann::json ret;
 	ret["cmd"] = "pong";
-	return ret.asString();
+	return ret.dump();
 }
 
 void c_tunserver::event_loop() {
