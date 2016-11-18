@@ -5,6 +5,7 @@
 
 #include <boost/asio.hpp>
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -36,19 +37,20 @@ class c_rpc_server final {
 		boost::asio::ip::tcp::socket m_socket;
 		std::unique_ptr<std::thread> m_thread_ptr;
 		std::mutex m_session_vector_mutex;
-		std::vector<c_session> m_session_vector;
+		std::list<c_session> m_session_list;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
 
 		void accept_handler(const boost::system::error_code &error);
-		void remove_session_from_vector(const size_t index);
+		void remove_session_from_vector(std::list<c_session>::iterator it);
 
 		class c_session {
 			public:
-				c_session(size_t index_in_session_vector, c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
+				c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
 				c_session(c_session &&) = default;
-				c_session & operator = (c_session && other) noexcept;
-				void set_index_in_session_vector(size_t index);
+				c_session & operator = (c_session && other);
+				void set_iterator_in_session_list(std::list<c_session>::iterator it);
 			private:
+				std::list<c_session>::iterator m_iterator_in_session_list;
 				size_t m_index_in_session_vector; // my index in m_session_vector
 				c_rpc_server *m_rpc_server_ptr;
 				boost::asio::ip::tcp::socket m_socket;
