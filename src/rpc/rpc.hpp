@@ -7,6 +7,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -34,6 +35,7 @@ class c_rpc_server final {
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket;
 		std::unique_ptr<std::thread> m_thread_ptr;
+		std::mutex m_session_vector_mutex;
 		std::vector<c_session> m_session_vector;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
 
@@ -45,6 +47,7 @@ class c_rpc_server final {
 				c_session(size_t index_in_session_vector, c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
 				c_session(c_session &&) = default;
 				c_session & operator = (c_session && other) noexcept;
+				void set_index_in_session_vector(size_t index);
 			private:
 				size_t m_index_in_session_vector; // my index in m_session_vector
 				c_rpc_server *m_rpc_server_ptr;
