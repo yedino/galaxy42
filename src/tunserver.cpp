@@ -109,7 +109,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
-
+#include "json/json.hpp"
 
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
@@ -285,7 +285,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
 	}
-	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); }
+	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); } 
 	catch(expected_not_found) { _dbg1("We do not have that dst="<<dst<<" in peers at all"); } // not found in direct peers
 
 	auto found = m_route_nexthop.find( dst ); // <--- search what we know
@@ -419,6 +419,7 @@ string c_tunserver::get_my_ipv6_nice() const {
 
 
 int c_tunserver::get_my_stats_peers_known_count() const {
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	return m_peer.size();
 }
 
@@ -499,12 +500,14 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	UNUSED(peer_ref);
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 }
 
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
 unique_ptr<c_haship_pubkey> && pubkey)
 {
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
 		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
@@ -630,6 +633,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 }
 
 void c_tunserver::peering_ping_all_peers() {
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	auto & peers = m_peer;
 	_info("Sending ping to all peers (count=" << peers.size() << ")");
 	for(auto & v : m_peer) { // to each peer
@@ -649,6 +653,7 @@ void c_tunserver::peering_ping_all_peers() {
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -657,6 +662,7 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 }
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	auto peer_iter = m_peer.find(addr);
 	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
 	c_peering & peer = * peer_iter->second;
@@ -668,6 +674,7 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 
 void c_tunserver::debug_peers() {
 	_note("=== Debug peers ===");
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		_info("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
@@ -687,9 +694,11 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 
 	// find c_peering to send to // TODO(r) this functionallity will be soon
 	// doubled with the route search in m_routing_manager below, remove it then
+	std::unique_lock<std::mutex> lg(m_peer_mutex);
 	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
+		lg.unlock();
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
 		if (recurse_level>1) {
 			_warn("DROP: Recruse level too big in choosing peer");
@@ -714,7 +723,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		auto & target_peer = peer_it->second;
 		_info("ROUTE-PEER (found the goal in direct peer) selected peerig next hop is: " << (*target_peer) );
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
-
+		lg.unlock();
 		// send it on wire:
 		peer_udp->send_data_udp(buff, buff_size, m_udp_device.get_socket(), src_hip, dst_hip, data_route_ttl, nonce_used); // <--- *** actually send the data
 	}
@@ -740,6 +749,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 }
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
+	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { if (v.second->get_pip() == ip) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
@@ -751,6 +761,12 @@ string c_tunserver::rpc_ping(const string &input_json) {
 	ret["msg"] = "pong";
 	return ret.dump();
 }
+
+string c_tunserver::rpc_peer_list(const string &input_json) {
+	nlohmann::json ret;
+
+}
+
 
 void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
@@ -775,9 +791,12 @@ void c_tunserver::event_loop(int time) {
 	bool anything_happened=false; // in given loop iteration, for e.g. debug
 
 	bool was_connected=true;
-	if (! m_peer.size()) {
-		was_connected=false;
-		ui::action_info_ok(boost::locale::gettext("L_wait_for_connect"));
+	{
+		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		if (! m_peer.size()) {
+			was_connected=false;
+			ui::action_info_ok(boost::locale::gettext("L_wait_for_connect"));
+		}
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
@@ -790,7 +809,9 @@ void c_tunserver::event_loop(int time) {
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
+			std::unique_lock<std::mutex> lg(m_peer_mutex);
 			if (m_peer.size()) { // event: conntected now
+				lg.unlock();
 				was_connected=true;
 				ui::action_info_ok("Ok, we have a peer.");
 			}
