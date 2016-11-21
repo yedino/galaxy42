@@ -422,47 +422,48 @@ int main(int argc, char **argv) {
 			#endif
 
 			#if EXTLEVEL_IS_PREVIEW
-/*
+
+
 			("demo", po::value<std::string>()->default_value(""),
 //						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
 //						"Use --demo help to see list of demos [TODO].")
-                                                boost::locale::boost::locale::gettext("L_what_demo_do").c_str())
+                                                boost::locale::gettext("L_what_demo_do").c_str())
 
 //			("devel","COMMAND: Test: used by developer to run current test")
-                        ("devel",boost::locale::boost::locale::gettext("L_what_devel_do").c_str())
+                        ("devel",boost::locale::gettext("L_what_devel_do").c_str())
 
 			("develnum", po::value<int>()->default_value(1),
 //						"Test: used by developer to set current node number (makes sense with option --devel)")
-                                                boost::locale::boost::locale::gettext("L_what_decelnum_do").c_str())
+                                                boost::locale::gettext("L_what_decelnum_do").c_str())
 
 			("develdemo", po::value<std::string>()->default_value("hardcoded"),
 //						"COMMAND: Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
-                                                boost::locale::boost::locale::gettext("L_what_develdemo_do").c_str())
+                                                boost::locale::gettext("L_what_develdemo_do").c_str())
 
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value(config_default_myname) ,
 //						"a readable name of your node (e.g. for debug)")
-                                                boost::locale::boost::locale::gettext("L_what_myname_do").c_str())
+                                                boost::locale::gettext("L_what_myname_do").c_str())
 
 //			("gen-config", "COMMAND: Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
 //						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
-                        ("gen-config", boost::locale::boost::locale::gettext("L_what_gen_config_do").c_str())
+                        ("gen-config", boost::locale::gettext("L_what_gen_config_do").c_str())
 
 //			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
 //						"\nrequires [--my-key]")
-                        ("set-IDI", boost::locale::boost::locale::gettext("L_what_set_IDI_do").c_str())
+                        ("set-IDI", boost::locale::gettext("L_what_set_IDI_do").c_str())
 
 //			("sign", "COMMAND: Sign key or other message with your key"
 //					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
 //					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
 //					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
-                        ("sign",  boost::locale::boost::locale::gettext("L_what_sing_do").c_str())
+                        ("sign",  boost::locale::gettext("L_what_sing_do").c_str())
 
 //				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
-                                ("sign-key", po::value<std::string>(), boost::locale::boost::locale::gettext("L_what_singKey_do").c_str())
+                                ("sign-key", po::value<std::string>(), boost::locale::gettext("L_what_singKey_do").c_str())
 
 //				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
-                                ("sign-key-file", po::value<std::string>(), boost::locale::boost::locale::gettext("L_what_singKeyFile_do").c_str())
+                                ("sign-key-file", po::value<std::string>(), boost::locale::gettext("L_what_singKeyFile_do").c_str())
 
 //				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
                                 ("sign-data-file", po::value<std::string>(), boost::locale::gettext("L_what_singDataFile_do").c_str())
@@ -472,10 +473,10 @@ int main(int argc, char **argv) {
 //					   "or --toverify-data-file *--signature-file]"
 //					   "\nDefault signature file name = key/data file name + \".sig\" extension"
 //					   "in same location as key/data file")
-                        ("verify", boost::locale::gettext("L_what_verify_do"))
+                        ("verify", boost::locale::gettext("L_what_verify_do").c_str())
 
 //				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
-                                ("trusted-key", po::value<std::string>(), boost::locale::gettext("L_what_trustedKey_do".c_str()))
+                                ("trusted-key", po::value<std::string>(), boost::locale::gettext("L_what_trustedKey_do").c_str())
 
 //				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
                                 ("trusted-key-file", po::value<std::string>(), boost::locale::gettext("L_what_trustedKeyFile_do").c_str())
@@ -489,11 +490,13 @@ int main(int argc, char **argv) {
 //				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
                                 ("toverify-data-file", po::value<std::string>(), boost::locale::gettext("L_what_toverifyDataFile_do").c_str())
 
+			/*
 				("signature-file", po::value<std::string>(),
 //							"External Name of signature file in specified location"
 //							"\nDefault signature file name = key/data file name + \".sig\" extension")
                                                         boost::locale::gettext("L_what_signatureFile_do").c_str())
-*/
+				*/
+
 
 			#endif
 
