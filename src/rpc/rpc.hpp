@@ -3,6 +3,7 @@
 #ifndef RPC_HPP
 #define RPC_HPP
 
+#include <array>
 #include <boost/asio.hpp>
 #include <functional>
 #include <list>
@@ -51,12 +52,13 @@ class c_rpc_server final {
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
 			private:
 				std::list<c_session>::iterator m_iterator_in_session_list;
-				size_t m_index_in_session_vector; // my index in m_session_vector
 				c_rpc_server *m_rpc_server_ptr;
 				boost::asio::ip::tcp::socket m_socket;
 				std::string m_received_data;
 				std::string m_write_data;
+				std::array<uint8_t, 2> m_data_size; // always first 2 bytes of packet == message size
 
+				void read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred); ///< data readed to m_read_data_size
 				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
 				void write_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
 				void delete_me();
