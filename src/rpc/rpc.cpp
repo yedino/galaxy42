@@ -50,14 +50,34 @@ void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it)
 
 c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket)
 :
-//	m_iterator_in_session_list(iterator_in_session_list),
 	m_rpc_server_ptr(rpc_server_ptr),
 	m_socket(std::move(socket)),
 	m_received_data(1024, 0), // fill
 	m_write_data()
 {
-	// start reading
-	m_socket.async_read_some(boost::asio::buffer(&m_received_data[0], m_received_data.size()),
+	// start reading size (2 bytes)
+	async_read(m_socket, boost::asio::buffer(&m_data_size[0], m_data_size.size()),
+		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
+			read_handler_size(error, bytes_transferred);
+	});
+}
+
+void c_rpc_server::c_session::read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred) {
+	_dbg("read handler size");
+	if (error) {
+		_dbg("asio error " << error.message());
+		delete_me();
+		return;
+	}
+	if (bytes_transferred != 2) {
+		_dbg("bytes_transferred != 2");
+		delete_me();
+		return;
+	}
+	uint16_t message_size = static_cast<uint16_t>(m_data_size[0] << 8);
+	message_size += m_data_size[1];
+	m_received_data.resize(message_size, 0); // prepare buffer for message
+	async_read(m_socket, boost::asio::buffer(&m_received_data[0], m_received_data.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler(error, bytes_transferred);
 	});
@@ -72,15 +92,8 @@ void c_rpc_server::c_session::read_handler(const boost::system::error_code &erro
 			return;
 		}
 		// parsing message
-		trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), m_received_data);
-		uint64_t message_size = parser.pop_integer_uvarint();
-		std::string message = parser.pop_varstring();
-		if (message.size() != message_size) { // TODO message can be chunked ?
-			delete_me();
-			return;
-		}
-		_dbg("received message " << message);
-		execute_rpc_command(message);
+		_dbg("received message " << m_received_data);
+		execute_rpc_command(m_received_data);
 	}
 	catch (const std::exception &e) {
 		std::cerr << "exception read_handler " << e.what() << "\n";
@@ -98,9 +111,9 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 			return;
 		}
 		// continue reading
-		m_socket.async_read_some(boost::asio::buffer(&m_received_data[0], m_received_data.size()),
+		async_read(m_socket, boost::asio::buffer(&m_data_size[0], m_data_size.size()),
 			[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
-				read_handler(error, bytes_transferred);
+				read_handler_size(error, bytes_transferred);
 		});
 	}
 	catch (const std::exception &e) {
@@ -114,6 +127,7 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 void c_rpc_server::c_session::set_iterator_in_session_list(std::list<c_session>::iterator it) {
 	m_iterator_in_session_list = it;
 }
+
 
 void c_rpc_server::c_session::delete_me() {
 	if (m_socket.is_open()) {
@@ -132,11 +146,15 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		// calling rpc function
 		const std::string response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
 		// serialize response
-		trivialserialize::generator generator(100);
-		generator.push_integer_uvarint(response.size());
-		generator.push_varstring(response);
-		m_write_data = std::move(generator.str_move());
+		assert(response_size <= std::numeric_limits<uint16_t>::max());
+		uint16_t size = static_cast<uint16_t>(response.size());
+		m_write_data.resize(size + 2); ///< 2 first bytes for size
+		m_write_data[0] = static_cast<char>(size >> 8);
+		m_write_data[1] = static_cast<char>(size & 0xFF);
+		for (size_t i = 0; i < response.size(); ++i)
+			m_write_data[i + 2] = response[i];
 		// send response
+
 		m_socket.async_write_some(boost::asio::buffer(m_write_data.data(), m_write_data.size()),
 			[this](const boost::system::error_code& error, std::size_t bytes_transferred) {
 				write_handler(error, bytes_transferred);
