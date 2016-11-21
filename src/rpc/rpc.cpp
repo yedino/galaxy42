@@ -66,13 +66,6 @@ c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip
 	});
 }
 
-c_rpc_server::c_session &c_rpc_server::c_session::operator =(c_rpc_server::c_session && other) {
-	m_index_in_session_vector = other.m_index_in_session_vector;
-	m_rpc_server_ptr = other.m_rpc_server_ptr;
-	m_socket = std::move(other.m_socket);
-	m_received_data = std::move(other.m_received_data);
-}
-
 void c_rpc_server::c_session::read_handler(const boost::system::error_code &error, std::size_t bytes_transferred) {
 	_dbg("readed " << bytes_transferred << " bytes");
 	try {
