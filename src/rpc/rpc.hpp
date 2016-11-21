@@ -46,8 +46,8 @@ class c_rpc_server final {
 		class c_session {
 			public:
 				c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
-				c_session(c_session &&) = default;
-				c_session & operator = (c_session && other);
+				c_session(c_session &&) = delete;
+				c_session & operator = (c_session && other) = delete;
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
 			private:
 				std::list<c_session>::iterator m_iterator_in_session_list;
