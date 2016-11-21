@@ -32,6 +32,7 @@ void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::f
 void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 	_dbg("Connected");
 	if (!error) {
+		std::lock_guard<std::mutex> lg(m_session_vector_mutex);
 		m_session_list.emplace_back(this, std::move(m_socket));
 		m_session_list.back().set_iterator_in_session_list(--m_session_list.end());
 	}
@@ -43,11 +44,7 @@ void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 
 void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it) {
 	std::lock_guard<std::mutex> lg(m_session_vector_mutex);
-//	if (index >= m_session_vector.size()) throw std::out_of_range("Not found session with index " + std::to_string(index));
 	m_session_list.erase(it);
-	// update indexes in sessions
-	//for (size_t i = 0; i < m_session_vector.size(); ++i)
-//		m_session_vector[i].set_index_in_session_vector(i);
 }
 
 
