@@ -395,6 +395,9 @@ c_tunserver::c_tunserver()
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
 	});
+	m_rpc_server.add_rpc_function("peer_list", [this](const std::string &input_json) {
+		return rpc_peer_list(input_json);
+	});
 }
 
 void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
@@ -757,7 +760,28 @@ string c_tunserver::rpc_ping(const string &input_json) {
 
 string c_tunserver::rpc_peer_list(const string &input_json) {
 	nlohmann::json ret;
-
+	std::vector<std::string> refs;
+	// ipv4:port-ipv6
+	std::ostringstream oss;
+	std::unique_lock<std::mutex> lg(m_peer_mutex);
+	for (const auto &peer : m_peer) {
+		oss << peer.second->get_pip();
+		oss << "-";
+		auto hip = peer.second->get_hip();
+		for (int i = 0; i < hip.size(); i+=2) {
+			uint16_t block = 0;
+			block = hip[i] << 8;
+			block += hip[i+1];
+			oss << std::hex << block << ":";
+		}
+		oss << std::dec;
+		refs.emplace_back(oss.str());
+		refs.back().erase(refs.back().end() - 1); // remove last character (':')
+	}
+	lg.unlock();
+	ret["cmd"] = "peer_list";
+	ret["msg"] = refs;
+	return ret.dump();
 }
 
 void c_tunserver::event_loop() {

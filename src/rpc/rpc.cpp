@@ -155,6 +155,8 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 			m_write_data[i + 2] = response[i];
 		// send response
 
+		_dbg("send packet");
+		_dbg(m_write_data);
 		m_socket.async_write_some(boost::asio::buffer(m_write_data.data(), m_write_data.size()),
 			[this](const boost::system::error_code& error, std::size_t bytes_transferred) {
 				write_handler(error, bytes_transferred);
