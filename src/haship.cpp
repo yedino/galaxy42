@@ -54,6 +54,19 @@ void c_haship_addr::print(ostream &ostr) const {
 	string_as_hex dbg( string_as_bin(*this) );
 	ostr << "hip:" << dbg.get();
 }
+
+string c_haship_addr::get_hip_as_string(bool with_dots) const{
+    string_as_hex dbg( string_as_bin(*this) );
+    string hip(dbg.get());
+    ostringstream out;
+    for(auto it = hip.begin(); it < hip.end(); it++)
+    {
+        if(with_dots && it != hip.begin() && (it - hip.begin()) % 4 == 0)
+            out << ':';
+        out << *it;
+    }
+    return out.str();
+}
 ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
 
 void c_haship_pubkey::print(ostream &ostr) const {

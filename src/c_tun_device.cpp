@@ -82,6 +82,7 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 #ifndef NTSTATUS 
 #define NTSTATUS LONG
 #endif 
+#include <wincrypt.h>
 #include <netioapi.h>
 #include <ntddscsi.h>
 #include <winioctl.h>
