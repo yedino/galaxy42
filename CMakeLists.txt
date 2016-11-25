@@ -336,11 +336,21 @@ ADD_CUSTOM_TARGET(Debug
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
 		COMMAND make)
 
+option(HTTP_DEBUGGER "Build with http debuger" OFF)
 
 # more directories of my main code
 
+include_directories( src/ )
+
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
+
+if(HTTP_DEBUGGER)
+    add_definitions(-DHTTP_DBG)
+    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/*.cpp)
+else()
+    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp)
+endif()
+
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)

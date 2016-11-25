@@ -18,6 +18,13 @@
 
 #include <boost/locale.hpp>
 
+#ifdef HTTP_DBG
+#include <thread>
+#include <mutex>
+#include <boost/asio.hpp>
+#include "httpdbg/httpdbg-server.hpp"
+#endif
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -159,8 +166,6 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	return true;
 }
 
-
-
 } // namespace developer_tests
 
 /***
@@ -188,7 +193,6 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	return ret;
 }
 
-
 bool test_foo() {
 	_info("TEST FOO");
 	return false;
@@ -198,7 +202,6 @@ bool test_bar() {
 	_info("TEST BAR");
 	return false;
 }
-
 
 void test_lang_optional() {
 	/* this fails on boost from debian 7
@@ -268,7 +271,6 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	//if (demoname=="rpc") { rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
-
 	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;
 }
@@ -281,7 +283,6 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 int main(int argc, char **argv) {
 //	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
-
 
 	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 	setlocale(LC_ALL,"");
@@ -319,9 +320,12 @@ int main(int argc, char **argv) {
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 
-
 	g_dbg_level = config_default_basic_dbg_level;
-	bool early_debug=false;
+    bool early_debug=false;
+
+    #ifdef HTTP_DBG
+    int http_dbg_port = 9080;
+    #endif
 	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
 //	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
         if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, boost::locale::gettext("L_early_debug_comand_line"));
@@ -391,6 +395,10 @@ int main(int argc, char **argv) {
 
 //			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
                         ("gen-key-simple", boost::locale::gettext("L_what_genKeySimple_do").c_str())
+            #ifdef HTTP_DBG
+//			("http-dbg-port", "COMMAND: Set http debugger port")
+                        ("http-dbg-port", po::value<int>()->default_value(9080), boost::locale::gettext("L_what_httpDbgPort_do").c_str())
+            #endif
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -413,49 +421,49 @@ int main(int argc, char **argv) {
 */
 			#endif
 
-
 			#if EXTLEVEL_IS_PREVIEW
-/*
+
+
 			("demo", po::value<std::string>()->default_value(""),
 //						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
 //						"Use --demo help to see list of demos [TODO].")
-                                                boost::locale::boost::locale::gettext("L_what_demo_do").c_str())
+                                                boost::locale::gettext("L_what_demo_do").c_str())
 
 //			("devel","COMMAND: Test: used by developer to run current test")
-                        ("devel",boost::locale::boost::locale::gettext("L_what_devel_do").c_str())
+                        ("devel",boost::locale::gettext("L_what_devel_do").c_str())
 
 			("develnum", po::value<int>()->default_value(1),
 //						"Test: used by developer to set current node number (makes sense with option --devel)")
-                                                boost::locale::boost::locale::gettext("L_what_decelnum_do").c_str())
+                                                boost::locale::gettext("L_what_decelnum_do").c_str())
 
 			("develdemo", po::value<std::string>()->default_value("hardcoded"),
 //						"COMMAND: Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
-                                                boost::locale::boost::locale::gettext("L_what_develdemo_do").c_str())
+                                                boost::locale::gettext("L_what_develdemo_do").c_str())
 
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
 			("myname", po::value<std::string>()->default_value(config_default_myname) ,
 //						"a readable name of your node (e.g. for debug)")
-                                                boost::locale::boost::locale::gettext("L_what_myname_do").c_str())
+                                                boost::locale::gettext("L_what_myname_do").c_str())
 
 //			("gen-config", "COMMAND: Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
 //						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
-                        ("gen-config", boost::locale::boost::locale::gettext("L_what_gen_config_do").c_str())
+                        ("gen-config", boost::locale::gettext("L_what_gen_config_do").c_str())
 
 //			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
 //						"\nrequires [--my-key]")
-                        ("set-IDI", boost::locale::boost::locale::gettext("L_what_set_IDI_do").c_str())
+                        ("set-IDI", boost::locale::gettext("L_what_set_IDI_do").c_str())
 
 //			("sign", "COMMAND: Sign key or other message with your key"
 //					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
 //					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
 //					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
-                        ("sign",  boost::locale::boost::locale::gettext("L_what_sing_do").c_str())
+                        ("sign",  boost::locale::gettext("L_what_sing_do").c_str())
 
 //				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
-                                ("sign-key", po::value<std::string>(), boost::locale::boost::locale::gettext("L_what_singKey_do").c_str())
+                                ("sign-key", po::value<std::string>(), boost::locale::gettext("L_what_singKey_do").c_str())
 
 //				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
-                                ("sign-key-file", po::value<std::string>(), boost::locale::boost::locale::gettext("L_what_singKeyFile_do").c_str())
+                                ("sign-key-file", po::value<std::string>(), boost::locale::gettext("L_what_singKeyFile_do").c_str())
 
 //				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
                                 ("sign-data-file", po::value<std::string>(), boost::locale::gettext("L_what_singDataFile_do").c_str())
@@ -465,10 +473,10 @@ int main(int argc, char **argv) {
 //					   "or --toverify-data-file *--signature-file]"
 //					   "\nDefault signature file name = key/data file name + \".sig\" extension"
 //					   "in same location as key/data file")
-                        ("verify", boost::locale::gettext("L_what_verify_do"))
+                        ("verify", boost::locale::gettext("L_what_verify_do").c_str())
 
 //				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
-                                ("trusted-key", po::value<std::string>(), boost::locale::gettext("L_what_trustedKey_do".c_str()))
+                                ("trusted-key", po::value<std::string>(), boost::locale::gettext("L_what_trustedKey_do").c_str())
 
 //				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
                                 ("trusted-key-file", po::value<std::string>(), boost::locale::gettext("L_what_trustedKeyFile_do").c_str())
@@ -482,11 +490,13 @@ int main(int argc, char **argv) {
 //				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
                                 ("toverify-data-file", po::value<std::string>(), boost::locale::gettext("L_what_toverifyDataFile_do").c_str())
 
+			/*
 				("signature-file", po::value<std::string>(),
 //							"External Name of signature file in specified location"
 //							"\nDefault signature file name = key/data file name + \".sig\" extension")
                                                         boost::locale::gettext("L_what_signatureFile_do").c_str())
-*/
+				*/
+
 
 			#endif
 
@@ -624,7 +634,11 @@ int main(int argc, char **argv) {
 				myserver.program_action_gen_key_simple();
 				return 0;
 			} // gen-key
-
+            #ifdef HTTP_DBG
+            if (argm.count("http-dbg-port")) {
+                http_dbg_port = argm["http-dbg-port"].as<int>();
+            } //http-dbg-port
+            #endif
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("sign")) {
 
@@ -671,8 +685,6 @@ int main(int argc, char **argv) {
 				}
 				return 0;
 			}
-
-
 
 			_dbg1("BoostPO before verify");
 			if(argm.count("verify")) {
@@ -868,13 +880,26 @@ int main(int argc, char **argv) {
 //		return 2;
 //	}
 
-
-
 	// ------------------------------------------------------------------
 //	_note("Done all preparations, moving to the server main");
         _note(boost::locale::gettext("L_all_preparations_done"));
 
+#ifdef HTTP_DBG
+		_note(boost::locale::gettext("L_starting_httpdbg_server"));
+        c_httpdbg_server httpdbg_server(http_dbg_port, myserver);
+		std::thread httpdbg_thread( [& httpdbg_server]() {
+			httpdbg_server.run();
+		}	);
+#endif
+		_note(boost::locale::gettext("L_starting_main_server"));
 		myserver.run();
+		_note(boost::locale::gettext("L_main_server_ended"));
+#ifdef HTTP_DBG
+        httpdbg_server.stop();
+		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
+		_note(boost::locale::gettext("L_httpdbg_server_ended"));
+#endif
+
 	} // try running server
 	catch(ui::exception_error_exit) {
 //		std::cerr << "Exiting as explained above" << std::endl;
@@ -903,5 +928,3 @@ int main(int argc, char **argv) {
         _note(boost::locale::gettext("L_exit_no_error")); return 0;
 
 }
-
-
