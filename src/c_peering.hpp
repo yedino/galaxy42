@@ -12,6 +12,7 @@
 
 #include "crypto/crypto_basic.hpp"
 #include "c_udp_wrapper.hpp"
+#include "httpdbg/peering_stats.hpp"
 
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
@@ -44,6 +45,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		void add_limit_points(long int points);
 		void decrement_limit_points();
 		long int get_limit_points();
+        c_peering_stats & get_stats();
 
 		friend class c_tunserver;
 
@@ -51,7 +53,8 @@ class c_peering { ///< An (mostly established) connection to peer
 		c_ip46_addr	m_peering_addr; ///< peer physical address in socket format
 		c_haship_addr m_haship_addr; ///< peer haship address
 		unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey (when we know it)
-		std::atomic<long int> m_limit_points; // decrement when send packet to this peer
+        std::atomic<long int> m_limit_points; // decrement when send packet to this peer
+        c_peering_stats m_peering_stats;
 };
 
 ostream & operator<<(ostream & ostr, const c_peering & obj);

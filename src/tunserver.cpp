@@ -17,24 +17,21 @@ it has bugs and 'typpos'.
 | '_ \| '__/ _ \_____| '_ \| '__/ _ \_____ / _` | | '_ \| '_ \ / _` |
 | |_) | | |  __/_____| |_) | | |  __/_____| (_| | | |_) | | | | (_| |
 | .__/|_|  \___|     | .__/|_|  \___|      \__,_|_| .__/|_| |_|\__,_|
-|_|                  |_|                          |_|                
-     _                       _                                    _   
-  __| | ___      _ __   ___ | |_     _   _ ___  ___    _   _  ___| |_ 
+|_|                  |_|                          |_|
+     _                       _                                    _
+  __| | ___      _ __   ___ | |_     _   _ ___  ___    _   _  ___| |_
  / _` |/ _ \    | '_ \ / _ \| __|   | | | / __|/ _ \  | | | |/ _ \ __|
-| (_| | (_) |   | | | | (_) | |_    | |_| \__ \  __/  | |_| |  __/ |_ 
+| (_| | (_) |   | | | | (_) | |_    | |_| \__ \  __/  | |_| |  __/ |_
  \__,_|\___/    |_| |_|\___/ \__|    \__,_|___/\___|   \__, |\___|\__|
-                                                       |___/          
- _                   _                     
-| |__   __ _ ___    | |__  _   _  __ _ ___ 
+                                                       |___/
+ _                   _
+| |__   __ _ ___    | |__  _   _  __ _ ___
 | '_ \ / _` / __|   | '_ \| | | |/ _` / __|
 | | | | (_| \__ \   | |_) | |_| | (_| \__ \
 |_| |_|\__,_|___/   |_.__/ \__,_|\__, |___/
-                                 |___/  
+                                 |___/
 
 */
-
-
-
 
 /*
 
@@ -64,7 +61,6 @@ Current TODO / topics:
 
 */
 
-
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 
@@ -85,8 +81,6 @@ const char * g_demoname_default = "route_dij";
 #include "trivialserialize.hpp"
 #include "counter.hpp"
 #include "generate_crypto.hpp"
-
-
 
 #ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include "../depends/cjdns-code/NetPlatform.h" // from cjdns
@@ -110,10 +104,8 @@ const char * g_demoname_default = "route_dij";
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
 
-
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
-
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
@@ -128,7 +120,6 @@ const char * g_demoname_default = "route_dij";
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 //const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
 
-
 // ------------------------------------------------------------------
 
 void error(const std::string & msg) {
@@ -137,7 +128,6 @@ void error(const std::string & msg) {
 }
 
 // ------------------------------------------------------------------
-
 
 namespace developer_tests {
 
@@ -156,7 +146,6 @@ bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 const char* expected_not_found_missing_pubkey::what() const noexcept {
 		return "expected_not_found_missing_pubkey";
 }
-
 
 // ------------------------------------------------------------------
 
@@ -198,7 +187,6 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_
 	ostr << "}";
 	return ostr;
 }
-
 
 c_routing_manager::c_route_info::c_route_info(c_haship_addr nexthop, int cost, const c_haship_pubkey & pubkey)
 	: m_state(e_route_state_found), m_nexthop(nexthop)
@@ -285,7 +273,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
 	}
-	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); } 
+	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); }
 	catch(expected_not_found) { _dbg1("We do not have that dst="<<dst<<" in peers at all"); } // not found in direct peers
 
 	auto found = m_route_nexthop.find( dst ); // <--- search what we know
@@ -359,7 +347,6 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 
 // ------------------------------------------------------------------
 
-
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
@@ -396,6 +383,12 @@ c_tunserver::c_tunserver()
 //		std::bind(&c_tunserver::rpc_add_limit_points, this, std::placeholders::_1));
 }
 
+#ifdef HTTP_DBG
+std::mutex & c_tunserver::get_my_mutex() const {
+	return this->m_my_mutex; // TODO or const-cast here? from mutable?
+}
+#endif
+
 void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
 	m_desc = desc;
 }
@@ -409,7 +402,6 @@ const antinet_crypto::c_multikeys_pub & c_tunserver::read_my_IDP_pub() const {
 string c_tunserver::get_my_ipv6_nice() const {
 	return m_my_IDI_pub.get_ipv6_string_hexdot();
 }
-
 
 int c_tunserver::get_my_stats_peers_known_count() const {
 	return m_peer.size();
@@ -509,7 +501,6 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	}
 }
 
-
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
@@ -526,7 +517,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 	}
 
 }
-
 
 void c_tunserver::help_usage() const {
 	// TODO(r) remove, using boost options
@@ -749,7 +739,7 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 //	return true;
 //}
 
-void c_tunserver::event_loop() {
+void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
 
 	_info("Entering the event loop");
@@ -764,7 +754,6 @@ void c_tunserver::event_loop() {
 	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
 	long int ping_all_count = 0; // how many times did we do that in fact
 
-
 	// low level receive buffer
 	const int buf_size=65536;
 	char buf[buf_size];
@@ -778,7 +767,12 @@ void c_tunserver::event_loop() {
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
-	while (1) {
+        double start = std::clock();
+        auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
+
+	while (time ? timer(time) : true) {
+
+		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
@@ -804,7 +798,6 @@ void c_tunserver::event_loop() {
 		ostringstream oss;
 		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
 		const string node_title_bar = oss.str();
-
 
 		if (anything_happened || 1) {
 			debug_peers();
@@ -834,11 +827,10 @@ void c_tunserver::event_loop() {
 			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
 			if (!addr_is_galaxy(dst_hip)) {
 
-
 				_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
 			}
-				
+
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
 				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
@@ -853,6 +845,8 @@ void c_tunserver::event_loop() {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
+                if ( m_peer.find(dst_hip) != m_peer.end() )
+                    m_peer[dst_hip]->get_stats().update_sent_stats(dump.size());
 
 			} else {
 				_info("Using CT tunnel to send our own data");
@@ -868,6 +862,8 @@ void c_tunserver::event_loop() {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
+                if ( m_peer.find(dst_hip) != m_peer.end() )
+                    m_peer[dst_hip]->get_stats().update_sent_stats(data_encrypted.size());
 			}
 
 			if (!was_anything_sent_from_TUN) {
@@ -880,6 +876,7 @@ void c_tunserver::event_loop() {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
+            //find_peer_by_sender_peering_addr( sender_pip ).get_stats().update_read_stats(size_read);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_mark("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
@@ -895,11 +892,13 @@ void c_tunserver::event_loop() {
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
+
 			c_peering * sender_as_peering_ptr  = nullptr; // TODO(r)-security review usage of this, and is it needed
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 				_info("We recognize the sender, as: " << sender_as_peering);
-				sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
+                sender_as_peering.get_stats().update_read_stats(size_read);
+                sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
 			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
@@ -978,7 +977,7 @@ void c_tunserver::event_loop() {
 							c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 							requested_ttl, // we assume sender is that far away from us, since the data reached us
 							antinet_crypto::t_crypto_nonce() // any nonce - just dummy
-						);
+                        );
 
 					} else {
 						_note("Using CT tunnel to decrypt data for us");
@@ -1020,6 +1019,8 @@ void c_tunserver::event_loop() {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
+                    if ( m_peer.find(dst_hip) != m_peer.end() )
+                        m_peer[dst_hip]->get_stats().update_sent_stats(blob.size());
 #endif
 				}
 
@@ -1118,6 +1119,9 @@ void c_tunserver::event_loop() {
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
+                        //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
+                        if ( m_peer.find(requested_hip) != m_peer.end() )
+                            m_peer[requested_hip]->get_stats().update_sent_stats(data.size());
 						_note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
@@ -1188,13 +1192,12 @@ void c_tunserver::event_loop() {
 	}
 }
 
-void c_tunserver::run() {
+void c_tunserver::run(int time) {
 	std::cout << boost::locale::gettext("L_starting_TUN") << std::endl;
 
 	prepare_socket();
-	event_loop();
+	event_loop(time);
 }
-
 
 void c_tunserver::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
@@ -1264,5 +1267,3 @@ void c_tunserver::program_action_gen_key(boost::program_options::variables_map &
 }
 
 // ------------------------------------------------------------------
-
-
