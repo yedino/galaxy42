@@ -18,6 +18,8 @@ addons:
       - libboost-system-dev
       - libboost-filesystem-dev
       - libboost-program-options-dev
+      - libboost-thread-dev
+      - libboost-locale-dev
       - libfftw3-dev
       - shellcheck
 
@@ -32,19 +34,16 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                                                  ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libsodium-dev -y                                   ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user cpp-coveralls                                        ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                                                           ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink llvm37; brew link llvm37; brew install llvm37             ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink autoconf; brew link autoconf; brew install autoconf       ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink pkg-config; brew link pkg-config; brew install pkg-config ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink cmake; brew link cmake; brew install cmake                ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew link boost; brew install boost                ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink libsodium; brew link libsodium; brew install libsodium    ; fi
+
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash share/script/setup-osx-brew   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then CC=clang  ; fi
 
 install:
-  - echo $CXX   # for dbg
-  - echo $CC
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-5" CC="gcc-5"  ; fi
   - if [[ "$CC" == "clang" ]]; then export CXX="clang++-3.7" CC="clang-3.7"  ; fi
+  - echo "PATH=${PATH}"
+  - echo "CC=${CC}, $(which ${CC})"
+  - echo "CXX=${CXX}, $(which ${CXX})"
 
 env:
   global:

@@ -10,6 +10,17 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
+if(BUILD_STATIC_TUNSERVER)
+	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+
+	if(NOT BOOST_LIBRARYDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+endif()
+
 if(MINGW)
 	if(CYGWIN)
 		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
@@ -28,11 +39,23 @@ if (MINGW)
 	add_definitions(-D_WIN32_WINNT=0x0600)
 endif()
 
-set (Boost_DEBUG OFF)
-if (NOT MSVC)
-	set(BOOST_LIBS_LIST system filesystem program_options)
+set (Boost_DEBUG ON)
+set (Boost_USE_MULTITHREADED ON)
+if (BUILD_STATIC_TUNSERVER)
+	set (Boost_USE_STATIC_RUBTIME ON)
+	set (Boost_USE_STATIC_LIBS ON)
+	set (Boost_USE_DEBUG_RUNTIME OFF)
+	set (sodium_USE_STATIC_LIBS ON)
+endif()
+if (CYGWIN)
+	set(BOOST_LOCALE_LINK_LIB boost_locale-mt)
 else()
-	set(BOOST_LIBS_LIST system filesystem)
+	set(BOOST_LOCALE_LIB_SEARCH locale)
+endif()
+if (NOT MSVC)
+	set(BOOST_LIBS_LIST ${BOOST_LOCALE_LIB_SEARCH} thread system filesystem program_options)
+else()
+	set(BOOST_LIBS_LIST system filesystem thread ${BOOST_LOCALE_LIB_SEARCH})
 endif()
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
 
@@ -51,9 +74,6 @@ if (MINGW)
 	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
 	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
 	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
-	set(GETTEXT_LIBS intl iconv pthread)
-	#set(GETTEXT_LIBS "iconv")
-	#message(FATAL_ERROR "${GETTEXT_LIBS}")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -235,8 +255,17 @@ else()
 	set(flag_coverage "")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${flag_coverage}")
+if(BUILD_STATIC_TUNSERVER)
+	set(STATIC_FLAG "-static")
+endif()
 
+
+if(MINGW)
+	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${STATIC_FLAG} ${flag_coverage}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
@@ -250,11 +279,21 @@ ADD_CUSTOM_TARGET(Debug
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
 		COMMAND make)
 
+option(HTTP_DEBUGGER "Build with http debuger" OFF)
 
 # more directories of my main code
 
+include_directories( src/ )
+
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp)
+
+if(HTTP_DEBUGGER)
+    add_definitions(-DHTTP_DBG)
+    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/*.cpp)
+else()
+    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp)
+endif()
+
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
@@ -333,15 +372,15 @@ if(MINGW)
 endif()
 
 if(NOT MSVC AND NOT MINGW)
-	set(PTHREAD_LIB "pthread")
+	#set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 else()
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
 	set(MSVC_LIRARIES "iphlpapi")
 endif()
 
-target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES} ${GETTEXT_LIBS})
+target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
@@ -351,8 +390,8 @@ message("Sorted sources are:" "${TEST_SOURCES}")
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES}
-	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
+target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-debug.elf ${_lib})
@@ -362,8 +401,8 @@ endforeach()
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES}
-	gtest ${SODIUM_LIB} sodiumpp jsoncpp_lib_static)
+target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB}
+	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static)
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-release.elf ${_lib})

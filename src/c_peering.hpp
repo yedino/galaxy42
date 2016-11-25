@@ -12,6 +12,7 @@
 
 #include "crypto/crypto_basic.hpp"
 #include "c_udp_wrapper.hpp"
+#include "httpdbg/peering_stats.hpp"
 
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
@@ -44,6 +45,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		void add_limit_points(long int points);
 		void decrement_limit_points();
 		long int get_limit_points();
+        c_peering_stats & get_stats();
 
 		friend class c_tunserver;
 
@@ -51,7 +53,8 @@ class c_peering { ///< An (mostly established) connection to peer
 		c_ip46_addr	m_peering_addr; ///< peer physical address in socket format
 		c_haship_addr m_haship_addr; ///< peer haship address
 		unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey (when we know it)
-		std::atomic<long int> m_limit_points; // decrement when send packet to this peer
+        std::atomic<long int> m_limit_points; // decrement when send packet to this peer
+        c_peering_stats m_peering_stats;
 };
 
 ostream & operator<<(ostream & ostr, const c_peering & obj);
@@ -60,10 +63,9 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 	public:
 		#ifdef __linux__
 		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper);
-		#endif
-
-		#if defined(_WIN32) || defined(__CYGWIN__)
-		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_windows &udp_wrapper);
+		// __linux__
+		#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_asio &udp_wrapper);
 		#endif
 
 		virtual void send_data(const char * data, size_t data_size) override;
@@ -75,9 +77,9 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 		virtual void send_data_RAW_udp(const char * data, size_t data_size, int udp_socket); ///< direct write
 		#ifdef __linux__
 		std::reference_wrapper<c_udp_wrapper_linux> m_udp_wrapper; // TODO: sahred_ptr ?
-		#endif
-		#if defined(_WIN32) || defined(__CYGWIN__)
-		std::reference_wrapper<c_udp_wrapper_windows> m_udp_wrapper; // TODO: sahred_ptr ?
+		// __linux__
+		#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+		std::reference_wrapper<c_udp_wrapper_asio> m_udp_wrapper; // TODO: sahred_ptr ?
 		#endif
 };
 
