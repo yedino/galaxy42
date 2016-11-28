@@ -22,11 +22,7 @@ if(BUILD_STATIC_TUNSERVER)
 endif()
 
 if(MINGW)
-	if(CYGWIN)
-		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-	else()
 		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-	endif()
 endif()
 
 #-----------------------------------------------------------------------------
