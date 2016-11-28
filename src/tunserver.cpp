@@ -109,7 +109,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
-
+#include <json.hpp>
 
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
@@ -758,7 +758,6 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 }
 
 string c_tunserver::rpc_ping(const string &input_json) {
-	//Json::Value input(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "ping";
 	ret["msg"] = "pong";
@@ -952,6 +951,7 @@ void c_tunserver::event_loop(int time) {
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
+
 			c_peering * sender_as_peering_ptr  = nullptr; // TODO(r)-security review usage of this, and is it needed
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
