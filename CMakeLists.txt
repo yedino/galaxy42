@@ -491,10 +491,16 @@ add_custom_command(
 #	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
 	COMMAND cp tunserver.elf nocap-tunserver.elf
+	WORKING_DIRECTORY ./)
+
+add_custom_command(
+	TARGET ipclient.elf ipserver.elf tunserver.elf
+	POST_BUILD
 	COMMAND share/script/use-setcap tunserver.elf || echo "Can not set rights on binary, ignoring."
 	COMMAND share/script/show-source-help.sh
 	COMMAND share/script/show-program-help.sh
-	WORKING_DIRECTORY ./)
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 endif()
 
 # unset( USE_BOOST_MULTIPRECISION_DEFAULT )
