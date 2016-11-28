@@ -272,6 +272,7 @@ class c_tunserver : public c_galaxy_node {
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
 		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip
+		mutable std::mutex m_peer_mutex;
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
@@ -296,12 +297,10 @@ class c_tunserver : public c_galaxy_node {
 		 * Exception safety: strong exception guarantee
 		 */
 		std::pair<string,int> parse_ip_string(const std::string &ip_string);
-//		c_rpc_server m_rpc_server;
-//		/**
-//		 * @brief rpc_add_limit_points
-//		 * @param peer_ip peer hash ip
-//		 */
-//		bool rpc_add_limit_points(const std::string &peer_ip);
+
+		c_rpc_server m_rpc_server;
+		std::string rpc_ping(const std::string &input_json);
+		std::string rpc_peer_list(const std::string &input_json);
 };
 
 // ------------------------------------------------------------------
