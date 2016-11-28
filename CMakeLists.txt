@@ -320,7 +320,7 @@ if(MINGW)
 	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${STATIC_FLAG} ${flag_coverage}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
