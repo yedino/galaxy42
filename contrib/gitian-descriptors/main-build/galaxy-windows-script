@@ -253,7 +253,7 @@ declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "li
 	"libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" "libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
 	"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" "libs/numeric/conversion" "libs/array" "libs/program_options" \
 	"libs/container" "libs/move" "libs/math" "libs/tokenizer" "libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" "libs/unordered" \
-	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" "libs/winapi" )
+	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" "libs/winapi" "libs/circular_buffer")
 
 
 # speed up boost download by initialize submodules asynchronously
