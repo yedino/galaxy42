@@ -18,3 +18,7 @@
 	path = depends/sodiumpp
 	url = https://github.com/yedino/sodiumpp.git
 	branch = tigusoft
+[submodule "depends/json"]
+	path = depends/json
+	url = https://github.com/nlohmann/json
+	branch = develop
