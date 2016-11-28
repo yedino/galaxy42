@@ -23,9 +23,6 @@ msgstr ""
 msgid ""
 "This tool will configure your computer for the SELECTED by you functions of "
 "$programname."
-#msgstr ""
-#"This tool will configure your computer for the SELECTED by you functions of "
-#"$programname."
 msgstr ""
 "Цей інструмент налаштує ваш комп’ютер для ОБРАНИХ Вами функцій "
 "$programname."
@@ -33,24 +30,18 @@ msgstr ""
 msgid ""
 "This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
 "select option, ENTER to finish."
-#msgstr ""
-#"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
-#"select option, ENTER to finish."
 msgstr ""
 "Це, здається, текстовий режим графичного інтерфейсу, Ви можете використовувати кнопки Вгору/Вниз, Пробіл щоб "
 "обрати опцію, ENTER щоб закінчити."
 
 msgid "We recognize your system/platform as:"
-#msgstr "We recognize your system/platform as:"
 msgstr "Ми визначили вашу систему/платформу як:"
 
 #, sh-format
 msgid "Configure computer for $programname"
-#msgstr "Configure computer for $programname"
 msgstr "Налаштувати комп’ютер для $programname"
 
 msgid "Ok"
-#msgstr "Ok"
 msgstr "Далі"
 
 msgid "Quit"
@@ -61,70 +52,49 @@ msgid "How do you want to use $programname:"
 msgstr "Як Ви бажаєте використовувати $programname:?"
 
 msgid "menu_task_warn"
-#msgstr "Show warnings"
 msgstr "Показувати попередження"
 
 #, sh-format
 msgid "menu_task_build"
-#msgstr "Build this program from source code"
 msgstr "Побудувати цю программу з вихідного коду"
 
 #, sh-format
 msgid "menu_task_touse"
-#msgstr "Use this program on this computer"
 msgstr "Використати цю программу на цьому комп’ютері"
 
 #, sh-format
 msgid "menu_task_devel"
-#msgstr "Develop this program"
 msgstr "Розробляти цю программу"
 
 #, sh-format
 msgid "menu_task_bgitian"
-#msgstr "Compile and sign/publish (e.g. Gitian)"
 msgstr "Скомпілювати та підписати/опублікувати (наприклад Gitian)"
 
 msgid "Done"
-#msgstr "Done"
 msgstr "Готово"
 
 #, sh-format
 msgid "Finished installation of $programname."
-#msgstr "Finished installation of $programname."
 msgstr "Інсталяція $programname завершена."
 
 #, sh-format
 msgid "warn2_net"
-#msgstr ""
-#"WARNING: SPECIAL settings of networks - maybe names or functions of network "
-#"cards (e.g. eth0/br0/lxcbr0) will be changed."
 msgstr ""
 "Попередження: СПЕЦІАЛЬНІ налаштування мереж - можливо, імена або функції мережевих"
 "адаптерів (наприклад eth0/br0/lxcbr0) буде змінено."
 
 msgid "warn2_net_title"
-#msgstr "WARNING (SPECIAL: networks)"
 msgstr "ПОПЕРЕДЖЕННЯ (SPECIAL: networks)"
 
 msgid "warning_build"
-#msgstr "* Installing tools to build a source code"
 msgstr "* Інсталювання інструментів для побудови вихідного коду"
 
 msgid "warning_devel"
-#msgstr ""
-#"* We're going to install some developer tools e.g. to simulate lot of "
-#"networks on this computer (network namespace)."
 msgstr ""
 "* Ми збираємося інсталювати деякі інструменти розробника. Наприклад, щоб зімітувати вілику кількисть"
 "мереж на цьому комп’ютері (network namespaces)."
 
 msgid "warning_bgitian"
-#msgstr ""
-#"* We're going to configure your computer to using Gitian (in virtualization "
-#"LXC). Warning, it can make some others network cards and change settings "
-#"actually using cards. For example other IP address from current main "
-#"Internet link (e.g. eth0) can be showed/moved like attached to other card "
-#"(that's how a 'bridge' works)"
 msgstr ""
 "* Ми збираємось налаштувати ваш комп’ютер для використання Gitian (у віртуалізації "
 "LXC). Попередження, це може створити декілько інших мережевих адаптерів і змінити налаштування "
@@ -134,143 +104,105 @@ msgstr ""
 
 #, sh-format
 msgid "warning_SUMMARY"
-#msgstr "Please confirm undermentioned changes (they impact security)."
 msgstr "Будь ласка, підтвердіть нижчезазначені зміни (вони впливають на безпеку)."
 
 msgid "warning_SUMMARY_TITLE"
-#msgstr "Caution safety and summary"
 msgstr "Caution safety and summary"
 
 msgid "warn_root"
-#msgstr "# We will need root (admin) rights during this installation."
 msgstr "# Нам буде потрібен root (admin) дозвіл впродовж інсталяції."
 
 msgid "warn_fw"
-#msgstr "# Please remember to install NOW a firewall!"
 msgstr "# Будь ласка, не забудьте інсталювати брандмауер!"
 
 msgid "menu_task_verbose"
-#msgstr "(Show more details during installation)"
 msgstr "(Показувати більше деталей під час інсталяції)"
 
 msgid "install_progress_title"
-#msgstr "Progress of installation"
 msgstr "Прогрес інсталювання"
 
 #, sh-format
 msgid "warning_touse $programname"
-#msgstr "* Configure computer for running here the program $programname"
 msgstr "* Налаштувати комп’ютер для роботи програми $programname"
 
 msgid "status_done_step_BEFORE"
-#msgstr "Now we're doing:"
 msgstr "Зараз ми робимо:"
 
 msgid "status_done_step_PRESSKEY"
-#msgstr "Please press ENTER to continue..."
 msgstr "Будь ласка, натисніть ENTER для продовження..."
 
 msgid "error_init_platforminfo"
-#msgstr "No information about this platform/system"
 msgstr "Відсутня інформація щодо цієї платформи/системи"
 
 #, sh-format
 msgid "status_done_step $item"
-#msgstr "The step is done: '$item'."
 msgstr "Етап завершено: '$item'."
 
 #, sh-format
 msgid "menu_main_title $programname:"
-#msgstr "Installer $programname"
 msgstr "Установник $programname"
 
 msgid "menu_taskpack_normal_builduse"
-#msgstr "Simple: build this program to use it only here"
 msgstr "Простий: побудувати цю программу для використання тільки на цьюму комп’ютері."
 
 msgid "menu_taskpack_custom"
-#msgstr "Chose the options..."
 msgstr "Виберіть варіанти..."
 
 msgid "menu_taskpack_quick_builduse"
-#msgstr "No confirmations (dangerous!) - build & use"
 msgstr "Ніяких підтверджень (небезпечно!) - побудувати & використати"
 
 msgid "menu_taskpack_quick_devel"
-#msgstr "No confirmations (dangerous!) - for developer"
 msgstr "Ніяких підтверджень (небезпечно!) - для розробника"
 
 msgid "tasks_we_will_do"
-#msgstr "We're going to do:"
 msgstr "Ми збираємось зробити:"
 
 #, sh-format
 msgid "this_script_uses_sudo_flag $sudo_flag"
-#msgstr ""
-#"Script isn't running like a root, but you put flag $sudo_flag and we think "
-#"so sudo is ready and we're continuing"
 msgstr ""
 "Скрипт не запущений із root дозвілом, але ви поставили прапор $sudo_flag то ж ми думаємо "
 "що sudo вже є і тому ми йдемо далі."
 
 #, sh-format
 msgid "this_script_must_be_run_as_root_or $sudo_flag"
-#msgstr ""
-#"This script must be run as root, or else run it with flag $sudo_flag to use "
-#"sudo"
 msgstr ""
 "Цей скрипт повинен бути запущений із root дозвілом або потрібно запустити його з прапором $sudo_flag щоб використати "
 "sudo"
 
 msgid "error_init_platforminfo_unknown"
-#msgstr "This platform/OS is unknown"
 msgstr "Ця платворма/ОС невідома."
 
 msgid "install_packages_title"
-#msgstr "Packages to install"
 msgstr "Пакети для інсталяції"
 
 msgid "Install"
-#msgstr "Install"
 msgstr "Інсталяція"
 
 #, sh-format
 msgid "L_install_failed"
-#msgstr "Installation failed"
 msgstr "Інсталяція не вдалася"
 
 #, sh-format
 msgid "L_install_nothing_to_do"
-#msgstr "Nothing to install now"
 msgstr "Нема нічого для інсталяції"
 
 msgid "L_now_installing_gitian_lxc"
-#msgstr "Now we are installing LXC for Gitian"
 msgstr "Зараз ми інсталюємо LXC для Gitian"
 
 #, sh-format
 msgid "L_needrestart_summary_text"
-#msgstr "System restart might be needed for following reasons:"
 msgstr "Може знадобитися перезавантаження системи з наступних причин:"
 
 msgid "L_needrestart_summary_title"
-#msgstr "Restart needed"
 msgstr "Необхідно перезавантаження"
 
 msgid "L_needrestart_LXC_maybe"
-msgstr ""
-"# Perhaps (but hopefully not) - LXC network (needed to use Gitian) should "
-"work now, but in case of problems you might want to restart the system to be "
-"sure."
 msgstr ""
 "# Можливо (але сподіваємося що ні) - LXC мережа (необхідна для використання Gitian) повинна "
 "працювати зараз, але в разі будь яких проблем Вам може знадобитися перезавантаження системи, щоб бути "
 "впевненим."
 
 msgid "L_program_is_pre_pre_alpha"
-#msgstr ""
-#"This program is not yet ready nor secure, do not use it in this version. "
-#"(Please use it only on a test virtual machine)."
 msgstr ""
 "Ця програма ще не готова, не використовувайте її у цій версії. "
 "(Будь ласка, використовувайте її тільки на тестовій віртуальній машині)."
@@ -278,40 +210,28 @@ msgstr ""
 #, sh-format
 msgid ""
 "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)."
-#msgstr "Can not find script library $lib (in directory $dir_base_of_source)."
 msgstr "Не можу знайти скрипт бібліотеці library $lib (у директорії $dir_base_of_source)."
 
 #, sh-format
 msgid "We will install packages: $packages_str now (as root)"
-#msgstr "We will install packages: $packages_str now (as root)"
 msgstr "Ми проінсталюємо пакети: $packages_str зараз (як root)"
 
 #, sh-format
 msgid "L_install_packages_text $packages_str"
-#msgstr "We will install packages: $packages_str"
 msgstr "Ми проінсталюємо пакети: $packages_str"
 
 msgid "menu_taskpack_devel_builduse"
-#msgstr "Advanced: build program in Gitian / develop it"
 msgstr "Просунутий: побудувати програму в Gitian / розробляти її"
 
 msgid "install_progress_fix"
-#msgstr "Automated fix of a problem"
 msgstr "Автоматичне вирішення проблем"
 
 msgid "L_fix_cgroupfs_mount"
-#msgstr ""
-#"This system seems to not properly support cgroupfs. We will try to fix this. "
-#"(This is needed to use Gitian)."
 msgstr ""
 "Здається, що ця система не підтримує належним чином cgroupfs. Ми постараємося виправити це. "
 "(Це потрібно щоб вікористовувати Gitian)."
 
 msgid "L_fix_ubuntu_old_build"
-#msgstr ""
-#"This system (older version of Ubuntu) needs special settings for "
-#"compilation. We will try to fix this. (This is needed to compile native "
-#"programs on this machine)."
 msgstr ""
 "Ця система (застаріла версія Ubuntu) вимагає спеціальних налаштувань для "
 "компіляції. Ми постараємося виправити це. (Це потрібно для компіляції натівної "
@@ -319,14 +239,6 @@ msgstr ""
 
 #, sh-format
 msgid "L_what_now"
-#msgstr ""
-#"To normally compile the program nativly (and use it later) we recommend "
-#"command:\n"
-#"  ./do \n"
-#"And for Gitian build (for this or other system) we recommend:\n"
-#"  ./build-gitian\n"
-#"You can change install options by running ./install.sh. List of other "
-#"options you will see by running ./menu or by reading documentation."
 msgstr ""
 "Для звичайної компіляції програми натівно (та подальшого використування) ми рекомендуємо "
 "команду:\n"
@@ -338,60 +250,29 @@ msgstr ""
 
 #, sh-format
 msgid "L_fix_uninstall_apt_cacher bad=$apt_cacher_bad good=$apt_cacher_good."
-#msgstr ""
-#"We must now uninstall you other apt cacher program: [$apt_cacher_bad], so "
-#"that we can instead install another one that we need: [$apt_cacher_good]."
 msgstr ""
 "Ми повинні видалити вашу apt cacher програму: [$apt_cacher_bad], щоб "
 "ми змогли взамін інсталювати потрібну нам : [$apt_cacher_good]."
 
 msgid "install_info_title"
-#msgstr "Info"
 msgstr "Інформація"
 
 msgid "L_install_option_lxcnet_bridged_TITLE"
-#msgstr "Gitian: LXC Network - give access"
 msgstr "Gitian: LXC мережа - дати доступ"
 
 msgid "L_install_option_lxcnet_bridged_ITEM_all"
-#msgstr "Allow LXC/Gitian to access ALL NETWORK"
 msgstr "Дозволити LXC/Gitian доступ до ВСІХ МЕРЕЖ"
 
 msgid "L_install_option_lxcnet_bridged_ITEM_some"
-#msgstr "Limit LXC/Gitian access to only some network"
 msgstr "Обмежити LXC/Gitian доступ тільки до одної мережи"
 
 msgid "L_install_option_lxcnet_bridged_INPUTBOX_cards"
-#msgstr "Space-separated list of network interfaces that LXC/Gitian can use"
 msgstr "Перелік мережевих інтерфейсів, які можуть використовувати LXC/Gitian, розділених пробілами"
 
 msgid "menu_task_autoselect"
-#msgstr "Skip some of install questions (maybe not safe!)"
 msgstr "Пропустити деякі питання інсталяції (може бути небезпечним!)"
 
 msgid "L_install_option_lxcnet_bridged_INFO"
-#msgstr ""
-#"In the next step you will choose whether to allow LXC to use all network "
-#"cards of this computer, or to limit that to manually selected ones.\n"
-#"\n"
-#"HINT: Allowing all cards (all) is easier and more compatible choice if you "
-#"do not care.\n"
-#"\n"
-#"Details:\n"
-#"Gitian uses LXC to download source code, therefore LXC must have access to "
-#"network. \n"
-#"LXC needs only access to the network card that you are using to connect to "
-#"Internet(or to a server that has all files needed to build). \n"
-#"It is possible that you have now or in future many network cards in computer "
-#"(e.g. WiFi, VPN, Cjdns). \n"
-#"It is also possible that some of them are very important (e.g. work VPN) and "
-#"absolutelly you don't want to give any chance LXC to access such card.\n"
-#"\n"
-#"Therefore you have to decide (in next step)\n"
-#"Either allow LXC to use all and any network card, this is easy and "
-#"comfortable.\n"
-#"Or else allow LXC to access only some of card - you will manually enter list "
-#"of cards [eth0 eth1 wlan0...] that LXC has the right to ever user."
 msgstr ""
 "На наступному кроці ви будете вибирати чи слід дозволити LXC використовувати всі мережеві "
 "адаптери або слід обмежити тільки деякими.\n"
@@ -416,40 +297,31 @@ msgstr ""
 "адаптерів [eth0 eth1 wlan0...] які LXC зможе використовувати."
 
 msgid "L_install_option_lxcnet_dns_TITLE"
-#msgstr "Gitian: LXC Network - select DNS"
 msgstr "Gitian: LXC мережа - оберіть DNS"
 
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_chattr"
-#msgstr "Add 8.8.8.8 /etc/resolv.conf;Block chattr +i"
 msgstr "Додати 8.8.8.8 до /etc/resolv.conf;Block chattr +i"
 
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_d"
-#msgstr "Add 8.8.8.8 resolv.conf.d (Ubuntu,Mint,...)"
 msgstr "Додати 8.8.8.8 до resolv.conf.d (Ubuntu,Mint,...)"
 
 msgid "L_install_option_lxcnet_dns_ITEM_none"
-#msgstr "Leave it as is, I will fix it if needed"
 msgstr "Залишите все як є, ми виправимо це якщо буде потрібно"
 
 msgid "L_install_option_lxcnet_dns_needsfix"
-#msgstr "TODO"
 msgstr "TODO"
 
 msgid "L_install_option_lxcnet_dns_INFO"
-#msgstr "TODO"
 msgstr "TODO"
 
 #, fuzzy
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
-#msgstr "Add 8.8.8.8 resolv.conf.d (Ubuntu,Mint,...)"
 msgstr "Додати 8.8.8.8 до resolv.conf.d (Ubuntu,Mint,...)"
 
 #, fuzzy, sh-format
 msgid "L_install_fail infile=$infile"
-#msgstr "Installation failed"
 msgstr "Інсталяція не вдалась"
 
 #, fuzzy, sh-format
 msgid "L_install_fail2"
-#msgstr "Installation failed"
 msgstr "Інсталяція не вдалась"
