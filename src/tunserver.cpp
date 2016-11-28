@@ -109,7 +109,7 @@ const char * g_demoname_default = "route_dij";
 #include "c_ip46_addr.hpp"
 #include "c_peering.hpp"
 #include "generate_crypto.hpp"
-#include "json/json.hpp"
+#include <json.hpp>
 
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"

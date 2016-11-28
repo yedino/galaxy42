@@ -2,7 +2,7 @@
 
 #include "rpc.hpp"
 #include "../trivialserialize.hpp"
-#include "../json/json.hpp"
+#include <json.hpp>
 
 #define _dbg(X) do std::cout << X << "\n"; while(0)
 
