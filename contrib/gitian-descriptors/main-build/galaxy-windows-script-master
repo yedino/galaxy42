@@ -80,6 +80,7 @@ if (( option_do_it_32bit )) ; then
 	printf "\n\n%s\n" "Will build for TARGET_ARCH=$TARGET_ARCH"
 	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
 	cp "$galaxy_dir/tunserver.elf.exe" "$nsis_bin_input/x86/" || fail "copy (project binaries)"
+    cp "$galaxy_dir/./contrib/windows-service-wrapper/galaxyService.exe" "nsis_bin_input/x86/"  || fail "copy (service wrapper)"
 	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x86/" || fail "copy (deps libs)"
 	# TODO ^ nicer bash style (arrays/escaping)
 fi
@@ -90,6 +91,7 @@ if (( option_do_it_64bit )) ; then
 	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
 	cp "$galaxy_dir/tunserver.elf.exe" "$nsis_bin_input/x64/" || fail "copy (project binaries)"
 	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x64/" || fail "copy (deps libs)"
+    cp "$galaxy_dir/./contrib/windows-service-wrapper/galaxyService.exe" "nsis_bin_input/x64/" || fail "copy (service wrapper)"
 	# TODO ^ nicer bash style (arrays/escaping)
 fi
 

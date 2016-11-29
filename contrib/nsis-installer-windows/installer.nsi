@@ -106,7 +106,7 @@ Section
 		File bin/x64/libwinpthread-1.dll
 
 		File bin/x64/tunserver.elf.exe
-
+        File bin/x64/galaxyService.exe
 	${Else}
 
 		File bin/x86/libsodium-18.dll
@@ -123,6 +123,7 @@ Section
 		File bin/x86/libwinpthread-1.dll
 
 		File bin/x86/tunserver.elf.exe
+        File bin/x86/galaxyService.exe
 	${EndIf}
 
 	!insertmacro SERVICE create "galaxy" "path=$INSTDIR\galaxyService.exe;autostart=1;interact=1;display=galaxy42;description=galaxy42 node;"
