@@ -397,7 +397,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
 
-if(WIN32 OR CYGWIN)
+if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
 	add_custom_target(windowsService)
 	add_dependencies(windowsService galaxyService)
