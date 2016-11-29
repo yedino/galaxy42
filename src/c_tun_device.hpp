@@ -20,7 +20,6 @@ class c_tun_device {
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
                 virtual size_t write_to_tun(void *buf, size_t count) = 0;
-		virtual std::array<uint8_t, 16> get_my_ipv6() = 0;
 };
 
 #ifdef __linux__
@@ -35,11 +34,9 @@ class c_tun_device_linux final : public c_tun_device {
 		bool incomming_message_form_tun() override;
 		size_t read_from_tun(void *buf, size_t count) override;
 		size_t write_to_tun(void *buf, size_t count) override;
-		std::array<uint8_t, 16> get_my_ipv6() override;
 
 	private:
 		const int m_tun_fd;
-		std::array<uint8_t, 16> m_my_ipv6_address;
 };
 
 // __linux__
