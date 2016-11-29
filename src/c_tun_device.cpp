@@ -22,11 +22,9 @@
 
 c_tun_device_linux::c_tun_device_linux()
 :
-	m_tun_fd(open("/dev/net/tun", O_RDWR)),
-	m_my_ipv6_address()
+	m_tun_fd(open("/dev/net/tun", O_RDWR))
 {
 	assert(! (m_tun_fd<0) ); // TODO throw?
-	m_my_ipv6_address.fill(0);
 }
 
 void c_tun_device_linux::set_ipv6_address
@@ -38,8 +36,7 @@ void c_tun_device_linux::set_ipv6_address
 	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
-	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
-	std::copy(binary_address.begin(), binary_address.end(), m_my_ipv6_address.begin());
+        NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
@@ -70,10 +67,6 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
-}
-
-std::array<uint8_t, 16> c_tun_device_linux::get_my_ipv6() {
-	return m_my_ipv6_address;
 }
 
 //__linux__
