@@ -47,7 +47,7 @@ sourcefile=""
 mainfile_messages_pot=""
 opt_notcare=0
 
-list_of_languages="pl en ua ru" # <--- add here more languages
+list_of_languages="pl en ru ru_UA" # <--- add here more languages
 
 
 MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp dir"
@@ -71,9 +71,12 @@ function lang_new_and_translate() {
 	# -j
 	for lang in $list_of_languages
 	do
-		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || fail "msgmerge"
-		$EDITOR "src-misc/locale/${textdomain}/${lang}.po"
-		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt"
+		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || {
+			echo "Error in msgmerge for lang=$lang"
+			continue
+		}
+		$EDITOR "src-misc/locale/${textdomain}/${lang}.po" || continue
+		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt for lang=$lang"
 	done
 }
 
