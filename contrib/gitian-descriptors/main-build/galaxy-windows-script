@@ -405,6 +405,7 @@ make galaxyService || fail "make of our project (main binary) failed"
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
+sha256sum  /home/ubuntu/build/galaxy42/contrib/windows-service-wrapper/galaxyService.exe
 sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
 sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
 
