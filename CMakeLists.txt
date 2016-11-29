@@ -81,8 +81,6 @@ message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
-
-
 set (Boost_DEBUG OFF)
 if (CYGWIN)
 	set(BOOST_LOCALE_LINK_LIB boost_locale-mt boost_thread-mt boost_atomic-mt)
@@ -243,7 +241,6 @@ else()
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
 endif()
 
-
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(depends/googletest/googletest/include/)
@@ -300,7 +297,6 @@ else()
 	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=0) # MATCH (name of this option) must match also in project.hpp!
 endif()
 
-
 # used e.g. by various crypto like ENABLE_CRYPTO_SIDH , ENABLE_CRYPTO_NTRU
 include_directories( build_extra )
 
@@ -320,10 +316,10 @@ if(MINGW)
 	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fPIE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
-
 
 ADD_CUSTOM_TARGET(Fast
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Fast ${CMAKE_SOURCE_DIR}
@@ -421,7 +417,6 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 #	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 
-
 if(MINGW)
 	set(MINGW_LIBRARIES ws2_32 iphlpapi)
 endif()
@@ -451,7 +446,6 @@ foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-debug.elf ${_lib})
 endforeach()
-
 
 #release version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")

@@ -16,10 +16,9 @@
 	branch = master
 [submodule "sodiumpp"]
 	path = depends/sodiumpp
-	url = https://github.com/yedino/sodiumpp.git
+	url = https://github.com/mikurys/sodiumpp.git
 	branch = tigusoft
 [submodule "depends/json"]
 	path = depends/json
 	url = https://github.com/nlohmann/json
 	branch = develop
-
