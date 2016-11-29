@@ -757,6 +757,18 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
+bool c_tunserver::check_packet_destination_address(const std::array<uint8_t, 16> &address, const string &packet) {
+	std::string packet_dst_address(packet, 28, 16); // from substring
+	assert(address.size() == packet_dst_address.size());
+	assert(packet_dst_address.size() == 16); // ipv6 address size == 16
+	for (int i = 0; i < 16; i++) {
+		if (address.at(i) != static_cast<uint8_t>(packet_dst_address.at(i))) {
+			return false;
+		}
+	}
+	return true;
+}
+
 string c_tunserver::rpc_ping(const string &input_json) {
 	//Json::Value input(input_json);
 	nlohmann::json ret;
@@ -1043,6 +1055,10 @@ void c_tunserver::event_loop(int time) {
 						_note("Using CT tunnel to decrypt data for us");
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
+						if (!check_packet_destination_address(m_tun_device.get_my_ipv6(), tundata)) {
+							_warn("crypto authentification of IP failed");
+							throw std::runtime_error("crypto authentification of IP failed");
+						}
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
                                                 auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 						_assert_throw( (write_bytes == tundata.size()) );
