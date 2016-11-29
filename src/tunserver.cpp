@@ -592,12 +592,10 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 }
 
 std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const char *buff, size_t buff_size, unsigned char ipv6_offset) {
-	// vuln-TODO(u) throw on invalid size + assert
-
 	size_t pos_src = ipv6_offset + g_ipv6_rfc::header_position_of_src , len_src = g_ipv6_rfc::header_length_of_src;
 	size_t pos_dst = ipv6_offset + g_ipv6_rfc::header_position_of_dst , len_dst = g_ipv6_rfc::header_length_of_dst;
-	assert(buff_size > pos_src+len_src);
-	assert(buff_size > pos_dst+len_dst);
+	if(buff_size < pos_src+len_src) throw std::runtime_error("undersized buffer");
+	if(buff_size < pos_dst+len_dst) throw std::runtime_error("undersized buffer");
 	// valid: reading pos_src up to +len_src, and same for dst
 
 #ifdef __linux__
@@ -775,7 +773,7 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 		oss << peer.second->get_pip();
 		oss << "-";
 		auto hip = peer.second->get_hip();
-		for (int i = 0; i < hip.size(); i+=2) {
+		for (size_t i = 0; i < hip.size(); i+=2) {
 			uint16_t block = 0;
 			block = hip[i] << 8;
 			block += hip[i+1];
@@ -947,8 +945,9 @@ void c_tunserver::event_loop(int time) {
 			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
 			assert( size_read >= 2 ); // buf: reads from position 0..1 are asserted as valid now
 
-			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) ); // TODO
-			assert(proto_version >= c_protocol::current_version ); // let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
+			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) );
+			// let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
+			if (c_protocol::current_version < proto_version) throw std::runtime_error("proto_version too new!");
 			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
