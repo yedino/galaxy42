@@ -324,15 +324,15 @@ msgstr "In the next step you will choose your DNS (Domain Name System) server fo
 "127.0.0.1, it wan't work inside LXC.\n"
 "\n"
 "In this situation - set your system to use for example DNS from Google e."
-"g.8.8.8.8 witch works almost always.\n"
-"Option [none] - you can do it yourself after instalation. If system doesn't "
+"g.8.8.8.8 which works almost always.\n"
+"Option [none] - you can do it yourself after installation. If system doesn't "
 "use DNS only localhost is nothing you need to do.\n"
 "Option [resolv_chattr] - it works everywhere but it's nice solution: append "
 "DNS 8.8.8.8 /etc/resolv.conf and block the changes it by chattr +i !\n"
 "Option [resolv_only] - append 8.8.8.8 to resolv.conf but if system upgrade "
 "this file it will be deleted.\n"
 "Option [resolv_d] - append 8.8.8.8 to resolv.conf.d/tail or similar - it "
-"works on system witch use this sub-system (e.g. Ubuntu, Mint)"
+"works on system which use this sub-system (e.g. Ubuntu, Mint)"
 
 
 
