@@ -102,7 +102,7 @@ public:
     c_tun_device_apple();
     void set_ipv6_address
             (const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
-    void set_mtu(uint32_t mtu);
+    void set_mtu(uint32_t mtu) override;
     bool incomming_message_form_tun() override; ///< returns true if tun is readry for read
     size_t read_from_tun(void *buf, size_t count) override;
     size_t write_to_tun(void *buf, size_t count) override;
