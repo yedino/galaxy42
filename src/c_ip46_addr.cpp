@@ -167,8 +167,8 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 #include <iostream>
 c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) 
 :
-	m_port(port),
-	m_address(boost::asio::ip::address::from_string(ip_addr))
+    m_address(boost::asio::ip::address::from_string(ip_addr)),
+    m_port(port)
 {
 }
 
