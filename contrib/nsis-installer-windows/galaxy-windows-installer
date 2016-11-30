@@ -94,3 +94,7 @@ printf "\n%s\n" "WRAPPING makensis localy in $(pwd)"
 	./makensis_wrapped "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
 	set +x
 popd
+
+# copy installer to gitian out dir (where can be accessed by host)
+cp "$galaxy42_dir/contrib/nsis-installer-windows/galaxy42_installer.exe" "/home/ubuntu/out" || fail "copy windows installer to 'out'"
+

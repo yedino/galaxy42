@@ -108,12 +108,12 @@ echo "FAKETIME = ${FAKETIME}"
 
 WRAP_DIR="$HOME/wrapped"
 HOSTS="x86_64-w64-mingw32 i686-w64-mingw32" # related to $TARGET_ARCH
-COMPILERS="g++ gcc cpp cc c++ nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # do we need "cc c++"? TODO
+COMPILERS="g++ gcc cpp g++-posix gcc-posix cpp-posix cc c++" # do we need "cc c++"? TODO
 
 ##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
 CONFIGFLAGS=""
 
-FAKETIME_HOST_PROGS="gcc g++ ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
+FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
 FAKETIME_PROGS="date zip"
 
 # We build own nsis from source. In this case we wrap makensis locally for our needs.
@@ -206,20 +206,20 @@ export PATH=${WRAP_DIR}:${PATH}
 # *** main build starts here ***
 
 ## set compilators
-export CC="$HOME/wrapped/$TARGET_ARCH-gcc"
-export CXX="$HOME/wrapped/$TARGET_ARCH-g++"
-export CPP="$HOME/wrapped/$TARGET_ARCH-cpp"
+export CC="$HOME/wrapped/$TARGET_ARCH-gcc-posix"
+export CXX="$HOME/wrapped/$TARGET_ARCH-g++-posix"
+export CPP="$HOME/wrapped/$TARGET_ARCH-cpp-posix"
 
 printf "\nPWD=$PWD in script $0\n"
 
 ## get and build lib gettext
-printf "\n\n=========================================================================\n\n"
-printf "gettext\n\n"
-pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
-rm -rf gettext-0.19.8/ libiconv-1.14/ || echo "clean previous gettext build, if there is"
-./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
-popd
-printf "\n\n"
+#printf "\n\n=========================================================================\n\n"
+#printf "gettext\n\n"
+#pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
+#rm -rf gettext-0.19.8/ libiconv-1.14/ || echo "clean previous gettext build, if there is"
+#./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
+#popd
+#printf "\n\n"
 
 ## clone and build boost
 printf "\n\n=========================================================================\n\n"
@@ -378,7 +378,7 @@ popd
 
 else
 	SODIUM_DIR="/home/ubuntu/build/libsodium"
-	[ -d "$SODIUM_DIR=" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
+	[ -d "$SODIUM_DIR" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
 	printf "\n\nSkipping sodium (as selected in options)\n\n"
 
 fi
@@ -399,11 +399,13 @@ echo "SODIUM_ROOT: $SODIUM_ROOT"
 
 printf "\n\nMoving on to main build of actually our project:"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH="$TARGET_ARCH" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
 make tunserver.elf || fail "make of our project (main binary) failed"
+make galaxyService || fail "make of our project (main binary) failed"
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
+sha256sum  /home/ubuntu/build/galaxy42/contrib/windows-service-wrapper/galaxyService.exe
 sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
 sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
 
