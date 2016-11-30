@@ -116,7 +116,7 @@ class c_multikeys_general : public c_multicryptostrings<TKey> {
 class c_multisign : public c_multicryptostrings< std::string > {
 	public:
 		c_multisign ();
-		virtual t_crypto_system_type get_system_type() const;
+		virtual t_crypto_system_type get_system_type() const override;
 
 		void add_signature_vec (const std::vector<std::string> &signatures_vec,
 							   t_crypto_system_type crypto_type);

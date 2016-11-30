@@ -467,6 +467,7 @@ bool c_tun_device_apple::incomming_message_form_tun() {
 
 size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
     assert(m_readed_bytes > 0);
+	if(m_readed_bytes > count) throw std::runtime_error("undersized buffer");
     // TUN header
     m_buffer[0] = 0x00;
     m_buffer[1] = 0x00;

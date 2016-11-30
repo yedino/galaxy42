@@ -77,8 +77,8 @@ void c_udp_wrapper_asio::send_data(const c_ip46_addr &dst_address, const void *d
 
 size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
 	//std::cout << "udp receive data" << std::endl;
-	if (m_bytes_readed > 0) { // readed data in m_buffer
-		assert(data_buf_size >= m_bytes_readed);
+    if (m_bytes_readed > 0) { // readed data in m_buffer
+		if (m_bytes_readed > data_buf_size) throw std::runtime_error("undersized buffer");
 //		std::copy_n(m_buffer.begin(), m_bytes_readed, data_buf);
 		std::copy_n(&m_buffer[0], m_bytes_readed, reinterpret_cast<uint8_t *>(data_buf));
 		size_t ret = m_bytes_readed;
