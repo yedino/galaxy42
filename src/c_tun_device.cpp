@@ -36,7 +36,7 @@ void c_tun_device_linux::set_ipv6_address
 	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
-        NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
