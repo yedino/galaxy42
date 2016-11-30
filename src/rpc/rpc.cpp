@@ -146,7 +146,7 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		// calling rpc function
 		const std::string response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
 		// serialize response
-		assert(response_size <= std::numeric_limits<uint16_t>::max());
+		assert(response.size() <= std::numeric_limits<uint16_t>::max());
 		uint16_t size = static_cast<uint16_t>(response.size());
 		m_write_data.resize(size + 2); ///< 2 first bytes for size
 		m_write_data[0] = static_cast<char>(size >> 8);
