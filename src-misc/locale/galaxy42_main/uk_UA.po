@@ -21,8 +21,8 @@ msgstr ""
 
 msgid "L_program_is_pre_pre_alpha"
 msgstr ""
-"UKRAINIAN TODO: This program is not yet ready nor secure, do not use it in "
-"this version. (Please use it only on a test virtual machine)."
+"UKRAINIAN TODO TEST: This program is not yet ready nor secure, do not use it "
+"in this version. (Please use it only on a test virtual machine)."
 
 msgid "L_program_is_copyrighted"
 msgstr "This program is Copyrighted, see LICENCE.txt"
