@@ -86,7 +86,7 @@ create_tun_component () {
 		pkgbuild --identifier $tun_identifier \
 			--root $tun_componenet_app \
 			--component-plist $tun_plist \
-			--install-location "/Applications" \
+                        --install-location "/Applications/galaxy42" \
 			$tun_pkg
 		
 		clean_dirs "$tun_componenet_app"
@@ -112,7 +112,7 @@ create_boost_component () {
 
 		pkgbuild --identifier $boost_identifier \
 			--root $boost_componenet_app \
-			--install-location "/Applications" \
+                        --install-location "/Applications/galaxy42" \
 			$boost_pkg
 		
 		clean_dirs "$boost_componenet_app"
@@ -132,7 +132,7 @@ create_sodium_component () {
 
 		pkgbuild --identifier $sodium_identifier \
 			--root $sodium_componenet_app \
-			--install-location "/Applications" \
+                        --install-location "/Applications/galaxy42" \
 			$sodium_pkg
 		
 		clean_dirs "$sodium_componenet_app"
@@ -143,6 +143,13 @@ create_galaxy_pkg() {
 	create_tun_component
 	create_boost_component
 	create_sodium_component
+        productbuild --synthesize \
+            --package tunserver.pkg \
+            --package boost.pkg \
+            --package sodium.pkg \
+            ./installer.pkg
+        #pkgutil --expand installer.pkg installer2
+        #pkgutil --flatten installer2 installer3.pkg
 
     pushd $SCRIPT_DIR
 		
