@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-27 13:51+0200\n"
+"POT-Creation-Date: 2016-11-29 14:55+0100\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -278,27 +278,8 @@ msgstr "Skończone, libsodium jest gotowe"
 msgid "L_lisodium_init_err"
 msgstr "błąd uruchomienia libsodium!"
 
-msgid "L_what_newKey_do"
-msgstr "Nazwa pliku wyjściowego dla klucza w domyślnej lokalizacji"
-
-msgid "L_what_newKeyFile_do"
-msgstr "Nazwa pliku wyjściowego dla klucza w określonej lokalizacji"
-
-msgid "L_what_keyType_do"
-msgstr "Rodzaje generowanych kluczy"
-
 msgid "L_parse_program_option"
 msgstr "Analiza opcji programu"
-
-msgid "L_gen_combo_crypto_key_require_examples"
-msgstr ""
-"POLECENIE: Generuje kombinacje klucza kryptograficznego\n"
-"wymaga [--new-key albo --new-key-file, --key-type]\n"
-"przykłady:\n"
-"--gen-key --new-key \"mój klucz\" --key-type \"ed25519:x3\" \"rsa:x1:"
-"size=4096\"\n"
-"--gen-key --new-key-file \"~/Documents/work/newkey.PRV\"--key-type \"ed25519:"
-"x3\" \"rsa:x1:size=4096\""
 
 msgid "L_what_demo_do"
 msgstr ""
@@ -378,7 +359,19 @@ msgstr "Nazwa kluczy do weryfikacji w określonej lokalizacji"
 msgid "L_what_toverifyDataFile_do"
 msgstr "Nazwa plików z danymi w określonej lokalizacji"
 
-msgid "L_what_signatureFile_do"
+#, fuzzy
+msgid "L_what_httpDbgPort_do"
+msgstr "To samo co --history"
+
+msgid "L_starting_httpdbg_server"
 msgstr ""
-"Zewnętrzna nazwa pliku podpisu w określonej lokalizacji\n"
-"Domyślna nazwa pliku z podpisem = nazwa pliku/klucza+\".sig\" rozszerzenie"
+
+#, fuzzy
+msgid "L_starting_main_server"
+msgstr "Uruchamiamy urządzenie TUN (wirtualna karta sieciowa)"
+
+msgid "L_main_server_ended"
+msgstr ""
+
+msgid "L_httpdbg_server_ended"
+msgstr ""

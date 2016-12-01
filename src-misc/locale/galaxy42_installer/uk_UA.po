@@ -309,19 +309,44 @@ msgid "L_install_option_lxcnet_dns_ITEM_none"
 msgstr "Залишите все як є, ми виправимо це якщо буде потрібно"
 
 msgid "L_install_option_lxcnet_dns_needsfix"
-msgstr "TODO"
+msgstr ""
+"Схоже що в /etc/resolv.conf \n"
+"Ви не вказали жодного публічного DNS-серверу (Іноді це попередження може бути "
+"помилковим. Перевірте себе)"
 
 msgid "L_install_option_lxcnet_dns_INFO"
-msgstr "TODO"
+msgstr "На наступному кроці Вам буде потрібно обрати DNS (Domain Name System) сервер для "
+"LXC\n"
+"адаптерів на цьому компʼютері чи обмежити його деяких з них.\n"
+"\n"
+"ПІДКАЗКА: обрана опція [resolv_chattr] буде, ймовірно, працювати, але це не дуже гарне "
+"рішення. Зазвичай на Debian вам не потрібно нічого робити [none].\n"
+"Деталі:\n"
+"Gitian у LXC потребує DNS для використання Інтернету \n"
+"Gitian/LXC робить копію налаштувань вашої системи.\n"
+"На жаль, якщо ваша система має DNS localhost сервер / "
+"127.0.0.1, то це не буде працювати всередині LXC.\n"
+"\n"
+"У цій сітуації - налаштуйте вашу систему для використання, наприклад, DNS від Google "
+"8.8.8.8 - він працює майже завжди.\n"
+"Опція [none] - ви можете зробити це власноруч після завершення інсталяції. Якщо система не "
+"використовує localhost в якості DNS, то не потрібно щось робити.\n"
+"Опція [resolv_chattr] - це працює завжди, але цене дуже гарне рішення: додати "
+"DNS 8.8.8.8 до /etc/resolv.conf та блокувати його зміну від chattr +i !\n"
+"Опція [resolv_only] - додає 8.8.8.8 до resolv.conf але якщо система буде оновлена, "
+"то цей файл може бути видалений.\n"
+"Опція [resolv_d] - додає 8.8.8.8 до resolv.conf.d/tail або подібне - це "
+"працює на системах які використовуют ці суб-системи (наприклад, Ubuntu, Mint тощо)"
 
-#, fuzzy
+#
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
 msgstr "Додати 8.8.8.8 до resolv.conf.d (Ubuntu,Mint,...)"
 
-#, fuzzy, sh-format
+#, sh-format
 msgid "L_install_fail infile=$infile"
 msgstr "Інсталяція не вдалась"
 
-#, fuzzy, sh-format
+#, sh-format
 msgid "L_install_fail2"
 msgstr "Інсталяція не вдалась"
+
