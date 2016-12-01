@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-05 14:56+0200\n"
+"POT-Creation-Date: 2016-11-30 12:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -251,19 +251,7 @@ msgstr ""
 msgid "L_lisodium_init_err"
 msgstr ""
 
-msgid "L_what_newKey_do"
-msgstr ""
-
-msgid "L_what_newKeyFile_do"
-msgstr ""
-
-msgid "L_what_keyType_do"
-msgstr ""
-
 msgid "L_parse_program_option"
-msgstr ""
-
-msgid "L_gen_combo_crypto_key_require_examples"
 msgstr ""
 
 msgid "L_what_demo_do"
@@ -317,5 +305,17 @@ msgstr ""
 msgid "L_what_toverifyDataFile_do"
 msgstr ""
 
-msgid "L_what_signatureFile_do"
+msgid "L_what_httpDbgPort_do"
+msgstr ""
+
+msgid "L_starting_httpdbg_server"
+msgstr ""
+
+msgid "L_starting_main_server"
+msgstr ""
+
+msgid "L_main_server_ended"
+msgstr ""
+
+msgid "L_httpdbg_server_ended"
 msgstr ""
