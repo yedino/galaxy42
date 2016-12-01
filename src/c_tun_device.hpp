@@ -13,10 +13,14 @@
  */
 class c_tun_device {
 	public:
+		string m_ifr_name; ///< the name of interface, as it is needed by various ioctls. We try to set it in set_ipv6_address()
+		bool m_ip6_ok; ///< did we yet succeed in setting IPv6
+
+		c_tun_device();
 		virtual ~c_tun_device() = default;
 		virtual void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) = 0;
-		virtual void set_mtu(uint32_t mtu) = 0;
+		virtual void set_mtu(uint32_t mtu) = 0; ///< sets MTU. first use set_ipv6_address
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
                 virtual size_t write_to_tun(void *buf, size_t count) = 0;
@@ -28,6 +32,7 @@ class c_tun_device_linux final : public c_tun_device {
 	friend class c_event_manager_linux;
 	public:
 		c_tun_device_linux();
+
 		void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
 		void set_mtu(uint32_t mtu) override;
@@ -36,7 +41,7 @@ class c_tun_device_linux final : public c_tun_device {
 		size_t write_to_tun(void *buf, size_t count) override;
 
 	private:
-		const int m_tun_fd;
+		const int m_tun_fd; ///< the fd for TUN
 };
 
 // __linux__
@@ -107,7 +112,6 @@ public:
     size_t read_from_tun(void *buf, size_t count) override;
     size_t write_to_tun(void *buf, size_t count) override;
 private:
-    std::string m_interface_name;
     const int m_tun_fd;
     boost::asio::io_service m_ioservice;
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
