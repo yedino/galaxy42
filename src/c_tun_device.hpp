@@ -6,6 +6,7 @@
 #include <string>
 //TODO (da2ce7) CIRCULAR HEADER INCLUDE
 #include "c_event_manager.hpp"
+#include <chrono>
 
 /**
  * @brief The c_tun_device class
@@ -20,6 +21,10 @@ class c_tun_device {
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
                 virtual size_t write_to_tun(void *buf, size_t count) = 0;
+    protected:
+        typedef std::chrono::system_clock time;
+        static const int number_of_tested_cards = 100;
+        static const int cards_testing_time = 5;
 };
 
 #ifdef __linux__
@@ -133,5 +138,19 @@ class c_tun_device_empty final : public c_tun_device {
 
 // else
 #endif
+
+class tun_device_err : public std::runtime_error
+{
+    public:
+        tun_device_err(const std::string& what_arg);
+        tun_device_err(const char* what_arg);
+};
+
+class tun_device_connection_err: public tun_device_err
+{
+    public:
+        tun_device_connection_err(const std::string& what_arg);
+        tun_device_connection_err(const char* what_arg);
+};
 
 #endif // C_TUN_DEVICE_HPP

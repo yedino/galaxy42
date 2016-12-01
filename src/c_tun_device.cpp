@@ -7,7 +7,6 @@
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
-
 #ifdef __linux__
 
 #include <cassert>
@@ -430,7 +429,14 @@ int c_tun_device_apple::get_tun_fd() {
     addr_ctl.ss_sysaddr = AF_SYS_CONTROL;
     addr_ctl.sc_unit = 1;
     // connect to first not used tun
+    int tested_card_counter = 0;
+    auto t0 = time::now();
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
+        auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
+        if (tested_card_counter++ > number_of_tested_cards)
+            throw tun_device_connection_err(boost::locale::gettext("L_max_number_of_tested_cards_limit_reached"));
+        if (int_s >= cards_testing_time)
+            throw tun_device_connection_err(boost::locale::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
 
@@ -523,3 +529,27 @@ size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
 
 // else
 #endif
+
+tun_device_err::tun_device_err(const std::string& what_arg):
+    std::runtime_error(what_arg)
+{
+
+}
+
+tun_device_err::tun_device_err(const char* what_arg):
+    std::runtime_error(what_arg)
+{
+
+}
+
+tun_device_connection_err::tun_device_connection_err(const std::string& what_arg):
+    tun_device_err(what_arg)
+{
+
+}
+
+tun_device_connection_err::tun_device_connection_err(const char* what_arg):
+    tun_device_err(what_arg)
+{
+
+}
