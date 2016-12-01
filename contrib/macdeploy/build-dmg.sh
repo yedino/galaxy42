@@ -130,6 +130,7 @@ create_boost_component () {
 			$boost_pkg
 		
 		clean_dirs "$boost_componenet_app"
+		clean_files "$boost_plist"
     popd
 }
 create_sodium_component () {
@@ -152,6 +153,7 @@ create_sodium_component () {
 			$sodium_pkg
 		
 		clean_dirs "$sodium_componenet_app"
+		clean_files "$sodium_plist"
     popd
 }
 create_galaxy_pkg() {
@@ -169,6 +171,8 @@ create_galaxy_pkg() {
 		productbuild --distribution ./Distribution.xml \
 				--package-path . \
 				$PKG_PATH
+		
+		clean_files "Distribution.xml" "tunserver.pkg" "boost.pkg" "sodium.pkg"
     popd
 }
 create_galaxy_dmg() {
@@ -176,27 +180,34 @@ create_galaxy_dmg() {
 	local vol_name="galaxy42_volume"
 	local vol_size="10000k"
             
-	clean_files "$tmp_name"
+    pushd $SCRIPT_DIR
+		clean_files "$tmp_name" "${DMG_PATH}"
 
-	hdiutil create -srcfolder "${PKG_PATH}" \
-		-volname "${vol_name}" \
-		-fs HFS+ \
-		-fsargs "-c c=64,a=16,e=16" \
-		-format UDRW \
-		-size "${vol_size}" \
-		"${tmp_name}"
-	
+		hdiutil create -srcfolder "${PKG_PATH}" \
+			-volname "${vol_name}" \
+			-fs HFS+ \
+			-fsargs "-c c=64,a=16,e=16" \
+			-format UDRW \
+			-size "${vol_size}" \
+			"${tmp_name}"
+		
 
 
-	device=$(hdiutil attach -readwrite -noverify -noautoopen "${tmp_name}" | egrep '^/dev/' | sed 1q | awk '{print $1}' )
+		device=$(hdiutil attach -readwrite -noverify -noautoopen "${tmp_name}" | egrep '^/dev/' | sed 1q | awk '{print $1}' )
+		
+		echo "sudo is necessary in this step to setting permissions properly:"
+		set -x
+		sudo chmod -Rf go-w "/Volumes/${vol_name}"
+		set +x
 
-	sudo chmod -Rf go-w "/Volumes/${vol_name}"
+		sync
+		sync
 
-	sync
-	sync
-
-	hdiutil detach "${device}"
-	hdiutil convert "${tmp_name}" -format UDZO -imagekey zlib-level=9 -o $DMG_PATH
+		hdiutil detach "${device}"
+		hdiutil convert "${tmp_name}" -format UDZO -imagekey zlib-level=9 -o "${DMG_PATH}"
+		
+		clean_files "${tmp_name}" "${PKG_PATH}"
+	popd 
 }
 
 main() {
