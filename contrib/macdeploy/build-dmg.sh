@@ -73,7 +73,7 @@ change_tun_dylib_loadpath () {
 	for dylib in "${dylib_list[@]}"; do
 		last_column='overwrite_me'
 		get_last_column last_column $dylib
-		install_name_tool -change $dylib "/Applications/galaxy42/$last_column" $tun_path
+		install_name_tool -change $dylib "/Applications/Galaxy42/$last_column" $tun_path
 	done
 
 }
@@ -81,7 +81,7 @@ change_tun_dylib_loadpath () {
 create_tun_component () {
 	echo "creating tun.pkg component"
 	local tun_identifier="tunserver"
-        local tun_componenet_app="tunserver.app"
+    local tun_componenet_app="Tunserver.app"
 	local tun_plist="tunserver.plist"
 	local tun_bin="tunserver.elf"
 	local tun_pkg="tunserver.pkg"
@@ -95,11 +95,11 @@ create_tun_component () {
 		cp -n "../../$tun_bin" $tun_componenet_app
 		change_tun_dylib_loadpath
 		
-		pkgbuild --analyze --root "$tun_componenet_app/$tun_bin" $tun_plist
+		pkgbuild --analyze --root "$tun_componenet_app" $tun_plist
 		pkgbuild --identifier $tun_identifier \
 			--root $tun_componenet_app \
 			--component-plist $tun_plist \
-                        --install-location "/Applications/galaxy42" \
+                        --install-location "/Applications/Galaxy42" \
 			$tun_pkg
 		
                 clean_dirs "$tun_componenet_app"
@@ -109,8 +109,8 @@ create_tun_component () {
 create_boost_component () {
 	echo "creating boost.pkg component"
 	local boost_identifier="boost_libs"
-	local boost_componenet_app="boost.app"
-        local boost_plist="boost.plist"
+	local boost_componenet_app="Boost.app"
+    local boost_plist="boost.plist"
 	local boost_pkg="boost.pkg"
     
 	pushd $SCRIPT_DIR
@@ -122,10 +122,10 @@ create_boost_component () {
 		cp -n "/usr/local/opt/boost/lib/libboost_filesystem-mt.dylib" $boost_componenet_app
 		cp -n "/usr/local/opt/boost/lib/libboost_program_options-mt.dylib" $boost_componenet_app
 
-                pkgbuild --analyze --root "$boost_componenet_app/" $boost_plist
+        pkgbuild --analyze --root "$boost_componenet_app/" $boost_plist
 		pkgbuild --identifier $boost_identifier \
 			--root $boost_componenet_app \
-                        --install-location "/Applications/galaxy42" \
+                        --install-location "/Applications/Galaxy42" \
 			$boost_pkg
 		
 		clean_dirs "$boost_componenet_app"
@@ -134,8 +134,8 @@ create_boost_component () {
 create_sodium_component () {
 	echo "creating sodium.pkg component"
 	local sodium_identifier="libsodium"
-	local sodium_componenet_app="sodium.app"
-        local sodium_plist="sodium.plist"
+	local sodium_componenet_app="Sodium.app"
+    local sodium_plist="sodium.plist"
 	local sodium_pkg="sodium.pkg"
     
 	pushd $SCRIPT_DIR
@@ -144,10 +144,10 @@ create_sodium_component () {
 		mkdir $sodium_componenet_app
 		cp -n "/usr/local/opt/libsodium/lib/libsodium.18.dylib" $sodium_componenet_app
 
-                pkgbuild --analyze --root "$sodium_componenet_app" $sodium_plist
+        pkgbuild --analyze --root "$sodium_componenet_app" $sodium_plist
 		pkgbuild --identifier $sodium_identifier \
 			--root $sodium_componenet_app \
-                        --install-location "/Applications/galaxy42" \
+                        --install-location "/Applications/Galaxy42" \
 			$sodium_pkg
 		
 		clean_dirs "$sodium_componenet_app"
@@ -158,16 +158,16 @@ create_galaxy_pkg() {
 	create_tun_component
 	create_boost_component
 	create_sodium_component
-        productbuild --synthesize \
-            --package tunserver.pkg \
-            --package boost.pkg \
-            --package sodium.pkg \
-            ./installer.pkg
-        #pkgutil --expand installer.pkg installer2
-        #pkgutil --flatten installer2 installer3.pkg
-
+    
     pushd $SCRIPT_DIR
-		
+		productbuild --synthesize \
+				--package tunserver.pkg \
+				--package boost.pkg \
+				--package sodium.pkg \
+				Distribution.xml
+		productbuild --distribution ./Distribution.xml \
+				--package-path . \
+				./Galaxy42_Installer.pkg
     popd
 }
 
