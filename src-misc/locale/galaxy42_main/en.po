@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-27 13:52+0200\n"
+"POT-Creation-Date: 2016-11-30 16:07+0100\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -375,3 +375,24 @@ msgid "L_what_signatureFile_do"
 msgstr ""
 "External Name of signature file in specified location\n"
 "Default signature file name = key/data file name + \".sig\" extension"
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr "Max number of tested cards reached"
+
+msgid "L_connection_to_tun_timeout"
+msgstr "Connection to tun timeout"
+
+msgid "L_what_httpDbgPort_do"
+msgstr "Set http debugger port"
+
+msgid "L_starting_httpdbg_server"
+msgstr "Starting http debugger server"
+
+msgid "L_starting_main_server"
+msgstr "Stating the TUN router"
+
+msgid "L_main_server_ended"
+msgstr "Main server ended"
+
+msgid "L_httpdbg_server_ended"
+msgstr "Http debugger server ended"

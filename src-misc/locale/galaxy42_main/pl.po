@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-27 13:51+0200\n"
+"POT-Creation-Date: 2016-11-30 16:07+0100\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -382,3 +382,24 @@ msgid "L_what_signatureFile_do"
 msgstr ""
 "Zewnętrzna nazwa pliku podpisu w określonej lokalizacji\n"
 "Domyślna nazwa pliku z podpisem = nazwa pliku/klucza+\".sig\" rozszerzenie"
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr "Osiągnięto maksymalną liczbę sprawdzanych kart"
+
+msgid "L_connection_to_tun_timeout"
+msgstr "Przekroczo czas próby połączenia z kartą"
+
+msgid "L_what_httpDbgPort_do"
+msgstr "Ustaw port http debuggera"
+
+msgid "L_starting_httpdbg_server"
+msgstr "Uruchanianie http debugg servera"
+
+msgid "L_starting_main_server"
+msgstr "Uruchamiamy urządzenie TUN (wirtualna karta sieciowa)"
+
+msgid "L_main_server_ended"
+msgstr "Główny server zakończył pracę"
+
+msgid "L_httpdbg_server_ended"
+msgstr "Http debugg server zakończył pracę"
