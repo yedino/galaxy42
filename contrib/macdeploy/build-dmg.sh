@@ -69,7 +69,7 @@ change_tun_dylib_loadpath () {
 create_tun_component () {
 	echo "creating tun.pkg component"
 	local tun_identifier="tunserver"
-	local tun_componenet_app="tunserver.app"
+        local tun_componenet_app="tunserver.app"
 	local tun_plist="tunserver.plist"
 	local tun_bin="tunserver.elf"
 	local tun_pkg="tunserver.pkg"
@@ -89,16 +89,16 @@ create_tun_component () {
                         --install-location "/Applications/galaxy42" \
 			$tun_pkg
 		
-		clean_dirs "$tun_componenet_app"
-		clean_files "$tun_plist"
+                clean_dirs "$tun_componenet_app"
+                clean_files "$tun_plist"
     popd
 }
 create_boost_component () {
 	echo "creating boost.pkg component"
 	local boost_identifier="boost_libs"
 	local boost_componenet_app="boost.app"
+        local boost_plist="boost.plist"
 	local boost_pkg="boost.pkg"
-
     
 	pushd $SCRIPT_DIR
 		clean_dirs "$boost_componenet_app"
@@ -109,7 +109,7 @@ create_boost_component () {
 		cp -n "/usr/local/opt/boost/lib/libboost_filesystem-mt.dylib" $boost_componenet_app
 		cp -n "/usr/local/opt/boost/lib/libboost_program_options-mt.dylib" $boost_componenet_app
 
-
+                pkgbuild --analyze --root "$boost_componenet_app/" $boost_plist
 		pkgbuild --identifier $boost_identifier \
 			--root $boost_componenet_app \
                         --install-location "/Applications/galaxy42" \
@@ -122,6 +122,7 @@ create_sodium_component () {
 	echo "creating sodium.pkg component"
 	local sodium_identifier="libsodium"
 	local sodium_componenet_app="sodium.app"
+        local sodium_plist="sodium.plist"
 	local sodium_pkg="sodium.pkg"
     
 	pushd $SCRIPT_DIR
@@ -130,6 +131,7 @@ create_sodium_component () {
 		mkdir $sodium_componenet_app
 		cp -n "/usr/local/opt/libsodium/lib/libsodium.18.dylib" $sodium_componenet_app
 
+                pkgbuild --analyze --root "$sodium_componenet_app" $sodium_plist
 		pkgbuild --identifier $sodium_identifier \
 			--root $sodium_componenet_app \
                         --install-location "/Applications/galaxy42" \
