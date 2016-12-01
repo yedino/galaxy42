@@ -298,6 +298,26 @@ class c_tunserver : public c_galaxy_node {
 		 */
 		std::pair<string,int> parse_ip_string(const std::string &ip_string);
 
+		/**
+		 * @brief check_packet_destination_address
+		 * @param address ipv6 address
+		 * @param packet ipv6 packet
+		 * @return true if dst address is the same as packet address
+		 */
+		bool check_packet_destination_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet);
+
+		/**
+		 * @brief check_packet_source_address
+		 * @param address ipv6 address
+		 * @param packet ipv6 packet
+		 * @return true if dst address is the same as packet src address
+		 */
+		bool check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet);
+
+		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
+
+
+
 		c_rpc_server m_rpc_server;
 		std::string rpc_ping(const std::string &input_json);
 		std::string rpc_peer_list(const std::string &input_json);
