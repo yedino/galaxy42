@@ -4,8 +4,9 @@ set -o errexit
 set -o nounset
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PACKAGE_NAME="galaxy42"
+readonly PACKAGE_NAME="Galaxy42_Installer"
 readonly PKG_PATH="$SCRIPT_DIR/$PACKAGE_NAME.pkg"
+readonly DMG_PATH="$SCRIPT_DIR/$PACKAGE_NAME.dmg"
 
 readonly GALAXY42_VERSION="$(git describe)"
 
@@ -73,7 +74,7 @@ change_tun_dylib_loadpath () {
 	for dylib in "${dylib_list[@]}"; do
 		last_column='overwrite_me'
 		get_last_column last_column $dylib
-		install_name_tool -change $dylib "/Applications/Galaxy42/$last_column" $tun_path
+		install_name_tool -change $dylib "/Applications/Galaxy42.app/$last_column" $tun_path
 	done
 
 }
@@ -99,7 +100,7 @@ create_tun_component () {
 		pkgbuild --identifier $tun_identifier \
 			--root $tun_componenet_app \
 			--component-plist $tun_plist \
-                        --install-location "/Applications/Galaxy42" \
+            --install-location "/Applications/Galaxy42.app" \
 			$tun_pkg
 		
                 clean_dirs "$tun_componenet_app"
@@ -125,7 +126,7 @@ create_boost_component () {
         pkgbuild --analyze --root "$boost_componenet_app/" $boost_plist
 		pkgbuild --identifier $boost_identifier \
 			--root $boost_componenet_app \
-                        --install-location "/Applications/Galaxy42" \
+                        --install-location "/Applications/Galaxy42.app" \
 			$boost_pkg
 		
 		clean_dirs "$boost_componenet_app"
@@ -147,7 +148,7 @@ create_sodium_component () {
         pkgbuild --analyze --root "$sodium_componenet_app" $sodium_plist
 		pkgbuild --identifier $sodium_identifier \
 			--root $sodium_componenet_app \
-                        --install-location "/Applications/Galaxy42" \
+                        --install-location "/Applications/Galaxy42.app" \
 			$sodium_pkg
 		
 		clean_dirs "$sodium_componenet_app"
@@ -167,12 +168,40 @@ create_galaxy_pkg() {
 				Distribution.xml
 		productbuild --distribution ./Distribution.xml \
 				--package-path . \
-				./Galaxy42_Installer.pkg
+				$PKG_PATH
     popd
+}
+create_galaxy_dmg() {
+	local tmp_name="gal_tmp.dmg"
+	local vol_name="galaxy42_volume"
+	local vol_size="10000k"
+            
+	clean_files "$tmp_name"
+
+	hdiutil create -srcfolder "${PKG_PATH}" \
+		-volname "${vol_name}" \
+		-fs HFS+ \
+		-fsargs "-c c=64,a=16,e=16" \
+		-format UDRW \
+		-size "${vol_size}" \
+		"${tmp_name}"
+	
+
+
+	device=$(hdiutil attach -readwrite -noverify -noautoopen "${tmp_name}" | egrep '^/dev/' | sed 1q | awk '{print $1}' )
+
+	sudo chmod -Rf go-w "/Volumes/${vol_name}"
+
+	sync
+	sync
+
+	hdiutil detach "${device}"
+	hdiutil convert "${tmp_name}" -format UDZO -imagekey zlib-level=9 -o $DMG_PATH
 }
 
 main() {
 	echo "starting main"
 	create_galaxy_pkg
+	create_galaxy_dmg
 }
 main
