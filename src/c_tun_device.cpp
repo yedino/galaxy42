@@ -8,6 +8,8 @@
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
 
+// === mtu ===
+
 #ifdef __linux__
 
 #include <cassert>
@@ -20,15 +22,24 @@
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
 
+c_tun_device::c_tun_device()
+ : m_ip6_ok(false)
+{ }
+
+
 c_tun_device_linux::c_tun_device_linux()
 :
-	m_tun_fd(open("/dev/net/tun", O_RDWR))
+	m_tun_fd(-1)
 {
-	assert(! (m_tun_fd<0) ); // TODO throw?
+	const char *fd_fname = "/dev/net/tun";
+	_note("Opening TUN file: " << fd_fname);
+	open(fd_name, O_RDWR);
+	if (m_tun_fd<0) throw std::runtime_error("Can not open the TUN file.");
 }
 
 void c_tun_device_linux::set_ipv6_address
-	(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
+{
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
@@ -37,11 +48,16 @@ void c_tun_device_linux::set_ipv6_address
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
 	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	m_ifr_name = std::string(ifr.ifr_name);
+	_note("Configured network IP for " << ifr.ifr_name);
+	m_ip6_ok=true;
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
-	_UNUSED(mtu);
-	_NOTREADY();
+	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
+	const auto name = m_ifr_name.c_str();
+	_note("Setting MTU="<<mtu<<" on card: " << name);
+	if (NetPlatform_setMTU(name,mtu) < 0) throw std::runtime_error("Failed to set MTU.");
 }
 
 bool c_tun_device_linux::incomming_message_form_tun() {
@@ -79,9 +95,9 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 #include <io.h>
 //#include <ntdef.h>
 //#include <ntstatus.h>
-#ifndef NTSTATUS 
+#ifndef NTSTATUS
 #define NTSTATUS LONG
-#endif 
+#endif
 #include <wincrypt.h>
 #include <netioapi.h>
 #include <ntddscsi.h>
@@ -394,7 +410,7 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>
 c_tun_device_apple::c_tun_device_apple() :
-    m_interface_name(),
+    m_ifr_name(),
     m_tun_fd(get_tun_fd()),
     m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
     m_buffer(),
@@ -434,7 +450,7 @@ int c_tun_device_apple::get_tun_fd() {
         ++addr_ctl.sc_unit;
     }
 
-    m_interface_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
+    m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;
 }
 
@@ -452,11 +468,13 @@ void c_tun_device_apple::set_ipv6_address
         (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
     assert(binary_address[0] == 0xFD);
     assert(binary_address[1] == 0x42);
-    NetPlatform_addAddress(m_interface_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+    NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tun_device_apple::set_mtu(uint32_t mtu) {
-    NetPlatform_setMTU(m_interface_name.c_str(), mtu);
+	const auto name = m_ifr_name.c_str();
+	_note("Setting MTU="<<mtu<<" on card: " << name);
+  NetPlatform_setMTU(name, mtu);
 }
 
 bool c_tun_device_apple::incomming_message_form_tun() {
