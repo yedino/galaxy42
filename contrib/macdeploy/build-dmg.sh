@@ -26,8 +26,8 @@ clean_dirs() {
 	pushd $SCRIPT_DIR
 		dir_list=("$@")
 		for dir in "${dir_list[@]}"; do
-			is_dir "$dir"	\
-				&& rm -rf "$dir"
+			is_dir $dir	\
+				&& rm -rf $dir
 		done
 	popd
 }
@@ -36,12 +36,13 @@ clean_files() {
 	pushd $SCRIPT_DIR
 		file_list=("$@")
 		for file in "${file_list[@]}"; do
-			is_file "$file"	\
-				&& rm "$file"
+			is_file $file	\
+				&& rm $file
 		done
 	popd
 }
 
+# parse file path to get filename, where '/' is delimiter : /usr/bin/gcc -> gcc
 get_last_column () {
 	eval $1=$( echo "$2" \
 		| rev \
@@ -51,12 +52,23 @@ get_last_column () {
 
 change_tun_dylib_loadpath () {
 	local tun_path="$SCRIPT_DIR/tunserver.app/tunserver.elf"
+
+	# dynamic libs that are required by galaxy42
 	local dylib_list=( \
 		"/usr/local/opt/boost/lib/libboost_locale-mt.dylib" \
 		"/usr/local/opt/boost/lib/libboost_system-mt.dylib" \
 		"/usr/local/opt/boost/lib/libboost_filesystem-mt.dylib" \
 		"/usr/local/opt/boost/lib/libboost_program_options-mt.dylib" \
 		"/usr/local/opt/libsodium/lib/libsodium.18.dylib" )
+
+	# check that required files exist
+	! is_file $tun_path \
+		&& echo "$tun_path not exist, something went wrong, exiting ..." && exit 1
+	
+	for dylib in "${dylib_list[@]}"; do
+		! is_file $dylib \
+			&& echo "missing library: $dylib. This library is required on your machine to create pkg, exiting ..." && exit 1
+	done
 
 	for dylib in "${dylib_list[@]}"; do
 		last_column='overwrite_me'
@@ -79,6 +91,7 @@ create_tun_component () {
 		clean_dirs "$tun_componenet_app"
 
 		mkdir $tun_componenet_app
+
 		cp -n "../../$tun_bin" $tun_componenet_app
 		change_tun_dylib_loadpath
 		
