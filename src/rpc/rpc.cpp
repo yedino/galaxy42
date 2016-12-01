@@ -6,7 +6,7 @@
 
 #define _dbg(X) do std::cout << X << "\n"; while(0)
 
-c_rpc_server::c_rpc_server(const short port)
+c_rpc_server::c_rpc_server(const unsigned short port)
 :
 	m_io_service(),
 	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
@@ -104,6 +104,7 @@ void c_rpc_server::c_session::read_handler(const boost::system::error_code &erro
 }
 
 void c_rpc_server::c_session::write_handler(const boost::system::error_code &error, std::size_t bytes_transferred) {
+	UNUSED(bytes_transferred);
 	try {
 		if (error) {
 			_dbg("asio error " << error.message());
