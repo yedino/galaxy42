@@ -66,7 +66,8 @@ const int Sockaddr_AF_INET6 = AF_INET6;
  * @param eg an exception handler in case something goes wrong.
  *           this will send a -1 for all errors.
  * @param ifRequestOut an ifreq which will be populated with the interface index of the interface.
- * @return a socket for interacting with this interface.
+ * @return a socket for interacting with this interface; Errors: -220 socket open,
+ * -230 ioctl
  */
 static int socketForIfName(const char* interfaceName,
 						int af,
@@ -75,6 +76,7 @@ static int socketForIfName(const char* interfaceName,
     int s;
 
     if ((s = socket(af, SOCK_DGRAM, 0)) < 0) {
+    	return -220;
     }
 
     memset(ifRequestOut, 0, sizeof(struct ifreq));
@@ -82,40 +84,52 @@ static int socketForIfName(const char* interfaceName,
 
     if (ioctl(s, SIOCGIFINDEX, ifRequestOut) < 0) {
         close(s);
+        return -230;
     }
     return s;
 }
 
-static void checkInterfaceUp(int socket,
+ /// @return 0=ok; Errors: -320 socket open, -330 ioctl
+static int checkInterfaceUp(int socket,
                              struct ifreq* ifRequest)
 {
     if (ioctl(socket, SIOCGIFFLAGS, ifRequest) < 0) {
         close(socket);
+        return -320;
     }
 
     if (ifRequest->ifr_flags & IFF_UP & IFF_RUNNING) {
         // already up.
-        return;
+        return 0;
     }
 
 
     ifRequest->ifr_flags |= IFF_UP | IFF_RUNNING;
     if (ioctl(socket, SIOCSIFFLAGS, ifRequest) < 0) {
         close(socket);
+        return -330;
     }
+    return 0;
 }
 
-void NetPlatform_addAddress(const char* interfaceName,
+/**
+ * @return: 0=ok; Errors: -10 getaddrinfo, -20 socket open, -30 ioctl; -100 invalid addrFam -101 not implemented
+   during socketForIfName:  -220 socket open, -230 ioctl,
+   during checkInterfaceUp: -320 socket open, -330 ioctl
+ */
+int NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
                             int addrFam)
 {
     struct ifreq ifRequest;
     int s = socketForIfName(interfaceName, addrFam, &ifRequest);
+    if (s < 0) return s;
     int ifIndex = ifRequest.ifr_ifindex;
 
     // checkInterfaceUp() clobbers the ifindex.
-    checkInterfaceUp(s, &ifRequest);
+    int ifUp = checkInterfaceUp(s, &ifRequest);
+    if (ifUp < 0) return ifUp;
 
     if (addrFam == Sockaddr_AF_INET6) {
         struct in6_ifreq ifr6;
@@ -130,12 +144,14 @@ void NetPlatform_addAddress(const char* interfaceName,
 
         if (ioctl(s, SIOCSIFADDR, &ifr6) < 0) {
             close(s);
+            return -30;
         }
 
 
     } else if (addrFam == Sockaddr_AF_INET) {
-		printf("setting ipv4 address\n");
-		printf("not implemented\n");
+			printf("setting ipv4 address\n");
+			printf("not implemented\n");
+			return -101;
         /*struct sockaddr_in sin = { .sin_family = AF_INET, .sin_port = 0 };
         memcpy(&sin.sin_addr.s_addr, address, 4);
         memcpy(&ifRequest.ifr_addr, &sin, sizeof(struct sockaddr));
@@ -153,23 +169,31 @@ void NetPlatform_addAddress(const char* interfaceName,
             close(s);
         }*/
     } else {
+    	return -100;
     }
 
     close(s);
+    return 0;
 }
 
-void NetPlatform_setMTU(const char* interfaceName,
+/**
+ * @return 0=ok
+ */
+int NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu)
 {
     struct ifreq ifRequest;
     int s = socketForIfName(interfaceName, AF_INET6, &ifRequest);
+    if (s<0) return s;
 
     ifRequest.ifr_mtu = mtu;
     if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) {
         close(s);
+        return -30;
     }
 
     close(s);
+    return 0;
 }
 
 #endif // __linux__

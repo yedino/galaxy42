@@ -7,6 +7,27 @@
 //TODO (da2ce7) CIRCULAR HEADER INCLUDE
 #include "c_event_manager.hpp"
 
+class runtime_error_subtype : public std::runtime_error {
+	public:
+		runtime_error_subtype();
+
+		template <typename T_SUBTYPE>
+		static T_SUBTYPE make_subtype(const string & msg) {
+			T_SUBTYPE subtype;
+			subtype.set_msg(msg);
+			return subtype;
+		};
+		const char * what() const override;
+
+		protecte:
+			void set_msg(const string &msg) { m_msg = msg; }
+
+		private:
+			string m_msg; ///< my message (from subtype)
+};
+
+class tuntap_error : public runtime_error_subtype {};
+
 /**
  * @brief The c_tun_device class
  * Abstract class to represent tun device
