@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-11-30 12:43+0100\n"
+"POT-Creation-Date: 2016-12-02 15:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,9 +96,6 @@ msgid "L_exit_from_connect"
 msgstr ""
 
 msgid "L_bad_peer_format"
-msgstr ""
-
-msgid "L_what_exception_program_throwow"
 msgstr ""
 
 msgid "L_bad_format_of_input_ip_address"
@@ -318,4 +315,7 @@ msgid "L_main_server_ended"
 msgstr ""
 
 msgid "L_httpdbg_server_ended"
+msgstr ""
+
+msgid "L_what_exception_program_throw"
 msgstr ""
