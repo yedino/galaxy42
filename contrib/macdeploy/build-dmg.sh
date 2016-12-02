@@ -48,10 +48,10 @@ clean_files() {
 get_last_column () {
 	return_value="$1"
 	fun_argument="$2"
-	eval "$return_value"=$( echo "$fun_argument" \
+	eval "$return_value"="$( echo "$fun_argument" \
 		| rev \
 		| cut -d/ -f1 \
-		| rev )
+		| rev )"
 }
 
 change_tun_dylib_loadpath () {
@@ -176,7 +176,7 @@ create_galaxy_pkg() {
 
 		productbuild --distribution ./Distribution.xml \
 				--package-path . \
-				$PKG_PATH
+				"$PKG_PATH"
 
 		clean_files "Distribution.xml" "tunserver.pkg" "boost.pkg" "sodium.pkg"
 	popd
@@ -198,7 +198,7 @@ create_galaxy_dmg() {
 			-size "${vol_size}" \
 			"${tmp_name}"
 
-		device=$(hdiutil attach -readwrite -noverify -noautoopen "${tmp_name}" | egrep '^/dev/' | sed 1q | awk '{print $1}' )
+		device="$(hdiutil attach -readwrite -noverify -noautoopen "${tmp_name}" | egrep '^/dev/' | sed 1q | awk '{print $1}' )"
 
 		echo "sudo is necessary in this step to setting permissions properly:"
 		set -x
