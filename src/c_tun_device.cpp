@@ -8,7 +8,77 @@
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
 
-// === mtu ===
+
+// TODO move
+
+runtime_error_subtype::runtime_error_subtype()
+:: std::runtime_error("Some subtype of runtime error (call our virtual .what function to see details - catch this exception by reference/pointer to std::exception)")
+// this default message is for rare case, when ..... *TODO*--rfree
+{
+}
+
+const char * runtime_error_subtype::what() const override {
+	return m_msg.c_str();
+}
+
+
+/// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+std::string NetPlatform_error_code_to_string(int err) {
+	switch (err) {
+		case -10: return "getaddrinfo"; break;
+		case -20: return "socket_open"; break;
+		case -30: return "ioctl"; break;
+		case -100: return "invalid_address_family"; break;
+		case -101: return "not_implemented_yet_address_family"; break;
+		case -220: return "socketForIfName_socket_open"; break;
+		case -230: return "socketForIfName_ioctl"; break;
+		case -320: return "checkInterfaceUp_socket_open"; break;
+		case -330: return "checkInterfaceUp_ioctl"; break;
+		default:
+			if (err<0) {
+				std::ostream oss; oss<<"UNKNOWN_NetPlatform_ERROR("<<err<<")";
+				return oss.str();
+			}
+	}
+	return "OK";
+}
+
+
+/**
+ * Wrapper around the from-cjdns function;
+ * Nicelly writes debug about this important function.
+ * Returns error code as int
+ */
+int Wrap_NetPlatform_addAddress(const char* interfaceName,
+                            const uint8_t* address,
+                            int prefixLen,
+                            int addrFam)
+{
+	_fact("Setting IP address: interfaceName="<<interfaceName
+		<<" address="<<address
+		<<" prefixLen="<<prefixLen
+		<<" addrFam="<<addrFam);
+	int ret = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
+		<< " result " << NetPlatform_error_code_to_string(ret));
+	if (ret<0) _erro("Setting address failed");
+	return ret;
+}
+
+// Wrapper around the from-cjdns function:
+int Wrap_NetPlatform_setMTU(const char* interfaceName,
+                        uint32_t mtu)
+{
+	_fact("Setting MTU on interfaceName="<<interfaceName<<" mtu="<<mtu);
+	int ret = NetPlatform_setMTU(interfaceName, mtu);
+	_goal("MTU value " << mtu << " set on interface " << interfaceName << " result "
+		<< NetPlatform_error_code_to_string(ret));
+	if (ret<0) _erro("Setting MTU failed");
+	return ret;
+}
+
+
+
 
 #ifdef __linux__
 
@@ -47,17 +117,20 @@ void c_tun_device_linux::set_ipv6_address
 	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
-	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	_note("Setting IP address");
+	int ret = Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	if (ret<0) throw error
 	m_ifr_name = std::string(ifr.ifr_name);
 	_note("Configured network IP for " << ifr.ifr_name);
 	m_ip6_ok=true;
+	_goal("IP address is fully configured");
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
 	const auto name = m_ifr_name.c_str();
 	_note("Setting MTU="<<mtu<<" on card: " << name);
-	if (NetPlatform_setMTU(name,mtu) < 0) throw std::runtime_error("Failed to set MTU.");
+	if (Wrap_NetPlatform_setMTU(name,mtu) < 0) throw std::runtime_error("Failed to set MTU.");
 }
 
 bool c_tun_device_linux::incomming_message_form_tun() {
@@ -468,7 +541,7 @@ void c_tun_device_apple::set_ipv6_address
         (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
     assert(binary_address[0] == 0xFD);
     assert(binary_address[1] == 0x42);
-    NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+    Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tun_device_apple::set_mtu(uint32_t mtu) {

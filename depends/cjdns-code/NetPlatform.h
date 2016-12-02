@@ -36,12 +36,14 @@ extern "C" {
 extern const int Sockaddr_AF_INET;
 extern const int Sockaddr_AF_INET6;
 
-void NetPlatform_addAddress(const char* interfaceName,
+/// @return value <0 if an error occured.
+int NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
                             int addrFam);
 
-void NetPlatform_setMTU(const char* interfaceName,
+/// @return value <0 if an error occured.
+int NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu);
 
 #ifdef __cplusplus

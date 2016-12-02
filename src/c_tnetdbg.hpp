@@ -31,6 +31,13 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define _dbg1(X) do { DBGLVL( 30); ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
 #define _info(X) do { DBGLVL( 40); ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
 #define _note(X) do { DBGLVL( 50); ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+#define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
+	::std::cerr<<"\033[92m"; \
+	::std::cerr<< X; \
+	do { DBGLVL(LVL_EXTRA); ::std::cerr << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
+	std::cerr << ::std::endl; } while(0)
+#define _fact(X) _fact_level( 90, 30, X)
+#define _goal(X) _fact_level(150, 30, X)
 /// yellow code
 //        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
 
@@ -59,6 +66,8 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define _dbg1(X) do {} while(0)
 #define _info(X) do {} while(0)
 #define _note(X) do {} while(0)
+#define _fact(X) do {} while(0)
+#define _goal(X) do {} while(0)
 #define _warn(X) do {} while(0)
 #define _erro(X) do {} while(0)
 #define _mark(X) do {} while(0)
@@ -152,6 +161,7 @@ std::string debug_this();
 #define _dbg1n(X) _dbg1(debug_this() << X)
 #define _infon(X) _info(debug_this() << X)
 #define _noten(X) _note(debug_this() << X)
+#define _factn(X) _fact(debug_this() << X)
 #define _warnn(X) _warn(debug_this() << X)
 #define _erron(X) _erro(debug_this() << X)
 #define _markn(X) _mark(debug_this() << X)

@@ -50,6 +50,11 @@
 const int Sockaddr_AF_INET = AF_INET;
 const int Sockaddr_AF_INET6 = AF_INET6;
 
+typedef struct {
+	int my_code; ///< my error code, depending on context
+	int errno_copy; ///< copy of the errno with system error in it
+} t_syserr;
+
 static const char* hexEntities = "0123456789abcdef";
 
 static int Hex_encode(uint8_t* output,
@@ -118,6 +123,7 @@ static void AddrTools_printIp(uint8_t output[40], const uint8_t binIp[16])
     output[39] = '\0';
 }
 
+/// @return: 0=ok; Errors: -20 socket open, -30 ioctl
 static void addIp4Address(const char* interfaceName,
                           const uint8_t address[4],
                           int prefixLen)
@@ -134,7 +140,7 @@ static void addIp4Address(const char* interfaceName,
 
     int s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s < 0) {
-        return;
+        return -20;
     }
 
     // will probably fail, ignore result.
@@ -145,15 +151,17 @@ static void addIp4Address(const char* interfaceName,
     if (ioctl(s, SIOCSIFADDR, &ifarted) < 0) {
         int err = errno;
         close(s);
-        return;
+        return -30;
     }
 
     //setupRoute4(address, prefixLen, interfaceName, logger, tempAlloc, eh);
 
     close(s);
+    return 0;
 }
 
-static void addIp6Address(const char* interfaceName,
+/// @return: 0=ok; Errors: -10 getaddrinfo, -20 socket open, -30 ioctl
+static int addIp6Address(const char* interfaceName,
                           const uint8_t address[16],
                           int prefixLen)
 {
@@ -175,7 +183,7 @@ static void addIp6Address(const char* interfaceName,
     int err = getaddrinfo((const char *)myIp, NULL, &hints, &result);
     if (err) {
         // Should never happen since the address is specified as binary.
-        return;
+        return -10;
     }
 
     bcopy(result->ai_addr, &in6_addreq.ifra_addr, result->ai_addrlen);
@@ -197,39 +205,43 @@ static void addIp6Address(const char* interfaceName,
     /* do the actual assignment ioctl */
     int s = socket(AF_INET6, SOCK_DGRAM, 0);
     if (s < 0) {
-        return;
+        return -20;
     }
 
     if (ioctl(s, SIOCAIFADDR_IN6, &in6_addreq) < 0) {
         int err = errno;
         close(s);
-        return;
+        return -30;
     }
 
     close(s);
+    return 0;
 }
 
-void NetPlatform_addAddress(const char* interfaceName,
+/// @return: 0=ok; Errors: -10 getaddrinfo, -20 socket open, -30 ioctl; -100 invalid addrFam
+int NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
                             int addrFam)
 {
     if (addrFam == Sockaddr_AF_INET6) {
-        addIp6Address(interfaceName, address, prefixLen);
+        return addIp6Address(interfaceName, address, prefixLen);
     } else if (addrFam == Sockaddr_AF_INET) {
-        addIp4Address(interfaceName, address, prefixLen);
+        return addIp4Address(interfaceName, address, prefixLen);
     } else {
-        assert(0);
+    	return -100;
     }
+    return 0;
 }
 
-void NetPlatform_setMTU(const char* interfaceName,
+/// @return: 0=ok; Errors: -10 getaddrinfo, -20 socket open, -30 ioctl; -100 invalid addrFam
+int NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu)
 {
     int s = socket(AF_INET6, SOCK_DGRAM, 0);
 
     if (s < 0) {
-        return;
+        return -20;
     }
 
     struct ifreq ifRequest;
@@ -240,8 +252,10 @@ void NetPlatform_setMTU(const char* interfaceName,
     if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) {
        int err = errno;
        close(s);
-       return;
+       return -30;
     }
+    close(s); // close file, it was opened since socket() succeeded.
+    return 0;
 }
 
 
