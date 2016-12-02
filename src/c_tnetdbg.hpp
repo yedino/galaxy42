@@ -90,14 +90,14 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 
 //        _warn("Going to throw exception. What: " << except_var.what()
 #define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
-	_warn( boost::locale::gettext("L_what_exception_program_throwow") << except_var.what() \
+	_warn( boost::locale::gettext("L_what_exception_program_throw") << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
 //        _warn("Going to throw exception. What: " << except_var.what() 
 
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
-	_warn(boost::locale::gettext("L_what_exception_program_throwow") << except_var.what() \
+	_warn(boost::locale::gettext("L_what_exception_program_throw") << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 
