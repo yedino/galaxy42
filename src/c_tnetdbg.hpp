@@ -35,7 +35,7 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 	::std::cerr<<"\033[92m"; \
 	::std::cerr<< X; \
 	do { DBGLVL(LVL_EXTRA); ::std::cerr << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
-	std::cerr << ::std::endl; } while(0)
+	std::cerr << "\033[0m" << ::std::endl; } while(0)
 #define _fact(X) _fact_level( 90, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 /// yellow code
@@ -103,13 +103,10 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
-//        _warn("Going to throw exception. What: " << except_var.what() 
-
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
 	_warn(boost::locale::gettext("L_what_exception_program_throw") << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
-
 
 namespace ui { class exception_error_exit; }
 

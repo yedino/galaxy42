@@ -7,26 +7,16 @@
 //TODO (da2ce7) CIRCULAR HEADER INCLUDE
 #include "c_event_manager.hpp"
 
-class runtime_error_subtype : public std::runtime_error {
-	public:
-		runtime_error_subtype();
+#include "error_subtype.hpp"
 
-		template <typename T_SUBTYPE>
-		static T_SUBTYPE make_subtype(const string & msg) {
-			T_SUBTYPE subtype;
-			subtype.set_msg(msg);
-			return subtype;
-		};
-		const char * what() const override;
 
-		protecte:
-			void set_msg(const string &msg) { m_msg = msg; }
+std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
 
-		private:
-			string m_msg; ///< my message (from subtype)
-};
 
 class tuntap_error : public runtime_error_subtype {};
+class tuntap_error_devtun : public tuntap_error {};
+class tuntap_error_ip     : public tuntap_error {};
+class tuntap_error_mtu    : public tuntap_error {};
 
 /**
  * @brief The c_tun_device class
@@ -34,7 +24,7 @@ class tuntap_error : public runtime_error_subtype {};
  */
 class c_tun_device {
 	public:
-		string m_ifr_name; ///< the name of interface, as it is needed by various ioctls. We try to set it in set_ipv6_address()
+		std::string m_ifr_name; ///< the name of interface, as it is needed by various ioctls. We try to set it in set_ipv6_address()
 		bool m_ip6_ok; ///< did we yet succeed in setting IPv6
 
 		c_tun_device();
@@ -62,7 +52,7 @@ class c_tun_device_linux final : public c_tun_device {
 		size_t write_to_tun(void *buf, size_t count) override;
 
 	private:
-		const int m_tun_fd; ///< the fd for TUN
+		int m_tun_fd; ///< the fd for TUN
 };
 
 // __linux__

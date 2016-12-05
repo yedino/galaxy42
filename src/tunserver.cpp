@@ -780,6 +780,7 @@ bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_ex
 }
 
 string c_tunserver::rpc_ping(const string &input_json) {
+	_UNUSED(input_json); // TODO?
 	//Json::Value input(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "ping";
@@ -788,6 +789,7 @@ string c_tunserver::rpc_ping(const string &input_json) {
 }
 
 string c_tunserver::rpc_peer_list(const string &input_json) {
+	_UNUSED(input_json);
 	nlohmann::json ret;
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6

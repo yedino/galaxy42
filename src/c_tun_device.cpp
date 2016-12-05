@@ -7,22 +7,14 @@
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
+#include "../depends/cjdns-code/syserr.h"
+#include "../depends/cjdns-code/NetPlatform.h"
+#include <syserror_use.hpp>
 
-
-// TODO move
-
-runtime_error_subtype::runtime_error_subtype()
-:: std::runtime_error("Some subtype of runtime error (call our virtual .what function to see details - catch this exception by reference/pointer to std::exception)")
-// this default message is for rare case, when ..... *TODO*--rfree
-{
-}
-
-const char * runtime_error_subtype::what() const override {
-	return m_msg.c_str();
-}
-
+#include <cstring>
 
 /// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+/// this translates the field t_syserr.my_code only, see other function for more
 std::string NetPlatform_error_code_to_string(int err) {
 	switch (err) {
 		case -10: return "getaddrinfo"; break;
@@ -36,20 +28,31 @@ std::string NetPlatform_error_code_to_string(int err) {
 		case -330: return "checkInterfaceUp_ioctl"; break;
 		default:
 			if (err<0) {
-				std::ostream oss; oss<<"UNKNOWN_NetPlatform_ERROR("<<err<<")";
+				std::ostringstream oss; oss<<"UNKNOWN_NetPlatform_ERROR("<<err<<")";
 				return oss.str();
 			}
 	}
 	return "OK";
 }
 
+/// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+std::string NetPlatform_syserr_to_string(t_syserr syserr) {
+	std::ostringstream oss;
+	auto code = syserr.my_code;
+	oss << "[Code=" << NetPlatform_error_code_to_string(code);
+	if (code<0) oss << " errno=" << errno_to_string( syserr.errno_copy ); // was some error, show errno then
+	oss << "]";
+	return oss.str();
+}
+
+
 
 /**
  * Wrapper around the from-cjdns function;
  * Nicelly writes debug about this important function.
- * Returns error code as int
+ * Errors are thrown as tuntap_error*
  */
-int Wrap_NetPlatform_addAddress(const char* interfaceName,
+void Wrap_NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
                             int addrFam)
@@ -58,23 +61,21 @@ int Wrap_NetPlatform_addAddress(const char* interfaceName,
 		<<" address="<<address
 		<<" prefixLen="<<prefixLen
 		<<" addrFam="<<addrFam);
-	int ret = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+	t_syserr syserr = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
 	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
-		<< " result " << NetPlatform_error_code_to_string(ret));
-	if (ret<0) _erro("Setting address failed");
-	return ret;
+		<< " result: " << NetPlatform_syserr_to_string(syserr));
 }
 
 // Wrapper around the from-cjdns function:
-int Wrap_NetPlatform_setMTU(const char* interfaceName,
+void Wrap_NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu)
 {
 	_fact("Setting MTU on interfaceName="<<interfaceName<<" mtu="<<mtu);
-	int ret = NetPlatform_setMTU(interfaceName, mtu);
-	_goal("MTU value " << mtu << " set on interface " << interfaceName << " result "
-		<< NetPlatform_error_code_to_string(ret));
-	if (ret<0) _erro("Setting MTU failed");
-	return ret;
+	t_syserr syserr = NetPlatform_setMTU(interfaceName, mtu);
+	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_mtu , NetPlatform_syserr_to_string(syserr) );
+	_goal("MTU value " << mtu << " set on interface " << interfaceName
+		<< " result: " << NetPlatform_syserr_to_string(syserr));
 }
 
 
@@ -102,9 +103,15 @@ c_tun_device_linux::c_tun_device_linux()
 	m_tun_fd(-1)
 {
 	const char *fd_fname = "/dev/net/tun";
-	_note("Opening TUN file: " << fd_fname);
-	open(fd_name, O_RDWR);
-	if (m_tun_fd<0) throw std::runtime_error("Can not open the TUN file.");
+	_goal("Opening TUN file (Linux driver) " << fd_fname);
+	m_tun_fd = open(fd_fname, O_RDWR);
+	int err = errno;
+	if (m_tun_fd<0) {
+		ostringstream oss;
+		oss << "Can not open the TUN file (" << fd_fname << ") errno: " << errno_to_string(err);
+		_throw_error_sub( tuntap_error_devtun , oss.str() );
+	}
+	_goal("TUN file opened as fd " << m_tun_fd);
 }
 
 void c_tun_device_linux::set_ipv6_address
@@ -117,9 +124,8 @@ void c_tun_device_linux::set_ipv6_address
 	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
-	_note("Setting IP address");
-	int ret = Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
-	if (ret<0) throw error
+	_fact("Setting IP address");
+	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);
 	_note("Configured network IP for " << ifr.ifr_name);
 	m_ip6_ok=true;
@@ -129,8 +135,9 @@ void c_tun_device_linux::set_ipv6_address
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
 	const auto name = m_ifr_name.c_str();
-	_note("Setting MTU="<<mtu<<" on card: " << name);
-	if (Wrap_NetPlatform_setMTU(name,mtu) < 0) throw std::runtime_error("Failed to set MTU.");
+	_fact("Setting MTU="<<mtu<<" on card: " << name);
+	Wrap_NetPlatform_setMTU(name,mtu);
+	_goal("MTU configured to " << mtu << " on card " << name);
 }
 
 bool c_tun_device_linux::incomming_message_form_tun() {
@@ -195,6 +202,7 @@ c_tun_device_windows::c_tun_device_windows()
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
 	m_mac_address(get_mac(m_handle))
 {
+	_FACT("Creating TUN/TAP (windows version)");
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
 	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
@@ -506,7 +514,8 @@ int c_tun_device_apple::get_tun_fd() {
     std::memset(&info, 0, sizeof(info));
     const std::string apple_utun_control = "com.apple.net.utun_control";
     apple_utun_control.copy(info.ctl_name, apple_utun_control.size());
-    if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) {
+    if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
+	    	int err = errno;
         close(tun_fd);
         throw std::runtime_error("ioctl error");
     }
