@@ -1,6 +1,7 @@
 
 #include <syserror_use.hpp>
 #include <cstring>
+#include <sstream>
 
 std::string errno_to_string(int errno_copy) {
 	// [02/12/2016 15:43] for http://man7.org/linux/man-pages/man3/strerror.3.html  how exactly to test in C program with #if should I call XSI-compilant, or GNU, version of strerror_r
@@ -12,7 +13,7 @@ std::string errno_to_string(int errno_copy) {
 	char buf[buflen];
 	std::memset(buf, 0, buflen); // extra guarantee no memleak
 
-	#if (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE
+	#if ( (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE )  ||  (defined(__MACH__))
 		// XSI
 		//  int strerror_r(int errnum, char *buf, size_t buflen);
 		int result = strerror_r(errno_copy, buf, buflen);

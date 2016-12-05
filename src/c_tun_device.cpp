@@ -80,6 +80,16 @@ void Wrap_NetPlatform_setMTU(const char* interfaceName,
 
 
 
+c_tun_device::c_tun_device()
+ :
+ m_ifr_name(""),
+ m_ip6_ok(false)
+{
+	_note("Creating new general TUN device class");
+}
+
+
+
 
 #ifdef __linux__
 
@@ -92,11 +102,6 @@ void Wrap_NetPlatform_setMTU(const char* interfaceName,
 #include "c_tnetdbg.hpp"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
-
-c_tun_device::c_tun_device()
- : m_ip6_ok(false)
-{ }
-
 
 c_tun_device_linux::c_tun_device_linux()
 :
@@ -491,7 +496,6 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>
 c_tun_device_apple::c_tun_device_apple() :
-    m_ifr_name(),
     m_tun_fd(get_tun_fd()),
     m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
     m_buffer(),
