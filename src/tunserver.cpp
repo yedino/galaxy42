@@ -547,7 +547,8 @@ void c_tunserver::help_usage() const {
 
 //#ifdef __linux__
 void c_tunserver::prepare_socket() {
-	//ui::action_info_ok("Allocated virtual network card interface (TUN) under name: " + to_string(ifr.ifr_name));
+	ui::action_info_ok("Allocated virtual network card interface (TUN)"); // TODO@mik translate './menu lc'
+	// under name: " + to_string(ifr.ifr_name));
 
 	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
 	{
@@ -558,16 +559,33 @@ void c_tunserver::prepare_socket() {
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
 		assert(address[1] == 0x42);
-		m_tun_device.set_ipv6_address(address, 16);
+
+		_fact("Will configure the tun device");
+		try {
+			m_tun_device.init();
+			m_tun_device.set_ipv6_address(address, 16);
+			m_tun_device.set_mtu(1304);
+		}
+		catch (tuntap_error &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap); "s + ex.what()); }
+		catch (tuntap_error_devtun &ex) { ui::action_error_exit("Problem with setup of virtual card (tun/tap) with accessing tun/tap driver-file; "s + ex.what()); }
+		catch (tuntap_error_ip &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap) while setting up virtual IP address; "s + ex.what()); }
+		catch (tuntap_error_mtu &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap) while configuring the MTU option; "s + ex.what()); }
+		catch (std::exception &ex) { ui::action_error_exit("Unknon problem (std::exception) with setup of virtual card (tun/tap) "s + ex.what()); }
+		catch (...) { ui::action_error_exit("Unknon problem (unknown exception type) with setup of virtual card (tun/tap)."); }
+		_goal("Tun device seems fully configured");
 	}
 
-#ifdef __linux__
-	_assert(m_udp_device.get_socket() >= 0);
-#endif
+	#ifdef __linux__
+		_assert(m_udp_device.get_socket() >= 0);
+	#endif
 
+	ui::action_info_ok("Started virtual network card interface (TUN)"
+	//under name: " + to_string(ifr.ifr_name)
+		+ std::string(" with proper IPv6 and other settings"));
 }
-#ifdef __linux__
 
+
+#ifdef __linux__
 void c_tunserver::wait_for_fd_event() { // wait for fd event
 	_info("Selecting");
 	// set the wait for read events:
