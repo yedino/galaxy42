@@ -31,12 +31,11 @@ else
 echo "Downloading boost in PWD=$PWD"
 # download boost starting from cleaning previous build
 rm -rf boost || fail # perhaps left over if we do some caching or testing
-git clone https://github.com/boostorg/boost.git || fail "git clone" # check gitrev hash below!
+git clone -b boost-1.61.0 https://github.com/boostorg/boost.git --depth 1 || fail "git clone" # check gitrev hash below!
 pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 0 ; }
 
-git checkout boost-1.61.0
 expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
 confirm_gitrev=$(git log --format='%H' -1)
 [[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
@@ -50,7 +49,7 @@ declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "li
 	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" "libs/circular_buffer" )
 
 # speed up boost download by initialize submodules asynchronously
-for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive && wait
+for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive --depth 1&& wait
 
 #git submodule update --init --recursive --depth 1 --jobs 16 "${boost_submodules[@]}"  # better but works for git version > 2.8
 #git submodule update --init --recursive "libs/algorithm" # fetching all history for 'libs/algorithm' because of: error: no such remote ref e5ea93bab1bfe66917ee52944619ad8cee9a0a85
@@ -71,7 +70,6 @@ printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
 echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
 echo "using gcc : 5.4.0 : $boost_user_gcc" >> user-config.jam || fail
 
-
   printf "\nTEST TOOLS (in BOOST script):\n"
   set -x
   which gcc
@@ -84,7 +82,6 @@ echo "using gcc : 5.4.0 : $boost_user_gcc" >> user-config.jam || fail
   g++ -print-prog-name=ar
   set +x
   printf "\n\n"
-
 
 printf "\n\nBoost bootstrap...\n\n"
 ./bootstrap.sh --without-icu || fail
@@ -143,10 +140,7 @@ pushd /home/ubuntu/build/boost/static-build/lib/ || "Enter dir of boost static b
 	for x in system filesystem locale program_options thread ; do ln -s  libboost_$x-mt-s.a  libboost_$x-mt-1_61.a ; done
 popd
 
-
-
 else
     printf "\n\nSkipping boost (as selected in options)\n\n"
 
 fi
-
