@@ -60,6 +60,14 @@ Example:
 
   `export CXX=x86_64-w64-mingw32-g++`
 
+  ###### Checking compiler
+  `$CXX -v`
+
+  Version must be >= 5.0.0
+
+  Thread model must be posix
+
+
 ### 3. Building
 `cmake .`
 
