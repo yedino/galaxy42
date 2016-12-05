@@ -207,7 +207,7 @@ c_tun_device_windows::c_tun_device_windows()
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
 	m_mac_address(get_mac(m_handle))
 {
-	_FACT("Creating TUN/TAP (windows version)");
+	_fact("Creating TUN/TAP (windows version)");
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
 	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
@@ -216,20 +216,28 @@ c_tun_device_windows::c_tun_device_windows()
 }
 
 void c_tun_device_windows::set_ipv6_address
-(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
+{
+	_fact("Setting IPv6 address, prefixLen="<<prefixLen);
 	auto human_name = get_human_name(m_guid);
 	auto luid = get_luid(human_name);
+	// _fact("Setting address on human_name ["<<human_name<<" luid="<<luid); // TODO@mik
 	// remove old address
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
 	GetUnicastIpAddressTable(AF_INET6, &table);
 	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
-		if (table->Table[i].InterfaceLuid.Value == luid.Value)
-			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR)
+		_info("Removing old addresses, i="<<i);
+		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
+		_info("Removing old addresses, entry i="<<i<<" - will remove");
+			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
+			}
+		}
 	}
 	FreeMibTable(table);
 
 	// set new address
+	_fact("Setting new IP address");
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -243,8 +251,10 @@ void c_tun_device_windows::set_ipv6_address
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
 
+	_fact("Creating unicast IP");
 	auto status = CreateUnicastIpAddressEntry(&iprow);
-	// TODO check for error with status
+	_goal("Created unicast IP, status=" << status);
+	// TODO check for error with status TODO@mik
 	_UNUSED(status);
 }
 
@@ -309,6 +319,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	DWORD cchValue = MAX_VALUE_NAME;
 
 	// Get the class name and the value count.
+	_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -347,6 +358,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 
 std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
+	// _fact("Looking for device guid" << adapterKey); // TODO@mik
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -383,6 +395,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		}
 		RegCloseKey(key);
 	}
+	_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
