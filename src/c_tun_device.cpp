@@ -542,6 +542,7 @@ void c_tun_device_apple::init()
 
 int c_tun_device_apple::get_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+    int err=errno;
 		if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
     // get ctl_id
@@ -552,7 +553,7 @@ int c_tun_device_apple::get_tun_fd() {
     if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
 	    	int err = errno;
         close(tun_fd);
-        throw std::runtime_error("ioctl error");
+				_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
     }
 
     // connect to tun
