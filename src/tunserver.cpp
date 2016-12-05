@@ -566,10 +566,10 @@ void c_tunserver::prepare_socket() {
 			m_tun_device.set_ipv6_address(address, 16);
 			m_tun_device.set_mtu(1304);
 		}
-		catch (tuntap_error &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap); "s + ex.what()); }
 		catch (tuntap_error_devtun &ex) { ui::action_error_exit("Problem with setup of virtual card (tun/tap) with accessing tun/tap driver-file; "s + ex.what()); }
 		catch (tuntap_error_ip &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap) while setting up virtual IP address; "s + ex.what()); }
 		catch (tuntap_error_mtu &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap) while configuring the MTU option; "s + ex.what()); }
+		catch (tuntap_error &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap); "s + ex.what()); }
 		catch (std::exception &ex) { ui::action_error_exit("Unknon problem (std::exception) with setup of virtual card (tun/tap) "s + ex.what()); }
 		catch (...) { ui::action_error_exit("Unknon problem (unknown exception type) with setup of virtual card (tun/tap)."); }
 		_goal("Tun device seems fully configured");
