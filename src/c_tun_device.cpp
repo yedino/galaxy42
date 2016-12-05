@@ -214,7 +214,7 @@ c_tun_device_windows::c_tun_device_windows()
 }
 
 
-void c_tun_device_windows::init() { }
+void c_tun_device_windows::init() {
 	// TODO@rob move all the init stuff to here, from the init-list of constructor please so we can debug/log it
 
 	_fact("Creating TUN/TAP (windows version)");
