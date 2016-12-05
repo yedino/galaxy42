@@ -162,7 +162,7 @@ string_as_dbg::string_as_dbg(const char * data, size_t data_size, t_debug_style 
 
 void string_as_dbg::print(std::ostream & os, char v, t_debug_style style)
 {
-	UNUSED(style); // TODONOW
+	UNUSED(style); // TODONOW TODO
 	unsigned char uc = static_cast<unsigned char>(v);
 	signed char widthH=-1; // -1 is normal print, otherwise the width of hex
 	signed char widthD; // width of dec

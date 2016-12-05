@@ -27,6 +27,8 @@
 #ifndef NetPlatform_H
 #define NetPlatform_H
 
+#include "syserr.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,13 +39,13 @@ extern const int Sockaddr_AF_INET;
 extern const int Sockaddr_AF_INET6;
 
 /// @return value <0 if an error occured.
-int NetPlatform_addAddress(const char* interfaceName,
+t_syserr NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
                             int addrFam);
 
 /// @return value <0 if an error occured.
-int NetPlatform_setMTU(const char* interfaceName,
+t_syserr NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu);
 
 #ifdef __cplusplus

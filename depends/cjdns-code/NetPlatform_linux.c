@@ -23,8 +23,9 @@
  */
 
  #ifdef __linux__
- 
+
 #include "NetPlatform.h"
+#include "syserr.h"
 
 #include <string.h>
 #include <errno.h>
@@ -69,47 +70,53 @@ const int Sockaddr_AF_INET6 = AF_INET6;
  * @return a socket for interacting with this interface; Errors: -220 socket open,
  * -230 ioctl
  */
-static int socketForIfName(const char* interfaceName,
+static t_syserr socketForIfName(const char* interfaceName,
 						int af,
                            struct ifreq* ifRequestOut)
 {
     int s;
+    int err;
 
     if ((s = socket(af, SOCK_DGRAM, 0)) < 0) {
-    	return -220;
+    	return (t_syserr){ -220 , errno };
     }
 
     memset(ifRequestOut, 0, sizeof(struct ifreq));
     strncpy(ifRequestOut->ifr_name, interfaceName, IFNAMSIZ);
 
     if (ioctl(s, SIOCGIFINDEX, ifRequestOut) < 0) {
+	    	err = errno;
         close(s);
-        return -230;
+        return (t_syserr){ -230 , err };
     }
-    return s;
+    return (t_syserr){ s , 0 };
 }
 
- /// @return 0=ok; Errors: -320 socket open, -330 ioctl
-static int checkInterfaceUp(int socket,
+/// @return 0=ok; Errors: -320 socket open, -330 ioctl
+static t_syserr checkInterfaceUp(int socket,
                              struct ifreq* ifRequest)
 {
+		int err=0;
+
     if (ioctl(socket, SIOCGIFFLAGS, ifRequest) < 0) {
+	    	err = errno;
         close(socket);
-        return -320;
+        return (t_syserr){ -320 , err };
     }
 
     if (ifRequest->ifr_flags & IFF_UP & IFF_RUNNING) {
         // already up.
-        return 0;
+        return (t_syserr){ 0 , 0 }; // all ok
     }
 
 
     ifRequest->ifr_flags |= IFF_UP | IFF_RUNNING;
     if (ioctl(socket, SIOCSIFFLAGS, ifRequest) < 0) {
+	    	err = errno;
         close(socket);
-        return -330;
+        return (t_syserr){ -330 , err };
     }
-    return 0;
+    return (t_syserr){ 0 , 0 };
 }
 
 /**
@@ -117,19 +124,23 @@ static int checkInterfaceUp(int socket,
    during socketForIfName:  -220 socket open, -230 ioctl,
    during checkInterfaceUp: -320 socket open, -330 ioctl
  */
-int NetPlatform_addAddress(const char* interfaceName,
+t_syserr NetPlatform_addAddress(const char* interfaceName,
                             const uint8_t* address,
                             int prefixLen,
                             int addrFam)
 {
+		int err=0;
     struct ifreq ifRequest;
-    int s = socketForIfName(interfaceName, addrFam, &ifRequest);
-    if (s < 0) return s;
-    int ifIndex = ifRequest.ifr_ifindex;
+    int s;
+    int ifIndex;
+    t_syserr s_and_syserr = socketForIfName(interfaceName, addrFam, &ifRequest);
+    if (s_and_syserr.my_code < 0) return (t_syserr){ s , 0 }; // some error
+    s = s_and_syserr.my_code;
+    ifIndex = ifRequest.ifr_ifindex;
 
     // checkInterfaceUp() clobbers the ifindex.
-    int ifUp = checkInterfaceUp(s, &ifRequest);
-    if (ifUp < 0) return ifUp;
+    t_syserr ifUp = checkInterfaceUp(s, &ifRequest);
+    if (ifUp.my_code < 0) return ifUp; // some error
 
     if (addrFam == Sockaddr_AF_INET6) {
         struct in6_ifreq ifr6;
@@ -142,16 +153,17 @@ int NetPlatform_addAddress(const char* interfaceName,
         };*/
         memcpy(&ifr6.ifr6_addr, address, 16);
 
-        if (ioctl(s, SIOCSIFADDR, &ifr6) < 0) {
+        if (ioctl(s, SIOCSIFADDR, &ifr6) < 0) { // errno
+        		err = errno;
             close(s);
-            return -30;
+            return (t_syserr){ -30 , err };
         }
 
 
     } else if (addrFam == Sockaddr_AF_INET) {
 			printf("setting ipv4 address\n");
 			printf("not implemented\n");
-			return -101;
+			return (t_syserr){ -101 , 0 };
         /*struct sockaddr_in sin = { .sin_family = AF_INET, .sin_port = 0 };
         memcpy(&sin.sin_addr.s_addr, address, 4);
         memcpy(&ifRequest.ifr_addr, &sin, sizeof(struct sockaddr));
@@ -169,31 +181,35 @@ int NetPlatform_addAddress(const char* interfaceName,
             close(s);
         }*/
     } else {
-    	return -100;
+    	return (t_syserr){ -100 , 0 };
     }
 
     close(s);
-    return 0;
+    return (t_syserr){ 0 , 0 };
 }
 
 /**
  * @return 0=ok
  */
-int NetPlatform_setMTU(const char* interfaceName,
+t_syserr NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu)
 {
     struct ifreq ifRequest;
-    int s = socketForIfName(interfaceName, AF_INET6, &ifRequest);
-    if (s<0) return s;
+    int err;
+    int s;
+    t_syserr s_and_syserr = socketForIfName(interfaceName, AF_INET6, &ifRequest);
+    if (s_and_syserr.my_code<0) return s_and_syserr; // some err
+    s = s_and_syserr.my_code;
 
     ifRequest.ifr_mtu = mtu;
-    if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) {
+    if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) { // errno
+    		err = errno;
         close(s);
-        return -30;
+        return (t_syserr){ -30 , err };
     }
 
     close(s);
-    return 0;
+    return (t_syserr){ 0 , 0 };
 }
 
 #endif // __linux__
