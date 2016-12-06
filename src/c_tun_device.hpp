@@ -29,6 +29,8 @@ class c_tun_device {
 
 		c_tun_device();
 		virtual ~c_tun_device() = default;
+		virtual void init(); ///< call before use
+
 		virtual void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) = 0;
 		virtual void set_mtu(uint32_t mtu) = 0; ///< sets MTU. first use set_ipv6_address
@@ -43,6 +45,7 @@ class c_tun_device_linux final : public c_tun_device {
 	friend class c_event_manager_linux;
 	public:
 		c_tun_device_linux();
+		virtual void init() override; ///< call before use
 
 		void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
@@ -78,6 +81,8 @@ class c_tun_device_windows final : public c_tun_device {
 	//friend class c_ndp;
 public:
 	c_tun_device_windows();
+	virtual void init() override; ///< call before use
+
 	void set_ipv6_address
 		(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
 	void set_mtu(uint32_t mtu) {}; // TODO
@@ -116,6 +121,7 @@ class c_tun_device_apple final : public c_tun_device {
 friend class c_event_manager_asio;
 public:
     c_tun_device_apple();
+		virtual void init() override; ///< call before use
     void set_ipv6_address
             (const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
     void set_mtu(uint32_t mtu) override;
@@ -138,6 +144,7 @@ private:
 class c_tun_device_empty final : public c_tun_device {
 	public:
 		c_tun_device_empty();
+		void init(); ///< call before use
 		void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
 		void set_mtu(uint32_t mtu) override;

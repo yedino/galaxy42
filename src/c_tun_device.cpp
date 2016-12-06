@@ -19,7 +19,8 @@ std::string NetPlatform_error_code_to_string(int err) {
 	switch (err) {
 		case -10: return "getaddrinfo"; break;
 		case -20: return "socket_open"; break;
-		case -30: return "ioctl"; break;
+		case e_netplatform_err_open_fd: return "ioctl"; break; // TODO@mik
+		case e_netplatform_err_ioctl: return "ioctl"; break; // TODO@mik
 		case -100: return "invalid_address_family"; break;
 		case -101: return "not_implemented_yet_address_family"; break;
 		case -220: return "socketForIfName_socket_open"; break;
@@ -45,8 +46,6 @@ std::string NetPlatform_syserr_to_string(t_syserr syserr) {
 	return oss.str();
 }
 
-
-
 /**
  * Wrapper around the from-cjdns function;
  * Nicelly writes debug about this important function.
@@ -57,6 +56,7 @@ void Wrap_NetPlatform_addAddress(const char* interfaceName,
                             int prefixLen,
                             int addrFam)
 {
+	#if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
 	_fact("Setting IP address: interfaceName="<<interfaceName
 		<<" address="<<address
 		<<" prefixLen="<<prefixLen
@@ -65,17 +65,24 @@ void Wrap_NetPlatform_addAddress(const char* interfaceName,
 	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
 	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
 		<< " result: " << NetPlatform_syserr_to_string(syserr));
+	#else
+		throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+	#endif
 }
 
 // Wrapper around the from-cjdns function:
 void Wrap_NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu)
 {
+	#if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
 	_fact("Setting MTU on interfaceName="<<interfaceName<<" mtu="<<mtu);
 	t_syserr syserr = NetPlatform_setMTU(interfaceName, mtu);
 	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_mtu , NetPlatform_syserr_to_string(syserr) );
 	_goal("MTU value " << mtu << " set on interface " << interfaceName
 		<< " result: " << NetPlatform_syserr_to_string(syserr));
+	#else
+		throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+	#endif
 }
 
 
@@ -89,6 +96,7 @@ c_tun_device::c_tun_device()
 }
 
 
+void c_tun_device::init() { }
 
 
 #ifdef __linux__
@@ -107,15 +115,15 @@ c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(-1)
 {
+}
+
+void c_tun_device_linux::init()
+{
 	const char *fd_fname = "/dev/net/tun";
 	_goal("Opening TUN file (Linux driver) " << fd_fname);
 	m_tun_fd = open(fd_fname, O_RDWR);
 	int err = errno;
-	if (m_tun_fd<0) {
-		ostringstream oss;
-		oss << "Can not open the TUN file (" << fd_fname << ") errno: " << errno_to_string(err);
-		_throw_error_sub( tuntap_error_devtun , oss.str() );
-	}
+	if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 	_goal("TUN file opened as fd " << m_tun_fd);
 }
 
@@ -126,7 +134,9 @@ void c_tun_device_linux::set_ipv6_address
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
-	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
+	int err = errno;
+	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
+
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
 	_fact("Setting IP address");
@@ -139,6 +149,7 @@ void c_tun_device_linux::set_ipv6_address
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
+	_fact("Setting MTU" << mtu);
 	const auto name = m_ifr_name.c_str();
 	_fact("Setting MTU="<<mtu<<" on card: " << name);
 	Wrap_NetPlatform_setMTU(name,mtu);
@@ -207,29 +218,45 @@ c_tun_device_windows::c_tun_device_windows()
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
 	m_mac_address(get_mac(m_handle))
 {
-	_FACT("Creating TUN/TAP (windows version)");
+	_fact("Creating the windows device class (in ctor, before init)");
+}
+
+
+void c_tun_device_windows::init() {
+	// TODO@rob move all the init stuff to here, from the init-list of constructor please so we can debug/log it
+
+	_fact("Creating TUN/TAP (windows version)");
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
+	// TODO@rob more debug
 	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void c_tun_device_windows::set_ipv6_address
-(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
+{
+	_fact("Setting IPv6 address, prefixLen="<<prefixLen);
 	auto human_name = get_human_name(m_guid);
 	auto luid = get_luid(human_name);
+	// _fact("Setting address on human_name ["<<human_name<<" luid="<<luid); // TODO@mik
 	// remove old address
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
 	GetUnicastIpAddressTable(AF_INET6, &table);
 	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
-		if (table->Table[i].InterfaceLuid.Value == luid.Value)
-			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR)
+		_info("Removing old addresses, i="<<i);
+		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
+		_info("Removing old addresses, entry i="<<i<<" - will remove");
+			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
+			}
+		}
 	}
 	FreeMibTable(table);
 
 	// set new address
+	_fact("Setting new IP address");
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -243,8 +270,10 @@ void c_tun_device_windows::set_ipv6_address
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
 
+	_fact("Creating unicast IP");
 	auto status = CreateUnicastIpAddressEntry(&iprow);
-	// TODO check for error with status
+	_goal("Created unicast IP, status=" << status);
+	// TODO check for error with status TODO@mik
 	_UNUSED(status);
 }
 
@@ -309,6 +338,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	DWORD cchValue = MAX_VALUE_NAME;
 
 	// Get the class name and the value count.
+	_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -347,6 +377,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 
 std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
+	// _fact("Looking for device guid" << adapterKey); // TODO@mik
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -383,6 +414,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		}
 		RegCloseKey(key);
 	}
+	_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
@@ -450,6 +482,7 @@ HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
+	// TODO@rob check error
 	return handle;
 }
 
@@ -490,6 +523,7 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 }
 
 // _win32 || __cygwin__
+
 #elif defined(__MACH__)
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
@@ -501,6 +535,11 @@ c_tun_device_apple::c_tun_device_apple() :
     m_buffer(),
     m_readed_bytes(0)
 {
+}
+
+void c_tun_device_apple::init()
+{
+	_fact("Creating the MAC OS X device class (in ctor, before init)");
     m_buffer.fill(0);
     assert(m_stream_handle_ptr->is_open());
     m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
@@ -511,7 +550,8 @@ c_tun_device_apple::c_tun_device_apple() :
 
 int c_tun_device_apple::get_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
-    if (tun_fd < 0) throw std::runtime_error("tun_fd open error");
+    int err=errno;
+		if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
     // get ctl_id
     ctl_info info;
@@ -521,7 +561,7 @@ int c_tun_device_apple::get_tun_fd() {
     if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
 	    	int err = errno;
         close(tun_fd);
-        throw std::runtime_error("ioctl error");
+				_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
     }
 
     // connect to tun
@@ -558,8 +598,9 @@ void c_tun_device_apple::set_ipv6_address
 }
 
 void c_tun_device_apple::set_mtu(uint32_t mtu) {
+	_fact("Setting MTU="<<mtu);
 	const auto name = m_ifr_name.c_str();
-	_note("Setting MTU="<<mtu<<" on card: " << name);
+	_fact("Setting MTU="<<mtu<<" on card: " << name);
   NetPlatform_setMTU(name, mtu);
 }
 
@@ -607,6 +648,7 @@ void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_
 }
 
 void c_tun_device_empty::set_mtu(uint32_t mtu) {
+	_warn("Called set_mtu on empty device");
 	_UNUSED(mtu);
 }
 
