@@ -92,7 +92,7 @@ class c_tun_device_linux final : public c_tun_device {
 class c_tun_device_windows final : public c_tun_device {
 	//friend class c_ndp;
 public:
-  friend class c_event_manager_linux; // for io_service etc?
+  friend class c_event_manager_asio; // for io_service etc?
 
 	c_tun_device_windows();
 	virtual void init() override; ///< call before use
@@ -133,7 +133,7 @@ private:
 #include <boost/asio.hpp>
 class c_tun_device_apple final : public c_tun_device {
 public:
-  friend class c_event_manager_linux; // for io_service etc?
+  friend class c_event_manager_asio; // for io_service etc?
 
     c_tun_device_apple();
 		virtual void init() override; ///< call before use

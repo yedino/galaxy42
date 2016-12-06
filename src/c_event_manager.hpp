@@ -23,7 +23,7 @@ class c_event_manager_linux final : public c_event_manager {
 		c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper);
 		void wait_for_event();
 		bool receive_udp_paket();
-		bool get_tun_packet();
+		virtual bool get_tun_packet() override;
 
 		virtual void init() override; ///< call this to finish init of the object, call it:
 		/// once the tun_device that we reference since constructor is now fully inited
@@ -66,8 +66,11 @@ public:
 
 	void wait_for_event() override;
 	bool receive_udp_paket() override;
-	bool get_tun_packet() override;
+	virtual bool get_tun_packet() override;
+
 private:
+		int m_tun_fd;
+
         #if defined(_WIN32) || defined(__CYGWIN__)
 	std::reference_wrapper<c_tun_device_windows> m_tun_device;
         #elif defined(__MACH__)
