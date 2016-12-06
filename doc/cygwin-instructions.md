@@ -42,26 +42,26 @@ Example:
 
 ### Building.
 #### 1. Download code from github:
-`git clone https://github.com/yedino/galaxy42.git`
-
-`cd galaxy42`
-
-`git submodule update --init`
+```sh
+$ git clone https://github.com/yedino/galaxy42.git
+$ cd galaxy42
+$ git submodule update --init
+```
 #### 2. Set compiler:
 - for 32-bit
-
-  `export CC=i686-w64-mingw32-gcc`
-
-  `export CXX=i686-w64-mingw32-g++`
-
+```sh
+$ export CC=i686-w64-mingw32-gcc
+$ export CXX=i686-w64-mingw32-g++
+```
 - for 64-bitst
-
-  `export CC=x86_64-w64-mingw32-gcc`
-
-  `export CXX=x86_64-w64-mingw32-g++`
-
+```sh
+$ export CC=x86_64-w64-mingw32-gcc
+$ export CXX=x86_64-w64-mingw32-g++
+```
   ###### Checking compiler
-  `$CXX -v`
+```sh
+$ $CXX -v
+```
 
   Version must be >= 5.0.0
 
@@ -69,9 +69,16 @@ Example:
 
 
 ### 3. Building
-`cmake .`
+``` sh
+$ cmake .
+$ make tunserver.elf
+```
+For building windows service wrapper
+```sh
+$ cmake .
+$ make windowsService
+```
 
-`make tunserver.elf`
 ### 4. Running
 ##### Install TUN/TAP device
 
