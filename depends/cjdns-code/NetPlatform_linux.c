@@ -78,7 +78,7 @@ static t_syserr socketForIfName(const char* interfaceName,
     int err;
 
     if ((s = socket(af, SOCK_DGRAM, 0)) < 0) {
-    	return (t_syserr){ -220 , errno };
+        return (t_syserr){ e_netplatform_err_socketForIfName_open , errno };
     }
 
     memset(ifRequestOut, 0, sizeof(struct ifreq));
@@ -87,7 +87,7 @@ static t_syserr socketForIfName(const char* interfaceName,
     if (ioctl(s, SIOCGIFINDEX, ifRequestOut) < 0) {
 	    	err = errno;
         close(s);
-        return (t_syserr){ -230 , err };
+        return (t_syserr){ e_netplatform_err_checkInterfaceUp_ioctl, err };
     }
     return (t_syserr){ s , 0 };
 }
@@ -101,7 +101,7 @@ static t_syserr checkInterfaceUp(int socket,
     if (ioctl(socket, SIOCGIFFLAGS, ifRequest) < 0) {
 	    	err = errno;
         close(socket);
-        return (t_syserr){ -320 , err };
+        return (t_syserr){ e_netplatform_err_checkInterfaceUp_open, err };
     }
 
     if (ifRequest->ifr_flags & IFF_UP & IFF_RUNNING) {
@@ -114,7 +114,7 @@ static t_syserr checkInterfaceUp(int socket,
     if (ioctl(socket, SIOCSIFFLAGS, ifRequest) < 0) {
 	    	err = errno;
         close(socket);
-        return (t_syserr){ -330 , err };
+        return (t_syserr){ e_netplatform_err_checkInterfaceUp_ioctl, err };
     }
     return (t_syserr){ 0 , 0 };
 }
@@ -156,14 +156,14 @@ t_syserr NetPlatform_addAddress(const char* interfaceName,
         if (ioctl(s, SIOCSIFADDR, &ifr6) < 0) { // errno
         		err = errno;
             close(s);
-            return (t_syserr){ -30 , err };
+            return (t_syserr){ e_netplatform_err_ioctl, err };
         }
 
 
     } else if (addrFam == Sockaddr_AF_INET) {
 			printf("setting ipv4 address\n");
 			printf("not implemented\n");
-			return (t_syserr){ -101 , 0 };
+            return (t_syserr){ e_netplatform_err_not_impl_addr_family, 0 };
         /*struct sockaddr_in sin = { .sin_family = AF_INET, .sin_port = 0 };
         memcpy(&sin.sin_addr.s_addr, address, 4);
         memcpy(&ifRequest.ifr_addr, &sin, sizeof(struct sockaddr));
@@ -181,7 +181,7 @@ t_syserr NetPlatform_addAddress(const char* interfaceName,
             close(s);
         }*/
     } else {
-    	return (t_syserr){ -100 , 0 };
+        return (t_syserr){ e_netplatform_err_invalid_addr_family, 0 };
     }
 
     close(s);
@@ -205,7 +205,7 @@ t_syserr NetPlatform_setMTU(const char* interfaceName,
     if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) { // errno
     		err = errno;
         close(s);
-        return (t_syserr){ -30 , err };
+        return (t_syserr){ e_netplatform_err_ioctl, err };
     }
 
     close(s);

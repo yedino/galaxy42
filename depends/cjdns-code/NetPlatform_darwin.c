@@ -136,7 +136,7 @@ static t_syserr addIp4Address(const char* interfaceName,
     memcpy(&ifarted.ifra_mask, &sin, sizeof(struct sockaddr_in));
 
     int s = socket(AF_INET, SOCK_DGRAM, 0); // can set errno
-    if (s < 0) return (t_syserr){ -20 , errno };
+    if (s < 0) return (t_syserr){ e_netplatform_err_open_socket, errno };
 
     // will probably fail, ignore result.
     struct ifreq ifr = { .ifr_flags = 0 };
@@ -147,7 +147,7 @@ static t_syserr addIp4Address(const char* interfaceName,
     if (ioctl(s, SIOCSIFADDR, &ifarted) < 0) { // can set errno
         int err = errno;
         close(s);
-        return (t_syserr){ -30 , err }; // return saved copy of errno
+        return (t_syserr){ e_netplatform_err_ioctl, err }; // return saved copy of errno
     }
 
     //setupRoute4(address, prefixLen, interfaceName, logger, tempAlloc, eh);
@@ -177,7 +177,7 @@ static t_syserr addIp6Address(const char* interfaceName,
     bzero(&hints, sizeof(struct addrinfo));
     hints.ai_family = AF_INET6;
     int err = getaddrinfo((const char *)myIp, NULL, &hints, &result); // can set errno
-    if (err) return (t_syserr){ -10 , errno };
+    if (err) return (t_syserr){ e_netplatform_err_getaddrinfo, errno };
 
     bcopy(result->ai_addr, &in6_addreq.ifra_addr, result->ai_addrlen);
 
@@ -197,12 +197,12 @@ static t_syserr addIp6Address(const char* interfaceName,
 
     /* do the actual assignment ioctl */
     int s = socket(AF_INET6, SOCK_DGRAM, 0); // can set errno
-    if (s < 0) return (t_syserr){ -20 , errno };
+    if (s < 0) return (t_syserr){ e_netplatform_err_open_socket, errno };
 
     if (ioctl(s, SIOCAIFADDR_IN6, &in6_addreq) < 0) { // can set errno
         int err = errno;
         close(s);
-        return (t_syserr){ -30 , err };
+        return (t_syserr){ e_netplatform_err_ioctl, err };
     }
 
     close(s);
@@ -220,7 +220,7 @@ t_syserr NetPlatform_addAddress(const char* interfaceName,
     } else if (addrFam == Sockaddr_AF_INET) {
         return addIp4Address(interfaceName, address, prefixLen);
     } else {
-    	return (t_syserr){ -100 , 0 } ;
+        return (t_syserr){ e_netplatform_err_invalid_addr_family, 0 } ;
     }
     return (t_syserr){0,0};
 }
@@ -230,7 +230,7 @@ t_syserr NetPlatform_setMTU(const char* interfaceName,
                         uint32_t mtu)
 {
     int s = socket(AF_INET6, SOCK_DGRAM, 0); // can set errno
-    if (s < 0) return (t_syserr){ -20 , errno };
+    if (s < 0) return (t_syserr){ e_netplatform_err_open_socket, errno };
 
     struct ifreq ifRequest;
     strncpy(ifRequest.ifr_name, interfaceName, IFNAMSIZ);
@@ -238,7 +238,7 @@ t_syserr NetPlatform_setMTU(const char* interfaceName,
     if (ioctl(s, SIOCSIFMTU, &ifRequest) < 0) { // can set errno
        int err = errno;
        close(s);
-       return (t_syserr){ -30 , err }; // the saved errno is returned too
+       return (t_syserr){ e_netplatform_err_ioctl, err }; // the saved errno is returned too
     }
     close(s); // close file, it was opened since socket() succeeded.
     return (t_syserr){0,0};
