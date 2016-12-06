@@ -96,9 +96,6 @@ c_tun_device::c_tun_device()
 }
 
 
-void c_tun_device::init() { }
-
-
 #ifdef __linux__
 
 #include <cassert>
@@ -189,8 +186,6 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 #include <cassert>
 #include <ifdef.h>
 #include <io.h>
-//#include <ntdef.h>
-//#include <ntstatus.h>
 #ifndef NTSTATUS
 #define NTSTATUS LONG
 #endif
@@ -211,12 +206,13 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 
 c_tun_device_windows::c_tun_device_windows()
 	:
-	// LOG_ON_INIT( _note("Creating TUN device (windows)") ),
-	m_guid(get_device_guid()),
+	m_guid(),
+	m_ioservice(),
+	m_buffer(),
 	m_readed_bytes(0),
-	m_handle(get_device_handle()),
-	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
-	m_mac_address(get_mac(m_handle))
+	m_handle(nullptr),
+	m_stream_handle_ptr(),
+	m_mac_address()
 {
 	_fact("Creating the windows device class (in ctor, before init)");
 }
@@ -224,8 +220,18 @@ c_tun_device_windows::c_tun_device_windows()
 
 void c_tun_device_windows::init() {
 	// TODO@rob move all the init stuff to here, from the init-list of constructor please so we can debug/log it
-
 	_fact("Creating TUN/TAP (windows version)");
+
+	m_guid = get_device_guid();
+	
+	/*m_guid(get_device_guid()),
+	m_readed_bytes(0),
+	m_handle(get_device_handle()),
+	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
+	m_mac_address(get_mac(m_handle))
+	*/
+	
+	
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
 	// TODO@rob more debug
@@ -332,7 +338,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	DWORD    cbMaxValueData;       // longest value data
 	DWORD    cbSecurityDescriptor; // size of security descriptor
 	FILETIME ftLastWriteTime;      // last write time
-	DWORD i, retCode;
+	DWORD retCode;
 	std::vector<std::wstring> ret;
 	TCHAR  achValue[MAX_VALUE_NAME];
 	DWORD cchValue = MAX_VALUE_NAME;
@@ -343,7 +349,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 		hKey,                    // key handle
 		achClass,                // buffer for class name
 		&cchClassName,           // size of class string
-		NULL,                    // reserved
+		nullptr,                 // reserved
 		&cSubKeys,               // number of subkeys
 		&cbMaxSubKey,            // longest subkey size
 		&cchMaxClass,            // longest class string
@@ -353,22 +359,21 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 		&cbSecurityDescriptor,   // security descriptor
 		&ftLastWriteTime);       // last write time
 								 // Enumerate the subkeys, until RegEnumKeyEx fails.
-	if (cSubKeys) {
-		std::cout << "Number of subkeys: " << cSubKeys << std::endl;
+	if (retCode != ERROR_SUCCESS) throw std::runtime_error("RegQueryInfoKey error, error code " + std::to_string(GetLastError()));
+	if (cSubKeys > 0) {
+		_fact("Number of subkeys: " << cSubKeys);
 
-		for (i = 0; i < cSubKeys; i++) {
+		for (DWORD i = 0; i < cSubKeys; i++) {
 			cbName = MAX_KEY_LENGTH;
 			retCode = RegEnumKeyEx(hKey, i,
 				achKey,
 				&cbName,
-				NULL,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
+				nullptr,
 				&ftLastWriteTime);
 			if (retCode == ERROR_SUCCESS) {
-				//std::wcout << achKey << std::endl;
-				//std::cout << "get value" << std::endl;
-				ret.emplace_back(std::wstring(achKey));
+				ret.emplace_back(std::wstring(achKey)); // Exception safety: strong guarantee (23.3.6.5, std::wstring is no-throw moveable 21.4.2)
 			}
 		}
 	}
@@ -379,33 +384,43 @@ std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
 	// _fact("Looking for device guid" << adapterKey); // TODO@mik
 	LONG status = 1;
-	HKEY key = nullptr;
+	HKEY key = nullptr; // TODO make unique_ptr
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
-	auto subkeys_vector = get_subkeys(key);
+	std::vector<std::wstring> subkeys_vector;
+	try {
+		subkeys_vector = get_subkeys(key);
+	} catch (const std::exception &e) {
+		RegCloseKey(key);
+		throw e;
+	}
 	RegCloseKey(key);
-	for (auto & subkey : subkeys_vector) { // foreach sub key
+	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
-		// std::wcout << subkey_reg_path << std::endl;
+		_fact(to_string(subkey_reg_path));
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
 		// get ComponentId field
 		DWORD size = 256;
 		std::wstring componentId(size, '\0');
+		 // this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
+		 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 		status = RegQueryValueExW(key, L"ComponentId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&componentId[0]), &size);
 		if (status != ERROR_SUCCESS) {
 			RegCloseKey(key);
 			continue;
 		}
 		if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
-			std::wcout << subkey_reg_path << std::endl;
+			_note(to_string(subkey_reg_path));
 			size = 256;
 			std::wstring netCfgInstanceId(size, '\0');
+			// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
+			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 			status = RegQueryValueExW(key, L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 			if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 			netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
-			std::wcout << netCfgInstanceId << std::endl;
+			std::wcout << netCfgInstanceId << std::endl; // TODO new debug
 			RegCloseKey(key);
 			HANDLE handle = open_tun_device(netCfgInstanceId);
 			if (handle == INVALID_HANDLE_VALUE) continue;
@@ -423,7 +438,7 @@ std::wstring c_tun_device_windows::get_human_name(const std::wstring &guid) {
 	std::wstring connectionKey = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 	connectionKey += guid;
 	connectionKey += L"\\Connection";
-	std::wcout << "connectionKey " << connectionKey << L"*******" << std::endl;
+	std::wcout << "connectionKey " << connectionKey << std::endl;
 	LONG status = 1;
 	HKEY key = nullptr;
 	DWORD size = 256;

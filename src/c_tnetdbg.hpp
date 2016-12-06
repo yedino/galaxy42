@@ -163,7 +163,7 @@ std::string debug_this();
 #define _erron(X) _erro(debug_this() << X)
 #define _markn(X) _mark(debug_this() << X)
 
-
+std::string to_string(const std::wstring &input); // TODO
 
 #endif // include guard
 
