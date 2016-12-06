@@ -9,8 +9,7 @@ download_boost_submodules() {
 		"libs/numeric/conversion" "libs/array" "libs/program_options" "libs/container" "libs/move" "libs/math" "libs/tokenizer" \
 		"libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" \
 		"libs/unordered" "libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" \
-		"libs/optional" "libs/rational" "libs/circular_buffer" )
-
+		"libs/optional" "libs/rational" "libs/circular_buffer" "libs/winapi" )
 
 	# git submodule update --init --recursive --depth 1 --jobs 16 "${boost_submodules[@]}"  # better but works for git version > 2.8
 
