@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+
+# importing functions for boost submodules download
+. /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
 
 function fail() {
     printf "\nERROR: the script failed (see above messages).\n\n"
@@ -43,17 +46,8 @@ confirm_gitrev=$(git log --format='%H' -1)
     fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
 }
 
-declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "libs/config" "tools/inspect" "libs/thread" "libs/system" "libs/utility" "libs/predef" "libs/detail" "libs/assert" \
-	"libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" "libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
-	"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" "libs/numeric/conversion" "libs/array" "libs/program_options" \
-	"libs/container" "libs/move" "libs/math" "libs/tokenizer" "libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" "libs/unordered" \
-	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" "libs/circular_buffer" )
-
-# speed up boost download by initialize submodules asynchronously
-for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive && wait
-
-#git submodule update --init --recursive --depth 1 --jobs 16 "${boost_submodules[@]}"  # better but works for git version > 2.8
-#git submodule update --init --recursive "libs/algorithm" # fetching all history for 'libs/algorithm' because of: error: no such remote ref e5ea93bab1bfe66917ee52944619ad8cee9a0a85
+    # Download boost submodules in n=3 attempts
+    dl_boost_submodules_n 3
 
 fi
 
