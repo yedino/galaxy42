@@ -49,6 +49,29 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
 
+## Developing and code details
+
+### Startup of TUN/TAP card
+
+Startup and error reporting is as follows:
+
+```
+1) low-level code, in pure C, reports error via syserr.h struct t_syserr
+NetPlatform_addAddress(..) and NetPlatform_setMTU(..)
+depends/cjdns-code/NetPlatform_darwin.c
+depends/cjdns-code/NetPlatform_linux.c
+
+2) medium code, in C++, reports errors via exceptions:
+	Wrap_NetPlatform_addAddress(..) - throws
+	Wrap_NetPlatform_setMTU(..) - throws
+this is called by:
+	c_tun_device*::set_ipv6_address(..)
+	c_tun_device*::set_mtu(..)
+and this throws proper tuntap_error*
+
+3) tunserver.c will catch then tuntap_error* and inform user
+```
+
 ## Developing translations
 
 ### Writting the code in translatable way
