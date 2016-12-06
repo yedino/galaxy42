@@ -98,6 +98,11 @@ c_tun_device::c_tun_device()
 
 void c_tun_device::init() { }
 
+int c_tun_device::get_tun_fd() const {
+	_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
+}
+
+
 #ifdef __linux__
 
 #include <cassert>
@@ -114,6 +119,12 @@ c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(-1)
 {
+	_note("Creating new linu TUN device class");
+}
+
+int c_tun_device_linux::get_tun_fd() const {
+	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	return m_tun_fd;
 }
 
 void c_tun_device_linux::init()
@@ -167,7 +178,9 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO throw if error
+	_info("Reading from tuntap");
 	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
+	_info("Reading from tuntap - ret="<<ret);
 	if (ret == -1) _throw_error( std::runtime_error("Read from tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
@@ -529,7 +542,7 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>
 c_tun_device_apple::c_tun_device_apple() :
-    m_tun_fd(get_tun_fd()),
+    m_tun_fd(create_tun_fd()),
     m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
     m_buffer(),
     m_readed_bytes(0)
@@ -547,7 +560,12 @@ void c_tun_device_apple::init()
         }); // lambda
 }
 
-int c_tun_device_apple::get_tun_fd() {
+int c_tun_device_apple::get_tun_fd() const {
+	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	return m_tun_fd;
+}
+
+int c_tun_device_apple::create_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
     int err=errno;
 		if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
