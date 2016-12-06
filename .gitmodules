@@ -22,4 +22,3 @@
 	path = depends/json
 	url = https://github.com/nlohmann/json
 	branch = develop
-
