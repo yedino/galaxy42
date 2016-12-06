@@ -110,6 +110,14 @@ private:
 	std::array<uint8_t, 6> get_mac(HANDLE handle); // get handle to opened device (returned by get_device_handle())
 
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
+	class hkey_wrapper final {
+		public:
+			hkey_wrapper(HKEY hkey);
+			~hkey_wrapper();
+			HKEY &get();
+		private:
+			HKEY m_hkey;
+	};
 };
 
 // _win32 || __cygwin__

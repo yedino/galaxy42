@@ -531,6 +531,21 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
+// hkey_wrapper
+c_tun_device_windows::hkey_wrapper::hkey_wrapper(HKEY hkey)
+:
+	m_hkey(hkey)
+{
+}
+
+c_tun_device_windows::hkey_wrapper::~hkey_wrapper() {
+	auto status = RegCloseKey(m_hkey);
+	if (status != ERROR_SUCCESS) throw std::runtime_error("RegCloseKey error, error code " + std::to_string(GetLastError()));
+}
+
+HKEY &c_tun_device_windows::hkey_wrapper::get() {
+	return m_hkey;
+}
 
 // _win32 || __cygwin__
 
