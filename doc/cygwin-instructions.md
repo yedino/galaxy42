@@ -107,3 +107,8 @@ Example:
 - Run cmd as Administrator(right mouse button -> Run as Administrator)
 - Go to binary dir (e.g. `cd C:\cygwin64\home\win2\galaxy42`)
 - Run tunserver (`tunserver.elf.exe`)
+
+
+Tested on Cygwin 2.6.0(0.304/5/3)
+
+mingw version 5.4.0
