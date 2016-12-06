@@ -11,6 +11,7 @@ class c_event_manager {
 		virtual void wait_for_event() = 0;
 		virtual bool receive_udp_paket() = 0;
 		virtual bool get_tun_packet() = 0;
+		virtual void init()=0; ///< call this to finish init of the object
 };
 
 #ifdef __linux__
@@ -23,8 +24,14 @@ class c_event_manager_linux final : public c_event_manager {
 		void wait_for_event();
 		bool receive_udp_paket();
 		bool get_tun_packet();
+
+		virtual void init() override; ///< call this to finish init of the object, call it:
+		/// once the tun_device that we reference since constructor is now fully inited
+
 	private:
-		const int m_tun_fd;
+		std::reference_wrapper<const c_tun_device_linux> m_tun_device;
+
+		int m_tun_fd;
 		const int m_udp_socket;
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 };
@@ -53,6 +60,10 @@ public:
         #elif defined(__MACH__)
         c_event_manager_asio(c_tun_device_apple &tun_device, c_udp_wrapper_asio &udp_wrapper);
         #endif
+
+	virtual void init() override; ///< call this to finish init of the object, call it:
+	/// once the tun_device that we reference since constructor is now fully inited
+
 	void wait_for_event() override;
 	bool receive_udp_paket() override;
 	bool get_tun_packet() override;
