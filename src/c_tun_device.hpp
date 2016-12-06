@@ -37,18 +37,24 @@ class c_tun_device {
 		virtual void set_mtu(uint32_t mtu) = 0; ///< sets MTU. first use set_ipv6_address
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
+
                 virtual size_t write_to_tun(void *buf, size_t count) = 0;
+
+		virtual int get_tun_fd() const; ///< for POSIX-like systems, returns int fd of the tuntap file, e.g. for select()'ing it
+
     protected:
         typedef std::chrono::system_clock time;
         static const int number_of_tested_cards = 100;
         static const int cards_testing_time = 5;
+
 };
 
 #ifdef __linux__
 
 class c_tun_device_linux final : public c_tun_device {
-	friend class c_event_manager_linux;
 	public:
+    friend class c_event_manager_linux; // for io_service etc?
+
 		c_tun_device_linux();
 		virtual void init() override; ///< call before use
 
@@ -58,6 +64,8 @@ class c_tun_device_linux final : public c_tun_device {
 		bool incomming_message_form_tun() override;
 		size_t read_from_tun(void *buf, size_t count) override;
 		size_t write_to_tun(void *buf, size_t count) override;
+
+		virtual int get_tun_fd() const override;
 
 	private:
 		int m_tun_fd; ///< the fd for TUN
@@ -82,9 +90,10 @@ class c_tun_device_linux final : public c_tun_device {
 #include <vector>
 
 class c_tun_device_windows final : public c_tun_device {
-        friend class c_event_manager_asio;
 	//friend class c_ndp;
 public:
+  friend class c_event_manager_linux; // for io_service etc?
+
 	c_tun_device_windows();
 	virtual void init() override; ///< call before use
 
@@ -123,8 +132,9 @@ private:
 #elif defined(__MACH__)
 #include <boost/asio.hpp>
 class c_tun_device_apple final : public c_tun_device {
-friend class c_event_manager_asio;
 public:
+  friend class c_event_manager_linux; // for io_service etc?
+
     c_tun_device_apple();
 		virtual void init() override; ///< call before use
     void set_ipv6_address
@@ -140,7 +150,8 @@ private:
     std::array<uint8_t, 9000> m_buffer;
     size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
 
-    int get_tun_fd();
+		virtual int get_tun_fd() const override;
+		int create_tun_fd();
     void handle_read(const boost::system::error_code &error, size_t length);
 };
 #else
@@ -160,19 +171,5 @@ class c_tun_device_empty final : public c_tun_device {
 
 // else
 #endif
-
-class tun_device_err : public std::runtime_error
-{
-    public:
-        tun_device_err(const std::string& what_arg);
-        tun_device_err(const char* what_arg);
-};
-
-class tun_device_connection_err: public tun_device_err
-{
-    public:
-        tun_device_connection_err(const std::string& what_arg);
-        tun_device_connection_err(const char* what_arg);
-};
 
 #endif // C_TUN_DEVICE_HPP

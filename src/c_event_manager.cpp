@@ -6,13 +6,21 @@
 
 c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper)
 :
-	m_tun_fd(tun_device.m_tun_fd),
+	m_tun_device(tun_device),
+	m_tun_fd(-1),
 	m_udp_socket(udp_wrapper.m_socket)
 {
 }
 
+void c_event_manager_linux::init() {
+	m_tun_fd = m_tun_device.get().get_tun_fd();
+	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
+	_goal("Event manager will watch tuntap fd " << m_tun_fd);
+}
+
 void c_event_manager_linux::wait_for_event() {
-	_info("Selecting");
+	_info("Selecting. m_tun_fd="<<m_tun_fd);
+	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_udp_socket, &m_fd_set_data);
@@ -21,6 +29,7 @@ void c_event_manager_linux::wait_for_event() {
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
+	_info("Selecting for fd_max="<<fd_max);
 	auto select_result = select( fd_max+1, &m_fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
 	_assert(select_result >= 0);
 }
@@ -47,6 +56,16 @@ c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_u
 	m_tun_event(false),
 	m_udp_event(false)
 {
+}
+
+void c_event_manager_asio::init() {
+	#if defined(__MACH__)
+		m_tun_fd = m_tun_device.get().get_tun_fd();
+		_goal("Event manager will watch tuntap fd " << m_tun_fd);
+		if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
+	#else
+		_goal("Event manager will not watch tuntap using fd on this Operating System");
+	#endif
 }
 
 void c_event_manager_asio::wait_for_event() {
