@@ -17,16 +17,16 @@
 /// this translates the field t_syserr.my_code only, see other function for more
 std::string NetPlatform_error_code_to_string(int err) {
 	switch (err) {
-		case -10: return "getaddrinfo"; break;
-		case -20: return "socket_open"; break;
-		case e_netplatform_err_open_fd: return "ioctl"; break; // TODO@mik
-		case e_netplatform_err_ioctl: return "ioctl"; break; // TODO@mik
-		case -100: return "invalid_address_family"; break;
-		case -101: return "not_implemented_yet_address_family"; break;
-		case -220: return "socketForIfName_socket_open"; break;
-		case -230: return "socketForIfName_ioctl"; break;
-		case -320: return "checkInterfaceUp_socket_open"; break;
-		case -330: return "checkInterfaceUp_ioctl"; break;
+        case e_netplatform_err_getaddrinfo: return "getaddrinfo"; break;
+        case e_netplatform_err_open_socket: return "socket_open"; break;
+        case e_netplatform_err_open_fd: return "open_fd"; break;
+        case e_netplatform_err_ioctl: return "ioctl"; break;
+        case e_netplatform_err_invalid_addr_family: return "invalid_address_family"; break;
+        case e_netplatform_err_not_impl_addr_family: return "not_implemented_yet_address_family"; break;
+        case e_netplatform_err_socketForIfName_open: return "socketForIfName_socket_open"; break;
+        case e_netplatform_err_socketForIfName_ioctl: return "socketForIfName_ioctl"; break;
+        case e_netplatform_err_checkInterfaceUp_open: return "checkInterfaceUp_socket_open"; break;
+        case e_netplatform_err_checkInterfaceUp_ioctl: return "checkInterfaceUp_ioctl"; break;
 		default:
 			if (err<0) {
 				std::ostringstream oss; oss<<"UNKNOWN_NetPlatform_ERROR("<<err<<")";
@@ -97,7 +97,6 @@ c_tun_device::c_tun_device()
 
 
 void c_tun_device::init() { }
-
 
 #ifdef __linux__
 
@@ -572,9 +571,18 @@ int c_tun_device_apple::get_tun_fd() {
     addr_ctl.ss_sysaddr = AF_SYS_CONTROL;
     addr_ctl.sc_unit = 1;
     // connect to first not used tun
+    int tested_card_counter = 0;
+    auto t0 = time::now();
+    _fact(boost::locale::gettext("L_searching_for_virtual_card"));
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
+        auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
+        if (tested_card_counter++ > number_of_tested_cards)
+            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_max_number_of_tested_cards_limit_reached"));
+        if (int_s >= cards_testing_time)
+            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
+    _goal(boost::locale::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
     m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;
