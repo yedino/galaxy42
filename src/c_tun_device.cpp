@@ -17,16 +17,16 @@
 /// this translates the field t_syserr.my_code only, see other function for more
 std::string NetPlatform_error_code_to_string(int err) {
 	switch (err) {
-		case -10: return "getaddrinfo"; break;
-		case -20: return "socket_open"; break;
-		case e_netplatform_err_open_fd: return "ioctl"; break; // TODO@mik
-		case e_netplatform_err_ioctl: return "ioctl"; break; // TODO@mik
-		case -100: return "invalid_address_family"; break;
-		case -101: return "not_implemented_yet_address_family"; break;
-		case -220: return "socketForIfName_socket_open"; break;
-		case -230: return "socketForIfName_ioctl"; break;
-		case -320: return "checkInterfaceUp_socket_open"; break;
-		case -330: return "checkInterfaceUp_ioctl"; break;
+        case e_netplatform_err_getaddrinfo: return "getaddrinfo"; break;
+        case e_netplatform_err_open_socket: return "socket_open"; break;
+        case e_netplatform_err_open_fd: return "open_fd"; break;
+        case e_netplatform_err_ioctl: return "ioctl"; break;
+        case e_netplatform_err_invalid_addr_family: return "invalid_address_family"; break;
+        case e_netplatform_err_not_impl_addr_family: return "not_implemented_yet_address_family"; break;
+        case e_netplatform_err_socketForIfName_open: return "socketForIfName_socket_open"; break;
+        case e_netplatform_err_socketForIfName_ioctl: return "socketForIfName_ioctl"; break;
+        case e_netplatform_err_checkInterfaceUp_open: return "checkInterfaceUp_socket_open"; break;
+        case e_netplatform_err_checkInterfaceUp_ioctl: return "checkInterfaceUp_ioctl"; break;
 		default:
 			if (err<0) {
 				std::ostringstream oss; oss<<"UNKNOWN_NetPlatform_ERROR("<<err<<")";
