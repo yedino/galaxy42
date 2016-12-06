@@ -223,15 +223,10 @@ void c_tun_device_windows::init() {
 	_fact("Creating TUN/TAP (windows version)");
 
 	m_guid = get_device_guid();
-	
-	/*m_guid(get_device_guid()),
-	m_readed_bytes(0),
-	m_handle(get_device_handle()),
-	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
-	m_mac_address(get_mac(m_handle))
-	*/
-	
-	
+	m_handle = get_device_handle();
+	m_stream_handle_ptr = std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle);
+	m_mac_address = get_mac(m_handle);
+
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
 	// TODO@rob more debug
