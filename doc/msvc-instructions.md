@@ -7,7 +7,7 @@
 	- It should be similar or easier for newer versions
 
 ### Used tools:
-- Cygwin for 32-bit versions of Windows (for git)
+- Cygwin (for git)
     - could be other tool that supports git
 - Visual Studio Community 2015
 - Cmake-GUI 3.6.0
@@ -18,15 +18,8 @@ $ git clone https://github.com/yedino/galaxy42
 $ echo "REMEMBER TO VERIFY CHECKSUM (git log -1) - git revision hash" ; read _
 $ cd galaxy42
 $ git submodule update --init
-$ export CC=i686-w64-mingw32-gcc
-$ export CXX=i686-w64-mingw32-g++
-$ cmake .
-$ make tunserver.elf
 ```
-For building windows service wrapper
-```sh
-$ make windowsService
-```
+
 ### MSVC:
 Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
 
@@ -35,10 +28,6 @@ __Provide dependencies (libboost and libsodium):__
 Download and install/unpack libraries. I used:
     - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)
     - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
-
-__Open Cygwin:__
-
-	In main galaxy directory run "git submodule update --init"
 
 __Open CMake:__
 - __Settings:__
