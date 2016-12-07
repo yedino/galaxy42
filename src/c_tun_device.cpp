@@ -602,8 +602,8 @@ void c_tun_device_windows::hkey_wrapper::close() {
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>
 c_tun_device_apple::c_tun_device_apple() :
-    m_tun_fd(create_tun_fd()),
-    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
+    m_tun_fd(-1),
+    m_stream_handle_ptr(),
     m_buffer(),
     m_readed_bytes(0)
 {
@@ -612,8 +612,13 @@ c_tun_device_apple::c_tun_device_apple() :
 void c_tun_device_apple::init()
 {
 	_fact("Creating the MAC OS X device class (in ctor, before init)");
+	m_tun_fd = create_tun_fd();
+	_fact("TUN file descriptor " << m_tun_fd);
+	m_stream_handle_ptr = std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd);
+	if (!m_stream_handle_ptr->is_open()) throw std::runtime_error("TUN/TAP stream handle open error");
+	assert(m_stream_handle_ptr->is_open());
     m_buffer.fill(0);
-    assert(m_stream_handle_ptr->is_open());
+	_fact("Startreading from TUN");
     m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
         [this](const boost::system::error_code &error, size_t length) {
             handle_read(error, length);
@@ -628,7 +633,7 @@ int c_tun_device_apple::get_tun_fd() const {
 int c_tun_device_apple::create_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
     int err=errno;
-		if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+	    if (tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
     // get ctl_id
     ctl_info info;
@@ -667,7 +672,8 @@ int c_tun_device_apple::create_tun_fd() {
 }
 
 void c_tun_device_apple::handle_read(const boost::system::error_code &error, size_t length) {
-    if (error || (length < 1)) throw std::runtime_error(error.message());
+	if (error || (length < 1))
+		throw std::runtime_error("TUN read error, length = " + std::to_string(length) + " error message: " + error.message());
     m_readed_bytes = length;
     // continue reading
     m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
@@ -687,7 +693,9 @@ void c_tun_device_apple::set_mtu(uint32_t mtu) {
 	_fact("Setting MTU="<<mtu);
 	const auto name = m_ifr_name.c_str();
 	_fact("Setting MTU="<<mtu<<" on card: " << name);
-  NetPlatform_setMTU(name, mtu);
+	t_syserr error = NetPlatform_setMTU(name, mtu);
+	if (error.my_code != 0)
+		throw std::runtime_error("set MTU error: " + errno_to_string(error.errno_copy));
 }
 
 bool c_tun_device_apple::incomming_message_form_tun() {
@@ -703,8 +711,8 @@ size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
     m_buffer[0] = 0x00;
     m_buffer[1] = 0x00;
     m_buffer[2] = 0x86;
-    m_buffer[3] = 0xDD;
-    std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t *>(buf));
+	m_buffer[3] = 0xDD;
+	std::copy_n(&m_buffer[0], m_readed_bytes, static_cast<uint8_t *>(buf));
     size_t ret = m_readed_bytes;
     m_readed_bytes = 0;
     return ret;
@@ -719,8 +727,9 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
     buf_ptr[2] = 0x00;
     buf_ptr[3] = 0x1E;
 
-    size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
-    if (ec) throw std::runtime_error("boost error " + ec.message());
+	//size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
+	size_t write_bytes = write(*m_stream_handle_ptr.get(), boost::asio::buffer(buf, count), ec);
+	if (ec) throw std::runtime_error("write to TUN error: " + ec.message());
     return write_bytes;
 }
 // __MACH__
