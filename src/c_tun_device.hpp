@@ -112,11 +112,22 @@ private:
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
 	class hkey_wrapper final {
 		public:
+			/**
+			 * hkey must have been opened by the RegCreateKeyEx, RegCreateKeyTransacted,
+			 * RegOpenKeyEx, RegOpenKeyTransacted, or RegConnectRegistry function.
+			 */
 			hkey_wrapper(HKEY hkey);
 			~hkey_wrapper();
 			HKEY &get();
+			/**
+			 * hkey must have been opened by the RegCreateKeyEx, RegCreateKeyTransacted,
+			 * RegOpenKeyEx, RegOpenKeyTransacted, or RegConnectRegistry function.
+			 */
+			void set(HKEY new_hkey);
+			void close();
 		private:
 			HKEY m_hkey;
+			bool m_is_open;
 	};
 };
 
