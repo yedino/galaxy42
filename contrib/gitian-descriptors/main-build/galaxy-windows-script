@@ -1,6 +1,9 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
+# importing functions for boost submodules download
+. /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
+
 project_name="galaxy42"
 printf "\n\n=========================================================================\n\n"
 printf "PROJECT $project_name - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
@@ -237,27 +240,21 @@ if (( option_download_skip )) ; then
 	ls
 else
 rm -rf boost || fail # perhaps left over if we do some caching or testing
-git clone https://github.com/boostorg/boost.git || fail # check gitrev hash below!
+git clone -b boost-1.61.0 https://github.com/boostorg/boost.git --depth 100 || fail "git clone" # check gitrev hash below!
+
 pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
 
-git checkout boost-1.61.0
 expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
 confirm_gitrev=$(git log --format='%H' -1)
 [[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
 	fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
 }
 
-declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "libs/config" "tools/inspect" "libs/thread" "libs/system" "libs/utility" "libs/predef" "libs/detail" "libs/assert" \
-	"libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" "libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
-	"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" "libs/numeric/conversion" "libs/array" "libs/program_options" \
-	"libs/container" "libs/move" "libs/math" "libs/tokenizer" "libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" "libs/unordered" \
-	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" "libs/winapi" "libs/circular_buffer")
+    # Download boost submodules in n=3 attempts
+    dl_boost_submodules_n 3
 
-
-# speed up boost download by initialize submodules asynchronously
-for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive && wait
 fi
 
 # delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
