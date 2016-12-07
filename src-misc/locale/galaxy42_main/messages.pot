@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-02 15:00+0100\n"
+"POT-Creation-Date: 2016-12-06 16:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -318,4 +318,16 @@ msgid "L_httpdbg_server_ended"
 msgstr ""
 
 msgid "L_what_exception_program_throw"
+msgstr ""
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr ""
+
+msgid "L_connection_to_tun_timeout"
+msgstr ""
+
+msgid "L_searching_for_virtual_card"
+msgstr ""
+
+msgid "L_found_virtual_card_at_slot"
 msgstr ""

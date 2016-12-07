@@ -909,7 +909,7 @@ int main(int argc, char **argv) {
 	}
 	catch(std::exception& e) {
 //		std::cerr << "Unhandled Exception reached the top of main (While running server): "
-                std::cerr << boost::locale::gettext("L_unhandled_exception_running_server")
+                std::cerr << boost::locale::gettext("L_unhandled_exception_running_server") << ' '
 
 //				  << e.what() << ", application will now exit" << std::endl;
                                   << e.what() << boost::locale::gettext("L_exit_aplication") << std::endl;
