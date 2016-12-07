@@ -35,7 +35,6 @@ dl_boost_submodules_n() {
 	for (( c=1; c<=${attemts}; c++ )); do
 		download_boost_submodules
 		success="${?}"
-		echo "Success: [${success}]"
 		if [ "${success}" = "0" ]; then
 			echo "Succes download all boost necessary submodules"
 			break

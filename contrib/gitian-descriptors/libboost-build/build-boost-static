@@ -32,6 +32,7 @@ echo "Downloading boost in PWD=$PWD"
 # download boost starting from cleaning previous build
 rm -rf boost || fail # perhaps left over if we do some caching or testing
 git clone -b boost-1.61.0 https://github.com/boostorg/boost.git --depth 100 || fail "git clone" # check gitrev hash below!
+
 pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 0 ; }
