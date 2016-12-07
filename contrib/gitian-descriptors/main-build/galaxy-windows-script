@@ -240,12 +240,12 @@ if (( option_download_skip )) ; then
 	ls
 else
 rm -rf boost || fail # perhaps left over if we do some caching or testing
-git clone https://github.com/boostorg/boost.git || fail # check gitrev hash below!
+git clone -b boost-1.61.0 https://github.com/boostorg/boost.git --depth 100 || fail "git clone" # check gitrev hash below!
+
 pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 1 ; }
 
-git checkout boost-1.61.0
 expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
 confirm_gitrev=$(git log --format='%H' -1)
 [[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
