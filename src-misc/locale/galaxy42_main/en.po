@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-02 15:00+0100\n"
+"POT-Creation-Date: 2016-12-06 16:57+0100\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -349,23 +349,32 @@ msgstr "Name of key to verify file in specified location"
 msgid "L_what_toverifyDataFile_do"
 msgstr "Name of data file specified location"
 
-msgid "L_what_exception_program_throw"
-msgstr "Going to throw exception. What: "
-
-#, fuzzy
 msgid "L_what_httpDbgPort_do"
-msgstr "same as --help"
+msgstr "Set http debugger port"
 
 msgid "L_starting_httpdbg_server"
-msgstr ""
+msgstr "Starting http debugger server"
 
-#, fuzzy
 msgid "L_starting_main_server"
 msgstr "Stating the TUN router"
 
 msgid "L_main_server_ended"
-msgstr ""
+msgstr "Main server ended"
 
 msgid "L_httpdbg_server_ended"
-msgstr ""
+msgstr "Http debugger server ended"
 
+msgid "L_what_exception_program_throw"
+msgstr "Going to throw exception. What: "
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr "Max number of tested cards reached"
+
+msgid "L_connection_to_tun_timeout"
+msgstr "Connection to tun timeout"
+
+msgid "L_searching_for_virtual_card"
+msgstr "Searching for available virtual (tun) card"
+
+msgid "L_found_virtual_card_at_slot"
+msgstr "Found virtual (tun) card at slot:"
