@@ -382,14 +382,15 @@ std::wstring c_tun_device_windows::get_device_guid() {
 	HKEY key = nullptr; // TODO make unique_ptr
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
+	hkey_wrapper key_wrapped(key);
 	std::vector<std::wstring> subkeys_vector;
 	try {
-		subkeys_vector = get_subkeys(key);
+		subkeys_vector = get_subkeys(key_wrapped.get());
 	} catch (const std::exception &e) {
-		RegCloseKey(key);
+		key_wrapped.close();
 		throw e;
 	}
-	RegCloseKey(key);
+	key_wrapped.close();
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
@@ -406,23 +407,24 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			RegCloseKey(key);
 			continue;
 		}
+		key_wrapped.set(key);
 		if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
 			_note(to_string(subkey_reg_path));
 			size = 256;
 			std::wstring netCfgInstanceId(size, '\0');
 			// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
 			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
-			status = RegQueryValueExW(key, L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
+			status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 			if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 			netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
 			std::wcout << netCfgInstanceId << std::endl; // TODO new debug
-			RegCloseKey(key);
+			key_wrapped.close();
 			HANDLE handle = open_tun_device(netCfgInstanceId);
 			if (handle == INVALID_HANDLE_VALUE) continue;
 			else CloseHandle(handle);
 			return netCfgInstanceId;
 		}
-		RegCloseKey(key);
+		key_wrapped.close();
 	}
 	_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
@@ -534,17 +536,30 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 // hkey_wrapper
 c_tun_device_windows::hkey_wrapper::hkey_wrapper(HKEY hkey)
 :
-	m_hkey(hkey)
+	m_hkey(hkey),
+	m_is_open(true)
 {
 }
 
 c_tun_device_windows::hkey_wrapper::~hkey_wrapper() {
-	auto status = RegCloseKey(m_hkey);
-	if (status != ERROR_SUCCESS) throw std::runtime_error("RegCloseKey error, error code " + std::to_string(GetLastError()));
+	if (m_is_open) close();
 }
 
 HKEY &c_tun_device_windows::hkey_wrapper::get() {
 	return m_hkey;
+}
+
+void c_tun_device_windows::hkey_wrapper::set(HKEY new_hkey) {
+	if (m_is_open) close();
+	m_hkey = new_hkey;
+	m_is_open = true;
+}
+
+void c_tun_device_windows::hkey_wrapper::close() {
+	if (!m_is_open) throw std::runtime_error("Closing closed HKEY");
+	m_is_open = false;
+	auto status = RegCloseKey(m_hkey);
+	if (status != ERROR_SUCCESS) throw std::runtime_error("RegCloseKey error, error code " + std::to_string(GetLastError()) + " returned value " + std::to_string(status));
 }
 
 // _win32 || __cygwin__
