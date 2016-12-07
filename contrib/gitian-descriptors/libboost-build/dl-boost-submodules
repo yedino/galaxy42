@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+download_boost_submodules() {
+	declare -a boost_submodules=( \
+		"tools/build" "libs/context" "libs/filesystem" "libs/config" "tools/inspect" "libs/thread" "libs/system" "libs/utility" \
+		"libs/predef" "libs/detail" "libs/assert" "libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" \
+		"libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
+		"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" \
+		"libs/numeric/conversion" "libs/array" "libs/program_options" "libs/container" "libs/move" "libs/math" "libs/tokenizer" \
+		"libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" \
+		"libs/unordered" "libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" \
+		"libs/optional" "libs/rational" "libs/circular_buffer" "libs/winapi" )
+
+	# git submodule update --init --recursive --depth 1 --jobs 16 "${boost_submodules[@]}"  # better but works for git version > 2.8
+
+	# speed up boost download by initialize submodules asynchronously
+	for submodule in "${boost_submodules[@]}"; do
+		sleep 0.1
+		echo "$submodule"
+	done | xargs -L1 --max-procs=4 git submodule update --init --recursive && wait
+
+	local exit_code="${?}" ; echo "Exit code: [${exit_code}]";
+
+	return "${exit_code}"
+}
+
+# Try to download all boost submodules in n attempts
+# Fail of this function in > 1 attempts mean that there is some network connection problem
+dl_boost_submodules_n() {
+	attemts="${1}"
+
+	# 0 mean success, other values are error code
+	local success=0
+	echo "attempts: ${attemts}"
+	for (( c=1; c<=${attemts}; c++ )); do
+		download_boost_submodules
+		success="${?}"
+		if [ "${success}" = "0" ]; then
+			echo "Succes download all boost necessary submodules"
+			break
+		fi
+	done
+
+	if [ "${success}" != "0" ]; then
+		echo "Fail to download all boost necessary submodules in ${attemts} attempts."
+		echo "Check your internet connection. Exiting ..."
+		exit 1
+	fi
+}
+
