@@ -785,14 +785,32 @@ int main(int argc, char **argv) {
 
 			_info("Configuring my own reference (keys):");
 
-			bool have_any_keys=0;
+			bool have_keys_configured=false;
 			try {
 				auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
 				std::vector<std::string> keys = datastore::get_file_list(keys_path);
-				have_any_keys = keys.size() > 0;
-			} catch(...) { _info("Can not load keys list"); have_any_keys=0; }
+				size_t have_keys = (keys.size() > 0);
 
-			if (have_any_keys) {
+				auto conf_IDI = datastore::get_full_path(e_datastore_galaxy_instalation_key_conf,"IDI");
+				bool conf_IDI_ok = datastore::is_file_ok(conf_IDI);
+
+				if (have_keys) {
+					if (conf_IDI_ok) {
+						have_keys_configured = true;
+					} else {
+						_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
+						_warn("If this warn still occurs, make sure you have backup of your keys");
+						myserver.program_action_set_IDI("IDI");
+						have_keys_configured = true;
+					}
+				}
+
+			} catch(...) {
+				_info("Can not load keys list or IDI configuration");
+				have_keys_configured=0;
+			}
+
+			if (have_keys_configured) {
 				bool ok=false;
 
 				try {
