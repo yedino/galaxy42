@@ -219,18 +219,17 @@ c_tun_device_windows::c_tun_device_windows()
 
 
 void c_tun_device_windows::init() {
-	// TODO@rob move all the init stuff to here, from the init-list of constructor please so we can debug/log it
 	_fact("Creating TUN/TAP (windows version)");
 
 	m_guid = get_device_guid();
+	_fact("GUID " << to_string(m_guid));
 	m_handle = get_device_handle();
 	m_stream_handle_ptr = std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle);
 	m_mac_address = get_mac(m_handle);
 
 	m_buffer.fill(0);
-	assert(m_stream_handle_ptr->is_open());
-	// TODO@rob more debug
-	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
+	if (!m_stream_handle_ptr->is_open()) throw std::runtime_error("TUN/TAP stream handle open error");
+	_fact("Start reading from TUN");
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
@@ -239,17 +238,19 @@ void c_tun_device_windows::set_ipv6_address
 	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
 {
 	_fact("Setting IPv6 address, prefixLen="<<prefixLen);
-	auto human_name = get_human_name(m_guid);
-	auto luid = get_luid(human_name);
-	// _fact("Setting address on human_name ["<<human_name<<" luid="<<luid); // TODO@mik
+	std::wstring human_name = get_human_name(m_guid);
+	NET_LUID luid = get_luid(human_name);
+	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
 	// remove old address
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
-	GetUnicastIpAddressTable(AF_INET6, &table);
+	NETIOAPI_API status = GetUnicastIpAddressTable(AF_INET6, &table);
+	if (status != NO_ERROR) throw std::runtime_error("GetUnicastIpAddressTable error, code");
 	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
 		_info("Removing old addresses, i="<<i);
 		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
 		_info("Removing old addresses, entry i="<<i<<" - will remove");
 			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
+				FreeMibTable(table);
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
 			}
 		}
@@ -272,10 +273,9 @@ void c_tun_device_windows::set_ipv6_address
 	iprow.OnLinkPrefixLength = prefixLen;
 
 	_fact("Creating unicast IP");
-	auto status = CreateUnicastIpAddressEntry(&iprow);
+	status = CreateUnicastIpAddressEntry(&iprow);
+	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
 	_goal("Created unicast IP, status=" << status);
-	// TODO check for error with status TODO@mik
-	_UNUSED(status);
 }
 
 bool c_tun_device_windows::incomming_message_form_tun() {
@@ -295,7 +295,6 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 }
 
 size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
-	//std::cout << "****************write to tun" << std::endl;
 	const size_t eth_header_size = 14;
 	const size_t eth_offset = 4;
 	std::vector<uint8_t> eth_frame(eth_header_size + count - eth_offset, 0);
@@ -309,7 +308,7 @@ size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
 	// eth type: ipv6
 	*it = 0x86; ++it;
 	*it = 0xDD; ++it;
-	std::copy(reinterpret_cast<const uint8_t *>(buf) + eth_offset, reinterpret_cast<const uint8_t *>(buf) + count, it);
+	std::copy(static_cast<const uint8_t *>(buf) + eth_offset, static_cast<const uint8_t *>(buf) + count, it);
 	boost::system::error_code ec;
 	//size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
 	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(eth_frame), ec); // prepares: blocks (but TUN is fast)
@@ -377,11 +376,11 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 
 std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
-	// _fact("Looking for device guid" << adapterKey); // TODO@mik
+	_fact("Looking for device guid" << to_string(adapterKey));
 	LONG status = 1;
-	HKEY key = nullptr; // TODO make unique_ptr
+	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
-	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
+	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
 	hkey_wrapper key_wrapped(key);
 	std::vector<std::wstring> subkeys_vector;
 	try {
@@ -396,7 +395,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
 		_fact(to_string(subkey_reg_path));
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
-		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(GetLastError()));
+		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
 		// get ComponentId field
 		DWORD size = 256;
 		std::wstring componentId(size, '\0');
@@ -408,21 +407,31 @@ std::wstring c_tun_device_windows::get_device_guid() {
 			continue;
 		}
 		key_wrapped.set(key);
-		if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
-			_note(to_string(subkey_reg_path));
-			size = 256;
-			std::wstring netCfgInstanceId(size, '\0');
-			// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
-			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
-			status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
-			if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
-			netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
-			std::wcout << netCfgInstanceId << std::endl; // TODO new debug
-			key_wrapped.close();
-			HANDLE handle = open_tun_device(netCfgInstanceId);
-			if (handle == INVALID_HANDLE_VALUE) continue;
-			else CloseHandle(handle);
-			return netCfgInstanceId;
+		std::wstring netCfgInstanceId;
+		try {
+			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
+				_note(to_string(subkey_reg_path));
+				size = 256;
+				netCfgInstanceId.resize(size, '\0');
+				// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
+				// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
+				status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
+				if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
+				netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
+				_note(to_string(netCfgInstanceId));
+				key_wrapped.close();
+				HANDLE handle = open_tun_device(netCfgInstanceId);
+				if (handle == INVALID_HANDLE_VALUE) continue;
+				else {
+					BOOL ret = CloseHandle(handle);
+					if (ret == 0) throw std::runtime_error("CloseHandle error, " + std::to_string(GetLastError()));
+				}
+				return netCfgInstanceId;
+			}
+		} catch (const std::out_of_range &e) {
+			_warn(std::string("register value processing error ") + e.what());
+			_note("componentId = " + to_string(componentId));
+			_note("netCfgInstanceId " + to_string(netCfgInstanceId));
 		}
 		key_wrapped.close();
 	}
@@ -435,21 +444,26 @@ std::wstring c_tun_device_windows::get_human_name(const std::wstring &guid) {
 	std::wstring connectionKey = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 	connectionKey += guid;
 	connectionKey += L"\\Connection";
-	std::wcout << "connectionKey " << connectionKey << std::endl;
+	_note("connectionKey " << to_string(connectionKey));
 	LONG status = 1;
-	HKEY key = nullptr;
+	HKEY key_tmp = nullptr;
 	DWORD size = 256;
 	std::wstring name(size, '\0');
-	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, connectionKey.c_str(), 0, KEY_QUERY_VALUE, &key);
-	status = RegQueryValueExW(key, L"Name", nullptr, nullptr, reinterpret_cast<LPBYTE>(&name[0]), &size);
+	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, connectionKey.c_str(), 0, KEY_QUERY_VALUE, &key_tmp);
+	if (status != ERROR_SUCCESS) throw std::runtime_error("get_human_name: RegOpenKeyExW error");
+	hkey_wrapper hkey_wrapped(key_tmp);
+	// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
+	status = RegQueryValueExW(hkey_wrapped.get(), L"Name", nullptr, nullptr, reinterpret_cast<LPBYTE>(&name[0]), &size);
+	if (status != ERROR_SUCCESS) throw std::runtime_error("get_human_name: RegQueryValueExW error");
 	name.erase(size / sizeof(wchar_t) - 1); // remove '\0'
-	RegCloseKey(key);
+	hkey_wrapped.close();
 	return name;
 }
 
 NET_LUID c_tun_device_windows::get_luid(const std::wstring &human_name) {
 	NET_LUID ret;
-	auto status = ConvertInterfaceAliasToLuid(human_name.c_str(), &ret); // TODO throw
+	NETIO_STATUS status = ConvertInterfaceAliasToLuid(human_name.c_str(), &ret);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("ConvertInterfaceAliasToLuid error, error code " + std::to_string(GetLastError()));
 	return ret;
 }
@@ -467,7 +481,8 @@ HANDLE c_tun_device_windows::get_device_handle() {
 	} version;
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_VERSION, &version, sizeof(version), &version, sizeof(version), &version_len, nullptr);
 	if (bret == false) {
-		CloseHandle(handle);
+		BOOL ret = CloseHandle(handle);
+		if (ret == 0) throw std::runtime_error("CloseHandle error, " + std::to_string(GetLastError()));
 		throw std::runtime_error("DeviceIoControl error");
 	}
 	// set status
@@ -475,7 +490,8 @@ HANDLE c_tun_device_windows::get_device_handle() {
 	unsigned long len = 0;
 	bret = DeviceIoControl(handle, TAP_IOCTL_SET_MEDIA_STATUS, &status, sizeof(status), &status, sizeof(status), &len, nullptr);
 	if (bret == false) {
-		CloseHandle(handle);
+		BOOL ret = CloseHandle(handle);
+		if (ret == 0) throw std::runtime_error("CloseHandle error, " + std::to_string(GetLastError()));
 		throw std::runtime_error("DeviceIoControl error");
 	}
 	return handle;
@@ -494,7 +510,7 @@ HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
-	// TODO@rob check error
+	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("CreateFileW error, last error " + std::to_string(GetLastError()));
 	return handle;
 }
 
@@ -502,7 +518,9 @@ std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
 	std::array<uint8_t, 6> mac_address;
 	DWORD mac_size = 0;
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
+	if (bret == 0) throw std::runtime_error("DeviceIoControl error, last error " + std::to_string(GetLastError()));
 	assert(mac_size == mac_address.size());
+	_fact("tun device MAC address");
 	for (const auto i : mac_address)
 		std::cout << std::hex << static_cast<int>(i) << " ";
 	std::cout << std::dec << std::endl;
@@ -510,9 +528,6 @@ std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
 }
 
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
-	//std::cout << "tun handle read" << std::endl;
-	//std::cout << "readed " << length << " bytes from tun" << std::endl;
-
 	try {
 		if (error || (length < 1)) throw std::runtime_error(error.message());
 		if (length < 54) throw std::runtime_error("tun data length < 54"); // 54 == sum of header sizes
@@ -521,18 +536,20 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 		if (c_ndp::is_packet_neighbor_solicitation(m_buffer)) {
 			std::array<uint8_t, 94> neighbor_advertisement_packet = c_ndp::generate_neighbor_advertisement(m_buffer);
 			boost::system::error_code ec;
-			m_stream_handle_ptr->write_some(boost::asio::buffer(neighbor_advertisement_packet), ec); // prepares: blocks (but TUN is fast)
+			boost::asio::write(*m_stream_handle_ptr.get(), boost::asio::buffer(neighbor_advertisement_packet), ec); // prepares: blocks (but TUN is fast)
+			if (ec) throw std::runtime_error("write neighbor advertisement packet to TUN error: "  + ec.message());
 		}
 	}
 	catch (const std::runtime_error &e) {
 		m_readed_bytes = 0;
-		_erro("Problem with the TUN/TAP parser" << std::endl << e.what());
+		_erro("Problem with the TUN/TAP parser\n" << e.what());
 	}
 
 	// continue reading
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
+
 // hkey_wrapper
 c_tun_device_windows::hkey_wrapper::hkey_wrapper(HKEY hkey)
 :
