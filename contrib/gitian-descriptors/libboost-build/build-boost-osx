@@ -40,7 +40,7 @@ pushd boost || fail # cd
 PWD_now2="$PWD/"
 [[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 0 ; }
 
-expected_gitrev="4f2bdeb93a4be13ba0dc5e9f44920a2bf67191fc" # this is the gitrev hash of this boost version (as we seen it)
+expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
 confirm_gitrev=$(git log --format='%H' -1)
 [[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
     fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
