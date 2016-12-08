@@ -9,13 +9,26 @@ Tested on: *OS X 10.11*.
 "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 2. Install dependences:
-	brew install git
-	brew install autoconf
-	brew install pkg-config
-	brew install cmake
-	brew install boost
-	brew install libsodium
-	brew install fftw
+-	brew install git
+-	brew install autoconf
+-	brew install pkg-config
+-	brew install cmake
+-	brew install boost
+-	brew install libsodium
+-	brew install fftw
+
+3. Run `do` script
+
+__Possible errors:__
+
+```error: thread-local storage is not supported for the current target```
+
+Set compiler to clang and run `do` script again
+```sh
+	$ export CC=clang
+	$ export CXX=clang++
+	$ ./do
+```
 
 Interesting (AppleClang):
 -- The C compiler identification is AppleClang 7.3.0.7030031
@@ -39,4 +52,3 @@ CMake Warning (dev):
 
    sodiumpp
 ```
-
