@@ -5,7 +5,8 @@
 #define __STDC_WANT_LIB_EXT1__ 1
 #include <string>
 #if (!defined(__STDC_LIB_EXT1__))
-	#warning "It seems __STDC_LIB_EXT1__ is not set by implementation/compiler - and we need it to have strerror_s"
+	// TODO #warning not works on MSVC
+	//#warning "It seems __STDC_LIB_EXT1__ is not set by implementation/compiler - and we need it to have strerror_s"
 #endif
 
 #include <syserror_use.hpp>
