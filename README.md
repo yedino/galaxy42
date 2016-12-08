@@ -20,7 +20,7 @@ This program creates an secure connection between 2 computers (like VPN).
  * only one of the computers needs to have public Internet IP address (in future none will need)
  * (not yet officially released) option to mesh many computers together
 
-To use it from Command Line, simply:
+To **use this program** from Command Line, simply:
 
 on 1st computer run command: `./tunserver.elf`
 the program will start and will **print you on screen what is the virtual IP address** that is assigned to it by our program.
@@ -33,10 +33,19 @@ That is all!
 Now your computers are connected together, try ping6 VIRTUALIP1 from 2nd computer, all connections (browser, ftp, ssh etc)
 should work too.
 
+To **build this program from source** we recommend:
+  * for **Windows**, in **Microsoft Visual Studio** - see [doc/msvc-instructions.md](doc/msvc-instructions.md)
+  * for Windows, in **Cygwin/Mingw** compiler - see [doc/cygwin-instructions.md](doc/cygwin-instructions.md)
+  * for **Mac Os X**, in Clang compiler - see [doc/build-osx-native.md](doc/build-osx-native.md)
+  * for **Linux**, in GCC (or Clang) compiler - see [doc/build-linux.md](doc/build-linux.md)
+  * other Unix systems might work - see [doc/build-other-unix.md](doc/build-other-unix.md)
+  * Browse directory with more documentation: [doc/](doc/)
+  * *advanced users:* to recreate **yourself** the **official binary** for Windows/Linux using **Gitian** deterministic-builds, see [doc/build-gitian.md](doc/build-gitian.md)
+
 Backup: your **private keys** that give ownership of your virtual IP address by default are in `~/.config/antinet/`
 (or just the `galaxy42/wallet` there).
 
-This program will allow to do much much more in future (full public mesh) but this are plans for advanced testers (see below).
+This program will allow to do **much more in future** (full public mesh, scoring, donations/payments) but this are plans for advanced testers (see below).
 
 For more details, including correct naming and **glossary**, and advanced technical topics **for developers** and "hackers", see also:
 [doc/hacking.md](doc/hacking.md).
