@@ -161,7 +161,7 @@ public:
     size_t read_from_tun(void *buf, size_t count) override;
     size_t write_to_tun(void *buf, size_t count) override;
 private:
-	int m_tun_fd;
+    int m_tun_fd;
     boost::asio::io_service m_ioservice;
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
     std::array<uint8_t, 9000> m_buffer;
