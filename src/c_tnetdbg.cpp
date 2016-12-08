@@ -46,4 +46,10 @@ std::string debug_this() {
 	return "(global) ";
 }
 
-
+// TODO
+std::string to_string(const std::wstring &input) {
+	std::string ret;
+	for (const auto & it : input)
+		ret += it;
+	return ret;
+}
