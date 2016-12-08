@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+
+# importing functions for boost submodules download
+. /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
 
 function fail() {
     printf "\nERROR: the script failed (see above messages).\n\n"

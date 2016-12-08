@@ -218,7 +218,7 @@ b_fs::path datastore::get_full_path(t_datastore file_type,
 			break;
 		}
 	}
-	// _dbg3("full_path " << full_path);
+	_dbg3("full_path: " << full_path);
 	return full_path;
 }
 
@@ -236,6 +236,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	path.erase(pos);
 	b_fs::path user_home(path);
 #endif
+	_goal("Get home directory: ["<< user_home.c_str() <<"]");
 
 	b_fs::path parent_path(user_home.c_str());
 
@@ -252,7 +253,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 			parent_path += "/.config/antinet/galaxy42/public/";
 			break;
 		}
-	case e_datastore_galaxy_instalation_key_conf: {
+		case e_datastore_galaxy_instalation_key_conf: {
 			parent_path += "/.config/antinet/galaxy42/config/";
 			break;
 		}
@@ -262,6 +263,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 			break;
 		}
 	}
+	_dbg3("parent_path: " << parent_path);
 
 	return parent_path;
 }
