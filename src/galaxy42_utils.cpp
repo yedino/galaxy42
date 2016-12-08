@@ -1,6 +1,9 @@
 
 
 #include "galaxy42_utils.hpp"
+#include <boost/asio.hpp>
+
+#include "libs0.hpp"
 
 std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &ip_string) {
 	if (ip_string.size()<(1+1)*4) _throw_error(runtime_error(join_string_sep("Invalid (too small) IP size",ip_string.size())));
@@ -22,9 +25,26 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	if (ip.size()<1) _throw_error(runtime_error(join_string_sep("Invalid (too small) IP size (port part)", port.size())));
 	_dbg1("Parsing IP as strings: " << ip <<  " port string: " << port);
 	int port_int = std::stoi(port);
-	if (port_int<0) _throw_error(runtime_error(join_string_sep("Invalid port", port_int)));
+	if (port_int<=0) _throw_error(runtime_error(join_string_sep("Invalid port", port_int)));
 	if (port_int>65535) _throw_error(runtime_error(join_string_sep("Invalid port", port_int)));
 	_info("Parsing IP as strings: " << ip <<  " port int: " << port_int);
+
+	// tests with boost:
+	// validate ipv4
+	boost::system::error_code ec;
+	auto ip_boost = boost::asio::ip::address_v4::from_string(ip, ec);
+	if (ec) _throw_error(runtime_error(join_string_sep("Invalid address (boost detected)", ip, ec)));
+	// boost::asio::ip::address_v6::from_string(r_ipv6, ec); // for ipv6
+
+	auto ip_bytes = ip_boost.to_bytes();
+	_assert( ip_bytes.size()==4 );
+	bool is_good_class = ip_boost.is_class_a() || ip_boost.is_class_b() || ip_boost.is_class_c()
+		|| ip_boost.is_loopback();
+	bool is_bad_class = ip_boost.is_unspecified() || ip_boost.is_multicast();
+
+	if (!( is_good_class && !is_bad_class ))
+		_throw_error(runtime_error(join_string_sep("Invalid address (not a normal ip-class of address)",ip_boost)));
+
 	return std::make_pair(std::move(ip), port_int);
 }
 
