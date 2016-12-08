@@ -23,8 +23,9 @@ If the script install fails, you can try installing yourself the **dependencies*
 
 If that all fails, you can instead:
 
-try just running normal `cmake . && make` but then you have to yourself
+try just running normal `cmake . && make` **but** first you have to yourself do following:
   * install dependencies in system
   * git submodules update --init (or alike)
   * build local dependency libraries if needed (e.g. libsodiumpp) for ones that are not automatically built from our main cmake/make.
+
 

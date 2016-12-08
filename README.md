@@ -34,7 +34,7 @@ Now your computers are connected together, try ping6 VIRTUALIP1 from 2nd compute
 should work too.
 
 To **build this program from source** we recommend:
-  * for *Windows*, in **Microsoft Visual Studio** - see [doc/msvc-instructions.md](doc/msvc-instructions.md)
+  * for **Windows**, in **Microsoft Visual Studio** - see [doc/msvc-instructions.md](doc/msvc-instructions.md)
   * for Windows, in **Cygwin/Mingw** compiler - see [doc/cygwin-instructions.md](doc/cygwin-instructions.md)
   * for **Mac Os X**, in Clang compiler - see [doc/build-osx-native.md](doc/build-osx-native.md)
   * for **Linux**, in GCC (or Clang) compiler - see [doc/build-linux.md](doc/build-linux.md)
