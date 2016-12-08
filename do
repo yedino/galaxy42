@@ -124,6 +124,7 @@ if [[ $OSTYPE == "linux-gnu" ]]; then
 
 fi
 
+echo "=== language / translations - will compile langauges ==="
 contrib/tools/galaxy42-lang-update-all || fail "Compiling po to mo (gettext/translations)"
 
 
