@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-02 15:00+0100\n"
+"POT-Creation-Date: 2016-12-08 11:53+0100\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -21,8 +21,8 @@ msgstr ""
 
 msgid "L_program_is_pre_pre_alpha"
 msgstr ""
-"UKRAINIAN TODO: This program is not yet ready nor secure, do not use it "
-"in this version. (Please use it only on a test virtual machine)."
+"UKRAINIAN TODO: This program is not yet ready nor secure, do not use it in "
+"this version. (Please use it only on a test virtual machine)."
 
 msgid "L_program_is_copyrighted"
 msgstr "This program is Copyrighted, see LICENCE.txt"
@@ -369,3 +369,18 @@ msgstr ""
 #, fuzzy
 msgid "L_what_exception_program_throw"
 msgstr "Going to throw exception. What: "
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr ""
+
+msgid "L_connection_to_tun_timeout"
+msgstr ""
+
+msgid "L_searching_for_virtual_card"
+msgstr ""
+
+msgid "L_found_virtual_card_at_slot"
+msgstr ""
+
+msgid "L_get_home_directory: "
+msgstr ""
