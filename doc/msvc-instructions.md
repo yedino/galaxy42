@@ -29,10 +29,10 @@ Download and install/unpack libraries. I used:
     - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)
     - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
 
-__Open CMake:__
+__Open CMake-gui:__
 - __Settings:__
 	- Where is the source: 		path/to/cloned/galaxy42
-	- Where to build binaries:	any/output/path
+	- Where to build the binaries:	any/output/path
 
 __Set cmake variables:__
 
@@ -46,6 +46,7 @@ __Set cmake variables:__
 
 ```
 click configure
+* for 32-bit build choose Visual Studio 14 2015
 * for 64-bit build choose Visual Studio 14 2015 Win64
 click generate
 ```
@@ -81,10 +82,26 @@ __Cmake output:__
 ```
 
 ### Build tunserver.elf.exe in Visual Studio:
-- Open Visual Studio, "Open project", choose folder, where you download galaxy42
+- Open Visual Studio, "Open project", choose folder, where you generate MSVC project files
+- Open `galaxy42.sln`
+- Right mouse button (on "tunserver.elf" in Solution Explorer section) -> Build
+- Copy dll library files to binary directory
+
+	For solutrins configuration Debug
 ```
-	right button (on "tunserver.elf" in Solution Explorer section) -> Build
+boost_filesystem-vc140-mt-gd-1_61.dll
+boost_locale-vc140-mt-gd-1_61.dll
+boost_system-vc140-mt-gd-1_61.dll
+libsodium.dll
 ```
+	For solutrins configuration Release
+```
+boost_filesystem-vc140-mt-1_61.dll
+boost_locale-vc140-mt-1_61.dll
+boost_system-vc140-mt-1_61.dll
+libsodium.dll
+```
+
 __Possible errors:__
 
 ```Warning	D9002	ignoring unknown option -std=c++14```
@@ -108,6 +125,7 @@ __download/install openvps drivers for windows tap device__
 - [OpenVPN-Downloads](https://openvpn.net/index.php/open-source/downloads.html)
 
 __set up device in windows devices manager (this step must be done as administrator)__
+OpenVPN installer creates default one TAP windows adapter. If you need more adapters:
 
 Windows 7
 
