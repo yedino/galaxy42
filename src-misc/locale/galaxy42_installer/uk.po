@@ -1,0 +1,352 @@
+# Galaxy42 installer
+# Copyright (C) 2016
+# This file is distributed at once at licences: under the same license as the Galaxy42 package,
+# and as BSD 2-clause licence.
+# Yedino <info@yedino.com>, 2016
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: galaxy 42\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-10-12 13:12+0000\n"
+"PO-Revision-Date: 2016-08-19 17:23+0000\n"
+"Last-Translator:  <info@yedino.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#, sh-format
+msgid ""
+"This tool will configure your computer for the SELECTED by you functions of "
+"$programname."
+msgstr ""
+"Цей інструмент налаштує ваш комп’ютер для ОБРАНИХ Вами функцій "
+"$programname."
+
+msgid ""
+"This seems to be a text-mode GUI, you can use up/down arrows, SPACE to "
+"select option, ENTER to finish."
+msgstr ""
+"Це, здається, текстовий режим графичного інтерфейсу, Ви можете використовувати кнопки Вгору/Вниз, Пробіл щоб "
+"обрати опцію, ENTER щоб закінчити."
+
+msgid "We recognize your system/platform as:"
+msgstr "Ми визначили вашу систему/платформу як:"
+
+#, sh-format
+msgid "Configure computer for $programname"
+msgstr "Налаштувати комп’ютер для $programname"
+
+msgid "Ok"
+msgstr "Далі"
+
+msgid "Quit"
+msgstr "Вихід"
+
+#, sh-format
+msgid "How do you want to use $programname:"
+msgstr "Як Ви бажаєте використовувати $programname:?"
+
+msgid "menu_task_warn"
+msgstr "Показувати попередження"
+
+#, sh-format
+msgid "menu_task_build"
+msgstr "Побудувати цю программу з вихідного коду"
+
+#, sh-format
+msgid "menu_task_touse"
+msgstr "Використати цю программу на цьому комп’ютері"
+
+#, sh-format
+msgid "menu_task_devel"
+msgstr "Розробляти цю программу"
+
+#, sh-format
+msgid "menu_task_bgitian"
+msgstr "Скомпілювати та підписати/опублікувати (наприклад Gitian)"
+
+msgid "Done"
+msgstr "Готово"
+
+#, sh-format
+msgid "Finished installation of $programname."
+msgstr "Інсталяція $programname завершена."
+
+#, sh-format
+msgid "warn2_net"
+msgstr ""
+"Попередження: СПЕЦІАЛЬНІ налаштування мереж - можливо, імена або функції мережевих"
+"адаптерів (наприклад eth0/br0/lxcbr0) буде змінено."
+
+msgid "warn2_net_title"
+msgstr "ПОПЕРЕДЖЕННЯ (SPECIAL: networks)"
+
+msgid "warning_build"
+msgstr "* Інсталювання інструментів для побудови вихідного коду"
+
+msgid "warning_devel"
+msgstr ""
+"* Ми збираємося інсталювати деякі інструменти розробника. Наприклад, щоб зімітувати вілику кількисть"
+"мереж на цьому комп’ютері (network namespaces)."
+
+msgid "warning_bgitian"
+msgstr ""
+"* Ми збираємось налаштувати ваш комп’ютер для використання Gitian (у віртуалізації "
+"LXC). Попередження, це може створити декілько інших мережевих адаптерів і змінити налаштування "
+"адаптерів, що використовуються. Наприклад, IP-адреса з поточного основного "
+"інтернет адаптеру (наприклад eth0) може бути відображена/пересунута як прикріплена до іншого адаптеру "
+"(ось як працює 'міст')"
+
+#, sh-format
+msgid "warning_SUMMARY"
+msgstr "Будь ласка, підтвердіть нижчезазначені зміни (вони впливають на безпеку)."
+
+msgid "warning_SUMMARY_TITLE"
+msgstr "Caution safety and summary"
+
+msgid "warn_root"
+msgstr "# Нам буде потрібен root (admin) дозвіл впродовж інсталяції."
+
+msgid "warn_fw"
+msgstr "# Будь ласка, не забудьте інсталювати брандмауер!"
+
+msgid "menu_task_verbose"
+msgstr "(Показувати більше деталей під час інсталяції)"
+
+msgid "install_progress_title"
+msgstr "Прогрес інсталювання"
+
+#, sh-format
+msgid "warning_touse $programname"
+msgstr "* Налаштувати комп’ютер для роботи програми $programname"
+
+msgid "status_done_step_BEFORE"
+msgstr "Зараз ми робимо:"
+
+msgid "status_done_step_PRESSKEY"
+msgstr "Будь ласка, натисніть ENTER для продовження..."
+
+msgid "error_init_platforminfo"
+msgstr "Відсутня інформація щодо цієї платформи/системи"
+
+#, sh-format
+msgid "status_done_step $item"
+msgstr "Етап завершено: '$item'."
+
+#, sh-format
+msgid "menu_main_title $programname:"
+msgstr "Установник $programname"
+
+msgid "menu_taskpack_normal_builduse"
+msgstr "Простий: побудувати цю программу для використання тільки на цьюму комп’ютері."
+
+msgid "menu_taskpack_custom"
+msgstr "Виберіть варіанти..."
+
+msgid "menu_taskpack_quick_builduse"
+msgstr "Ніяких підтверджень (небезпечно!) - побудувати & використати"
+
+msgid "menu_taskpack_quick_devel"
+msgstr "Ніяких підтверджень (небезпечно!) - для розробника"
+
+msgid "tasks_we_will_do"
+msgstr "Ми збираємось зробити:"
+
+#, sh-format
+msgid "this_script_uses_sudo_flag $sudo_flag"
+msgstr ""
+"Скрипт не запущений із root дозвілом, але ви поставили прапор $sudo_flag то ж ми думаємо "
+"що sudo вже є і тому ми йдемо далі."
+
+#, sh-format
+msgid "this_script_must_be_run_as_root_or $sudo_flag"
+msgstr ""
+"Цей скрипт повинен бути запущений із root дозвілом або потрібно запустити його з прапором $sudo_flag щоб використати "
+"sudo"
+
+msgid "error_init_platforminfo_unknown"
+msgstr "Ця платворма/ОС невідома."
+
+msgid "install_packages_title"
+msgstr "Пакети для інсталяції"
+
+msgid "Install"
+msgstr "Інсталяція"
+
+#, sh-format
+msgid "L_install_failed"
+msgstr "Інсталяція не вдалася"
+
+#, sh-format
+msgid "L_install_nothing_to_do"
+msgstr "Нема нічого для інсталяції"
+
+msgid "L_now_installing_gitian_lxc"
+msgstr "Зараз ми інсталюємо LXC для Gitian"
+
+#, sh-format
+msgid "L_needrestart_summary_text"
+msgstr "Може знадобитися перезавантаження системи з наступних причин:"
+
+msgid "L_needrestart_summary_title"
+msgstr "Необхідно перезавантаження"
+
+msgid "L_needrestart_LXC_maybe"
+msgstr ""
+"# Можливо (але сподіваємося що ні) - LXC мережа (необхідна для використання Gitian) повинна "
+"працювати зараз, але в разі будь яких проблем Вам може знадобитися перезавантаження системи, щоб бути "
+"впевненим."
+
+msgid "L_program_is_pre_pre_alpha"
+msgstr ""
+"Ця програма ще не готова, не використовувайте її у цій версії. "
+"(Будь ласка, використовувайте її тільки на тестовій віртуальній машині)."
+
+#, sh-format
+msgid ""
+"Can not find script library $lib (dir_base_of_source=$dir_base_of_source)."
+msgstr "Не можу знайти скрипт бібліотеці library $lib (у директорії $dir_base_of_source)."
+
+#, sh-format
+msgid "We will install packages: $packages_str now (as root)"
+msgstr "Ми проінсталюємо пакети: $packages_str зараз (як root)"
+
+#, sh-format
+msgid "L_install_packages_text $packages_str"
+msgstr "Ми проінсталюємо пакети: $packages_str"
+
+msgid "menu_taskpack_devel_builduse"
+msgstr "Просунутий: побудувати програму в Gitian / розробляти її"
+
+msgid "install_progress_fix"
+msgstr "Автоматичне вирішення проблем"
+
+msgid "L_fix_cgroupfs_mount"
+msgstr ""
+"Здається, що ця система не підтримує належним чином cgroupfs. Ми постараємося виправити це. "
+"(Це потрібно щоб вікористовувати Gitian)."
+
+msgid "L_fix_ubuntu_old_build"
+msgstr ""
+"Ця система (застаріла версія Ubuntu) вимагає спеціальних налаштувань для "
+"компіляції. Ми постараємося виправити це. (Це потрібно для компіляції натівної "
+"програми на цьому комп’ютері)."
+
+#, sh-format
+msgid "L_what_now"
+msgstr ""
+"Для звичайної компіляції програми натівно (та подальшого використування) ми рекомендуємо "
+"команду:\n"
+"  ./do \n"
+"Для будування за допомогої Gitian (для цієї або інших ОС) ми рекомендуємо:\n"
+"  ./build-gitian\n"
+"Ви можете змінити параметри інсталятора запустивши ./install.sh. Список інших "
+"опцій ви можете побачити запустивши ./menu або прочитавши документацію."
+
+#, sh-format
+msgid "L_fix_uninstall_apt_cacher bad=$apt_cacher_bad good=$apt_cacher_good."
+msgstr ""
+"Ми повинні видалити вашу apt cacher програму: [$apt_cacher_bad], щоб "
+"ми змогли взамін інсталювати потрібну нам : [$apt_cacher_good]."
+
+msgid "install_info_title"
+msgstr "Інформація"
+
+msgid "L_install_option_lxcnet_bridged_TITLE"
+msgstr "Gitian: LXC мережа - дати доступ"
+
+msgid "L_install_option_lxcnet_bridged_ITEM_all"
+msgstr "Дозволити LXC/Gitian доступ до ВСІХ МЕРЕЖ"
+
+msgid "L_install_option_lxcnet_bridged_ITEM_some"
+msgstr "Обмежити LXC/Gitian доступ тільки до одної мережи"
+
+msgid "L_install_option_lxcnet_bridged_INPUTBOX_cards"
+msgstr "Перелік мережевих інтерфейсів, які можуть використовувати LXC/Gitian, розділених пробілами"
+
+msgid "menu_task_autoselect"
+msgstr "Пропустити деякі питання інсталяції (може бути небезпечним!)"
+
+msgid "L_install_option_lxcnet_bridged_INFO"
+msgstr ""
+"На наступному кроці ви будете вибирати чи слід дозволити LXC використовувати всі мережеві "
+"адаптери або слід обмежити тільки деякими.\n"
+"\n"
+"ПІДКАЗКА: Дозволити використовувати всі адаптері є біль легшим та зручним вибіром якщо ви "
+"не дбаєте.\n"
+"\n"
+"Деталі:\n"
+"Gitian використовує LXC задля завантаження вихідного коду, тому LXC має мати доступ до "
+"мережі. \n"
+"LXC потребує доступ тільки но до мережевого адаптеру, який використовується для доступу до "
+"Інтернету (або до серверу де є всі необхідні файли для будування). \n"
+"Можливо, що у вас зараз або в майбутньому буде багато мережевих адаптерів у вашому комп’ютері "
+"(наприклад WiFi, VPN, Cjdns). \n"
+"Цілком можливо, що деякі з них дуже важливі (наприклад робочий VPN) та "
+"ви зовсім не бажаєте давати шанс LXC отримати доступ до цього адаптеру.\n"
+"\n"
+"Тому ви повинні вирішити (на наступньому кроці)\n"
+"Або дозволити LXC використовувати всі мережеві адаптери (це просто та "
+"комфортно.\n"
+"Або надати LXC доступ лише до дояких адаптерів - ви зможете вручну ввести список "
+"адаптерів [eth0 eth1 wlan0...] які LXC зможе використовувати."
+
+msgid "L_install_option_lxcnet_dns_TITLE"
+msgstr "Gitian: LXC мережа - оберіть DNS"
+
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_chattr"
+msgstr "Додати 8.8.8.8 до /etc/resolv.conf;Block chattr +i"
+
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_d"
+msgstr "Додати 8.8.8.8 до resolv.conf.d (Ubuntu,Mint,...)"
+
+msgid "L_install_option_lxcnet_dns_ITEM_none"
+msgstr "Залишите все як є, ми виправимо це якщо буде потрібно"
+
+msgid "L_install_option_lxcnet_dns_needsfix"
+msgstr ""
+"Схоже що в /etc/resolv.conf \n"
+"Ви не вказали жодного публічного DNS-серверу (Іноді це попередження може бути "
+"помилковим. Перевірте себе)"
+
+msgid "L_install_option_lxcnet_dns_INFO"
+msgstr "На наступному кроці Вам буде потрібно обрати DNS (Domain Name System) сервер для "
+"LXC\n"
+"адаптерів на цьому компʼютері чи обмежити його деяких з них.\n"
+"\n"
+"ПІДКАЗКА: обрана опція [resolv_chattr] буде, ймовірно, працювати, але це не дуже гарне "
+"рішення. Зазвичай на Debian вам не потрібно нічого робити [none].\n"
+"Деталі:\n"
+"Gitian у LXC потребує DNS для використання Інтернету \n"
+"Gitian/LXC робить копію налаштувань вашої системи.\n"
+"На жаль, якщо ваша система має DNS localhost сервер / "
+"127.0.0.1, то це не буде працювати всередині LXC.\n"
+"\n"
+"У цій сітуації - налаштуйте вашу систему для використання, наприклад, DNS від Google "
+"8.8.8.8 - він працює майже завжди.\n"
+"Опція [none] - ви можете зробити це власноруч після завершення інсталяції. Якщо система не "
+"використовує localhost в якості DNS, то не потрібно щось робити.\n"
+"Опція [resolv_chattr] - це працює завжди, але цене дуже гарне рішення: додати "
+"DNS 8.8.8.8 до /etc/resolv.conf та блокувати його зміну від chattr +i !\n"
+"Опція [resolv_only] - додає 8.8.8.8 до resolv.conf але якщо система буде оновлена, "
+"то цей файл може бути видалений.\n"
+"Опція [resolv_d] - додає 8.8.8.8 до resolv.conf.d/tail або подібне - це "
+"працює на системах які використовуют ці суб-системи (наприклад, Ubuntu, Mint тощо)"
+
+#
+msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
+msgstr "Додати 8.8.8.8 до resolv.conf.d (Ubuntu,Mint,...)"
+
+#, sh-format
+msgid "L_install_fail infile=$infile"
+msgstr "Інсталяція не вдалась"
+
+#, sh-format
+msgid "L_install_fail2"
+msgstr "Інсталяція не вдалась"
+

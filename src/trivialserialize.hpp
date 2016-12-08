@@ -290,6 +290,7 @@ template <int S, typename T> void generator::push_integer_s(T value) {
 }
 
 template <int S> void generator::push_bytes_sizeoctets(const std::string & data, size_t max_size_for_assert) {
+	_UNUSED(max_size_for_assert);
 	assert( data.size() <= max_size_for_assert);
 	push_bytes_sizeoctets<S>(data);
 }

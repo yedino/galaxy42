@@ -93,28 +93,37 @@ Section
 
 	${If} ${RunningX64}
 		File bin/x64/libsodium-18.dll
-		File bin/x64/libboost_filesystem-mt.dll
+
+        File bin/x64/libboost_filesystem-mt.dll
 		File bin/x64/libboost_program_options-mt.dll
 		File bin/x64/libboost_system-mt.dll
+		File bin/x64/libboost_chrono-mt.dll
+		File bin/x64/libboost_locale-mt.dll
+		File bin/x64/libboost_thread_win32-mt.dll
 
 		File bin/x64/libgcc_s_seh-1.dll
 		File bin/x64/libstdc++-6.dll
 		File bin/x64/libwinpthread-1.dll
 
 		File bin/x64/tunserver.elf.exe
-
+        File bin/x64/galaxyService.exe
 	${Else}
 
 		File bin/x86/libsodium-18.dll
-		File bin/x86/libboost_filesystem-mt.dll
+
+        File bin/x86/libboost_filesystem-mt.dll
 		File bin/x86/libboost_program_options-mt.dll
 		File bin/x86/libboost_system-mt.dll
+		File bin/x86/libboost_chrono-mt.dll
+		File bin/x86/libboost_locale-mt.dll
+		File bin/x86/libboost_thread_win32-mt.dll
 
 		File bin/x86/libgcc_s_sjlj-1.dll
 		File bin/x86/libstdc++-6.dll
 		File bin/x86/libwinpthread-1.dll
 
 		File bin/x86/tunserver.elf.exe
+        File bin/x86/galaxyService.exe
 	${EndIf}
 
 	!insertmacro SERVICE create "galaxy" "path=$INSTDIR\galaxyService.exe;autostart=1;interact=1;display=galaxy42;description=galaxy42 node;"

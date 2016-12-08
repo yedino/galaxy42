@@ -50,6 +50,7 @@ void generator::push_byte_s(signed char c) {	m_str += c; }
 
 
 void generator::push_bytes_n(size_t size, const std::string & data) {
+	_UNUSED(size);
 	assert(size == data.size()); // is the size of data the same as size that we think should go here
 	m_str += data;
 }

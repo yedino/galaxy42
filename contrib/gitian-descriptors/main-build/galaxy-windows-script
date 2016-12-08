@@ -108,12 +108,12 @@ echo "FAKETIME = ${FAKETIME}"
 
 WRAP_DIR="$HOME/wrapped"
 HOSTS="x86_64-w64-mingw32 i686-w64-mingw32" # related to $TARGET_ARCH
-COMPILERS="g++ gcc cpp cc c++ nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # do we need "cc c++"? TODO
+COMPILERS="g++ gcc cpp g++-posix gcc-posix cpp-posix cc c++" # do we need "cc c++"? TODO
 
 ##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
 CONFIGFLAGS=""
 
-FAKETIME_HOST_PROGS="gcc g++ ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
+FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy dlltool elfedit ld ld.bfd objdump readelf windmc widl" # why  g++ is here and in COMPILERS? but gcc,... only there? TODO
 FAKETIME_PROGS="date zip"
 
 # We build own nsis from source. In this case we wrap makensis locally for our needs.
@@ -206,20 +206,20 @@ export PATH=${WRAP_DIR}:${PATH}
 # *** main build starts here ***
 
 ## set compilators
-export CC="$HOME/wrapped/$TARGET_ARCH-gcc"
-export CXX="$HOME/wrapped/$TARGET_ARCH-g++"
-export CPP="$HOME/wrapped/$TARGET_ARCH-cpp"
+export CC="$HOME/wrapped/$TARGET_ARCH-gcc-posix"
+export CXX="$HOME/wrapped/$TARGET_ARCH-g++-posix"
+export CPP="$HOME/wrapped/$TARGET_ARCH-cpp-posix"
 
 printf "\nPWD=$PWD in script $0\n"
 
 ## get and build lib gettext
-printf "\n\n=========================================================================\n\n"
-printf "gettext\n\n"
-pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
-rm -rf gettext-0.19.8/ libiconv-1.14/ || echo "clean previous gettext build, if there is"
-./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
-popd
-printf "\n\n"
+#printf "\n\n=========================================================================\n\n"
+#printf "gettext\n\n"
+#pushd ./galaxy42/depends/gettext/ || fail "Entering dir of gettext"
+#rm -rf gettext-0.19.8/ libiconv-1.14/ || echo "clean previous gettext build, if there is"
+#./build_gettext "$TARGET_ARCH" || fail "Building the gettext lib"
+#popd
+#printf "\n\n"
 
 ## clone and build boost
 printf "\n\n=========================================================================\n\n"
@@ -249,45 +249,15 @@ confirm_gitrev=$(git log --format='%H' -1)
 	fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
 }
 
-git submodule update --init --recursive tools/build
-git submodule update --init --recursive libs/context
-git submodule update --init --recursive libs/filesystem
-git submodule update --init --recursive libs/config
-git submodule update --init --recursive tools/inspect
-git submodule update --init --recursive libs/thread
-git submodule update --init --recursive libs/system
-git submodule update --init --recursive libs/utility
-git submodule update --init --recursive libs/predef
-git submodule update --init --recursive libs/detail
-git submodule update --init --recursive libs/assert
-git submodule update --init --recursive libs/core
-git submodule update --init --recursive libs/io
-git submodule update --init --recursive libs/type_traits
-git submodule update --init --recursive libs/iterator
-git submodule update --init --recursive libs/mpl
-git submodule update --init --recursive libs/preprocessor
-git submodule update --init --recursive libs/static_assert
-git submodule update --init --recursive libs/smart_ptr
-git submodule update --init --recursive libs/throw_exception
-git submodule update --init --recursive libs/functional
-git submodule update --init --recursive libs/range
-git submodule update --init --recursive libs/any
-git submodule update --init --recursive libs/type_index
-git submodule update --init --recursive libs/function
-git submodule update --init --recursive libs/integer
-git submodule update --init --recursive libs/bind
-git submodule update --init --recursive libs/lexical_cast
-git submodule update --init --recursive libs/concept_check
-git submodule update --init --recursive libs/numeric/conversion
-git submodule update --init --recursive libs/array
-git submodule update --init --recursive libs/program_options
-git submodule update --init --recursive libs/container
-git submodule update --init --recursive libs/move
-git submodule update --init --recursive libs/math
-git submodule update --init --recursive libs/tokenizer
-git submodule update --init --recursive libs/asio
-git submodule update --init --recursive libs/date_time
-git submodule update --init --recursive libs/regex
+declare -a boost_submodules=( "tools/build" "libs/context" "libs/filesystem" "libs/config" "tools/inspect" "libs/thread" "libs/system" "libs/utility" "libs/predef" "libs/detail" "libs/assert" \
+	"libs/core" "libs/io" "libs/type_traits" "libs/iterator" "libs/mpl" "libs/preprocessor" "libs/static_assert" "libs/smart_ptr" "libs/throw_exception" "libs/functional" "libs/range" \
+	"libs/any" "libs/type_index" "libs/function" "libs/integer" "libs/bind" "libs/lexical_cast" "libs/concept_check" "libs/numeric/conversion" "libs/array" "libs/program_options" \
+	"libs/container" "libs/move" "libs/math" "libs/tokenizer" "libs/asio" "libs/date_time" "libs/regex" "libs/locale" "libs/chrono" "libs/atomic" "libs/ratio" "libs/tuple" "libs/unordered" \
+	"libs/exception" "libs/intrusive" "libs/align" "libs/algorithm" "libs/multiprecision" "libs/format" "libs/optional" "libs/rational" "libs/winapi" "libs/circular_buffer")
+
+
+# speed up boost download by initialize submodules asynchronously
+for submodule in "${boost_submodules[@]}"; do sleep 0.1; echo "$submodule" ; done | xargs -L1 -P8 git submodule update --init --recursive && wait
 fi
 
 # delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
@@ -305,11 +275,13 @@ echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
 
 printf "Starting the b2 boost build\n"
 set -x
-b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" )
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" )
 b2_opt_debug=( )
 if (( option_verbose )) ; then
 	b2_opt_debug=( "-d" "4" "--debug-building" )
 fi
+
+./b2 headers
 
 ./b2 \
 	"${b2_opt_debug[@]}" \
@@ -406,7 +378,7 @@ popd
 
 else
 	SODIUM_DIR="/home/ubuntu/build/libsodium"
-	[ -d "$SODIUM_DIR=" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
+	[ -d "$SODIUM_DIR" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
 	printf "\n\nSkipping sodium (as selected in options)\n\n"
 
 fi
@@ -427,11 +399,13 @@ echo "SODIUM_ROOT: $SODIUM_ROOT"
 
 printf "\n\nMoving on to main build of actually our project:"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH=$TARGET_ARCH -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH="$TARGET_ARCH" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
 make tunserver.elf || fail "make of our project (main binary) failed"
+make galaxyService || fail "make of our project (main binary) failed"
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
+sha256sum  /home/ubuntu/build/galaxy42/contrib/windows-service-wrapper/galaxyService.exe
 sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
 sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
 

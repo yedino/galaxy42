@@ -7,7 +7,104 @@
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "c_tnetdbg.hpp"
+#include "../depends/cjdns-code/syserr.h"
+#include "../depends/cjdns-code/NetPlatform.h"
+#include <syserror_use.hpp>
+
+#include <cstring>
+
+/// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+/// this translates the field t_syserr.my_code only, see other function for more
+std::string NetPlatform_error_code_to_string(int err) {
+	switch (err) {
+        case e_netplatform_err_getaddrinfo: return "getaddrinfo"; break;
+        case e_netplatform_err_open_socket: return "socket_open"; break;
+        case e_netplatform_err_open_fd: return "open_fd"; break;
+        case e_netplatform_err_ioctl: return "ioctl"; break;
+        case e_netplatform_err_invalid_addr_family: return "invalid_address_family"; break;
+        case e_netplatform_err_not_impl_addr_family: return "not_implemented_yet_address_family"; break;
+        case e_netplatform_err_socketForIfName_open: return "socketForIfName_socket_open"; break;
+        case e_netplatform_err_socketForIfName_ioctl: return "socketForIfName_ioctl"; break;
+        case e_netplatform_err_checkInterfaceUp_open: return "checkInterfaceUp_socket_open"; break;
+        case e_netplatform_err_checkInterfaceUp_ioctl: return "checkInterfaceUp_ioctl"; break;
+		default:
+			if (err<0) {
+				std::ostringstream oss; oss<<"UNKNOWN_NetPlatform_ERROR("<<err<<")";
+				return oss.str();
+			}
+	}
+	return "OK";
+}
+
+/// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+std::string NetPlatform_syserr_to_string(t_syserr syserr) {
+	std::ostringstream oss;
+	auto code = syserr.my_code;
+	oss << "[Code=" << NetPlatform_error_code_to_string(code);
+	if (code<0) oss << " errno=" << errno_to_string( syserr.errno_copy ); // was some error, show errno then
+	oss << "]";
+	return oss.str();
+}
+
+/**
+ * Wrapper around the from-cjdns function;
+ * Nicelly writes debug about this important function.
+ * Errors are thrown as tuntap_error*
+ */
+void Wrap_NetPlatform_addAddress(const char* interfaceName,
+                            const uint8_t* address,
+                            int prefixLen,
+                            int addrFam)
+{
+	#if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
+	_fact("Setting IP address: interfaceName="<<interfaceName
+		<<" address="<<address
+		<<" prefixLen="<<prefixLen
+		<<" addrFam="<<addrFam);
+	t_syserr syserr = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
+	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
+		<< " result: " << NetPlatform_syserr_to_string(syserr));
+	#else
+		throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+	#endif
+}
+
+// Wrapper around the from-cjdns function:
+void Wrap_NetPlatform_setMTU(const char* interfaceName,
+                        uint32_t mtu)
+{
+	#if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
+	_fact("Setting MTU on interfaceName="<<interfaceName<<" mtu="<<mtu);
+	t_syserr syserr = NetPlatform_setMTU(interfaceName, mtu);
+	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_mtu , NetPlatform_syserr_to_string(syserr) );
+	_goal("MTU value " << mtu << " set on interface " << interfaceName
+		<< " result: " << NetPlatform_syserr_to_string(syserr));
+	#else
+		throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+	#endif
+}
+
+
+
+c_tun_device::c_tun_device()
+ :
+ m_ifr_name(""),
+ m_ip6_ok(false)
+{
+	_note("Creating new general TUN device class");
+}
+
+
+void c_tun_device::init() { }
+
+int c_tun_device::get_tun_fd() const {
+	_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
+}
+
+
 #ifdef __linux__
+
 #include <cassert>
 #include <fcntl.h>
 #include <linux/if_tun.h>
@@ -17,28 +114,55 @@
 #include "c_tnetdbg.hpp"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
+
 c_tun_device_linux::c_tun_device_linux()
 :
-	m_tun_fd(open("/dev/net/tun", O_RDWR))
+	m_tun_fd(-1)
 {
-	assert(! (m_tun_fd<0) ); // TODO throw?
+	_note("Creating new linu TUN device class");
+}
+
+int c_tun_device_linux::get_tun_fd() const {
+	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	return m_tun_fd;
+}
+
+void c_tun_device_linux::init()
+{
+	const char *fd_fname = "/dev/net/tun";
+	_goal("Opening TUN file (Linux driver) " << fd_fname);
+	m_tun_fd = open(fd_fname, O_RDWR);
+	int err = errno;
+	if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+	_goal("TUN file opened as fd " << m_tun_fd);
 }
 
 void c_tun_device_linux::set_ipv6_address
-	(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
+{
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN; // || IFF_MULTI_QUEUE; TODO
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
-	if (errcode_ioctl < 0) _throw_error( std::runtime_error("ioctl error") );
+	int err = errno;
+	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
+
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
-	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	_fact("Setting IP address");
+	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	m_ifr_name = std::string(ifr.ifr_name);
+	_note("Configured network IP for " << ifr.ifr_name);
+	m_ip6_ok=true;
+	_goal("IP address is fully configured");
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
-	_UNUSED(mtu);
-	_NOTREADY();
+	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
+	const auto name = m_ifr_name.c_str();
+	_fact("Setting MTU="<<mtu<<" on card: " << name);
+	Wrap_NetPlatform_setMTU(name,mtu);
+	_goal("MTU configured to " << mtu << " on card " << name);
 }
 
 bool c_tun_device_linux::incomming_message_form_tun() {
@@ -53,22 +177,23 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO throw if error
+	_info("Reading from tuntap");
 	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
+	_info("Reading from tuntap - ret="<<ret);
 	if (ret == -1) _throw_error( std::runtime_error("Read from tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
-size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO throw if error
+size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
 	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
-#endif //__linux__
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+//__linux__
+#elif defined(_WIN32) || defined(__CYGWIN__)
 
 #include "c_tnetdbg.hpp"
 #include <boost/bind.hpp>
@@ -77,9 +202,10 @@ size_t c_tun_device_linux::write_to_tun(const void *buf, size_t count) { // TODO
 #include <io.h>
 //#include <ntdef.h>
 //#include <ntstatus.h>
-#ifndef NTSTATUS 
+#ifndef NTSTATUS
 #define NTSTATUS LONG
-#endif 
+#endif
+#include <wincrypt.h>
 #include <netioapi.h>
 #include <ntddscsi.h>
 #include <winioctl.h>
@@ -103,28 +229,45 @@ c_tun_device_windows::c_tun_device_windows()
 	m_stream_handle_ptr(std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle)),
 	m_mac_address(get_mac(m_handle))
 {
+	_fact("Creating the windows device class (in ctor, before init)");
+}
+
+
+void c_tun_device_windows::init() {
+	// TODO@rob move all the init stuff to here, from the init-list of constructor please so we can debug/log it
+
+	_fact("Creating TUN/TAP (windows version)");
 	m_buffer.fill(0);
 	assert(m_stream_handle_ptr->is_open());
+	// TODO@rob more debug
 	//m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer), std::bind(&c_tun_device_windows::handle_read, this));
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void c_tun_device_windows::set_ipv6_address
-(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
+{
+	_fact("Setting IPv6 address, prefixLen="<<prefixLen);
 	auto human_name = get_human_name(m_guid);
 	auto luid = get_luid(human_name);
+	// _fact("Setting address on human_name ["<<human_name<<" luid="<<luid); // TODO@mik
 	// remove old address
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
 	GetUnicastIpAddressTable(AF_INET6, &table);
 	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
-		if (table->Table[i].InterfaceLuid.Value == luid.Value)
-			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR)
+		_info("Removing old addresses, i="<<i);
+		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
+		_info("Removing old addresses, entry i="<<i<<" - will remove");
+			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
+			}
+		}
 	}
 	FreeMibTable(table);
 
 	// set new address
+	_fact("Setting new IP address");
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -138,8 +281,10 @@ void c_tun_device_windows::set_ipv6_address
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
 
+	_fact("Creating unicast IP");
 	auto status = CreateUnicastIpAddressEntry(&iprow);
-	// TODO check for error with status
+	_goal("Created unicast IP, status=" << status);
+	// TODO check for error with status TODO@mik
 	_UNUSED(status);
 }
 
@@ -159,7 +304,7 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 	return ret;
 }
 
-size_t c_tun_device_windows::write_to_tun(const void *buf, size_t count) {
+size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
 	//std::cout << "****************write to tun" << std::endl;
 	const size_t eth_header_size = 14;
 	const size_t eth_offset = 4;
@@ -204,6 +349,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	DWORD cchValue = MAX_VALUE_NAME;
 
 	// Get the class name and the value count.
+	_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -242,6 +388,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 
 std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
+	// _fact("Looking for device guid" << adapterKey); // TODO@mik
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -278,6 +425,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		}
 		RegCloseKey(key);
 	}
+	_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
@@ -345,6 +493,7 @@ HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
+	// TODO@rob check error
 	return handle;
 }
 
@@ -384,9 +533,137 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-#endif
+// _win32 || __cygwin__
 
+#elif defined(__MACH__)
+#include "../depends/cjdns-code/NetPlatform.h"
+#include "cpputils.hpp"
+#include <sys/kern_control.h>
+#include <sys/sys_domain.h>
+c_tun_device_apple::c_tun_device_apple() :
+    m_tun_fd(create_tun_fd()),
+    m_stream_handle_ptr(std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd)),
+    m_buffer(),
+    m_readed_bytes(0)
+{
+}
 
+void c_tun_device_apple::init()
+{
+	_fact("Creating the MAC OS X device class (in ctor, before init)");
+    m_buffer.fill(0);
+    assert(m_stream_handle_ptr->is_open());
+    m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+        [this](const boost::system::error_code &error, size_t length) {
+            handle_read(error, length);
+        }); // lambda
+}
+
+int c_tun_device_apple::get_tun_fd() const {
+	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	return m_tun_fd;
+}
+
+int c_tun_device_apple::create_tun_fd() {
+    int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+    int err=errno;
+		if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+
+    // get ctl_id
+    ctl_info info;
+    std::memset(&info, 0, sizeof(info));
+    const std::string apple_utun_control = "com.apple.net.utun_control";
+    apple_utun_control.copy(info.ctl_name, apple_utun_control.size());
+    if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
+	    	int err = errno;
+        close(tun_fd);
+				_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+    }
+
+    // connect to tun
+    sockaddr_ctl addr_ctl;
+    addr_ctl.sc_id = info.ctl_id;
+    addr_ctl.sc_len = sizeof(addr_ctl);
+    addr_ctl.sc_family = AF_SYSTEM;
+    addr_ctl.ss_sysaddr = AF_SYS_CONTROL;
+    addr_ctl.sc_unit = 1;
+    // connect to first not used tun
+    int tested_card_counter = 0;
+    auto t0 = time::now();
+    _fact(boost::locale::gettext("L_searching_for_virtual_card"));
+    while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
+        auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
+        if (tested_card_counter++ > number_of_tested_cards)
+            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_max_number_of_tested_cards_limit_reached"));
+        if (int_s >= cards_testing_time)
+            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_connection_to_tun_timeout"));
+        ++addr_ctl.sc_unit;
+    }
+    _goal(boost::locale::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+
+    m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
+    return tun_fd;
+}
+
+void c_tun_device_apple::handle_read(const boost::system::error_code &error, size_t length) {
+    if (error || (length < 1)) throw std::runtime_error(error.message());
+    m_readed_bytes = length;
+    // continue reading
+    m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
+                                         [this](const boost::system::error_code &error, size_t length) {
+        handle_read(error, length);
+    }); // lambda
+}
+
+void c_tun_device_apple::set_ipv6_address
+        (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
+    assert(binary_address[0] == 0xFD);
+    assert(binary_address[1] == 0x42);
+    Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+}
+
+void c_tun_device_apple::set_mtu(uint32_t mtu) {
+	_fact("Setting MTU="<<mtu);
+	const auto name = m_ifr_name.c_str();
+	_fact("Setting MTU="<<mtu<<" on card: " << name);
+  NetPlatform_setMTU(name, mtu);
+}
+
+bool c_tun_device_apple::incomming_message_form_tun() {
+        m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
+        if (m_readed_bytes > 0) return true;
+        return false;
+}
+
+size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
+    assert(m_readed_bytes > 0);
+	if(m_readed_bytes > count) throw std::runtime_error("undersized buffer");
+    // TUN header
+    m_buffer[0] = 0x00;
+    m_buffer[1] = 0x00;
+    m_buffer[2] = 0x86;
+    m_buffer[3] = 0xDD;
+    std::copy_n(&m_buffer[0], m_readed_bytes, reinterpret_cast<uint8_t *>(buf));
+    size_t ret = m_readed_bytes;
+    m_readed_bytes = 0;
+    return ret;
+}
+
+size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
+    boost::system::error_code ec;
+    uint8_t *buf_ptr = static_cast<uint8_t *>(buf);
+    // TUN HEADER
+    buf_ptr[0] = 0x00;
+    buf_ptr[1] = 0x00;
+    buf_ptr[2] = 0x00;
+    buf_ptr[3] = 0x1E;
+
+    size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
+    if (ec) throw std::runtime_error("boost error " + ec.message());
+    return write_bytes;
+}
+// __MACH__
+#else
 
 c_tun_device_empty::c_tun_device_empty() { }
 
@@ -396,6 +673,7 @@ void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_
 }
 
 void c_tun_device_empty::set_mtu(uint32_t mtu) {
+	_warn("Called set_mtu on empty device");
 	_UNUSED(mtu);
 }
 
@@ -415,4 +693,5 @@ size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
 	return 0;
 }
 
-
+// else
+#endif

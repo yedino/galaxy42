@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-27 13:52+0200\n"
+"POT-Creation-Date: 2016-12-06 16:57+0100\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -115,9 +115,6 @@ msgstr "Exiting program now, as explained above..."
 
 msgid "L_bad_peer_format"
 msgstr "Bad peer format"
-
-msgid "L_what_exception_program_throwow"
-msgstr "Going to throw exception. What: "
 
 msgid "L_bad_format_of_input_ip_address"
 msgstr "bad format of input ip address"
@@ -271,27 +268,8 @@ msgstr "Done, libsodium ready"
 msgid "L_lisodium_init_err"
 msgstr "libsodium init error!"
 
-msgid "L_what_newKey_do"
-msgstr "Name of output key file in default location for keys"
-
-msgid "L_what_newKeyFile_do"
-msgstr "Name of output key file in specified location"
-
-msgid "L_what_keyType_do"
-msgstr "Types of generated sub keys"
-
 msgid "L_parse_program_option"
 msgstr "Will parse program options"
-
-msgid "L_gen_combo_crypto_key_require_examples"
-msgstr ""
-"COMMAND: Generate combination of crypto key\n"
-"required [--new-key or --new-key-file, --key-type]\n"
-"examples:\n"
-"--gen-key --new-key \"myself\" --key-type \"ed25519:x3\" \"rsa:x1:"
-"size=4096\"\n"
-"--gen-key --new-key-file \"~/Documents/work/newkey.PRV\"--key-type \"ed25519:"
-"x3\" \"rsa:x1:size=4096\""
 
 msgid "L_what_demo_do"
 msgstr ""
@@ -371,7 +349,32 @@ msgstr "Name of key to verify file in specified location"
 msgid "L_what_toverifyDataFile_do"
 msgstr "Name of data file specified location"
 
-msgid "L_what_signatureFile_do"
-msgstr ""
-"External Name of signature file in specified location\n"
-"Default signature file name = key/data file name + \".sig\" extension"
+msgid "L_what_httpDbgPort_do"
+msgstr "Set http debugger port"
+
+msgid "L_starting_httpdbg_server"
+msgstr "Starting http debugger server"
+
+msgid "L_starting_main_server"
+msgstr "Stating the TUN router"
+
+msgid "L_main_server_ended"
+msgstr "Main server ended"
+
+msgid "L_httpdbg_server_ended"
+msgstr "Http debugger server ended"
+
+msgid "L_what_exception_program_throw"
+msgstr "Going to throw exception. What: "
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr "Max number of tested cards reached"
+
+msgid "L_connection_to_tun_timeout"
+msgstr "Connection to tun timeout"
+
+msgid "L_searching_for_virtual_card"
+msgstr "Searching for available virtual (tun) card"
+
+msgid "L_found_virtual_card_at_slot"
+msgstr "Found virtual (tun) card at slot:"

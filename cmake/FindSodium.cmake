@@ -3,6 +3,9 @@
 #
 # - Find Sodium
 # Find the native libsodium includes and library.
+#
+#  HINT: SODIUM_ROOT_DIR
+#
 # Once done this will define
 #
 #  SODIUM_INCLUDE_DIR    - where to find libsodium header files, etc.
@@ -30,7 +33,13 @@ else()
     set(SODIUM_BUILDTYPE_DIR "Win32")
 endif()
 
-FIND_LIBRARY(SODIUM_LIBRARY NAMES sodium libsodium
+if (sodium_USE_STATIC_LIBS)
+    set(SODIUM_NAMES sodium.a libsodium.a )
+else()
+    set(SODIUM_NAMES sodium libsodium )
+endif()
+
+FIND_LIBRARY(SODIUM_LIBRARY NAMES ${SODIUM_NAMES}
 	HINTS
     ${SODIUM_ROOT_DIR}/lib
     ${SODIUM_ROOT_DIR}/${SODIUM_BUILDTYPE_DIR}/Debug/v140/dynamic
