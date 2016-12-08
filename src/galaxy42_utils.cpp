@@ -37,7 +37,7 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	// boost::asio::ip::address_v6::from_string(r_ipv6, ec); // for ipv6
 
 	auto ip_bytes = ip_boost.to_bytes();
-	_assert( ip_bytes.size()==4 );
+	assert( ip_bytes.size()==4 );
 	bool is_good_class = ip_boost.is_class_a() || ip_boost.is_class_b() || ip_boost.is_class_c()
 		|| ip_boost.is_loopback();
 	bool is_bad_class = ip_boost.is_unspecified() || ip_boost.is_multicast();
@@ -47,4 +47,3 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 
 	return std::make_pair(std::move(ip), port_int);
 }
-
