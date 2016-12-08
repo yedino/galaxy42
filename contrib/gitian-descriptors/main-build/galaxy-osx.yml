@@ -18,6 +18,7 @@ packages:
 - "libsodium-dev"
 - "faketime" # used to force date
 - "gettext-base" # some scripts/tools used in build could be using gettext translations
+- "gettext" # for msgfmt and other advanced tools to compile language .po to .mo
 - "bsdmainutils"
 - "python-dev"
 - "imagemagick"
