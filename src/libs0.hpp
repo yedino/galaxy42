@@ -35,6 +35,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 #include "c_tnetdbg.hpp"
+#include "strings_utils_simple.hpp"
 
 using std::string;
 using std::shared_ptr;
@@ -58,6 +59,9 @@ using std::ostringstream;
 using std::endl;
 
 using boost::numeric_cast;
+
+using std::runtime_error;
+using std::invalid_argument;
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 #define SVAR(x) #x << " = " << x
