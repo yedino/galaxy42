@@ -236,7 +236,12 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	path.erase(pos);
 	b_fs::path user_home(path);
 #endif
-	_goal("Get home directory: ["<< user_home.c_str() <<"]");
+	static bool first_run = true;
+	if(first_run) {
+		_goal(boost::locale::gettext("L_get_home_directory: ") << " "<< user_home.c_str());
+		first_run = false;
+	} else
+		_info("Get home directory: "<< user_home.c_str());
 
 	b_fs::path parent_path(user_home.c_str());
 
