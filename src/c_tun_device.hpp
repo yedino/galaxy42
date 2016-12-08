@@ -30,7 +30,7 @@ class c_tun_device {
 
 		c_tun_device();
 		virtual ~c_tun_device() = default;
-		virtual void init(); ///< call before use
+		virtual void init() = 0; ///< call before use
 
 		virtual void set_ipv6_address
 			(const std::array<uint8_t, 16> &binary_address, int prefixLen) = 0;
@@ -99,7 +99,7 @@ public:
 
 	void set_ipv6_address
 		(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
-	void set_mtu(uint32_t mtu) {}; // TODO
+	void set_mtu(uint32_t mtu) override {}; // TODO
 	bool incomming_message_form_tun() override; ///< returns true if tun is ready for read
 	size_t read_from_tun(void *buf, size_t count) override; ///< count must be <= size of buffer in buf! otherwise UB
         size_t write_to_tun(void *buf, size_t count) override; ///< count must be <= the size of buffer in buf! otherwise UB
@@ -110,9 +110,7 @@ private:
 	std::wstring m_guid;
 	boost::asio::io_service m_ioservice;
 	std::array<uint8_t, 9000> m_buffer;
-
 	size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
-
 	HANDLE m_handle; ///< windows handle to the TUN device
 	std::unique_ptr<boost::asio::windows::stream_handle> m_stream_handle_ptr; ///< boost handler to the TUN device
 	std::array<uint8_t, 6> m_mac_address;
@@ -126,6 +124,25 @@ private:
 	std::array<uint8_t, 6> get_mac(HANDLE handle); // get handle to opened device (returned by get_device_handle())
 
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
+	class hkey_wrapper final {
+		public:
+			/**
+			 * hkey must have been opened by the RegCreateKeyEx, RegCreateKeyTransacted,
+			 * RegOpenKeyEx, RegOpenKeyTransacted, or RegConnectRegistry function.
+			 */
+			hkey_wrapper(HKEY hkey);
+			~hkey_wrapper();
+			HKEY &get();
+			/**
+			 * hkey must have been opened by the RegCreateKeyEx, RegCreateKeyTransacted,
+			 * RegOpenKeyEx, RegOpenKeyTransacted, or RegConnectRegistry function.
+			 */
+			void set(HKEY new_hkey);
+			void close();
+		private:
+			HKEY m_hkey;
+			bool m_is_open;
+	};
 };
 
 // _win32 || __cygwin__
@@ -144,7 +161,7 @@ public:
     size_t read_from_tun(void *buf, size_t count) override;
     size_t write_to_tun(void *buf, size_t count) override;
 private:
-    const int m_tun_fd;
+    int m_tun_fd;
     boost::asio::io_service m_ioservice;
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
     std::array<uint8_t, 9000> m_buffer;
