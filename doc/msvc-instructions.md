@@ -87,14 +87,14 @@ __Cmake output:__
 - Right mouse button (on "tunserver.elf" in Solution Explorer section) -> Build
 - Copy dll library files to binary directory
 
-	For solutrins configuration Debug
+	For solutions configuration Debug
 ```
 boost_filesystem-vc140-mt-gd-1_61.dll
 boost_locale-vc140-mt-gd-1_61.dll
 boost_system-vc140-mt-gd-1_61.dll
 libsodium.dll
 ```
-	For solutrins configuration Release
+	For solutions configuration Release
 ```
 boost_filesystem-vc140-mt-1_61.dll
 boost_locale-vc140-mt-1_61.dll
