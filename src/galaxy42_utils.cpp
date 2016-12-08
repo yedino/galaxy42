@@ -4,7 +4,7 @@
 
 std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &ip_string) {
 	if (ip_string.size()<(1+1)*4) _throw_error(runtime_error(join_string_sep("Invalid (too small) IP size",ip_string.size())));
-	if (ip_string.size()>20) _throw_error(runtime_error(join_string_sep("Invalid (too big) IP size",ip_string.size())));
+	if (ip_string.size()>(4*4+1+4)) _throw_error(runtime_error(join_string_sep("Invalid (too big) IP size",ip_string.size())));
 	/*
 	std::regex pattern("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5}"); // i.e. 127.0.0.1:4562
 	std::smatch result;
