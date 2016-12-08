@@ -50,6 +50,24 @@ This program will allow to do **much more in future** (full public mesh, scoring
 For more details, including correct naming and **glossary**, and advanced technical topics **for developers** and "hackers", see also:
 [doc/hacking.md](doc/hacking.md).
 
+### Release notes
+
+* On Windows, building with MSVC compiler, the messages/languages will not work even if you provide .mo files correctly. (bug#J332)
+* On Windows, in both Cygwin and MSVC, if you want to build from source, there is no ready script to convert .po to .mo translation files, you ust supply them yourself (e.g. copy from linux build or linux release binary - copy it with the directory, so next to .exe we have ./share/locale/...)
+* You can not crossbuild / Gitian build for Mac OS X target, therefore we do not provide official Macintosh version yet. (bug#278)
+
+
+=== Using pre-built binary ===
+
+On windows: get the installer .exe, run it.
+The Program files/galaxy42/tunserver.elf.exe
+
+Program will be installed as service and will run on boot.
++ disable the service. Run the installed .exe manually. It will work and you can specify --peer option ... as well as see own IP.
+
+On macosx: currently not supporting this untill we resolve bug#J278
+
+
 * * *
 
 ## Security:

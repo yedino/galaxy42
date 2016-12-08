@@ -284,7 +284,77 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 int main(int argc, char **argv) {
 //	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
-	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+	using std::cerr; using std::endl;
+
+	cerr << "Start... " << endl;
+	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
+
+	{
+		bool found=false;
+		try
+		{
+			namespace b_fs = boost::filesystem;
+			// find path to my main data dir (to my data "in share").
+			// e.g. /home/rafalcode/work/galaxy42/    - because it contains:
+			//      /home/rafalcode/work/galaxy42/share/locale/en/LC_MESSAGES/galaxy42_main.mo
+
+			// we could normalize the path... but this could trigger more problems maybe with encoding of string.
+			auto dir_normalize = [](std::string path) -> std::string {
+				return path; // nothing for now. TODO (would be nicer to not display "//home/.." in this tests below
+			};
+
+			b_fs::path cwd_full_boost( b_fs::current_path() );
+			string cwd_full = dir_normalize( b_fs::absolute( cwd_full_boost ) .string() );
+			// string cwd_full = b_fs::lexically_norma( b_fs::absolute( cwd_full_boost ) ).string();
+
+			b_fs::path selfpath = "";
+			// += cwd_full_boost;
+			// selfpath += "/";
+			selfpath += argv[0];
+			b_fs::path selfdir_boost = selfpath.remove_filename();
+			string selfdir = dir_normalize( b_fs::absolute( selfdir_boost ) .string() );
+
+	//		cerr << "Start... [" << cwd_full << "] (cwd) " << endl;
+	//		cerr << "Start... [" << selfdir << "] (exec) " << endl;
+
+			vector<string> data_dir_possible;
+			data_dir_possible.push_back(cwd_full);
+			data_dir_possible.push_back(selfdir);
+
+			#if defined(__MACH__)
+				// TODO when macosx .dmg fully works (when Gitian on macosx works)
+			#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
+				// data files should be next to .exe
+			#else
+				data_dir_possible.push_back("/usr");
+				data_dir_possible.push_back("/usr/local");
+				data_dir_possible.push_back("/usr/opt");
+			#endif
+
+			for (auto && dir : data_dir_possible) {
+				string testname = dir;
+				testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
+				cerr << "Test: [" << testname << "]... " << std::flush;
+				ifstream filetest( testname.c_str() );
+				if (filetest.good()) {
+					install_dir_base = dir;
+					found=true;
+					cerr << " OK! " << endl;
+					break;
+				} else cerr << endl;
+			}
+		} catch(std::exception & ex) {
+				cerr << "Error while looking for data directory ("<<ex.what()<<")" << std::endl;
+		}
+		if (found) {
+		} else {
+			cerr << "Can not find language data files." << endl;
+		}
+	}
+
+	std::cerr << "Data: [" << install_dir_base << "]" << endl;
+	const std::string install_dir_share_locale = install_dir_base + "/share/locale";
+	std::cerr << "Lang: [" << install_dir_share_locale << "]" << endl;
 	setlocale(LC_ALL,"");
 
 	boost::locale::generator gen;
@@ -294,6 +364,7 @@ int main(int argc, char **argv) {
 	std::string locale_name;
 	try {
 		locale_name = std::use_facet<boost::locale::info>(gen("")).name();
+		std::cerr << "Locale: " << locale_name << endl;
 	} catch (const std::exception &e) {
 		std::cerr << "Can not detect language, set default language" << "\n";
 		locale_name = "en_US.UTF-8";
@@ -309,6 +380,7 @@ int main(int argc, char **argv) {
 	std::cerr << boost::locale::gettext("L_program_is_copyrighted") << std::endl;
 	std::cerr << std::endl;
 
+
 //	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 //	setlocale(LC_ALL,"");
 //	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
@@ -322,6 +394,10 @@ int main(int argc, char **argv) {
 
 	g_dbg_level = config_default_basic_dbg_level;
     bool early_debug=false;
+
+	_fact("Using data dir ["<<install_dir_base<<"], language/locale ["<<locale_name<<"]");
+
+	// === data-dir, languages, locale, debug - are now set ===
 
     #ifdef HTTP_DBG
     int http_dbg_port = 9080;
