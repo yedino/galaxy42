@@ -159,7 +159,6 @@ void c_tun_device_linux::set_ipv6_address
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
-	_fact("Setting MTU" << mtu);
 	const auto name = m_ifr_name.c_str();
 	_fact("Setting MTU="<<mtu<<" on card: " << name);
 	Wrap_NetPlatform_setMTU(name,mtu);
