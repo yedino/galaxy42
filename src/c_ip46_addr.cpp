@@ -1,6 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "c_ip46_addr.hpp"
+#include <libs0.hpp>
 
 #ifdef __linux__
 #include "cpputils.hpp"
@@ -83,12 +84,13 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	struct addrinfo *result = nullptr;
 	hint.ai_family = PF_UNSPEC;
 	hint.ai_flags = AI_NUMERICHOST;
+
 	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
-	if (ret) {
-		_throw_error( std::invalid_argument("unknown address format") );
-	}
-	auto result_deleter = [&](struct addrinfo *result){freeaddrinfo(result);};
+	if (ret) _throw_error( invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
+	if (!result) _throw_error( invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
+	auto result_deleter = [&](struct addrinfo *result){ if (!result) _throw_error(runtime_error("NULL in freeaddrinfo"); freeaddrinfo(result)); };
 	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
+
 	if(result_ptr->ai_family == AF_INET) {
 		return true;
 	}
@@ -165,7 +167,7 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 #elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__)
 
 #include <iostream>
-c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) 
+c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port)
 :
     m_address(boost::asio::ip::address::from_string(ip_addr)),
     m_port(port)
