@@ -94,7 +94,7 @@ Section
 	${If} ${RunningX64}
 		File bin/x64/libsodium-18.dll
 
-        File bin/x64/libboost_filesystem-mt.dll
+		File bin/x64/libboost_filesystem-mt.dll
 		File bin/x64/libboost_program_options-mt.dll
 		File bin/x64/libboost_system-mt.dll
 		File bin/x64/libboost_chrono-mt.dll
@@ -106,12 +106,12 @@ Section
 		File bin/x64/libwinpthread-1.dll
 
 		File bin/x64/tunserver.elf.exe
-        File bin/x64/galaxyService.exe
+		File bin/x64/galaxyService.exe
 	${Else}
 
 		File bin/x86/libsodium-18.dll
 
-        File bin/x86/libboost_filesystem-mt.dll
+		File bin/x86/libboost_filesystem-mt.dll
 		File bin/x86/libboost_program_options-mt.dll
 		File bin/x86/libboost_system-mt.dll
 		File bin/x86/libboost_chrono-mt.dll
@@ -123,8 +123,25 @@ Section
 		File bin/x86/libwinpthread-1.dll
 
 		File bin/x86/tunserver.elf.exe
-        File bin/x86/galaxyService.exe
+		File bin/x86/galaxyService.exe
 	${EndIf}
+
+	# translation file
+	FILE bin/noarch/share/locale/en/LC_MESSAGES/g42bashutils.mo
+	FILE bin/noarch/share/locale/en/LC_MESSAGES/galaxy42_installer.mo
+	FILE bin/noarch/share/locale/en/LC_MESSAGES/galaxy42_main.mo
+	FILE bin/noarch/share/locale/en/LC_MESSAGES/galaxy42_scripts.mo
+
+	FILE bin/noarch/share/locale/pl/LC_MESSAGES/g42bashutils.mo
+	FILE bin/noarch/share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
+	FILE bin/noarch/share/locale/pl/LC_MESSAGES/galaxy42_main.mo
+	FILE bin/noarch/share/locale/pl/LC_MESSAGES/galaxy42_scripts.mo
+
+	FILE bin/noarch/share/locale/ru/LC_MESSAGES/galaxy42_installer.mo
+	FILE bin/noarch/share/locale/ru/LC_MESSAGES/galaxy42_main.mo
+
+	FILE bin/noarch/share/locale/uk/LC_MESSAGES/galaxy42_installer.mo
+	FILE bin/noarch/share/locale/uk/LC_MESSAGES/galaxy42_main.mo
 
 	!insertmacro SERVICE create "galaxy" "path=$INSTDIR\galaxyService.exe;autostart=1;interact=1;display=galaxy42;description=galaxy42 node;"
 	!insertmacro SERVICE start "galaxy" ""
