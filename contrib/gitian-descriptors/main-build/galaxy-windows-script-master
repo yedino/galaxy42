@@ -97,6 +97,12 @@ fi
 
 printf "\n\nBinaries built (and results are copied) (for all selected 32/64 versions) - proceeding to NSIS.\n\n"
 
-"$galaxy_dir/contrib/nsis-installer-windows/galaxy-windows-installer" || fail "NSIS failed."
+# .mo language files
+copy_noarch() {
+	mkdir -p "${nsis_bin_input}/noarch/share" || fail "mkdir noarch"
+	cp -r --dereference "${galaxy_dir}/share/locale" "${nsis_bin_input}/noarch/share" || fail "copy (noarch files)"
+}
+copy_noarch
 
+"$galaxy_dir/contrib/nsis-installer-windows/galaxy-windows-installer" || fail "NSIS failed."
 
