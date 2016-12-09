@@ -21,8 +21,11 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 }
 
 c_rpc_server::~c_rpc_server() {
+	_dbg("rpc server destructor");
 	m_io_service.stop();
+	_dbg("io service stopped, join thread");
 	m_thread_ptr->join();
+	_dbg("thread joined");
 }
 
 void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::string&)> &&function) {
