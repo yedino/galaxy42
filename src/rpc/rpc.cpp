@@ -17,15 +17,26 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
 		accept_handler(error);
 	});
-	m_thread_ptr = make_unique<std::thread>([this](){m_io_service.run();});
+	_dbg("Starting RPC server thread");
+	m_thread_ptr = make_unique<std::thread>([this]() {
+		_dbg("RPC thread start");
+		m_io_service.run();
+		_dbg("RPC thread stop");
+	});
+	if (!m_thread_ptr)
+		throw std::runtime_error("Can not start rpc server thread");
 }
 
 c_rpc_server::~c_rpc_server() {
 	_dbg("rpc server destructor");
 	m_io_service.stop();
 	_dbg("io service stopped, join thread");
-	m_thread_ptr->join();
-	_dbg("thread joined");
+	if (m_thread_ptr) {
+		m_thread_ptr->join();
+		_dbg("thread joined");
+	} else {
+		_dbg("thread pointer == nullptr, thread not joined");
+	}
 }
 
 void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::string&)> &&function) {
