@@ -39,6 +39,7 @@ Example:
 - make:       Devel:          (make: GUI version of the 'make' utillity)
 - gcc:        Devel:          mingw64-i686-gcc-g++: GCC for Win32 (i686-w64-mingw32) toolchain (C++)
 - gcc:        Devel:          mingw64-x86_64-gcc-g++: GCC for Win64 toolchain (C++)
+- gettext     Devel:          gettext-devel:GNUInternationalization development utilities
 
 ### Building.
 #### 1. Download code from github:

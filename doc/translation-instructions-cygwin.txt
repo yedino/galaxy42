@@ -1,0 +1,25 @@
+Translations on Cygwin (Windows)
+
+
+-To recompile *.po to *.mo
+	Run
+	./contrib/tools/galaxy42-lang-update-all
+	in main galagx42 directory
+
+
+If you add new string to main program:
+	In main galagx42 directory:
+	make tunserver.elf
+	and add:
+
+	msgid "YOUR_STRING"
+	msgstr "YOUR_TRANSLATION"
+
+	to the end of file:
+	src-misc/locale/galaxy42_main/pl.op (also en.po, ru.po, uk.po)
+	
+	After this run:
+	./contrib/tools/galaxy42-lang-update-all
+        in main galagx42 directory
+	
+
