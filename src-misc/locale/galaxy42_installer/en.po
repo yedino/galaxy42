@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy 42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-12 13:12+0000\n"
+"POT-Creation-Date: 2016-12-09 16:42+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Polish\n"
@@ -311,7 +311,8 @@ msgstr ""
 "correct. Check yourself)"
 
 msgid "L_install_option_lxcnet_dns_INFO"
-msgstr "In the next step you will choose your DNS (Domain Name System) server for "
+msgstr ""
+"In the next step you will choose your DNS (Domain Name System) server for "
 "LXC\n"
 "cards of this computer, or to limit that to manually selected ones.\n"
 "\n"
@@ -334,8 +335,6 @@ msgstr "In the next step you will choose your DNS (Domain Name System) server fo
 "Option [resolv_d] - append 8.8.8.8 to resolv.conf.d/tail or similar - it "
 "works on system witch use this sub-system (e.g. Ubuntu, Mint)"
 
-
-
 msgid "L_install_option_lxcnet_dns_ITEM_resolv_only"
 msgstr "Add 8.8.8.8 do /etc/resolv.conf; but not block"
 
@@ -348,3 +347,14 @@ msgid "L_install_fail2"
 msgstr ""
 "Instation unfortunately failed. Look at README file and information chow to "
 "contact us"
+
+# "Allow user to compile program usable without root"
+msgid "menu_task_captool"
+msgstr "Allow user to compile program usable without root"
+
+msgid "warning_captool"
+msgstr ""
+"* Install a tool ('captool'), that will allow this user (or other users that "
+"you will select by editing visudo/sudo config) to compile the program with "
+"special capabilities like CAP_NET_ADMIN so that the program can work fully "
+"even when running it without using root nor sudo"
