@@ -309,7 +309,7 @@ else()
 endif()
 
 if(BUILD_STATIC_TUNSERVER)
-	set(STATIC_FLAG "-static")
+	set(STATIC_FLAG "-Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
 endif()
 
 if(MINGW)
