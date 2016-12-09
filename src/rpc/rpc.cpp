@@ -21,9 +21,18 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 	m_thread_ptr = make_unique<std::thread>([this]() {
 		_dbg("RPC thread start");
 		try {
-			m_io_service.run();
+			boost::system::error_code ec;
+			_dbg("io_service run");
+			m_io_service.run(ec);
+			_dbg("end of io_service run");
+			if (ec)
+				_dbg("error code " << ec.message());
+			_dbg("io_service reset");
+			m_io_service.reset();
 		} catch (const std::exception &e) {
 			_dbg("io_service exception" << e.what());
+		} catch (...) {
+			_dbg("catch unhandled exception");
 		}
 
 		_dbg("RPC thread stop");
