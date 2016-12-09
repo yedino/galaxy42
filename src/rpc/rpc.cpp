@@ -20,7 +20,12 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 	_dbg("Starting RPC server thread");
 	m_thread_ptr = make_unique<std::thread>([this]() {
 		_dbg("RPC thread start");
-		m_io_service.run();
+		try {
+			m_io_service.run();
+		} catch (const std::exception &e) {
+			_dbg("io_service exception" << e.what());
+		}
+
 		_dbg("RPC thread stop");
 	});
 	if (!m_thread_ptr)
