@@ -99,6 +99,8 @@ printf "\n\nBinaries built (and results are copied) (for all selected 32/64 vers
 
 # .mo language files
 copy_noarch() {
+	# generate all .mo files
+	"${galaxy_dir}/contrib/tools/galaxy42-lang-update-all"
 	mkdir -p "${nsis_bin_input}/noarch/share" || fail "mkdir noarch"
 	cp -r --dereference "${galaxy_dir}/share/locale" "${nsis_bin_input}/noarch/share" || fail "copy (noarch files)"
 }
