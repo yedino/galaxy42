@@ -54,6 +54,7 @@ gen_noarch() {
 		
 		# pasing path to get nsis record example:  /.../rest_of_path/share/locale/en/LC_MESSAGES/g42bashutils.mo  -->
 		# FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\g42bashutils.mo	bin/noarch/share/locale/en/LC_MESSAGES/g42bashutils.mo
+		
 		for path in "${path_list[@]}"; do
 			local filename=$( echo "${path}" | awk -F "noarch/" '{print $2}' )
 			local win_format_file=$(echo "$filename" | sed 's/\//\\/g')
@@ -67,7 +68,7 @@ gen_noarch() {
 main() {
 
 	echo
-	echo -e '\t${If} \${RunningX64}'
+	echo -e '\t${If} ${RunningX64}'
 	gen_x86_64
 	echo -e '\t${Else}'
 	gen_i686
