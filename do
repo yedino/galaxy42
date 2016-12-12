@@ -33,6 +33,7 @@ function usage_main {
 	echo "    or grave bugs, run only in VM for some testets."
 	echo ""
 	echo "Special options include:"
+	echo "BUILD_STATIC=1 if this is set to 1, then we will tell CMake to build static version of the program (it requires static deps)"
 	echo "USE_BOOST_MULTIPRECISION_DEFAULT=1 set it to 0 instead to work around broken lib boost multiprecision on e.g. Suse"
 	echo ""
 	echo "Program command line options:"
@@ -92,34 +93,38 @@ COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Build
 
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source="./"
-source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+if [[ $OSTYPE == "linux-gnu" ]]; then
+	source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 
-lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
-init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
-if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
+	init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+	if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
 
-# setting newer CC CXX for older ubuntu
-if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
-	# get ubuntu main version e.g. "14" from "ubuntu_14.04"
-	ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
-	# if ubuntu main version is older/equal than 14
-	if (( $ubuntu_ver <= 14 )); then
-		echo "Setting manually newer compiler for ubuntu <= 14"
-		echo "Which gcc-5, g++-5: "
-		w_gcc=$(which gcc-5) || true
-		w_gpp=$(which g++-5) || true
-		if [[ -z "$w_gcc" ]] || [[ -z "$w_gpp" ]]; then
-			echo "Can't found g++/gcc in version 5. Aborting"
-			echo "Required dependencies can be installed using install.sh script"
-			exit 1
+	# setting newer CC CXX for older ubuntu
+	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
+		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
+		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
+		# if ubuntu main version is older/equal than 14
+		if (( $ubuntu_ver <= 14 )); then
+			echo "Setting manually newer compiler for ubuntu <= 14"
+			echo "Which gcc-5, g++-5: "
+			w_gcc=$(which gcc-5) || true
+			w_gpp=$(which g++-5) || true
+			if [[ -z "$w_gcc" ]] || [[ -z "$w_gpp" ]]; then
+				echo "Can't found g++/gcc in version 5. Aborting"
+				echo "Required dependencies can be installed using install.sh script"
+				exit 1
+			fi
+			export CC=gcc-5
+			export CXX=g++-5
 		fi
-		export CC=gcc-5
-		export CXX=g++-5
 	fi
+
 fi
 
+echo "=== language / translations - will compile langauges ==="
 contrib/tools/galaxy42-lang-update-all || fail "Compiling po to mo (gettext/translations)"
 
 
@@ -128,11 +133,24 @@ echo "Which gcc, g++: "
 which gcc
 which g++
 
+FLAG_STATIC="OFF"
+if [[ "$BUILD_STATIC"  == "1" ]] ; then
+	printf "\n\n\nSTATIC BUILD ENABLED\n\n\n"
+	FLAG_STATIC="ON"
+fi
+
+set -x
 cmake  .  \
+	-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC" \
 	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
+	${BUILD_SET_BOOST_ROOT:+"-DBOOST_ROOT=$BUILD_SET_BOOST_ROOT"} \
+	$FLAG_BOOST_ROOT \
 	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
 	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+set +x
 # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
-make -j 8 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+set -x
+make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+set +x
 

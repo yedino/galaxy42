@@ -70,6 +70,11 @@ long c_peering::get_limit_points() {
 	return m_limit_points;
 }
 
+c_peering_stats & c_peering::get_stats(){
+    return m_peering_stats;
+}
+
+
 // ------------------------------------------------------------------
 
 #ifdef __linux__
@@ -78,10 +83,9 @@ c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linu
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
 { }
-#endif
 
-#if defined(_WIN32) || defined(__CYGWIN__)
-c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_windows &udp_wrapper)
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio &udp_wrapper)
 :
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)

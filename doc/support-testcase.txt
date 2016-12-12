@@ -1,0 +1,50 @@
+
+=====================================================================
+
+More detailed exact test-cases and use-cases that we support.
+
+This is quite short list, mainly for beta-testers.
+Read other doc/ for explanation of some things used here.
+
+=====================================================================
+=== Bugs ===
+
+See README.md release notes for bugs bug#J... that are mentioned here (if any).
+
+=====================================================================
+=== Build and run ===
+
+[ ] linux: get sources from git; ./install && ./do
+[ ] sudo ./tunserver.elf
+[ ] + same when:  ~/other-dir ; sudo ~/sources-dir/tunserver.elf
+[ ] to not run as root, add linux caps CAP_NET_ADMIN on the binary, then repeat above executions as user, not as root
+
+[ ] macosx: get sources from git; (follow macosx readme!) ; ./do
+[ ] sudo ./tunserver.elf # .mo gettext works
+[ ] + same when:  ~/other-dir ; sudo ~/sources-dir/tunserver.elf
+
+[ ] cygwin: get sources from git; (follow cygwin/mingw readme!) ; cmake && make ; (download .mo files!)
+(in Cygwin console) ./tunserver.elf.exe # .mo gettext works
+[ ] + same when you are in other CWD and run somedir/tunserver.elf.exe
+[ ] + same with cmd.exe instead cygwin's own console
+
+[ ] download sources on windows from git;  (follow MSVC readme!) ; cmake && make ; (download .mo files!)
+[ ] ./tunserver.elf.exe  # works but (bug#J332)
+[ ] + same when you are in other CWD and run somedir/tunserver.elf.exe # works but (bug#J332)
+[ ] + same with cmd.exe instead cygwin's own console # works but (bug#J332)
+
+=== Using pre-built binary ===
+
+[ ] On windows: get the installer .exe, run it.
+[ ] The program will be in file: files/galaxy42/tunserver.elf.exe
+[ ] Program will be installed as service and will run on boot.
+[ ] Afte reboot you can connect to ipv6 of other computer, if this computer is peering you (connects into you)
+[ ] + disable the service. Run the installed .exe manually. It will work and you can specify --peer option ... as well as see own IP.
+
+[ ] On Linux: get the .tar.gz, unpack it
+[ ] sudo ./galaxy42-static-start.sh (you must run this script! do not use ./galaxy42.elf directly without proper options or it will crash e.g. with SIGBUS)
+[ ] + same when:  ~/other-dir ; sudo ~/sources-dir/tunserver.elf
+[ ] to not run as root, add linux caps CAP_NET_ADMIN on the binary, then repeat above executions as user, not as root
+
+On macosx: currently not supporting this untill we resolve bug#J278
+

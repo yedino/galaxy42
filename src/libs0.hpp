@@ -35,6 +35,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 #include "c_tnetdbg.hpp"
+#include "strings_utils_simple.hpp"
 
 using std::string;
 using std::shared_ptr;
@@ -58,6 +59,9 @@ using std::ostringstream;
 using std::endl;
 
 using boost::numeric_cast;
+
+using std::runtime_error;
+using std::invalid_argument;
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 #define SVAR(x) #x << " = " << x
@@ -192,6 +196,10 @@ template <typename TIn, typename TOut> bool ranges_overlap_oc_ne_asserted(TIn st
  * @note It asserts also that the given ranges are not-empty and valid (start<end).
  */
 template <typename TIn, typename TOut> void assert_not_ranges_overlap_oc_ne(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
+	_UNUSED(start1);
+	_UNUSED(end1);
+	_UNUSED(start2);
+	_UNUSED(end2);
 	assert( ! ranges_overlap_oc_ne_asserted(start1,end1, start2,end2) );
 }
 
@@ -229,7 +237,8 @@ using namespace std::string_literals;
 template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
 	if (!(ptr!=nullptr)) {
 		_erro("NULL pointer used! from func="<<func);
-		std::abort();
+        throw std::invalid_argument("Null pointer");
+        //std::abort();
 		//assert(ptr!=nullptr);
 	}
 	return ptr;

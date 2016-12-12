@@ -99,7 +99,6 @@ Q:	Fail to get xenial image from ubuntu server:
 A:	On some distributions (e.g kali linux) apt-cacher-ng is disabled at system startup and there is a need to start it manually:
 	``` $ sudo /etc/init.d/apt-cacher-ng start ```
 
-
 Q: Apt issue inside lxc-gitian machine: 403 Access to cache prohibited  (gitian-builder/var/install.log)
 	```./bin/gbuild:21:in `system!': failed to run on-target -u root apt-get update > var/install.log 2>&1 (RuntimeError)```
 

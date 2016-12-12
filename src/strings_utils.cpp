@@ -15,6 +15,7 @@ string_as_hex::string_as_hex(const string_as_bin & in) {
 	size_t in_size = in.bytes.size();
 	size_t size_mul = 2; // how much will the string expand
 	size_t in_size_max1 = ( std::numeric_limits<decltype(in_size)>::max() / size_mul ) ; // it will expand e.g. x2 (that is not entire limit yet)
+	_UNUSED(in_size_max1);
 	assert( in_size < in_size_max1 );
 	assert( in_size < (in_size_max1-1) ); // make sure no issue with ending C-string NULL
 	size_t retsize = in_size*size_mul; // this will be size of output
@@ -161,7 +162,7 @@ string_as_dbg::string_as_dbg(const char * data, size_t data_size, t_debug_style 
 
 void string_as_dbg::print(std::ostream & os, char v, t_debug_style style)
 {
-	UNUSED(style); // TODONOW
+	UNUSED(style); // TODONOW TODO
 	unsigned char uc = static_cast<unsigned char>(v);
 	signed char widthH=-1; // -1 is normal print, otherwise the width of hex
 	signed char widthD; // width of dec
