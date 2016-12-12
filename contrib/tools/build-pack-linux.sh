@@ -31,8 +31,7 @@ cp -ar "${dir_top}/share" "${dir_pack}/" || fail
 
 dir_static_libs="$dir_pack/staticlibs"
 mkdir -p "$dir_static_libs/" || fail
-cp /usr/lib/x86_64-linux-gnu/gconv/UTF-32.so "${dir_static_libs}/" || fail
-cp /usr/lib/x86_64-linux-gnu/gconv/gconv-modules "${dir_static_libs}/" || fail
+cp /usr/lib/x86_64-linux-gnu/gconv/* "${dir_static_libs}/" || fail
 
 cp "${dir_top}/contrib/add_scripts_build_linux_static/galaxy42-static-start.sh" "${dir_pack}/" || fail
 
