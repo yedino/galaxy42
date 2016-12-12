@@ -127,19 +127,23 @@ Section
 	${EndIf}
 
 	# translation file
+	CreateDirectory $INSTDIR\share\locale\en\LC_MESSAGES\
 	FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\g42bashutils.mo         bin/noarch/share/locale/en/LC_MESSAGES/g42bashutils.mo
 	FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\galaxy42_installer.mo   bin/noarch/share/locale/en/LC_MESSAGES/galaxy42_installer.mo
 	FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\galaxy42_main.mo        bin/noarch/share/locale/en/LC_MESSAGES/galaxy42_main.mo
 	FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\galaxy42_scripts.mo     bin/noarch/share/locale/en/LC_MESSAGES/galaxy42_scripts.mo
 
+	CreateDirectory $INSTDIR\share\locale\pl\LC_MESSAGES\
 	FILE /oname=$INSTDIR\share\locale\pl\LC_MESSAGES\g42bashutils.mo         bin/noarch/share/locale/pl/LC_MESSAGES/g42bashutils.mo
 	FILE /oname=$INSTDIR\share\locale\pl\LC_MESSAGES\galaxy42_installer.mo   bin/noarch/share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 	FILE /oname=$INSTDIR\share\locale\pl\LC_MESSAGES\galaxy42_main.mo        bin/noarch/share/locale/pl/LC_MESSAGES/galaxy42_main.mo
 	FILE /oname=$INSTDIR\share\locale\pl\LC_MESSAGES\galaxy42_scripts.mo     bin/noarch/share/locale/pl/LC_MESSAGES/galaxy42_scripts.mo
 
+	CreateDirectory $INSTDIR\share\locale\ru\LC_MESSAGES\
 	FILE /oname=$INSTDIR\share\locale\ru\LC_MESSAGES\galaxy42_installer.mo   bin/noarch/share/locale/ru/LC_MESSAGES/galaxy42_installer.mo
 	FILE /oname=$INSTDIR\share\locale\ru\LC_MESSAGES\galaxy42_main.mo        bin/noarch/share/locale/ru/LC_MESSAGES/galaxy42_main.mo
 
+	CreateDirectory $INSTDIR\share\locale\uk\LC_MESSAGES\
 	FILE /oname=$INSTDIR\share\locale\uk\LC_MESSAGES\galaxy42_installer.mo   bin/noarch/share/locale/uk/LC_MESSAGES/galaxy42_installer.mo
 	FILE /oname=$INSTDIR\share\locale\uk\LC_MESSAGES\galaxy42_main.mo        bin/noarch/share/locale/uk/LC_MESSAGES/galaxy42_main.mo
 
