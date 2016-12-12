@@ -49,6 +49,29 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
 
+## Developing and code details
+
+### Startup of TUN/TAP card
+
+Startup and error reporting is as follows:
+
+```
+1) low-level code, in pure C, reports error via syserr.h struct t_syserr
+NetPlatform_addAddress(..) and NetPlatform_setMTU(..)
+depends/cjdns-code/NetPlatform_darwin.c
+depends/cjdns-code/NetPlatform_linux.c
+
+2) medium code, in C++, reports errors via exceptions:
+	Wrap_NetPlatform_addAddress(..) - throws
+	Wrap_NetPlatform_setMTU(..) - throws
+this is called by:
+	c_tun_device*::set_ipv6_address(..)
+	c_tun_device*::set_mtu(..)
+and this throws proper tuntap_error*
+
+3) tunserver.c will catch then tuntap_error* and inform user
+```
+
 ## Developing translations
 
 ### Writting the code in translatable way
@@ -161,5 +184,50 @@ but remember also about do-scripts (e.g. `./do`, `build-extra-libs.sh`).
 
 + in C++ code use it simply by checking the EXTLEVEL like `#if EXTLEVEL_IS_NORMAL` (see project.hpp for alternatives)
 + or create an `ENABLE_NEWTHING` as described for library and use it like that
+
+# Technical docs
+
+## RPC protocol
+
+```
+
+RPC/Json for GUI (now being developed)
+
+There are two Sides of RPC use.
+
+Sides send eachother messages. Each message has JSON text in it (utf8).
+
+Messages are converted into armoredmessages by adding few (1+4 = 5) bytes in front.
+Armoredmessages are merged together into a bytestream.
+This bytestream is cut into chunks and sent using some transport.
+A transport could be TCP connection to localhost e.g. implemented with boost::asio.
+
+Ech armoredmessage has following format: (byte means octet with unsigned number 0..255)
+
+1 byte 0xFF
+var int of 1,2,4 or 8 bytes representing N
+N bytes - the message
+
+Transport must deliver all chunks without loss and in-order.
+
+1 chunk can have 0, 1, or more armmsg or their parts (begining of armmsg, middle part of it, one of middle parts of it,
+the end of it, or entire).
+
+Example:
+message: {msg:"ok"}
+armmsg:  0xFF 0x0A {msg:"ok"}
+message: {foo:123}
+message: 0xFF 0x09 {foo:123}
+stream:  0xFF 0x0A {msg:"ok"} 0xFF 0x09 {foo:123}
+any possible chunking can appear.
+it can even cut away the "header" of armmsg
+
+
+TODO verify this with example GUI code.
+
+
+
+```
+
 
 

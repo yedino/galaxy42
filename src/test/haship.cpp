@@ -36,6 +36,7 @@ void addr_is_invalid(string s1) {
 	EXPECT_THROW( fun1() , std::invalid_argument);
 }
 
+
 TEST(haship, speciall_addresses) {
 	addr_is_same("0000:0000:0000:0000:0000:0000:0000:0000",
 		{
@@ -111,3 +112,61 @@ TEST(haship, invalid_addresses) {
 	addr_is_invalid("ffff::aaaa::bbbb");
 }
 
+TEST(haship, print){
+  c_haship_addr empty_ip = c_haship_addr();
+  
+  ostringstream empty_haship;
+  empty_ip.print(empty_haship);
+  EXPECT_EQ(empty_haship.str(),"hip:00000000000000000000000000000000");
+  
+}
+
+/*
+TEST(haship, tag_pubkey){
+  const c_haship_pubkey mykey='2001:0db8:0a0b:12f0:0000:0000:0000:0001';
+  c_haship_addr key = c_haship_addr(c_haship_addr::tag_constr_by_hash_of_pubkey() , mykey);
+  ostringstream haship;
+  key.print(haship);
+  std::cout<<"TEST\n\n\n"<<haship<<endl;
+  EXPECT_EQ(haship.str(),"");
+}
+*/
+TEST(haship, tag_dot){
+  const t_ipv6dot mydot="2001:0db8:0a0b:12f0:0000:0000:0000:0001";
+  c_haship_addr dot = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot() , mydot);
+  ostringstream haship;
+  dot.print(haship);
+  EXPECT_EQ(haship.str(),"hip:20010db80a0b12f00000000000000001");
+}
+/*
+TEST(haship, tag_bin){
+  const t_ipv6bin mybin;
+  c_haship_addr bin = c_haship_addr(c_haship_addr::tag_constr_by_addr_bin() , mybin);
+  ostringstream haship;
+  bin.print(haship);
+  std::cout<<"TEST\n\n\n"<<haship.str()<<endl;
+  //EXPECT_EQ(haship.str(),"");
+}
+
+TEST(haship, c_haship_pubkey){
+  c_haship_pubkey empty_pubkey = c_haship_pubkey();
+  ostringstream empty_pubkey_ostr;
+  empty_pubkey.print(empty_pubkey_ostr);
+  EXPECT_EQ(empty_pubkey_ostr.str(),"");
+}
+
+TEST(haship, string_as_bin){
+  const string_as_bin pubkey_bin;
+  c_haship_pubkey pubkey = c_haship_pubkey();
+  ostringstream pubkey_bin_ostr;
+  pubkey.print(pubkey_bin_ostr);
+  EXPECT_EQ(pubkey_bin_ostr.str(),"");
+}*/
+
+
+TEST (haship, is_galaxy){
+  c_haship_addr address1 = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot() , "2001:0db8:0a0b:12f0:0000:0000:0000:0001");
+  EXPECT_FALSE(addr_is_galaxy(address1));
+  c_haship_addr address2 = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot() , "fd42:0db8:0a0b:12f0:0000:0000:0000:0001");
+  EXPECT_TRUE(addr_is_galaxy(address2));
+}

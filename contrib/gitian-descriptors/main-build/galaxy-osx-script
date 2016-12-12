@@ -1,0 +1,175 @@
+#!/bin/bash
+# see below for LICENCE information, it can differ for this files or it's fragments.
+
+
+function fail() {
+	echo -e "\nERROR (in $0): " "$@"
+	exit 1
+}
+
+OUTDIR="$1"
+export OUTDIR
+
+GALAXY_DIR="/home/ubuntu/build/galaxy42/"
+BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
+
+REFERENCE_DATETIME="2016-08-01 00:00:00"
+
+export FAKETIME="$REFERENCE_DATETIME"
+# variable from above yml config
+echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
+# debug
+
+### <LICENCE> - start of licence block - this code if possibly on other licence:
+### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/2c2d471e18f0601c2767cf516425b2ecfcfd2126/contrib/gitian-descriptors/gitian-linux.yml
+### (and possibly with local changes, see our git log)
+### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
+### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
+
+WRAP_DIR="$HOME/wrapped"
+
+HOSTS="x86_64-apple-darwin11"
+
+CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+# CONFIGFLAGS=""
+
+FAKETIME_HOST_PROGS=""
+FAKETIME_PROGS="date ar ranlib dmg genisoimage"
+
+HOST_CFLAGS="-O2 -g"
+HOST_CXXFLAGS="-O2 -g"
+HOST_LDFLAGS=-static-libstdc++
+
+# importat:
+export GZIP="-9n"
+export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+export TZ="UTC"
+
+# ok?
+export BUILD_DIR=`pwd`
+
+mkdir -p ${WRAP_DIR}
+if test -n "$GBUILD_CACHE_ENABLED"; then
+	export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+	export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+fi
+
+function create_global_faketime_wrappers {
+	for prog in ${FAKETIME_PROGS}; do
+		out="${WRAP_DIR}/${prog}"
+		echo "" > "$out"
+		echo '#!/bin/bash' > "$out"
+		echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> "$out"
+		echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
+		echo "export FAKETIME=\"$1\"" >> "$out"
+		echo '$REAL "$@"' >> "$out"
+		chmod +x "$out"
+	done
+}
+
+function create_per-host_faketime_wrappers {
+	for i in $HOSTS; do
+		for prog in ${FAKETIME_HOST_PROGS}; do
+			out="${WRAP_DIR}/${i}-${prog}"
+			echo "" > "$out"
+			echo '#!/bin/bash' >> "$out"
+			echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> "$out"
+			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
+			echo "export FAKETIME=\"$1\"" >> "$out"
+			echo '$REAL "$@"' >> "$out"
+			chmod +x "$out"
+		done
+	done
+}
+
+# Create faketime timestamp
+
+# Faketime for depends so intermediate results are comparable
+export PATH_orig=${PATH}
+create_global_faketime_wrappers "$FAKETIME"
+create_per-host_faketime_wrappers "$FAKETIME"
+export PATH=${WRAP_DIR}:${PATH}
+
+pushd ${GALAXY_DIR} || fail
+
+BASEPREFIX=`pwd`/depends
+mkdir -p ${BASEPREFIX}/SDKs
+tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.11.sdk.tar.gz
+
+# Build dependencies for each host
+for i in $HOSTS; do
+	make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+done
+
+popd
+
+# Faketime for binaries
+export PATH=${PATH_orig}
+create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+export PATH=${WRAP_DIR}:${PATH}
+
+# Create the release tarball using (arbitrarily) the first host
+
+# ./autogen.sh # delete
+# CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
+
+
+printf "\n\n\nDoing boost static build\n\n\n"
+
+printf "\nTEST TOOLS (in linux script):\n"
+set -x
+which gcc
+which ar
+which ranlib
+gcc -v || fail "test gcc"
+g++ -v || fail "test g++"
+ar --version || fail "test ar"
+ranlib --version || fail "test ranlib"
+g++ -print-prog-name=ar
+set +x
+printf "\n\n"
+
+#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
+# sh
+# printf "\n\n=== EXITED TEST SHELL ==="
+# sleep 1 # XXX
+
+pushd "${GALAXY_DIR}" || fail
+
+# version not ready for static build
+# contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+popd || fail
+echo "\nAll done regarding boost.\n"
+
+# *** main build starts here ***
+pushd galaxy42
+echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+
+export CC=clang
+export CXX=clang++
+
+git clean -fdx
+# make dist # delete
+COVERAGE=0 EXTLEVEL=0 \
+#	BUILD_STATIC=1 
+#	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+	./do --go || fail "Failed to do the main build of our project"
+#############################################
+
+echo -e "\n\nBuild is done.\n\n"
+popd
+
+
+echo -e "\n\nBuild will start the linux packer.\n"
+pushd "${GALAXY_DIR}" || fail
+echo "In PWD=$PWD"
+contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
+popd || fail
+
+### </LICENCE> - end of licence block
+
+echo "Entire script in Gitian done"
+date
+

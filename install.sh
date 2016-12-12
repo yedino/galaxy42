@@ -130,6 +130,7 @@ function install_for_build() {
 
 
 		install_packages  g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext
+		install_packages libboost-locale-dev
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
 		# EXTLEVEL fftw-devel
@@ -275,6 +276,38 @@ function install_build_gitian() {
 	needrestart_lxc=1
 }
 
+function install_captool() {
+	install_for_touse
+	install_for_devel
+	install_packages libcap2-bin  sudo
+	install_packages_NOW # we need sudo right now
+
+	echo "--------------------------------------------------------------"
+
+	pwd="$PWD"
+	#./share/script/install-as-root/setcap_scripts/install
+	cd ./share/script/install-as-root/setcap_scripts/
+	run_with_root_privilages "./install" "-y" || fail "Installer of the captool failed."
+
+
+	echo "--------------------------------------------------------------"
+	echo "--------------------------------------------------------------"
+	echo "Installing 'captool' :"
+	echo
+	echo "Now we will open sudo configuration program (visudo)"
+	echo
+	echo "In that program, copy/paste following line:"
+	echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/setcap_net_admin --normal -u --current -f *"
+	echo "... but, replace the first word ('alice') with the user name of the user that should be allowed to build this program and grant it CAP_NET_ADMIN rights"
+	echo ""
+	echo "Press ENTER when ready to edit the configuration."
+	echo ""
+	read _
+	run_with_root_privilages "visudo" || fail "Program visudo (for captool) failed."
+
+	cd "$pwd"
+}
+
 function install_languages() {
 	printf "\n%s\n\n" "Install languages."
 	contrib/tools/galaxy42-lang-update-all || fail "Update languages"
@@ -335,10 +368,10 @@ response_menu_task=""
 
 if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
 if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
-if [[ "$response" == "devel2" ]] ; then response_menu_task="warn build touse devel devel2 bgitian verbose" ; fi
+if [[ "$response" == "devel2" ]] ; then response_menu_task="warn build touse devel devel2 bgitian verbose captool" ; fi
 if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect" ; fi
 if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect" ; fi
-if [[ "$response" == "x_devel2" ]] ; then response_menu_task="build touse devel devel2 bgitian autoselect" ; fi
+if [[ "$response" == "x_devel2" ]] ; then response_menu_task="build touse devel devel2 bgitian autoselect captool" ; fi
 if [[ "$response" == "custom" ]] ; then
 # shellcheck disable=SC2069
 response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$programname:")"  23 76 18  \
@@ -346,6 +379,7 @@ response=$( abdialog  --checklist  "$(eval_gettext "How do you want to use \$pro
 	"touse"         "$(gettext "menu_task_touse")" "on" \
 	"devel"         "$(gettext "menu_task_devel")" "off" \
 	"devel2"        "$(gettext "menu_task_devel") 2" "off" \
+	"captool"       "$(gettext "menu_task_captool")" "off" \
 	"bgitian"       "$(gettext "menu_task_bgitian")" "off" \
 	"warn"          "$(gettext "menu_task_warn")" "on" \
 	"verbose"       "$(gettext "menu_task_verbose")" "on" \
@@ -396,6 +430,11 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			warnings_text="${warnings_text}$(gettext "warning_bgitian")\n" # run lxc as root, set special NIC card/bridge
 			warn2_net=1 # for special LXC network
 			warn_root=1 # for LXC and maybe running gitian too (perhaps avoidable?)
+			warn_ANY=1
+		;;
+		captool)
+			warnings_text="${warnings_text}$(gettext "warning_captool")\n" # captool
+			warn_root=1 # for captool
 			warn_ANY=1
 		;;
 		autoselect)
@@ -453,6 +492,9 @@ read -r -a tab <<< "$response_menu_task" ; for item_tab in "${tab[@]}" ; do
 		;;
 		bgitian)
 			install_build_gitian
+		;;
+		captool)
+			install_captool
 		;;
 	esac
 

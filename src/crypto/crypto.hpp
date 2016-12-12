@@ -57,6 +57,7 @@ it has bugs and 'typpos'.
 
 #include "crypto_basic.hpp"
 #include "multikeys.hpp"
+#include "httpdbg/httpdbg-server.hpp"
 
 /**
  * @defgroup antinet_crypto Antinet Crypto
@@ -249,6 +250,7 @@ class c_symhash_state final : public c_crypto_system {
 class c_stream final /* because strange ctor init list functions */
 : public c_crypto_system
 {
+    friend class ::c_httpdbg_raport;
 	private:
 		t_symkey m_KCT; ///< the main KCT for this stream
 
@@ -320,6 +322,7 @@ class c_stream final /* because strange ctor init list functions */
  * A CT, can be used to send data in both directions.
 */
 class c_crypto_tunnel {
+    friend class ::c_httpdbg_raport;
 	private:
 		// TODO why 65:
 		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1

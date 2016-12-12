@@ -7,6 +7,8 @@
 
 #include <boost/any.hpp>
 
+// ====================================================================
+
 
 enum t_debug_style {
 	e_debug_style_object=0,

@@ -11,6 +11,9 @@ share/locale/*/LC_MESSAGES/galaxy42_scripts.mo
 # directories copied from source
 # (the source is e.g. git submodule but in other location)
 
+# mac
+.DS_Store
+
 # also other libs
 
 build_extra/

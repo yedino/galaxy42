@@ -1139,7 +1139,7 @@ void multi_key_sign_generation_benchmark(const size_t seconds_for_test_case) {
 	while (std::chrono::steady_clock::now() - start_point < std::chrono::seconds(seconds_for_test_case)) {
 		t_crypto_nonce nonce_used;
 		auto msg1s = AliceCT.box(msg, nonce_used);
-		BobCT.unbox(msg1s, nonce_used);
+		// BobCT.unbox(msg1s, nonce_used);
 		encryption_data_size += msg.size();
 	}
 	stop_point = std::chrono::steady_clock::now();

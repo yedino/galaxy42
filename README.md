@@ -20,7 +20,7 @@ This program creates an secure connection between 2 computers (like VPN).
  * only one of the computers needs to have public Internet IP address (in future none will need)
  * (not yet officially released) option to mesh many computers together
 
-To use it from Command Line, simply:
+To **use this program** from Command Line, simply:
 
 on 1st computer run command: `./tunserver.elf`
 the program will start and will **print you on screen what is the virtual IP address** that is assigned to it by our program.
@@ -33,13 +33,47 @@ That is all!
 Now your computers are connected together, try ping6 VIRTUALIP1 from 2nd computer, all connections (browser, ftp, ssh etc)
 should work too.
 
+To **build this program from source** we recommend:
+  * for **Windows**, in **Microsoft Visual Studio** - see [doc/msvc-instructions.md](doc/msvc-instructions.md)
+  * for Windows, in **Cygwin/Mingw** compiler - see [doc/cygwin-instructions.md](doc/cygwin-instructions.md)
+  * for **Mac Os X**, in Clang compiler - see [doc/build-osx-native.md](doc/build-osx-native.md)
+  * for **Linux**, in GCC (or Clang) compiler - see [doc/build-linux.md](doc/build-linux.md)
+  * other Unix systems might work - see [doc/build-other-unix.md](doc/build-other-unix.md)
+  * Browse directory with more documentation: [doc/](doc/)
+  * *advanced users:* to recreate **yourself** the **official binary** for Windows/Linux using **Gitian** deterministic-builds, see [doc/build-gitian.md](doc/build-gitian.md)
+
 Backup: your **private keys** that give ownership of your virtual IP address by default are in `~/.config/antinet/`
 (or just the `galaxy42/wallet` there).
 
-This program will allow to do much much more in future (full public mesh) but this are plans for advanced testers (see below).
+This program will allow to do **much more in future** (full public mesh, scoring, donations/payments) but this are plans for advanced testers (see below).
 
 For more details, including correct naming and **glossary**, and advanced technical topics **for developers** and "hackers", see also:
 [doc/hacking.md](doc/hacking.md).
+
+### Release notes
+
+### Version v0.3.0
+
+* For users of official binary distribution:
+  * Connections seem encrypted, but are not yet authenticated correctly.
+  * You can not crossbuild / Gitian build for Mac OS X target, therefore we do not provide official Macintosh version yet. (bug#278)
+* For people building from source
+  * (Same remarks as for users)
+  * On Windows, building with MSVC compiler, the messages/languages will not work even if you provide .mo files correctly. (bug#J332)
+  * On Windows, you can try to build the .mo language files as in [doc/translation-instructions-cygwin.txt](doc/translation-instructions-cygwin.txt), or copy the .mo files from other platforms
+
+Older release notes are in [Changelog.md](Changelog.md).
+
+=== Using pre-built binary ===
+
+On windows: get the installer .exe, run it.
+The Program files/galaxy42/tunserver.elf.exe
+
+Program will be installed as service and will run on boot.
++ disable the service. Run the installed .exe manually. It will work and you can specify --peer option ... as well as see own IP.
+
+On macosx: currently not supporting this untill we resolve bug#J278
+
 
 * * *
 

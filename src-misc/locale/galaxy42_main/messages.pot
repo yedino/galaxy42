@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-05 14:56+0200\n"
+"POT-Creation-Date: 2016-12-08 11:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,9 +96,6 @@ msgid "L_exit_from_connect"
 msgstr ""
 
 msgid "L_bad_peer_format"
-msgstr ""
-
-msgid "L_what_exception_program_throwow"
 msgstr ""
 
 msgid "L_bad_format_of_input_ip_address"
@@ -251,19 +248,7 @@ msgstr ""
 msgid "L_lisodium_init_err"
 msgstr ""
 
-msgid "L_what_newKey_do"
-msgstr ""
-
-msgid "L_what_newKeyFile_do"
-msgstr ""
-
-msgid "L_what_keyType_do"
-msgstr ""
-
 msgid "L_parse_program_option"
-msgstr ""
-
-msgid "L_gen_combo_crypto_key_require_examples"
 msgstr ""
 
 msgid "L_what_demo_do"
@@ -317,5 +302,35 @@ msgstr ""
 msgid "L_what_toverifyDataFile_do"
 msgstr ""
 
-msgid "L_what_signatureFile_do"
+msgid "L_what_httpDbgPort_do"
+msgstr ""
+
+msgid "L_starting_httpdbg_server"
+msgstr ""
+
+msgid "L_starting_main_server"
+msgstr ""
+
+msgid "L_main_server_ended"
+msgstr ""
+
+msgid "L_httpdbg_server_ended"
+msgstr ""
+
+msgid "L_what_exception_program_throw"
+msgstr ""
+
+msgid "L_max_number_of_tested_cards_limit_reached"
+msgstr ""
+
+msgid "L_connection_to_tun_timeout"
+msgstr ""
+
+msgid "L_searching_for_virtual_card"
+msgstr ""
+
+msgid "L_found_virtual_card_at_slot"
+msgstr ""
+
+msgid "L_get_home_directory: "
 msgstr ""
