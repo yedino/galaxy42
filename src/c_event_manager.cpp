@@ -19,7 +19,7 @@ void c_event_manager_linux::init() {
 }
 
 void c_event_manager_linux::wait_for_event() {
-	_info("Selecting. m_tun_fd="<<m_tun_fd);
+	_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
 	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
@@ -29,7 +29,7 @@ void c_event_manager_linux::wait_for_event() {
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
-	_info("Selecting for fd_max="<<fd_max);
+	_dbg1("Selecting for fd_max="<<fd_max);
 	auto select_result = select( fd_max+1, &m_fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
 	_assert(select_result >= 0);
 }
