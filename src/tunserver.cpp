@@ -710,6 +710,12 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	c_routing_manager::c_route_reason reason,
 	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
+	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
+	if (m_peer.size() == 0) {
+		_warn("I have no peers, I can not route anywhere.");
+		return false;
+	}
+
 	// --- choose next hop in peering ---
 
 	// try direct peers:
@@ -755,7 +761,9 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 	const char *buff, size_t buff_size,
 	c_haship_addr src_hip, c_haship_addr dst_hip,
-	c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used) {
+	c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
+{
+	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
 	try {
 		_info("Sending data between end2end " << src_hip <<"--->" << dst_hip);
 		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
@@ -1110,18 +1118,18 @@ void c_tunserver::event_loop(int time) {
 				}
 				else
 				{ // received data that is addresses to someone else
-#if 0
+#if 1
 					auto data_route_ttl = requested_ttl - 1;
 					const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 					if (data_route_ttl > limit_incoming_ttl) {
-						_info("We were requested to route (data) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
+						_warn("We were requested to route (data) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 						data_route_ttl=limit_incoming_ttl;
 					}
 
 					_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
 					if (sender_as_peering_ptr != nullptr) {
 						if (sender_as_peering_ptr->get_limit_points() < 0) {
-							_dbg1("drop packet");
+							_dbg1("drop packet (in ROUTING) because points");
 							continue;
 						}
 						// sender_as_peering_ptr->decrement_limit_points();
