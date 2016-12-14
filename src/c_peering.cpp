@@ -52,6 +52,10 @@ c_haship_addr c_peering::get_hip() const { return m_haship_addr; }
 c_haship_pubkey * c_peering::get_pub() const { return m_pubkey.get(); }
 c_ip46_addr c_peering::get_pip() const { return m_peering_addr; }
 
+void c_peering::set_pip( c_ip46_addr addr) {
+	m_peering_addr = addr;
+}
+
 void c_peering::set_pubkey( std::unique_ptr<c_haship_pubkey> && pubkey ) {
 	m_pubkey = std::move(pubkey);
 }

@@ -510,15 +510,37 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
 unique_ptr<c_haship_pubkey> && pubkey)
 {
+	_dbg1("Update (or add) peer reference " << peer_ref << ", pubkey=" << (*pubkey));
+	{
+		// auto hip_from_pubkey = pubkey->get_ipv6_string_hexdot(); // re-confirm there that the haship matches the pubkey, just to be sure:
+		c_haship_addr hip_from_pubkey( c_haship_addr::tag_constr_by_hash_of_pubkey() , *pubkey );
+
+		if (hip_from_pubkey != peer_ref.haship_addr) {
+			_throw_error(runtime_error(join_string_sep("Pubkey",*pubkey," has hip not matching reference",peer_ref)));
+		}
+	}
+
+	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
+
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
 		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+		_fact("Adding new peer " << peer_ref << " with pubkey=" << (*pubkey));
 		peering_ptr->set_pubkey(std::move(pubkey));
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	} else { // update existing
 		auto & peering_ptr = find->second;
-		peering_ptr->set_pubkey(std::move(pubkey));
+		const auto & old_pip = peering_ptr->get_pip();
+		const auto & new_pip = peer_ref.peering_addr;
+		if (old_pip == new_pip) {
+			_info("This peer "<<(*pubkey)<<" has unchanged IP "<< new_pip);
+		}
+		else {
+			_info("This peer "<<(*pubkey)<<" CHANGES IP, from " << old_pip << " to " << new_pip );
+			peering_ptr->set_pubkey(std::move(pubkey));
+			peering_ptr->set_pip( new_pip );
+		}
 	}
 }
 
@@ -937,10 +959,7 @@ void c_tunserver::event_loop(int time) {
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
 			// TODO warn if src_hip is not our hip
 
-			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
 			if (!addr_is_galaxy(dst_hip)) {
-
-
 				_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
 			}
