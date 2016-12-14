@@ -1,5 +1,7 @@
 #include "c_event_manager.hpp"
 #include "c_tnetdbg.hpp"
+#include <thread>
+#include <chrono>
 
 #ifdef __linux__
 #include <limits>
@@ -19,7 +21,8 @@ void c_event_manager_linux::init() {
 }
 
 void c_event_manager_linux::wait_for_event() {
-	_info("Selecting. m_tun_fd="<<m_tun_fd);
+
+	_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
 	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
@@ -29,9 +32,10 @@ void c_event_manager_linux::wait_for_event() {
 	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	_assert(fd_max >= 1);
 	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
-	_info("Selecting for fd_max="<<fd_max);
+	_dbg1("Selecting for fd_max="<<fd_max);
 	auto select_result = select( fd_max+1, &m_fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
 	_assert(select_result >= 0);
+
 }
 
 bool c_event_manager_linux::receive_udp_paket() {
@@ -43,6 +47,7 @@ bool c_event_manager_linux::get_tun_packet() {
 }
 
 // __linux__
+
 #elif defined(_WIN32) || defined(__CYGWIN__) || defined (__MACH__)
 
 #if defined(__MACH__)
@@ -72,14 +77,30 @@ void c_event_manager_asio::wait_for_event() {
 	// TODO !!!
 	// poll_one is not blocking function, possible 100% CPU usage
 	// TODO use one io_service ojbect
-	if (m_tun_device.get().m_ioservice.poll_one() > 0) m_tun_event = true;
-	else m_tun_event = false;
-	if (m_udp_device.get().m_io_service.poll_one() > 0) m_udp_event = true;
-	else m_udp_event = false;
+
+	const auto time_start = std::chrono::steady_clock::now(); // time now
+	const auto timeout = std::chrono::seconds( 3 ); // timeout of this select
+
+	while(1) {
+
+		if (m_tun_device.get().m_ioservice.poll_one() > 0) m_tun_event = true;
+		else m_tun_event = false;
+
+		if (m_udp_device.get().m_io_service.poll_one() > 0) m_udp_event = true;
+		else m_udp_event = false;
+
+		if (m_udp_event || m_tun_event) break; // got event
+
+		const auto time_now = std::chrono::steady_clock::now(); // time now
+		if (time_now > time_start + timeout) break; // no event - timeout
+
+		// we wait - sleep a bit
+                std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
+	}
 }
 
 bool c_event_manager_asio::receive_udp_paket() {
-	if (m_udp_event) std::cout << "get udp packet" << std::endl;
+	// if (m_udp_event) std::cout << "get udp packet" << std::endl;
 	return m_udp_event;
 }
 
@@ -91,6 +112,7 @@ bool c_event_manager_asio::get_tun_packet() {
 #elif defined(__MACH__)
 
 // __mach__
+
 #else
 
 c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper) {

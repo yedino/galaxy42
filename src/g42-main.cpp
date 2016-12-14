@@ -475,6 +475,7 @@ int main(int argc, char **argv) {
 //			("http-dbg-port", "COMMAND: Set http debugger port")
                         ("http-dbg-port", po::value<int>()->default_value(9080), boost::locale::gettext("L_what_httpDbgPort_do").c_str())
             #endif
+                        ("net-hello-interval", po::value<int>()->default_value(3), boost::locale::gettext("L_what_netHelloInterval_do").c_str())
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -939,7 +940,7 @@ int main(int argc, char **argv) {
 			}
 
 			// ------------------------------------------------------------------
-
+            myserver.set_argm(shared_ptr<po::variables_map>(new po::variables_map(argm)));
 			auto peers_count = myserver.get_my_stats_peers_known_count();
 			if (peers_count) {
 				ui::action_info_ok("You will try to connect to up to " + std::to_string(peers_count) + " peer(s)");
