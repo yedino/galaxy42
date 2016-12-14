@@ -537,7 +537,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 			_info("This peer "<<(*pubkey)<<" has unchanged IP "<< new_pip);
 		}
 		else {
-			_info("This peer "<<(*pubkey)<<" CHANGES IP, from " << old_pip << " to " << new_pip );
+			_fact("This peer "<<(*pubkey)<<" CHANGES IP, from " << old_pip << " to " << new_pip );
 			peering_ptr->set_pubkey(std::move(pubkey));
 			peering_ptr->set_pip( new_pip );
 		}
