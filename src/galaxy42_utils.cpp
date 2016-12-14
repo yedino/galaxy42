@@ -36,7 +36,7 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	if (ec) _throw_error(runtime_error(join_string_sep("Invalid address (boost detected)", ip, ec)));
 	// boost::asio::ip::address_v6::from_string(r_ipv6, ec); // for ipv6
 
-	auto ip_bytes = ip_boost.to_bytes();
+	//auto ip_bytes = ip_boost.to_bytes();
 	assert( ip_bytes.size()==4 );
 	bool is_good_class = ip_boost.is_class_a() || ip_boost.is_class_b() || ip_boost.is_class_c()
 		|| ip_boost.is_loopback();
