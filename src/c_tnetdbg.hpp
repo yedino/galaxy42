@@ -36,7 +36,8 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 	::std::cerr<< X; \
 	do { DBGLVL(LVL_EXTRA); ::std::cerr << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	std::cerr << "\033[0m" << ::std::endl; } while(0)
-#define _fact(X) _fact_level( 90, 30, X)
+#define _stat(X) _fact_level( 90, 30, X)
+#define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 /// yellow code
 //        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 

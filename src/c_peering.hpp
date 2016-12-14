@@ -40,6 +40,8 @@ class c_peering { ///< An (mostly established) connection to peer
 		virtual c_haship_pubkey * get_pub() const; ///< gets "reference" to current pubkey; will be invlidated, use immediatelly
 		virtual c_ip46_addr get_pip() const;
 
+		virtual void set_pip( c_ip46_addr addr); ///< set physical ip of this peer, e.g. when it changed
+
 		virtual void set_pubkey( std::unique_ptr<c_haship_pubkey> && pubkey ); ///< consume this pubkey and set as mine
 		bool is_pubkey() const; ///< do we have a valid pubkey set
 		void add_limit_points(long int points);

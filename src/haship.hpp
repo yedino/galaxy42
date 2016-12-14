@@ -46,7 +46,7 @@ struct c_haship_pubkey;
 @class virtual hash-ip, e.g. ipv6, usable for ipv6-cjdns (fc00/8), and of course also for our ipv6-galaxy (fd42/16)
 */
 struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
-	struct tag_constr_by_hash_of_pubkey{};
+	struct tag_constr_by_hash_of_pubkey{}; // address is calculated from hash of given public key
 	struct tag_constr_by_addr_dot{}; // address is in form of t_ipv6dot
 	struct tag_constr_by_addr_bin{}; // address is in form of t_ipv6bin
 
@@ -60,7 +60,7 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	c_haship_addr(tag_constr_by_addr_bin x, const t_ipv6bin & data );
 
 	void print(ostream &ostr) const;
-    std::string get_hip_as_string(bool with_dots) const;
+	std::string get_hip_as_string(bool with_dots) const;
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 

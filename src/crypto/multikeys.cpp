@@ -157,16 +157,13 @@ string c_multikeys_pub::get_ipv6_string_hex() const {
 string c_multikeys_pub::get_ipv6_string_hexdot() const {
 	std::string hex_str = this->get_ipv6_string_hex();
 	std::string hexdot_str;
+	hexdot_str.reserve((4+1)*8); // four hexal digits plus ':', by 8 groups
 	for (size_t i = 0; i < hex_str.size(); ++i ) {
 		hexdot_str += hex_str.at(i);
-		if (i != 0
-			&& i+1 != hex_str.size()
-			&& ((i+1) % 4) == 0) {
-
-			hexdot_str += ":";
-		}
+		if ( (i != 0)
+			&& (i+1 != hex_str.size() )
+			&& ( ((i+1) % 4) == 0) ) { hexdot_str += ":";	}
 	}
-
 	return hexdot_str;
 }
 

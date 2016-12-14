@@ -178,6 +178,7 @@ class c_tunserver : public c_galaxy_node {
 	public:
 		c_tunserver();
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
+        void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
 		void configure_mykey(); ///<  load my (this node's) keypair
 		void run(int time = 0); ///< run the main loop
@@ -265,7 +266,7 @@ class c_tunserver : public c_galaxy_node {
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
-
+        shared_ptr< boost::program_options::variables_map > m_argm;
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
