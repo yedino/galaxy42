@@ -1,5 +1,7 @@
 #include "c_event_manager.hpp"
 #include "c_tnetdbg.hpp"
+#include <thread>
+#include <chrono>
 
 #ifdef __linux__
 #include <limits>
@@ -45,7 +47,6 @@ bool c_event_manager_linux::get_tun_packet() {
 }
 
 // __linux__
-
 
 #elif defined(_WIN32) || defined(__CYGWIN__) || defined (__MACH__)
 
@@ -94,7 +95,7 @@ void c_event_manager_asio::wait_for_event() {
 		if (time_now > time_start + timeout) break; // no event - timeout
 
 		// we wait - sleep a bit
-		std::this_thread::sleep_for( 50ms );
+                std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
 	}
 }
 
