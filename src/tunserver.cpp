@@ -410,6 +410,10 @@ void c_tunserver::set_desc(shared_ptr< boost::program_options::options_descripti
 	m_desc = desc;
 }
 
+void c_tunserver::set_argm(shared_ptr< boost::program_options::variables_map > argm) {
+    m_argm = argm;
+}
+
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
 
 const antinet_crypto::c_multikeys_pub & c_tunserver::read_my_IDP_pub() const {
@@ -875,7 +879,8 @@ void c_tunserver::event_loop(int time) {
 	c_counter counter_big(10,false);
 
 	this->peering_ping_all_peers();
-	const auto ping_all_frequency = std::chrono::seconds( 3 ); // how often to ping them
+
+    const auto ping_all_frequency = std::chrono::seconds( m_argm->at("net-hello-interval").as<int>() ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
