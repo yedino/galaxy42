@@ -903,6 +903,7 @@ void c_tunserver::event_loop(int time) {
         auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
 
 	while (time ? timer(time) : true) {
+		try { // ---
 
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
@@ -948,7 +949,6 @@ void c_tunserver::event_loop(int time) {
 		// TODO(r): program can be hanged/DoS with bad routing, no TTL field yet
 		// ^--- or not fully checked. need scoring system anyway
 
-		try { // ---
 		if (m_event_manager.get_tun_packet()) { // get packet from tun
 			anything_happened=true;
 			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
@@ -1326,12 +1326,15 @@ void c_tunserver::event_loop(int time) {
 		catch (std::exception &e) {
 			_warn("### !!! ### Parsing network data caused an exception: " << e.what());
 		}
+		catch (...) {
+			_erro("### !!! ### Parsing network data caused unknown exception type.");
+		}
 
 // stats-TODO(r) counters
 //		int sent=0;
 //		counter.tick(sent, std::cout);
 //		counter_big.tick(sent, std::cout);
-	}
+	} // while
 }
 
 void c_tunserver::run(int time) {
