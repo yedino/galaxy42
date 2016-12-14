@@ -51,7 +51,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
 }
 
 void c_haship_addr::print(ostream &ostr) const {
-	ostr << "hip:" << get_hip_as_string(true);
+	ostr << "hip=" << get_hip_as_string(true);
 }
 
 string c_haship_addr::get_hip_as_string(bool with_dots) const{
@@ -69,7 +69,7 @@ string c_haship_addr::get_hip_as_string(bool with_dots) const{
 ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
 
 void c_haship_pubkey::print(ostream &ostr) const {
-	ostr << "pub:" << ::to_debug(this->serialize_bin());
+	ostr << "pub=" << ::to_debug(this->serialize_bin());
 }
 ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	return ostr; }
 

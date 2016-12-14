@@ -717,11 +717,11 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 }
 
 void c_tunserver::debug_peers() {
-	_note("=== Debug peers ===");
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	if (!m_peer.size()) _stat("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_info("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
+		_stat("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -881,6 +881,7 @@ void c_tunserver::event_loop(int time) {
 
 	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
 	long int ping_all_count = 0; // how many times did we do that in fact
+	const auto idle_banner_frequency = std::chrono::seconds( 15 ); // how often to show banner/stats
 
 
 	// low level receive buffer
@@ -902,6 +903,9 @@ void c_tunserver::event_loop(int time) {
         double start = std::clock();
         auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
 
+	auto time_loop_start = std::chrono::steady_clock::now(); // time now
+	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
+
 	while (time ? timer(time) : true) {
 		try { // ---
 
@@ -919,6 +923,7 @@ void c_tunserver::event_loop(int time) {
 
 		auto time_now = std::chrono::steady_clock::now(); // time now
 
+
 		{
 			auto freq = ping_all_frequency;
 			if (ping_all_count < ping_all_count_low) freq = ping_all_frequency_low;
@@ -931,16 +936,17 @@ void c_tunserver::event_loop(int time) {
 		}
 
 		ostringstream oss;
-		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
+		oss <<	"Node " << m_my_name << " "
+			<< " has peer(s): " << get_my_stats_peers_known_count()
+			<< " has address: " << m_my_hip ;
 		const string node_title_bar = oss.str();
 
-
-		if (anything_happened || 1) {
+		/*if (anything_happened || 1) {
 			debug_peers();
-
 			string xx(10,'-');
 			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
+		*/
 
 		anything_happened=false;
 
@@ -1319,8 +1325,22 @@ void c_tunserver::event_loop(int time) {
 			}
 			// ------------------------------------
 
+		} // event: udp
+		else { _dbg3("No event/idle"); } // event: idle / nothing happened
+
+
+		{ // write periodical stats
+			bool doit=1;
+			if (time_last_idle != nullptr) {
+				if (*time_last_idle >= time_now - idle_banner_frequency) doit=0; // cancel the idle report if it's too soon
+			}
+
+			if (doit) {
+				time_last_idle = make_unique<decltype(time_now)>( time_now );
+				_stat("Status: " << node_title_bar);
+				debug_peers();
+			}
 		}
-		else _info("Idle. " << node_title_bar);
 
 		}
 		catch (std::exception &e) {
