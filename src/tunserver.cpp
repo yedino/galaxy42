@@ -1331,7 +1331,9 @@ void c_tunserver::event_loop(int time) {
 			// ------------------------------------
 
 		} // event: udp
-		else { _dbg3("No event/idle"); } // event: idle / nothing happened
+		else {
+			_dbg3("No event/idle");
+		} // event: idle / nothing happened
 
 
 		{ // write periodical stats
