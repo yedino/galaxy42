@@ -1,6 +1,3 @@
-
-
-
 === THE CURRENT METHOD ===
 
 ./download.sh provies all the dll's from system install of mingw, that is all.
@@ -76,4 +73,16 @@ http://mirror.switch.ch/ftp/mirror/cygwin/x86/setup.ini
 also remember to check also the noarch/ directory !
 
 
+=== generate_nsis_filelist.sh ===
 
+Do not add manulaly files to installer.nsi!
+generate_nsis_filelist.sh is a script that generates file list section for main nsis installer.nsi file.
+For now, to add new files to output galaxy42_installer.exe, put them in a:
+	bin/x64		-	64-bit version
+	bin/x86		-	32-bit version
+or	bin/noarch	-	both of the above
+
+and run:
+	$ ./bin/generate_nsis_filelist.sh
+
+END generate_nsis_filelist.sh ===
