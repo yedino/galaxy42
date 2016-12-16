@@ -117,7 +117,7 @@ TEST(haship, print){
   
   ostringstream empty_haship;
   empty_ip.print(empty_haship);
-  EXPECT_EQ(empty_haship.str(),"hip:00000000000000000000000000000000");
+  EXPECT_EQ(empty_haship.str(),"hip=0000:0000:0000:0000:0000:0000:0000:0000");
   
 }
 
@@ -136,7 +136,7 @@ TEST(haship, tag_dot){
   c_haship_addr dot = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot() , mydot);
   ostringstream haship;
   dot.print(haship);
-  EXPECT_EQ(haship.str(),"hip:20010db80a0b12f00000000000000001");
+  EXPECT_EQ(haship.str(),"hip=2001:0db8:0a0b:12f0:0000:0000:0000:0001");
 }
 /*
 TEST(haship, tag_bin){
