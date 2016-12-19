@@ -3,6 +3,9 @@
 #include "mo_reader.hpp"
 #include <cstring>
 
+std::atomic<bool> mo_file_reader::s_translation_map_ready(false);
+std::map<std::string, std::string> mo_file_reader::m_translation_map;
+
 #ifdef _WIN32
 	#include <windows.h>
 	#include <winnls.h>
@@ -12,8 +15,9 @@
 
 void mo_file_reader::read_file() {
 	const std::string filename = m_messages_dir + "/" + get_system_lang_short_name() + "/LC_MESSAGES/" + m_mo_filename;
-	m_ifstream.open(filename, std::ios::in | std::ios::binary); // TODO lang name
+	m_ifstream.open(filename, std::ios::in | std::ios::binary);
 	if (!m_ifstream.is_open()) throw std::runtime_error("mo file open error, filename: " + filename);
+
 	uint32_t magic_number = read_section();
 	if ((magic_number != 0x950412de) && (magic_number != 0xde120495))
 		throw std::runtime_error("mo file bad format (wrong magic number)");
@@ -49,6 +53,7 @@ void mo_file_reader::read_file() {
 
 		m_translation_map.emplace(std::move(orig_str), std::move(translate_str));
 	}
+	s_translation_map_ready = true;
 }
 
 void mo_file_reader::add_messages_dir(const std::string &path) {
@@ -72,6 +77,7 @@ void mo_file_reader::add_mo_filename(std::string &&name) {
 }
 
 std::string mo_file_reader::gettext(const std::string &original_string) {
+	if (!s_translation_map_ready) return original_string;
 	try {
 		return m_translation_map.at(original_string);
 	}

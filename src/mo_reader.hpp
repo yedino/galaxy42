@@ -3,6 +3,7 @@
 #ifndef MO_READER_HPP
 #define MO_READER_HPP
 
+#include <atomic>
 #include <fstream>
 #include <map>
 #include <string>
@@ -23,17 +24,17 @@ public:
 	void add_mo_filename(const std::string &name);
 	void add_mo_filename(std::string &&name);
 
-	std::string gettext(const std::string &original_string);
-	// TODO private
+	static std::string gettext(const std::string &original_string);
 
 private:
-	std::map<std::string, std::string> m_translation_map; ///< original string => translation
+	static std::map<std::string, std::string> m_translation_map; ///< original string => translation
 	uint32_t read_section();
 	std::string load_string_with_offset(size_t offset);
 	std::string get_system_lang_short_name() const; ///< returns 639-1 code
 	std::ifstream m_ifstream;
 	std::string m_messages_dir;
 	std::string m_mo_filename;
+	static std::atomic<bool> s_translation_map_ready;
 };
 
 #endif // MO_READER_HPP
