@@ -2,7 +2,7 @@
 
 #include "datastore.hpp"
 #include "text_ui.hpp"
-#include <boost/locale.hpp>
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#include <windows.h>
 #endif

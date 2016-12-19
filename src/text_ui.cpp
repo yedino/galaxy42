@@ -1,7 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "text_ui.hpp"
-#include <boost/locale.hpp>
+
 #include <string>
 #include <locale>
 #include "mo_reader.hpp"

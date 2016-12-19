@@ -4,7 +4,7 @@
 #ifndef C_TNETDBG_HPP
 #define C_TNETDBG_HPP
 
-#include <boost/locale.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
