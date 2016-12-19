@@ -3,6 +3,7 @@
 #ifndef MO_READER_HPP
 #define MO_READER_HPP
 
+#include <array>
 #include <atomic>
 #include <fstream>
 #include <map>
