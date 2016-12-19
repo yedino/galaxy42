@@ -27,6 +27,11 @@ packages:
 - "libboost-filesystem-dev"
 - "libboost-locale-dev"
 - "libboost-program-options-dev"
+- "clang"
+- "llvm-dev"
+- "libxml2-dev"
+- "uuid-dev"
+- "libssl-dev"
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
