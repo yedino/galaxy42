@@ -1,7 +1,6 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
-
 function fail() {
 	echo -e "\nERROR (in $0): " "$@"
 	exit 1
@@ -10,10 +9,15 @@ function fail() {
 OUTDIR="$1"
 export OUTDIR
 
-GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
+readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
+readonly BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
 
-REFERENCE_DATETIME="2016-08-01 00:00:00"
+# build osx cross toolchain
+pushd "${BUILD_TOP_DIR}"
+	"${GALAXY_DIR}/contrib/macdeploy/build-cross-toolchain.sh"
+popd
+
+readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
 
 export FAKETIME="$REFERENCE_DATETIME"
 # variable from above yml config
@@ -29,16 +33,16 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 WRAP_DIR="$HOME/wrapped"
 
 HOSTS="x86_64-apple-darwin11"
+COMPILERS="o64-clang o64-clang++"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-# CONFIGFLAGS=""
 
 FAKETIME_HOST_PROGS=""
 FAKETIME_PROGS="date ar ranlib dmg genisoimage"
 
 HOST_CFLAGS="-O2 -g"
 HOST_CXXFLAGS="-O2 -g"
-HOST_LDFLAGS=-static-libstdc++
+HOST_LDFLAGS="-static-libstdc++"
 
 # importat:
 export GZIP="-9n"
@@ -79,6 +83,15 @@ function create_per-host_faketime_wrappers {
 			echo "export FAKETIME=\"$1\"" >> "$out"
 			echo '$REAL "$@"' >> "$out"
 			chmod +x "$out"
+		done
+		for prog in ${COMPILERS}; do
+			echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+			echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+			echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+			echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
+			echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+			chmod +x ${WRAP_DIR}/${i}-${prog}
 		done
 	done
 }
@@ -131,15 +144,13 @@ g++ -print-prog-name=ar
 set +x
 printf "\n\n"
 
-#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
-# sh
-# printf "\n\n=== EXITED TEST SHELL ==="
-# sleep 1 # XXX
+export CC=o64-clang
+export CXX=o64-clang++
 
 pushd "${GALAXY_DIR}" || fail
 
-# version not ready for static build
-# contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+	contrib/gitian-descriptors/libboost-build/build-boost-osx || fail "Failed to build dependence - boost lib for osx"
+
 popd || fail
 echo "\nAll done regarding boost.\n"
 
@@ -147,8 +158,6 @@ echo "\nAll done regarding boost.\n"
 pushd galaxy42
 echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
-export CC=clang
-export CXX=clang++
 
 git clean -fdx
 # make dist # delete
