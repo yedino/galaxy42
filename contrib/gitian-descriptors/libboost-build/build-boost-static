@@ -2,6 +2,7 @@
 
 # importing functions for boost submodules download
 . /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
+. /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost
 
 function fail() {
     printf "\nERROR: the script failed (see above messages).\n\n"
@@ -11,7 +12,8 @@ function fail() {
 ## clone and build boost
 printf "\n\n=========================================================================\n\n"
 printf "boost...\n\n"
-BOOST_DIR="$HOME/build/boost/"
+readonly BOOST_DIR="$HOME/build/boost/"
+
 cd "$HOME/build/" || fail "Can not enter build dir"
 
 option_download_skip=0  # XXXXXXXXXXXXXXXXX
@@ -20,36 +22,20 @@ option_allow_boost=1
 if (( option_allow_boost )) ; then
     printf "\n\nWill build boost now\n\n"
 
-if (( option_download_skip )) ; then
-    printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
-    pushd boost || fail # cd
-    pwd
+	if (( option_download_skip )) ; then
+		printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
 
-#printf "\n\nXXX extra download tmp\n\n"
-#git submodule update --init --recursive libs/align
+	else
+		# Download main boost repository
+		dl_boost
 
-    ls
-else
-
-echo "Downloading boost in PWD=$PWD"
-# download boost starting from cleaning previous build
-rm -rf boost || fail # perhaps left over if we do some caching or testing
-git clone -b boost-1.61.0 https://github.com/boostorg/boost.git --depth 100 || fail "git clone" # check gitrev hash below!
+		# Download boost submodules in n=3 attempts
+		dl_boost_submodules_n 3
+	fi
 
 pushd boost || fail # cd
-PWD_now2="$PWD/"
-[[ "$PWD_now2" == "$BOOST_DIR" ]] || { echo "The PWD (PWD_now2=$PWD_now2) is not the expected boost dir ($BOOST_DIR) - aborting" ; exit 0 ; }
-
-expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
-confirm_gitrev=$(git log --format='%H' -1)
-[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
-    fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
-}
-
-    # Download boost submodules in n=3 attempts
-    dl_boost_submodules_n 3
-
-fi
+pwd
+ls
 
 echo "Will build boost in PWD=$PWD"
 # delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
