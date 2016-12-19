@@ -1,7 +1,7 @@
 #!/bin/bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
-# importing functions for boost submodules download
+# importing functions for boost main and submodules download
 . /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
 . /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost
 
