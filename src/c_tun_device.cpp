@@ -656,16 +656,16 @@ int c_tun_device_apple::create_tun_fd() {
     // connect to first not used tun
     int tested_card_counter = 0;
     auto t0 = time::now();
-    _fact(boost::locale::gettext("L_searching_for_virtual_card"));
+    _fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
         auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
         if (tested_card_counter++ > number_of_tested_cards)
-            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_max_number_of_tested_cards_limit_reached"));
+            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
         if (int_s >= cards_testing_time)
-            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_connection_to_tun_timeout"));
+            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
-    _goal(boost::locale::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+    _goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
     m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;

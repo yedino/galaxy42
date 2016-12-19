@@ -4,11 +4,12 @@
 #include <boost/locale.hpp>
 #include <string>
 #include <locale>
+#include "mo_reader.hpp"
 
 bool text_ui::ask_user_forpermission(const std::string &msg) {
 	std::string answer = "";
 //	std::cout << "Do you want : " << msg << " -- (YES/no):";
-        std::cout << boost::locale::gettext("L_do_you_want")  << msg << boost::locale::gettext( "L_Y_N") ;
+        std::cout << mo_file_reader::gettext("L_do_you_want")  << msg << mo_file_reader::gettext( "L_Y_N") ;
 
 	std::getline(std::cin,answer);
 	if(answer == "YES") {
