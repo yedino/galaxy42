@@ -23,9 +23,107 @@ target_name="galaxy42" # will be asserted when detecting git repo url. this also
 # target_repo_user , target_url will be auto detected
 
 function fail() {
-	echo "Error occured (in $0) will exit: " "$@"
+	echo "Error occured (in $0) will exit now. Error is: " "$@"
 	exit 1
 }
+
+function usage() {
+cat <<EOF
+
+Usage: call this program like:
+$0 -W image
+$0 -W fast
+$0 -M image
+$0 -L fast
+$0 [-W -L -M] build_type
+
+-W is windows build
+-L is linux build
+-M is mac osx build
+
+build_type is:
+  install - installs everything, this will do a sudo and as root will setup it all - run it once
+  image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
+  fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
+  show - just show the results (as they are now)
+
+  on-target (or "o-t") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
+  on-target-root (or "o-t-r") - same, but you are the root user (inside System Image e.g. LXC)
+
+  fix1 - special function: re-run configuration on-target
+
+  Configuration options, set env variables:
+    export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
+    export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
+
+EOF
+}
+
+
+# --- parse options ---
+function parse_options() {
+	echo "Parsing options"
+
+while getopts ":hWLM" opt; do
+	case $opt in
+		h)
+			usage
+			exit 0
+		;;
+		W)
+			option_platform_windows=1
+		;;
+		L)
+			option_platform_linux=1
+		;;
+		M)
+			option_platform_osx=1
+		;;
+	esac
+done
+shift $((OPTIND-1)) # eat all the options paresed above
+
+printf "Program is running with options:\n"
+printf "%s\n" "option_platform_windows=$option_platform_windows"
+printf "%s\n" "option_platform_linux=$option_platform_linux"
+printf "%s\n" "option_platform_osx=$option_platform_osx"
+
+## can not pass options via Gitian to inside Gitian -> yml -> script...
+## printf "\n%s\n" "options to be passed to the Gitian would be:"
+## printf "%s\n" "$@"
+
+runmode="$1" ;
+shift || fail "Run program with some runmode in command line arguments; Run with -h to see usage help".
+
+printf "runmode=%s\n" "runmode"
+
+}
+
+# --- execute main program ---
+
+function main_run_action() {
+
+anything=0
+if [[ "$runmode" == "install" ]] ; then anything=1 ;  setup_host_for_lxc ; fi
+if [[ "$runmode" == "image" ]] ; then anything=1 ; all_including_new_lxc "$@" ; fi
+if [[ "$runmode" == "fast" ]] ; then anything=1 ; all_excluding_new_lxc "$@" ; fi
+if [[ "$runmode" == "show" ]] ; then anything=1 ; run_onlyresult ; fi
+
+if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  || "$runmode" == "o-t" ]] ; then anything=1 ; special_command_on_target "$@" ; fi
+if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" || "$runmode" == "o-t-r" ]] ; then anything=1 ; special_command_on_target "-u" "root" "$@" ; fi
+
+if [[ "$runmode" == "fix1" ]] ; then anything=1 ; gitian_my_cfg_on_target  ; fi
+
+if (( ! anything )) ; then
+	printf "\n%s\n" "No action was selected. Run with -h for usage."
+fi
+
+}
+
+
+
+
+# --- tmp dir ---
 
 my_dir="$PWD"
 my_tmp="$my_dir/vartmp/build-gitian/" ; rm -rf "$my_tmp" || exit 1
@@ -54,6 +152,10 @@ target_dbs="${base_dir}debootstrap/"
 option_platform_windows=0
 option_platform_linux=0
 option_platform_osx=0
+
+
+parse_options "$@"
+
 
 # get our own version
 info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
@@ -229,6 +331,7 @@ function gitian_detect_source_repository() {
 }
 
 function gitian_detect_source_version() {
+	echo "Checking git-rev of the source from which you call this script."
 	pushd "$my_dir" || fail "Can not cd my_dir=[$my_dir]"
 	printf "%s\n" "Detecting git version (revision) from PWD=$PWD."
 	gr=$(git log --format='%H' -1) || fail "Can not detect git version (revision) form PWD=$PWD"
@@ -248,7 +351,7 @@ function target_download() {
 	git clone "$target_url" || fail "Download target, target_url=[$target_url]" # confirm gitrev hash below!
 	cd "${base_dir}/${target_name}" || fail
 	printf "%s\n" "On host we start with download of (${target_name}) in version:"
-	git log -1
+	PAGER=cat git log -1
 	git clean -xdf || fail
 	git checkout "$target_checkout_gitrev" || {
 	printf "\nYou probably should push your local version on server. Use: git branch (it shows you your actual branch)."
@@ -260,7 +363,7 @@ function target_download() {
 		fail "Git verification of hash: hash is $confirm_git_ver instead of expected $target_checkout_gitrev"
 	}
 	git clean -xdf || fail "Doing git-clean"
-	git log -1 || fail "Show git-version"
+	PAGER=cat git log -1 || fail "Show git-version"
 	printf "\n\n\n"
 }
 
@@ -508,38 +611,6 @@ function run_onlyresult() {
 
 }
 
-function usage() {
-cat <<EOF
-Usage: call this program like:
-$0 [-W -L -M] build_type
-e.g.:
-$0 -W image
-$0 -W fast
-$0 -M image
-$0 -L fast
-
--W is windows build
--L is linux build
--M is mac osx build
-
-build_type is:
-  install - installs everything, this will do a sudo and as root will setup it all - run it once
-  image - also recreates the System Image (e.g. LXC) - run it once (as user) and then from time to time
-  fast - faster gbuild, no re-creationg of System Image (e.g. LXC) - run it often
-  show - just show the results (as they are now)
-
-  on-target (or "o-t") - opens a bash console inside the System Image (e.g. LXC) so you can debug it here
-  on-target-root (or "o-t-r") - same, but you are the root user (inside System Image e.g. LXC)
-
-  fix1 - special function: re-run configuration on-target
-
-  Configuration options, set env variables:
-    export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
-    export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
-
-EOF
-}
-
 function run_with_root_privilages_fix() {
 # TODO ask user to confirm?
 	info="$1" ; shift
@@ -568,49 +639,10 @@ printf "\n\n%s\n\n" "Apt-cacher that should be used is detected as: ${midutils_a
 run_with_root_privilages "service" "$midutils_apt_cacher_version_name_service" "restart" || \
 	fail "Restarting apt-cacher (version: ${midutils_apt_cacher_version_name_service}."
 
-while getopts ":hWLM" opt; do
-	case $opt in
-		W)
-			option_platform_windows=1
-		;;
-		L)
-			option_platform_linux=1
-		;;
-		M)
-			option_platform_osx=1
-		;;
-                h)
-                usage
-                                exit 0
-		;;
-	esac
-done
-shift $((OPTIND-1)) # eat all the options paresed above
 
-printf "\n"
-printf "%s\n" "option_platform_windows=$option_platform_windows"
-printf "%s\n" "option_platform_linux=$option_platform_linux"
-printf "%s\n" "option_platform_osx=$option_platform_osx"
 
-## can not pass options via Gitian to inside Gitian -> yml -> script...
-## printf "\n%s\n" "options to be passed to the Gitian would be:"
-## printf "%s\n" "$@"
+# start main:
 
-runmode="$1" ; shift
-anything=0
-
-if [[ "$runmode" == "install" ]] ; then anything=1 ;  setup_host_for_lxc ; fi
-if [[ "$runmode" == "image" ]] ; then anything=1 ; all_including_new_lxc "$@" ; fi
-if [[ "$runmode" == "fast" ]] ; then anything=1 ; all_excluding_new_lxc "$@" ; fi
-if [[ "$runmode" == "show" ]] ; then anything=1 ; run_onlyresult ; fi
-
-if [[ "$runmode" == "on-target"      || "$runmode" == "ont"  || "$runmode" == "o-t" ]] ; then anything=1 ; special_command_on_target "$@" ; fi
-if [[ "$runmode" == "on-target-root" || "$runmode" == "ontr" || "$runmode" == "o-t-r" ]] ; then anything=1 ; special_command_on_target "-u" "root" "$@" ; fi
-
-if [[ "$runmode" == "fix1" ]] ; then anything=1 ; gitian_my_cfg_on_target  ; fi
-
-if (( ! anything )) ; then
-	printf "\n%s\n" "No action was selected. Run with -h for usage."
-fi
+main_run_action
 
 
