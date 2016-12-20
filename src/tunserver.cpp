@@ -592,7 +592,7 @@ void c_tunserver::prepare_socket() {
 			m_tun_device.set_ipv6_address(address, 16);
 			m_tun_device.set_mtu(1304);
 
-			_fact("Finsh init of event manager - for this tuntap");
+			_fact("Done init of event manager - for this tuntap");
 			m_event_manager.init(); // because now we have the tuntap fully ready (with the fd)
 		}
 		catch (tuntap_error_devtun &ex) { ui::action_error_exit("Problem with setup of virtual card (tun/tap) with accessing tun/tap driver-file; "s + ex.what()); }
