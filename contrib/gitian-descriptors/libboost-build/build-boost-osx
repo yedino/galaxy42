@@ -28,9 +28,10 @@ if (( option_allow_boost )) ; then
     else
         # Download main boost repository
         dl_boost
-
-        # Download boost submodules in n=3 attempts
-        dl_boost_submodules_n 3
+		pushd boost || fail "Can not enter build dir"
+			# Download boost submodules in n=3 attempts
+			dl_boost_submodules_n 3
+		popd
     fi
 
 pushd boost || fail # cd
