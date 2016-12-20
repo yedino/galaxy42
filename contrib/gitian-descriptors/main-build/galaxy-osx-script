@@ -49,11 +49,16 @@ HOST_LDFLAGS="-static-libstdc++"
 
 # importat:
 export GZIP="-9n"
-export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+# export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
 export TZ="UTC"
 
 # ok?
 export BUILD_DIR=`pwd`
+
+# set cache variables
+GBUILD_CACHE_ENABLED=1
+GBUILD_PACKAGE_CACHE="/home/ubuntu/cache/galaxy42"
+GBUILD_COMMON_CACHE="/home/ubuntu/cache/common"
 
 mkdir -p ${WRAP_DIR}
 if test -n "$GBUILD_CACHE_ENABLED"; then

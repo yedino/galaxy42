@@ -56,18 +56,23 @@ export OUTDIR
 
   # importat:
   export GZIP="-9n"
-  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  # export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
 
   # ok?
   export BUILD_DIR=`pwd`
 
-  mkdir -p ${WRAP_DIR}
-  if test -n "$GBUILD_CACHE_ENABLED"; then
-    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
-    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
-    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
-  fi
+# set cache variables
+GBUILD_CACHE_ENABLED=1
+GBUILD_PACKAGE_CACHE="/home/ubuntu/cache/galaxy42"
+GBUILD_COMMON_CACHE="/home/ubuntu/cache/common"
+
+mkdir -p ${WRAP_DIR}
+if test -n "$GBUILD_CACHE_ENABLED"; then
+	export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+	export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+fi
 
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
