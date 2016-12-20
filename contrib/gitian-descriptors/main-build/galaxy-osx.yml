@@ -12,6 +12,7 @@ packages:
 - "g++-5"
 - "cmake"
 - "autoconf"
+- "automake"
 - "libtool"
 - "build-essential"
 - "libfftw3-dev"
