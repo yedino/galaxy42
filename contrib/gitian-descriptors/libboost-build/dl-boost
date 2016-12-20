@@ -7,7 +7,7 @@ readonly BOOST_DIR="$HOME/build/boost/"
 # checkout to choosen tag
 # and validate version hash
 
-download_boost () {
+dl_boost () {
 
 	echo "Downloading boost in PWD=$PWD"
 
