@@ -96,7 +96,6 @@ if (( option_verbose )) ; then
 fi
 
 set -x
-time  strace  -fffff -s 2000  -e trace=process \
 ./b2 \
     -q \
     "${b2_opt_debug[@]}" \
@@ -114,11 +113,10 @@ time  strace  -fffff -s 2000  -e trace=process \
     -j 1 \
     -sNO_BZIP2=1 --sNO_ZLIB=1 \
     --layout=tagged install \
-     &> "$HOME/build/s3"
-#    || {
-#	set -x
-#	fail "The b2 build of boost failed"
-#	}
+		|| {
+			set -x
+			fail "The b2 build of boost failed"
+		}
 set +x
 
 printf "\n\n\n\nDONE the b2 boost build\n\n\n\n"
