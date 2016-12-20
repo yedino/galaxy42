@@ -511,11 +511,12 @@ function run_onlyresult() {
 function usage() {
 cat <<EOF
 Usage: call this program like:
+$0 [-W -L -M] build_type
+e.g.:
 $0 -W image
 $0 -W fast
 $0 -M image
 $0 -L fast
-$0 [-W -L -M] build_type
 
 -W is windows build
 -L is linux build
