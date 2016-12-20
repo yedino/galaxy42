@@ -1,5 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
+
+set -o errexit
+set -o nounset
 
 function fail() {
 	echo -e "\nERROR (in $0): " "$@"
