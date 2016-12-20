@@ -1,5 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
+
+set -o errexit
+set -o nounset
 
 # importing functions for boost main and submodules download
 . /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
