@@ -146,10 +146,6 @@ EOF
   done
 
 
-
-
-
-
   if false ; then # TODO
   cd bitcoin
   BASEPREFIX=`pwd`/depends

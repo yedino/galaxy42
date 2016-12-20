@@ -112,19 +112,6 @@ create_global_faketime_wrappers "$FAKETIME"
 create_per-host_faketime_wrappers "$FAKETIME"
 export PATH=${WRAP_DIR}:${PATH}
 
-pushd ${GALAXY_DIR} || fail
-
-BASEPREFIX=`pwd`/depends
-mkdir -p ${BASEPREFIX}/SDKs
-tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.11.sdk.tar.gz
-
-# Build dependencies for each host
-for i in $HOSTS; do
-	make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
-done
-
-popd
-
 # Faketime for binaries
 export PATH=${PATH_orig}
 create_global_faketime_wrappers "${REFERENCE_DATETIME}"
