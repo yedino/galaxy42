@@ -384,13 +384,13 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
-c_tunserver::c_tunserver()
+c_tunserver::c_tunserver(int port, int rpc_port)
 :
 	m_my_name("unnamed-tunserver")
-	,m_udp_device(9042) //TODO port
+    ,m_udp_device(port) //TODO port
 	,m_event_manager(m_tun_device, m_udp_device)
 	,m_tun_header_offset_ipv6(0)
-	,m_rpc_server(42000)
+    ,m_rpc_server(rpc_port)
 {
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);

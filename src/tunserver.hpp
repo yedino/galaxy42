@@ -176,7 +176,7 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 
 class c_tunserver : public c_galaxy_node {
 	public:
-		c_tunserver();
+        c_tunserver(int port, int rpc_port);
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
         void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
