@@ -56,6 +56,8 @@ echo "If you changed this generation script, then remember to also copy the now-
 echo "E.g.:"
 echo "cp contrib/ci/autotest/set1/data/sha-now.txt   contrib/ci/autotest/set1/sha-good.txt"
 
+difference=$(diff "sha-now.txt" "../sha-good.txt")
+
 echo "All done in $0."
 
 
