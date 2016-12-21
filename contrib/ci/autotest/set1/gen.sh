@@ -20,6 +20,8 @@ echo "Example small file." > 1.txt
 
 ( export m=5000 ; for ((i = 0; i < m; ++i)); do echo "Test line $i/$m" ; done )> 4.txt
 
+( export m=20000 ; for ((i = 0; i < m; ++i)); do echo "Test line $i/$m" ; done )> 5.txt
+
 function make_hashfile() {
 	tmpdir="./tmp"
 	m="$1"
@@ -34,17 +36,26 @@ function make_hashfile() {
 	cd "$pwd"
 	mv "$tmpdir/all.txt" "$2"
 	rm -rf "$tmpdir"
+
+	gzip --keep --best --no-name "$2" # create e.g. s1.txt.gz from s1.txt
 }
 
 make_hashfile 200 "s1.txt"
 make_hashfile 2000 "s2.txt"
+make_hashfile 6000 "s3.txt"
 
 sha256sum * > "sha-now.txt" # expected as generated on server
 
 echo "Generated:"
 cat "sha-now.txt"
+ls -lh
 
 )
 
+echo "If you changed this generation script, then remember to also copy the now-calulated checksums into the good file:"
+echo "E.g.:"
+echo "cp contrib/ci/autotest/set1/data/sha-now.txt   contrib/ci/autotest/set1/sha-good.txt"
+
 echo "All done in $0."
+
 
