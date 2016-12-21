@@ -15,7 +15,7 @@ while read -r item_checksum_expected item_filename; do
 
 	printf '%s\n' "Downloading: $url"
 
-	wget --quiet --timeout "$timeout" "$url" -O "${item_filename}" # <------
+	wget --quiet --tries 1 --timeout "$timeout" "$url" -O "${item_filename}" # <------
 
 	item_checksum_now=$(sha256sum "${item_filename}" | cut -f1 -d' ' )
 	item_size_now=$(stat --printf="%s" "${item_filename}")
