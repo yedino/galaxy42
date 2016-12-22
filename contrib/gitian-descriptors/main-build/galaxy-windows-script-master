@@ -9,6 +9,13 @@ function fail() {
 	exit 1
 }
 
+function_fdfix() {
+	echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
+	sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
+}
+function_fdfix
+
+
 galaxy_dir="/home/ubuntu/build/galaxy42/"
 
 script="$galaxy_dir/contrib/gitian-descriptors/main-build/galaxy-windows-script"

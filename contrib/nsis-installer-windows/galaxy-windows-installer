@@ -1,8 +1,9 @@
 #!/bin/bash -e
 
 
-galaxy42_dir="$HOME/build/galaxy42"
-WRAP_DIR="$HOME/wrapped"
+readonly galaxy42_dir="$HOME/build/galaxy42"
+readonly WRAP_DIR="$HOME/wrapped"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # copy dll's, tunserver.elf.exe etc to contrib/nsis-installer-windows/bin  x64 x86
 
@@ -89,6 +90,11 @@ printf "\n%s\n" "WRAPPING makensis localy in $(pwd)"
 	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" ./ || fail "copy nsis plugin here for use"
 	printf "\n\nRunning makensis in PWD=$PWD\n\n"
 	set -x
+
+	# generate file list that will be pushed to installer.nsi file 
+	"${SCRIPT_DIR}/bin/generate_nsis_filelist.sh" > tmp.out
+	sed -i '/START_FILES/r tmp.out' "${SCRIPT_DIR}/installer.nsi"
+	rm tmp.out
 
 	# use wrapped
 	./makensis_wrapped "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
