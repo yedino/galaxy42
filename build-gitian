@@ -193,13 +193,14 @@ gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must b
 
 gitian_suite=xenial
 
-target_dbs="${base_dir}debootstrap/"
 
 # ---
 
 parse_options "$@"
 
 set_base_dir
+target_dbs="${base_dir}debootstrap/"
+echo "Using target_dbs=$target_dbs for debootstrap dir"
 
 
 # get our own version
