@@ -152,6 +152,21 @@ function set_base_dir() {
 
 function main_run_action() {
 
+# --- test can we run fast for this base_dir e.g. as multidir ---
+printf  "\n\n%s\n\n" "Testing data in base_dir=[$base_dir]"
+if [[ "$runmode" == "fast" ]] ; then
+	filename="$base_dir/gitian-builder/$gitian_filename_of_target" # e.g.  ~/var-gitian/gitian-builder/target-xenial-amd64
+	if [[ -r "$filename" ]] ; then
+		echo "OK, we can run FAST build - Image of Target seems to exist ($filename). $runmode"
+	else
+		echo "Note: we can NOT run FAST build - Image of Target is not readable by us (probably not existing) ($filename). $runmode"
+		runmode="image"
+		echo "CHANGING RUNMODE:"
+		echo "runmode=$runmode"
+	fi
+fi
+printf "\n\n\n"
+
 anything=0
 if [[ "$runmode" == "install" ]] ; then anything=1 ;  setup_host_for_lxc ; fi
 if [[ "$runmode" == "image" ]] ; then anything=1 ; all_including_new_lxc "$@" ; fi
@@ -193,7 +208,7 @@ gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must b
 
 gitian_suite=xenial
 
-
+gitian_filename_of_target="target-${gitian_suite}-amd64"
 # ---
 
 parse_options "$@"
@@ -201,7 +216,6 @@ parse_options "$@"
 set_base_dir
 target_dbs="${base_dir}debootstrap/"
 echo "Using target_dbs=$target_dbs for debootstrap dir"
-
 
 # get our own version
 info_thisscript="$( git describe  --dirty="-DIRTY-NOT-COMMITED" )"
