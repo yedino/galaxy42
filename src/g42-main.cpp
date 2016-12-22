@@ -489,9 +489,9 @@ int main(int argc, char **argv) {
 //			("http-dbg-port", "COMMAND: Set http debugger port")
                         ("http-dbg-port", po::value<int>()->default_value(9080), mo_file_reader::gettext("L_what_httpDbgPort_do").c_str())
             #endif
-                        ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::locale::gettext("L_what_netHelloInterval_do").c_str())
-                        ("port", po::value<int>()->default_value(9042), mo_file_reader::locale::gettext("L_port_do").c_str())
-                        ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::locale::gettext("L_rpcPort_do").c_str())
+                        ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
+                        ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
+                        ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::gettext("L_rpcPort_do").c_str())
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -944,7 +944,7 @@ int main(int argc, char **argv) {
 			string my_name = config_default_myname;
 			if (argm.count("myname")) my_name = argm["myname"].as<string>();
             myserver->set_my_name(my_name);
-            ui::action_info_ok(mo_file_reader::locale::gettext("L_your_haship_address") + myserver->get_my_ipv6_nice());
+            ui::action_info_ok(mo_file_reader::gettext("L_your_haship_address") + myserver->get_my_ipv6_nice());
 
 			_info("Configuring my peers references (keys):");
 			try {
@@ -1006,9 +1006,9 @@ int main(int argc, char **argv) {
 			httpdbg_server.run();
 		}	);
 #endif
-		_note(mo_file_reader::locale::gettext("L_starting_main_server"));
+		_note(mo_file_reader::gettext("L_starting_main_server"));
         myserver->run();
-		_note(mo_file_reader::locale::gettext("L_main_server_ended"));
+		_note(mo_file_reader::gettext("L_main_server_ended"));
 #ifdef HTTP_DBG
         httpdbg_server.stop();
 		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
