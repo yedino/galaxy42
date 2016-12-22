@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
 
 	}
 	try {
-		c_tunserver myserver;
+		std::unique_ptr<c_tunserver> myserver_ptr;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -490,6 +490,8 @@ int main(int argc, char **argv) {
                         ("http-dbg-port", po::value<int>()->default_value(9080), mo_file_reader::gettext("L_what_httpDbgPort_do").c_str())
             #endif
                         ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
+                        ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
+                        ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::gettext("L_rpcPort_do").c_str())
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -593,7 +595,6 @@ int main(int argc, char **argv) {
 
 			;
 
-		myserver.set_desc(desc);
 
 //		_note("Will parse program options");
                 _note(mo_file_reader::gettext("L_parse_program_option"));
@@ -644,7 +645,14 @@ int main(int argc, char **argv) {
 				}
 			}
 			#endif
-			_note("After devel/demo BoostPO code");
+
+			assert(argm.count("port") && argm.count("rpc-port"));
+			myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
+			assert(myserver_ptr);
+			auto& myserver = *myserver_ptr;
+			myserver.set_desc(desc);
+
+            _note("After devel/demo BoostPO code");
 
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
@@ -937,8 +945,8 @@ int main(int argc, char **argv) {
 
 			string my_name = config_default_myname;
 			if (argm.count("myname")) my_name = argm["myname"].as<string>();
-			myserver.set_my_name(my_name);
-			ui::action_info_ok(mo_file_reader::gettext("L_your_haship_address") + myserver.get_my_ipv6_nice());
+						myserver.set_my_name(my_name);
+						ui::action_info_ok(mo_file_reader::gettext("L_your_haship_address") + myserver.get_my_ipv6_nice());
 
 			_info("Configuring my peers references (keys):");
 			try {
@@ -954,13 +962,12 @@ int main(int argc, char **argv) {
 			}
 
 			// ------------------------------------------------------------------
-            myserver.set_argm(shared_ptr<po::variables_map>(new po::variables_map(argm)));
+			myserver.set_argm(shared_ptr<po::variables_map>(new po::variables_map(argm)));
 			auto peers_count = myserver.get_my_stats_peers_known_count();
 			if (peers_count) {
 				ui::action_info_ok("You will try to connect to up to " + std::to_string(peers_count) + " peer(s)");
 			} else {
-				ostringstream oss; oss << "./tunserver.elf --peer YOURIP:9042-" << myserver.get_my_ipv6_nice();
-				string help_cmd1 = oss.str();
+				string help_cmd1 = myserver.get_my_reference();
 				ui::action_info_ok(mo_file_reader::gettext("L_no_other_computer_Option_for_other") + help_cmd1);
 			}
 
@@ -995,16 +1002,16 @@ int main(int argc, char **argv) {
 
 #ifdef HTTP_DBG
 		_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
-        c_httpdbg_server httpdbg_server(http_dbg_port, myserver);
+		c_httpdbg_server httpdbg_server(http_dbg_port, *myserver_ptr);
 		std::thread httpdbg_thread( [& httpdbg_server]() {
-			httpdbg_server.run();
+		httpdbg_server.run();
 		}	);
 #endif
 		_note(mo_file_reader::gettext("L_starting_main_server"));
-		myserver.run();
+		myserver_ptr->run();
 		_note(mo_file_reader::gettext("L_main_server_ended"));
 #ifdef HTTP_DBG
-        httpdbg_server.stop();
+		httpdbg_server.stop();
 		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
 		_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
 #endif
