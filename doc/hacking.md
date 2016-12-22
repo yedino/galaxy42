@@ -134,11 +134,15 @@ It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918
 
 For more of technical names, see also source code file: [crypto.hpp](../src/crypto/crypto.hpp)
 
-## Common naming
+## Common naming and dictionary
 
-* Private Key - is the private (secret) key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
+* "privkey" - Private Key - is the private (secret) key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
 
-* Public Key - is the public key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
+* "pubkey" - Public Key - is the public key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
+
+* "macosx" - Mac OS X / Macintosh operating system
+
+* "tuntap" - the TUN/TAP virtual network technology/drivers/cards
 
 # Special topics
 
