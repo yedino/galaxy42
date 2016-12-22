@@ -175,6 +175,8 @@ For more of technical names, see also source code file: [crypto.hpp](../src/cryp
 
 ## Common naming and dictionary
 
+Dictionary, dict:
+
 * "privkey" - Private Key - is the private (secret) key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
 
 * "pubkey" - Public Key - is the public key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)

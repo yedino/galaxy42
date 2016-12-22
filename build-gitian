@@ -23,7 +23,8 @@ target_name="galaxy42" # will be asserted when detecting git repo url. this also
 # target_repo_user , target_url will be auto detected
 
 function fail() {
-	echo "Error occured (in $0) will exit now. Error is: " "$@"
+	echo "ERROR occured (in $0) will exit now."
+	echo "ERROR is: " "$@"
 	exit 1
 }
 
@@ -35,7 +36,7 @@ $0 -W image
 $0 -W fast
 $0 -M image
 $0 -L fast
-$0 [-W -L -M] build_type
+$0 [-W -L -M] [options] build_type
 
 -W is windows build
 -L is linux build
@@ -52,19 +53,34 @@ build_type is:
 
   fix1 - special function: re-run configuration on-target
 
-  Configuration options, set env variables:
-    export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
-    export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
+Options:
+  -s single dir - use the same main directory for all Gitian temporary data,
+    and images (around 3 GB size)
+  -m multi dir - use and save a separate directory for each platform,
+    for the Gitian temporary data and images, e.g. one dir for -L linux, other for -W windows,
+    etc (each dir is around 3 GB size) - this can help to speedup builds if you often here
+    for example build linux then windows then again linux
+
+Configuration options, set env variables:
+  export buildgitian_dbs_skip_template_fix=1 to skip the automatic debootstrap template fix
+  export buildgitian_dbs_sys="/some/dir" to force the debootstrap template fix to search there for it's files
 
 EOF
 }
 
 
 # --- parse options ---
+
+option_platform_windows=0
+option_platform_linux=0
+option_platform_osx=0
+option_basedir_multi=0
+
 function parse_options() {
 	echo "Parsing options"
 
-while getopts ":hWLM" opt; do
+used_sm=0 # did we already given one of this excluding options (to detect conflict in options): -s , -m for option_basedir_multi
+while getopts ":hWLMsm" opt; do
 	case $opt in
 		h)
 			usage
@@ -78,6 +94,16 @@ while getopts ":hWLM" opt; do
 		;;
 		M)
 			option_platform_osx=1
+		;;
+		s)
+			if [[ "$used_sm" == "true" ]] ; then fail "Do not use both Single and Multi option together" ; fi
+			option_basedir_multi=0
+			used_sm=1
+		;;
+		m)
+			if [[ "$used_sm" == "true" ]] ; then fail "Do not use both Single and Multi option together" ; fi
+			option_basedir_multi=1
+			used_sm=1
 		;;
 	esac
 done
@@ -143,16 +169,24 @@ gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must b
 # "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
 gitian_suite=xenial
-base_dir="$HOME/var-gitian/"
+image_name=""
+if (( option_basedir_multi )) ; then
+		if (( option_platform_osx )) ; then
+			image_name="macosx"
+		elif (( option_platform_windows )) ; then
+			image_name="windows"
+		elif (( option_platform_linux )) ; then
+			image_name="linux"
+		else
+			fail "Unknown (or none) platform used (when choosing image_name)"
+		fi
+fi
+base_dir="$HOME/var-gitian${image_name}/"
+echo "Using base_dir=\"$base_dir\" , for image_name=\"$image_name\""
 
 target_dbs="${base_dir}debootstrap/"
 
 # ---
-
-option_platform_windows=0
-option_platform_linux=0
-option_platform_osx=0
-
 
 parse_options "$@"
 
