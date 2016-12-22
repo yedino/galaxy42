@@ -6,6 +6,13 @@ function fail() {
 	exit 1
 }
 
+function_fdfix () {
+	echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
+	sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
+}
+function_fdfix
+
+
 OUTDIR="$1"
 export OUTDIR
 
@@ -18,9 +25,6 @@ export OUTDIR
   # variable from above yml config
   echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
   # debug
-
-  echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
-  sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
 
   ### <LICENCE> - start of licence block - this code if possibly on other licence:
   ### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/2c2d471e18f0601c2767cf516425b2ecfcfd2126/contrib/gitian-descriptors/gitian-linux.yml
