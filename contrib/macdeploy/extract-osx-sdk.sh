@@ -9,7 +9,7 @@ INPUTFILE="Xcode_7.3.1.dmg"
 HFSFILENAME="5.hfs"
 SDKDIR="Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk"
 
-#7z x "${INPUTFILE}" "${HFSFILENAME}"
+7z x "${INPUTFILE}" "${HFSFILENAME}"
 SDKNAME="$(basename "${SDKDIR}")"
 SDKDIRINODE=$(ifind -n "${SDKDIR}" "${HFSFILENAME}")
 fls "${HFSFILENAME}" -rpF ${SDKDIRINODE} |
