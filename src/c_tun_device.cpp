@@ -327,7 +327,8 @@ size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
 	//size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
 	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(eth_frame), ec); // prepares: blocks (but TUN is fast)
 	if (ec) throw std::runtime_error("boost error " + ec.message());
-	return write_bytes;
+	if (write_bytes < (eth_header_size - eth_offset)) return 0; ///< error write not complete
+	return write_bytes - eth_header_size + eth_offset;
 }
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
