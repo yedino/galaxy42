@@ -1138,6 +1138,7 @@ void c_tunserver::event_loop(int time) {
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
                                                 auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+
 						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
 
