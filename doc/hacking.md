@@ -15,6 +15,10 @@ The build process should be described in the main README.md of this project.
 
 See what dependencies you need to monitor for upgrades! See: [SECURITY.txt].
 
+* For CI (continuous integration) we use
+  * Jenkins (see below in Using-Jenkins)
+  * Travis (see below in Using-Travis)
+
 # Using
 
 The use of this project/programs as end-user, is described in other places, see the main README.md of this project.
@@ -103,6 +107,41 @@ msgfmt --check --endianness=little src-misc/locale/galaxy42_installer/pl.po -o .
 
 (though this command probably do not e.g. remove obsolete strings etc)
 
+# Build infrastructure and tools
+
+## Continuous Integration (CI) tools
+
+We use both Jenkins and Travis.
+
+Travis is easier to set up (integrated with github.com), but can be slow, you need 3rd party machines, and is less secure in a way.
+We will run simple tests on it.
+
+Jenkins requires a set up (installation of master and slave nodes) but is more open, you can run all on own (+volounteer's) machines,
+is therefore more secure, and can be much faster if you can provide strong boxes.
+We will run more advanced tests on in that require more resources or not supported on Travis platforms.
+
+### Travis
+
+To use Travis just:
+
+* fork our project
+* create account on Travis http://travis-ci.org/
+* connect travis-ci.org to your e.g. github.com (or other git account if they allow that)
+* modify file .travis.yml that is on top of this project's source code - set email addresses / notifications and possibly change tests
+
+that should be enough: now when you push to your git account associtated with your travis-ci.org account,
+then it should run the build and notfiy you about results.
+
+### Jenkins
+
+To use Jenkins:
+
+* install Jenkins, on your master computer. Connect to it via webUI and administrate.
+* configure Jenkins tests. We will write and export the recommended tests set, in future.
+* on Slave nodes, probably install Jenkins and give SSH access to it from the Master
+* on Master node, add the Slave nodes credentials
+* set Jenkins to observe your git account for updates and to run tests
+
 # Naming and Glossary
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
@@ -135,6 +174,8 @@ It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918
 For more of technical names, see also source code file: [crypto.hpp](../src/crypto/crypto.hpp)
 
 ## Common naming and dictionary
+
+Dictionary, dict:
 
 * "privkey" - Private Key - is the private (secret) key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
 

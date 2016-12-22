@@ -51,6 +51,26 @@ echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
 echo ""
 
+platform="posix"
+uname -a # show info
+uname -a | egrep '^CYGWIN' && platform="cygwin"
+
+if [[ "$platform" == "cygwin" ]]
+then
+
+	echo "PLATFORM - WINDOWS/CYGWIN ($platform)"
+
+	CC="i686-w64-mingw32-gcc.exe"
+	CXX="i686-w64-mingw32-g++.exe"
+
+	cmake . || fail "Can not cmake (on Cygwin mode)"
+	make tunserver.elf || fail "Can not make (on Cygwin mode)"
+
+else
+
+	echo "PLATFORM - NORMAL POSIX e.g. Linux ($platform)"
+
+
 if [[ "$1" == "--help" ]] ; then
 	usage
 	exit 2 # <--- exit
@@ -153,4 +173,6 @@ set +x
 set -x
 make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
 set +x
+
+fi # platform posix
 
