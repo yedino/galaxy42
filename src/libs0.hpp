@@ -36,6 +36,7 @@
 
 #include "c_tnetdbg.hpp"
 #include "strings_utils_simple.hpp"
+#include "mo_reader.hpp"
 
 using std::string;
 using std::shared_ptr;

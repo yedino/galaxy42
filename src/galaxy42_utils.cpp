@@ -15,7 +15,7 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	std::smatch result;
 	if (!std::regex_search(ip_string, result, pattern)) { // bad argument
 //		throw std::invalid_argument("bad format of input ip address");
-                throw std::invalid_argument(boost::locale::gettext("L_bad_format_of_input_ip_address"));
+                throw std::invalid_argument(mo_file_reader::gettext("L_bad_format_of_input_ip_address"));
 
 	}
 	*/
@@ -39,7 +39,7 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	// boost::asio::ip::address_v6::from_string(r_ipv6, ec); // for ipv6
 
 	//auto ip_bytes = ip_boost.to_bytes();
-	assert( ip_bytes.size()==4 );
+	//assert( ip_bytes.size()==4 );
 	bool is_good_class = ip_boost.is_class_a() || ip_boost.is_class_b() || ip_boost.is_class_c()
 		|| ip_boost.is_loopback();
 	bool is_bad_class = ip_boost.is_unspecified() || ip_boost.is_multicast();
@@ -51,6 +51,6 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 
         }
         catch(std::exception &ex) {
-                _throw_error(std::invalid_argument( join_string_sep( ex.what() , boost::locale::gettext("L_bad_format_of_input_ip_address")) ));
+                _throw_error(std::invalid_argument( join_string_sep( ex.what() , mo_file_reader::gettext("L_bad_format_of_input_ip_address")) ));
         }
 }
