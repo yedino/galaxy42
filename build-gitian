@@ -97,11 +97,13 @@ while getopts ":hWLMsm" opt; do
 		;;
 		s)
 			if [[ "$used_sm" == "true" ]] ; then fail "Do not use both Single and Multi option together" ; fi
+			echo "-s option"
 			option_basedir_multi=0
 			used_sm=1
 		;;
 		m)
 			if [[ "$used_sm" == "true" ]] ; then fail "Do not use both Single and Multi option together" ; fi
+			echo "-m option"
 			option_basedir_multi=1
 			used_sm=1
 		;;
@@ -123,6 +125,27 @@ shift || fail "Run program with some runmode in command line arguments; Run with
 
 printf "runmode=%s\n" "runmode"
 
+}
+
+base_dir=""
+function set_base_dir() {
+	image_name=""
+	if (( option_basedir_multi )) ; then
+		echo "Using multi basedir"
+			if (( option_platform_osx )) ; then
+				image_name="macosx"
+			elif (( option_platform_windows )) ; then
+				image_name="windows"
+			elif (( option_platform_linux )) ; then
+				image_name="linux"
+			else
+				fail "Unknown (or none) platform used (when choosing image_name)"
+			fi
+	else
+		echo "Using single basedir"
+	fi
+	base_dir="$HOME/var-gitian${image_name:+-$image_name}/"
+	echo "Using base_dir=\"$base_dir\" , for image_name=\"$image_name\""
 }
 
 # --- execute main program ---
@@ -169,26 +192,14 @@ gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must b
 # "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
 gitian_suite=xenial
-image_name=""
-if (( option_basedir_multi )) ; then
-		if (( option_platform_osx )) ; then
-			image_name="macosx"
-		elif (( option_platform_windows )) ; then
-			image_name="windows"
-		elif (( option_platform_linux )) ; then
-			image_name="linux"
-		else
-			fail "Unknown (or none) platform used (when choosing image_name)"
-		fi
-fi
-base_dir="$HOME/var-gitian${image_name}/"
-echo "Using base_dir=\"$base_dir\" , for image_name=\"$image_name\""
 
 target_dbs="${base_dir}debootstrap/"
 
 # ---
 
 parse_options "$@"
+
+set_base_dir
 
 
 # get our own version
