@@ -387,10 +387,11 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 c_tunserver::c_tunserver(int port, int rpc_port)
 :
 	m_my_name("unnamed-tunserver")
-    ,m_udp_device(port) //TODO port
+	,m_udp_device(port)
 	,m_event_manager(m_tun_device, m_udp_device)
 	,m_tun_header_offset_ipv6(0)
-    ,m_rpc_server(rpc_port)
+	,m_rpc_server(rpc_port)
+	,m_port(port)
 {
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
@@ -1439,6 +1440,17 @@ void c_tunserver::program_action_gen_key(boost::program_options::variables_map &
 		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
+
+int c_tunserver::get_my_port() const {
+	return m_port;
+}
+
+std::string c_tunserver::get_my_reference() const {
+	ostringstream oss;
+	oss << "./tunserver.elf --peer YOURIP:" << get_my_port() << "-" << get_my_ipv6_nice();
+	return oss.str();
+}
+
 
 // ------------------------------------------------------------------
 

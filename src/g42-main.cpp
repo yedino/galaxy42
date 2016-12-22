@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
 
 	}
 	try {
-        std::unique_ptr<c_tunserver> myserver;
+		std::unique_ptr<c_tunserver> myserver_ptr;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -626,7 +626,8 @@ int main(int argc, char **argv) {
 					argm.insert(std::make_pair("devel",     po::variable_value( false , false ))); // --devel
 				}
 			}
-            if (argm.count("devel")) { // can also set up additional options
+
+			if (argm.count("devel")) { // can also set up additional options
 				try {
 					g_dbg_level_set(10,"Running in devel mode");
 					_info("The devel mode is active");
@@ -645,10 +646,11 @@ int main(int argc, char **argv) {
 			}
 			#endif
 
-            if (argm.count("port") && argm.count("rpc-port")) {
-                myserver = std::make_unique<c_tunserver>(argm["port"].as<int>(), argm["rpc-port"].as<int>());
-            } //port
-            myserver->set_desc(desc);
+			assert(argm.count("port") && argm.count("rpc-port"));
+			myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
+			assert(myserver_ptr);
+			auto& myserver = *myserver_ptr;
+			myserver.set_desc(desc);
 
             _note("After devel/demo BoostPO code");
 
@@ -680,7 +682,7 @@ int main(int argc, char **argv) {
                                 if (!argm.count("my-key")) { _erro( mo_file_reader::gettext("L_setIDI_require_myKey") );       return 1;       }
 
 				auto name = argm["my-key"].as<std::string>();
-                myserver->program_action_set_IDI(name);
+				myserver.program_action_set_IDI(name);
 				return 0; // <--- return
 			}
 			#endif
@@ -724,11 +726,11 @@ int main(int argc, char **argv) {
 			}
 
 			if (argm.count("gen-key")) {
-                myserver->program_action_gen_key(argm);
+				myserver.program_action_gen_key(argm);
 				return 0;
 			} // gen-key
 			if (argm.count("gen-key-simple")) {
-                myserver->program_action_gen_key_simple();
+				myserver.program_action_gen_key_simple();
 				return 0;
 			} // gen-key
             #ifdef HTTP_DBG
@@ -870,7 +872,7 @@ int main(int argc, char **argv) {
 				auto peer_refs = galaxyconf.get_peer_references();
 				_info("Will add peer(s) from config file, count: " << peer_refs.size());
 				for(auto &ref : peer_refs) {
-                    myserver->add_peer(ref);
+					myserver.add_peer(ref);
 				}
 			}
 			#endif
@@ -897,7 +899,7 @@ int main(int argc, char **argv) {
 					} else {
 						_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
 						_warn("If this warn still occurs, make sure you have backup of your keys");
-                        myserver->program_action_set_IDI("IDI");
+						myserver.program_action_set_IDI("IDI");
 						have_keys_configured = true;
 					}
 				}
@@ -911,7 +913,7 @@ int main(int argc, char **argv) {
 				bool ok=false;
 
 				try {
-                    myserver->configure_mykey();
+					myserver.configure_mykey();
 					ok=true;
 				} UI_CATCH("Loading your key");
 
@@ -929,10 +931,10 @@ int main(int argc, char **argv) {
 
 				auto step_make_default_keys = [&]()	{
 					ui::action_info_ok("Generating your new keys.");
-                    const string IDI_name = myserver->program_action_gen_key_simple();
-                    myserver->program_action_set_IDI(IDI_name);
+					const string IDI_name = myserver.program_action_gen_key_simple();
+					myserver.program_action_set_IDI(IDI_name);
 					ui::action_info_ok("Your new keys are created.");
-                    myserver->configure_mykey();
+					myserver.configure_mykey();
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
@@ -943,15 +945,15 @@ int main(int argc, char **argv) {
 
 			string my_name = config_default_myname;
 			if (argm.count("myname")) my_name = argm["myname"].as<string>();
-            myserver->set_my_name(my_name);
-            ui::action_info_ok(mo_file_reader::gettext("L_your_haship_address") + myserver->get_my_ipv6_nice());
+						myserver.set_my_name(my_name);
+						ui::action_info_ok(mo_file_reader::gettext("L_your_haship_address") + myserver.get_my_ipv6_nice());
 
 			_info("Configuring my peers references (keys):");
 			try {
 				vector<string> peers_cmdline;
 				try { peers_cmdline = argm["peer"].as<vector<string>>(); } catch(...) { }
 				for (const string & peer_ref : peers_cmdline) {
-                    myserver->add_peer_simplestring( peer_ref );
+					myserver.add_peer_simplestring( peer_ref );
 				}
 			} catch(...) {
 //				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
@@ -960,13 +962,12 @@ int main(int argc, char **argv) {
 			}
 
 			// ------------------------------------------------------------------
-            myserver->set_argm(shared_ptr<po::variables_map>(new po::variables_map(argm)));
-            auto peers_count = myserver->get_my_stats_peers_known_count();
+			myserver.set_argm(shared_ptr<po::variables_map>(new po::variables_map(argm)));
+			auto peers_count = myserver.get_my_stats_peers_known_count();
 			if (peers_count) {
 				ui::action_info_ok("You will try to connect to up to " + std::to_string(peers_count) + " peer(s)");
 			} else {
-                ostringstream oss; oss << "./tunserver.elf --peer YOURIP:9042-" << myserver->get_my_ipv6_nice();
-				string help_cmd1 = oss.str();
+				string help_cmd1 = myserver.get_my_reference();
 				ui::action_info_ok(mo_file_reader::gettext("L_no_other_computer_Option_for_other") + help_cmd1);
 			}
 
@@ -1001,16 +1002,16 @@ int main(int argc, char **argv) {
 
 #ifdef HTTP_DBG
 		_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
-        c_httpdbg_server httpdbg_server(http_dbg_port, myserver);
+		c_httpdbg_server httpdbg_server(http_dbg_port, *myserver_ptr);
 		std::thread httpdbg_thread( [& httpdbg_server]() {
-			httpdbg_server.run();
+		httpdbg_server.run();
 		}	);
 #endif
 		_note(mo_file_reader::gettext("L_starting_main_server"));
-        myserver->run();
+		myserver_ptr->run();
 		_note(mo_file_reader::gettext("L_main_server_ended"));
 #ifdef HTTP_DBG
-        httpdbg_server.stop();
+		httpdbg_server.stop();
 		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
 		_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
 #endif
