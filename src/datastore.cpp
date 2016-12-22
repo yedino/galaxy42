@@ -60,7 +60,7 @@ void datastore::save_string_mlocked(t_datastore file_type,
 		file.close();
 
 		FILE *f_ptr;
-		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "w");
+		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "wb");
 		// magic 1 is the size in bytes of each element to be written
 		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
 
@@ -88,7 +88,7 @@ std::string datastore::load_string(t_datastore file_type,
 		if (!is_file_ok(b_fs::canonical(file_with_path).string())) {
 			_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
 		} else {
-			b_fs::ifstream ifs(file_with_path);
+			b_fs::ifstream ifs(file_with_path, std::ios::in | std::ios::binary);
 			content.assign( (std::istreambuf_iterator<char>(ifs) ),
 							(std::istreambuf_iterator<char>()  ) );
 
