@@ -14,7 +14,7 @@ class runtime_error_subtype : public std::runtime_error {
 			T_SUBTYPE subtype;
 			subtype.set_msg(msg);
 			return subtype;
-		};
+        }
 		virtual const char * what() const noexcept override;
 
 		protected:
