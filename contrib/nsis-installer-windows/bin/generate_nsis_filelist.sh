@@ -16,7 +16,7 @@ gen_x86_64() {
 	if ( is_dir "${SCRIPT_DIR}/x64" ); then
 		find ${SCRIPT_DIR}/x64 -regex ".*\.\(dll\|exe\)" \
 			| sort \
-			| awk -F "x64/" '{print "\t\tbin/x64/"$2}'
+			| awk -F "x64/" '{print "\t\tFILE bin/x64/"$2}'
 			
 	else 
 		echo "Can't find x64 dir in $SCRIPT_DIR, skipping..."
@@ -27,7 +27,7 @@ gen_i686() {
 	if ( is_dir "${SCRIPT_DIR}/x86" ); then
 		find ${SCRIPT_DIR}/x86 -regex ".*\.\(dll\|exe\)" \
 			| sort \
-			| awk -F "x86/" '{print "\t\tbin/x86/"$2}'
+			| awk -F "x86/" '{print "\t\tFILE bin/x86/"$2}'
 
 	else 
 		echo "Can't find x86 dir in $SCRIPT_DIR, skipping..."
