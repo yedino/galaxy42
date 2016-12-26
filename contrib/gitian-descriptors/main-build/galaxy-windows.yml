@@ -10,6 +10,7 @@ packages:
 - "g++-5"
 - "mingw-w64"
 - "g++-mingw-w64"
+- "mingw-w64-tools"
 - "cmake"
 - "autoconf"
 - "automake"
@@ -20,6 +21,7 @@ packages:
 - "zlib1g-dev" # for nsis build -- unclear why it is needed  bug(GALAXY-226)
 - "ca-certificates"  #  because of: Problem with the SSL CA cert (path? access rights?)
 - "faketime" # used to force date
+- "zip"
 - "gettext-base" # some scripts/tools used in build could be using gettext translations
 - "gettext" # for msgfmt and other advanced tools to compile language .po to .mo
 reference_datetime: "2016-08-01 00:00:00"
