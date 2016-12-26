@@ -112,6 +112,7 @@ echo "FAKETIME = ${FAKETIME}"
 WRAP_DIR="$HOME/wrapped"
 HOSTS="x86_64-w64-mingw32 i686-w64-mingw32" # related to $TARGET_ARCH
 COMPILERS="g++ gcc cpp g++-posix gcc-posix cpp-posix cc c++" # do we need "cc c++"? TODO
+NATIVE_COLPILATION_TOOLS="g++ gcc cpp cc c++ ar ranlib nm strip objcopy elfedit ld ld.bfd objdump readelf"
 
 ##  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
 CONFIGFLAGS=""
@@ -140,11 +141,11 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 fi
 
 function create_global_faketime_wrappers {
-for prog in ${FAKETIME_PROGS}; do
+for prog in ${FAKETIME_PROGS} ${NATIVE_COLPILATION_TOOLS}; do
 	outfile="${WRAP_DIR}/${prog}"
 	printf "\n%s\n" "WRAPPING (global): $outfile"
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
-    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+	echo "REAL=\"$(which -a ${prog})\"" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
@@ -153,12 +154,12 @@ done
 }
 
 function create_per-host_faketime_wrappers {
-for i in $HOSTS; do
+for i in ${HOSTS}; do
     for prog in ${FAKETIME_HOST_PROGS}; do
 	outfile="${WRAP_DIR}/${i}-${prog}"
 	printf "\n%s\n" "WRAPPING (per-host): $outfile"
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+		echo "REAL=\"$(which -a ${i}-${prog})\"" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
@@ -170,7 +171,7 @@ done
 function create_per-host_linker_wrapper {
 # This is only needed for trusty, as the mingw linker leaks a few bytes of
 # heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
-for i in $HOSTS; do
+for i in ${HOSTS}; do
     mkdir -p ${WRAP_DIR}/${i}
     for prog in collect2; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}/${prog}
@@ -181,7 +182,7 @@ for i in $HOSTS; do
     done
     for prog in ${COMPILERS}; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+		echo "REAL=\"$(which -a ${i}-${prog})\"" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
@@ -193,9 +194,9 @@ done
 
 # Faketime for depends so intermediate results are comparable
 export PATH_orig=${PATH}
-create_global_faketime_wrappers "$FAKETIME"
-create_per-host_faketime_wrappers "$FAKETIME"
-create_per-host_linker_wrapper "$FAKETIME"
+create_global_faketime_wrappers "${FAKETIME}"
+create_per-host_faketime_wrappers "${FAKETIME}"
+create_per-host_linker_wrapper "${FAKETIME}"
 export PATH=${WRAP_DIR}:${PATH}
 
 
