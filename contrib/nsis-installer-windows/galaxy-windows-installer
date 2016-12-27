@@ -54,6 +54,11 @@ pushd nsis || fail
 
 	export PATH="${HOME}/wrapped:${PATH}"
 
+	# for scons nsis_version - work because we only need day precision
+	# ** more than 24h build of nsis could ruin deteministic
+	export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+	export FAKETIME="2016-08-01 00:00:00"
+
 	sed -i '46a\    '$WRAP_DIR'/i686-w64-mingw32-' SCons/Tools/crossmingw.py # add our wrapped i686-w64-mingw32 at the top of compiler available list
 
 	scons UNICODE=yes ZLIB_W32=../zlib PREFIX=install_dir install || fail "Scons failed (of zlib, for NSIS)"
