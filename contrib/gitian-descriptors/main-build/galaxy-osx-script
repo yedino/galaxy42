@@ -13,11 +13,11 @@ OUTDIR="$1"
 export OUTDIR
 
 readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
+readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
 
 # build osx cross toolchain
-pushd "${BUILD_TOP_DIR}"
-	"${GALAXY_DIR}/contrib/macdeploy/build-cross-toolchain.sh"
+pushd "${GALAXY_DIR}"
+	./contrib/macdeploy/build-cross-toolchain.sh
 popd
 
 readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
@@ -35,7 +35,7 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 
 WRAP_DIR="$HOME/wrapped"
 
-HOSTS="x86_64-apple-darwin11"
+HOSTS="x86_64-apple-darwin15"
 COMPILERS="o64-clang o64-clang++"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
@@ -140,30 +140,33 @@ g++ -print-prog-name=ar
 set +x
 printf "\n\n"
 
-export CC=o64-clang
-export CXX=o64-clang++
 
+# ** building boost **
 pushd "${GALAXY_DIR}" || fail
-
 	contrib/gitian-descriptors/libboost-build/build-boost-osx || fail "Failed to build dependence - boost lib for osx"
-
 popd || fail
 echo "\nAll done regarding boost.\n"
 
+# ** building libsodium **
+pushd "${GALAXY_DIR}" || fail
+	contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - boost lib for osx"
+popd
+
 # *** main build starts here ***
-pushd galaxy42
-echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+pushd "${GALXAY_DIR}"
+	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+	export CC=o64-clang
+	export CXX=o64-clang++
 
+	git clean -fdx
+	# make dist # delete
+	COVERAGE=0 EXTLEVEL=0 \
+	#	BUILD_STATIC=1 
+	#	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+		./do --go || fail "Failed to do the main build of our project"
+	#############################################
 
-git clean -fdx
-# make dist # delete
-COVERAGE=0 EXTLEVEL=0 \
-#	BUILD_STATIC=1 
-#	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
-	./do --go || fail "Failed to do the main build of our project"
-#############################################
-
-echo -e "\n\nBuild is done.\n\n"
+	echo -e "\n\nBuild is done.\n\n"
 popd
 
 

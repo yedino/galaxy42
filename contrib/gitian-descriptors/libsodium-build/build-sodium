@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+# importing functions
+. /home/ubuntu/build/galaxy42/contrib/gitian-descriptors/libsodium-build/dl-sodium
+
+function fail() {
+	printf "\nERROR: the script failed (see above messages).\n\n"
+	exit 1
+}
+
+readonly TARGET_ARCH="$1"
+readonly SODIUM_DIR="$HOME/build/libsodium/"
+
+# use wrapped tools to provide deterministic build
+export PATH="${HOME}/wrapped:${PATH}"
+
+build-sodium () {
+	## clone and build libsodium
+	printf "\n\n=========================================================================\n\n"
+	printf "libsodium...\n\n"
+
+	cd "$HOME/build/" || fail "Can not enter build dir"
+
+	option_download_skip=0 # XXX
+	option_allow_sodium=1
+
+	if (( option_allow_sodium )) ; then
+		printf "\n\nWill build sodium now\n\n"
+
+		if (( option_download_skip )) ; then
+			printf "\n\n\n\nSkipping download (libsodium)\n\n\n\n"
+
+		else
+			# Download main libsodium repository
+			dl_sodium
+		fi
+
+		pushd libsodium || fail # cd
+
+			./autogen.sh || fail
+
+			printf "\n\nRunning crossbuild-script(s) (of lib sodium)\n\n"
+
+			if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
+				local patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
+				printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 64bit) - from file ($patched_msys_script)\n\n"
+				cp "$patched_msys_script" "./dist-build/msys2-win64.sh" || fail
+				
+				export CC="x86_64-w64-mingw32-gcc"
+				export CXX="x86_64-w64-mingw32-g++"
+				./dist-build/msys2-win64.sh || fail
+			elif [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
+
+				local patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win32.sh"
+				printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 32bit) - from file ($patched_msys_script)\n\n"
+				cp "$patched_msys_script" "./dist-build/msys2-win32.sh" || fail
+				
+				export CC="i686-w64-mingw32-gcc"
+				export CXX="i686-w64-mingw32-g++"
+				./dist-build/msys2-win32.sh || fail
+			elif [[ $TARGET_ARCH == "x86_64-apple-darwin15"]]; then
+				local patched_osx_script="$HOME/build/galaxy42/contrib/gitian-patch/libsodium-osx_x86_64.sh"
+				printf "\n\nPatching the apple-darwin15-crossbuild-script(s) (of lib sodium 64bit) - from file ($patched_osx_script)\n\n"
+				cp "$patched_osx_script" "./dist-build/osx.sh" || fail
+
+				export CC="o64-clang"
+				export CXX="o64-clang++"
+				./dist-build/osx.sh || fail
+			fi
+		popd
+
+	else
+		printf "\n\nSkipping sodium (as selected in options)\n\n"
+	fi
+} 
+build-sodium $TARGET_ARCH

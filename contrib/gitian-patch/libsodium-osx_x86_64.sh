@@ -1,6 +1,6 @@
 #!/bin/bash
 
-printf "\nApple/darwin11 osx 64bit crossbuild script for Libsodium (with fixes)\n\n"
+printf "\nclang apple-darwin15 osx 64bit crossbuild script for Libsodium (with fixes)\n\n"
 
 function fail() {
 	printf "\nError in $0. (see above)\n\n"
@@ -20,11 +20,11 @@ make distclean > /dev/null
 
 ./configure --enable-minimal \
             --prefix="$PREFIX" \
-            --host=x86_64-apple-darwin11 || fail
+            --host=x86_64-apple-darwin15 || fail
 
 make -j3 install || fail
 
 # Cleanup
 make distclean > /dev/null
 
-printf "\nApple/darwin11 osx 64bit crossbuild script for Libsodium (with fixes) - DONE\n\n"
+printf "\nclang apple-darwin11 osx 64bit crossbuild script for Libsodium (with fixes) - DONE\n\n"
