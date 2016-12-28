@@ -245,7 +245,7 @@ unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
 	IDe -> generate( m_cryptolists_count , will_asymkex );
 	m_packetstart_IDe = IDe->read_pub().serialize_bin(); // TODO(r) this should be all moved outside
 	_dbg1("Created my IDe, ready to send it as: " << to_debug(m_packetstart_IDe) );
-	return std::move(IDe);
+	return IDe;
 }
 
 void c_stream::set_packetstart_IDe_from(const c_multikeys_PAIR & keypair) {

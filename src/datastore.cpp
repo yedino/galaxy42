@@ -2,7 +2,7 @@
 
 #include "datastore.hpp"
 #include "text_ui.hpp"
-#include <boost/locale.hpp>
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#include <windows.h>
 #endif
@@ -60,7 +60,7 @@ void datastore::save_string_mlocked(t_datastore file_type,
 		file.close();
 
 		FILE *f_ptr;
-		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "w");
+		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "wb");
 		// magic 1 is the size in bytes of each element to be written
 		std::fwrite(locked_data.c_str(), 1, locked_data.size(), f_ptr);
 
@@ -88,7 +88,7 @@ std::string datastore::load_string(t_datastore file_type,
 		if (!is_file_ok(b_fs::canonical(file_with_path).string())) {
 			_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
 		} else {
-			b_fs::ifstream ifs(file_with_path);
+			b_fs::ifstream ifs(file_with_path, std::ios::in | std::ios::binary);
 			content.assign( (std::istreambuf_iterator<char>(ifs) ),
 							(std::istreambuf_iterator<char>()  ) );
 
@@ -238,7 +238,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 #endif
 	static bool first_run = true;
 	if(first_run) {
-		_goal(boost::locale::gettext("L_get_home_directory: ") << " "<< user_home.c_str());
+		_goal(mo_file_reader::gettext("L_get_home_directory: ") << " "<< user_home.c_str());
 		first_run = false;
 	} else
 		_info("Get home directory: "<< user_home.c_str());
@@ -287,7 +287,7 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 		if(is_file_ok(file_with_path.string()) &&  !overwrite) {
 			std::string err_msg(file_with_path.string()
 //								+ std::string(": file existing, it can't be overwrite [overwrite=")
-                                                                + std::string(boost::locale::gettext("L_fail_file_overwrite"))
+                                                                + std::string(mo_file_reader::gettext("L_fail_file_overwrite"))
 
 								+ std::to_string(overwrite)
 								+ std::string("]"));
@@ -300,7 +300,7 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 		empty_file.close();
 		if (!is_file_ok(file_with_path)) {
 //			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
-                        std::string err_msg(__func__ + std::string(boost::locale::gettext("L_fail_create_empty_file")));
+                        std::string err_msg(__func__ + std::string(mo_file_reader::gettext("L_fail_create_empty_file")));
 
 			_throw_error( std::invalid_argument(err_msg) );
 		}
