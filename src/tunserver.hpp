@@ -176,8 +176,9 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 
 class c_tunserver : public c_galaxy_node {
 	public:
-		c_tunserver();
+		c_tunserver(int port, int rpc_port);
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
+		void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
 		void configure_mykey(); ///<  load my (this node's) keypair
 		void run(int time = 0); ///< run the main loop
@@ -210,6 +211,8 @@ class c_tunserver : public c_galaxy_node {
 
 		void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) override;
 		const c_peering & get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) override;
+		int get_my_port() const;
+		std::string get_my_reference() const;
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -265,7 +268,7 @@ class c_tunserver : public c_galaxy_node {
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
-
+        shared_ptr< boost::program_options::variables_map > m_argm;
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
@@ -321,6 +324,7 @@ class c_tunserver : public c_galaxy_node {
 		c_rpc_server m_rpc_server;
 		std::string rpc_ping(const std::string &input_json);
 		std::string rpc_peer_list(const std::string &input_json);
+		int m_port;
 };
 
 // ------------------------------------------------------------------

@@ -72,7 +72,7 @@ Current TODO / topics:
 const char * g_demoname_default = "route_dij";
 // see function run_mode_developer() here to see list of possible values
 
-#include <boost/locale.hpp>
+
 #include "libs1.hpp"
 
 #include "tunserver.hpp"
@@ -376,21 +376,22 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
-                _erro(boost::locale::gettext("L_failed_adding_peer_simple_reference") << e.what());
+                _erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what());
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
-		_throw_error( std::invalid_argument(boost::locale::gettext("L_bad_peer_format")) );
+		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 
 	}
 }
 
-c_tunserver::c_tunserver()
+c_tunserver::c_tunserver(int port, int rpc_port)
 :
 	m_my_name("unnamed-tunserver")
-	,m_udp_device(9042) //TODO port
+	,m_udp_device(port)
 	,m_event_manager(m_tun_device, m_udp_device)
 	,m_tun_header_offset_ipv6(0)
-	,m_rpc_server(42000)
+	,m_rpc_server(rpc_port)
+	,m_port(port)
 {
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
@@ -408,6 +409,10 @@ std::mutex & c_tunserver::get_my_mutex() const {
 
 void c_tunserver::set_desc(shared_ptr< boost::program_options::options_description > desc) {
 	m_desc = desc;
+}
+
+void c_tunserver::set_argm(shared_ptr< boost::program_options::variables_map > argm) {
+    m_argm = argm;
 }
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
@@ -510,15 +515,37 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
 unique_ptr<c_haship_pubkey> && pubkey)
 {
+	_dbg1("Update (or add) peer reference " << peer_ref << ", pubkey=" << (*pubkey));
+	{
+		// auto hip_from_pubkey = pubkey->get_ipv6_string_hexdot(); // re-confirm there that the haship matches the pubkey, just to be sure:
+		c_haship_addr hip_from_pubkey( c_haship_addr::tag_constr_by_hash_of_pubkey() , *pubkey );
+
+		if (hip_from_pubkey != peer_ref.haship_addr) {
+			_throw_error(runtime_error(join_string_sep("Pubkey",*pubkey," has hip not matching reference",peer_ref)));
+		}
+	}
+
+	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
+
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	auto find = m_peer.find( peer_ref.haship_addr );
 	if (find == m_peer.end()) { // no such peer yet
 		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+		_fact("Adding new peer " << peer_ref << " with pubkey=" << (*pubkey));
 		peering_ptr->set_pubkey(std::move(pubkey));
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	} else { // update existing
 		auto & peering_ptr = find->second;
-		peering_ptr->set_pubkey(std::move(pubkey));
+		const auto & old_pip = peering_ptr->get_pip();
+		const auto & new_pip = peer_ref.peering_addr;
+		if (old_pip == new_pip) {
+			_info("This peer "<<(*pubkey)<<" has unchanged IP "<< new_pip);
+		}
+		else {
+			_fact("This peer "<<(*pubkey)<<" CHANGES IP, from " << old_pip << " to " << new_pip );
+			peering_ptr->set_pubkey(std::move(pubkey));
+			peering_ptr->set_pip( new_pip );
+		}
 	}
 }
 
@@ -566,7 +593,7 @@ void c_tunserver::prepare_socket() {
 			m_tun_device.set_ipv6_address(address, 16);
 			m_tun_device.set_mtu(1304);
 
-			_fact("Finsh init of event manager - for this tuntap");
+			_fact("Done init of event manager - for this tuntap");
 			m_event_manager.init(); // because now we have the tuntap fully ready (with the fd)
 		}
 		catch (tuntap_error_devtun &ex) { ui::action_error_exit("Problem with setup of virtual card (tun/tap) with accessing tun/tap driver-file; "s + ex.what()); }
@@ -695,11 +722,11 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 }
 
 void c_tunserver::debug_peers() {
-	_note("=== Debug peers ===");
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	if (!m_peer.size()) _stat("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_info("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
+		_stat("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -710,6 +737,12 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	c_routing_manager::c_route_reason reason,
 	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
+	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
+	if (m_peer.size() == 0) {
+		_warn("I have no peers, I can not route anywhere.");
+		return false;
+	}
+
 	// --- choose next hop in peering ---
 
 	// try direct peers:
@@ -755,7 +788,9 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 	const char *buff, size_t buff_size,
 	c_haship_addr src_hip, c_haship_addr dst_hip,
-	c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used) {
+	c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
+{
+	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
 	try {
 		_info("Sending data between end2end " << src_hip <<"--->" << dst_hip);
 		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
@@ -845,12 +880,14 @@ void c_tunserver::event_loop(int time) {
 	c_counter counter_big(10,false);
 
 	this->peering_ping_all_peers();
-	const auto ping_all_frequency = std::chrono::seconds( 3 ); // how often to ping them
+
+    const auto ping_all_frequency = std::chrono::seconds( m_argm->at("net-hello-interval").as<int>() ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
 	auto ping_all_time_last = std::chrono::steady_clock::now(); // last time we sent ping to all
 	long int ping_all_count = 0; // how many times did we do that in fact
+	const auto idle_banner_frequency = std::chrono::seconds( 15 ); // how often to show banner/stats
 
 
 	// low level receive buffer
@@ -864,7 +901,7 @@ void c_tunserver::event_loop(int time) {
 		std::lock_guard<std::mutex> lg(m_peer_mutex);
 		if (! m_peer.size()) {
 			was_connected=false;
-			ui::action_info_ok(boost::locale::gettext("L_wait_for_connect"));
+			ui::action_info_ok(mo_file_reader::gettext("L_wait_for_connect"));
 		}
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
@@ -872,7 +909,11 @@ void c_tunserver::event_loop(int time) {
         double start = std::clock();
         auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
 
+	auto time_loop_start = std::chrono::steady_clock::now(); // time now
+	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
+
 	while (time ? timer(time) : true) {
+		try { // ---
 
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
@@ -888,6 +929,7 @@ void c_tunserver::event_loop(int time) {
 
 		auto time_now = std::chrono::steady_clock::now(); // time now
 
+
 		{
 			auto freq = ping_all_frequency;
 			if (ping_all_count < ping_all_count_low) freq = ping_all_frequency_low;
@@ -900,16 +942,17 @@ void c_tunserver::event_loop(int time) {
 		}
 
 		ostringstream oss;
-		oss <<	" Node " << m_my_name << " hip=" << m_my_hip;
+		oss <<	"Node " << m_my_name << " "
+			<< " has peer(s): " << get_my_stats_peers_known_count()
+			<< " has address: " << m_my_hip ;
 		const string node_title_bar = oss.str();
 
-
-		if (anything_happened || 1) {
+		/*if (anything_happened || 1) {
 			debug_peers();
-
 			string xx(10,'-');
 			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
+		*/
 
 		anything_happened=false;
 
@@ -918,7 +961,6 @@ void c_tunserver::event_loop(int time) {
 		// TODO(r): program can be hanged/DoS with bad routing, no TTL field yet
 		// ^--- or not fully checked. need scoring system anyway
 
-		try { // ---
 		if (m_event_manager.get_tun_packet()) { // get packet from tun
 			anything_happened=true;
 			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
@@ -929,10 +971,7 @@ void c_tunserver::event_loop(int time) {
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
 			// TODO warn if src_hip is not our hip
 
-			_note(" is galaxy? dst_hip=" << dst_hip << " is:");
 			if (!addr_is_galaxy(dst_hip)) {
-
-
 				_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
 			}
@@ -1100,6 +1139,7 @@ void c_tunserver::event_loop(int time) {
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
                                                 auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+
 						_assert_throw( (write_bytes == tundata.size()) );
 					} // we have CT
 
@@ -1110,18 +1150,18 @@ void c_tunserver::event_loop(int time) {
 				}
 				else
 				{ // received data that is addresses to someone else
-#if 0
+#if 1
 					auto data_route_ttl = requested_ttl - 1;
 					const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 					if (data_route_ttl > limit_incoming_ttl) {
-						_info("We were requested to route (data) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
+						_warn("We were requested to route (data) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 						data_route_ttl=limit_incoming_ttl;
 					}
 
 					_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
 					if (sender_as_peering_ptr != nullptr) {
 						if (sender_as_peering_ptr->get_limit_points() < 0) {
-							_dbg1("drop packet");
+							_dbg1("drop packet (in ROUTING) because points");
 							continue;
 						}
 						// sender_as_peering_ptr->decrement_limit_points();
@@ -1292,23 +1332,42 @@ void c_tunserver::event_loop(int time) {
 			}
 			// ------------------------------------
 
+		} // event: udp
+		else {
+			_dbg3("No event/idle");
+		} // event: idle / nothing happened
+
+
+		{ // write periodical stats
+			bool doit=1;
+			if (time_last_idle != nullptr) {
+				if (*time_last_idle >= time_now - idle_banner_frequency) doit=0; // cancel the idle report if it's too soon
+			}
+
+			if (doit) {
+				time_last_idle = make_unique<decltype(time_now)>( time_now );
+				_stat("Status: " << node_title_bar);
+				debug_peers();
+			}
 		}
-		else _info("Idle. " << node_title_bar);
 
 		}
 		catch (std::exception &e) {
 			_warn("### !!! ### Parsing network data caused an exception: " << e.what());
+		}
+		catch (...) {
+			_erro("### !!! ### Parsing network data caused unknown exception type.");
 		}
 
 // stats-TODO(r) counters
 //		int sent=0;
 //		counter.tick(sent, std::cout);
 //		counter_big.tick(sent, std::cout);
-	}
+	} // while
 }
 
 void c_tunserver::run(int time) {
-	std::cout << boost::locale::gettext("L_starting_TUN") << std::endl;
+	std::cout << mo_file_reader::gettext("L_starting_TUN") << std::endl;
 
 	prepare_socket();
 	event_loop(time);
@@ -1337,7 +1396,7 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 std::string c_tunserver::program_action_gen_key_simple() {
 	const string IDI_name = "IDI";
 //	ui::action_info_ok("Generating your new keys.");
-        ui::action_info_ok(boost::locale::gettext("L_generatin_new_keys"));
+        ui::action_info_ok(mo_file_reader::gettext("L_generatin_new_keys"));
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys; // list of key types
 	keys.emplace_back(std::make_pair(antinet_crypto::t_crypto_system_type_from_string("ed25519"), 1));
@@ -1381,6 +1440,17 @@ void c_tunserver::program_action_gen_key(boost::program_options::variables_map &
 		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
+
+int c_tunserver::get_my_port() const {
+	return m_port;
+}
+
+std::string c_tunserver::get_my_reference() const {
+	ostringstream oss;
+	oss << "./tunserver.elf --peer YOURIP:" << get_my_port() << "-" << get_my_ipv6_nice();
+	return oss.str();
+}
+
 
 // ------------------------------------------------------------------
 

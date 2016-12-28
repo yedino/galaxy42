@@ -4,11 +4,12 @@
 #ifndef C_TNETDBG_HPP
 #define C_TNETDBG_HPP
 
-#include <boost/locale.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "mo_reader.hpp"
 
 extern unsigned char g_dbg_level;
 
@@ -36,21 +37,22 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 	::std::cerr<< X; \
 	do { DBGLVL(LVL_EXTRA); ::std::cerr << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	std::cerr << "\033[0m" << ::std::endl; } while(0)
-#define _fact(X) _fact_level( 90, 30, X)
+#define _stat(X) _fact_level( 90, 30, X)
+#define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 /// yellow code
 //        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
 
 #define _warn(X) do { DBGLVL(100); \
 	::std::cerr<<"\033[93m\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<< boost::locale::gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+	::std::cerr<< mo_file_reader::gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 } while(0)
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
 
 #define _erro(X) do { DBGLVL(200); \
 	::std::cerr<<"\033[91m\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<<boost::locale::gettext("L_error") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	::std::cerr<<mo_file_reader::gettext("L_error") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<"\033[0m"<<::std::endl; \
 } while(0)
 #define _mark(X) do { DBGLVL(150); \
@@ -99,12 +101,12 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 
 //        _warn("Going to throw exception. What: " << except_var.what()
 #define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
-	_warn( boost::locale::gettext("L_what_exception_program_throw") << except_var.what() \
+	_warn( mo_file_reader::gettext("L_what_exception_program_throw") << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
-	_warn(boost::locale::gettext("L_what_exception_program_throw") << except_var.what() \
+	_warn(mo_file_reader::gettext("L_what_exception_program_throw") << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 

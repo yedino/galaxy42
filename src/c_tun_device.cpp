@@ -327,7 +327,8 @@ size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
 	//size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec); // prepares: blocks (but TUN is fast)
 	size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(eth_frame), ec); // prepares: blocks (but TUN is fast)
 	if (ec) throw std::runtime_error("boost error " + ec.message());
-	return write_bytes;
+	if (write_bytes < (eth_header_size - eth_offset)) return 0; ///< error write not complete
+	return write_bytes - eth_header_size + eth_offset;
 }
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
@@ -656,16 +657,16 @@ int c_tun_device_apple::create_tun_fd() {
     // connect to first not used tun
     int tested_card_counter = 0;
     auto t0 = time::now();
-    _fact(boost::locale::gettext("L_searching_for_virtual_card"));
+    _fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
         auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
         if (tested_card_counter++ > number_of_tested_cards)
-            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_max_number_of_tested_cards_limit_reached"));
+            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
         if (int_s >= cards_testing_time)
-            _throw_error_sub( tuntap_error_devtun, boost::locale::gettext("L_connection_to_tun_timeout"));
+            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
-    _goal(boost::locale::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+    _goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
     m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;
