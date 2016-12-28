@@ -89,7 +89,7 @@ printf "\n\nBoost b2 headers...\n\n"
 ./b2 -q headers || fail "b2 headers"
 
 printf "\n\nStarting the b2 boost build\n\n"
-b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" )
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" )
 b2_opt_debug=( )
 if (( option_verbose )) ; then
     b2_opt_debug=( "-d" "4" "--debug-building" )
