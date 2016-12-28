@@ -70,16 +70,33 @@ For more details, including correct naming and **glossary**, and advanced techni
 
 Older release notes are in [Changelog.md](Changelog.md).
 
-=== Using pre-built binary ===
+## Using pre-built binary
 
-On windows: get the installer .exe, run it.
-The Program files/galaxy42/tunserver.elf.exe
+You can download the binary releases from:
+https://github.com/yedino/galaxy42-release/
+https://github.com/yedino/galaxy42-release/tree/master/tests-insecure
+search there for the version that you want to use.
 
-Program will be installed as service and will run on boot.
-+ disable the service. Run the installed .exe manually. It will work and you can specify --peer option ... as well as see own IP.
+Security: write down a checksum of the downloaded file if you care about security for verification in future,
+also check if other people confirm same checksum of binary files, and you can also confirm yourself
+that it matches given source code (see below - "Security of binary install").
 
-On macosx: currently not supporting this untill we resolve bug#J278
+* Using pre-built binary on **Windows**:
+you need to have TUN/TAP Driver installed first, e.g. get one from the OpenVPN project.
+* Get the installer .exe, run it.
+* Results:
+  * Program is in: Program files/galaxy42/tunserver.elf.exe
+  * Program will be installed as service and will run on boot.
+* You can start program manually e.g. to specify command-line options:
+  * Disable the system service of Galaxy42
+  * Run the installed .exe program manually. It will work and you can specify --peer option ... as well as see own virtual IPv6 there.
 
+* Using pre-built binary on **Linux**:
+* Get the installer .tar.gz and unpack it.
+* Start the program using the .sh script there for static version of program.
+
+* Using pre-built binary on **Mac OS X**:
+* Currently not supporting this (untill we resolve bug#J278).
 
 * * *
 
@@ -92,7 +109,23 @@ When you build program from source, check the file [SECURITY.txt] for list of de
 
 ### Security of binary install:
 
-Currently we do not yet offer binary install. But once we do, they will be properly signed by root of trust.
+We offer binary builds on web page:
+
+https://github.com/yedino/galaxy42-release/
+in future address will be also:
+https://download.yedino.com/
+
+The files there will be GPG signed, see below "Root of trust".
+
+Write down a checksum of the downloaded file if you care about security for verification in future:
+you can check if the files are GPG-signed by us (they always should be), and look around if other
+trusted people repeated our Gitian builds and can testify they have same resulting checksum.
+
+In addition you can "trust no one" and repeat the Gitian build now or in future and you will get identical checksum
+of resulting binary files.
+
+If you repeat the Gitian build in far future (when there were updates to relevant parts of the OS that we use inside Gitian),
+then you must somehow provide identical version of the packages, otherwise it could change the checksum.
 
 ### Security of binary auto-updates:
 
