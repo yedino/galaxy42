@@ -16,6 +16,7 @@ readonly SODIUM_DIR="$HOME/build/libsodium/"
 
 # use wrapped tools to provide deterministic build
 export PATH="${HOME}/wrapped:${PATH}"
+printf "PATH = $PATH"
 
 build-sodium () {
 	## clone and build libsodium
@@ -61,13 +62,13 @@ build-sodium () {
 				export CC="i686-w64-mingw32-gcc"
 				export CXX="i686-w64-mingw32-g++"
 				./dist-build/msys2-win32.sh || fail
-			elif [[ $TARGET_ARCH == "x86_64-apple-darwin15"]]; then
+			elif [[ $TARGET_ARCH == "x86_64-apple-darwin15" ]]; then
 				local patched_osx_script="$HOME/build/galaxy42/contrib/gitian-patch/libsodium-osx_x86_64.sh"
 				printf "\n\nPatching the apple-darwin15-crossbuild-script(s) (of lib sodium 64bit) - from file ($patched_osx_script)\n\n"
 				cp "$patched_osx_script" "./dist-build/osx.sh" || fail
 
-				export CC="o64-clang"
-				export CXX="o64-clang++"
+				export CC="x86_64-apple-darwin15-clang"
+				export CXX="x86_64-apple-darwin15-clang++"
 				./dist-build/osx.sh || fail
 			fi
 		popd

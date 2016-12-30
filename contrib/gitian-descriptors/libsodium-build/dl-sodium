@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-readonly SODIUM_DIR="$HOME/build/libsodium/"
-
+# Required global variable defined in build-sodium
+# readonly SODIUM_DIR="$HOME/build/libsodium/"
 
 # clone main libsodium repository 
 # checkout to choosen tag
@@ -21,7 +21,7 @@ dl_sodium () {
     local PWD_sodium="$PWD/"
     [[ "$PWD_sodium" == "$SODIUM_DIR" ]] \
         || {
-            echo "The PWD (PWD_sodium=$PWD_sodium) is not the expected boost dir ($SODIUM_DIR) - aborting"
+            echo "The PWD (PWD_sodium=$PWD_sodium) is not the expected libsodium dir ($SODIUM_DIR) - aborting"
             exit 0
         }
 
