@@ -18,9 +18,11 @@ export LDFLAGS="-arch x86_64 -mmacosx-version-min=${OSX_VERSION_MIN} -march=${OS
 
 make distclean > /dev/null
 
-./configure --enable-minimal \
+./configure PACKAGE_STRING='libsodium1.0.11' \
+            --enable-minimal \
             --prefix="$PREFIX" \
-            --host=x86_64-apple-darwin15 || fail
+            --host=x86_64-apple-darwin15 \
+                || fail
 
 make -j3 install || fail
 
