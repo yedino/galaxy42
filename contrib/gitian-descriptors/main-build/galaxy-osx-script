@@ -17,7 +17,8 @@ readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
 
 # build osx cross toolchain
 pushd "${GALAXY_DIR}"
-	./contrib/macdeploy/build-cross-toolchain.sh
+	source ./contrib/macdeploy/build-cross-toolchain.sh
+	printf "sourced PATH = $PATH\n"
 popd
 
 readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
@@ -35,12 +36,12 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 
 WRAP_DIR="$HOME/wrapped"
 
-HOSTS="x86_64-apple-darwin15"
-COMPILERS="o64-clang o64-clang++"
+HOST="x86_64-apple-darwin15"
+COMPILERS="clang clang++"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
 
-FAKETIME_HOST_PROGS=""
+FAKETIME_HOST_PROGS="ar strip nm otool"
 FAKETIME_PROGS="date ar ranlib dmg genisoimage"
 
 HOST_CFLAGS="-O2 -g"
@@ -51,9 +52,6 @@ HOST_LDFLAGS="-static-libstdc++"
 export GZIP="-9n"
 # export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
 export TZ="UTC"
-
-# ok?
-export BUILD_DIR=`pwd`
 
 # set cache variables
 GBUILD_CACHE_ENABLED=1
@@ -81,7 +79,7 @@ function create_global_faketime_wrappers {
 }
 
 function create_per-host_faketime_wrappers {
-	for i in $HOSTS; do
+	for i in $HOST; do
 		for prog in ${FAKETIME_HOST_PROGS}; do
 			local out="${WRAP_DIR}/${i}-${prog}"
 			echo "" > "$out"
@@ -122,7 +120,7 @@ export PATH=${WRAP_DIR}:${PATH}
 # Create the release tarball using (arbitrarily) the first host
 
 # ./autogen.sh # delete
-# CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
+# CONFIG_SITE=${BASEPREFIX}/`echo "${HOST}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
 
 printf "\n\n\nDoing boost static build\n\n\n"
@@ -149,20 +147,21 @@ echo "\nAll done regarding boost.\n"
 
 # ** building libsodium **
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - boost lib for osx"
+	contrib/gitian-descriptors/libsodium-build/build-sodium "${HOST}" || fail "Failed to build dependence - libsodium for osx"
 popd
 
 # *** main build starts here ***
-pushd "${GALXAY_DIR}"
+pushd "${GALAXY_DIR}"
 	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
-	export CC=o64-clang
-	export CXX=o64-clang++
+
+	export CC="x86_64-apple-darwin15-clang"
+	export CXX="x86_64-apple-darwin15-clang++"
 
 	git clean -fdx
 	# make dist # delete
 	COVERAGE=0 EXTLEVEL=0 \
-	#	BUILD_STATIC=1 
-	#	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+	#	BUILD_STATIC=1
+		BUILD_SET_BOOST_ROOT="${BUILD_DIR}/boost/build-osx/" \
 		./do --go || fail "Failed to do the main build of our project"
 	#############################################
 
