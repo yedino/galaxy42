@@ -68,8 +68,7 @@ private:
     string reply=raport.generate(strs[2]);
 
     boost::asio::async_write(socket_,
-    	boost::asio::buffer(reply, reply.size()),
-    	// boost::asio::buffer(data_, length),
+			boost::asio::buffer(reply.c_str(), reply.size()),
         [this, self](boost::system::error_code ec, size_t /*length*/)
         {
           if (!ec)
