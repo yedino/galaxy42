@@ -121,6 +121,19 @@ set +x
 
 printf "\n\n\n\nDONE the b2 boost build\n\n\n\n"
 
+# Create sybolic links .a to libraries required by our main cmake
+create_symlinks() {
+	pushd "$BOOST_DIR/build-osx/lib"
+		for filename in *.dylib; do
+				local tmp=`echo "${filename}" | cut -d. -f1`.a;
+				ln -s "${filename}" "${tmp}" \
+					|| fail "Create symbolic link for ${filename}"
+		done
+	popd
+}
+create_symlinks
+
+
 # copy all boost includes for header only libraries
 #find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
 #    substr="include"

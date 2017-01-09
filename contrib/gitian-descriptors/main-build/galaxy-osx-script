@@ -160,21 +160,26 @@ pushd "${GALAXY_DIR}"
 	export CXX="x86_64-apple-darwin15-clang++"
 
 	git clean -fdx
-	# make dist # delete
-	COVERAGE=0 EXTLEVEL=0 \
-	#	BUILD_STATIC=1
-		BUILD_SET_BOOST_ROOT="${BUILD_DIR}/boost/build-osx/" \
-		./do --go || fail "Failed to do the main build of our project"
-	#############################################
+	git submodule update --init --recursive
+
+	cmake	-DBOOST_ROOT="${BUILD_DIR}/boost/build-osx/" \
+			-DSODIUM_ROOT_DIR="${BUILD_DIR}/libsodium/libsodium-osx/" \
+			-DCMAKE_TOOLCHAIN_FILE="${GALAXY_DIR}/cmake/toolchain_macosx.cmake.in" \
+			. \
+			|| fail "create makefile for our project (cmake) failed"
+
+	make tunserver.elf || fail "make of our project (main binary) failed"
 
 	echo -e "\n\nBuild is done.\n\n"
 popd
 
 
-echo -e "\n\nBuild will start the linux packer.\n"
+echo -e "\n\nBuild will start the osx packer.\n"
 pushd "${GALAXY_DIR}" || fail
-echo "In PWD=$PWD"
-contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
+	echo "In PWD=$PWD"
+	echo "OSX packer script is not provided yet"
+	echo "simple copy only tunserver.elf"
+	cp "${GALAXY_DIR}/tunserver.elf" "${OUTDIR}"
 popd || fail
 
 ### </LICENCE> - end of licence block
