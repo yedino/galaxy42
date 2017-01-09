@@ -401,7 +401,7 @@ echo "SODIUM_ROOT: $SODIUM_ROOT"
 
 printf "\n\nMoving on to main build of actually our project:"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH="$TARGET_ARCH" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
+cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH="$TARGET_ARCH" -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
 make tunserver.elf || fail "make of our project (main binary) failed"
 make galaxyService || fail "make of our project (main binary) failed"
 
