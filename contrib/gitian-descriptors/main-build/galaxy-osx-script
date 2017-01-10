@@ -171,6 +171,16 @@ pushd "${GALAXY_DIR}"
 	echo -e "\n\nBuild is done.\n\n"
 popd
 
+# .mo language files
+copy_noarch() {
+        # generate all .mo files
+	pushd "${GALAXY_DIR}" || fail
+        "${GALAXY_DIR}/contrib/tools/galaxy42-lang-update-all"
+        mkdir -p "${OUTDIR}/locale/share" || fail "mkdir locale/share"
+        cp -r --dereference "${GALAXY_DIR}/share/locale" "${OUTDIR}" || fail "copy (mo files)"
+	popd || fail
+}
+copy_noarch
 
 echo -e "\n\nBuild will start the osx packer.\n"
 pushd "${GALAXY_DIR}" || fail
