@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# outputs sum of files for ---> linux <---
+# outputs sum of files for ---> MAC <---
 # first line is the main checksum
 
 
 build="/home/ubuntu/build"
 proj="/home/ubuntu/build/galaxy42/"
+out_dir="/home/ubuntu/out/"
 
-mapfile -t all_file < <( ls -1 $proj/*.elf $proj/share/locale/ | LC_ALL=C sort )
+mapfile -t all_file < <( ls -1 $out_dir/*.elf $out_dir/*.dylib | LC_ALL=C sort )
 
-#mapfile -t all_file < <( find  test/lib/*      -name  '*.dll' -o -name '*.exe' | sort ) # test
 if (( "${#all_file[@]}" )) ; then
 	mapfile -t all_hash < <( sha256sum "${all_file[@]}")
 else
