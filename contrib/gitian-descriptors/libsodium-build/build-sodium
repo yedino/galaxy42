@@ -78,3 +78,5 @@ build-sodium () {
 	fi
 } 
 build-sodium $TARGET_ARCH
+
+find "$HOME/build/libsodium/libsodium-osx/lib/" -name "*.dylib" -exec cp -v {} "${OUTDIR}" \; || fail "cp error"
