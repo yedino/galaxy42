@@ -142,14 +142,14 @@ printf "\n\n"
 # ** building boost **
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libboost-build/build-boost-osx || fail "Failed to build dependence - boost lib for osx"
-	cp "${BUILD_DIR}/boost/build-osx/lib/*.dylib" "${OUTDIR}"
+	find . -name "*.dylib" -exec cp {} "${OUTDIR}" \; || fail "cp error"
 popd || fail
 echo "\nAll done regarding boost.\n"
 
 # ** building libsodium **
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libsodium-build/build-sodium "${HOST}" || fail "Failed to build dependence - libsodium for osx"
-	cp "${BUILD_DIR}/libsodium/libsodium-osx/lib/*.dylib" "${OUTDIR}"
+	find . -name "*.dylib" -exec cp {} "${OUTDIR}" \; || fail "cp error"
 popd
 
 # *** main build starts here ***
