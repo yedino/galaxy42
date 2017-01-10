@@ -8,7 +8,10 @@ build="/home/ubuntu/build"
 proj="/home/ubuntu/build/galaxy42/"
 out_dir="/home/ubuntu/out/"
 
-mapfile -t all_file < <( ls -1 $out_dir/*.elf $out_dir/*.dylib | LC_ALL=C sort )
+mapfile -t all_file < <(
+	ls -1 $out_dir/*.elf $out_dir/*.dylib | LC_ALL=C sort
+	find $out_dir/locale/ -name *.mo | LC_ALL=C sort
+	)
 
 if (( "${#all_file[@]}" )) ; then
 	mapfile -t all_hash < <( sha256sum "${all_file[@]}")
