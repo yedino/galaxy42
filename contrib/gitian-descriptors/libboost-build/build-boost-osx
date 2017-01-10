@@ -133,6 +133,7 @@ create_symlinks() {
 }
 create_symlinks
 
+find "$BOOST_DIR/build-osx/lib" -name "*.dylib" -exec cp -v {} "${OUTDIR}" \; || fail "cp error"
 
 # copy all boost includes for header only libraries
 #find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
