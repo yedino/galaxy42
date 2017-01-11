@@ -23,6 +23,7 @@ namespace g_ipv6_rfc {
 
 	constexpr unsigned char header_position_of_dst = 24 ;  // rfc2460#section-3
 	constexpr unsigned char header_length_of_dst = 128/8 ;  // length of this field
+	constexpr unsigned char header_position_of_ip_protocol_type = 6 ;
 }
 // use: g_ipv6_rfc::header_position_of_src
 

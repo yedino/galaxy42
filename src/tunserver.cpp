@@ -392,6 +392,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_tun_header_offset_ipv6(0)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
+	,m_supported_ip_protocols{TCP, UDP, IPv6_ICMP}
 {
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
@@ -1138,9 +1139,15 @@ void c_tunserver::event_loop(int time) {
 						}
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-                                                auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+						if (check_ip_protocol(tundata))
+						{
+							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+							_assert_throw( (write_bytes == tundata.size()) );
 
-						_assert_throw( (write_bytes == tundata.size()) );
+						}
+						else
+							_warn("IP protocol number " << get_ip_protocol_number(tundata) << " not supported.");
+
 					} // we have CT
 
 					if (!was_anything_sent_to_TUN) {
@@ -1457,6 +1464,18 @@ std::string c_tunserver::get_my_reference() const {
 	return oss.str();
 }
 
+bool c_tunserver::check_ip_protocol(const std::string& data) const{
+	char protocol = get_ip_protocol_number(data);
+	if(find(m_supported_ip_protocols.begin(), m_supported_ip_protocols.end(), protocol) != m_supported_ip_protocols.end())
+		return true;
+	else
+		return false;
+}
+
+int c_tunserver::get_ip_protocol_number(const std::string& data) const{
+	size_t pos_ip_protocol_type = m_tun_header_offset_ipv6 + g_ipv6_rfc::header_position_of_ip_protocol_type;
+	return data.at(pos_ip_protocol_type);
+}
 
 // ------------------------------------------------------------------
 
