@@ -49,12 +49,12 @@ git submodule foreach git clean -fdx
 # patching boost locale - detecting iconv
 patch "$BOOST_DIR/libs/locale/build/Jamfile.v2" < "$HOME/build/galaxy42/contrib/gitian-patch/workaround-boost-12570.patch"
 
-
-boost_user_gcc="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-clang++-libc++"
-AR="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-ar"
-LD="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-ld"
-STRIP="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-strip"
-RANLIB="/home/ubuntu/build/osxcross/target/bin/x86_64-apple-darwin15-ranlib"
+wrapped_dir="/home/ubuntu/wrapped"
+boost_user_gcc="${wrapped_dir}/x86_64-apple-darwin15-clang++-libc++"
+AR="${wrapped_dir}/x86_64-apple-darwin15-ar"
+LD="${wrapped_dir}/x86_64-apple-darwin15-ld"
+STRIP="${wrapped_dir}/x86_64-apple-darwin15-strip"
+RANLIB="${wrapped_dir}/x86_64-apple-darwin15-ranlib"
 
 printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
 
