@@ -37,7 +37,7 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 WRAP_DIR="$HOME/wrapped"
 
 HOST="x86_64-apple-darwin15"
-COMPILERS="clang clang++"
+COMPILERS="clang clang++ clang++-libc++"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
 
