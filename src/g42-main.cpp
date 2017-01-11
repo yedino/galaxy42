@@ -491,7 +491,7 @@ int main(int argc, char **argv) {
             #endif
                         ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
                         ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
-                        ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::gettext("L_rpcPort_do").c_str())
+                        ("rpc-port", po::value<int>()->default_value(9043), mo_file_reader::gettext("L_rpcPort_do").c_str())
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
