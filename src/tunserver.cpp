@@ -1133,22 +1133,24 @@ void c_tunserver::event_loop(int time) {
 						_note("Using CT tunnel to decrypt data for us");
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
-						if (!check_packet_destination_address(dst_hip, tundata)) {
-							_warn("crypto authentification of destination IP failed");
-							throw std::runtime_error("crypto authentification of destination IP failed");
-						}
-						if (!check_packet_source_address(src_hip, tundata)) {
-							_warn("crypto authentification of source IP failed");
-							throw std::runtime_error("crypto authentification of source IP failed");
-						}
+
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						if (check_ip_protocol(tundata)) {
 							// add TUN header
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
+							tundata.insert(g_ipv6_rfc::header_position_of_src, reinterpret_cast<const char *>(src_hip.data()), src_hip.size());
+							tundata.insert(g_ipv6_rfc::header_position_of_dst, reinterpret_cast<const char *>(dst_hip.data()), dst_hip.size());
+
+/*							if (!check_packet_destination_address(dst_hip, tundata)) {
+								_warn("crypto authentification of destination IP failed");
+								throw std::runtime_error("crypto authentification of destination IP failed");
+							}
+							if (!check_packet_source_address(src_hip, tundata)) {
+								_warn("crypto authentification of source IP failed");
+								throw std::runtime_error("crypto authentification of source IP failed");
+							}*/
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
-							tundata.insert(g_ipv6_rfc::header_position_of_src, reinterpret_cast<const char *>(src_hip.data()));
-							tundata.insert(g_ipv6_rfc::header_position_of_dst, reinterpret_cast<const char *>(dst_hip.data()));
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 							_assert_throw( (write_bytes == tundata.size()) );
 
