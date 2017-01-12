@@ -970,6 +970,7 @@ void c_tunserver::event_loop(int time) {
 
 			c_haship_addr src_hip, dst_hip;
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
+			std::cout << "src_hip " << src_hip << "\n dst_hip " << dst_hip << std::endl;
 			// TODO warn if src_hip is not our hip
 
 			if (!addr_is_galaxy(dst_hip)) {
@@ -999,6 +1000,7 @@ void c_tunserver::event_loop(int time) {
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
 				std::string data_cleartext(buf +4, buf+size_read-4);
+//				std::string data_cleartext(buf, buf+size_read);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -1143,7 +1145,7 @@ void c_tunserver::event_loop(int time) {
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header));
 							std::cout << "tuna packet size " << tundata.size() << "\n";
-							for (int i = 0; i < 4; i++)
+							for (int i = 0; i < 8; i++)
 								std::cout << std::hex << (((int)tundata[i]) & 0xFF) << " ";
 							std::cout << std::dec << std::endl;
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
