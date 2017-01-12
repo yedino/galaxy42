@@ -41,7 +41,7 @@ private:
 
 template <class T>
 void mo_file_reader::add_mo_filename(T &&name) {
-	static_assert(std::is_same<T, const std::string &>::value || std::is_same<T, std::string &>::value  || std::is_same<T, std::string>::value, "name must be std::string");
+	static_assert(std::is_same<typename std::decay<T>::type, std::string>::value, "name must be std::string");
 	if (!m_mo_filename.empty()) throw std::runtime_error("mo file is open");
 	if (name.size() < 4) throw std::invalid_argument("file name is too short");
 	m_mo_filename = std::forward<T>(name);
