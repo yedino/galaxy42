@@ -30,7 +30,7 @@ namespace g_ipv6_rfc {
 namespace g_tuntap {
 	namespace TUN_with_PI {
 
-		constexpr unsigned char header_position_of_ipv6 = 0;
+		constexpr unsigned char header_position_of_ipv6 = 4;
 
 	}
 	// not supporting TAP for now
