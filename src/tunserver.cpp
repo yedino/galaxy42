@@ -892,7 +892,7 @@ void c_tunserver::event_loop(int time) {
 
 
 	// low level receive buffer
-	const int buf_size=65536;
+	constexpr size_t buf_size=65536;
 	char buf[buf_size];
 
 	bool anything_happened=false; // in given loop iteration, for e.g. debug
@@ -964,12 +964,13 @@ void c_tunserver::event_loop(int time) {
 
 		if (m_event_manager.get_tun_packet()) { // get packet from tun
 			anything_happened=true;
-			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
-			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
+			std::vector<int8_t> tun_read_buff(buf_size);
+			auto size_read = m_tun_device.read_from_tun(&tun_read_buff[0], tun_read_buff.size());
+			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(reinterpret_cast<char *>(&tun_read_buff[0]),size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
 			c_haship_addr src_hip, dst_hip;
-			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
+			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<const char *>(&tun_read_buff[0]), size_read);
 			// TODO warn if src_hip is not our hip
 
 			if (!addr_is_galaxy(dst_hip)) {
@@ -999,7 +1000,9 @@ void c_tunserver::event_loop(int time) {
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
 
-				std::string data_cleartext(buf + g_tuntap::header_position_of_ipv6, size_read - g_tuntap::header_position_of_ipv6);
+				std::string data_cleartext(reinterpret_cast<char *>(&tun_read_buff[g_tuntap::header_position_of_ipv6]), size_read - g_tuntap::header_position_of_ipv6);
+				// clear data == ipv6 packet
+				data_cleartext.erase(g_ipv6_rfc::header_position_of_src, g_haship_addr_size * 2); // remove src and dst addr from ipv6
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -1144,6 +1147,8 @@ void c_tunserver::event_loop(int time) {
 							// add TUN header
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
+							tundata.insert(g_ipv6_rfc::header_position_of_src, reinterpret_cast<const char *>(src_hip.data()));
+							tundata.insert(g_ipv6_rfc::header_position_of_dst, reinterpret_cast<const char *>(dst_hip.data()));
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 							_assert_throw( (write_bytes == tundata.size()) );
 
