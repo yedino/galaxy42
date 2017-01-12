@@ -813,11 +813,11 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 }
 
 bool c_tunserver::check_packet_destination_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
-	return check_packet_address(address_expected, packet, 28); //< 28 == offset of src address
+	return check_packet_address(address_expected, packet, 24); //< 28 == offset of src address
 }
 
 bool c_tunserver::check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
-	return check_packet_address(address_expected, packet, 12); //< 12 == offset of src address
+	return check_packet_address(address_expected, packet, 8); //< 12 == offset of src address
 }
 
 bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_expected, const string &packet, const size_t offset) {
@@ -999,6 +999,11 @@ void c_tunserver::event_loop(int time) {
 				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
+				std::cout << "ignoring bytes: ";
+				for (int i = 0; i < 4; i++)
+								std::cout << std::hex << (((int)buf[i]) & 0xFF) << " ";
+				std::cout << std::dec << std::endl;
+
 				std::string data_cleartext(buf +4, buf+size_read-4);
 //				std::string data_cleartext(buf, buf+size_read);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
@@ -1144,10 +1149,10 @@ void c_tunserver::event_loop(int time) {
 						if (check_ip_protocol(tundata)) {
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header));
-							std::cout << "tuna packet size " << tundata.size() << "\n";
+/*							std::cout << "tuna packet size " << tundata.size() << "\n";
 							for (int i = 0; i < 8; i++)
 								std::cout << std::hex << (((int)tundata[i]) & 0xFF) << " ";
-							std::cout << std::dec << std::endl;
+							std::cout << std::dec << std::endl;*/
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 							_assert_throw( (write_bytes == tundata.size()) );
 
@@ -1480,7 +1485,7 @@ bool c_tunserver::check_ip_protocol(const std::string& data) const{
 }
 
 int c_tunserver::get_ip_protocol_number(const std::string& data) const{
-	size_t pos_ip_protocol_type = m_tun_header_offset_ipv6 + g_ipv6_rfc::header_position_of_ip_protocol_type;
+	size_t pos_ip_protocol_type = g_ipv6_rfc::header_position_of_ip_protocol_type;
 	return data.at(pos_ip_protocol_type);
 }
 
