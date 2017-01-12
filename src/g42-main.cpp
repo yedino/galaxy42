@@ -383,7 +383,7 @@ int main(int argc, char **argv) {
 	try {
 		mo_file_reader mo_reader;
 		mo_reader.add_messages_dir(install_dir_share_locale);
-		mo_reader.add_mo_filename("galaxy42_main");
+		mo_reader.add_mo_filename(std::string("galaxy42_main"));
 		mo_reader.read_file();
 	} catch (const std::exception &e) {
 		std::cerr << "mo file open error: " << e.what() << std::endl;

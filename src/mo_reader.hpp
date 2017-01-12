@@ -20,10 +20,10 @@ public:
 	void add_messages_dir(std::string &&path);
 
 	/**
-	* @param name Name of mo file
+	* @param name Name of mo file(std::string)
 	*/
-	void add_mo_filename(const std::string &name);
-	void add_mo_filename(std::string &&name);
+	template <class T>
+	void add_mo_filename(T &&name);
 
 	static std::string gettext(const std::string &original_string);
 
@@ -37,5 +37,16 @@ private:
 	std::string m_mo_filename;
 	static std::atomic<bool> s_translation_map_ready;
 };
+
+
+template <class T>
+void mo_file_reader::add_mo_filename(T &&name) {
+	static_assert(std::is_same<T, const std::string &>::value || std::is_same<T, std::string>::value, "name must be std::string");
+	if (!m_mo_filename.empty()) throw std::runtime_error("mo file is open");
+	if (name.size() < 4) throw std::invalid_argument("file name is too short");
+	m_mo_filename = std::forward<T>(name);
+	if (m_mo_filename.substr(m_mo_filename.size() - 3) != ".mo")
+		m_mo_filename += ".mo";
+}
 
 #endif // MO_READER_HPP
