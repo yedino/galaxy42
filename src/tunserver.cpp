@@ -1004,7 +1004,7 @@ void c_tunserver::event_loop(int time) {
 								std::cout << std::hex << (((int)buf[i]) & 0xFF) << " ";
 				std::cout << std::dec << std::endl;
 
-				std::string data_cleartext(buf +4, buf+size_read-4);
+				std::string data_cleartext(buf +4, size_read-4);
 //				std::string data_cleartext(buf, buf+size_read);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
