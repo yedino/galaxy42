@@ -998,7 +998,7 @@ void c_tunserver::event_loop(int time) {
 				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
-				std::string data_cleartext(buf, buf+size_read);
+				std::string data_cleartext(buf +4, buf+size_read-4);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -1139,8 +1139,13 @@ void c_tunserver::event_loop(int time) {
 						}
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-						if (check_ip_protocol(tundata))
-						{
+						if (check_ip_protocol(tundata)) {
+							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
+							tundata.insert(0, reinterpret_cast<const char*>(tun_header));
+							std::cout << "tuna packet size " << tundata.size() << "\n";
+							for (int i = 0; i < 4; i++)
+								std::cout << std::hex << (((int)tundata[i]) & 0xFF) << " ";
+							std::cout << std::dec << std::endl;
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 							_assert_throw( (write_bytes == tundata.size()) );
 
