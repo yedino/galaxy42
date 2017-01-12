@@ -578,7 +578,7 @@ void c_tunserver::prepare_socket() {
 	ui::action_info_ok("Allocated virtual network card interface (TUN)"); // TODO@mik translate './menu lc'
 	// under name: " + to_string(ifr.ifr_name));
 
-	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
+	m_tun_header_offset_ipv6 = g_tuntap::header_position_of_ipv6; // matching the TUN/TAP type above
 	{
 		std::array<uint8_t, 16> address;
 		assert(m_my_hip.size() == 16 && "m_my_hip != 16");
@@ -813,11 +813,11 @@ c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) cons
 }
 
 bool c_tunserver::check_packet_destination_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
-	return check_packet_address(address_expected, packet, 24); //< 28 == offset of src address
+	return check_packet_address(address_expected, packet, g_ipv6_rfc::header_position_of_dst); //< 28 == offset of src address
 }
 
 bool c_tunserver::check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
-	return check_packet_address(address_expected, packet, 8); //< 12 == offset of src address
+	return check_packet_address(address_expected, packet, g_ipv6_rfc::header_position_of_src); //< 12 == offset of src address
 }
 
 bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_expected, const string &packet, const size_t offset) {
@@ -970,7 +970,6 @@ void c_tunserver::event_loop(int time) {
 
 			c_haship_addr src_hip, dst_hip;
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
-			std::cout << "src_hip " << src_hip << "\n dst_hip " << dst_hip << std::endl;
 			// TODO warn if src_hip is not our hip
 
 			if (!addr_is_galaxy(dst_hip)) {
@@ -999,13 +998,8 @@ void c_tunserver::event_loop(int time) {
 				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
-				std::cout << "ignoring bytes: ";
-				for (int i = 0; i < 4; i++)
-								std::cout << std::hex << (((int)buf[i]) & 0xFF) << " ";
-				std::cout << std::dec << std::endl;
 
-				std::string data_cleartext(buf +4, size_read-4);
-//				std::string data_cleartext(buf, buf+size_read);
+				std::string data_cleartext(buf + g_tuntap::header_position_of_ipv6, size_read - g_tuntap::header_position_of_ipv6);
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -1147,12 +1141,9 @@ void c_tunserver::event_loop(int time) {
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						if (check_ip_protocol(tundata)) {
+							// add TUN header
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
-							tundata.insert(0, reinterpret_cast<const char*>(tun_header));
-/*							std::cout << "tuna packet size " << tundata.size() << "\n";
-							for (int i = 0; i < 8; i++)
-								std::cout << std::hex << (((int)tundata[i]) & 0xFF) << " ";
-							std::cout << std::dec << std::endl;*/
+							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 							_assert_throw( (write_bytes == tundata.size()) );
 
