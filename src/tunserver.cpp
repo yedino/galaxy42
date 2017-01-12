@@ -1002,7 +1002,7 @@ void c_tunserver::event_loop(int time) {
 
 				std::string data_cleartext(reinterpret_cast<char *>(&tun_read_buff[g_tuntap::header_position_of_ipv6]), size_read - g_tuntap::header_position_of_ipv6);
 				// clear data == ipv6 packet
-				data_cleartext.erase(g_ipv6_rfc::header_position_of_src, g_haship_addr_size * 2); // remove src and dst addr from ipv6
+				data_cleartext.erase(g_ipv6_rfc::header_position_of_dst, g_haship_addr_size); // remove dst addr from ipv6
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -1139,17 +1139,16 @@ void c_tunserver::event_loop(int time) {
 						if (check_ip_protocol(tundata)) {
 							// add TUN header
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
-							tundata.insert(g_ipv6_rfc::header_position_of_src, reinterpret_cast<const char *>(src_hip.data()), src_hip.size());
 							tundata.insert(g_ipv6_rfc::header_position_of_dst, reinterpret_cast<const char *>(dst_hip.data()), dst_hip.size());
 
 /*							if (!check_packet_destination_address(dst_hip, tundata)) {
 								_warn("crypto authentification of destination IP failed");
 								throw std::runtime_error("crypto authentification of destination IP failed");
-							}
+							}*/
 							if (!check_packet_source_address(src_hip, tundata)) {
 								_warn("crypto authentification of source IP failed");
 								throw std::runtime_error("crypto authentification of source IP failed");
-							}*/
+							}
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
 							_assert_throw( (write_bytes == tundata.size()) );
