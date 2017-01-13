@@ -25,6 +25,30 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define SHOW_DEBUG
 #ifdef SHOW_DEBUG
 
+#include <winbase.h>
+#include <wincon.h>
+#include <windef.h>
+
+extern const bool g_is_windows_console;
+template <typename T>
+void write_to_console(const T& obj) {
+	if (g_is_windows_console) {
+		#if defined(_WIN32) || defined(__CYGWIN__)
+		std::ostringstream oss;
+		oss << obj;
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		const std::string str = oss.str();
+		DWORD write_bytes = 0;
+		WriteConsole(hConsole, str.c_str(), str.size(), &write_bytes, nullptr);
+		#else
+			assert(flase); // windows console detected on non windows OS
+		#endif
+	}
+	else
+		::std::cerr << obj;
+}
+
+
 #define DBGLVL(N) if (!(N>=g_dbg_level)) break
 
 #define _dbg3(X) do { DBGLVL( 10); ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
