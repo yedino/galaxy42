@@ -28,6 +28,7 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #include <windef.h>
 #include <winbase.h>
 #include <wincon.h>
+#include <stringapiset.h>
 
 extern const bool g_is_windows_console;
 template <typename T>
@@ -37,9 +38,14 @@ void write_to_console(const T& obj) {
 		std::ostringstream oss;
 		oss << obj;
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		const std::string str = oss.str();
+		//const std::string str = oss.str();
+		const std::string str = "żźćśóńł";
+		wchar_t buf[1024];
 		DWORD write_bytes = 0;
-		WriteConsole(hConsole, str.c_str(), str.size(), &write_bytes, nullptr);
+		write_bytes = MultiByteToWideChar(CP_UTF8, 0,
+            str.c_str(), str.size(),
+            buf, sizeof(buf));
+		WriteConsole(hConsole, buf, write_bytes, &write_bytes, nullptr);
 		#else
 			assert(flase); // windows console detected on non windows OS
 		#endif
@@ -51,11 +57,17 @@ void write_to_console(const T& obj) {
 
 #define DBGLVL(N) if (!(N>=g_dbg_level)) break
 
-#define _dbg3(X) do { DBGLVL( 10); ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-#define _dbg2(X) do { DBGLVL( 20); ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-#define _dbg1(X) do { DBGLVL( 30); ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
-#define _info(X) do { DBGLVL( 40); ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
-#define _note(X) do { DBGLVL( 50); ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; } while(0)
+//#define _dbg3(X) do { DBGLVL( 10); ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
+//#define _dbg2(X) do { DBGLVL( 20); ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
+//#define _dbg1(X) do { DBGLVL( 30); ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
+//#define _info(X) do { DBGLVL( 40); ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
+//#define _note(X) do { DBGLVL( 50); ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
+#define _dbg3(X) do { DBGLVL( 10); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
+#define _dbg2(X) do { DBGLVL( 20); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
+#define _dbg1(X) do { DBGLVL( 30); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
+#define _info(X) do { DBGLVL( 40); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
+#define _note(X) do { DBGLVL( 50); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
+
 #define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
 	::std::cerr<<"\033[92m"; \
 	::std::cerr<< X; \

@@ -8,10 +8,10 @@
 unsigned char g_dbg_level = 100; // (extern)
 const bool g_is_windows_console = []() {
 	#if defined(_WIN32) || defined(__CYGWIN__)
-		//#include <winnt.h>
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		DWORD n = 0;
-		return WriteConsole(hConsole, nullptr, 0, &n, nullptr);
+		bool ret = WriteConsole(hConsole, nullptr, 0, &n, nullptr);
+		return ret;
 	#else
 		return false;
 	#endif
