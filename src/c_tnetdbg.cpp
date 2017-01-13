@@ -6,7 +6,16 @@
 #include <cstring>
 
 unsigned char g_dbg_level = 100; // (extern)
-
+const bool g_is_windows_console = []() {
+	#if defined(_WIN32) || defined(__CYGWIN__)
+		//#include <winnt.h>
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		DWORD n = 0;
+		return WriteConsole(hConsole, nullptr, 0, &n, nullptr);
+	#else
+		return false;
+	#endif
+}();
 
 void g_dbg_level_set(unsigned char level, std::string why, bool quiet) {
 	bool more_debug = level < g_dbg_level;
@@ -16,6 +25,7 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet) {
 	}
 	if (!more_debug) g_dbg_level = level; // increase after printing
 }
+
 
 const char * debug_shorten__FILE__(const char * name) {
 	const char *p1 = name;
