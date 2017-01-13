@@ -25,9 +25,9 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define SHOW_DEBUG
 #ifdef SHOW_DEBUG
 
+#include <windef.h>
 #include <winbase.h>
 #include <wincon.h>
-#include <windef.h>
 
 extern const bool g_is_windows_console;
 template <typename T>
