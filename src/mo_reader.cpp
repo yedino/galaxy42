@@ -101,7 +101,7 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 		lang,
 		sizeof(lang)
 		);
-	if (ret == 0) throw std::system_error("GetLocaleInfo error, last error code " + std::to_string(GetLastError));
+	if (ret == 0) throw std::runtime_error("GetLocaleInfo error, last error code " + std::to_string(GetLastError()));
 	return std::string(lang);
 #endif
 }
