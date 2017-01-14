@@ -86,7 +86,7 @@ if (CYGWIN)
 	set(BOOST_LOCALE_LINK_LIB boost_locale-mt boost_thread-mt boost_atomic-mt)
 	set(BOOST_THREAD_LINK_LIB boost_thread-mt boost_atomic-mt)
 else()
-	set(BOOST_LOCALE_LIB_SEARCH locale)
+	set(BOOST_LOCALE_LIB_SEARCH)
 	set(BOOST_THREAD_LIB_SEARCH thread atomic)
 endif()
 
@@ -119,6 +119,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(Sodium)
+link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/)
 
 if (NOT SODIUM_FOUND)
 message("\nSODIUM NOT FOUND!")
