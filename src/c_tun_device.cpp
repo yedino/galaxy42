@@ -302,7 +302,8 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 	const size_t eth_offset = 10;
 	m_readed_bytes -= eth_offset;
 	assert(m_readed_bytes > 0);
-	std::copy_n(&m_buffer[0] + eth_offset, m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
+	if(m_readed_bytes <= count)
+		std::copy_n(&m_buffer[0] + eth_offset, m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
 	size_t ret = m_readed_bytes;
 	m_readed_bytes = 0;
 	return ret;
@@ -559,6 +560,7 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 	catch (const std::runtime_error &e) {
 		m_readed_bytes = 0;
 		_erro("Problem with the TUN/TAP parser\n" << e.what());
+		_throw_error_sub( tuntap_error_devtun, " Problem with TUN/TAP device");
 	}
 
 	// continue reading
