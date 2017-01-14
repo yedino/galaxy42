@@ -19,7 +19,9 @@ void mo_file_reader::read_file() {
 	if (!m_ifstream.is_open()) throw std::runtime_error("mo file open error, filename: " + filename);
 
 	uint32_t magic_number = read_section();
-	if ((magic_number != 0x950412de) && (magic_number != 0xde120495))
+	if (magic_number == 0xde120495)
+		throw std::runtime_error("mo files with this endianness is not supported");
+	if ((magic_number != 0x950412de))
 		throw std::runtime_error("mo file bad format (wrong magic number)");
 
 	uint32_t file_format_revision = read_section();
@@ -64,18 +66,6 @@ void mo_file_reader::add_messages_dir(std::string &&path) {
 	m_messages_dir = std::move(path);
 }
 
-void mo_file_reader::add_mo_filename(const std::string &name) {
-	m_mo_filename = name;
-	if (m_mo_filename.substr(m_mo_filename.size() - 3) != ".mo")
-		m_mo_filename += ".mo";
-}
-
-void mo_file_reader::add_mo_filename(std::string &&name) {
-	m_mo_filename = std::move(name);
-	if (m_mo_filename.substr(m_mo_filename.size() - 3) != ".mo")
-		m_mo_filename += ".mo";
-}
-
 std::string mo_file_reader::gettext(const std::string &original_string) {
 	if (!s_translation_map_ready) return original_string;
 	try {
@@ -102,6 +92,7 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 	if (lang_env.size() >= 2 && std::islower(lang_env.at(0)) && std::islower(lang_env.at(1)))
 		return lang_env.substr(0, 2); // return first 2 characters (i.e. "pl" for "pl_PL.UTF-8")
 	std::string locale = setlocale(LC_CTYPE, "");
+	return locale;
 #else
 	char lang[3]; // ISO 639-1 == two-letter codes
 	int ret = GetLocaleInfoA(
@@ -110,6 +101,7 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 		lang,
 		sizeof(lang)
 		);
+	if (ret == 0) throw std::runtime_error("GetLocaleInfo error, last error code " + std::to_string(GetLastError()));
 	return std::string(lang);
 #endif
 }
