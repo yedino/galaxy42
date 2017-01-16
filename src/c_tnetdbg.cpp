@@ -8,9 +8,9 @@
 unsigned char g_dbg_level = 100; // (extern)
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include <windef.h>
-#include <winbase.h>
-#include <wincon.h>
+#include <windows.h>
+//#include <winbase.h>
+//#include <wincon.h>
 #include <stringapiset.h>
 #include <cstring>
 
