@@ -29,23 +29,26 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #include <winbase.h>
 #include <wincon.h>
 #include <stringapiset.h>
-
+#include <cstring>
 extern const bool g_is_windows_console;
 template <typename T>
 void write_to_console(const T& obj) {
 	if (g_is_windows_console) {
 		#if defined(_WIN32) || defined(__CYGWIN__)
+		
 		std::ostringstream oss;
 		oss << obj;
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		//const std::string str = oss.str();
-		const std::string str = "żźćśóńł";
+		const std::string str = oss.str();
+		//const std::string str = "żźćśóńł";
 		wchar_t buf[1024];
+		std::memset(buf, 0, sizeof(buf));
 		DWORD write_bytes = 0;
 		write_bytes = MultiByteToWideChar(CP_UTF8, 0,
             str.c_str(), str.size(),
             buf, sizeof(buf));
-		WriteConsole(hConsole, buf, write_bytes, &write_bytes, nullptr);
+		//WriteConsole(hConsole, buf, write_bytes, &write_bytes, nullptr);
+		::std::wcerr << buf;
 		#else
 			assert(flase); // windows console detected on non windows OS
 		#endif
@@ -68,18 +71,18 @@ void write_to_console(const T& obj) {
 #define _info(X) do { DBGLVL( 40); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
 #define _note(X) do { DBGLVL( 50); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
 
-#define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
+/*#define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
 	::std::cerr<<"\033[92m"; \
 	::std::cerr<< X; \
 	do { DBGLVL(LVL_EXTRA); ::std::cerr << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	std::cerr << "\033[0m" << ::std::endl; } while(0)
-#define _stat(X) _fact_level( 90, 30, X)
-#define _fact(X) _fact_level(100, 30, X)
-#define _goal(X) _fact_level(150, 30, X)
+#define _stat(X) //_fact_level( 90, 30, X)
+#define _fact(X) //_fact_level(100, 30, X)
+#define _goal(X) //_fact_level(150, 30, X)*/
 /// yellow code
 //        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
 
-#define _warn(X) do { DBGLVL(100); \
+/*#define _warn(X) do { DBGLVL(100); \
 	::std::cerr<<"\033[93m\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
 	::std::cerr<< mo_file_reader::gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 } while(0)
@@ -96,6 +99,14 @@ void write_to_console(const T& obj) {
 	::std::cerr<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
 	} while(0)
+*/
+
+#define _stat(X) do {} while(0)
+#define _fact(X) do {} while(0)
+#define _goal(X) do {} while(0)
+#define _warn(X) do {} while(0)
+#define _erro(X) do {} while(0)
+#define _mark(X) do {} while(0)
 
 #else
 

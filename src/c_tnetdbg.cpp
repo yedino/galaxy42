@@ -6,11 +6,34 @@
 #include <cstring>
 
 unsigned char g_dbg_level = 100; // (extern)
+
+void set_windows_console_utf8(HANDLE console_handle) {
+	CONSOLE_FONT_INFOEX cfi = {sizeof(cfi)};
+	GetCurrentConsoleFontEx(console_handle, FALSE, &cfi);
+	wchar_t font_name[32] = L"Lucida Console";
+	std::memcpy(cfi.FaceName, font_name, 32);
+	//cfi.FaceName = font_name;
+	SetCurrentConsoleFontEx(console_handle, FALSE, &cfi);
+	//std::wcout << "font name " << cfi.FaceName << std::endl; exit(0);
+	std::wcout << "GetConsoleOutputCP " << GetConsoleOutputCP() << std::endl;
+	bool chcp_ret = SetConsoleOutputCP(CP_UTF8);
+	std::wcout << "GetConsoleOutputCP " << GetConsoleOutputCP() << std::endl;
+	if (!chcp_ret) {
+		std::cout << "SetConsoleOutputCP error, nr: " + std::to_string(GetLastError()) << std::endl;
+		throw::std::runtime_error("SetConsoleOutputCP error, nr: " + std::to_string(GetLastError()));
+	}
+	std::cout << "SetConsoleOutputCP success" << std::endl;
+}
+
 const bool g_is_windows_console = []() {
 	#if defined(_WIN32) || defined(__CYGWIN__)
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		DWORD n = 0;
 		bool ret = WriteConsole(hConsole, nullptr, 0, &n, nullptr);
+		if (ret) { // if windows console
+			set_windows_console_utf8(hConsole);
+		}
+		//exit(0);
 		return ret;
 	#else
 		return false;
