@@ -43,6 +43,7 @@ const bool g_is_windows_console = []() {
 	#endif
 }();
 
+#include <cassert>
 void write_to_console(const std::string& obj) {
 	if (g_is_windows_console) {
 		#if defined(_WIN32) || defined(__CYGWIN__)
@@ -57,7 +58,7 @@ void write_to_console(const std::string& obj) {
             buf, sizeof(buf));
 		::std::wcerr << buf;
 		#else
-			assert(flase); // windows console detected on non windows OS
+			assert(false); // windows console detected on non windows OS
 		#endif
 	}
 	else
