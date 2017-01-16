@@ -25,64 +25,57 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define SHOW_DEBUG
 #ifdef SHOW_DEBUG
 
-#include <windef.h>
-#include <winbase.h>
-#include <wincon.h>
-#include <stringapiset.h>
-#include <cstring>
+
 extern const bool g_is_windows_console;
 
 void write_to_console(const std::string& obj);
 
 #define DBGLVL(N) if (!(N>=g_dbg_level)) break
 
-//#define _dbg3(X) do { DBGLVL( 10); ::std::cerr<<"dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
-//#define _dbg2(X) do { DBGLVL( 20); ::std::cerr<<"dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
-//#define _dbg1(X) do { DBGLVL( 30); ::std::cerr<<"dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
-//#define _info(X) do { DBGLVL( 40); ::std::cerr<<"\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << "\033[0m" << ::std::endl; } while(0)	///< blue esc code
-//#define _note(X) do { DBGLVL( 50); ::std::cerr<<"note: " << _my__FILE__ << ':' << __LINE__ << " " << write_to_console(X) << ::std::endl; } while(0)
-#define _dbg3(X) do { DBGLVL( 10); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
-#define _dbg2(X) do { DBGLVL( 20); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
-#define _dbg1(X) do { DBGLVL( 30); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
-#define _info(X) do { DBGLVL( 40); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
-#define _note(X) do { DBGLVL( 50); std::ostringstream oss; oss << "dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; write_to_console(oss.str());} while(0)
+#define _main_dbg(X) std::ostringstream oss; oss << X; write_to_console(oss.str())
 
-/*#define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
-	::std::cerr<<"\033[92m"; \
-	::std::cerr<< X; \
-	do { DBGLVL(LVL_EXTRA); ::std::cerr << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
-	std::cerr << "\033[0m" << ::std::endl; } while(0)
-#define _stat(X) //_fact_level( 90, 30, X)
-#define _fact(X) //_fact_level(100, 30, X)
-#define _goal(X) //_fact_level(150, 30, X)*/
+#define _dbg3(X) do { DBGLVL( 10); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _dbg2(X) do { DBGLVL( 20); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _dbg1(X) do { DBGLVL( 30); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _info(X) do { DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define _note(X) do { DBGLVL( 50); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+
+#define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
+	std::ostringstream oss; \
+	oss<<"\033[92m"; \
+	oss<< X; \
+	do { DBGLVL(LVL_EXTRA); oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
+	oss << "\033[0m" << ::std::endl; \
+	write_to_console(oss.str()); } while(0)
+#define _stat(X) _fact_level( 90, 30, X)
+#define _fact(X) _fact_level(100, 30, X)
+#define _goal(X) _fact_level(150, 30, X)
 /// yellow code
 //        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
 
-/*#define _warn(X) do { DBGLVL(100); \
-	::std::cerr<<"\033[93m\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<< mo_file_reader::gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+#define _warn(X) do { DBGLVL(100); \
+	std::ostringstream oss; \
+	oss<<"\033[93m\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
+	oss<< mo_file_reader::gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+	write_to_console(oss.str());\
 } while(0)
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
 
 #define _erro(X) do { DBGLVL(200); \
-	::std::cerr<<"\033[91m\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<::std::endl; \
-	::std::cerr<<mo_file_reader::gettext("L_error") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
-	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'!'; ::std::cerr<<"\033[0m"<<::std::endl; \
+	std::ostringstream oss; \
+	oss<<"\033[91m\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
+	oss<<mo_file_reader::gettext("L_error") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<"\033[0m"<<::std::endl; \
+	write_to_console(oss.str());\
 } while(0)
 #define _mark(X) do { DBGLVL(150); \
-	::std::cerr<<"\n\n"; for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
-	::std::cerr<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
-	for (int i=0; i<70; ++i) ::std::cerr<<'='; ::std::cerr<<::std::endl; \
+	std::ostringstream oss; \
+	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
+	oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
+	write_to_console(oss.str());\
 	} while(0)
-*/
-
-#define _stat(X) do {} while(0)
-#define _fact(X) do {} while(0)
-#define _goal(X) do {} while(0)
-#define _warn(X) do {} while(0)
-#define _erro(X) do {} while(0)
-#define _mark(X) do {} while(0)
 
 #else
 
