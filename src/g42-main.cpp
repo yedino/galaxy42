@@ -43,7 +43,7 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
 //	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
-        std::cerr << mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr << std::endl;
+        _fact( mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr );
 
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
 
@@ -86,7 +86,7 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 //	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-        std::cerr << mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr << std::endl;
+        _fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
 
 	if (my_nr == 1) add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
 	if (my_nr == 2) add_program_option_vector_strings(argm, "peer", "192.168.1.62:9042-fd42:ae11:f636:8636:ae76:acf5:e5c4:dae1");
@@ -121,7 +121,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 //	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-        std::cerr << mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr << std::endl;
+        _fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
 
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
@@ -178,17 +178,17 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	try {
 		ifstream democonf_file(democonf_fn);
 //		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
-                if (! democonf_file.good()) { std::cerr<<mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" << std::endl; return ret; }
+                if (! democonf_file.good()) { _fact( mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
 		string line="";
 		getline(democonf_file,line);
 //		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
-                if (! democonf_file.good()) { std::cerr<<mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" << std::endl; return ret; }
+                if (! democonf_file.good()) { _fact( mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
 		ret = line.substr( string("demo=").size() );
 	} catch(...) { }
 //	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
-        std::cerr<< mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret << std::endl;
+        _fact( mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret );
 
 	return ret;
 }
@@ -219,7 +219,7 @@ void test_lang_optional() {
 */
 bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 //	std::cerr << "Running in developer/demo mode." << std::endl;
-        std::cerr << mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl;
+        _fact( mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl );
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
@@ -245,8 +245,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("help",					"Help msg");
 
 	if ((demoname=="help")||(demoname=="list")) {
-		std::cout << "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:";
-		std::cout << desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" << std::endl; // TODO(janusz)
+		_fact( "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:" );
+		_fact( desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" ); // TODO(janusz)
 		return false;
 	}
 
@@ -255,8 +255,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="hardcoded") demoname = demoname_default;
 
 	_note("Demo name selected: [" << demoname << "]");
-	std::cout << std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
-		<< std::string(70,'=')<<"\n" << std::endl;
+	_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
+		<< std::string(70,'=')<<"\n" );
 
 	if (demoname=="lang_optional") { test_lang_optional();  return false; }
 	if (demoname=="foo") { test_foo();  return false; }
@@ -277,7 +277,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 
 bool run_mode_developer(boost::program_options::variables_map & argm) {
 	auto ret = run_mode_developer_main(argm);
-	std::cout << std::string(70,'=')<<"\n" << std::endl;
+	_fact( std::string(70,'=')<<"\n" );
 	return ret;
 }
 
@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
 
 	using std::cerr; using std::endl;
 
-	cerr << "Start... " << endl;
+	_fact( "Start... " );
 	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
 	{
@@ -334,27 +334,27 @@ int main(int argc, char **argv) {
 			for (auto && dir : data_dir_possible) {
 				string testname = dir;
 				testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
-				cerr << "Test: [" << testname << "]... " << std::flush;
+				_fact( "Test: [" << testname << "]... " << std::flush );
 				ifstream filetest( testname.c_str() );
 				if (filetest.good()) {
 					install_dir_base = dir;
 					found=true;
-					cerr << " OK! " << endl;
+					_fact(" OK! " );
 					break;
-				} else cerr << endl;
+				} else _fact( "" );
 			}
 		} catch(std::exception & ex) {
-				cerr << "Error while looking for data directory ("<<ex.what()<<")" << std::endl;
+				_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
 		}
 		if (found) {
 		} else {
-			cerr << "Can not find language data files." << endl;
+			_fact( "Can not find language data files." );
 		}
 	}
 
-	std::cerr << "Data: [" << install_dir_base << "]" << endl;
+	_fact( "Data: [" << install_dir_base << "]" );
 	const std::string install_dir_share_locale = install_dir_base + "/share/locale";
-	std::cerr << "Lang: [" << install_dir_share_locale << "]" << endl;
+	_fact( "Lang: [" << install_dir_share_locale << "]" );
 	setlocale(LC_ALL,"");
 
 /*	boost::locale::generator gen;
@@ -386,13 +386,13 @@ int main(int argc, char **argv) {
 		mo_reader.add_mo_filename("galaxy42_main");
 		mo_reader.read_file();
 	} catch (const std::exception &e) {
-		std::cerr << "mo file open error: " << e.what() << std::endl;
+		_erro( "mo file open error: " << e.what() );
 	}
 
-	std::cerr << std::string(80,'=') << std::endl << mo_file_reader::gettext("L_warning_work_in_progres") << std::endl << std::endl;
-	std::cerr << mo_file_reader::gettext("L_program_is_pre_pre_alpha") << std::endl;
-	std::cerr << mo_file_reader::gettext("L_program_is_copyrighted") << std::endl;
-	std::cerr << std::endl;
+	_fact( std::string(80,'=') << std::endl << mo_file_reader::gettext("L_warning_work_in_progres") << std::endl );
+	_fact( mo_file_reader::gettext("L_program_is_pre_pre_alpha") );
+	_fact( mo_file_reader::gettext("L_program_is_copyrighted") );
+	_fact( "" );
 
 
 //	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
@@ -671,8 +671,8 @@ int main(int argc, char **argv) {
 			_note("BoostPO after parsing debug");
 
 			if (argm.count("help")) { // usage
-				std::cout << *desc;
-				std::cout << std::endl << project_version_info() << std::endl;
+				_fact( *desc );
+				_fact( std::endl << project_version_info() );
 				return 0;
 			}
 
@@ -714,13 +714,13 @@ int main(int argc, char **argv) {
 
 				}
 //				std::cout << "Your key list:" << std::endl;
-                                std::cout << mo_file_reader::gettext("L_your_key_list") << std::endl;
+                _fact( mo_file_reader::gettext("L_your_key_list") );
 
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
 					std::string actual_key = key_name.substr(0,pos);
-					std::cout << actual_key << (IDI_key == actual_key ? " * IDI" : "") << std::endl;
+					_fact( actual_key << (IDI_key == actual_key ? " * IDI" : "") );
 				}
 				return 0;
 			}
@@ -918,16 +918,15 @@ int main(int argc, char **argv) {
 				} UI_CATCH("Loading your key");
 
 				if (!ok) {
-					std::cout << "You seem to already have your hash-IP key, but I can not load it." << std::endl;
-					std::cout << "Hint:\n"
+					_fact( "You seem to already have your hash-IP key, but I can not load it." );
+					_fact( "Hint:\n"
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
-						<< std::endl
-					;
+					);
 					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
-				std::cout << "You have no ID keys yet - so will create new keys for you." << std::endl;
+				_fact( "You have no ID keys yet - so will create new keys for you." );
 
 				auto step_make_default_keys = [&]()	{
 					ui::action_info_ok("Generating your new keys.");
@@ -974,14 +973,14 @@ int main(int argc, char **argv) {
 		} // try parsing
 		catch(ui::exception_error_exit) {
 //			std::cerr << "Exiting program now, as explained above..." << std::endl;
-                        std::cerr << mo_file_reader::gettext("L_exit_from_connect") << std::endl;
+                        _erro( mo_file_reader::gettext("L_exit_from_connect") );
 
 			return 1;
 		}
 		catch(po::error& e) {
 //			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
-                        std::cerr << mo_file_reader::gettext("L_option_error") << e.what() << std::endl << std::endl;
-			std::cerr << *desc << std::endl;
+            _erro( mo_file_reader::gettext("L_option_error") << e.what() << std::endl );
+			_erro( *desc );
 			return 1;
 		}
 
@@ -1019,22 +1018,22 @@ int main(int argc, char **argv) {
 	} // try running server
 	catch(ui::exception_error_exit) {
 //		std::cerr << "Exiting as explained above" << std::endl;
-                std::cerr << mo_file_reader::gettext("L_exiting_explained_above") << std::endl;
+        _erro( mo_file_reader::gettext("L_exiting_explained_above") );
 
 		return 1;
 	}
 	catch(std::exception& e) {
 //		std::cerr << "Unhandled Exception reached the top of main (While running server): "
-                std::cerr << mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+        _erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 
 //				  << e.what() << ", application will now exit" << std::endl;
-                                  << e.what() << mo_file_reader::gettext("L_exit_aplication") << std::endl;
+                                  << e.what() << mo_file_reader::gettext("L_exit_aplication") );
 
 		return 2;
 	}
 	catch(...) {
 //		std::cerr << "Unknown exception while running server." << std::endl;
-                std::cerr << mo_file_reader::gettext("L_unknown_exception_running_server") << std::endl;
+        _erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
 
 		return 3;
 	}
