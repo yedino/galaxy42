@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-readonly BOOST_DIR="$HOME/build/boost/"
-
 
 # clone main boost repository 
 # checkout to choosen tag
