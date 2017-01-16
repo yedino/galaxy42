@@ -7,6 +7,13 @@
 
 unsigned char g_dbg_level = 100; // (extern)
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <stringapiset.h>
+#include <cstring>
+
 void set_windows_console_utf8(HANDLE console_handle) {
 	CONSOLE_FONT_INFOEX cfi = {sizeof(cfi)};
 	GetCurrentConsoleFontEx(console_handle, FALSE, &cfi);
@@ -20,6 +27,7 @@ void set_windows_console_utf8(HANDLE console_handle) {
 		throw::std::runtime_error("SetConsoleOutputCP error, nr: " + std::to_string(GetLastError()));
 	}
 }
+#endif
 
 const bool g_is_windows_console = []() {
 	#if defined(_WIN32) || defined(__CYGWIN__)
