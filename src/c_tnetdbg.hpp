@@ -31,32 +31,8 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #include <stringapiset.h>
 #include <cstring>
 extern const bool g_is_windows_console;
-template <typename T>
-void write_to_console(const T& obj) {
-	if (g_is_windows_console) {
-		#if defined(_WIN32) || defined(__CYGWIN__)
-		
-		std::ostringstream oss;
-		oss << obj;
-		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		const std::string str = oss.str();
-		//const std::string str = "żźćśóńł";
-		wchar_t buf[1024];
-		std::memset(buf, 0, sizeof(buf));
-		DWORD write_bytes = 0;
-		write_bytes = MultiByteToWideChar(CP_UTF8, 0,
-            str.c_str(), str.size(),
-            buf, sizeof(buf));
-		//WriteConsole(hConsole, buf, write_bytes, &write_bytes, nullptr);
-		::std::wcerr << buf;
-		#else
-			assert(flase); // windows console detected on non windows OS
-		#endif
-	}
-	else
-		::std::cerr << obj;
-}
 
+void write_to_console(const std::string& obj);
 
 #define DBGLVL(N) if (!(N>=g_dbg_level)) break
 
