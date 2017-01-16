@@ -12,6 +12,7 @@ unsigned char g_dbg_level = 100; // (extern)
 //#include <winbase.h>
 //#include <wincon.h>
 #include <stringapiset.h>
+#undef _assert
 #include <cstring>
 
 void set_windows_console_utf8(HANDLE console_handle) {
