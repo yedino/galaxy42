@@ -85,13 +85,16 @@ uint32_t mo_file_reader::read_section() {
 	return ret;
 }
 
-
 std::string mo_file_reader::get_system_lang_short_name() const {
 #ifndef _WIN32
-	std::string lang_env = std::getenv("LANG");
+	char *env = std::getenv("LANG");
+	std::string lang_env;
+	if (env != nullptr)
+		lang_env = std::getenv("LANG");
 	if (lang_env.size() >= 2 && std::islower(lang_env.at(0)) && std::islower(lang_env.at(1)))
 		return lang_env.substr(0, 2); // return first 2 characters (i.e. "pl" for "pl_PL.UTF-8")
 	std::string locale = setlocale(LC_CTYPE, "");
+	if (locale == "C") locale = "en"; // default language
 	return locale;
 #else
 	char lang[3]; // ISO 639-1 == two-letter codes
