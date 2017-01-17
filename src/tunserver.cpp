@@ -1292,6 +1292,8 @@ void c_tunserver::event_loop(int time) {
 						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
                         //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
+						_dbg1("send route response to " << sender_pip);
+						_dbg1("sender HIP " << sender_as_peering.get_hip());
                         if ( m_peer.find(sender_as_peering.get_hip()) != m_peer.end() )
                             m_peer[requested_hip]->get_stats().update_sent_stats(data.size());
 						_note("Send the route reply");
