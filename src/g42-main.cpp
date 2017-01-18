@@ -42,7 +42,6 @@ struct t_peer_cmdline_ref {
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
-//	std::cerr << "Running in developer mode - as node_nr=" << node_nr << std::endl;
         _fact( mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr );
 
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
@@ -383,7 +382,7 @@ int main(int argc, char **argv) {
 	try {
 		mo_file_reader mo_reader;
 		mo_reader.add_messages_dir(install_dir_share_locale);
-		mo_reader.add_mo_filename("galaxy42_main");
+		mo_reader.add_mo_filename(std::string("galaxy42_main"));
 		mo_reader.read_file();
 	} catch (const std::exception &e) {
 		_erro( "mo file open error: " << e.what() );
@@ -442,56 +441,39 @@ int main(int argc, char **argv) {
 
 		auto desc = make_shared<po::options_description>( mo_file_reader::gettext("L_options") , line_length);
 		desc->add_options()
-//			("help", "Print help messages, including program version and compiled options (what is enabled)")
-                        ("help", mo_file_reader::gettext("L_what_help_do").c_str())
+                    ("help", mo_file_reader::gettext("L_what_help_do").c_str())
 
-//			("h", "same as --help")
-                        ("h", mo_file_reader::gettext("L_what_h_do").c_str())
+                    ("h", mo_file_reader::gettext("L_what_h_do").c_str())
 
-//			("debug", "Turns on more debug")
-                        ("debug", mo_file_reader::gettext("L_what_debug_do").c_str())
+                    ("debug", mo_file_reader::gettext("L_what_debug_do").c_str())
 
-//			("d", "same as --debug")
-                        ("d", mo_file_reader::gettext("L_what_d_do").c_str())
+                    ("d", mo_file_reader::gettext("L_what_d_do").c_str())
 
-//			("quiet", "Turns off most of the debug")
-                        ("quiet", mo_file_reader::gettext("L_what_quiet_do").c_str())
+                    ("quiet", mo_file_reader::gettext("L_what_quiet_do").c_str())
 
-//			("q", "same as --quiet")
-                        ("q", mo_file_reader::gettext("L_what_q_do").c_str())
+                    ("q", mo_file_reader::gettext("L_what_q_do").c_str())
 
-//			("peer", po::value<std::vector<std::string>>()->multitoken(),
-//						"Adding entire peer reference, in syntax like ip-pub."
-//						"Can be give more then once, for multiple peers.")
-                        ("peer", po::value<std::vector<std::string>>()->multitoken(), mo_file_reader::gettext("L_what_peer_do").c_str())
+                    ("peer", po::value<std::vector<std::string>>()->multitoken(), mo_file_reader::gettext("L_what_peer_do").c_str())
 
-//			("info", "COMMAND: Print info about key specified in my-key option\nrequires [--my-key]")
-                        ("info", mo_file_reader::gettext("L_what_info_do").c_str())
+                    ("info", mo_file_reader::gettext("L_what_info_do").c_str())
 
-//			("list-my-keys", "COMMAND: List your key which are in default location")
-                        ("list-my-keys", mo_file_reader::gettext("L_what_listMyKeys_do").c_str())
+                    ("list-my-keys", mo_file_reader::gettext("L_what_listMyKeys_do").c_str())
 
-//			("my-key", po::value<std::string>(), "Choose already generated key from default location")
-                        ("my-key", po::value<std::string>(), mo_file_reader::gettext("L_what_myKey_do").c_str())
+                    ("my-key", po::value<std::string>(), mo_file_reader::gettext("L_what_myKey_do").c_str())
 
-//			("my-key-file", po::value<std::string>(), "Choose key file from specified location")
-                        ("my-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_myKeyFile_do").c_str())
+                    ("my-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_myKeyFile_do").c_str())
 
-//			("config", po::value<std::string>()->default_value("galaxy.conf") , "Load configuration file (for advanced users)")
-                        ("config", po::value<std::string>()->default_value("galaxy.conf") , mo_file_reader::gettext("L_what_config_do").c_str())
+                    ("config", po::value<std::string>()->default_value("galaxy.conf") , mo_file_reader::gettext("L_what_config_do").c_str())
 
-//			("no-config", "Don't load any configuration file")
-                        ("no-config", mo_file_reader::gettext("L_what_noConfig_do").c_str())
+                    ("no-config", mo_file_reader::gettext("L_what_noConfig_do").c_str())
 
-//			("gen-key-simple", "COMMAND: Generate the recommended simple key (that gives you ownership of a new hash-IP address)")
-                        ("gen-key-simple", mo_file_reader::gettext("L_what_genKeySimple_do").c_str())
+                    ("gen-key-simple", mo_file_reader::gettext("L_what_genKeySimple_do").c_str())
             #ifdef HTTP_DBG
-//			("http-dbg-port", "COMMAND: Set http debugger port")
                         ("http-dbg-port", po::value<int>()->default_value(9080), mo_file_reader::gettext("L_what_httpDbgPort_do").c_str())
             #endif
                         ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
                         ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
-                        ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::gettext("L_rpcPort_do").c_str())
+                        ("rpc-port", po::value<int>()->default_value(9043), mo_file_reader::gettext("L_rpcPort_do").c_str())
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -517,49 +499,28 @@ int main(int argc, char **argv) {
 			#if EXTLEVEL_IS_PREVIEW
 
 
-			("demo", po::value<std::string>()->default_value(""),
-//						"COMMAND: Try DEMO here. Run one of the compiled-in demonstrations of how program works.\n"
-//						"Use --demo help to see list of demos [TODO].")
-                                                mo_file_reader::gettext("L_what_demo_do").c_str())
+			("demo", po::value<std::string>()->default_value(""), mo_file_reader::gettext("L_what_demo_do").c_str())
 
-//			("devel","COMMAND: Test: used by developer to run current test")
-                        ("devel",mo_file_reader::gettext("L_what_devel_do").c_str())
+			("devel",mo_file_reader::gettext("L_what_devel_do").c_str())
 
-			("develnum", po::value<int>()->default_value(1),
-//						"Test: used by developer to set current node number (makes sense with option --devel)")
-                                                mo_file_reader::gettext("L_what_decelnum_do").c_str())
+			("develnum", po::value<int>()->default_value(1), mo_file_reader::gettext("L_what_decelnum_do").c_str())
 
-			("develdemo", po::value<std::string>()->default_value("hardcoded"),
-//						"COMMAND: Test: used by developer to set current demo-test number/name(makes sense with option --devel)")
-                                                mo_file_reader::gettext("L_what_develdemo_do").c_str())
+			("develdemo", po::value<std::string>()->default_value("hardcoded"), mo_file_reader::gettext("L_what_develdemo_do").c_str())
 
 			// ("K", po::value<int>()->required(), "number that sets your virtual IP address for now, 0-255")
-			("myname", po::value<std::string>()->default_value(config_default_myname) ,
-//						"a readable name of your node (e.g. for debug)")
-                                                mo_file_reader::gettext("L_what_myname_do").c_str())
+			("myname", po::value<std::string>()->default_value(config_default_myname) , mo_file_reader::gettext("L_what_myname_do").c_str())
 
-//			("gen-config", "COMMAND: Generate default .conf files:\n-galaxy.conf\n-connect_from.my.conf\n-connect_to.my.conf"
-//						   "\n-connect_to.seed.conf\n*** this could overwrite your actual configurations ***")
                         ("gen-config", mo_file_reader::gettext("L_what_gen_config_do").c_str())
 
-//			("set-IDI", "COMMAND: Set main instalation key (IDI) that will be use for signing connection (IDC) key"
-//						"\nrequires [--my-key]")
                         ("set-IDI", mo_file_reader::gettext("L_what_set_IDI_do").c_str())
 
-//			("sign", "COMMAND: Sign key or other message with your key"
-//					 "\nrequires [--my-key, --my-key-file and sign-key sign-key-file\nexamples:"
-//					 "\n--sign --my-key \"myself\" --sign-key \"friend\""
-//					 "\n--sign --my-key-file \"/mount/usb2/work/work2\" --sign-data-file \"/mount/usb1/friend.public\"")
                         ("sign",  mo_file_reader::gettext("L_what_sing_do").c_str())
 
-//				("sign-key", po::value<std::string>(), "Name of key file in default location for keys")
-                                ("sign-key", po::value<std::string>(), mo_file_reader::gettext("L_what_singKey_do").c_str())
+                        ("sign-key", po::value<std::string>(), mo_file_reader::gettext("L_what_singKey_do").c_str())
 
-//				("sign-key-file", po::value<std::string>(), "Name of key file in specified location")
-                                ("sign-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_singKeyFile_do").c_str())
+                        ("sign-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_singKeyFile_do").c_str())
 
-//				("sign-data-file", po::value<std::string>(), "Name of data file in specified location")
-                                ("sign-data-file", po::value<std::string>(), mo_file_reader::gettext("L_what_singDataFile_do").c_str())
+                        ("sign-data-file", po::value<std::string>(), mo_file_reader::gettext("L_what_singDataFile_do").c_str())
 
 //			("verify", "COMMAND: Verify key or data with trusted-key and key or data"
 //					   "\nrequires [--trusted-key or --trusted-key-file and --toverify-key or --toverify-key-file "
@@ -568,20 +529,15 @@ int main(int argc, char **argv) {
 //					   "in same location as key/data file")
                         ("verify", mo_file_reader::gettext("L_what_verify_do").c_str())
 
-//				("trusted-key", po::value<std::string>(), "Name of trusted key in default location")
-                                ("trusted-key", po::value<std::string>(), mo_file_reader::gettext("L_what_trustedKey_do").c_str())
+                        ("trusted-key", po::value<std::string>(), mo_file_reader::gettext("L_what_trustedKey_do").c_str())
 
-//				("trusted-key-file", po::value<std::string>(), "Name of trusted key file in specified location")
-                                ("trusted-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_trustedKeyFile_do").c_str())
+                        ("trusted-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_trustedKeyFile_do").c_str())
 
-//				("toverify-key", po::value<std::string>(), "Name of key to verify in default location")
-                                ("toverify-key", po::value<std::string>(), mo_file_reader::gettext("L_what_toverifyKey_do").c_str())
+                        ("toverify-key", po::value<std::string>(), mo_file_reader::gettext("L_what_toverifyKey_do").c_str())
 
-//				("toverify-key-file", po::value<std::string>(), "Name of key to verify file in specified location")
-                                ("toverify-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_toverifyKeyFile_do").c_str())
+                        ("toverify-key-file", po::value<std::string>(), mo_file_reader::gettext("L_what_toverifyKeyFile_do").c_str())
 
-//				("toverify-data-file", po::value<std::string>(), "Name of data file specified location")
-                                ("toverify-data-file", po::value<std::string>(), mo_file_reader::gettext("L_what_toverifyDataFile_do").c_str())
+                        ("toverify-data-file", po::value<std::string>(), mo_file_reader::gettext("L_what_toverifyDataFile_do").c_str())
 
 			/*
 				("signature-file", po::value<std::string>(),
@@ -596,8 +552,7 @@ int main(int argc, char **argv) {
 			;
 
 
-//		_note("Will parse program options");
-                _note(mo_file_reader::gettext("L_parse_program_option"));
+        _note(mo_file_reader::gettext("L_parse_program_option"));
 
 		po::variables_map argm;
 		try { // try parsing
@@ -636,10 +591,8 @@ int main(int argc, char **argv) {
 					if (!should_continue) return 0;
 				}
 				catch(std::exception& e) {
-//					std::cerr << "Unhandled Exception reached the top of main: (in DEVELOPER MODE)" << e.what()
-//							  << ", application will now exit" << std::endl;
-                                        std::cerr << mo_file_reader::gettext("L_unhandled_exception_devel_mode") << e.what()
-                                                          << mo_file_reader::gettext("L_exit_aplication") << std::endl;
+                    std::cerr << mo_file_reader::gettext("L_unhandled_exception_devel_mode") << e.what()
+                         << mo_file_reader::gettext("L_exit_aplication") << std::endl;
 
 						return 0; // no error for developer mode
 				}
@@ -678,8 +631,7 @@ int main(int argc, char **argv) {
 
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {
-//				if (!argm.count("my-key")) { _erro("--my-key is required for --set-IDI");	return 1;	}
-                                if (!argm.count("my-key")) { _erro( mo_file_reader::gettext("L_setIDI_require_myKey") );       return 1;       }
+                    if (!argm.count("my-key")) { _erro( mo_file_reader::gettext("L_setIDI_require_myKey") );       return 1;       }
 
 				auto name = argm["my-key"].as<std::string>();
 				myserver.program_action_set_IDI(name);
@@ -690,8 +642,7 @@ int main(int argc, char **argv) {
 			_note("BoostPO before info");
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
-//					_erro("--my-key is required for --info");
-                                        _erro( mo_file_reader::gettext("L_info_require_myKey") );
+                    _erro( mo_file_reader::gettext("L_info_require_myKey") );
 
 					return 1;
 				}
@@ -709,8 +660,7 @@ int main(int argc, char **argv) {
 			try {
 				IDI_key = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 			} catch (std::invalid_argument &err) {
-//				_dbg2("IDI is not set!");
-                                _dbg2(mo_file_reader::gettext("L_IDI_not_set_err"));
+                    _dbg2(mo_file_reader::gettext("L_IDI_not_set_err"));
 
 				}
 //				std::cout << "Your key list:" << std::endl;
@@ -955,8 +905,7 @@ int main(int argc, char **argv) {
 					myserver.add_peer_simplestring( peer_ref );
 				}
 			} catch(...) {
-//				ui::action_error_exit("Can not use the peers that you specified on the command line. Perhaps you have a typo in there.");
-                                ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
+                ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
 
 			}
 
@@ -996,8 +945,7 @@ int main(int argc, char **argv) {
 //	}
 
 	// ------------------------------------------------------------------
-//	_note("Done all preparations, moving to the server main");
-        _note(mo_file_reader::gettext("L_all_preparations_done"));
+    _note(mo_file_reader::gettext("L_all_preparations_done"));
 
 #ifdef HTTP_DBG
 		_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
@@ -1039,7 +987,6 @@ int main(int argc, char **argv) {
 	}
 
 	// ------------------------------------------------------------------
-//	_note("Program exits (no error code)"); return 0;
-        _note(mo_file_reader::gettext("L_exit_no_error")); return 0;
+    _note(mo_file_reader::gettext("L_exit_no_error")); return 0;
 
 }
