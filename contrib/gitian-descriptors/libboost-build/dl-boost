@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+
+# clone main boost repository 
+# checkout to choosen tag
+# and validate version hash
+
+dl_boost () {
+
+	echo "Downloading boost in PWD=$PWD"
+
+	# download boost starting from cleaning previous build
+	rm -rf boost || fail # perhaps left over if we do some caching or testing
+
+	git clone -b boost-1.61.0 https://github.com/boostorg/boost.git --depth 100 || fail "git clone" # check gitrev hash below!
+
+	pushd boost || fail # cd
+	local PWD_boost="$PWD/"
+	[[ "$PWD_boost" == "$BOOST_DIR" ]] \
+		|| { 
+			echo "The PWD (PWD_boost=$PWD_boost) is not the expected boost dir ($BOOST_DIR) - aborting"
+			exit 0
+		} 
+
+	local expected_gitrev="ea0209516426e4b358204b8b50d093d001c00f54" # this is the gitrev hash of this boost version (as we seen it)
+	local confirm_gitrev=$(git log --format='%H' -1)
+	[[ "$confirm_gitrev" == "$expected_gitrev" ]] \
+		|| {
+			fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
+		}
+	popd
+}

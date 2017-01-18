@@ -36,7 +36,7 @@ __Go to galaxy42 main directory__
 $ git clean -fdx
 $ cmake -DBOOST_ROOT=/prefix/to/boost/mingw-w64/build \
 > -DSODIUM_ROOT_DIR=/prefix/to/libsodium/mingw-w64/build \
-> -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake.in \
+> -DTARGET_ARCH=x86_64-w64-mingw32 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_mingw.cmake.in \
 > -DCMAKE_BUILD_TYPE=Debug .
 $ make tunserver.elf
 
