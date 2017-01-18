@@ -302,8 +302,10 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 	const size_t eth_offset = 10;
 	m_readed_bytes -= eth_offset;
 	assert(m_readed_bytes > 0);
-	if(m_readed_bytes <= count)
+	if(m_readed_bytes + eth_offset <= count)
 		std::copy_n(&m_buffer[0] + eth_offset, m_readed_bytes, reinterpret_cast<uint8_t*>(buf)); // TODO!!! change base api and remove copy!!!
+	else
+		m_readed_bytes = 0;
 	size_t ret = m_readed_bytes;
 	m_readed_bytes = 0;
 	return ret;
@@ -546,7 +548,8 @@ std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
 
 void c_tun_device_windows::handle_read(const boost::system::error_code& error, std::size_t length) {
 	try {
-		if (error || (length < 1)) throw std::runtime_error(error.message());
+		if (length < 1) throw std::runtime_error("Readed 0 bytes from tun");
+		if (error) throw std::runtime_error(error.message());
 		if (length < 54) throw std::runtime_error("tun data length < 54"); // 54 == sum of header sizes
 
 		m_readed_bytes = length;
