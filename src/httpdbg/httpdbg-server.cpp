@@ -65,10 +65,10 @@ private:
     vector<string> strs;
     boost::split(strs, data_, boost::is_any_of("/ "));
 
-    string reply=raport.generate(strs[2]);
+		m_reply=raport.generate(strs.at(2));
 
-    boost::asio::async_write(socket_,
-			boost::asio::buffer(reply.c_str(), reply.size()),
+		boost::asio::async_write(socket_,
+			boost::asio::buffer(m_reply, m_reply.size()),
         [this, self](boost::system::error_code ec, size_t /*length*/)
         {
           if (!ec)
@@ -81,8 +81,8 @@ private:
 
   tcp::socket socket_;
   enum { max_length = 1024 };
-  char data_[max_length];
-
+	char data_[max_length];
+	std::string m_reply;
   const c_tunserver & tunserver_;
 };
 
