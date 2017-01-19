@@ -12,8 +12,6 @@
 typedef long double t_correct1;
 
 
-
-
 TEST(xint,normal_use_init) {
 	xint a; a=0;
 	a=1;
