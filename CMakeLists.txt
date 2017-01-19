@@ -59,7 +59,7 @@ if (MSVC)
 	endif()
 endif()
 
-if(WIN32)
+if(WIN32 OR CYGWIN)
   add_definitions(-DUNICODE)
   add_definitions(-D_UNICODE)
   add_definitions(-DWINVER=0x0601)
@@ -396,6 +396,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
+cotire(tunserver.elf)
 
 if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -436,7 +437,6 @@ endif()
 
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
-
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
