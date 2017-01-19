@@ -319,9 +319,9 @@ void math_tests_overflow_incr(T_INT val) { bool safetype = is_safe_int<T_INT>();
 template<typename T_INT>
 void math_tests_overflow_decr(T_INT val) { bool safetype = is_safe_int<T_INT>();
 	T_INT a = val;	t_correct_int a_corr = a;
+	EXPECT_EQ(a,a_corr);
 	auto func = [&]() { a_corr-=1; a--; } ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
-
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
@@ -487,14 +487,18 @@ TEST(xint, range_b_to_sizet) {
 }
 
 TEST(xint, safe_create_float1) {
-	auto func = []() { float a=10000, b=10000000000, c=100000000;
+	auto func = [](bool negative) { float a=10000, b=10000000000, c=100000000;
+		if (negative) a = -a;
 		xint bonus(a*b*c); UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+	EXPECT_THROW( func(true)  , std::runtime_error );
+	EXPECT_THROW( func(false)  , boost::numeric::bad_numeric_cast );
 }
 TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
-	auto func = []() { float a=10000, b=10000000000, c=100000000;
+	auto func = [](bool negative) { float a=10000, b=10000000000, c=100000000;
+		if (negative) a = -a;
 		xint bonus = a*b*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
+	EXPECT_THROW( func(true)  , std::runtime_error );
+	EXPECT_THROW( func(false)  , boost::numeric::bad_numeric_cast );
 }
 /*TEST(xint, safe_create_float_assign) {
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
@@ -504,19 +508,25 @@ TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 
 // terminate called after throwing an instance of 'boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<std::overflow_error> >'
 TEST(xint, safe_create_xint) {
-	auto func = []() { xint a=10000, b=10000000000, c=100000000;
+	auto func = [](bool negative) { xint a=10000, b=10000000000, c=100000000;
+		if (negative) a = -a;
 		xint bonus(a*b*c*c*c); UNUSED(bonus);	} ;
-		EXPECT_THROW( func()  , std::runtime_error );
+		EXPECT_THROW( func(true)  , std::runtime_error );
+		EXPECT_THROW( func(false)  , std::runtime_error );
 }
 TEST(xint, safe_create_xint2) { // obviously the same, other syntax as example
-	auto func = []() { xint a=10000, b=10000000000, c=100000000;
+	auto func = [](bool negative) { xint a=10000, b=10000000000, c=100000000;
+		if (negative) a = -a;
 		xint bonus = a*b*c*c*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , std::runtime_error );
+	EXPECT_THROW( func(true)  , std::runtime_error );
+	EXPECT_THROW( func(false)  , std::runtime_error );
 }
 TEST(xint, safe_create_xint_assign) {
-	auto func = []() { xint a=10000, b=10000000000, c=100000000;
+	auto func = [](bool negative) { xint a=10000, b=10000000000, c=100000000;
+		if (negative) a = -a;
 		xint bonus;  bonus = a*b*c*c*c; UNUSED(bonus);	} ;
-	EXPECT_THROW( func()  , std::runtime_error );
+	EXPECT_THROW( func(true)  , std::runtime_error );
+	EXPECT_THROW( func(false)  , std::runtime_error );
 }
 
 
