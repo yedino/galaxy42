@@ -559,8 +559,8 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 	}
 	catch (const std::runtime_error &e) {
 		m_readed_bytes = 0;
-		_erro("Problem with the TUN/TAP parser\n" << e.what());
-		_throw_error_sub( tuntap_error_devtun, " Problem with TUN/TAP device");
+		_erro("Problem with the TUN/TAP parser" << e.what());
+		_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
 	}
 
 	// continue reading
