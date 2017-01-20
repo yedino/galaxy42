@@ -227,6 +227,27 @@ TEST(serialize, skip_var_string) {
 	EXPECT_THROW(parser.skip_varstring(), format_error_read);
 }
 
+TEST(serialize, ojb_serialize) {
+	generator gen(1);
+	const std::string data1("aaaaaa");
+	const std::string data2("bbbbbb");
+	obj_serialize(data1, gen);
+	obj_serialize(data2, gen);
+	obj_serialize('a', gen);
+	obj_serialize('b', gen);
+	std::vector<std::string> vec {"asda", "asdasd", "asdaaaaaa"};
+	obj_serialize(vec, gen);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	EXPECT_EQ(obj_deserialize<std::string>(parser), data1);
+	EXPECT_EQ(obj_deserialize<std::string>(parser), data2);
+	EXPECT_EQ(obj_deserialize<char>(parser), 'a');
+	EXPECT_EQ(obj_deserialize<char>(parser), 'b');
+	std::vector<std::string> vec2;
+	EXPECT_NO_THROW(vec2 = obj_deserialize<std::vector<std::string>>(parser));
+	ASSERT_EQ(vec.size(), vec2.size());
+	for (size_t i = 0; i < vec.size(); i++)
+		EXPECT_EQ(vec.at(i), vec2.at(i));
+}
 
 // ==================================================================
 
@@ -258,7 +279,7 @@ map<c_tank, string> get_example_tanks_map_captain() {
 }
 // ==================================================================
 
-TEST(serialize, object_serialize) {
+TEST(serialize, multi_serialize) {
 
 	string f="fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
 
