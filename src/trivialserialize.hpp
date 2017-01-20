@@ -21,10 +21,6 @@
  */
 namespace trivialserialize {
 
-namespace test {
-	void test_trivialserialize(std::ostream &dbgout);
-} // namespace
-
 // ---
 /** @defgroup format_error The Format Error
  *  One description for all members of this group

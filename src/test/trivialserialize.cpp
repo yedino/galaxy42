@@ -1,6 +1,7 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "gtest/gtest.h"
+#include "trivialserialize_test_object.hpp"
 #include "../trivialserialize.hpp"
 #include <exception>
 
@@ -76,13 +77,13 @@ TEST(serialize, get_from_empty_string) {
 	ASSERT_THROW((parser.pop_integer_u<1, uint8_t>()), std::exception);
 }
 
-TEST(serialize, test_trivialserialize) {
+/*TEST(serialize, test_trivialserialize) {
 	std::ostringstream oss;
 	EXPECT_NO_THROW(test::test_trivialserialize(oss)); // <---
 	auto thestr = oss.str();
 	EXPECT_GT( thestr.size() , static_cast<size_t>(1000));
 	EXPECT_LT( thestr.size() , static_cast<size_t>(10000));
-}
+}*/
 
 TEST(serialize, varstring_map) {
 	std::map<std::string, std::string> input;
@@ -224,4 +225,167 @@ TEST(serialize, skip_var_string) {
 	EXPECT_EQ(parser.pop_varstring(), data3);
 	EXPECT_NO_THROW(parser.skip_varstring());
 	EXPECT_THROW(parser.skip_varstring(), format_error_read);
+}
+
+
+// ==================================================================
+
+
+vector<c_tank> get_example_tanks() {
+	vector<c_tank> data = {
+		{ 150, 60 , "T-64"} ,
+		{ 500, 70 , "T-72"} ,
+		{ 800, 80 , "T-80"} ,
+		{ 2000, 90 , "Shilka"} ,
+	};
+	return data;
+}
+
+map<string, c_tank> get_example_tanks_map_location() {
+	map<string, c_tank> data = {
+		{ "Moscow", { 150, 60 , "T-64"} } ,
+		{ "Puszkin" , { 500, 70 , "T-72"} },
+	};
+	return data;
+}
+
+map<c_tank, string> get_example_tanks_map_captain() {
+	map<c_tank, string> data = {
+		{ { 150, 60 , "T-64"} , "Pavlov" },
+		{ { 900, 80 , "BMP"} , "A. Ramius" },
+	};
+	return data;
+}
+// ==================================================================
+
+TEST(serialize, object_serialize) {
+
+	string f="fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+
+	trivialserialize::generator gen(50);
+	gen.push_byte_u(50);
+	gen.push_byte_s(-42);
+	gen.push_bytes_n(3, "abc");
+	gen.push_bytes_n(3, "xyz");
+	gen.push_bytes_n(0, "");
+	gen.push_bytes_n(6, "foobar");
+	gen.push_integer_u<1>(150UL);
+	gen.push_integer_u<2>(+30000UL);
+	gen.push_integer_u<8>(+30000UL);
+	gen.push_integer_u<4>(+2140000000UL);
+	gen.push_integer_u<4>(+4294777777UL);
+	gen.push_bytes_sizeoctets<1>("Octets1"+f, 100);
+	gen.push_bytes_sizeoctets<2>("Octets2"+f, 100);
+	gen.push_bytes_sizeoctets<3>("Octets3"+f, 100);
+	gen.push_bytes_sizeoctets<4>("Octets4"+f, 100);
+	gen.push_bytes_sizeoctets<1>("", 100);
+
+	vector<uint64_t> test_uvarint1 = {1,42,100,250, 0xFD,     0xFE,      0xFF,  1000,     0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFA};
+	// width should be:              {1,1,   1,  1,  1+2,     1+2,        1+2,  1+2,         1+2,        1+4,         1+8};
+	// serialization should be:                      FD,0,FD  FD,0,FE FD,0,FF  FD,(1000) FD,FFFF  FE,FFFFFFF  FF,FFFFFFFFA
+	test_uvarint1.push_back(0xDEADCAFEBEEF);
+	for (auto val : test_uvarint1) gen.push_integer_uvarint(val);
+
+	vector<string> test_varstring = {
+		string("Hi."),
+		string("Now empty string:"),
+		string(""),
+		string("Now empty string x5"),
+		string(""),
+		string(""),
+		string(""),
+		string(""),
+		string(""),
+		string("Hello!"),
+		string(250,'x'),
+		string(255,'y'),
+		string(400,'z'),
+	};
+	for (auto val : test_varstring) gen.push_varstring(val);
+
+	gen.push_vector_string( test_varstring );
+
+	gen.push_vector_object( get_example_tanks() );
+
+	gen.push_map_object( get_example_tanks_map_location() );
+	gen.push_map_object( get_example_tanks_map_captain() );
+
+
+	std::map<std::string, std::string> input_map;
+	input_map["aaa"] = "bbb";
+	input_map["111"] = "2222222222222222222";
+	input_map["0"] = "zzzzzzzzz";
+	input_map["asdfas"] = "5567";
+	input_map[";"] = "...";
+	input_map[",./234"] = ";433334;43;34;34;2<>;";
+	input_map["           "] = "htfthfft";
+	input_map[R"(		  		)"] = "xyz";
+	input_map["%"] = std::string();
+	input_map[std::string()] = std::string();
+	input_map[std::string(259, 'x')] = std::string(259, 'x');
+	gen.push_map_object(input_map);
+
+	// ==============================================
+
+	const string input = gen.str();
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , input );
+
+	EXPECT_EQ(parser.pop_byte_u(), 50);
+	EXPECT_EQ(parser.pop_byte_s(), -42);
+
+	EXPECT_EQ(parser.pop_bytes_n(3), "abc");
+	EXPECT_EQ(parser.pop_bytes_n(3), "xyz");
+	EXPECT_NO_THROW(parser.pop_bytes_n(0));
+	EXPECT_EQ(parser.pop_bytes_n(6), "foobar");
+{
+	unsigned int val = 0;
+	val = parser.pop_integer_u<1,unsigned int>();
+	EXPECT_EQ(val, 150);
+	val = parser.pop_integer_u<2,unsigned int>();
+	EXPECT_EQ(val, 30000);
+	val = parser.pop_integer_u<8,unsigned int>();
+	EXPECT_EQ(val, 30000);
+	val = parser.pop_integer_u<4,unsigned int>();
+	EXPECT_EQ(val, 2140000000);
+	val = parser.pop_integer_u<4,unsigned int>();
+	EXPECT_EQ(val, 4294777777);
+}
+	EXPECT_EQ(parser.pop_bytes_sizeoctets<1>(),"Octets1" + f);
+	EXPECT_EQ(parser.pop_bytes_sizeoctets<2>(), "Octets2" + f);
+	EXPECT_EQ(parser.pop_bytes_sizeoctets<3>(), "Octets3" + f);
+	EXPECT_EQ(parser.pop_bytes_sizeoctets<4>(), "Octets4" + f);
+	EXPECT_EQ(parser.pop_bytes_sizeoctets<1>(), "");
+
+	for (auto val_expected : test_uvarint1) {
+		auto val_given = parser.pop_integer_uvarint();
+		EXPECT_EQ( val_given, val_expected );
+	}
+
+	for (auto val_expected : test_varstring) {
+		auto val_given = parser.pop_varstring();
+		EXPECT_EQ( val_given, val_expected );
+	}
+
+	auto test_varstring_LOADED = parser.pop_vector_string();
+	ASSERT_EQ(test_varstring.size(), test_varstring_LOADED.size());
+	for (size_t i = 0; i < test_varstring.size(); i++)
+		EXPECT_EQ(test_varstring.at(i), test_varstring_LOADED.at(i));
+
+	auto tanks = parser.pop_vector_object<c_tank>();
+	auto example_tanks = get_example_tanks();
+	ASSERT_EQ(tanks.size(), example_tanks.size());
+	for (size_t i = 0; i < tanks.size(); i++)
+		EXPECT_EQ(tanks.at(i), example_tanks.at(i));
+
+	auto tanks_location = parser.pop_map_object<string, c_tank>();
+	EXPECT_EQ ( tanks_location, get_example_tanks_map_location());
+
+	auto tanks_captain = parser.pop_map_object<c_tank,string>();
+	EXPECT_EQ(tanks_captain, get_example_tanks_map_captain());
+
+	auto output = parser.pop_map_object<std::string, std::string>();
+	for (const auto &it : output) {
+		EXPECT_NO_THROW(input_map.at(it.first));
+		EXPECT_EQ(it.second, input_map.at(it.first));
+	}
 }
