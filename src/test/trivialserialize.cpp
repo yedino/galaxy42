@@ -22,6 +22,23 @@ TEST(serialize, uvarint) {
 	for (uint64_t i = 0; i < 3; ++i) uvarint_for_i(65536-1+i);
 }
 
+TEST(serialize, single_bytes) {
+	const signed char s_chars[] = {'a', 'b', 'c'};
+	const unsigned char u_chars[] = {'x', 'y', 'z'};
+	generator gen(6);
+	for (size_t i = 0; i < 3; i++) {
+		gen.push_byte_s(s_chars[i]);
+		gen.push_byte_u(u_chars[i]);
+	}
+	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
+	for (size_t i = 0; i < 3; i++) {
+		signed char s = parser.pop_byte_s();
+		EXPECT_EQ(s, s_chars[i]);
+		unsigned char u = parser.pop_byte_u();
+		EXPECT_EQ(u, u_chars[i]);
+	}
+}
+
 TEST(serialize, varstring_vector) {
 	generator gen(1);
 	std::vector<std::string> input = {
@@ -130,4 +147,81 @@ TEST(serialize, empty_element_as_first) {
 	for (size_t i = 0; i < input.size(); ++i) {
 		ASSERT_EQ(input.at(i), output.at(i));
 	}
+}
+
+TEST(serialize, get_generator_buffer) {
+	generator gen(1);
+	gen.push_varstring("serialized_string");
+	const std::string str1 = gen.str();
+	const std::string str2 = gen.get_buffer();
+	EXPECT_FALSE(gen.str().empty());
+	const std::string str3 = gen.str_move();
+	EXPECT_EQ(str1, str2);
+	EXPECT_EQ(str2, str3);
+	EXPECT_TRUE(gen.str().empty());
+}
+
+TEST(serialize, create_parser) {
+	generator gen(1);
+	gen.push_varstring("asdasdasd");
+	gen.push_integer_uvarint(32111);
+	const std::string gen_str1 = gen.str();
+	const std::string gen_str2 = gen.str();
+	trivialserialize::parser parser_buffer(trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), gen_str1.data(), gen_str1.size());
+	trivialserialize::parser parser_string(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen_str2);
+	EXPECT_EQ(parser_buffer.pop_varstring(), parser_string.pop_varstring());
+	EXPECT_EQ(parser_buffer.pop_integer_uvarint(), parser_string.pop_integer_uvarint());
+}
+
+TEST(serialize, skip_byte) {
+	generator gen(1);
+	gen.push_byte_u('a');
+	const std::string data = "a1a2a3a4a5a6a7a8a9a0a";
+	gen.push_varstring(data);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	EXPECT_THROW(parser.pop_byte_skip('z'), format_error_read_delimiter);
+	EXPECT_NO_THROW(parser.pop_byte_skip('a'));
+	EXPECT_THROW(parser.pop_byte_skip('a'), format_error_read_delimiter);
+	std::string readed_data;
+	EXPECT_NO_THROW(readed_data = parser.pop_varstring());
+	EXPECT_EQ(readed_data, data);
+}
+
+TEST(serialize, skip_bytes_n) {
+	generator gen(1);
+	gen.push_byte_u('a');
+	gen.push_byte_s('b');
+	gen.push_byte_u('c');
+	gen.push_byte_s('d');
+	gen.push_byte_s('e');
+	gen.push_byte_u('f');
+	const std::string data("dghefilh");
+	gen.push_varstring(data);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	EXPECT_NO_THROW(parser.skip_bytes_n(0));
+	parser.skip_bytes_n(2);
+	EXPECT_EQ(parser.pop_byte_u(), 'c');
+	EXPECT_THROW(parser.skip_bytes_n(100), format_error_read);
+	EXPECT_NO_THROW(parser.skip_bytes_n(3));
+	EXPECT_NO_THROW(parser.pop_varstring());
+	EXPECT_NO_THROW(parser.skip_bytes_n(0));
+	EXPECT_THROW(parser.skip_bytes_n(1), format_error_read);
+}
+
+TEST(serialize, skip_var_string) {
+	generator gen(1);
+	const std::string data1("aaaaaa");
+	const std::string data2("bbbbbb");
+	const std::string data3("cccccc");
+	const std::string data4("dddddd");
+	gen.push_varstring(data1);
+	gen.push_varstring(data2);
+	gen.push_varstring(data3);
+	gen.push_varstring(data4);
+	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), gen.str());
+	EXPECT_EQ(parser.pop_varstring(), data1);
+	EXPECT_NO_THROW(parser.skip_varstring());
+	EXPECT_EQ(parser.pop_varstring(), data3);
+	EXPECT_NO_THROW(parser.skip_varstring());
+	EXPECT_THROW(parser.skip_varstring(), format_error_read);
 }
