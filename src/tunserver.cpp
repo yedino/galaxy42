@@ -1373,10 +1373,10 @@ void c_tunserver::event_loop(int time) {
 		}
 		catch (tuntap_error_devtun &e) {
 			_erro(e.what());
-			std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
 			_warn("Trying restar tun/tap device ...");
-			std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
-			prepare_socket();
+			try{
+				prepare_socket();
+			}catch(ui::exception_error_exit){}
 		}catch (std::exception &e) {
 			_warn("### !!! ### Parsing network data caused an exception: " << e.what());
 		}
