@@ -808,7 +808,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	for(auto & v : m_peer) { if (v.second->get_pip() == ip) return * v.second.get(); }
+	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assign_port() == ip.get_assign_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
@@ -1291,7 +1291,10 @@ void c_tunserver::event_loop(int time) {
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
                         //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
-                        if ( m_peer.find(requested_hip) != m_peer.end() )
+						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
+						_dbg1("send route response to " << sender_pip);
+						_dbg1("sender HIP " << sender_as_peering.get_hip());
+                        if ( m_peer.find(sender_as_peering.get_hip()) != m_peer.end() )
                             m_peer[requested_hip]->get_stats().update_sent_stats(data.size());
 						_note("Send the route reply");
 					} catch(...) {
