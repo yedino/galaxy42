@@ -12,7 +12,17 @@ dir_top="."
 set -x
 project_name="galaxy42"
 
-echo "$0: working on project_name=$project_name ; OUTDIR=$OUTDIR TAR_OPTIONS=$TAR_OPTIONS"
+# determine if pack_type is gitian. gitian requires to use wrapped tar and gzip
+pack_type=$1
+
+if [[ $pack_type == "gitian" ]]; then
+    prog_path="/home/ubuntu/wrapped/" # use wrapped programs
+else
+    pack_type="default"
+    prog_path="" # use global programs
+fi
+
+echo "$0: working on project_name=$project_name pack_type=${pack_type}; OUTDIR=$OUTDIR TAR_OPTIONS=$TAR_OPTIONS"
 
 outname="${project_name}-static" # name of project release/output
 outname_tgz="${outname}.tar.gz" # name of project release/output
@@ -41,9 +51,9 @@ pushd "$dir_pack_wrap" || fail
 	echo "Quick sum of all files to be packed:"
 	sha1sum $(find "$outname" | sort) | sha1sum -
 	echo "Packing, from outname=$outname to $outname_tgz, with TAR_OPTIONS=$TAR_OPTIONS in PWD=$PWD"
-	find "$outname" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' \
+	find "$outname" | sort | ${prog_path}tar --no-recursion --mode='u+rw,go+r-w,a+X' \
 		--owner=0 --group=0 -c \
-		-T - | gzip -9n > "${outname_tgz}" || fail "Can not compress"
+		-T - | ${prog_path}gzip -9n > "${outname_tgz}" || fail "Can not compress"
 # gzip -9n
 #--mtime="/tmp/faketime_timestamp" \
 popd || fail
