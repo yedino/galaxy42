@@ -260,7 +260,7 @@ int c_httpdbg_server::run(){
     }
     catch (exception& e)
     {
-        cerr << "Exception: " << e.what() << "\n";
+        _erro( "Exception: " << e.what() );
     }
     return 0;
 }
@@ -272,7 +272,7 @@ void c_httpdbg_server::stop(){
     }
     catch (exception& e)
     {
-        cerr << "Exception: " << e.what() << "\n";
+        _erro( "Exception: " << e.what());
     }
 }
 
