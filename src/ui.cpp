@@ -32,7 +32,7 @@ void action_info_ok(const string &info) {
 
 void show_error_exception_show_what(const std::string &during_action, const std::string &what) {
 //        std::cerr<<"Error occured during '"<<during_action<<"' - " << what << std::endl;
-	std::cerr<<mo_file_reader::gettext("L_error_during_action")<<during_action<<"' - " << what << std::endl;
+	_fact( mo_file_reader::gettext("L_error_during_action")<<during_action<<"' - " << what );
 }
 
 void show_error_exception(const string &during_action, const std::exception &e) { ///< Inform user about caught exception
