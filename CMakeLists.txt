@@ -59,7 +59,7 @@ if (MSVC)
 	endif()
 endif()
 
-if(WIN32)
+if(WIN32 OR CYGWIN)
   add_definitions(-DUNICODE)
   add_definitions(-D_UNICODE)
   add_definitions(-DWINVER=0x0601)
@@ -118,6 +118,9 @@ if (MINGW)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cotire/CMake")
+include(cotire)
+
 find_package(Sodium)
 link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/)
 
@@ -393,6 +396,7 @@ include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
 # add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
+cotire(tunserver.elf)
 
 if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -417,6 +421,7 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 #	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
 #	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+cotire(tunserver)
 
 if(MINGW)
 	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
@@ -432,7 +437,6 @@ endif()
 
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
-
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
