@@ -392,7 +392,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_tun_header_offset_ipv6(0)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
-	,m_supported_ip_protocols{TCP, UDP, IPv6_ICMP}
+	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 {
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
@@ -1000,6 +1000,7 @@ void c_tunserver::event_loop(int time) {
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
 
+				assert(size_read <= tun_read_buff.size() && size_read >= g_tuntap::header_position_of_ipv6);
 				std::string data_cleartext(reinterpret_cast<char *>(&tun_read_buff[g_tuntap::header_position_of_ipv6]), size_read - g_tuntap::header_position_of_ipv6);
 				// clear data == ipv6 packet
 				data_cleartext.erase(g_ipv6_rfc::header_position_of_dst, g_haship_addr_size); // remove dst addr from ipv6
