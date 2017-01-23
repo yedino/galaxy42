@@ -17,7 +17,7 @@ download_boost_submodules() {
 	for submodule in "${boost_submodules[@]}"; do
 		sleep 0.1
 		echo "$submodule"
-	done | xargs -L1 --max-procs=4 git submodule update --init --recursive && wait
+	done | xargs -L1 --max-procs=2 git submodule update --init --recursive && wait
 
 	local exit_code="${?}" ; echo "Exit code: [${exit_code}]";
 
