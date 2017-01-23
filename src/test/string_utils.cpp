@@ -134,3 +134,77 @@ TEST(string_utils, string_as_bin_operators) {
 	EXPECT_FALSE(str2 < str1);
 	EXPECT_FALSE(str1 < str1);
 }
+
+TEST(string_utils, string_as_dbg_create) {
+	EXPECT_NO_THROW(string_as_dbg());
+
+	string_as_bin bin("w234rgt554tgeargt45");
+	EXPECT_NO_THROW(string_as_dbg(bin, e_debug_style_object));
+	EXPECT_NO_THROW(string_as_dbg(bin, e_debug_style_short_devel));
+	EXPECT_NO_THROW(string_as_dbg(bin, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(string_as_dbg(bin, e_debug_style_big));
+
+	std::string str("10101fd45");
+	EXPECT_NO_THROW(string_as_dbg(str.data(), str.size(), e_debug_style_object));
+	EXPECT_NO_THROW(string_as_dbg(str.data(), str.size(), e_debug_style_short_devel));
+	EXPECT_NO_THROW(string_as_dbg(str.data(), str.size(), e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(string_as_dbg(str.data(), str.size(), e_debug_style_big));
+
+	std::array<char, 4> arr {{'a', 'b', 'c', 'd'}};
+	EXPECT_NO_THROW(string_as_dbg(arr.begin(), arr.end(), e_debug_style_object));
+	EXPECT_NO_THROW(string_as_dbg(arr.begin(), arr.end(), e_debug_style_short_devel));
+	EXPECT_NO_THROW(string_as_dbg(arr.begin(), arr.end(), e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(string_as_dbg(arr.begin(), arr.end(), e_debug_style_big));
+
+	EXPECT_NO_THROW(string_as_dbg(arr));
+}
+
+TEST(string_utils, to_debug) {
+	std::string str("fbhiw7wo308w938ru03urfw!@#!@#a");
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug_b(str));
+	str.clear();
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(str, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug_b(str));
+
+	char c = 'a';
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug_b(c));
+	c = 0;
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(c, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug_b(c));
+
+	string_as_bin bin("kdhsaiwe7hdf97e");
+	EXPECT_NO_THROW(to_debug(bin, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(bin, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(bin, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(bin, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug_b(bin));
+
+	string_as_bin bin_empty;
+	EXPECT_NO_THROW(to_debug(bin_empty, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(bin_empty, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(bin_empty, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(bin_empty, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug_b(bin_empty));
+}
+
+TEST(string_utils, debug_simple_hash) {
+	EXPECT_NO_THROW(debug_simple_hash(""));
+	EXPECT_NO_THROW(debug_simple_hash("sadfsdfa"));
+	EXPECT_NO_THROW(debug_simple_hash("123123445"));
+	EXPECT_NO_THROW(debug_simple_hash("!@#3e234!RDQWER"));
+	EXPECT_NO_THROW(debug_simple_hash(";;l[['l[l;"));
+}
