@@ -280,7 +280,9 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		const auto & peer = galaxy_node.get_peer_with_hip(dst,false); // no need for PK now, caller will do this on his own usually
 		_info("We have that peer directly: " << peer );
 		const int cost = 1; // direct peer. In future we can add connection cost or take into account congestion/lag...
-		c_route_info route_info( peer.get_hip() , cost , * peer.get_pub() );
+		const auto peer_pub_ptr = peer.get_pub();
+		if (!peer_pub_ptr) _throw_error( std::runtime_error("This peer has no pubkey yet.") );
+		c_route_info route_info( peer.get_hip() , cost , * peer_pub_ptr );
 		_info("Direct route: " << route_info);
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
