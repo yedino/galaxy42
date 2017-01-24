@@ -47,11 +47,11 @@ class c_multicryptostrings : public c_crypto_system {
 		typedef std::array< vector< TKey > , e_crypto_system_type_END	> t_cryptolists_general; ///< templated!
 		typedef TKey t_key; ///< concretized key type used in this templated class
 
-		///< A "map" of [e.g.] public keys of given type, organized by their crypto type.
+		///< A "map" of e.g. public keys of given type, organized by their crypto type.
 		///< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
 		t_cryptolists_general m_cryptolists_general; ///<  *** The main collection ("map") of the keys
 
-		mutable string m_hash_cached; ///< Hash of all my [e.g.] public keys (a cache,
+		mutable string m_hash_cached; ///< Hash of all my e.g. public keys (a cache,
 		// auto calculated by getters/cleared by setters - when m_autoupdate_hash)
 		// empty "" means that it needs calculation. (this is the default value)
 
