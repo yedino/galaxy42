@@ -96,7 +96,7 @@ unsigned char parser::pop_byte_u() {
 	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() );
 	if (! ((m_data_end - m_data_now) >= 1) ) _throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
-	unsigned char c = *m_data_now;
+	unsigned char c = static_cast<unsigned char>(*m_data_now);
 	++m_data_now;
 	return c;
 }
@@ -113,7 +113,10 @@ signed char parser::pop_byte_s() {
 void parser::pop_byte_skip(char c) { // read expected character (e.g. a delimiter)
 	unsigned char was = pop_byte_u();
 	unsigned char expected = static_cast<unsigned char>(c);
-	if (was != expected) _throw_error( format_error_read_delimiter() );
+	if (was != expected) {
+		--m_data_now;
+		_throw_error( format_error_read_delimiter() );
+	}
 }
 
 std::string parser::pop_bytes_n(size_t size) {
