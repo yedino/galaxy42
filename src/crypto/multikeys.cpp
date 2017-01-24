@@ -62,7 +62,7 @@ void c_multisign::add_signature_vec(const std::vector<string> &signatures_vec, t
 	//std::cout << "adding vec " << t_crypto_system_type_to_name(crypto_type)	// dbg
 	//		  << " vec_size: " << signatures_vec.size() << std::endl;
 	for(size_t i = 0; i < signatures_vec.size(); ++i) {
-		add_signature(crypto_type, signatures_vec[i]);
+		add_signature(crypto_type, signatures_vec.at(i));
 	}
 }
 
@@ -192,7 +192,7 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 			for(size_t i = 0; i < amount_of_pubkeys; ++i) {
 				std::string pubkey = pubkeys.get_public(sign_type,i);
 				try {
-					sodiumpp::crypto_sign_verify_detached(signs[i], msg, pubkey);
+					sodiumpp::crypto_sign_verify_detached(signs.at(i), msg, pubkey);
 				} catch (sodiumpp::crypto_error &err) {
 					_throw_error(std::invalid_argument(err.what()));
 				}
@@ -203,7 +203,7 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 			#if ENABLE_CRYPTO_NTRU
 			for(size_t i = 0; i < amount_of_pubkeys; ++i) {
 				std::string pubkey = pubkeys.get_public(sign_type,i);
-				if (!ntrupp::verify(signs[i], msg, pubkey)) {
+				if (!ntrupp::verify(signs.at(i), msg, pubkey)) {
 					_throw_error( std::invalid_argument("Ntru sign verify: fail") );
 				}
 			}
