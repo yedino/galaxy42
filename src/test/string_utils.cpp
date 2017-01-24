@@ -159,7 +159,7 @@ TEST(string_utils, string_as_dbg_create) {
 	EXPECT_NO_THROW(string_as_dbg(arr));
 }
 
-TEST(string_utils, to_debug) {
+TEST(string_utils, to_debug_string) {
 	std::string str("fbhiw7wo308w938ru03urfw!@#!@#a");
 	EXPECT_NO_THROW(to_debug(str, e_debug_style_object));
 	EXPECT_NO_THROW(to_debug(str, e_debug_style_short_devel));
@@ -172,7 +172,9 @@ TEST(string_utils, to_debug) {
 	EXPECT_NO_THROW(to_debug(str, e_debug_style_crypto_devel));
 	EXPECT_NO_THROW(to_debug(str, e_debug_style_big));
 	EXPECT_NO_THROW(to_debug_b(str));
+}
 
+TEST(string_utils, to_debug_char) {
 	char c = 'a';
 	EXPECT_NO_THROW(to_debug(c, e_debug_style_object));
 	EXPECT_NO_THROW(to_debug(c, e_debug_style_short_devel));
@@ -185,7 +187,9 @@ TEST(string_utils, to_debug) {
 	EXPECT_NO_THROW(to_debug(c, e_debug_style_crypto_devel));
 	EXPECT_NO_THROW(to_debug(c, e_debug_style_big));
 	EXPECT_NO_THROW(to_debug_b(c));
+}
 
+TEST(string_utils, to_debug_string_as_bin) {
 	string_as_bin bin("kdhsaiwe7hdf97e");
 	EXPECT_NO_THROW(to_debug(bin, e_debug_style_object));
 	EXPECT_NO_THROW(to_debug(bin, e_debug_style_short_devel));
@@ -201,10 +205,57 @@ TEST(string_utils, to_debug) {
 	EXPECT_NO_THROW(to_debug_b(bin_empty));
 }
 
+TEST(string_utils, to_debug_unique_ptr) {
+	std::unique_ptr<std::string> u_ptr;
+	EXPECT_NO_THROW(to_debug(u_ptr));
+	auto u_ptr2 = std::make_unique<std::string>("ksafh24098");
+	auto u_ptr3 = std::make_unique<std::string>("ksafhhasgdijasgd");
+	EXPECT_NO_THROW(to_debug(u_ptr2));
+	EXPECT_NO_THROW(to_debug(u_ptr3));
+	EXPECT_NE(to_debug(u_ptr), to_debug(u_ptr2));
+	EXPECT_NE(to_debug(u_ptr2), to_debug(u_ptr3));
+	EXPECT_NE(to_debug(u_ptr), to_debug(u_ptr3));
+}
+
+TEST(string_utils, to_debug_vector) {
+	std::vector<int> vec1 = {1, 2, 5, 8, 4, 3, 4};
+	std::vector<int> vec2;
+	EXPECT_NO_THROW(to_debug(vec1, e_debug_style_object));
+	EXPECT_NO_THROW(to_debug(vec2, e_debug_style_object));
+	EXPECT_NE(to_debug(vec1, e_debug_style_object), to_debug(vec2, e_debug_style_object));
+
+	EXPECT_NO_THROW(to_debug(vec1, e_debug_style_short_devel));
+	EXPECT_NO_THROW(to_debug(vec2, e_debug_style_short_devel));
+	EXPECT_NE(to_debug(vec1, e_debug_style_short_devel), to_debug(vec2, e_debug_style_short_devel));
+
+	EXPECT_NO_THROW(to_debug(vec1, e_debug_style_crypto_devel));
+	EXPECT_NO_THROW(to_debug(vec2, e_debug_style_crypto_devel));
+	EXPECT_NE(to_debug(vec1, e_debug_style_crypto_devel), to_debug(vec2, e_debug_style_crypto_devel));
+
+	EXPECT_NO_THROW(to_debug(vec1, e_debug_style_big));
+	EXPECT_NO_THROW(to_debug(vec2, e_debug_style_big));
+	EXPECT_NE(to_debug(vec1, e_debug_style_big), to_debug(vec2, e_debug_style_big));
+}
+
 TEST(string_utils, debug_simple_hash) {
 	EXPECT_NO_THROW(debug_simple_hash(""));
 	EXPECT_NO_THROW(debug_simple_hash("sadfsdfa"));
 	EXPECT_NO_THROW(debug_simple_hash("123123445"));
 	EXPECT_NO_THROW(debug_simple_hash("!@#3e234!RDQWER"));
 	EXPECT_NO_THROW(debug_simple_hash(";;l[['l[l;"));
+	EXPECT_EQ(debug_simple_hash(""), debug_simple_hash(""));
+	EXPECT_NE(debug_simple_hash(""), debug_simple_hash("a"));
+	EXPECT_EQ(debug_simple_hash("aaaaa"), debug_simple_hash("aaaaa"));
+}
+
+TEST(string_utils, to_binary_string) {
+	std::array<char, 4> arr_char {{'a', '&', 'L', '\0'}};
+	std::array<char, 4> arr_char2 {{0, 7, 46, 2}};
+
+	EXPECT_NO_THROW(to_binary_string(arr_char));
+	EXPECT_NO_THROW(to_binary_string(arr_char2));
+
+	EXPECT_EQ(to_binary_string(arr_char), to_binary_string(arr_char));
+	EXPECT_EQ(to_binary_string(arr_char2), to_binary_string(arr_char2));
+	EXPECT_NE(to_binary_string(arr_char), to_binary_string(arr_char2));
 }
