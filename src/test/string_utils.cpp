@@ -259,3 +259,56 @@ TEST(string_utils, to_binary_string) {
 	EXPECT_EQ(to_binary_string(arr_char2), to_binary_string(arr_char2));
 	EXPECT_NE(to_binary_string(arr_char), to_binary_string(arr_char2));
 }
+
+TEST(string_utils, chardbg) {
+	EXPECT_NO_THROW(chardbg('a'));
+	EXPECT_NO_THROW(chardbg('Z'));
+	EXPECT_NO_THROW(chardbg('1'));
+	EXPECT_NO_THROW(chardbg('&'));
+	EXPECT_NO_THROW(chardbg(';'));
+	EXPECT_NO_THROW(chardbg(0));
+	EXPECT_NO_THROW(chardbg(127));
+	EXPECT_NO_THROW(chardbg(-128));
+	EXPECT_EQ(chardbg('q'), std::string("q"));
+	EXPECT_EQ(chardbg('a'), std::string("a"));
+	EXPECT_EQ(chardbg('G'), std::string("G"));
+	EXPECT_EQ(chardbg('7'), std::string("7"));
+	EXPECT_EQ(chardbg('('), std::string("("));
+	EXPECT_NE(chardbg(4), std::string("4"));
+}
+
+TEST(string_utils, ostream_for_boost_any) {
+	boost::any any_char = 'a';
+	boost::any any_int = 3847;
+	boost::any any_bool = true;
+	boost::any any_float = 10.542f;
+	boost::any any_double = 354.48;
+	boost::any any_string = std::string("swufyie");
+	boost::any any_vector_string = std::vector<std::string>{"sdfsf", "ru8999999rorg", "&^%^Y&^%"};
+
+	std::ostringstream oss;
+	EXPECT_NO_THROW(oss << any_char);
+	EXPECT_EQ(oss.str().at(0), boost::any_cast<char>(any_char));
+
+	oss.str("");
+	EXPECT_NO_THROW(oss << any_int);
+	EXPECT_EQ(oss.str(), std::to_string(boost::any_cast<int>(any_int)));
+
+	oss.str("");
+	EXPECT_NO_THROW(oss << any_bool);
+	EXPECT_EQ(oss.str(), std::to_string(boost::any_cast<bool>(any_bool)));
+
+	oss.str("");
+	EXPECT_NO_THROW(oss << any_float);
+	EXPECT_FLOAT_EQ(std::stof(oss.str()), std::stof(std::to_string(boost::any_cast<float>(any_float))));
+
+	oss.str("");
+	EXPECT_NO_THROW(oss << any_double);
+	EXPECT_DOUBLE_EQ(std::stod(oss.str()), std::stod(std::to_string(boost::any_cast<double>(any_double))));
+
+	oss.str("");
+	EXPECT_NO_THROW(oss << any_string);
+	EXPECT_EQ(oss.str(), boost::any_cast<std::string>(any_string));
+
+	EXPECT_NO_THROW(oss << any_vector_string);
+}
