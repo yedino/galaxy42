@@ -311,4 +311,9 @@ TEST(string_utils, ostream_for_boost_any) {
 	EXPECT_EQ(oss.str(), boost::any_cast<std::string>(any_string));
 
 	EXPECT_NO_THROW(oss << any_vector_string);
+
+	oss.str("");
+	boost::any any_vector_int = std::vector<int> {1, 5, 7, 3, 0, 123321};
+	EXPECT_NO_THROW(oss << any_vector_int);
+	EXPECT_EQ(oss.str(), "(no-debug for this boost any type)");
 }
