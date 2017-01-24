@@ -22,10 +22,13 @@ def ircNotification(result) {
 }
 
 node('master') {
-	def GIT_REPOSITORY_URL="https://github.com/yedino/galaxy42.git"
+
+	def GIT_REPOSITORY_URL=scm.getUserRemoteConfigs()[0].getUrl()
+	println "$GIT_REPOSITORY_URL"
 
 	// git repository branch could be passed as regular expresion, more info: Jenkins Git plugin
-	def GIT_BRANCH="*/dev"
+	def GIT_BRANCH="${BRANCH_NAME}"
+	println "$GIT_BRANCH"
 
 	def failure_counter=0
 
