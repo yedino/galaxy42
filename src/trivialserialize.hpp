@@ -334,7 +334,7 @@ class parser {
 		signed char pop_byte_s();
 		/**
 		 * \par Exception safety
-		 * basic exception guarantee, TODO make strong exception guarantee (TEST(serialize, skip_bytes))
+		 * strong exception guarantee
 		 */
 		void pop_byte_skip(char c); // read expected character (e.g. a delimiter)
 
