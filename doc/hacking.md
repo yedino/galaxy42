@@ -142,6 +142,15 @@ To use Jenkins:
 * on Master node, add the Slave nodes credentials
 * set Jenkins to observe your git account for updates and to run tests
 
+Our Jenkins test suite defined by one pipeline can be checked in details in the Jenkinsfile located in the root directory of the project.
+At the moment test suite includes:
+	- native build on gcc debian8 linux and mingw/cygwin 32-bit windows
+	- unit tests passing
+	- integration tests passing
+	- deterministic build linux target
+	- deterministic build osx target
+	- deterministic build windows installer
+
 # Naming and Glossary
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
