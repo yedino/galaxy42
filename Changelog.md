@@ -1,6 +1,6 @@
 # Galaxy42 - Changelog
 
-### Version v0.3.1b
+### Version v0.3.1b (pre-alpha)
 
 * Important changes for all users:
   * Fixed segfault (nullptr deref) when peered peer with wrong ipv6 (remote attack: crash)
