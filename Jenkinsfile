@@ -174,6 +174,8 @@ node('master') {
 		println "At least one stage has failed, make pipeline build failure"
 		currentBuild.result = 'FAILURE'
 		println "Check individual item build - console log for details."
+	} else {
+		currentBuild.result = 'SUCCESS'
 	}
 
 	ircNotification(currentBuild.result)
