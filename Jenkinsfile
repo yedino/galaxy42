@@ -23,13 +23,24 @@ def ircNotification(result) {
 
 node('master') {
 
+	dev build_native_linux = 1
+	dev build_native_windows = 1
+	dev build_native_all = 1
+
+	dev run_unit_test = 1
+	dev run_integration_test = 1
+
+	dev build_gitian_linux = 1
+	dev build_gitian_macosx = 1
+	dev build_gitian_windows = 1
+
 	def GIT_REPOSITORY_URL = scm.getUserRemoteConfigs()[0].getUrl()
 	println "GIT_URL: [$GIT_REPOSITORY_URL]"
 
 	//def GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
 	//println "GIT COMMIT: [$GIT_REPOSITORY_URL]"
 
-	// git repository branch could be passed on jenkins build configuration as regular expresion, more info: Jenkins Git plugin
+	//git repository branch could be passed on jenkins build configuration as regular expresion, more info: Jenkins Git plugin
 	//def GIT_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
 	def GIT_BRANCH = ""
 
