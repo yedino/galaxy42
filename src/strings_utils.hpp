@@ -32,8 +32,8 @@ std::ostream& operator<<(std::ostream &ostr, const string_as_hex &obj);
 
 bool operator==( const string_as_hex &a, const string_as_hex &b);
 
-unsigned char hexchar2int(char c); // 'f' -> 15
 unsigned char int2hexchar(unsigned char i); // 15 -> 'f'
+unsigned char hexchar2int(char c); // 'f' -> 15
 
 unsigned char doublehexchar2int(string s); // "fd" -> 253
 
@@ -76,8 +76,8 @@ std::string debug_simple_hash(const std::string & str);
 std::string chardbg(char c); ///< Prints one character in "debugging" format, e.g. 0x0, or 0x20=32, etc.
 
 struct string_as_dbg {
+	std::string dbg; ///< this string is already nicelly formatted for debug output e.g. "(3){a,l,a,0x13}" or "(3){1,2,3}"
 	public:
-		std::string dbg; ///< this string is already nicelly formatted for debug output e.g. "(3){a,l,a,0x13}" or "(3){1,2,3}"
 
 		string_as_dbg()=default;
 		string_as_dbg(const string_as_bin & bin, t_debug_style style=e_debug_style_short_devel); ///< from our binary data string
