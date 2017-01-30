@@ -995,9 +995,9 @@ void c_tunserver::event_loop(int time) {
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
 				try{
-						m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
-				}catch(std::out_of_range){
-					_warn("Trying to update stats for peer not in m_peer.");
+					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
+				}catch(std::out_of_range&){
+					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
 				}
 
 			} else {
@@ -1020,8 +1020,8 @@ void c_tunserver::event_loop(int time) {
 				); // push the tunneled data to where they belong
 				try{
 					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
-				}catch(std::out_of_range){
-					_warn("Trying to update stats for peer not in m_peer.");
+				}catch(std::out_of_range&){
+					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
 				}
 			}
 			if (!was_anything_sent_from_TUN) {
@@ -1200,8 +1200,8 @@ void c_tunserver::event_loop(int time) {
 					); // push the tunneled data to where they belong // reinterpret char-signess
 					try{
 						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
-					}catch(std::out_of_range){
-						_warn("Trying to update stats for peer not in m_peer.");
+					}catch(std::out_of_range&){
+						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
 					}
 #endif
 				}
@@ -1307,8 +1307,8 @@ void c_tunserver::event_loop(int time) {
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
 						try{
 							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
-						}catch(std::out_of_range){
-							_warn("Trying to update stats for peer not in m_peer.");
+						}catch(std::out_of_range&){
+							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
 						}
                         _note("Send the route reply");
 					} catch(...) {
