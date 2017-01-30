@@ -75,8 +75,7 @@ long c_peering::get_limit_points() {
 }
 
 c_peering_stats & c_peering::get_stats(){
-    _dbg1("this" << this);
-    return m_peering_stats;
+	return m_peering_stats;
 }
 
 

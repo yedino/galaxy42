@@ -17,9 +17,8 @@ c_data_tramsmission_buffer::c_data_tramsmission_buffer(int buffer_size, int inte
 {}
 
 void c_data_tramsmission_buffer::update_sent_buffer(size_t data_size){
-    _dbg1("this" << this);
     auto now = chrono::system_clock::now();
-    long units = chrono::duration<double, milli>(now - m_reference_time).count() / m_interval;
+		long units = chrono::duration<double, milli>(now - m_reference_time).count() / m_interval;
     long distance = units - m_last_sent;
     m_last_sent = units;
     for(int i=0; i<distance; i++)
