@@ -994,8 +994,11 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
-                if ( m_peer.find(dst_hip) != m_peer.end() )
-                    m_peer[dst_hip]->get_stats().update_sent_stats(dump.size());
+				try{
+					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
+				}catch(std::out_of_range&){
+					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+				}
 
 			} else {
 				_info("Using CT tunnel to send our own data");
@@ -1015,10 +1018,12 @@ void c_tunserver::event_loop(int time) {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
-                if ( m_peer.find(dst_hip) != m_peer.end() )
-                    m_peer[dst_hip]->get_stats().update_sent_stats(data_encrypted.size());
+				try{
+					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
+				}catch(std::out_of_range&){
+					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+				}
 			}
-
 			if (!was_anything_sent_from_TUN) {
 				ui::action_info_ok("Ok, we sent a packet of data from our computer through virtual network, sending seems to work.");
 				was_anything_sent_from_TUN=true;
@@ -1193,8 +1198,11 @@ void c_tunserver::event_loop(int time) {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
-                    if ( m_peer.find(dst_hip) != m_peer.end() )
-                        m_peer[dst_hip]->get_stats().update_sent_stats(blob.size());
+					try{
+						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
+					}catch(std::out_of_range&){
+						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+					}
 #endif
 				}
 
@@ -1297,9 +1305,12 @@ void c_tunserver::event_loop(int time) {
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 						_dbg1("send route response to " << sender_pip);
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
-                        if ( m_peer.find(sender_as_peering.get_hip()) != m_peer.end() )
-                            m_peer[requested_hip]->get_stats().update_sent_stats(data.size());
-						_note("Send the route reply");
+						try{
+							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
+						}catch(std::out_of_range&){
+							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+						}
+                        _note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
 						// a background should be running in background usually
