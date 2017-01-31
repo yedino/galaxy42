@@ -6,6 +6,7 @@
 #include <chrono>
 #include <string>
 #include <boost/circular_buffer.hpp>
+#include <trivialserialize.hpp>
 
 class c_data_tramsmission_buffer{
     public:
