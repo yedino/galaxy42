@@ -31,6 +31,7 @@ c_peering::c_peering(const t_peering_reference & ref)
 	,m_haship_addr(ref.haship_addr)
 	,m_pubkey(nullptr) // unknown untill we e.g. download it; was: make_unique<c_haship_pubkey>(ref.pubkey))
 	,m_limit_points(100)
+	,m_last_ping_time(std::chrono::steady_clock::now())
 { }
 
 void c_peering::print(ostream & ostr) const {
@@ -75,7 +76,15 @@ long c_peering::get_limit_points() {
 }
 
 c_peering_stats & c_peering::get_stats(){
-    return m_peering_stats;
+	return m_peering_stats;
+}
+
+void c_peering::update_last_ping_time() {
+	m_last_ping_time = std::chrono::steady_clock::now();
+}
+
+std::chrono::steady_clock::time_point c_peering::get_last_ping_time() {
+	return m_last_ping_time;
 }
 
 
