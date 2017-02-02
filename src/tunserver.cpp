@@ -508,17 +508,20 @@ void c_tunserver::configure_mykey() {
 
 // add peer
 void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
-	UNUSED(peer_ref);
+	_mark("add_peer (add only!) " << peer_ref );
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	{
+		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	}
 }
 
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
 unique_ptr<c_haship_pubkey> && pubkey)
 {
-	_dbg1("Update (or add) peer reference " << peer_ref << ", pubkey=" << (*pubkey));
+	auto peer_hip =  peer_ref.haship_addr;
+	_dbg1("Update (or add) peer reference for hip="<<peer_hip<< " , reference=" << peer_ref << ", pubkey=" << (*pubkey));
 	{
 		// auto hip_from_pubkey = pubkey->get_ipv6_string_hexdot(); // re-confirm there that the haship matches the pubkey, just to be sure:
 		c_haship_addr hip_from_pubkey( c_haship_addr::tag_constr_by_hash_of_pubkey() , *pubkey );
@@ -530,27 +533,40 @@ unique_ptr<c_haship_pubkey> && pubkey)
 
 	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
 
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	auto find = m_peer.find( peer_ref.haship_addr );
-	if (find == m_peer.end()) { // no such peer yet
-		auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
-		_fact("Adding new peer " << peer_ref << " with pubkey=" << (*pubkey));
-		peering_ptr->set_pubkey(std::move(pubkey));
-		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
-	} else { // update existing
-		auto & peering_ptr = find->second;
-		const auto & old_pip = peering_ptr->get_pip();
-		const auto & new_pip = peer_ref.peering_addr;
-		if (old_pip == new_pip) {
-			_info("This peer "<<(*pubkey)<<" has unchanged IP "<< new_pip);
+	{ // lock
+		std::lock_guard<std::mutex> lg(m_peer_mutex);
+
+		try {
+			_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
+		} catch(...) { _warn("This peer is not yet in map"); }
+
+		auto find = m_peer.find( peer_hip );
+		if (find == m_peer.end()) { // no such peer yet
+			auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+			_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
 			peering_ptr->set_pubkey(std::move(pubkey));
+			_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
+			m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+		} else { // update existing
+			auto & peering_ptr = find->second;
+			const auto & old_pip = peering_ptr->get_pip();
+			const auto & new_pip = peer_ref.peering_addr;
+			peering_ptr->set_pubkey(std::move(pubkey)); // append the pubkey!
+			if (old_pip == new_pip) {
+				_info("This peer indexed by hip="<<peer_hip<<" has unchanged IP "<< new_pip);
+			}
+			else {
+				_fact("This peer indexed by hip="<<peer_hip<<" CHANGES IP (physical), from " << old_pip << " to " << new_pip);
+				peering_ptr->set_pip( new_pip );
+			}
 		}
-		else {
-			_fact("This peer "<<(*pubkey)<<" CHANGES IP, from " << old_pip << " to " << new_pip );
-			peering_ptr->set_pubkey(std::move(pubkey));
-			peering_ptr->set_pip( new_pip );
-		}
-	}
+
+		try {
+			_dbg2("As result, after adding/appending peer, we have him in map: " << to_debug( m_peer.at( peer_hip ) ) );
+		} catch(...) { _erro("Failed to display the added peer"); throw ; }
+
+	} // lock
+
 }
 
 
