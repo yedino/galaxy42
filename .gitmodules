@@ -22,3 +22,6 @@
 	path = depends/json
 	url = https://github.com/nlohmann/json
 	branch = develop
+[submodule "cotire"]
+	path = cotire
+	url = https://github.com/sakra/cotire

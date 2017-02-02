@@ -280,7 +280,9 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		const auto & peer = galaxy_node.get_peer_with_hip(dst,false); // no need for PK now, caller will do this on his own usually
 		_info("We have that peer directly: " << peer );
 		const int cost = 1; // direct peer. In future we can add connection cost or take into account congestion/lag...
-		c_route_info route_info( peer.get_hip() , cost , * peer.get_pub() );
+		const auto peer_pub_ptr = peer.get_pub();
+		if (!peer_pub_ptr) _throw_error( std::runtime_error("This peer has no pubkey yet.") );
+		c_route_info route_info( peer.get_hip() , cost , * peer_pub_ptr );
 		_info("Direct route: " << route_info);
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
@@ -392,6 +394,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_tun_header_offset_ipv6(0)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
+	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 {
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
@@ -577,7 +580,7 @@ void c_tunserver::prepare_socket() {
 	ui::action_info_ok("Allocated virtual network card interface (TUN)"); // TODO@mik translate './menu lc'
 	// under name: " + to_string(ifr.ifr_name));
 
-	m_tun_header_offset_ipv6 = g_tuntap::TUN_with_PI::header_position_of_ipv6; // matching the TUN/TAP type above
+	m_tun_header_offset_ipv6 = g_tuntap::header_position_of_ipv6; // matching the TUN/TAP type above
 	{
 		std::array<uint8_t, 16> address;
 		assert(m_my_hip.size() == 16 && "m_my_hip != 16");
@@ -807,16 +810,16 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	for(auto & v : m_peer) { if (v.second->get_pip() == ip) return * v.second.get(); }
+	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assign_port() == ip.get_assign_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
 bool c_tunserver::check_packet_destination_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
-	return check_packet_address(address_expected, packet, 28); //< 28 == offset of src address
+	return check_packet_address(address_expected, packet, g_ipv6_rfc::header_position_of_dst); //< 28 == offset of src address
 }
 
 bool c_tunserver::check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
-	return check_packet_address(address_expected, packet, 12); //< 12 == offset of src address
+	return check_packet_address(address_expected, packet, g_ipv6_rfc::header_position_of_src); //< 12 == offset of src address
 }
 
 bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_expected, const string &packet, const size_t offset) {
@@ -891,7 +894,7 @@ void c_tunserver::event_loop(int time) {
 
 
 	// low level receive buffer
-	const int buf_size=65536;
+	constexpr size_t buf_size=65536;
 	char buf[buf_size];
 
 	bool anything_happened=false; // in given loop iteration, for e.g. debug
@@ -963,12 +966,13 @@ void c_tunserver::event_loop(int time) {
 
 		if (m_event_manager.get_tun_packet()) { // get packet from tun
 			anything_happened=true;
-			auto size_read = m_tun_device.read_from_tun(buf, sizeof(buf));
-			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(buf,size_read)<<"]");
+			std::vector<int8_t> tun_read_buff(buf_size);
+			auto size_read = m_tun_device.read_from_tun(&tun_read_buff[0], tun_read_buff.size());
+			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(reinterpret_cast<char *>(&tun_read_buff[0]),size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
 			c_haship_addr src_hip, dst_hip;
-			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(buf, size_read);
+			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<const char *>(&tun_read_buff[0]), size_read);
 			// TODO warn if src_hip is not our hip
 
 			if (!addr_is_galaxy(dst_hip)) {
@@ -990,14 +994,21 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
-                if ( m_peer.find(dst_hip) != m_peer.end() )
-                    m_peer[dst_hip]->get_stats().update_sent_stats(dump.size());
+				try{
+					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
+				}catch(std::out_of_range&){
+					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+				}
 
 			} else {
 				_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
-				std::string data_cleartext(buf, buf+size_read);
+
+				assert(size_read <= tun_read_buff.size() && size_read >= g_tuntap::header_position_of_ipv6);
+				std::string data_cleartext(reinterpret_cast<char *>(&tun_read_buff[g_tuntap::header_position_of_ipv6]), size_read - g_tuntap::header_position_of_ipv6);
+				// clear data == ipv6 packet
+				data_cleartext.erase(g_ipv6_rfc::header_position_of_dst, g_haship_addr_size); // remove dst addr from ipv6
 				std::string data_encrypted = ct.box_ab(data_cleartext, nonce_used);
 
 				this->route_tun_data_to_its_destination_top(
@@ -1007,10 +1018,12 @@ void c_tunserver::event_loop(int time) {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
-                if ( m_peer.find(dst_hip) != m_peer.end() )
-                    m_peer[dst_hip]->get_stats().update_sent_stats(data_encrypted.size());
+				try{
+					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
+				}catch(std::out_of_range&){
+					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+				}
 			}
-
 			if (!was_anything_sent_from_TUN) {
 				ui::action_info_ok("Ok, we sent a packet of data from our computer through virtual network, sending seems to work.");
 				was_anything_sent_from_TUN=true;
@@ -1128,19 +1141,30 @@ void c_tunserver::event_loop(int time) {
 						_note("Using CT tunnel to decrypt data for us");
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
-						if (!check_packet_destination_address(dst_hip, tundata)) {
-							_warn("crypto authentification of destination IP failed");
-							throw std::runtime_error("crypto authentification of destination IP failed");
-						}
-						if (!check_packet_source_address(src_hip, tundata)) {
-							_warn("crypto authentification of source IP failed");
-							throw std::runtime_error("crypto authentification of source IP failed");
-						}
+
 
 						_note("<<<====== TUN INPUT: " << to_debug(tundata));
-                                                auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+						if (check_ip_protocol(tundata)) {
+							// add TUN header
+							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
+							tundata.insert(g_ipv6_rfc::header_position_of_dst, reinterpret_cast<const char *>(dst_hip.data()), dst_hip.size());
 
-						_assert_throw( (write_bytes == tundata.size()) );
+/*							if (!check_packet_destination_address(dst_hip, tundata)) {
+								_warn("crypto authentification of destination IP failed");
+								throw std::runtime_error("crypto authentification of destination IP failed");
+							}*/
+							if (!check_packet_source_address(src_hip, tundata)) {
+								_warn("crypto authentification of source IP failed");
+								throw std::runtime_error("crypto authentification of source IP failed");
+							}
+							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
+							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+							_assert_throw( (write_bytes == tundata.size()) );
+
+						}
+						else
+							_warn("IP protocol number " << get_ip_protocol_number(tundata) << " not supported.");
+
 					} // we have CT
 
 					if (!was_anything_sent_to_TUN) {
@@ -1174,8 +1198,11 @@ void c_tunserver::event_loop(int time) {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
-                    if ( m_peer.find(dst_hip) != m_peer.end() )
-                        m_peer[dst_hip]->get_stats().update_sent_stats(blob.size());
+					try{
+						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
+					}catch(std::out_of_range&){
+						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+					}
 #endif
 				}
 
@@ -1275,9 +1302,15 @@ void c_tunserver::event_loop(int time) {
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
                         //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
-                        if ( m_peer.find(requested_hip) != m_peer.end() )
-                            m_peer[requested_hip]->get_stats().update_sent_stats(data.size());
-						_note("Send the route reply");
+						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
+						_dbg1("send route response to " << sender_pip);
+						_dbg1("sender HIP " << sender_as_peering.get_hip());
+						try{
+							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
+						}catch(std::out_of_range&){
+							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
+						}
+                        _note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
 						// a background should be running in background usually
@@ -1352,7 +1385,13 @@ void c_tunserver::event_loop(int time) {
 		}
 
 		}
-		catch (std::exception &e) {
+		catch (tuntap_error_devtun &e) {
+			_erro(e.what());
+			_warn("Trying restar tun/tap device ...");
+			try{
+				prepare_socket();
+			}catch(ui::exception_error_exit){}
+		}catch (std::exception &e) {
 			_warn("### !!! ### Parsing network data caused an exception: " << e.what());
 		}
 		catch (...) {
@@ -1451,6 +1490,18 @@ std::string c_tunserver::get_my_reference() const {
 	return oss.str();
 }
 
+bool c_tunserver::check_ip_protocol(const std::string& data) const{
+	char protocol = get_ip_protocol_number(data);
+	if(find(m_supported_ip_protocols.begin(), m_supported_ip_protocols.end(), protocol) != m_supported_ip_protocols.end())
+		return true;
+	else
+		return false;
+}
+
+int c_tunserver::get_ip_protocol_number(const std::string& data) const{
+	size_t pos_ip_protocol_type = g_ipv6_rfc::header_position_of_ip_protocol_type;
+	return data.at(pos_ip_protocol_type);
+}
 
 // ------------------------------------------------------------------
 

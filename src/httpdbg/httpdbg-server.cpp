@@ -65,11 +65,10 @@ private:
     vector<string> strs;
     boost::split(strs, data_, boost::is_any_of("/ "));
 
-    string reply=raport.generate(strs[2]);
+		m_reply=raport.generate(strs.at(2));
 
-    boost::asio::async_write(socket_,
-    	boost::asio::buffer(reply, reply.size()),
-    	// boost::asio::buffer(data_, length),
+		boost::asio::async_write(socket_,
+			boost::asio::buffer(m_reply, m_reply.size()),
         [this, self](boost::system::error_code ec, size_t /*length*/)
         {
           if (!ec)
@@ -82,8 +81,8 @@ private:
 
   tcp::socket socket_;
   enum { max_length = 1024 };
-  char data_[max_length];
-
+	char data_[max_length];
+	std::string m_reply;
   const c_tunserver & tunserver_;
 };
 
@@ -261,7 +260,7 @@ int c_httpdbg_server::run(){
     }
     catch (exception& e)
     {
-        cerr << "Exception: " << e.what() << "\n";
+        _erro( "Exception: " << e.what() );
     }
     return 0;
 }
@@ -273,7 +272,7 @@ void c_httpdbg_server::stop(){
     }
     catch (exception& e)
     {
-        cerr << "Exception: " << e.what() << "\n";
+        _erro( "Exception: " << e.what());
     }
 }
 

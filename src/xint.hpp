@@ -136,7 +136,7 @@ class safer_int : public safer_int_base {
 
 			auto xi_min = std::numeric_limits<T>::min() ;
 			T_big xi_min_big( xi_min );
-			if (obj_big > xi_min_big) { _throw_error( boost::numeric::bad_numeric_cast() ); }
+			if (obj_big < xi_min_big) { _throw_error( boost::numeric::bad_numeric_cast() ); }
 
 			xi = static_cast<T>(obj);
 		}

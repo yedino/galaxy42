@@ -209,10 +209,18 @@ class c_tunserver : public c_galaxy_node {
 			e_route_method_default=3, ///< The default routing method
 		} t_route_method;
 
+		typedef enum {
+			eIPv6_TCP=6,
+			eIPv6_UDP=17,
+			eIPv6_ICMP=58
+		} t_ipv6_protocol_type;
+
 		void nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) override;
 		const c_peering & get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) override;
 		int get_my_port() const;
 		std::string get_my_reference() const;
+		bool check_ip_protocol(const std::string& data) const;
+		int get_ip_protocol_number(const std::string& data) const;
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -325,6 +333,7 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_ping(const std::string &input_json);
 		std::string rpc_peer_list(const std::string &input_json);
 		int m_port;
+		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
 };
 
 // ------------------------------------------------------------------

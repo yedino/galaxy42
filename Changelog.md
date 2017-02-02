@@ -1,5 +1,32 @@
 # Galaxy42 - Changelog
 
+### Version v0.3.1b (pre-alpha)
+
+* Important changes for all users:
+  * Fixed segfault (nullptr deref) when peered peer with wrong ipv6 (remote attack: crash)
+  * Basic firewall: packets other then UDP/TCP/ICMP are possibly dropped.
+  * Node2Node protocol format change (git-rev 456bf77dffd4),
+    * Therefore all nodes should update (older nodes are not supported),
+  * NAT traversal fixed: same external node can be used from hidden behind one NAT group of several nodes.
+* For users of official binary distribution:
+  * All users:
+    * Changed default RPC port to 9043 TCP.
+  * Windows users:
+    * Fixed crash (sometimes) after wake up from sleep.
+* For people building from source:
+  * Windows users:
+    * Read translation (.mo) files in program built in MSVC compiler.
+    * When running in Cmd.exe native console (instead of Cygwin) support nationalized characters (Unicode).
+    * The http-debug console should work on Windows now too (still probably disabled by default).
+  * Linux users:
+    * Fixed determinism of Gitian tar/gzip of linux build (perhaps it was not, even though the files inside were).
+  * Mac OS X users:
+    * Gitian for Mac OS X - produces deterministic binary. (Still TODO automatic generation of .dmg file itself).
+* Misc:
+  * Precompiled headers (with Cotire for CMake) for build speed (tested on Linux, MSVC).
+  * Using Jenkins to help with QA of Gitian.
+  * After Merry Christmas 2016 - we wish you also Happy New Year 2017; a bit late :P but still.
+
 ### Version v0.3.1
 
 * For users of official binary distribution:
