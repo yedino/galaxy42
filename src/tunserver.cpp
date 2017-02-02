@@ -543,6 +543,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 		const auto & new_pip = peer_ref.peering_addr;
 		if (old_pip == new_pip) {
 			_info("This peer "<<(*pubkey)<<" has unchanged IP "<< new_pip);
+			peering_ptr->set_pubkey(std::move(pubkey));
 		}
 		else {
 			_fact("This peer "<<(*pubkey)<<" CHANGES IP, from " << old_pip << " to " << new_pip );
