@@ -33,6 +33,8 @@ packages:
 - "libxml2-dev"
 - "uuid-dev"
 - "libssl-dev"
+- "mkisofs"
+- "hfsprogs"
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
