@@ -71,9 +71,9 @@ void write_to_console(const std::string& obj);
 } while(0)
 #define _mark(X) do { DBGLVL(150); \
 	std::ostringstream oss; \
-	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
+	oss<<"\033[95m\n\n"; for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
 	oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
-	for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
+	for (int i=0; i<70; ++i) oss<<'='; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
 	} while(0)
 
