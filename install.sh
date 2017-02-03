@@ -336,7 +336,7 @@ if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_
 # platforminfo_install_packages 'vim' 'mc' || { echo "Test install failed." ; exit 1; }  ; echo "Test seems ok." ; exit 0 # debug
 
 text1="$(eval_gettext "This tool will configure your computer for the SELECTED by you functions of \$programname.")"
-text_warn="$(gettext "L_program_is_pre_pre_alpha")"
+text_warn="$(gettext "L_INSTALLER_program_is_pre_pre_alpha")"
 
 text2=""
 if (("$abdialog_curses")) ; then
