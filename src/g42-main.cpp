@@ -284,7 +284,13 @@ int main(int argc, char **argv) {
 
 	using std::cerr; using std::endl;
 
-	_fact( "Start... " );
+	ostringstream oss; oss << "ver. "
+		<< project_version_number_major << "."
+		<< project_version_number_minor << "."
+		<< project_version_number_sub << "."
+		<< project_version_number_patch ;
+	string ver_str = oss.str();
+	_fact( "Start... " << ver_str );
 	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
 	{
