@@ -192,8 +192,17 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 				flag=""
 			fi
 			sleep 0.2
-		  for iii in en pl uk de ru; do
-				LANGUAGE="$iii" ./install.sh "$flag"
+		  for iii in 'en_EN.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
+		  	echo -e "\n\n\nLANG: - $iii - (press ENTER)\n\n\n"
+		  	read _
+				LANGUAGE= LANG="$iii" LC_ALL= ./install.sh "$flag"
+		  done
+		  echo "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
+		  read _
+		  for iii in en pl uk ru de; do
+		  	echo -e "\n\n\nLANGUAGE: - $iii - (press ENTER)\n\n\n"
+		  	read _
+				LANGUAGE="$iii" LANG= LC_ALL= ./install.sh "$flag"
 		  done
 	  ;;
 
