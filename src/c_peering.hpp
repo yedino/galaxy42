@@ -47,7 +47,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		void add_limit_points(long int points);
 		void decrement_limit_points();
 		long int get_limit_points();
-        c_peering_stats & get_stats();
+		c_peering_stats & get_stats();
 
 		friend class c_tunserver;
 
