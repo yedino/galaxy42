@@ -703,8 +703,23 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 
 void c_tunserver::peering_ping_all_peers() {
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	auto & peers = m_peer;
-	_info("Sending ping to all peers (count=" << peers.size() << ")");
+	auto now = std::chrono::steady_clock::now();
+	_dbg2("Remove inactive peers, time="<<now);
+	size_t count_removed=0; // how many we removed
+	for (auto it = m_peer.begin(); it != m_peer.end();) {
+		auto last_ping_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - it->second->get_last_ping_time()); //< seconds after the last
+		if (last_ping_seconds > std::chrono::seconds(30)) { // TODO configure this
+			_note("removing peer " << it->first.get_hip_as_string(true));
+			++count_removed;
+			m_peer.erase(it++);
+		} else {
+			++ it;
+		}
+
+	}
+	if (count_removed) _mark("Removed " << count_removed << " inactive peer(s), time="<<now);
+
+	_info("Sending ping to all peers (count=" << m_peer.size() << ")");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
