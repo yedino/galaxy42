@@ -195,6 +195,9 @@ pushd "${GALAXY_DIR}" || fail
 	echo "OSX packer script is not provided yet"
 	echo "simple copy only tunserver.elf"
 	cp "${GALAXY_DIR}/tunserver.elf" "${OUTDIR}"
+
+	# pack results to dmg
+	${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
 popd || fail
 
 ### </LICENCE> - end of licence block
