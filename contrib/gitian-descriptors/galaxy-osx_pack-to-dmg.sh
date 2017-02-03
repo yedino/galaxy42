@@ -16,12 +16,12 @@ readonly APP_NAME="Tunserver.app"
 
 # ** building bomutils **
 pushd "${GALAXY_DIR}"
-       contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
+       . contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
 popd
 
 # ** building xar **
 pushd "${GALAXY_DIR}"
-       contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
+       . contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
 popd
 
 

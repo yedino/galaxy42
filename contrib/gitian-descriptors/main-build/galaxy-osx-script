@@ -197,7 +197,7 @@ pushd "${GALAXY_DIR}" || fail
 	cp "${GALAXY_DIR}/tunserver.elf" "${OUTDIR}"
 
 	# pack results to dmg
-	${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
+	. ${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
 popd || fail
 
 ### </LICENCE> - end of licence block
