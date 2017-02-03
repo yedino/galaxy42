@@ -479,6 +479,9 @@ int main(int argc, char **argv) {
                         ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
                         ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
                         ("rpc-port", po::value<int>()->default_value(9043), mo_file_reader::gettext("L_rpcPort_do").c_str())
+                    ("remove-peers", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_remove_peers_do").c_str())
+                    ("remove-peers-timeout", po::value<unsigned int>()->default_value(30), mo_file_reader::gettext("L_remove_peers_timeout_do").c_str())
+
 
 			#if EXTLEVEL_IS_PREVIEW
 /*
@@ -693,6 +696,12 @@ int main(int argc, char **argv) {
                 http_dbg_port = argm["http-dbg-port"].as<int>();
             } //http-dbg-port
             #endif
+			if (argm.count("remove-peers")) {
+				myserver.enable_remove_peers();
+			}
+
+			myserver.set_remove_peer_tometout(argm.at("remove-peers-timeout").as<unsigned int>());
+
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("sign")) {
 
