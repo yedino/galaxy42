@@ -3,7 +3,13 @@
 #include "c_ip46_addr.hpp"
 #include <libs0.hpp>
 
+
+// ==================================================================
+// LINUX version
+// ==================================================================
+
 #ifdef __linux__
+
 #include "cpputils.hpp"
 #include <netdb.h>
 
@@ -21,7 +27,7 @@ c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) {
 	} else {
 		(*this) = create_ipv6(ip_addr, port);
 	}
-	_info("Parsing ip46 from string ["<<ip_addr<<":" << port << "] created: " << (*this));
+	_dbg1("Parsing ip46 from string ["<<ip_addr<<"], with port=" << port << "] created: " << (*this));
 }
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
@@ -47,6 +53,7 @@ sockaddr_in6 c_ip46_addr::get_ip6() const {
 	_assert(ret.sin6_family == AF_INET6);
 	return ret;
 }
+
 ///< return my address, any IP (e.g. for listening), on given port
 c_ip46_addr c_ip46_addr::any_on_port(int port) {
 	as_zerofill< sockaddr_in > addr_in;
@@ -78,6 +85,17 @@ c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
 	return ret;
 }
 
+int c_ip46_addr::get_assigned_port() const {
+	if (m_tag == tag_ipv4) {
+		return ntohs(m_ip_data.in4.sin_port);
+	} else if (m_tag == tag_ipv6) {
+		return ntohs(m_ip_data.in6.sin6_port);
+	}
+	//assert(false && "c_ip46_addr has bad ip type (can not return it's port)");
+	_warn("Trying to read port on invalid address");
+	return 0;
+}
+
 
 bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	as_zerofill< addrinfo > hint;
@@ -101,18 +119,18 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 }
 
 
-ostream &operator << (ostream &out, const c_ip46_addr& addr) {
+ostream & operator<<(ostream &out, const c_ip46_addr& addr) {
 	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
 		char addr_str[INET_ADDRSTRLEN];
 		auto ip4_address = addr.get_ip4();
 		inet_ntop(AF_INET, &ip4_address.sin_addr, addr_str, INET_ADDRSTRLEN);
-		out << addr_str << ":" << addr.get_assign_port();
+		out << addr_str << ":" << addr.get_assigned_port();
 	}
 	else if (addr.m_tag == c_ip46_addr::tag_ipv6) {
 		char addr_str[INET6_ADDRSTRLEN];
 		auto ip6_address = addr.get_ip6();
 		inet_ntop(AF_INET6, &ip6_address.sin6_addr, addr_str, INET6_ADDRSTRLEN);
-		out << addr_str << ":" << addr.get_assign_port();
+		out << "[" << addr_str << "]:" << addr.get_assigned_port();
 	}
 	else {
 		out << "none";
@@ -120,7 +138,7 @@ ostream &operator << (ostream &out, const c_ip46_addr& addr) {
 	return out;
 }
 
-bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
+bool c_ip46_addr::operator==(const c_ip46_addr &rhs) const {
 	if (this->m_tag == t_tag::tag_none) {
 		_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
 	}
@@ -131,14 +149,22 @@ bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
 		return false;
 	}
 	if (this->m_tag == t_tag::tag_ipv4) {
-		return !memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
+		_assert(rhs.m_tag == t_tag::tag_ipv4); // to be sure both this and rhs union data can be accessed as ipv4
+		return (!memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr)))
+			&& (this->get_assigned_port() == rhs.get_assigned_port());
+	}
+	if (this->m_tag == t_tag::tag_ipv6) {
+		_assert(rhs.m_tag == t_tag::tag_ipv6); // to be sure both this and rhs union data can be accessed as ipv6
+		return !memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr))
+			&& (this->get_assigned_port() == rhs.get_assigned_port());
 	}
 	else {
-		return !memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr));
+		_throw_error(std::runtime_error("Unknown IP type"));
+		return false;
 	}
 }
 
-bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
+bool c_ip46_addr::operator<(const c_ip46_addr &rhs) const {
 	if (this->m_tag == t_tag::tag_none) {
 		_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
 	}
@@ -152,19 +178,31 @@ bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
 		return false;
 	}
 
-	int ret = 0;
-    if (rhs.m_tag == t_tag::tag_ipv4) {
-        ret = memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
+	if (this->m_tag == t_tag::tag_ipv4) {
+		_assert(rhs.m_tag == t_tag::tag_ipv4); // to be sure both this and rhs union data can be accessed as ipv4
+		auto cmp = memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
+		if (cmp<0) return true;
+		if (cmp>0) return false;
+		return this->get_assigned_port() < rhs.get_assigned_port();
 	}
-    else {
-        ret = memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr));
+	else if (this->m_tag == t_tag::tag_ipv6) {
+		_assert(rhs.m_tag == t_tag::tag_ipv6); // to be sure both this and rhs union data can be accessed as ipv6
+		auto cmp = memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in_addr));
+		if (cmp<0) return true;
+		if (cmp>0) return false;
+		return this->get_assigned_port() < rhs.get_assigned_port();
 	}
-	if (ret < 0) return true;
 	else return false;
 }
 
-// __linux__
+
+// end of:  __linux__
 #elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__)
+
+// ==================================================================
+// BOOST version: WINDOWS / MACOSX
+// ==================================================================
+
 
 #include <iostream>
 c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port)
@@ -180,32 +218,40 @@ c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
 	else return t_tag::tag_none;
 }
 
-std::ostream &operator << (std::ostream &out, const c_ip46_addr& addr) {
-	out << addr.m_address.to_string();
+std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr) {
+	auto const & addr = addr.m_address;
+	if (addr.is_v6()) {
+		out << "[" << addr.to_string() << "]:" << m_port;
+	}
+	else {
+		out << addr.to_string() << ":" << m_port;
+		if (! addr.is_v4()) _warn("Unknown IP type, not v4 not v6: " << addr.to_string());
+	}
 	return out;
 }
 
-bool c_ip46_addr::operator== (const c_ip46_addr &rhs) const {
-	return this->m_address == rhs.m_address;
+bool c_ip46_addr::operator==(const c_ip46_addr &rhs) const {
+	return (this->m_address == rhs.m_address) && (this->m_port == rhs.m_port);
 }
 
-bool c_ip46_addr::operator< (const c_ip46_addr &rhs) const {
-	return this->m_address < rhs.m_address;
+bool c_ip46_addr::operator<(const c_ip46_addr &rhs) const {
+	if (this->m_address < rhs.m_address) return true;
+	if (this->m_address > rhs.m_address) return false;
+	return this->m_port < rhs.m_port;
 }
 
-int c_ip46_addr::get_assign_port() const {
+int c_ip46_addr::get_assigned_port() const {
 	return m_port;
 }
 
 boost::asio::ip::address c_ip46_addr::get_address() const {
 	return m_address;
 }
-
 void c_ip46_addr::set_address(const boost::asio::ip::address &address) {
 	m_address = address;
 }
 
-// __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+// end of: __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 #endif
 
 

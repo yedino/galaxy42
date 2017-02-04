@@ -5,12 +5,13 @@
 * Important changes:
   * Fixed segfault (nullptr deref) when peered peer with wrong ipv6 (remote attack: crash)
   * Fixed segfault (nullptr deref) in some cases (from the statistics code) [in rc4].
-  * Basic firewall: packets other then UDP/TCP/ICMP are possibly dropped.
+  * Basic firewall: packets other then UDP/TCP/ICMP are possibly dropped!
   * Node2Node protocol format change (git-rev 456bf77dffd4),
-    * Therefore all nodes should update (older nodes are not supported),
-  * NAT traversal fixed: same external node can be used from hidden behind one NAT group of several nodes.
+    * Therefore all nodes should update (older nodes are not supported)!
 * Changes:
-  * IP change fixed: when one peer changes IP address then we write to him on the new one (e.g. laptop changes WiFi to eth other subnet of same LAN) [in rc4][DISABLED NOW].
+  * NAT traversal fixed: same external node can be used from hidden behind one NAT group of several nodes.
+  * NAT/IP change fixed: works when we are behind NAT and change LAN IP that causes external nodes to see us on different (NATed) port [in rc5]
+  * Program main version (but not rc/git tag/dirty/rev) is printed on start [in rc5].
 * For users of official binary distribution:
   * All systems:
     * Changed default RPC port to 9043 TCP.

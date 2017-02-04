@@ -20,7 +20,7 @@ t_peering_reference::t_peering_reference(const c_ip46_addr & peering_addr, const
 	,haship_addr( c_haship_addr::tag_constr_by_addr_dot() , peering_hip  )
 {
 	_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << " on port="
-		  << peering_addr.get_assign_port() << ", and this is: " << (*this) );
+		  << peering_addr.get_assigned_port() << ", and this is: " << (*this) );
 }
 
 // ------------------------------------------------------------------

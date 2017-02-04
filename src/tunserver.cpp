@@ -845,7 +845,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assign_port() == ip.get_assign_port())) return * v.second.get(); }
+	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
@@ -1072,7 +1072,7 @@ void c_tunserver::event_loop(int time) {
             //find_peer_by_sender_peering_addr( sender_pip ).get_stats().update_read_stats(size_read);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
-			_mark("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
+			_note("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
 
 			// parse version and command:
@@ -1154,7 +1154,7 @@ void c_tunserver::event_loop(int time) {
 
 				// TODONOW optimize? make sure the proper binary format is cached:
 				if (dst_hip == m_my_hip) { // received data addresses to us as finall destination:
-					_mark("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
+					_note("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
 
 					auto find_tunnel = m_tunnel.find( src_hip ); // find end2end tunnel
 					if (find_tunnel == m_tunnel.end()) {
@@ -1312,7 +1312,7 @@ void c_tunserver::event_loop(int time) {
 				} else {
 					c_routing_manager::c_route_reason reason( sender_hip , c_routing_manager::e_search_mode_help_find );
 					try {
-						_mark("Searching for the route he asks about");
+						_note("Searching for the route he asks about");
 						const auto & route = m_routing_manager.get_route_or_maybe_search(*this, requested_hip , reason , true, requested_ttl - 1);
 						_note("We found the route thas he asks about, as: " << route);
 
