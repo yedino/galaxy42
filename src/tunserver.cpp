@@ -705,19 +705,17 @@ void c_tunserver::peering_ping_all_peers() {
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
 	auto now = std::chrono::steady_clock::now();
 	_dbg2("Remove inactive peers, time="<<now);
-	bool enable_remove=false; // if false then just count, do not remove
 	size_t count_removed=0; // how many we removed
-	for (auto it = m_peer.begin(); it != m_peer.end();) {
-		auto last_ping_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - it->second->get_last_ping_time()); //< seconds after the last
-		if (last_ping_seconds > std::chrono::seconds(30)) { // TODO configure this
-			_note("removing peer " << it->first.get_hip_as_string(true));
-			++count_removed;
-			if (enable_remove) m_peer.erase(it);
-			++ it;
-		} else {
+	if (enable_remove) {
+		for (auto it = m_peer.begin(); it != m_peer.end();) {
+			auto last_ping_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - it->second->get_last_ping_time()); //< seconds after the last
+			if (last_ping_seconds > peer_timeout) {
+				_note("removing peer " << it->first.get_hip_as_string(true));
+				m_peer.erase(it);
+				++count_removed;
+			}
 			++ it;
 		}
-
 	}
 	if (count_removed) {
 		_mark( (enable_remove ? "Removed actually" : "Would remove (but disabled)")
@@ -1538,6 +1536,15 @@ bool c_tunserver::check_ip_protocol(const std::string& data) const{
 int c_tunserver::get_ip_protocol_number(const std::string& data) const{
 	size_t pos_ip_protocol_type = g_ipv6_rfc::header_position_of_ip_protocol_type;
 	return data.at(pos_ip_protocol_type);
+}
+
+void c_tunserver::enable_remove_peers() {
+	enable_remove = true;
+}
+
+void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
+	_info("set peer remove timeout " << timeout_seconds);
+	peer_timeout = std::chrono::seconds(timeout_seconds);
 }
 
 // ------------------------------------------------------------------
