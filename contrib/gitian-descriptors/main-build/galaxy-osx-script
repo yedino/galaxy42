@@ -15,7 +15,6 @@ function_fdfix() {
 }
 function_fdfix
 
-
 OUTDIR="$1"
 export OUTDIR
 
@@ -129,7 +128,6 @@ export PATH=${WRAP_DIR}:${PATH}
 # ./autogen.sh # delete
 # CONFIG_SITE=${BASEPREFIX}/`echo "${HOST}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
-
 printf "\n\n\nDoing boost static build\n\n\n"
 
 printf "\nTEST TOOLS (in linux script):\n"
@@ -144,7 +142,6 @@ ranlib --version || fail "test ranlib"
 g++ -print-prog-name=ar
 set +x
 printf "\n\n"
-
 
 # ** building boost **
 pushd "${GALAXY_DIR}" || fail
@@ -197,11 +194,11 @@ pushd "${GALAXY_DIR}" || fail
 	cp "${GALAXY_DIR}/tunserver.elf" "${OUTDIR}"
 
 	# pack results to dmg
-	${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
+        # XXX not working yet
+	# ${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
 popd || fail
 
 ### </LICENCE> - end of licence block
 
 echo "Entire script in Gitian done"
 date
-
