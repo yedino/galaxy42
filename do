@@ -71,6 +71,14 @@ clean_previous_build
 # download external dependencies/submodules
 ./download.sh || { echo "Downloads failed" ; exit 1 ; }
 
+for dir in depends/* ; do
+	count=$(find "$dir" | wc -l) ;
+	if ((count<2)) ; then
+		echo "Error: this submodule seems empty - I see just $count file(s)) - fix it: $dir"
+		exit 1
+	fi
+done
+
 
 if [[ "$platform" == "cygwin" ]]
 then
