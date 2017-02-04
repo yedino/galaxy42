@@ -845,7 +845,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assign_port() == ip.get_assign_port())) return * v.second.get(); }
+	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
