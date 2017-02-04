@@ -54,14 +54,18 @@ For more details, including correct naming and **glossary**, and advanced techni
 
 ### Version v0.3.1b (pre-alpha)
 
-* Important changes for all users:
+* Important changes:
   * Fixed segfault (nullptr deref) when peered peer with wrong ipv6 (remote attack: crash)
-  * Basic firewall: packets other then UDP/TCP/ICMP are possibly dropped.
+  * Fixed segfault (nullptr deref) in some cases (from the statistics code) [in rc4].
+  * Basic firewall: packets other then UDP/TCP/ICMP are possibly dropped!
   * Node2Node protocol format change (git-rev 456bf77dffd4),
-    * Therefore all nodes should update (older nodes are not supported),
+    * Therefore all nodes should update (older nodes are not supported)!
+* Changes:
   * NAT traversal fixed: same external node can be used from hidden behind one NAT group of several nodes.
+  * NAT/IP change fixed: works when we are behind NAT and change LAN IP that causes external nodes to see us on different (NATed) port [in rc5]
+  * Program main version (but not rc/git tag/dirty/rev) is printed on start [in rc5].
 * For users of official binary distribution:
-  * All users:
+  * All systems:
     * Changed default RPC port to 9043 TCP.
   * Windows users:
     * Fixed crash (sometimes) after wake up from sleep.
@@ -73,7 +77,8 @@ For more details, including correct naming and **glossary**, and advanced techni
   * Linux users:
     * Fixed determinism of Gitian tar/gzip of linux build (perhaps it was not, even though the files inside were).
   * Mac OS X users:
-    * Gitian for Mac OS X - produces deterministic binary. (Still TODO automatic generation of .dmg file itself).
+    * Gitian for Mac OS X - produces deterministic binary.
+    * Gitian for Mac OS X now generates the .dmg though this new functionality is not yet tested [in rc4].
 * Misc:
   * Precompiled headers (with Cotire for CMake) for build speed (tested on Linux, MSVC).
   * Using Jenkins to help with QA of Gitian.
