@@ -549,6 +549,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 			m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
 		} else { // update existing
 			auto & peering_ptr = find->second;
+			peering_ptr->update_last_ping_time();
 			const auto & old_pip = peering_ptr->get_pip();
 			const auto & new_pip = peer_ref.peering_addr;
 			peering_ptr->set_pubkey(std::move(pubkey)); // append the pubkey!
@@ -1282,7 +1283,7 @@ void c_tunserver::event_loop(int time) {
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
 					add_tunnel_to_pubkey( his_pubkey );
 				}
-			} catch (std::invalid_argument &err) {
+			} catch (std::invalid_argument &) {
 				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
 			}
 			}
