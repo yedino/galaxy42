@@ -707,14 +707,17 @@ void c_tunserver::peering_ping_all_peers() {
 	_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
 	if (enable_remove) {
-		for (auto it = m_peer.begin(); it != m_peer.end();) {
+		for (auto it = m_peer.begin(), it_end = m_peer.end(); it != it_end;) {
 			auto last_ping_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - it->second->get_last_ping_time()); //< seconds after the last
 			if (last_ping_seconds > peer_timeout) {
 				_note("removing peer " << it->first.get_hip_as_string(true));
-				m_peer.erase(it);
+				it = m_peer.erase(it);
+				it_end = m_peer.end();
+				_dbg1("after erase");
 				++count_removed;
+			} else {
+				++ it;
 			}
-			++ it;
 		}
 	}
 	if (count_removed) {
