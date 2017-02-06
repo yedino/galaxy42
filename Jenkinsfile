@@ -21,18 +21,24 @@ def ircNotification(result) {
 	}
 }
 
+// build trigger
+properties([pipelineTriggers([	[$class: 'GitHubPushTrigger'],
+								[$class: "SCMTrigger", scmpoll_spec: "H/5 * * * *"]
+							])
+			])
+
 node('master') {
 
-	dev build_native_linux = 1
-	dev build_native_windows = 1
-	dev build_native_all = 1
+	def build_native_linux = 1
+	def build_native_windows = 1
+	def build_native_all = 1
 
-	dev run_unit_test = 1
-	dev run_integration_test = 1
+	def run_unit_test = 1
+	def run_integration_test = 1
 
-	dev build_gitian_linux = 1
-	dev build_gitian_macosx = 1
-	dev build_gitian_windows = 1
+	def build_gitian_linux = 1
+	def build_gitian_macosx = 1
+	def build_gitian_windows = 1
 
 	def GIT_REPOSITORY_URL = scm.getUserRemoteConfigs()[0].getUrl()
 	println "GIT_URL: [$GIT_REPOSITORY_URL]"
@@ -58,6 +64,7 @@ node('master') {
 	println "BRANCH: [$GIT_BRANCH]"
 
 	def failure_counter=0
+
 
 	stage('native_build_parallel') {
 		parallel linux: {
