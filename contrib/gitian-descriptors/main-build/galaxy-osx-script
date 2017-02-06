@@ -44,12 +44,12 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 WRAP_DIR="$HOME/wrapped"
 
 HOST="x86_64-apple-darwin15"
-COMPILERS="clang clang++ clang++-libc++"
+COMPILERS="clang clang++ clang++-libc++ install_name_tool"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
 
 FAKETIME_HOST_PROGS="ar strip nm otool"
-FAKETIME_PROGS="date ar ranlib dmg genisoimage"
+FAKETIME_PROGS="date ar ranlib dmg genisoimage g++ gcc"
 
 HOST_CFLAGS="-O2 -g"
 HOST_CXXFLAGS="-O2 -g"
