@@ -1542,6 +1542,7 @@ int c_tunserver::get_ip_protocol_number(const std::string& data) const{
 }
 
 void c_tunserver::enable_remove_peers() {
+	_dbg2("enable remove peers");
 	enable_remove = true;
 }
 
