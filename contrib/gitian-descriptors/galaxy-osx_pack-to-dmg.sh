@@ -15,8 +15,8 @@ readonly APP_NAME="Tunserver.app"
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
 
 # setting compilers
-export CC=gcc
-export CXX=g++
+export CC=/home/ubuntu/wrapped/gcc
+export CXX=/home/ubuntu/wrapped/g++
 
 # ** building bomutils **
 pushd "${GALAXY_DIR}"
@@ -98,7 +98,7 @@ function create_dmg() {
 	pushd "${GALAXY_DIR}/dmg-build"
 		mkdir /tmp/disk
 		cp Tunserver_Installer.pkg /tmp/disk/
-		mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
+		/home/ubuntu/wrapped/mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
 
 		cp Tunserver.dmg "${OUTDIR}"/Tunserver.dmg
 	popd
@@ -125,7 +125,7 @@ function pack_to_dmg() {
 
 		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-		( cd root && find . | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | cpio -o --format odc --owner 0:80 | /home/ubuntu/wrapped/gzip -c ) > flat/base.pkg/Payload
 
 		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
