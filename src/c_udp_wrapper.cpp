@@ -71,7 +71,7 @@ void c_udp_wrapper_asio::send_data(const c_ip46_addr &dst_address, const void *d
 	std::cout << "udp sending data to [" << dst_address << "]" << " size [" << size_of_data << "]" << std::endl;
 	m_socket.send_to( // blocks
 			boost::asio::buffer(data, size_of_data),
-			boost::asio::ip::udp::endpoint(dst_address.get_address(), dst_address.get_assign_port())
+			boost::asio::ip::udp::endpoint(dst_address.get_address(), dst_address.get_assigned_port())
 	);
 }
 
