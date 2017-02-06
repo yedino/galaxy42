@@ -20,12 +20,12 @@ export CXX=g++
 
 # ** building bomutils **
 pushd "${GALAXY_DIR}"
-#       . contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
+	. contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
 popd
 
 # ** building xar **
 pushd "${GALAXY_DIR}"
- #      . contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
+	. contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
 popd
 
 # unset compilers
@@ -34,12 +34,12 @@ unset CXX
 
 
 function create_PackageInfo() {
-       pushd "${GALAXY_DIR}/dmg-build" > /dev/null
+	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
-               local git_version=`git describe`
-               local number_of_files=`find root | wc -l`
-               local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
-               cat <<< \
+		local git_version=`git describe`
+		local number_of_files=`find root | wc -l`
+		local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
+		cat <<< \
 '<pkg-info format-version="2" identifier="Tunserver_Installer.pkg" version="'"${git_version}"'" install-location="/" auth="root">
   <payload installKBytes="'"${install_size}"'" numberOfFiles="'"${number_of_files}"'"/>
   <scripts>
@@ -49,20 +49,20 @@ function create_PackageInfo() {
 </bundle-version>
 </pkg-info>'
 
-       popd > /dev/null
+	popd > /dev/null
 
 }
 
 # function getting one parametr with path to Distribiution file
 function create_DistribiutonFile() {
-       local FILENAME=$1
-       pushd "${GALAXY_DIR}/dmg-build" > /dev/null
+	local FILENAME=$1
+	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
-               local git_version=`git describe`
-               local number_of_files=`find root | wc -l`
-               local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
+		local git_version=`git describe`
+		local number_of_files=`find root | wc -l`
+		local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
 
-               cat > "${FILENAME}" << EOL
+		cat > "${FILENAME}" << EOL
 <?xml version="1.0" encoding="utf-8"?>
 <installer-script minSpecVersion="1.000000" authoringTool="com.apple.PackageMaker" authoringToolVersion="3.0.3" authoringToolBuild="174">
     <title>${APP_NAME}</title>
@@ -90,61 +90,61 @@ function create_DistribiutonFile() {
     <pkg-ref id="com.galaxy42.tunserver" installKBytes="${install_size}" version="${git_version}" auth="Root">#base.pkg</pkg-ref>
 </installer-script>
 EOL
-       popd
+	popd
 }
 
 function create_dmg() {
-       #create img
-       pushd "${GALAXY_DIR}/dmg-build"
-               mkdir /tmp/disk
-               cp Tunserver_Installer.pkg /tmp/disk/
-               mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
+	#create img
+	pushd "${GALAXY_DIR}/dmg-build"
+		mkdir /tmp/disk
+		cp Tunserver_Installer.pkg /tmp/disk/
+		mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
 
-               cp Tunserver.dmg "${OUTDIR}"/Tunserver.dmg
-       popd
+		cp Tunserver.dmg "${OUTDIR}"/Tunserver.dmg
+	popd
 }
 
 function clean_builds() {
-       pushd ${OUTDIR}
-               rm -rf locale
-               rm tunserver.elf
-               rm *.dylib
-       popd
+	pushd ${OUTDIR}
+		rm -rf locale
+		rm tunserver.elf
+		rm *.dylib
+	popd
 
-       rm -rf /tmp/disk
-       rm -rf "${GALAXY_DIR}/dmg-build"
+	rm -rf /tmp/disk
+	rm -rf "${GALAXY_DIR}/dmg-build"
 }
 function pack_to_dmg() {
-       mkdir -p "${GALAXY_DIR}/dmg-build"
+	mkdir -p "${GALAXY_DIR}/dmg-build"
 
-       pushd "${GALAXY_DIR}/dmg-build"
+	pushd "${GALAXY_DIR}/dmg-build"
 
-               mkdir -p flat/base.pkg flat/Resources/en.lproj
-               mkdir -p root/Applications;
-               cp -r "${APP_FILES_DIR}" root/Applications/
+		mkdir -p flat/base.pkg flat/Resources/en.lproj
+		mkdir -p root/Applications;
+		cp -r "${APP_FILES_DIR}" root/Applications/
 
-               mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
+		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-               ( cd root && find . | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
 
-               create_PackageInfo > "flat/base.pkg/PackageInfo"
+		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
-               "${BUILD_DIR}/bomutils/build/bin/mkbom" -u 0 -g 80 root flat/base.pkg/Bom
+		"${BUILD_DIR}/bomutils/build/bin/mkbom" -u 0 -g 80 root flat/base.pkg/Bom
 
-               # copy licence and readme
-               cp ${GALAXY_DIR}/README.md flat/Resources/en.lproj/ReadMe
-               cp ${GALAXY_DIR}/LICENCE.txt flat/Resources/en.lproj/Licence
+		# copy licence and readme
+		cp ${GALAXY_DIR}/README.md flat/Resources/en.lproj/ReadMe
+		cp ${GALAXY_DIR}/LICENCE.txt flat/Resources/en.lproj/Licence
 
-               create_DistribiutonFile "flat/Distribution"
+		create_DistribiutonFile "flat/Distribution"
 
-               # create pkg
-               ( cd flat && /home/ubuntu/build/xar/xar/src/xar --compression none -cf "../Tunserver_Installer.pkg" * )
+		# create pkg
+		( cd flat && /home/ubuntu/build/xar/xar/src/xar --compression none -cf "../Tunserver_Installer.pkg" * )
 
-               # create dmg
-               create_dmg
+		# create dmg
+		create_dmg
 
-       popd
+	popd
 
-       clean_builds
+	clean_builds
 }
 pack_to_dmg
