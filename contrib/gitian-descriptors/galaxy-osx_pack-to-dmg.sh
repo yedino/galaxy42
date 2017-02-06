@@ -14,88 +14,93 @@ readonly APP_NAME="Tunserver.app"
 # importing functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
 
+# setting compilers
+export CC=gcc
+export CXX=g++
+
 # ** building bomutils **
 pushd "${GALAXY_DIR}"
-       . contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
+#       . contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
 popd
 
 # ** building xar **
 pushd "${GALAXY_DIR}"
-       . contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
+ #      . contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
 popd
 
+# unset compilers
+unset CC
+unset CXX
 
 
 function create_PackageInfo() {
-       pushd "${GALAXY_DIR}/dmg-build"
+       pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
                local git_version=`git describe`
                local number_of_files=`find root | wc -l`
                local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
                cat <<< \
-'<pkg-info format-version="2" identifier="Tunserver.pkg" version="'"${git_version}"'" install-location="/" auth="root">
+'<pkg-info format-version="2" identifier="Tunserver_Installer.pkg" version="'"${git_version}"'" install-location="/" auth="root">
   <payload installKBytes="'"${install_size}"'" numberOfFiles="'"${number_of_files}"'"/>
   <scripts>
   </scripts>
 <bundle-version>
-    <bundle id="com.Galaxy42.Tunserver" CFBundleIdentifier="com.Galaxy42.Tunserver" path="./Applications/'"${APP_NAME}"'" CFBundleVersion="0.1"/>
+    <bundle id="com.galaxy42.tunserver" CFBundleIdentifier="com.galaxy42.tunserver" path="./Applications/'"${APP_NAME}"'" CFBundleVersion="1.3.0"/>
 </bundle-version>
-PackageInfo</pkg-info>'
+</pkg-info>'
 
-       popd
+       popd > /dev/null
 
 }
 
+# function getting one parametr with path to Distribiution file
 function create_DistribiutonFile() {
-       pushd "${GALAXY_DIR}/dmg-build"
+       local FILENAME=$1
+       pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
                local git_version=`git describe`
                local number_of_files=`find root | wc -l`
                local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
 
-               cat <<< \
-"taller-script minSpecVersion=\"1.000000\" authoringTool=\"com.apple.PackageMaker\" authoringToolVersion=\"3.0.3\" authoringToolBuild=\"174\">
+               cat > "${FILENAME}" << EOL
+<?xml version="1.0" encoding="utf-8"?>
+<installer-script minSpecVersion="1.000000" authoringTool="com.apple.PackageMaker" authoringToolVersion="3.0.3" authoringToolBuild="174">
     <title>${APP_NAME}</title>
-    <options customize=\"never\" allow-external-scripts=\"no\"/>
-    <domains enable_anywhere=\"true\"/>
-    <installation-check script=\"pm_install_check();\"/>
+    <options customize="never" allow-external-scripts="no"/>
+    <domains enable_anywhere="true"/>
+    <installation-check script="pm_install_check();"/>
     <script>function pm_install_check() {
-  if(!(system.compareVersions(system.version.ProductVersion,'10.7') >= 0)) {
+  if(!(system.compareVersions(system.version.ProductVersion,'10.5') >= 0)) {
     my.result.title = 'Failure';
-    my.result.message = 'You need at least Mac OS X 10.7 to install Galxa42/Tunserver.';
+    my.result.message = 'You need at least Mac OS X 10.5 to install Galaxy42/Tunserver';
     my.result.type = 'Fatal';
     return false;
   }
   return true;
 }
 </script>
-    <readme file=\"ReadMe\"/>
-    <license file=\"License\"/>
+    <readme file="ReadMe"/>
+    <license file="License"/>
     <choices-outline>
-        <line choice=\"choice1\"/>
+        <line choice="choice1"/>
     </choices-outline>
-    <choice id=\"choice1\" title=\"base\">
-        <pkg-ref id=\"com.Galaxy42.Tunserver.base.pkg\"/>
+    <choice id="choice1" title="base">
+        <pkg-ref id="com.galaxy42.tunserver"/>
     </choice>
-    <pkg-ref id=\"com.Galaxy42.Tunservr.base.pkg\" installKBytes=\"${install_size}\" version=\"${number_of_files}\" auth=\"Root\">#base.pkg</pkg-ref>
-</installer-script>"
-
+    <pkg-ref id="com.galaxy42.tunserver" installKBytes="${install_size}" version="${git_version}" auth="Root">#base.pkg</pkg-ref>
+</installer-script>
+EOL
        popd
 }
 
-function create_img() {
+function create_dmg() {
        #create img
        pushd "${GALAXY_DIR}/dmg-build"
                mkdir /tmp/disk
                cp Tunserver_Installer.pkg /tmp/disk/
-               mkisofs -o Tunserver.img  -r -l -ldots -V "Tunserver" /tmp/disk
-       popd
-}
-function create_dmg() {
-       pushd "${GALAXY_DIR}/dmg-build"
-               dd if=/dev/zero of=/tmp/tunserver.dmg bs=1M count=64
-               mkfs.hfsplus -v Tunserver_Installer.pkg /tmp/tunserver.dmg
-               cp /tmp/tunserver.dmg "${OUTDIR}"/Tunserver.dmg
+               mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
+
+               cp Tunserver.dmg "${OUTDIR}"/Tunserver.dmg
        popd
 }
 
@@ -105,6 +110,8 @@ function clean_builds() {
                rm tunserver.elf
                rm *.dylib
        popd
+
+       rm -rf /tmp/disk
        rm -rf "${GALAXY_DIR}/dmg-build"
 }
 function pack_to_dmg() {
@@ -125,10 +132,10 @@ function pack_to_dmg() {
                "${BUILD_DIR}/bomutils/build/bin/mkbom" -u 0 -g 80 root flat/base.pkg/Bom
 
                # copy licence and readme
-               cp ${GALAXY_DIR}/README.md flat/Resources/ReadMe
-               cp ${GALAXY_DIR}/LICENCE.txt flat/Resources/Licence
+               cp ${GALAXY_DIR}/README.md flat/Resources/en.lproj/ReadMe
+               cp ${GALAXY_DIR}/LICENCE.txt flat/Resources/en.lproj/Licence
 
-               create_DistribiutonFile > flat/Distribution
+               create_DistribiutonFile "flat/Distribution"
 
                # create pkg
                ( cd flat && /home/ubuntu/build/xar/xar/src/xar --compression none -cf "../Tunserver_Installer.pkg" * )
