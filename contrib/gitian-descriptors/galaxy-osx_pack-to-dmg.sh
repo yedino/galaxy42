@@ -123,6 +123,9 @@ function clean_builds() {
 	rm -rf "${GALAXY_DIR}/dmg-build"
 }
 function pack_to_dmg() {
+
+	echo "PATH_dmgbuild=${PATH}}"
+
 	mkdir -p "${GALAXY_DIR}/dmg-build"
 
 	pushd "${GALAXY_DIR}/dmg-build"
@@ -153,9 +156,9 @@ function pack_to_dmg() {
 
 	popd
 
-	clean_builds
+	#clean_builds
 }
 pack_to_dmg
 
 # export original PATH
-export PATH="{PATH_orig}"
+export PATH="${PATH_orig}"
