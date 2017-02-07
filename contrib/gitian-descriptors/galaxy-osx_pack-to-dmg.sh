@@ -32,6 +32,7 @@ pushd "${GALAXY_DIR}"
 popd
 
 # wrap mkbom and xar and place them in PATH
+export PATH_orig="${PATH}"
 export PATH="${PATH}:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/xar/src/"
 create_global_faketime_wrappers "${REFERENCE_DATETIME}" "mkbom xar" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
@@ -155,3 +156,6 @@ function pack_to_dmg() {
 	clean_builds
 }
 pack_to_dmg
+
+# export original PATH
+export PATH="{PATH_orig}"
