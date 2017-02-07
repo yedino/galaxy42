@@ -4,9 +4,6 @@
 set -o errexit
 set -o nounset
 
-# importing functions
-. "${GALAXY_DIR}"/share/script/lib/fail.sh
-. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 function_fdfix() {
         echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
@@ -15,7 +12,7 @@ function_fdfix() {
 function_fdfix
 
 
-OUTDIR="$1"
+readonly OUTDIR="$1"
 export OUTDIR
 
 readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
@@ -28,6 +25,11 @@ pushd "${GALAXY_DIR}"
 popd
 
 readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
+readonly WRAP_DIR="$HOME/wrapped"
+
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 export FAKETIME="$REFERENCE_DATETIME"
 # variable from above yml config
@@ -40,7 +42,6 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
-WRAP_DIR="$HOME/wrapped"
 
 HOST="x86_64-apple-darwin15"
 COMPILERS="clang clang++ clang++-libc++ install_name_tool"
@@ -74,11 +75,11 @@ fi
 # Create faketime timestamp
 
 # Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
-export PATH=${PATH_orig}
+export PATH_orig="${PATH}"
 create_global_faketime_wrappers "${REFERENCE_DATETIME}" "${FAKETIME_PROGS}" "${WRAP_DIR}"
 create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
 create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
-export PATH=${WRAP_DIR}:${PATH}
+export PATH="${WRAP_DIR}:${PATH}"
 
 # Create the release tarball using (arbitrarily) the first host
 
@@ -159,5 +160,6 @@ popd || fail
 ### </LICENCE> - end of licence block
 
 echo "Entire script in Gitian done"
-date
+printf "PATH = $PATH\n"
+/bin/date
 
