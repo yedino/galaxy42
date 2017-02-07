@@ -696,7 +696,7 @@ int main(int argc, char **argv) {
                 http_dbg_port = argm["http-dbg-port"].as<int>();
             } //http-dbg-port
             #endif
-			if (argm.count("remove-peers")) {
+			if (argm.at("remove-peers").as<bool>()) {
 				myserver.enable_remove_peers();
 			}
 

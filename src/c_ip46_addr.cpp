@@ -218,13 +218,13 @@ c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
 	else return t_tag::tag_none;
 }
 
-std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr) {
-	auto const & addr = addr.m_address;
+std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr_46) {
+	auto const & addr = addr_46.m_address;
 	if (addr.is_v6()) {
-		out << "[" << addr.to_string() << "]:" << m_port;
+		out << "[" << addr.to_string() << "]:" << addr_46.m_port;
 	}
 	else {
-		out << addr.to_string() << ":" << m_port;
+		out << addr.to_string() << ":" << addr_46.m_port;
 		if (! addr.is_v4()) _warn("Unknown IP type, not v4 not v6: " << addr.to_string());
 	}
 	return out;

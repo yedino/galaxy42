@@ -549,6 +549,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 			m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
 		} else { // update existing
 			auto & peering_ptr = find->second;
+			peering_ptr->update_last_ping_time();
 			const auto & old_pip = peering_ptr->get_pip();
 			const auto & new_pip = peer_ref.peering_addr;
 			peering_ptr->set_pubkey(std::move(pubkey)); // append the pubkey!
@@ -707,14 +708,17 @@ void c_tunserver::peering_ping_all_peers() {
 	_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
 	if (enable_remove) {
-		for (auto it = m_peer.begin(); it != m_peer.end();) {
+		for (auto it = m_peer.begin(), it_end = m_peer.end(); it != it_end;) {
 			auto last_ping_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - it->second->get_last_ping_time()); //< seconds after the last
 			if (last_ping_seconds > peer_timeout) {
 				_note("removing peer " << it->first.get_hip_as_string(true));
-				m_peer.erase(it);
+				it = m_peer.erase(it);
+				it_end = m_peer.end();
+				_dbg1("after erase");
 				++count_removed;
+			} else {
+				++ it;
 			}
-			++ it;
 		}
 	}
 	if (count_removed) {
@@ -1279,7 +1283,7 @@ void c_tunserver::event_loop(int time) {
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
 					add_tunnel_to_pubkey( his_pubkey );
 				}
-			} catch (std::invalid_argument &err) {
+			} catch (std::invalid_argument &) {
 				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
 			}
 			}
@@ -1539,6 +1543,7 @@ int c_tunserver::get_ip_protocol_number(const std::string& data) const{
 }
 
 void c_tunserver::enable_remove_peers() {
+	_dbg2("enable remove peers");
 	enable_remove = true;
 }
 
