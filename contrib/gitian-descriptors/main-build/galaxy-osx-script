@@ -4,10 +4,9 @@
 set -o errexit
 set -o nounset
 
-function fail() {
-	echo -e "\nERROR (in $0): " "$@"
-	exit 1
-}
+# importing functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 function_fdfix() {
         echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
@@ -72,56 +71,13 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
 fi
 
-function create_global_faketime_wrappers {
-	for prog in ${FAKETIME_PROGS}; do
-		local out="${WRAP_DIR}/${prog}"
-		echo "" > "$out"
-		echo '#!/bin/bash' > "$out"
-		echo "REAL=\"$(which -a ${prog})\"" >> "$out"
-		echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-		echo "export FAKETIME=\"$1\"" >> "$out"
-		echo '$REAL "$@"' >> "$out"
-		chmod +x "$out"
-	done
-}
-
-function create_per-host_faketime_wrappers {
-	for i in $HOST; do
-		for prog in ${FAKETIME_HOST_PROGS}; do
-			local out="${WRAP_DIR}/${i}-${prog}"
-			echo "" > "$out"
-			echo '#!/bin/bash' >> "$out"
-			echo "REAL=\"$(which -a ${i}-${prog})\"" >> "$out"
-			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-			echo "export FAKETIME=\"$1\"" >> "$out"
-			echo '$REAL "$@"' >> "$out"
-			chmod +x "$out"
-		done
-		for prog in ${COMPILERS}; do
-			local out="${WRAP_DIR}/${i}-${prog}"
-			echo '#!/bin/bash' > "$out"
-			echo "REAL=\"$(which -a ${i}-${prog})\"" >> "$out"
-			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-			echo "export FAKETIME=\"$1\"" >> "$out"
-			echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> "$out"
-			echo "\$REAL \$@" >> "$out"
-			chmod +x "$out"
-		done
-	done
-}
-
 # Create faketime timestamp
 
-# Faketime for depends so intermediate results are comparable
-export PATH_orig=${PATH}
-create_global_faketime_wrappers "$FAKETIME"
-create_per-host_faketime_wrappers "$FAKETIME"
-export PATH=${WRAP_DIR}:${PATH}
-
-# Faketime for binaries
+# Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
 export PATH=${PATH_orig}
-create_global_faketime_wrappers "${REFERENCE_DATETIME}"
-create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+create_global_faketime_wrappers "${REFERENCE_DATETIME}" "${FAKETIME_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
 # Create the release tarball using (arbitrarily) the first host
