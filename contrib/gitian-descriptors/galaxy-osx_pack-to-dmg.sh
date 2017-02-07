@@ -7,12 +7,15 @@ set -o nounset
 # readonly BUILD_DIR
 # readonly GALAXY_DIR
 # readonly OUTDIR
+# readonly REFERENCE_DATETIME
+# readonly WRAP_DIR
 readonly OUTDIR_NAME="out"
 readonly APP_FILES_DIR=${OUTDIR} # in our case APP_FILES_DIR should contain files (binaries/libs) and this is the same dir as OUTDIR
 readonly APP_NAME="Tunserver.app"
 
 # importing functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 # setting compilers
 export CC=/home/ubuntu/wrapped/gcc
@@ -28,10 +31,14 @@ pushd "${GALAXY_DIR}"
 	. contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
 popd
 
+# wrap mkbom and xar and place them in PATH
+export PATH="${PATH}:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/xar/src/"
+create_global_faketime_wrappers "${REFERENCE_DATETIME}" "mkbom xar" "${WRAP_DIR}"
+export PATH=${WRAP_DIR}:${PATH}
+
 # unset compilers
 unset CC
 unset CXX
-
 
 function create_PackageInfo() {
 	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
@@ -98,7 +105,7 @@ function create_dmg() {
 	pushd "${GALAXY_DIR}/dmg-build"
 		mkdir /tmp/disk
 		cp Tunserver_Installer.pkg /tmp/disk/
-		/home/ubuntu/wrapped/mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
+		mkisofs -o Tunserver.dmg  -r -l -ldots -V "Tunserver" /tmp/disk
 
 		cp Tunserver.dmg "${OUTDIR}"/Tunserver.dmg
 	popd
@@ -125,11 +132,11 @@ function pack_to_dmg() {
 
 		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-		( cd root && find . | cpio -o --format odc --owner 0:80 | /home/ubuntu/wrapped/gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
 
 		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
-		"${BUILD_DIR}/bomutils/build/bin/mkbom" -u 0 -g 80 root flat/base.pkg/Bom
+		mkbom -u 0 -g 80 root flat/base.pkg/Bom
 
 		# copy licence and readme
 		cp ${GALAXY_DIR}/README.md flat/Resources/en.lproj/ReadMe
@@ -138,7 +145,7 @@ function pack_to_dmg() {
 		create_DistribiutonFile "flat/Distribution"
 
 		# create pkg
-		( cd flat && /home/ubuntu/build/xar/xar/src/xar --compression none -cf "../Tunserver_Installer.pkg" * )
+		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" * )
 
 		# create dmg
 		create_dmg
