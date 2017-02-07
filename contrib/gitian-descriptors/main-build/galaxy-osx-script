@@ -4,10 +4,6 @@
 set -o errexit
 set -o nounset
 
-function fail() {
-	echo -e "\nERROR (in $0): " "$@"
-	exit 1
-}
 
 function_fdfix() {
         echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
@@ -15,7 +11,8 @@ function_fdfix() {
 }
 function_fdfix
 
-OUTDIR="$1"
+
+readonly OUTDIR="$1"
 export OUTDIR
 
 readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
@@ -28,6 +25,11 @@ pushd "${GALAXY_DIR}"
 popd
 
 readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
+readonly WRAP_DIR="$HOME/wrapped"
+
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 export FAKETIME="$REFERENCE_DATETIME"
 # variable from above yml config
@@ -40,15 +42,14 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
-WRAP_DIR="$HOME/wrapped"
 
 HOST="x86_64-apple-darwin15"
-COMPILERS="clang clang++ clang++-libc++"
+COMPILERS="clang clang++ clang++-libc++ install_name_tool"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
 
 FAKETIME_HOST_PROGS="ar strip nm otool"
-FAKETIME_PROGS="date ar ranlib dmg genisoimage"
+FAKETIME_PROGS="date ar ranlib dmg genisoimage g++ gcc mkisofs gzip"
 
 HOST_CFLAGS="-O2 -g"
 HOST_CXXFLAGS="-O2 -g"
@@ -71,62 +72,20 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
 fi
 
-function create_global_faketime_wrappers {
-	for prog in ${FAKETIME_PROGS}; do
-		local out="${WRAP_DIR}/${prog}"
-		echo "" > "$out"
-		echo '#!/bin/bash' > "$out"
-		echo "REAL=\"$(which -a ${prog})\"" >> "$out"
-		echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-		echo "export FAKETIME=\"$1\"" >> "$out"
-		echo '$REAL "$@"' >> "$out"
-		chmod +x "$out"
-	done
-}
-
-function create_per-host_faketime_wrappers {
-	for i in $HOST; do
-		for prog in ${FAKETIME_HOST_PROGS}; do
-			local out="${WRAP_DIR}/${i}-${prog}"
-			echo "" > "$out"
-			echo '#!/bin/bash' >> "$out"
-			echo "REAL=\"$(which -a ${i}-${prog})\"" >> "$out"
-			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-			echo "export FAKETIME=\"$1\"" >> "$out"
-			echo '$REAL "$@"' >> "$out"
-			chmod +x "$out"
-		done
-		for prog in ${COMPILERS}; do
-			local out="${WRAP_DIR}/${i}-${prog}"
-			echo '#!/bin/bash' > "$out"
-			echo "REAL=\"$(which -a ${i}-${prog})\"" >> "$out"
-			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-			echo "export FAKETIME=\"$1\"" >> "$out"
-			echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> "$out"
-			echo "\$REAL \$@" >> "$out"
-			chmod +x "$out"
-		done
-	done
-}
-
 # Create faketime timestamp
 
-# Faketime for depends so intermediate results are comparable
-export PATH_orig=${PATH}
-create_global_faketime_wrappers "$FAKETIME"
-create_per-host_faketime_wrappers "$FAKETIME"
-export PATH=${WRAP_DIR}:${PATH}
-
-# Faketime for binaries
-export PATH=${PATH_orig}
-create_global_faketime_wrappers "${REFERENCE_DATETIME}"
-create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
-export PATH=${WRAP_DIR}:${PATH}
+# Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
+export PATH_orig="${PATH}"
+create_global_faketime_wrappers "${REFERENCE_DATETIME}" "${FAKETIME_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
+export PATH="${WRAP_DIR}:${PATH}"
 
 # Create the release tarball using (arbitrarily) the first host
 
 # ./autogen.sh # delete
 # CONFIG_SITE=${BASEPREFIX}/`echo "${HOST}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
+
 
 printf "\n\n\nDoing boost static build\n\n\n"
 
@@ -142,6 +101,7 @@ ranlib --version || fail "test ranlib"
 g++ -print-prog-name=ar
 set +x
 printf "\n\n"
+
 
 # ** building boost **
 pushd "${GALAXY_DIR}" || fail
@@ -194,11 +154,12 @@ pushd "${GALAXY_DIR}" || fail
 	cp "${GALAXY_DIR}/tunserver.elf" "${OUTDIR}"
 
 	# pack results to dmg
-        # XXX not working yet
-	# ${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
+	. ${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
 popd || fail
 
 ### </LICENCE> - end of licence block
 
 echo "Entire script in Gitian done"
-date
+printf "PATH = $PATH\n"
+/bin/date
+
