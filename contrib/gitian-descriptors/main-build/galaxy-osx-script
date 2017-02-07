@@ -49,7 +49,7 @@ COMPILERS="clang clang++ clang++-libc++ install_name_tool"
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
 
 FAKETIME_HOST_PROGS="ar strip nm otool"
-FAKETIME_PROGS="date ar ranlib dmg genisoimage g++ gcc mkisofs gzip"
+FAKETIME_PROGS="date ar ranlib dmg genisoimage g++ gcc mkisofs gzip cpio"
 
 HOST_CFLAGS="-O2 -g"
 HOST_CXXFLAGS="-O2 -g"
