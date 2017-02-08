@@ -3,6 +3,9 @@
 set -o errexit
 set -o nounset
 
+# sort normalize
+export LC_ALL=C
+
 # Required variables:
 # readonly BUILD_DIR
 # readonly GALAXY_DIR
@@ -136,7 +139,7 @@ function pack_to_dmg() {
 
 		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-		( cd root && find . | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | sort | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
 
 		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
@@ -149,7 +152,7 @@ function pack_to_dmg() {
 		create_DistribiutonFile "flat/Distribution"
 
 		# create pkg
-		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" * )
+		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" `find | sort` )
 
 		# create dmg
 		create_dmg
