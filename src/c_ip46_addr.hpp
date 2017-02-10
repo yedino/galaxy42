@@ -98,6 +98,7 @@ class c_ip46_addr {
 		int get_assigned_port() const;
 		boost::asio::ip::address get_address() const;
 		void set_address(const boost::asio::ip::address &address);
+		void set_port(int new_port);
 	private:
 		boost::asio::ip::address m_address;
 		int m_port = 9042;
