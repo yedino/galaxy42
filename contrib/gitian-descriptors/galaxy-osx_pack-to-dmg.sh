@@ -38,7 +38,7 @@ popd
 
 # wrap mkbom and xar and place them in PATH
 export PATH_orig="${PATH}"
-export PATH="${BUILD_DIR}/cpio-2.12/src:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/xar/src/:${PATH}"
+export PATH="${BUILD_DIR}/cpio-2.12/src:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/src/:${PATH}"
 create_global_faketime_wrappers "${REFERENCE_DATETIME}" "cpio mkbom xar" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
