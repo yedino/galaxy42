@@ -22,10 +22,10 @@ build_xar () {
                printf "build xar in ${BUILD_DIR}\n"
                git clone https://github.com/mackyle/xar.git
 
-               pushd "xar/xar"
+               pushd "xar"
 
                        git checkout "${xar_version}"
-                       local expected_gitrev="056ba5324dc35116f49f27e877ef215fe3fd1b3d" # this is the gitrev hash of this xar-1.5.1 xar version
+                       local expected_gitrev="056ba5324dc35116f49f27e877ef215fe3fd1b3d" # this is the gitrev hash of this xar-1.5.2 xar version
                        local confirm_gitrev=$(git --no-pager log --format='%H' -1)
                        [[ "$confirm_gitrev" == "$expected_gitrev" ]] \
                                || {
