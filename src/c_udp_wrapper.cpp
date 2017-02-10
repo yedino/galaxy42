@@ -83,6 +83,7 @@ size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_si
 		std::copy_n(&m_buffer[0], m_bytes_readed, reinterpret_cast<uint8_t *>(data_buf));
 		size_t ret = m_bytes_readed;
 		from_address.set_address(m_sender_endpoint.address());
+		from_address.set_port(m_sender_endpoint.port());
 		std::cout << "udp recieving data from [" << from_address << "]" << std::endl;
 		m_bytes_readed = 0;
 		return ret;

@@ -247,8 +247,13 @@ int c_ip46_addr::get_assigned_port() const {
 boost::asio::ip::address c_ip46_addr::get_address() const {
 	return m_address;
 }
+
 void c_ip46_addr::set_address(const boost::asio::ip::address &address) {
 	m_address = address;
+}
+
+void c_ip46_addr::set_port(int new_port) {
+	m_port = new_port;
 }
 
 // end of: __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
