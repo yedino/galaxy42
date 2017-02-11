@@ -1,6 +1,6 @@
 # Galaxy42 - Changelog
 
-### Version v0.3.1b (pre-alpha) [up to Release Candidate: rc6]
+### Version v0.3.1b (pre-alpha) [up to Release Candidate: rc7]
 
 * Important changes:
   * Fixed segfault (nullptr deref) when peered peer with wrong ipv6 (remote attack: crash)!
@@ -11,6 +11,7 @@
 * Changes:
   * NAT traversal fixed: same external node can be used from hidden behind one NAT group of several nodes.
   * NAT/IP change fixed: works when we are behind NAT and change LAN IP that causes external nodes to see us on different (NATed) port [in rc5, rc6].
+  * Port numbers: fixes (on Mac and Windows).
   * Program main version (but not rc/git tag/dirty/rev) is printed on start [in rc5].
   * There are command-line options to drop not working peers from peer list after some time [in rc6].
 * For users of official binary distribution:
@@ -28,7 +29,7 @@
   * Mac OS X users:
     * Gitian for Mac OS X - produces deterministic binary.
     * Gitian for Mac OS X - now generates the .dmg installer [in rc4].
-    * Gitian for Mac OS X - now the resulting .dmg is deterministic [in rc6].
+    * Gitian for Mac OS X - now the resulting .dmg is *almost* deterministic [in rc7] (only top-level xar is not tested, cpio should be ok).
 * Misc:
   * Precompiled headers (with Cotire for CMake) for build speed (tested on Linux, MSVC).
   * Using Jenkins to help with QA of Gitian.
