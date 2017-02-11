@@ -3,6 +3,9 @@
 set -o errexit
 set -o nounset
 
+# sort normalize
+export LC_ALL=C
+
 # Required variables:
 # readonly BUILD_DIR
 # readonly GALAXY_DIR
@@ -21,20 +24,22 @@ readonly APP_NAME="Tunserver.app"
 export CC=/home/ubuntu/wrapped/gcc
 export CXX=/home/ubuntu/wrapped/g++
 
-# ** building bomutils **
+
 pushd "${GALAXY_DIR}"
+# ** building cpio 2.12 **
+	. contrib/macdeploy/build-cpio.sh || fail "Failed to build cpio 2.12"
+
+# ** building bomutils **
 	. contrib/macdeploy/build-bomutils.sh || fail "Failed to build bomutils"
-popd
 
 # ** building xar **
-pushd "${GALAXY_DIR}"
 	. contrib/macdeploy/build-xar.sh || fail "Failed to build xar"
 popd
 
 # wrap mkbom and xar and place them in PATH
 export PATH_orig="${PATH}"
-export PATH="${PATH}:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/xar/src/"
-create_global_faketime_wrappers "${REFERENCE_DATETIME}" "mkbom xar" "${WRAP_DIR}"
+export PATH="${BUILD_DIR}/cpio-2.12/src:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/xar/src/:${PATH}"
+create_global_faketime_wrappers "${REFERENCE_DATETIME}" "cpio mkbom xar" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
 # unset compilers
@@ -122,7 +127,11 @@ function clean_builds() {
 	rm -rf /tmp/disk
 	rm -rf "${GALAXY_DIR}/dmg-build"
 }
+
 function pack_to_dmg() {
+
+	echo "PATH_dmgbuild=${PATH}}"
+
 	mkdir -p "${GALAXY_DIR}/dmg-build"
 
 	pushd "${GALAXY_DIR}/dmg-build"
@@ -133,7 +142,7 @@ function pack_to_dmg() {
 
 		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-		( cd root && find . | cpio -o --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | sort | cpio -o --ignore-devno --renumber-inodes --device-independent --reproducible --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
 
 		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
@@ -146,16 +155,16 @@ function pack_to_dmg() {
 		create_DistribiutonFile "flat/Distribution"
 
 		# create pkg
-		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" * )
+		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" `find | sort` )
 
 		# create dmg
 		create_dmg
 
 	popd
 
-	clean_builds
+	#clean_builds
 }
 pack_to_dmg
 
 # export original PATH
-export PATH="{PATH_orig}"
+export PATH="${PATH_orig}"
