@@ -49,7 +49,7 @@ unset CXX
 function create_PackageInfo() {
 	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
-		local git_version=`git describe`
+		local git_version="alpha-version"
 		local number_of_files=`find root | wc -l`
 		local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
 		cat <<< \
@@ -71,7 +71,7 @@ function create_DistribiutonFile() {
 	local FILENAME=$1
 	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
-		local git_version=`git describe`
+		local git_version="alpha-version"
 		local number_of_files=`find root | wc -l`
 		local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
 
