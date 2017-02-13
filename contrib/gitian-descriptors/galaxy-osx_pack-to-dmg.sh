@@ -155,8 +155,10 @@ function pack_to_dmg() {
 		create_DistribiutonFile "flat/Distribution"
 
 		# create pkg
-		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" `find | sort` )
-
+		pushd flat
+			find | sort > "file_list.txt"
+			xar --compression none -cf "../Tunserver_Installer.pkg" *
+		popd
 		# create dmg
 		create_dmg
 
