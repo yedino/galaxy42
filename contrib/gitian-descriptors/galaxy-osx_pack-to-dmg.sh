@@ -142,7 +142,7 @@ function pack_to_dmg() {
 
 		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-		( cd root && find . | sort | cpio -o --ignore-devno --renumber-inodes --device-independent --reproducible --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | sort | cpio -o --ignore-devno --renumber-inodes --device-independent --reproducible --format odc --owner 0:80 | gzip -nc ) > flat/base.pkg/Payload
 
 		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
