@@ -13,19 +13,19 @@ readonly BUILD_THREADS=2
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
 
 build_xar () {
-       local xar_version="xar-1.6.1"  # git tag
+       local xar_version="deterministic"  # git tag
 
        pushd "${BUILD_DIR}"
                printf "clean previous build\n"
                rm -rf xar
 
                printf "build xar in ${BUILD_DIR}\n"
-               git clone https://github.com/mackyle/xar.git
+               git clone "https://github.com/robertoleksy/xar"
 
-               pushd "xar/xar"
+               pushd "xar"
 
                        git checkout "${xar_version}"
-                       local expected_gitrev="570d6f282ac250408c1241961678f6ee3ca5f27b" # this is the gitrev hash of this xar-1.6.1 xar version
+                       local expected_gitrev="1f9d1de0f00cd91f2cd8713731dcf81463f63a79" # this is the gitrev hash of this xar-1.5.2 xar version
                        local confirm_gitrev=$(git --no-pager log --format='%H' -1)
                        [[ "$confirm_gitrev" == "$expected_gitrev" ]] \
                                || {

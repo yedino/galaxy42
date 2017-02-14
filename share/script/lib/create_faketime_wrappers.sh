@@ -14,7 +14,7 @@ function create_global_faketime_wrappers {
 		local out="${wrap_dir}/${prog}"
 		echo "" > "${out}"
 		echo '#!/bin/bash' > "${out}"
-		echo "REAL=\"$(which -a ${prog})\"" >> "${out}"
+		echo "REAL=\"$(which ${prog})\"" >> "${out}"
 		echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "${out}"
 		echo "export FAKETIME=\""${reference_datatime}"\"" >> "$out"
 		echo '$REAL "$@"' >> "$out"
