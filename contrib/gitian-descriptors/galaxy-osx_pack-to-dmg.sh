@@ -156,9 +156,15 @@ function pack_to_dmg() {
 
 		# create pkg
 		pushd flat
-			find | sort > "file_list.txt"
+
+			local filelist=`find | sort`
+			for file in "${filelist}"; do
+				printf "${file}\n" > "file_list.txt"
+			done
+
 			xar --compression none -cf "../Tunserver_Installer.pkg" *
 		popd
+
 		# create dmg
 		create_dmg
 
