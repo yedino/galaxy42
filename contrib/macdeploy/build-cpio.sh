@@ -18,10 +18,24 @@ build_cpio () {
 
 	pushd "${BUILD_DIR}"
 			printf "clean previous build\n"
-			rm -rf ${prog_name}
+			rm -rf "${prog_name}"
+			rm -rf "${prog_name}.tar.gz"
 
 			printf "build ${prog_name} in ${BUILD_DIR}\n"
-			wget "${source}"
+			wget "${source}" -O "${prog_name}.tar.gz"
+
+			sum_expected="640a6980273b699dba147e7b656440d3bd09c1c3ac71650f218ca1e4b4309c04b391ff2a8569e12d7a95827dd2781ab369542de20cc3c26dab3431f2efbdc905"
+			sum_now=$(sha512sum "cpio-2.12.tar.gz" | cut -f1 -d' ')
+			echo "Sum of downloaded file: $sum_now"
+			if [ "$sum_now" != "$sum_expected" ] ; then
+				pwd ; ls -l ;
+				echo "Invalid checksum ($prog_name) got $sum_now instead of expected $sum_expected)"
+				exit 1 # <--- exit
+			else
+				echo "Checksum is OK"
+			fi
+
+
 			tar -xf "${prog_name}.tar.gz"
 
 			pushd "cpio-2.12"
@@ -32,5 +46,7 @@ build_cpio () {
 		   popd
    popd
 }
+
 build_cpio
+
 

@@ -1,6 +1,6 @@
 # Galaxy42 - Changelog
 
-### Version v0.3.1b (pre-alpha) [up to Release Candidate: rc7]
+### Version v0.3.1b (pre-alpha) [up to Release Candidate: rc8]
 
 * Important changes:
   * Fixed segfault (nullptr deref) when peered peer with wrong ipv6 (remote attack: crash)!
@@ -29,7 +29,7 @@
   * Mac OS X users:
     * Gitian for Mac OS X - produces deterministic binary.
     * Gitian for Mac OS X - now generates the .dmg installer [in rc4].
-    * Gitian for Mac OS X - now the resulting .dmg is *almost* deterministic [in rc7] (only top-level xar is not tested, cpio should be ok).
+    * Gitian for Mac OS X - now the resulting .dmg is *almost* deterministic [in rc8].
 * Misc:
   * Precompiled headers (with Cotire for CMake) for build speed (tested on Linux, MSVC).
   * Using Jenkins to help with QA of Gitian.
