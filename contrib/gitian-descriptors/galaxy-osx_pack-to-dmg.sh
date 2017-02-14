@@ -38,7 +38,7 @@ popd
 
 # wrap mkbom and xar and place them in PATH
 export PATH_orig="${PATH}"
-export PATH="${BUILD_DIR}/cpio-2.12/src:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/xar/src/:${PATH}"
+export PATH="${BUILD_DIR}/cpio-2.12/src:${BUILD_DIR}/bomutils/build/bin/:${BUILD_DIR}/xar/src/:${PATH}"
 create_global_faketime_wrappers "${REFERENCE_DATETIME}" "cpio mkbom xar" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
@@ -49,7 +49,7 @@ unset CXX
 function create_PackageInfo() {
 	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
-		local git_version=`git describe`
+		local git_version="alpha-version"
 		local number_of_files=`find root | wc -l`
 		local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
 		cat <<< \
@@ -71,7 +71,7 @@ function create_DistribiutonFile() {
 	local FILENAME=$1
 	pushd "${GALAXY_DIR}/dmg-build" > /dev/null
 
-		local git_version=`git describe`
+		local git_version="alpha-version"
 		local number_of_files=`find root | wc -l`
 		local install_size=`du -b -s -h -k root | cut -f1` # in KBytes
 
@@ -142,7 +142,7 @@ function pack_to_dmg() {
 
 		mv "root/Applications/${OUTDIR_NAME}" "root/Applications/${APP_NAME}"
 
-		( cd root && find . | sort | cpio -o --ignore-devno --renumber-inodes --device-independent --reproducible --format odc --owner 0:80 | gzip -c ) > flat/base.pkg/Payload
+		( cd root && find . | sort | cpio -o --ignore-devno --renumber-inodes --device-independent --reproducible --format odc --owner 0:80 | gzip -nc ) > flat/base.pkg/Payload
 
 		create_PackageInfo > "flat/base.pkg/PackageInfo"
 
@@ -155,7 +155,15 @@ function pack_to_dmg() {
 		create_DistribiutonFile "flat/Distribution"
 
 		# create pkg
-		( cd flat && xar --compression none -cf "../Tunserver_Installer.pkg" `find | sort` )
+		pushd flat
+
+			local filelist=`find | sort`
+			for file in "${filelist}"; do
+				printf "${file}\n" > "file_list.txt"
+			done
+
+			xar --compression none -cf "../Tunserver_Installer.pkg" *
+		popd
 
 		# create dmg
 		create_dmg
