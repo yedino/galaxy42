@@ -496,9 +496,14 @@ add_custom_command(
 add_custom_command(
 	TARGET ipclient.elf ipserver.elf tunserver.elf
 	POST_BUILD
-	COMMAND share/script/use-setcap tunserver.elf || echo "Can not set rights on binary, ignoring."
-	COMMAND share/script/show-source-help.sh
-	COMMAND share/script/show-program-help.sh
+	COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_custom_target(
+	TARGET ipclient.elf ipserver.elf tunserver.elf
+	POST_BUILD
+	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
+	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 endif()
