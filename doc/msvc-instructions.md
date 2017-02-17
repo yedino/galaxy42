@@ -81,6 +81,12 @@ __Cmake output:__
 	Configuring done
 ```
 
+__Possible errors:__
+
+ ``` Configuring incomplete, errors occurred!```
+ ```See also "C:/cygwin64/home/Krystian/galaxy42/CMakeFiles/CMakeOutput.log".'```
+- try to delete cache and files by commend in cygwin: rm -rf CMakeCache.txt CMakeFiles/
+
 ### Build tunserver.elf.exe in Visual Studio:
 - Open Visual Studio, "Open project", choose folder, where you generate MSVC project files
 - Open `galaxy42.sln`
@@ -118,8 +124,7 @@ __Possible errors:__
  or
  ``` Error LNK1112 module machine type 'x64' conflicts with target machine type 'X86'```
 - make sure you link correct version of 32-bit or 64-bit (libsodium/libboost) libraries.
-
-
+ 
 ### Create TUN/TAP device
 __download/install openvps drivers for windows tap device__
 - [OpenVPN-Downloads](https://openvpn.net/index.php/open-source/downloads.html)
