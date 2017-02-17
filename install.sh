@@ -6,6 +6,12 @@
 # (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
 #
 
+#
+# Usage:
+# --sudo - will run install commands as "sudo" use that if you do not have root
+# --test-lang - will do some language/translations test and exit (just for developers)
+#
+
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
@@ -13,6 +19,11 @@ source gettext.sh || { echo "Gettext is not installed, please install it." ; exi
 export TEXTDOMAIN="galaxy42_installer"
 # share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+
+echo "LANG=($LANG) LANGUAGE=($LANGUAGE) LC_ALL=($LC_ALL) - Language of your OS"
+language_test="$(eval_gettext "L_language")"
+echo -e "\n\n\n\n\nLanguage test: $language_test\n"
+if [[ '$1' == "--test-lang" ]] ; then exit 0 ; fi
 
 programname="Galaxy42" # shellcheck disable=SC2034
 
