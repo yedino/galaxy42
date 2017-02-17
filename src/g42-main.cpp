@@ -25,6 +25,8 @@
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
+#include "newloop.hpp"
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -279,7 +281,7 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	return ret;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, const char **argv) {
 //	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
 	using std::cerr; using std::endl;
@@ -292,6 +294,15 @@ int main(int argc, char **argv) {
 	string ver_str = oss.str();
 	_fact( "Start... " << ver_str );
 	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
+
+	if (argc>=2) {
+		if (string(argv[1]) == "--newloop") {
+			_goal("\nStarting newloop mode\n\n");
+			int ret = newloop_main(argc,argv);
+			_goal("\nEnded.\n\n");
+			return ret;
+		}
+	}
 
 	{
 		bool found=false;
