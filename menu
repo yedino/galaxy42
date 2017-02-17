@@ -173,7 +173,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	  tid)
 			printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 			if [[ $EUID -ne 0 ]]; then
-				printf "Will add --sudo"
+				printf "Will add --sudo\n"
 				flag="--sudo"
 			else
 				flag=""
@@ -184,25 +184,28 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		  done
 	  ;;
 	  til)
-			printf "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 			if [[ $EUID -ne 0 ]]; then
-				printf "Will add --sudo"
+				printf "Will add --sudo\n"
 				flag="--sudo"
 			else
 				flag=""
 			fi
 			sleep 0.2
-		  for iii in 'en_EN.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
-		  	echo -e "\n\n\nLANG: - $iii - (press ENTER)\n\n\n"
+		  for iii in 'en_US.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
+		  	echo -e "\n\n\n===============================================\nLANG: - $iii - (press ENTER)\n\n\n"
 		  	read _
-				LANGUAGE= LANG="$iii" LC_ALL= ./install.sh "$flag"
+				#LANG="$iii" LANGUAGE=  LC_ALL= strace -e open -f ./install.sh --test-lang "$flag"
+				LANG="$iii" LANGUAGE=  LC_ALL= ./install.sh "$flag"
+				sleep 0.2
 		  done
-		  echo "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
+		 	echo -e "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
 		  read _
-		  for iii in en pl uk ru de; do
-		  	echo -e "\n\n\nLANGUAGE: - $iii - (press ENTER)\n\n\n"
+		  for iii in 'en_US.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
+		  	echo -e "\n\n\n===============================================\nLANGUAGE: - $iii - (press ENTER)\n\n\n"
 		  	read _
-				LANGUAGE="$iii" LANG= LC_ALL= ./install.sh "$flag"
+					LANG= LANGUAGE="$iii" LC_ALL= ./install.sh "$flag"
+				sleep 0.2
 		  done
 	  ;;
 
