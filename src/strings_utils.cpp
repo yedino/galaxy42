@@ -50,15 +50,15 @@ unsigned char int2hexchar(unsigned char i) {
 }
 
 unsigned char hexchar2int(char c) {
-	if ((c>='0')&&(c<='9')) return c-'0';
-	if ((c>='a')&&(c<='f')) return c-'a' +10;
+	if ((c>='0')&&(c<='9')) return static_cast<unsigned char>(c-'0');
+	if ((c>='a')&&(c<='f')) return static_cast<unsigned char>(c-'a' +10);
 	_throw_error( std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  ) );
 }
 
 unsigned char doublehexchar2int(string s) {
 	if (s.size()!=2) _throw_error( std::invalid_argument("Invalid double-hex string: '"+s+"'") );
-	unsigned char h = s.at(0);
-	unsigned char l = s.at(1);
+	char h = s.at(0);
+	char l = s.at(1);
 	return hexchar2int(h)*16 + hexchar2int(l);
 }
 

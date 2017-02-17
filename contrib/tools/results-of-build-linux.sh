@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# outputs sum of files for ---> windows <---
+# outputs sum of files for ---> linux <---
 # first line is the main checksum
 
 

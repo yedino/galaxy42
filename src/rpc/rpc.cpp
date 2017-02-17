@@ -124,8 +124,8 @@ void c_rpc_server::c_session::read_handler(const boost::system::error_code &erro
 		execute_rpc_command(m_received_data);
 	}
 	catch (const std::exception &e) {
-		std::cerr << "exception read_handler " << e.what() << "\n";
-		std::cerr << "close connection\n";
+		_erro( "exception read_handler " << e.what());
+		_erro( "close connection\n" );
 		delete_me();
 		return;
 	}
@@ -146,8 +146,8 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 		});
 	}
 	catch (const std::exception &e) {
-		std::cerr << "exception in write_handler " << e.what() << "\n";
-		std::cerr << "close connection\n";
+		_erro( "exception in write_handler " << e.what() );
+		_erro( "close connection\n" );
 		delete_me();
 		return;
 	}
@@ -192,8 +192,8 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		});
 	}
 	catch (const std::exception &e) {
-		std::cerr << "exception in execute_rpc_command " << e.what() << "\n";
-		std::cerr << "close connection\n";
+		_erro( "exception in execute_rpc_command " << e.what() );
+		_erro( "close connection\n" );
 		delete_me();
 		return;
 	}

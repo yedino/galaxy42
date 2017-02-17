@@ -21,10 +21,6 @@
  */
 namespace trivialserialize {
 
-namespace test {
-	void test_trivialserialize(std::ostream &dbgout);
-} // namespace
-
 // ---
 /** @defgroup format_error The Format Error
  *  One description for all members of this group
@@ -73,17 +69,7 @@ class format_error_read_invalid_version : public format_error { public:	const ch
  * - varstring: we COULD have one that uses 4 bytes to encode length when it is long, but uses just 1 byte when it is e.g. 250; bitcoin uses such mechanism. Not implemented (yet?).
  * - cstring: we COULD have null-delimited string. Not implemented (yet?).
  */
-class generator {
-	protected:
-		std::string m_str; ///< the generated data so far
-
-		// powers of two for different number of bytes (8-bit - octets):
-		constexpr static size_t bytesize0 = 1;
-		constexpr static size_t bytesize1 = 1 << (8*1); // and size of 1 byte, so usable for module
-		constexpr static size_t bytesize2 = 1 << (8*2); // size for 2 octet word
-		constexpr static size_t bytesize3 = 1 << (8*3); // 3 byte
-		constexpr static size_t bytesize4minus1 = (1LL << (8*4)) -1; // typical 4 octet bigger word, but -1 (so it fits in size_t), we need other comparsion when using it (<=).
-
+class generator final {
 	public:
 		generator(size_t suggested_size);
 
@@ -177,7 +163,15 @@ class generator {
 		///< * you should NOT resize it
 		///@}
 
-	protected:
+	private:
+		std::string m_str; ///< the generated data so far
+
+		// powers of two for different number of bytes (8-bit - octets):
+		constexpr static size_t bytesize0 = 1;
+		constexpr static size_t bytesize1 = 1 << (8*1); // and size of 1 byte, so usable for module
+		constexpr static size_t bytesize2 = 1 << (8*2); // size for 2 octet word
+		constexpr static size_t bytesize3 = 1 << (8*3); // 3 byte
+		constexpr static size_t bytesize4minus1 = (1LL << (8*4)) -1; // typical 4 octet bigger word, but -1 (so it fits in size_t), we need other comparsion when using it (<=).
 		/// give number of octets of actuall-data-size, give the max_size that is just asserted, and the data
 		void push_bytes_octets_and_size(unsigned char octets, size_t max_size, const std::string & data);
 };

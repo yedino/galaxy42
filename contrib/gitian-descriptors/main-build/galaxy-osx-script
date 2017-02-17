@@ -1,11 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
 
+set -o errexit
+set -o nounset
 
-function fail() {
-	echo -e "\nERROR (in $0): " "$@"
-	exit 1
-}
 
 function_fdfix() {
         echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
@@ -14,13 +12,24 @@ function_fdfix() {
 function_fdfix
 
 
-OUTDIR="$1"
+readonly OUTDIR="$1"
 export OUTDIR
 
-GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
+readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
+readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
 
-REFERENCE_DATETIME="2016-08-01 00:00:00"
+# build osx cross toolchain
+pushd "${GALAXY_DIR}"
+	source ./contrib/macdeploy/build-cross-toolchain.sh
+	printf "sourced PATH = $PATH\n"
+popd
+
+readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
+readonly WRAP_DIR="$HOME/wrapped"
+
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 export FAKETIME="$REFERENCE_DATETIME"
 # variable from above yml config
@@ -33,27 +42,28 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
-WRAP_DIR="$HOME/wrapped"
 
-HOSTS="x86_64-apple-darwin11"
+HOST="x86_64-apple-darwin15"
+COMPILERS="clang clang++ clang++-libc++ install_name_tool"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-# CONFIGFLAGS=""
 
-FAKETIME_HOST_PROGS=""
-FAKETIME_PROGS="date ar ranlib dmg genisoimage"
+FAKETIME_HOST_PROGS="ar strip nm otool"
+FAKETIME_PROGS="date ar ranlib g++ gcc mkisofs gzip tar"
 
 HOST_CFLAGS="-O2 -g"
 HOST_CXXFLAGS="-O2 -g"
-HOST_LDFLAGS=-static-libstdc++
+HOST_LDFLAGS="-static-libstdc++"
 
 # importat:
 export GZIP="-9n"
-export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+# export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
 export TZ="UTC"
 
-# ok?
-export BUILD_DIR=`pwd`
+# set cache variables
+GBUILD_CACHE_ENABLED=1
+GBUILD_PACKAGE_CACHE="/home/ubuntu/cache/galaxy42"
+GBUILD_COMMON_CACHE="/home/ubuntu/cache/common"
 
 mkdir -p ${WRAP_DIR}
 if test -n "$GBUILD_CACHE_ENABLED"; then
@@ -62,65 +72,19 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
 fi
 
-function create_global_faketime_wrappers {
-	for prog in ${FAKETIME_PROGS}; do
-		out="${WRAP_DIR}/${prog}"
-		echo "" > "$out"
-		echo '#!/bin/bash' > "$out"
-		echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> "$out"
-		echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-		echo "export FAKETIME=\"$1\"" >> "$out"
-		echo '$REAL "$@"' >> "$out"
-		chmod +x "$out"
-	done
-}
-
-function create_per-host_faketime_wrappers {
-	for i in $HOSTS; do
-		for prog in ${FAKETIME_HOST_PROGS}; do
-			out="${WRAP_DIR}/${i}-${prog}"
-			echo "" > "$out"
-			echo '#!/bin/bash' >> "$out"
-			echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> "$out"
-			echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-			echo "export FAKETIME=\"$1\"" >> "$out"
-			echo '$REAL "$@"' >> "$out"
-			chmod +x "$out"
-		done
-	done
-}
-
 # Create faketime timestamp
 
-# Faketime for depends so intermediate results are comparable
-export PATH_orig=${PATH}
-create_global_faketime_wrappers "$FAKETIME"
-create_per-host_faketime_wrappers "$FAKETIME"
-export PATH=${WRAP_DIR}:${PATH}
-
-pushd ${GALAXY_DIR} || fail
-
-BASEPREFIX=`pwd`/depends
-mkdir -p ${BASEPREFIX}/SDKs
-tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.11.sdk.tar.gz
-
-# Build dependencies for each host
-for i in $HOSTS; do
-	make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
-done
-
-popd
-
-# Faketime for binaries
-export PATH=${PATH_orig}
-create_global_faketime_wrappers "${REFERENCE_DATETIME}"
-create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
-export PATH=${WRAP_DIR}:${PATH}
+# Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
+export PATH_orig="${PATH}"
+create_global_faketime_wrappers "${REFERENCE_DATETIME}" "${FAKETIME_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
+export PATH="${WRAP_DIR}:${PATH}"
 
 # Create the release tarball using (arbitrarily) the first host
 
 # ./autogen.sh # delete
-# CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
+# CONFIG_SITE=${BASEPREFIX}/`echo "${HOST}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
 
 printf "\n\n\nDoing boost static build\n\n\n"
@@ -138,45 +102,64 @@ g++ -print-prog-name=ar
 set +x
 printf "\n\n"
 
-#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
-# sh
-# printf "\n\n=== EXITED TEST SHELL ==="
-# sleep 1 # XXX
 
+# ** building boost **
 pushd "${GALAXY_DIR}" || fail
-
-# version not ready for static build
-# contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+	contrib/gitian-descriptors/libboost-build/build-boost-osx || fail "Failed to build dependence - boost lib for osx"
 popd || fail
 echo "\nAll done regarding boost.\n"
 
-# *** main build starts here ***
-pushd galaxy42
-echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
-
-export CC=clang
-export CXX=clang++
-
-git clean -fdx
-# make dist # delete
-COVERAGE=0 EXTLEVEL=0 \
-#	BUILD_STATIC=1 
-#	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
-	./do --go || fail "Failed to do the main build of our project"
-#############################################
-
-echo -e "\n\nBuild is done.\n\n"
+# ** building libsodium **
+pushd "${GALAXY_DIR}" || fail
+	contrib/gitian-descriptors/libsodium-build/build-sodium "${HOST}" || fail "Failed to build dependence - libsodium for osx"
 popd
 
+# *** main build starts here ***
+pushd "${GALAXY_DIR}"
+	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
-echo -e "\n\nBuild will start the linux packer.\n"
+	export CC="x86_64-apple-darwin15-clang"
+	export CXX="x86_64-apple-darwin15-clang++"
+
+	git clean -fdx
+	git submodule update --init --recursive
+
+	cmake	-DBOOST_ROOT="${BUILD_DIR}/boost/build-osx/" \
+			-DSODIUM_ROOT_DIR="${BUILD_DIR}/libsodium/libsodium-osx/" \
+			-DCMAKE_TOOLCHAIN_FILE="${GALAXY_DIR}/cmake/toolchain_macosx.cmake.in" \
+			. \
+			|| fail "create makefile for our project (cmake) failed"
+
+	make tunserver.elf || fail "make of our project (main binary) failed"
+
+	echo -e "\n\nBuild is done.\n\n"
+popd
+
+# .mo language files
+copy_noarch() {
+        # generate all .mo files
+	pushd "${GALAXY_DIR}" || fail
+        "${GALAXY_DIR}/contrib/tools/galaxy42-lang-update-all"
+        mkdir -p "${OUTDIR}/locale/share" || fail "mkdir locale/share"
+        cp -r --dereference "${GALAXY_DIR}/share/locale" "${OUTDIR}" || fail "copy (mo files)"
+	popd || fail
+}
+copy_noarch
+
+echo -e "\n\nBuild will start the osx packer.\n"
 pushd "${GALAXY_DIR}" || fail
-echo "In PWD=$PWD"
-contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
+	echo "In PWD=$PWD"
+	echo "OSX packer script is not provided yet"
+	echo "simple copy only tunserver.elf"
+	cp "${GALAXY_DIR}/tunserver.elf" "${OUTDIR}"
+
+	# pack results to dmg
+	. ${GALAXY_DIR}/contrib/gitian-descriptors/galaxy-osx_pack-to-dmg.sh
 popd || fail
 
 ### </LICENCE> - end of licence block
 
 echo "Entire script in Gitian done"
-date
+printf "PATH = $PATH\n"
+/bin/date
 

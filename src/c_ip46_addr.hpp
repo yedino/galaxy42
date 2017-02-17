@@ -36,16 +36,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 		sockaddr_in6 get_ip6() const;
 
 		t_tag get_ip_type() const;
-		int get_assign_port() const {
-			if(m_tag == tag_ipv4) {
-				return ntohs(m_ip_data.in4.sin_port);
-			} else if (m_tag == tag_ipv6){
-				return ntohs(m_ip_data.in6.sin6_port);
-			}
-
-			assert(false && "c_ip46_addr has bad ip type");
-			return 0;
-		}
+		int get_assigned_port() const;
 
 		/// return my address, any IP (e.g. for listening), on given port.
 		/// it should listen on both ipv4 and 6
@@ -60,20 +51,20 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 		 * Exception safety: strong exception guarantee
 		 */
 		static bool is_ipv4(const std::string &ipstr);
-		friend ostream &operator << (ostream &out, const c_ip46_addr& addr);
+		friend ostream & operator<<(ostream &out, const c_ip46_addr& addr);
 
 		/**
 		 * @return false if m_tag of lhs and rhs are different
 		 * @throw std::invalid_argument if m_tag of lhs or rhs == tag_none
 		 * Exception safety: strong exception guarantee
 		 */
-		bool operator == (const c_ip46_addr &rhs) const;
+		bool operator==(const c_ip46_addr &rhs) const;
 
 		/**
 		 * @throw std::invalid_argument if m_tag of lhs or rhs == tag_none
 		 * Exception safety: strong exception guarantee
 		 */
-		bool operator < (const c_ip46_addr &rhs) const;
+		bool operator<(const c_ip46_addr &rhs) const;
 
 
 	private:
@@ -84,8 +75,8 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 			};
 		};
 
-		t_ip_data m_ip_data;
-
+		t_ip_data m_ip_data; ///< current ip either ipv4, or ipv6, including the port too
+		// int m_port; // port is inside m_ip_data
 		t_tag m_tag; ///< current type of address
 };
 
@@ -101,12 +92,13 @@ class c_ip46_addr {
 		///! Constructs, from ip_addr in format hexdotip e.g.: fd42:ae11:f636:86:5:1:e5c4:d
 		c_ip46_addr(const std::string &ip_addr, int port = 9042);
 		t_tag get_ip_type() const;
-		friend std::ostream &operator << (std::ostream &out, const c_ip46_addr& addr);
-		bool operator == (const c_ip46_addr &rhs) const;
-		bool operator < (const c_ip46_addr &rhs) const;
-		int get_assign_port() const;
+		friend std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr);
+		bool operator==(const c_ip46_addr &rhs) const;
+		bool operator<(const c_ip46_addr &rhs) const;
+		int get_assigned_port() const;
 		boost::asio::ip::address get_address() const;
 		void set_address(const boost::asio::ip::address &address);
+		void set_port(int new_port);
 	private:
 		boost::asio::ip::address m_address;
 		int m_port = 9042;

@@ -1,5 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # see below for LICENCE information, it can differ for this files or it's fragments.
+
+set -o errexit
+set -o nounset
 
 function fail() {
 	echo -e "\nERROR (in $0): " "$@"
@@ -42,8 +45,8 @@ export OUTDIR
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   # CONFIGFLAGS=""
 
-  FAKETIME_HOST_PROGS="ar ranlib nm ld ldd"
-  FAKETIME_PROGS="date ar ranlib nm ld ldd"
+FAKETIME_HOST_PROGS="ar ranlib nm ld ldd"
+FAKETIME_PROGS="date ar ranlib nm ld ldd tar gzip"
 
   # TODO?
   HOST_CFLAGS="-O2 -g"
@@ -57,18 +60,23 @@ export OUTDIR
 
   # importat:
   export GZIP="-9n"
-  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  # export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
 
   # ok?
   export BUILD_DIR=`pwd`
 
-  mkdir -p ${WRAP_DIR}
-  if test -n "$GBUILD_CACHE_ENABLED"; then
-    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
-    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
-    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
-  fi
+# set cache variables
+GBUILD_CACHE_ENABLED=1
+GBUILD_PACKAGE_CACHE="/home/ubuntu/cache/galaxy42"
+GBUILD_COMMON_CACHE="/home/ubuntu/cache/common"
+
+mkdir -p ${WRAP_DIR}
+if test -n "$GBUILD_CACHE_ENABLED"; then
+	export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+	export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+fi
 
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
@@ -118,7 +126,7 @@ export OUTDIR
   ln -s /usr/include/x86_64-linux-gnu/asm $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu/asm
 
   for prog in ${COMPILERS}; do
-  echo "Creating writer for compiler prog=$PROG with FAKETIME=${REFERENCE_DATETIME}"
+  echo "Creating writer for compiler prog=$prog with FAKETIME=${REFERENCE_DATETIME}"
   out="${WRAP_DIR}/${prog}"
   rm -f "$out"
 
@@ -140,10 +148,6 @@ EOF
 
   chmod +x "$out"
   done
-
-
-
-
 
 
   if false ; then # TODO
@@ -192,30 +196,32 @@ EOF
 # printf "\n\n=== EXITED TEST SHELL ==="
 # sleep 1 # XXX
 
-  pushd "${GALAXY_DIR}" || fail
-  contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
-  popd || fail
-  echo "\nAll done regarding boost.\n"
+pushd "${GALAXY_DIR}" || fail
+	contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+popd || fail
 
-  # *** main build starts here ***
-  pushd galaxy42
-  echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+echo "\nAll done regarding boost.\n"
 
-  git clean -fdx
-  # make dist # delete
-  COVERAGE=0 EXTLEVEL=0 \
-    BUILD_STATIC=1 BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
-    ./do --go || fail "Failed to do the main build of our project"
-  #############################################
+# *** main build starts here ***
+pushd galaxy42
+	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
-  echo -e "\n\nBuild is done.\n\n"
-  popd
+	git clean -fdx
+	# make dist # delete
+	COVERAGE=0 \
+	EXTLEVEL=0 \
+	BUILD_STATIC=1 \
+	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+	./do --go \
+		|| fail "Failed to do the main build of our project"
 
+	echo -e "\n\nBuild is done.\n\n"
+popd
 
 echo -e "\n\nBuild will start the linux packer.\n"
 pushd "${GALAXY_DIR}" || fail
-echo "In PWD=$PWD"
-contrib/tools/build-pack-linux.sh || fail "Can not pack the build results"
+	echo "In PWD=$PWD"
+	contrib/tools/build-pack-linux.sh "gitian" || fail "Can not pack the build results"
 popd || fail
 
   # when we create .tgz.gz - TODO later
