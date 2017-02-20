@@ -6,6 +6,103 @@ typedef string hip_id; // name end src/dst
 
 // -------------------------------------------------------------------
 
+class err_check_base : public std::runtime_error {
+	public:
+		err_check_base(const char *what, bool _serious);
+		err_check_base(const std::string & what, bool serious);
+		static string check_category();
+		const bool serious;
+};
+err_check_base::err_check_base(const char *what, bool _serious) : std::runtime_error(check_category() + what) , serious(_serious) { }
+err_check_base::err_check_base(const std::string & what, bool _serious) : std::runtime_error(check_category() + what) , serious(_serious) { }
+string err_check_base::check_category() {
+	static std::string category = "Warning in Check (Base of Check!): ";
+	static std::string category_s = "Error in Check (Base of Check!): ";
+	return serious ? category_s : category;
+}
+
+// -------------------------------------------------------------------
+
+class err_check_prog : public err_check_base {
+	public:
+		err_check_prog(const char *what);
+		static string check_category();
+};
+err_check_prog::err_check_prog(const char *what) : err_check_base(check_category() + what) { }
+string err_check_prog::check_category() {
+	static std::string category = "Error in Check (Prog - programming error): ";
+	static std::string category_s = "Error in Check (Prog - programming error): ";
+	return serious ? category_s : category;
+}
+
+// -------------------------------------------------------------------
+
+class err_check_sys : public std::system_error , virtual err_check_base {
+	public:
+		err_check_sys(const char *what);
+		err_check_sys(const std::string & what);
+		static string check_category();
+};
+err_check_sys::err_check_sys(const char *what) : err_check_base(check_category() + what) { }
+err_check_sys::err_check_sys(const std::string & what) : err_check_base(check_category() + what) { }
+string err_check_sys::check_category() {
+	static std::string category = "Warning in Check (System - I/O or System): ";
+	static std::string category_s = "Error in Check (System - unexpected problem with I/O or System): ";
+	return serious ? category_s : category;
+}
+
+// -------------------------------------------------------------------
+
+
+class err_check_user : public err_check_base {
+	public:
+		err_check_user(const char *what);
+		static string check_category();
+};
+err_check_user::err_check_user(const char *what) : err_check_base(check_category() + what) { }
+string err_check_user::check_category() {
+	static std::string category = "Warning in Check (User executed invalid action): ";
+	static std::string category_s = "Error in Check (User executed invalid and unexpected action): ";
+	return serious ? category_s : category;
+}
+
+// -------------------------------------------------------------------
+
+class err_check_extern : public err_check_base {
+	public:
+		err_check_extern(const char *what);
+		static string check_category();
+};
+err_check_extern::err_check_extern(const char *what) : err_check_base(check_category() + what) { }
+string err_check_extern::check_category() {
+	static std::string category = "Warning in Check (Extern - warning caused by external data, e.g. network connection): ";
+	static std::string category_s = "Error in Check (Extern - ERROR caused by external data, e.g. network connection): ";
+	return serious ? category_s : category;
+}
+
+// -------------------------------------------------------------------
+
+#define _check(X) do { if(!(X)) { throw err_check_prog( #X );  } } while(0)
+
+#define _check_user(X) do { if(!(X)) { throw err_check_user( #X , true);  } } while(0)
+#define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X , true);  } } while(0)
+#define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X , true );  } } while(0)
+
+#define _try_user(X) do { if(!(X)) { throw err_check_user( #X , false );  } } while(0)
+#define _try_sys(X) do { if(!(X)) { throw err_check_sys( #X , false );  } } while(0)
+#define _try_extern(X) do { if(!(X)) { throw err_check_extern( #X , false );  } } while(0)
+
+void test_debug_check() {
+	try {
+		int files=0;
+		_try_user( files );
+	} catch(std::exception &ex) { _mark(ex.what()); }
+}
+
+
+
+// -------------------------------------------------------------------
+
 template <typename T>
 struct c_to_report {
 	public:
@@ -182,6 +279,8 @@ c_netbuf_circle::c_netbuf_circle() {
 // -------------------------------------------------------------------
 
 void read_from_tun(c_netbuf & entire_buf , size_t buf_) {
+	_UNUSED( entire_buf );
+	_UNUSED( buf_ );
 }
 
 int get_tun_inbuf_size() { // the inbuffer used to read from TUN; each tun-reader thread has own inbuf.
@@ -203,6 +302,8 @@ int newloop_main(int argc, const char **argv) {
 	_UNUSED(argv);
 
 	g_dbg_level_set(10, "Debug the newloop");
+
+	test_debug_check();
 
 	{ // in tun-reader thread
 		c_netbuf tun_inbuf( get_tun_inbuf_size() );
