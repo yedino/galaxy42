@@ -6,28 +6,73 @@ typedef string hip_id; // name end src/dst
 
 // -------------------------------------------------------------------
 
-class c_netbuf {
+template <typename T>
+struct c_to_report {
 	public:
-		c_netbuf(size_t size);
-		size_t size() const;
-
-	private:
-		vector<unsigned char> m_data;
+		const T & m_obj;
+		int m_level;
+		c_to_report(const T & obj, int level) : m_obj(obj), m_level(level) {}
 };
 
-c_netbuf::c_netbuf(size_t size) : m_data(size) { }
+template <typename TS, typename TR> TS & operator<<(TS & ostr , const c_to_report<TR> & to_report) {
+	to_report.m_obj.report(ostr, to_report.m_level);
+	return ostr;
+}
 
-size_t c_netbuf::size() const {	return m_data.size(); }
+template <typename T>
+const c_to_report<T> make_report(const T & obj, int level) {
+	return c_to_report<T>( obj , level);
+}
 
+// -------------------------------------------------------------------
 
 class c_netchunk {
 	public:
-		c_netchunk(char * _data, size_t _size);
+		typedef unsigned char t_element; ///< type of one elemenet
+
+		c_netchunk(t_element * _data, size_t _size);
 
 	public:
-		char * const data; // points to inside of some existing t_netbuf. you do NOT own the data.
+		t_element * const data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
 		const size_t size;
 };
+
+// -------------------------------------------------------------------
+
+/***
+	@brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
+*/
+class c_netbuf {
+	public:
+		typedef c_netchunk::t_element t_element; ///< type of one elemenet
+
+		c_netbuf(size_t size); ///< construct and allocate
+
+		size_t size() const;
+		// vector<t_element> & get_data(); ///< access data
+		// const vector<t_element> & get_data() const; ///< access data
+		t_element & at(size_t ix); ///< access one element (asserted)
+
+		void report(std::ostream & ostr, int detail) const;
+
+	private:
+		vector<unsigned char> m_data; ///< my actuall data storage
+};
+
+c_netbuf::c_netbuf(size_t size) : m_data(size) {
+	_dbg1( make_report(*this,10) );
+}
+
+size_t c_netbuf::size() const {	return m_data.size(); }
+
+c_netbuf::t_element & c_netbuf::at(size_t ix) { return m_data.at(ix); }
+
+void c_netbuf::report(std::ostream & ostr, int detail) const {
+	ostr << "this@" << static_cast<const void*>(this);
+	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_data.size()
+		<< ",memory@" << static_cast<const void*>(m_data.data()) ;
+}
+
 
 // -------------------------------------------------------------------
 
@@ -38,36 +83,36 @@ Writes from TUN can return up to 3 bytes (need to reserve that much always).
 Writes from TUN can though return 1..3 bytes in fact (we will find after).
 This number eg. 3 there is the MTU of TUN (normally e.g. 1400 or 9000 bytes or more).
 
-How this can work, next lines are the time flow.
+How this can work, next lines are the time flow:
 
-0123456789 <-- position. buffer size is 10
+0123456789 <-- position. buffer size is 10, this are collumns for all lines below, showing data in buff.
 
-aa         push: we read 2
-D F
+aa         push: we read 2. Our buffer have in it "aa" from position 0 to position 1 inclusive.
+D>         D=buf[0], S=2
 
 aabb       push: we read 2
-D   F
+D-->       D=buf[0], S=4
 
 aabbc      push: we read 1
-D    F
+D--->
 
   bbc      pop:  the 2 was done (we can free it)
-  D  F
+  D->      D=buf[2], S=3
 
   bbcddd   push: we read 3
-  D     F
+  D    F
 
 !!bbcddd!! push: (fail) can not guaranteed to give 3 bytes of space at end, nor at begining (*1*)
-  D     F
+  D    F
 
     cddd   pop:  the 2 was done (we can free it)
-    D   F
+    D  F
 
 eee cddd   push: can not reserve 3bytes at end, but can at begining
-   FD
+  F D
 
 eeeecddd  EXAMPLE: if we would read that much (if that would be allowed)
-    X     now F==D
+   FD     now F==D
 
 eee!cddd   push: (fail) can not reserve 3bytes from position
 
@@ -82,27 +127,55 @@ eeeff      push
    ff      pop
 
 
-   empty flag ?  
+Expressing position:
+
+
+.......... S=0. D can be anything, e.g. D=buf[0]
+
+a......... D=buf[0], S=0
+D
+
+.abcdefghi
+ D------->
+
+abcdefghi.
+D------->
+
+abcdefghij
+D-------->
+
+hijabcdefg
+-->D------
+
+cccaaabb..
+==>D--->
+
+bbbc.aaa..
+bbbc......
+bbbcddd...
+...cddd...
+
+
+0123456789
 
 
 (*1*) we /could/ at some point allow it to return 2 buffers, usable when we
 
 */
 
-class c_netbuf_circle() {
+class c_netbuf_circle {
 	public:
-		c_netbuf_writer()
+		c_netbuf_circle();
 
-		size_t pos_F; // free_after - can write after this position
-		size_t pos_D; // dirty_after - data is written after this position
-		// data is free:
-		// if (pos_F > pos_D)  posF .. size
-		//               else  
-		// data is written:
+		size_t pos_D; // position of data start.
+		size_t size_from_D; // size of data allocated after pos_D.
+		size_t size_from_0; // size of data allocated in addition from start. Normalize it: prefer this to be 0 when possible.
 
+		vector<char> dbg_data_name; ///< for debug only: vector representing this memory, with it's 1-character printable name
+		vector<long int> dbg_data_id; ///< for debug only: vector representing this memory, with unique ID for unit-tests etc
 };
 
-c_netbuf_writer::c_netbuf_writer() {
+c_netbuf_circle::c_netbuf_circle() {
 }
 
 
@@ -128,6 +201,8 @@ int get_mts(transport_id t) { // maximum transport size
 int newloop_main(int argc, const char **argv) {
 	_UNUSED(argc);
 	_UNUSED(argv);
+
+	g_dbg_level_set(10, "Debug the newloop");
 
 	{ // in tun-reader thread
 		c_netbuf tun_inbuf( get_tun_inbuf_size() );
