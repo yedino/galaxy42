@@ -39,7 +39,7 @@ msgid "L_wait_for_connect"
 msgstr "Now will wait for someone to connect to us..."
 
 msgid "L_starting_TUN"
-msgstr "Stating the TUN router"
+msgstr "Starting the TUN router"
 
 msgid "L_options"
 msgstr "Options"
