@@ -17,35 +17,67 @@ void	image(int size) {
 	_dbg1( (void*)mem1 << " " << (void*)mem2 << " " << size2 );
 }
 
-void image_ui(int size) {
-	_info("For size=" << size);
-
-try{
-	while (1) {
-		try {
-			image(size);
-		}
-		catch(err_check_soft & ex) { _mark("Soft:" << ex.what()); }
-		break;
+void connect_peer(bool good_version, bool good_data) {
+	try {
+		_try_extern(good_version == true);
+		_check_extern(good_data == false);
 	}
+	catch(err_check_user & ex) { _erro("User (not-fixed):" << ex.what()); }
+	catch(err_check_base & ex) { _erro("Check (not-fixed):" << ex.what()); }
+	catch(std::runtime_error & ex) { _erro("Runtime:" << ex.what()); }
+	catch(std::bad_alloc & ex) { _erro("Bad alloc:" << ex.what()); }
+	catch(std::exception & ex) { _erro("Exception:" << ex.what()); }
+	catch(...) { _erro("Exception of unknown type"); }
 }
 
-	catch(err_check_user & ex) { _mark("User (not soft):" << ex.what()); }
-	catch(std::runtime_error & ex) { _mark("Runtime:" << ex.what()); }
-	catch(std::bad_alloc & ex) { _mark("Bad alloc:" << ex.what()); }
-	catch(std::exception & ex) { _mark("Exception:" << ex.what()); }
-	catch(...) { _mark("Exception of unknown type"); }
+void image_ui(int size, string dir="/tmp", string fname="/tmp/data") {
+	_info("For size=" << size);
+	try {
+		bool done=false; int trynr=0;
+		while (!done) {
+			try {
+				image(size);
+				_try_sys( dir=="/tmp" ); // peretending here we actually stat() the directory here
+				_check_sys( fname=="/tmp/data" ); // pretending we here read the file and if it's other file then it is invalid
+				done=true;
+			}
+			catch(err_check_soft & ex) {
+				_warn("Soft:" << ex.what());
+				++trynr;
+				if (trynr>3) throw;
+				_note("Will retry...");
+				if (size>20) size -= 5; // maybe the size is too big, try to fix that
+			}
+		}
+	}
+	catch(err_check_user & ex) { _erro("User (not-fixed):" << ex.what()); }
+	catch(err_check_base & ex) { _erro("Check (not-fixed):" << ex.what()); }
+	catch(std::runtime_error & ex) { _erro("Runtime:" << ex.what()); }
+	catch(std::bad_alloc & ex) { _erro("Bad alloc:" << ex.what()); }
+	catch(std::exception & ex) { _erro("Exception:" << ex.what()); }
+	catch(...) { _erro("Exception of unknown type"); }
 }
 
 void test_debug_check() {
-	image_ui(10);
-	image_ui(101);
-	image_ui(50);
-	image_ui(1);
-	image_ui(-3);
+	image_ui(10); // ok
+	image_ui(101); // ok (after retry)
+
+	// regarding user errors:
+	image_ui(120); // soft
+	image_ui(70); // hard - unexpected, anything above 30 is bad on size*size condition
+	image_ui(1); // hard - unexpected small size*size
+	_mark("More tests");
+
+	// regarding system errors:
+	image_ui(10,"/mount/z"); // soft system
+	image_ui(10,"/tmp", "/tmp/badfile"); // hard system
+
+	connect_peer(true, true); // ok
+	connect_peer(false,true); // soft
+	connect_peer(true, false); // hard
+
+	image_ui(-3); // bad alloc
 }
-
-
 
 // -------------------------------------------------------------------
 

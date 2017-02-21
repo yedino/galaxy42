@@ -34,15 +34,46 @@ class err_check_user : public err_check_base {
 	protected:
 		err_check_user(tag_err_check_named, const char   * what, bool serious); ///< for use by child class where the child class generated entire message
 		err_check_user(tag_err_check_named, const string & what, bool serious); ///< for use by child class where the child class generated entire message
-		static std::string cause();
+		static std::string cause(bool se);
 };
-
-// -------------------------------------------------------------------
 
 class err_check_user_soft final : public err_check_user, public err_check_soft {
 	public:
 		err_check_user_soft(const char *what); ///< create soft error, from this message (can add cause string)
-		static std::string cause();
+};
+
+// -------------------------------------------------------------------
+
+/// This class is for exeption representing: sys error. It can be (and is by default) a hard error.
+class err_check_sys : public err_check_base {
+	public:
+		err_check_sys(const char *what); ///< create hard error, from this message (can add cause string)
+	protected:
+		err_check_sys(tag_err_check_named, const char   * what, bool serious); ///< for use by child class where the child class generated entire message
+		err_check_sys(tag_err_check_named, const string & what, bool serious); ///< for use by child class where the child class generated entire message
+		static std::string cause(bool se);
+};
+
+class err_check_sys_soft final : public err_check_sys, public err_check_soft {
+	public:
+		err_check_sys_soft(const char *what); ///< create soft error, from this message (can add cause string)
+};
+
+// -------------------------------------------------------------------
+
+/// This class is for exeption representing: extern error. It can be (and is by default) a hard error.
+class err_check_extern : public err_check_base {
+	public:
+		err_check_extern(const char *what); ///< create hard error, from this message (can add cause string)
+	protected:
+		err_check_extern(tag_err_check_named, const char   * what, bool serious); ///< for use by child class where the child class generated entire message
+		err_check_extern(tag_err_check_named, const string & what, bool serious); ///< for use by child class where the child class generated entire message
+		static std::string cause(bool se);
+};
+
+class err_check_extern_soft final : public err_check_extern, public err_check_soft {
+	public:
+		err_check_extern_soft(const char *what); ///< create soft error, from this message (can add cause string)
 };
 
 // -------------------------------------------------------------------
@@ -50,10 +81,10 @@ class err_check_user_soft final : public err_check_user, public err_check_soft {
 #define _check(X) do { if(!(X)) { throw err_check_prog( #X );  } } while(0)
 
 #define _check_user(X) do { if(!(X)) { throw err_check_user( #X );  } } while(0)
-#define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X , true);  } } while(0)
-#define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X , true );  } } while(0)
+#define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X );  } } while(0)
+#define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X );  } } while(0)
 
 #define _try_user(X) do { if(!(X)) { throw err_check_user_soft( #X );  } } while(0)
-#define _try_sys(X) do { if(!(X)) { throw err_check_sys( #X , false );  } } while(0)
-#define _try_extern(X) do { if(!(X)) { throw err_check_extern( #X , false );  } } while(0)
+#define _try_sys(X) do { if(!(X)) { throw err_check_sys_soft( #X );  } } while(0)
+#define _try_extern(X) do { if(!(X)) { throw err_check_extern_soft( #X );  } } while(0)
 

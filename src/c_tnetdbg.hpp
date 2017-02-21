@@ -55,8 +55,8 @@ void write_to_console(const std::string& obj);
 
 #define _warn(X) do { DBGLVL(100); \
 	std::ostringstream oss; \
-	oss<<"\033[93m\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
-	oss<< mo_file_reader::gettext( "L_warn" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+	oss<<"\033[93m"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
+	oss<< mo_file_reader::gettext( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str());\
 } while(0)
 /// red code
@@ -64,14 +64,14 @@ void write_to_console(const std::string& obj);
 
 #define _erro(X) do { DBGLVL(200); \
 	std::ostringstream oss; \
-	oss<<"\033[91m\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
-	oss<<mo_file_reader::gettext("L_error") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	oss<<"\033[91m\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
+	oss<<mo_file_reader::gettext("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
 } while(0)
 #define _mark(X) do { DBGLVL(150); \
 	std::ostringstream oss; \
-	oss<<"\033[95m\n\n"; for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
+	oss<<"\033[95m\n"; for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
 	oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	for (int i=0; i<70; ++i) oss<<'='; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
