@@ -9,7 +9,7 @@ TEST(c_ip46_addr, compare_same) {
 	c_ip46_addr addr1a( "192.168.1.2" , 9042 );
 	c_ip46_addr addr1b( "192.168.1.2" , 9042 );
 	_mark(addr1a);
-	
+
 	EXPECT_EQ(addr1a, addr1b);
 }
 
@@ -41,10 +41,10 @@ TEST(c_ip46_addr, compare_sort) {
 
 	_info("Testing IPs count: " << tab.size());
 
-	for (int i=0; i<tab.size(); ++i) {
+	for (size_t i=0; i<tab.size(); ++i) {
 		EXPECT_TRUE(tab.at(i) == tab.at(i));
 		EXPECT_FALSE(tab.at(i) < tab.at(i));
-		for (int j=0; j<tab.size(); ++j) {
+		for (size_t j=0; j<tab.size(); ++j) {
 			if (i<j)  EXPECT_TRUE(   tab.at(i) <  tab.at(j) );
 			if (i>j)  EXPECT_TRUE(!( tab.at(i) <  tab.at(j) ));
 
