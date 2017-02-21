@@ -8,47 +8,69 @@ typedef string hip_id; // name end src/dst
 
 // -------------------------------------------------------------------
 
-struct tag_err_check_named{};
+/***
+@file Check is a library part that offers macros that do certain checks and assertions, but can
+result in exception being nicelly thrown.
+*/
 
+struct tag_err_check_named{}; ///< tag for constructor of err_check_* saying that the name of object is already decided
+
+/// A general class to catch soft errors. It can only be used to inherit to some class that also inherits from err_check_base
+/// use case is that you catch (err_check_soft &ex) and you can then still ex->what() propertly (it will dynamic cast itself
+/// and get the error message from err_check_base)
 class err_check_soft {
 	public:
-		virtual const char * what();
+		virtual const char * what(); ///< return the error message, like from std::runtime_error::what()
 };
 
-class err_check_base : public virtual std::runtime_error {
-	private:
+/// base of all exceptions thrown by our _check system
+class err_check_base : public std::runtime_error {
+	protected:
 		const bool m_serious;
 	public:
-		err_check_base(bool serious) : std::runtime_error("base?") ,  m_serious(serious)  { }
+		err_check_base(tag_err_check_named, const char   * what, bool serious);
+		err_check_base(tag_err_check_named, const string & what, bool serious);
 		bool is_serious() const;
 };
+err_check_base::err_check_base(tag_err_check_named, const char   * what, bool serious)
+	: std::runtime_error(what) ,  m_serious(serious)  { }
+err_check_base::err_check_base(tag_err_check_named, const string & what, bool serious)
+	: std::runtime_error(what) ,  m_serious(serious)  { }
 
 bool err_check_base::is_serious() const { return m_serious; }
 
 // -------------------------------------------------------------------
 
-class err_check_user : public virtual err_check_base {
+/// This class is for exeption representing: user error. It can be (and is by default) a hard error.
+class err_check_user : public err_check_base {
 	public:
-		err_check_user(const char *what);
+		err_check_user(const char *what); ///< create hard error, from this message (can add cause string)
+	protected:
+		err_check_user(tag_err_check_named, const char   * what, bool serious); ///< for use by child class where the child class generated entire message
+		err_check_user(tag_err_check_named, const string & what, bool serious); ///< for use by child class where the child class generated entire message
 		static std::string cause();
 };
-err_check_user::err_check_user(const char *what) : std::runtime_error(cause()+what) , err_check_base(true) { }
+err_check_user::err_check_user(const char *what)
+	: err_check_base(tag_err_check_named{} , cause()+what , true)  { }
+err_check_user::err_check_user(tag_err_check_named, const char   * what, bool serious)
+	: err_check_base(tag_err_check_named{} , what , serious) { }
+err_check_user::err_check_user(tag_err_check_named, const string & what, bool serious)
+	: err_check_base(tag_err_check_named{} , what , serious) { }
 std::string err_check_user::cause() {
-	static string c = "Check detected user error: ";
-	return c;
+	return "Check detected user error: "s;
 }
 
 // -------------------------------------------------------------------
 
-class err_check_user_soft : public virtual err_check_user, public virtual err_check_soft {
+class err_check_user_soft : public err_check_user, public err_check_soft {
 	public:
-		err_check_user_soft(const char *what);
+		err_check_user_soft(const char *what); ///< create soft error, from this message (can add cause string)
 		static std::string cause();
 };
-err_check_user_soft::err_check_user_soft(const char *what) : std::runtime_error(cause()+what) , err_check_base("base-soft?"), err_check_user(cause().c_str()) { }
+err_check_user_soft::err_check_user_soft(const char *what)
+	: err_check_user(tag_err_check_named{} , cause()+what , true) { }
 std::string err_check_user_soft::cause() {
-	static string c = "Check detected user warning: ";
-	return c;
+	return "Check detected user warning: "s;
 }
 
 // -------------------------------------------------------------------
