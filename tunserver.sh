@@ -14,6 +14,6 @@
 
 echo "Running the tunserver in devel mode, devel_num=$devel_num"
 set -x
-./tunserver.elf --newloop || { echo "Program failed"; }
+./tunserver.elf $DEVEL_OPTIONS || { echo "Program failed"; }
 # ./tunserver.elf --devel --develnum $devel_num || { echo "Program failed"; } # for network lab
 
