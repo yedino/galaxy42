@@ -1,58 +1,67 @@
 
 #include "libs1.hpp"
 
+#include <system_error>
+
 typedef string transport_id; // name next hop
 typedef string hip_id; // name end src/dst
 
 // -------------------------------------------------------------------
 
-class err_check_base : public std::runtime_error {
+struct tag_err_check_named{};
+
+class err_check_soft {
 	public:
-		err_check_base(const char *what, bool _serious);
-		err_check_base(const std::string & what, bool serious);
-		static string check_category();
-		const bool serious;
+		virtual const char * what();
 };
-err_check_base::err_check_base(const char *what, bool _serious) : std::runtime_error(check_category() + what) , serious(_serious) { }
-err_check_base::err_check_base(const std::string & what, bool _serious) : std::runtime_error(check_category() + what) , serious(_serious) { }
-string err_check_base::check_category() {
-	static std::string category = "Warning in Check (Base of Check!): ";
-	static std::string category_s = "Error in Check (Base of Check!): ";
-	return serious ? category_s : category;
+
+class err_check_base : public virtual std::runtime_error {
+	private:
+		const bool m_serious;
+	public:
+		err_check_base(bool serious) : std::runtime_error("base?") ,  m_serious(serious)  { }
+		bool is_serious() const;
+};
+
+bool err_check_base::is_serious() const { return m_serious; }
+
+// -------------------------------------------------------------------
+
+class err_check_user : public virtual err_check_base {
+	public:
+		err_check_user(const char *what);
+		static std::string cause();
+};
+err_check_user::err_check_user(const char *what) : std::runtime_error(cause()+what) , err_check_base(true) { }
+std::string err_check_user::cause() {
+	static string c = "Check detected user error: ";
+	return c;
 }
 
 // -------------------------------------------------------------------
 
-class err_check_prog : public err_check_base {
+class err_check_user_soft : public virtual err_check_user, public virtual err_check_soft {
 	public:
-		err_check_prog(const char *what);
-		static string check_category();
+		err_check_user_soft(const char *what);
+		static std::string cause();
 };
-err_check_prog::err_check_prog(const char *what) : err_check_base(check_category() + what) { }
-string err_check_prog::check_category() {
-	static std::string category = "Error in Check (Prog - programming error): ";
-	static std::string category_s = "Error in Check (Prog - programming error): ";
-	return serious ? category_s : category;
+err_check_user_soft::err_check_user_soft(const char *what) : std::runtime_error(cause()+what) , err_check_base("base-soft?"), err_check_user(cause().c_str()) { }
+std::string err_check_user_soft::cause() {
+	static string c = "Check detected user warning: ";
+	return c;
 }
 
 // -------------------------------------------------------------------
 
-class err_check_sys : public std::system_error , virtual err_check_base {
-	public:
-		err_check_sys(const char *what);
-		err_check_sys(const std::string & what);
-		static string check_category();
-};
-err_check_sys::err_check_sys(const char *what) : err_check_base(check_category() + what) { }
-err_check_sys::err_check_sys(const std::string & what) : err_check_base(check_category() + what) { }
-string err_check_sys::check_category() {
-	static std::string category = "Warning in Check (System - I/O or System): ";
-	static std::string category_s = "Error in Check (System - unexpected problem with I/O or System): ";
-	return serious ? category_s : category;
+const char * err_check_soft::what() {
+	auto ptr = dynamic_cast< err_check_base * >( this );
+	if (ptr) return ptr->what();
+	return "Undefined soft error (huh?)";
 }
 
-// -------------------------------------------------------------------
 
+/*
+// -------------------------------------------------------------------
 
 class err_check_user : public err_check_base {
 	public:
@@ -63,7 +72,8 @@ err_check_user::err_check_user(const char *what) : err_check_base(check_category
 string err_check_user::check_category() {
 	static std::string category = "Warning in Check (User executed invalid action): ";
 	static std::string category_s = "Error in Check (User executed invalid and unexpected action): ";
-	return serious ? category_s : category;
+	//return serious ? category_s : category;
+	return category;
 }
 
 // -------------------------------------------------------------------
@@ -77,26 +87,60 @@ err_check_extern::err_check_extern(const char *what) : err_check_base(check_cate
 string err_check_extern::check_category() {
 	static std::string category = "Warning in Check (Extern - warning caused by external data, e.g. network connection): ";
 	static std::string category_s = "Error in Check (Extern - ERROR caused by external data, e.g. network connection): ";
-	return serious ? category_s : category;
+	//return serious ? category_s : category;
+	return category;
 }
-
+*/
 // -------------------------------------------------------------------
 
 #define _check(X) do { if(!(X)) { throw err_check_prog( #X );  } } while(0)
 
-#define _check_user(X) do { if(!(X)) { throw err_check_user( #X , true);  } } while(0)
-#define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X , true);  } } while(0)
-#define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X , true );  } } while(0)
+#define _check_user(X) do { if(!(X)) { throw err_check_user( #X );  } } while(0)
+//#define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X , true);  } } while(0)
+//#define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X , true );  } } while(0)
 
-#define _try_user(X) do { if(!(X)) { throw err_check_user( #X , false );  } } while(0)
-#define _try_sys(X) do { if(!(X)) { throw err_check_sys( #X , false );  } } while(0)
-#define _try_extern(X) do { if(!(X)) { throw err_check_extern( #X , false );  } } while(0)
+#define _try_user(X) do { if(!(X)) { throw err_check_user_soft( #X );  } } while(0)
+//#define _try_sys(X) do { if(!(X)) { throw err_check_sys( #X , false );  } } while(0)
+//#define _try_extern(X) do { if(!(X)) { throw err_check_extern( #X , false );  } } while(0)
+
+void	image(int size) {
+	_info("image size="<<size);
+	_try_user(size < 100);
+
+	auto size2 = size * size;
+	_check_user( size2 < 1000 );
+	_check_user( size2 >= 4 );
+	auto mem1 = new int[ size ];
+	auto mem2 = new int[ size2 ];
+	_dbg1( (void*)mem1 << " " << (void*)mem2 << " " << size2 );
+}
+
+void image_ui(int size) {
+	_info("For size=" << size);
+
+try{
+	while (1) {
+		try {
+			image(size);
+		}
+		catch(err_check_soft & ex) { _mark("Soft:" << ex.what()); }
+		break;
+	}
+}
+
+	catch(err_check_user & ex) { _mark("User (not soft):" << ex.what()); }
+	catch(std::runtime_error & ex) { _mark("Runtime:" << ex.what()); }
+	catch(std::bad_alloc & ex) { _mark("Bad alloc:" << ex.what()); }
+	catch(std::exception & ex) { _mark("Exception:" << ex.what()); }
+	catch(...) { _mark("Exception of unknown type"); }
+}
 
 void test_debug_check() {
-	try {
-		int files=0;
-		_try_user( files );
-	} catch(std::exception &ex) { _mark(ex.what()); }
+	image_ui(10);
+	image_ui(101);
+	image_ui(50);
+	image_ui(1);
+	image_ui(-3);
 }
 
 
