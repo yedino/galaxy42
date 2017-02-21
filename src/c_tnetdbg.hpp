@@ -56,7 +56,7 @@ void write_to_console(const std::string& obj);
 #define _warn(X) do { DBGLVL(100); \
 	std::ostringstream oss; \
 	oss<<"\033[93m"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
-	oss<< mo_file_reader::gettext( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+	oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str());\
 } while(0)
 /// red code
@@ -65,7 +65,7 @@ void write_to_console(const std::string& obj);
 #define _erro(X) do { DBGLVL(200); \
 	std::ostringstream oss; \
 	oss<<"\033[91m\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
-	oss<<mo_file_reader::gettext("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
 } while(0)
@@ -116,13 +116,19 @@ void write_to_console(const std::string& obj);
 
 
 //        _warn("Going to throw exception. What: " << except_var.what()
-#define _throw_error_2( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
-	_warn( mo_file_reader::gettext("L_what_exception_program_throw") << except_var.what() \
+// this one is unused; leaving for translators if used again later.
+#define _unused_throw_error_msg \
+	_warn( mo_file_reader::gettext("L_what_exception_program_throw") << ": " << except_var.what() \
+
+// TODO-r-deprecate: ?
+#define _throw_error_detail( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
+	_warn( "Except: " << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
+// TODO-r-deprecate: ?
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
-	_warn(mo_file_reader::gettext("L_what_exception_program_throw") << except_var.what() \
+	_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 
@@ -137,9 +143,11 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 		throw except_var; } while(0)
 
 #define _throw_error_rethrow( ) do { \
-	_warn("Going to re-throw exception."); \
+	_warn("re-throw"); \
 		throw ; } while(0)
 
+
+// TODO-r-deprecate:
 #define _assert_throw(COND) do { \
 	if (!(COND)) { \
 		std::ostringstream oss; \
