@@ -26,6 +26,7 @@
 #endif
 
 #include "newloop.hpp"
+#include "utils/misc.hpp"
 
 namespace developer_tests {
 
@@ -281,11 +282,24 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	return ret;
 }
 
-int main(int argc, const char **argv) {
-//	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
-	using std::cerr; using std::endl;
+/// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
+class c_the_program {
+	public:
+		void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
+		void startup_version(); ///< show basic info about version
 
+		/// run special tests instea of main program. Returns: {should-we-exit, error-code-if-we-exit}
+		std::tuple<bool,int> program_startup_special(vector<string> argt);
+
+	protected:
+};
+
+void c_the_program::startup_console_first() {
+}
+
+/// Show program version
+void c_the_program::startup_version() {
 	ostringstream oss; oss << "ver. "
 		<< project_version_number_major << "."
 		<< project_version_number_minor << "."
@@ -293,16 +307,33 @@ int main(int argc, const char **argv) {
 		<< project_version_number_patch ;
 	string ver_str = oss.str();
 	_fact( "Start... " << ver_str );
-	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
-	if (argc>=2) {
-		if (string(argv[1]) == "--newloop") {
-			_goal("\nStarting newloop mode\n\n");
-			int ret = newloop_main(argc,argv);
-			_goal("\nEnded.\n\n");
-			return ret;
-		}
+}
+
+std::tuple<bool,int> c_the_program::program_startup_special(vector<string> argt) {
+	if (contains_value(argt,"--newloop")) {
+		_goal("\nStarting newloop mode\n\n");
+		int ret = newloop_main(argt);
+		_goal("\nEnded.\n\n");
+		return std::tuple<bool,int>(true, ret); // tell it to end
 	}
+	return std::tuple<bool,int>(false, 0); // tell it to continue
+}
+
+int main(int argc, const char **argv) {
+	c_the_program the_program;
+
+	the_program.startup_console_first();
+	the_program.startup_version();
+
+	vector<string> argt; for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
+
+	{
+		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special( argt );
+		if (done) return ret;
+	}
+
+	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
 	{
 		bool found=false;
