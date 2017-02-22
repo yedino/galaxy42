@@ -286,14 +286,35 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 /// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
 class c_the_program {
 	public:
-		void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
-		void startup_version(); ///< show basic info about version
+		c_the_program();
+		virtual ~c_the_program();
+
+		virtual void take_args(int argc, const char **argv); ///< set the argc,argv
+		virtual void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
+		virtual void startup_version(); ///< show basic info about version
+		virtual void startup_data_dir(); ///< find the data dir, set install_dir_base
 
 		/// run special tests instea of main program. Returns: {should-we-exit, error-code-if-we-exit}
-		std::tuple<bool,int> program_startup_special(vector<string> argt);
+		virtual std::tuple<bool,int> program_startup_special();
+
+		virtual void startup_locales();
 
 	protected:
+		vector<string> argt; ///< the arguments with which the program is running, except for program name (see argt_exec)
+		string argt_exec; ///< the name of running binary program (like from argv[0])
+
+		string install_dir_base; ///< here we will find main dir like "/usr/" that contains our share dir
+		std::string install_dir_share_locale; ///< dir with our locale data
 };
+
+c_the_program::c_the_program() { }
+
+void c_the_program::take_args(int argc, const char **argv) {
+	if (argc>=0) argt_exec=argv[0]; else argt_exec="";
+	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
+}
+
+c_the_program::~c_the_program() { }
 
 void c_the_program::startup_console_first() {
 }
@@ -307,10 +328,9 @@ void c_the_program::startup_version() {
 		<< project_version_number_patch ;
 	string ver_str = oss.str();
 	_fact( "Start... " << ver_str );
-
 }
 
-std::tuple<bool,int> c_the_program::program_startup_special(vector<string> argt) {
+std::tuple<bool,int> c_the_program::program_startup_special() {
 	if (contains_value(argt,"--newloop")) {
 		_goal("\nStarting newloop mode\n\n");
 		int ret = newloop_main(argt);
@@ -320,87 +340,73 @@ std::tuple<bool,int> c_the_program::program_startup_special(vector<string> argt)
 	return std::tuple<bool,int>(false, 0); // tell it to continue
 }
 
-int main(int argc, const char **argv) {
-	c_the_program the_program;
 
-	the_program.startup_console_first();
-	the_program.startup_version();
-
-	vector<string> argt; for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
-
+void c_the_program::startup_data_dir() {
+	bool found=false;
+	try
 	{
-		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special( argt );
-		if (done) return ret;
+		namespace b_fs = boost::filesystem;
+		// find path to my main data dir (to my data "in share").
+		// e.g. /home/rafalcode/work/galaxy42/    - because it contains:
+		//      /home/rafalcode/work/galaxy42/share/locale/en/LC_MESSAGES/galaxy42_main.mo
+
+		// we could normalize the path... but this could trigger more problems maybe with encoding of string.
+		auto dir_normalize = [](std::string path) -> std::string {
+			return path; // nothing for now. TODO (would be nicer to not display "//home/.." in this tests below
+		};
+
+		b_fs::path cwd_full_boost( b_fs::current_path() );
+		string cwd_full = dir_normalize( b_fs::absolute( cwd_full_boost ) .string() );
+		// string cwd_full = b_fs::lexically_norma( b_fs::absolute( cwd_full_boost ) ).string();
+
+		b_fs::path selfpath = "";
+		// += cwd_full_boost;
+		// selfpath += "/";
+		selfpath += argt_exec; // hmm, what? --rafal
+		b_fs::path selfdir_boost = selfpath.remove_filename();
+		string selfdir = dir_normalize( b_fs::absolute( selfdir_boost ) .string() );
+
+//		cerr << "Start... [" << cwd_full << "] (cwd) " << endl;
+//		cerr << "Start... [" << selfdir << "] (exec) " << endl;
+
+		vector<string> data_dir_possible;
+		data_dir_possible.push_back(cwd_full);
+		data_dir_possible.push_back(selfdir);
+
+		#if defined(__MACH__)
+			// TODO when macosx .dmg fully works (when Gitian on macosx works)
+		#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
+			// data files should be next to .exe
+		#else
+			data_dir_possible.push_back("/usr");
+			data_dir_possible.push_back("/usr/local");
+			data_dir_possible.push_back("/usr/opt");
+		#endif
+
+		for (auto && dir : data_dir_possible) {
+			string testname = dir;
+			testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
+			_fact( "Test: [" << testname << "]... " << std::flush );
+			ifstream filetest( testname.c_str() );
+			if (filetest.good()) {
+				install_dir_base = dir;
+				found=true;
+				_fact(" OK! " );
+				break;
+			} else _fact( "" );
+		}
+	} catch(std::exception & ex) {
+			_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
 	}
 
-	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
-
-	{
-		bool found=false;
-		try
-		{
-			namespace b_fs = boost::filesystem;
-			// find path to my main data dir (to my data "in share").
-			// e.g. /home/rafalcode/work/galaxy42/    - because it contains:
-			//      /home/rafalcode/work/galaxy42/share/locale/en/LC_MESSAGES/galaxy42_main.mo
-
-			// we could normalize the path... but this could trigger more problems maybe with encoding of string.
-			auto dir_normalize = [](std::string path) -> std::string {
-				return path; // nothing for now. TODO (would be nicer to not display "//home/.." in this tests below
-			};
-
-			b_fs::path cwd_full_boost( b_fs::current_path() );
-			string cwd_full = dir_normalize( b_fs::absolute( cwd_full_boost ) .string() );
-			// string cwd_full = b_fs::lexically_norma( b_fs::absolute( cwd_full_boost ) ).string();
-
-			b_fs::path selfpath = "";
-			// += cwd_full_boost;
-			// selfpath += "/";
-			selfpath += argv[0];
-			b_fs::path selfdir_boost = selfpath.remove_filename();
-			string selfdir = dir_normalize( b_fs::absolute( selfdir_boost ) .string() );
-
-	//		cerr << "Start... [" << cwd_full << "] (cwd) " << endl;
-	//		cerr << "Start... [" << selfdir << "] (exec) " << endl;
-
-			vector<string> data_dir_possible;
-			data_dir_possible.push_back(cwd_full);
-			data_dir_possible.push_back(selfdir);
-
-			#if defined(__MACH__)
-				// TODO when macosx .dmg fully works (when Gitian on macosx works)
-			#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
-				// data files should be next to .exe
-			#else
-				data_dir_possible.push_back("/usr");
-				data_dir_possible.push_back("/usr/local");
-				data_dir_possible.push_back("/usr/opt");
-			#endif
-
-			for (auto && dir : data_dir_possible) {
-				string testname = dir;
-				testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
-				_fact( "Test: [" << testname << "]... " << std::flush );
-				ifstream filetest( testname.c_str() );
-				if (filetest.good()) {
-					install_dir_base = dir;
-					found=true;
-					_fact(" OK! " );
-					break;
-				} else _fact( "" );
-			}
-		} catch(std::exception & ex) {
-				_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
-		}
-		if (found) {
-		} else {
-			_fact( "Can not find language data files." );
-		}
-	}
+	if (!found) _fact( "Can not find language data files." );
 
 	_fact( "Data: [" << install_dir_base << "]" );
-	const std::string install_dir_share_locale = install_dir_base + "/share/locale";
+	std::string install_dir_share_locale = install_dir_base + "/share/locale";
 	_fact( "Lang: [" << install_dir_share_locale << "]" );
+}
+
+void c_the_program::startup_locales() {
 	setlocale(LC_ALL,"");
 
 /*	boost::locale::generator gen;
@@ -440,7 +446,6 @@ int main(int argc, const char **argv) {
 	_fact( mo_file_reader::gettext("L_program_is_copyrighted") );
 	_fact( "" );
 
-
 //	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
 //	setlocale(LC_ALL,"");
 //	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
@@ -448,20 +453,31 @@ int main(int argc, const char **argv) {
 	// Using mo_file_reader::gettext:
 //	std::cerr << mo_reader::mo_file_reader::gettext("L_program_is_pre_pre_alpha") << std::endl;
 //	std::cerr << mo_reader::mo_file_reader::gettext("L_program_is_copyrighted") << std::endl;
+}
+
+
+
+int main(int argc, const char **argv) {
+	c_the_program the_program;
+
+	the_program.take_args(argc,argv);
+	the_program.startup_console_first();
+	the_program.startup_version();
+	{
+		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special();
+		if (done) return ret;
+	}
+	the_program.startup_locales();
 
 	const int config_default_basic_dbg_level = 60; // [debug] level default
 	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 
 	g_dbg_level = config_default_basic_dbg_level;
-    bool early_debug=false;
+	bool early_debug=false;
 
-//	_fact("Using data dir ["<<install_dir_base<<"], language/locale ["<<locale_name<<"]");
-
-	// === data-dir, languages, locale, debug - are now set ===
-
-    #ifdef HTTP_DBG
-    int http_dbg_port = 9080;
-    #endif
+	#ifdef HTTP_DBG
+	int http_dbg_port = 9080;
+	#endif
 	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
 //	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
         if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, mo_file_reader::gettext("L_early_debug_comand_line"));
@@ -479,6 +495,7 @@ int main(int argc, const char **argv) {
                 _info(mo_file_reader::gettext("L_libsodium_ready"));
 
 	}
+
 	try {
 		std::unique_ptr<c_tunserver> myserver_ptr;
 		namespace po = boost::program_options;
