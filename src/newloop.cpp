@@ -1,5 +1,6 @@
 #include "libs1.hpp"
 #include "utils/check.hpp"
+#include "utils/misc.hpp"
 
 typedef string transport_id; // name next hop
 typedef string hip_id; // name end src/dst
@@ -275,13 +276,12 @@ int get_mts(transport_id t) { // maximum transport size
 // ideas:
 // http://stackoverflow.com/questions/15219984/using-vectorchar-as-a-buffer-without-initializing-it-on-resize/15220853#15220853
 
-int newloop_main(int argc, const char **argv) {
-	_UNUSED(argc);
-	_UNUSED(argv);
+int newloop_main(const vector<string> &argt) {
+	_UNUSED(argt);
 
 	g_dbg_level_set(10, "Debug the newloop");
 
-	test_debug_check();
+	// test_debug_check();
 
 	{ // in tun-reader thread
 		c_netbuf tun_inbuf( get_tun_inbuf_size() );

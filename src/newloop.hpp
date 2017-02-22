@@ -1,3 +1,5 @@
 
-int newloop_main(int argc, const char **argv);
+#pragma once
+
+int newloop_main(const vector<string> & argt);
 
