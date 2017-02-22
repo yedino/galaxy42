@@ -346,12 +346,12 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/*)
+
 if(HTTP_DEBUGGER)
 	add_definitions(-DHTTP_DBG)
-	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/*.cpp)
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp)
 endif()
-
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/*)
 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
