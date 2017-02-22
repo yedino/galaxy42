@@ -51,7 +51,7 @@ class err_check_user : public err_check_base {
 		static std::string cause(bool se);
 };
 
-/// Class that represent soft case of err_check_user
+/// Class that represents soft case of err_check_user
 class err_check_user_soft final : public err_check_user, public err_check_soft {
 	public:
 		err_check_user_soft(const char *what); ///< create soft error, from this message (can add cause string)
@@ -72,7 +72,7 @@ class err_check_sys : public err_check_base {
 		static std::string cause(bool se);
 };
 
-/// Class that represent soft case of err_check_sys
+/// Class that represents soft case of err_check_sys
 class err_check_sys_soft final : public err_check_sys, public err_check_soft {
 	public:
 		err_check_sys_soft(const char *what); ///< create soft error, from this message (can add cause string)
@@ -93,7 +93,7 @@ class err_check_extern : public err_check_base {
 		static std::string cause(bool se);
 };
 
-/// Class that represent soft case of err_check_extern
+/// Class that represents soft case of err_check_extern
 class err_check_extern_soft final : public err_check_extern, public err_check_soft {
 	public:
 		err_check_extern_soft(const char *what); ///< create soft error, from this message (can add cause string)
@@ -104,16 +104,16 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 /// err_check_prog?
 #define _check(X) do { if(!(X)) { throw err_check_prog( #X );  } } while(0)
 
-/// Makro that checks arg X, throws err_check_user if false
+/// Macro that checks arg X, throws err_check_user if false
 #define _check_user(X) do { if(!(X)) { throw err_check_user( #X );  } } while(0)
-/// Makro that checks arg X, throws err_check_sys if false
+/// Macro that checks arg X, throws err_check_sys if false
 #define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X );  } } while(0)
-/// Makro that checks arg X, throws err_check_extern if false
+/// Macro that checks arg X, throws err_check_extern if false
 #define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X );  } } while(0)
 
-/// Makro that checks arg X, throws err_check_user_soft if false
+/// Macro that checks arg X, throws err_check_user_soft if false
 #define _try_user(X) do { if(!(X)) { throw err_check_user_soft( #X );  } } while(0)
-/// Makro that checks arg X, throws err_check_sys_soft if false
+/// Macro that checks arg X, throws err_check_sys_soft if false
 #define _try_sys(X) do { if(!(X)) { throw err_check_sys_soft( #X );  } } while(0)
-/// Makro that checks arg X, throws err_check_extern_soft if false
+/// Macro that checks arg X, throws err_check_extern_soft if false
 #define _try_extern(X) do { if(!(X)) { throw err_check_extern_soft( #X );  } } while(0)
