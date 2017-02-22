@@ -69,6 +69,6 @@ std::string project_version_info();
 
 constexpr int  project_version_number_major =  0 ;
 constexpr int  project_version_number_minor =  3 ;
-constexpr int  project_version_number_sub   =  1 ;
-constexpr char project_version_number_patch = 'b';
+constexpr int  project_version_number_sub   =  2 ;
+constexpr char project_version_number_patch = 'a';
 
