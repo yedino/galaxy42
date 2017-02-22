@@ -290,10 +290,13 @@ class c_the_program {
 		void startup_version(); ///< show basic info about version
 
 		/// run special tests instea of main program. Returns: {should-we-exit, error-code-if-we-exit}
-		std::tuple<bool,int> program_startup_special_version(vector<string> argt);
+		std::tuple<bool,int> program_startup_special(vector<string> argt);
 
 	protected:
 };
+
+void c_the_program::startup_console_first() {
+}
 
 /// Show program version
 void c_the_program::startup_version() {
@@ -307,7 +310,7 @@ void c_the_program::startup_version() {
 
 }
 
-std::tuple<bool,int> program_startup_special_version(vector<string> argt) {
+std::tuple<bool,int> c_the_program::program_startup_special(vector<string> argt) {
 	if (contains_value(argt,"--newloop")) {
 		_goal("\nStarting newloop mode\n\n");
 		int ret = newloop_main(argt);
@@ -318,15 +321,15 @@ std::tuple<bool,int> program_startup_special_version(vector<string> argt) {
 }
 
 int main(int argc, const char **argv) {
-//	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+	c_the_program the_program;
 
-	program_startup_console_first();
-	program_startup_version();
+	the_program.startup_console_first();
+	the_program.startup_version();
 
 	vector<string> argt; for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 
 	{
-		bool done; int ret; std::tie(done,ret) = program_startup_special_version( argt );
+		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special( argt );
 		if (done) return ret;
 	}
 
