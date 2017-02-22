@@ -283,16 +283,20 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 }
 
 
-/***
- * @brief program should detect environment, e.g. should it use color codes to write to cout, cerr, and to debug-log
- * @TODO
-*/
-void program_startup_console_first() {
-}
+/// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
+class c_the_program {
+	public:
+		void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
+		void startup_version(); ///< show basic info about version
+
+		/// run special tests instea of main program. Returns: {should-we-exit, error-code-if-we-exit}
+		std::tuple<bool,int> program_startup_special_version(vector<string> argt);
+
+	protected:
+};
 
 /// Show program version
-void program_startup_version() {
-
+void c_the_program::startup_version() {
 	ostringstream oss; oss << "ver. "
 		<< project_version_number_major << "."
 		<< project_version_number_minor << "."
@@ -325,7 +329,6 @@ int main(int argc, const char **argv) {
 		bool done; int ret; std::tie(done,ret) = program_startup_special_version( argt );
 		if (done) return ret;
 	}
-
 
 	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
