@@ -26,6 +26,7 @@
 #endif
 
 #include "newloop.hpp"
+#include "utils/misc.hpp"
 
 namespace developer_tests {
 
@@ -281,10 +282,16 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	return ret;
 }
 
-int main(int argc, const char **argv) {
-//	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
 
-	using std::cerr; using std::endl;
+/***
+ * @brief program should detect environment, e.g. should it use color codes to write to cout, cerr, and to debug-log
+ * @TODO
+*/
+void program_startup_console_first() {
+}
+
+/// Show program version
+void program_startup_version() {
 
 	ostringstream oss; oss << "ver. "
 		<< project_version_number_major << "."
@@ -293,16 +300,34 @@ int main(int argc, const char **argv) {
 		<< project_version_number_patch ;
 	string ver_str = oss.str();
 	_fact( "Start... " << ver_str );
-	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
-	if (argc>=2) {
-		if (string(argv[1]) == "--newloop") {
-			_goal("\nStarting newloop mode\n\n");
-			int ret = newloop_main(argc,argv);
-			_goal("\nEnded.\n\n");
-			return ret;
-		}
+}
+
+std::tuple<bool,int> program_startup_special_version(vector<string> argt) {
+	if (contains_value(argt,"--newloop")) {
+		_goal("\nStarting newloop mode\n\n");
+		int ret = newloop_main(argt);
+		_goal("\nEnded.\n\n");
+		return std::tuple<bool,int>(true, ret); // tell it to end
 	}
+	return std::tuple<bool,int>(false, 0); // tell it to continue
+}
+
+int main(int argc, const char **argv) {
+//	std::cerr << std::string(80,'=') << std::endl << g_the_disclaimer << std::endl << std::endl;
+
+	program_startup_console_first();
+	program_startup_version();
+
+	vector<string> argt; for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
+
+	{
+		bool done; int ret; std::tie(done,ret) = program_startup_special_version( argt );
+		if (done) return ret;
+	}
+
+
+	string install_dir_base; // here we will find main dir like "/usr/" that contains our share dir
 
 	{
 		bool found=false;
