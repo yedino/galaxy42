@@ -65,7 +65,7 @@ class err_check_sys : public err_check_base {
 		err_check_sys(const char *what); ///< create hard error, from this message (can add cause string)
 	protected:
 		/// for use by child class where the child class generated entire message
-		///${
+		///@{
 		err_check_sys(tag_err_check_named, const char   * what, bool serious);
 		err_check_sys(tag_err_check_named, const string & what, bool serious);
 		///@}
