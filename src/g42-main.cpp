@@ -27,9 +27,8 @@
 
 #include "newloop.hpp"
 #include "utils/misc.hpp"
+#include "utils/check.hpp"
 
-#include <cstdlib>
-#include <cstring>
 
 namespace developer_tests {
 
@@ -293,6 +292,7 @@ class c_the_program {
 		virtual ~c_the_program();
 
 		virtual void take_args(int argc, const char **argv); ///< set the argc,argv
+
 		virtual void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
 		virtual void startup_version(); ///< show basic info about version
 		virtual void startup_data_dir(); ///< find the data dir, set install_dir_base
@@ -300,12 +300,13 @@ class c_the_program {
 
 		virtual void init_library_sodium(); ///< init library
 
-		/// run special tests instea of main program. Returns: {should-we-exit, error-code-if-we-exit}
+		/// run special tests instead of main program. Returns: {should-we-exit, error-code-if-we-exit}
 		virtual std::tuple<bool,int> program_startup_special();
 
 		virtual void options_create_desc(); ///< prepare description/definition of the program options
 		virtual void options_parse_first(); ///< parse the command-line options
 		virtual void options_multioptions(); ///< parse some special options that add more options (e.g. developer tests)
+		virtual void options_done(); ///< done parsing of options+multioptions
 		virtual std::tuple<bool,int> options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
 
 		virtual int main_execution(); ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
@@ -323,8 +324,19 @@ class c_the_program {
 		shared_ptr<boost::program_options::options_description> m_boostPO_desc; ///< description/definition of the possible options, for parsing
 		///@}
 
+		/// Dirs/path options for the program
+		/// @{
 		string m_install_dir_base; ///< here we will find main dir like "/usr/" that contains our share dir
 		std::string m_install_dir_share_locale; ///< dir with our locale data
+		/// @}
+
+		/// Debug options for the program
+		///@{
+		int config_default_basic_dbg_level = 60; // [debug] level default
+		int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
+		///@}
+
+		string config_default_myname;
 };
 
 c_the_program::c_the_program() { }
@@ -351,6 +363,7 @@ void c_the_program::startup_version() {
 }
 
 std::tuple<bool,int> c_the_program::program_startup_special() {
+	// TODO move it to c_the_program_newloop or such (or to code spawning that)
 	if (contains_value(argt,"--newloop")) {
 		_goal("\nStarting newloop mode\n\n");
 		int ret = newloop_main(argt);
@@ -359,7 +372,6 @@ std::tuple<bool,int> c_the_program::program_startup_special() {
 	}
 	return std::tuple<bool,int>(false, 0); // tell it to continue
 }
-
 
 void c_the_program::startup_data_dir() {
 	bool found=false;
@@ -484,11 +496,51 @@ void c_the_program::init_library_sodium() {
 	_info(mo_file_reader::gettext("L_libsodium_ready"));
 }
 
-void c_the_program::options_create_desc() {
+void c_the_program::options_create_desc() { }
+void c_the_program::options_parse_first() { }
+void c_the_program::options_multioptions() { }
+std::tuple<bool,int> c_the_program::options_commands_run() {
+	return std::tuple<bool,int>(false,0);
+}
+
+void c_the_program::options_done() {
+			// === argm now can contain options added/modified by developer mode ===
+			namespace po = boost::program_options;
+			po::notify(m_argm);  // !
+			_note("After BoostPO notify");
+			for(auto &arg: m_argm) _info("Argument in argm: " << arg.first );
+}
+
+int c_the_program::main_execution() {
+	return 0;
+}
+
+// ============================================================================
+// ============================================================================
+
+/// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
+class c_the_program_tunserver : public c_the_program {
+	public:
+		c_the_program_tunserver();
+		virtual ~c_the_program_tunserver();
+
+		virtual void options_create_desc() override; ///< prepare description/definition of the program options
+		virtual void options_parse_first() override; ///< parse the command-line options
+		virtual void options_multioptions() override; ///< parse some special options that add more options (e.g. developer tests)
+		virtual std::tuple<bool,int> options_commands_run() override; ///< run special commands given in command line; returns should we exit and with what exit-code
+
+		virtual int main_execution() override; ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
+
+	protected:
+		unique_ptr<c_tunserver> m_myserver_ptr; ///< object of my node
+};
+
+
+void c_the_program_tunserver::options_create_desc() {
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
-		const string config_default_myname = "galaxy";
+		config_default_myname = "galaxy";
 
 		auto desc = make_shared<po::options_description>( mo_file_reader::gettext("L_options") , line_length);
 		desc->add_options()
@@ -605,129 +657,15 @@ void c_the_program::options_create_desc() {
 
 			;
 
-
         _note(mo_file_reader::gettext("L_parse_program_option"));
 
 	m_boostPO_desc = desc;
 }
 
-/// Misc class to convert a vector<string> into format like argc+argv. Is RAII compatible.
-class c_string_string_Cstyle final {
-	public:
-		c_string_string_Cstyle(const vector<string> & data);
-		c_string_string_Cstyle(const string & first, const vector<string> & data);
-		~c_string_string_Cstyle();
-		const char ** get_argv() ;
-		int get_argc() const ;
-	private:
-		vector< const char* > argv_vec;
-		void init_from_data(const string * first, const vector<string> & data); ///< first can be null ptr; Append first (if any) and then data.
-		void cleanup();
-		void append(const string & s);
-};
 
-c_string_string_Cstyle::c_string_string_Cstyle(const vector<string> & data) {
-	init_from_data(nullptr, data);
-}
-c_string_string_Cstyle::c_string_string_Cstyle(const string & first, const vector<string> & data) {
-	init_from_data(&first, data);
-}
-c_string_string_Cstyle::~c_string_string_Cstyle() {
-	cleanup();
-}
-
-void c_string_string_Cstyle::cleanup() {
-	for (const char * ptr : argv_vec) {
-		if (ptr) free( const_cast<char*>(ptr)  );
-		else throw std::runtime_error( "Tried to remove a nullptr in "s + __PRETTY_FUNCTION__ );
-	}
-	argv_vec.empty();
-}
-
-void c_string_string_Cstyle::append(const string & s) {
-	const char * newptr = strdup( s.c_str() ); // allocate...
-	if (!newptr) throw std::bad_alloc(); // throw if error
-	argv_vec.push_back( newptr ); // ...quickly save (to guarantee deletion)
-}
-
-void c_string_string_Cstyle::init_from_data(const string * first, const vector<string> & data) {
-	try {
-		argv_vec.empty();
-		if (first) append(*first);
-		for(const string & arg : data) append(arg);
-	} catch(...) {
-		cleanup();
-		throw;
-	}
-}
-
-const char ** c_string_string_Cstyle::get_argv() {
-	const char ** ptr = argv_vec.data();
-	return ptr;
-}
-
-int c_string_string_Cstyle::get_argc() const {
-	return argv_vec.size();
-}
-
-void c_the_program::options_parse_first() {
-	namespace po = boost::program_options;
-	c_string_string_Cstyle args_cstyle( argt_exec , argt );
-	const int argc = args_cstyle.get_argc();
-	const char ** argv = args_cstyle.get_argv();
-	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc), m_argm); // parse commandline, and store result
-	_note("BoostPO parsed argm size=" << m_argm.size());
-}
-
-/*
-		virtual void options_multioptions(); ///< parse some special options that add more options (e.g. developer tests)
-		virtual std::tuple<bool,int> options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
-
-		virtual int main_execution(); ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
-*/
-
-
-int main(int argc, const char **argv) {
-	c_the_program the_program;
-
-	the_program.take_args(argc,argv);
-	the_program.startup_console_first();
-	the_program.startup_version();
-	{
-		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special();
-		if (done) return ret;
-	}
-	the_program.startup_locales();
-
-	const int config_default_basic_dbg_level = 60; // [debug] level default
-	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
-
-	g_dbg_level = config_default_basic_dbg_level;
-	bool early_debug=false;
-
-	#ifdef HTTP_DBG
-		int http_dbg_port = 9080;
-	#endif
-
-	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
-	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, mo_file_reader::gettext("L_early_debug_comand_line"));
-
-	the_program.init_library_sodium();
-
-	the_program.options_create_desc();
-
-	try {
-		std::unique_ptr<c_tunserver> myserver_ptr;
-		namespace po = boost::program_options;
-
-
-		try { // try parsing
-
-			// === PECIAL options - that set up other program options ===
-
+void c_the_program_tunserver::options_multioptions() {
 			#if EXTLEVEL_IS_PREVIEW
-//			_info("BoostPO Will parse demo/devel options");
-                        _info("BoostPO Will parse demo/devel options");
+			_info("BoostPO Will parse demo/devel options");
 
 			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
 				auto opt_demo = argm["demo"].as<string>();
@@ -761,20 +699,24 @@ int main(int argc, const char **argv) {
 				}
 			}
 			#endif
+}
 
-			assert(argm.count("port") && argm.count("rpc-port"));
-			myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
+std::tuple<bool,int> c_the_program_tunserver::options_commands_run() {
+	return std::tuple<bool,int>(false,0);
+}
+
+int c_the_program_tunserver::main_execution() {
+		try { // try parsing
+			const auto & argm = m_argm;
+
+			_check_user(argm.count("port") && argm.count("rpc-port"));
+			m_myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
 			assert(myserver_ptr);
-			auto& myserver = *myserver_ptr;
+			auto& myserver = * m_myserver_ptr;
 			myserver.set_desc(m_boostPO_desc);
 
 			_note("After devel/demo BoostPO code");
 
-			// === argm now can contain options added/modified by developer mode ===
-			po::notify(argm);  // !
-			_note("After BoostPO notify");
-
-			for(auto &arg: argm) _info("Argument in argm: " << arg.first );
 
 			// --- debug level for main program ---
 			bool is_debug=false;
@@ -1079,7 +1021,7 @@ int main(int argc, const char **argv) {
 			}
 
 			// ------------------------------------------------------------------
-			myserver.set_argm(shared_ptr<po::variables_map>(new po::variables_map(argm)));
+			myserver.set_argm(shared_ptr<boost::program_options::variables_map>(new boost::program_options::variables_map(argm)));
 			auto peers_count = myserver.get_my_stats_peers_known_count();
 			if (peers_count) {
 				ui::action_info_ok("You will try to connect to up to " + std::to_string(peers_count) + " peer(s)");
@@ -1092,28 +1034,16 @@ int main(int argc, const char **argv) {
 		catch(ui::exception_error_exit) {
 //			std::cerr << "Exiting program now, as explained above..." << std::endl;
                         _erro( mo_file_reader::gettext("L_exit_from_connect") );
-
 			return 1;
 		}
-		catch(po::error& e) {
-//			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
-            _erro( mo_file_reader::gettext("L_option_error") << e.what() << std::endl );
+		catch(boost::program_options::error& e) {
+			_erro( mo_file_reader::gettext("L_option_error") << e.what() << std::endl );
 			_erro( *m_boostPO_desc );
 			return 1;
 		}
 
-//	} // try preparing
-//	catch(std::exception& e) {
-////		std::cerr << "Unhandled Exception reached the top of main: "
-//                std::cerr << mo_file_reader::gettext("L_unhandled_exception")
-//
-////				  << e.what() << ", application will now exit" << std::endl;
-//                                  << e.what() << mo_file_reader::gettext("L_exit_aplication") << std::endl;
-//
-//		return 2;
-//	}
 
-	// ------------------------------------------------------------------
+
     _note(mo_file_reader::gettext("L_all_preparations_done"));
 
 #ifdef HTTP_DBG
@@ -1123,14 +1053,62 @@ int main(int argc, const char **argv) {
 		httpdbg_server.run();
 		}	);
 #endif
+
 		_note(mo_file_reader::gettext("L_starting_main_server"));
-		myserver_ptr->run();
+		_check(m_myserver_ptr);
+		m_myserver_ptr->run();
 		_note(mo_file_reader::gettext("L_main_server_ended"));
+
 #ifdef HTTP_DBG
 		httpdbg_server.stop();
 		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
 		_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
 #endif
+
+
+	_goal("Exiting normally the main part of program");
+	return 0;
+}
+
+
+int main(int argc, const char **argv) {
+	c_the_program the_program;
+
+	the_program.take_args(argc,argv);
+	the_program.startup_console_first();
+	the_program.startup_version();
+	{
+		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special();
+		if (done) return ret;
+	}
+	the_program.startup_locales();
+
+	g_dbg_level = 60;
+	bool early_debug=false;
+	#ifdef HTTP_DBG
+		int http_dbg_port = 9080;
+	#endif
+	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
+	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
+
+	the_program.init_library_sodium();
+
+	the_program.options_create_desc();
+
+	the_program.options_parse_first();
+	the_program.options_multioptions();
+	the_program.options_done();
+
+	{
+		bool done; int ret; std::tie(done,ret) = the_program.options_commands_run();
+		if (done) return ret;
+	}
+
+
+
+	try {
+
+		int exit_code = the_program.main_execution(); // <---
 
 	} // try running server
 	catch(ui::exception_error_exit) {
@@ -1159,3 +1137,16 @@ int main(int argc, const char **argv) {
     _note(mo_file_reader::gettext("L_exit_no_error")); return 0;
 
 }
+
+//	} // try preparing
+//	catch(std::exception& e) {
+////		std::cerr << "Unhandled Exception reached the top of main: "
+//                std::cerr << mo_file_reader::gettext("L_unhandled_exception")
+//
+////				  << e.what() << ", application will now exit" << std::endl;
+//                                  << e.what() << mo_file_reader::gettext("L_exit_aplication") << std::endl;
+//
+//		return 2;
+//	}
+
+

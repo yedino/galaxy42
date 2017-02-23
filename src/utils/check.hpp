@@ -23,7 +23,7 @@ struct tag_err_check_named{};
  */
 class err_check_soft {
 	public:
-		virtual const char * what(); ///< return the error message, like from std::runtime_error::what()
+		virtual const char * what() const; ///< return the error message, like from std::runtime_error::what()
 };
 
 /// base of all exceptions thrown by our _check system
@@ -34,6 +34,21 @@ class err_check_base : public std::runtime_error {
 		err_check_base(tag_err_check_named, const char   * what, bool serious);
 		err_check_base(tag_err_check_named, const string & what, bool serious);
 		bool is_serious() const;
+};
+// -------------------------------------------------------------------
+
+/// This class is for exeption representing: programming error. This is fault in program execution.
+/// This errors are always hard errors.
+class err_check_prog : public err_check_base {
+	public:
+		err_check_prog(const char *what); ///< create hard error, from this message (can add cause string)
+	protected:
+		/// for use by child class where the child class generated entire message
+		///@{
+		err_check_prog(tag_err_check_named, const char   * what, bool serious);
+		err_check_prog(tag_err_check_named, const string & what, bool serious);
+		///@}
+		static std::string cause(bool se);
 };
 
 // -------------------------------------------------------------------
