@@ -28,6 +28,9 @@
 #include "newloop.hpp"
 #include "utils/misc.hpp"
 
+#include <cstdlib>
+#include <cstring>
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -293,18 +296,35 @@ class c_the_program {
 		virtual void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
 		virtual void startup_version(); ///< show basic info about version
 		virtual void startup_data_dir(); ///< find the data dir, set install_dir_base
+		virtual void startup_locales(); ///< setup locales, e.g. mo_file_reader
+
+		virtual void init_library_sodium(); ///< init library
 
 		/// run special tests instea of main program. Returns: {should-we-exit, error-code-if-we-exit}
 		virtual std::tuple<bool,int> program_startup_special();
 
-		virtual void startup_locales();
+		virtual void options_create_desc(); ///< prepare description/definition of the program options
+		virtual void options_parse_first(); ///< parse the command-line options
+		virtual void options_multioptions(); ///< parse some special options that add more options (e.g. developer tests)
+		virtual std::tuple<bool,int> options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
+
+		virtual int main_execution(); ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
 
 	protected:
+		/// Raw command-line options
+		///@{
 		vector<string> argt; ///< the arguments with which the program is running, except for program name (see argt_exec)
 		string argt_exec; ///< the name of running binary program (like from argv[0])
+		///@}
 
-		string install_dir_base; ///< here we will find main dir like "/usr/" that contains our share dir
-		std::string install_dir_share_locale; ///< dir with our locale data
+		/// Boost program-options (for options from command-line and more)
+		///@{
+		boost::program_options::variables_map m_argm; ///< the arguments map (parsed, ready to use)
+		shared_ptr<boost::program_options::options_description> m_boostPO_desc; ///< description/definition of the possible options, for parsing
+		///@}
+
+		string m_install_dir_base; ///< here we will find main dir like "/usr/" that contains our share dir
+		std::string m_install_dir_share_locale; ///< dir with our locale data
 };
 
 c_the_program::c_the_program() { }
@@ -389,7 +409,7 @@ void c_the_program::startup_data_dir() {
 			_fact( "Test: [" << testname << "]... " << std::flush );
 			ifstream filetest( testname.c_str() );
 			if (filetest.good()) {
-				install_dir_base = dir;
+				m_install_dir_base = dir;
 				found=true;
 				_fact(" OK! " );
 				break;
@@ -401,9 +421,9 @@ void c_the_program::startup_data_dir() {
 
 	if (!found) _fact( "Can not find language data files." );
 
-	_fact( "Data: [" << install_dir_base << "]" );
-	std::string install_dir_share_locale = install_dir_base + "/share/locale";
-	_fact( "Lang: [" << install_dir_share_locale << "]" );
+	_fact( "Data: [" << m_install_dir_base << "]" );
+	std::string m_install_dir_share_locale = m_install_dir_base + "/share/locale";
+	_fact( "Lang: [" << m_install_dir_share_locale << "]" );
 }
 
 void c_the_program::startup_locales() {
@@ -411,7 +431,7 @@ void c_the_program::startup_locales() {
 
 /*	boost::locale::generator gen;
 	// Specify location of dictionaries
-	gen.add_messages_path(install_dir_share_locale);
+	gen.add_messages_path(m_install_dir_share_locale);
 	gen.add_messages_domain("galaxy42_main");
 	std::string locale_name;
 	try {
@@ -434,7 +454,7 @@ void c_the_program::startup_locales() {
 */
 	try {
 		mo_file_reader mo_reader;
-		mo_reader.add_messages_dir(install_dir_share_locale);
+		mo_reader.add_messages_dir(m_install_dir_share_locale);
 		mo_reader.add_mo_filename(std::string("galaxy42_main"));
 		mo_reader.read_file();
 	} catch (const std::exception &e) {
@@ -446,58 +466,25 @@ void c_the_program::startup_locales() {
 	_fact( mo_file_reader::gettext("L_program_is_copyrighted") );
 	_fact( "" );
 
-//	const std::string install_dir_share_locale="share/locale"; // for now, for running in place
+//	const std::string m_install_dir_share_locale="share/locale"; // for now, for running in place
 //	setlocale(LC_ALL,"");
-//	string used_domain = bindtextdomain ("galaxy42_main", install_dir_share_locale.c_str() );
+//	string used_domain = bindtextdomain ("galaxy42_main", m_install_dir_share_locale.c_str() );
 //	textdomain("galaxy42_main");
 	// Using mo_file_reader::gettext:
 //	std::cerr << mo_reader::mo_file_reader::gettext("L_program_is_pre_pre_alpha") << std::endl;
 //	std::cerr << mo_reader::mo_file_reader::gettext("L_program_is_copyrighted") << std::endl;
 }
 
+void c_the_program::init_library_sodium() {
+	_fact(mo_file_reader::gettext("L_starting_lib_libsodium"));
 
-
-int main(int argc, const char **argv) {
-	c_the_program the_program;
-
-	the_program.take_args(argc,argv);
-	the_program.startup_console_first();
-	the_program.startup_version();
-	{
-		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special();
-		if (done) return ret;
+	if (sodium_init() == -1) {
+		_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
 	}
-	the_program.startup_locales();
+	_info(mo_file_reader::gettext("L_libsodium_ready"));
+}
 
-	const int config_default_basic_dbg_level = 60; // [debug] level default
-	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
-
-	g_dbg_level = config_default_basic_dbg_level;
-	bool early_debug=false;
-
-	#ifdef HTTP_DBG
-	int http_dbg_port = 9080;
-	#endif
-	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
-//	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, "Early debug because command line options");
-        if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, mo_file_reader::gettext("L_early_debug_comand_line"));
-
-	{
-//		_info("Starting library libsodium");
-                _info(mo_file_reader::gettext("L_starting_lib_libsodium"));
-
-		if (sodium_init() == -1) {
-//			_throw_error( std::runtime_error("libsodium init error!") );
-                        _throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
-
-		}
-//		_info("Done, libsodium ready");
-                _info(mo_file_reader::gettext("L_libsodium_ready"));
-
-	}
-
-	try {
-		std::unique_ptr<c_tunserver> myserver_ptr;
+void c_the_program::options_create_desc() {
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -621,11 +608,120 @@ int main(int argc, const char **argv) {
 
         _note(mo_file_reader::gettext("L_parse_program_option"));
 
-		po::variables_map argm;
+	m_boostPO_desc = desc;
+}
+
+/// Misc class to convert a vector<string> into format like argc+argv. Is RAII compatible.
+class c_string_string_Cstyle final {
+	public:
+		c_string_string_Cstyle(const vector<string> & data);
+		c_string_string_Cstyle(const string & first, const vector<string> & data);
+		~c_string_string_Cstyle();
+		const char ** get_argv() ;
+		int get_argc() const ;
+	private:
+		vector< const char* > argv_vec;
+		void init_from_data(const string * first, const vector<string> & data); ///< first can be null ptr; Append first (if any) and then data.
+		void cleanup();
+		void append(const string & s);
+};
+
+c_string_string_Cstyle::c_string_string_Cstyle(const vector<string> & data) {
+	init_from_data(nullptr, data);
+}
+c_string_string_Cstyle::c_string_string_Cstyle(const string & first, const vector<string> & data) {
+	init_from_data(&first, data);
+}
+c_string_string_Cstyle::~c_string_string_Cstyle() {
+	cleanup();
+}
+
+void c_string_string_Cstyle::cleanup() {
+	for (const char * ptr : argv_vec) {
+		if (ptr) free( const_cast<char*>(ptr)  );
+		else throw std::runtime_error( "Tried to remove a nullptr in "s + __PRETTY_FUNCTION__ );
+	}
+	argv_vec.empty();
+}
+
+void c_string_string_Cstyle::append(const string & s) {
+	const char * newptr = strdup( s.c_str() ); // allocate...
+	if (!newptr) throw std::bad_alloc(); // throw if error
+	argv_vec.push_back( newptr ); // ...quickly save (to guarantee deletion)
+}
+
+void c_string_string_Cstyle::init_from_data(const string * first, const vector<string> & data) {
+	try {
+		argv_vec.empty();
+		if (first) append(*first);
+		for(const string & arg : data) append(arg);
+	} catch(...) {
+		cleanup();
+		throw;
+	}
+}
+
+const char ** c_string_string_Cstyle::get_argv() {
+	const char ** ptr = argv_vec.data();
+	return ptr;
+}
+
+int c_string_string_Cstyle::get_argc() const {
+	return argv_vec.size();
+}
+
+void c_the_program::options_parse_first() {
+	namespace po = boost::program_options;
+	c_string_string_Cstyle args_cstyle( argt_exec , argt );
+	const int argc = args_cstyle.get_argc();
+	const char ** argv = args_cstyle.get_argv();
+	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc), m_argm); // parse commandline, and store result
+	_note("BoostPO parsed argm size=" << m_argm.size());
+}
+
+/*
+		virtual void options_multioptions(); ///< parse some special options that add more options (e.g. developer tests)
+		virtual std::tuple<bool,int> options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
+
+		virtual int main_execution(); ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
+*/
+
+
+int main(int argc, const char **argv) {
+	c_the_program the_program;
+
+	the_program.take_args(argc,argv);
+	the_program.startup_console_first();
+	the_program.startup_version();
+	{
+		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special();
+		if (done) return ret;
+	}
+	the_program.startup_locales();
+
+	const int config_default_basic_dbg_level = 60; // [debug] level default
+	const int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
+
+	g_dbg_level = config_default_basic_dbg_level;
+	bool early_debug=false;
+
+	#ifdef HTTP_DBG
+		int http_dbg_port = 9080;
+	#endif
+
+	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
+	if (early_debug) g_dbg_level_set(config_default_incrased_dbg_level, mo_file_reader::gettext("L_early_debug_comand_line"));
+
+	the_program.init_library_sodium();
+
+	the_program.options_create_desc();
+
+	try {
+		std::unique_ptr<c_tunserver> myserver_ptr;
+		namespace po = boost::program_options;
+
+
 		try { // try parsing
-			po::store(po::parse_command_line(argc, argv, *desc), argm); // <-- parse actuall real command line options
-//			_note("BoostPO parsed argm size=" << argm.size());
-                        _note("BoostPO parsed argm size=" << argm.size());
 
 			// === PECIAL options - that set up other program options ===
 
@@ -670,9 +766,9 @@ int main(int argc, const char **argv) {
 			myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
 			assert(myserver_ptr);
 			auto& myserver = *myserver_ptr;
-			myserver.set_desc(desc);
+			myserver.set_desc(m_boostPO_desc);
 
-            _note("After devel/demo BoostPO code");
+			_note("After devel/demo BoostPO code");
 
 			// === argm now can contain options added/modified by developer mode ===
 			po::notify(argm);  // !
@@ -691,7 +787,7 @@ int main(int argc, const char **argv) {
 			_note("BoostPO after parsing debug");
 
 			if (argm.count("help")) { // usage
-				_fact( *desc );
+				_fact( *m_boostPO_desc );
 				_fact( std::endl << project_version_info() );
 				return 0;
 			}
@@ -1002,7 +1098,7 @@ int main(int argc, const char **argv) {
 		catch(po::error& e) {
 //			std::cerr << "Error in options: " << e.what() << std::endl << std::endl;
             _erro( mo_file_reader::gettext("L_option_error") << e.what() << std::endl );
-			_erro( *desc );
+			_erro( *m_boostPO_desc );
 			return 1;
 		}
 
