@@ -38,7 +38,7 @@ void write_to_console(const std::string& obj);
 #define _dbg2(X) do { DBGLVL( 20); _main_dbg("dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
 #define _dbg1(X) do { DBGLVL( 30); _main_dbg("dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
 #define _info(X) do { DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
-#define _note(X) do { DBGLVL( 50); _main_dbg("\033[95note: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _note(X) do { DBGLVL( 50); _main_dbg("\033[96mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
 #define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
 	std::ostringstream oss; \
