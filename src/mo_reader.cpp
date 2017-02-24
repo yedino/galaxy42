@@ -3,6 +3,8 @@
 #include "mo_reader.hpp"
 #include <cstring>
 
+#include "libs0.hpp" // for debug
+
 std::atomic<bool> mo_file_reader::s_translation_map_ready(false);
 std::map<std::string, std::string> mo_file_reader::m_translation_map;
 
@@ -34,6 +36,8 @@ void mo_file_reader::read_file() {
 	uint32_t size_of_hashing_table = read_section();
 	uint32_t offset_of_hashing_table = read_section();
 
+	_dbg1("MO format: " <<  file_format_revision << ", " << size_of_hashing_table << "@" << offset_of_hashing_table );
+
 	// loadnig to map
 	for (uint32_t i = 0; i < number_of_strings; i++) {
 		//i = 17;
@@ -60,6 +64,7 @@ void mo_file_reader::read_file() {
 
 void mo_file_reader::add_messages_dir(const std::string &path) {
 	m_messages_dir = path;
+	_fact("Starting translations reader (mo_reader) for path: " << m_messages_dir);
 }
 
 void mo_file_reader::add_messages_dir(std::string &&path) {
