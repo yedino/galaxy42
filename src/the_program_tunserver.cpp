@@ -197,7 +197,7 @@ int c_the_program_tunserver::main_execution() {
 
 			_check_user(argm.count("port") && argm.count("rpc-port"));
 			m_myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
-			assert(myserver_ptr);
+			assert(m_myserver_ptr);
 			auto& myserver = * m_myserver_ptr;
 			myserver.set_desc(m_boostPO_desc);
 
