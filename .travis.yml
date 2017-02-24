@@ -103,7 +103,7 @@ script:
   - ./do --go
 
 after_success:
-  - ./test-release.elf    # run gtests
+  - ./build/test-release.elf    # run gtests
   - if [[ "$COVERAGE" == "1" ]]; then coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5' ; fi
 
 notifications:
