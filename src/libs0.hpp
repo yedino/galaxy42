@@ -82,6 +82,15 @@ using std::invalid_argument;
 	#define DEBUG_SECRET_STR( X ) ( "[hidden-secret]" )
 #endif
 
+// PRETTY FUNCTION NAME - DEBUG
+#ifndef __PRETTY_FUNCTION__
+	#ifdef WIN32   //WINDOWS
+	#define __PRETTY_FUNCTION__   __FUNCTION__
+#else          //*NIX
+	#define __PRETTY_FUNCTION__   __func__
+	#endif
+#endif
+
 // ??? decide: XXX
 #include "c_tnetdbg.hpp"
 
