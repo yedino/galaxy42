@@ -257,6 +257,9 @@ link_directories(depends/jsoncpp/src/lib_json)
 #add local nlohmann json
 include_directories(depends/json/src)
 
+#add local CTPL
+include_directories(depends/CTPL)
+
 #add local local lib sodiumpp
 set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
