@@ -499,6 +499,7 @@ void c_the_program::init_library_sodium() {
 void c_the_program::options_create_desc() { }
 
 void c_the_program::options_parse_first() {
+	_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
 	namespace po = boost::program_options;
 	c_string_string_Cstyle args_cstyle( argt_exec , argt );
 	const int argc = args_cstyle.get_argc();
@@ -1115,9 +1116,10 @@ int main(int argc, const char **argv) {
 
 
 
+	int exit_code=1;
 	try {
 
-		int exit_code = the_program.main_execution(); // <---
+		exit_code = the_program.main_execution(); // <---
 
 	} // try running server
 	catch(ui::exception_error_exit) {
@@ -1144,6 +1146,8 @@ int main(int argc, const char **argv) {
 
 	// ------------------------------------------------------------------
     _note(mo_file_reader::gettext("L_exit_no_error")); return 0;
+
+  return exit_code;
 
 }
 

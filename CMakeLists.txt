@@ -474,7 +474,7 @@ message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
 if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
-		COMMAND ./tunserver.sh
+		COMMAND "${CMAKE_SOURCE_DIR}/tunserver.sh"
 		DEPENDS ./tunserver.elf
 		DEPENDS test-debug.elf
 		WORKING_DIRECTORY ./)

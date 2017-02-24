@@ -182,7 +182,8 @@ fi
 
 set -x
 dir_build="$dir_base_of_source/build"
-mkdir $dir_build
+echo "Will build into directory dir_build=$dir_build"
+mkdir -p $dir_build
 pushd $dir_build
 cmake  ..  \
 	-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC" \
@@ -197,7 +198,7 @@ set +x
 set -x
 make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
 set +x
-ln -s "$dir_base_of_source"/share share
+ln -s "$dir_base_of_source"/share share || echo "Link already exists"
 popd
 fi # platform posix
 
