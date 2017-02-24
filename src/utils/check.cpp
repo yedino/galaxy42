@@ -1,7 +1,7 @@
 #include "utils/check.hpp"
 
-const char * err_check_soft::what() const {
-	auto ptr = dynamic_cast< const err_check_base * >( this );
+const char * err_check_soft::what_soft() const {
+	auto ptr = dynamic_cast<const err_check_base * >( this );
 	if (ptr) return ptr->what();
 	return "Undefined soft error (huh?)";
 }
@@ -81,4 +81,3 @@ err_check_extern_soft::err_check_extern_soft(const char *what)
 	: err_check_extern(tag_err_check_named{} , cause(false)+what , false) { }
 
 // -------------------------------------------------------------------
-
