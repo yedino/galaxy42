@@ -497,7 +497,16 @@ void c_the_program::init_library_sodium() {
 }
 
 void c_the_program::options_create_desc() { }
-void c_the_program::options_parse_first() { }
+
+void c_the_program::options_parse_first() {
+	namespace po = boost::program_options;
+	c_string_string_Cstyle args_cstyle( argt_exec , argt );
+	const int argc = args_cstyle.get_argc();
+	const char ** argv = args_cstyle.get_argv();
+	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc), m_argm); // parse commandline, and store result
+	_note("BoostPO parsed argm size=" << m_argm.size());
+}
+
 void c_the_program::options_multioptions() { }
 std::tuple<bool,int> c_the_program::options_commands_run() {
 	return std::tuple<bool,int>(false,0);
@@ -525,7 +534,6 @@ class c_the_program_tunserver : public c_the_program {
 		virtual ~c_the_program_tunserver();
 
 		virtual void options_create_desc() override; ///< prepare description/definition of the program options
-		virtual void options_parse_first() override; ///< parse the command-line options
 		virtual void options_multioptions() override; ///< parse some special options that add more options (e.g. developer tests)
 		virtual std::tuple<bool,int> options_commands_run() override; ///< run special commands given in command line; returns should we exit and with what exit-code
 
@@ -534,6 +542,7 @@ class c_the_program_tunserver : public c_the_program {
 	protected:
 		unique_ptr<c_tunserver> m_myserver_ptr; ///< object of my node
 };
+
 
 
 void c_the_program_tunserver::options_create_desc() {
