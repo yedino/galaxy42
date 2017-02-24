@@ -22,7 +22,7 @@ struct tag_err_check_named{};
  */
 class err_check_soft {
 	public:
-		virtual const char * what_soft() const; ///< ... XXX
+		virtual const char * what_soft() const; ///< use this if you catch as err_check_soft exactly; else use normal what()
 	protected:
 		err_check_soft() = default;
 };
