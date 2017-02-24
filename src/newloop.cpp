@@ -276,6 +276,9 @@ int newloop_main(const vector<string> &argt) {
 
 	{ // in tun-reader thread
 		c_netbuf tun_inbuf( get_tun_inbuf_size() );
+
+
+
 	}
 
 	return 0;
