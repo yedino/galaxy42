@@ -1,4 +1,5 @@
 
+#include "utils/misc.hpp"
 
 c_string_string_Cstyle::c_string_string_Cstyle(const vector<string> & data) {
 	init_from_data(nullptr, data);
@@ -42,15 +43,6 @@ const char ** c_string_string_Cstyle::get_argv() {
 
 int c_string_string_Cstyle::get_argc() const {
 	return argv_vec.size();
-}
-
-void c_the_program_tunserver::options_parse_first() {
-	namespace po = boost::program_options;
-	c_string_string_Cstyle args_cstyle( argt_exec , argt );
-	const int argc = args_cstyle.get_argc();
-	const char ** argv = args_cstyle.get_argv();
-	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc), m_argm); // parse commandline, and store result
-	_note("BoostPO parsed argm size=" << m_argm.size());
 }
 
 

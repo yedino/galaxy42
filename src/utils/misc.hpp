@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "libs0.hpp"
+
 template <typename TC> bool contains_value(const TC & c, const typename TC::value_type v) {
 	return std::find( c.begin() , c.end() , v ) != c.end();
 }
