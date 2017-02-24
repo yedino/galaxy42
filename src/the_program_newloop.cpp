@@ -15,11 +15,11 @@
 
 #include "newloop.hpp"
 
-
 #ifdef HTTP_DBG
 #include <thread>
 #include <mutex>
 #include <boost/asio.hpp>
+#include <ctpl.h>
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
@@ -123,7 +123,6 @@ class c_the_program_newloop_pimpl {
 	private:
 		friend class c_the_program_newloop;
 };
-
 
 // -------------------------------------------------------------------
 
@@ -257,6 +256,15 @@ c_the_program_newloop::~c_the_program_newloop() {
 	if (m_pimpl) { delete m_pimpl; }
 }
 
+void thread_test()
+{
+	// thread pool example
+	unsigned int number_of_threads = 4;
+	auto fun = [](int id) {_note("thread id="<<id);};
+	ctpl::thread_pool tp(number_of_threads);
+	for(unsigned int i=0; i<number_of_threads; i++) tp.push(fun);
+}
+
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
 	g_dbg_level_set(10, "Debug the newloop");
@@ -274,9 +282,10 @@ int c_the_program_newloop::main_execution() {
 		_note("chunk: " << make_report(chunk,20) );
 	}
 
+	thread_test();
+
 	_mark("newloop main_execution - DONE");
 
 	//	newloop_main( argt );
 	return 0;
 }
-
