@@ -25,3 +25,6 @@
 [submodule "cotire"]
 	path = cotire
 	url = https://github.com/sakra/cotire
+[submodule "depends/CTPL"]
+	path = depends/CTPL
+	url = https://github.com/vit-vit/CTPL.git
