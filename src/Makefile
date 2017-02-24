@@ -2,5 +2,5 @@
 .PHONY: run
 
 run:
-	( cd .. && make run )
+	( cd ../build && make run )
 

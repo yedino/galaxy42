@@ -1483,7 +1483,7 @@ std::string c_tunserver::program_action_gen_key_simple() {
 	return IDI_name;
 }
 
-void c_tunserver::program_action_gen_key(boost::program_options::variables_map & argm) {
+void c_tunserver::program_action_gen_key(const boost::program_options::variables_map & argm) {
 	_note("Action: gen key");
 	if (!argm.count("key-type")) {
 		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
