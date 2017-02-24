@@ -2,6 +2,7 @@
 
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
+#include "the_program_newloop.hpp"
 
 namespace developer_tests {
 
@@ -260,15 +261,45 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 	return ret;
 }
 
+// ============================================================================
+// ============================================================================
+// ============================================================================
 
-// ============================================================================
-// ============================================================================
-// ============================================================================
+#define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
 int main(int argc, const char **argv) {
-	unique_ptr<c_the_program> the_program = make_unique<c_the_program_tunserver>();
+	unique_ptr<c_the_program> the_program = nullptr;
 
-	the_program->take_args(argc,argv);
+	// parse early options:
+	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
+	vector<string> argt; // args (without exec name)
+	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
+	bool early_debug = contains_value(argt, "--d");
+
+	typedef enum {
+		e_program_type_tunserver = 1,
+		e_program_type_newloop = 100,
+	} t_program_type;
+	t_program_type program_type = e_program_type_tunserver;
+
+	if (remove_and_count(argt, "--newloop" )) program_type = e_program_type_newloop;
+
+	switch (program_type) {
+		case e_program_type_tunserver:
+			the_program = make_unique<c_the_program_tunserver>();
+		break;
+		case e_program_type_newloop:
+			the_program = make_unique<c_the_program_newloop>();
+		break;
+		default: break;
+	}
+
+	if (!the_program) {
+		_early_cerr("Programming error: not supported program type.");
+		return 1;
+	}
+
+	the_program->take_args(argt_exe , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
 	the_program->startup_version();
 	the_program->startup_data_dir();
@@ -279,8 +310,6 @@ int main(int argc, const char **argv) {
 	the_program->startup_locales();
 
 	g_dbg_level = 60;
-	bool early_debug=false;
-	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
 
 	the_program->init_library_sodium();
