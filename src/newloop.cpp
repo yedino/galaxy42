@@ -268,18 +268,7 @@ int get_mts(transport_id t) { // maximum transport size
 // http://stackoverflow.com/questions/15219984/using-vectorchar-as-a-buffer-without-initializing-it-on-resize/15220853#15220853
 
 int newloop_main(const vector<string> &argt) {
-	_mark("In the newloop");
 	_UNUSED(argt);
-	g_dbg_level_set(10, "Debug the newloop");
-
-	// test_debug_check();
-
-	{ // in tun-reader thread
-		c_netbuf tun_inbuf( get_tun_inbuf_size() );
-
-
-
-	}
 
 	return 0;
 }
