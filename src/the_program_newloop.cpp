@@ -51,6 +51,78 @@ class c_the_program_newloop_pimpl {
 		friend class c_the_program_newloop;
 };
 
+
+// -------------------------------------------------------------------
+
+template <typename T>
+struct c_to_report {
+	public:
+		const T & m_obj;
+		int m_level;
+		c_to_report(const T & obj, int level) : m_obj(obj), m_level(level) {}
+};
+
+template <typename TS, typename TR> TS & operator<<(TS & ostr , const c_to_report<TR> & to_report) {
+	to_report.m_obj.report(ostr, to_report.m_level);
+	return ostr;
+}
+
+template <typename T>
+const c_to_report<T> make_report(const T & obj, int level) {
+	return c_to_report<T>( obj , level);
+}
+
+// -------------------------------------------------------------------
+
+class c_netchunk {
+	public:
+		typedef unsigned char t_element; ///< type of one elemenet
+
+		c_netchunk(t_element * _data, size_t _size);
+
+	public:
+		t_element * const data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
+		const size_t size;
+};
+
+// -------------------------------------------------------------------
+
+/***
+	@brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
+*/
+class c_netbuf {
+	public:
+		typedef c_netchunk::t_element t_element; ///< type of one elemenet
+
+		c_netbuf(size_t size); ///< construct and allocate
+
+		size_t size() const;
+		// vector<t_element> & get_data(); ///< access data
+		// const vector<t_element> & get_data() const; ///< access data
+		t_element & at(size_t ix); ///< access one element (asserted)
+
+		void report(std::ostream & ostr, int detail) const;
+
+	private:
+		vector<unsigned char> m_data; ///< my actuall data storage
+};
+
+c_netbuf::c_netbuf(size_t size) : m_data(size) {
+	_dbg1( make_report(*this,10) );
+}
+
+size_t c_netbuf::size() const {	return m_data.size(); }
+
+c_netbuf::t_element & c_netbuf::at(size_t ix) { return m_data.at(ix); }
+
+void c_netbuf::report(std::ostream & ostr, int detail) const {
+	ostr << "this@" << static_cast<const void*>(this);
+	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_data.size()
+		<< ",memory@" << static_cast<const void*>(m_data.data()) ;
+}
+
+// -------------------------------------------------------------------
+
 // ============================================================================
 
 c_the_program_newloop::c_the_program_newloop()
@@ -67,7 +139,8 @@ int c_the_program_newloop::main_execution() {
 	_mark("newloop main");
 	m_pimpl->tunserver = make_unique< c_tunserver2 >();
 
-
+	c_netbuf(9000);
+	readtun();
 
 	//	newloop_main( argt );
 	return 0;
