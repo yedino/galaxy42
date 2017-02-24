@@ -10,7 +10,6 @@
  * result in exception being nicelly thrown.
  */
 
-
 /// tag for constructor of err_check_* saying that the name of object is already decided
 struct tag_err_check_named{};
 
@@ -23,7 +22,9 @@ struct tag_err_check_named{};
  */
 class err_check_soft {
 	public:
-		virtual const char * what() const; ///< return the error message, like from std::runtime_error::what()
+		virtual const char * what_soft() const; ///< ... XXX
+	protected:
+		err_check_soft() = default;
 };
 
 /// base of all exceptions thrown by our _check system

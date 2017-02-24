@@ -116,8 +116,8 @@ TEST(utils_check, try_what_message_test) {
 
 	try{
 		_try_user(2+2==5);
-	}catch(const err_check_user_soft &e){
-		std::string msg(e.what());
+	}catch(err_check_soft &e){
+		std::string msg(e.what_soft());
 		if( msg.find(warn) == string::npos )
 			FAIL();
 		if( msg.find(test_sentence) == string::npos )
