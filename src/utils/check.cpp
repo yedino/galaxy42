@@ -30,10 +30,6 @@ std::string err_check_prog::cause(bool se) {
 	return "Check detected prog warning: "s;
 }
 
-err_check_prog_soft::err_check_prog_soft(const char *what)
-	: err_check_prog(tag_err_check_named{} , cause(false)+what , false) { }
-
-
 // -------------------------------------------------------------------
 
 err_check_user::err_check_user(const char *what)
