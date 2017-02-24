@@ -500,11 +500,12 @@ void c_the_program::options_create_desc() { }
 
 void c_the_program::options_parse_first() {
 	_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
+	_check(m_boostPO_desc);
 	namespace po = boost::program_options;
 	c_string_string_Cstyle args_cstyle( argt_exec , argt );
 	const int argc = args_cstyle.get_argc();
 	const char ** argv = args_cstyle.get_argv();
-	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc), m_argm); // parse commandline, and store result
+	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // parse commandline, and store result
 	_note("BoostPO parsed argm size=" << m_argm.size());
 }
 
@@ -531,8 +532,8 @@ int c_the_program::main_execution() {
 /// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
 class c_the_program_tunserver : public c_the_program {
 	public:
-		c_the_program_tunserver();
-		virtual ~c_the_program_tunserver();
+		c_the_program_tunserver()=default;
+		virtual ~c_the_program_tunserver()=default;
 
 		virtual void options_create_desc() override; ///< prepare description/definition of the program options
 		virtual void options_multioptions() override; ///< parse some special options that add more options (e.g. developer tests)
@@ -542,9 +543,9 @@ class c_the_program_tunserver : public c_the_program {
 
 	protected:
 		unique_ptr<c_tunserver> m_myserver_ptr; ///< object of my node
+
+		int m_http_dbg_port=9080; ///< the http-debug port
 };
-
-
 
 void c_the_program_tunserver::options_create_desc() {
 		namespace po = boost::program_options;
@@ -552,7 +553,8 @@ void c_the_program_tunserver::options_create_desc() {
 
 		config_default_myname = "galaxy";
 
-		auto desc = make_shared<po::options_description>( mo_file_reader::gettext("L_options") , line_length);
+		m_boostPO_desc = make_shared<po::options_description>( mo_file_reader::gettext("L_options") , line_length);
+		auto & desc = m_boostPO_desc;
 		desc->add_options()
                     ("help", mo_file_reader::gettext("L_what_help_do").c_str())
 
@@ -669,7 +671,6 @@ void c_the_program_tunserver::options_create_desc() {
 
         _note(mo_file_reader::gettext("L_parse_program_option"));
 
-	m_boostPO_desc = desc;
 }
 
 
@@ -798,11 +799,11 @@ int c_the_program_tunserver::main_execution() {
 				myserver.program_action_gen_key_simple();
 				return 0;
 			} // gen-key
-            #ifdef HTTP_DBG
-            if (argm.count("http-dbg-port")) {
-                http_dbg_port = argm["http-dbg-port"].as<int>();
-            } //http-dbg-port
-            #endif
+
+			#ifdef HTTP_DBG
+				if (argm.count("http-dbg-port")) m_http_dbg_port = argm["http-dbg-port"].as<int>();
+			#endif
+
 			if (argm.at("remove-peers").as<bool>()) {
 				myserver.enable_remove_peers();
 			}
@@ -1052,114 +1053,86 @@ int c_the_program_tunserver::main_execution() {
 			return 1;
 		}
 
-
-
     _note(mo_file_reader::gettext("L_all_preparations_done"));
 
-#ifdef HTTP_DBG
-		_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
-		c_httpdbg_server httpdbg_server(http_dbg_port, *myserver_ptr);
-		std::thread httpdbg_thread( [& httpdbg_server]() {
-		httpdbg_server.run();
-		}	);
-#endif
+		#ifdef HTTP_DBG
+			_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
+			c_httpdbg_server httpdbg_server(m_http_dbg_port, *m_myserver_ptr);
+			std::thread httpdbg_thread( [& httpdbg_server]() {
+				httpdbg_server.run();
+			}	);
+		#endif
 
 		_note(mo_file_reader::gettext("L_starting_main_server"));
 		_check(m_myserver_ptr);
-		m_myserver_ptr->run();
+		_goal("My server: calling run");
+		m_myserver_ptr->run(); // <---
+		_goal("My server: returned");
 		_note(mo_file_reader::gettext("L_main_server_ended"));
 
-#ifdef HTTP_DBG
-		httpdbg_server.stop();
-		httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
-		_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
-#endif
-
+		#ifdef HTTP_DBG
+			httpdbg_server.stop();
+			httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
+			_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
+	#endif
 
 	_goal("Exiting normally the main part of program");
 	return 0;
 }
 
+// ============================================================================
 
 int main(int argc, const char **argv) {
-	c_the_program the_program;
+	unique_ptr<c_the_program> the_program = make_unique<c_the_program_tunserver>();
 
-	the_program.take_args(argc,argv);
-	the_program.startup_console_first();
-	the_program.startup_version();
+	the_program->take_args(argc,argv);
+	the_program->startup_console_first();
+	the_program->startup_version();
 	{
-		bool done; int ret; std::tie(done,ret) = the_program.program_startup_special();
+		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();
 		if (done) return ret;
 	}
-	the_program.startup_locales();
+	the_program->startup_locales();
 
 	g_dbg_level = 60;
 	bool early_debug=false;
-	#ifdef HTTP_DBG
-		int http_dbg_port = 9080;
-	#endif
 	for (decltype(argc) i=0; i<argc; ++i) if (  (!strcmp(argv[i],"--d")) || (!strcmp(argv[i],"--debug"))  ) early_debug=true;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
 
-	the_program.init_library_sodium();
+	the_program->init_library_sodium();
 
-	the_program.options_create_desc();
+	the_program->options_create_desc();
 
-	the_program.options_parse_first();
-	the_program.options_multioptions();
-	the_program.options_done();
+	the_program->options_parse_first();
+	the_program->options_multioptions();
+	the_program->options_done();
 
 	{
-		bool done; int ret; std::tie(done,ret) = the_program.options_commands_run();
+		bool done; int ret; std::tie(done,ret) = the_program->options_commands_run();
 		if (done) return ret;
 	}
-
-
 
 	int exit_code=1;
 	try {
 
-		exit_code = the_program.main_execution(); // <---
+		exit_code = the_program->main_execution(); // <---
 
 	} // try running server
 	catch(ui::exception_error_exit) {
-//		std::cerr << "Exiting as explained above" << std::endl;
-        _erro( mo_file_reader::gettext("L_exiting_explained_above") );
-
+		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
 		return 1;
 	}
 	catch(std::exception& e) {
-//		std::cerr << "Unhandled Exception reached the top of main (While running server): "
-        _erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-
-//				  << e.what() << ", application will now exit" << std::endl;
-                                  << e.what() << mo_file_reader::gettext("L_exit_aplication") );
-
+		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+		 << e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		return 2;
 	}
 	catch(...) {
-//		std::cerr << "Unknown exception while running server." << std::endl;
-        _erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
-
+		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
 		return 3;
 	}
-
-	// ------------------------------------------------------------------
-    _note(mo_file_reader::gettext("L_exit_no_error")); return 0;
+	_note(mo_file_reader::gettext("L_exit_no_error")); return 0;
 
   return exit_code;
-
 }
-
-//	} // try preparing
-//	catch(std::exception& e) {
-////		std::cerr << "Unhandled Exception reached the top of main: "
-//                std::cerr << mo_file_reader::gettext("L_unhandled_exception")
-//
-////				  << e.what() << ", application will now exit" << std::endl;
-//                                  << e.what() << mo_file_reader::gettext("L_exit_aplication") << std::endl;
-//
-//		return 2;
-//	}
-
 
