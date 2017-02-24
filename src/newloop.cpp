@@ -5,7 +5,6 @@
 typedef string transport_id; // name next hop
 typedef string hip_id; // name end src/dst
 
-
 void	image(int size) {
 	_info("image size="<<size);
 	_try_user(size < 100);
@@ -43,7 +42,7 @@ void image_ui(int size, string dir="/tmp", string fname="/tmp/data") {
 				done=true;
 			}
 			catch(err_check_soft & ex) {
-				_warn("Soft:" << ex.what());
+				_warn("Soft:" << ex.what_soft());
 				++trynr;
 				if (trynr>3) throw;
 				_note("Will retry...");
@@ -149,7 +148,6 @@ void c_netbuf::report(std::ostream & ostr, int detail) const {
 		<< ",memory@" << static_cast<const void*>(m_data.data()) ;
 }
 
-
 // -------------------------------------------------------------------
 
 /**
@@ -202,9 +200,7 @@ eeeff      push
 
    ff      pop
 
-
 Expressing position:
-
 
 .......... S=0. D can be anything, e.g. D=buf[0]
 
@@ -231,9 +227,7 @@ bbbc......
 bbbcddd...
 ...cddd...
 
-
 0123456789
-
 
 (*1*) we /could/ at some point allow it to return 2 buffers, usable when we
 
@@ -254,7 +248,6 @@ class c_netbuf_circle {
 c_netbuf_circle::c_netbuf_circle() {
 }
 
-
 // -------------------------------------------------------------------
 
 void read_from_tun(c_netbuf & entire_buf , size_t buf_) {
@@ -270,8 +263,6 @@ int get_mts(transport_id t) { // maximum transport size
 	if (t=="A") return 4;
 	return 8;
 }
-
-
 
 // ideas:
 // http://stackoverflow.com/questions/15219984/using-vectorchar-as-a-buffer-without-initializing-it-on-resize/15220853#15220853
@@ -289,5 +280,3 @@ int newloop_main(const vector<string> &argt) {
 
 	return 0;
 }
-
-
