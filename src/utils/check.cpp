@@ -1,7 +1,7 @@
 #include "utils/check.hpp"
 
-const char * err_check_soft::what() {
-	auto ptr = dynamic_cast< err_check_base * >( this );
+const char * err_check_soft::what() const {
+	auto ptr = dynamic_cast< const err_check_base * >( this );
 	if (ptr) return ptr->what();
 	return "Undefined soft error (huh?)";
 }
@@ -14,6 +14,21 @@ err_check_base::err_check_base(tag_err_check_named, const string & what, bool se
 	: std::runtime_error(what) ,  m_serious(serious)  { }
 
 bool err_check_base::is_serious() const { return m_serious; }
+
+// -------------------------------------------------------------------
+
+err_check_prog::err_check_prog(const char *what)
+	: err_check_base(tag_err_check_named{} , cause(true)+what , true)  { }
+
+err_check_prog::err_check_prog(tag_err_check_named, const char   * what, bool serious)
+	: err_check_base(tag_err_check_named{} , what , serious) { }
+err_check_prog::err_check_prog(tag_err_check_named, const string & what, bool serious)
+	: err_check_base(tag_err_check_named{} , what , serious) { }
+
+std::string err_check_prog::cause(bool se) {
+	if (se)	return "Check detected prog ERROR: "s;
+	return "Check detected prog warning: "s;
+}
 
 // -------------------------------------------------------------------
 
