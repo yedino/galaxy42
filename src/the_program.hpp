@@ -11,6 +11,7 @@ class c_the_program {
 		virtual ~c_the_program();
 
 		virtual void take_args(int argc, const char **argv); ///< set the argc,argv
+		virtual void take_args(const string & _argt_exec , const vector<string> & _argt); ///< sets exec-name, and rest of args
 
 		virtual void startup_console_first(); ///< program should detect environment for console (e.g. are color-codes ok)
 		virtual void startup_version(); ///< show basic info about version
@@ -30,6 +31,8 @@ class c_the_program {
 		virtual std::tuple<bool,int> options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
 
 		virtual int main_execution(); ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
+
+		virtual bool check_and_remove_special_cmdline(const string & name); ///< checks if given command-line argument is given, if yes then remove it and return true
 
 	protected:
 		/// Raw command-line options

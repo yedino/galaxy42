@@ -10,8 +10,13 @@
 c_the_program::c_the_program() { }
 
 void c_the_program::take_args(int argc, const char **argv) {
-	if (argc>=0) argt_exec=argv[0]; else argt_exec="";
+	if (argc>0) argt_exec=argv[0]; else argt_exec="";
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
+}
+
+void c_the_program::take_args(const string & _argt_exec , const vector<string> & _argt) {
+	argt_exec = _argt_exec;
+	argt = _argt;
 }
 
 c_the_program::~c_the_program() { }
@@ -30,16 +35,19 @@ void c_the_program::startup_version() {
 	_fact( "Start... " << ver_str );
 }
 
-std::tuple<bool,int> c_the_program::program_startup_special() {
-	/*
-	// TODO move it to c_the_program_newloop or such (or to code spawning that)
-	if (contains_value(argt,"--newloop")) {
-		_goal("\nStarting newloop mode\n\n");
-		int ret = newloop_main(argt);
-		_goal("\nEnded.\n\n");
-		return std::tuple<bool,int>(true, ret); // tell it to end
+bool c_the_program::check_and_remove_special_cmdline(const string & name) {
+	if (contains_value(argt, name)) {
+		while (true) { // keep erasing all occurances
+			auto it = find(argt.begin() , argt.end(), name);
+			if (it == argt.end()) break; // not found
+			argt.erase(it);
+		}
+		return true;
 	}
-	*/
+	return false;
+}
+
+std::tuple<bool,int> c_the_program::program_startup_special() {
 	return std::tuple<bool,int>(false, 0); // tell it to continue
 }
 
