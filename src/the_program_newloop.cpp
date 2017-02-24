@@ -25,16 +25,69 @@
 
 // ============================================================================
 
-std::atomic<int> readtun_nr;
-size_t readtun( char * buf , size_t bufsize ) { // semantics like "read" from C.
-	int x = readtun_nr++;
-	_dbg2("readtun, read#="<<x);
-	string d = "foo"s;
-	auto size_full = d.size();
+/// For tests this simulates the kernel that provides data that can be read via tuntap
+class c_tuntap_fake_kernel {
+	public:
+		c_tuntap_fake_kernel();
+
+		size_t readtun( char * buf , size_t bufsize ); ///< semantics like "read" from C.
+
+	protected:
+		string m_big1;
+		std::atomic<int> readtun_nr;
+};
+
+c_tuntap_fake_kernel::c_tuntap_fake_kernel() {
+	m_big1 = "fooXXXX"s;
+	for (int i=8; i<255; ++i) {
+		m_big1 += char(i);
+	}
+}
+
+// ============================================================================
+
+size_t c_tuntap_fake_kernel::readtun( char * buf , size_t bufsize ) { // semantics like "read" from C.
+	int pat = readtun_nr++;
+	_dbg2("readtun, read#="<< pat);
+	string data = "fooXXXX"s;
+
+	if ( (pat==0) ||  ((pat/5) % 2) ) data = "fooXXXX___ABCDwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwXYZ"s ;
+
+	{ // add numbers:
+		size_t w = 3+1 -1;
+		data[w++] = (pat >> (8*3)) % 256;
+		data[w++] = (pat >> (8*2)) % 256;
+		data[w++] = (pat >> (8*1)) % 256;
+		data[w++] = (pat >> (8*0)) % 256;
+	}
+
+	auto size_full = data.size();
 	_check(size_full <= bufsize); // we must fit in buffer
-	std::memmove( buf , d.c_str() , bufsize );
+	std::memmove( buf , data.c_str() , bufsize );
 	return size_full;
 }
+
+// ============================================================================
+
+class c_tuntap_fake {
+	public:
+		c_tuntap_fake( c_tuntap_fake_kernel & kernel );
+		size_t readtun( char * buf , size_t bufsize ); ///< semantics like "read" from C.
+	protected:
+		c_tuntap_fake_kernel & m_kernel;
+};
+
+c_tuntap_fake::c_tuntap_fake( c_tuntap_fake_kernel & kernel )
+	: m_kernel( kernel )
+{
+	_info("Created tuntap reader, from fake kernel device at " << reinterpret_cast<void*>(&kernel) );
+}
+
+size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) { ///< semantics like "read" from C.
+	return m_kernel.readtun( buf, bufsize );
+}
+
+// ============================================================================
 
 class c_tunserver2 {
 	public:
@@ -96,7 +149,7 @@ void c_netchunk::report(std::ostream & ostr, int detail) const {
 	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_size
 		<< ",memory@" << static_cast<const void*>(m_data) ;
 	if (detail>=20) {
-		ostr << "[";
+		ostr << " [";
 		for (size_t i=0; i<m_size; ++i) {
 			if (i) ostr<<' ';
 			ostr << std::hex << (int)m_data[i] << std::dec ;
@@ -158,7 +211,7 @@ void c_netbuf::report(std::ostream & ostr, int detail) const {
 	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_size
 		<< ",memory@" << static_cast<const void*>(m_data) ;
 	if (detail>=20) {
-		ostr << "[";
+		ostr << " [";
 		for (size_t i=0; i<m_size; ++i) {
 			if (i) ostr<<' ';
 			ostr << std::hex << (int)m_data[i] << std::dec ;
@@ -188,19 +241,22 @@ c_the_program_newloop::~c_the_program_newloop() {
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
 
+	c_tuntap_fake_kernel kernel;
+
+	c_tuntap_fake tuntap_reader(kernel);
+
 	g_dbg_level_set(10, "Debug the newloop");
-	_dbg1("dbg1");
-	_dbg2("dbg2");
-	_dbg3("dbg3");
 
 
 	m_pimpl->tunserver = make_unique< c_tunserver2 >();
 
 	c_netbuf buf(100);
-	size_t read = readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
-	c_netchunk chunk( buf.data() , read );
 	_note("buf: " << make_report(buf,20) );
-	_note("chunk: " << make_report(chunk,20) );
+	for (int cycle=0; cycle<10; ++cycle) {
+		size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
+		c_netchunk chunk( buf.data() , read );
+		_note("chunk: " << make_report(chunk,20) );
+	}
 
 	_mark("newloop main_execution - DONE");
 
