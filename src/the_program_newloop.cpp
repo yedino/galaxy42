@@ -14,12 +14,12 @@
 #include "galaxy_debug.hpp"
 
 #include "newloop.hpp"
+#include <ctpl_stl.h>
 
 #ifdef HTTP_DBG
 #include <thread>
 #include <mutex>
 #include <boost/asio.hpp>
-#include <ctpl.h>
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
@@ -262,7 +262,7 @@ void thread_test()
 	unsigned int number_of_threads = 4;
 	auto fun = [](int id) {_note("thread id="<<id);};
 	ctpl::thread_pool tp(number_of_threads);
-	for(unsigned int i=0; i<number_of_threads; i++) tp.push(fun);
+	for(unsigned int i=0; i<10; i++) tp.push(fun);
 }
 
 int c_the_program_newloop::main_execution() {
