@@ -32,16 +32,35 @@ class c_tuntap_fake_kernel {
 
 		size_t readtun( char * buf , size_t bufsize ); ///< semantics like "read" from C.
 
+		string make_example(int nr);
+
 	protected:
-		string m_big1;
+		std::vector<string> m_data; ///< example packet of data
 		std::atomic<int> readtun_nr;
 };
 
 c_tuntap_fake_kernel::c_tuntap_fake_kernel() {
-	m_big1 = "fooXXXX"s;
-	for (int i=8; i<255; ++i) {
-		m_big1 += char(i);
+	_note("Preparing fake kernel tuntap");
+	for (int nr=0; nr<4; ++nr) m_data.push_back( make_example(nr) );
+}
+
+string c_tuntap_fake_kernel::make_example(int nr) {
+	string data;
+	int nr_len = (nr/2)%2;
+	int nr_dst = (nr/1)%2;
+	int cfg_len = (vector<int>{50,200})[nr_len];
+	char cfg_dst = (vector<int>{'E','I'})[nr_dst];
+	for (long int i=0; i<16; ++i) data += char(i/4) + cfg_dst;
+	data += '~';
+	for (long int i=0; static_cast<int>(data.size())<cfg_len; ++i) {
+		char c;
+		if ((i%3)==0) c =  char(((i/3)%10)%10) + '0';
+		if ((i%3)==1) c =  char(((i/3)%4+nr*4)%('z'-'a')) + 'A';
+		if ((i%3)==2) c = '_';// char((nr%20) + 'a');
+		data += c;
 	}
+	_info("Example data from TUN will be: " << data);
+	return data;
 }
 
 // ============================================================================
@@ -240,13 +259,10 @@ c_the_program_newloop::~c_the_program_newloop() {
 
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
-
-	c_tuntap_fake_kernel kernel;
-
-	c_tuntap_fake tuntap_reader(kernel);
-
 	g_dbg_level_set(10, "Debug the newloop");
 
+	c_tuntap_fake_kernel kernel;
+	c_tuntap_fake tuntap_reader(kernel);
 
 	m_pimpl->tunserver = make_unique< c_tunserver2 >();
 
