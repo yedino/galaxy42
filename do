@@ -195,10 +195,13 @@ cmake  ..  \
 set +x
 # the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
+
 set -x
-make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
-set +x
 ln -s "$dir_base_of_source"/share share || echo "Link already exists"
+
+make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+
+set +x
 popd
 fi # platform posix
 
