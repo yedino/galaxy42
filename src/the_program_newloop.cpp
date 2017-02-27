@@ -30,25 +30,35 @@ class c_tuntap_fake_kernel {
 	public:
 		c_tuntap_fake_kernel();
 
-		size_t readtun( char * buf , size_t bufsize ); ///< semantics like "read" from C.
+		size_t readtun( char * buf , size_t bufsize ); ///< [thread_safe] semantics like "read" from C.
 
-		string make_example(int nr);
 
 	protected:
+		std::atomic<int> m_readtun_nr;
 		std::vector<string> m_data; ///< example packet of data
-		std::atomic<int> readtun_nr;
+
+		string make_example(int nr);
+		int pseudo_rand(int r1, int r2, int r3=0);
 };
 
-c_tuntap_fake_kernel::c_tuntap_fake_kernel() {
+c_tuntap_fake_kernel::c_tuntap_fake_kernel()
+	: m_readtun_nr(0)
+{
 	_note("Preparing fake kernel tuntap");
 	for (int nr=0; nr<4; ++nr) m_data.push_back( make_example(nr) );
+}
+
+int c_tuntap_fake_kernel::pseudo_rand(int r1, int r2, int r3) {
+	long int r = r1*67481L + r2*82781L + r3*63719L;
+	r1 += r1*28081L + r2*44699L;
+	return (r % 104729) + (r1%8273) + (r2%9103);
 }
 
 string c_tuntap_fake_kernel::make_example(int nr) {
 	string data;
 	int nr_len = (nr/2)%2;
 	int nr_dst = (nr/1)%2;
-	int cfg_len = (vector<int>{50,200})[nr_len];
+	int cfg_len = (vector<int>{60,100})[nr_len];
 	char cfg_dst = (vector<int>{'E','I'})[nr_dst];
 	for (long int i=0; i<16; ++i) data += char(i/4) + cfg_dst;
 	data += '~';
@@ -63,26 +73,34 @@ string c_tuntap_fake_kernel::make_example(int nr) {
 	return data;
 }
 
-// ============================================================================
-
 size_t c_tuntap_fake_kernel::readtun( char * buf , size_t bufsize ) { // semantics like "read" from C.
-	int pat = readtun_nr++;
-	_dbg2("readtun, read#="<< pat);
-	string data = "fooXXXX"s;
+	//	[thread_safe]
 
-	if ( (pat==0) ||  ((pat/5) % 2) ) data = "fooXXXX___ABCDwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwXYZ"s ;
+	int readnr = m_readtun_nr++;
+	_dbg2("readtun, read#="<< readnr);
+	string & this_pattern = m_data.at(readnr % m_data.size()) ;
+	auto size_full = this_pattern.size();
+	_check(size_full <= bufsize); // we must fit in buffer
+
+	std::memmove( buf , this_pattern.c_str() , bufsize );
 
 	{ // add numbers:
-		size_t w = 3+1 -1;
-		data[w++] = (pat >> (8*3)) % 256;
-		data[w++] = (pat >> (8*2)) % 256;
-		data[w++] = (pat >> (8*1)) % 256;
-		data[w++] = (pat >> (8*0)) % 256;
+		size_t w = 16+1;
+		int pat = readnr;
+		buf[w++] = (pat >> (8*3)) % 256;
+		buf[w++] = (pat >> (8*2)) % 256;
+		buf[w++] = (pat >> (8*1)) % 256;
+		buf[w++] = (pat >> (8*0)) % 256;
+		buf[w++] = '~';
+
+		int dp = 16+2; // data pos (in buf)
+		int dl = this_pattern.size() - dp ; // data len
+		_check(dl>=1);
+
+		// std::cout << "readnr="<<readnr << " rand:" << pseudo_rand(readnr, 0) << std::endl;
+		for (int i=0; i<3; ++i) buf[ pseudo_rand(readnr, i) % dl  + dp ] = 'X'+i;
 	}
 
-	auto size_full = data.size();
-	_check(size_full <= bufsize); // we must fit in buffer
-	std::memmove( buf , data.c_str() , bufsize );
 	return size_full;
 }
 
@@ -91,7 +109,7 @@ size_t c_tuntap_fake_kernel::readtun( char * buf , size_t bufsize ) { // semanti
 class c_tuntap_fake {
 	public:
 		c_tuntap_fake( c_tuntap_fake_kernel & kernel );
-		size_t readtun( char * buf , size_t bufsize ); ///< semantics like "read" from C.
+		size_t readtun( char * buf , size_t bufsize ); ///< [thread_safe] semantics like "read" from C.
 	protected:
 		c_tuntap_fake_kernel & m_kernel;
 };
@@ -102,8 +120,30 @@ c_tuntap_fake::c_tuntap_fake( c_tuntap_fake_kernel & kernel )
 	_info("Created tuntap reader, from fake kernel device at " << reinterpret_cast<void*>(&kernel) );
 }
 
-size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) { ///< semantics like "read" from C.
+size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) {
+	// [thread-safe]
 	return m_kernel.readtun( buf, bufsize );
+}
+
+// ============================================================================
+
+class c_transport_fake {
+	public:
+		bool send(int endpoint, const char * data , size_t size); ///< [thread-safe]
+};
+
+bool c_transport_fake::send(int endpoint, const char * data , size_t size) {
+	// [thread-safe]
+
+	_check(size>=1);
+	_info("Tranport send to " << endpoint << " data: " << data );
+	volatile char fake;
+	size_t pos=0;
+	pos += data[1];
+	if (size>=2) pos += data[2]*256;
+	if (size>=3) pos += data[2]*256*256;
+	fake = data[ pos % size ]; // force a fake "write" to volatile
+	return true;
 }
 
 // ============================================================================
@@ -271,15 +311,30 @@ int c_the_program_newloop::main_execution() {
 
 	c_tuntap_fake_kernel kernel;
 	c_tuntap_fake tuntap_reader(kernel);
+	c_transport_fake udp_connection;
+	_UNUSED(udp_connection);
 
 	m_pimpl->tunserver = make_unique< c_tunserver2 >();
 
-	c_netbuf buf(100);
+	c_netbuf buf(200);
 	_note("buf: " << make_report(buf,20) );
-	for (int cycle=0; cycle<10; ++cycle) {
-		size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
-		c_netchunk chunk( buf.data() , read );
-		_note("chunk: " << make_report(chunk,20) );
+//	for (int cycle=0; cycle<10; ++cycle) {
+
+	if (false) {
+		g_dbg_level_set(100, "Test data only");
+		for(;;) {
+			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
+			c_netchunk chunk( buf.data() , read );
+			// _note("chunk: " << make_report(chunk,20) );
+			std::cout << to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) << std::endl;
+		}
+	} else {
+		for(int cycle=0; cycle<10; ++cycle) {
+			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
+			c_netchunk chunk( buf.data() , read );
+			_note("chunk: " << make_report(chunk,20) );
+			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
+		}
 	}
 
 	thread_test();
