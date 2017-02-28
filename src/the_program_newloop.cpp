@@ -23,6 +23,11 @@
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
+#include "transport/base/transp_base_addr.hpp"
+#include "transport/base/transp_base_obj.hpp"
+#include "transport/simulation/transp_simul_addr.hpp"
+#include "transport/simulation/transp_simul_obj.hpp"
+
 // ============================================================================
 
 /// For tests this simulates the kernel that provides data that can be read via tuntap
