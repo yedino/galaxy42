@@ -78,7 +78,7 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet) {
 
 const char * dbg__FILE__(const char * name) {
 	const char * s_target = "/galaxy42/";
-	size_t l_target = strlen(s_target);
+	// size_t l_target = strlen(s_target);
 	const char * pos_target  = std::strstr(name, s_target);
 	if (pos_target==nullptr) return name; // not matched
 	const char * s_src = "/src/";
