@@ -132,27 +132,6 @@ size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) {
 
 // ============================================================================
 
-class c_transport_fake {
-	public:
-		bool send(int endpoint, const char * data , size_t size); ///< [thread-safe]
-};
-
-bool c_transport_fake::send(int endpoint, const char * data , size_t size) {
-	// [thread-safe]
-
-	_check(size>=1);
-	_info("Tranport send to " << endpoint << " data: " << data );
-	volatile char fake;
-	size_t pos=0;
-	pos += data[1];
-	if (size>=2) pos += data[2]*256;
-	if (size>=3) pos += data[2]*256*256;
-	fake = data[ pos % size ]; // force a fake "write" to volatile
-	return true;
-}
-
-// ============================================================================
-
 class c_tunserver2 {
 	public:
 		vector< std::thread > m_tun_reader;
@@ -316,8 +295,9 @@ int c_the_program_newloop::main_execution() {
 
 	c_tuntap_fake_kernel kernel;
 	c_tuntap_fake tuntap_reader(kernel);
-	c_transport_fake udp_connection;
-	_UNUSED(udp_connection);
+
+	auto world = make_shared<c_world>();
+	c_transport_simul_obj transport_sim1( world );
 
 	m_pimpl->tunserver = make_unique< c_tunserver2 >();
 

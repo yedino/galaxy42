@@ -11,6 +11,8 @@
 #include <string>
 #include "mo_reader.hpp"
 
+#include <memory> // for UsePtr
+
 extern unsigned char g_dbg_level;
 
 
@@ -92,6 +94,14 @@ void write_to_console(const std::string& obj);
 
 #endif
 
+template<class T> T& UsePtr(std::shared_ptr<T> & ptr, int line, const char* file) {
+	if (!ptr) {
+		_erro("Failed pointer, for " << file << ":" << line);
+		abort();
+	}
+	return *ptr;
+}
+
 // TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)
 
@@ -108,13 +118,6 @@ void write_to_console(const std::string& obj);
 // this assert could be helpful, maybe use in release
 #define _assert(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
-// this assert MUST BE checked in release too
-// #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
-
-// this assert MUST BE checked in release too
-// #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
-
-
 //        _warn("Going to throw exception. What: " << except_var.what()
 // this one is unused; leaving for translators if used again later.
 #define _unused_throw_error_msg \
@@ -126,11 +129,12 @@ void write_to_console(const std::string& obj);
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
-// TODO-r-deprecate: ?
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
 	_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
+
+#define _throw_error_runtime( MSG ) _throw_error( std::runtime_error( MSG ) )
 
 namespace ui { class exception_error_exit; }
 
