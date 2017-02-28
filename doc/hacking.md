@@ -9,11 +9,17 @@ Intended for:
 + packagers, maintainers of this project
 + power users building own versions or modding this project
 
-# Simmary for every developer!
+# Summary for every developer!
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
 
 ```
+
+Throw:
+_throw_error_runtime("TTL too big");
+_throw_error( std::invalid_argument("TTL too big") );
+_throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
+
 Use command ./menu .
 try {
 	_check( ptr != nullptr ); // like assert
