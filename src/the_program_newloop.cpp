@@ -331,16 +331,8 @@ int c_the_program_newloop::main_execution() {
 			c_netchunk chunk( buf.data() , read );
 			_note("chunk: " << make_report(chunk,20) );
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
+			crypto.cryptobox_encrypt(chunk.data(), read, nonce, crypto.get_my_public_key());
 			UsePtr(transp).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
-			transp.send_data( peer_addr , chunk.data() , chunk.size() );
-			crypto.cryptobox_encrypt(buf.data(), read, nonce, crypto.get_my_public_key());
-			c_netchunk encrypted_chunk( buf.data() , read+crypto_box_MACBYTES );
-			_note("encrypted chunk: " << make_report(encrypted_chunk,20) );
-			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
-			crypto.cryptobox_decrypt(buf.data(), read+crypto_box_MACBYTES, nonce, crypto.get_my_public_key());
-			c_netchunk decrypted_chunk( buf.data() , read );
-			_note("decrypted chunk: " << make_report(decrypted_chunk,20) );
-			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
 		}
 	}
 
