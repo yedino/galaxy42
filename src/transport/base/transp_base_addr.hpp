@@ -5,12 +5,13 @@
 #include <boost/any.hpp>
 
 class c_transport_base_addr {
-	public:
+	protected:
 		/// the addrdata should be called from child-class and contain actually type as in t_addr in child-class
 		c_transport_base_addr(boost::any && addrdata);
 
 		c_transport_base_addr()=default; ///< empty constr. You should next call init_addrdata() fro child-class
 
+	public:
 		virtual ~c_transport_base_addr()=default;
 
 		/// replace current addr-data with given one, use this from child-class'es constr
