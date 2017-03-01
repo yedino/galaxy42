@@ -37,7 +37,6 @@ class c_tuntap_fake_kernel {
 
 		size_t readtun( char * buf , size_t bufsize ); ///< [thread_safe] semantics like "read" from C.
 
-
 	protected:
 		std::atomic<int> m_readtun_nr;
 		std::vector<string> m_data; ///< example packet of data
