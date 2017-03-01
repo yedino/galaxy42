@@ -3,21 +3,20 @@
 
 using namespace boost::asio;
 
-c_transport_udp_addr::c_transport_udp_addr(const boost::asio::ip::udp::endpoint &endpoint)
-:
-	m_endpoint(endpoint)
+c_transport_udp_addr::c_transport_udp_addr(const t_addr &endpoint)
+	: c_transport_base_addr(endpoint)
 {
 }
 
-c_transport_udp_addr::c_transport_udp_addr(const std::string &ip_string) {
+c_transport_udp_addr::c_transport_udp_addr(const std::string &ip_string)
+	: c_transport_base_addr( boost::any() ) // filled in below
+{
 	std::pair<std::string, int> endpoint = tunserver_utils::parse_ip_string(ip_string);
-	m_endpoint = ip::udp::endpoint(ip::address::from_string(endpoint.first), static_cast<unsigned short>(endpoint.second));
+	init_addrdata( ip::udp::endpoint(ip::address::from_string(endpoint.first), static_cast<unsigned short>(endpoint.second)) );
 }
 
 void c_transport_udp_addr::print(std::ostream &ostr) const {
-	  ostr << m_endpoint;
+	auto endpoint = boost::any_cast<t_addr>(m_addrdata);
+	ostr << endpoint;
 }
 
-const boost::asio::ip::udp::endpoint &c_transport_udp_addr::get_native() {
-	return m_endpoint;
-}

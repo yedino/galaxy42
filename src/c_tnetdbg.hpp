@@ -94,13 +94,15 @@ void write_to_console(const std::string& obj);
 
 #endif
 
-template<class T> T& UsePtr(std::shared_ptr<T> & ptr, int line, const char* file) {
-	if (!ptr) {
-		_erro("Failed pointer, for " << file << ":" << line);
-		abort();
+
+template<class T> T& _UsePtr(std::shared_ptr<T> & ptr, int line, const char* file) {
+	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+		std::abort();
 	}
 	return *ptr;
 }
+
+#define UsePtr(PTR) _UsePtr(PTR,__LINE__,__FILE__)
 
 // TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)

@@ -12,11 +12,11 @@ class c_transport_simul_obj : public c_transport_base_obj {
 		c_transport_simul_obj(shared_ptr<c_world> world);
 		virtual ~c_transport_simul_obj();
 
-		virtual void send_data(boost::any dest, const unsigned char *data, size_t size_of_data);
+		virtual void send_to(const c_transport_base_addr & dest, const unsigned char *data, size_t size) override;
 
 	protected:
 		c_transport_simul_addr m_addr; ///< my own address
-		shared_ptr<c_world> m_world;
+		shared_ptr<c_world> m_world; ///< world in which me (and my peers) exist
 };
 
 
