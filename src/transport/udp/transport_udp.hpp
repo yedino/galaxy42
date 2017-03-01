@@ -6,7 +6,8 @@
 
 class c_transport_udp final : public c_transport_base_obj {
 	public:
-		void send_data(boost::any dest, const unsigned char *data, size_t size_of_data) override;
+		virtual void send_to(const c_transport_base_addr & dest, const unsigned char *data, size_t size) override;
+
 	private:
 		boost::asio::io_service m_io_service;
 

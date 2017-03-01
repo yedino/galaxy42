@@ -3,9 +3,8 @@
 
 using namespace boost::asio;
 
-void c_transport_udp::send_data(boost::any dest, const unsigned char *data, size_t size_of_data) {
-	c_transport_udp_addr destination_endpoint;
-	destination_endpoint = boost::any_cast<decltype(destination_endpoint)>(dest);
+void c_transport_udp::send_to(const c_transport_base_addr & dest, const unsigned char *data, size_t size) {
+	auto destination_endpoint = (boost::any_cast<c_transport_udp_addr::t_addr>( dest.get_addrdata() ));
 	ip::udp::socket socket(m_io_service);
-	socket.send_to(buffer(data, size_of_data), destination_endpoint.get_native());
+	socket.send_to(buffer(data, size), destination_endpoint);
 }

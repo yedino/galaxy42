@@ -8,6 +8,9 @@ void c_transport_base_addr::print(std::ostream & ostr) const {
 	// ostr << "[unknown-address-type]";
 }
 
+const boost::any & c_transport_base_addr::get_addrdata() const { return m_addrdata ; }
+
+
 std::ostream & operator<<(std::ostream & ostr , c_transport_base_addr & obj) {
 	obj.print(ostr);
 	return ostr;

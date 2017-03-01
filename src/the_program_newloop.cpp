@@ -303,8 +303,9 @@ int c_the_program_newloop::main_execution() {
 	c_tuntap_fake tuntap_reader(kernel);
 
 	auto world = make_shared<c_world>();
-	c_transport_simul_obj transp( world );
-	c_transport_simul_addr peer_addr( world->generate_simul_transport() ); // address of next peer to send to
+
+	unique_ptr<c_transport_base_obj> transp = make_unique<c_transport_simul_obj>( world );
+	unique_ptr<c_transport_base_addr> peer_addr = make_unique<c_transport_simul_addr>( world->generate_simul_transport() );
 
 	// m_pimpl->tunserver = make_unique< c_tunserver2 >();
 
@@ -327,7 +328,7 @@ int c_the_program_newloop::main_execution() {
 			c_netchunk chunk( buf.data() , read );
 			_note("chunk: " << make_report(chunk,20) );
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
-			transp.send_data( peer_addr , chunk.data() , chunk.size() );
+			UsePtr(transp).send_data( UsePtr(peer_addr) , chunk.data() , chunk.size() );
 		}
 	}
 
