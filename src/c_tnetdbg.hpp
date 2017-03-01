@@ -11,16 +11,18 @@
 #include <string>
 #include "mo_reader.hpp"
 
+#include <memory> // for UsePtr
+
 extern unsigned char g_dbg_level;
 
 
 /// This macros will be moved later to glorious-cpp library or other
 
-const char * debug_shorten__FILE__(const char * name);
+const char * dbg__FILE__(const char * name);
 
 void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 
-#define _my__FILE__ (debug_shorten__FILE__(__FILE__))
+#define _my__FILE__ (dbg__FILE__(__FILE__))
 
 #define SHOW_DEBUG
 #ifdef SHOW_DEBUG
@@ -35,10 +37,10 @@ void write_to_console(const std::string& obj);
 #define _main_dbg(X) std::ostringstream oss; oss << X; write_to_console(oss.str())
 
 #define _dbg3(X) do { DBGLVL( 10); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define _dbg2(X) do { DBGLVL( 20); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define _dbg1(X) do { DBGLVL( 30); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _dbg2(X) do { DBGLVL( 20); _main_dbg("dbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _dbg1(X) do { DBGLVL( 30); _main_dbg("dbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
 #define _info(X) do { DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
-#define _note(X) do { DBGLVL( 50); _main_dbg("dbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define _note(X) do { DBGLVL( 50); _main_dbg("\033[96mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
 #define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
 	std::ostringstream oss; \
@@ -92,6 +94,22 @@ void write_to_console(const std::string& obj);
 
 #endif
 
+template<class T> T& _UsePtr(std::shared_ptr<T> & ptr, int line, const char* file) {
+	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+		std::abort();
+	}
+	return *ptr;
+}
+
+template<class T> T& _UsePtr(std::unique_ptr<T> & ptr, int line, const char* file) {
+	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+		std::abort();
+	}
+	return *ptr;
+}
+
+#define UsePtr(PTR) _UsePtr(PTR,__LINE__,__FILE__)
+
 // TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)
 
@@ -108,13 +126,6 @@ void write_to_console(const std::string& obj);
 // this assert could be helpful, maybe use in release
 #define _assert(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
-// this assert MUST BE checked in release too
-// #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
-
-// this assert MUST BE checked in release too
-// #define _check(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
-
-
 //        _warn("Going to throw exception. What: " << except_var.what()
 // this one is unused; leaving for translators if used again later.
 #define _unused_throw_error_msg \
@@ -126,11 +137,12 @@ void write_to_console(const std::string& obj);
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
-// TODO-r-deprecate: ?
 #define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
 	_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
+
+#define _throw_error_runtime( MSG ) _throw_error( std::runtime_error( MSG ) )
 
 namespace ui { class exception_error_exit; }
 

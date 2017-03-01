@@ -162,24 +162,26 @@ string_as_dbg::string_as_dbg(const char * data, size_t data_size, t_debug_style 
 
 void string_as_dbg::print(std::ostream & os, char v, t_debug_style style)
 {
-	UNUSED(style); // TODONOW TODO
-	unsigned char uc = static_cast<unsigned char>(v);
-	signed char widthH=-1; // -1 is normal print, otherwise the width of hex
-	signed char widthD; // width of dec
-	if (uc<=9) {
-		os << "0x" << static_cast<int>(uc);
+	if (style == e_debug_style_buf) {
+		unsigned char uc = static_cast<unsigned char>(v);
+		if ((uc>=32)&&(uc<=126)) os << std::setfill(' ') << std::setw(2) << uc; // printable
+		else os << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << static_cast<int>(uc);
+	} else {
+		unsigned char uc = static_cast<unsigned char>(v);
+		signed char widthH=-1; // -1 is normal print, otherwise the width of hex
+		signed char widthD; // width of dec
+		if (uc<=9) os << "0x" << static_cast<int>(uc);
+		else
+		{
+			if (uc<32) { widthH=2; widthD=2; }
+			if (uc>127) { widthH=2; widthD=3; }
+			if (widthH!=-1) { // escape it
+				os << "0x" << std::hex << std::setfill('0') << std::setw(widthH) << std::uppercase << static_cast<int>(uc)
+					 << '=' << std::dec << std::setfill('0') << std::setw(widthD) << static_cast<int>(uc);
+			}
+			else os<<v; // normal
+		}
 	}
-	else
-	{
-	if (uc<32) { widthH=2; widthD=2; }
-	if (uc>127) { widthH=2; widthD=3; }
-	if (widthH!=-1) { // escape it
-		os << "0x" << std::hex << std::setfill('0') << std::setw(widthH) << std::uppercase << static_cast<int>(uc)
-		   << '=' << std::dec << std::setfill('0') << std::setw(widthD) << static_cast<int>(uc);
-	}
-	else os<<v; // normal
-	}
-	//
 }
 void string_as_dbg::print(std::ostream & os, signed char v, t_debug_style style)
 { print(os, static_cast<char>(v), style); }

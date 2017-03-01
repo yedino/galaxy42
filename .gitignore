@@ -46,3 +46,6 @@ compile_commands.json
 # QT-Creator Ignore
 CMakeLists.txt.user
 
+# produced by CMake/Cotire
+*cotire.cmake
+

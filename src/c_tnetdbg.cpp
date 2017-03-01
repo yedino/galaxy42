@@ -76,25 +76,17 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet) {
 }
 
 
-const char * debug_shorten__FILE__(const char * name) {
-	const char *p1 = name;
-	const char *p2 = p1;
-
-	static const std::string target("antinet");
-
-	while (true) {
-		p2 = std::strchr(p1, '/');
-		if (p2==nullptr) return name; // not matched
-		if (*p2=='\0') return name; // not matched
-
-		// p2 is valid
-
-		if (std::string(p1,p2) == target) return p2;
-
-		p1 = p2+1;
-		if (*p1=='\0') return name; // not matched
-	}
-
+const char * dbg__FILE__(const char * name) {
+	const char * s_target = "/galaxy42/";
+	// size_t l_target = strlen(s_target);
+	const char * pos_target  = std::strstr(name, s_target);
+	if (pos_target==nullptr) return name; // not matched
+	const char * s_src = "/src/";
+	size_t l_src = strlen(s_src);
+	const char * pos_src = std::strstr(pos_target, s_src);
+	// std::cout << pos_src << "<------------" << std::endl;
+	if (pos_src==nullptr) return pos_target;
+	return pos_src + l_src; // convert "/src/x.cpp" to "x.cpp"
 }
 
 
