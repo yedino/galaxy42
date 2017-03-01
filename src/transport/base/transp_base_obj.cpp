@@ -8,9 +8,6 @@ c_transport_base_obj::c_transport_base_obj() {
 	_dbg1("Creating some transport");
 }
 
-c_transport_base_obj::~c_transport_base_obj() {
-}
-
 void c_transport_base_obj::send_data(boost::any dest, const char *data, size_t size_of_data) {
 	_UNUSED(dest);
 	_UNUSED(data);
