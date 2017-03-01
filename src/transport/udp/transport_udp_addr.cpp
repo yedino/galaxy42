@@ -16,7 +16,7 @@ c_transport_udp_addr::c_transport_udp_addr(const std::string &ip_string)
 }
 
 void c_transport_udp_addr::print(std::ostream &ostr) const {
-	auto endpoint = boost::any_cast<t_addr>(m_addrdata);
+	auto endpoint = boost::any_cast<t_addr>(get_addrdata());
 	ostr << endpoint;
 }
 
