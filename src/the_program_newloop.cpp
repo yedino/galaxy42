@@ -15,6 +15,7 @@
 
 #include "newloop.hpp"
 #include <ctpl_stl.h>
+#include <c_crypto.hpp>
 
 #ifdef HTTP_DBG
 #include <thread>
@@ -301,6 +302,9 @@ int c_the_program_newloop::main_execution() {
 	c_tuntap_fake_kernel kernel;
 	c_tuntap_fake tuntap_reader(kernel);
 
+	c_crypto crypto;
+	std::array<unsigned char, crypto_box_NONCEBYTES> nonce;
+
 	auto world = make_shared<c_world>();
 
 	unique_ptr<c_transport_base_obj> transp = make_unique<c_transport_simul_obj>( world );
@@ -323,11 +327,20 @@ int c_the_program_newloop::main_execution() {
 		}
 	} else {
 		for(int cycle=0; cycle<10; ++cycle) {
-			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
+			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size()-crypto_box_MACBYTES);
 			c_netchunk chunk( buf.data() , read );
 			_note("chunk: " << make_report(chunk,20) );
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
 			UsePtr(transp).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
+			transp.send_data( peer_addr , chunk.data() , chunk.size() );
+			crypto.cryptobox_encrypt(buf.data(), read, nonce, crypto.get_my_public_key());
+			c_netchunk encrypted_chunk( buf.data() , read+crypto_box_MACBYTES );
+			_note("encrypted chunk: " << make_report(encrypted_chunk,20) );
+			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
+			crypto.cryptobox_decrypt(buf.data(), read+crypto_box_MACBYTES, nonce, crypto.get_my_public_key());
+			c_netchunk decrypted_chunk( buf.data() , read );
+			_note("decrypted chunk: " << make_report(decrypted_chunk,20) );
+			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
 		}
 	}
 
