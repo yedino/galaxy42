@@ -12,7 +12,7 @@ class c_transport_simul_obj : public c_transport_base_obj {
 		c_transport_simul_obj(shared_ptr<c_world> world);
 		virtual ~c_transport_simul_obj();
 
-		virtual void send_data(boost::any dest, const char *data, size_t size_of_data);
+		virtual void send_data(boost::any dest, const unsigned char *data, size_t size_of_data);
 
 	protected:
 		c_transport_simul_addr m_addr; ///< my own address

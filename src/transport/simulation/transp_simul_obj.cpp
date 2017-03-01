@@ -15,11 +15,11 @@ c_transport_simul_obj::c_transport_simul_obj(shared_ptr<c_world> world)
 c_transport_simul_obj::~c_transport_simul_obj() {
 }
 
-void c_transport_simul_obj::send_data(boost::any dest, const char *data, size_t size_of_data) {
+void c_transport_simul_obj::send_data(boost::any dest, const unsigned char *data, size_t size_of_data) {
 	_check(size_of_data>=1);
 
-	_UNUSED(dest);
-	// _info("Tranport send to " << dest << " data: " << data );
+	int uuid = (boost::any_cast<c_transport_simul_addr>( dest )).m_uuid;
+	_info("Tranport send to " << uuid << " data: " <<  to_debug( std::string(data , data+size_of_data) , e_debug_style_buf ) );
 
 	volatile char fake;
 	size_t pos=0;

@@ -177,6 +177,9 @@ class c_netchunk {
 		c_netchunk(t_element * _data, size_t _size); ///< will point to memory in data (it must be valid!) will NOT free memory
 		~c_netchunk()=default; ///< does nothing (does NOT delete memory!)
 
+		size_t size() const;
+		t_element * data() const;
+
 	public:
 		t_element * const m_data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
 		const size_t m_size;
@@ -199,6 +202,9 @@ void c_netchunk::report(std::ostream & ostr, int detail) const {
 		ostr << "]";
 	}
 }
+
+size_t c_netchunk::size() const { return m_size; }
+c_netchunk::t_element * c_netchunk::data() const { return m_data; }
 
 // -------------------------------------------------------------------
 
@@ -297,9 +303,11 @@ int c_the_program_newloop::main_execution() {
 	c_tuntap_fake tuntap_reader(kernel);
 
 	auto world = make_shared<c_world>();
-	c_transport_simul_obj transport_sim1( world );
+	c_transport_simul_obj transp( world );
+	c_transport_simul_addr peer_addr( world->generate_simul_transport() ); // address of next peer to send to
 
-	m_pimpl->tunserver = make_unique< c_tunserver2 >();
+	// m_pimpl->tunserver = make_unique< c_tunserver2 >();
+
 
 	c_netbuf buf(200);
 	_note("buf: " << make_report(buf,20) );
@@ -319,6 +327,7 @@ int c_the_program_newloop::main_execution() {
 			c_netchunk chunk( buf.data() , read );
 			_note("chunk: " << make_report(chunk,20) );
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
+			transp.send_data( peer_addr , chunk.data() , chunk.size() );
 		}
 	}
 
