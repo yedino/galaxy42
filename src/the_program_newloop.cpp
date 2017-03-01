@@ -328,7 +328,7 @@ int c_the_program_newloop::main_execution() {
 			c_netchunk chunk( buf.data() , read );
 			_note("chunk: " << make_report(chunk,20) );
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
-			UsePtr(transp).send_data( UsePtr(peer_addr) , chunk.data() , chunk.size() );
+			UsePtr(transp).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
 		}
 	}
 
