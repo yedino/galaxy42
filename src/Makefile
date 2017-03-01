@@ -2,5 +2,5 @@
 .PHONY: run
 
 run:
-	( cd ../build && make run )
+	$(MAKE) -C ../build $(MAKECMDGOALS) "$@"
 

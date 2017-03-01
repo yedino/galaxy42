@@ -1,13 +1,45 @@
 
 # Hacking
 
-This page described how to "Hack" this project - how to develop it, how to change it, how to build it.
+This page described how to "Hack" this project - how to develop it, how to change it, how to build it - topics for developers.
 
 Intended for:
 
 + developers of this project
 + packagers, maintainers of this project
 + power users building own versions or modding this project
+
+# Summary for every developer!
+
+Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
+
+```
+
+Throw:
+_throw_error_runtime("TTL too big");
+_throw_error( std::invalid_argument("TTL too big") );
+_throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
+
+Use command ./menu .
+try {
+	_check( ptr != nullptr ); // like assert
+	_check_user( size < 100 ); // user given bad input
+	_check_sys( file.exists() ); // system doesn't work
+	_check_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data
+
+	// same, but we expect this errors as they are common and we do not want to spam log with ERROR
+	_try_user( size < 100 ); // user given bad input - common case
+	_try_sys( file.exists() ); // system doesn't work - common case
+	_try_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data - common case
+}
+
+Catch it using:
+  catch(std::runtime_error &ex) // catch all errors, including check soft and hard errors
+-or-
+  catch(err_check_soft &soft) { string info = soft.what_soft(); } // catch soft (expected) error, but hard errors propagate
+// for more see chapter Check-asserts
+```
+
 
 # Building
 
@@ -54,6 +86,20 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
 
 ## Developing and code details
+
+# Developer handbook
+
+
+## Check-asserts
+
+Read also the Summary chapter first. More details are in file **utils/check.hpp** .
+
+You can also catch:
+```
+catch(err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
+catch(err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
+catch(err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
+```
 
 ### Startup of TUN/TAP card
 
@@ -182,7 +228,7 @@ It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918
 
 For more of technical names, see also source code file: [crypto.hpp](../src/crypto/crypto.hpp)
 
-## Common naming and dictionary
+## Dictionary - common naming:
 
 Dictionary, dict:
 

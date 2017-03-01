@@ -257,6 +257,9 @@ link_directories(depends/jsoncpp/src/lib_json)
 #add local nlohmann json
 include_directories(depends/json/src)
 
+#add local CTPL
+include_directories(depends/CTPL)
+
 #add local local lib sodiumpp
 set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
@@ -343,11 +346,11 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/transport/* src/transport/*/*)
+
 if(HTTP_DEBUGGER)
-    add_definitions(-DHTTP_DBG)
-    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/*.cpp src/utils/*)
-else()
-    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/*)
+	add_definitions(-DHTTP_DBG)
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp src/transport/* src/transport/*/*)
 endif()
 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)

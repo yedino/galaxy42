@@ -2,6 +2,7 @@
 #include "../utils/check.hpp"
 #include <iostream>
 #include <exception>
+#include <stdexcept>
 
 TEST(utils_check, exception_check) {
 
@@ -16,6 +17,18 @@ TEST(utils_check, exception_check) {
 	EXPECT_THROW({
 		_check_extern(false);
 	}, err_check_extern);
+
+	EXPECT_THROW({
+		_check(false);
+	}, err_check_prog);
+
+	EXPECT_THROW({
+		_check(false);
+	}, std::exception);
+
+	EXPECT_THROW({
+		_check(false);
+	}, std::runtime_error);
 
 	EXPECT_THROW({
 		try{
@@ -35,7 +48,17 @@ TEST(utils_check, exception_check) {
 		}catch(const err_check_extern_soft&){}
 	}, err_check_extern);
 
+	EXPECT_THROW({
+		try{
+			_check(false);
+			_check_user(false);
+			_check_sys(false);
+			_check_extern(false);
+		}catch(const err_check_soft&){}
+	}, std::exception);
+
 	EXPECT_NO_THROW({
+		_check(true);
 		_check_user(true);
 		_check_sys(true);
 		_check_extern(true);
@@ -69,6 +92,16 @@ TEST(utils_check, exception_try) {
 		try{
 			_try_extern(false);
 		}catch(const err_check_extern&){}
+		try{
+			_try_user(false);
+			_try_sys(false);
+			_try_extern(false);
+		}catch(const err_check_soft&){}
+		try{
+			_try_user(false);
+			_try_sys(false);
+			_try_extern(false);
+		}catch(const std::exception&){}
 	});
 }
 
@@ -76,6 +109,16 @@ TEST(utils_check, check_what_message_test) {
 
 	std::string err("ERROR");
 	std::string test_sentence("2+2==5");
+
+	try{
+		_check(2+2==5);
+	}catch(const err_check_prog &e){
+		std::string msg(e.what());
+		if( msg.find(err) == string::npos )
+			FAIL();
+		if( msg.find(test_sentence) == string::npos )
+			FAIL();
+	}
 
 	try{
 		_check_user(2+2==5);

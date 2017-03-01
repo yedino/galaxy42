@@ -270,13 +270,5 @@ int get_mts(transport_id t) { // maximum transport size
 int newloop_main(const vector<string> &argt) {
 	_UNUSED(argt);
 
-	g_dbg_level_set(10, "Debug the newloop");
-
-	// test_debug_check();
-
-	{ // in tun-reader thread
-		c_netbuf tun_inbuf( get_tun_inbuf_size() );
-	}
-
 	return 0;
 }
