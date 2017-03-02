@@ -2,7 +2,7 @@
 #include "utils/check.hpp"
 #include "utils/misc.hpp"
 
-typedef string transport_id; // name next hop
+typedef string cable_id; // name next hop
 typedef string hip_id; // name end src/dst
 
 void	image(int size) {
@@ -259,7 +259,7 @@ int get_tun_inbuf_size() { // the inbuffer used to read from TUN; each tun-reade
 	return 9000;
 }
 
-int get_mts(transport_id t) { // maximum transport size
+int get_mts(cable_id t) { // maximum cable size
 	if (t=="A") return 4;
 	return 8;
 }

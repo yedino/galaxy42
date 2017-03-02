@@ -24,10 +24,10 @@
 	#include "httpdbg/httpdbg-server.hpp"
 #endif
 
-#include "transport/base/transp_base_addr.hpp"
-#include "transport/base/transp_base_obj.hpp"
-#include "transport/simulation/transp_simul_addr.hpp"
-#include "transport/simulation/transp_simul_obj.hpp"
+#include "cable/base/cable_base_addr.hpp"
+#include "cable/base/cable_base_obj.hpp"
+#include "cable/simulation/cable_simul_addr.hpp"
+#include "cable/simulation/cable_simul_obj.hpp"
 
 #include "tunserver.hpp"
 
@@ -385,8 +385,8 @@ int c_the_program_newloop::main_execution() {
 
 	auto world = make_shared<c_world>();
 
-	unique_ptr<c_transport_base_obj> transp = make_unique<c_transport_simul_obj>( world );
-	unique_ptr<c_transport_base_addr> peer_addr = make_unique<c_transport_simul_addr>( world->generate_simul_transport() );
+	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
+	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
 	m_pimpl->server = make_unique< c_galaxysrv >();
 
@@ -411,7 +411,7 @@ int c_the_program_newloop::main_execution() {
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
 			crypto.cryptobox_encrypt(chunk.data(), read, nonce, crypto.get_my_public_key());
 			// TODO incr nonce
-			UsePtr(transp).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
+			UsePtr(cable).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
 		}
 	}
 

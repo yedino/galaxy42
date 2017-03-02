@@ -7,10 +7,10 @@ class c_world {
 		c_world()=default;
 		virtual ~c_world()=default;
 
-		int generate_simul_transport();
+		int generate_simul_cable();
 
 	protected:
-		int m_simul_transport=0;
+		int m_simul_cable=0;
 };
 
 
