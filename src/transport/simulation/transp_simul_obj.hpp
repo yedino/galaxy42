@@ -12,7 +12,9 @@ class c_transport_simul_obj : public c_transport_base_obj {
 		c_transport_simul_obj(shared_ptr<c_world> world);
 		virtual ~c_transport_simul_obj();
 
-		virtual void send_to(const c_transport_base_addr & dest, const unsigned char *data, size_t size) override;
+		void send_to(const c_transport_base_addr & dest, const unsigned char *data, size_t size) override;
+		size_t receive_from(c_transport_base_addr & source, unsigned char * const data, size_t size) override;
+		void listen_on(c_transport_base_addr & local_address) override;
 
 	protected:
 		c_transport_simul_addr m_addr; ///< my own address
