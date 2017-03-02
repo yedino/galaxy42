@@ -120,7 +120,7 @@ it has bugs and 'typpos'.
  * * \b CTp2p - a CT established peer-to-peer for forwarding of data further, so it is only CT_encr.
  *
  * * \b N2N is a general name for any node to node communication; It is either:
- * * \b P2P peer-to-peer connection - is between two nodes directly talking to each other via Transport
+ * * \b P2P peer-to-peer connection - is between two nodes directly talking to each other via cable
  * * \b E2E end-to-end connection - is sending the end-to-end data, usually the user data between two our IPv6
  *
  * * pub - public key
@@ -246,7 +246,7 @@ class c_symhash_state final : public c_crypto_system {
  * Crypto primitives are provided by - sodiumpp library (and NTru, SIDH, Geport - in future - TODO)
  * Raw symmetric encryption - done by c_stream
  * Adding needed crypto data - nonce constant, nonce counter - done by c_crypto_tunnel
- * Downloading pubkeys, adding other meta-data, transport - are to be done by other, higher layers.
+ * Downloading pubkeys, adding other meta-data, cable - are to be done by other, higher layers.
  */
 
 /**
