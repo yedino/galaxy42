@@ -589,10 +589,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 }
 
 
-void c_tunserver::help_usage() const {
-	// TODO(r) remove, using boost options
-}
-
 //#ifdef __linux__
 void c_tunserver::prepare_socket() {
 	ui::action_info_ok("Allocated virtual network card interface (TUN)"); // TODO@mik translate './menu lc'

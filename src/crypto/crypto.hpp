@@ -60,39 +60,39 @@ it has bugs and 'typpos'.
 #include "httpdbg/httpdbg-server.hpp"
 
 /**
- * @defgroup antinet_crypto Antinet Crypto
- * @page cryptoglossary Crypto Glossary
+  @defgroup antinet_crypto Galaxy42 Crypto
+ * @page cryptoglossary Crypto Glossary for Galaxy42
  *
- * * \b kagr - is a process of key agreement (using either DH and it variants, or other systems)
+ *
+ * * \b {kagr} - is a process of key agreement (using either DH and it variants, or other systems)
  *
  * * \b PFS - perfrect forward security - is the security property that means data should be secure even if [all other]
- * 			  long-term keys are compromised. In this system we have kind of PFS created by IDP -> IDC (see below),
- * 			  but mainly this is done by using IDCE instead IDC, which are unique keys for pair alice/bob AND
+ * 			  long-term keys are compromised. In this system we have kind of PFS created by IDp -> IDc (see below),
+ * 			  but mainly this is done by using IDe instead IDc, which are unique keys for pair alice/bob AND
  * 			  for each of their tunnels.
  *
- * * \b IDP - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
- * * \b IDC - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
+ * * \b IDp - ID of user of this system (usually a multikey of many crypto public keys), that is Permanently his (see HIP).
+ * * \b IDc - ID of user of this system (usually a multikey of many crypto public keys), that is Current in use by him.
  * 			  It is authorized by his IDP. In Cjdns, IDP == IDC (there is no separation).
- * * \b IDPtC - ID Permanent to Current -  is the full chain of crypto signatures, pubkeys, etc,
+ * * \b IDptc - ID Permanent to Current -  is the full chain of crypto signatures, pubkeys, etc,
  * 			 	to prove ownership from HIP and IDP to given IDC.
- * * \b IDCE - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDC.
- * ... also known as IDe (TODO: pick one :)
+ * * \b IDe - New ephemeral ID (multikey) used only for this one crypto (to have PFS). It is authorized to someone by IDc.
  *
- * * \b IDP - - - - signatures (IDPtC) - - - -> IDC
  * \n
+ *
  * * Overview of creating of the CT between two people known by their IPv6:\n
  * <pre>
- * Alice: IPv6 HIP <-- IDP ---(IDPtC)---> IDC              IDCE (of Alice)
- *                                         |                  |
- *                                         |                ,-+--(auth+encrypt)
- *                                         |               /          \
- *                                         V              /            \
- *                                        kagr --> KCTab <              > kagr ---> KCTf - symmetrical
- *                                         ^              \            /                  crypto stream
- *                                         |               \          /
- *                                         |                '-+--(auth+encrypt)
- *                                         |                  |
- * Bob:   IPv6 HIP <-- IDP ---(IDPtC)---> IDC              IDCE (of Bob)
+ * Alice: IPv6 HIP <-- IDp ---{sign}(IDPtC)---> IDc                IDe (of Alice)
+ *                                               |                   |
+ *                                               |                 ,-+--{auth+encrypt}
+ *                                               |                /          \
+ *                                               V               /            \
+ *                                             {kagr} --> KCTab <              > {kagr} ---> KCTf - symmetrical
+ *                                               ^               \            /                     crypto stream
+ *                                               |                \          /
+ *                                               |                 '-+--{auth+encrypt}
+ *                                               |                   |
+ * Bob:   IPv6 HIP <-- IDp ---{sign}(IDPtC)---> IDc                IDe (of Bob)
  * </pre>
  *
  * * \b HIP - Hash IP - the IP (here IPv6 always), that is a hash of some public key(s) - of his IDP.
@@ -113,11 +113,15 @@ it has bugs and 'typpos'.
  * * \b CT - CryptoTunnel. Similar to CA (CryptoAuth) from Cjdns. Tunnel that is encrypted: possibly encrypted,
  * 			 and always authenticated.
  *
- * * \b CTE - CryptoTunnel Encrypted - a CT that in addition always is encrypted (and of course is authenticated)
- * * \b CTNE - CryptoTunnel NOT Encrypted - a CT that is NOT encrypted (and of course is authenticated)
+ * * \b CT_auth - CryptoTunnel NOT Encrypted - a CT that is only authenticated
+ * * \b CT_encr - CryptoTunnel Encrypted - a CT that in addition always is encrypted (and of course is authenticated)
  *
- * * \b CT-E2E - a CT established end-to-end for transmission of data, it is of type CTE.
- * * \b CT-P2P - a CT established peer-to-peer for forwarding of data further, so it is only CTNE.
+ * * \b CTe2e - a CT established end-to-end for transmission of data, it is of type CT_auth.
+ * * \b CTp2p - a CT established peer-to-peer for forwarding of data further, so it is only CT_encr.
+ *
+ * * \b N2N is a general name for any node to node communication; It is either:
+ * * \b P2P peer-to-peer connection - is between two nodes directly talking to each other via Transport
+ * * \b E2E end-to-end connection - is sending the end-to-end data, usually the user data between two our IPv6
  *
  * * pub - public key
  * * PRV - private key
@@ -142,6 +146,8 @@ c_multikeys_PRV
 c_multikeys_PAIR
 
 === Full exchange (PFS and asymkex) ===
+
+How to establish the tunnel's finall symm key (KCTf), from our current public ID (IDC):
 
 Alice:
 (IDC) -> do KEX(+ASYM) -> {created IDC_ali_ASYM_PASS} + count_keys + KCTab !

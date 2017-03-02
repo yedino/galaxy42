@@ -1,5 +1,8 @@
 #include "c_crypto.hpp"
 
+/// @file this is a TEST-ONLY class for now (main program uses other code)
+/// This is based on draft from <hbadger>
+
 c_crypto::c_crypto()
 {
 	if (sodium_init() == -1) {

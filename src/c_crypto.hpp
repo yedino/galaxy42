@@ -1,6 +1,10 @@
 #ifndef C_CRYPTO_HPP
 #define C_CRYPTO_HPP
 #include <sodium.h>
+#include "libs0.hpp"
+
+/// @file this is a TEST-ONLY class for now (main program uses other code)
+/// This is based on draft from <hbadger>
 
 struct cryptobox_keypair {
 	std::array<unsigned char, crypto_box_PUBLICKEYBYTES> public_key;
