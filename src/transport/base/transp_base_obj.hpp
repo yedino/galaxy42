@@ -12,6 +12,7 @@ class c_transport_base_obj {
 		virtual ~c_transport_base_obj() = default;
 
 		virtual void send_to(const c_transport_base_addr & dest, const unsigned char *data, size_t size)=0; ///< block function
+
 		/**
 		 * @brief receive_from block function
 		 * @param source address of sender
@@ -20,6 +21,8 @@ class c_transport_base_obj {
 		 * @return number of readed bytes
 		 */
 		virtual size_t receive_from(c_transport_base_addr & source, unsigned char * const data, size_t size)=0;
+
+		virtual void listen_on(c_transport_base_addr & local_address)=0;
 };
 
 

@@ -34,5 +34,9 @@ size_t c_transport_simul_obj::receive_from(c_transport_base_addr &source, unsign
 	return 0;
 }
 
+void c_transport_simul_obj::listen_on(c_transport_base_addr &local_address) {
+	_NOTREADY();
+}
+
 
 
