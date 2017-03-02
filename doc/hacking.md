@@ -232,12 +232,15 @@ For more of technical names, see also source code file: [crypto.hpp](../src/cryp
 Dictionary, dict:
 
 * "privkey" - Private Key - is the private (secret) key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
-
 * "pubkey" - Public Key - is the public key in [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)
-
 * "macosx" - Mac OS X / Macintosh operating system
-
 * "tuntap" - the TUN/TAP virtual network technology/drivers/cards
+* "p2p" - "peer2peer" - [e.g. connection] to a direct peer
+* "p2p tunnel" - crypto tunnel for p2p
+* "e2e" - "end2end" - [e.g. connection] as end-to-end, e.g. to transport user data form IPv6 o IPv6
+* "e2e tunnel" - crypto tunnel for e2e
+* "cable" - is a logical cable, an underlying "transport" mechanism. e.g. UDP4, or ETHGAL, or Email - to deliver our data p2p
+* "ETHGAL" - would be our raw IP Ethernet transport to deliver our data to MAC address in Ethernet network
 
 # Special topics
 

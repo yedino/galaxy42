@@ -282,7 +282,7 @@ class c_tunserver : public c_galaxy_node {
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
-		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip
+		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
 		mutable std::mutex m_peer_mutex;
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
