@@ -15,18 +15,50 @@
 
 #include "newloop.hpp"
 #include <ctpl_stl.h>
+#include <c_crypto.hpp>
 
 #ifdef HTTP_DBG
-#include <thread>
-#include <mutex>
-#include <boost/asio.hpp>
-#include "httpdbg/httpdbg-server.hpp"
+	#include <thread>
+	#include <mutex>
+	#include <boost/asio.hpp>
+	#include "httpdbg/httpdbg-server.hpp"
 #endif
 
-#include "transport/base/transp_base_addr.hpp"
-#include "transport/base/transp_base_obj.hpp"
-#include "transport/simulation/transp_simul_addr.hpp"
-#include "transport/simulation/transp_simul_obj.hpp"
+#include "cable/base/cable_base_addr.hpp"
+#include "cable/base/cable_base_obj.hpp"
+#include "cable/simulation/cable_simul_addr.hpp"
+#include "cable/simulation/cable_simul_obj.hpp"
+
+#include "tunserver.hpp"
+
+
+// --- for using crypto directly
+
+#include "crypto/crypto.hpp"
+#include "datastore.hpp"
+
+#include "crypto/crypto_basic.hpp"
+
+#if ENABLE_CRYPTO_NTRU
+	#include "crypto/ntrupp.hpp"
+
+	// ntru sign
+	extern "C" {
+#include <constants.h>
+#include <pass_types.h>
+#include <hash.h>
+#include <ntt.h>
+#include <pass.h>
+	}
+
+#endif
+
+#if ENABLE_CRYPTO_SIDH
+	#include "crypto/sidhpp.hpp"
+#endif
+
+// ---
+
 
 // ============================================================================
 
@@ -131,17 +163,18 @@ size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) {
 
 // ============================================================================
 
-class c_tunserver2 {
+class c_galaxysrv {
 	public:
-		vector< std::thread > m_tun_reader;
 };
+
+// -------------------------------------------------------------------
 
 class c_the_program_newloop_pimpl {
 	public:
 		c_the_program_newloop_pimpl()=default;
 		~c_the_program_newloop_pimpl()=default;
 
-		unique_ptr<c_tunserver2> tunserver;
+		unique_ptr<c_galaxysrv> server;
 
 	private:
 		friend class c_the_program_newloop;
@@ -294,6 +327,52 @@ void thread_test()
 	for(unsigned int i=0; i<10; i++) tp.push(fun);
 }
 
+///@param level - memory use allowed: level=0 - basic tests,  level=1 also SIDH, level=2 also NTru
+void test_create_cryptolink(const int number_of_test, int level=0) {
+	using namespace antinet_crypto;
+
+	for (std::remove_cv<decltype(number_of_test)>::type i = 0; i < number_of_test; ++i) {
+		// g_dbg_level_set(160, "start test");
+		c_multikeys_PAIR keypairA, keypairB;
+
+		keypairA.generate(e_crypto_system_type_Ed25519, 2);
+		keypairB.generate(e_crypto_system_type_Ed25519, 2);
+
+#if ENABLE_CRYPTO_SIDH
+		if (level>=1) {
+			keypairA.generate(e_crypto_system_type_SIDH, 2);
+			keypairB.generate(e_crypto_system_type_SIDH, 2);
+		}
+#endif
+
+#if ENABLE_CRYPTO_NTRU
+		if (level>=2) {
+			keypairA.generate(e_crypto_system_type_NTRU_sign, 1);
+			keypairB.generate(e_crypto_system_type_NTRU_sign, 1);
+		}
+#endif
+
+		if (level>=0) _dbg2("Advanced crypto tests enabled");
+
+		c_multikeys_pub keypubA = keypairA.m_pub;
+		c_multikeys_pub keypubB = keypairB.m_pub;
+
+		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
+		AliceCT.create_IDe();
+		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
+		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+		AliceCT.create_CTf(packetstart_2); // A<<<---
+
+		const std::string msg(1024, 'm');
+		t_crypto_nonce nonce_used;
+		auto msg_encrypted = AliceCT.box(msg, nonce_used);
+		_check(msg != msg_encrypted);
+		auto msg_decrypted = BobCT.unbox(msg_encrypted, nonce_used);
+		_check(msg == msg_decrypted);
+	}
+}
+
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
 	g_dbg_level_set(10, "Debug the newloop");
@@ -301,12 +380,15 @@ int c_the_program_newloop::main_execution() {
 	c_tuntap_fake_kernel kernel;
 	c_tuntap_fake tuntap_reader(kernel);
 
+	c_crypto crypto;
+	std::array<unsigned char, crypto_box_NONCEBYTES> nonce;
+
 	auto world = make_shared<c_world>();
 
-	unique_ptr<c_transport_base_obj> transp = make_unique<c_transport_simul_obj>( world );
-	unique_ptr<c_transport_base_addr> peer_addr = make_unique<c_transport_simul_addr>( world->generate_simul_transport() );
+	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
+	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
-	// m_pimpl->tunserver = make_unique< c_tunserver2 >();
+	m_pimpl->server = make_unique< c_galaxysrv >();
 
 
 	c_netbuf buf(200);
@@ -323,15 +405,19 @@ int c_the_program_newloop::main_execution() {
 		}
 	} else {
 		for(int cycle=0; cycle<10; ++cycle) {
-			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
+			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size()-crypto_box_MACBYTES);
 			c_netchunk chunk( buf.data() , read );
 			_note("chunk: " << make_report(chunk,20) );
 			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
-			UsePtr(transp).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
+			crypto.cryptobox_encrypt(chunk.data(), read, nonce, crypto.get_my_public_key());
+			// TODO incr nonce
+			UsePtr(cable).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
 		}
 	}
 
 	thread_test();
+
+	test_create_cryptolink(10,0);
 
 	_mark("newloop main_execution - DONE");
 

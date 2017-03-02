@@ -13,7 +13,7 @@ Intended for:
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
 
-```
+```cpp
 
 Throw:
 _throw_error_runtime("TTL too big");
@@ -36,10 +36,10 @@ try {
 Catch it using:
   catch(std::runtime_error &ex) // catch all errors, including check soft and hard errors
 -or-
-  catch(err_check_soft &soft) { string info = soft.what_soft(); } // catch soft (expected) error, but hard errors propagate
+// catch soft (expected) error, but hard errors propagate
+  catch(err_check_soft &soft) { string info = soft.what_soft(); }
 // for more see chapter Check-asserts
 ```
-
 
 # Building
 
@@ -88,7 +88,6 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ## Developing and code details
 
 # Developer handbook
-
 
 ## Check-asserts
 
@@ -322,12 +321,6 @@ stream:  0xFF 0x0A {msg:"ok"} 0xFF 0x09 {foo:123}
 any possible chunking can appear.
 it can even cut away the "header" of armmsg
 
-
 TODO verify this with example GUI code.
 
-
-
 ```
-
-
-

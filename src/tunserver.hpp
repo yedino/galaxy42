@@ -201,8 +201,6 @@ class c_tunserver : public c_galaxy_node {
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
 
-		void help_usage() const; ///< show help about usage of the program
-
 		typedef enum {
 			e_route_method_from_me=1, ///< I am the oryginal sender (try hard to send it)
 			e_route_method_if_direct_peer=2, ///< Send data only if if I know the direct peer (e.g. I just route it for someone else - in star protocol the center node)
