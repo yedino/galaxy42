@@ -4,10 +4,13 @@
 
 #include "libs0.hpp"
 
-struct c_galaxysrv_peers final {
-		void add_peer(const string & refer);
+class c_galaxysrv_peers {
+	protected:
+		c_galaxysrv_peers();
+		virtual ~c_galaxysrv_peers();
 
-	private:
+	public:
+		void add_peer(const string & refer);
 };
 
 // -------------------------------------------------------------------

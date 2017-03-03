@@ -11,16 +11,11 @@
 
 // gal.peers.peers_add();
 
-class c_galaxysrv {
+class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e {
 	public:
 		c_galaxysrv()=default;
 		virtual ~c_galaxysrv()=default;
 
-	public:
-		c_galaxysrv_p2p p2p; ///< peer2peer tunnels
-		c_galaxysrv_e2e e2e; ///< end2end tunnels
-		c_galaxysrv_cables cables; ///< cable
-		c_galaxysrv_peers peers; ///< peers
 };
 
 // -------------------------------------------------------------------
