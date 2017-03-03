@@ -37,6 +37,28 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 		}
 }
 
+/*
+
+Cable types (TODO move this doc later to cable base addr)
+
+Cable types are:
+"udp4" "udp6" "tcp4" "tcp6" "ETH"
+
+When taking input from user (e.g. in the factory generating addresses) we also support
+this conversions:
+
+"" --> "auto"
+"auto" --> "udp"
+"udp" --> udp4 or udp6, auto detect from address form (x.x.x.x)
+"tcp" --> udp4 or udp6, auto detect from address form (x.x.x.x)
+
+Btw missing port at end is defaulted to 9042.
+
+So that "auto:4.5.6.7" and "4.5.6.7" and "udp:4.5.6.7" and "udp4:4.5.6.7:9042"
+will all be expanded to address UDPv4 4.5.6.7 port 9042, printed as normalized "udp4:4.5.6.7:9042"
+
+*/
+
 void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
 	ostr <<
 	"# Format [cable] - peer to anyone who is reachable there:\n"
