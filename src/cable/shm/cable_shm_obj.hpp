@@ -2,6 +2,7 @@
 #define CABLE_SHM_OBJ_HPP
 
 #include "../base/cable_base_obj.hpp"
+#include "cable_shm_addr.hpp"
 
 class cable_shm_obj final : c_cable_base_obj {
 	public:
