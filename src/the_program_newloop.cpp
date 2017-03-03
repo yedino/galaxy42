@@ -373,8 +373,7 @@ void test_create_cryptolink(const int number_of_test, int level=0) {
 }
 
 void c_the_program_newloop::use_options_peerref() {
-
-	_info("Configuring my peers references (keys):");
+	_note("Configuring my peers references (keys):");
 	try {
 		vector<string> peers_cmdline;
 		try { peers_cmdline =m_argm["peer"].as<vector<string>>(); } catch(...) { }
