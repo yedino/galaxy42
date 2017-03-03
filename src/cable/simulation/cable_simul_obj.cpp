@@ -29,9 +29,17 @@ void c_cable_simul_obj::send_to(const c_cable_base_addr & dest, const unsigned c
 	fake = data[ pos % size ]; // force a fake "write" to volatile (compiler can't predict what part, it must provide entire data[]
 }
 
+void c_cable_simul_obj::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
+	_NOTREADY();
+}
+
 size_t c_cable_simul_obj::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
 	_NOTREADY();
 	return 0;
+}
+
+void c_cable_simul_obj::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
+	_NOTREADY();
 }
 
 void c_cable_simul_obj::listen_on(c_cable_base_addr &local_address) {
