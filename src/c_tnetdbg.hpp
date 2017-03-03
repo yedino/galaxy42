@@ -94,14 +94,14 @@ void write_to_console(const std::string& obj);
 
 #endif
 
-template<class T> T& _UsePtr(std::shared_ptr<T> & ptr, int line, const char* file) {
+template<class T> T& _UsePtr(const std::shared_ptr<T> & ptr, int line, const char* file) {
 	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
 		std::abort();
 	}
 	return *ptr;
 }
 
-template<class T> T& _UsePtr(std::unique_ptr<T> & ptr, int line, const char* file) {
+template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const char* file) {
 	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
 		std::abort();
 	}
