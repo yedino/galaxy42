@@ -6,3 +6,5 @@ struct c_galaxysrv_cables {
 		virtual ~c_galaxysrv_cables();
 };
 
+
+
