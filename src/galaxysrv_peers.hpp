@@ -13,6 +13,13 @@ class c_galaxysrv_peers {
 		void add_peer_simplestring(const string & simple); ///< add peer with given reference @see help_peer_ref()
 
 		void help_peer_ref(ostream & ostr); ///< see function body for documentation too! Displays help: peer reference formats
+
+
+		/// partially parsed reference. first is 0...1 elements the ID (HIP), and second is 0...N of cable reference
+		typedef pair<vector<string> , vector<string>> t_peering_reference_parse;
+
+	protected:
+		pair<vector<string> , vector<string>> parse_peer_reference(const string & simple) const;
 };
 
 // -------------------------------------------------------------------

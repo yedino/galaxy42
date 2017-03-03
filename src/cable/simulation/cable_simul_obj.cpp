@@ -30,10 +30,12 @@ void c_cable_simul_obj::send_to(const c_cable_base_addr & dest, const unsigned c
 }
 
 void c_cable_simul_obj::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
+	_UNUSED(dest); _UNUSED(data); _UNUSED(size); _UNUSED(handler);
 	_NOTREADY();
 }
 
 size_t c_cable_simul_obj::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
+	_UNUSED(source); _UNUSED(data); _UNUSED(size);
 	_NOTREADY();
 	return 0;
 }
