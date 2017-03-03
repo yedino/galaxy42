@@ -377,6 +377,9 @@ int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
 	g_dbg_level_set(10, "Debug the newloop");
 
+	auto server = make_unique<c_galaxysrv>();
+
+/*
 	c_tuntap_fake_kernel kernel;
 	c_tuntap_fake tuntap_reader(kernel);
 
@@ -418,6 +421,7 @@ int c_the_program_newloop::main_execution() {
 	thread_test();
 
 	test_create_cryptolink(10,0);
+*/
 
 	_mark("newloop main_execution - DONE");
 
