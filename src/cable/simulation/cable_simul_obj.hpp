@@ -13,10 +13,9 @@ class c_cable_simul_obj : public c_cable_base_obj {
 		virtual ~c_cable_simul_obj();
 
 		void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) override;
-		void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, std::function<void(const unsigned char *, std::size_t)> handler) override;
+		void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler) override;
 		size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size) override;
-		void async_receive_from(unsigned char * const data, size_t size,
-			std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> handler) override;
+		void async_receive_from(unsigned char * const data, size_t size, read_handler handler) override;
 		void listen_on(c_cable_base_addr & local_address) override;
 
 	protected:

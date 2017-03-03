@@ -6,6 +6,9 @@
 #include <memory>
 #include "cable/base/cable_base_addr.hpp"
 
+using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
+using read_handler = const std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> &;
+
 class c_cable_base_obj {
 	protected:
 		c_cable_base_obj() = default;
@@ -26,7 +29,7 @@ class c_cable_base_obj {
 		 * 	size_t size // Number of sended bytes\n
 		 * );
 		 */
-		virtual void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, std::function<void(const unsigned char *, std::size_t)> handler)=0;
+		virtual void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler)=0;
 
 		/**
 		 * @brief receive_from block function
@@ -48,8 +51,7 @@ class c_cable_base_obj {
 		 * 	size_t size // Number of sended bytes\n
 		 * );
 		 */
-		virtual void async_receive_from(unsigned char * const data, size_t size,
-			std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> handler)=0;
+		virtual void async_receive_from(unsigned char * const data, size_t size, read_handler handler)=0;
 
 		virtual void listen_on(c_cable_base_addr & local_address)=0;
 };
