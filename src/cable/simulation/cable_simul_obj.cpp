@@ -38,7 +38,7 @@ size_t c_cable_simul_obj::receive_from(c_cable_base_addr &source, unsigned char 
 	return 0;
 }
 
-void c_cable_simul_obj::async_receive_from(unsigned char *const data, size_t size, std::function<void (const unsigned char *, std::size_t, c_cable_base_addr)> handler) {
+void c_cable_simul_obj::async_receive_from(unsigned char *const data, size_t size, std::function<void (const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> handler) {
 	_NOTREADY();
 }
 
