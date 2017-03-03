@@ -18,6 +18,9 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
 
+Function: if throw - then std::exception (or child class).
+Member functions: assume are not thread safe for concurent writes to same object, unless marked "[thread_safe]".
+
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
 
 Throw:
