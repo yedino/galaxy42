@@ -3,12 +3,13 @@
 #include "galaxysrv_peers.hpp"
 #include "libs1.hpp"
 
-void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
-	_info("Adding peer from simplestring=" << simple);
-
+t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) {
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	size_t pos1 = simple.find('-');
 	if (pos1 == string::npos) { // must be one-part format [cable]
+		vector<string> ret_id; // no IDs
+		vector<string> ret_cable( simple.substr(pos1+1) );
+		return std::make_pair(ret_id, ret_cable);
 	}
 	else { // other format
 		_try_user(pos1>0); // string::substr is safe, but anyway test against user doing --peer "-foo"
@@ -33,8 +34,13 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 		catch (const std::exception &e) {
 			_erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what());
 			_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
-			}
 		}
+	} // other format
+}
+
+t_peering_reference_parse c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
+	_info("Adding peer from simplestring=" << simple);
+	t_peering_reference_parse parse = parse_peer_reference(simple);
 }
 
 /*
