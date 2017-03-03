@@ -13,7 +13,12 @@ Intended for:
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
 
+Use ./menu
+Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
+
 ```cpp
+
+auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
 
 Throw:
 _throw_error_runtime("TTL too big");
