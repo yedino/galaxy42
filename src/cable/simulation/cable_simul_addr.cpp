@@ -22,7 +22,7 @@ int c_cable_simul_addr::compare(const c_cable_base_addr &other) const {
 		const t_addr & other_addr = any_cast<t_addr>(other.get_addrdata());
 		if (my_addr < other_addr) return -1;
 		if (other_addr < my_addr) return +1;
-		_check(my_addr == my_addr);
+		_check(my_addr == other_addr);
 		return 0; // same
 	} catch(...) {
 		return this->cable_type_name().compare( other.cable_type_name() );
