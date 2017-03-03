@@ -365,6 +365,7 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
+	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	size_t pos1 = simple.find('-');

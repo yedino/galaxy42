@@ -17,11 +17,5 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		virtual ~c_galaxysrv()=default;
 };
 
-void bar() {
-	c_galaxysrv x;
-	string peer_ref;
-	x.add_peer( peer_ref );
-}
-
 // -------------------------------------------------------------------
 

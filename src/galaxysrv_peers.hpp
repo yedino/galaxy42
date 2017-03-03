@@ -10,7 +10,7 @@ class c_galaxysrv_peers {
 		virtual ~c_galaxysrv_peers()=default;
 
 	public:
-		void add_peer(const string & refer); ///< add peer with given reference; @see help_peer_ref() below for allowed formats
+		void add_peer_simplestring(const string & simple); ///< add peer with given reference @see help_peer_ref()
 
 		void help_peer_ref(ostream & ostr); ///< see function body for documentation too! Displays help: peer reference formats
 };
