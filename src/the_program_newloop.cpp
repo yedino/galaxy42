@@ -24,12 +24,15 @@
 	#include "httpdbg/httpdbg-server.hpp"
 #endif
 
+#include "galaxysrv.hpp" // ***
+
+// delete this block later:
 #include "cable/base/cable_base_addr.hpp"
 #include "cable/base/cable_base_obj.hpp"
 #include "cable/simulation/cable_simul_addr.hpp"
 #include "cable/simulation/cable_simul_obj.hpp"
 
-#include "tunserver.hpp"
+#include "tunserver.hpp" // delete?
 
 
 // --- for using crypto directly
@@ -162,10 +165,6 @@ size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) {
 }
 
 // ============================================================================
-
-class c_galaxysrv {
-	public:
-};
 
 // -------------------------------------------------------------------
 
@@ -309,13 +308,13 @@ c_netbuf::t_element const * c_netbuf::data() const { return m_data; }
 // ============================================================================
 
 c_the_program_newloop::c_the_program_newloop()
-	: m_pimpl( new c_the_program_newloop_pimpl() )
+	: pimpl( new c_the_program_newloop_pimpl() )
 {	}
 
 c_the_program_newloop::~c_the_program_newloop() {
 	_check( ! m_pimpl_deleted); // avoid double destruction of this object
+	if (pimpl) { delete pimpl; }
 	m_pimpl_deleted=true;
-	if (m_pimpl) { delete m_pimpl; }
 }
 
 void thread_test()
@@ -373,11 +372,29 @@ void test_create_cryptolink(const int number_of_test, int level=0) {
 	}
 }
 
+void c_the_program_newloop::use_options_peerref() {
+
+	_info("Configuring my peers references (keys):");
+	try {
+		vector<string> peers_cmdline;
+		try { peers_cmdline =m_argm["peer"].as<vector<string>>(); } catch(...) { }
+		// TODO@hb no catch(...)
+		for (const string & peer_ref : peers_cmdline) {
+			pimpl->server->add_peer( peer_ref ); // XXX
+		}
+	} catch(...) {
+		// TODO@hb no catch(...)
+		ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
+	}
+}
+
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
 	g_dbg_level_set(10, "Debug the newloop");
 
-	auto server = make_unique<c_galaxysrv>();
+	pimpl->server = make_unique<c_galaxysrv>();
+	this->use_options_peerref();
+
 
 /*
 	c_tuntap_fake_kernel kernel;
@@ -391,7 +408,7 @@ int c_the_program_newloop::main_execution() {
 	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
 	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
-	m_pimpl->server = make_unique< c_galaxysrv >();
+	pimpl->server = make_unique< c_galaxysrv >();
 
 
 	c_netbuf buf(200);

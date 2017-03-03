@@ -6,13 +6,13 @@
 
 class c_galaxysrv_peers {
 	protected:
-		c_galaxysrv_peers();
-		virtual ~c_galaxysrv_peers();
+		c_galaxysrv_peers()=default;
+		virtual ~c_galaxysrv_peers()=default;
 
 	public:
-		void add_peer(const string & refer); ///< add peer with given reference; @see help_peer_ref() for allowed formats
+		void add_peer(const string & refer); ///< add peer with given reference; @see help_peer_ref() below for allowed formats
 
-		void help_peer_ref(ostream & ostr); ///< displays help regarding peer reference formats
+		void help_peer_ref(ostream & ostr); ///< see function body for documentation too! Displays help: peer reference formats
 };
 
 // -------------------------------------------------------------------
