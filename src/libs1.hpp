@@ -11,5 +11,10 @@
 #include "utils/misc.hpp"
 #include "utils/check.hpp"
 
+#include <boost/any.hpp>
+
+using boost::any_cast;
+using boost::any;
+
 #endif
 
