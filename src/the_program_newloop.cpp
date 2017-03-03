@@ -376,14 +376,20 @@ void c_the_program_newloop::use_options_peerref() {
 	_note("Configuring my peers references (keys):");
 	try {
 		vector<string> peers_cmdline;
-		try { peers_cmdline =m_argm["peer"].as<vector<string>>(); } catch(...) { }
-		// TODO@hb no catch(...)
+		if(m_argm.count("peer")) {
+			try {
+				peers_cmdline = m_argm["peer"].as<vector<string>>();
+			} catch(boost::bad_any_cast &err) {
+			_warn(err.what());
+			}
+		}
 		for (const string & peer_ref : peers_cmdline) {
 			_info( peer_ref  );
 			UsePtr(pimpl->server).add_peer_simplestring( peer_ref );
 		}
-	} catch(const std::exception & ex) {
-		ui::action_error_exit(join_string_sep( mo_file_reader::gettext("L_wrong_peer_typo") , ex.what()));
+	} catch(std::exception &err) {
+		_warn(err.what());
+		ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
 	}
 }
 
