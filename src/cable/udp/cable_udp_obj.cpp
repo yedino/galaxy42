@@ -31,8 +31,21 @@ size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const
 	return readed_bytes;
 }
 
-void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, std::function<void (const unsigned char *, std::size_t, c_cable_base_addr)> handler) {
+void c_cable_udp::async_receive_from(unsigned char *const data, size_t size,
+	std::function<void (const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> handler)
+{
+	udp::endpoint *source_addr_ptr = new udp::endpoint; // boost will write this after async
+	// raw pointer because asio handler must meet the requirements of CopyConstructible types
+	// will by deleted in handler(via unique_ptr)
 
+	m_socket.async_receive_from(boost::asio::buffer(data, size), *source_addr_ptr,
+		[handler_ = handler, data, source_addr_ptr]
+		(const boost::system::error_code& error, std::size_t bytes_transferred)
+		{
+			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *source_addr_ptr );
+			handler_(data, bytes_transferred, std::move(source_addr_cable));
+		} // lambda
+	);
 }
 
 void c_cable_udp::listen_on(c_cable_base_addr &local_address) {

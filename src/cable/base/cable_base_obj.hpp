@@ -3,6 +3,7 @@
 
 #include <boost/any.hpp>
 #include <functional>
+#include <memory>
 #include "cable/base/cable_base_addr.hpp"
 
 class c_cable_base_obj {
@@ -38,7 +39,7 @@ class c_cable_base_obj {
 
 		/**
 		 * @brief async_receive_from
-		 * @param source address of sender
+		 * @param source address of sender Ownership of the source object is retained by the caller, which must guarantee that it is valid until the handler is called.
 		 * @param data pointer to prealocated buffer
 		 * @param size size of prealocated buffer
 		 * @param handler The handler to be called when the receive operation completes. The function signature of the handler must be:\n
@@ -48,9 +49,7 @@ class c_cable_base_obj {
 		 * );
 		 */
 		virtual void async_receive_from(unsigned char * const data, size_t size,
-			std::function<void(const unsigned char *, std::size_t, c_cable_base_addr source)> handler)=0;
+			std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> handler)=0;
 
 		virtual void listen_on(c_cable_base_addr & local_address)=0;
 };
-
-
