@@ -23,9 +23,17 @@ std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr & obj) {
 	return ostr;
 }
 
-unique_ptr<c_cable_base_addr> cable_make_addr(const string & str) {
-	// TODO@mik
-	_UNUSED(str);
+unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & str) {
+	size_t pos1 = str.find(':');
+	if (pos1 == string::npos) { // must be udp
+		return std::make_unique<c_cable_udp_addr>(str);
+	}
+	else {
+		_try_user(pos1>0); // string::substr is safe, but anyway test against user doing --peer "-foo"
+		string part1 = str.substr(0,pos1);
+		string part2 = str.substr(pos1, st);
+		if (part)
+	}
 	unique_ptr<c_cable_base_addr> x;
 	return x;
 }
@@ -41,7 +49,7 @@ bool operator<(const c_cable_base_addr & obj1, const c_cable_base_addr & obj2) {
 	_UNUSED(obj2);
 	return obj1.compare(obj2) < 0;
 }
-
+/*
 bool c_cable_base_addr::is_same(const c_cable_base_addr &other) const {
 	_UNUSED(other);
 	_NOTREADY();
@@ -53,5 +61,5 @@ int c_cable_base_addr::compare(const c_cable_base_addr &other) const {
 	_NOTREADY();
 	// TODO@mik - replace with abstract =0, when implemented for all existing cables, please
 }
-
+*/
 
