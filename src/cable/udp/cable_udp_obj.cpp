@@ -15,7 +15,7 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *d
 	m_socket.send_to(boost::asio::buffer(data, size), destination_endpoint);
 }
 
-void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, std::function<void (const unsigned char *, std::size_t)> handler) {
+void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
 	udp::endpoint destination_endpoint = (boost::any_cast<c_cable_udp_addr::t_addr>( dest.get_addrdata() ));
 	m_socket.async_send_to(boost::asio::buffer(data, size), destination_endpoint,
 		[handler = std::move(handler), data](const boost::system::error_code& error, std::size_t bytes_transferred) {
@@ -31,8 +31,7 @@ size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const
 	return readed_bytes;
 }
 
-void c_cable_udp::async_receive_from(unsigned char *const data, size_t size,
-	std::function<void (const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> handler)
+void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler)
 {
 	udp::endpoint *source_addr_ptr = new udp::endpoint; // boost will write this after async
 	// raw pointer because asio handler must meet the requirements of CopyConstructible types
