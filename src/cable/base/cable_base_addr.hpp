@@ -3,6 +3,8 @@
 
 #include "libs1.hpp"
 
+int get_default_galaxy_port();
+
 class c_cable_base_addr {
 	protected:
 		/// the addrdata should be called from child-class and contain actually type as in t_addr in child-class
@@ -21,7 +23,7 @@ class c_cable_base_addr {
 
 		virtual void print(std::ostream & ostr) const ; ///< displays human readalbe form of this address
 
-		virtual std::string cable_type_name() const; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
+		virtual std::string cable_type_name() const =0; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
 
 		/// is my address the same (cable type, and address) to another.
 		virtual bool is_same(const c_cable_base_addr &other) const =0;

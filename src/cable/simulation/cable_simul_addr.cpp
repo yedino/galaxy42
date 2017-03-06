@@ -8,6 +8,10 @@ void c_cable_simul_addr::print(ostream & ostr) const {
 	ostr << "[transp-simul-" << uuid << "]" ;
 }
 
+std::string c_cable_simul_addr::cable_type_name() const {
+	return "simulation"s;
+}
+
 bool c_cable_simul_addr::is_same(const c_cable_base_addr &other) const {
 	try {
 		return any_cast<t_addr>(other.get_addrdata())  ==  any_cast<t_addr>(get_addrdata());

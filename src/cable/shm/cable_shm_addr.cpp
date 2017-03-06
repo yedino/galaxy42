@@ -6,6 +6,10 @@ cable_shm_addr::cable_shm_addr(const std::string &address)
 	init_addrdata(address);
 }
 
+std::string cable_shm_addr::cable_type_name() const {
+	return "shm"s;
+}
+
 bool cable_shm_addr::is_same(const c_cable_base_addr &other) const{
 	try {
 		return any_cast<t_addr>(other.get_addrdata())  ==  any_cast<t_addr>(get_addrdata());
@@ -20,7 +24,7 @@ int cable_shm_addr::compare(const c_cable_base_addr &other) const{
 		const t_addr & other_addr = any_cast<t_addr>(other.get_addrdata());
 		if (my_addr < other_addr) return -1;
 		if (other_addr < my_addr) return +1;
-		_check(my_addr == my_addr);
+		_check(my_addr == other_addr);
 		return 0; // same
 	} catch(...) {
 		return this->cable_type_name().compare( other.cable_type_name() );

@@ -12,6 +12,8 @@ class c_cable_simul_addr : public c_cable_base_addr {
 
 		virtual void print(ostream & ostr) const ;
 
+		std::string cable_type_name() const override; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
+
 		/// is my address the same (cable type, and address) to another.
 		virtual bool is_same(const c_cable_base_addr &other) const;
 
