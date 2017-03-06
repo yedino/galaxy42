@@ -42,6 +42,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 		(const boost::system::error_code& error, std::size_t bytes_transferred)
 		{
 			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *source_addr_ptr );
+			delete source_addr_ptr;
 			handler_(data, bytes_transferred, std::move(source_addr_cable));
 		} // lambda
 	);
