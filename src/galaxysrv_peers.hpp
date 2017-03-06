@@ -15,7 +15,7 @@ class c_galaxysrv_peers {
 		void help_peer_ref(ostream & ostr); ///< see function body for documentation too! Displays help: peer reference formats
 
 		/// partially parsed reference. first is 0...1 elements the ID (HIP), and second is 0...N of cable reference
-		typedef pair<vector<string> , vector<string>> t_peering_reference_parse;
+		using t_peering_reference_parse = pair<vector<string> , vector<string>>;
 
 	protected:
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
