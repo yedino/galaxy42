@@ -28,7 +28,6 @@ bool c_cable_udp_addr::is_same(const c_cable_base_addr &other) const{
 	try {
 		return any_cast<t_addr>(other.get_addrdata())  ==  any_cast<t_addr>(get_addrdata());
 	} catch(...) {
-		_erro("in catch");
 		return 0; // the other address has even other type then me, so it's different
 	}
 }
