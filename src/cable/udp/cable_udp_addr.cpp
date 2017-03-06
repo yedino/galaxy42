@@ -25,22 +25,35 @@ std::string c_cable_udp_addr::cable_type_name() const {
 }
 
 bool c_cable_udp_addr::is_same(const c_cable_base_addr &other) const{
+	bool conv_ok=false; // to know is exception was casued by OUR any_cast, or by something else
 	try {
-		return any_cast<t_addr>(other.get_addrdata())  ==  any_cast<t_addr>(get_addrdata());
-	} catch(...) {
-		return 0; // the other address has even other type then me, so it's different
+		const auto & x_other = any_cast<t_addr>(other.get_addrdata());
+		const auto & x_me = any_cast<t_addr>(get_addrdata());
+		conv_ok=true;
+		return x_other == x_me;
 	}
+	catch (const std::bad_cast &) {
+		if (!conv_ok) return 0; // the other address has even other type then me, so it's different
+		throw; // bad_cast, but NOT from our conversion - unexpected!
+	}
+	// if other exception then it will just roll over
 }
 
 int c_cable_udp_addr::compare(const c_cable_base_addr &other) const{
+	bool conv_ok=false; // to know is exception was casued by OUR any_cast, or by something else
 	try {
 		const t_addr & my_addr    = any_cast<t_addr>(this->get_addrdata());
 		const t_addr & other_addr = any_cast<t_addr>(other.get_addrdata());
+		conv_ok=true;
 		if (my_addr < other_addr) return -1;
+		return +1; // XXX test
 		if (other_addr < my_addr) return +1;
-		_check(my_addr == other_addr);
+		_check(my_addr == other_addr); // else we must be the same; confirm this
 		return 0; // same
 	} catch(...) {
-		return this->cable_type_name().compare( other.cable_type_name() );
+		if (!conv_ok) { // we have other type
+			return this->cable_type_name().compare( other.cable_type_name() );
+		}
+		throw; // else, this is some other actuall error
 	}
 }
