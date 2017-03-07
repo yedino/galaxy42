@@ -32,19 +32,25 @@ size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const
 	return readed_bytes;
 }
 
-void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler)
-{
-	udp::endpoint *source_addr_ptr = new udp::endpoint; // boost will write this after async
-	// raw pointer because asio handler must meet the requirements of CopyConstructible types
-	// will by deleted in handler(via unique_ptr)
+void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
+	auto endpoint_iterator = [this] {
+		std::unique_lock<std::mutex> lock(m_enpoint_list_mutex);
+		m_endpoint_list.emplace_back();
+		auto ret = m_endpoint_list.end();
+		--ret;
+		return ret;
+	}();
 
-	m_read_socket.async_receive_from(boost::asio::buffer(data, size), *source_addr_ptr,
-		[handler_ = handler, data, source_addr_ptr]
+	m_read_socket.async_receive_from(boost::asio::buffer(data, size), *endpoint_iterator,
+		[this, handler, data, endpoint_iterator]
 		(const boost::system::error_code& error, std::size_t bytes_transferred)
 		{
-			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *source_addr_ptr );
-			delete source_addr_ptr;
-			handler_(data, bytes_transferred, std::move(source_addr_cable));
+			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *endpoint_iterator );
+			std::unique_lock<std::mutex> lock(m_enpoint_list_mutex);
+			m_endpoint_list.erase(endpoint_iterator);
+			lock.unlock();
+
+			handler(data, bytes_transferred, std::move(source_addr_cable));
 		} // lambda
 	);
 }

@@ -4,6 +4,8 @@
 
 #include "../base/cable_base_obj.hpp"
 #include <boost/asio.hpp>
+#include <list>
+#include <mutex>
 
 class c_cable_udp final : public c_cable_base_obj {
 	public:
@@ -17,7 +19,8 @@ class c_cable_udp final : public c_cable_base_obj {
 	private:
 		boost::asio::ip::udp::socket m_read_socket;
 		boost::asio::ip::udp::socket m_write_socket;
-
+		std::mutex m_enpoint_list_mutex;
+		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list;
 };
 
 #endif // cable_UDP_HPP
