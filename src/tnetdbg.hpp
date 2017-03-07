@@ -120,8 +120,11 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 	} while(0)
 
 
-// this assert is probably not important, rather only in debug
-#define _obvious(X) do { if (!(X)) { _erro("Assertation failed (_obvious) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); } } while(0)
+// this assert could be helpful, maybe use in release
+#define _check_abort(X) do { if (!(X)) { \
+	_erro("Assertation failed, will abort: (" << #X << ")" << _my__FILE__ << ':' << __LINE__); \
+	::std::abort(); } \
+} while(0)
 
 // this assert could be helpful, maybe use in release
 #define _assert(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)

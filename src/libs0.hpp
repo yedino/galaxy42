@@ -34,7 +34,7 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 #include "strings_utils_simple.hpp"
 #include "mo_reader.hpp"
 
@@ -92,7 +92,7 @@ using std::invalid_argument;
 #endif
 
 // ??? decide: XXX
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 
 // --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
 /***

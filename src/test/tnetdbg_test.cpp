@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include <c_tnetdbg.hpp>
+#include <tnetdbg.hpp>
 #include <iostream>
 
 TEST(UsePtr_Test, abort_test) {
