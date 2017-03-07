@@ -5,6 +5,7 @@
 
 c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
+	_info("Parsing: "<<simple);
 	size_t pos1 = simple.find('-');
 	if (pos1 == string::npos) { // must be one-part format [cable]
 		vector<string> ret_id; // no IDs
@@ -36,6 +37,9 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 			_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 		}
 	} // other format
+
+	t_peering_reference_parse x;
+	return x;
 }
 
 void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
@@ -43,53 +47,53 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 	t_peering_reference_parse parse = parse_peer_reference(simple);
 }
 
-/*
-
-Cable types (TODO move this doc later to cable base addr)
-
-Cable types are:
-"udp4" "udp6" "tcp4" "tcp6" "ETH"
-
-When taking input from user (e.g. in the factory generating addresses) we also support
-this conversions:
-
-"" --> "auto"
-"auto" --> "udp"
-"udp" --> udp4 or udp6, auto detect from address form (x.x.x.x)
-"tcp" --> udp4 or udp6, auto detect from address form (x.x.x.x)
-
-Btw missing port at end is defaulted to 9042.
-
-So that "auto:4.5.6.7" and "4.5.6.7" and "udp:4.5.6.7" and "udp4:4.5.6.7:9042"
-will all be expanded to address UDPv4 4.5.6.7 port 9042, printed as normalized "udp4:4.5.6.7:9042"
-
-*/
-
 void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
 	ostr <<
-	"# Format [cable] - peer to anyone who is reachable there:\n"
+	"# Format [CABLE] - peer to anyone who is reachable there:\n"
 	"--peer 192.166.218.58 \n"
 	"--peer auto:192.166.218.58 \n"
 	"--peer auto:192.166.218.58:9042 \n"
 	"--peer udp:192.166.218.58:9042 \n"
+	"--peer udp:[fe80::d428:5aff:feb0:d44e]:9042 \n"
 	"--peer tcp:192.166.218.58:9042 \n"
 	"\n"
-	"# Format [id] - peer to this ID, find yourself how (e.g. using seed-nodes):\n"
+	"# Format [id-ID] - peer to this ID, find yourself how (e.g. using seed-nodes):\n"
 	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5\n"
 	"\n"
-	"# Format [id-cables] - peer to this ID, using given list of cables:\n"
+	"# Format [id-ID-(CABLES)] - peer to this ID, using given list of cables:\n"
 	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(tcp:192.166.218.58:9042) \n"
-	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(tcp:192.166.218.58:9042,udp:192.166.218.58:9042) \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(tcp:[fe80::d428:5aff:feb0:d44e]:9042,udp:192.166.218.58:9042) \n"
 	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(shm:test1,shm:test2) \n"
 	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(shm:test1,shm:test2,tcp:192.166.218.58:9042) \n"
 	"\n"
-	"# Format [cable-id] - (an older format):\n"
+	"# Format [CABLE-ID] - (an older format):\n"
 	"--peer 192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
 	"--peer 192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
 	"--peer auto:192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
 	"--peer udp:192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
 	"--peer tcp:192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
 	"--peer shm:test1-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	;
+	"\n"
+	"\n"
+	"CABLE is: \n"
+	"cabletype:data:port"
+	"cabletype:data:port"
+	"a cable, with possible types are: \n"
+	"'udp4' 'udp6' 'tcp4' 'tcp6' 'ETH' \n"
+	"\n"
+	"When taking input from user (e.g. in the factory generating addresses) we also support \n"
+	"this conversions: \n"
+	" \n"
+	"\"\" --> \"auto\" \n"
+	"\"auto\" --> \"udp\" \n"
+	"\"udp\" --> udp4 or udp6, auto detect from address form (x.x.x.x) \n"
+	"\"tcp\" --> udp4 or udp6, auto detect from address form (x.x.x.x) \n"
+	" \n"
+	"Btw missing port at end is defaulted to 9042. \n"
+	" \n"
+	"So that \"auto:4.5.6.7\" and \"4.5.6.7\" and \"udp:4.5.6.7\" and \"udp4:4.5.6.7:9042\" \n"
+	"will all be expanded to address UDPv4 4.5.6.7 port 9042, printed as normalized \"udp4:4.5.6.7:9042\" \n"
+	" \n"
+;
 }
 

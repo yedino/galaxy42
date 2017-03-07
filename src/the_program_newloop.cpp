@@ -379,7 +379,8 @@ void c_the_program_newloop::use_options_peerref() {
 		try { peers_cmdline =m_argm["peer"].as<vector<string>>(); } catch(...) { }
 		// TODO@hb no catch(...)
 		for (const string & peer_ref : peers_cmdline) {
-	//		pimpl->server->add_peer( peer_ref ); // XXX
+			_info( peer_ref  );
+			UsePtr(pimpl->server).add_peer_simplestring( peer_ref );
 		}
 	} catch(...) {
 		// TODO@hb no catch(...)
