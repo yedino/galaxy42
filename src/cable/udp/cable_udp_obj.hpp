@@ -15,8 +15,8 @@ class c_cable_udp final : public c_cable_base_obj {
 		void listen_on(c_cable_base_addr & local_address) override;
 
 	private:
-		boost::asio::io_service m_io_service;
-		boost::asio::ip::udp::socket m_socket;
+		boost::asio::ip::udp::socket m_read_socket;
+		boost::asio::ip::udp::socket m_write_socket;
 
 };
 
