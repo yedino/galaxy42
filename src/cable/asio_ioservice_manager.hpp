@@ -6,15 +6,15 @@
 
 /// Manager for objects that will use ioservice, provides them with a pool of ioservice objects
 /// References to #m_ioservice_array at valid as long as this object.
-class asio_ioservice_manager final {
+class c_asioservice_manager final {
 	public:
-		asio_ioservice_manager(size_t size_); ///< start manager with size @param size
+		c_asioservice_manager(size_t size_); ///< start manager with size @param size
 		void size_at_least(size_t size_); ///< set object size to at least this given size
 
-		asio_ioservice_manager(const asio_ioservice_manager &)=delete; // not copyable
-		asio_ioservice_manager& operator=(const asio_ioservice_manager &)=delete; // not copyable
-		asio_ioservice_manager(asio_ioservice_manager &&)=delete; // not moveable
-		asio_ioservice_manager& operator=(asio_ioservice_manager &&)=delete; // not moveable
+		c_asioservice_manager(const c_asioservice_manager &)=delete; // not copyable
+		c_asioservice_manager& operator=(const c_asioservice_manager &)=delete; // not copyable
+		c_asioservice_manager(c_asioservice_manager &&)=delete; // not moveable
+		c_asioservice_manager& operator=(c_asioservice_manager &&)=delete; // not moveable
 
 		boost::asio::io_service &get_next_ioservice(); ///< returns reference to an ioservice, it is valid as long as this object.
 
