@@ -19,8 +19,8 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 ```cpp
 
 Function: if throw - then std::exception (or child class).
-Member functions: assume are not thread safe for concurent writes to same object, unless marked "[thread_safe]".
-
+Member functions: assume are not thread safe for concurent writes to same object, unless:
+// [thread_safe] - thread safe functions.
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
 
 Throw:
@@ -28,12 +28,21 @@ _throw_error_runtime("TTL too big");
 _throw_error( std::invalid_argument("TTL too big") );
 _throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
 
-Use command ./menu .
+1. abort on error only guaranteed in debug mode - assert() // from compiler
+2. abort on error always guaranteed - check_abort() // our lib
+3. throw on error - _check() // our lib
+
 try {
 	_check( ptr != nullptr ); // like assert
 	_check_user( size < 100 ); // user given bad input
 	_check_sys( file.exists() ); // system doesn't work
 	_check_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data
+
+	int i=2;
+	assert( i+i == 4); // obvious, no need to check it
+	auto size2 = size*size;
+	_check_abort( size2 >= size ); // almost obvious, especially since we already check size<100,
+	// it would happen if someone would set "size" type to be e.g. unsigned char
 
 	// same, but we expect this errors as they are common and we do not want to spam log with ERROR
 	_try_user( size < 100 ); // user given bad input - common case
