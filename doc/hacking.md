@@ -18,6 +18,11 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
 
+assert() / _check_abort() / _check()
+1. abort on error (only guaranteed in debug mode) - assert() // from compiler
+2. abort on error (always guaranteed) - _check_abort() // our lib
+3. throw on error - _check() // our lib
+
 Function: if throw - then std::exception (or child class).
 Member functions: assume are not thread safe for concurent writes to same object, unless:
 // [thread_safe] - thread safe functions.
@@ -27,10 +32,6 @@ Throw:
 _throw_error_runtime("TTL too big");
 _throw_error( std::invalid_argument("TTL too big") );
 _throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
-
-1. abort on error only guaranteed in debug mode - assert() // from compiler
-2. abort on error always guaranteed - check_abort() // our lib
-3. throw on error - _check() // our lib
 
 try {
 	_check( ptr != nullptr ); // like assert

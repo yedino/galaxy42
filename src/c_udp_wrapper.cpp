@@ -1,5 +1,5 @@
 #include "c_udp_wrapper.hpp"
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 
 #ifdef __linux__
 
