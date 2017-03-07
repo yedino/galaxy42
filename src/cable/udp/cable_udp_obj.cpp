@@ -1,13 +1,14 @@
 #include "cable_udp_obj.hpp"
 #include "cable_udp_addr.hpp"
-#include "asio_ioservice_manager.hpp"
+#include "../asio_ioservice_manager.hpp"
 
 using namespace boost::asio::ip;
 
-c_cable_udp::c_cable_udp()
+c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager)
 :
-	m_read_socket(asio_ioservice_manager::get_next_ioservice()),
-	m_write_socket(asio_ioservice_manager::get_next_ioservice())
+	c_asiocable(iomanager),
+	m_read_socket(get_io_service()),
+	m_write_socket(get_io_service())
 {
 }
 
