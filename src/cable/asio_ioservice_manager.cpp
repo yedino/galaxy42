@@ -9,6 +9,13 @@ c_asioservice_manager::c_asioservice_manager(size_t size_) : m_size(size_) {
 	}
 }
 
+c_asioservice_manager::~c_asioservice_manager() {
+	for (size_t i = 0; i < m_size; i++)
+		m_ioservice_array.at(i).stop();
+	for (auto & thread : m_ioservice_threads)
+		thread.join();
+}
+
 void c_asioservice_manager::resize_to_at_least(size_t size_) {
 	_check(size_ > m_ioservice_array.size());
 	if (size_ <= m_size) return;
