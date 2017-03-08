@@ -9,6 +9,7 @@
 class c_asioservice_manager final {
 	public:
 		c_asioservice_manager(size_t size_); ///< start manager with size @param size
+		~c_asioservice_manager();
 		void resize_to_at_least(size_t size_); ///< set object size to at least this given size
 
 		c_asioservice_manager(const c_asioservice_manager &)=delete; // not copyable
