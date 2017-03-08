@@ -9,7 +9,7 @@
 class c_asioservice_manager final {
 	public:
 		c_asioservice_manager(size_t size_); ///< start manager with size @param size
-		void size_at_least(size_t size_); ///< set object size to at least this given size
+		void resize_to_at_least(size_t size_); ///< set object size to at least this given size
 
 		c_asioservice_manager(const c_asioservice_manager &)=delete; // not copyable
 		c_asioservice_manager& operator=(const c_asioservice_manager &)=delete; // not copyable
@@ -28,6 +28,8 @@ class c_asioservice_manager final {
 		size_t m_size=0; ///< current actuall size, nubmer of existing ioservices
 		size_t m_last_ioservice=0; ///< index of last-used ioservice, to know what to return next time
 		std::array<boost::asio::io_service, m_ioservice_max> m_ioservice_array; ///< the ioservices
+		std::vector<boost::asio::io_service::work> m_io_service_idle_works;
+		std::vector<std::thread> m_io_service_threads;
 };
 
 #endif // ASIO_IOSERVICE_MANAGER_HPP
