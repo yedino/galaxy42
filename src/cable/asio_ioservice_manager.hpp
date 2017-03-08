@@ -28,8 +28,10 @@ class c_asioservice_manager final {
 		size_t m_size=0; ///< current actuall size, nubmer of existing ioservices
 		size_t m_last_ioservice=0; ///< index of last-used ioservice, to know what to return next time
 		std::array<boost::asio::io_service, m_ioservice_max> m_ioservice_array; ///< the ioservices
-		std::vector<boost::asio::io_service::work> m_io_service_idle_works;
-		std::vector<std::thread> m_io_service_threads;
+		std::vector<boost::asio::io_service::work> m_ioservice_idle_works;
+		std::vector<std::thread> m_ioservice_threads;
+
+		void run_ioservice(size_t index);
 };
 
 #endif // ASIO_IOSERVICE_MANAGER_HPP
