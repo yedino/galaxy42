@@ -15,7 +15,7 @@ c_linux_tuntap_obj::c_linux_tuntap_obj() :
 	m_io_service(),
 	m_tun_stream(m_io_service, m_tun_fd)
 {
-	_check_sys(m_tun_fd != -1);
+	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
 }
 
@@ -27,9 +27,11 @@ size_t c_linux_tuntap_obj::read_from_tun(unsigned char *const data, size_t size)
 	return m_tun_stream.read_some(boost::asio::buffer(data, size));
 }
 
-void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_t size, tuntap_base_obj::read_handler handler) {
+void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_t size,
+	const tuntap_base_obj::read_handler & handler)
+{
 	auto asio_handler = [data, handler](const boost::system::error_code& error, std::size_t bytes_transferred) {
-		handler(data, bytes_transferred);
+		handler(data, bytes_transferred, error);
 	};
 	return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
