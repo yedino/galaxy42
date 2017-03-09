@@ -346,7 +346,7 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/cable/* src/cable/*/* src/tuntap/base/*)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* )
 
 if(HTTP_DEBUGGER)
 	add_definitions(-DHTTP_DBG)
