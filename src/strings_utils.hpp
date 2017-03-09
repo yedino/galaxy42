@@ -9,7 +9,6 @@
 
 // ====================================================================
 
-
 enum t_debug_style {
 	e_debug_style_object=0,
 	e_debug_style_short_devel=1,
@@ -39,7 +38,6 @@ unsigned char int2hexchar(unsigned char i); // 15 -> 'f'
 unsigned char hexchar2int(char c); // 'f' -> 15
 
 unsigned char doublehexchar2int(string s); // "fd" -> 253
-
 
 struct string_as_bin {
 	std::string bytes;
@@ -72,7 +70,6 @@ struct string_as_bin {
 };
 
 bool operator<( const string_as_bin &a, const string_as_bin &b);
-
 
 std::string debug_simple_hash(const std::string & str);
 
@@ -129,13 +126,11 @@ struct string_as_dbg {
 
 		template<class T>	void print(std::ostream & os, const T & v) { os<<v; }
 
-
 	public: // for chardbg.  TODO move to class & make friend class
 		void print(std::ostream & os, unsigned char v, t_debug_style style=e_debug_style_short_devel );
 		void print(std::ostream & os, signed char v, t_debug_style style=e_debug_style_short_devel );
 		void print(std::ostream & os, char v, t_debug_style style=e_debug_style_short_devel );
 };
-
 
 // for debug mainly
 template<class T, std::size_t N>
@@ -223,6 +218,6 @@ template <typename T> std::string to_debug_b(const T * ptr)
 template <typename T> std::string to_debug_b(const std::unique_ptr<T> & ptr)
 {	return to_debug(ptr,e_debug_style_big); }
 
+bool is_ascii_normal(const std::string str);
+
 #endif
-
-
