@@ -364,7 +364,7 @@ void c_multikeys_PAIR::datastore_load_PRV_and_pub(const string  & fname_base) {
 }
 
 c_multikeys_PAIR & c_crypto_tunnel::get_IDe() {
-	return * PTR(m_IDe);
+	return UsePtr(m_IDe);
 }
 
 void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool will_asymkex) {
