@@ -28,7 +28,10 @@ size_t c_linux_tuntap_obj::read_from_tun(unsigned char *const data, size_t size)
 }
 
 void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_t size, tuntap_base_obj::read_handler handler) {
-	_NOTREADY();
+	auto asio_handler = [data, handler](const boost::system::error_code& error, std::size_t bytes_transferred) {
+		handler(data, bytes_transferred);
+	};
+	return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
 
 void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) {
