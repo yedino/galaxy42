@@ -257,6 +257,9 @@ link_directories(depends/jsoncpp/src/lib_json)
 #add local nlohmann json
 include_directories(depends/json/src)
 
+#add local CTPL
+include_directories(depends/CTPL)
+
 #add local local lib sodiumpp
 set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
@@ -343,11 +346,11 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* )
+
 if(HTTP_DEBUGGER)
-    add_definitions(-DHTTP_DBG)
-    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/*.cpp)
-else()
-    file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp)
+	add_definitions(-DHTTP_DBG)
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp src/cable/* src/cable/*/*)
 endif()
 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
@@ -474,7 +477,7 @@ message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
 if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
-		COMMAND ./tunserver.sh
+		COMMAND "${CMAKE_SOURCE_DIR}/tunserver.sh"
 		DEPENDS ./tunserver.elf
 		DEPENDS test-debug.elf
 		WORKING_DIRECTORY ./)
@@ -496,9 +499,14 @@ add_custom_command(
 add_custom_command(
 	TARGET ipclient.elf ipserver.elf tunserver.elf
 	POST_BUILD
-	COMMAND share/script/use-setcap tunserver.elf || echo "Can not set rights on binary, ignoring."
-	COMMAND share/script/show-source-help.sh
-	COMMAND share/script/show-program-help.sh
+	COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_custom_target(
+	TARGET ipclient.elf ipserver.elf tunserver.elf
+	POST_BUILD
+	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
+	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 endif()

@@ -135,7 +135,7 @@ std::string c_stream::box(const std::string & msg) {
 }
 
 std::string c_stream::box(const std::string & msg, t_crypto_nonce & nonce) {
-	auto & cb = * PTR(m_boxer); // my crypto (un)boxer
+	auto & cb = UsePtr(m_boxer); // my crypto (un)boxer
 	const auto N = cb.get_nonce(); // nonce (before operation) - just for debug
 	const auto ret = cb.box(msg,nonce).to_binary(); // btw, nonce variable is updated here too
 	_dbg1n(
@@ -152,7 +152,7 @@ std::string c_stream::unbox(const std::string & msg) {
 }
 
 std::string c_stream::unbox(const std::string & msg, t_crypto_nonce nonce, bool force_nonce) {
-	auto & cb = * PTR(m_unboxer); // my crypto (un)boxer
+	auto & cb = UsePtr(m_unboxer); // my crypto (un)boxer
 	const auto N = force_nonce ? nonce : cb.get_nonce(); // nonce (before operation)
 	try {
 		auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary) , N);
@@ -204,8 +204,8 @@ void c_stream::create_boxer_with_K() {
 	_note("EXCHANGE start:: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
 		<< " and m_KCT=" << to_debug_locked( m_KCT )
 		);
-	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(PTR(m_boxer)  ->get_nonce().get().to_binary()));
-	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(PTR(m_unboxer)->get_nonce().get().to_binary()));
+	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(UsePtr(m_boxer).get_nonce().get().to_binary()));
+	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(UsePtr(m_unboxer).get_nonce().get().to_binary()));
 	assert(m_boxer); assert(m_unboxer);
 }
 
@@ -511,7 +511,7 @@ const string& nicename)
 {
 	_noten("Alice? Creating the crypto tunnel (we are initiator)");
 	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator, m_nicename+"-CTab"); // TODONOW
-	PTR(m_stream_crypto_ab)->exchange_start( self, them , true );
+	UsePtr(m_stream_crypto_ab).exchange_start( self, them , true );
 	_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
 }
 
@@ -522,7 +522,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 {
 	_note("Bob? Creating the crypto tunnel (we are respondent)");
 	m_stream_crypto_ab = make_unique<c_stream>(false, nicename+"-CTab");
-	PTR(m_stream_crypto_ab)->exchange_done( self, them , packetstart ); // exchange for IDC is ready
+	UsePtr(m_stream_crypto_ab).exchange_done( self, them , packetstart ); // exchange for IDC is ready
 	_mark("Ok exchange for AB is finalized");
 
 	_note("Bob? Ok created our IDe...");
@@ -556,7 +556,7 @@ std::string c_crypto_tunnel::debug_this() const {
 void c_crypto_tunnel::create_CTf(const string & packetstart) {
 	_info("Alice? Creating CTf from packetstart="<<to_debug(packetstart));
 	c_multikeys_pub them_IDe;
-	them_IDe.load_from_bin( PTR(m_stream_crypto_ab)->parse_packetstart_IDe(packetstart) );
+	them_IDe.load_from_bin( UsePtr(m_stream_crypto_ab).parse_packetstart_IDe(packetstart) );
 	m_stream_crypto_final = make_unique<c_stream>(false, m_nicename+"-CTf"); // I am not initiator of this return-stream CTe
 	m_stream_crypto_final -> exchange_done( * this->m_IDe , them_IDe , packetstart);
 	_info("Alice? Creating CTf - done");
@@ -565,46 +565,46 @@ void c_crypto_tunnel::create_CTf(const string & packetstart) {
 // ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::get_packetstart_ab() const {
-	return PTR(m_stream_crypto_ab)->generate_packetstart( * PTR(m_stream_crypto_ab) );
+	return UsePtr(m_stream_crypto_ab).generate_packetstart( UsePtr(m_stream_crypto_ab) );
 
 }
 
 std::string c_crypto_tunnel::get_packetstart_final() const {
-	return PTR(m_stream_crypto_final)->generate_packetstart( * PTR(m_stream_crypto_ab) );
+	return UsePtr(m_stream_crypto_final).generate_packetstart( UsePtr(m_stream_crypto_ab) );
 }
 
 // ------------------------------------------------------------------
 
 std::string c_crypto_tunnel::box(const std::string & msg) {
-	return PTR(m_stream_crypto_final)->box(msg);
+	return UsePtr(m_stream_crypto_final).box(msg);
 }
 
 std::string c_crypto_tunnel::box(const std::string & msg, t_crypto_nonce &nonce) {
-	return PTR(m_stream_crypto_final)->box(msg, nonce);
+	return UsePtr(m_stream_crypto_final).box(msg, nonce);
 }
 
 std::string c_crypto_tunnel::unbox(const std::string & msg) {
-	return PTR(m_stream_crypto_final)->unbox(msg);
+	return UsePtr(m_stream_crypto_final).unbox(msg);
 }
 
 std::string c_crypto_tunnel::unbox(const std::string & msg, t_crypto_nonce nonce) {
-	return PTR(m_stream_crypto_final)->unbox(msg,nonce);
+	return UsePtr(m_stream_crypto_final).unbox(msg,nonce);
 }
 
 std::string c_crypto_tunnel::box_ab(const std::string & msg) {
-	return PTR(m_stream_crypto_ab)->box(msg);
+	return UsePtr(m_stream_crypto_ab).box(msg);
 }
 
 std::string c_crypto_tunnel::box_ab(const std::string & msg, t_crypto_nonce &nonce) {
-	return PTR(m_stream_crypto_ab)->box(msg,nonce);
+	return UsePtr(m_stream_crypto_ab).box(msg,nonce);
 }
 
 std::string c_crypto_tunnel::unbox_ab(const std::string & msg) {
-	return PTR(m_stream_crypto_ab)->unbox(msg);
+	return UsePtr(m_stream_crypto_ab).unbox(msg);
 }
 
 std::string c_crypto_tunnel::unbox_ab(const std::string & msg, t_crypto_nonce nonce) {
-	return PTR(m_stream_crypto_ab)->unbox(msg,nonce);
+	return UsePtr(m_stream_crypto_ab).unbox(msg,nonce);
 }
 
 // ------------------------------------------------------------------
@@ -615,8 +615,8 @@ void c_crypto_tunnel::create_IDe() {
 	_mark("Creating IDe");
 	if (m_IDe) _throw_error( std::runtime_error("Tried to create IDe again, on a CT that already has one created.") );
 	//m_IDe = make_unique<c_multikeys_PAIR>();
-	//m_IDe->generate( PTR(m_stream_crypto_ab)->get_cryptolists_count_for_KCTf() );
-	m_IDe = PTR( m_stream_crypto_ab )->create_IDe( true );
+	//m_IDe->generate( UsePtr(m_stream_crypto_ab).get_cryptolists_count_for_KCTf() );
+	m_IDe = UsePtr( m_stream_crypto_ab ).create_IDe( true );
 	_info("My IDe:");
 	m_IDe->debug();
 	_mark("Creating IDe - DONE");

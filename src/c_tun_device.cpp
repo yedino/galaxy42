@@ -6,7 +6,7 @@
 
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 #include "../depends/cjdns-code/syserr.h"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include <syserror_use.hpp>
@@ -111,7 +111,7 @@ int c_tun_device::get_tun_fd() const {
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
 
@@ -195,7 +195,7 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 //__linux__
 #elif defined(_WIN32) || defined(__CYGWIN__)
 
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 #include <boost/bind.hpp>
 #include <cassert>
 #include <ifdef.h>

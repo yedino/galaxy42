@@ -361,15 +361,15 @@ TEST(serialize, multi_serialize) {
 {
 	unsigned int val = 0;
 	val = parser.pop_integer_u<1,unsigned int>();
-	EXPECT_EQ(val, 150);
+	EXPECT_EQ(val, 150u);
 	val = parser.pop_integer_u<2,unsigned int>();
-	EXPECT_EQ(val, 30000);
+	EXPECT_EQ(val, 30000u);
 	val = parser.pop_integer_u<8,unsigned int>();
-	EXPECT_EQ(val, 30000);
+	EXPECT_EQ(val, 30000u);
 	val = parser.pop_integer_u<4,unsigned int>();
-	EXPECT_EQ(val, 2140000000);
+	EXPECT_EQ(val, 2140000000u);
 	val = parser.pop_integer_u<4,unsigned int>();
-	EXPECT_EQ(val, 4294777777);
+	EXPECT_EQ(val, 4294777777u);
 }
 	EXPECT_EQ(parser.pop_bytes_sizeoctets<1>(),"Octets1" + f);
 	EXPECT_EQ(parser.pop_bytes_sizeoctets<2>(), "Octets2" + f);

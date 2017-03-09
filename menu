@@ -192,7 +192,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 				flag=""
 			fi
 			sleep 0.2
-		  for iii in 'en_US.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
+		  for iii in 'en_US.UTF-8' 'pl_PL.UTF-8' 'uk_UA.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
 		  	echo -e "\n\n\n===============================================\nLANG: - $iii - (press ENTER)\n\n\n"
 		  	read _
 				#LANG="$iii" LANGUAGE=  LC_ALL= strace -e open -f ./install.sh --test-lang "$flag"

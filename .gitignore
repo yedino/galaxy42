@@ -1,3 +1,7 @@
+
+# the default directory for building
+build/
+
 # temporary var files, including created by running-in-place program
 # especially for developer tools, script
 vartmp/
@@ -41,4 +45,7 @@ compile_commands.json
 
 # QT-Creator Ignore
 CMakeLists.txt.user
+
+# produced by CMake/Cotire
+*cotire.cmake
 

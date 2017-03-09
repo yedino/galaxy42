@@ -365,6 +365,7 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
+	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	size_t pos1 = simple.find('-');
@@ -588,10 +589,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 
 }
 
-
-void c_tunserver::help_usage() const {
-	// TODO(r) remove, using boost options
-}
 
 //#ifdef __linux__
 void c_tunserver::prepare_socket() {
@@ -1483,7 +1480,7 @@ std::string c_tunserver::program_action_gen_key_simple() {
 	return IDI_name;
 }
 
-void c_tunserver::program_action_gen_key(boost::program_options::variables_map & argm) {
+void c_tunserver::program_action_gen_key(const boost::program_options::variables_map & argm) {
 	_note("Action: gen key");
 	if (!argm.count("key-type")) {
 		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
