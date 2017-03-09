@@ -3,7 +3,7 @@
 #pragma once
 
 #include "gtest/gtest.h"
-#include "../c_tnetdbg.hpp"
+#include "../tnetdbg.hpp"
 
 // https://github.com/google/googletest/blob/master/googletest/include/gtest/gtest.h
 class TestsEnvReseter : public ::testing::EmptyTestEventListener {

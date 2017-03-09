@@ -58,8 +58,10 @@ class c_peering { ///< An (mostly established) connection to peer
 		c_ip46_addr	m_peering_addr; ///< peer physical address in socket format
 		c_haship_addr m_haship_addr; ///< peer haship address
 		unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey (when we know it)
-        std::atomic<long int> m_limit_points; // decrement when send packet to this peer
-        c_peering_stats m_peering_stats;
+
+		std::atomic<long int> m_limit_points; // decrement when send packet to this peer
+		c_peering_stats m_peering_stats;
+
 		std::chrono::steady_clock::time_point m_last_ping_time;
 };
 

@@ -1,5 +1,5 @@
 #include "c_event_manager.hpp"
-#include "c_tnetdbg.hpp"
+#include "tnetdbg.hpp"
 #include <thread>
 #include <chrono>
 
