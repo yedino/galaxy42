@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 #include "c_linux_tuntap_obj.hpp"
 #include "../../../depends/cjdns-code/NetPlatform.h"
 #include "../../cpputils.hpp"
@@ -17,6 +19,18 @@ c_linux_tuntap_obj::c_linux_tuntap_obj() :
 	_check_sys(m_tun_stream.is_open());
 }
 
+size_t c_linux_tuntap_obj::send_to_tun(const unsigned char *data, size_t size) {
+	return m_tun_stream.write_some(boost::asio::buffer(data, size));
+}
+
+size_t c_linux_tuntap_obj::read_from_tun(unsigned char *const data, size_t size) {
+	return m_tun_stream.read_some(boost::asio::buffer(data, size));
+}
+
+void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_t size, tuntap_base_obj::read_handler handler) {
+	_NOTREADY();
+}
+
 void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) {
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN;
@@ -32,3 +46,5 @@ void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binar
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
 }
+
+#endif // __linux__
