@@ -146,17 +146,16 @@ t_hash_PRV Hash2_PRV( const t_hash_PRV & hash );
 
 // ==================================================================
 
-// must match: t_crypto_system_type_to_name()
+/// must match: t_crypto_system_type_to_name()
 enum t_crypto_system_type : unsigned char {
-	// 0 is reserved
-	e_crypto_system_type_invalid = 0,
-	e_crypto_system_type_X25519 = 5,
-	e_crypto_system_type_Ed25519 = 6,
-	e_crypto_system_type_NTRU_EES439EP1 = 7,
-	e_crypto_system_type_SIDH = 8,
-	e_crypto_system_type_geport_todo = 9,
+	e_crypto_system_type_invalid = 0,	///< 0 is reserved
+	e_crypto_system_type_X25519 = 5, ///< {kagr}
+	e_crypto_system_type_Ed25519 = 6,  ///< {sign}
+	e_crypto_system_type_NTRU_EES439EP1 = 7, ///< {encr}
+	e_crypto_system_type_SIDH = 8, ///< {kagr}
+	e_crypto_system_type_geport_todo = 9, ///< {sign}
 	e_crypto_system_type_symhash_todo = 10,
-	e_crypto_system_type_NTRU_sign = 11,
+	e_crypto_system_type_NTRU_sign = 11, ///< {sign}
 	e_crypto_system_type_END_normal,
 
 	e_crypto_system_type_multikey_pub = 29,

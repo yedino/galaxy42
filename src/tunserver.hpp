@@ -201,8 +201,6 @@ class c_tunserver : public c_galaxy_node {
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
 
-		void help_usage() const; ///< show help about usage of the program
-
 		typedef enum {
 			e_route_method_from_me=1, ///< I am the oryginal sender (try hard to send it)
 			e_route_method_if_direct_peer=2, ///< Send data only if if I know the direct peer (e.g. I just route it for someone else - in star protocol the center node)
@@ -284,7 +282,7 @@ class c_tunserver : public c_galaxy_node {
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
-		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip
+		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
 		mutable std::mutex m_peer_mutex;
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
