@@ -17,6 +17,10 @@ Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
+// TODO  ....  TODO@author
+thing_to_be_fixed_before_release ; // TODO-release
+
+is_ascii_normal // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
 
 assert() / _check_abort() / _check()
 1. abort on error (only guaranteed in debug mode) - assert() // from compiler

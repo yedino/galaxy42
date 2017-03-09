@@ -7,7 +7,11 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	_info("Parsing: "<<simple);
 	size_t pos1 = simple.find('-');
-	if (pos1 == string::npos) { // must be one-part format [cable]
+
+/*
+*/
+
+	if (pos1 == string::npos) { // must be one-part format [CABLE]
 		vector<string> ret_id; // no IDs
 		vector<string> ret_cable{ simple.substr(pos1+1) };
 		return std::make_pair(std::move(ret_id), std::move(ret_cable));
@@ -49,37 +53,26 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 
 void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
 	ostr <<
-	"# Format [CABLE] - peer to anyone who is reachable there:\n"
-	"--peer 192.166.218.58 \n"
-	"--peer auto:192.166.218.58 \n"
-	"--peer auto:192.166.218.58:9042 \n"
-	"--peer udp:192.166.218.58:9042 \n"
-	"--peer udp:[fe80::d428:5aff:feb0:d44e]:9042 \n"
-	"--peer tcp:192.166.218.58:9042 \n"
-	"\n"
-	"# Format [id-ID] - peer to this ID, find yourself how (e.g. using seed-nodes):\n"
-	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5\n"
-	"\n"
-	"# Format [id-ID-(CABLES)] - peer to this ID, using given list of cables:\n"
-	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(tcp:192.166.218.58:9042) \n"
-	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(tcp:[fe80::d428:5aff:feb0:d44e]:9042,udp:192.166.218.58:9042) \n"
-	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(shm:test1,shm:test2) \n"
-	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(shm:test1,shm:test2,tcp:192.166.218.58:9042) \n"
-	"\n"
-	"# Format [CABLE-ID] - (an older format):\n"
-	"--peer 192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	"--peer 192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	"--peer auto:192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	"--peer udp:192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	"--peer tcp:192.166.218.58:9042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	"--peer shm:test1-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
-	"\n"
+	"# Format [id-ID-CABLES] - peer to this ID, using given list of cables:\n"
+	"--peer udp:76.31.171.15:9042 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-udp:76.31.171.15:9042 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-udp:76.31.171.15:9042,cost=100 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,friend-udp:76.31.171.15:9042 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,friend,score=10000,prio=10-udp:76.31.171.15:9042 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-udp:p2.meshnet.pl:9042 \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-(udp:p.meshnet.pl:9042,cost=500),(shm:test,tcp:[fe80::d44e]:9042) \n"
+	"--peer id-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5-bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr \n"
+	"--peer bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=99999 \n"
+	"--peer (bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=99999;udp:p.meshnet.pl:9042) \n"
+	"--peer (udp:p.meshnet.pl:9042;shm:test;tcp:[fe80::d44e]:9042) \n"
 	"\n"
 	"CABLE is: \n"
-	"cabletype:data:port"
+	"cabletype:data:port \n"
+	"cabletype:data:port \n"
 	"cabletype:data:port"
 	"a cable, with possible types are: \n"
-	"'udp4' 'udp6' 'tcp4' 'tcp6' 'ETH' \n"
+	"'udp4' 'udp6' 'tcp4' 'tcp6' 'ETH' (currently implemented: ...TODO) \n" // TODO-release update what is implemented
 	"\n"
 	"When taking input from user (e.g. in the factory generating addresses) we also support \n"
 	"this conversions: \n"
