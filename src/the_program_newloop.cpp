@@ -382,9 +382,8 @@ void c_the_program_newloop::use_options_peerref() {
 			_info( peer_ref  );
 			UsePtr(pimpl->server).add_peer_simplestring( peer_ref );
 		}
-	} catch(...) {
-		// TODO@hb no catch(...)
-		ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
+	} catch(const std::exception & ex) {
+		ui::action_error_exit(join_string_sep( mo_file_reader::gettext("L_wrong_peer_typo") , ex.what()));
 	}
 }
 
