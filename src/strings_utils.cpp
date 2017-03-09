@@ -1,6 +1,5 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 
-
 #include "strings_utils.hpp"
 
 #include "crypto/crypto_basic.hpp" // for hashing function
@@ -41,7 +40,6 @@ bool operator==( const string_as_hex &a, const string_as_hex &b) {
 }
 
 // ==================================================================
-
 
 unsigned char int2hexchar(unsigned char i) {
 	if (i<=9) return '0'+i;
@@ -135,7 +133,6 @@ bool string_as_bin::operator!=(const string_as_bin &rhs) const {
 	return this->bytes != rhs.bytes;
 }
 
-
 bool operator<( const string_as_bin &a, const string_as_bin &b) {
 	return a.bytes < b.bytes;
 }
@@ -189,7 +186,6 @@ void string_as_dbg::print(std::ostream & os, signed char v, t_debug_style style)
 void string_as_dbg::print(std::ostream & os, unsigned char v, t_debug_style style)
 { print(os, static_cast<char>(v), style); }
 
-
 string_as_dbg::operator const std::string & () const {
 	return this->dbg;
 }
@@ -209,7 +205,6 @@ std::string to_debug(const string_as_bin & data, t_debug_style style) {
 	return to_debug( data.bytes , style );
 }
 
-
 std::string to_debug_b(const std::string & data)
 	{ return  to_debug(data,e_debug_style_big); }
 std::string to_debug_b(const string_as_bin & data)
@@ -222,8 +217,6 @@ std::string debug_simple_hash(const std::string & str) {
 	string_as_bin bin( s );
 	return  string_as_hex( bin ).get();
 }
-
-
 
 std::ostream & operator<<(std::ostream & os, boost::any & obj) {
 	using namespace boost;
@@ -238,3 +231,10 @@ std::ostream & operator<<(std::ostream & os, boost::any & obj) {
 	return os;
 }
 
+bool is_ascii_normal(const std::string str){
+	auto it = find_if(str.begin(), str.end(), [](auto x){return !isprint(x);	} );
+	if(it == str.end())
+		return true;
+	else
+		return false;
+}
