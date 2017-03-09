@@ -38,8 +38,6 @@ void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binar
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN;
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
-	std::cout << "iface name " << ifr.ifr_name << '\n';
-	std::cout << "IFNAMSIZ " << IFNAMSIZ << '\n';
 	int errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	_check_sys(errcode_ioctl != -1);
 	_check_extern(binary_address[0] == 0xFD);
