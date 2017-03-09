@@ -11,7 +11,7 @@ class tuntap_base_obj {
 		virtual ~tuntap_base_obj() = default;
 		virtual size_t send_to_tun(const unsigned char *data, size_t size) = 0; ///< block function
 		virtual size_t read_from_tun(unsigned char * const data, size_t size) = 0; ///< block function
-		virtual size_t async_receive_from_tun(unsigned char * const data, size_t size, read_handler handler) = 0;
+		virtual void async_receive_from_tun(unsigned char * const data, size_t size, read_handler handler) = 0;
 		virtual void set_tun_parameters
 			(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
 };
