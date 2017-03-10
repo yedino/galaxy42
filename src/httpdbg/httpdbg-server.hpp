@@ -32,7 +32,7 @@ class c_httpdbg_raport {
 	protected:
 		const c_tunserver & m_target;
 		std::string page_template;
-		std::ostringstream get_current_date(std::ostringstream &);
+		std::ostringstream& get_current_date(std::ostringstream &);
 		static std::string HTML(const std::string & s);
 		static std::string get_page_template(const std::string & file_name);
 		template <class T>

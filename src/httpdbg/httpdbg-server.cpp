@@ -97,7 +97,7 @@ string c_httpdbg_raport::get_page_template(const string &file_name){
 	return out.str();
 }
 
-ostringstream c_httpdbg_raport::get_current_date(ostringstream& out){
+ostringstream& c_httpdbg_raport::get_current_date(ostringstream& out){
 	time_t t = time(0);
 	struct tm * now = localtime( & t);
 	out << now->tm_mday << '.' << (now->tm_mon + 1) << '.' << (now->tm_year + 1900) << ' ';
@@ -107,7 +107,7 @@ ostringstream c_httpdbg_raport::get_current_date(ostringstream& out){
 
 string c_httpdbg_raport::generate(string url) {
 	ostringstream out;
-	out << get_current_date() << "</br>" << endl;
+	out << get_current_date(out) << "</br>" << endl;
 
 	lock_guard<mutex> lg( m_target.get_my_mutex() );
 
