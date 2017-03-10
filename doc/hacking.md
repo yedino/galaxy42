@@ -17,6 +17,13 @@ Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
+
+_dbg3(X) _dbg2(X) _dbg1(X)
+_info(X) _note(X) _clue(X)
+_fact(X) _goal(X)
+_warn(X) _erro(X)
+_mark(X)
+
 // TODO  ....  TODO@author
 thing_to_be_fixed_before_release ; // TODO-release
 

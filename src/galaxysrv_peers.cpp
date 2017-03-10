@@ -7,7 +7,7 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
 
-	_mark("Parsing: "<<simple);
+	_clue("Parsing: "<<simple);
 	size_t pos1 = simple.find(separator);
 
 	if (pos1 == string::npos) { // must be one-part format "VIRTUAL"
@@ -42,7 +42,6 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 			_dbg3("posX=" << posX << " posB="<<posB<<" given " <<partX);
 			ret_cable.push_back( std::move(partX) );
 			posB=posX;
-			_note(simple.at(posB));
 			_check_user(simple.at(posB)==group_close); // ")"
 			++posB;
 			if (!(posB<size)) break; // end is possible after last "....@(...)"
