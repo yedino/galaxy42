@@ -58,38 +58,38 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"rh"        "Read (edit) doc/hacking" \
 	"rm"        "Read (edit) main README" \
 	"d"         "Build: with ./do"  \
-	"" "" \
+	"-" "" \
 	"d10"       "Build: with ./do extlevel 10"  \
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
 	"d30"       "Build: with ./do extlevel 30 - slow! insecure!"  \
-	"" "" \
-	"" "--- Gitian ---" \
+	"-" "" \
+	"-" "--- Gitian ---" \
 	"glf"       "Build: Gitian for Linux (fast)"  \
 	"gwf"       "Build: Gitian for Windows (fast)"  \
-	"" "" \
+	"-" "" \
 	"gli"       "Build: Gitian for Linux (image) - slow!"  \
 	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
 	"gai"       "Build: Gitian for all (image) - slow!"  \
-	"" "" \
+	"-" "" \
 	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
 	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
-	"" "" \
-	"" "--- Language ---" \
+	"-" "" \
+	"-" "--- Language ---" \
 	"lc"        "Language: update: re-COMPILE .po --> .mo" \
 	"lui"       "Language: update: Scripts: INSTALLER" \
 	"luu"       "Language: update: Scripts: UTILS (g42bashutils)" \
 	"lus"       "Language: update: Scripts: other SCRIPT (e.g. gitian-build)" \
 	"lum"       "Language: update: C++: MAIN-program strings" \
-	"" "" \
+	"-" "" \
 	"tut"       "Tests: run Unit Tests" \
 	"tutr"      "Tests: run Unit Tests (release version)" \
 	"til"       "Tests: run Installer - in all Languages" \
 	"tid"       "Tests: run Installer - in all Dialog menu types" \
-	"" "" \
-	"" "--- Git/Security ---" \
+	"-" "" \
+	"-" "--- Git/Security ---" \
 	"GS"        "Git Security: check git history integrity" \
 	"GSk"       "Git Security: as above (GS) but first import all keys from here TO YOUR GPG" \
-	"" "" \
+	"-" "" \
 	"info" "INFO about this menu: run it from cmd as: ./m do10 to run given action instantly" \
 	2>&1 >/dev/tty ) || abdialog_exit
 [[ -z "$response" ]] && exit

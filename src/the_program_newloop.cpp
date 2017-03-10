@@ -389,7 +389,7 @@ void c_the_program_newloop::use_options_peerref() {
 
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
-	g_dbg_level_set(10, "Debug the newloop");
+	g_dbg_level_set(20, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
 	this->use_options_peerref();
