@@ -33,13 +33,13 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 		_info(join_string_sep(posB," < ",size));
 		while (posB < size_before) {
 			auto posX = simple.find(group_close,posB); // find ")"
-			_info("posX=" << posX << " posB="<<posB);
+			_dbg3("posX=" << posX << " posB="<<posB);
 			if (posX == string::npos) {
 				_info("Hit end because posX="<<posX);
 				posX = size_before;
 			}
 			string partX = simple.substr(posB, posX-posB);
-			_info("posX=" << posX << " posB="<<posB<<" given " <<partX);
+			_dbg3("posX=" << posX << " posB="<<posB<<" given " <<partX);
 			ret_cable.push_back( std::move(partX) );
 			posB=posX;
 			_note(simple.at(posB));
@@ -91,8 +91,9 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
 	ostr <<
 	"# --peer VIRTUAL \n"
-	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300 \n"
+	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,friend,score=-300 \n"
 	"# --peer VIRTUAL@(CABLE) \n"
+	"  --peer fd42::1234@(udp:foo.com:9042)@(email:tx@test.com)@(email:b@test.com)@(email:c@test.com) \n"
 	"  --peer anyone@(udp:76.31.171.15:9042) \n"
 	"  --peer anyone@(udp:p.meshnet.pl:9042) \n"
 	"  --peer anyone@(bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=99999) \n"
@@ -101,8 +102,8 @@ void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
 	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5@(udp:76.31.171.15:9042,cost=100) \n"
 	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5@(bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr) \n"
 	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,friend@(udp:76.31.171.15:9042) \n"
-	"# --peer VIRTUAL@(CABLE)@(CABLE) \n"
 	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,friend,score=10000,prio=10@(udp:76.31.171.15:9042) \n"
+	"# --peer VIRTUAL@(CABLE)@(CABLE) \n"
 	"  --peer fd42:f6c4:9d19:f128:30df:b289:aef0:25f5@(udp:p.meshnet.pl:9042,cost=500)@(shm:test)@(tcp:[fe80::d44e]:9042) \n"
 	"\n"
 	"CABLE is: \n"

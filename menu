@@ -1,10 +1,15 @@
 #!/bin/bash
-# This script should be run as-is inside the source code of this project.
-#
-# (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
-#
+# (C) 2017 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
 
-[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
+[ -r "toplevel" ] || {
+	# search up: usually we are simply too deep e.g. inside build/ or src/
+	while true ; do
+		# can not go further and didn't found toplevel yet - can't find it
+		cd .. || { echo "ERROR: Can't find root file 'toplevel'. (Searched, now PWD=$PWD)."; exit 1; }
+		[ -r "toplevel" ] && break # found it, done
+	done ;
+}
+# we are now in the top level directory
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
@@ -19,9 +24,16 @@ lib='abdialog.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 	eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
 
-dialog_h=40
+dialog_h=$(tput lines)
+dialog_h=$((dialog_h - 2))
 dialog_h2=$((dialog_h - 7 ))
-dialog_w=110
+dialog_w=$(tput cols)
+dialog_w=$((dialog_w - 2))
+
+dialog_h=$(( dialog_h>30 ? dialog_h-5 : dialog_h ))
+dialog_w=$(( dialog_w>100 ? dialog_w-5 : dialog_w ))
+dialog_h=$(( dialog_h>200 ? 200 : dialog_h ))
+dialog_w=$(( dialog_w>200 ? 200 : dialog_w ))
 
 # ------------------------------------------------------------------------
 # start
@@ -41,16 +53,17 @@ then
 
 # shellcheck disable=SC2069
 response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$dialog_w" "$dialog_h2"  \
-	"i"         "Install: with ./install.sh (with --sudo if not root)"  \
+	"i"         "Install ./install.sh (with --sudo if not root)"  \
+	"icfg"      "Install devel configure (e.g. default commandline for running program)" \
+	"rh"        "Read (edit) doc/hacking" \
+	"rm"        "Read (edit) main README" \
 	"d"         "Build: with ./do"  \
+	"" "" \
 	"d10"       "Build: with ./do extlevel 10"  \
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
-	"d30"       "Build: with ./do extlevel 30 - slow! exploits"  \
+	"d30"       "Build: with ./do extlevel 30 - slow! insecure!"  \
 	"" "" \
-	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
-	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
-	"" "" \
-	"" "" \
+	"" "--- Gitian ---" \
 	"glf"       "Build: Gitian for Linux (fast)"  \
 	"gwf"       "Build: Gitian for Windows (fast)"  \
 	"" "" \
@@ -58,6 +71,10 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
 	"gai"       "Build: Gitian for all (image) - slow!"  \
 	"" "" \
+	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
+	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
+	"" "" \
+	"" "--- Language ---" \
 	"lc"        "Language: update: re-COMPILE .po --> .mo" \
 	"lui"       "Language: update: Scripts: INSTALLER" \
 	"luu"       "Language: update: Scripts: UTILS (g42bashutils)" \
@@ -69,9 +86,7 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"til"       "Tests: run Installer - in all Languages" \
 	"tid"       "Tests: run Installer - in all Dialog menu types" \
 	"" "" \
-	"rm"        "Read/write: main README" \
-	"rh"        "Read/write: doc/hacking" \
-	"" "" \
+	"" "--- Git/Security ---" \
 	"GS"        "Git Security: check git history integrity" \
 	"GSk"       "Git Security: as above (GS) but first import all keys from here TO YOUR GPG" \
 	"" "" \
@@ -97,6 +112,11 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			else
 				bash ./install.sh
 			fi
+		;;
+
+		icfg)
+			cd doc/cmdline/
+			./install-one.sh
 		;;
 
 		d)
