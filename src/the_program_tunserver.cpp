@@ -429,6 +429,9 @@ int c_the_program_tunserver::main_execution() {
 			// end of options
 			// ------------------------------------------------------------------
 
+
+// ------------------------------------------------------------------
+// deprecated - now in newloop new galaxysrv
 			_info("Configuring my own reference (keys):");
 
 			bool have_keys_configured=false;
@@ -484,8 +487,10 @@ int c_the_program_tunserver::main_execution() {
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
-
 			}
+
+// ^ deprecated ------------------------------------------------------------------
+
 
 			// ------------------------------------------------------------------
 
