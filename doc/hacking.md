@@ -47,6 +47,7 @@ _throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string)
 try {
 	_check( ptr != nullptr ); // like assert
 	_check_user( size < 100 ); // user given bad input
+	_check_input( size < 100 ); // bad input
 	_check_sys( file.exists() ); // system doesn't work
 	_check_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data
 
@@ -58,6 +59,7 @@ try {
 
 	// same, but we expect this errors as they are common and we do not want to spam log with ERROR
 	_try_user( size < 100 ); // user given bad input - common case
+	_try_input( size < 100 ); // bad input - common case
 	_try_sys( file.exists() ); // system doesn't work - common case
 	_try_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data - common case
 }
