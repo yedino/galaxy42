@@ -42,13 +42,13 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 			_dbg3("posX=" << posX << " posB="<<posB<<" given " <<partX);
 			ret_cable.push_back( std::move(partX) );
 			posB=posX;
-			_check_user(simple.at(posB)==group_close); // ")"
+			_check_input(simple.at(posB)==group_close); // ")"
 			++posB;
 			if (!(posB<size)) break; // end is possible after last "....@(...)"
 			// otherwise we open new group:
-			_check_user(simple.at(posB)==separator); // ")@"
+			_check_input(simple.at(posB)==separator); // ")@"
 			++posB;
-			_check_user(simple.at(posB)==group_open); // ")@(" after this
+			_check_input(simple.at(posB)==group_open); // ")@(" after this
 			++posB;
 		}
 
