@@ -795,7 +795,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		lg.unlock();
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
 		if (recurse_level>1) {
-			_warn("DROP: Recruse level too big in choosing peer");
+			_warn("DROP: Recursion level too big in choosing peer");
 			return false; // <---
 		}
 
@@ -1449,6 +1449,8 @@ void c_tunserver::run(int time) {
 }
 
 
+// ----------------------------------------------------------------------------
+// @deprecated
 void c_tunserver::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
 	_info("Setting the name of IDI key to: " << keyname);
@@ -1468,6 +1470,7 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 	datastore::save_string(e_datastore_galaxy_instalation_key_conf,"IDI", keyname, true);
 }
 
+// @deprecated
 std::string c_tunserver::program_action_gen_key_simple() {
 	const string IDI_name = "IDI";
 //	ui::action_info_ok("Generating your new keys.");
@@ -1480,6 +1483,7 @@ std::string c_tunserver::program_action_gen_key_simple() {
 	return IDI_name;
 }
 
+// @deprecated
 void c_tunserver::program_action_gen_key(const boost::program_options::variables_map & argm) {
 	_note("Action: gen key");
 	if (!argm.count("key-type")) {
@@ -1515,6 +1519,7 @@ void c_tunserver::program_action_gen_key(const boost::program_options::variables
 		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
+// ----------------------------------------------------------------------------
 
 int c_tunserver::get_my_port() const {
 	return m_port;

@@ -387,12 +387,79 @@ void c_the_program_newloop::use_options_peerref() {
 	}
 }
 
+
+
+// ------------------------------------------------------------------
+// @new - now in newloop new galaxysrv
+			_info("Configuring my own reference (keys):");
+
+			bool have_keys_configured=false;
+			try {
+				auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
+				std::vector<std::string> keys = datastore::get_file_list(keys_path);
+				size_t have_keys = (keys.size() > 0);
+
+				auto conf_IDI = datastore::get_full_path(e_datastore_galaxy_instalation_key_conf,"IDI");
+				bool conf_IDI_ok = datastore::is_file_ok(conf_IDI);
+
+				if (have_keys) {
+					if (conf_IDI_ok) {
+						have_keys_configured = true;
+					} else {
+						_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
+						_warn("If this warn still occurs, make sure you have backup of your keys");
+						myserver.program_action_set_IDI("IDI");
+						have_keys_configured = true;
+					}
+				}
+
+			} catch(...) {
+				_info("Can not load keys list or IDI configuration");
+				have_keys_configured=0;
+			}
+
+			if (have_keys_configured) {
+				bool ok=false;
+
+				try {
+					myserver.configure_mykey();
+					ok=true;
+				} UI_CATCH("Loading your key");
+
+				if (!ok) {
+					_fact( "You seem to already have your hash-IP key, but I can not load it." );
+					_fact( "Hint:\n"
+						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
+						<< "Or maybe instead try other version of this program, that can load this key."
+					);
+					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
+				}
+			} else {
+				_fact( "You have no ID keys yet - so will create new keys for you." );
+
+				auto step_make_default_keys = [&]()	{
+					ui::action_info_ok("Generating your new keys.");
+					const string IDI_name = myserver.program_action_gen_key_simple();
+					myserver.program_action_set_IDI(IDI_name);
+					ui::action_info_ok("Your new keys are created.");
+					myserver.configure_mykey();
+					ui::action_info_ok("Your new keys are ready to use.");
+				};
+				UI_EXECUTE_OR_EXIT( step_make_default_keys );
+			}
+
+// ^ new ------------------------------------------------------------------
+
+
+
+
+
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
 	g_dbg_level_set(20, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
-	this->use_options_peerref();
+	// this->use_options_peerref();
 
 
 /*
