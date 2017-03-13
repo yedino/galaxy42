@@ -1,7 +1,6 @@
-
 #pragma once
 #ifndef HTTPDBG_HTTPDBG_SERVER
-#define HTTPDBG_HTTPDBG_SERVER 1
+#define HTTPDBG_HTTPDBG_SERVER
 
 #include <thread>
 #include <mutex>
@@ -32,7 +31,11 @@ class c_httpdbg_raport {
 	protected:
 		const c_tunserver & m_target;
 		std::string page_template;
-		std::ostringstream& get_current_date(std::ostringstream &);
+		std::ostringstream& generate_current_date(std::ostringstream &);
+		std::ostringstream& generate_table_of_peers(std::ostringstream &, std::string &url);
+		std::ostringstream& generate_table_of_tunnels(std::ostringstream &, std::string &url);
+		std::string get_data();
+		std::string get_charts(std::string &url);
 		static std::string HTML(const std::string & s);
 		static std::string get_page_template(const std::string & file_name);
 		template <class T>

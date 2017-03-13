@@ -97,20 +97,16 @@ string c_httpdbg_raport::get_page_template(const string &file_name){
 	return out.str();
 }
 
-ostringstream& c_httpdbg_raport::get_current_date(ostringstream& out){
+ostringstream& c_httpdbg_raport::generate_current_date(ostringstream& out){
 	time_t t = time(0);
 	struct tm * now = localtime( & t);
 	out << now->tm_mday << '.' << (now->tm_mon + 1) << '.' << (now->tm_year + 1900) << ' ';
 	out << now->tm_hour << ':' << setfill('0') << setw(2) << now->tm_min << ':' << setfill('0') << setw(2) << now->tm_sec;
+	out << "</br>" << endl;
 	return out;
 }
 
-string c_httpdbg_raport::generate(string url) {
-	ostringstream out;
-	out << get_current_date(out) << "</br>" << endl;
-
-	lock_guard<mutex> lg( m_target.get_my_mutex() );
-
+ostringstream& c_httpdbg_raport::generate_table_of_peers(ostringstream& out, string &url){
 	if(url.size()!=32)
 	{
 		out << "<table><tr font-weight='bold'><th>Server name</th><th>Server hip</th></tr><tr><td>";
@@ -120,10 +116,8 @@ string c_httpdbg_raport::generate(string url) {
 	else
 		out << "</br>" << "<a href=\"/\">Back</a></th><th>";
 	if(m_target.m_peer.size())
-	out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Data read</th><th>Packets read</th>"
-				 "<th>Data sent</th><th>Packets sent</th><th>Connection time</th><th>Data</th><th>Packets</th></tr>";
-	string data = "";
-	string chart = "";
+		out << "<table><tr><th>Peering adress</th><th>Hip</th><th>Pub</th><th>Limit points</th><th>Data read</th><th>Packets read</th>"
+					 "<th>Data sent</th><th>Packets sent</th><th>Connection time</th><th>Data</th><th>Packets</th></tr>";
 	for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
 	{
 		string hip = it->first.get_hip_as_string(false);
@@ -133,7 +127,7 @@ string c_httpdbg_raport::generate(string url) {
 		out << HTML(it->second->get_pip()) << "</td><td>";
 		out << it->first.get_hip_as_string(true);
 		if(url.size()!=32)
-				out<< "</br><a href=\"" << hip << "\"> Details</a>";
+			out<< "</br><a href=\"" << hip << "\"> Details</a>";
 		out << "</td><td>";
 		out << HTML(it->second->get_pub()) << "</td><td>";
 		out << HTML(it->second->get_limit_points()) <<  "</td><td>";
@@ -144,11 +138,12 @@ string c_httpdbg_raport::generate(string url) {
 		out << HTML(it->second->get_stats().get_connection_time()) << "</td><td>";
 		out << "<div id=\"cd_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></td><td>";
 		out << "<div id=\"cp_div" << hip << "\" style=\"width: 150px; height: 100px;\"></div></td></tr>";
-		data += it->second->get_stats().get_data_buffer().get_data_buffer_as_js_str(hip);
-		data += it->second->get_stats().get_data_buffer().get_packets_buffer_as_js_str(hip);
-		chart += it->second->get_stats().get_data_buffer().get_charts_as_js_str(hip, url.size()==32);
 	}
 	out << "</table></br>";
+	return out;
+}
+
+ostringstream& c_httpdbg_raport::generate_table_of_tunnels(ostringstream& out, string &url){
 	if(url.size()!=32)
 		out << "<b>Number of tunnels: " << HTML(m_target.m_tunnel.size()) << "</b>" << endl;
 	if(m_target.m_tunnel.size())
@@ -197,12 +192,45 @@ string c_httpdbg_raport::generate(string url) {
 		out << HTML(it->second->m_state) << "</td></tr>";
 	}
 	out << "</table>";
+	return out;
+}
+
+string c_httpdbg_raport::get_data(){
+	string data = "";
+	for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
+	{
+		string hip = it->first.get_hip_as_string(false);
+		data += it->second->get_stats().get_data_buffer().get_data_buffer_as_js_str(hip);
+		data += it->second->get_stats().get_data_buffer().get_packets_buffer_as_js_str(hip);
+	}
+	return data;
+}
+
+string c_httpdbg_raport::get_charts(string &url){
+	string charts = "";
+	for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
+	{
+		string hip = it->first.get_hip_as_string(false);
+		charts += it->second->get_stats().get_data_buffer().get_charts_as_js_str(hip, url.size()==32);
+	}
+	return charts;
+}
+
+string c_httpdbg_raport::generate(string url) {
+	ostringstream out;
+	generate_current_date(out);
+
+	lock_guard<mutex> lg( m_target.get_my_mutex() );
+
+	generate_table_of_peers(out, url);
+	generate_table_of_tunnels(out, url);
+
 	if(url.size()==32)
 	{
 		out << "<div id=\"bcd_div" << url << "\" style=\"width: 50%; height: 500px; float: left;\"></div>";
 		out << "<div id=\"bcp_div" << url << "\" style=\"width: 50%; height: 500px; float: left;\"></div>";
 	}
-	boost::format page = boost::format(page_template) % data % chart % out.str();
+	boost::format page = boost::format(page_template) % get_data() % get_charts(url) % out.str();
 	return page.str();
 }
 
@@ -224,7 +252,7 @@ int c_httpdbg_server::run(){
 		server s(m_io_service, m_opt_port, m_tunserver);
 		m_io_service.run();
 	}
-	catch (exception& e)
+	catch (const exception& e)
 	{
 		_erro( "Exception: " << e.what() );
 	}
@@ -236,7 +264,7 @@ void c_httpdbg_server::stop(){
 	{
 		m_io_service.stop();
 	}
-	catch (exception& e)
+	catch (const exception& e)
 	{
 		_erro( "Exception: " << e.what());
 	}
