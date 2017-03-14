@@ -464,7 +464,7 @@ void c_tunserver::configure_mykey() {
 		if (IDI_ip_hexdot.at(0) != 'f') throw std::runtime_error(msg_badip);
 		if (IDI_ip_hexdot.at(1) != 'd') throw std::runtime_error(msg_badip);
 	}
-	UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
+	catch UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
 
 	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_ip_hexdot );
 	_info("IDI IPv6: " << IDI_ip_hexdot);
@@ -497,7 +497,7 @@ void c_tunserver::configure_mykey() {
 		if (IDC_ip_hexdot.at(0) != 'f') throw std::runtime_error(msg_badip);
 		if (IDC_ip_hexdot.at(1) != 'd') throw std::runtime_error(msg_badip);
 	}
-	UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
+	catch UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
 
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_ip_hexdot );
 	_info("IDC IPv6: " << IDC_ip_hexdot);
