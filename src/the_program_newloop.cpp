@@ -388,7 +388,7 @@ void c_the_program_newloop::use_options_peerref() {
 }
 
 
-
+void c_the_program_newloop::programtask_load_my_keys() {
 // ------------------------------------------------------------------
 // @new - now in newloop new galaxysrv
 			_info("Configuring my own reference (keys):");
@@ -408,7 +408,7 @@ void c_the_program_newloop::use_options_peerref() {
 					} else {
 						_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
 						_warn("If this warn still occurs, make sure you have backup of your keys");
-						myserver.program_action_set_IDI("IDI");
+						UsePtr(pimpl->server).program_action_set_IDI("IDI");
 						have_keys_configured = true;
 					}
 				}
@@ -422,7 +422,7 @@ void c_the_program_newloop::use_options_peerref() {
 				bool ok=false;
 
 				try {
-					myserver.configure_mykey();
+					UsePtr(pimpl->server).configure_mykey();
 					ok=true;
 				} UI_CATCH("Loading your key");
 
@@ -440,16 +440,15 @@ void c_the_program_newloop::use_options_peerref() {
 				auto step_make_default_keys = [&]()	{
 					ui::action_info_ok("Generating your new keys.");
 					const string IDI_name = myserver.program_action_gen_key_simple();
-					myserver.program_action_set_IDI(IDI_name);
+					UsePtr(pimpl->server).program_action_set_IDI(IDI_name);
 					ui::action_info_ok("Your new keys are created.");
-					myserver.configure_mykey();
+					UsePtr(pimpl->server).myserver.configure_mykey();
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
 			}
-
 // ^ new ------------------------------------------------------------------
-
+}
 
 
 
