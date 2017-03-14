@@ -435,7 +435,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 	return m_peer.size();
 }
 
-// my key
+// my key @deprecated (newloop)
 void c_tunserver::configure_mykey() {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
