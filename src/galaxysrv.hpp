@@ -43,6 +43,8 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		c_galaxysrv()=default;
 		virtual ~c_galaxysrv()=default;
 
+		void configure_mykey(); ///<  load my (this node's) keypair
+
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
 		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk)
