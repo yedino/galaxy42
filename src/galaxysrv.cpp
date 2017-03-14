@@ -3,39 +3,41 @@
 #include "libs1.hpp"
 
 // my key @new
-void c_tunserver::configure_mykey() {
+void c_galaxysrv::configure_mykey() {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
-	// getting IDC
 	std::string IDI_name;
 	try {
 		IDI_name = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
-	} catch (std::invalid_argument &err) {
-		_dbg2("IDI is not set");
-		_throw_error( std::runtime_error("IDI is not set") );
+	} catch (const std::invalid_argument &ex) {
+		_info( join_string_sep("Can not find existing IDI",ex.what()) );
+		throw stdplus::expected_not_found(); /// key doesn't exist at all then
 	}
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
-	// getting HIP from IDI
+	// getting our address HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
 	auto IDI_ip_hexdot = my_IDI->get_ipv6_string_hexdot() ;
-	// IDI_hexdot.at(0)='z'; // for testing
 	try {
-		std::ostringstream oss; oss<<"Your Hash-IP address looks not valid (not a Galaxy42 address?)"
-			<< " - the IDI part is: ["<<IDI_ip_hexdot<<"]";
-		const string msg_badip = oss.str();
-		if (static_cast<unsigned char>(IDI_ip_bin.at(0)) != 0xFD) throw std::runtime_error(msg_badip);
-		if (IDI_ip_hexdot.at(0) != 'f') throw std::runtime_error(msg_badip);
-		if (IDI_ip_hexdot.at(1) != 'd') throw std::runtime_error(msg_badip);
-	}
-	UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
+		try {
+			if (static_cast<unsigned char>(IDI_ip_bin.at(0)) != 0xFD) throw std::exception();
+			if (IDI_ip_hexdot.at(0) != 'f') throw std::exception();
+			if (IDI_ip_hexdot.at(1) != 'd') throw std::exception();
+		} catch(...) {
+			std::ostringstream oss; oss<<"Your Hash-IP address looks not valid (not a Galaxy42 address?)"
+				<< " - the IDI part is: ["<<IDI_ip_hexdot<<"]";
+			const string msg_badip = oss.str();
+			throw std::runtime_error(oss.str());
+		}
+	} catch UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
 
 	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_ip_hexdot );
 	_info("IDI IPv6: " << IDI_ip_hexdot);
 	_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
+
 	// creating IDC for this session
 	antinet_crypto::c_multikeys_PAIR my_IDC;
 	my_IDC.generate(antinet_crypto::e_crypto_system_type_X25519,1);
@@ -46,7 +48,7 @@ void c_tunserver::configure_mykey() {
 	// example veryifying
 	antinet_crypto::c_multikeys_pub::multi_sign_verify(IDC_IDI_signature, IDC_pub_to_sign, my_IDI->m_pub);
 
-	// save signature and IDI publickey in tunserver
+	// save signature and IDI publickey in server
 	m_my_IDI_pub = my_IDI->m_pub;
 	m_IDI_IDC_sig = IDC_IDI_signature;
 
@@ -58,13 +60,16 @@ void c_tunserver::configure_mykey() {
 	auto IDC_ip_hexdot = my_IDC.get_ipv6_string_hexdot() ;
 
 	try {
-		std::ostringstream oss; oss<<"Your Hash-IP address looks not valid (not a Galaxy42 address?)"
-			<< " - the IDC part is: ["<<IDC_ip_hexdot<<"]";
-		const string msg_badip = oss.str();
-		if (IDC_ip_hexdot.at(0) != 'f') throw std::runtime_error(msg_badip);
-		if (IDC_ip_hexdot.at(1) != 'd') throw std::runtime_error(msg_badip);
-	}
-	UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
+		try {
+			if (IDC_ip_hexdot.at(0) != 'f') throw std::exception();
+			if (IDC_ip_hexdot.at(1) != 'd') throw std::exception();
+		}
+		catch (...) {
+			std::ostringstream oss; oss<<"Your Hash-IP address looks not valid (not a Galaxy42 address?)"
+				<< " - the IDC part is: ["<<IDC_ip_hexdot<<"]";
+			const string msg_badip = oss.str();
+		}
+	} catch UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
 
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_ip_hexdot );
 	_info("IDC IPv6: " << IDC_ip_hexdot);

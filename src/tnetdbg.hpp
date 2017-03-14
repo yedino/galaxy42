@@ -179,7 +179,7 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 				try { \
 					try { \
 			FUNC(); \
-					} UI_CATCH_RETHROW( "" # FUNC ); \
+					} catch UI_CATCH_RETHROW( "" # FUNC ); \
 				} catch(...) { \
 					std::cout << "Error occured (see above) - we will exit now" << std::endl; \
 					_throw_exit( ui::exception_error_exit("Error in: " # FUNC ) ); \

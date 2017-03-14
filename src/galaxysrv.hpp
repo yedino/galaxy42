@@ -43,13 +43,30 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		c_galaxysrv()=default;
 		virtual ~c_galaxysrv()=default;
 
-		void configure_mykey(); ///<  load my (this node's) keypair
+		/// load my (this node's) keypair from it's default store (e.g. config files)
+		/// if your files seem to not be yet created, then throws expected_not_found
+		void configure_mykey();
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
 		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk)
 		void program_action_gen_key(const boost::program_options::variables_map & argm); ///< generate a key according to given options
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
+		/// @}
+
+	protected:
+
+		/// @name My crypto identity
+		/// @{
+
+		/// priv+pub keypair for my Current identity (IDC)
+		antinet_crypto::c_multikeys_PAIR m_my_IDC;
+		/// IDI - the Installation Identnity, as only public-key, to remove privte from ram for protection
+		antinet_crypto::c_multikeys_pub	m_my_IDI_pub;
+		/// 'signature' - msg=IDC_pub, signer=IDI - it proves that IDI authorized this IDC
+		antinet_crypto::c_multisign m_IDI_IDC_sig;
+		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
+
 		/// @}
 };
 

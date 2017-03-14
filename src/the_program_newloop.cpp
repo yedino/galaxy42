@@ -424,7 +424,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 				try {
 					UsePtr(pimpl->server).configure_mykey();
 					ok=true;
-				} UI_CATCH("Loading your key");
+				} catch UI_CATCH("Loading your key");
 
 				if (!ok) {
 					_fact( "You seem to already have your hash-IP key, but I can not load it." );
@@ -439,10 +439,10 @@ void c_the_program_newloop::programtask_load_my_keys() {
 
 				auto step_make_default_keys = [&]()	{
 					ui::action_info_ok("Generating your new keys.");
-					const string IDI_name = myserver.program_action_gen_key_simple();
+					const string IDI_name = UsePtr(pimpl->server).program_action_gen_key_simple();
 					UsePtr(pimpl->server).program_action_set_IDI(IDI_name);
 					ui::action_info_ok("Your new keys are created.");
-					UsePtr(pimpl->server).myserver.configure_mykey();
+					UsePtr(pimpl->server).configure_mykey();
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
