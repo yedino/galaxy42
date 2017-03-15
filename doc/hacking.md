@@ -18,11 +18,12 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
 
-_dbg3(X) _dbg2(X) _dbg1(X)
-_info(X) _note(X) _clue(X)
-_fact(X) _goal(X)
-_warn(X) _erro(X)
-_mark(X)
+_dbg4(X) // unorganized "removed" debug
+_dbg3(X) _dbg2(X) _dbg1(X) // debug "Load key=0x1234"
+_info(X) _note(X) _clue(X) // information, more important, bigger group
+_fact(X) _goal(X) // very improtant goals, shown to user
+_warn(X) _erro(X) // warnings/errors
+_mark(X) // hot topics (usually for testing)
 
 // TODO  ....  TODO@author
 thing_to_be_fixed_before_release ; // TODO-release
