@@ -64,11 +64,11 @@ TEST(datastore, load_nonexistent) {
 	// string
 	EXPECT_THROW({
 		datastore::load_string(e_datastore_galaxy_instalation_key_conf, non_existent_file);
-	}, std::invalid_argument);
+	},  expected_not_found);
 	// strin mlocked
 	EXPECT_THROW({
 		datastore::load_string_mlocked(e_datastore_galaxy_instalation_key_conf, non_existent_file);
-	}, std::invalid_argument);
+	},  expected_not_found);
 }
 
 TEST(datastore, bad_file_confdir) {
