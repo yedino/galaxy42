@@ -302,23 +302,22 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 		file_with_path = create_path_for(file_type, filename);
 
 		// In code below we want to create an empty file which will help us to open and write down it without any errors
-		boost::filesystem::ofstream empty_file;
-		empty_file.open(file_with_path);
+		boost::filesystem::ofstream empty_file(file_with_path,std::ios_base::app);
 		empty_file.close();
 
-		// prevent overwriting
-		if(is_file_ok(file_with_path.string()) &&  !overwrite) {
-			std::string err_msg(file_with_path.string()
-								+ std::string(mo_file_reader::gettext("L_fail_file_overwrite"))
+		if (!is_file_ok(file_with_path)) {
+			std::string err_msg(__func__ + std::string(mo_file_reader::gettext("l_fail_create_empty_file")));
+			_throw_error( std::invalid_argument(err_msg) );
+		}
 
+		if(is_file_ok(file_with_path) && !b_fs::is_empty(file_with_path) &&  !overwrite) {
+			std::string err_msg(file_with_path.string()
+								+ std::string(" ")
+								+ std::string(mo_file_reader::gettext("L_fail_file_overwrite"))
+								+ std::string(" [")
 								+ std::to_string(overwrite)
 								+ std::string("]"));
 			_throw_error( overwrite_error(err_msg) );
-		}
-
-		if (!is_file_ok(file_with_path)) {
-			std::string err_msg(__func__ + std::string(mo_file_reader::gettext("L_fail_create_empty_file")));
-			_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		// TODO perrmisions
