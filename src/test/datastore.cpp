@@ -22,10 +22,11 @@ TEST(datastore, prepare_path) {
 	b_fs::path PRV_full = datastore::prepare_path_for_write(e_datastore_galaxy_wallet_PRV, "bannedname!_key", true);
 	_dbg2(PRV_full);
 
+	datastore::save_string(e_datastore_galaxy_wallet_PRV, "bannedname!_key", "priv data01", true);
 	// try to overvrite path for PRV key
 	EXPECT_THROW({
 		b_fs::path PRV_full = datastore::prepare_path_for_write(e_datastore_galaxy_wallet_PRV, "bannedname!_key");
-	},overwrite_error);
+	}, overwrite_error);
 
 	// removing
 	ASSERT_TRUE(datastore::remove(PRV_full.string()));
