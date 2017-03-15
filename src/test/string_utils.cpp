@@ -317,3 +317,27 @@ TEST(string_utils, ostream_for_boost_any) {
 	EXPECT_NO_THROW(oss << any_vector_int);
 	EXPECT_EQ(oss.str(), "(no-debug for this boost any type)");
 }
+
+TEST(string_utils, is_ascii_normal) {
+	EXPECT_TRUE(is_ascii_normal(""));
+	EXPECT_TRUE(is_ascii_normal("qwertyuiopasdfghjklzxcvbnm"));
+	EXPECT_TRUE(is_ascii_normal("QWERTYUIOPASDFGHJKLZXCVBNM"));
+	EXPECT_TRUE(is_ascii_normal("0123456789"));
+	EXPECT_TRUE(is_ascii_normal("        "));
+	EXPECT_TRUE(is_ascii_normal("`~!@#$%^&*()_+-={}[]|\\:;\"'<,>.?/'"));
+
+	std::string str_not_printable = std::string() + char(0x7f);
+	EXPECT_FALSE(is_ascii_normal(str_not_printable));
+	EXPECT_FALSE(is_ascii_normal("\n\t\r\b"));
+	EXPECT_FALSE(is_ascii_normal("¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶¸¹º»¼½¾¿"));
+	EXPECT_FALSE(is_ascii_normal("✀✁✂✃✄✅✆✇✈✉✊✋✌✍✎✏✐✑✒✓✔✕✖✗✘✙✚✛✜✝✟"));
+	EXPECT_FALSE(is_ascii_normal("⅀⅁⅂⅃⅄ⅅⅆⅇⅈⅉ⅊⅋⅌⅍ⅎ⅏⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅟"));
+	EXPECT_FALSE(is_ascii_normal("ؠءآأؤإئابةتثجحخدذرزسشصضطظعغػؼؽؾؿ"));
+	EXPECT_FALSE(is_ascii_normal("ӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟ"));
+	EXPECT_FALSE(is_ascii_normal("рстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџ"));
+	EXPECT_FALSE(is_ascii_normal("РСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмноп"));
+	EXPECT_FALSE(is_ascii_normal("ѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿ"));
+	EXPECT_FALSE(is_ascii_normal("ठडढणतथदधनऩपफबभमयरऱलळऴवशषसहऺऻ़ऽाि"));
+	EXPECT_FALSE(is_ascii_normal("僠僡僢僣僤僥僦僧僨僩僪僫僬僭僮僯僰僱僲僳僴僵僶僷僸價僺僻僼僽僾僿"));
+	EXPECT_FALSE(is_ascii_normal("だちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみ"));
+}

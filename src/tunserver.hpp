@@ -185,9 +185,9 @@ class c_tunserver : public c_galaxy_node {
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
-		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk)
-		void program_action_gen_key(const boost::program_options::variables_map & argm); ///< generate a key according to given options
-		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
+		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk) @deprecated
+		void program_action_gen_key(const boost::program_options::variables_map & argm); ///< generate a key according to given options @deprecated
+		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI" @deprecated
 		/// @}
 
 		void set_my_name(const string & name); ///< set a nice name of this peer (shown in debug for example)

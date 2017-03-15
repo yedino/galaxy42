@@ -429,6 +429,9 @@ int c_the_program_tunserver::main_execution() {
 			// end of options
 			// ------------------------------------------------------------------
 
+
+// ------------------------------------------------------------------
+// deprecated - now in newloop new galaxysrv
 			_info("Configuring my own reference (keys):");
 
 			bool have_keys_configured=false;
@@ -462,7 +465,7 @@ int c_the_program_tunserver::main_execution() {
 				try {
 					myserver.configure_mykey();
 					ok=true;
-				} UI_CATCH("Loading your key");
+				} catch UI_CATCH("Loading your key");
 
 				if (!ok) {
 					_fact( "You seem to already have your hash-IP key, but I can not load it." );
@@ -484,8 +487,10 @@ int c_the_program_tunserver::main_execution() {
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
-
 			}
+
+// ^ deprecated ------------------------------------------------------------------
+
 
 			// ------------------------------------------------------------------
 

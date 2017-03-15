@@ -28,3 +28,25 @@ TEST(UsePtr_Test, dereference_test) {
 	EXPECT_EQ(UsePtr(const_str_const_shared_ptr).at(2), const_str_const_shared_ptr->at(2));
 }
 
+TEST(asserts_test, abort_test) {
+	ASSERT_DEATH(_assert(2+2==5), "");
+	ASSERT_DEATH(_assert(false), "");
+	ASSERT_DEATH(_assert(0), "");
+	ASSERT_DEATH(_assert(2>3), "");
+	ASSERT_DEATH(_check_abort(2+2==5), "");
+	ASSERT_DEATH(_check_abort(false), "");
+	ASSERT_DEATH(_check_abort(0), "");
+	ASSERT_DEATH(_check_abort(2>3), "");
+	/*
+	_assert(true);
+	_assert(1);
+	_assert(-1);
+	_assert(2+2==4);
+	_assert(2<3);
+	_check_abort(true);
+	_check_abort(1);
+	_check_abort(-1);
+	_check_abort(2+2==4);
+	_check_abort(2<3);
+	*/
+}

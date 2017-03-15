@@ -3,6 +3,7 @@
 #pragma once
 
 #include "libs0.hpp"
+#include "gtest/gtest_prod.h"
 
 class c_galaxysrv_peers {
 	protected:
@@ -19,6 +20,8 @@ class c_galaxysrv_peers {
 
 	protected:
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
+		FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test);
+		FRIEND_TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test);
 };
 
 // -------------------------------------------------------------------
