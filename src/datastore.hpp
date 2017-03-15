@@ -45,11 +45,25 @@ public:
 									const sodiumpp::locked_string &locked_data,
 									bool overwrite = false);
 
+/// new style load string functions - recommended
+/// default custom local path gives intuitive behavior, like std functions
+///@{
+	static std::string load_string(const std::string &filename,
+								   t_datastore file_type = e_datastore_local_path);
+
+	static sodiumpp::locked_string load_string_mlocked(const std::string &filename,
+													   t_datastore file_type = e_datastore_local_path);
+
+///@}
+
+/// old style load string functions
+///@{
 	static std::string load_string(t_datastore file_type,
 								   const std::string &filename);
 
 	static sodiumpp::locked_string load_string_mlocked(t_datastore file_type,
 													   const std::string &filename);
+///@}
 
 	/**
 	 * @brief check if file can be correctly loaded
