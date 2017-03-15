@@ -409,7 +409,7 @@ TEST(crypto, save_and_open_user_key) {
 }
 
 ///@param level - memory use allowed: level=0 - basic tests,  level=1 also SIDH, level=2 also NTru
-void test_create_cryptolink(const int number_of_test, int level=0) {
+void unittest_create_cryptolink(const int number_of_test, int level=0) {
 	for (std::remove_cv<decltype(number_of_test)>::type i = 0; i < number_of_test; ++i) {
 		// g_dbg_level_set(160, "start test");
 		c_multikeys_PAIR keypairA, keypairB;
