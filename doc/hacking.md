@@ -18,6 +18,18 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
 
+_dbg4(X) // unorganized "removed" debug
+_dbg3(X) _dbg2(X) _dbg1(X) // debug "Load key=0x1234"
+_info(X) _note(X) _clue(X) // information, more important, bigger group
+_fact(X) _goal(X) // very improtant goals, shown to user
+_warn(X) _erro(X) // warnings/errors
+_mark(X) // hot topics (usually for testing)
+
+// TODO  ....  TODO@author
+thing_to_be_fixed_before_release ; // TODO-release
+
+is_ascii_normal // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
+
 assert() / _check_abort() / _check()
 1. abort on error (only guaranteed in debug mode) - assert() // from compiler
 2. abort on error (always guaranteed) - _check_abort() // our lib
@@ -36,6 +48,7 @@ _throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string)
 try {
 	_check( ptr != nullptr ); // like assert
 	_check_user( size < 100 ); // user given bad input
+	_check_input( size < 100 ); // bad input
 	_check_sys( file.exists() ); // system doesn't work
 	_check_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data
 
@@ -47,6 +60,7 @@ try {
 
 	// same, but we expect this errors as they are common and we do not want to spam log with ERROR
 	_try_user( size < 100 ); // user given bad input - common case
+	_try_input( size < 100 ); // bad input - common case
 	_try_sys( file.exists() ); // system doesn't work - common case
 	_try_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data - common case
 }

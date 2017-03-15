@@ -1,3 +1,9 @@
 --newloop
 --peer
-192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5
+fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300
+--peer
+fd42::25f5,friend,score=10000,prio=10@(udp:76.31.171.15:9042)
+--peer
+fd42::25f5@(udp:p.meshnet.pl:9042,cost=500)@(shm:test)@(tcp:[fe80::d44e]:9042)
+--peer
+fd42::1234@(udp:foo.com:9042)@(email:tx@test.com)@(email:b@test.com)@(email:c@test.com)
