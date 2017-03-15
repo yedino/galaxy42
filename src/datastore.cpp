@@ -76,16 +76,24 @@ void datastore::save_string_mlocked(t_datastore file_type,
 	catch(...) { _throw_error(std::runtime_error("Failed to save mlocked string")); }
 }
 
+std::string datastore::load_string(const std::string &filename, t_datastore file_type) {
+	return load_string(file_type, filename);
+}
+
+sodiumpp::locked_string datastore::load_string_mlocked(const std::string &filename, t_datastore file_type) {
+	return load_string_mlocked(file_type, filename);
+}
+
 std::string datastore::load_string(t_datastore file_type,
 								   const std::string &filename) {
-	_dbg1("load string");
+	_dbg4("Load string - filename : [" << filename << "]");
 	std::string content;
 	std::string file_with_path_str;
 	try {
 		b_fs::path file_with_path = get_full_path(file_type, filename);
 		_dbg2("Loading file path: " << b_fs::canonical(file_with_path).string());
 
-		if (!is_file_ok(b_fs::canonical(file_with_path).string())) {
+		if (!is_file_ok(file_with_path)) {
 			_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
 		} else {
 			b_fs::ifstream ifs(file_with_path, std::ios::in | std::ios::binary);
@@ -95,20 +103,27 @@ std::string datastore::load_string(t_datastore file_type,
 			ifs.close();
 		}
 		file_with_path_str = b_fs::canonical(file_with_path).string();
+	} catch (expected_not_found &) {
+		_warn("File: [" << filename << "] not found");
+		_throw_error( expected_not_found() );
 	} catch (b_fs::filesystem_error & err) {
 		_erro("Fail to load file [" << filename << "] : " << err.what());
 		_throw_error( std::invalid_argument(err.what()) );
 	}
+
 	_dbg2("Successfully loaded string from:" << file_with_path_str);
 	return content;
 }
 
 sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 													   const std::string &filename) {
-	_dbg1("load string mlocked");
+	_dbg4("Load string mlocked- filename : [" << filename << "]");
 	try {
 		FILE * f_ptr;
 		b_fs::path file_with_path = get_full_path(file_type, filename);
+		if (!is_file_ok(file_with_path)) {
+			_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
+		}
 
 		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "rb");
 
@@ -134,6 +149,9 @@ sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 
 		_dbg2("Successfully loaded mlocked string from:" << b_fs::canonical(file_with_path).string());
 		return content;
+	} catch (expected_not_found &) {
+		_warn("File: [" << filename << "] not found");
+		_throw_error( expected_not_found() );
 	} catch (b_fs::filesystem_error & err) {
 		_erro("Fail to load file [" << filename << "] : " << err.what());
 		_throw_error( std::invalid_argument(err.what()) );
@@ -157,11 +175,11 @@ bool datastore::is_file_ok(const b_fs::path &path) {
 				return 0;
 			}
 		} else {
-			// std::cout << p << " does not exist" << std::endl; // dbg
-			return 0;
+			_dbg2("Checking non existing file with path: [" << path.string() << "]");
+			throw expected_not_found();
 		}
 	} catch (const b_fs::filesystem_error& ex) {
-		_info("File is not OK: " << ex.what());
+		_info("File is NOT ok: " << ex.what());
 		return 0;
 	}
 	return 1;
@@ -283,26 +301,23 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 		// creating directory tree if necessary
 		file_with_path = create_path_for(file_type, filename);
 
-		// prevent overwriting
-		if(is_file_ok(file_with_path.string()) &&  !overwrite) {
-			std::string err_msg(file_with_path.string()
-//								+ std::string(": file existing, it can't be overwrite [overwrite=")
-                                                                + std::string(mo_file_reader::gettext("L_fail_file_overwrite"))
+		// In code below we want to create an empty file which will help us to open and write down it without any errors
+		boost::filesystem::ofstream empty_file(file_with_path,std::ios_base::app);
+		empty_file.close();
 
+		if (!is_file_ok(file_with_path)) {
+			std::string err_msg(__func__ + std::string(mo_file_reader::gettext("l_fail_create_empty_file")));
+			_throw_error( std::invalid_argument(err_msg) );
+		}
+
+		if(is_file_ok(file_with_path) && !b_fs::is_empty(file_with_path) &&  !overwrite) {
+			std::string err_msg(file_with_path.string()
+								+ std::string(" ")
+								+ std::string(mo_file_reader::gettext("L_fail_file_overwrite"))
+								+ std::string(" [")
 								+ std::to_string(overwrite)
 								+ std::string("]"));
 			_throw_error( overwrite_error(err_msg) );
-		}
-
-		// In code below we want to create an empty file which will help us to open and write down it without any errors
-		boost::filesystem::ofstream empty_file;
-		empty_file.open(file_with_path);
-		empty_file.close();
-		if (!is_file_ok(file_with_path)) {
-//			std::string err_msg(__func__ + std::string(": fail to create empty file on given path and name"));
-                        std::string err_msg(__func__ + std::string(mo_file_reader::gettext("L_fail_create_empty_file")));
-
-			_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		// TODO perrmisions
