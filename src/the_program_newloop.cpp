@@ -455,12 +455,12 @@ void c_the_program_newloop::programtask_load_my_keys() {
 
 int c_the_program_newloop::main_execution() {
 	_mark("newloop main_execution");
-	g_dbg_level_set(20, "Debug the newloop");
+	g_dbg_level_set(5, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
-	// this->use_options_peerref();
-	this->programtask_load_my_keys();
 
+	this->programtask_load_my_keys();
+	this->use_options_peerref();
 
 /*
 	c_tuntap_fake_kernel kernel;
