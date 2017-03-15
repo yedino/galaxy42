@@ -24,7 +24,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey
 }
 
 c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string) {
-	_dbg3("PARSING IP addr_string=" << addr_string);
+	_dbg3("parsing ip addr_string=" << addr_string);
 	// use boost asio for parsing
 	boost::asio::ip::address_v6 asio_addr_v6;
 	try {
