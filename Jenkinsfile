@@ -21,6 +21,35 @@ def ircNotification(result) {
 	}
 }
 
+def build_native_linux() {
+	build job: 'galaxy42_native',
+		parameters: [	[$class: 'NodeParameterValue',
+							name: 'Multinode',
+							labels: ['debian'],
+							nodeEligibility: [$class: 'AllNodeEligibility'] ],
+						[$class: 'StringParameterValue',
+							name: 'git_repository_url',
+							value: "${GIT_REPOSITORY_URL}" ],
+						[$class: 'StringParameterValue',
+							name: 'git_branch',
+							value: "${GIT_BRANCH}" ] ]
+}
+
+def build_native_windows() {
+	build job: 'galaxy42_native',
+		parameters: [	[$class: 'NodeParameterValue',
+							name: 'Multinode',
+							labels: ['win32&&cygwin'],
+							nodeEligibility: [$class: 'AllNodeEligibility'] ],
+						[$class: 'StringParameterValue',
+							name: 'git_repository_url',
+							value: "${GIT_REPOSITORY_URL}" ],
+						[$class: 'StringParameterValue',
+							name: 'git_branch',
+							value: "${GIT_BRANCH}" ] ]
+}
+
+
 // build trigger
 properties([pipelineTriggers([	[$class: 'GitHubPushTrigger'],
 								[$class: "SCMTrigger", scmpoll_spec: "H/5 * * * *"]
@@ -34,11 +63,11 @@ node('master') {
 	def build_native_all = 1
 
 	def run_unit_test = 1
-	def run_integration_test = 1
+	def run_integration_test = 0
 
-	def build_gitian_linux = 1
-	def build_gitian_macosx = 1
-	def build_gitian_windows = 1
+	def build_gitian_linux = 0
+	def build_gitian_macosx = 0
+	def build_gitian_windows = 0
 
 	def GIT_REPOSITORY_URL = scm.getUserRemoteConfigs()[0].getUrl()
 	println "GIT_URL: [$GIT_REPOSITORY_URL]"
@@ -65,126 +94,119 @@ node('master') {
 
 	def failure_counter=0
 
-
-	stage('native_build_parallel') {
-		parallel linux: {
-	//stage 'linux_build'
-			build job: 'galaxy42_native',
-				parameters: [	[$class: 'NodeParameterValue',
-									name: 'Multinode',
-									labels: ['debian'],
-									nodeEligibility: [$class: 'AllNodeEligibility'] ],
-								[$class: 'StringParameterValue',
-									name: 'git_repository_url',
-									value: "${GIT_REPOSITORY_URL}" ],
-								[$class: 'StringParameterValue',
-									name: 'git_branch',
-									value: "${GIT_BRANCH}" ] ]
-		},
-		windows: {
-	//stage 'windows_build'
-			build job: 'galaxy42_native',
-				parameters: [	[$class: 'NodeParameterValue',
-									name: 'Multinode',
-									labels: ['win32&&cygwin'],
-									nodeEligibility: [$class: 'AllNodeEligibility'] ],
-								[$class: 'StringParameterValue',
-									name: 'git_repository_url',
-									value: "${GIT_REPOSITORY_URL}" ],
-								[$class: 'StringParameterValue',
-									name: 'git_branch',
-									value: "${GIT_BRANCH}" ] ]
+	if (build_native_all || build_native_linux && build_native_windows ) {
+		stage('native_build_parallel') {
+			parallel linux: {
+				build_native_linux()
+			},
+			windows: {
+				build_native_windows()
+			}
 		}
+	} else if ( build_native_linux ) {
+		stage 'linux_build'
+		build_native_linux()
+	} else if ( build_native_windows) {
+		stage 'windows_build'
+		build_native_windows()
 	}
 
-	stage('unit_test') {
-		try {
-			build job: 'galaxy42_unit-tests',
-				parameters: [	[$class: 'LabelParameterValue',
-									name: 'Unit',
-									label: 'allow_unittests' ],
-								[$class: 'StringParameterValue',
-									name: 'git_repository_url',
-									value: "${GIT_REPOSITORY_URL}" ],
-								[$class: 'StringParameterValue',
-									name: 'git_branch',
-									value: "${GIT_BRANCH}" ] ]
-		} catch (all) {
+	if (build_native_windows) {
+		stage('unit_test') {
+			try {
+				build job: 'galaxy42_unit-tests',
+					parameters: [	[$class: 'LabelParameterValue',
+										name: 'Unit',
+										label: 'allow_unittests' ],
+									[$class: 'StringParameterValue',
+										name: 'git_repository_url',
+										value: "${GIT_REPOSITORY_URL}" ],
+									[$class: 'StringParameterValue',
+										name: 'git_branch',
+										value: "${GIT_BRANCH}" ] ]
+			} catch (all) {
+					println "Integration_tests probably fails, but we continue to next stage."
+					println "Check individual item build console log for details."
+					failure_counter++
+			}
+		}
+	}
+	if (run_integration_test) {
+		stage('integration_tests') {
+			try {
+				build job: 'galaxy42_integration-tests',
+					parameters: [	[$class: 'LabelParameterValue',
+										name: 'Integration',
+										label: 'allow_integrationtests' ] ]
+
+			} catch (all) {
 				println "Integration_tests probably fails, but we continue to next stage."
 				println "Check individual item build console log for details."
 				failure_counter++
+			}
 		}
 	}
+	if (build_gitian_linux) {
+		stage('Gitian_build_linux') {
+			try {
+				build job: 'galaxy42_gitian_-L',
+					parameters: [	[$class: 'NodeParameterValue',
+										name: 'Gitian_linux',
+										labels: ['allow_gitian'],
+										nodeEligibility: [$class: 'AllNodeEligibility'] ],
+									[$class: 'StringParameterValue',
+										name: 'git_repository_url',
+										value: "${GIT_REPOSITORY_URL}" ],
+									[$class: 'StringParameterValue',
+										name: 'git_branch',
+										value: "${GIT_BRANCH}" ] ]
 
-	stage('integration_tests') {
-		try {
-			build job: 'galaxy42_integration-tests',
-				parameters: [	[$class: 'LabelParameterValue',
-									name: 'Integration',
-									label: 'allow_integrationtests' ] ]
-
-		} catch (all) {
-			println "Integration_tests probably fails, but we continue to next stage."
-			println "Check individual item build console log for details."
-			failure_counter++
+			} catch (all) {
+				println "Gitian_build_linux probably fails, but we continue to next stage."
+				println "Check individual item build console log for details."
+				failure_counter++
+			}
 		}
 	}
-
-	stage('Gitian_build_linux') {
-		try {
-			build job: 'galaxy42_gitian_-L',
-				parameters: [	[$class: 'NodeParameterValue',
-									name: 'Gitian_linux',
-									labels: ['allow_gitian'],
-									nodeEligibility: [$class: 'AllNodeEligibility'] ],
-								[$class: 'StringParameterValue',
-									name: 'git_repository_url',
-									value: "${GIT_REPOSITORY_URL}" ],
-								[$class: 'StringParameterValue',
-									name: 'git_branch',
-									value: "${GIT_BRANCH}" ] ]
-
-		} catch (all) {
-			println "Gitian_build_linux probably fails, but we continue to next stage."
-			println "Check individual item build console log for details."
-			failure_counter++
+	if (build_gitian_macosx) {
+		stage('Gitian_build_macosx') {
+			try {
+				build job: 'galaxy42_gitian_-M',
+					parameters: [	[$class: 'NodeParameterValue',
+										name: 'Gitian_osx',
+										labels: ['allow_gitian'],
+										nodeEligibility: [$class: 'AllNodeEligibility'] ],
+									[$class: 'StringParameterValue',
+										name: 'git_repository_url',
+										value: "${GIT_REPOSITORY_URL}" ],
+									[$class: 'StringParameterValue',
+										name: 'git_branch',
+										value: "${GIT_BRANCH}" ] ]
+			} catch (all) {
+				println "Gitian_build_macosx probably fails, but we continue to next stage."
+				println "Check individual item build console log for details."
+				failure_counter++
+			}
 		}
 	}
-	stage('Gitian_build_macosx') {
-		try {
-			build job: 'galaxy42_gitian_-M',
-				parameters: [	[$class: 'NodeParameterValue',
-									name: 'Gitian_osx',
-									labels: ['allow_gitian'],
-									nodeEligibility: [$class: 'AllNodeEligibility'] ],
-								[$class: 'StringParameterValue',
-									name: 'git_repository_url',
-									value: "${GIT_REPOSITORY_URL}" ],
-								[$class: 'StringParameterValue',
-									name: 'git_branch',
-									value: "${GIT_BRANCH}" ] ]
-		} catch (all) {
-			println "Gitian_build_macosx probably fails, but we continue to next stage."
-			println "Check individual item build console log for details."
-			failure_counter++
-		}
-	}
-	stage('Gitian_build_windows') {
-		try {
-			build job: 'galaxy42_gitian_-W',
-				parameters: [	[$class: 'NodeParameterValue',
-									name: 'Gitian_windows',
-									labels: ['allow_gitian'],
-									nodeEligibility: [$class: 'AllNodeEligibility'] ],
-								[$class: 'StringParameterValue',
-									name: 'git_repository_url',
-									value: "${GIT_REPOSITORY_URL}" ],
-								[$class: 'StringParameterValue',
-									name: 'git_branch',
-									value: "${GIT_BRANCH}" ] ]
-		} catch (all) {
-			println "Gitian_build_windows probably fails, but we continue to next stage."
-			failure_counter++
+	if (build_gitian_windows) {
+		stage('Gitian_build_windows') {
+			try {
+				build job: 'galaxy42_gitian_-W',
+					parameters: [	[$class: 'NodeParameterValue',
+										name: 'Gitian_windows',
+										labels: ['allow_gitian'],
+										nodeEligibility: [$class: 'AllNodeEligibility'] ],
+									[$class: 'StringParameterValue',
+										name: 'git_repository_url',
+										value: "${GIT_REPOSITORY_URL}" ],
+									[$class: 'StringParameterValue',
+										name: 'git_branch',
+										value: "${GIT_BRANCH}" ] ]
+			} catch (all) {
+				println "Gitian_build_windows probably fails, but we continue to next stage."
+				failure_counter++
+			}
 		}
 	}
 
