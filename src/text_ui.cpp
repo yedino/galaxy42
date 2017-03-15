@@ -12,7 +12,11 @@ bool text_ui::ask_user_forpermission(const std::string &msg) {
         std::cout << mo_file_reader::gettext("L_do_you_want")  << msg << mo_file_reader::gettext( "L_Y_N") ;
 
 	std::getline(std::cin,answer);
-	if(answer == "YES") {
+	if(   answer == "Y"
+	   || answer == "YES"
+	   || answer == "Yes"
+	   || answer == "y"
+	   || answer == "yes" ) {
 		return true;
 	}
 	return false;
