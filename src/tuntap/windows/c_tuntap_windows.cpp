@@ -14,6 +14,9 @@
 #include <ntddscsi.h>
 #include <winioctl.h>
 
+#define UNICODE
+#define _UNICODE
+
 #define TAP_CONTROL_CODE(request,method) \
 	CTL_CODE (FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS)
 #define TAP_IOCTL_GET_MAC				TAP_CONTROL_CODE (1, METHOD_BUFFERED)
@@ -21,7 +24,15 @@
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
 
-c_tuntap_windows_obj::c_tuntap_windows_obj() {
+c_tuntap_windows_obj::c_tuntap_windows_obj()
+:
+	m_handle(get_device_handle()),
+	m_guid(get_device_guid()),
+	m_mac_address(get_mac(m_handle)),
+	m_ioservice(),
+	m_stream_handle(m_ioservice, m_handle)
+{
+	_check_sys(!m_stream_handle.is_open());
 }
 
 size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size) {
@@ -36,6 +47,8 @@ void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, siz
 }
 
 void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) {
+	_fact("Setting IPv6 address, prefixLen=" << prefix_len);
+	std::wstring human_name = get_human_name(m_guid);
 }
 
 
