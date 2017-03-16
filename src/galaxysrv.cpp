@@ -83,6 +83,9 @@ void c_galaxysrv::configure_mykey() {
 	m_my_IDC = my_IDC;
 }
 
+c_haship_addr c_galaxysrv::get_my_hip() const {
+	return m_my_hip;
+}
 
 void c_galaxysrv::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
