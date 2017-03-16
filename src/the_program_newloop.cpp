@@ -466,7 +466,7 @@ int c_the_program_newloop::main_execution() {
 	pimpl->server = make_unique<c_galaxysrv>();
 
 	this->programtask_load_my_keys();
-	this->use_options_peerref();
+	//this->use_options_peerref();
 
 /*
 	c_tuntap_fake_kernel kernel;

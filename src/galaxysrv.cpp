@@ -74,6 +74,10 @@ void c_galaxysrv::configure_mykey() {
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_ip_hexdot );
 	_info("IDC IPv6: " << IDC_ip_hexdot);
 	_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
+	_note("Your temporary, current crypto key (IDC) is: " << IDC_ip_hexdot << " (this is just for information)");
+	_goal("Your permanent IPv6 address (IDI) is: " << IDI_ip_hexdot << " - others can connect to this IP address to reach you");
+	string IDI_as_url = "http://" + IDI_ip_hexdot ;
+	_goal("For example your web page would be at: " << IDI_as_url );
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
