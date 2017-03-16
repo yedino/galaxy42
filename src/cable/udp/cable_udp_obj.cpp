@@ -21,7 +21,7 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *d
 void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
 	udp::endpoint destination_endpoint = (boost::any_cast<c_cable_udp_addr::t_addr>( dest.get_addrdata() ));
 	m_write_socket.async_send_to(boost::asio::buffer(data, size), destination_endpoint,
-		[handler = std::move(handler), data](const boost::system::error_code& error, std::size_t bytes_transferred) {
+		[handler, data](const boost::system::error_code& error, std::size_t bytes_transferred) {
 			_UNUSED(error);
 			handler(data, bytes_transferred);
 		} // lambda
