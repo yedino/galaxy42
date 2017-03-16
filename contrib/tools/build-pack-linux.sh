@@ -28,7 +28,7 @@ outname="${project_name}-static" # name of project release/output
 outname_tgz="${outname}.tar.gz" # name of project release/output
 dir_pack_wrap="${dir_top}/pack-linux"
 dir_pack="${dir_pack_wrap}/${outname}"
-dir_build="${dir_top}"
+dir_build="${dir_top}/build"
 outfile_tgz="${dir_pack_wrap}/$outname_tgz"
 
 rm -rf "$dir_pack_wrap/" || fail
