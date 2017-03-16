@@ -32,6 +32,9 @@
 #include "cable/simulation/cable_simul_addr.hpp"
 #include "cable/simulation/cable_simul_obj.hpp"
 
+#include "tuntap/base/tuntap_base.hpp"
+#include "tuntap/linux/c_linux_tuntap_obj.hpp"
+
 #include "tunserver.hpp" // delete?
 
 
@@ -466,7 +469,10 @@ int c_the_program_newloop::main_execution() {
 	pimpl->server = make_unique<c_galaxysrv>();
 
 	this->programtask_load_my_keys();
-	//this->use_options_peerref();
+	this->use_options_peerref();
+
+	c_linux_tuntap_obj tuntap;
+	tuntap.set_tun_parameters(pimpl->server->get_my_hip(), 16, 16000);
 
 /*
 	c_tuntap_fake_kernel kernel;

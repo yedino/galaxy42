@@ -54,6 +54,8 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}
 
+		c_haship_addr get_my_hip() const; ///< get your main hash-ip (ipv6)
+
 	protected:
 
 		/// @name My crypto identity

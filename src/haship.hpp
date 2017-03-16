@@ -45,15 +45,18 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	struct tag_constr_by_hash_of_pubkey{}; // address is calculated from hash of given public key
 	struct tag_constr_by_addr_dot{}; // address is in form of t_ipv6dot
 	struct tag_constr_by_addr_bin{}; // address is in form of t_ipv6bin
+	struct tag_constr_by_array_uchar{}; // address is in form of std::array of unsigned char of proper size
 
 	c_haship_addr();
 
-	///! create the IP address that matches given public key (e.g. hash of it)
+	/// create the IP address that matches given public key (e.g. hash of it)
 	c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey );
-	///! create the IP address from a string (as dot/colon IP notation)
+	/// create the IP address from a string (as dot/colon IP notation)
 	c_haship_addr(tag_constr_by_addr_dot x, const t_ipv6dot & addr_string);
-	///! create the IP address from binary serialization of the IP address
+	/// create the IP address from binary serialization of the IP address
 	c_haship_addr(tag_constr_by_addr_bin x, const t_ipv6bin & data );
+	/// create the IP address from std::array of unsigned char
+	c_haship_addr(tag_constr_by_array_uchar x, const std::array<unsigned char, g_haship_addr_size> & data);
 
 	void print(ostream &ostr) const;
 	std::string get_hip_as_string(bool with_dots) const;
