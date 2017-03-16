@@ -51,7 +51,8 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
 }
 
 c_haship_addr::c_haship_addr(tag_constr_by_array_uchar, const std::array<unsigned char, g_haship_addr_size> & data) {
-	for (size_t i=0; i<data.size(); ++i) this->at(i) = data.at(i);
+	_check_abort(data.size() == this->size());
+	std::copy(data.begin(), data.end(), this->begin());
 }
 
 void c_haship_addr::print(ostream &ostr) const {
