@@ -33,7 +33,8 @@
 #include "cable/simulation/cable_simul_obj.hpp"
 
 #include "tuntap/base/tuntap_base.hpp"
-#include "tuntap/linux/c_linux_tuntap_obj.hpp"
+#include "tuntap/linux/c_tuntap_linux_obj.hpp"
+#include "tuntap/windows/c_tuntap_windows.hpp"
 
 #include "tunserver.hpp" // delete?
 
@@ -471,7 +472,13 @@ int c_the_program_newloop::main_execution() {
 	this->programtask_load_my_keys();
 	this->use_options_peerref();
 
-	c_linux_tuntap_obj tuntap;
+#ifdef __linux__
+	c_tuntap_linux_obj tuntap;
+#elif defined(_WIN32) || defined(__CYGWIN__)
+	c_tun_device_windows tuntap;
+#else
+	#error "This platform is not supported"
+#endif
 	tuntap.set_tun_parameters(pimpl->server->get_my_hip(), 16, 16000);
 
 /*
