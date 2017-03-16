@@ -9,14 +9,17 @@
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include "../../haship.hpp"
 
 c_linux_tuntap_obj::c_linux_tuntap_obj() :
 	m_tun_fd(open("/dev/net/tun", O_RDWR)),
 	m_io_service(),
 	m_tun_stream(m_io_service, m_tun_fd)
 {
+	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
+	_goal("tuntap is opened correctly");
 }
 
 size_t c_linux_tuntap_obj::send_to_tun(const unsigned char *data, size_t size) {
@@ -37,6 +40,8 @@ void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_
 }
 
 void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) {
+	c_haship_addr address(c_haship_addr::tag_constr_by_array_uchar(), binary_address);
+	_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
@@ -48,6 +53,7 @@ void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binar
 	NetPlatform_setMTU(ifr.ifr_name, mtu);
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
+	_goal("Configuring tuntap options - done");
 }
 
 #endif // __linux__
