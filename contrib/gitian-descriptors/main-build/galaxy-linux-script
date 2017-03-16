@@ -78,7 +78,7 @@ fi
 # Faketime for depends so intermediate results are comparable
 export PATH_orig=${PATH}
 create_global_faketime_wrappers "${FAKETIME_PROGS}" "${WRAP_DIR}"
-create_per-host_faketime_wrappers "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${HOSTS}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
   EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes

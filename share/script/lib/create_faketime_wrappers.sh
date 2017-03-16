@@ -29,7 +29,7 @@ function create_per-host_faketime_wrappers {
 
 	for i in ${hosts}; do
 		for prog in ${faketime_host_progs}; do
-			create_global_faketime_wrappers "${REFERENCE_DATETIME}" "${i}-${prog}" "${wrap_dir}"
+			create_global_faketime_wrappers "${i}-${prog}" "${wrap_dir}"
 		done
 	done
 }
