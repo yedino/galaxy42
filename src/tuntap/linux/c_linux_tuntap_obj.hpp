@@ -16,7 +16,7 @@ class c_linux_tuntap_obj final : public tuntap_base_obj {
 		void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) override;
 
 		void set_tun_parameters
-			(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) override;
+			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) override;
 
 	private:
 		const int m_tun_fd; ///< the unix file descriptor. -1 is closed (this should not happen in correct object)

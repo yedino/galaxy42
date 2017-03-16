@@ -36,7 +36,7 @@ void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_
 	return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
 
-void c_linux_tuntap_obj::set_tun_parameters(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) {
+void c_linux_tuntap_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) {
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);

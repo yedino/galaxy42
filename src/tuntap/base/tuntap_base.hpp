@@ -26,7 +26,7 @@ class tuntap_base_obj {
 
 		// sets the parameters of our tuntap
 		virtual void set_tun_parameters
-			(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
+			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
 };
 
 #endif // TUNTAP_BASE_HPP
