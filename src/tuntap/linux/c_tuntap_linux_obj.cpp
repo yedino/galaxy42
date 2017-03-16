@@ -1,6 +1,6 @@
 #ifdef __linux__
 
-#include "c_linux_tuntap_obj.hpp"
+#include "c_tuntap_linux_obj.hpp"
 #include "../../../depends/cjdns-code/NetPlatform.h"
 #include "../../cpputils.hpp"
 #include "../../utils/check.hpp"
@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include "../../haship.hpp"
 
-c_linux_tuntap_obj::c_linux_tuntap_obj() :
+c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	m_tun_fd(open("/dev/net/tun", O_RDWR)),
 	m_io_service(),
 	m_tun_stream(m_io_service, m_tun_fd)
@@ -22,16 +22,16 @@ c_linux_tuntap_obj::c_linux_tuntap_obj() :
 	_goal("tuntap is opened correctly");
 }
 
-size_t c_linux_tuntap_obj::send_to_tun(const unsigned char *data, size_t size) {
+size_t c_tuntap_linux_obj::send_to_tun(const unsigned char *data, size_t size) {
 	return m_tun_stream.write_some(boost::asio::buffer(data, size));
 }
 
-size_t c_linux_tuntap_obj::read_from_tun(unsigned char *const data, size_t size) {
+size_t c_tuntap_linux_obj::read_from_tun(unsigned char *const data, size_t size) {
 	return m_tun_stream.read_some(boost::asio::buffer(data, size));
 }
 
-void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_t size,
-	const tuntap_base_obj::read_handler & handler)
+void c_tuntap_linux_obj::async_receive_from_tun(unsigned char *const data, size_t size,
+	const c_tuntap_base_obj::read_handler & handler)
 {
 	auto asio_handler = [data, handler](const boost::system::error_code& error, std::size_t bytes_transferred) {
 		handler(data, bytes_transferred, error);
@@ -39,7 +39,7 @@ void c_linux_tuntap_obj::async_receive_from_tun(unsigned char *const data, size_
 	return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
 
-void c_linux_tuntap_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) {
+void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) {
 	c_haship_addr address(c_haship_addr::tag_constr_by_array_uchar(), binary_address);
 	_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
 	as_zerofill< ifreq > ifr; // the if request

@@ -33,7 +33,7 @@
 #include "cable/simulation/cable_simul_obj.hpp"
 
 #include "tuntap/base/tuntap_base.hpp"
-#include "tuntap/linux/c_linux_tuntap_obj.hpp"
+#include "tuntap/linux/c_tuntap_linux_obj.hpp"
 
 #include "tunserver.hpp" // delete?
 
@@ -471,7 +471,7 @@ int c_the_program_newloop::main_execution() {
 	this->programtask_load_my_keys();
 	this->use_options_peerref();
 
-	c_linux_tuntap_obj tuntap;
+	c_tuntap_linux_obj tuntap;
 	tuntap.set_tun_parameters(pimpl->server->get_my_hip(), 16, 16000);
 
 /*
