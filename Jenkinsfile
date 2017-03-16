@@ -21,7 +21,7 @@ def ircNotification(result) {
 	}
 }
 
-def build_native_linux() {
+def native_linux(git_url, branch) {
 	build job: 'galaxy42_native',
 		parameters: [	[$class: 'NodeParameterValue',
 							name: 'Multinode',
@@ -29,13 +29,13 @@ def build_native_linux() {
 							nodeEligibility: [$class: 'AllNodeEligibility'] ],
 						[$class: 'StringParameterValue',
 							name: 'git_repository_url',
-							value: "${GIT_REPOSITORY_URL}" ],
+							value: "$git_url" ],
 						[$class: 'StringParameterValue',
 							name: 'git_branch',
-							value: "${GIT_BRANCH}" ] ]
+							value: "$branch" ] ]
 }
 
-def build_native_windows() {
+def native_windows(git_url, branch) {
 	build job: 'galaxy42_native',
 		parameters: [	[$class: 'NodeParameterValue',
 							name: 'Multinode',
@@ -43,10 +43,10 @@ def build_native_windows() {
 							nodeEligibility: [$class: 'AllNodeEligibility'] ],
 						[$class: 'StringParameterValue',
 							name: 'git_repository_url',
-							value: "${GIT_REPOSITORY_URL}" ],
+							value: "$git_url" ],
 						[$class: 'StringParameterValue',
 							name: 'git_branch',
-							value: "${GIT_BRANCH}" ] ]
+							value: "$branch" ] ]
 }
 
 
@@ -97,21 +97,21 @@ node('master') {
 	if (build_native_all || build_native_linux && build_native_windows ) {
 		stage('native_build_parallel') {
 			parallel linux: {
-				build_native_linux()
+				native_linux($GIT_REPOSITORY_URL,$GIT_BRANCH)
 			},
 			windows: {
-				build_native_windows()
+				native_windows($GIT_REPOSITORY_URL,$GIT_BRANCH)
 			}
 		}
 	} else if ( build_native_linux ) {
 		stage 'linux_build'
-		build_native_linux()
+		native_linux($GIT_REPOSITORY_URL,$GIT_BRANCH)
 	} else if ( build_native_windows) {
 		stage 'windows_build'
-		build_native_windows()
+		native_windows($GIT_REPOSITORY_URL,$GIT_BRANCH)
 	}
 
-	if (build_native_windows) {
+	if (run_unit_test) {
 		stage('unit_test') {
 			try {
 				build job: 'galaxy42_unit-tests',
