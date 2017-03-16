@@ -32,6 +32,7 @@ void c_the_program::startup_version() {
 		<< project_version_number_sub // << "."
 		<< project_version_number_patch ;
 	string ver_str = oss.str();
+	_fact( "" ); // newline
 	_fact( "Start... " << ver_str );
 }
 
