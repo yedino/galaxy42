@@ -16,10 +16,10 @@ template <typename TC> void remove_all(TC & c, const typename TC::value_type & v
 }
 
 template <typename TC> size_t remove_and_count(TC & c, const typename TC::value_type & v) {
-	auto size_before = c.size();
+	size_t size_before = c.size();
 	c.erase( remove(c.begin() , c.end() , v) , c.end());
-	auto size_after = c.size();
-	_assert( size_after <= size_before );
+	size_t size_after = c.size();
+	_check_abort( size_after <= size_before );
 	size_t removed =  size_before - size_after;
 	return removed;
 }
