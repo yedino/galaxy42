@@ -6,9 +6,9 @@
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-class c_tuntap_windows final : c_tuntap_base_obj {
+class c_tuntap_windows_obj final : c_tuntap_base_obj {
 	public:
-		c_tuntap_windows();
+		c_tuntap_windows_obj();
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
@@ -19,8 +19,8 @@ class c_tuntap_windows final : c_tuntap_base_obj {
 			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) override;
 
 	private:
-		boost::asio::io_service m_ioservice;
-		boost::asio::windows::stream_handle m_stream_handle; ///< boost handler to the TUN device
+		//boost::asio::io_service m_ioservice;
+		//boost::asio::windows::stream_handle m_stream_handle; ///< boost handler to the TUN device
 		std::wstring m_guid;
 		std::array<uint8_t, 6> m_mac_address;
 

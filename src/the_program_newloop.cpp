@@ -475,7 +475,7 @@ int c_the_program_newloop::main_execution() {
 #ifdef __linux__
 	c_tuntap_linux_obj tuntap;
 #elif defined(_WIN32) || defined(__CYGWIN__)
-	c_tun_device_windows tuntap;
+	c_tuntap_windows_obj tuntap;
 #else
 	#error "This platform is not supported"
 #endif
