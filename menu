@@ -219,7 +219,10 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 				LANG="$iii" LANGUAGE=  LC_ALL= ./install.sh "$flag"
 				sleep 0.2
 		  done
-		 	echo -e "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
+
+			if false ;
+			then
+			echo -e "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
 		  read _
 		  for iii in 'en_US.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
 		  	echo -e "\n\n\n===============================================\nLANGUAGE: - $iii - (press ENTER)\n\n\n"
@@ -227,6 +230,10 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 					LANG= LANGUAGE="$iii" LC_ALL= ./install.sh "$flag"
 				sleep 0.2
 		  done
+		  else
+				echo -e "\n\n\n\n\nSkipping the tests about LANGUAGE with unset LC_ALL and LANG, we assume they are not needed\n\n\n\n\n";
+				read _
+			fi
 	  ;;
 
 	  rm)
