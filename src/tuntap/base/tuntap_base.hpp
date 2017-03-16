@@ -13,7 +13,7 @@ class tuntap_base_obj {
 		// the callback function that caller can provide
 		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code& error)>;
 
-		virtual ~tuntap_base_obj() = default;
+		virtual ~tuntap_base_obj();
 
 		virtual size_t send_to_tun(const unsigned char *data, size_t size) = 0; ///< blocking function
 		// it seems that async send was slow.
@@ -26,7 +26,7 @@ class tuntap_base_obj {
 
 		// sets the parameters of our tuntap
 		virtual void set_tun_parameters
-			(const std::array<uint8_t, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
+			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
 };
 
 #endif // TUNTAP_BASE_HPP

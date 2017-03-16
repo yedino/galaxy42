@@ -37,8 +37,9 @@ void show_error_exception_unknown(const string &during_action); ///< Inform user
 
 #define UI_TRY try
 
+// first catch is removed here, so that caller must use it in his syntax
 #define _UI_CATCH_ADVANCED(DURING_ACTION, RETHROW) \
-	catch(std::exception &e) {\
+	(std::exception &e) {\
 		_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
 		ui::show_error_exception(DURING_ACTION, e); \
 		if (RETHROW) throw; } \

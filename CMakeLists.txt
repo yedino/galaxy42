@@ -350,7 +350,7 @@ file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/
 
 if(HTTP_DEBUGGER)
 	add_definitions(-DHTTP_DBG)
-	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp src/cable/* src/cable/*/*)
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp)
 endif()
 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)

@@ -75,6 +75,27 @@ class err_check_user_soft final : public err_check_user, public err_check_soft {
 
 // -------------------------------------------------------------------
 
+/// This class is for exeption representing: input error. It can be (and is by default) a hard error.
+class err_check_input : public err_check_base {
+	public:
+		err_check_input(const char *what); ///< create hard error, from this message (can add cause string)
+	protected:
+		/// for use by child class where the child class generated entire message
+		///@{
+		err_check_input(tag_err_check_named, const char   * what, bool serious);
+		err_check_input(tag_err_check_named, const string & what, bool serious);
+		///@}
+		static std::string cause(bool se);
+};
+
+/// Class that represents soft case of err_check_input
+class err_check_input_soft final : public err_check_input, public err_check_soft {
+	public:
+		err_check_input_soft(const char *what); ///< create soft error, from this message (can add cause string)
+};
+
+// -------------------------------------------------------------------
+
 /// This class is for exeption representing: sys error. It can be (and is by default) a hard error.
 class err_check_sys : public err_check_base {
 	public:
@@ -122,6 +143,8 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 
 /// Macro that checks arg X, throws err_check_user if false
 #define _check_user(X) do { if(!(X)) { throw err_check_user( #X );  } } while(0)
+/// Macro that checks arg X, throws err_check_input if false
+#define _check_input(X) do { if(!(X)) { throw err_check_input( #X );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys if false
 #define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern if false
@@ -129,6 +152,8 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 
 /// Macro that checks arg X, throws err_check_user_soft if false
 #define _try_user(X) do { if(!(X)) { throw err_check_user_soft( #X );  } } while(0)
+/// Macro that checks arg X, throws err_check_input_soft if false
+#define _try_input(X) do { if(!(X)) { throw err_check_input_soft( #X );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys_soft if false
 #define _try_sys(X) do { if(!(X)) { throw err_check_sys_soft( #X );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern_soft if false

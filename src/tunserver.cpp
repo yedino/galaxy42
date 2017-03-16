@@ -435,7 +435,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 	return m_peer.size();
 }
 
-// my key
+// my key @deprecated (newloop)
 void c_tunserver::configure_mykey() {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
@@ -464,7 +464,7 @@ void c_tunserver::configure_mykey() {
 		if (IDI_ip_hexdot.at(0) != 'f') throw std::runtime_error(msg_badip);
 		if (IDI_ip_hexdot.at(1) != 'd') throw std::runtime_error(msg_badip);
 	}
-	UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
+	catch UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
 
 	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_ip_hexdot );
 	_info("IDI IPv6: " << IDI_ip_hexdot);
@@ -497,7 +497,7 @@ void c_tunserver::configure_mykey() {
 		if (IDC_ip_hexdot.at(0) != 'f') throw std::runtime_error(msg_badip);
 		if (IDC_ip_hexdot.at(1) != 'd') throw std::runtime_error(msg_badip);
 	}
-	UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
+	catch UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
 
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_ip_hexdot );
 	_info("IDC IPv6: " << IDC_ip_hexdot);
@@ -795,7 +795,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 		lg.unlock();
 		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
 		if (recurse_level>1) {
-			_warn("DROP: Recruse level too big in choosing peer");
+			_warn("DROP: Recursion level too big in choosing peer");
 			return false; // <---
 		}
 
@@ -1449,6 +1449,8 @@ void c_tunserver::run(int time) {
 }
 
 
+// ----------------------------------------------------------------------------
+// @deprecated
 void c_tunserver::program_action_set_IDI(const string & keyname) {
 	_note("Action: set IDI");
 	_info("Setting the name of IDI key to: " << keyname);
@@ -1468,6 +1470,7 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 	datastore::save_string(e_datastore_galaxy_instalation_key_conf,"IDI", keyname, true);
 }
 
+// @deprecated
 std::string c_tunserver::program_action_gen_key_simple() {
 	const string IDI_name = "IDI";
 //	ui::action_info_ok("Generating your new keys.");
@@ -1480,6 +1483,7 @@ std::string c_tunserver::program_action_gen_key_simple() {
 	return IDI_name;
 }
 
+// @deprecated
 void c_tunserver::program_action_gen_key(const boost::program_options::variables_map & argm) {
 	_note("Action: gen key");
 	if (!argm.count("key-type")) {
@@ -1515,6 +1519,7 @@ void c_tunserver::program_action_gen_key(const boost::program_options::variables
 		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
+// ----------------------------------------------------------------------------
 
 int c_tunserver::get_my_port() const {
 	return m_port;

@@ -152,12 +152,16 @@ std::string STR(const T & obj) {
 	return oss.str();
 }
 
-
+/// For exceptions that are not errors, but are expected
+/// alternative situation in program.
 class expected_exception : public std::exception {
 	public:
 		const char* what() const noexcept override;
 };
 
+/// Throw this if some element was not found, but this is normal situation.
+/// E.g. when public-key was not yet created at all (to differentiate
+/// from case where public-key was found but can not be loaded due to format errors etc)
 class expected_not_found : public stdplus::expected_exception {
 	public:
 		const char* what() const noexcept override;

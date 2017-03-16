@@ -39,4 +39,41 @@ function abdialog_exit() {
 		exit
 	fi
 }
+function abdialog_info_quit_big() {
+	[[ -z "$2" ]] || title="$2"
+	local text="$1"
+	abdialog --title "$title" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--yesno "$1" "$3" "$4" || abdialog_exit
+}
+
+function abdialog_info_quit() {
+	title="Info"
+	[[ -z "$2" ]] || title="$2"
+	local text="$1"
+	abdialog --title "$title" \
+		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+		--yesno "$1" 20 65 || abdialog_exit
+}
+
+function abdialog_info() {
+	title="Info"
+	[[ -z "$2" ]] || title="$2"
+	local text="$1"
+	abdialog --title "$title" \
+		--yes-button "$(gettext "Ok")" \
+		--msgbox "$1" 20 65 || abdialog_exit
+}
+
+function abdialog_fail() {
+	title="Error"
+	[[ -z "$2" ]] || title="$2"
+	local text="$1"
+	abdialog --title "$title" \
+		--yes-button "$(gettext "Ok")" \
+		--msgbox "$1" 20 65 || abdialog_exit
+	abdialog_exit
+}
+
+
 

@@ -50,6 +50,24 @@ err_check_user_soft::err_check_user_soft(const char *what)
 
 // -------------------------------------------------------------------
 
+err_check_input::err_check_input(const char *what)
+	: err_check_base(tag_err_check_named{} , cause(true)+what , true)  { }
+
+err_check_input::err_check_input(tag_err_check_named, const char   * what, bool serious)
+	: err_check_base(tag_err_check_named{} , what , serious) { }
+err_check_input::err_check_input(tag_err_check_named, const string & what, bool serious)
+	: err_check_base(tag_err_check_named{} , what , serious) { }
+
+std::string err_check_input::cause(bool se) {
+	if (se)	return "Check detected input ERROR: "s;
+	return "Check detected input warning: "s;
+}
+
+err_check_input_soft::err_check_input_soft(const char *what)
+	: err_check_input(tag_err_check_named{} , cause(false)+what , false) { }
+
+// -------------------------------------------------------------------
+
 err_check_sys::err_check_sys(const char *what)
 	: err_check_base(tag_err_check_named{} , cause(true)+what , true)  { }
 err_check_sys::err_check_sys(tag_err_check_named, const char   * what, bool serious)
