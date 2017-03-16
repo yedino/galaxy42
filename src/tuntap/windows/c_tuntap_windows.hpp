@@ -19,10 +19,11 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) override;
 
 	private:
-		//boost::asio::io_service m_ioservice;
-		//boost::asio::windows::stream_handle m_stream_handle; ///< boost handler to the TUN device
+		HANDLE m_handle;
 		std::wstring m_guid;
 		std::array<uint8_t, 6> m_mac_address;
+		boost::asio::io_service m_ioservice;
+		boost::asio::windows::stream_handle m_stream_handle; ///< boost handler to the TUN device
 
 		std::vector<std::wstring> get_subkeys(HKEY hKey); ///< for windows registry
 		std::wstring get_device_guid(); ///< technical name of the device
