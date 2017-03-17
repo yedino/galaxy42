@@ -4,15 +4,15 @@
 
 // -------------------------------------------------------------------
 
-class c_netchunk {
+class c_netchunk final {
 	public:
-		typedef unsigned char t_element; ///< type of one elemenet
+		using t_element = unsigned char; ///< type of one elemenet
 
 		c_netchunk(t_element * _data, size_t _size); ///< will point to memory in data (it must be valid!) will NOT free memory
 		~c_netchunk()=default; ///< does nothing (does NOT delete memory!)
 
-		size_t size() const;
-		t_element * data() const;
+		size_t size() const noexcept;
+		t_element * data() const noexcept;
 
 	public:
 		t_element * const m_data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
@@ -28,18 +28,18 @@ class c_netchunk {
 */
 class c_netbuf final {
 	public:
-		typedef c_netchunk::t_element t_element; ///< type of one elemenet
+		using t_element = c_netchunk::t_element; ///< type of one elemenet
 
 		c_netbuf(size_t size); ///< construct and allocate
 		~c_netbuf(); ///< free memory
 
-		size_t size() const;
+		size_t size() const noexcept;
 		// vector<t_element> & get_data(); ///< access data
 		// const vector<t_element> & get_data() const; ///< access data
 		t_element & at(size_t ix); ///< access one element (asserted)
 
-		t_element * data();
-		t_element const * data() const;
+		t_element * data() noexcept;
+		t_element const * data() const noexcept;
 
 		void report(std::ostream & ostr, int detail) const;
 
