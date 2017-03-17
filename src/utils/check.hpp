@@ -1,6 +1,9 @@
 #pragma once
 
-#include "libs1.hpp"
+#include <string>
+#include <memory> // for UsePtr
+
+#include <tnetdbg.hpp>
 
 /**
  * @file check.hpp
@@ -33,7 +36,7 @@ class err_check_base : public std::runtime_error {
 		const bool m_serious;
 	public:
 		err_check_base(tag_err_check_named, const char   * what, bool serious);
-		err_check_base(tag_err_check_named, const string & what, bool serious);
+		err_check_base(tag_err_check_named, const std::string & what, bool serious);
 		bool is_serious() const;
 };
 // -------------------------------------------------------------------
@@ -47,7 +50,7 @@ class err_check_prog : public err_check_base {
 		/// for use by child class where the child class generated entire message
 		///@{
 		err_check_prog(tag_err_check_named, const char   * what, bool serious);
-		err_check_prog(tag_err_check_named, const string & what, bool serious);
+		err_check_prog(tag_err_check_named, const std::string & what, bool serious);
 		///@}
 		static std::string cause(bool se);
 };
@@ -62,7 +65,7 @@ class err_check_user : public err_check_base {
 		/// for use by child class where the child class generated entire message
 		///@{
 		err_check_user(tag_err_check_named, const char   * what, bool serious);
-		err_check_user(tag_err_check_named, const string & what, bool serious);
+		err_check_user(tag_err_check_named, const std::string & what, bool serious);
 		///@}
 		static std::string cause(bool se);
 };
@@ -83,7 +86,7 @@ class err_check_input : public err_check_base {
 		/// for use by child class where the child class generated entire message
 		///@{
 		err_check_input(tag_err_check_named, const char   * what, bool serious);
-		err_check_input(tag_err_check_named, const string & what, bool serious);
+		err_check_input(tag_err_check_named, const std::string & what, bool serious);
 		///@}
 		static std::string cause(bool se);
 };
@@ -104,7 +107,7 @@ class err_check_sys : public err_check_base {
 		/// for use by child class where the child class generated entire message
 		///@{
 		err_check_sys(tag_err_check_named, const char   * what, bool serious);
-		err_check_sys(tag_err_check_named, const string & what, bool serious);
+		err_check_sys(tag_err_check_named, const std::string & what, bool serious);
 		///@}
 		static std::string cause(bool se);
 };
@@ -125,7 +128,7 @@ class err_check_extern : public err_check_base {
 		/// for use by child class where the child class generated entire message
 		///@{
 		err_check_extern(tag_err_check_named, const char   * what, bool serious);
-		err_check_extern(tag_err_check_named, const string & what, bool serious);
+		err_check_extern(tag_err_check_named, const std::string & what, bool serious);
 		///@}
 		static std::string cause(bool se);
 };
@@ -158,3 +161,29 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 #define _try_sys(X) do { if(!(X)) { throw err_check_sys_soft( #X );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern_soft if false
 #define _try_extern(X) do { if(!(X)) { throw err_check_extern_soft( #X );  } } while(0)
+
+
+// always abort - for serious errors
+#define _check_abort(X) do { if (!(X)) { \
+	_erro("Assertation failed, will abort: (" << #X << ")" << _my__FILE__ << ':' << __LINE__); \
+	::std::abort(); } \
+} while(0)
+
+// -------------------------------------------------------------------
+
+template<class T> T& _UsePtr(const std::shared_ptr<T> & ptr, int line, const char* file) {
+	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+		std::abort();
+	}
+	return *ptr;
+}
+
+template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const char* file) {
+	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+		std::abort();
+	}
+	return *ptr;
+}
+
+#define UsePtr(PTR) _UsePtr(PTR,__LINE__,__FILE__)
+

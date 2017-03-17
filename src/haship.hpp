@@ -47,7 +47,7 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	struct tag_constr_by_addr_bin{}; // address is in form of t_ipv6bin
 	struct tag_constr_by_array_uchar{}; // address is in form of std::array of unsigned char of proper size
 
-	c_haship_addr();
+	c_haship_addr(); ///< address is zero filled
 
 	/// create the IP address that matches given public key (e.g. hash of it)
 	c_haship_addr(tag_constr_by_hash_of_pubkey x, const c_haship_pubkey & pubkey );
@@ -60,6 +60,8 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 
 	void print(ostream &ostr) const;
 	std::string get_hip_as_string(bool with_dots) const;
+	bool is_empty() const;
+	static c_haship_addr make_empty(); ///< named constructor
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 

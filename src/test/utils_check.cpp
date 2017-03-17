@@ -3,6 +3,9 @@
 #include <iostream>
 #include <exception>
 #include <stdexcept>
+#include <string>
+#include <memory>
+using std::string;
 
 TEST(utils_check, exception_check) {
 
