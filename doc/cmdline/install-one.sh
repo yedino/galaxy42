@@ -54,7 +54,7 @@ while IFS= read -r line; do
 done < <( ls -1 )
 
 # shellcheck disable=SC2069
-response=$( abdialog  --menu  "Install commandline for galaxy 'make run' and for 'tunserver.sh'. File will be copied into $xtarget" \
+response=$( abdialog  --menu  "Install commandline for galaxy 'make run' and for 'develrun.sh'. File will be copied into $xtarget" \
 	"$dialog_h" "$dialog_w" "$dialog_h2"  \
 	"${choices[@]}" \
 	"(nothing)" "(nothing)" \

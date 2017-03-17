@@ -33,7 +33,7 @@
 #include "cable/simulation/cable_simul_obj.hpp"
 
 #include "tuntap/base/tuntap_base.hpp"
-#include "tuntap/linux/c_linux_tuntap_obj.hpp"
+#include "tuntap/linux/c_tuntap_linux_obj.hpp"
 
 #include "tunserver.hpp" // delete?
 
@@ -471,8 +471,27 @@ int c_the_program_newloop::main_execution() {
 	this->programtask_load_my_keys();
 	this->use_options_peerref();
 
-	c_linux_tuntap_obj tuntap;
+	c_tuntap_linux_obj tuntap;
 	tuntap.set_tun_parameters(pimpl->server->get_my_hip(), 16, 16000);
+
+	c_netbuf buf(200);
+
+	auto world = make_shared<c_world>();
+	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
+	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
+
+	string stopflag_name="/tmp/stop1";
+	_goal("Running loop, create file " << stopflag_name << " to stop this loop.");
+	while (1) {
+		_dbg3("Reading TUN...");
+		size_t read = tuntap.read_from_tun( buf.data(), buf.size() );
+		c_netchunk chunk( buf.data() , read ); // actually used part of buffer
+		_info("Read: " << make_report(chunk,20));
+		UsePtr(cable).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
+		if (boost::filesystem::exists(stopflag_name)) {
+			break;
+		}
+	} // loop
 
 /*
 	c_tuntap_fake_kernel kernel;

@@ -54,10 +54,11 @@ then
 # shellcheck disable=SC2069
 response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$dialog_w" "$dialog_h2"  \
 	"i"         "Install ./install.sh (with --sudo if not root)"  \
-	"icfg"      "Install devel configure (e.g. default commandline for running program)" \
+	"icfg"      "Install rundevel configure (e.g. default commandline for rundevel.sh)" \
+	"d"         "Build: with ./do"  \
+	"r"         "Run the program (in build/ directory - in devel mode)"  \
 	"rh"        "Read (edit) doc/hacking" \
 	"rm"        "Read (edit) main README" \
-	"d"         "Build: with ./do"  \
 	"-" "" \
 	"d10"       "Build: with ./do extlevel 10"  \
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
@@ -117,6 +118,11 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		icfg)
 			cd doc/cmdline/
 			./install-one.sh
+		;;
+
+		r)
+			cd build || abdialog_fail "Can not enter build directory. Build the project first"
+			./rundevel.sh
 		;;
 
 		d)
@@ -219,7 +225,10 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 				LANG="$iii" LANGUAGE=  LC_ALL= ./install.sh "$flag"
 				sleep 0.2
 		  done
-		 	echo -e "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
+
+			if false ;
+			then
+			echo -e "\n\n\n\n\nNow will change variable LANGUAGE (the language-only option)\n\n\n\n\n";
 		  read _
 		  for iii in 'en_US.UTF-8' 'pl_PL.UTF-8' 'uk_UK.UTF-8' 'ru_RU.UTF-8' 'de_DE.UTF-8' ; do
 		  	echo -e "\n\n\n===============================================\nLANGUAGE: - $iii - (press ENTER)\n\n\n"
@@ -227,6 +236,10 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 					LANG= LANGUAGE="$iii" LC_ALL= ./install.sh "$flag"
 				sleep 0.2
 		  done
+		  else
+				echo -e "\n\n\n\n\nSkipping the tests about LANGUAGE with unset LC_ALL and LANG, we assume they are not needed\n\n\n\n\n";
+				read _
+			fi
 	  ;;
 
 	  rm)
