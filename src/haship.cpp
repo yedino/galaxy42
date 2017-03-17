@@ -71,6 +71,18 @@ string c_haship_addr::get_hip_as_string(bool with_dots) const{
     }
     return out.str();
 }
+
+bool c_haship_addr::is_empty() const {
+	for (auto & byte : *this)
+		if (byte != 0) return false;
+	return true;
+}
+
+c_haship_addr c_haship_addr::make_empty() {
+	c_haship_addr ret;
+	ret.fill(0);
+	return ret;
+}
 ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
 
 void c_haship_pubkey::print(ostream &ostr) const {
