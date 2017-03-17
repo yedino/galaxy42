@@ -6,19 +6,23 @@
 
 #include "cable/simulation/cable_simul_addr.hpp"
 #include "cable/simulation/cable_simul_obj.hpp"
+#include "cable/simulation/world.hpp"
+
+#include "libs0.hpp"
+#include "cable/kind.hpp"
 
 #include "tuntap/base/tuntap_base.hpp"
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
 
-
-
 void c_galaxysrv::main_loop() {
 	c_netbuf buf(200);
 
 	auto world = make_shared<c_world>();
-	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
-	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
+//	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
+//	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
+
+	auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
 
 	string stopflag_name="/tmp/stop1";
 	_goal("Running loop, create file " << stopflag_name << " to stop this loop.");
@@ -26,8 +30,8 @@ void c_galaxysrv::main_loop() {
 		_dbg3("Reading TUN...");
 		size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
 		c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-		_info("Read: " << make_report(chunk,20));
-		UsePtr(cable).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
+	_info("Read: " << make_report(chunk,20));
+		m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
 		if (boost::filesystem::exists(stopflag_name)) {
 			break;
 		}

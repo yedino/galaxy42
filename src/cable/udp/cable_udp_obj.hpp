@@ -12,7 +12,7 @@
 
 class c_cable_udp final : public c_asiocable {
 	public:
-		c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager);
+		c_cable_udp(shared_ptr<c_asioservice_manager> iomanager);
 		void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) override;
 		void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler) override;
 		size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size) override;
