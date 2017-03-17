@@ -477,7 +477,7 @@ message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
 if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
-		COMMAND "${CMAKE_SOURCE_DIR}/tunserver.sh"
+		COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
 		DEPENDS ./tunserver.elf
 		DEPENDS test-debug.elf
 		WORKING_DIRECTORY ./)
@@ -494,6 +494,7 @@ add_custom_command(
 #	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
 	COMMAND cp tunserver.elf nocap-tunserver.elf
+	COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./"
 	WORKING_DIRECTORY ./)
 
 add_custom_command(

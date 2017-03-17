@@ -1,5 +1,16 @@
 #!/bin/bash
 
+echo "=============================================================="
+echo "rundevel - Run for Developer"
+echo "=============================================================="
+
+program_bin="./tunserver.elf"
+
+[[ -r "$program_bin" ]] || {
+	echo "Can not find binary ($program_bin) - try entering directory build/ first, or doing ./do if you do not have that";
+	exit 1;
+}
+
 [[ -z "$devel_num" ]] && {
 	echo ""
 	echo "=============================================================="
@@ -12,7 +23,7 @@
 	echo ""
 }
 
-echo "Running the tunserver in devel mode, devel_num=$devel_num"
+echo "Running the program ($program_bin) in devel mode, devel_num=$devel_num"
 
 unset -v arr
 readonly option_file="$HOME/.devel/galaxy42.cmdline"
@@ -31,6 +42,16 @@ fi
 
 echo "=============================================================="
 set -x
-./tunserver.elf "${arr[@]}" || { echo "Program failed"; }
+"$program_bin" "${arr[@]}" "$@"
+status=$?
+set +x
+if [[ -z $status ]] ; then
+	echo "Program ended normally."
+	echo "p.s. try using ./menu (or ../menu) to change Rundevel configuration (default command line)"
+	exit 0
+else
+	echo "Program failed with exit code = $status";
+	exit 1
+fi
 # ./tunserver.elf --devel --develnum $devel_num || { echo "Program failed"; } # for network lab
 
