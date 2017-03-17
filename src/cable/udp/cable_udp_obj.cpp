@@ -5,7 +5,7 @@
 
 using namespace boost::asio::ip;
 
-c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager)
+c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> iomanager)
 :
 	c_asiocable(iomanager),
 	m_read_socket(get_io_service()),
