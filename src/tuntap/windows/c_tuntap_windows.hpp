@@ -57,6 +57,6 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
   };
 };
 
-#endif ANTINET_windows
+#endif //ANTINET_windows
 
 #endif // C_TUNTAP_WINDOWS_HPP
