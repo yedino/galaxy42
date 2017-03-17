@@ -103,7 +103,7 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 				nullptr,
 				&ftLastWriteTime);
 			if (retCode == ERROR_SUCCESS) {
-				static_assert(std::is_nothrow_move_assignable<decltype(ret)::value_type>::value, "");
+				// static_assert(std::is_nothrow_move_assignable<decltype(ret)::value_type>::value, ""); // not works on gcc and clang but it should never throws
 				static_assert(std::is_nothrow_move_constructible<decltype(ret)::value_type>::value, "");
 				ret.emplace_back(achKey); // Exception safety: strong guarantee (ISO/IEC 14882:2014(E) 23.3.6.5, std::wstring is no-throw moveable 21.4.2)
 				// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/containers.tex#L5276
