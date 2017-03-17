@@ -54,10 +54,11 @@ then
 # shellcheck disable=SC2069
 response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$dialog_w" "$dialog_h2"  \
 	"i"         "Install ./install.sh (with --sudo if not root)"  \
-	"icfg"      "Install devel configure (e.g. default commandline for running program)" \
+	"icfg"      "Install rundevel configure (e.g. default commandline for rundevel.sh)" \
+	"d"         "Build: with ./do"  \
+	"r"         "Run the program (in build/ directory - in devel mode)"  \
 	"rh"        "Read (edit) doc/hacking" \
 	"rm"        "Read (edit) main README" \
-	"d"         "Build: with ./do"  \
 	"-" "" \
 	"d10"       "Build: with ./do extlevel 10"  \
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
@@ -117,6 +118,11 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		icfg)
 			cd doc/cmdline/
 			./install-one.sh
+		;;
+
+		r)
+			cd build || abdialog_fail "Can not enter build directory. Build the project first"
+			./rundevel.sh
 		;;
 
 		d)
