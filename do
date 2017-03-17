@@ -39,7 +39,6 @@ function usage_main {
 	echo ""
 	echo "Program command line options:"
 	echo "  --help shows the help and exits"
-	echo "  --go skips waiting for confirmation from the user"
 }
 
 function usage {
@@ -114,14 +113,6 @@ echo "* EXTLEVEL=$EXTLEVEL"
 echo ""
 echo "* USE_BOOST_MULTIPRECISION_DEFAULT=$USE_BOOST_MULTIPRECISION_DEFAULT"
 echo ""
-if [[ "$1" == "--go" ]] ; then
-	:
-else
-	usage_mini
-	echo ""
-	echo "Press ENTER to continue. Run this script with option --go to skip this pause/help (e.g. in batch mode)"
-	read _
-fi
 
 echo ""
 echo "===================================================================="

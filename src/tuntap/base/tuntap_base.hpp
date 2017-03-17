@@ -8,12 +8,12 @@
 
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
-class tuntap_base_obj {
+class c_tuntap_base_obj {
 	public:
 		// the callback function that caller can provide
 		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code& error)>;
 
-		virtual ~tuntap_base_obj();
+		virtual ~c_tuntap_base_obj();
 
 		virtual size_t send_to_tun(const unsigned char *data, size_t size) = 0; ///< blocking function
 		// it seems that async send was slow.

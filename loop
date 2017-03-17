@@ -1,12 +1,12 @@
 #!/bin/bash
-while true ; do clear ; 
-	echo ; echo ; echo ; 
-	./tunserver.sh ; echo ; 
-	echo ; echo ; echo ; 
-	echo ; echo ; echo ; 
-	echo ; echo ; echo ; 
-	echo ; echo ; echo ; 
-	echo ; echo ; echo ; 
-	sleep 1 ; 
+while true ; do clear ;
+	echo ; echo ; echo ;
+	./rundevel.sh ; echo ;
+	echo ; echo ; echo ;
+	echo ; echo ; echo ;
+	echo ; echo ; echo ;
+	echo ; echo ; echo ;
+	echo ; echo ; echo ;
+	sleep 1 ;
 done
 

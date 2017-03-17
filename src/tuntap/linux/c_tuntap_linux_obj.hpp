@@ -7,9 +7,9 @@
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 
-class c_linux_tuntap_obj final : public tuntap_base_obj {
+class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	public:
-		c_linux_tuntap_obj(); ///< construct this object, throws if error
+		c_tuntap_linux_obj(); ///< construct this object, throws if error
 
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
