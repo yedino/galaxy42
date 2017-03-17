@@ -1,6 +1,6 @@
 #include "c_tuntap_windows.hpp"
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(ANTINET_windows)
 
 #include "../../utils/check.hpp"
 #include <libs0.hpp>
@@ -14,8 +14,7 @@
 #include <ntddscsi.h>
 #include <winioctl.h>
 
-#define UNICODE
-#define _UNICODE
+#include <type_traits>
 
 #define TAP_CONTROL_CODE(request,method) \
 	CTL_CODE (FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS)
@@ -104,6 +103,8 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 				nullptr,
 				&ftLastWriteTime);
 			if (retCode == ERROR_SUCCESS) {
+				static_assert(std::is_nothrow_move_assignable<decltype(ret)::value_type>::value, "");
+				static_assert(std::is_nothrow_move_constructible<decltype(ret)::value_type>::value, "");
 				ret.emplace_back(achKey); // Exception safety: strong guarantee (23.3.6.5, std::wstring is no-throw moveable 21.4.2)
 			}
 		}
@@ -147,10 +148,11 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 		key_wrapped.set(key);
 		std::wstring netCfgInstanceId;
 		try {
-			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
+			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP, substr throws std::out_of_range
 				_note(to_string(subkey_reg_path));
 				size = 256;
 				netCfgInstanceId.resize(size, '\0');
+				static_assert(std::is_same<LPBYTE, unsigned char *>::value, "");
 				// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
 				// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 				status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
@@ -252,8 +254,8 @@ HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
 	return handle;
 }
 
-std::array<uint8_t, 6> c_tuntap_windows_obj::get_mac(HANDLE handle) {
-	std::array<uint8_t, 6> mac_address;
+std::array<uint8_t, c_tuntap_windows_obj::mac_address_size> c_tuntap_windows_obj::get_mac(HANDLE handle) {
+	std::array<uint8_t, mac_address_size> mac_address;
 	DWORD mac_size = 0;
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
 	if (bret == 0) throw std::runtime_error("DeviceIoControl error, last error " + std::to_string(GetLastError()));
@@ -278,10 +280,12 @@ c_tuntap_windows_obj::hkey_wrapper::~hkey_wrapper() {
 }
 
 HKEY &c_tuntap_windows_obj::hkey_wrapper::get() {
+	if (!m_is_open) throw std::runtime_error("getting not open HKEY");
 	return m_hkey;
 }
 
 void c_tuntap_windows_obj::hkey_wrapper::set(HKEY new_hkey) {
+	if (m_hkey == new_hkey) return;
 	if (m_is_open) close();
 	m_hkey = new_hkey;
 	m_is_open = true;
@@ -294,4 +298,4 @@ void c_tuntap_windows_obj::hkey_wrapper::close() {
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegCloseKey error, error code " + std::to_string(GetLastError()) + " returned value " + std::to_string(status));
 }
 
-#endif // _WIN32 || __CYGWIN__
+#endif // ANTINET_windows

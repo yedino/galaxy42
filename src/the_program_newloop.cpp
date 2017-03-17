@@ -1,5 +1,6 @@
 
 #include "the_program_newloop.hpp"
+#include "platform.hpp"
 #include "libs1.hpp"
 
 #include "project.hpp"
@@ -472,9 +473,9 @@ int c_the_program_newloop::main_execution() {
 	this->programtask_load_my_keys();
 	this->use_options_peerref();
 
-#ifdef __linux__
+#ifdef ANTINET_linux
 	c_tuntap_linux_obj tuntap;
-#elif defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(ANTINET_windows)
 	c_tuntap_windows_obj tuntap;
 #else
 	#error "This platform is not supported"

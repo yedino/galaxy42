@@ -3,8 +3,9 @@
 
 
 #include "../base/tuntap_base.hpp"
+#include <platform.hpp>
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(ANTINET_windows)
 
 class c_tuntap_windows_obj final : c_tuntap_base_obj {
 	public:
@@ -24,6 +25,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		std::array<uint8_t, 6> m_mac_address;
 		boost::asio::io_service m_ioservice;
 		boost::asio::windows::stream_handle m_stream_handle; ///< boost handler to the TUN device
+		static constexpr size_t mac_address_size = 6;
 
 		std::vector<std::wstring> get_subkeys(HKEY hKey); ///< for windows registry
 		std::wstring get_device_guid(); ///< technical name of the device
@@ -31,7 +33,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		NET_LUID get_luid(const std::wstring &human_name);
 		HANDLE get_device_handle();
 		HANDLE open_tun_device(const std::wstring &guid); ///< returns opened handle for guid or INVALID_HANDLE_VALUE
-		std::array<uint8_t, 6> get_mac(HANDLE handle); ///< get handle to opened device (returned by get_device_handle())
+		std::array<uint8_t, mac_address_size> get_mac(HANDLE handle); ///< get handle to opened device (returned by get_device_handle())
 
 		class hkey_wrapper final {
 			public:
@@ -40,20 +42,21 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 				 * RegOpenKeyEx, RegOpenKeyTransacted, or RegConnectRegistry function.
 				 */
 				hkey_wrapper(HKEY hkey);
-				~hkey_wrapper();
-				HKEY &get();
+				~hkey_wrapper(); ///< call close() method
+				HKEY &get(); ///< throws std::runtime_error if HKEY object is not open
 				/**
 				 * hkey must have been opened by the RegCreateKeyEx, RegCreateKeyTransacted,
 				 * RegOpenKeyEx, RegOpenKeyTransacted, or RegConnectRegistry function.
+				 * multiple calling this function with opened HKEY objects is safe (old hkeys will be closed via close() method)
 				 */
 				void set(HKEY new_hkey);
-				void close();
+				void close(); ///< close HKEY object via RegClose_key() function, multiple calling this function is safe
 			private:
 				HKEY m_hkey;
 				bool m_is_open;
   };
 };
 
-#endif // _WIN32 || __CYGWIN__
+#endif ANTINET_windows
 
 #endif // C_TUNTAP_WINDOWS_HPP
