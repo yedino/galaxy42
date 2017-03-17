@@ -11,7 +11,6 @@
 #include <string>
 #include "mo_reader.hpp"
 
-#include <memory> // for UsePtr
 
 extern unsigned char g_dbg_level;
 
@@ -98,21 +97,6 @@ void write_to_console(const std::string& obj);
 
 #endif
 
-template<class T> T& _UsePtr(const std::shared_ptr<T> & ptr, int line, const char* file) {
-	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
-		std::abort();
-	}
-	return *ptr;
-}
-
-template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const char* file) {
-	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
-		std::abort();
-	}
-	return *ptr;
-}
-
-#define UsePtr(PTR) _UsePtr(PTR,__LINE__,__FILE__)
 
 // TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)
@@ -122,13 +106,6 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 
 #define _NOTREADY_warn() do { _warn("This code is not implemented yet! in "<<__FUNCTION__);\
 	} while(0)
-
-
-// this assert could be helpful, maybe use in release
-#define _check_abort(X) do { if (!(X)) { \
-	_erro("Assertation failed, will abort: (" << #X << ")" << _my__FILE__ << ':' << __LINE__); \
-	::std::abort(); } \
-} while(0)
 
 // this assert could be helpful, maybe use in release
 #define _assert(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)

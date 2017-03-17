@@ -3,6 +3,21 @@
 #include "galaxysrv_peers.hpp"
 #include "libs1.hpp"
 
+c_peer_connection::c_peer_connection( t_peer_reference_newloop && ref )
+ : m_reference( std::move(ref) )
+{
+}
+
+bool c_peer_connection::is_connected() const {
+	// TODO
+	return true;
+}
+
+bool c_peer_connection::should_connect() const {
+	// TODO
+	return true;
+}
+
 c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
@@ -72,19 +87,39 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 	return x;
 }
 
+void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
+	_check(ref.get());
+	_note("Adding peer: "); // TODO << *ref );
+
+	auto peer = make_unique<c_peer_connection>( std::move( *ref ) );
+	m_peer.push_back( std::move( peer ) );
+}
+
 void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 	_info("Adding peer from simplestring=" << simple);
-	t_peering_reference_parse parse = parse_peer_reference(simple);
+	t_peering_reference_parse parse = parse_peer_reference(simple); // partially parsed
 	bool id_anyone=true;
 	string id;
 	const auto & cables = parse.second;
+
+	auto reference = make_unique<t_peer_reference_newloop>();
+
 	if (parse.first.size()==1) { // there was 1 ID parsed
 		id_anyone=false;
-		id=parse.first.at(0);
-	} else _check(parse.first.size() == 0); // else there was no ID parsed
+		id = parse.first.at(0);
+		reference->hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , id);
+	} else {
+		_check(parse.first.size() == 0); // else there was no ID parsed
+		reference->hip = c_haship_addr::make_empty(); // clear it to be sure
+	}
 	_note(join_string_sep( id_anyone?"anyone":"id" , id ) );
 	_note("Cables: " << cables.size());
-	for(const auto & cablestr : cables) _note("Cable: " << cablestr);
+	for(const auto & cablestr : cables) {
+		_note("Cable: " << cablestr); // cablestr like udp:192.168.1.107:9042
+		unique_ptr<c_cable_base_addr> cable_addr = c_cable_base_addr::cable_make_addr( cablestr );
+		reference->cable_addr.push_back( std::move(cable_addr) );
+	}
+	this->add_peer( std::move( reference ) ); // ***
 }
 
 void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {

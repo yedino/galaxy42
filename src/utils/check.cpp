@@ -1,5 +1,7 @@
 #include "utils/check.hpp"
 
+using namespace  std;
+
 const char * err_check_soft::what_soft() const {
 	auto ptr = dynamic_cast<const err_check_base * >( this );
 	if (ptr) return ptr->what();

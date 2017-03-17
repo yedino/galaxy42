@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include <tnetdbg.hpp>
+#include <utils/check.hpp>
 #include <iostream>
+#include <memory>
 
 TEST(UsePtr_Test, abort_test) {
 	ASSERT_DEATH(UsePtr(std::unique_ptr<int>(nullptr)), "");

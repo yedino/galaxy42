@@ -12,7 +12,9 @@
 // c_haship_addr :
 c_haship_addr::c_haship_addr()
 	 : std::array<unsigned char, g_haship_addr_size>({{}})
-{ }
+{
+	fill(0);
+}
 
 c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey & pubkey)
 	 : std::array<unsigned char, g_haship_addr_size>({{}})
@@ -70,6 +72,18 @@ string c_haship_addr::get_hip_as_string(bool with_dots) const{
         out << *it;
     }
     return out.str();
+}
+
+bool c_haship_addr::is_empty() const {
+	for (auto & byte : *this)
+		if (byte != 0) return false;
+	return true;
+}
+
+c_haship_addr c_haship_addr::make_empty() {
+	c_haship_addr ret;
+	ret.fill(0);
+	return ret;
 }
 ostream& operator<<(ostream &ostr, const c_haship_addr & v) {	v.print(ostr);	return ostr; }
 
