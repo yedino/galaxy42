@@ -60,6 +60,8 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 
 	void print(ostream &ostr) const;
 	std::string get_hip_as_string(bool with_dots) const;
+	bool is_empty() const;
+	static c_haship_addr make_empty(); ///< named constructor
 };
 ostream& operator<<(ostream &ostr, const c_haship_addr & v);
 
