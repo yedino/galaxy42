@@ -3,6 +3,34 @@
 #include "galaxysrv_peers.hpp"
 #include "libs1.hpp"
 
+void t_peer_reference_newloop::print(ostream &ostr) const{
+	ostr << hip << ", cables:[";
+	for(const unique_ptr<c_cable_base_addr>& addr : cable_addr)
+		ostr << UsePtr(addr) << ", ";
+	ostr << "\b], options: {";
+	for(const std::pair<string, boost::any>& opt : options)
+	{
+		ostr << opt.first << ':';
+		try{
+			ostr << boost::any_cast<int>(opt.second) << ", ";
+		}catch(const boost::bad_any_cast &)
+		{
+			try{
+				ostr << boost::any_cast<string>(opt.second) << ", ";
+			}catch(const boost::bad_any_cast &)
+			{
+				ostr << "?, ";
+			}
+		}
+	}
+	ostr << "\b}" << endl;
+}
+
+ostream& operator<<(ostream &ostr, const t_peer_reference_newloop & v){
+	v.print(ostr);
+	return ostr;
+}
+
 c_peer_connection::c_peer_connection( t_peer_reference_newloop && ref )
  : m_reference( std::move(ref) )
 {
@@ -16,6 +44,15 @@ bool c_peer_connection::is_connected() const {
 bool c_peer_connection::should_connect() const {
 	// TODO
 	return true;
+}
+
+void c_peer_connection::print(ostream &ostr) const {
+	ostr << m_reference;
+}
+
+ostream& operator<<(ostream &ostr, const c_peer_connection & v){
+	v.print(ostr);
+	return ostr;
 }
 
 c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
