@@ -12,7 +12,9 @@
 // c_haship_addr :
 c_haship_addr::c_haship_addr()
 	 : std::array<unsigned char, g_haship_addr_size>({{}})
-{ }
+{
+	fill(0);
+}
 
 c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey & pubkey)
 	 : std::array<unsigned char, g_haship_addr_size>({{}})
