@@ -1,7 +1,8 @@
 #ifndef C_MACOSX_TUNTAP_OBJ_HPP
 #define C_MACOSX_TUNTAP_OBJ_HPP
 
-#ifdef __MACH__
+#include <platform.hpp>
+#ifdef ANTINET_macosx
 #include "../base/tuntap_base.hpp"
 #include <boost/asio.hpp>
 #include <libs0.hpp>
@@ -23,6 +24,6 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 		                         uint32_t mtu) override;
 };
 
-#endif // __MACH__
+#endif // ANTINET_macosx
 
 #endif // C_MACOSX_TUNTAP_OBJ_HPP

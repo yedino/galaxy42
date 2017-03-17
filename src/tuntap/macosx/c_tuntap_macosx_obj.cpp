@@ -1,4 +1,4 @@
-#ifdef __MACH__
+#ifdef ANTINET_macosx
 #include "c_tuntap_macosx_obj.hpp"
 
 c_tuntap_macosx_obj::c_tuntap_macosx_obj() {
@@ -37,5 +37,5 @@ void c_tuntap_macosx_obj::set_tun_parameters(const std::array<unsigned char, 16>
 	_UNUSED(mtu);
 }
 
-#endif // __MACH__
+#endif // ANTINET_macosx
 
