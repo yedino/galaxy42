@@ -106,6 +106,8 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 				static_assert(std::is_nothrow_move_assignable<decltype(ret)::value_type>::value, "");
 				static_assert(std::is_nothrow_move_constructible<decltype(ret)::value_type>::value, "");
 				ret.emplace_back(achKey); // Exception safety: strong guarantee (ISO/IEC 14882:2014(E) 23.3.6.5, std::wstring is no-throw moveable 21.4.2)
+				// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/containers.tex#L5276
+				// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/strings.tex#L1425
 			}
 		}
 	}
@@ -141,6 +143,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 		DWORD size = 256;
 		std::wstring componentId(size, '\0');
 		// this reinterpret_cast is not UB(ISO/IEC 14882:2014(E) 3.10.10) because LPBYTE == unsigned char *
+		// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/basic.tex#L4126
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 		status = RegQueryValueExW(key, L"ComponentId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&componentId[0]), &size);
 		if (status != ERROR_SUCCESS) {
@@ -156,6 +159,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 				netCfgInstanceId.resize(size, '\0');
 				static_assert(std::is_same<LPBYTE, unsigned char *>::value, "");
 				// this reinterpret_cast is not UB(ISO/IEC 14882:2014(E) 3.10.10) because LPBYTE == unsigned char *
+				// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/basic.tex#L4126
 				// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 				status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 				if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
@@ -198,6 +202,7 @@ std::wstring c_tuntap_windows_obj::get_human_name(const std::wstring &guid) {
 	if (status != ERROR_SUCCESS) throw std::runtime_error("get_human_name: RegOpenKeyExW error");
 	hkey_wrapper hkey_wrapped(key_tmp);
 	// this reinterpret_cast is not UB(ISO/IEC 14882:2014(E) 3.10.10) because LPBYTE == unsigned char *
+	// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/basic.tex#L4126
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 	status = RegQueryValueExW(hkey_wrapped.get(), L"Name", nullptr, nullptr, reinterpret_cast<LPBYTE>(&name[0]), &size);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("get_human_name: RegQueryValueExW error");
