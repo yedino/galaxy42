@@ -3,6 +3,17 @@
 #include "galaxysrv_peers.hpp"
 #include "libs1.hpp"
 
+
+bool c_peer_connection::is_connected() const {
+	// TODO
+	return true;
+}
+
+bool c_peer_connection::should_connect() const {
+	// TODO
+	return true;
+}
+
 c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
@@ -74,7 +85,7 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 
 void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 	_info("Adding peer from simplestring=" << simple);
-	t_peering_reference_parse parse = parse_peer_reference(simple);
+	t_peering_reference_parse parse = parse_peer_reference(simple); // partially parsed
 	bool id_anyone=true;
 	string id;
 	const auto & cables = parse.second;
@@ -84,7 +95,10 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 	} else _check(parse.first.size() == 0); // else there was no ID parsed
 	_note(join_string_sep( id_anyone?"anyone":"id" , id ) );
 	_note("Cables: " << cables.size());
-	for(const auto & cablestr : cables) _note("Cable: " << cablestr);
+	for(const auto & cablestr : cables) {
+		_note("Cable: " << cablestr); // cablestr like udp:192.168.1.107:9042
+		auto cable_addr = c_cable_base_addr::cable_make_addr( cablestr );
+	}
 }
 
 void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
