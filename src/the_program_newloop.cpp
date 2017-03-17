@@ -184,133 +184,6 @@ class c_the_program_newloop_pimpl {
 		friend class c_the_program_newloop;
 };
 
-// -------------------------------------------------------------------
-
-template <typename T>
-struct c_to_report {
-	public:
-		const T & m_obj;
-		int m_level;
-		c_to_report(const T & obj, int level) : m_obj(obj), m_level(level) {}
-};
-
-template <typename TS, typename TR> TS & operator<<(TS & ostr , const c_to_report<TR> & to_report) {
-	to_report.m_obj.report(ostr, to_report.m_level);
-	return ostr;
-}
-
-template <typename T>
-const c_to_report<T> make_report(const T & obj, int level) {
-	return c_to_report<T>( obj , level);
-}
-
-// -------------------------------------------------------------------
-
-class c_netchunk {
-	public:
-		typedef unsigned char t_element; ///< type of one elemenet
-
-		c_netchunk(t_element * _data, size_t _size); ///< will point to memory in data (it must be valid!) will NOT free memory
-		~c_netchunk()=default; ///< does nothing (does NOT delete memory!)
-
-		size_t size() const;
-		t_element * data() const;
-
-	public:
-		t_element * const m_data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
-		const size_t m_size;
-
-		void report(std::ostream & ostr, int detail) const;
-};
-
-c_netchunk::c_netchunk(t_element * _data, size_t _size) : m_data(_data), m_size(_size) { }
-
-void c_netchunk::report(std::ostream & ostr, int detail) const {
-	ostr << "netchunk this@" << static_cast<const void*>(this);
-	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_size
-		<< ",memory@" << static_cast<const void*>(m_data) ;
-	if (detail>=20) {
-		ostr << " [";
-		for (size_t i=0; i<m_size; ++i) {
-			if (i) ostr<<' ';
-			ostr << std::hex << (int)m_data[i] << std::dec ;
-		}
-		ostr << "]";
-	}
-}
-
-size_t c_netchunk::size() const { return m_size; }
-c_netchunk::t_element * c_netchunk::data() const { return m_data; }
-
-// -------------------------------------------------------------------
-
-/***
-	@brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
-*/
-class c_netbuf final {
-	public:
-		typedef c_netchunk::t_element t_element; ///< type of one elemenet
-
-		c_netbuf(size_t size); ///< construct and allocate
-		~c_netbuf(); ///< free memory
-
-		size_t size() const;
-		// vector<t_element> & get_data(); ///< access data
-		// const vector<t_element> & get_data() const; ///< access data
-		t_element & at(size_t ix); ///< access one element (asserted)
-
-		t_element * data();
-		t_element const * data() const;
-
-		void report(std::ostream & ostr, int detail) const;
-
-	private:
-		t_element * m_data; ///< my actuall data storage
-		size_t m_size;
-};
-
-c_netbuf::c_netbuf(size_t size) {
-	_dbg2("allocating");
-	m_data = new t_element[size]; // fast new - no initialization of data
-	m_size = size;
-	_dbg1( make_report(*this,10) );
-}
-
-c_netbuf::~c_netbuf() {
-	_dbg1("dealloc: " << make_report(*this,10) );
-	delete[] m_data;
-	m_data=nullptr;
-	m_size=0;
-}
-
-size_t c_netbuf::size() const {	return m_size; }
-
-c_netbuf::t_element & c_netbuf::at(size_t ix) {
-	_check(ix<m_size);
-	return  *( m_data + ix );
-}
-
-void c_netbuf::report(std::ostream & ostr, int detail) const {
-	ostr << "netBUF this@" << static_cast<const void*>(this);
-	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_size
-		<< ",memory@" << static_cast<const void*>(m_data) ;
-	if (detail>=20) {
-		ostr << " [";
-		for (size_t i=0; i<m_size; ++i) {
-			if (i) ostr<<' ';
-			ostr << std::hex << (int)m_data[i] << std::dec ;
-		}
-		ostr << "]";
-	}
-}
-
-c_netbuf::t_element * c_netbuf::data() {	return m_data; }
-
-c_netbuf::t_element const * c_netbuf::data() const { return m_data; }
-
-// -------------------------------------------------------------------
-
-// ============================================================================
 
 c_the_program_newloop::c_the_program_newloop()
 	: pimpl( new c_the_program_newloop_pimpl() )
@@ -462,6 +335,10 @@ void c_the_program_newloop::programtask_load_my_keys() {
 }
 
 
+void c_the_program_newloop::programtask_tuntap() {
+	pimpl->server->init_tuntap();
+}
+
 
 
 int c_the_program_newloop::main_execution() {
@@ -472,34 +349,10 @@ int c_the_program_newloop::main_execution() {
 
 	this->programtask_load_my_keys();
 	this->use_options_peerref();
+	this->programtask_tuntap();
 
-#ifdef ANTINET_linux
-	c_tuntap_linux_obj tuntap;
-#elif defined(ANTINET_windows)
-	c_tuntap_windows_obj tuntap;
-#else
-	#error "This platform is not supported"
-#endif
-	tuntap.set_tun_parameters(pimpl->server->get_my_hip(), 16, 16000);
+	pimpl->server->main_loop();
 
-	c_netbuf buf(200);
-
-	auto world = make_shared<c_world>();
-	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
-	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
-
-	string stopflag_name="/tmp/stop1";
-	_goal("Running loop, create file " << stopflag_name << " to stop this loop.");
-	while (1) {
-		_dbg3("Reading TUN...");
-		size_t read = tuntap.read_from_tun( buf.data(), buf.size() );
-		c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-		_info("Read: " << make_report(chunk,20));
-		UsePtr(cable).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );
-		if (boost::filesystem::exists(stopflag_name)) {
-			break;
-		}
-	} // loop
 
 /*
 	c_tuntap_fake_kernel kernel;

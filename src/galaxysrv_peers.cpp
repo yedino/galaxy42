@@ -3,8 +3,8 @@
 #include "galaxysrv_peers.hpp"
 #include "libs1.hpp"
 
-c_peer_connection::c_peer_connection( const t_peer_reference_newloop & ref )
- : m_reference( ref )
+c_peer_connection::c_peer_connection( t_peer_reference_newloop && ref )
+ : m_reference( std::move(ref) )
 {
 }
 
@@ -91,7 +91,7 @@ void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
 	_check(ref.get());
 	_note("Adding peer: "); // TODO << *ref );
 
-	auto peer = make_unique<c_peer_connection>( ref );
+	auto peer = make_unique<c_peer_connection>( std::move( *ref ) );
 	m_peer.push_back( std::move( peer ) );
 }
 

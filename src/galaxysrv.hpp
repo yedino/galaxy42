@@ -36,6 +36,12 @@
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
+#include "tuntap/base/tuntap_base.hpp"
+#include "tuntap/linux/c_tuntap_linux_obj.hpp"
+#include "tuntap/windows/c_tuntap_windows.hpp"
+
+#include "platform.hpp"
+
 // gal.peers.peers_add();
 
 class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e {
@@ -54,7 +60,11 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}
 
+		void init_tuntap();
+
 		c_haship_addr get_my_hip() const; ///< get your main hash-ip (ipv6)
+
+		void main_loop();
 
 	protected:
 
@@ -69,6 +79,18 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		antinet_crypto::c_multisign m_IDI_IDC_sig;
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
 
+		/// @}
+
+
+		/// @name tuntap access
+		/// @{
+		#ifdef ANTINET_linux
+			c_tuntap_linux_obj m_tuntap;
+		#elif defined(ANTINET_windows)
+			c_tuntap_windows_obj m_tuntap;
+		#else
+			#error "This platform is not supported currently"
+		#endif
 		/// @}
 };
 

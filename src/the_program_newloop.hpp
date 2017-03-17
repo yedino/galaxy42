@@ -22,10 +22,8 @@ class c_the_program_newloop : public c_the_program_tunserver {
 		/// Main tasks of the program. Also @see main_execution()
 		/// @{
 		void programtask_load_my_keys();
+		void programtask_tuntap(); ///< start tuntap
 		/// @}
-
-
-
 
 	protected:
 		bool m_pimpl_deleted = false; ///< assert: was delete yet called on pimpl? to avoid deleting it twice by mistake
