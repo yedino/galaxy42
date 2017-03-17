@@ -1,6 +1,6 @@
-#ifdef __linux__
-
 #include "c_tuntap_linux_obj.hpp"
+#ifdef ANTINET_linux
+
 #include "../../../depends/cjdns-code/NetPlatform.h"
 #include "../../cpputils.hpp"
 #include "../../utils/check.hpp"
@@ -56,4 +56,4 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, 16> 
 	_goal("Configuring tuntap options - done");
 }
 
-#endif // __linux__
+#endif // ANTINET_linux
