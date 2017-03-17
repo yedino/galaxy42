@@ -113,6 +113,8 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 }
 
 std::wstring c_tuntap_windows_obj::get_device_guid() {
+	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
+	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
 	_fact("Looking for device guid" << to_string(adapterKey));
 	LONG status = 1;
@@ -182,6 +184,8 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 
 std::wstring c_tuntap_windows_obj::get_human_name(const std::wstring &guid) {
 	_check_extern(!guid.empty());
+	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
+	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
 	std::wstring connectionKey = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 	connectionKey += guid;
 	connectionKey += L"\\Connection";
