@@ -5,7 +5,7 @@
 #include "libs0.hpp"
 #include "gtest/gtest_prod.h"
 
-#include "haship.cpp"
+#include "haship.hpp"
 #include "cable/base/cable_base_addr.hpp"
 
 /// The "static" reference to a peer, not so much the run-time state of it.
@@ -23,7 +23,7 @@ class c_peer_connection {
 	public:
 		t_peer_reference_newloop m_reference; ///< address informations with HIP and list of cable addresses
 
-		c_peer_connection( const t_peer_reference_newloop & ref ); ///< create connection for this reference (hip,cables)
+		c_peer_connection( t_peer_reference_newloop && ref ); ///< create connection for this reference (hip,cables)
 
 		bool is_connected() const; ///< are we connected to it right now? (>=1 cable connected)
 		bool should_connect() const; ///< should we try to connect to it as soon as possible? E.g. some hello_loop

@@ -38,6 +38,8 @@
 #include "strings_utils_simple.hpp"
 #include "mo_reader.hpp"
 
+#include "utils/check.hpp"
+
 using std::string;
 using std::shared_ptr;
 using std::weak_ptr;
