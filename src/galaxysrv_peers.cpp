@@ -7,7 +7,7 @@ void t_peer_reference_newloop::print(ostream &ostr) const{
 	ostr << hip << ", cables:[";
 	for(const unique_ptr<c_cable_base_addr>& addr : cable_addr)
 		ostr << UsePtr(addr) << ", ";
-	ostr << "\b], options: {";
+	ostr << "\b\b], options: {";
 	for(const std::pair<string, boost::any>& opt : options)
 	{
 		ostr << opt.first << ':';
@@ -23,7 +23,9 @@ void t_peer_reference_newloop::print(ostream &ostr) const{
 			}
 		}
 	}
-	ostr << "\b}" << endl;
+	if(options.size())
+		ostr << "\b\b";
+	ostr << '}' << endl;
 }
 
 ostream& operator<<(ostream &ostr, const t_peer_reference_newloop & v){
