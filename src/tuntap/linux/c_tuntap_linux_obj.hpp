@@ -1,11 +1,13 @@
 #ifndef C_LINUX_TUNTAP_OBJ_HPP
 #define C_LINUX_TUNTAP_OBJ_HPP
 
-#ifdef __linux__
+#include <platform.hpp>
+#ifdef ANTINET_linux
 
 #include "../base/tuntap_base.hpp"
 #include <boost/asio.hpp>
 #include <libs0.hpp>
+
 
 class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	public:
@@ -24,6 +26,6 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 		boost::asio::posix::stream_descriptor m_tun_stream;
 };
 
-#endif // __linux__
+#endif // ANTINET_linux
 
 #endif // C_LINUX_TUNTAP_OBJ_HPP
