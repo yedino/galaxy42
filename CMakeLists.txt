@@ -494,7 +494,7 @@ add_custom_command(
 #	COMMAND chmod g-wx,o-wx ipserver.elf
 	COMMAND chmod g-wx,o-wx tunserver.elf
 	COMMAND cp tunserver.elf nocap-tunserver.elf
-	COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./"
+	COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
 	WORKING_DIRECTORY ./)
 
 add_custom_command(
