@@ -39,6 +39,7 @@
 #include "tuntap/base/tuntap_base.hpp"
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
+#include "tuntap/macosx/c_tuntap_macosx_obj.hpp"
 
 #include "platform.hpp"
 
@@ -81,18 +82,18 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		/// @}
 
-
 		/// @name tuntap access
 		/// @{
 		#ifdef ANTINET_linux
-			c_tuntap_linux_obj m_tuntap;
+			c_tuntap_linux_obj tuntap;
 		#elif defined(ANTINET_windows)
-			c_tuntap_windows_obj m_tuntap;
+			c_tuntap_windows_obj tuntap;
+		#elif defined(__MACH__)
+			c_tuntap_macosx_obj tuntap;
 		#else
-			#error "This platform is not supported currently"
+			#error "This platform is not supported"
 		#endif
 		/// @}
 };
 
 // -------------------------------------------------------------------
-
