@@ -30,3 +30,6 @@ class c_the_program_newloop : public c_the_program_tunserver {
 		c_the_program_newloop_pimpl * const pimpl;
 };
 
+
+///@param level - memory use allowed: level=0 - basic tests,  level=1 also SIDH, level=2 also NTru
+void test_create_cryptolink(const int number_of_test, int level=0);
