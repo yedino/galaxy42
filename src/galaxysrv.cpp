@@ -16,6 +16,8 @@
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
 
+#include <boost/asio.hpp> // to create local address
+
 void c_galaxysrv::main_loop() {
 	_goal("\n\nMain loop\n\n");
 
@@ -64,7 +66,13 @@ void c_galaxysrv::main_loop() {
 
 	std::vector<unique_ptr<std::thread>> threads;
 
+
+	c_cable_udp_addr address_all;
+	address_all.init_addrdata( boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),9042) );
+	m_cable_cards.get_card(e_cable_kind_udp).listen_on( address_all );
+
 	threads.push_back( make_unique<std::thread>( loop_tunread ) );
+	threads.push_back( make_unique<std::thread>( loop_cableread ) );
 
 	_goal("All threads started, count=" << threads.size());
 
