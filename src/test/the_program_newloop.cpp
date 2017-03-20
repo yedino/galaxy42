@@ -3,7 +3,9 @@
 #include "gtest/gtest.h"
 #include "fake_tuntap.hpp"
 
+#include "../libs0.hpp"
 #include "../cable/simulation/world.hpp"
+#include "../galaxysrv.hpp"
 #include "../c_crypto.hpp"
 #include "../the_program_newloop.hpp"
 #include "../netbuf.hpp"
@@ -13,9 +15,9 @@
 TEST(the_program_new_loop, use_options_peerref) {
 	string argt_exe = "my_exec_name";
 	vector<string> argt {"--peer", "192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
-						 "--peer", "auto:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"
-						 "--peer", "udp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"
-						 "--peer", "tcp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"
+						 "--peer", "auto:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+						 "--peer", "udp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+						 "--peer", "tcp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
 						 "--peer", "shm:test1-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"};
 	/*
 	"--peer 192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
@@ -26,7 +28,13 @@ TEST(the_program_new_loop, use_options_peerref) {
 	*/
 	c_the_program_newloop my_program;
 	my_program.take_args(argt_exe , argt);
-	my_program.use_options_peerref();
+
+	my_program.options_create_desc();
+	my_program.options_parse_first();
+
+	// can not be tested because of pimpl declaration i .cpp
+	//my_program.pimpl->server.reset(std::make_unique<c_galaxysrv>());
+	//my_program.use_options_peerref();
 }
 
 TEST(the_program_new_loop, fake_kernel) {
