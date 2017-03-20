@@ -11,11 +11,19 @@ c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> iomanager)
 	m_read_socket(get_io_service()),
 	m_write_socket(get_io_service())
 {
+	_note("Created UDP card");
 }
 
 void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) {
-	udp::endpoint destination_endpoint = (boost::any_cast<c_cable_udp_addr::t_addr>( dest.get_addrdata() ));
-	m_write_socket.send_to(boost::asio::buffer(data, size), destination_endpoint);
+	_dbg3("Seding UDP size=" << size); // TODO print dest
+	try {
+		udp::endpoint destination_endpoint = (boost::any_cast<c_cable_udp_addr::t_addr>( dest.get_addrdata() ));
+		_dbg3("UDP to " << destination_endpoint);
+		m_write_socket.send_to(boost::asio::buffer(data, size), destination_endpoint);
+	} catch(...) {
+		_warn("Can not send UDP");
+		throw;
+	}
 }
 
 void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
