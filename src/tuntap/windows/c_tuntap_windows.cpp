@@ -25,13 +25,13 @@
 
 c_tuntap_windows_obj::c_tuntap_windows_obj()
 :
-	m_handle(get_device_handle()),
 	m_guid(get_device_guid()),
+	m_handle(get_device_handle()),
 	m_mac_address(get_mac(m_handle)),
 	m_ioservice(),
 	m_stream_handle(m_ioservice, m_handle)
 {
-	_check_sys(!m_stream_handle.is_open());
+	_check_sys(m_stream_handle.is_open());
 }
 
 size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size) {
@@ -48,6 +48,43 @@ void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, siz
 void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) {
 	_fact("Setting IPv6 address, prefixLen=" << prefix_len);
 	std::wstring human_name = get_human_name(m_guid);
+	NET_LUID luid = get_luid(human_name);
+	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
+																	 // remove old address
+	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
+	NETIOAPI_API status = GetUnicastIpAddressTable(AF_INET6, &table);
+	_check_sys(status == NO_ERROR);
+	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
+		_info("Removing old addresses, i=" << i);
+		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
+			_info("Removing old addresses, entry i=" << i << " - will remove");
+			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
+				FreeMibTable(table);
+				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
+			}
+		}
+	}
+	FreeMibTable(table);
+
+	// set new address
+	_fact("Setting new IP address");
+	MIB_UNICASTIPADDRESS_ROW iprow;
+	std::memset(&iprow, 0, sizeof(iprow));
+	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
+	iprow.SuffixOrigin = IpSuffixOriginUnchanged;
+	iprow.ValidLifetime = 0xFFFFFFFF;
+	iprow.PreferredLifetime = 0xFFFFFFFF;
+	iprow.OnLinkPrefixLength = 0xFF;
+
+	iprow.InterfaceLuid = luid;
+	iprow.Address.si_family = AF_INET6;
+	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
+	iprow.OnLinkPrefixLength = prefix_len;
+
+	_fact("Creating unicast IP");
+	status = CreateUnicastIpAddressEntry(&iprow);
+	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
+	_goal("Created unicast IP, status=" << status);
 }
 
 
@@ -115,6 +152,7 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 }
 
 std::wstring c_tuntap_windows_obj::get_device_guid() {
+	_dbg1("strat get_device_guid");
 	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
 	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
@@ -165,13 +203,13 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 				if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 				netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
 				_note(to_string(netCfgInstanceId));
-				key_wrapped.close();
 				HANDLE handle = open_tun_device(netCfgInstanceId);
 				if (handle == INVALID_HANDLE_VALUE) continue;
 				else {
 					BOOL ret = CloseHandle(handle);
 					if (ret == 0) throw std::runtime_error("CloseHandle error, " + std::to_string(GetLastError()));
 				}
+				_dbg1("end of get_device_guid");
 				return netCfgInstanceId;
 			}
 		}
@@ -180,13 +218,13 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 			_note("componentId = " + to_string(componentId));
 			_note("netCfgInstanceId " + to_string(netCfgInstanceId));
 		}
-		key_wrapped.close();
 	}
 	_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
 std::wstring c_tuntap_windows_obj::get_human_name(const std::wstring &guid) {
+	_dbg1("start get_human_name");
 	_check_extern(!guid.empty());
 	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
 	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
@@ -212,6 +250,7 @@ std::wstring c_tuntap_windows_obj::get_human_name(const std::wstring &guid) {
 }
 
 NET_LUID c_tuntap_windows_obj::get_luid(const std::wstring &human_name) {
+	_dbg1("start get_luid");
 	NET_LUID ret;
 	NETIO_STATUS status = ConvertInterfaceAliasToLuid(human_name.c_str(), &ret);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("ConvertInterfaceAliasToLuid error, error code " + std::to_string(GetLastError()));
@@ -219,6 +258,7 @@ NET_LUID c_tuntap_windows_obj::get_luid(const std::wstring &human_name) {
 }
 
 HANDLE c_tuntap_windows_obj::get_device_handle() {
+	_dbg1("start get_device_handle");
 	HANDLE handle = open_tun_device(m_guid);
 	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("invalid handle");
 	// get version
@@ -247,6 +287,7 @@ HANDLE c_tuntap_windows_obj::get_device_handle() {
 }
 
 HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
+	_dbg1("start open_tun_device");
 	std::wstring tun_filename;
 	tun_filename += L"\\\\.\\Global\\";
 	tun_filename += guid;
@@ -264,6 +305,7 @@ HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
 }
 
 std::array<uint8_t, c_tuntap_windows_obj::mac_address_size> c_tuntap_windows_obj::get_mac(HANDLE handle) {
+	_dbg1("start get_mac");
 	std::array<uint8_t, mac_address_size> mac_address;
 	DWORD mac_size = 0;
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
@@ -301,7 +343,7 @@ void c_tuntap_windows_obj::hkey_wrapper::set(HKEY new_hkey) {
 }
 
 void c_tuntap_windows_obj::hkey_wrapper::close() {
-	if (!m_is_open) throw std::runtime_error("Closing closed HKEY");
+	if (!m_is_open) return;
 	m_is_open = false;
 	auto status = RegCloseKey(m_hkey);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegCloseKey error, error code " + std::to_string(GetLastError()) + " returned value " + std::to_string(status));
