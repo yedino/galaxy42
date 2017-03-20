@@ -1,5 +1,5 @@
-#ifdef ANTINET_macosx
 #include "c_tuntap_macosx_obj.hpp"
+#ifdef ANTINET_macosx
 
 c_tuntap_macosx_obj::c_tuntap_macosx_obj() {
 	_NOTREADY_warn();
