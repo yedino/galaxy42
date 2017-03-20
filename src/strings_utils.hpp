@@ -158,7 +158,7 @@ std::basic_string<T> to_binary_string_basic_string( const std::array<T,N> & obj 
 }
 
 template<typename T>
-std::ostream & debug_to_oss(std::ostream & os, const T & data, t_debug_style style) {
+std::ostringstream & debug_to_oss(std::ostringstream & os, const T & data, t_debug_style style) {
 	if (style==e_debug_style_object) os<<data;
 	else os << to_debug(data,style);
 	return os;
@@ -173,12 +173,9 @@ t_debug_style style_v=e_debug_style_object)
 	std::ostringstream oss;
 	UNUSED(data); UNUSED(style_v); UNUSED(style_k);
 	for (const auto & pair : data) {
-
-// TODO when we do bug#m153.  debug_to_oss makes no sense to connect like this - returns ostream
-
-//		oss << "[" << debug_to_oss(oss, pair.first, style_k) << "]";
-//		oss << " -> ";
-//		oss << "[" << debug_to_oss(oss, pair.second, style_v) << "]";
+		oss << "[" << debug_to_oss(oss, pair.first, style_k).str() << "]";
+		oss << " -> ";
+		oss << "[" << debug_to_oss(oss, pair.second, style_v).str() << "]";
 	}
 	return oss.str();
 }
@@ -188,10 +185,9 @@ std::string to_debug(const std::vector<TV> & data, t_debug_style style_v=e_debug
 {
 	std::ostringstream oss;
 	UNUSED(data); UNUSED(style_v);
-//	for (const auto & obj : data) {
-// TODO when we do bug#m153.  debug_to_oss makes no sense to connect like this - returns ostream
-//		oss << "[" << debug_to_oss(oss, obj, style_v) << "]";
-//	}
+	for (const auto & obj : data) {
+		oss << "[" << debug_to_oss(oss, obj, style_v).str() << "]";
+	}
 	return oss.str();
 }
 
