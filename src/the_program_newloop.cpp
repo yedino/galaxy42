@@ -92,7 +92,7 @@ c_the_program_newloop::~c_the_program_newloop() {
 }
 
 ///@param level - memory use allowed: level=0 - basic tests,  level=1 also SIDH, level=2 also NTru
-void test_create_cryptolink(const int number_of_test, int level=0) {
+void test_create_cryptolink(const int number_of_test, int level) {
 	using namespace antinet_crypto;
 
 	for (std::remove_cv<decltype(number_of_test)>::type i = 0; i < number_of_test; ++i) {

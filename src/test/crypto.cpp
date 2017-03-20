@@ -5,6 +5,7 @@
 #include "../crypto/crypto.hpp"
 #include "../datastore.hpp"
 
+#include "../the_program_newloop.hpp"
 #include "../crypto/crypto_basic.hpp"
 
 #if ENABLE_CRYPTO_NTRU
@@ -463,7 +464,7 @@ TEST(crypto, locked_string_once) {
 	test_locked_string(1, 1000);
 }
 
-/*
+
 TEST(crypto, locked_string_manytimes) {
 	test_locked_string(1, 1000);
 }
@@ -477,9 +478,7 @@ TEST(crypto, create_cryptolink_times1_manytimes) {
 		test_create_cryptolink(1);
 	}
 }
-*/
 
-/*
 TEST(crypto, create_cryptolink_times2) {
 	test_create_cryptolink(2);
 }
@@ -493,7 +492,9 @@ TEST(crypto, create_cryptolink_few) {
 }
 
 TEST(crypto, create_cryptolink_more) {
-	test_create_cryptolink(1000);
+	test_create_cryptolink(100);
 }
-*/
 
+TEST(crypto, create__cryptolink_level1) {
+	test_create_cryptolink(10,0);
+}
