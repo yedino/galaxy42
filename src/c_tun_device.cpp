@@ -1,15 +1,11 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
-#if defined(_WIN32) || defined(__CYGWIN__)
-	#define UNICODE
-	#define _UNICODE
-#endif
-
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "tnetdbg.hpp"
 #include "../depends/cjdns-code/syserr.h"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include <syserror_use.hpp>
+#include "platform.hpp"
 
 #include <cstring>
 

@@ -4,10 +4,6 @@
 set -o errexit
 set -o nounset
 
-function fail() {
-	echo -e "\nERROR (in $0): " "$@"
-	exit 1
-}
 
 function_fdfix () {
 	echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
@@ -16,44 +12,46 @@ function_fdfix () {
 function_fdfix
 
 
-OUTDIR="$1"
+readonly OUTDIR="$1"
 export OUTDIR
 
-  GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-  BUILD_TOP_DIR="/home/ubuntu/build/" # where deps are built
+readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
+readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
 
-  REFERENCE_DATETIME="2016-08-01 00:00:00"
+readonly WRAP_DIR="$HOME/wrapped"
 
-  export FAKETIME="$REFERENCE_DATETIME"
-  # variable from above yml config
-  echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
-  # debug
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
-  ### <LICENCE> - start of licence block - this code if possibly on other licence:
-  ### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/2c2d471e18f0601c2767cf516425b2ecfcfd2126/contrib/gitian-descriptors/gitian-linux.yml
-  ### (and possibly with local changes, see our git log)
-  ### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
-  ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
+export FAKETIME="$REFERENCE_DATETIME"
 
-  WRAP_DIR="$HOME/wrapped"
+# variable from above yml config
+echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
+# debug
 
-  ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
-  HOSTS="x86_64-linux-gnu"
+### <LICENCE> - start of licence block - this code if possibly on other licence:
+### taken from https://raw.githubusercontent.com/bitcoin/bitcoin/2c2d471e18f0601c2767cf516425b2ecfcfd2126/contrib/gitian-descriptors/gitian-linux.yml
+### (and possibly with local changes, see our git log)
+### it seems to be on MIT licence: "Bitcoin Core is released under the terms of the MIT license":
+### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
-  COMPILERS="g++ gcc"
+##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+HOSTS="x86_64-linux-gnu"
 
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-  # CONFIGFLAGS=""
+COMPILERS="g++ gcc"
+
+CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
 
 FAKETIME_HOST_PROGS="ar ranlib nm ld ldd"
 FAKETIME_PROGS="date ar ranlib nm ld ldd tar gzip"
 
-  # TODO?
-  HOST_CFLAGS="-O2 -g"
-  HOST_CXXFLAGS="-O2 -g"
-  # TODO? this seems to cause some problems on bitcoin: any change to library...
-  # seem to cause totally differet binary (other address of function)?
-  HOST_LDFLAGS=-static-libstdc++
+# TODO?
+HOST_CFLAGS="-O2 -g"
+HOST_CXXFLAGS="-O2 -g"
+# TODO? this seems to cause some problems on bitcoin: any change to library...
+# seem to cause totally differet binary (other address of function)?
+HOST_LDFLAGS=-static-libstdc++
 
   # (not used?)
   export QT_RCC_TEST=1
@@ -63,8 +61,6 @@ FAKETIME_PROGS="date ar ranlib nm ld ldd tar gzip"
   # export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
 
-  # ok?
-  export BUILD_DIR=`pwd`
 
 # set cache variables
 GBUILD_CACHE_ENABLED=1
@@ -78,48 +74,19 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 	mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
 fi
 
-  function create_global_faketime_wrappers {
-  for prog in ${FAKETIME_PROGS}; do
-    out="${WRAP_DIR}/${prog}"
-    echo "" > "$out"
-    echo '#!/bin/bash' > "$out"
-    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> "$out"
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-    echo "export FAKETIME=\"$1\"" >> "$out"
-    echo '$REAL "$@"' >> "$out"
-    chmod +x "$out"
-  done
-  }
-
-  function create_per-host_faketime_wrappers {
-  for i in $HOSTS; do
-    for prog in ${FAKETIME_HOST_PROGS}; do
-	out="${WRAP_DIR}/${i}-${prog}"
-	echo "" > "$out"
-        echo '#!/bin/bash' >> "$out"
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> "$out"
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> "$out"
-        echo "export FAKETIME=\"$1\"" >> "$out"
-        echo '$REAL "$@"' >> "$out"
-        chmod +x "$out"
-    done
-  done
-  }
-
 # Create faketime timestamp
-
-  # Faketime for depends so intermediate results are comparable
-  export PATH_orig=${PATH}
-  create_global_faketime_wrappers "$FAKETIME"
-  create_per-host_faketime_wrappers "$FAKETIME"
-  export PATH=${WRAP_DIR}:${PATH}
+# Faketime for depends so intermediate results are comparable
+export PATH_orig=${PATH}
+create_global_faketime_wrappers "${FAKETIME_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${HOSTS}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
+export PATH=${WRAP_DIR}:${PATH}
 
   EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
   mkdir -p $EXTRA_INCLUDES_BASE
 
-  # x86 needs /usr/include/i386-linux-gnu/asm pointed to /usr/include/x86_64-linux-gnu/asm,
-  # but we can't write there. Instead, create a link here and force it to be included in the
-  # search paths by wrapping gcc/g++.
+# x86 needs /usr/include/i386-linux-gnu/asm pointed to /usr/include/x86_64-linux-gnu/asm,
+# but we can't write there. Instead, create a link here and force it to be included in the
+# search paths by wrapping gcc/g++.
 
   mkdir -p $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu
   rm -f $WRAP_DIR/extra_includes/i686-pc-linux-gnu/asm
@@ -164,12 +131,6 @@ EOF
   done
   fi
 
-  # Faketime for binaries
-  export PATH=${PATH_orig}
-  create_global_faketime_wrappers "${REFERENCE_DATETIME}"
-  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
-  export PATH=${WRAP_DIR}:${PATH}
-
   # Create the release tarball using (arbitrarily) the first host
 
   # ./autogen.sh # delete
@@ -211,7 +172,7 @@ pushd galaxy42
 	COVERAGE=0 \
 	EXTLEVEL=0 \
 	BUILD_STATIC=1 \
-	BUILD_SET_BOOST_ROOT="$BUILD_TOP_DIR/boost/static-build/" \
+	BUILD_SET_BOOST_ROOT="$BUILD_DIR/boost/static-build/" \
 	./do --go \
 		|| fail "Failed to do the main build of our project"
 

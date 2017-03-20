@@ -24,7 +24,6 @@ pushd "${GALAXY_DIR}"
 	printf "sourced PATH = $PATH\n"
 popd
 
-readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
 readonly WRAP_DIR="$HOME/wrapped"
 
 # import functions
@@ -76,9 +75,9 @@ fi
 
 # Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
 export PATH_orig="${PATH}"
-create_global_faketime_wrappers "${REFERENCE_DATETIME}" "${FAKETIME_PROGS}" "${WRAP_DIR}"
-create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
-create_per-host_faketime_wrappers "${REFERENCE_DATETIME}" "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
+create_global_faketime_wrappers "${FAKETIME_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR}"
+create_per-host_faketime_wrappers "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
 export PATH="${WRAP_DIR}:${PATH}"
 
 # Create the release tarball using (arbitrarily) the first host
