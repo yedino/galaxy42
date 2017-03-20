@@ -30,7 +30,7 @@ void c_galaxysrv::main_loop() {
 		_dbg3("Reading TUN...");
 		size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
 		c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-	_info("Read: " << make_report(chunk,20));
+		_info("Read: " << make_report(chunk,20));
 		m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
 		if (boost::filesystem::exists(stopflag_name)) {
 			break;
