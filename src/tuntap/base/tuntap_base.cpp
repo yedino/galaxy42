@@ -32,6 +32,37 @@ std::string NetPlatform_syserr_to_string(t_syserr syserr) {
 	return oss.str();
 }
 
+void Wrap_NetPlatform_addAddress(const char *interfaceName,
+                                 const uint8_t *address,
+                                 int prefixLen,
+                                 int addrFam) {
+
+#if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
+	_fact("Setting IP address: interfaceName="<<interfaceName
+		  <<" address="<<address
+		  <<" prefixLen="<<prefixLen
+		  <<" addrFam="<<addrFam);
+	t_syserr syserr = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
+	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
+		  << " result: " << NetPlatform_syserr_to_string(syserr));
+#else
+	throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+#endif
+}
+
+void Wrap_NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
+#if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
+	_fact("Setting MTU on interfaceName="<<interfaceName<<" mtu="<<mtu);
+	t_syserr syserr = NetPlatform_setMTU(interfaceName, mtu);
+	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_mtu , NetPlatform_syserr_to_string(syserr) );
+	_goal("MTU value " << mtu << " set on interface " << interfaceName
+		  << " result: " << NetPlatform_syserr_to_string(syserr));
+#else
+	throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+#endif
+}
+
 c_tuntap_base_obj::~c_tuntap_base_obj() {
 	_fact("Deleting the tuntap");
 }

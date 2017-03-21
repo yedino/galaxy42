@@ -21,6 +21,21 @@ std::string NetPlatform_error_code_to_string(int err);
 /// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
 std::string NetPlatform_syserr_to_string(t_syserr syserr);
 
+/**
+ * Wrapper around the from-cjdns function;
+ * Nicelly writes debug about this important function.
+ * Errors are thrown as tuntap_error*
+ */
+void Wrap_NetPlatform_addAddress(const char* interfaceName,
+                                 const uint8_t* address,
+                                 int prefixLen,
+                                 int addrFam);
+
+/// Wrapper around the from-cjdns function:
+void Wrap_NetPlatform_setMTU(const char* interfaceName,
+                             uint32_t mtu);
+
+
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
 class c_tuntap_base_obj {
