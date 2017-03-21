@@ -27,8 +27,9 @@ c_asioservice_manager::~c_asioservice_manager() {
 void c_asioservice_manager::resize_to_at_least(size_t size_) {
 	_note("Resizing to size_" << size_ << " now size="<<size()<<", capacity="<<capacity() );
 	if (size_ <= m_size) return; // we are already that big
-	_check(size_ < capacity()); // it's not allowed to resize bigger then capacity
+	_check(size_ <= capacity()); // it's not allowed to resize bigger then capacity
 	size_t count_new=0;
+	m_ioservice_threads.resize(size_);
 	for (size_t i = m_size; i < size_; i++) {
 		++count_new;
 		run_ioservice(i);
