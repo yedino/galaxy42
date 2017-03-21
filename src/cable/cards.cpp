@@ -53,11 +53,11 @@ void c_cable_cards::stop() {
 	_note("Stopping all cards, size="<<m_cards.size());
 	for(auto & cable_map_element : this->m_cards) {
 		auto & ptr = cable_map_element.second;
-		if (ptr) { ptr->stop(); } else _info("Element was null");
+		if (ptr) { UsePtr(ptr).stop(); } else _info("Element was null");
 	}
 
 	if (m_asioservice_manager) {
-		UsePtr(m_asioservice_manager).stop();
+		UsePtr(m_asioservice_manager).stop_all();
 	} else _info("ioservicemanager was null");
 }
 

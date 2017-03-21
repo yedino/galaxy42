@@ -16,6 +16,8 @@
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
 
+#include <boost/filesystem.hpp> // for flag-file
+
 #include <boost/asio.hpp> // to create local address
 
 void c_galaxysrv::main_loop() {
@@ -28,6 +30,7 @@ void c_galaxysrv::main_loop() {
 	auto loop_exitwait = [&]() {
 		string stopflag_name="/tmp/stop1";
 		_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
+		boost::filesystem::remove( boost::filesystem::path(stopflag_name) );
 		try {
 			while (!m_exiting) {
 				if (boost::filesystem::exists(stopflag_name)) break;
@@ -35,7 +38,7 @@ void c_galaxysrv::main_loop() {
 			}
 		}
 		catch (...) { _warn("The exitwait loop failed"); }
-		this->start_exit();
+		this->start_exit(); // TODO-thread
 	}; // lambda exitwait
 
 	auto loop_tunread = [&]() {
@@ -98,8 +101,8 @@ void c_galaxysrv::main_loop() {
 void c_galaxysrv::start_exit() {
 	_goal("Start exiting");
 	m_exiting=1;
-	for(auto & cable : m_cable_cards) {
-	}
+	m_cable_cards.stop();
+	_goal("Start exiting - ok");
 }
 
 void c_galaxysrv::init_tuntap() {

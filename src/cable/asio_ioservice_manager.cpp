@@ -16,9 +16,7 @@ c_asioservice_manager::c_asioservice_manager(size_t size_) : m_size(size_) {
 
 c_asioservice_manager::~c_asioservice_manager() {
 	_note("Destructing SIOM");
-	for (size_t i = 0; i < m_size; i++) {
-		m_ioservice_array.at(i).stop();
-	}
+	for (size_t i = 0; i < m_size; i++) stop_ioservice(i);
 	_note("Joining threads");
 	for (auto & thread : m_ioservice_threads) {
 		thread.join();
@@ -64,13 +62,13 @@ void c_asioservice_manager::run_ioservice(size_t index) {
 }
 
 void c_asioservice_manager::stop_ioservice(size_t index) {
+	_note("Stopping ioservice index="<<index<<" (from our array size=" << m_ioservice_array.size()<<")");
+	m_ioservice_array.at(index).stop();
 }
 
 void c_asioservice_manager::stop_all() {
 	_note("Stopping all in SIOM, m_size="<<m_size);
-	for (size_t i = 0; i < m_size; i++) {
-		m_ioservice_array.at(i).stop();
-	}
+	for (size_t i = 0; i < m_size; i++) stop_ioservice(i);
 }
 
 

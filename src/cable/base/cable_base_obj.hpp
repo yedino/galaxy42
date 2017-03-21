@@ -16,6 +16,8 @@ class c_cable_base_obj {
 	public:
 		virtual ~c_cable_base_obj() = default;
 
+		virtual void stop()=0; ///< will stop all running requests, even blocking ones (e.g. with asio .shutdown())
+
 		virtual void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size)=0; ///< block function
 
 		/**
