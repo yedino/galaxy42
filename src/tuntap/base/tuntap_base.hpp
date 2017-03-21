@@ -7,14 +7,12 @@
 #include <boost/system/system_error.hpp> // for the error_code
 
 #include "error_subtype.hpp"
+#include "syserror_use.hpp"
 
+#include "../depends/cjdns-code/syserr.h"
+#include "../../../depends/cjdns-code/NetPlatform.h"
 
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
-
-class tuntap_error : public runtime_error_subtype {};
-class tuntap_error_devtun : public tuntap_error {};
-class tuntap_error_ip     : public tuntap_error {};
-class tuntap_error_mtu    : public tuntap_error {};
 
 /// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
 /// this translates the field t_syserr.my_code only, see other function for more
