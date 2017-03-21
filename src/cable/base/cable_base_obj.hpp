@@ -6,17 +6,17 @@
 #include <memory>
 #include "cable/base/cable_base_addr.hpp"
 
+#include "someio.hpp"
+
 using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
 using read_handler = const std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> &;
 
-class c_cable_base_obj {
+class c_cable_base_obj : public c_someio {
 	protected:
-		c_cable_base_obj() = default;
+		c_cable_base_obj(); // to be used by factory
 
 	public:
 		virtual ~c_cable_base_obj() = default;
-
-		virtual void stop()=0; ///< will stop all running requests, even blocking ones (e.g. with asio .shutdown())
 
 		virtual void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size)=0; ///< block function
 
@@ -56,4 +56,6 @@ class c_cable_base_obj {
 		virtual void async_receive_from(unsigned char * const data, size_t size, read_handler handler)=0;
 
 		virtual void listen_on(c_cable_base_addr & local_address)=0;
+
+
 };

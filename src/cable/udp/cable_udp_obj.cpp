@@ -90,7 +90,7 @@ void c_cable_udp::listen_on(c_cable_base_addr &local_address) {
 	m_read_socket.bind(local_endpoint);
 }
 
-void c_cable_udp::stop() {
+void c_cable_udp::stop_threadsafe() {
 	_note("Stoping socket");
 	boost::system::error_code ec;
 	m_read_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);

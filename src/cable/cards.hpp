@@ -19,7 +19,7 @@ class c_cable_cards {
 
 		unique_ptr<c_cable_base_obj> create_card(t_cable_kind); ///< factory for cards
 
-		void stop(); ///< tries to stop all io_services, and all cards
+		void stop_threadsafe(); ///< tries to stop all io_services, and all cards. [thread_safe]
 
 	protected:
 		map<t_cable_kind , unique_ptr<c_cable_base_obj>> m_cards;

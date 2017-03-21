@@ -5,10 +5,11 @@
 #include <cstddef>
 #include <functional>
 #include <boost/system/system_error.hpp> // for the error_code
+#include "someio.hpp"
 
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
-class c_tuntap_base_obj {
+class c_tuntap_base_obj : public c_someio {
 	public:
 		// the callback function that caller can provide
 		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code& error)>;

@@ -9,6 +9,8 @@
 /// References to #m_ioservice_array (and all it's elemets) remain valid as long as entire object of this class.
 /// To avoid reallocations, the statically allocated array has compilation-time size #capacity()
 /// While the run-time actuall number of running io_service is read by #size() and increased by #resize_to_at_least()
+///
+/// @warning All operations must obey the mutex #m_mutex
 class c_asioservice_manager final {
 	public:
 		c_asioservice_manager(size_t size_); ///< start manager with size @param size
@@ -25,7 +27,7 @@ class c_asioservice_manager final {
 		size_t capacity() const; ///< get capacity
 		size_t size() const; ///< get current size
 
-		void stop_all(); ///< runs stop on all our ioservices
+		void stop_all_threadsafe(); ///< [thread_safe] runs stop on all our ioservices
 
 	private:
 		/// max supported count of ioservices that we can have (capacity). @see m_size for actuall
@@ -39,8 +41,14 @@ class c_asioservice_manager final {
 		std::vector<boost::asio::io_service::work> m_ioservice_idle_works;
 		std::vector<std::thread> m_ioservice_threads;
 
-		void run_ioservice(size_t index); ///< starts an existing, allocated service.
-		void stop_ioservice(size_t index); ///< stops an existing, allocated service. Does NOT remove it! Just runs proper ASIO .stop()
+		void run_ioservice(std::lock_guard<std::mutex> &caller_lg, size_t index); ///< starts an existing, allocated service.
+		void stop_ioservice(std::lock_guard<std::mutex> &caller_lg, size_t index); ///< stops an existing, allocated service. Does NOT remove it! Just runs proper ASIO .stop()
+
+		mutable std::mutex m_mutex; ///< mutex for self-protection to implement certain thread_safe functions
+
+		/// if set to yes then I should stop all my jobs: e.g. will refuse creating new ones etc,
+		/// this must be set e.g. to not add more started jobs after I decided to stop
+		/// bool m_stop;
 };
 
 #endif // ASIO_IOSERVICE_MANAGER_HPP

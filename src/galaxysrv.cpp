@@ -101,7 +101,7 @@ void c_galaxysrv::main_loop() {
 void c_galaxysrv::start_exit() {
 	_goal("Start exiting");
 	m_exiting=1;
-	m_cable_cards.stop();
+	m_cable_cards.stop_threadsafe();
 	_goal("Start exiting - ok");
 }
 
