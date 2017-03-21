@@ -7,7 +7,7 @@
 #include <sys/sys_domain.h>
 #include "../../haship.hpp"
 
-c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd),
+c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
                                              m_io_service(),
                                              m_tun_stream(m_io_service, m_tun_fd) {
 
@@ -112,10 +112,10 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 
 	// connect to first not used tun
 	int tested_card_counter = 0;
-	auto t0 = time::now();
+	auto t0 = std::chrono::system_clock::now();
 	_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
 	while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
-		auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
+		auto int_s = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - t0).count();
 		if (tested_card_counter++ > number_of_tested_cards)
 			_throw_error_sub(tuntap_error_devtun,
 			                 mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));

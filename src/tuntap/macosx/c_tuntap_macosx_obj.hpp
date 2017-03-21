@@ -33,6 +33,9 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 
 		void set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen);
 		void set_mtu(uint32_t mtu);
+
+		static const int number_of_tested_cards = 100;
+		static const int cards_testing_time = 5;
 };
 
 #endif // ANTINET_macosx
