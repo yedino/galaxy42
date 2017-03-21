@@ -7,7 +7,6 @@
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 
-// empty macosx class - NOT IMPLEMENTED YET
 class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 	public:
 		c_tuntap_macosx_obj(); ///< construct this object, throws if error
@@ -22,6 +21,18 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 		void set_tun_parameters (const std::array<unsigned char, 16> &binary_address,
 		                         int prefix_len,
 		                         uint32_t mtu) override;
+	private:
+		const int m_tun_fd; ///< the unix file descriptor. -1 is closed (this should not happen in correct object)
+		std::string m_ifr_name; ///< the name of interface. We want to set it in set_ipv6_address(), needed for set_mtu.
+
+		boost::asio::io_service m_io_service;
+		boost::asio::posix::stream_descriptor m_tun_stream;
+
+		/// create unix file descriptor
+		int create_tun_fd();
+
+		void set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen);
+		void set_mtu(uint32_t mtu);
 };
 
 #endif // ANTINET_macosx
