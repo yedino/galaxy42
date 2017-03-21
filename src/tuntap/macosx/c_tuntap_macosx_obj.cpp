@@ -1,7 +1,6 @@
 #include "c_tuntap_macosx_obj.hpp"
 #ifdef ANTINET_macosx
 
-#include "../../../depends/cjdns-code/NetPlatform.h"
 #include "../../cpputils.hpp"
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>
