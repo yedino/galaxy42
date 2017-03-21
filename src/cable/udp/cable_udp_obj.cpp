@@ -85,7 +85,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 }
 
 void c_cable_udp::listen_on(c_cable_base_addr &local_address) {
-	_note("Listening on " << local_address );
+	_goal("Listening on " << local_address );
 	udp::endpoint local_endpoint = boost::any_cast<c_cable_udp_addr::t_addr>(local_address.get_addrdata());
 	m_read_socket.bind(local_endpoint);
 }
