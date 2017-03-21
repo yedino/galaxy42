@@ -89,3 +89,15 @@ void c_cable_udp::listen_on(c_cable_base_addr &local_address) {
 	udp::endpoint local_endpoint = boost::any_cast<c_cable_udp_addr::t_addr>(local_address.get_addrdata());
 	m_read_socket.bind(local_endpoint);
 }
+
+void c_cable_udp::stop() {
+	_note("Stoping socket");
+	boost::system::error_code ec;
+	m_read_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
+	_dbg1("Shutdown ec="<<ec);
+	m_read_socket.close();
+	m_write_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
+	_dbg1("Shutdown ec="<<ec);
+	m_write_socket.close();
+}
+

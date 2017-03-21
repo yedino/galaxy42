@@ -19,6 +19,8 @@ class c_cable_udp final : public c_asiocable {
 		void async_receive_from(unsigned char * const data, size_t size, read_handler handler) override;
 		void listen_on(c_cable_base_addr & local_address) override;
 
+		virtual void stop() override;
+
 	private:
 		boost::asio::ip::udp::socket m_read_socket;
 		boost::asio::ip::udp::socket m_write_socket;

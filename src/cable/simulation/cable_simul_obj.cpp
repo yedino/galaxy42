@@ -15,6 +15,10 @@ c_cable_simul_obj::c_cable_simul_obj(shared_ptr<c_world> world)
 c_cable_simul_obj::~c_cable_simul_obj() {
 }
 
+void c_cable_simul_obj::stop() {
+	_info("Stopping simulation card");
+}
+
 void c_cable_simul_obj::send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) {
 	_check(size>=1);
 
