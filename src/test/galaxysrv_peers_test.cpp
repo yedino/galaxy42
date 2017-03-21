@@ -180,10 +180,10 @@ TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test) {
 	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL$(CABLE)"), err_check_user);
 	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL(CABLE)"), err_check_user);
 	//?EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE@(CABLE)"), err_check_user);
-	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)(CABLE)"), err_check_user);
-	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE"), err_check_user);
-	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE("), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)(CABLE)"), err_check_input);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE"), err_check_input);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE("), err_check_input);
 	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@CABLE)"), err_check_user);
 	//?EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE(CABLE)"), err_check_user);
-	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)CABLE)"), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)CABLE)"), err_check_input);
 }
