@@ -25,13 +25,23 @@ void c_galaxysrv::main_loop() {
 //	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
 //	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
+	auto loop_exitwait = [&]() {
+		string stopflag_name="/tmp/stop1";
+		_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
+		try {
+			while (!m_exiting) {
+				if (boost::filesystem::exists(stopflag_name)) break;
+				std::this_thread::sleep_for( std::chrono::milliseconds(50) );
+			}
+		}
+		catch (...) { _warn("The exitwait loop failed"); }
+		this->start_exit();
+	}; // lambda exitwait
 
 	auto loop_tunread = [&]() {
 		try {
 			c_netbuf buf(9000);
-			string stopflag_name="/tmp/stop1";
-			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
-			while (1) {
+			while (!m_exiting) {
 				_dbg3("Reading TUN...");
 				size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
@@ -40,7 +50,6 @@ void c_galaxysrv::main_loop() {
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
 				m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
-				if (boost::filesystem::exists(stopflag_name)) break;
 			} // loop
 			_note("Loop done");
 		} catch(...) { _warn("Thread-lambda got exception"); }
@@ -51,7 +60,7 @@ void c_galaxysrv::main_loop() {
 			c_netbuf buf(9000);
 			string stopflag_name="/tmp/stop1";
 			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
-			while (1) {
+			while (!m_exiting) {
 				_dbg3("Reading cables...");
 				c_cable_udp_addr peer_addr;
 				size_t read =	m_cable_cards.get_card(e_cable_kind_udp).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
@@ -66,11 +75,11 @@ void c_galaxysrv::main_loop() {
 
 	std::vector<unique_ptr<std::thread>> threads;
 
-
 	c_cable_udp_addr address_all;
 	address_all.init_addrdata( boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),9042) );
 	m_cable_cards.get_card(e_cable_kind_udp).listen_on( address_all );
 
+	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
 	threads.push_back( make_unique<std::thread>( loop_tunread ) );
 	threads.push_back( make_unique<std::thread>( loop_cableread ) );
 
@@ -84,6 +93,13 @@ void c_galaxysrv::main_loop() {
 	}
 	_fact("After joining all threads");
 	_goal("All threads joined, count=" << threads.size());
+}
+
+void c_galaxysrv::start_exit() {
+	_goal("Start exiting");
+	m_exiting=1;
+	for(auto & cable : m_cable_cards) {
+	}
 }
 
 void c_galaxysrv::init_tuntap() {
