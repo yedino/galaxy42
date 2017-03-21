@@ -25,6 +25,7 @@
 
 c_tuntap_windows_obj::c_tuntap_windows_obj()
 :
+	m_register_tun_path(),
 	m_guid(get_device_guid()),
 	m_handle(get_device_handle()),
 	m_mac_address(get_mac(m_handle)),
@@ -85,6 +86,7 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, 16
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
 	_goal("Created unicast IP, status=" << status);
+	set_mtu(mtu);
 }
 
 
@@ -193,6 +195,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 		try {
 			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP, substr throws std::out_of_range
 				_note(to_string(subkey_reg_path));
+				m_register_tun_path = std::move(subkey_reg_path);
 				size = 256;
 				netCfgInstanceId.resize(size, '\0');
 				static_assert(std::is_same<LPBYTE, unsigned char *>::value, "");
@@ -316,6 +319,20 @@ std::array<uint8_t, c_tuntap_windows_obj::mac_address_size> c_tuntap_windows_obj
 		std::cout << std::hex << static_cast<int>(i) << " ";
 	std::cout << std::dec << std::endl;
 	return mac_address;
+}
+
+void c_tuntap_windows_obj::set_mtu(uint32_t mtu) {
+	_note("set MTU to " << mtu);
+	_dbg1("register path " << to_string(m_register_tun_path));
+	LONG status = 1;
+	HKEY key = nullptr;
+	_check(!m_register_tun_path.empty());
+	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, m_register_tun_path.c_str(), 0, KEY_SET_VALUE, &key);
+	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
+	hkey_wrapper key_wrapped(key);
+	std::wstring mtu_str_value = std::to_wstring(mtu);
+	status = RegSetValueEx(key_wrapped.get(), L"MTU", 0, REG_SZ, reinterpret_cast<const BYTE *>(mtu_str_value.c_str()), mtu_str_value.size() * sizeof(wchar_t));
+	if (status != ERROR_SUCCESS) throw std::runtime_error("RegSetValueEx error, error code " + std::to_string(status));
 }
 
 // hkey_wrapper

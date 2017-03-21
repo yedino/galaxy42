@@ -20,6 +20,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) override;
 
 	private:
+		std::wstring m_register_tun_path;
 		std::wstring m_guid;
 		HANDLE m_handle;
 		std::array<uint8_t, 6> m_mac_address;
@@ -34,6 +35,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		HANDLE get_device_handle();
 		HANDLE open_tun_device(const std::wstring &guid); ///< returns opened handle for guid or INVALID_HANDLE_VALUE
 		std::array<uint8_t, mac_address_size> get_mac(HANDLE handle); ///< get handle to opened device (returned by get_device_handle())
+		void set_mtu(uint32_t mtu);
 
 		class hkey_wrapper final {
 			public:
