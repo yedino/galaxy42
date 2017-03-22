@@ -174,16 +174,20 @@ TEST(galaxysrv_peers, parse_peer_reference_test) {
 
 }
 
+// in this test, we want to test only preparser syntax
+// so real address and cable are replaced by VIRTUAL and CABLE hard-strings
 TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test) {
 	c_galaxysrv_peers test_srv_peers;
-	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@)CABLE)"), err_check_user);
-	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL$(CABLE)"), err_check_user);
-	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL(CABLE)"), err_check_user);
-	//?EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE@(CABLE)"), err_check_user);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)(CABLE)"), err_check_input);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE"), err_check_input);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE("), err_check_input);
-	//EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@CABLE)"), err_check_user);
-	//?EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE(CABLE)"), err_check_user);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)CABLE)"), err_check_input);
+
+	// to fix
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@CABLE)"), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE(CABLE)"), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@)CABLE)"), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL$(CABLE)"), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL(CABLE)"), err_check_user);
+	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE@(CABLE)"), err_check_user);
 }
