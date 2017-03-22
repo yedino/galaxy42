@@ -17,7 +17,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) override;
 
 		void set_tun_parameters
-			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) override;
+			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) override;
 
 	private:
 		std::wstring m_register_tun_path;
