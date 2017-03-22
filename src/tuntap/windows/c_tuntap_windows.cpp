@@ -38,11 +38,11 @@ c_tuntap_windows_obj::c_tuntap_windows_obj()
 }
 
 size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size) {
-	return 0;
+	return m_stream_handle.write_some(boost::asio::buffer(data, size));
 }
 
 size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t size) {
-	return 0;
+	return m_stream_handle.read_some(boost::asio::buffer(data, size));
 }
 
 void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, size_t size, const c_tuntap_base_obj::read_handler &handler) {
