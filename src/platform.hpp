@@ -5,6 +5,12 @@
 	#define ANTINET_windows
 	#define UNICODE
 	#define _UNICODE
+	#if defined(__CYGWIN__)
+		//http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio/using.html
+		#ifndef __USE_W32_SOCKETS
+			#define __USE_W32_SOCKETS
+		#endif
+	#endif
 #elif (__MACH__)
 	#define ANTINET_macosx
 #else
