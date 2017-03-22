@@ -28,6 +28,8 @@ class c_the_program_newloop : public c_the_program_tunserver {
 	protected:
 		bool m_pimpl_deleted = false; ///< assert: was delete yet called on pimpl? to avoid deleting it twice by mistake
 		c_the_program_newloop_pimpl * const pimpl;
+
+		FRIEND_TEST(the_program_new_loop, use_options_peerref);
 };
 
 

@@ -60,17 +60,28 @@ ostream& operator<<(ostream &ostr, const c_peer_connection & v){
 c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
+	reasonable_size(simple);
 
 	_clue("Parsing: "<<simple);
-	size_t pos1 = simple.find(separator);
+	_check_input(simple.size()>=3); // some reasonable sized not-empty string
+
+	size_t pos1 = simple.find(separator); // was there any "@"
 
 	if (pos1 == string::npos) { // must be one-part format "VIRTUAL"
 		vector<string> ret_id( { simple } ); // e.g. "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300"
 		vector<string> ret_cable{ };
+		// make sure this part does not contain ( or ) etc
+		_check_input( string::npos == simple.find(group_open) );
+		_check_input( string::npos == simple.find(group_close) );
+		_check_input( simple.size()>0 );
 		return std::make_pair(std::move(ret_id), std::move(ret_cable));
 	}
-	else { // format "VIRTUAL@(CABLE)@(CABLE)"
+	else { // format "VIRTUAL@(CABLE)" possibly with more "@(CABLE)"
 		string part1 = simple.substr(0,pos1); // the VIRTUAL
+		// make sure this part does not contain ( or )
+		_check_input( string::npos == part1.find(group_open) );
+		_check_input( string::npos == part1.find(group_close) );
+		_check_input( part1.size()>0 );
 		vector<string> ret_id( { part1 } ); // e.g. "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300"
 		// fd42::25f5@(udp:p.meshnet.pl:9042,cost=500)@(shm:test)@(tcp:[fe80::d44e]:9042)
 		//             B
@@ -83,6 +94,9 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 		vector<string> ret_cable;
 		// will parse additional groups "@(....)" selecting their index posB...posX
 		const size_t size = simple.size(), size_before=size-1; _check(size_before < size);
+		_check_input(pos1+2 < size);
+		_check_input(simple.at(pos1+0)==separator);  // theck the '@' out of "@(" that we just found
+		_check_input(simple.at(pos1+1)==group_open); // theck the '(' out of "@(" that we just found
 		size_t posB = pos1+2; // begin, poiting after "@("
 		_info(join_string_sep(posB," < ",size));
 		while (posB < size_before) {
@@ -94,6 +108,11 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 			}
 			string partX = simple.substr(posB, posX-posB);
 			_dbg3("posX=" << posX << " posB="<<posB<<" given " <<partX);
+			// make sure this part does not contain ( or ), e.g. "CABLE(" as result of parsing "VIRTUAL@(CABLE(CABLE)"
+			_check_input( string::npos == partX.find(group_open) );
+			_check_input( string::npos == partX.find(group_close) );
+			_check_input( partX.size()>0 );
+
 			ret_cable.push_back( std::move(partX) );
 			posB=posX;
 			_check_input(simple.at(posB)==group_close); // ")"
@@ -105,7 +124,6 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 			_check_input(simple.at(posB)==group_open); // ")@(" after this
 			++posB;
 		}
-
 		return std::make_pair(std::move(ret_id), std::move(ret_cable));
 
 		try {
