@@ -1,5 +1,7 @@
 #include "c_tuntap_windows.hpp"
 
+// [todo_review_logic] needs WINAPI review
+
 #if defined(ANTINET_windows)
 
 #include "../../utils/check.hpp"
@@ -51,14 +53,19 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, 16
 	std::wstring human_name = get_human_name(m_guid);
 	NET_LUID luid = get_luid(human_name);
 	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
-																	 // remove old address
+
+	// remove old address
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814508(v=vs.85).aspx
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814428(v=vs.85).aspx
 	NETIOAPI_API status = GetUnicastIpAddressTable(AF_INET6, &table);
 	_check_sys(status == NO_ERROR);
-	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
+	static_assert(std::numeric_limits<decltype(table->NumEntries)>::max() <= std::numeric_limits<size_t>::max(), "");
+	for (size_t i = 0; i < static_cast<size_t>(table->NumEntries); ++i) {
 		_info("Removing old addresses, i=" << i);
-		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
+		if (table->Table[i].InterfaceLuid.Value == luid.Value) { // check if iface LUID == TAP LUID
 			_info("Removing old addresses, entry i=" << i << " - will remove");
+			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814405(v=vs.85).aspx
 			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				FreeMibTable(table);
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
@@ -69,20 +76,23 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, 16
 
 	// set new address
 	_fact("Setting new IP address");
+	// https://msdn.microsoft.com/pl-pl/library/windows/desktop/aa814507(v=vs.85).aspx
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
-	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
-	iprow.SuffixOrigin = IpSuffixOriginUnchanged;
-	iprow.ValidLifetime = 0xFFFFFFFF;
-	iprow.PreferredLifetime = 0xFFFFFFFF;
-	iprow.OnLinkPrefixLength = 0xFF;
+	iprow.PrefixOrigin = IpPrefixOriginUnchanged; // The IP address prefix should be unchanged.
+	iprow.SuffixOrigin = IpSuffixOriginUnchanged; // The IP address suffix should be unchanged.
+	iprow.ValidLifetime = 0xFFFFFFFF; // A value of 0xffffffff is considered to be infinite.
+	iprow.PreferredLifetime = 0xFFFFFFFF; // A value of 0xffffffff is considered to be infinite.
+	iprow.OnLinkPrefixLength = 0xFF; // A value of 255 is commonly used to represent an illegal value.
 
 	iprow.InterfaceLuid = luid;
 	iprow.Address.si_family = AF_INET6;
+	_check(sizeof(iprow.Address.Ipv6.sin6_addr) == binary_address.size()); // static_assert not works on MSVC
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefix_len;
 
 	_fact("Creating unicast IP");
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814401(v=vs.85).aspx
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
 	_goal("Created unicast IP, status=" << status);
@@ -182,6 +192,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 		// get ComponentId field
 		DWORD size = 256;
 		std::wstring componentId(size, '\0');
+		static_assert(std::is_same<LPBYTE, unsigned char *>::value, "");
 		// this reinterpret_cast is not UB(ISO/IEC 14882:2014(E) 3.10.10) because LPBYTE == unsigned char *
 		// https://github.com/cplusplus/draft/blob/c%2B%2B14-cd/source/basic.tex#L4126
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
@@ -329,8 +340,9 @@ void c_tuntap_windows_obj::set_mtu(uint32_t mtu) {
 	_check(!m_register_tun_path.empty());
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, m_register_tun_path.c_str(), 0, KEY_SET_VALUE, &key);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
-	hkey_wrapper key_wrapped(key);
+	hkey_wrapper key_wrapped(key); // key will be closed in desctructor oh kay_wrapped
 	std::wstring mtu_str_value = std::to_wstring(mtu);
+	static_assert(std::is_same<BYTE, unsigned char >::value, "");
 	status = RegSetValueEx(key_wrapped.get(), L"MTU", 0, REG_SZ, reinterpret_cast<const BYTE *>(mtu_str_value.c_str()), mtu_str_value.size() * sizeof(wchar_t));
 	if (status != ERROR_SUCCESS) throw std::runtime_error("RegSetValueEx error, error code " + std::to_string(status));
 }
