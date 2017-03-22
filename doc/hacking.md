@@ -65,6 +65,8 @@ try {
 	_try_extern( connection_format == 2 ); // remote input (e.g. peer) given wrong data - common case
 }
 
+reasonable_size( vec ); // <--- test potentially big objects on input, function start
+
 Catch it using:
   catch(std::runtime_error &ex) // catch all errors, including check soft and hard errors
 -or-
