@@ -35,7 +35,7 @@ void Wrap_NetPlatform_addAddress(const char* interfaceName,
 void Wrap_NetPlatform_setMTU(const char* interfaceName,
                              uint32_t mtu);
 
-
+constexpr size_t IPV6_LEN = 16;
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
 class c_tuntap_base_obj {
@@ -56,7 +56,7 @@ class c_tuntap_base_obj {
 
 		// sets the parameters of our tuntap
 		virtual void set_tun_parameters
-			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
+			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) = 0;
 };
 
 #endif // TUNTAP_BASE_HPP
