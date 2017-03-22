@@ -41,10 +41,10 @@ class c_asioservice_manager final {
 		std::vector<boost::asio::io_service::work> m_ioservice_idle_works;
 		std::vector<std::thread> m_ioservice_threads;
 
-		void run_ioservice(std::lock_guard<std::mutex> &caller_lg, size_t index); ///< starts an existing, allocated service.
-		void stop_ioservice(std::lock_guard<std::mutex> &caller_lg, size_t index); ///< stops an existing, allocated service. Does NOT remove it! Just runs proper ASIO .stop()
+		void run_ioservice(size_t index); ///< starts an existing, allocated service.
+		void stop_ioservice(size_t index); ///< stops an existing, allocated service. Does NOT remove it! Just runs proper ASIO .stop()
 
-		mutable std::mutex m_mutex; ///< mutex for self-protection to implement certain thread_safe functions
+		mutable std::recursive_mutex m_mutex; ///< mutex for self-protection to implement certain thread_safe functions
 
 		/// if set to yes then I should stop all my jobs: e.g. will refuse creating new ones etc,
 		/// this must be set e.g. to not add more started jobs after I decided to stop

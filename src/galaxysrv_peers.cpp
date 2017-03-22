@@ -125,23 +125,7 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 			++posB;
 		}
 		return std::make_pair(std::move(ret_id), std::move(ret_cable));
-
-		try {
-			/*
-			_info("Peer pip="<<part_pip<<" hip="<<part_hip);
-			auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
-			_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
-			// this->add_peer_simplestring( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
-			*/
-		}
-		catch (const std::exception &e) {
-			_erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what());
-			_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
-		}
 	} // other format
-
-	t_peering_reference_parse x;
-	return x;
 }
 
 void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
