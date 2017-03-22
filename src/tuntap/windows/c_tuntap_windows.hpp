@@ -21,12 +21,12 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 
 	private:
 		std::wstring m_register_tun_path;
-		std::wstring m_guid;
+		std::wstring m_guid; // https://msdn.microsoft.com/en-us/library/windows/desktop/aa368767(v=vs.85).aspx
 		HANDLE m_handle;
-		std::array<uint8_t, 6> m_mac_address;
+		static constexpr size_t mac_address_size = 6;
+		std::array<uint8_t, mac_address_size> m_mac_address;
 		boost::asio::io_service m_ioservice;
 		boost::asio::windows::stream_handle m_stream_handle; ///< boost handler to the TUN device
-		static constexpr size_t mac_address_size = 6;
 
 		std::vector<std::wstring> get_subkeys(HKEY hKey); ///< for windows registry
 		std::wstring get_device_guid(); ///< technical name of the device
