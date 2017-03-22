@@ -2,6 +2,9 @@
 
 #include <string>
 #include <memory> // for UsePtr
+#include <vector>
+
+#include <limits>
 
 #include <tnetdbg.hpp>
 
@@ -184,6 +187,61 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 	}
 	return *ptr;
 }
+
+// -------------------------------------------------------------------
+/// name reasonable
+/// @brief We want to check that objects we operate on stay in reasonable size.
+/// For example std::string does it more-or-less as that: size of std::string must be less then /2 or /4 of size_t
+/// after doing that one check, we know that all operations like string1+string2 will also be fitting inside the limit.
+///
+/// Here we configure limits for our program, how ever we set them much lower:
+/// In this project, objects of reasonable size, are ones that:
+/// 1) fit in expected memory limits
+/// 2) operating on them in expected typical way will not quickly make them unreasonable
+///
+/// This functions will check against this, and e.g. throw exception.
+/// They also can disaply warnings once we are getting closer to limit.
+/// @{
+constexpr size_t reasonable_size_limit_bytes    = 128 * 1024 * 1024; ///< objects should never get this big nor close to it
+constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get this many elements nor close
+constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this many times in worst case
+constexpr size_t reasonable_size_mul_warning = 2; ///< display warning once objects are only N times smaller then the limit
+
+constexpr size_t reasonable_size_limit_bytes_divided_max  = reasonable_size_limit_bytes / reasonable_size_mul;
+constexpr size_t reasonable_size_limit_bytes_divided_warn = reasonable_size_limit_bytes / reasonable_size_mul_warning;
+constexpr size_t reasonable_size_limit_elements_divided_max  = reasonable_size_limit_elements / reasonable_size_mul;
+constexpr size_t reasonable_size_limit_elements_divided_warn = reasonable_size_limit_elements / reasonable_size_mul_warning;
+
+void reasonable_size(const std::string & obj); ///< will throw if string is unreasonably big, see #reasonable
+
+template<typename T> void reasonable_size(const T & obj) { ///< will throw if this some container is too big, see #reasonable
+	const size_t elements = obj.size();
+	if (! (elements < reasonable_size_limit_elements_divided_warn) ) {
+		_warn("Object @"<<static_cast<void*>(&obj)<<" starts to get too big: elemens="<<elements);
+	}
+	_check_input(elements <= reasonable_size_limit_elements_divided_max);
+
+	const size_t bytes = elements * sizeof(obj.at(0));
+	if (! (bytes < reasonable_size_limit_bytes_divided_warn) ) {
+		_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: bytes="<<bytes);
+	}
+	_check_input(bytes <= reasonable_size_limit_bytes_divided_max);
+}
+
+static_assert( reasonable_size_limit_bytes >= reasonable_size_limit_elements ,
+	"Allowed limit of bytes should be >= then limit of elements");
+
+static_assert( reasonable_size_limit_bytes_divided_max < std::numeric_limits<size_t>::max()/8 , "use lower limit");
+static_assert( reasonable_size_limit_bytes_divided_max < std::numeric_limits<int>::max()/4 , "use lower limit");
+static_assert( reasonable_size_limit_bytes_divided_max+1 < std::numeric_limits<int>::max()/4 , "use lower limit");
+
+static_assert( reasonable_size_limit_elements_divided_max < std::numeric_limits<size_t>::max()/8 , "use lower limit");
+static_assert( reasonable_size_limit_elements_divided_max < std::numeric_limits<int>::max()/4 , "use lower limit");
+static_assert( reasonable_size_limit_elements_divided_max+1 < std::numeric_limits<int>::max()/4 , "use lower limit");
+
+// }@
+// -------------------------------------------------------------------
+
 
 #define UsePtr(PTR) _UsePtr(PTR,__LINE__,__FILE__)
 

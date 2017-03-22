@@ -1,5 +1,7 @@
 #include "utils/check.hpp"
 
+#include <libs0.hpp>
+
 using namespace  std;
 
 const char * err_check_soft::what_soft() const {
@@ -101,3 +103,21 @@ err_check_extern_soft::err_check_extern_soft(const char *what)
 	: err_check_extern(tag_err_check_named{} , cause(false)+what , false) { }
 
 // -------------------------------------------------------------------
+
+void reasonable_size(const std::string & obj) { ///< will throw if string is unreasonably big, see #reasonable
+	const size_t elements = obj.size();
+	if (! (elements < reasonable_size_limit_elements_divided_warn) ) {
+		_warn("String @"<<static_cast<const void*>(&obj)<<" starts to get too big: elemens="<<elements);
+	}
+	_check_input(elements <= reasonable_size_limit_elements_divided_max);
+
+	// therefore we don't need separate check for bytes separatelly:
+	static_assert( sizeof(obj.at(0)) == 1 , "Char size should be 1" );
+	static_assert( reasonable_size_limit_elements_divided_max <= reasonable_size_limit_bytes_divided_max ,
+		"Check for elements must be as harsh as check for bytes" );
+	static_assert( reasonable_size_limit_elements_divided_warn <= reasonable_size_limit_bytes_divided_warn ,
+		"Check for elements must be as harsh as check for bytes (in warning)" );
+}
+
+// -------------------------------------------------------------------
+
