@@ -11,6 +11,7 @@
 #include "error_subtype.hpp"
 
 
+/// @thread
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
 
 
