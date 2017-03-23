@@ -188,8 +188,32 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 	return *ptr;
 }
 
+
+
 // -------------------------------------------------------------------
-/// name reasonable
+
+/// This is a base class that you should add as a friend to classes that are using #c_ig<>
+/// @owner rafal
+class c_ig_friendly { public: };
+
+/// This is a RAII that calls Precond() and Postcond() for an object. Use it like a lock-guard in your member functions.
+/// @owner rafal
+template<typename TC> class c_ig final : public c_ig_friendly {
+	public:
+		c_ig(const TC & thisobj) : m_thisobj(thisobj) { m_thisobj->Precond(); }
+		~c_ig() { m_thisobj->Postcond(); }
+	private:
+		const TC & m_thisobj;
+};
+
+template<typename TC> c_ig<TC> make_ig(const TC & thisobj) {
+	return c_ig<TC>(thisobj);
+}
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+/// @name reasonable
 /// @brief We want to check that objects we operate on stay in reasonable size.
 /// For example std::string does it more-or-less as that: size of std::string must be less then /2 or /4 of size_t
 /// after doing that one check, we know that all operations like string1+string2 will also be fitting inside the limit.
