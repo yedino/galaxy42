@@ -38,7 +38,7 @@ class c_cable_base_addr {
 		boost::any m_addrdata; ///< the address data as some (::any) datatype, see t_addr in child classes, get via get_addrdata()
 };
 
-std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr & obj);
+std::ostream & operator<<(std::ostream & ostr , const c_cable_base_addr & obj);
 
 bool operator==(const c_cable_base_addr & obj1, const c_cable_base_addr & obj2);
 bool operator<(const c_cable_base_addr & obj1, const c_cable_base_addr & obj2);
