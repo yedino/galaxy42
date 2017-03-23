@@ -1,15 +1,13 @@
 #include "gtest/gtest.h"
 
-#include <chrono>
+#include <vector>
 
 #include "../utils/wrap_thread.hpp"
 
-
 TEST(utils_wrap_thread, thread_at) {
 
-	vector<wrap_thread> vec;
+	std::vector<wrap_thread> vec;
 	vec.resize(1);
-
 	vec.at(0) = std::move(wrap_thread());
 
 	EXPECT_THROW(vec.at(1) = std::move(wrap_thread()), std::out_of_range);
@@ -21,26 +19,26 @@ void fun2(int, int) {}
 
 TEST(utils_wrap_thread, different_construct) {
 
-	wrapped_thread local_wrap_thread; // default constr
-	local_wrap_thread = wrapped_thread(fun0); // operator=
+	wrap_thread local_wrap_thread; // default constr
+	local_wrap_thread = wrap_thread(fun0); // operator=
 
-	wrapped_thread local_wrap_thread2(fun1,34); // templ constr
-	wrapped_thread local_wrap_thread3(local_wrap_thread2); // move constr
+	wrap_thread local_wrap_thread2(fun1,34); // templ constr
+	wrap_thread local_wrap_thread3(std::move(local_wrap_thread2)); // move constr
 	// from now local_wrap_thread2 is empty!
 
 }
 
 TEST(utils_wrap_thread, empty_functions) {
 
-	wrapped_thread local_wrap_thread1(fun0);
-	wrapped_thread local_wrap_thread2(fun1, 3);
-	wrapped_thread local_wrap_thread3(fun2, 4, 7);
+	wrap_thread local_wrap_thread1(fun0);
+	wrap_thread local_wrap_thread2(fun1, 3);
+	wrap_thread local_wrap_thread3(fun2, 4, 7);
 }
 
 TEST(utils_wrap_thread, swap_function) {
 
-	wrapped_thread local_wrap_thread1(fun1, 3);
-	wrapped_thread local_wrap_thread2(fun2, 4, 7);
+	wrap_thread local_wrap_thread1(fun1, 3);
+	wrap_thread local_wrap_thread2(fun2, 4, 7);
 
 	std::thread::id id1 = local_wrap_thread1.get_id();
 
@@ -53,16 +51,11 @@ TEST(utils_wrap_thread, swap_function) {
 
 TEST(utils_wrap_thread, manual_join) {
 
-	wrapped_thread local_wrap_thread1(fun1, 3);
+	wrap_thread local_wrap_thread1(fun1, 3);
 
-	using namespace std::chrono_literals;
-	typedef std::chrono::duration_cast<std::chrono::duration<double>> duration;
-	std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+	EXPECT_TRUE(local_wrap_thread1.joinable());
 
-	while (duration(std::chrono::steady_clock::now() - start).count() > 3s) {
-		if (local_wrap_thread1.joinable()) {
-			local_wrap_thread1.join();
-			break;
-		}
+	if(local_wrap_thread1.joinable()) {
+		local_wrap_thread1.join();
 	}
 }

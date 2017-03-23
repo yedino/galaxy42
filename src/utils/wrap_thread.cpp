@@ -30,7 +30,7 @@ void wrap_thread::join() {
 	m_thr.join();
 }
 
-void wrap_thread::swap(wrap_thread &&other) {
+void wrap_thread::swap(wrap_thread &other) {
 	m_thr.swap(other.m_thr);
 }
 
