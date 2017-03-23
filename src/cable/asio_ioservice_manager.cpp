@@ -4,10 +4,10 @@
 c_asioservice_manager::c_asioservice_manager(size_t size_) : m_size(size_)
 	// ,m_stop(false)
 {
-	auto ig = make_ig(this);
+	guard_inv;
 
 	_note("Starting SIOM for size=" << size_);
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
+	guard_LOCK(m_mutex);
 	_note("Starting SIOM for size=" << size_);
 	_check(size() <= capacity());
 	_check(size() >= 1);
@@ -22,8 +22,8 @@ c_asioservice_manager::c_asioservice_manager(size_t size_) : m_size(size_)
 
 c_asioservice_manager::~c_asioservice_manager() {
 	_note("Destructing SIOM");
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 
 	for (size_t i = 0; i < m_size; i++) stop_ioservice(i);
 	_note("Joining threads");
@@ -42,8 +42,8 @@ void c_asioservice_manager::Postcond() const { Precond(); }
 
 void c_asioservice_manager::resize_to_at_least(size_t size_) {
 	_note("Resizing to size_" << size_ );
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 
 	_note("Resizing to size_" << size_ << " now size="<<size()<<" / capacity="<<capacity()
 		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ...works=" << m_ioservice_idle_works.size() );
@@ -62,21 +62,21 @@ void c_asioservice_manager::resize_to_at_least(size_t size_) {
 }
 
 size_t c_asioservice_manager::size() const {
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 	return m_size;
 }
 
 size_t c_asioservice_manager::capacity() const {
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 	return m_ioservice_array.size();
 }
 
 boost::asio::io_service &c_asioservice_manager::get_next_ioservice() {
 	_mark("Requesting next SIO from SIOM");
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 
 	m_last_ioservice++;
 	m_last_ioservice %= m_ioservice_array.size();
@@ -87,8 +87,8 @@ boost::asio::io_service &c_asioservice_manager::get_next_ioservice() {
 
 
 void c_asioservice_manager::stop_all_threadsafe() {
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 
 	_note("Stopping all in SIOM, m_size="<<m_size);
 	for (size_t i = 0; i < m_size; i++) stop_ioservice(i);
@@ -96,8 +96,8 @@ void c_asioservice_manager::stop_all_threadsafe() {
 
 
 void c_asioservice_manager::run_ioservice(size_t index) {
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK (it's private func anyway)
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 
 	// lock is already taken
 	_note("Starting ioservice index="<<index<<" (from our array size=" << m_ioservice_array.size()<<")");
@@ -111,8 +111,8 @@ void c_asioservice_manager::run_ioservice(size_t index) {
 }
 
 void c_asioservice_manager::stop_ioservice(size_t index) {
-	std::lock_guard< decltype(m_mutex) > lg(m_mutex); // LOCK (it's private func anyway)
-	auto ig = make_ig(this);
+	guard_LOCK(m_mutex);
+	guard_inv;
 
 	_note("Stopping ioservice index="<<index<<" (from our array size=" << m_ioservice_array.size()<<")");
 	m_ioservice_array.at(index).stop();
