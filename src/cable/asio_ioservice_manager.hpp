@@ -4,6 +4,7 @@
 #include "libs0.hpp"
 #include <boost/asio.hpp>
 
+
 /**
 @brief Manager for objects that will use ioservice, provides them with a pool of ioservice objects;
 References to #m_ioservice_array (and all it's elemets) remain valid as long as entire object of this class.
@@ -41,11 +42,10 @@ class c_asioservice_manager final {
 		c_asioservice_manager(c_asioservice_manager &&)=delete; // not moveable
 		c_asioservice_manager& operator=(c_asioservice_manager &&)=delete; // not moveable
 
-	public: // TODO protected
+	protected:
 		void Precond() const;
 		void Postcond() const;
-		friend class c_ig_friendly;
-		friend class c_ig< c_asioservice_manager >;
+		friend class c_ig<c_asioservice_manager>;
 
 	private:
 		/// max supported count of ioservices that we can have (capacity). @see m_size for actuall
@@ -71,7 +71,7 @@ class c_asioservice_manager final {
 
 		/// if set to yes then I should stop all my jobs: e.g. will refuse creating new ones etc,
 		/// this must be set e.g. to not add more started jobs after I decided to stop
-		bool m_stop;
+		bool m_stop=false;
 };
 
 #endif // ASIO_IOSERVICE_MANAGER_HPP

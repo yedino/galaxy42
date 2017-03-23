@@ -189,19 +189,14 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 }
 
 
-
 // -------------------------------------------------------------------
-
-/// This is a base class that you should add as a friend to classes that are using #c_ig<>
-/// @owner rafal
-class c_ig_friendly { public: };
 
 /// This is a RAII that calls Precond() and Postcond() for an object. Use it like a lock-guard in your member functions.
 /// @owner rafal
-template<typename TC> class c_ig final : public c_ig_friendly {
+template<typename TC> class c_ig final {
 	public:
-		c_ig(const TC & thisobj) : m_thisobj(thisobj) { m_thisobj->Precond(); }
-		~c_ig() { m_thisobj->Postcond(); }
+		c_ig(const TC & thisobj) : m_thisobj(thisobj) { m_thisobj.Precond(); }
+		~c_ig() { m_thisobj.Postcond(); }
 	private:
 		const TC & m_thisobj;
 };
@@ -209,6 +204,12 @@ template<typename TC> class c_ig final : public c_ig_friendly {
 template<typename TC> c_ig<TC> make_ig(const TC & thisobj) {
 	return c_ig<TC>(thisobj);
 }
+
+#define guard_inv auto invariant_guard_obj = make_ig(*this)
+
+// -------------------------------------------------------------------
+
+#define guard_LOCK(MUTEX)	std::lock_guard< decltype(MUTEX) > lg(MUTEX)
 
 // -------------------------------------------------------------------
 
