@@ -45,6 +45,7 @@
 
 // gal.peers.peers_add();
 
+/// @owner supernatural_net_owner this is very powerfull owner be aware of making him mad.
 class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e {
 	public:
 		c_galaxysrv()=default;
