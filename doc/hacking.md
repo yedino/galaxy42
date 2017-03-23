@@ -1,4 +1,4 @@
-
+@page Hacking
 # Hacking
 
 This page described how to "Hack" this project - how to develop it, how to change it, how to build it - topics for developers.
