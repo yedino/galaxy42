@@ -67,6 +67,8 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		void main_loop();
 
+		void start_exit(); ///< start exiting: sets #m_exiting and tries to close connections etc.
+
 	protected:
 
 		/// @name My crypto identity
@@ -94,6 +96,8 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 			#error "This platform is not supported"
 		#endif
 		/// @}
+
+		bool m_exiting=false; ///< are we now in exiting mode, then we should be refusing/closing connections etc
 };
 
 // -------------------------------------------------------------------

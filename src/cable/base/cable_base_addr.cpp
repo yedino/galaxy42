@@ -20,7 +20,7 @@ void c_cable_base_addr::print(std::ostream & ostr) const {
 	// ostr << "[unknown-address-type]";
 }
 
-std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr & obj) {
+std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr const & obj) {
 	obj.print(ostr);
 	return ostr;
 }

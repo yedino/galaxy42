@@ -20,7 +20,8 @@ class c_asiocable : public c_cable_base_obj {
 		boost::asio::io_service & m_io_service; ///< ref. to my io_service, e.g. received from get_next_ioservice()
 
 		/// I am holding my ioservice-manager, so that it will not die while I am alive,
-		/// so therefore also mine #m_io_service remains valid
+		/// so therefore also mine #m_io_service remains valid.
+		/// Prefer to not use this variable, instead use it via #m_io_service
 		shared_ptr< c_asioservice_manager > m_iomanager;
 };
 

@@ -234,6 +234,8 @@ At the moment test suite includes:
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
 
+* SIOM - Service_IO Manager - asio::service_io manager, see asio_ioservice_manager.cpp
+
 * Hash-Node (or just "Node") - is some sort of computer system that has a Hash-IP, and usually is connected with it to some network.
 For Galaxy42, a Node will be any computer running the Galaxy42 client program.
 One computer can run several nodes at once, using e.g. network name-spaces. And that all can be run at once few times on one physical computer with help of e.g. virtual machines.
