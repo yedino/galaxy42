@@ -5,7 +5,7 @@
 
 class wrap_thread {
 public:
-	wrap_thread();
+	wrap_thread() noexcept = default;
 
 	template<typename Function, typename ...Args>
 	explicit wrap_thread(Function&& f, Args&&... arg) {
@@ -14,14 +14,14 @@ public:
 
 	wrap_thread(const wrap_thread &) = delete;
 
-	wrap_thread(wrap_thread && rhm);
+	wrap_thread(wrap_thread && rhm) noexcept;
 
-	wrap_thread & operator=(wrap_thread && rhm);
+	wrap_thread & operator=(wrap_thread && rhm) noexcept;
 
-	bool joinable() const;
-	std::thread::id get_id() const;
+	bool joinable() const noexcept;
+	std::thread::id get_id() const noexcept;
 	void join();
-	void swap(wrap_thread& other);
+	void swap(wrap_thread& other) noexcept;
 	~wrap_thread();
 private:
 	std::thread m_thr;
