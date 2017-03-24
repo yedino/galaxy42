@@ -18,7 +18,7 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 	// and the thread would keep running since the exception would end function before thread is joined
 	std::atomic<bool> endflag{false};
 	_mark("Thread ...");
-	EXPECT_THROW(vec.at(1) = std::move(wrap_thread( [&](){ while(!endflag){} } )), std::out_of_range);
+	EXPECT_THROW( vec.at(1) = std::move(wrap_thread( [&](){ while(!endflag){} } )), std::out_of_range);
 	endflag=true;
 	EXPECT_THROW( vec.at(1) , std::out_of_range );
 	EXPECT_THROW( vec.at(1).join() , std::out_of_range );
