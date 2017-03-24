@@ -48,6 +48,8 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     else()
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
     endif()
+    # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wthread-safety")
   else()
     message(FATAL_ERROR "No C++14 support for Clang version. Please upgrade Clang to a version supporting C++14.")
   endif()
