@@ -47,7 +47,7 @@ void Wrap_NetPlatform_addAddress(const char *interfaceName,
 	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
 		  << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
-	throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
 
@@ -59,7 +59,7 @@ void Wrap_NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
 	_goal("MTU value " << mtu << " set on interface " << interfaceName
 		  << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
-	throw std::runtime_error("You used wrapper, that is not implemented for this OS.");
+	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
 
