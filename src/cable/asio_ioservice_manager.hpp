@@ -19,7 +19,7 @@ all resizing must be done in one place, in #resize_to_at_least() !
 #m_ioservice_idle_works + #m_ioservice_threads - is resized by us
 
 @warning All public operations must happen under mutex - #m_mutex
-@owner rob
+@owner rf
 */
 class c_asioservice_manager final {
 	public:
@@ -61,7 +61,8 @@ class c_asioservice_manager final {
 		std::vector<std::thread> m_ioservice_threads; ///< the thread of work for #m_ioservice_idle_works
 
 		/// starts an existing, allocated service (caller made proper resize).
-		/// @pre Object must be already resized to proper size (so that index is valid, size is at least index+1)
+		/// @pre m_ioservice_array is already resized up to index,
+		/// @pre m_ioservice_idle_works and m_ioservice_threads is NOT RESIZED YET, we will increase it's size by +1
 		void run_ioservice(size_t index);
 
 		void stop_ioservice(size_t index); ///< stops an existing, allocated service (does NOT remove/resize)

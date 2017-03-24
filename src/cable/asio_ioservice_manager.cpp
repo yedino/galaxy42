@@ -1,21 +1,21 @@
 #include "asio_ioservice_manager.hpp"
 #include "../utils/check.hpp"
 
-c_asioservice_manager::c_asioservice_manager(size_t size_) : m_size(size_)
+c_asioservice_manager::c_asioservice_manager(size_t size_)
+	: m_size(size_)
 	// ,m_stop(false)
 {
-	guard_inv;
+	guard_inv_post;
 
 	_note("Starting SIOM for size=" << size_);
 	guard_LOCK(m_mutex);
 	_note("Starting SIOM for size=" << size_);
-	_check(size() <= capacity());
-	_check(size() >= 1);
-	m_ioservice_threads.resize(size_);
+	_check(size_ <= m_ioservice_array.size());
+	_check(size_ >= 1);
 
 	_note("Starting SIOM initial");
 	for (size_t i = 0; i < m_size; i++) {
-		run_ioservice(i);
+		run_ioservice(i); // m_ioservice_array is resized, and the other arrays are NOT - as needed
 	}
 	_note("SIOM constructed");
 }
@@ -41,7 +41,7 @@ void c_asioservice_manager::Precond() const {
 void c_asioservice_manager::Postcond() const { Precond(); }
 
 void c_asioservice_manager::resize_to_at_least(size_t size_) {
-	_note("Resizing to size_" << size_ );
+	_note("Resizing to size_=" << size_ );
 	guard_LOCK(m_mutex);
 	guard_inv;
 
@@ -49,14 +49,15 @@ void c_asioservice_manager::resize_to_at_least(size_t size_) {
 		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ...works=" << m_ioservice_idle_works.size() );
 
 	if (size_ <= m_size) return; // we are already that big
-	_check(size_ <= capacity()); // it's not allowed to resize bigger then capacity
+
+	_check_input(size_ <= capacity()); // it's not allowed to resize bigger then capacity
+
 	size_t count_new=0;
-	m_ioservice_threads.resize(size_);
+	m_size = size_; // this is "resize" of our main array m_ioservice_array
 	for (size_t i = m_size; i < size_; i++) {
 		++count_new;
-		run_ioservice(i);
+		run_ioservice(i); // m_ioservice_array is resized, and the others are NOT yet
 	}
-	m_size = size_; // all this are now created
 	_check( size() == size_ );
 	_note("Resize doned, count_new="<<count_new);
 }
@@ -96,18 +97,19 @@ void c_asioservice_manager::stop_all_threadsafe() {
 
 
 void c_asioservice_manager::run_ioservice(size_t index) {
-	guard_LOCK(m_mutex);
-	guard_inv;
-
-	// lock is already taken
+	_info("run_ioservice index="<<index);
+	guard_LOCK(m_mutex); // lock again - why not
+	// guard_inv;
 	_note("Starting ioservice index="<<index<<" (from our array size=" << m_ioservice_array.size()<<")");
 	m_ioservice_idle_works.emplace_back(m_ioservice_array.at(index)); // run idle work to have io service run running forever
-	m_ioservice_threads.at(index) = std::thread([&io_service_ref = m_ioservice_array.at(index) , index] {
-		_note("Starting in thread " << std::this_thread::get_id() << ", ioservice index="<<index
-			<< " io_service_ref="<<static_cast<void*>(&io_service_ref));
-		io_service_ref.run();
-		_note("Ok, service started for index="<<index);
-	});
+	m_ioservice_threads.emplace_back(
+		std::thread([&io_service_ref = m_ioservice_array.at(index) , index] {
+			_note("Starting in thread " << std::this_thread::get_id() << ", ioservice index="<<index
+				<< " io_service_ref="<<static_cast<void*>(&io_service_ref));
+			io_service_ref.run();
+			_note("Ok, service started for index="<<index);
+		})
+	);
 }
 
 void c_asioservice_manager::stop_ioservice(size_t index) {
