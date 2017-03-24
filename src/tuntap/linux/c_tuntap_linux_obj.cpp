@@ -40,7 +40,7 @@ void c_tuntap_linux_obj::async_receive_from_tun(unsigned char *const data,
 	return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
 
-void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address,
+void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address,
                                             int prefix_len,
                                             uint32_t mtu) {
 

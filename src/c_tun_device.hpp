@@ -9,15 +9,9 @@
 #include <chrono>
 
 #include "error_subtype.hpp"
-
+#include "syserror_use.hpp"
 
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
-
-
-class tuntap_error : public runtime_error_subtype {};
-class tuntap_error_devtun : public tuntap_error {};
-class tuntap_error_ip     : public tuntap_error {};
-class tuntap_error_mtu    : public tuntap_error {};
 
 /**
  * @brief The c_tun_device class

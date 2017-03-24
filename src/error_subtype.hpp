@@ -4,7 +4,6 @@
 #include <string>
 #include <stdexcept>
 
-
 class runtime_error_subtype : public std::runtime_error {
 	public:
 		runtime_error_subtype();
@@ -24,6 +23,10 @@ class runtime_error_subtype : public std::runtime_error {
 			std::string m_msg; ///< my message (from subtype)
 };
 
+class tuntap_error : public runtime_error_subtype {};
+class tuntap_error_devtun : public tuntap_error {};
+class tuntap_error_ip     : public tuntap_error {};
+class tuntap_error_mtu    : public tuntap_error {};
 
 // throw runtime_error_subtype::make_subtype<tuntap_error_devtun>(".....")
 #define _throw_error_sub(TYPE, MSG) do { _throw_error( runtime_error_subtype::make_subtype<TYPE>(MSG) ); } while(0)
