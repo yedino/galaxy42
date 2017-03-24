@@ -1,13 +1,14 @@
 #include "wrap_thread.hpp"
 #include "libs0.hpp"
 
-wrap_thread::wrap_thread()
+wrap_thread::wrap_thread() noexcept
 	:
 	m_time_created( t_timepoint::clock::now() ), // created now
 	m_time_started( t_timepoint::min() ),
 	m_time_stopped( t_timepoint::min() )
 {
 	_note("Created thread: " << this->info());
+	m_destroy_timeout=std::chrono::seconds(0);
 }
 
 wrap_thread::wrap_thread(wrap_thread &&rhm) noexcept {
@@ -52,4 +53,10 @@ void wrap_thread::swap(wrap_thread &other) noexcept {
 wrap_thread::~wrap_thread()  {
 	if(m_thr.joinable())
 		m_thr.join();
+}
+
+std::string wrap_thread::info() const noexcept {
+	std::stringstream ss;
+	ss << m_destroy_timeout.count();
+	return ss.str();
 }
