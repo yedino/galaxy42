@@ -1,16 +1,28 @@
 #include "gtest/gtest.h"
 
 #include <vector>
+#include <atomic>
 
 #include "../utils/wrap_thread.hpp"
+#include "../libs0.hpp"
 
-TEST(utils_wrap_thread, thread_at) {
+TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
+	g_dbg_level_set(10,"test");
 
 	std::vector<wrap_thread> vec;
 	vec.resize(1);
 	vec.at(0) = std::move(wrap_thread());
 
-	EXPECT_THROW(vec.at(1) = std::move(wrap_thread()), std::out_of_range);
+	// with normal thread, it would continue to run because it was spawned
+	// in the temporary - we would have created std::thread( {some..work..in..lanbda} )
+	// and the thread would keep running since the exception would end function before thread is joined
+	std::atomic<bool> endflag{false};
+	_mark("Thread ...");
+	EXPECT_THROW(vec.at(1) = std::move(wrap_thread( [&](){ while(!endflag){} } )), std::out_of_range);
+	endflag=true;
+	EXPECT_THROW( vec.at(1) , std::out_of_range );
+	EXPECT_THROW( vec.at(1).join() , std::out_of_range );
+	// we would have a problem here with normal std::thread, but here it will join itself
 }
 
 void fun0() {}
