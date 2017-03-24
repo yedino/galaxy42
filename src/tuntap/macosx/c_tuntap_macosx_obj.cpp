@@ -31,7 +31,7 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
 
     //size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
     size_t write_bytes = write(*m_stream_handle_ptr.get(), boost::asio::buffer(buf, count), ec);
-    if (ec) throw std::runtime_error("write to TUN error: " + ec.message());
+    if (ec) _throw_error_runtime("write to TUN error: " + ec.message());
     return write_bytes;
 }
 */
@@ -42,7 +42,7 @@ size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t siz
 /* OLD STYLE todo - waiting for memory model
 size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
     assert(m_readed_bytes > 0);
-    if(m_readed_bytes > count) throw std::runtime_error("undersized buffer");
+    if(m_readed_bytes > count) _throw_error_runtime("undersized buffer");
     // TUN header
     m_buffer[0] = 0x00;
     m_buffer[1] = 0x00;
@@ -93,6 +93,10 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	ctl_info info;
 	std::memset(&info, 0, sizeof(info));
 	const std::string apple_utun_control = "com.apple.net.utun_control";
+
+	// ctl_info.ctl_name is a static array with size=96:
+	// https://developer.apple.com/reference/kernel/kern_control.h/ctl_info
+	_check_abort(apple_utun_control.size() < sizeof(info.ctl_name) );
 	apple_utun_control.copy(info.ctl_name, apple_utun_control.size());
 	if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
 		int err = errno;
@@ -131,8 +135,8 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &binary_address,
                                            int prefixLen) {
 
-	_check_extern(binary_address[0] == 0xFD);
-	_check_extern(binary_address[1] == 0x42);
+	_check_input(binary_address[0] == 0xFD);
+	_check_input(binary_address[1] == 0x42);
 	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 
@@ -142,7 +146,7 @@ void c_tuntap_macosx_obj::set_mtu(uint32_t mtu) {
 	_fact("Setting MTU="<<mtu<<" on card: " << name);
 	t_syserr error = NetPlatform_setMTU(name, mtu);
 	if (error.my_code != 0)
-		throw std::runtime_error("set MTU error: " + errno_to_string(error.errno_copy));
+		_throw_error_runtime("set MTU error: " + errno_to_string(error.errno_copy));
 }
 
 #endif // ANTINET_macosx
