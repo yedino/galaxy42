@@ -65,5 +65,5 @@ TEST(c_asioservice_menager_test, resize_to_at_least_test)
 	size = manager.capacity();
 	manager.resize_to_at_least(size);
 	EXPECT_EQ(manager.size(), size);
-	EXPECT_THROW(manager.resize_to_at_least(manager.capacity()+1), err_check_prog);
+	EXPECT_THROW(manager.resize_to_at_least(manager.capacity()+1), err_check_input);
 }
