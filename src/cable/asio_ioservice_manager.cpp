@@ -23,7 +23,7 @@ c_asioservice_manager::c_asioservice_manager(size_t size_)
 c_asioservice_manager::~c_asioservice_manager() {
 	_note("Destructing SIOM");
 	guard_LOCK(m_mutex);
-	guard_inv;
+	guard_inv_pre;
 
 	for (size_t i = 0; i < m_size; i++) stop_ioservice(i);
 	_note("Joining threads");
@@ -46,20 +46,26 @@ void c_asioservice_manager::resize_to_at_least(size_t size_) {
 	guard_inv;
 
 	_note("Resizing to size_" << size_ << " now size="<<size()<<" / capacity="<<capacity()
-		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ...works=" << m_ioservice_idle_works.size() );
+		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ..._works=" << m_ioservice_idle_works.size() );
 
-	if (size_ <= m_size) return; // we are already that big
+	if (size_ <= m_size) {
+		_dbg1("We already have requested size");
+		return;	// we are already that big
+	}
 
 	_check_input(size_ <= capacity()); // it's not allowed to resize bigger then capacity
 
 	size_t count_new=0;
-	m_size = size_; // this is "resize" of our main array m_ioservice_array
-	for (size_t i = m_size; i < size_; i++) {
+	auto old_size = m_size;
+	for (size_t i = old_size; i < size_; i++) {
 		++count_new;
+		m_size = (i+1); // we increment by one our size, for run_ioservice()
 		run_ioservice(i); // m_ioservice_array is resized, and the others are NOT yet
 	}
-	_check( size() == size_ );
-	_note("Resize doned, count_new="<<count_new);
+	//_mark( "m_size=" << m_size << " size_" << size_ );
+	_check( m_size == size_ );
+	_note("Resizing done: size_=" << size_ << " now m_size="<<m_size
+		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ..._works=" << m_ioservice_idle_works.size() );
 }
 
 size_t c_asioservice_manager::size() const {

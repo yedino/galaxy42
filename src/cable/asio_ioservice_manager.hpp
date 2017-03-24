@@ -42,7 +42,7 @@ class c_asioservice_manager final {
 		c_asioservice_manager(c_asioservice_manager &&)=delete; // not moveable
 		c_asioservice_manager& operator=(c_asioservice_manager &&)=delete; // not moveable
 
-	protected:
+	private:
 		void Precond() const;
 		void Postcond() const;
 		friend class c_ig<c_asioservice_manager>;
