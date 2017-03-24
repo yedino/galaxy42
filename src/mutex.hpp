@@ -9,7 +9,7 @@
 #define THREAD_ANNOTATION_ATTRIBUTE__(x)   // no-op
 #endif
 
-#define THREAD_ANNOTATION_ATTRIBUTE__(x)   __attribute__((x))
+//#define THREAD_ANNOTATION_ATTRIBUTE__(x)   __attribute__((x))
 
 #define CAPABILITY(x) \
   THREAD_ANNOTATION_ATTRIBUTE__(capability(x))
@@ -71,55 +71,59 @@
 
 // Defines an annotated interface for mutexes.
 // These methods can be implemented to use any internal mutex implementation.
+#include <mutex>
 class CAPABILITY("mutex") Mutex {
+private:
+	std::mutex std_mutex;
 public:
   // Acquire/lock this mutex exclusively.  Only one thread can have exclusive
   // access at any one time.  Write operations to guarded data require an
   // exclusive lock.
-  void Lock() ACQUIRE();
+  void lock() ACQUIRE(){std_mutex.lock();}
 
   // Acquire/lock this mutex for read operations, which require only a shared
   // lock.  This assumes a multiple-reader, single writer semantics.  Multiple
   // threads may acquire the mutex simultaneously as readers, but a writer
   // must wait for all of them to release the mutex before it can acquire it
   // exclusively.
-  void ReaderLock() ACQUIRE_SHARED();
+//  void ReaderLock() ACQUIRE_SHARED();
 
   // Release/unlock an exclusive mutex.
-  void Unlock() RELEASE();
+  void unlock() RELEASE(){std_mutex.unlock();}
 
   // Release/unlock a shared mutex.
-  void ReaderUnlock() RELEASE_SHARED();
+//  void ReaderUnlock() RELEASE_SHARED();
 
   // Try to acquire the mutex.  Returns true on success, and false on failure.
-  bool TryLock() TRY_ACQUIRE(true);
+  bool try_lock() TRY_ACQUIRE(true){return std_mutex.try_lock();}
 
   // Try to acquire the mutex for read operations.
-  bool ReaderTryLock() TRY_ACQUIRE_SHARED(true);
+//  bool ReaderTryLock() TRY_ACQUIRE_SHARED(true);
 
   // Assert that this mutex is currently held by the calling thread.
-  void AssertHeld() ASSERT_CAPABILITY(this);
+//  void AssertHeld() ASSERT_CAPABILITY(this);
 
   // Assert that is mutex is currently held for read operations.
-  void AssertReaderHeld() ASSERT_SHARED_CAPABILITY(this);
+//  void AssertReaderHeld() ASSERT_SHARED_CAPABILITY(this);
 
   // For negative capabilities.
-  const Mutex& operator!() const { return *this; }
+//  const Mutex& operator!() const { return *this; }
 };
 
 
 // MutexLocker is an RAII class that acquires a mutex in its constructor, and
 // releases it in its destructor.
-class SCOPED_CAPABILITY MutexLocker {
+template <class t_mutex>
+class SCOPED_CAPABILITY Lock_guard {
 private:
-  Mutex* mut;
+  t_mutex &mut;
 
 public:
-  MutexLocker(Mutex *mu) ACQUIRE(mu) : mut(mu) {
-    mu->Lock();
+  Lock_guard(t_mutex &mu) ACQUIRE(mu) : mut(mu) {
+    mut.lock();
   }
-  ~MutexLocker() RELEASE() {
-    mut->Unlock();
+  ~Lock_guard() RELEASE() {
+    mut.unlock();
   }
 };
 
