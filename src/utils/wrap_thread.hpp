@@ -16,6 +16,7 @@ class wrap_thread {
 		explicit wrap_thread(Function&& f, Args&&... arg)
 			: wrap_thread()
 		{
+			m_time_started = t_clock::now();
 			m_future = std::async(std::launch::async, std::forward<Function>(f), std::forward<Args>(arg)...);
 
 		}
