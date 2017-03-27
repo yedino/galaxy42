@@ -11,26 +11,26 @@ wrap_thread::wrap_thread() noexcept
 	m_destroy_timeout=std::chrono::seconds(0);
 }
 
-wrap_thread::wrap_thread(wrap_thread &&rhm) noexcept {
-	_note("Moving thread -START- from: " << rhm.info() << " onto me " << this->info() );
-	if (&rhm != this) {
+wrap_thread::wrap_thread(wrap_thread &&rhs) noexcept {
+	_note("Moving thread -START- from: " << rhs.info() << " onto me " << this->info() );
+	if (&rhs != this) {
 		if (m_thr.joinable()) {
 			m_thr.join();
 		}
-		m_thr = std::move(rhm.m_thr);
+		m_thr = std::move(rhs.m_thr);
 	} else _info("Moving onto myself? Ignoring.");
-	_note("Moving thread -DONE-  from: " << rhm.info() << " onto me " << this->info() );
+	_note("Moving thread -DONE-  from: " << rhs.info() << " onto me " << this->info() );
 }
 
-wrap_thread &wrap_thread::operator=(wrap_thread &&rhm) noexcept {
-	if (&rhm == this) {
+wrap_thread &wrap_thread::operator=(wrap_thread &&rhs) noexcept {
+	if (&rhs == this) {
 		_info("Moving onto myself? Ignoring.");
 		return *this;
 	}
 	if (m_thr.joinable()) {
 		m_thr.join();
 	}
-	m_thr = std::move(rhm.m_thr);
+	m_thr = std::move(rhs.m_thr);
 	return *this;
 }
 

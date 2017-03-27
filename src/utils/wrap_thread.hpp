@@ -25,9 +25,9 @@ class wrap_thread {
 
 		wrap_thread(const wrap_thread &) = delete;
 
-		wrap_thread(wrap_thread && rhm) noexcept;
+		wrap_thread(wrap_thread && rhs) noexcept;
 
-		wrap_thread & operator=(wrap_thread && rhm) noexcept;
+		wrap_thread & operator=(wrap_thread && rhs) noexcept;
 
 		bool joinable() const noexcept;
 		std::thread::id get_id() const noexcept;
