@@ -18,7 +18,11 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 	// and the thread would keep running since the exception would end function before thread is joined
 	std::atomic<bool> endflag{false};
 	_mark("Thread ...");
-	EXPECT_THROW( vec.at(1) = std::move(wrap_thread( [&](){ while(!endflag){} } )), std::out_of_range);
+
+	EXPECT_DEATH( vec.at(1) = std::move(wrap_thread(std::chrono::seconds(2), [&](){
+		while(!endflag){}
+	} )), ""); // catch std::abort
+
 	endflag=true;
 	EXPECT_THROW( vec.at(1) , std::out_of_range );
 	EXPECT_THROW( vec.at(1).join() , std::out_of_range );
@@ -47,27 +51,8 @@ TEST(utils_wrap_thread, empty_functions) {
 	wrap_thread local_wrap_thread3(fun2, 4, 7);
 }
 
-TEST(utils_wrap_thread, swap_function) {
-
-	wrap_thread local_wrap_thread1(fun1, 3);
-	wrap_thread local_wrap_thread2(fun2, 4, 7);
-
-	std::thread::id id1 = local_wrap_thread1.get_id();
-
-	local_wrap_thread1.swap(local_wrap_thread2); // swap
-
-	std::thread::id id1_afterswap = local_wrap_thread2.get_id();
-
-	EXPECT_EQ(id1,id1_afterswap);
-}
-
 TEST(utils_wrap_thread, manual_join) {
 
 	wrap_thread local_wrap_thread1(fun1, 3);
-
-	EXPECT_TRUE(local_wrap_thread1.joinable());
-
-	if(local_wrap_thread1.joinable()) {
-		local_wrap_thread1.join();
-	}
+	local_wrap_thread1.join();
 }
