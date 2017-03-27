@@ -55,7 +55,7 @@ wrap_thread::~wrap_thread()  {
 		m_thr.join();
 }
 
-std::string wrap_thread::info() const noexcept {
+std::string wrap_thread::info() const {
 	std::stringstream ss;
 	ss << m_destroy_timeout.count();
 	return ss.str();

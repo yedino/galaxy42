@@ -35,7 +35,7 @@ class wrap_thread {
 		void swap(wrap_thread& other) noexcept;
 		~wrap_thread();
 
-		std::string info() const noexcept; ///< return for debug summary of this object
+		std::string info() const; ///< return for debug summary of this object
 
 		using t_clock = decltype(std::chrono::steady_clock()) ;  ///< clock I will use for my timing
 		using t_timepoint = std::chrono::time_point<t_clock>; ////< timepoint I will use for my timing
