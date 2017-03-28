@@ -16,7 +16,9 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
 		void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) override;
-
+		size_t read_from_tun_without_header(unsigned char * const data,
+			size_t size, std::array<unsigned char, IPV6_LEN> &dst_binary_address,
+			uint8_t &next_header) override;
 		void set_tun_parameters
 			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) override;
 
