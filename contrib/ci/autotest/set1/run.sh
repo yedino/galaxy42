@@ -11,7 +11,7 @@ function fail() {
 default_peer1="192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"
 peer1_reference="${test_galaxy_peer1:-$default_peer1}"
 
-target_program_path="../../../../" # where is our binary
+target_program_path="../../../../build/" # where is our binary
 target_program_fname="tunserver.elf"
 
 target_program_full="${target_program_path}${target_program_fname}"
