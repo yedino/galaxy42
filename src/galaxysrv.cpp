@@ -46,9 +46,15 @@ void c_galaxysrv::main_loop() {
 			c_netbuf buf(9000);
 			while (!m_exiting) {
 				_dbg3("Reading TUN...");
-				size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
+				//size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
+				//std::array<unsigned char, 16> dst_addr;
+				c_haship_addr dst_addr;
+				uint8_t next_header_type = 0;
+				size_t read = m_tuntap.read_from_tun_without_header(buf.data(), buf.size(), dst_addr, next_header_type);
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 				_info("TUN read: " << make_report(chunk,20));
+				_info("dst address " << dst_addr);
+				_info("next header type " << static_cast<unsigned int>(next_header_type));
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
