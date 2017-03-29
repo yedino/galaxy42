@@ -51,16 +51,16 @@ class c_tuntap_base_obj {
 		virtual size_t read_from_tun(unsigned char * const data, size_t size) = 0; ///< blocking function
 
 		/**
-		 * @brief read_from_tun_without_header
-		 * @param data pointer to block of data whitch will be filled by payload (i.e. udpv6 packet without ipv6 header), must be preallocated
+		 * @brief read_from_tun_separated_addresses
+		 * @param data pointer to block of data which will be filled by ipv6 packet without src and dst address fields, must be preallocated
 		 * @param size size of block of data pointed by data pointer
-		 * @param dst_binary_address will be filled by destination ipv6 from ipv6 packet header
-		 * @param next_header next header filed from ipv6 header (i.e. 3a for icmpv6)
-		 * @return number of readed bytes without ipv6 header size
+		 * @param src_binary_address source address filed
+		 * @param dst_binary_address destination address field
+		 * @return number of readed bytes without - 32 (dst size + src size == 32)
 		 */
-		virtual size_t read_from_tun_without_header(unsigned char * const data,
-			size_t size, std::array<unsigned char, IPV6_LEN> &dst_binary_address,
-			uint8_t &next_header) = 0; ///< blocking function
+		virtual size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
+			std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			std::array<unsigned char, IPV6_LEN> &dst_binary_address) = 0;
 
 		// receive data to provided buffer, and then callback. Buffer must be valid up untill callback is called
 		// then the callback is allowed to e.g. deallocate (or reuse) it.
