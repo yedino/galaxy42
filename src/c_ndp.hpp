@@ -39,6 +39,9 @@ class c_ndp {
 	public:
 		static bool is_packet_neighbor_solicitation
 			(const std::array<uint8_t, 9000> &packet_data);
+		template <typename T>
+		static bool is_packet_neighbor_solicitation(const T * const data) noexcept;
+
 		static std::array<uint8_t, 94> generate_neighbor_advertisement
 			(const std::array<uint8_t, 9000> &neighbor_solicitation_packet);
 
@@ -52,6 +55,17 @@ class c_ndp {
 
 };
 
+template<typename T>
+bool c_ndp::is_packet_neighbor_solicitation(const T * const data) noexcept {
+	static_assert(CHAR_BIT == 8);
+	static_assert(sizeof(std::remove_pointer<decltype(data)>::type) == 1);
+	// ethernet header = 14
+	// ipv6 header = 40
+	// tested od wireshark
+	const unsigned char * const packet_type = data + 14 + 40;
+	if (*packet_type == 135) return true;
+	return false;
+}
 #endif // _WIN32
 
 #endif
