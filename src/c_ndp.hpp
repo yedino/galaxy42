@@ -39,11 +39,26 @@ class c_ndp {
 	public:
 		static bool is_packet_neighbor_solicitation
 			(const std::array<uint8_t, 9000> &packet_data);
+
+		/**
+		 * @param data pointer to buffer contains ETH frame readed from windows TAP
+		 * @param size number of bytes pointed by data
+		 * @returns true if packet is neighbor slolicitation
+		 */
 		template <typename T>
-		static bool is_packet_neighbor_solicitation(const T * const data) noexcept;
+		static bool is_packet_neighbor_solicitation(const T * const data, size_t size) noexcept;
 
 		static std::array<uint8_t, 94> generate_neighbor_advertisement
 			(const std::array<uint8_t, 9000> &neighbor_solicitation_packet);
+
+		/**
+		 * Generate response packet for neighbor solicitation
+		 * @param data pointer to buffer contains neighbor solicitation packet
+		 * @param size size of data pointed by data
+		 * @returns neighbor advertisement packet
+		 */
+		template <typename T>
+		std::array<unsigned char, 94> generate_neighbor_advertisement(const T * const data, size_t size) noexcept;
 
 		// next_hvalue: 58 icmpv6 and 17 for udpv6
 
@@ -56,16 +71,26 @@ class c_ndp {
 };
 
 template<typename T>
-bool c_ndp::is_packet_neighbor_solicitation(const T * const data) noexcept {
-	static_assert(CHAR_BIT == 8);
-	static_assert(sizeof(std::remove_pointer<decltype(data)>::type) == 1);
+bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) noexcept {
+	static_assert(CHAR_BIT == 8, "");
+	static_assert(sizeof(std::remove_pointer<decltype(data)>::type) == 1, "");
 	// ethernet header = 14
 	// ipv6 header = 40
 	// tested od wireshark
+	if (size < (14 + 40)) return false;
 	const unsigned char * const packet_type = data + 14 + 40;
 	if (*packet_type == 135) return true;
 	return false;
 }
+
+template<typename T>
+std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement(const T * const data, size_t size) noexcept {
+	std::array<unsigned char, 94> ret;
+	//*** ethernet header ***//
+	
+	return std::array<unsigned char, 94>();
+}
+
 #endif // _WIN32
 
 #endif
