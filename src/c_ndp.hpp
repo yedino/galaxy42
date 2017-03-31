@@ -53,12 +53,14 @@ class c_ndp {
 
 		/**
 		 * Generate response packet for neighbor solicitation
-		 * @param data pointer to buffer contains neighbor solicitation packet
-		 * @param size size of data pointed by data
+		 * @param sol_src_mac pointer to data buffer containst source mac address from neighbor solicitation packet\n
+		 * all values between sol_stc_mac and sol_src_mac + 6 must be valid
+		 * @param sol_target_address pointer to data buffer contains ipv6 target address from neighbor solicitation packet\n
+		 * all values between sol_target_address and sol_target_address + 16 must be valid
 		 * @returns neighbor advertisement packet
 		 */
 		template <typename T>
-		std::array<unsigned char, 94> generate_neighbor_advertisement(const T * const data, size_t size) noexcept;
+		std::array<unsigned char, 94> generate_neighbor_advertisement(const T * const sol_src_mac, const T * const sol_target_address) noexcept;
 
 		// next_hvalue: 58 icmpv6 and 17 for udpv6
 
@@ -86,12 +88,9 @@ bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) n
 }
 
 template<typename T>
-std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement(const T * const data, size_t size) noexcept {
+std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement(const T * const sol_src_mac, const T * const sol_target_address) noexcept {
 	std::array<unsigned char, 94> ret;
-	//*** ethernet header ***//
-	ret.at(0);
-	const T* const input_src_mac_address = data + 6;
-	return std::array<unsigned char, 94>();
+	return ret;
 }
 
 #endif // _WIN32
