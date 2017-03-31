@@ -67,6 +67,8 @@ class c_ndp {
 				const uint8_t* header_with_content,
 				uint16_t length,
 				uint32_t next_hvalue);
+	private:
+		static std::array<unsigned char, 94> m_generate_neighbor_advertisement_packet;
 
 };
 
@@ -87,7 +89,8 @@ template<typename T>
 std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement(const T * const data, size_t size) noexcept {
 	std::array<unsigned char, 94> ret;
 	//*** ethernet header ***//
-	
+	ret.at(0);
+	const T* const input_src_mac_address = data + 6;
 	return std::array<unsigned char, 94>();
 }
 
