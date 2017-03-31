@@ -46,21 +46,22 @@ void c_galaxysrv::main_loop() {
 			c_netbuf buf(9000);
 			while (!m_exiting) {
 				_dbg3("Reading TUN...");
-				//size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
-				c_haship_addr src_addr;
+				size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
+				/*c_haship_addr src_addr;
 				c_haship_addr dst_addr;
-				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr);
+				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr);*/
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 				_info("TUN read: " << make_report(chunk,20));
-				_info("src address " << src_addr);
-				_info("dst address " << dst_addr);
+				//_info("src address " << src_addr);
+				//_info("dst address " << dst_addr);
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
-				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
+				// XXX auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
+				// XXX m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
 			} // loop
 			_note("Loop done");
-		} catch(...) { _warn("Thread-lambda got exception"); }
+		} catch (const std::exception &e) {_warn("Thread-lambda got exception " << e.what());}
+		catch(...) { _warn("Thread-lambda got exception"); }
 	}; // lambda tunread
 
 	auto loop_cableread = [&]() {

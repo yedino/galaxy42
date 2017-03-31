@@ -56,7 +56,8 @@ class c_tuntap_base_obj {
 		 * @param size size of block of data pointed by data pointer
 		 * @param src_binary_address source address filed
 		 * @param dst_binary_address destination address field
-		 * @return number of readed bytes without - 32 (dst size + src size == 32)
+		 * @return number of readed bytes without - 32 (dst size + src size == 32) or 0 if error
+		 * if 0 is returned in data, src_binary_address or dst_binary_address may be trash data
 		 */
 		virtual size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
 			std::array<unsigned char, IPV6_LEN> &src_binary_address,
