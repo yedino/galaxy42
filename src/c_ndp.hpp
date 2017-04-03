@@ -61,7 +61,7 @@ class c_ndp {
 		 * Thread safe: no (internal static array is modified)
 		 */
 		template <typename T>
-		const std::array<unsigned char, 94> &generate_neighbor_advertisement(
+		static const std::array<unsigned char, 94> &generate_neighbor_advertisement(
 			const T * const sol_src_mac,
 			const T * const source_address_ipv6,
 			const T * const destination_address_ipv6) noexcept;
@@ -102,14 +102,17 @@ const std::array<unsigned char, 94> &c_ndp::generate_neighbor_advertisement(
 		static_assert(sizeof(std::remove_pointer<decltype(source_address_ipv6)>::type) == 1, "");
 		static_assert(sizeof(std::remove_pointer<decltype(destination_address_ipv6)>::type) == 1, "");
 		std::copy(sol_src_mac, sol_src_mac + 6, &m_generate_neighbor_advertisement_packet.at(0)); // copy 6 bytes of mac address
-		std::copy(source_address_ipv6, source_address_ipv6 + 8, &m_generate_neighbor_advertisement_packet.at(22)); // copy ipv6 address into ipv6.src field
-		std::copy(destination_address_ipv6, destination_address_ipv6 + 8, &m_generate_neighbor_advertisement_packet.at(38)); // copy ipv6 address into ipv6.dst field
-		std::copy(source_address_ipv6, source_address_ipv6 + 8, &m_generate_neighbor_advertisement_packet.at(62)); // copy ipv6 address into icmpv6.target_address field
+		std::copy(source_address_ipv6, source_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(22)); // copy ipv6 address into ipv6.src field
+		std::copy(destination_address_ipv6, destination_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(38)); // copy ipv6 address into ipv6.dst field
+		std::copy(source_address_ipv6, source_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(62)); // copy ipv6 address into icmpv6.target_address field
 		std::copy(sol_src_mac, sol_src_mac + 6, &m_generate_neighbor_advertisement_packet.at(88)); // copy 6 bytes of mac address into icmpv6.link_layer address field
 		// clear checksum field
 		m_generate_neighbor_advertisement_packet.at(56) = 0x00;
 		m_generate_neighbor_advertisement_packet.at(57) = 0x00;
 
+		uint16_t checksum = checksum_ipv6_packet(&m_generate_neighbor_advertisement_packet.front() + 22, &m_generate_neighbor_advertisement_packet.front() + 54, 40, 58);
+		m_generate_neighbor_advertisement_packet.at(56) = reinterpret_cast<uint8_t*>(&checksum)[0]; // TODO UB
+		m_generate_neighbor_advertisement_packet.at(57) = reinterpret_cast<uint8_t*>(&checksum)[1]; // TODO UB
 		return m_generate_neighbor_advertisement_packet;
 }
 
