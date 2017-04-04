@@ -21,14 +21,23 @@ static const union { unsigned char bytes[4]; uint32_t value; } o32_host_order = 
 
 #define O32_HOST_ORDER (o32_host_order.value)
 
+/*static constexpr uint16_t number = 1;
+constexpr bool is_little_edian() {
+	return (reinterpret_cast<const unsigned char *>(&number)[0] == 1);
+}
+
+static constexpr bool little_edian = is_little_edian();
+*/
+
+
 #endif
 
 
 #ifndef C_NDP_HPP
 #define C_NDP_HPP
 
-
-#if defined(_WIN32) || defined(__CYGWIN__)
+#include <platform.hpp>
+#if defined(ANTINET_windows)
 
 #include <array>
 #include <cstdint>
@@ -84,7 +93,7 @@ bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) n
 	static_assert(sizeof(std::remove_pointer<decltype(data)>::type) == 1, "");
 	// ethernet header = 14
 	// ipv6 header = 40
-	// tested od wireshark
+	// tested on wireshark
 	if (size < (14 + 40)) return false;
 	const unsigned char * const packet_type = data + 14 + 40;
 	if (*packet_type == 135) return true;
@@ -111,11 +120,11 @@ const std::array<unsigned char, 94> &c_ndp::generate_neighbor_advertisement(
 		m_generate_neighbor_advertisement_packet.at(57) = 0x00;
 
 		uint16_t checksum = checksum_ipv6_packet(&m_generate_neighbor_advertisement_packet.front() + 22, &m_generate_neighbor_advertisement_packet.front() + 54, 40, 58);
-		m_generate_neighbor_advertisement_packet.at(56) = reinterpret_cast<uint8_t*>(&checksum)[0]; // TODO UB
-		m_generate_neighbor_advertisement_packet.at(57) = reinterpret_cast<uint8_t*>(&checksum)[1]; // TODO UB
+		m_generate_neighbor_advertisement_packet.at(56) = checksum & 0xFF;
+		m_generate_neighbor_advertisement_packet.at(57) = checksum >> 8;
 		return m_generate_neighbor_advertisement_packet;
 }
 
-#endif // _WIN32
+#endif // ANTINET_windows
 
 #endif
