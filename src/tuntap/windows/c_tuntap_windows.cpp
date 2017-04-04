@@ -52,6 +52,14 @@ size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t siz
 	return readed_size;
 }
 
+size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
+	unsigned char * const data, size_t size,
+	std::array<unsigned char, IPV6_LEN>& src_binary_address,
+	std::array<unsigned char, IPV6_LEN>& dst_binary_address) {
+		assert(0); // NOT IMPLEMENTED YET
+		return 0;
+}
+
 void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, size_t size, const c_tuntap_base_obj::read_handler &handler) {
 	_NOTREADY();
 }
