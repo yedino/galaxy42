@@ -6,6 +6,10 @@
 #include <iomanip>
 #include <boost/asio.hpp>
 
+static const bool little_edian = [] {
+	uint16_t number = 1;
+	return (reinterpret_cast<unsigned char *>(&number)[0] == 1);
+}();
 
 std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = {
 	//*** ethernet header ***//
@@ -156,10 +160,8 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 }
 
 uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
-//	static_assert(O32_HOST_ORDER == O32_LITTLE_ENDIAN, "");
-	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+	if(little_edian)
 		next_hvalue = htonl(next_hvalue);
-		
 
 	uint64_t result = 0;
 	uint8_t sd_addr_size = 32;
@@ -174,10 +176,10 @@ uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, con
 	}
 
 	if (length & 1)
-		result += O32_HOST_ORDER == O32_BIG_ENDIAN ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
+		result += little_edian ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
 
-	uint32_t length_bigendian;
-	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+	uint32_t length_bigendian = length;
+	if(little_edian)
 		length_bigendian = htonl(length);
 
 	result += (length_bigendian >> 16) + (length_bigendian & 0xFFFF);

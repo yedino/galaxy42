@@ -16,10 +16,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 
 		size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
 			std::array<unsigned char, IPV6_LEN> &src_binary_address,
-			std::array<unsigned char, IPV6_LEN> &dst_binary_address) override {
-			assert(0); // NOT IMPLEMENTED YET
-			return 0;
-		}; // TODO
+			std::array<unsigned char, IPV6_LEN> &dst_binary_address) override;
 
 		void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) override;
 
