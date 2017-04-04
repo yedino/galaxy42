@@ -1,6 +1,6 @@
 #include "c_ndp.hpp"
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(ANTINET_windows)
 
 #include <iostream>
 #include <iomanip>
@@ -156,16 +156,22 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 }
 
 uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
-
+//	static_assert(O32_HOST_ORDER == O32_LITTLE_ENDIAN, "");
 	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
 		next_hvalue = htonl(next_hvalue);
+		
 
 	uint64_t result = 0;
 	uint8_t sd_addr_size = 32;
-	for (uint8_t i = 0; i < sd_addr_size/2; ++i)
-		result += reinterpret_cast<const uint16_t *>(source_destination_addr)[i];
-	for (uint32_t i = 0; i < length / 2; i++)
-		result += reinterpret_cast<const uint16_t *>(header_with_content)[i];
+	for (uint8_t i = 0; i < sd_addr_size; i += 2) {
+		result += source_destination_addr[i];
+		result += source_destination_addr[i + 1] << 8;
+	}
+
+	for (uint32_t i = 0; i < length; i += 2) {
+		result += header_with_content[i];
+		result += header_with_content[i + 1] << 8;
+	}
 
 	if (length & 1)
 		result += O32_HOST_ORDER == O32_BIG_ENDIAN ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
