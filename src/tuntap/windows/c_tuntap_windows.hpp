@@ -37,7 +37,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		std::wstring get_human_name(const std::wstring &guid);
 		NET_LUID get_luid(const std::wstring &human_name);
 		HANDLE get_device_handle();
-		HANDLE open_tun_device(const std::wstring &guid); ///< returns opened handle for guid or INVALID_HANDLE_VALUE
+		HANDLE open_tun_device(const std::wstring &guid) noexcept; ///< returns opened handle for guid or INVALID_HANDLE_VALUE
 		std::array<uint8_t, mac_address_size> get_mac(HANDLE handle); ///< get handle to opened device (returned by get_device_handle())
 		void set_mtu(uint32_t mtu);
 

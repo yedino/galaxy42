@@ -326,7 +326,7 @@ HANDLE c_tuntap_windows_obj::get_device_handle() {
 	return handle;
 }
 
-HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
+HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) noexcept {
 	_dbg1("start open_tun_device");
 	std::wstring tun_filename;
 	tun_filename += L"\\\\.\\Global\\";
@@ -340,7 +340,6 @@ HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
-	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("CreateFileW error, last error " + std::to_string(GetLastError()));
 	return handle;
 }
 
