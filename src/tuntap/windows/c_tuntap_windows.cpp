@@ -39,7 +39,15 @@ c_tuntap_windows_obj::c_tuntap_windows_obj()
 }
 
 size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size) {
-	return m_stream_handle.write_some(boost::asio::buffer(data, size));
+	std::array<unsigned char, 14 + 40 + 65535> output_buffer = { // eth header + ipv6 header + max ipv6 payload
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC
+		0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC
+		0x86, 0xDD // eth type: ipv6
+	};
+	// fill eth header
+	std::copy(m_mac_address.begin(), m_mac_address.end(), output_buffer.begin()); // destination mac address
+	std::copy(data, data + size, output_buffer.begin() + 14); // 14 == size of eth header
+	return m_stream_handle.write_some(boost::asio::buffer(output_buffer.data(), size + 14)); // write eth frame
 }
 
 size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t size) {
