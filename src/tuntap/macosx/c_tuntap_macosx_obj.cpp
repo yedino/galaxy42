@@ -19,23 +19,14 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
 }
 
 size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) {
-/* OLD STYLE todo - waiting for memory model
-size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
-    boost::system::error_code ec;
-    uint8_t *buf_ptr = static_cast<uint8_t *>(buf);
-    // TUN HEADER
-    buf_ptr[0] = 0x00;
-    buf_ptr[1] = 0x00;
-    buf_ptr[2] = 0x00;
-    buf_ptr[3] = 0x1E;
+	std::array<unsigned char, 4> tun_header = {
+		0x00, 0x00, 0x00, 0x1E
+	};
+	std::array<boost::asio::const_buffer, 2> buffers;
+	buffers.at(0) = boost::asio::buffer(tun_header);
+	buffers.at(1) = boost::asio::buffer(data, size);
 
-    //size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
-    size_t write_bytes = write(*m_stream_handle_ptr.get(), boost::asio::buffer(buf, count), ec);
-    if (ec) _throw_error_runtime("write to TUN error: " + ec.message());
-    return write_bytes;
-}
-*/
-	return m_tun_stream.write_some(boost::asio::buffer(data, size));
+	return m_tun_stream.write_some(buffers);
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t size) {
