@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
 #include "../c_ip46_addr.hpp"
+#include <libs0.hpp>
 
 
 TEST(c_ip46_addr, compare_same) {
