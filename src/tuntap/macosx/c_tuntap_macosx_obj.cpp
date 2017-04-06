@@ -57,6 +57,14 @@ size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
 	return m_tun_stream.read_some(boost::asio::buffer(data, size));
 }
 
+size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
+		unsigned char * const data,
+		size_t size, std::array<unsigned char, IPV6_LEN> &src_binary_address,
+		std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
+			_NOTREADY();
+			return 0;
+}
+
 void c_tuntap_macosx_obj::async_receive_from_tun(unsigned char * const data,
                                                  size_t size,
                                                  const c_tuntap_base_obj::read_handler &handler) {
@@ -129,6 +137,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
 	m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
+	_dbg1("interface name " << m_ifr_name);
 	return tun_fd;
 }
 
@@ -137,6 +146,7 @@ void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &
 
 	_check_input(binary_address[0] == 0xFD);
 	_check_input(binary_address[1] == 0x42);
+	_dbg1("set ip addres for interface name " << m_ifr_name);
 	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 

@@ -13,6 +13,9 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
+		size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
+			std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			std::array<unsigned char, IPV6_LEN> &dst_binary_address) override;
 
 		void async_receive_from_tun(unsigned char * const data,
 		                            size_t size, const
@@ -22,8 +25,8 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 		                         int prefix_len,
 		                         uint32_t mtu) override;
 	private:
-		const int m_tun_fd; ///< the unix file descriptor. -1 is closed (this should not happen in correct object)
 		std::string m_ifr_name; ///< the name of interface. We want to set it in set_ipv6_address(), needed for set_mtu.
+		const int m_tun_fd; ///< the unix file descriptor. -1 is closed (this should not happen in correct object)
 
 		boost::asio::io_service m_io_service;
 		boost::asio::posix::stream_descriptor m_tun_stream;
