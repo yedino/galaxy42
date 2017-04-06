@@ -50,6 +50,19 @@ class c_tuntap_base_obj {
 
 		virtual size_t read_from_tun(unsigned char * const data, size_t size) = 0; ///< blocking function
 
+		/**
+		 * @brief read_from_tun_separated_addresses
+		 * @param data pointer to block of data which will be filled by ipv6 packet without src and dst address fields, must be preallocated
+		 * @param size size of block of data pointed by data pointer
+		 * @param src_binary_address source address filed
+		 * @param dst_binary_address destination address field
+		 * @return number of readed bytes without - 32 (dst size + src size == 32) or 0 if error
+		 * if 0 is returned in data, src_binary_address or dst_binary_address may be trash data
+		 */
+		virtual size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
+			std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			std::array<unsigned char, IPV6_LEN> &dst_binary_address) = 0;
+
 		// receive data to provided buffer, and then callback. Buffer must be valid up untill callback is called
 		// then the callback is allowed to e.g. deallocate (or reuse) it.
 		virtual void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) = 0;

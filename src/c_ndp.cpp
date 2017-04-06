@@ -1,10 +1,46 @@
 #include "c_ndp.hpp"
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(ANTINET_windows)
 
 #include <iostream>
 #include <iomanip>
 #include <boost/asio.hpp>
+
+static const bool little_edian = [] {
+	uint16_t number = 1;
+	return (reinterpret_cast<unsigned char *>(&number)[0] == 1);
+}();
+
+std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = {
+	//*** ethernet header ***//
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC will be set later
+	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
+	0x86, 0xDD, 	// EtherType 0x86DD == IPv6 (https://en.wikipedia.org/wiki/EtherType)
+
+	//*** ipv6 header ***//
+	0x60, 0x00, 0x00, 0x00, // flow label
+	0x00, 0x28, // payload len, TODO current value is from wireshark
+	0x3A, // next header 56 == ICMPv6
+	0xFF, // hop limit
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // source ipv6 address
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+	//*** icmpv6 ***//
+	0x88, // type 136 (Neighbor Advertisement) https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol_version_6
+	0x00, // code
+	0x00, 0x00, // checksum
+	0xE0, // set flags R, S, O
+	0x00, 0x00, 0x00, // reserved
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // target ipv6 address
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x02, 0x01, // options
+	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
+	0x01, // type: source link-layer address
+	0x01, // length
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // link layer address
+};
 
 // size of array must be the same as in c_tun_device_windows::m_buffer 
 bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &packet_data) {
@@ -124,22 +160,26 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 }
 
 uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
-
-	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+	if(little_edian)
 		next_hvalue = htonl(next_hvalue);
 
 	uint64_t result = 0;
 	uint8_t sd_addr_size = 32;
-	for (uint8_t i = 0; i < sd_addr_size/2; ++i)
-		result += reinterpret_cast<const uint16_t *>(source_destination_addr)[i];
-	for (uint32_t i = 0; i < length / 2; i++)
-		result += reinterpret_cast<const uint16_t *>(header_with_content)[i];
+	for (uint8_t i = 0; i < sd_addr_size; i += 2) {
+		result += source_destination_addr[i];
+		result += source_destination_addr[i + 1] << 8;
+	}
+
+	for (uint32_t i = 0; i < length; i += 2) {
+		result += header_with_content[i];
+		result += header_with_content[i + 1] << 8;
+	}
 
 	if (length & 1)
-		result += O32_HOST_ORDER == O32_BIG_ENDIAN ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
+		result += little_edian ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
 
-	uint32_t length_bigendian;
-	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+	uint32_t length_bigendian = length;
+	if(little_edian)
 		length_bigendian = htonl(length);
 
 	result += (length_bigendian >> 16) + (length_bigendian & 0xFFFF);
