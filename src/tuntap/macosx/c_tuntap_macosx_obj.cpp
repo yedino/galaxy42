@@ -19,9 +19,7 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
 }
 
 size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) {
-	std::array<unsigned char, 4> tun_header = {
-		0x00, 0x00, 0x00, 0x1E
-	};
+	std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};
 	std::array<boost::asio::const_buffer, 2> buffers;
 	buffers.at(0) = boost::asio::buffer(tun_header);
 	buffers.at(1) = boost::asio::buffer(data, size);
@@ -30,22 +28,13 @@ size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) 
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t size) {
-/* OLD STYLE todo - waiting for memory model
-size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
-    assert(m_readed_bytes > 0);
-    if(m_readed_bytes > count) _throw_error_runtime("undersized buffer");
-    // TUN header
-    m_buffer[0] = 0x00;
-    m_buffer[1] = 0x00;
-    m_buffer[2] = 0x86;
-    m_buffer[3] = 0xDD;
-    std::copy_n(&m_buffer[0], m_readed_bytes, static_cast<uint8_t *>(buf));
-    size_t ret = m_readed_bytes;
-    m_readed_bytes = 0;
-    return ret;
-}
-*/
-	return m_tun_stream.read_some(boost::asio::buffer(data, size));
+	size_t readed_bytes = m_tun_stream.read_some(boost::asio::buffer(data, size));
+	_check(size >= 4);
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x86;
+	data[3] = 0xDD;
+	return readed_bytes;
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
