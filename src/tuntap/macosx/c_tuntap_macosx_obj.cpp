@@ -41,8 +41,14 @@ size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
 		unsigned char * const data,
 		size_t size, std::array<unsigned char, IPV6_LEN> &src_binary_address,
 		std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
-			_NOTREADY();
-			return 0;
+			// field sizes based on rfc2460
+			// https://tools.ietf.org/html/rfc2460
+			std::array<boost::asio::mutable_buffer, 4> buffers;
+			buffers.at(0) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
+			buffers.at(1) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
+			buffers.at(2) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
+			buffers.at(3) = boost::asio::buffer(data + 8, size - 8); // 8 bytes are filled in buffers.at(0)
+			return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
 }
 
 void c_tuntap_macosx_obj::async_receive_from_tun(unsigned char * const data,
