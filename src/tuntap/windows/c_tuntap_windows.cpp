@@ -51,13 +51,16 @@ size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size)
 }
 
 size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t size) {
-	size_t readed_size = m_stream_handle.read_some(boost::asio::buffer(data, size));
-	if (c_ndp::is_packet_neighbor_solicitation(data, readed_size)) {
-		const std::array<unsigned char, 94> &neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement(m_mac_address.data(), data + 62, data + 22);
+	std::array<unsigned char, 14 + 40 + 65535> input_buffer;
+	const unsigned char * const ipv6_begin = input_buffer.data();
+	size_t readed_size = m_stream_handle.read_some(boost::asio::buffer(input_buffer.data(), input_buffer.size()));
+	if (c_ndp::is_packet_neighbor_solicitation(input_buffer.data(), readed_size)) {
+		const std::array<unsigned char, 94> &neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement(m_mac_address.data(), input_buffer.data() + 62, input_buffer.data() + 22);
 		m_stream_handle.write_some(boost::asio::buffer(neighbor_advertisement_packet_array));
 		return 0;
 	}
-	return readed_size;
+	std::copy_n(input_buffer.begin() + 14, readed_size - 14, data); // without eth header
+	return readed_size - 14;
 }
 
 size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
