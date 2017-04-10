@@ -28,13 +28,17 @@ size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) 
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t size) {
-	size_t readed_bytes = m_tun_stream.read_some(boost::asio::buffer(data, size));
+	std::array<boost::asio::mutable_buffer, 2> buffers;
+	std::array<unsigned char, 4> tun_header;
+	buffers.at(0) = boost::asio::buffer(tun_header);
+	buffers.at(1) = boost::asio::buffer(data, size);
+	size_t readed_bytes = m_tun_stream.read_some(buffers);
 	_check(size >= 4);
-	data[0] = 0x00;
+/*	data[0] = 0x00;
 	data[1] = 0x00;
 	data[2] = 0x86;
-	data[3] = 0xDD;
-	return readed_bytes;
+	data[3] = 0xDD;*/
+	return readed_bytes - 4;
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
