@@ -55,7 +55,7 @@ class c_ndp {
 template<typename T>
 bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) noexcept {
 	static_assert(CHAR_BIT == 8, "");
-	static_assert(sizeof(std::remove_pointer<decltype(data)>::type) == 1, "");
+	static_assert(sizeof(typename std::remove_pointer<decltype(data)>::type) == 1, "");
 	// ethernet header = 14
 	// ipv6 header = 40
 	// tested on wireshark
@@ -72,9 +72,9 @@ const std::array<unsigned char, 94> &c_ndp::generate_neighbor_advertisement(
 	const T * const destination_address_ipv6) noexcept {
 
 		static_assert(CHAR_BIT == 8, "");
-		static_assert(sizeof(std::remove_pointer<decltype(sol_src_mac)>::type) == 1, "");
-		static_assert(sizeof(std::remove_pointer<decltype(source_address_ipv6)>::type) == 1, "");
-		static_assert(sizeof(std::remove_pointer<decltype(destination_address_ipv6)>::type) == 1, "");
+		static_assert(sizeof(typename std::remove_pointer<decltype(sol_src_mac)>::type) == 1, "");
+		static_assert(sizeof(typename std::remove_pointer<decltype(source_address_ipv6)>::type) == 1, "");
+		static_assert(sizeof(typename std::remove_pointer<decltype(destination_address_ipv6)>::type) == 1, "");
 		std::copy(sol_src_mac, sol_src_mac + 6, &m_generate_neighbor_advertisement_packet.at(0)); // copy 6 bytes of mac address
 		std::copy(source_address_ipv6, source_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(22)); // copy ipv6 address into ipv6.src field
 		std::copy(destination_address_ipv6, destination_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(38)); // copy ipv6 address into ipv6.dst field
