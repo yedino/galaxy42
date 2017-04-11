@@ -3,6 +3,7 @@
 #include "rpc.hpp"
 #include "../trivialserialize.hpp"
 #include <json.hpp>
+#include <sodium.h>
 
 #define _dbg(X) do std::cout << X << "\n"; while(0)
 
@@ -11,8 +12,10 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 	m_io_service(),
 	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
 	m_socket(m_io_service),
-	m_thread_ptr(nullptr)
+	m_thread_ptr(nullptr),
+	m_hmac_key()
 {
+	m_hmac_key.fill(0x42); // TODO load this from conf file
 	// start waiting for new connection
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
 		accept_handler(error);
@@ -36,7 +39,7 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 		}
 
 		_dbg("RPC thread stop");
-	});
+	}); // lambda
 	if (!m_thread_ptr)
 		throw std::runtime_error("Can not start rpc server thread");
 }

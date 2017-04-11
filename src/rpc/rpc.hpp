@@ -17,6 +17,9 @@
 /**
  * @brief The c_rpc_sever class
  * !!! NEVER CHANGE ADDRESS OF THIS CLASS OBJECT !!!
+ * network message format:
+ * n[2 octets] == size of message
+ * message[n octets] == message in json format
  */
 class c_rpc_server final {
 	public:
@@ -40,6 +43,7 @@ class c_rpc_server final {
 		std::mutex m_session_vector_mutex;
 		std::list<c_session> m_session_list;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
+		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key, shold be loaded from conf file TODO
 
 		void accept_handler(const boost::system::error_code &error);
 		void remove_session_from_vector(std::list<c_session>::iterator it);
@@ -56,7 +60,7 @@ class c_rpc_server final {
 				boost::asio::ip::tcp::socket m_socket;
 				std::string m_received_data;
 				std::string m_write_data;
-				std::array<uint8_t, 2> m_data_size; // always first 2 bytes of packet == message size
+				std::array<unsigned char, 2> m_data_size; // always first 2 bytes of packet == message size
 
 				void read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred); ///< data readed to m_read_data_size
 				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
