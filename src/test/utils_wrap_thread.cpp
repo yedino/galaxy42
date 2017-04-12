@@ -5,13 +5,18 @@
 
 #include "../utils/wrap_thread.hpp"
 #include "../libs0.hpp"
+/*
+TEST(utils_wrap_thread, simple_thread_replace) {
+	// we create an empty thread and immediately replace it with another one
+	wrap_thread wt;
+	wt = std::move(wrap_thread());
+}
 
 TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 	g_dbg_level_set(10,"test");
 
 	std::vector<wrap_thread> vec;
 	vec.resize(1);
-	vec.at(0) = std::move(wrap_thread());
 
 	// with normal thread, it would continue to run because it was spawned
 	// in the temporary - we would have created std::thread( {some..work..in..lanbda} )
@@ -56,3 +61,4 @@ TEST(utils_wrap_thread, manual_join) {
 	wrap_thread local_wrap_thread1(fun1, 3);
 	local_wrap_thread1.join();
 }
+*/
