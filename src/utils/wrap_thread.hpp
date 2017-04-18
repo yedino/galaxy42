@@ -28,11 +28,13 @@ class wrap_thread {
 		/// this creates an thread that will auto-join itself in destructor (unless caller does the join himself first);
 		/// In that automated join, the program will wait the specified time to be joined.
 		/// If it's not joined by then, the it aborts/terminates.
+		/// @param destroy_time - should be passed as std::chrono::seconds
+		/// 	any other "time/chrono" variable will be interpreted as function and will run previous constructor.
 		template<typename Function, typename ...Args>
-		explicit wrap_thread(std::chrono::duration<double> destroy_time, Function&& f, Args&&... arg)
+		explicit wrap_thread(std::chrono::seconds destroy_time, Function&& f, Args&&... arg)
 			: wrap_thread(std::forward<Function>(f), std::forward<Args>(arg)...) {
 
-			m_destroy_timeout=std::chrono::duration_cast<std::chrono::seconds> (destroy_time);
+			m_destroy_timeout=destroy_time;
 		}
 
 		wrap_thread(const wrap_thread &) = delete;
