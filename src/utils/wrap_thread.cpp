@@ -88,6 +88,9 @@ wrap_thread::~wrap_thread()  {
 			std::abort();
 		}
 		m_future.get();
+	} else {
+		_erro("This thread was not joined!");
+		std::abort();
 	}
 }
 
