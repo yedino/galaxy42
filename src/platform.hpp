@@ -1,6 +1,7 @@
 #pragma once
 #if __linux__
 	#define ANTINET_linux
+	#define ATTR_NODISCARD __attribute__((warn_unused_result))
 #elif defined(_WIN32) || defined(__CYGWIN__)
 	#define ANTINET_windows
 	#define UNICODE

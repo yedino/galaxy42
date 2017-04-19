@@ -12,7 +12,7 @@ using namespace time_utils;
 /// More advanced then std::thread. Will join itself on destruction to avoid certain UBs. Has debug and stats.
 /// @owner hb
 class wrap_thread {
-	public:ATTR_NODISCARD
+	public:
 		/// Creates an empty-thread, that does nothing.
 		/// It does not have to be joined. It does not start any thread.
 		wrap_thread() noexcept;
@@ -48,7 +48,7 @@ class wrap_thread {
 
 		/// It will wait at most around "duration" time, and if thread is not joined by then then it return false;
 		/// otherwise it returns true; if thread is joined (e.g. the thread finished, or it was an empty thread).
-		bool try_join(std::chrono::duration<double> duration);
+		ATTR_NODISCARD bool try_join(std::chrono::duration<double> duration);
 
 		~wrap_thread();
 
