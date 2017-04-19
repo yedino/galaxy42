@@ -33,7 +33,10 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 
 	endflag=true;
 	EXPECT_THROW( vec.at(1) , std::out_of_range );
-	EXPECT_THROW( vec.at(1).try_join(std::chrono::seconds(1)) , std::out_of_range );
+	EXPECT_THROW(
+		// get rid of ATTR_NODISCARD warn at compile time
+		EXPECT_FALSE( vec.at(1).try_join(std::chrono::seconds(1)) ),
+		std::out_of_range );
 	// we would have a problem here with normal std::thread, but here it will join itself
 }
 
@@ -58,8 +61,8 @@ TEST(utils_wrap_thread, different_construct) {
 	// from now local_wrap_thread2 is empty!
 
 	// try_join
-	local_wrap_thread.try_join(std::chrono::seconds(1));
-	local_wrap_thread3.try_join(std::chrono::seconds(1));
+	EXPECT_FALSE( local_wrap_thread.try_join(std::chrono::seconds(1)) );
+	EXPECT_FALSE( local_wrap_thread3.try_join(std::chrono::seconds(1)) );
 }
 
 // should not abort
@@ -73,7 +76,7 @@ TEST(utils_wrap_thread, try_join) {
 	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(fun1, 3);
-	local_wrap_thread1.try_join(std::chrono::seconds(1));
+	EXPECT_FALSE( local_wrap_thread1.try_join(std::chrono::seconds(1)) );
 }
 
 TEST(utils_wrap_thread, simple_functions) {
@@ -83,9 +86,9 @@ TEST(utils_wrap_thread, simple_functions) {
 	wrap_thread local_wrap_thread2(fun1, 3);
 	wrap_thread local_wrap_thread3(fun2, 4, 7);
 
-	local_wrap_thread1.try_join(std::chrono::seconds(1));
-	local_wrap_thread2.try_join(std::chrono::seconds(1));
-	local_wrap_thread3.try_join(std::chrono::seconds(1));
+	EXPECT_FALSE( local_wrap_thread1.try_join(std::chrono::seconds(1)) );
+	EXPECT_FALSE( local_wrap_thread2.try_join(std::chrono::seconds(1)) );
+	EXPECT_FALSE( local_wrap_thread3.try_join(std::chrono::seconds(1)) );
 }
 
 TEST(utils_wrap_thread, abort_not_joined) {

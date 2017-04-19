@@ -1,7 +1,6 @@
 #include "wrap_thread.hpp"
 #include "libs0.hpp"
 
-#include <iomanip>
 
 wrap_thread::wrap_thread() noexcept
 	:
@@ -64,8 +63,8 @@ bool wrap_thread::try_join(std::chrono::duration<double> duration) {
 		_warn("try_join: can not end thread in given time");
 		return true;
 	} else {
-		m_time_stopped = t_clock::now();
-		_info("Successfull joined wrap_thread");
+		m_time_stopped = t_sysclock::now();
+		_info("Successfully joined wrap_thread");
 		m_future.get();
 		return false;
 	}
@@ -74,7 +73,7 @@ bool wrap_thread::try_join(std::chrono::duration<double> duration) {
 
 wrap_thread::~wrap_thread()  {
 
-	m_time_stopped = t_clock::now();
+	m_time_stopped = t_sysclock::now();
 	_info(info());
 
 	if(!m_future.valid())
@@ -91,15 +90,6 @@ wrap_thread::~wrap_thread()  {
 		_erro("This thread was not joined!");
 		std::abort();
 	}
-}
-
-std::string wrap_thread::timepoint_to_readable(const t_timepoint &tp) const {
-
-	std::time_t now_c = std::chrono::system_clock::to_time_t(tp);
-	std::stringstream ss;
-	ss << std::put_time(std::localtime(&now_c), "%Om-%Y-%T");
-
-	return ss.str();
 }
 
 
