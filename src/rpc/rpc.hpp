@@ -20,6 +20,7 @@
  * network message format:
  * n[2 octets] == size of message
  * message[n octets] == message in json format
+ * crypto_hash_sha512_BYTES bytes of HMAC SHA-512
  */
 class c_rpc_server final {
 	public:
