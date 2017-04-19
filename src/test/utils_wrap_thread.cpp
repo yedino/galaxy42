@@ -8,6 +8,7 @@
 
 
 TEST(utils_wrap_thread, simple_thread_replace) {
+	g_dbg_level_set(10,"test");
 	// we create an empty thread and immediately replace it with another one
 	wrap_thread wt;
 	wt = std::move(wrap_thread());
@@ -18,6 +19,7 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 
 	std::vector<wrap_thread> vec;
 	vec.resize(1);
+	vec.at(0) = wrap_thread();
 
 	// with normal thread, it would continue to run because it was spawned
 	// in the temporary - we would have created std::thread( {some..work..in..lanbda} )
@@ -46,6 +48,7 @@ void fun2(int i, int j) {
 }
 
 TEST(utils_wrap_thread, different_construct) {
+	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread; // default constr
 	local_wrap_thread = wrap_thread(fun0); // operator=
@@ -61,17 +64,20 @@ TEST(utils_wrap_thread, different_construct) {
 
 // should not abort
 TEST(utils_wrap_thread, destruct_join) {
+	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(std::chrono::seconds(3),fun1, 3);
 }
 
 TEST(utils_wrap_thread, try_join) {
+	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(fun1, 3);
 	local_wrap_thread1.try_join(std::chrono::seconds(1));
 }
 
 TEST(utils_wrap_thread, simple_functions) {
+	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(fun0);
 	wrap_thread local_wrap_thread2(fun1, 3);
@@ -83,6 +89,7 @@ TEST(utils_wrap_thread, simple_functions) {
 }
 
 TEST(utils_wrap_thread, abort_not_joined) {
+	g_dbg_level_set(10,"test");
 
 	EXPECT_DEATH({
 		{
