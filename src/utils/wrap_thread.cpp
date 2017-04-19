@@ -1,14 +1,16 @@
 #include "wrap_thread.hpp"
 #include "libs0.hpp"
 
+#include <iomanip>
+
 wrap_thread::wrap_thread() noexcept
 	:
 	m_time_created( t_timepoint::clock::now() ), // created now
 	m_time_started( t_timepoint::min() ),
 	m_time_stopped( t_timepoint::min() )
 {
-	_note("Created thread: " << this->info());
 	m_destroy_timeout=std::chrono::seconds(0);
+	_note("Created thread: " << this->info());
 }
 
 wrap_thread::wrap_thread(wrap_thread &&rhs) noexcept {
@@ -37,8 +39,6 @@ wrap_thread &wrap_thread::operator=(wrap_thread &&rhs) noexcept {
 void wrap_thread::join() {
 	if(!m_future.valid())
 		return;
-	m_time_stopped = t_clock::now();
-	_info(info());
 	if (m_destroy_timeout == std::chrono::seconds(0)) {
 		_erro("wrap_thread with not set time should be joined manualy using try_join()!");
 		std::abort();
@@ -66,7 +66,6 @@ bool wrap_thread::try_join(std::chrono::duration<double> duration) {
 	} else {
 		m_time_stopped = t_clock::now();
 		_info("Successfull joined wrap_thread");
-		_info(info());
 		m_future.get();
 		return false;
 	}
@@ -94,11 +93,31 @@ wrap_thread::~wrap_thread()  {
 	}
 }
 
-std::string wrap_thread::info() const {
+std::string wrap_thread::timepoint_to_readable(const t_timepoint &tp) const {
+
+	std::time_t now_c = std::chrono::system_clock::to_time_t(tp);
 	std::stringstream ss;
-	ss << "Destroy thread timeout in sec " << m_destroy_timeout.count() << '\n';
-	ss << "time created since epoch " << m_time_created.time_since_epoch().count() << '\n';
-	ss << "time started since epoch " << m_time_started.time_since_epoch().count() << '\n';
-	ss << "time stopped since epoch " << m_time_stopped.time_since_epoch().count() << '\n';
+	ss << std::put_time(std::localtime(&now_c), "%Om-%Y-%T");
+
+	return ss.str();
+}
+
+
+std::string wrap_thread::info() const {
+
+	std::stringstream ss;
+	if(m_destroy_timeout != std::chrono::seconds(0)) {
+		ss << "Destroy thread timeout in sec " << m_destroy_timeout.count() << '\n';
+	} else {
+		ss << "Destroy thread timeout not set\n";
+	}
+	if(m_time_created != t_timepoint::min())
+		ss << "time created: " << timepoint_to_readable(m_time_created) << '\n';
+	if(m_time_started != t_timepoint::min()) {
+		ss << "time started: " << timepoint_to_readable(m_time_started) << '\n';
+		ss << "time stopped: " << timepoint_to_readable(m_time_stopped) << '\n';
+	} else
+		ss << "thread was not started\n";
+
 	return ss.str();
 }
