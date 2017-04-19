@@ -52,7 +52,7 @@ class wrap_thread {
 
 		std::string info() const; ///< return for debug summary of this object
 
-		using t_clock = decltype(std::chrono::steady_clock()) ;  ///< clock I will use for my timing
+		using t_clock = decltype(std::chrono::system_clock()) ;  ///< clock I will use for my timing
 		using t_timepoint = std::chrono::time_point<t_clock>; ////< timepoint I will use for my timing
 
 	private:
@@ -60,6 +60,8 @@ class wrap_thread {
 		void join();
 
 		std::future<void> m_future;
+
+		std::string timepoint_to_readable(const t_timepoint &tp) const;
 
 		t_timepoint m_time_created; ///< when was this thread created first
 		t_timepoint m_time_started; ///< when was this thread last time created/assigned
