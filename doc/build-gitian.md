@@ -126,7 +126,7 @@ Q: I can't get in to gitian-lxc machine $ ./build-gitian on-taret
  
 A: Probably you don't have set br0 bridge. Try to run again install.sh script with custom *bgitian option.
 - another solution is to run manualy  
-    ```$ sudo /etc/rc/local```
+    ```$ sudo /etc/rc.local```
  
     /etc/rc.local file should contain line:  
     ``` sh /etc/rc.local.lxcnet-gitian```

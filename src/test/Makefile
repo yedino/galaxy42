@@ -2,5 +2,5 @@
 .PHONY: run
 
 run:
-	( cd ../../build && make && ./test-debug.elf --gtest_filter=galaxysrv_peers.*:utils_wrap_thread*.* )
+	( cd ../../build && make && ./test-debug.elf --gtest_filter=*cable*.* )
 

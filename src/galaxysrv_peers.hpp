@@ -6,6 +6,7 @@
 #include "gtest/gtest_prod.h"
 
 #include "haship.hpp"
+#include "cable/cards.hpp"
 #include "cable/base/cable_base_addr.hpp"
 
 /// The "static" reference to a peer, not so much the run-time state of it.
@@ -54,6 +55,7 @@ class c_galaxysrv_peers {
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
 
 		vector<unique_ptr<c_peer_connection>> m_peer; ///< my peers (connected or not), including unknown yet peers "anyone@cable"
+		c_cable_cards m_cable_cards; ///< my cards to use the cables (transports), this objects represent my virtual transport network "card"
 
 		FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test);
 		FRIEND_TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test);
