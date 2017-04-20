@@ -11,10 +11,11 @@ static const bool little_edian = [] {
 	return ((reinterpret_cast<unsigned char *>(&number))[0] == 1);
 }();
 
+// Here we build ethernet frame template (level 2) as in https://en.wikipedia.org/wiki/Ethernet_frame#Ethernet_II
 std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = {
 	//*** ethernet header ***//
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC will be set later
-	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
+	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same, only this seems to work; Tested 0xFD 00 ... 00 it does not work
 	0x86, 0xDD, 	// EtherType 0x86DD == IPv6 (https://en.wikipedia.org/wiki/EtherType)
 
 	//*** ipv6 header ***//
@@ -22,20 +23,21 @@ std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = 
 	0x00, 0x28, // payload len, TODO current value is from wireshark
 	0x3A, // next header 56 == ICMPv6
 	0xFF, // hop limit
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // source ipv6 address (will be filed later)
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // source ipv6 address (filled later in the code using this packet-template)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address (will be filed later)
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address (filled later in the code using this packet-template)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
 	//*** icmpv6 ***//
+	// Below we have the body of NDP-reply, as in: https://tools.ietf.org/html/rfc4861#section-4.4
 	0x88, // type 136 (Neighbor Advertisement) https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol_version_6
 	0x00, // code
-	0x00, 0x00, // checksum (will be filed later)
+	0x00, 0x00, // checksum (filled later in the code using this packet-template)
 	0xE0, // set flags R, S, O
 	0x00, 0x00, 0x00, // reserved
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // target ipv6 address (will be filed later)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x02, 0x01, // options
+	0x02, 0x01, // options, works this way, tested in Wireshark; Could be explained more based on RFC4861 "Possible options:" in 4.4
 	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
 	0x01, // type: source link-layer address
 	0x01, // length
