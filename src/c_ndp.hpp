@@ -11,9 +11,19 @@ class c_tun_device_windows;
 
 /**
  * @brief The c_ndp class
- * generate NDP response (neighbor advertisement packet) for NDP request (neighbor solicitation packet request)
+ * This Class sends NDP (Neighbor Discovery Protocol) packets
  * Neighbor Discovery Protocol is described in rfc4861
  * https://tools.ietf.org/html/rfc4861
+ *
+ * this will be used when one computer is windows, that is:
+ * (Windows galaxy42 peer) -----> (Linux galaxy42 peer)
+ *
+ * 1) Windows application wants to send packet to fd42::abcd - therefore it will use galaxy42 tuntap
+ * 2) Windows kernel first automatically sends an NDP-request packet (to see that there are any peers available through that tuntap - otherwise it would conclude there are 0 devices with ipv6 connected to this tuntap and would drop all packets it seems)
+ * 3) Windows gives this NDP-request packet into galaxy42 because it is sent via tuntap, it is an ICMPv6
+ * 4) Windows galaxy42 program (we here) see the NDP-request, and we react to it, by sending back to tuntap an NDP-reply
+ * 5) Windows kernel sees the NDP-reply, and thinks there are connected ipv6-peers to that tuntap, and it will allow to send IPv6 over this tuntap from now on
+ * 6) We (windows galaxy42 program) reply back to ourselves
  */
 
 class c_ndp {
