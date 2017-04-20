@@ -6,6 +6,8 @@
 
 using namespace time_utils;
 
+// TODO test for Leap second
+
 std::string gen_formated_date(int year, int month, int day) {
 	std::time_t t = std::time(NULL);
 	std::tm tm = *std::localtime(&t);
