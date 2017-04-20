@@ -39,7 +39,12 @@ TEST(time_utils, check_readable_time_length) {
 TEST(time_utils, check_readable_time_regex) {
 
 	//example match: 2017-01-02T09:10:53+00:00
-	std::regex re(R"(^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:Z|[+-][01]\d:[0-5]\d)$)");
+	const std::string year_regexp(R"((?:[1-9]\d{3})");
+	const std::string month_regexp(R"((?:(?:0[1-9]|1[0-2]))");
+	const std::string day_regexp(R"((?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29))");
+	const std::string hour(R"((?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d)");
+	const std::string timeshift(R"((?:Z|[+-][01]\d:[0-5]\d))");
+	std::regex re("^" + year_regexp + "-" + month_regexp + "-" + day_regexp + "T" + hour + timeshift + "$");
 	std::smatch result;
 
 
