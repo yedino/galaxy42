@@ -13,8 +13,13 @@ and stdplus/misc are assorted parts of that
 #include <memory>
 #include <string>
 #include <sstream>
+#include <limits>
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <limits>
+
+#include "tnetdbg.hpp"
+#include "utils/check.hpp"
 
 namespace stdplus {
 
@@ -29,8 +34,15 @@ std::string STR(const T & obj) { ///< stringify any object
 	return oss.str();
 }
 
-template <typename TE, typename TI>
-TE int_to_enum(TI i) { ///< convert integer into enum of given type, throw if this value is not represented in target enum
+template <typename TE>
+TE int_to_enum(int i) { ///< convert integer into enum of given type, throw if this value is not represented in target enum
+	// TODO assert that the type TE is an defined enum here?
+	static_assert( std::is_enum<TE>::value , "Must be an enum type (defined enum)");
+
+	// assert that the type i will over/under flow (e.g. wrap back to some valid value causing undetected error)
+	_check_input( static_cast<long long int>(i)  <= static_cast<long long int>( std::numeric_limits< typename std::underlying_type<TE>::type >::max() ) ); // TODO it's afe compare - upcast both types to long long... make tool for this idiom?
+	_check_input( i >= 0 );
+
 	TE e = static_cast<TE>(i);
 	if (! enum_is_valid_value(e) ) {
 		std::string err = "Can not convert integer " + std::to_string(i)
