@@ -6,7 +6,7 @@
 
 using namespace time_utils;
 
-// TODO test for Leap second
+// TODO write unit test that meet "Leap second" exception
 
 std::string gen_formated_date(int year, int month, int day) {
 	std::time_t t = std::time(NULL);
