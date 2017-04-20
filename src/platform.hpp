@@ -1,4 +1,5 @@
 #pragma once
+// test for little/big edian is in src/c_ndp.cpp
 #if __linux__
 	#define ANTINET_linux
 #elif defined(_WIN32) || defined(__CYGWIN__)

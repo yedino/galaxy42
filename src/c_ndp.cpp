@@ -8,7 +8,7 @@
 
 static const bool little_edian = [] {
 	uint16_t number = 1;
-	return (reinterpret_cast<unsigned char *>(&number)[0] == 1);
+	return ((reinterpret_cast<unsigned char *>(&number))[0] == 1);
 }();
 
 std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = {
@@ -22,18 +22,18 @@ std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = 
 	0x00, 0x28, // payload len, TODO current value is from wireshark
 	0x3A, // next header 56 == ICMPv6
 	0xFF, // hop limit
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // source ipv6 address
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // source ipv6 address (will be filed later)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address (will be filed later)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
 	//*** icmpv6 ***//
 	0x88, // type 136 (Neighbor Advertisement) https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol_version_6
 	0x00, // code
-	0x00, 0x00, // checksum
+	0x00, 0x00, // checksum (will be filed later)
 	0xE0, // set flags R, S, O
 	0x00, 0x00, 0x00, // reserved
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // target ipv6 address
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // target ipv6 address (will be filed later)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x02, 0x01, // options
 	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
@@ -44,31 +44,10 @@ std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = 
 
 // size of array must be the same as in c_tun_device_windows::m_buffer 
 bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &packet_data) {
-/*	const uint8_t const * source_arrdess = &packet_data.front() + 22;
-	const uint8_t const * destination_arrdess = &packet_data.front() + 38;
-
-	std::cout << "src address ";
-	const uint8_t *it = source_arrdess;
-	for (int i = 0; i < 16; ++i) {
-		std::cout << std::hex << std::setw(2) << std::setfill('0') <<  static_cast<int>(*it);
-		++it;
-	}
-	std::cout << std::endl;
-
-	std::cout << "dst address ";
-	it = destination_arrdess;
-	for (int i = 0; i < 16; ++i) {
-		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*it);
-		++it;
-	}
-	std::cout << std::endl;
-	*/
 	// ethernet header = 14
 	// ipv6 header = 40
-	// tested od wireshark
+	// tested in wireshark
 	const uint8_t * const packet_type = &packet_data.front() + 14 + 40;
-
-	//std::cout << "packet type " << std::dec << std::setw(2) << std::setfill('0') << static_cast<int>(*packet_type) << std::endl;
 
 	if (*packet_type == 135) return true;
 	return false;
