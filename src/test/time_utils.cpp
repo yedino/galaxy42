@@ -65,3 +65,8 @@ TEST(time_utils, check_readable_time_regex) {
 	_mark("time: " << formated << ", formated_length: " << formated.length());
 }
 
+TEST(time_utils, t_timepoint_overload) {
+	t_timepoint now_time = t_timepoint::clock::now();
+	std::string formated = timepoint_to_readable(now_time);
+	EXPECT_TRUE(formated.length() == 25);
+}
