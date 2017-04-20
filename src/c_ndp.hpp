@@ -9,8 +9,16 @@
 
 class c_tun_device_windows;
 
+/**
+ * @brief The c_ndp class
+ * generate NDP response (neighbor advertisement packet) for NDP request (neighbor solicitation packet request)
+ * Neighbor Discovery Protocol is described in rfc4861
+ * https://tools.ietf.org/html/rfc4861
+ */
+
 class c_ndp {
 	public:
+		[[deprecated]]
 		static bool is_packet_neighbor_solicitation
 			(const std::array<uint8_t, 9000> &packet_data);
 
@@ -22,6 +30,7 @@ class c_ndp {
 		template <typename T>
 		static bool is_packet_neighbor_solicitation(const T * const data, size_t size) noexcept;
 
+		[[deprecated]]
 		static std::array<uint8_t, 94> generate_neighbor_advertisement
 			(const std::array<uint8_t, 9000> &neighbor_solicitation_packet);
 
