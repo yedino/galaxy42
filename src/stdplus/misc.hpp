@@ -32,11 +32,9 @@ std::string STR(const T & obj) { ///< stringify any object
 template <typename TE, typename TI>
 TE int_to_enum(TI i) { ///< convert integer into enum of given type, throw if this value is not represented in target enum
 	TE e = static_cast<TE>(i);
-	TI i_check = static_cast<TI>(e);
-	if (i_check != i) {
+	if (! enum_is_valid_value(e) ) {
 		std::string err = "Can not convert integer " + std::to_string(i)
 		+ std::string(" to enum of type ") + std::string(typeid(TE).name())
-		+ std::string(" because it is truncated to other value: ") + std::to_string( i_check )
 		;
 		throw std::runtime_error(err);
 	}

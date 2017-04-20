@@ -74,6 +74,20 @@ Catch it using:
 // catch soft (expected) error, but hard errors propagate
   catch(err_check_soft &soft) { string info = soft.what_soft(); }
 // for more see chapter Check-asserts
+
+enum class t_temper { cold=15, hot=80 }; // for (de)serializable Enums. See "Enum" below.
+inline bool enum_is_valid_value(t_temper value) {
+	switch (value) {
+		case t_temper::cold :
+		case t_temper::hot :
+		return true;
+	}
+	return false;
+}
+
+t_temper water_temp = int_to_enum<t_temper>( 80 ); // asserted
+
+
 ```
 
 # Building
@@ -123,10 +137,28 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 
 ## Editor
 
-Following comment-line horizontal ruler ornaments are used (given here as `.vimrc` macros to be pasted);
+### Editing source code (and in general text files)
+
+Identation is done with tab-characters.
+Files should be in UTF-8, using Unix line-end markers (exceptions allowed for files edited on windows, temporarly).
+
+We assume/recommend to display tabs as 2-character-wide.
+We recommend keeping lines-length below 100-120, max 130 collumns (with following tab size).
+
+Following comment-line horizontal ruler ornaments are used (given here below as `.vimrc` macros to be pasted);
 Optionally, following marking of leave-block instructions (to be used especially when block is exited suddently instead at normal end of it)
 
+Recommended vimrc settings to use if that is your editor:
+
 ```vim
+:set noexpandtab
+:set copyindent
+:set smarttab
+:set smartindent
+:set softtabstop=0
+:set shiftwidth=2
+:set tabstop=2
+
 iabbrev !!# // ###########################################################################################################
 iabbrev !!= // ===========================================================================================================
 iabbrev !!- // -------------------------------------------------------------------
@@ -148,6 +180,13 @@ catch(err_check_user &ex) { string info = ex.what(); } // catch error (soft of h
 catch(err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
 catch(err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
 ```
+
+## Enum
+
+When using enums, try to use enum-class.
+If given enum needs to be (de)serializable or otherwise convertible from-integer, then provide override of function:
+inline bool enum_is_valid_value(t_your_enum_type value);
+that will return true if given enum has allowed value in it; else false. See unit tests (stdplus_misc.cpp) for example.
 
 ### Startup of TUN/TAP card
 
