@@ -4,8 +4,11 @@
 #include <ctime>
 
 std::string time_utils::timepoint_to_readable(const time_utils::t_timepoint &tp) {
-
 	std::time_t time = std::chrono::system_clock::to_time_t(tp);
+	return timepoint_to_readable(time);
+}
+
+std::string time_utils::timepoint_to_readable(const std::time_t &time) {
 	std::stringstream ss;
 	ss << std::put_time(std::gmtime(&time), "%FT%T");
 
@@ -16,7 +19,7 @@ std::string time_utils::timepoint_to_readable(const time_utils::t_timepoint &tp)
 
 std::string time_utils::get_zone_iso8601(const std::time_t &time) {
 	std::stringstream zone;
-	zone << std::put_time(std::gmtime(&time), "%z");
+	zone << std::put_time(std::localtime(&time), "%z");
 
 	std::string zone_str = zone.str();
 	zone_str.insert(zone_str.end()-2,':');
