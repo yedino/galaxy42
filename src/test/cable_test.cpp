@@ -4,6 +4,7 @@
 #include <cable/simulation/cable_simul_addr.hpp>
 #include <cable/simulation/world.hpp>
 #include <cable/udp/cable_udp_addr.hpp>
+#include <cable/asio_ioservice_manager.hpp>
 #include <iostream>
 
 TEST(cable_Test, operators_test) {
@@ -36,4 +37,33 @@ TEST(cable_Test, operators_test) {
 	EXPECT_LT(UsePtr(default_port_as_udp_addr2), UsePtr(default_as_udp_addr2));
 	EXPECT_LT(UsePtr(shm_addr1), UsePtr(default_as_udp_addr2));
 	EXPECT_LT(UsePtr(shm_addr1), UsePtr(shm_addr3));
+}
+
+TEST(c_asioservice_menager_test, resize_to_at_least_test)
+{
+	size_t size = 1;
+	c_asioservice_manager manager(size);
+	size_t capacity = manager.capacity();
+	EXPECT_EQ(manager.size(), size);
+
+	manager.resize_to_at_least(size);
+	EXPECT_EQ(manager.size(), size);
+
+	manager.resize_to_at_least(size-1);
+	EXPECT_EQ(manager.size(), size);
+
+	if (size + 1 <= manager.capacity())
+		size++;
+	manager.resize_to_at_least(size);
+	EXPECT_EQ(manager.size(), size);
+	EXPECT_EQ(manager.capacity(), capacity);
+
+	size = manager.capacity()-1;
+	manager.resize_to_at_least(size);
+	EXPECT_EQ(manager.size(), size);
+
+	size = manager.capacity();
+	manager.resize_to_at_least(size);
+	EXPECT_EQ(manager.size(), size);
+	EXPECT_THROW(manager.resize_to_at_least(manager.capacity()+1), err_check_prog);
 }

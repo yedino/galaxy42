@@ -3,6 +3,8 @@
 
 #pragma once
 
+/// @owner owner_of_file
+
 #include "galaxysrv.hpp"
 #include "galaxysrv_peers.hpp"
 #include "galaxysrv_cables.hpp"
@@ -45,6 +47,7 @@
 
 // gal.peers.peers_add();
 
+/// @owner magaNet_user
 class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e {
 	public:
 		c_galaxysrv()=default;
@@ -65,7 +68,10 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		c_haship_addr get_my_hip() const; ///< get your main hash-ip (ipv6)
 
+		/// @owner main_loop_engineer refactored fast loop that do everything
 		void main_loop();
+
+		void start_exit(); ///< start exiting: sets #m_exiting and tries to close connections etc.
 
 	protected:
 
@@ -94,6 +100,8 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 			#error "This platform is not supported"
 		#endif
 		/// @}
+
+		bool m_exiting=false; ///< are we now in exiting mode, then we should be refusing/closing connections etc
 };
 
 // -------------------------------------------------------------------
