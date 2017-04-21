@@ -8,7 +8,6 @@ using namespace time_utils;
 
 // TODO write unit test that meet "Leap second" exception
 
-
 TEST(time_utils, check_readable_time_length) {
 
 	std::string formated = time_t_to_readable(gen_exact_date(1023,6,1,1,1,1));
@@ -23,8 +22,7 @@ TEST(time_utils, check_readable_time_length) {
 }
 
 TEST(time_utils, check_readable_time_regex) {
-	//setenv("TZ", "UTC", 1);
-	//tzset();
+
 	//example match: 2017-01-02T09:10:53+00:00
 	const std::string year_regexp(R"((?:[1-9]\d{3})");
 	const std::string month_regexp(R"((?:(?:0[1-9]|1[0-2]))");
@@ -71,4 +69,11 @@ TEST(time_utils, exact_data_check) {
 	formated = time_t_to_readable(gen_exact_date(2022,12,15,15,0,0), "Pacific/Galapagos");
 	_mark("time Pacific/Galapagos: " << formated << ", formated_length: " << formated.length());
 	EXPECT_EQ(formated, "2022-12-15T15:00:00-06:00");
+}
+
+TEST(time_utils, default_tz) {
+
+	unsetenv("TZ");
+	std::string formated = time_t_to_readable(gen_exact_date(2019,11,21,11,10,30));
+	EXPECT_TRUE(formated.find("2019-11-21T11:10:30") != std::string::npos);
 }
