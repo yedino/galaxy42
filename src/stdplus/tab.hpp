@@ -16,6 +16,24 @@ stdplus/tab focuses on containers support
 
 namespace stdplus {
 
+/**
+ * Check if elements of container are stored contiguously
+ */
+template <typename T>
+struct is_stl_container_contiguously : std::false_type {
+};
+
+template <typename T, typename A>
+struct is_stl_container_contiguously<std::vector<T, A>> : std::true_type {
+};
+
+template <typename T, size_t N>
+struct is_stl_container_contiguously<std::array<T, N>> : std::true_type {
+};
+
+template <typename T>
+struct is_stl_container_contiguously<std::basic_string<T>> : std::true_type {
+};
 
 /*
 Copies n elements from tab_src container (starting from offset_src)
@@ -27,6 +45,8 @@ how ever it can also do nothing if given invalid condition was not needed anyway
 */
 template <class T1, class T2>
 typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst, size_t offset_src=0, size_t offset_dst=0) {
+	static_assert(is_stl_container_contiguously<T1>::value, "Template parameter T1 is not stl contiguously container");
+	static_assert(is_stl_container_contiguously<T2>::value, "Template parameter T2 is not stl contiguously container");
 	if (n<1) return tab_dst.begin();
 
 	// source

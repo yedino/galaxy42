@@ -39,6 +39,7 @@ std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x02, 0x01, // options, works this way, tested in Wireshark; Could be explained more based on RFC4861 "Possible options:" in 4.4
 	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
+	// optins described in https://tools.ietf.org/html/rfc4861#section-4.6
 	0x01, // type: source link-layer address
 	0x01, // length
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // link layer address
