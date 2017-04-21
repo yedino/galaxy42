@@ -51,7 +51,6 @@ void fun2(int i, int j) {
 }
 
 TEST(utils_wrap_thread, different_construct) {
-	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread; // default constr
 	local_wrap_thread = wrap_thread(fun0); // operator=
@@ -67,20 +66,17 @@ TEST(utils_wrap_thread, different_construct) {
 
 // should not abort
 TEST(utils_wrap_thread, destruct_join) {
-	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(std::chrono::seconds(3),fun1, 3);
 }
 
 TEST(utils_wrap_thread, try_join) {
-	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(fun1, 3);
 	EXPECT_FALSE( local_wrap_thread1.try_join(std::chrono::seconds(1)) );
 }
 
 TEST(utils_wrap_thread, simple_functions) {
-	g_dbg_level_set(10,"test");
 
 	wrap_thread local_wrap_thread1(fun0);
 	wrap_thread local_wrap_thread2(fun1, 3);
@@ -92,7 +88,6 @@ TEST(utils_wrap_thread, simple_functions) {
 }
 
 TEST(utils_wrap_thread, abort_not_joined) {
-	g_dbg_level_set(10,"test");
 
 	EXPECT_DEATH({
 		{
@@ -100,4 +95,40 @@ TEST(utils_wrap_thread, abort_not_joined) {
 		}
 	}
 	, ""); // catch std::abort
+}
+
+TEST(utils_wrap_thread, crossover_timelimit) {
+	g_dbg_level_set(10,"test");
+	using namespace std::chrono_literals;
+	EXPECT_DEATH({
+		{
+			wrap_thread notpossible(1s,[](){ std::this_thread::sleep_for(2s); });
+		}
+	}
+	, ""); // catch std::abort
+}
+
+TEST(utils_wrap_thread, assign_to_myself_not_possible) {
+	using namespace std::chrono_literals;
+
+	EXPECT_DEATH({
+		{
+			// 1 second limit, 10 second sleep
+			wrap_thread not_possible(1s,[](){ std::this_thread::sleep_for(10s); });
+			not_possible = std::move(not_possible);
+
+			wrap_thread not_possible2(1s,[](){ std::this_thread::sleep_for(10s); });
+			not_possible=std::move(not_possible2);
+		}
+	}
+	, ""); // catch std::abort
+}
+
+TEST(utils_wrap_thread, assign_to_myself_possible) {
+	using namespace std::chrono_literals;
+	wrap_thread possible(3s,[](){ std::this_thread::sleep_for(1s); });
+	possible = std::move(possible);
+
+	wrap_thread possible2(3s,[](){ std::this_thread::sleep_for(1s); });
+	possible=std::move(possible2);
 }
