@@ -14,9 +14,6 @@ wrap_thread::wrap_thread() noexcept
 
 wrap_thread::wrap_thread(wrap_thread &&rhs) noexcept {
 	_note("Moving thread -START- from rhs onto me ");
-	if (&rhs == this) {
-		_info("Moving onto myself? Ignoring.");
-	}
 
 	join();
 	m_future = std::move(rhs.m_future);
