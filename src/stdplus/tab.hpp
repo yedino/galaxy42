@@ -64,9 +64,29 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 	return dst_rb;
 }
 
-
-
-
+/**
+ * View for SequenceContainer and also ContiguousIterator(as defined for C++17)
+ * e.g. std::vector<> will work.
+ * The container view is valid until the container iterators are valid.
+ */
+	template<typename Tp>
+	class container_view
+	{
+	public:
+		using iterator = typename Tp::iterator;
+		using const_iterator = typename Tp::const_iterator;
+		container_view(iterator begin, iterator end)
+			: m_begin(begin), m_end(end), m_size(end-begin){}
+		iterator begin() {return m_begin;}
+		iterator end() {return m_end;}
+		const_iterator begin() const {return m_begin;}
+		const_iterator end() const {return m_end;}
+		size_t size() const {return m_size;}
+	private:
+		iterator m_begin;
+		iterator m_end;
+		size_t m_size;
+	};
 
 } // namespace stdplus
 
