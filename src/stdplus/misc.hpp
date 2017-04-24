@@ -59,21 +59,22 @@ std::string STR(const T & obj) { ///< stringify any object
 
 /// convert integer into enum of given type, throw if this value is not represented in target enum
 /// if expected_bad==true, then for invalid enum thrown exception type is 'expected_not_found'
-template <typename TE>
-TE int_to_enum(int i, bool expected_bad=false) {
+template <typename TE, typename TI>
+TE int_to_enum(TI i, bool expected_bad=false) {
+	using namespace std::string_literals;
+
 	static_assert( std::is_enum<TE>::value , "Must be an enum type (defined enum)");
 
-	// assert that the type i will over/under flow (e.g. wrap back to some valid value causing undetected error)
-	_check_input( static_cast<long long int>(i)  <= static_cast<long long int>( std::numeric_limits< typename std::underlying_type<TE>::type >::max() ) ); // TODO it's afe compare - upcast both types to long long... make tool for this idiom?
-	_check_input( i >= 0 );
+	// TODO is it safe comparsion?
+	_check_input( i  <= std::numeric_limits< typename std::underlying_type<TE>::type >::max());
+	_check_input( i  >= std::numeric_limits< typename std::underlying_type<TE>::type >::min());
 
 	TE e = static_cast<TE>(i);
 	if (! enum_is_valid_value(e) ) {
 		if (expected_bad) throw expected_not_found();
-		std::string err = "Can not convert integer " + std::to_string(i)
-		+ std::string(" to enum of type ") + std::string(typeid(TE).name())
-		;
-		throw std::runtime_error(err);
+		std::string err = "Can not convert integer value "s + STR(i)
+		+ " to enum of type "s + typeid(TE).name() + " (and you wanted strict matching of enum type to be hard exception)"s;
+		_throw_error_runtime(err);
 	}
 	return e;
 }
