@@ -44,7 +44,6 @@ void netClient::onTcpReceive() {
 	QByteArray data_array = m_socket->readAll();
 	std::string arr(data_array.data(), static_cast<size_t>(data_array.size()));
 	m_data_eater.eat(arr);
-	m_data_eater.process();
 	std::string last_cmd = m_data_eater.getLastCommand();
 	qDebug() << "last command " << QString::fromStdString(last_cmd);
 	if (!last_cmd.empty()) {
