@@ -4,23 +4,7 @@
 
 #include "trivialserialize.hpp"
 
-void dataeater::eat(const std::vector<uint8_t> &data) {
-	for(const auto &i:data) m_internal_buffer.push(i);
-}
-
-void dataeater::eat(const std::string &data) {
-	static_assert(sizeof(char) == sizeof(uint8_t), "size of char are different than size of uint8_t");
-	for(const auto i:data) {
-		eat(i);
-	}
-}
-
-void dataeater::eat(const char &ch) {
-	static_assert(sizeof(char) == sizeof(uint8_t), "size of char are different than size of uint8_t");
-	uint8_t que_ele;
-	memcpy(&que_ele,&ch,sizeof(uint8_t));
-	m_internal_buffer.push(que_ele);
-}
+dataeater::dataeater(): m_is_processing(false){}
 
 void dataeater::process() {
 
