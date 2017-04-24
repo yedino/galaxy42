@@ -1,4 +1,5 @@
 #pragma once
+
 #if __linux__
 	#define ANTINET_linux
 #elif defined(_WIN32) || defined(__CYGWIN__)
@@ -16,3 +17,12 @@
 #else
 	#error Platform is not supported
 #endif
+
+
+// ===========================================================================================================
+// TODO is this needed?
+#if defined (__MINGW32__)
+	#undef _assert
+#endif
+
+
