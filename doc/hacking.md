@@ -18,6 +18,14 @@ Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
 ```cpp
+_dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
+_check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
+to_debug(...);
+is_ascii_normal(str); reasonable_size(vec);
+UsePtr(p).func();
+```
+
+```cpp
 
 _dbg4(X) // unorganized "removed" debug
 _dbg3(X) _dbg2(X) _dbg1(X) // debug "Load key=0x1234"
@@ -29,17 +37,18 @@ _mark(X) // hot topics (usually for testing)
 // TODO  ....  TODO@author
 thing_to_be_fixed_before_release ; // TODO-release
 
-is_ascii_normal // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
-
-assert() / _check_abort() / _check()
-1. abort on error (only guaranteed in debug mode) - assert() // from compiler
-2. abort on error (always guaranteed) - _check_abort() // our lib
-3. throw on error - _check() // our lib
+is_ascii_normal(str) // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
 
 Function: if throw - then std::exception (or child class).
 Member functions: assume are not thread safe for concurent writes to same object, unless:
 // [thread_safe] - thread safe functions.
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
+
+_check_abort() / _abort() / _check() / _try()
+1. abort on error (always guaranteed) - _check_abort() // our lib
+2. abort on error (only guaranteed in debug mode) - assert() // from compiler
+3a. throw on error - _check() - hard exception type // our library
+3b. throw on error - _try() - soft exception type // our library
 
 Throw:
 _throw_error_runtime("TTL too big");
@@ -185,8 +194,8 @@ catch(err_check_extern &ex) { string info = ex.what(); } // catch error (soft of
 
 When using enums, try to use enum-class.
 If given enum needs to be (de)serializable or otherwise convertible from-integer, then provide override of function:
-inline bool enum_is_valid_value(t_your_enum_type value);
-that will return true if given enum has allowed value in it; else false. See unit tests (stdplus_misc.cpp) for example.
+`inline bool enum_is_valid_value(t_your_enum_type value);`
+that will return true if given enum has allowed value in it; else false. See unit tests (`stdplus_misc.cpp`) for example.
 
 ### Startup of TUN/TAP card
 
@@ -288,7 +297,7 @@ At the moment test suite includes:
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
 
-* SIOM - Service_IO Manager - asio::service_io manager, see asio_ioservice_manager.cpp
+* SIOM - `Service_IO Manager` - `asio::service_io` manager, see `asio_ioservice_manager.cpp`
 
 * Hash-Node (or just "Node") - is some sort of computer system that has a Hash-IP, and usually is connected with it to some network.
 For Galaxy42, a Node will be any computer running the Galaxy42 client program.
