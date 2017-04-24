@@ -58,7 +58,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::showDebugPage(QByteArray &pageCode) {
-
+	Q_UNUSED(pageCode);
 }
 
 void MainWindow::on_plusButton_clicked() {

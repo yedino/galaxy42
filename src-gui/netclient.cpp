@@ -1,5 +1,6 @@
 #include "netclient.hpp"
 #include <cassert>
+#include <sodium.h>
 
 netClient::netClient(std::shared_ptr<commandExecutor> cmd_exec_ptr)
 :
@@ -33,8 +34,8 @@ bool netClient::is_connected() {
 void netClient::send_msg(const std::string &msg) {
 	if (!is_connected()) return;
 	QByteArray packet = serialize_msg(msg);
-	size_t send_bytes = m_socket->write(packet);
-	if (send_bytes != packet.size())
+	size_t send_bytes = static_cast<size_t>(m_socket->write(packet));
+	if (send_bytes != static_cast<size_t>(packet.size()))
 		throw std::runtime_error("send packet error");
 }
 

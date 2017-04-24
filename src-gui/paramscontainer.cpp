@@ -42,6 +42,7 @@ bool ParamsContainer::writeParams(QString file_name)
 
 //	file.write(doc.toJson(),doc.toJson().size());
 //	file.close();
+	return true;
 }
 
 QString ParamsContainer::getIp() {return m_my_ip;}

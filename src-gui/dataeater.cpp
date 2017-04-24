@@ -72,7 +72,7 @@ bool dataeater::continiueProcessing() {
 			return true;
 		} else {
 			if(m_internal_buffer.empty()) break;
-			m_last_command.push_back(m_internal_buffer.front()); m_internal_buffer.pop();
+			m_last_command.push_back(static_cast<char>(m_internal_buffer.front())); m_internal_buffer.pop();
 		}
 		m_current_index++;
 	}
