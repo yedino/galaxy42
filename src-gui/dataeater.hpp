@@ -16,7 +16,6 @@ public:
 	template <class T>
 	void eat(const T &data);
 
-	void process();
 	bool hasNextCommand();
 	std::string getLastCommand();
 
@@ -42,6 +41,11 @@ void dataeater::eat(const T &data) {
 	static_assert(sizeof(typename T::value_type) == sizeof(char), "bad container type size (size should be equal 1)");
 	for (const auto &c : data) {
 			m_internal_buffer.push(static_cast<uint8_t>(c));
+	}
+	if(!m_is_processing) {
+		processFresh();
+	} else {
+		continiueProcessing();
 	}
 }
 

@@ -6,15 +6,6 @@
 
 dataeater::dataeater(): m_is_processing(false){}
 
-void dataeater::process() {
-
-	if(!m_is_processing) {
-		processFresh();
-	} else {
-		continiueProcessing();
-	}
-}
-
 uint16_t dataeater::pop_msg_size() {
 	uint16_t msg_size;
 	msg_size = static_cast<uint16_t>(m_internal_buffer.front() << 8);
