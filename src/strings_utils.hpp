@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #ifndef include_strings_utils_hpp
 #define include_strings_utils_hpp
@@ -37,7 +37,7 @@ bool operator==( const string_as_hex &a, const string_as_hex &b);
 unsigned char int2hexchar(unsigned char i); // 15 -> 'f'
 unsigned char hexchar2int(char c); // 'f' -> 15
 
-unsigned char doublehexchar2int(string s); // "fd" -> 253
+unsigned char doublehexchar2int(std::string s); // "fd" -> 253
 
 struct string_as_bin {
 	std::string bytes;
