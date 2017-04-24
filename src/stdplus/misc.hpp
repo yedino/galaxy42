@@ -20,9 +20,8 @@ and stdplus/misc are assorted parts of that
 #include <limits>
 
 #include "tnetdbg.hpp" // debug
-// #include "strings_utils.hpp" // to_debug // TODO XXX
+#include "strings_utils_base.hpp" // to create to_debug()
 #include "utils/check.hpp"
-
 
 namespace stdplus {
 
@@ -119,14 +118,10 @@ const void * iterator_to_voidptr(T iter) {
 	return addr;
 }
 
-#if 0
 template <typename T>
-std::string to_debug(const T & X, t_debug_style style
+std::string to_debug(const T & X, t_debug_style style=e_debug_style_object
 	,typename std::enable_if<
-	std::is_same<
-		typename std::iterator_traits<T>::iterator_category
-   , std::random_access_iterator_tag
-	>
+		std::is_same<  typename std::iterator_traits<T>::iterator_category , std::random_access_iterator_tag	 >
 	::value >::type * = 0)
 {
 	(void)(style); // unused
@@ -134,7 +129,6 @@ std::string to_debug(const T & X, t_debug_style style
 	oss << "iter("<<iterator_to_voidptr(X)<<")";
 	return oss.str();
 }
-#endif
 
 /// @warning the iterators iter1, iter2 must be an AddressComparableIterator
 /// @return whether iter1 points to memory address lower then iter2 (as by comparing void*)
@@ -148,7 +142,7 @@ bool iterator_less(T1 iter1, T2 iter2) {
 template <typename T1, typename T2>
 bool iterator_less_equal(T1 iter1, T2 iter2) {
 	bool ret = std::less_equal<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
-	_mark("Compare <= says: " << iterator_to_voidptr(iter1) << ( ret ? " <= " : " no " ) << iterator_to_voidptr(iter2)  );
+	_dbg4("Compare <= says: " << iterator_to_voidptr(iter1) << ( ret ? " <= " : " no " ) << iterator_to_voidptr(iter2)  );
 	return ret;
 }
 
@@ -198,12 +192,11 @@ template <typename TIn, typename TOut> bool test_ranges_overlap_notempty_asserte
  * must be valid
  */
 template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
-//	_dbg4("copy first="<<to_string(first)<<" last="<< // TODO XXX
+	_dbg4("copy first="<<to_debug(first)<<" last="<<to_debug(last)<<" d_first="<<to_debug(d_first)<<" size="<<size);
 	_check_abort( iterator_less_equal( first, last ) );
 	_check_abort( size > 0 );
-	_check_input( ! test_ranges_overlap_notempty_asserted(first, last, d_first, d_first+size) ); // overlap?
 	_check_input( ! test_ranges_overlap_notempty_asserted(first, last, d_first, d_first+size-1) ); // overlap?
-	std::copy(first,last, d_first); // copy
+	std::copy(first, std::next(last), d_first); // copy. next, because std::copy takes iterator to end (not to last)
 }
 
 

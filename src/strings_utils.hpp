@@ -7,17 +7,9 @@
 
 #include <boost/any.hpp>
 
-// ====================================================================
+#include <strings_utils_base.hpp>
 
-enum t_debug_style {
-	e_debug_style_object=0,
-	e_debug_style_short_devel=1,
-	e_debug_style_crypto_devel=2,
-	e_debug_style_big=2,
-
-	e_debug_style_buf=100,
-
-};
+// -------------------------------------------------------------------
 
 struct string_as_bin;
 

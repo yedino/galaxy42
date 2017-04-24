@@ -22,6 +22,7 @@ TEST(stdplus_tab, helper_overlap) {
 
 template <class TAB1, class TAB2>
 void testcase_vectorlike_copyall(size_t n) {
+	_info("Test for n="<<n);
 	TAB1 tab1;
 	for (size_t i=0; i<n; ++i) tab1.push_back(1000+i);
 
@@ -36,6 +37,7 @@ void testcase_vectorlike_copyall(size_t n) {
 		++it1;
 		++it2;
 	}
+	_info("Test for n="<<n<<" done ");
 }
 
 template <class TAB1, class TAB2>
@@ -81,6 +83,7 @@ T fuzzy_plus_minus(typename T::value_type n, const T & tab) {
 }
 
 TEST(stdplus_tab, simple) {
+	g_dbg_level_set(5,"test");
 	std::array<int,2> arr1,arr2;
 	stdplus::copy_safe_apart(2,arr1,arr2,0,0);
 }
@@ -88,6 +91,7 @@ TEST(stdplus_tab, simple) {
 
 
 TEST(stdplus_tab, basicuse) {
+	g_dbg_level_set(5,"test");
 	// testcase< std::vector<int> , std::vector<int> > ( ) ;
 	testcase_vectorlike_copyall<  std::vector<int> , std::vector<int>  > ( 10 ) ;
 
