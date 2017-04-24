@@ -313,7 +313,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		// for given crypto system:
 		t_crypto_system_type sys_enum;
 		try {
-			sys_enum = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto system
+			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
 		} catch(expected_not_found) { continue ; } // not assigned enum type, skip
 
 		auto key_count_a = self_pub.get_count_keys_in_system(sys_enum);
