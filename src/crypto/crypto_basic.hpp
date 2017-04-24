@@ -103,7 +103,7 @@ T1 binary_string_xor(T1 const & str1, T2 const& str2) {
 	const auto size1 = str1.size();
 	const auto size2 = str2.size();
 	if (size1 != size2) throw std::runtime_error(
-		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
+		std::string("Can not execute function ")	+ std::string(__func__) + std::string(" because different size: ")
 		+ std::to_string(size1) + " vs " + std::to_string(size2) );
 
 	// this is safe also for locked string:
