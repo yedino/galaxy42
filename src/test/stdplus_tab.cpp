@@ -10,6 +10,16 @@
 
 #include <stdplus/tab.hpp>
 
+TEST(stdplus_tab, helper_overlap) {
+
+	std::vector<int> aaa{100, 101, 102, 103, 104};
+	std::vector<int> bbb{200, 201, 202, 203, 204};
+
+	EXPECT_EQ( true  , test_ranges_overlap_notempty_asserted(aaa.begin()+0,aaa.begin()+3, aaa.begin()+3, aaa.begin()+4) );
+	EXPECT_EQ( false , test_ranges_overlap_notempty_asserted(aaa.begin()+0,aaa.begin()+3, aaa.begin()+4, aaa.begin()+4) );
+
+}
+
 template <class TAB1, class TAB2>
 void testcase_vectorlike_copyall(size_t n) {
 	TAB1 tab1;
@@ -69,6 +79,12 @@ T fuzzy_plus_minus(typename T::value_type n, const T & tab) {
 	}
 	return ret;
 }
+
+TEST(stdplus_tab, simple) {
+	std::array<int,2> arr1,arr2;
+	stdplus::copy_safe_apart(2,arr1,arr2,0,0);
+}
+
 
 
 TEST(stdplus_tab, basicuse) {
