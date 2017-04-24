@@ -33,20 +33,20 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 	auto src_rb = tab_src.begin() + offset_src; // rb = range begin
 	_check_input( offset_src < tab_src.size() );
 	_check_input( n <= tab_src.size() - offset_src ); // subtracting offset_src is valid since above
-	auto src_re = tab_src.begin() + offset_src + n; // range end
-	_check_abort( src_re <= tab_src.end() );
+	auto src_rl = tab_src.begin() + offset_src + n; // range last
+	_check_abort( src_rl <= tab_src.end() );
 
 	// dest
 	auto dst_rb = tab_dst.begin() + offset_dst; // rb = range begin
 	_check_input( offset_dst < tab_dst.size() );
 	_check_input( n <= tab_dst.size() - offset_dst ); // subtracting offset_dst is valid since above
-	auto dst_re = tab_dst.begin() + offset_dst + n; // range end
-	_check_abort( dst_re <= tab_dst.end() );
+	auto dst_rl = tab_dst.begin() + offset_dst + n; // range last
+	_check_abort( dst_rl <= tab_dst.end() );
 
-	bool overlap = ranges_overlap_oc_ne_asserted(src_rb, src_re,  dst_rb, dst_re);
+	bool overlap = test_ranges_overlap_notempty_asserted(src_rb, src_rl,  dst_rb, dst_rl);
 	_check_input(!overlap);
 
-	copy_and_assert_no_overlap_size( src_rb, src_re,  dst_rb, n );
+	copy_and_assert_no_overlap_size( src_rb, src_rl,  dst_rb, n );
 
 	return dst_rb;
 }

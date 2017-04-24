@@ -198,7 +198,7 @@ template <typename TIn, typename TOut> bool test_ranges_overlap_notempty_asserte
  * must be valid
  */
 template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
-	_dbg4("copy first="<<to_string(first)<<" last="<<
+//	_dbg4("copy first="<<to_string(first)<<" last="<< // TODO XXX
 	_check_abort( iterator_less_equal( first, last ) );
 	_check_abort( size > 0 );
 	_check_input( ! test_ranges_overlap_notempty_asserted(first, last, d_first, d_first+size) ); // overlap?
