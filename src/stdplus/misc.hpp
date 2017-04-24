@@ -96,31 +96,39 @@ T* unique_cast_ptr(std::unique_ptr<U> & u) {
 // ===========================================================================================================
 // === ranges, copy ===
 
-
 /// AddressibleIterator
 /// this is our concept of an iterator that meets all of following conditions:
 /// - it's instance is a valid iterator that can be dereferenced, e.g. it is not some vector_v.end()
 /// - it's type can be converted to void* and to T*
 
-/// AddressComparableIterator
+/// AddressLinearIterator
 /// this is our concept of an iterator that meets all of following conditions:
 /// - is an AddressibleIterator
 /// - can be ordered (has correct operations < <= > >= done by std:: less less_equal greater greater_equal)
 ///   (though anyway we will often compare the resulting raw address void* instead)
 
-/// @warning the iterator iter must be an AddressibleIterator
+/// AddressLinearContainer - container that has it's .begin() .end() and other iterators of type AddressLinearIterator,
+/// that is: std::vector<>, std::array<>, std::basic_string<>
+
 /// @return the object pointed to by given iterator, in form of void*;
+/// @warning the iterator iter must be an AddressibleIterator
 template <typename T>
-const void * iterator_to_voidptr(T iter) {
+const void * iterator_to_voidptr(T iter
+	,typename std::enable_if< // Concept
+		std::is_same<  typename std::iterator_traits<T>::iterator_category , std::random_access_iterator_tag	 >
+	::value >::type * = 0)
+{
 	typedef typename std::iterator_traits<T>::value_type value_type;
 	const value_type & obj = * iter; // pointed object, as some type
 	const void* addr = static_cast<const void*>(&obj); // as raw address
 	return addr;
 }
 
+/// @return string representing debug information about given iterator
+/// @warning the iterator iter must be an AddressibleIterator
 template <typename T>
 std::string to_debug(const T & X, t_debug_style style=e_debug_style_object
-	,typename std::enable_if<
+	,typename std::enable_if< // Concept, needed to choose from other functions with same name
 		std::is_same<  typename std::iterator_traits<T>::iterator_category , std::random_access_iterator_tag	 >
 	::value >::type * = 0)
 {
@@ -130,44 +138,52 @@ std::string to_debug(const T & X, t_debug_style style=e_debug_style_object
 	return oss.str();
 }
 
-/// @warning the iterators iter1, iter2 must be an AddressComparableIterator
+// -------------------------------------------------------------------
+// Comparing iterators
+
+/// @warning the iterators iter1, iter2 must be an AddressLinearIterator
 /// @return whether iter1 points to memory address lower then iter2 (as by comparing void*)
 template <typename T1, typename T2>
 bool iterator_less(T1 iter1, T2 iter2) {
 	return std::less<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
 }
 
-/// @warning the iterators iter1, iter2 must be an AddressComparableIterator
+/// @warning the iterators iter1, iter2 must be an AddressLinearIterator
 /// @return whether iter1 points to memory address lower or equal to iter2 (as by comparing void*)
 template <typename T1, typename T2>
 bool iterator_less_equal(T1 iter1, T2 iter2) {
 	bool ret = std::less_equal<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
-	_dbg4("Compare <= says: " << iterator_to_voidptr(iter1) << ( ret ? " <= " : " no " ) << iterator_to_voidptr(iter2)  );
+	_dbg4("Compare<= says: " << iterator_to_voidptr(iter1) << ( ret ? "  IS<= " : " NOT<= " ) << iterator_to_voidptr(iter2)  );
 	return ret;
 }
 
-/// @warning the iterators iter1, iter2 must be an AddressComparableIterator
+/// @warning the iterators iter1, iter2 must be an AddressLinearIterator
 /// @return whether iter1 points to memory address higher then iter2 (as by comparing void*)
 template <typename T1, typename T2>
 bool iterator_greater(T1 iter1, T2 iter2) {
 	return std::greater<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
 }
 
-/// @warning the iterators iter1, iter2 must be an AddressComparableIterator
+/// @warning the iterators iter1, iter2 must be an AddressLinearIterator
 /// @return whether iter1 points to memory address higher or equal to iter2 (as by comparing void*)
 template <typename T1, typename T2>
 bool iterator_greater_equal(T1 iter1, T2 iter2) {
 	return std::greater_equal<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
 }
 
+// -------------------------------------------------------------------
+// ranges
+
 /**
 Tests whether range [start1..last1] overlaps with [start2..last2].
 This ranges are given inclusive.
+Therefore container/range must be NOT EMPTY (this is reminded by function name _noempty).
+All this iterators must be of type AddressLinearIterator.
 All this iterators must be valid (dereferencable).
-Therefore to express entire e.g. vector<T> v, you would give range v.begin() , v.end()-1,
-after first checking that v is not empty.
+Therefore to express entire e.g. vector<T> v, you would give range
+as v.begin() , v.end()-1 and after first checking that v is not empty.
 */
-template <typename TIn, typename TOut> bool test_ranges_overlap_notempty_asserted(TIn start1, TIn last1,  TOut start2, TOut last2) noexcept {
+template <typename TIn, typename TOut> bool test_ranges_overlap_inclusive_noempty(TIn start1, TIn last1,  TOut start2, TOut last2) noexcept {
 	_check_abort( std::less_equal<decltype(start1)>() (start1, last1) );
 	_check_abort( std::less_equal<decltype(start1)>() (start2, last2) );
 
@@ -177,7 +193,7 @@ template <typename TIn, typename TOut> bool test_ranges_overlap_notempty_asserte
 
 /**
  * Safe copy of memory from range [first..last] into [d_first, d_first+size-1]
- * This iterator should be of type
+ * This iterators should be of type AddressLinearIterator
  *
  * It always checks following conditions:
  * - the memory ranges must not overlap
@@ -191,11 +207,11 @@ template <typename TIn, typename TOut> bool test_ranges_overlap_notempty_asserte
  * - the ranges defined by them must be valid too, e.g. all elements [first..last], and [d_first..d_first+size-1]
  * must be valid
  */
-template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
+template <typename TIn, typename TOut> void copy_iter_and_check_no_overlap(TIn first, TIn last, TOut d_first, size_t size) {
 	_dbg4("copy first="<<to_debug(first)<<" last="<<to_debug(last)<<" d_first="<<to_debug(d_first)<<" size="<<size);
 	_check_abort( iterator_less_equal( first, last ) );
 	_check_abort( size > 0 );
-	_check_input( ! test_ranges_overlap_notempty_asserted(first, last, d_first, d_first+size-1) ); // overlap?
+	_check_input( ! test_ranges_overlap_inclusive_noempty(first, last, d_first, d_first+size-1) ); // overlap?
 	std::copy(first, std::next(last), d_first); // copy. next, because std::copy takes iterator to end (not to last)
 }
 

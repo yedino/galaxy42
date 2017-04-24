@@ -24,8 +24,8 @@ void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
 #define _my__FILE__ (dbg__FILE__(__FILE__))
 
 #define SHOW_DEBUG
-#ifdef SHOW_DEBUG
 
+#ifdef SHOW_DEBUG
 
 extern const bool g_is_windows_console;
 
@@ -35,6 +35,7 @@ void write_to_console(const std::string& obj);
 
 #define _main_dbg(X) std::ostringstream oss; oss << X; write_to_console(oss.str())
 
+#define _dbg5(X) do { } while(0)
 #define _dbg4(X) do { DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
 #define _dbg3(X) do { DBGLVL( 10); _main_dbg("\033[37mdbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
 #define _dbg2(X) do { DBGLVL( 20); _main_dbg("\033[37mdbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
@@ -82,6 +83,7 @@ void write_to_console(const std::string& obj);
 
 #else
 
+#define _dbg5(X) do {} while(0)
 #define _dbg4(X) do {} while(0)
 #define _dbg3(X) do {} while(0)
 #define _dbg2(X) do {} while(0)
@@ -175,6 +177,7 @@ throw _except( std::logic_error("foo")) ;
 
 std::string debug_this();
 
+#define _dbg5n(X) ;
 #define _dbg4n(X) _dbg4(debug_this() << X)
 #define _dbg3n(X) _dbg3(debug_this() << X)
 #define _dbg2n(X) _dbg2(debug_this() << X)

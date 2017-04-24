@@ -9,14 +9,15 @@
 #include <array>
 
 #include <stdplus/tab.hpp>
+#include <stdplus/misc.hpp>
 
 TEST(stdplus_tab, helper_overlap) {
 
 	std::vector<int> aaa{100, 101, 102, 103, 104};
 	std::vector<int> bbb{200, 201, 202, 203, 204};
 
-	EXPECT_EQ( true  , test_ranges_overlap_notempty_asserted(aaa.begin()+0,aaa.begin()+3, aaa.begin()+3, aaa.begin()+4) );
-	EXPECT_EQ( false , test_ranges_overlap_notempty_asserted(aaa.begin()+0,aaa.begin()+3, aaa.begin()+4, aaa.begin()+4) );
+	EXPECT_EQ( true  , test_ranges_overlap_inclusive_noempty(aaa.begin()+0,aaa.begin()+3, aaa.begin()+3, aaa.begin()+4) );
+	EXPECT_EQ( false , test_ranges_overlap_inclusive_noempty(aaa.begin()+0,aaa.begin()+3, aaa.begin()+4, aaa.begin()+4) );
 
 }
 
