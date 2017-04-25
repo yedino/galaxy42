@@ -6,6 +6,36 @@
 #include <functional>
 #include <boost/system/system_error.hpp> // for the error_code
 
+#include "error_subtype.hpp"
+#include "syserror_use.hpp"
+
+#include "../depends/cjdns-code/syserr.h"
+#include "../../../depends/cjdns-code/NetPlatform.h"
+
+std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
+
+/// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+/// this translates the field t_syserr.my_code only, see other function for more
+std::string NetPlatform_error_code_to_string(int err);
+
+/// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
+std::string NetPlatform_syserr_to_string(t_syserr syserr);
+
+/**
+ * Wrapper around the from-cjdns function;
+ * Nicelly writes debug about this important function.
+ * Errors are thrown as tuntap_error*
+ */
+void Wrap_NetPlatform_addAddress(const char* interfaceName,
+                                 const uint8_t* address,
+                                 int prefixLen,
+                                 int addrFam);
+
+/// Wrapper around the from-cjdns function:
+void Wrap_NetPlatform_setMTU(const char* interfaceName,
+                             uint32_t mtu);
+
+constexpr size_t IPV6_LEN = 16;
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
 class c_tuntap_base_obj {
@@ -26,7 +56,7 @@ class c_tuntap_base_obj {
 
 		// sets the parameters of our tuntap
 		virtual void set_tun_parameters
-			(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) = 0;
+			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) = 0;
 };
 
 #endif // TUNTAP_BASE_HPP
