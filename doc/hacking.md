@@ -25,6 +25,12 @@ to_debug(...);
 is_ascii_normal(str); reasonable_size(vec);
 UsePtr(p).func();
 
+/**
+ * @codestyle
+ * @thread ...
+ * @owner rfree
+ */
+
 catch(const ex_type & ex){}
 
 UNUSED(x); DEAD_RETURN();
