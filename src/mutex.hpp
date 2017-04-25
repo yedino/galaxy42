@@ -136,7 +136,6 @@ public:
   Unique_lock(t_mutex &mu) ACQUIRE(mu) : unique_lock(mu) {}
 
   ~Unique_lock() RELEASE() {
-    unique_lock.unlock();
   }
 
   void unlock() RELEASE() {
