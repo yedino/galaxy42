@@ -127,6 +127,26 @@ public:
   }
 };
 
+template <class t_mutex>
+class SCOPED_CAPABILITY Unique_lock {
+private:
+  std::unique_lock<t_mutex> unique_lock;
+
+public:
+  Unique_lock(t_mutex &mu) ACQUIRE(mu) : unique_lock(mu) {}
+
+  ~Unique_lock() RELEASE() {
+    unique_lock.unlock();
+  }
+
+  void unlock() RELEASE() {
+    unique_lock.unlock();
+  }
+
+  void lock() ACQUIRE() {
+    unique_lock.unlock();
+  }
+};
 
 #ifdef USE_LOCK_STYLE_THREAD_SAFETY_ATTRIBUTES
 // The original version of thread safety analysis the following attribute
