@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 #ifndef C_TNETDBG_HPP
@@ -12,6 +12,7 @@
 #include "mo_reader.hpp"
 
 
+/// Current debug level. Plase change it only using g_dbg_level_set().
 extern unsigned char g_dbg_level;
 
 
@@ -19,7 +20,18 @@ extern unsigned char g_dbg_level;
 
 const char * dbg__FILE__(const char * name);
 
-void g_dbg_level_set(unsigned char level, std::string why, bool quiet=false);
+/**
+ * @brief Change debug level to given one; Also it can mute/unmute further notifications about changes to debug level using it.
+ * @param level: the level to be set. Or -1 to leave unchanged.
+ * @param quiet: 0(false)/1(true)/-1(auto) - should we quiet reporting the level change.
+ * @param quiet_from_now_on: 0(false)/1(true)/-1(unchanged) if it is 0 or 1 then it sets behaviour of quiet==-1(auto)
+ * @note To be used in main program execution structure e.g. main(), or in tests / Unit Tests. Avoid using it from other code.
+ * @note By default changes of debug level will be reported. To only stop reporting them use g_dbg_level_set(-1,"",-1,false);
+ * And to only start reporting changes use g_dbg_level_set(-1,"",-1,true);
+ * @codestyle This code avoids creating singleton object, so instead of a class, we have 1 function that does various things
+ * and holds internal state in form of function static variables.
+ */
+void g_dbg_level_set(int level, std::string why, int quiet=-1, int quiet_from_now_on=-1);
 
 #define _my__FILE__ (dbg__FILE__(__FILE__))
 

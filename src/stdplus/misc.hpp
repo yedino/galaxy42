@@ -195,7 +195,7 @@ bool iterator_less(T1 iter1, T2 iter2) {
 template <typename T1, typename T2>
 bool iterator_less_equal(T1 iter1, T2 iter2) {
 	bool ret = std::less_equal<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
-	_dbg4("Compare<= says: " << iterator_to_voidptr(iter1) << ( ret ? "  IS<= " : " NOT<= " ) << iterator_to_voidptr(iter2)  );
+	_dbg5("Compare<= says: " << iterator_to_voidptr(iter1) << ( ret ? "  IS<= " : " NOT<= " ) << iterator_to_voidptr(iter2)  );
 	return ret;
 }
 
@@ -250,7 +250,7 @@ template <typename TIn, typename TOut> bool test_ranges_overlap_inclusive_noempt
  * must be valid
  */
 template <typename TIn, typename TOut> void copy_iter_and_check_no_overlap(TIn first, TIn last, TOut d_first, size_t size) {
-	_dbg4("copy first="<<to_debug(first)<<" last="<<to_debug(last)<<" d_first="<<to_debug(d_first)<<" size="<<size);
+	_dbg5("copy first="<<to_debug(first)<<" last="<<to_debug(last)<<" d_first="<<to_debug(d_first)<<" size="<<size);
 	_check_abort( iterator_less_equal( first, last ) );
 	_check_abort( size > 0 );
 	_check_input( ! test_ranges_overlap_inclusive_noempty(first, last, d_first, d_first+size-1) ); // overlap?
