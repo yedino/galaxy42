@@ -86,7 +86,7 @@ string c_multisign::get_signature(t_crypto_system_type crypto_type, size_t numbe
 void c_multisign::print_signatures() const {
 	_info("Printing all sinatures in c_multisign:");
 	for (size_t sys = 0; sys < get_count_of_systems(); ++sys) {
-		t_crypto_system_type sys_enum;
+			t_crypto_system_type sys_enum;
 		try {
 			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
 		} catch(expected_not_found) { continue ; } // not assigned enum type, skip
@@ -229,21 +229,23 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 	}
 
 	for (size_t sys=0; sys < all_signatures.get_count_of_systems(); ++sys) {
+		t_crypto_system_type sys_enum;
+		try {
+			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
+		} catch(...) { continue; }
 
-		auto crypto_type = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
-
-		if (all_signatures.get_count_keys_in_system(crypto_type) != pubkeys.get_count_keys_in_system(crypto_type)) {
+		if (all_signatures.get_count_keys_in_system(sys_enum) != pubkeys.get_count_keys_in_system(sys_enum)) {
 			std::string err_msg = "count of keys system [";
-			err_msg += t_crypto_system_type_to_name(crypto_type);
+			err_msg += t_crypto_system_type_to_name(sys_enum);
 			err_msg += "] in c_multikeypub and c_multisign different!";
 			_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		// crypto systems allowed for signing
-		if (!c_multisign::cryptosystem_sign_allowed(crypto_type)) {
+		if (!c_multisign::cryptosystem_sign_allowed(sys_enum)) {
 			continue;
 		}
-		multi_sign_verify(all_signatures.get_signature_vec(crypto_type), msg, pubkeys, crypto_type);
+		multi_sign_verify(all_signatures.get_signature_vec(sys_enum), msg, pubkeys, sys_enum);
 	}
 }
 
