@@ -84,7 +84,6 @@ T fuzzy_plus_minus(typename T::value_type n, const T & tab) {
 }
 
 TEST(stdplus_tab, simple) {
-	g_dbg_level_set(5,"test");
 	std::array<int,2> arr1,arr2;
 	stdplus::copy_safe_apart(2,arr1,arr2,0,0);
 }
@@ -92,7 +91,6 @@ TEST(stdplus_tab, simple) {
 
 
 TEST(stdplus_tab, basicuse) {
-	g_dbg_level_set(5,"test");
 	// testcase< std::vector<int> , std::vector<int> > ( ) ;
 	testcase_vectorlike_copyall<  std::vector<int> , std::vector<int>  > ( 10 ) ;
 
