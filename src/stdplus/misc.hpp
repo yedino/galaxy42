@@ -14,14 +14,15 @@ and stdplus/misc are assorted parts of that
 #include <string>
 #include <sstream>
 #include <limits>
-#include <boost/numeric/conversion/cast.hpp>
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <functional> // for less
 
 #include <limits>
 
-#include "tnetdbg.hpp" // debug
-#include "strings_utils_base.hpp" // to create to_debug()
-#include "utils/check.hpp"
+#include <tnetdbg.hpp> // debug
+#include <strings_utils_base.hpp> // to create to_debug()
+#include <utils/check.hpp>
+#include <utils/unused.hpp>
 
 namespace stdplus {
 
@@ -60,23 +61,32 @@ std::string STR(const T & obj) { ///< stringify any object
 /// convert integer into enum of given type, throw if this value is not represented in target enum
 /// if expected_bad==true, then for invalid enum thrown exception type is 'expected_not_found'
 template <typename TE, typename TI>
-TE int_to_enum(TI i, bool expected_bad=false) {
+TE int_to_enum(TI val_int, bool expected_bad=false) {
 	using namespace std::string_literals;
 
 	static_assert( std::is_enum<TE>::value , "Must be an enum type (defined enum)");
 
-	// TODO is it safe comparsion?
-	_check_input( i  <= std::numeric_limits< typename std::underlying_type<TE>::type >::max());
-	_check_input( i  >= std::numeric_limits< typename std::underlying_type<TE>::type >::min());
+	using underlying_type = typename std::underlying_type<TE>::type;
 
-	TE e = static_cast<TE>(i);
-	if (! enum_is_valid_value(e) ) {
+	auto handle_error = [&](const std::string & why) { // handle conversion error
 		if (expected_bad) throw expected_not_found();
-		std::string err = "Can not convert integer value "s + STR(i)
-		+ " to enum of type "s + typeid(TE).name() + " (and you wanted strict matching of enum type to be hard exception)"s;
-		_throw_error_runtime(err);
+		std::string msg = "Can not convert integer value "s + STR(val_int) + " ("s + typeid(TI).name() + ")"s
+		+ " to enum of type "s + typeid(TE).name() + " "s
+		+ ": "s + why + "."s
+		+ " (and you wanted strict matching of enum type to be hard exception)"s;
+		_throw_error_runtime(msg);
+	};
+
+	try {
+		auto val_underlying = boost::numeric_cast<underlying_type>( val_int );
+		TE the_enum = static_cast<TE>(val_underlying); // <--- this must succeed (without under/overflow) since it's already underlying
+		if (! enum_is_valid_value(the_enum) ) handle_error("Given integer does not map to any defined value of this enum");
+		return the_enum; // <=== return
+	} catch(const boost::numeric::bad_numeric_cast &) {
+		handle_error("Given integer value can not be expressed in enum underlying type "s
+			+ " ("s + typeid(underlying_type).name()+")");
 	}
-	return e;
+	DEAD_RETURN();
 }
 
 std::string to_string(const std::string & v); ///< just to have identical syntax
