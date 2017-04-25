@@ -27,6 +27,7 @@ inline bool enum_is_valid_value(t_color_components value) {
 }
 
 TEST(stdplus_misc, function_enum_to_int__enumclass) {
+	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
 
 	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(0);  _UNUSED(color); } );
 	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(2);  _UNUSED(color); } );
@@ -51,6 +52,8 @@ inline bool enum_is_valid_value(t_gender value) {
 }
 
 TEST(stdplus_misc, function_enum_to_int) {
+	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
+
 	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(0);	_UNUSED(gender); } );
 	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(1);	_UNUSED(gender); } );
 	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(35500000);	_UNUSED(gender); } );
@@ -73,6 +76,8 @@ inline bool enum_is_valid_value(t_contact value) {
 }
 
 TEST(stdplus_misc, function_enum_to_int__enumclass_match_after_conversion) {
+	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
+
 	{ auto en = int_to_enum<t_contact>(0);	EXPECT_EQ( en , t_contact::email ); }
 	{ auto en = int_to_enum<t_contact>(1);	EXPECT_EQ( en , t_contact::phone ); }
 	{ auto en = int_to_enum<t_contact>(5);	EXPECT_EQ( en , t_contact::sms ); }
@@ -80,6 +85,8 @@ TEST(stdplus_misc, function_enum_to_int__enumclass_match_after_conversion) {
 }
 
 TEST(stdplus_misc, function_enum_to_int__enumclass_with_holes) {
+	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
+
 	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(0);  _UNUSED(en); } );
 	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(1);  _UNUSED(en); } );
 	EXPECT_THROW( { auto en = int_to_enum<t_contact>(2);  _UNUSED(en); } , std::exception );
@@ -90,6 +97,8 @@ TEST(stdplus_misc, function_enum_to_int__enumclass_with_holes) {
 }
 
 TEST(stdplus_misc, function_enum_to_int__enumclass_overflow) {
+	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
+
 	EXPECT_THROW( { auto en = int_to_enum<t_contact>( 0+256 );  _UNUSED(en); } , std::exception ); // wrap-around back to valid
 	EXPECT_THROW( { auto en = int_to_enum<t_contact>( -1 );  _UNUSED(en); } , std::exception ); // wrap  of unsigned
 
