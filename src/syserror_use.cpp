@@ -9,7 +9,7 @@
 	//#warning "It seems __STDC_LIB_EXT1__ is not set by implementation/compiler - and we need it to have strerror_s"
 #endif
 
-#include <syserror_use.hpp>
+#include "syserror_use.hpp"
 
 #include <cstring>
 #include <sstream>

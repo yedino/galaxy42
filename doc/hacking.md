@@ -1,4 +1,4 @@
-
+@page Hacking
 # Hacking
 
 This page described how to "Hack" this project - how to develop it, how to change it, how to build it - topics for developers.
@@ -12,6 +12,7 @@ Intended for:
 # Summary for every developer!
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
+Know the Editor (below).
 
 Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
@@ -91,9 +92,10 @@ The use of this project/programs as end-user, is described in other places, see 
 
 # Developing
 
-To develop the program, we recommend mainly Debian Stable as the main environment at this time.
+To develop the program, we recommend mainly Debian Stable (Jassie, Amd64) as the main environment at this time;
+Ubuntu and Mint also are used by developers so we can recommend them (at least in some versions),
 
-IF YOU ADD ANY DEPENDENCY THEN write it in dependencies list in [SECURITY.txt].
+IF YOU ADD ANY DEPENDENCY (library) THEN write it in dependencies list in [SECURITY.txt].
 
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
@@ -117,6 +119,19 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 
 # as non-root user, but allowed to "sudo" into needed commands especially the package manager:
 FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
+```
+
+## Editor
+
+Following comment-line horizontal ruler ornaments are used (given here as `.vimrc` macros to be pasted);
+Optionally, following marking of leave-block instructions (to be used especially when block is exited suddently instead at normal end of it)
+
+```vim
+iabbrev !!# // ###########################################################################################################
+iabbrev !!= // ===========================================================================================================
+iabbrev !!- // -------------------------------------------------------------------
+iabbrev !!r return ; // <=== return
+iabbrev !!b break ; // <=== break
 ```
 
 ## Developing and code details

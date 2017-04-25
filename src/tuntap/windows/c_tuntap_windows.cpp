@@ -48,7 +48,7 @@ size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t siz
 void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, size_t size, const c_tuntap_base_obj::read_handler &handler) {
 }
 
-void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, 16> &binary_address, int prefix_len, uint32_t mtu) {
+void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) {
 	_fact("Setting IPv6 address, prefixLen=" << prefix_len);
 	std::wstring human_name = get_human_name(m_guid);
 	NET_LUID luid = get_luid(human_name);
