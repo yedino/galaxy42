@@ -8,7 +8,7 @@
 // ===========================================================================================================
 // example of enum-class
 
-enum class t_color_components { red=0, green=1, blue=2, ultra_violet, infra_red, joy, happiness, terror, dazzle  };
+enum class t_color_components { red=0, green=1, blue=2, ultra_violet=3, infra_red=4, joy=5, happiness=6, terror=-666, dazzle=7  };
 /// ^ main color components, as seen by Mantis Shrimp https://en.wikipedia.org/wiki/Mantis_shrimp#Eyes
 inline bool enum_is_valid_value(t_color_components value) {
 	switch (value) {
@@ -30,18 +30,21 @@ TEST(stdplus_misc, function_enum_to_int__enumclass) {
 
 	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(0);  _UNUSED(color); } );
 	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(2);  _UNUSED(color); } );
-	for (int i=0; i<=8; ++i) EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(i);  _UNUSED(color); } );
+	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(-666);  _UNUSED(color); } );
+	for (int i=0; i<=7; ++i) EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(i);  _UNUSED(color); } );
 	for (int i=9; i<=300; ++i) EXPECT_THROW( { auto color = int_to_enum<t_color_components>(i);  _UNUSED(color); } , std::exception ); // no such base colors
 }
 
 // ===========================================================================================================
 // non-class enum (deprecated)
 
-enum t_gender { male=1, female=0 };
+// constant 35.5M is the production cost of https://en.wikipedia.org/wiki/Boeing_AH-64_Apache (variant E)
+enum t_gender { female=1, male=0, ah64=35500000 };
 inline bool enum_is_valid_value(t_gender value) {
 	switch (value) {
-		case male:
 		case female:
+		case male:
+		case ah64:
 		return true;
 	}
 	return false;
@@ -50,10 +53,12 @@ inline bool enum_is_valid_value(t_gender value) {
 TEST(stdplus_misc, function_enum_to_int) {
 	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(0);	_UNUSED(gender); } );
 	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(1);	_UNUSED(gender); } );
-	EXPECT_THROW( { auto gender = int_to_enum<t_gender>(2);  _UNUSED(gender); } , std::exception ); // there are no other genders
+	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(35500000);	_UNUSED(gender); } );
+	EXPECT_THROW( { auto gender = int_to_enum<t_gender>(3);  _UNUSED(gender); } , std::exception ); // there is no gender number 3
 }
 
 // ===========================================================================================================
+// tests for value overflow/wrapping - short underlying type of enum
 
 enum class t_contact : unsigned char { email=0, phone=1, sms=5, jabber=6 };
 inline bool enum_is_valid_value(t_contact value) {
