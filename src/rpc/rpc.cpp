@@ -60,7 +60,7 @@ void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::f
 void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 	_dbg("Connected");
 	if (!error) {
-		std::lock_guard<std::mutex> lg(m_session_vector_mutex);
+		Lock_guard<Mutex> lg(m_session_vector_mutex);
 		m_session_list.emplace_back(this, std::move(m_socket));
 		m_session_list.back().set_iterator_in_session_list(--m_session_list.end());
 	}
@@ -71,7 +71,7 @@ void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 }
 
 void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it) {
-	std::lock_guard<std::mutex> lg(m_session_vector_mutex);
+	Lock_guard<Mutex> lg(m_session_vector_mutex);
 	m_session_list.erase(it);
 }
 

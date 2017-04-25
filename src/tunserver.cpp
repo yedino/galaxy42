@@ -406,7 +406,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 }
 
 #ifdef HTTP_DBG
-std::mutex & c_tunserver::get_my_mutex() const {
+Mutex & c_tunserver::get_my_mutex() const {
 	return this->m_my_mutex; // TODO or const-cast here? from mutable?
 }
 #endif
