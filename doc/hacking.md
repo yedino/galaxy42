@@ -25,6 +25,8 @@ to_debug(...);
 is_ascii_normal(str); reasonable_size(vec);
 UsePtr(p).func();
 
+catch(const ex_type & ex){}
+
 UNUSED(x); DEAD_RETURN();
 ```
 
@@ -83,10 +85,10 @@ try {
 reasonable_size( vec ); // <--- test potentially big objects on input, function start
 
 Catch it using:
-  catch(std::runtime_error &ex) // catch all errors, including check soft and hard errors
+  catch(const std::runtime_error &ex) // catch all errors, including check soft and hard errors
 -or-
 // catch soft (expected) error, but hard errors propagate
-  catch(err_check_soft &soft) { string info = soft.what_soft(); }
+  catch(const err_check_soft &soft) { string info = soft.what_soft(); }
 // for more see chapter Check-asserts
 
 enum class t_temper { cold=15, hot=80 }; // for (de)serializable Enums. See "Enum" below.
@@ -190,9 +192,9 @@ Read also the Summary chapter first. More details are in file **utils/check.hpp*
 
 You can also catch:
 ```
-catch(err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
-catch(err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
-catch(err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
+catch(const err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
+catch(const err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
+catch(const err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
 ```
 
 ## Enum
