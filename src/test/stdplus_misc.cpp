@@ -76,6 +76,13 @@ inline bool enum_is_valid_value(t_contact value) {
 	return false;
 }
 
+TEST(stdplus_misc, function_enum_to_int__exception_type_overflow_or_invalid) {
+	g_dbg_level_set(5,"test"); /// XXX
+
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(3);  _UNUSED(en); } , std::invalid_argument );
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(300);  _UNUSED(en); } , std::overflow_error ); // value wraps
+}
+
 TEST(stdplus_misc, function_enum_to_int__enumclass_match_after_conversion) {
 	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
 
@@ -124,6 +131,7 @@ public:
 	enum class t_enum_numeric_limits : T{
 		min = std::numeric_limits<T>::min(),
 		two = 2,
+		max_half = std::numeric_limits<T>::max()/2,
 		max = std::numeric_limits<T>::max()
 	};
 };
@@ -134,6 +142,7 @@ inline bool enum_is_valid_value(T value) {
 	switch (value) {
 		case t_enum::min:
 		case t_enum::two:
+		case t_enum::max_half:
 		case t_enum::max:
 		return true;
 	}
@@ -145,13 +154,19 @@ void test_case_enum_numeric_limits(c_test_enum<T>){
 	using t_enum = typename c_test_enum<T>::t_enum_numeric_limits;
 	EXPECT_EQ(t_enum::min, int_to_enum<t_enum>(std::numeric_limits<T>::min()));
 	EXPECT_EQ(t_enum::max, int_to_enum<t_enum>(std::numeric_limits<T>::max()));
+	EXPECT_EQ(t_enum::max_half, int_to_enum<t_enum>(std::numeric_limits<T>::max()/2));
 	EXPECT_EQ(t_enum::two, int_to_enum<t_enum>(2));
 	EXPECT_THROW(int_to_enum<t_enum>(std::numeric_limits<T>::max() - 1), std::exception );
 	EXPECT_THROW(int_to_enum<t_enum>(std::numeric_limits<T>::min() + 1), std::exception );
-	EXPECT_THROW(int_to_enum<t_enum>(3), std::exception );
+	EXPECT_THROW(int_to_enum<t_enum>(3), std::exception ); // assume this test is not run on underlying type with max()==4
+
+	EXPECT_THROW(int_to_enum<t_enum>( std::numeric_limits<long long unsigned>::max() - 5 ), std::exception );
 }
 
-//http://stackoverflow.com/questions/1198260/iterate-over-tuple
+// -------------------------------------------------------------------
+/// TODO move to a lib?
+// http://stackoverflow.com/questions/1198260/iterate-over-tuple
+// run a function for each element of tuple
 template<std::size_t I = 0, typename FuncT, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
 	for_each(std::tuple<Tp...> &, FuncT) // Unused arguments are given no names.
@@ -164,14 +179,19 @@ inline typename std::enable_if<I < sizeof...(Tp), void>::type
 		f(std::get<I>(t));
 		for_each<I + 1, FuncT, Tp...>(t, f);
 	}
+// -------------------------------------------------------------------
 
 TEST(stdplus_misc, function_enum_to_int_numeric_limits)
 {
-	using tup = std::tuple<char, unsigned char, short, unsigned short, int, unsigned int, long, unsigned long
-												, long long, unsigned long long>;
+	using tup = std::tuple<
+		char, unsigned char, signed char
+		,short, unsigned short
+		,int, unsigned int
+		,long, unsigned long
+		,long long, unsigned long long
+	>;
 
 	tup types{};
 	for_each(types, [](auto type){c_test_enum<decltype(type)> test; test_case_enum_numeric_limits(test);});
-
 }
 

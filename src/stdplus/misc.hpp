@@ -14,6 +14,7 @@ and stdplus/misc are assorted parts of that
 #include <string>
 #include <sstream>
 #include <limits>
+#include <tuple>
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <functional> // for less
 
@@ -63,12 +64,13 @@ class expected_not_found : public stdplus::expected_exception {
  * template <typename T, typename FALSE = std::false_type>
  * void foo(T obj) { static_assert(FALSE::value, "my error message"); }
  *
- * Method 3 is preferred.
+ * Method 3 would be preferred, though it does not work on MSVC (2014).
+ * choosing method 1 for now.
 */
 
 /**
  * This template returns false when a template using it is instantized. Useful for the idiom_error_on_instantize
- * @warning how ever we prefer method idiom_missing_overload_as_template_false instead.
+ * @warning check whether we prefer this method of idiom_missing_overload_as_template_false or something else.
 */
 template<typename T> constexpr bool templated_always_false() { return false; }
 
@@ -98,23 +100,28 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 
 	using underlying_type = typename std::underlying_type<TE>::type;
 
-	auto handle_error = [&](const std::string & why) { // handle conversion error
+	// on conversion error, throw exception of given type from ex_type::value_type, and add additional info #why
+	// TODO pass here const auto & to ex_type
+	auto handle_error = [&](const std::string & why, auto ex_type) {
 		if (expected_bad) throw expected_not_found();
 		std::string msg = "Can not convert integer value "s + STR(val_int) + " ("s + typeid(TI).name() + ")"s
-		+ " to enum of type "s + typeid(TE).name() + " "s
-		+ ": "s + why + "."s
-		+ " (and you wanted strict matching of enum type to be hard exception)"s;
-		_throw_error_runtime(msg);
+			+ " to enum of type "s + typeid(TE).name() + " "s
+			+ ": "s + why + "."s
+			+ " (and you wanted strict matching of enum type to be hard exception)"s;
+		using t_ex = typename decltype(ex_type)::value_type;
+		_dbg5("Exception type to throw is: " << typeid(t_ex).name());
+		t_ex ex(msg);
+		_throw_error(ex);
 	};
 
 	try {
 		auto val_underlying = boost::numeric_cast<underlying_type>( val_int );
 		TE the_enum = static_cast<TE>(val_underlying); // <--- this must succeed (without under/overflow) since it's already underlying
-		if (! enum_is_valid_value(the_enum) ) handle_error("Given integer does not map to any defined value of this enum");
+		if (! enum_is_valid_value(the_enum) ) handle_error("No such value defined in enum", std::vector<std::invalid_argument>() );
 		return the_enum; // <=== return
 	} catch(const boost::numeric::bad_numeric_cast &) {
 		handle_error("Given integer value can not be expressed in enum underlying type "s
-			+ " ("s + typeid(underlying_type).name()+")");
+			+ " ("s + typeid(underlying_type).name()+")", std::vector<std::overflow_error>() );
 	}
 
 	DEAD_RETURN_I_AM_SURE();
