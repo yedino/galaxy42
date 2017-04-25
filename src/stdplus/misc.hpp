@@ -44,6 +44,29 @@ class expected_not_found : public stdplus::expected_exception {
 		const char* what() const noexcept override;
 };
 
+/**
+ * idiom_error_on_instantize - this is when we want to do an static_assert,
+ * that triggers when templated function is instantized,
+ * and not just when it's body is parsed.
+ * it can be useful for idiom_error_on_missing_overload_specialization
+ */
+
+/**
+ * idiom_error_on_missing_overload_specialization - this is a situation where
+ * we want to show a NICE compilation error, when ever user tries to do something
+ * that requires user to provide specialization/overload of function foo,
+ * when user fails to provide it.
+ *
+ * 1) It could be done with idiom_error_on_instantize e.g. with templated_always_false()
+ * 2) In future even better way of doing that can be C++20, or BoostConcepts (if we decide to use that lib)
+ * 3) It can be easily done using idiom_missing_overload_as_template_false as following:
+ * template <typename T, typename FALSE = std::false_type>
+ * void foo(T obj) { static_assert(FALSE::value, "my error message"); }
+*/
+
+/**
+ * This template returns false when a template using it is instantized. Useful for the idiom_error_on_instantize
+*/
 template<typename T> constexpr bool templated_always_false() { return false; }
 
 
@@ -129,7 +152,7 @@ const void * iterator_to_voidptr(T iter
 		std::is_same<  typename std::iterator_traits<T>::iterator_category , std::random_access_iterator_tag	 >
 	::value >::type * = 0)
 {
-	typedef typename std::iterator_traits<T>::value_type value_type;
+	using value_type = typename std::iterator_traits<T>::value_type;
 	const value_type & obj = * iter; // pointed object, as some type
 	const void* addr = static_cast<const void*>(&obj); // as raw address
 	return addr;
@@ -143,7 +166,7 @@ std::string to_debug(const T & X, t_debug_style style=e_debug_style_object
 		std::is_same<  typename std::iterator_traits<T>::iterator_category , std::random_access_iterator_tag	 >
 	::value >::type * = 0)
 {
-	(void)(style); // unused
+	UNUSED(style);
 	std::ostringstream oss;
 	oss << "iter("<<iterator_to_voidptr(X)<<")";
 	return oss.str();
