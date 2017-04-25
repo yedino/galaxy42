@@ -77,8 +77,6 @@ inline bool enum_is_valid_value(t_contact value) {
 }
 
 TEST(stdplus_misc, function_enum_to_int__exception_type_overflow_or_invalid) {
-	g_dbg_level_set(5,"test"); /// XXX
-
 	EXPECT_THROW( { auto en = int_to_enum<t_contact>(3);  _UNUSED(en); } , std::invalid_argument );
 	EXPECT_THROW( { auto en = int_to_enum<t_contact>(300);  _UNUSED(en); } , std::overflow_error ); // value wraps
 }
