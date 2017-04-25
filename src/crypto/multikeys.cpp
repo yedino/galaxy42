@@ -89,7 +89,7 @@ void c_multisign::print_signatures() const {
 			t_crypto_system_type sys_enum;
 		try {
 			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
-		} catch(expected_not_found) { continue ; } // not assigned enum type, skip
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
 
 		for (size_t i = 0; i < get_count_keys_in_system(sys_enum); ++i) {
 			_info("[" << i << "]."
@@ -197,7 +197,7 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 				std::string pubkey = pubkeys.get_public(sign_type,i);
 				try {
 					sodiumpp::crypto_sign_verify_detached(signs.at(i), msg, pubkey);
-				} catch (sodiumpp::crypto_error &err) {
+				} catch (const sodiumpp::crypto_error &err) {
 					_throw_error(std::invalid_argument(err.what()));
 				}
 			}
@@ -232,7 +232,7 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 		t_crypto_system_type sys_enum;
 		try {
 			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
-		} catch(...) { continue; }
+		} catch(const expected_not_found &) { continue; }
 
 		if (all_signatures.get_count_keys_in_system(sys_enum) != pubkeys.get_count_keys_in_system(sys_enum)) {
 			std::string err_msg = "count of keys system [";
@@ -273,7 +273,7 @@ c_multisign c_multikeys_PRV::multi_sign(const string &msg) {
 		t_crypto_system_type sys_enum;
 		try {
 			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
-		} catch(expected_not_found) { continue ; } // not assigned enum type, skip
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
 
 		// crypto systems allowed for signing
 		// or allowed crypto system is empty
@@ -383,7 +383,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool wi
 		t_crypto_system_type sys_enum;
 		try {
 			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
-		} catch(expected_not_found) { continue ; } // not assigned enum type, skip
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
 
 		auto how_many = cryptolists_count.at(sys);
 		if (how_many > 0) {

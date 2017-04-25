@@ -161,7 +161,7 @@ std::string c_stream::unbox(const std::string & msg, t_crypto_nonce nonce, bool 
 			<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
 			<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
 		return ret;
-	} catch(std::exception &e) {
+	} catch(const std::exception &e) {
 		_erro("Crypto failed to unbox: " << e.what() << " during: "
 			<< "Decrypt N="<<show_nice_nonce(N)
 			<<" text " << "???" << " <--- " << to_debug(msg)
@@ -314,7 +314,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		t_crypto_system_type sys_enum;
 		try {
 			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
-		} catch(expected_not_found) { continue ; } // not assigned enum type, skip
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
 
 		auto key_count_a = self_pub.get_count_keys_in_system(sys_enum);
 		auto key_count_b = them_pub.get_count_keys_in_system(sys_enum);
