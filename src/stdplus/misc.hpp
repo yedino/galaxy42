@@ -62,10 +62,13 @@ class expected_not_found : public stdplus::expected_exception {
  * 3) It can be easily done using idiom_missing_overload_as_template_false as following:
  * template <typename T, typename FALSE = std::false_type>
  * void foo(T obj) { static_assert(FALSE::value, "my error message"); }
+ *
+ * Method 3 is preferred.
 */
 
 /**
  * This template returns false when a template using it is instantized. Useful for the idiom_error_on_instantize
+ * @warning how ever we prefer method idiom_missing_overload_as_template_false instead.
 */
 template<typename T> constexpr bool templated_always_false() { return false; }
 
@@ -81,10 +84,14 @@ std::string STR(const T & obj) { ///< stringify any object
 	return oss.str();
 }
 
-/// convert integer into enum of given type, throw if this value is not represented in target enum
-/// if expected_bad==true, then for invalid enum thrown exception type is 'expected_not_found'
+/**
+ * convert integer into enum of given type, throw if this value is not represented in target enum
+ * if expected_bad==true, then for invalid enum thrown exception type is 'expected_not_found'
+ */
+
 template <typename TE, typename TI>
-TE int_to_enum(TI val_int, bool expected_bad=false) {
+TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std::is_integral<TI>::value>::type* = 0)
+{
 	using namespace std::string_literals;
 
 	static_assert( std::is_enum<TE>::value , "Must be an enum type (defined enum)");
@@ -109,7 +116,8 @@ TE int_to_enum(TI val_int, bool expected_bad=false) {
 		handle_error("Given integer value can not be expressed in enum underlying type "s
 			+ " ("s + typeid(underlying_type).name()+")");
 	}
-	DEAD_RETURN();
+
+	DEAD_RETURN_I_AM_SURE();
 }
 
 std::string to_string(const std::string & v); ///< just to have identical syntax
