@@ -50,19 +50,21 @@ std::string time_utils::time_t_to_readable(const std::time_t &time, const std::s
 	return full_date;
 }
 
+// use of std::strftime instead of std::put_time, because of no implementation in gcc version < 5 (4.9.2 on debian8)
 std::string time_utils::get_date_str(const std::time_t &time) {
-	std::stringstream ss;
-	ss << std::put_time(std::gmtime(&time), "%FT%T");
+	char buff[35];
+	std::strftime(buff, sizeof(buff), "%FT%T", std::gmtime(&time));
 
-	return ss.str();
+	return std::string(buff);
 }
 
+// use of std::strftime instead of std::put_time, because of no implementation in gcc version < 5 (4.9.2 on debian8)
 std::string time_utils::get_zone_offset_local(const std::time_t &time) {
 
-	std::stringstream zone_stream;
-	zone_stream << std::put_time(std::localtime(&time), "%z");
+	char buff[15];
+	std::strftime(buff, sizeof(buff), "%z", std::localtime(&time));
+	std::string zone_str(buff);
 
-	std::string zone_str = zone_stream.str();
 	zone_str.insert(zone_str.end()-2,':');
 	return zone_str;
 }
