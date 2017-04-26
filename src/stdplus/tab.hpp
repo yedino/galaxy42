@@ -51,8 +51,6 @@ If other conditions are not meet (e.g. offset is bigger then size) function can 
 */
 template <class T1, class T2>
 typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst, size_t offset_src=0, size_t offset_dst=0) {
-	static_assert(is_stl_container_contiguously<T1>::value, "Template parameter T1 is not stl contiguously container");
-	static_assert(is_stl_container_contiguously<T2>::value, "Template parameter T2 is not stl contiguously container");
 	_dbg5("copy (tab) n="<<n);
 	if (n<1) return tab_dst.begin();
 
