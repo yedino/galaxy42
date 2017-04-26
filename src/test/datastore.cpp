@@ -76,6 +76,7 @@ TEST(datastore, bad_file_confdir) {
 
 	std::string test_conf_name = "test_non_important_conffile.configuration";
 	b_fs::path parent_dirname  = datastore::get_parent_path(e_datastore_galaxy_instalation_key_conf, test_conf_name);
+	datastore::create_parent_dir(parent_dirname);
 
 	// trying to open directory
 	ASSERT_FALSE(datastore::is_file_ok(parent_dirname.string()));
