@@ -1,6 +1,7 @@
 #include "dataeater.hpp"
 #include <iostream>
 #include <cstring>
+#include <QDebug>
 
 #include "trivialserialize.hpp"
 
@@ -15,43 +16,45 @@ uint16_t dataeater::pop_msg_size() {
 	return msg_size;
 }
 
-bool dataeater::processFresh() {
-	// change 4 to 2 because of no 0xff at the begin of packet
-	if (m_internal_buffer.size() < 2){
-		return false;
+void dataeater::processFresh() {}
+
+void dataeater::continiueProcessing() {
+	if(!m_is_processing) {
+		// change 4 to 2 because of no 0xff at the begin of packet
+		if (m_internal_buffer.size() < 2) {
+			return;
+		}
+
+		// Is it really neccessary?
+		//if(char (m_internal_buffer.front()) != char(0xff)) {	//frame should start with 0xff. If not - something goes wrong
+		//	m_internal_buffer.pop();
+		//	return false;
+		//}
+
+		m_frame_size = pop_msg_size();
+
+		qDebug() << "qframe size = " << m_frame_size;
+
+		m_current_index = 0;
+		//continiueProcessing();
+		m_is_processing = true;
+
 	}
-
-	// Is it really neccessary?
-	//if(char (m_internal_buffer.front()) != char(0xff)) {	//frame should start with 0xff. If not - something goes wrong
-	//	m_internal_buffer.pop();
-	//	return false;
-	//}
-
-	m_frame_size = pop_msg_size();
-
-	std::cout << "qframe size = " << m_frame_size << std::endl;
-
-	m_current_index = 0;
-	continiueProcessing();
-	return m_is_processing = true;
-}
-
-bool dataeater::continiueProcessing() {
 
 	while (true) {
 		if (m_frame_size == m_current_index) {
 			m_commands_list.push(m_last_command);
 			m_last_command.clear();
-			m_is_processing= false;
+			m_is_processing = false;
 			processFresh();
-			return true;
+			return;
 		} else {
 			if(m_internal_buffer.empty()) break;
 			m_last_command.push_back(static_cast<char>(m_internal_buffer.front())); m_internal_buffer.pop();
 		}
 		m_current_index++;
 	}
-	return m_is_processing;
+
 }
 
 std::string dataeater::getLastCommand() {

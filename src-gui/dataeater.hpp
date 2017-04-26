@@ -25,8 +25,8 @@ private:
 	std::string m_last_command;
 
 	uint16_t pop_msg_size();
-	bool processFresh();
-	bool continiueProcessing();
+	void processFresh();
+	void continiueProcessing();
 
 	bool m_is_processing;
 
@@ -42,11 +42,7 @@ void dataeater::eat(const T &data) {
 	for (const auto &c : data) {
 			m_internal_buffer.push(static_cast<uint8_t>(c));
 	}
-	if(!m_is_processing) {
-		processFresh();
-	} else {
-		continiueProcessing();
-	}
+	continiueProcessing();
 }
 
 
