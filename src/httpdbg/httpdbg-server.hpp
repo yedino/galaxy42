@@ -3,7 +3,7 @@
 #define HTTPDBG_HTTPDBG_SERVER
 
 #include <thread>
-#include <mutex>
+#include "../mutex.hpp"
 #include <memory>
 #include <boost/asio.hpp>
 

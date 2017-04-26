@@ -55,6 +55,7 @@ moved into e.g. src/utils/... and src/stdplus/... and this file will be purely i
 #include <utils/unused.hpp>
 
 #include "stdplus/misc.hpp"
+#include "mutex.hpp" // clang thread safety analysis
 
 using std::string;
 using std::shared_ptr;
