@@ -3,7 +3,7 @@
 
 c_asioservice_manager::c_asioservice_manager(size_t size_)
 	: m_size(size_)
-	// ,m_stop(false)
+	 ,m_stop(false)
 {
 	guard_inv_post;
 
@@ -47,6 +47,7 @@ void c_asioservice_manager::resize_to_at_least(size_t size_) {
 
 	_note("Resizing to size_" << size_ << " now size="<<size()<<" / capacity="<<capacity()
 		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ..._works=" << m_ioservice_idle_works.size() );
+	if (m_stop) { _note("Will NOT resize, because m_stop"); return ; }
 
 	if (size_ <= m_size) {
 		_dbg1("We already have requested size");
@@ -68,13 +69,13 @@ void c_asioservice_manager::resize_to_at_least(size_t size_) {
 		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ..._works=" << m_ioservice_idle_works.size() );
 }
 
-size_t c_asioservice_manager::size() const {
+size_t c_asioservice_manager::size() const noexcept {
 	guard_LOCK(m_mutex);
 	guard_inv;
 	return m_size;
 }
 
-size_t c_asioservice_manager::capacity() const {
+size_t c_asioservice_manager::capacity() const noexcept {
 	guard_LOCK(m_mutex);
 	guard_inv;
 	return m_ioservice_array.size();

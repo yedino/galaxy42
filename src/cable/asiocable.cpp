@@ -9,7 +9,7 @@ c_asiocable::c_asiocable(shared_ptr< c_asioservice_manager > & iomanager)
 {
 }
 
-boost::asio::io_service & c_asiocable::get_io_service() {
+boost::asio::io_service & c_asiocable::get_io_service() noexcept {
 	return m_io_service;
 }
 

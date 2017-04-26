@@ -13,7 +13,7 @@ using read_handler = const std::function<void(const unsigned char *, std::size_t
 
 class c_cable_base_obj : public c_someio {
 	protected:
-		c_cable_base_obj(); // to be used by factory
+		c_cable_base_obj()=default; // to be used by factory
 
 	public:
 		virtual ~c_cable_base_obj() = default;

@@ -39,7 +39,7 @@ void Wrap_NetPlatform_setMTU(const char* interfaceName,
 constexpr size_t IPV6_LEN = 16;
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
-class c_tuntap_base_obj : public c_someio {
+class c_tuntap_base_obj : protected c_someio {
 	public:
 		// the callback function that caller can provide
 		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code& error)>;

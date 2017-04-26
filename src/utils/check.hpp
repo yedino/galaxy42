@@ -205,6 +205,7 @@ template<typename TC> class c_ig final {
 		c_ig(const TC & thisobj, t_invariant_place place, int fromline, const char* fromfile)
 		: m_thisobj(thisobj), m_place(place), m_fromline(fromline), m_fromfile(fromfile)
 		{
+			if (!fromfile) { _erro("Invalid fromfile used in debug."); fromfile="(unknown source file)"; }
 			if ( (place==e_invariant_place_both) || (place==e_invariant_place_pre) ) {
 				try {
 					m_thisobj.Precond();
