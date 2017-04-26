@@ -25,7 +25,7 @@ namespace time_utils {
 	                      int hour,
 	                      int min,
 	                      int sec,
-	                      int isdst = 0);
+	                      int isdst = -1);
 
 	/// Convert t_timepoint to readable date in accordance with ISO 8601 - Combined date and time in UTC
 	/// Only leaving zone empyt guarantees thread safety
