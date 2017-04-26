@@ -16,6 +16,24 @@ stdplus/tab focuses on containers support
 
 namespace stdplus {
 
+/**
+ * Check if elements of container are stored contiguously
+ */
+template <typename T>
+struct is_stl_container_contiguously : std::false_type {
+};
+
+template <typename T, typename A>
+struct is_stl_container_contiguously<std::vector<T, A>> : std::true_type {
+};
+
+template <typename T, size_t N>
+struct is_stl_container_contiguously<std::array<T, N>> : std::true_type {
+};
+
+template <typename T>
+struct is_stl_container_contiguously<std::basic_string<T>> : std::true_type {
+};
 
 /*
 Copies n elements from tab_src container (starting from offset_src)

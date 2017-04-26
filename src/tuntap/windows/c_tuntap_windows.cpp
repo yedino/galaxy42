@@ -5,6 +5,7 @@
 #if defined(ANTINET_windows)
 
 #include "../../utils/check.hpp"
+#include "../../c_ndp.hpp"
 #include <libs0.hpp>
 #include <ifdef.h>
 #include <io.h>
@@ -38,14 +39,50 @@ c_tuntap_windows_obj::c_tuntap_windows_obj()
 }
 
 size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size) {
-	return m_stream_handle.write_some(boost::asio::buffer(data, size));
+	std::array<unsigned char, 14 + 40 + 65535> output_buffer = { // eth header + ipv6 header + max ipv6 payload
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC
+		0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC
+		0x86, 0xDD // eth type: ipv6
+	};
+	// fill eth header
+	std::copy(m_mac_address.begin(), m_mac_address.end(), output_buffer.begin()); // destination mac address
+	std::copy(data, data + size, output_buffer.begin() + 14); // 14 == size of eth header
+	return m_stream_handle.write_some(boost::asio::buffer(output_buffer.data(), size + 14)); // write eth frame
 }
 
 size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t size) {
-	return m_stream_handle.read_some(boost::asio::buffer(data, size));
+	std::array<unsigned char, 14 + 40 + 65535> input_buffer;
+	const unsigned char * const ipv6_begin = input_buffer.data();
+	size_t readed_size = m_stream_handle.read_some(boost::asio::buffer(input_buffer.data(), input_buffer.size()));
+	if (c_ndp::is_packet_neighbor_solicitation(input_buffer.data(), readed_size)) {
+		const std::array<unsigned char, 94> neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement_new(m_mac_address, input_buffer);
+		m_stream_handle.write_some(boost::asio::buffer(neighbor_advertisement_packet_array));
+		return 0;
+	}
+	std::copy_n(input_buffer.begin() + 14, readed_size - 14, data); // without eth header
+	return readed_size - 14;
+}
+
+size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
+	unsigned char * const data, size_t size,
+	std::array<unsigned char, IPV6_LEN>& src_binary_address,
+	std::array<unsigned char, IPV6_LEN>& dst_binary_address) {
+		std::array<unsigned char, 14 + 40 + 65535> input_buffer; // eth header + ipv6 header + max ipv6 payload
+		size_t readed_bytes = read_from_tun(input_buffer.data(), input_buffer.size());
+		if (readed_bytes == 0) return 0;
+		auto ipv6_header_begin = input_buffer.begin() + 14;
+		// copy addresses
+		std::copy(ipv6_header_begin + 8, ipv6_header_begin + 24, src_binary_address.begin());
+		std::copy(ipv6_header_begin + 24, ipv6_header_begin + 40, dst_binary_address.begin());
+		// copy content without addresses
+		std::copy(ipv6_header_begin, ipv6_header_begin + 8, data); // before addresses
+		size_t ipv6_payload_size = readed_bytes - 14 - 40; // size of received bytes without eth and ipv6 header
+		std::copy(ipv6_header_begin + 40, ipv6_header_begin + 40 + ipv6_payload_size, data + 8);
+		return readed_bytes - src_binary_address.size() - dst_binary_address.size();
 }
 
 void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, size_t size, const c_tuntap_base_obj::read_handler &handler) {
+	_NOTREADY();
 }
 
 void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) {
@@ -300,7 +337,7 @@ HANDLE c_tuntap_windows_obj::get_device_handle() {
 	return handle;
 }
 
-HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
+HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) noexcept {
 	_dbg1("start open_tun_device");
 	std::wstring tun_filename;
 	tun_filename += L"\\\\.\\Global\\";
@@ -314,7 +351,6 @@ HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
-	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("CreateFileW error, last error " + std::to_string(GetLastError()));
 	return handle;
 }
 
