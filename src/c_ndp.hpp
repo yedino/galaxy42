@@ -80,7 +80,8 @@ bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) n
 	// ethernet header = 14
 	// ipv6 header = 40
 	// tested on wireshark
-	if (size < (14 + 40)) return false;
+	const int offset_icmpv6_type = 14 + 40 + 0;
+	if (size <= (offset_icmpv6_type)) return false;
 	const unsigned char * const packet_type = data + 14 + 40;
 	if (*packet_type == 135) return true;
 	return false;
