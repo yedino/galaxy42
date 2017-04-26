@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+#include <stdplus/tab.hpp>
 
 class c_tun_device_windows;
 
@@ -53,11 +54,12 @@ class c_ndp {
 		 * @returns neighbor advertisement packet
 		 * Thread safe: no (internal static array is modified)
 		 */
-		template <typename T>
-		static const std::array<unsigned char, 94> &generate_neighbor_advertisement(
-			const T * const sol_src_mac,
-			const T * const source_address_ipv6,
-			const T * const destination_address_ipv6) noexcept;
+		// [performance]
+		// TODO remove new from name after delete deprecated version
+		template <typename T, typename U>
+		static const std::array<unsigned char, 94> generate_neighbor_advertisement_new(
+			const T & mac_address_container,
+			const U & packet_neighbor_solicitation_container);
 
 		// next_hvalue: 58 icmpv6 and 17 for udpv6
 
@@ -84,22 +86,15 @@ bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) n
 	return false;
 }
 
-template<typename T>
-const std::array<unsigned char, 94> &c_ndp::generate_neighbor_advertisement(
-	const T * const sol_src_mac,
-	const T * const source_address_ipv6,
-	const T * const destination_address_ipv6) noexcept {
-
-		static_assert(CHAR_BIT == 8, "");
-		static_assert(sizeof(typename std::remove_pointer<decltype(sol_src_mac)>::type) == 1, "");
-		static_assert(sizeof(typename std::remove_pointer<decltype(source_address_ipv6)>::type) == 1, "");
-		static_assert(sizeof(typename std::remove_pointer<decltype(destination_address_ipv6)>::type) == 1, "");
-
-		std::copy(sol_src_mac, sol_src_mac + 6, &m_generate_neighbor_advertisement_packet.at(0)); // copy 6 bytes of mac address
-		std::copy(source_address_ipv6, source_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(22)); // copy ipv6 address into ipv6.src field
-		std::copy(destination_address_ipv6, destination_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(38)); // copy ipv6 address into ipv6.dst field
-		std::copy(source_address_ipv6, source_address_ipv6 + 16, &m_generate_neighbor_advertisement_packet.at(62)); // copy ipv6 address into icmpv6.target_address field
-		std::copy(sol_src_mac, sol_src_mac + 6, &m_generate_neighbor_advertisement_packet.at(88)); // copy 6 bytes of mac address into icmpv6.link_layer address field
+template <typename T, typename U>
+static const std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement_new(
+	const T & mac_address_container,
+	const U & packet_neighbor_solicitation_container) {
+		stdplus::copy_safe_apart(6, mac_address_container, m_generate_neighbor_advertisement_packet); // copy 6 bytes of mac address
+		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 62, 22); // copy ipv6 address into ipv6.src field
+		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 22, 38); // copy ipv6 address into ipv6.dst field
+		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 0, 62); // copy ipv6 address into icmpv6.target_address field
+		stdplus::copy_safe_apart(6, mac_address_container, m_generate_neighbor_advertisement_packet, 0, 88); // copy 6 bytes of mac address into icmpv6.link_layer address field
 		// clear checksum field
 		m_generate_neighbor_advertisement_packet.at(56) = 0x00;
 		m_generate_neighbor_advertisement_packet.at(57) = 0x00;
