@@ -82,15 +82,15 @@ Catch it using:
 Popular kinds of thread safety used in this project:
 
 @thread `thread_safe` - applies to function: for member function it means that it is safe to call object of this class
-concurently from different threads without any additional synchronization by caller;
+concurrently from different threads without any additional synchronization by caller;
 for free function it means that it is safe to call this free function
-concurently from different threads without any additional synchronization by caller;
+concurrently from different threads without any additional synchronization by caller;
 
 @thread `thread_safe_public_myself` - applies to a class - means "Thread Safe on Public, if I'm just using Myself":
 all public function are `thread_safe` unless noted otherwise,
 except for all constructors (including move and copy), destructor,
-and except for functions and opeartors that take same-class (or parent/child class) - like especially copy operator=,
-moving operator=, comparsion operator< operator> operator== and such.
+and except for functions and operators that take same-class (or parent/child class) - like especially copy operator=,
+moving operator=, comparison operator< operator> operator== and such.
 
 # Building
 
