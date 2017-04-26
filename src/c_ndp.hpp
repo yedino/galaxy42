@@ -93,7 +93,7 @@ static const std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisemen
 		stdplus::copy_safe_apart(6, mac_address_container, m_generate_neighbor_advertisement_packet); // copy 6 bytes of mac address
 		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 62, 22); // copy ipv6 address into ipv6.src field
 		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 22, 38); // copy ipv6 address into ipv6.dst field
-		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 0, 62); // copy ipv6 address into icmpv6.target_address field
+		stdplus::copy_safe_apart(16, packet_neighbor_solicitation_container, m_generate_neighbor_advertisement_packet, 62, 62); // copy ipv6 address into icmpv6.target_address field
 		stdplus::copy_safe_apart(6, mac_address_container, m_generate_neighbor_advertisement_packet, 0, 88); // copy 6 bytes of mac address into icmpv6.link_layer address field
 		// clear checksum field
 		m_generate_neighbor_advertisement_packet.at(56) = 0x00;
