@@ -152,7 +152,7 @@ void c_the_program_newloop::use_options_peerref() {
 			_info( peer_ref  );
 			UsePtr(pimpl->server).add_peer_simplestring( peer_ref );
 		}
-	} catch(std::exception &err) {
+	} catch(const std::exception &err) {
 		_warn(err.what());
 		ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
 	}
@@ -208,7 +208,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 			} else {
 				_fact( "You have no ID keys yet - so will create new keys for you." );
 
-				auto step_make_default_keys = [&]()	{
+				auto step_make_default_keys = [&]() {
 					ui::action_info_ok("Generating your new keys.");
 					const string IDI_name = UsePtr(pimpl->server).program_action_gen_key_simple();
 					UsePtr(pimpl->server).program_action_set_IDI(IDI_name);
