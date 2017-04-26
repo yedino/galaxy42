@@ -142,6 +142,7 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 }
 
 uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
+	_check_assert(length > 0);
 	if(little_edian)
 		next_hvalue = htonl(next_hvalue);
 
