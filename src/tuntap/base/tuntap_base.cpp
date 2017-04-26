@@ -39,7 +39,7 @@ void Wrap_NetPlatform_addAddress(const char *interfaceName,
 
 #if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
 	_fact("Setting IP address: interfaceName="<<interfaceName
-		  <<" address="<<address
+		  // <<" address="<<address // TODO print address correctly
 		  <<" prefixLen="<<prefixLen
 		  <<" addrFam="<<addrFam);
 	t_syserr syserr = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
