@@ -1,8 +1,10 @@
 #pragma once
 
-// comment
-// in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
+// any errors about not-returning value from non-void function, will be hard errors,
+// you can quiet them e.g. using DEAD_RETURN_I_AM_SURE();
+#pragma GCC diagnostic error "-Wreturn-type"
 
+// in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
 #if __linux__
 	#define ANTINET_linux
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
@@ -23,3 +25,12 @@
 #else
 	#error Platform is not supported
 #endif
+
+
+// ===========================================================================================================
+// TODO is this needed?
+#if defined (__MINGW32__)
+	#undef _assert
+#endif
+
+
