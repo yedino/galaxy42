@@ -27,26 +27,33 @@ namespace time_utils {
 	                      int sec,
 	                      int isdst = 0);
 
-	/// convert t_timepoint to readable date in accordance with ISO 8601 - Combined date and time in UTC
+	/// Convert t_timepoint to readable date in accordance with ISO 8601 - Combined date and time in UTC
+	/// Only leaving zone empyt guarantees thread safety
 	std::string timepoint_to_readable(const t_timepoint &tp, const std::string &zone = "");
 
-	/// convert time_t to readable date in accordance with ISO 8601 - Combined date and time in UTC
+	/// Convert time_t to readable date in accordance with ISO 8601 - Combined date and time in UTC
+	/// Only leaving zone empyt guarantees thread safety
 	std::string time_t_to_readable(const std::time_t &time, const std::string &zone = "");
 
+	/// get only date, without timezone info
+	std::string get_date_str(const std::time_t &time);
 	/**
 	 * change zone offset format accordinig to ISO 8601:
 	 * +0200->+02:00
 	 * -0430->-04:00
 	 * because of zone setting, gen_exact_date uses C getenv, setenv, tzset function
-	 * that are not thread safe
+	 *
+	 * This functions is not thread safe !
 	 *
 	 * available zones could be find on:
 	 *   https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 	 * or on linux in file:
 	 *   /usr/share/zoneinfo/zone.tab
 	 */
-	std::string get_zone_offset(const time_t &time, const std::string &zone = "");
+	std::string get_zone_offset_universal(const time_t &time, const std::string &zone = "");
 
+	/// getting default timezone without getenv, setenv, tzset functions
+	std::string get_zone_offset_local(const std::time_t &time);
 }
 
 #endif // TIME_UTILS_HPP
