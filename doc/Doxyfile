@@ -240,6 +240,7 @@ TAB_SIZE               = 4
 
 ALIASES += "ref_to_owners=\ref my_owners See \"Galaxy42-DevOwners\""
 ALIASES += owner="\xrefitem my_owners \ref_to_owners \"Owner\""
+ALIASES += codestyle="\par \htmlonly<i style=\"color:blue\">\endhtmlonly Code-Style: \htmlonly</i>\endhtmlonly "
 ALIASES += thread="\ref Hacking \"Thread Safe\""
 
 #ALIASES += xreflist{2}="\xrefitem \1 \"\2\""

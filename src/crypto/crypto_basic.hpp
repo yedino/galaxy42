@@ -103,7 +103,7 @@ T1 binary_string_xor(T1 const & str1, T2 const& str2) {
 	const auto size1 = str1.size();
 	const auto size2 = str2.size();
 	if (size1 != size2) throw std::runtime_error(
-		string("Can not execute function ")	+ string(__func__) + string(" because different size: ")
+		std::string("Can not execute function ")	+ std::string(__func__) + std::string(" because different size: ")
 		+ std::to_string(size1) + " vs " + std::to_string(size2) );
 
 	// this is safe also for locked string:
@@ -143,7 +143,6 @@ t_hash_PRV Hash1_PRV( const t_hash_PRV & hash );
 t_hash_PRV Hash2_PRV( const t_hash_PRV & hash );
 
 ///@}
-
 // ==================================================================
 
 /// must match: t_crypto_system_type_to_name()
@@ -163,6 +162,27 @@ enum t_crypto_system_type : unsigned char {
 	e_crypto_system_type_multisign = 31,
 	e_crypto_system_type_END,
 };
+inline bool enum_is_valid_value(t_crypto_system_type value) {
+	switch (value) {
+		case e_crypto_system_type_invalid:
+		case e_crypto_system_type_X25519:
+		case e_crypto_system_type_Ed25519:
+		case e_crypto_system_type_NTRU_EES439EP1:
+		case e_crypto_system_type_SIDH:
+		case e_crypto_system_type_geport_todo:
+		case e_crypto_system_type_symhash_todo:
+		case e_crypto_system_type_NTRU_sign:
+		case e_crypto_system_type_END_normal:
+
+		case e_crypto_system_type_multikey_pub:
+		case e_crypto_system_type_multikey_private:
+		case e_crypto_system_type_multisign:
+		case e_crypto_system_type_END:
+		return true;
+	}
+	return false;
+}
+
 
 std::string t_crypto_system_type_to_name(int val);
 std::string enum_name(t_crypto_system_type e);
