@@ -88,7 +88,7 @@ bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) n
 }
 
 template <typename T, typename U>
-static const std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement_new(
+const std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement_new(
 	const T & mac_address_container,
 	const U & packet_neighbor_solicitation_container) {
 		stdplus::copy_safe_apart(6, mac_address_container, m_generate_neighbor_advertisement_packet); // copy 6 bytes of mac address
