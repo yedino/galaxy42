@@ -55,7 +55,7 @@ size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t siz
 	const unsigned char * const ipv6_begin = input_buffer.data();
 	size_t readed_size = m_stream_handle.read_some(boost::asio::buffer(input_buffer.data(), input_buffer.size()));
 	if (c_ndp::is_packet_neighbor_solicitation(input_buffer.data(), readed_size)) {
-		const std::array<unsigned char, 94> &neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement(m_mac_address.data(), input_buffer.data() + 62, input_buffer.data() + 22);
+		const std::array<unsigned char, 94> neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement_new(m_mac_address, input_buffer);
 		m_stream_handle.write_some(boost::asio::buffer(neighbor_advertisement_packet_array));
 		return 0;
 	}

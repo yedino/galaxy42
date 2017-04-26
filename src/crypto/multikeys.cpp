@@ -86,7 +86,11 @@ string c_multisign::get_signature(t_crypto_system_type crypto_type, size_t numbe
 void c_multisign::print_signatures() const {
 	_info("Printing all sinatures in c_multisign:");
 	for (size_t sys = 0; sys < get_count_of_systems(); ++sys) {
-		auto sys_enum = int_to_enum<t_crypto_system_type>(sys);
+			t_crypto_system_type sys_enum;
+		try {
+			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
+
 		for (size_t i = 0; i < get_count_keys_in_system(sys_enum); ++i) {
 			_info("[" << i << "]."
 				  << t_crypto_system_type_to_name(sys_enum)
@@ -193,7 +197,7 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 				std::string pubkey = pubkeys.get_public(sign_type,i);
 				try {
 					sodiumpp::crypto_sign_verify_detached(signs.at(i), msg, pubkey);
-				} catch (sodiumpp::crypto_error &err) {
+				} catch (const sodiumpp::crypto_error &err) {
 					_throw_error(std::invalid_argument(err.what()));
 				}
 			}
@@ -225,21 +229,23 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 	}
 
 	for (size_t sys=0; sys < all_signatures.get_count_of_systems(); ++sys) {
+		t_crypto_system_type sys_enum;
+		try {
+			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
+		} catch(const expected_not_found &) { continue; }
 
-		auto crypto_type = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto syste
-
-		if (all_signatures.get_count_keys_in_system(crypto_type) != pubkeys.get_count_keys_in_system(crypto_type)) {
+		if (all_signatures.get_count_keys_in_system(sys_enum) != pubkeys.get_count_keys_in_system(sys_enum)) {
 			std::string err_msg = "count of keys system [";
-			err_msg += t_crypto_system_type_to_name(crypto_type);
+			err_msg += t_crypto_system_type_to_name(sys_enum);
 			err_msg += "] in c_multikeypub and c_multisign different!";
 			_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		// crypto systems allowed for signing
-		if (!c_multisign::cryptosystem_sign_allowed(crypto_type)) {
+		if (!c_multisign::cryptosystem_sign_allowed(sys_enum)) {
 			continue;
 		}
-		multi_sign_verify(all_signatures.get_signature_vec(crypto_type), msg, pubkeys, crypto_type);
+		multi_sign_verify(all_signatures.get_signature_vec(sys_enum), msg, pubkeys, sys_enum);
 	}
 }
 
@@ -264,17 +270,20 @@ c_multisign c_multikeys_PRV::multi_sign(const string &msg) {
 	// all key crypto systems
 	for (size_t sys=0; sys<get_count_of_systems(); ++sys) {
 
-		auto crypto_type = int_to_enum<t_crypto_system_type>(sys); // enum of this crypto syste
+		t_crypto_system_type sys_enum;
+		try {
+			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
 
 		// crypto systems allowed for signing
 		// or allowed crypto system is empty
-		if (!c_multisign::cryptosystem_sign_allowed(crypto_type) ||
-			get_count_keys_in_system(crypto_type) == 0) {
+		if (!c_multisign::cryptosystem_sign_allowed(sys_enum) ||
+			get_count_keys_in_system(sys_enum) == 0) {
 			continue;
 		}
 
-		std::vector<std::string> signatures = multi_sign(msg, crypto_type);
-		multi_signature.add_signature_vec(signatures, crypto_type);
+		std::vector<std::string> signatures = multi_sign(msg, sys_enum);
+		multi_signature.add_signature_vec(signatures, sys_enum);
 		//multi_signature.add_signature_vec(signatures, sys_enum);
 	}
 	return multi_signature;
@@ -371,14 +380,18 @@ void c_multikeys_PAIR::generate(t_crypto_system_count cryptolists_count, bool wi
 	_info("Generating from cryptolists_count");
 	for (size_t sys=0; sys<cryptolists_count.size(); ++sys) { // all key crypto systems
 		// for given crypto system:
-		auto sys_id = int_to_enum<t_crypto_system_type>(sys); // ID of this crypto system
+		t_crypto_system_type sys_enum;
+		try {
+			sys_enum = int_to_enum<t_crypto_system_type>(sys,true); // enum of this crypto system
+		} catch(const expected_not_found &) { continue ; } // not assigned enum type, skip
+
 		auto how_many = cryptolists_count.at(sys);
 		if (how_many > 0) {
-			_info("Generate keys " << t_crypto_system_type_to_name(sys_id) << " in amount: "<<how_many);
-			if ( will_asymkex || false==t_crypto_system_type_is_asymkex(sys_id) ) {
-				this->generate(sys_id, how_many);
+			_info("Generate keys " << t_crypto_system_type_to_name(sys_enum) << " in amount: "<<how_many);
+			if ( will_asymkex || false==t_crypto_system_type_is_asymkex(sys_enum) ) {
+				this->generate(sys_enum, how_many);
 			} else _dbg1("Skipping because this is asymkex, and we do not want to do that "
-				<< "will_asymkex="<<will_asymkex<<" : " << std::to_string(sys_id));
+				<< "will_asymkex="<<will_asymkex<<" : " << std::to_string(sys_enum));
 		}
 	}
 }
