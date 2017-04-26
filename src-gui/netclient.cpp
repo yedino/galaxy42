@@ -1,5 +1,6 @@
 #include "netclient.hpp"
 #include <cassert>
+#include <memory>
 #include <sodium.h>
 
 netClient::netClient(std::shared_ptr<commandExecutor> cmd_exec_ptr)
