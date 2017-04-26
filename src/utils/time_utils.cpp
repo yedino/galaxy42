@@ -38,15 +38,36 @@ std::string time_utils::timepoint_to_readable(const time_utils::t_timepoint &tp,
 }
 
 std::string time_utils::time_t_to_readable(const std::time_t &time, const std::string &zone) {
+
+	std::string full_date = get_date_str(time);
+
+	if(zone.empty()) {
+		full_date += time_utils::get_zone_offset_local(time);
+	} else {
+		full_date += time_utils::get_zone_offset_universal(time, zone);
+	}
+
+	return full_date;
+}
+
+std::string time_utils::get_date_str(const std::time_t &time) {
 	std::stringstream ss;
 	ss << std::put_time(std::gmtime(&time), "%FT%T");
-
-	ss << time_utils::get_zone_offset(time, zone);
 
 	return ss.str();
 }
 
-std::string time_utils::get_zone_offset(const std::time_t &time, const std::string &zone) {
+std::string time_utils::get_zone_offset_local(const std::time_t &time) {
+
+	std::stringstream zone_stream;
+	zone_stream << std::put_time(std::localtime(&time), "%z");
+
+	std::string zone_str = zone_stream.str();
+	zone_str.insert(zone_str.end()-2,':');
+	return zone_str;
+}
+
+std::string time_utils::get_zone_offset_universal(const std::time_t &time, const std::string &zone) {
 
 	// save actual // char* because getenv could return null
 	char* ctz(getenv("TZ"));
@@ -59,8 +80,7 @@ std::string time_utils::get_zone_offset(const std::time_t &time, const std::stri
 	}
 	tzset();
 
-	std::stringstream zone_stream;
-	zone_stream << std::put_time(std::localtime(&time), "%z");
+	std::string zone_str = get_zone_offset_local(time);
 
 	// back to actual
 	if(ctz != NULL) {
@@ -70,7 +90,5 @@ std::string time_utils::get_zone_offset(const std::time_t &time, const std::stri
 	}
 	tzset();
 
-	std::string zone_str = zone_stream.str();
-	zone_str.insert(zone_str.end()-2,':');
 	return zone_str;
 }
