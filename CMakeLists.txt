@@ -48,6 +48,8 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     else()
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
     endif()
+    # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wthread-safety")
   else()
     message(FATAL_ERROR "No C++14 support for Clang version. Please upgrade Clang to a version supporting C++14.")
   endif()
@@ -346,7 +348,7 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
+file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/stdplus/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
 
 if(HTTP_DEBUGGER)
 	add_definitions(-DHTTP_DBG)

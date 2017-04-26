@@ -24,7 +24,7 @@ class c_cable_udp final : public c_asiocable {
 	private:
 		boost::asio::ip::udp::socket m_read_socket;
 		boost::asio::ip::udp::socket m_write_socket;
-		std::mutex m_enpoint_list_mutex;
+		Mutex m_enpoint_list_mutex;
 		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list;
 
 };

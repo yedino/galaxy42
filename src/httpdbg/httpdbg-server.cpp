@@ -220,7 +220,7 @@ string c_httpdbg_raport::generate(string url) {
 	ostringstream out;
 	generate_current_date(out);
 
-	lock_guard<mutex> lg( m_target.get_my_mutex() );
+	Lock_guard<Mutex> lg( m_target.get_my_mutex() );
 
 	generate_table_of_peers(out, url);
 	generate_table_of_tunnels(out, url);

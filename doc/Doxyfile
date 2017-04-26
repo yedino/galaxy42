@@ -238,13 +238,19 @@ TAB_SIZE               = 4
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
-ALIASES                = 
+ALIASES += "ref_to_owners=\ref my_owners See \"Galaxy42-DevOwners\""
+ALIASES += owner="\xrefitem my_owners \ref_to_owners \"Owner\""
+ALIASES += codestyle="\par \htmlonly<i style=\"color:blue\">\endhtmlonly Code-Style: \htmlonly</i>\endhtmlonly "
+ALIASES += thread="\ref Hacking \"Thread Safe\""
+
+#ALIASES += xreflist{2}="\xrefitem \1 \"\2\""
+#ALIASES += "owner=\xrefitem{2} owners \"\ref hacking.md \""
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
 # will allow you to use the command class in the itcl::class meaning.
 
-TCL_SUBST              = 
+TCL_SUBST              =
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
