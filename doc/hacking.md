@@ -1,4 +1,4 @@
-
+@page Hacking
 # Hacking
 
 This page described how to "Hack" this project - how to develop it, how to change it, how to build it - topics for developers.
@@ -12,9 +12,31 @@ Intended for:
 # Summary for every developer!
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
+Know the Editor (below).
 
 Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
+
+```cpp
+_dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
+_check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
+STR(...) to_string(...) "..."s
+to_debug(...);
+is_ascii_normal(str); reasonable_size(vec);
+UsePtr(p).func();
+
+/**
+ * @codestyle
+ * @thread ...
+ * @owner rfree
+ */
+
+catch(const ex_type & ex){}
+
+UNUSED(x); DEAD_RETURN();
+```
+
+
 
 ```cpp
 
@@ -28,17 +50,18 @@ _mark(X) // hot topics (usually for testing)
 // TODO  ....  TODO@author
 thing_to_be_fixed_before_release ; // TODO-release
 
-is_ascii_normal // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
-
-assert() / _check_abort() / _check()
-1. abort on error (only guaranteed in debug mode) - assert() // from compiler
-2. abort on error (always guaranteed) - _check_abort() // our lib
-3. throw on error - _check() // our lib
+is_ascii_normal(str) // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
 
 Function: if throw - then std::exception (or child class).
 Member functions: assume are not thread safe for concurent writes to same object, unless:
 // [thread_safe] - thread safe functions.
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
+
+_check_abort() / _abort() / _check() / _try()
+1. abort on error (always guaranteed) - _check_abort() // our lib
+2. abort on error (only guaranteed in debug mode) - assert() // from compiler
+3a. throw on error - _check() - hard exception type // our library
+3b. throw on error - _try() - soft exception type // our library
 
 Throw:
 _throw_error_runtime("TTL too big");
@@ -68,11 +91,25 @@ try {
 reasonable_size( vec ); // <--- test potentially big objects on input, function start
 
 Catch it using:
-  catch(std::runtime_error &ex) // catch all errors, including check soft and hard errors
+  catch(const std::runtime_error &ex) // catch all errors, including check soft and hard errors
 -or-
 // catch soft (expected) error, but hard errors propagate
-  catch(err_check_soft &soft) { string info = soft.what_soft(); }
+  catch(const err_check_soft &soft) { string info = soft.what_soft(); }
 // for more see chapter Check-asserts
+
+enum class t_temper { cold=15, hot=80 }; // for (de)serializable Enums. See "Enum" below.
+inline bool enum_is_valid_value(t_temper value) {
+	switch (value) {
+		case t_temper::cold :
+		case t_temper::hot :
+		return true;
+	}
+	return false;
+}
+
+t_temper water_temp = int_to_enum<t_temper>( 80 ); // asserted
+
+
 ```
 
 # Doxygen tags attributes
@@ -108,9 +145,10 @@ The use of this project/programs as end-user, is described in other places, see 
 
 # Developing
 
-To develop the program, we recommend mainly Debian Stable as the main environment at this time.
+To develop the program, we recommend mainly Debian Stable (Jassie, Amd64) as the main environment at this time;
+Ubuntu and Mint also are used by developers so we can recommend them (at least in some versions),
 
-IF YOU ADD ANY DEPENDENCY THEN write it in dependencies list in [SECURITY.txt].
+IF YOU ADD ANY DEPENDENCY (library) THEN write it in dependencies list in [SECURITY.txt].
 
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
@@ -136,6 +174,37 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
 
+## Editor
+
+### Editing source code (and in general text files)
+
+Identation is done with tab-characters.
+Files should be in UTF-8, using Unix line-end markers (exceptions allowed for files edited on windows, temporarly).
+
+We assume/recommend to display tabs as 2-character-wide.
+We recommend keeping lines-length below 100-120, max 130 collumns (with following tab size).
+
+Following comment-line horizontal ruler ornaments are used (given here below as `.vimrc` macros to be pasted);
+Optionally, following marking of leave-block instructions (to be used especially when block is exited suddently instead at normal end of it)
+
+Recommended vimrc settings to use if that is your editor:
+
+```vim
+:set noexpandtab
+:set copyindent
+:set smarttab
+:set smartindent
+:set softtabstop=0
+:set shiftwidth=2
+:set tabstop=2
+
+iabbrev !!# // ###########################################################################################################
+iabbrev !!= // ===========================================================================================================
+iabbrev !!- // -------------------------------------------------------------------
+iabbrev !!r return ; // <=== return
+iabbrev !!b break ; // <=== break
+```
+
 ## Developing and code details
 
 # Developer handbook
@@ -146,10 +215,17 @@ Read also the Summary chapter first. More details are in file **utils/check.hpp*
 
 You can also catch:
 ```
-catch(err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
-catch(err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
-catch(err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
+catch(const err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
+catch(const err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
+catch(const err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
 ```
+
+## Enum
+
+When using enums, try to use enum-class.
+If given enum needs to be (de)serializable or otherwise convertible from-integer, then provide override of function:
+`inline bool enum_is_valid_value(t_your_enum_type value);`
+that will return true if given enum has allowed value in it; else false. See unit tests (`stdplus_misc.cpp`) for example.
 
 ### Startup of TUN/TAP card
 
@@ -251,7 +327,7 @@ At the moment test suite includes:
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
 
-* SIOM - Service_IO Manager - asio::service_io manager, see asio_ioservice_manager.cpp
+* SIOM - `Service_IO Manager` - `asio::service_io` manager, see `asio_ioservice_manager.cpp`
 
 * Hash-Node (or just "Node") - is some sort of computer system that has a Hash-IP, and usually is connected with it to some network.
 For Galaxy42, a Node will be any computer running the Galaxy42 client program.

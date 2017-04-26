@@ -184,19 +184,27 @@ class generator final {
  * @{
  */
 
-// example "abstract" serialize() - it should not be used ever, instead user needs to provide own version of it
-template <typename T> void obj_serialize(const T & data, trivialserialize::generator & gen) {
+/**
+ * example "abstract" serialize - it should not be used ever, instead user needs to provide own version of it
+ * this will cause compilation error if user tries to call it (instead of providing own specialization)
+ */
+template <typename T>
+void obj_serialize(const T & data, trivialserialize::generator & gen) {
 	UNUSED(data); UNUSED(gen);
-	static_assert(templated_always_false<T>(),
+	static_assert(templated_always_false<T>, // check with idiom_error_on_instantize
 		"To use this type in serialization, implement specialized template<> serialize(..) for it.");
 	assert(false);
 }
 
-// example "abstract" obj_deserialize() - it should not be used ever, instead user needs to provide own version of it
+/**
+ * example "abstract" deserialize - it should not be used ever, instead user needs to provide own version of it
+ * this will cause compilation error if user tries to call it (instead of providing own specialization)
+ */
 class parser; // needs the forward declaration if placed here
-template <typename T> T obj_deserialize(trivialserialize::parser & parser) {
+template <typename T>
+T obj_deserialize(trivialserialize::parser & parser) {
 	UNUSED(parser);
-	static_assert(templated_always_false<T>(),
+	static_assert(templated_always_false<T>, // check with idiom_error_on_instantize
 		"To use this type in deserialization, implement specialized template<> obj_deserialize(..) for it.");
 	assert(false);
 	T ret;
