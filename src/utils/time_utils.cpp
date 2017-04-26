@@ -2,7 +2,7 @@
 
 #include <iomanip>
 #include <ctime>
-
+#include "../platform.hpp"
 
 time_t time_utils::gen_exact_date(int year,
                       int month,
