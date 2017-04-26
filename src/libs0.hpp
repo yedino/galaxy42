@@ -52,6 +52,8 @@ moved into e.g. src/utils/... and src/stdplus/... and this file will be purely i
 
 #include "utils/check.hpp"
 
+#include <utils/unused.hpp>
+
 #include "stdplus/misc.hpp"
 
 using std::string;
@@ -87,8 +89,6 @@ using namespace std::string_literals; // <=== using entire namespace
 
 using namespace stdplus;
 
-
-#define UNUSED(expr) do { (void)(expr); } while (0)
 #define SVAR(x) #x << " = " << x
 
 
@@ -116,9 +116,6 @@ using namespace stdplus;
 
 // ==================================================================
 
-// ??? decide: XXX
-#include "tnetdbg.hpp"
-
 // --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
 /***
  * type that is a size_t, but can be with error-signaling value e.g. -1, otherwise it is valid.
@@ -140,8 +137,6 @@ inline bool size_t_is_ok(size_t x) {
 // -----------------------------------------
 
 
-
-
 #define PTR(X) (PTR_assert(X, __func__))
 template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
 	if (!(ptr!=nullptr)) {
@@ -152,13 +147,6 @@ template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
 	}
 	return ptr;
 }
-
-
-#define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
-<<__func__<<" (line "<<__LINE__<<")"; \
-_erro(oss.str()); \
-throw std::runtime_error(oss.str()); \
-} while(0)
 
 
 #if defined(_MSC_VER)

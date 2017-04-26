@@ -2,7 +2,7 @@
 
 #include "my_tests_lib.hpp"
 
-TestsEnvReseter::TestsEnvReseter() : m_count_tests_skipped(0) { } 
+TestsEnvReseter::TestsEnvReseter() : m_count_tests_skipped(0) { }
 
 std::string banner_skip() {
 	//     "[  PASSED  ]"
@@ -13,7 +13,7 @@ std::string banner_skip() {
 // Called before a test starts.
 void TestsEnvReseter::OnTestStart(const ::testing::TestInfo& test_info) {
 	_UNUSED(test_info);
-	g_dbg_level_set(100, "Be quiet during tests");
+	g_dbg_level_set(150, "Be quiet during tests", true, true);
 	// test_info.test_case_name(), test_info.name());
 }
 

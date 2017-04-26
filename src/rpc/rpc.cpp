@@ -4,7 +4,9 @@
 #include "../trivialserialize.hpp"
 #include <json.hpp>
 
-#define _dbg(X) do std::cout << X << "\n"; while(0)
+#include <libs0.hpp>
+
+#define _dbg(X) _info("RPC: " << X);
 
 c_rpc_server::c_rpc_server(const unsigned short port)
 :
