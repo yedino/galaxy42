@@ -233,8 +233,8 @@ Therefore to express entire e.g. vector<T> v, you would give range
 as v.begin() , v.end()-1 and after first checking that v is not empty.
 */
 template <typename TIn, typename TOut> bool test_ranges_overlap_inclusive_noempty(TIn start1, TIn last1,  TOut start2, TOut last2) noexcept {
-	_check_abort( std::less_equal<decltype(start1)>() (start1, last1) );
-	_check_abort( std::less_equal<decltype(start1)>() (start2, last2) );
+	_check_abort( iterator_less_equal(start1, last1) );
+	_check_abort( iterator_less_equal(start2, last2) );
 
 	// start1 < last2 && (start2 < last1)
 	return ( iterator_less_equal(start1,last2) && iterator_less_equal(start2,last1) );
