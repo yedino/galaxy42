@@ -32,8 +32,8 @@ class c_asioservice_manager final {
 
 		boost::asio::io_service &get_next_ioservice(); ///< [thread_safe] returns reference to an ioservice, it is valid as long as this object.
 
-		size_t capacity() const; ///< [thread_safe] get capacity
-		size_t size() const; ///< [thread_safe] get current size
+		size_t capacity() const noexcept; ///< [thread_safe] get capacity
+		size_t size() const noexcept; ///< [thread_safe] get current size
 
 		void stop_all_threadsafe(); ///< [thread_safe] runs stop on all our ioservices
 
@@ -42,10 +42,12 @@ class c_asioservice_manager final {
 		c_asioservice_manager(c_asioservice_manager &&)=delete; // not moveable
 		c_asioservice_manager& operator=(c_asioservice_manager &&)=delete; // not moveable
 
+	// ---------- enable pre/post condition  ----------
 	private:
 		void Precond() const;
 		void Postcond() const;
 		friend class c_ig<c_asioservice_manager>;
+	// ----------
 
 	private:
 		/// max supported count of ioservices that we can have (capacity). @see m_size for actuall

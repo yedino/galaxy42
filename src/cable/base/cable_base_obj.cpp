@@ -5,9 +5,5 @@
 
 
 
-c_cable_base_obj::c_cable_base_obj()
-{
-}
-
 
 
