@@ -406,7 +406,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 }
 
 #ifdef HTTP_DBG
-std::mutex & c_tunserver::get_my_mutex() const {
+Mutex & c_tunserver::get_my_mutex() const {
 	return this->m_my_mutex; // TODO or const-cast here? from mutable?
 }
 #endif
@@ -431,7 +431,7 @@ string c_tunserver::get_my_ipv6_nice() const {
 
 
 int c_tunserver::get_my_stats_peers_known_count() const {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	Lock_guard<Mutex> lg(m_peer_mutex);
 	return m_peer.size();
 }
 
@@ -513,7 +513,7 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
-		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		Lock_guard<Mutex> lg(m_peer_mutex);
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	}
 }
@@ -535,7 +535,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
 
 	{ // lock
-		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		Lock_guard<Mutex> lg(m_peer_mutex);
 
 		try {
 			_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
@@ -700,7 +700,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 }
 
 void c_tunserver::peering_ping_all_peers() {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	Lock_guard<Mutex> lg(m_peer_mutex);
 	auto now = std::chrono::steady_clock::now();
 	_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
@@ -741,7 +741,7 @@ void c_tunserver::peering_ping_all_peers() {
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	Lock_guard<Mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -750,7 +750,7 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 }
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	Lock_guard<Mutex> lg(m_peer_mutex);
 	auto peer_iter = m_peer.find(addr);
 	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
 	c_peering & peer = * peer_iter->second;
@@ -761,7 +761,7 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 }
 
 void c_tunserver::debug_peers() {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	Lock_guard<Mutex> lg(m_peer_mutex);
 	if (!m_peer.size()) _stat("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
@@ -788,7 +788,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 
 	// find c_peering to send to // TODO(r) this functionallity will be soon
 	// doubled with the route search in m_routing_manager below, remove it then
-	std::unique_lock<std::mutex> lg(m_peer_mutex);
+	Unique_lock<Mutex> lg(m_peer_mutex);
 	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
@@ -845,7 +845,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 }
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	Lock_guard<Mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
@@ -889,7 +889,7 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
 	std::ostringstream oss;
-	std::unique_lock<std::mutex> lg(m_peer_mutex);
+	Unique_lock<Mutex> lg(m_peer_mutex);
 	for (const auto &peer : m_peer) {
 		oss << peer.second->get_pip();
 		oss << "-";
@@ -937,7 +937,7 @@ void c_tunserver::event_loop(int time) {
 
 	bool was_connected=true;
 	{
-		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		Lock_guard<Mutex> lg(m_peer_mutex);
 		if (! m_peer.size()) {
 			was_connected=false;
 			ui::action_info_ok(mo_file_reader::gettext("L_wait_for_connect"));
@@ -958,7 +958,7 @@ void c_tunserver::event_loop(int time) {
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
-			std::unique_lock<std::mutex> lg(m_peer_mutex);
+			Unique_lock<Mutex> lg(m_peer_mutex);
 			if (m_peer.size()) { // event: conntected now
 				lg.unlock();
 				was_connected=true;
