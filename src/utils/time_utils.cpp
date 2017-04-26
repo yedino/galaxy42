@@ -21,14 +21,13 @@ time_t time_utils::gen_exact_date(int year,
 	tm.tm_mon = month -1;
 	tm.tm_mday = day;
 
-	// hour is shifted by 1
-	tm.tm_hour = hour + 1;
+	tm.tm_hour = hour;
 	tm.tm_min = min;
 	tm.tm_sec = sec;
 
 	// Daylight Saving Time flag. The value is positive if DST is in effect
 	tm.tm_isdst=isdst;
-	ret = mktime(&tm);
+	ret = timegm(&tm);
 	return ret;
 }
 
