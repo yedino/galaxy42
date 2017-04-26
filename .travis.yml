@@ -101,9 +101,9 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - ./check
   - ./do --go
+  - ./build/test-release.elf    # run gtests
 
 after_success:
-  - ./build/test-release.elf    # run gtests
   - if [[ "$COVERAGE" == "1" ]]; then coveralls -i src/ -e src/test --gcov-options '\-lp' --gcov 'gcov-5' ; fi
 
 notifications:
