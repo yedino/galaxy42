@@ -1,0 +1,22 @@
+
+This are things TODO that we create when we postpone some needed things to go forward,
+creating technological debt.
+
+Noting them here to not forget and keep track.
+
+=== critical ===
+
+- PR 323, a5072877d8420ca382001a852174168a940932dd, (SIOM) - windows builds are broken (no socketopt) - need to fix this by using cancelio family of functions instead. Was merged to dev to not block development.
+
+=== important ===
+
+=== bad design ===
+
+=== better refactoring ===
+
+- PR 328, PR 327 - there are now asserts and .at and safe copy in arrays, but still would be even better to use some container view instead in this places (especially in NDP protocol, which is not important regarding performance)
+
+=== security ===
+
+- we must drop permissions when running as root
+
