@@ -14,7 +14,9 @@ class c_asiocable : public c_cable_base_obj {
 	protected:
 		c_asiocable(shared_ptr< c_asioservice_manager > & iomanager);
 
-		boost::asio::io_service & get_io_service() { return m_io_service; }
+		boost::asio::io_service & get_io_service() noexcept;
+
+		virtual void stop_threadsafe() override; // [thread_safe]
 
 	private:
 		boost::asio::io_service & m_io_service; ///< ref. to my io_service, e.g. received from get_next_ioservice()

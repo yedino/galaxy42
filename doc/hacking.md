@@ -112,6 +112,23 @@ t_temper water_temp = int_to_enum<t_temper>( 80 ); // asserted
 
 ```
 
+# Doxygen tags attributes
+
+## Attribute @thread
+
+Popular kinds of thread safety used in this project:
+
+@thread `thread_safe` - applies to function: for member function it means that it is safe to call object of this class
+concurrently from different threads without any additional synchronization by caller;
+for free function it means that it is safe to call this free function
+concurrently from different threads without any additional synchronization by caller;
+
+@thread `thread_safe_public_myself` - applies to a class - means "Thread Safe on Public, if I'm just using Myself":
+all public function are `thread_safe` unless noted otherwise,
+except for all constructors (including move and copy), destructor,
+and except for functions and operators that take same-class (or parent/child class) - like especially copy operator=,
+moving operator=, comparison operator< operator> operator== and such.
+
 # Building
 
 The build process should be described in the main README.md of this project.

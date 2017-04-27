@@ -15,7 +15,7 @@ c_cable_simul_obj::c_cable_simul_obj(shared_ptr<c_world> world)
 c_cable_simul_obj::~c_cable_simul_obj() {
 }
 
-void c_cable_simul_obj::stop() {
+void c_cable_simul_obj::stop_threadsafe() {
 	_info("Stopping simulation card");
 }
 

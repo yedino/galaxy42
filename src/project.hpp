@@ -1,6 +1,9 @@
 // Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
 #pragma once
 
+// thread_safe_public_myself
+// thread_safe
+
 #include <stdexcept>
 #include <string>
 
