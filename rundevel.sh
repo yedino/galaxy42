@@ -4,7 +4,7 @@ echo "=============================================================="
 echo "rundevel - Run for Developer"
 echo "=============================================================="
 
-program_bin="./Debug/tunserver.elf"
+program_bin="./tunserver.elf"
 
 [[ -r "$program_bin" ]] || {
 	echo "Can not find binary ($program_bin) - try entering directory build/ first, or doing ./do if you do not have that";
