@@ -54,6 +54,15 @@
 
 
 // ===========================================================================================================
+
+#if ( ! defined( ANTINET_windows ))
+	// works on mac, linux
+	#define ANTINET_socket_sockopt // we should set sockopt e.g. timeout options
+#else
+	#define ANTINET_cancelio // we should use window's cancelIO/family
+#endif
+
+// ===========================================================================================================
 // TODO is this needed?
 #if defined (__MINGW32__)
 	#undef _assert
