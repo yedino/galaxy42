@@ -15,7 +15,6 @@ TEST(utils_wrap_thread, simple_thread_replace) {
 }
 
 TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
-	g_dbg_level_set(10,"test");
 
 	std::vector<wrap_thread> vec;
 	vec.resize(1);
@@ -25,7 +24,7 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 	// in the temporary - we would have created std::thread( {some..work..in..lanbda} )
 	// and the thread would keep running since the exception would end function before thread is joined
 	std::atomic<bool> endflag{false};
-	_mark("Thread ...");
+	_info("Thread will start now");
 
 	auto example_function_causing_abort = [&]() {
 		_info("Starting the bad function that should crash (abort)");
@@ -38,15 +37,15 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 			} );
 			vec.at(1) = std::move(mythread) ;
 			_erro("This code should not be reached (above the function at() should throw");
-			bool joined = vec.at(1).try_join( std::chrono::seconds(5) ); // trying to join for 1 second
+			bool joined = vec.at(1).try_join( std::chrono::seconds(5) ); // trying to join for few seconds
 			_erro("This unreachable code, has joined=" << joined);
 		}
 		catch(const std::out_of_range &) {
 			_erro("As expected, the code thrown... though we will not reach this place here, since the destructor of now detached thread will abort program.");
-	//		EXPECT_FALSE(true);
+			FAIL(); // unreachable
 		}
 		_erro("Should not reach this place");
-	//	EXPECT_FALSE(true);
+		FAIL(); // unreachable
 	};
 
 	EXPECT_DEATH( { example_function_causing_abort(); } , ""); // catch std::abort
