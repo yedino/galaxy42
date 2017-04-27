@@ -1,7 +1,6 @@
-
+#include "platform.hpp"
 
 #include "someio.hpp"
-
 
 c_someio::c_someio()
 : m_stop(false)
@@ -32,4 +31,3 @@ void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::mic
 std::chrono::microseconds c_someio::sockopt_timeout_get_default() const {
 	return std::chrono::milliseconds(100);
 }
-
