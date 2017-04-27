@@ -69,22 +69,25 @@ bool wrap_thread::try_join(std::chrono::duration<double> duration) {
 }
 
 wrap_thread::~wrap_thread()  {
-
 	m_time_stopped = t_sysclock::now();
-	_info(info());
+	_info("wrap_thread destructor." + info());
 
-	if(!m_future.valid())
+	if(!m_future.valid()) {
+		_info("wrap_thread destructor - nothing to do (it was joined already?)"); // XXX more comments
 		return;
+	}
 
 	if (m_destroy_timeout != std::chrono::seconds(0)) {
+		_info("wrap_thread destructor - will try to join it automatically, for time: " << m_destroy_timeout.count());
 		std::future_status status = m_future.wait_for(m_destroy_timeout);
 		if (status != std::future_status::ready) {
-			_erro("can not end thread in given time");
+			_erro("can not end thread in given time. Will abort now.");
 			std::abort();
 		}
-		m_future.get();
+		_erro("thread was correctly joined it seems");
+		m_future.get(); // why? XXX
 	} else {
-		_erro("This thread was not joined!");
+		_erro("This thread was not joined, and you set to not wait for joining. Will abort.");
 		std::abort();
 	}
 }
