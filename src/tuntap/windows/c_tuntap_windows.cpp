@@ -7,7 +7,7 @@
 #include "../../utils/check.hpp"
 #include "../../c_ndp.hpp"
 #include <libs0.hpp>
-#include <ifdef.h>
+
 #include <io.h>
 #ifndef NTSTATUS
 	#define NTSTATUS LONG
