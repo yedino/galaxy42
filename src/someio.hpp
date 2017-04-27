@@ -28,6 +28,7 @@ class c_someio {
 
 		std::chrono::microseconds sockopt_timeout_get_default() const; ///< returns the default timeout, see #sockopt_timeout()
 
+		#ifdef ANTINET_socket_sockopt
 		using t_native_socket = boost::asio::ip::udp::socket::native_handle_type; ///< this platforms handler for native objects
 		static_assert(
 			std::is_same<
@@ -36,13 +37,16 @@ class c_someio {
 				::value
 			, "Hmm can't find same native handler for e.g. UDP sockets and TCP sockets? Then what type to pass to set_sockopt_timeout here?"
 		);
+		#endif
 
 	protected:
 		std::atomic<bool> m_stop; ///< should we stop our operations, see #unblock
 
+		#ifdef ANTINET_socket_sockopt
 		/// on some native socket given by caller, sets the timeout, used for blocking read - latency of exit flag #m_stop
 		/// call this from child classes on all sockets (e.g. asio sockets); see #unblock
 		void set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout);
+		#endif
 };
 
 
