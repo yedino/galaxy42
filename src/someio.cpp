@@ -1,7 +1,6 @@
-
+#include "platform.hpp"
 
 #include "someio.hpp"
-
 
 c_someio::c_someio()
 : m_stop(false)
@@ -12,6 +11,7 @@ void c_someio::stop_threadsafe() {
 	m_stop=true;
 }
 
+#ifdef ANTINET_socket_sockopt
 void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout) {
 	// ideas from http://stackoverflow.com/questions/2876024/linux-is-there-a-read-or-recv-from-socket-with-timeout
 	auto us = timeout.count();
@@ -26,8 +26,8 @@ void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::mic
 		_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
+#endif
 
 std::chrono::microseconds c_someio::sockopt_timeout_get_default() const {
 	return std::chrono::milliseconds(100);
 }
-
