@@ -17,6 +17,9 @@ Know the Editor (below).
 Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
+Try to minimize technical debt by fixing things in [debt.txt](debt.txt).
+If you must move forward without writting things the good way for now, add information to that debt.txt.
+
 ```cpp
 _dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
 _check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
