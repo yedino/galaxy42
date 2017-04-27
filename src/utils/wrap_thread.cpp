@@ -84,7 +84,7 @@ wrap_thread::~wrap_thread()  {
 			_erro("can not end thread in given time. Will abort now.");
 			std::abort();
 		}
-		_erro("thread was correctly joined it seems");
+		_info("thread was correctly joined it seems");
 		m_future.get(); // why? XXX
 	} else {
 		_erro("This thread was not joined, and you set to not wait for joining. Will abort.");
