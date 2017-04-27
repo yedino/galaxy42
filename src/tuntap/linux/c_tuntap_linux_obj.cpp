@@ -19,6 +19,9 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
+	try {
+		set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
+	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
 	_goal("tuntap is opened correctly");
 }
 
