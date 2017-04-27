@@ -74,12 +74,19 @@ void c_galaxysrv::main_loop() {
 				c_cable_udp_addr peer_addr;
 				size_t read =	m_cable_cards.get_card(e_cable_kind_udp).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				_info("CABLE read, from " << peer_addr << make_report(chunk,20));
-				m_tuntap.send_to_tun(chunk.data(), chunk.size());
-				if (boost::filesystem::exists(stopflag_name)) break;
+				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
+				if ( peer_addr == UsePtr( peer_one_addr  ) ) {
+					_info("CABLE read, from " << peer_addr << make_report(chunk,20));
+					m_tuntap.send_to_tun(chunk.data(), chunk.size());
+					_info("Sent");
+				} else {
+					_info("Ignoring packet from unexpected peer " << peer_addr << ", we wanted data from " << UsePtr(peer_one_addr) );
+				}
 			} // loop
 			_note("Loop done");
-		} catch(...) { _warn("Thread-lambda got exception"); }
+		}
+		catch(const std::exception & ex) { _warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
+		catch(...) { _warn("Thread-lambda loop_cableread got exception"); }
 	}; // lambda cableread
 
 	std::vector<unique_ptr<std::thread>> threads;
