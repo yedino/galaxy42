@@ -23,27 +23,14 @@
 
 	#define timegm _mkgmtime
 
-	#include<sec_api/tchar_s.h>
+	//#include<sec_api/tchar_s.h>
 
 	std::wstring carray_to_wstring(const char *cstr);
 	// inspiration:
 	// http://stackoverflow.com/questions/17258029/c-setenv-undefined-identifier-in-visual-studio/23616164#23616164
-	int setenv(const char *name, const char *value, int overwrite) {
-		int errcode = 0;
+	int setenv(const char *name, const char *value, int overwrite);
 
-		std::wstring wname = carray_to_wstring(name);
-		std::wstring wvalue = carray_to_wstring(value);
-
-		if(!overwrite) {
-			size_t envsize = 0;
-			errcode = _wgetenv_s(&envsize, nullptr, 0, wname.c_str());
-			if(errcode || envsize) return errcode;
-		}
-		return _wputenv_s(wname.c_str(), wvalue.c_str());
-	}
-	int unsetenv(const char *name) {
-		return setenv(name, "", 1);
-	}
+	int unsetenv(const char *name);
 
 #elif (__MACH__)
 	#define ANTINET_macosx

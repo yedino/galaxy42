@@ -6,6 +6,7 @@
 #include <platform.hpp>
 
 #if defined(ANTINET_windows)
+#include <ifdef.h>
 
 class c_tuntap_windows_obj final : c_tuntap_base_obj {
 	public:
