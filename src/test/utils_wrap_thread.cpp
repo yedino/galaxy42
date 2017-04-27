@@ -27,9 +27,29 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 	std::atomic<bool> endflag{false};
 	_mark("Thread ...");
 
-	EXPECT_DEATH( vec.at(1) = wrap_thread(std::chrono::seconds(2), [&](){
-		while(!endflag){}
-	} ), ""); // catch std::abort
+	auto example_function_causing_abort = [&]() {
+		_info("Starting the bad function that should crash (abort)");
+		try {
+			auto mythread =
+			 wrap_thread(std::chrono::seconds(2), [&](){
+					while(!endflag) {
+						int volatile x=1,y=2; x=y; // to not have thread that never makes progress
+					}
+			} );
+			vec.at(1) = std::move(mythread) ;
+			_erro("This code should not be reached (above the function at() should throw");
+			bool joined = vec.at(1).try_join( std::chrono::seconds(5) ); // trying to join for 1 second
+			_erro("This unreachable code, has joined=" << joined);
+		}
+		catch(const std::out_of_range &) {
+			_erro("As expected, the code thrown... though we will not reach this place here, since the destructor of now detached thread will abort program.");
+	//		EXPECT_FALSE(true);
+		}
+		_erro("Should not reach this place");
+	//	EXPECT_FALSE(true);
+	};
+
+	EXPECT_DEATH( { example_function_causing_abort(); } , ""); // catch std::abort
 
 	endflag=true;
 	EXPECT_THROW( vec.at(1) , std::out_of_range );
