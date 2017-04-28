@@ -5,11 +5,12 @@
 
 using namespace boost::asio::ip;
 
-c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> iomanager)
+c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> iomanager, const c_cable_base_addr &source_addr)
 :
 	c_asiocable(iomanager),
 	m_read_socket(get_io_service(), boost::asio::ip::udp::v4()),
-	m_write_socket(get_io_service(), boost::asio::ip::udp::v4())
+	// choose the source-address (especially port), convert to UDP since we're UDP socket, and assign to write socket so packets send will be sent from this source:
+	m_write_socket(get_io_service(), boost::any_cast<c_cable_udp_addr::t_addr>(source_addr.get_addrdata()) )
 {
 	_note("Created UDP card: \n"
 		<< "  Read socket:  open="<< m_read_socket.is_open() << " native="<<m_read_socket.native_handle() << "\n"
@@ -85,9 +86,10 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 }
 
 void c_cable_udp::listen_on(c_cable_base_addr &local_address) {
-	_goal("Listening on " << local_address );
+	_fact("Listen on " << local_address );
 	udp::endpoint local_endpoint = boost::any_cast<c_cable_udp_addr::t_addr>(local_address.get_addrdata());
 	m_read_socket.bind(local_endpoint);
+	_goal("Listening on " << local_endpoint );
 }
 
 void c_cable_udp::stop_threadsafe() {
