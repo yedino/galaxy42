@@ -1,36 +1,38 @@
 #pragma once
 
-#include "base/cable_base_addr.hpp"
-#include "base/cable_base_obj.hpp"
-#include "asio_ioservice_manager.hpp"
-#include "kind.hpp"
-#include "../libs0.hpp"
+#include <cable/base/cable_base_addr.hpp>
+#include <cable/base/cable_base_obj.hpp>
+#include <cable/asio_ioservice_manager.hpp>
+#include <cable/kind.hpp>
+#include <cable/selector.hpp>
+#include <libs0.hpp>
 
-/// Group of cable-cards (virtual transport network "card"),
-/// group of objects like the object used to send/receive UDP transport data, other one for TCP etc
-/// Such cards can be spawned on demand as need comes.
-class c_cable_cards {
+/** Group of cable-cards (virtual transport network "card"),
+ * group of objects like the object used to send/receive UDP transport data, other one for TCP etc
+ * 1 Card is an object, that can be used to send/receive from anyone (to any destination address) and that is
+ * the only difference.
+ * So e.g. when you have other SOURCE address (local address), then it will be other card.
+ * Such cards can be spawned on demand as need comes.
+ */
+class c_cable_cards final {
 	public:
 		~c_cable_cards()=default;
 
-		/// return card for given cable type, this (reference) can be invalided on next call, use immediatelly!
-		/// Spawn it it if not created yet.
-		c_cable_base_obj & get_card(t_cable_kind kind);
-
-		unique_ptr<c_cable_base_obj> create_card(t_cable_kind); ///< factory for cards
+		/// @return Return (spawn if needed) the card for given seletor (e.g. cable type + my ip:port, e.g. UDP,any,9042)
+		/// @warning Returned reference can be invalided on next call, use immediatelly!
+		c_cable_base_obj & get_card(const unique_ptr<c_card_selector> & selector);
 
 		void stop_threadsafe(); ///< tries to stop all io_services, and all cards. [thread_safe]
 
-	protected:
-		map<t_cable_kind , unique_ptr<c_cable_base_obj>> m_cards;
+	private:
+		unique_ptr<c_cable_base_obj> create_card(const unique_ptr<c_card_selector> & selector); ///< factory for cards
+
+		/// polymorphic-key map. Key elements are copied (new unique)
+		map< unique_ptr<c_card_selector> , unique_ptr<c_cable_base_obj> > m_cards;
 
 		shared_ptr<c_asioservice_manager> m_asioservice_manager; ///< needed to create cables based on asio service
 
 		shared_ptr<c_asioservice_manager> get_asioservice(); ///< creates if needed and returns an asioservice manager
 };
-
-
-
-
 
 
