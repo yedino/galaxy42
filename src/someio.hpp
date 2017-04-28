@@ -37,15 +37,25 @@ class c_someio {
 				::value
 			, "Hmm can't find same native handler for e.g. UDP sockets and TCP sockets? Then what type to pass to set_sockopt_timeout here?"
 		);
+		#else if defined ANTINET_cancelio
+		using t_native_socket = SOCKET;
+		using t_native_tuntap_handler = HANDLE;
 		#endif
 
 	protected:
 		std::atomic<bool> m_stop; ///< should we stop our operations, see #unblock
 
-		#ifdef ANTINET_socket_sockopt
 		/// on some native socket given by caller, sets the timeout, used for blocking read - latency of exit flag #m_stop
 		/// call this from child classes on all sockets (e.g. asio sockets); see #unblock
 		void set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout);
+
+		#ifdef ANTINET_cancelio
+		/**
+		 * @brief close_all_tuntap_operations
+		 * @param tuntap_handler
+		 * CancelIoEx is called https://msdn.microsoft.com/en-us/library/windows/desktop/aa363792(v=vs.85).aspx
+		 */
+		void close_all_tuntap_operations(t_native_tuntap_handler tuntap_handler);
 		#endif
 };
 
