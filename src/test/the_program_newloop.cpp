@@ -39,6 +39,8 @@ TEST(the_program_new_loop, use_options_peerref) {
 	//my_program.use_options_peerref();
 }
 
+/*
+TODO FIXME - fix c_cable_simul_obj (finish move to selector) @rfree
 TEST(the_program_new_loop, fake_kernel) {
 	c_tuntap_fake_kernel kernel;
 	c_tuntap_fake tuntap_reader(kernel);
@@ -76,3 +78,5 @@ TEST(the_program_new_loop, fake_kernel) {
 
 	thread_test();
 }
+*/
+

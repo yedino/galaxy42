@@ -1,27 +1,19 @@
 
-#pragma once
-
 #include <libs0.hpp>
+#include <cable/kind.hpp>
 
-typedef enum {
-	e_cable_kind_simul=1,
-	e_cable_kind_shm=2,
-	e_cable_kind_udp=3,
-} t_cable_kind;
+std::string to_string(t_cable_kind obj) {
+	switch (obj) {
+		case (t_cable_kind::kind_simul):  return "simul"s;  break;
+		case (t_cable_kind::kind_shm):  return "shm"s;  break;
+		case (t_cable_kind::kind_udp):  return "udp"s;  break;
+		default: break;
+	}
+	_throw_error_runtime("Unknown cable_kind object (in print)");
+}
 
 std::ostream & operator<<(std::ostream & ostr, t_cable_kind obj) {
-	switch (obj) {
-		case (e_cable_kind_simul):
-			ostr << "simul";
-		break;
-		case (e_cable_kind_shm):
-			ostr << "shm";
-		break;
-		case (e_cable_kind_udp):
-			ostr << "udp";
-		break;
-		default: _throw_error_runtime("Unknown cable_kind object (in print)");
-	}
+	ostr << to_string(obj);
 	return ostr;
 }
 

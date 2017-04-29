@@ -6,10 +6,13 @@
 #include <memory>
 #include "cable/base/cable_base_addr.hpp"
 
+#include <cable/selector.hpp>
 #include "someio.hpp"
 
+class c_card_selector;
+
 using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
-using read_handler = const std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> &;
+using read_handler = const std::function<void(const unsigned char *, std::size_t, c_card_selector &)> &;
 
 class c_cable_base_obj : public c_someio {
 	protected:
@@ -35,12 +38,12 @@ class c_cable_base_obj : public c_someio {
 
 		/**
 		 * @brief receive_from block function
-		 * @param source address of sender
+		 * @param OUT: source address of sender will be written here
 		 * @param data pointer to prealocated buffer
 		 * @param size size of prealocated buffer
 		 * @return number of readed bytes
 		 */
-		virtual size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size)=0;
+		virtual size_t receive_from(c_card_selector & source, unsigned char * const data, size_t size)=0;
 
 		/**
 		 * @brief async_receive_from
@@ -55,7 +58,7 @@ class c_cable_base_obj : public c_someio {
 		 */
 		virtual void async_receive_from(unsigned char * const data, size_t size, read_handler handler)=0;
 
-		virtual void listen_on(c_cable_base_addr & local_address)=0;
+		virtual void listen_on(const c_card_selector & local_address)=0;
 
 
 };
