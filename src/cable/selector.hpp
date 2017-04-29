@@ -20,7 +20,8 @@
 
 class c_card_selector {
 	public:
-		c_card_selector(t_cable_kind kind, unique_ptr<c_cable_base_addr> && my_addr);
+		c_card_selector()=default;
+		c_card_selector(unique_ptr<c_cable_base_addr> && my_addr);
 
 		c_card_selector(const c_card_selector & other);
 		c_card_selector & operator=(const c_card_selector & other);
@@ -31,15 +32,13 @@ class c_card_selector {
 
 		void print(ostream & out) const;
 
-		auto & get_kind() { return m_kind; }
-		const auto & get_kind() const { return m_kind; }
+		t_cable_kind get_kind() const { return UsePtr(m_my_addr).get_kind(); }
 		auto & get_my_addr() { return m_my_addr; }
 		const auto & get_my_addr() const { return m_my_addr; }
 
 		friend class m_cable_cards; ///< to read addr etc without getters TODO
 
 	private:
-		t_cable_kind m_kind;
 		unique_ptr<c_cable_base_addr> m_my_addr; ///< polymorphic to have any address type
 };
 

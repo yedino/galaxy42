@@ -7,6 +7,7 @@
 #include "cable/simulation/cable_simul_addr.hpp" // own addr
 #include "cable/simulation/world.hpp"
 
+/*
 class c_cable_simul_obj : public c_cable_base_obj {
 	public:
 		c_cable_simul_obj(shared_ptr<c_world> world);
@@ -24,6 +25,6 @@ class c_cable_simul_obj : public c_cable_base_obj {
 		c_cable_simul_addr m_addr; ///< my own address
 		shared_ptr<c_world> m_world; ///< world in which me (and my peers) exist
 };
-
+*/
 
 

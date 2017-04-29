@@ -6,8 +6,10 @@
 
 #include "cable/simulation/cable_simul_addr.hpp"
 #include "cable/udp/cable_udp_addr.hpp"
+#include <cable/udp/cable_udp_obj.hpp>
 #include "cable/simulation/cable_simul_obj.hpp"
 #include "cable/simulation/world.hpp"
+#include <cable/selector.hpp>
 
 #include "libs0.hpp"
 #include "cable/kind.hpp"
@@ -41,6 +43,18 @@ void c_galaxysrv::main_loop() {
 		this->start_exit(); // TODO-thread
 	}; // lambda exitwait
 
+	c_card_selector listen1_selector = [this]() -> auto {
+		_fact("Starting to listen");
+		// start listener:
+		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP:w
+		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
+		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
+		_fact("Listen on " << listen1_selector );
+		m_cable_cards.get_card(listen1_selector).listen_on(listen1_selector);
+		_goal("Listening on " << listen1_selector );
+		return listen1_selector;
+	} ();
+
 	auto loop_tunread = [&]() {
 		try {
 			c_netbuf buf(9000);
@@ -57,7 +71,13 @@ void c_galaxysrv::main_loop() {
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
+
+
+				boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
+				unique_ptr<c_cable_udp_addr> my_addr = make_unique<c_cable_udp_addr>( ep );
+				c_card_selector my_selector( std::move(my_addr) ); // will send from this my-address, to this peer
+				// pick up / create proper "card" (e.g. new socket from other my-address) and send from it:
+				m_cable_cards.get_card(my_selector).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
 			} // loop
 			_note("Loop done");
 		} catch (const std::exception &e) {_warn("Thread-lambda got exception " << e.what());}
@@ -71,11 +91,13 @@ void c_galaxysrv::main_loop() {
 			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
 			while (!m_exiting) {
 				_dbg3("Reading cables...");
-				c_cable_udp_addr peer_addr;
-				size_t read =	m_cable_cards.get_card(e_cable_kind_udp).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
+				c_card_selector peer_addr; // in c++17 instead, use "tie" with decomposition declaration
+				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				if ( peer_addr == UsePtr( peer_one_addr  ) ) {
+				bool fwok = true;
+				// if ( peer_addr == UsePtr( peer_one_addr  ) ) { // TODONOW TODO
+				if (fwok) {
 					_info("CABLE read, from " << peer_addr << make_report(chunk,20));
 					m_tuntap.send_to_tun(chunk.data(), chunk.size());
 					_info("Sent");
@@ -91,9 +113,6 @@ void c_galaxysrv::main_loop() {
 
 	std::vector<unique_ptr<std::thread>> threads;
 
-	c_cable_udp_addr address_all;
-	address_all.init_addrdata( boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),9042) );
-	m_cable_cards.get_card(e_cable_kind_udp).listen_on( address_all );
 
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
 	threads.push_back( make_unique<std::thread>( loop_tunread ) );

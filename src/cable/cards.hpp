@@ -20,15 +20,14 @@ class c_cable_cards final {
 
 		/// @return Return (spawn if needed) the card for given seletor (e.g. cable type + my ip:port, e.g. UDP,any,9042)
 		/// @warning Returned reference can be invalided on next call, use immediatelly!
-		c_cable_base_obj & get_card(const unique_ptr<c_card_selector> & selector);
+		c_cable_base_obj & get_card(const c_card_selector & selector);
 
 		void stop_threadsafe(); ///< tries to stop all io_services, and all cards. [thread_safe]
 
 	private:
-		unique_ptr<c_cable_base_obj> create_card(const unique_ptr<c_card_selector> & selector); ///< factory for cards
+		unique_ptr<c_cable_base_obj> create_card(const c_card_selector & selector); ///< factory for cards
 
-		/// polymorphic-key map. Key elements are copied (new unique)
-		map< unique_ptr<c_card_selector> , unique_ptr<c_cable_base_obj> > m_cards;
+		map< c_card_selector , unique_ptr<c_cable_base_obj> > m_cards;
 
 		shared_ptr<c_asioservice_manager> m_asioservice_manager; ///< needed to create cables based on asio service
 

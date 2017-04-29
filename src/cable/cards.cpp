@@ -7,11 +7,11 @@
 #include "simulation/cable_simul_obj.hpp"
 #include "shm/cable_shm_obj.hpp"
 #include "udp/cable_udp_obj.hpp"
+#include "udp/cable_udp_addr.hpp"
 
 
-unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const unique_ptr<c_card_selector> & selector) {
-	assert(selector);
-	switch (selector->get_kind()) {
+unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector & selector) {
+	switch (selector.get_kind()) {
 		/*
 		case e_cable_kind_simul:
 			return make_unique<c_cable_simul_obj>();
@@ -20,8 +20,10 @@ unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const unique_ptr<c_car
 			return make_unique<c_cable_shm_obj>();
 		break;
 		*/
-		case e_cable_kind_udp:
-			return make_unique<c_cable_udp>(get_asioservice(), selector->get_my_addr() );
+		case t_cable_kind::kind_udp:
+		{
+			return make_unique<c_cable_udp>(get_asioservice(), selector );
+		}
 		break;
 		default:
 		break;
@@ -38,15 +40,15 @@ shared_ptr<c_asioservice_manager> c_cable_cards::get_asioservice() {
 	return m_asioservice_manager;
 }
 
-c_cable_base_obj & c_cable_cards::get_card(const unique_ptr<c_card_selector> & selector) {
-	assert(selector);
+c_cable_base_obj & c_cable_cards::get_card(const c_card_selector & selector) {
 	auto found = m_cards.find(selector);
 	if (found == m_cards.end()) {
-		_note("Create card for cable kind=" << static_cast<int>(selector->get_kind()));
+		_note("Create card for cable kind=" << static_cast<int>(selector.get_kind()) << ", selector=" << selector);
 		unique_ptr<c_cable_base_obj> card = c_cable_cards::create_card(selector);
 		_note("Created card at " << static_cast<void*>(card.get()));
-		auto selector_cpy = make_unique<decltype(*selector)>( *selector );
-		m_cards.emplace( std::move(selector_cpy) , std::move(card) );
+		m_cards.emplace( selector , std::move(card) );
+		_dbg1("Emplaced, size: " << m_cards.size());
+		_check( ! ( selector < selector ) ); // there was a bug
 		return UsePtr( m_cards.at( selector ) );
 	}
 	return UsePtr( found->second );
