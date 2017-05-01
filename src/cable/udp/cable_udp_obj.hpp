@@ -13,6 +13,11 @@
 #include <cable/selector.hpp>
 #include <cable/udp/cable_udp_addr.hpp>
 
+enum class t_multisocket_kind {
+	one_rw=1, ///< one socket: for both read and write (then we do not need to e.g. do SO_REUSEPORT)
+	separate_rw, ///< two sockets: separate read, and separate write sockets, probably we need SO_REUSEPORT
+};
+
 class c_cable_udp final : public c_asiocable {
 	public:
 		/**
@@ -34,12 +39,17 @@ class c_cable_udp final : public c_asiocable {
 
 		virtual void stop_threadsafe() override;
 
+		bool has_separate_rw() const noexcept; ///< do we use separate read and write socket, or is this the same socket
+		static t_multisocket_kind default_multisocket_kind(); ///< get the default strategy
+
 	private:
+		t_multisocket_kind m_multisocket_kind; ///< what multisocket strategy we have
+
+		boost::asio::ip::udp::socket m_write_socket; ///< this is also used to read, if one_rw
 		boost::asio::ip::udp::socket m_read_socket;
-		boost::asio::ip::udp::socket m_write_socket;
+
 		Mutex m_enpoint_list_mutex;
 		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list;
-
 };
 
 #endif // cable_UDP_HPP
