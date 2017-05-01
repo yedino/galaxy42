@@ -12,6 +12,10 @@ Noting them here to not forget and keep track.
 
 - PR 320 was merged without full review (as we need to use this threads now already). It needs at least more comments in few places. Notify @rfree with the review to sign-on the review, before deleting this item.
 
+=== disabled ===
+
+- disabled cable/udp async receive
+
 === bad design ===
 
 === better refactoring ===

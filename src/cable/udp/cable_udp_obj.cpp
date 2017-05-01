@@ -3,14 +3,27 @@
 #include "../asio_ioservice_manager.hpp"
 #include <libs0.hpp>
 
+#define ANTINET_socket_use_two_and_reuse
+
 using namespace boost::asio::ip;
 
 c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> iomanager, const c_card_selector &source_addr)
 :
-	c_asiocable(iomanager),
-	m_read_socket(get_io_service(), boost::asio::ip::udp::v4()),
-	m_write_socket(get_io_service(), dynamic_cast<const c_cable_udp_addr&>(UsePtr(source_addr.get_my_addr())).get_addr() )
+	c_asiocable(iomanager)
+	,m_multisocket_kind( default_multisocket_kind() )
+	,m_write_socket( get_io_service(), dynamic_cast<const c_cable_udp_addr&>(UsePtr(source_addr.get_my_addr())).get_addr() )
+	#ifdef ANTINET_socket_use_two_and_reuse
+	,m_read_socket(  get_io_service(), boost::asio::ip::udp::v4() )
+	#else
+	,m_read_socket( get_io_service() )
+	#endif
 {
+	#ifdef ANTINET_socket_use_two_and_reuse
+		_note("Will set socket reuse");
+		boost::asio::socket_base::reuse_address option(true);
+		m_write_socket.set_option(option); // not so important when we have just 1 socket
+	#endif
+
 	_note("Created UDP card: \n"
 		<< "  Read socket:  open="<< m_read_socket.is_open() << " native="<<m_read_socket.native_handle() << "\n"
 		<< "  Write socket: open="<< m_write_socket.is_open() << " native="<<m_write_socket.native_handle());
@@ -49,7 +62,7 @@ size_t c_cable_udp::receive_from(c_card_selector &source, unsigned char *const d
 	_dbg3("Receive (blocking) UDP");
 	try {
 		udp::endpoint their_ep;
-		size_t readed_bytes = m_read_socket.receive_from(boost::asio::buffer(data, size), their_ep);
+		size_t readed_bytes = (has_separate_rw() ? m_read_socket : m_write_socket).receive_from(boost::asio::buffer(data, size), their_ep);
 		unique_ptr<c_cable_base_addr> their_ep_cable = make_unique<c_cable_udp_addr>( their_ep );
 		source = c_card_selector( std::move( their_ep_cable ) );
 		return readed_bytes;
@@ -89,19 +102,39 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 	*/
 }
 
+bool c_cable_udp::has_separate_rw() const noexcept { ///< do we use separate read and write socket, or is this the same socket
+	switch (m_multisocket_kind) {
+		case (t_multisocket_kind::one_rw): return true; break;
+		case (t_multisocket_kind::separate_rw): return false; break;
+	}
+}
+
+t_multisocket_kind c_cable_udp::default_multisocket_kind() {
+	return t_multisocket_kind::separate_rw;
+}
+
 void c_cable_udp::listen_on(const c_card_selector & local_address) {
 	_fact("Listen on " << local_address );
-	udp::endpoint local_endpoint = dynamic_cast<const c_cable_udp_addr &>(UsePtr(local_address.get_my_addr())).get_addr();
-	m_read_socket.bind(local_endpoint);
-	_goal("Listening on " << local_endpoint );
+	if (has_separate_rw()) {
+		udp::endpoint local_endpoint = dynamic_cast<const c_cable_udp_addr &>(UsePtr(local_address.get_my_addr())).get_addr();
+		_info("Endpoint created: " << local_endpoint);
+		_info("Binding...");
+		( m_read_socket ).bind(local_endpoint);
+		_goal("Listening on " << local_endpoint );
+	} else _goal("The write socket already is binded (as host-address) - it is listening");
 }
 
 void c_cable_udp::stop_threadsafe() {
 	_note("Stoping socket");
+
 	boost::system::error_code ec;
-	m_read_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
-	_dbg1("Shutdown ec="<<ec);
-	m_read_socket.close();
+
+	if (has_separate_rw()) {
+		m_read_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
+		_dbg1("Shutdown ec="<<ec);
+		m_read_socket.close();
+	}
+
 	m_write_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
 	_dbg1("Shutdown ec="<<ec);
 	m_write_socket.close();

@@ -7,15 +7,18 @@ c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
 {
+	_note("Creating udp wrapper (old-style)");
 	_assert(m_socket >= 0);
 	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(listen_port);
 	int bind_result = -1;
 	if (address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv4) {
 		sockaddr_in addr4 = address_for_sock.get_ip4();
+		_note("Binding");
 		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
 	}
 	else if(address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv6) {
 		sockaddr_in6 addr6 = address_for_sock.get_ip6();
+		_note("Binding");
 		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
 	}
 		_assert( bind_result >= 0 ); // TODO change to except
