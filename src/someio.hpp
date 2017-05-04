@@ -37,7 +37,7 @@ class c_someio {
 				::value
 			, "Hmm can't find same native handler for e.g. UDP sockets and TCP sockets? Then what type to pass to set_sockopt_timeout here?"
 		);
-		#else if defined ANTINET_cancelio
+		#elif defined ANTINET_cancelio
 		using t_native_socket = SOCKET;
 		using t_native_tuntap_handler = HANDLE;
 		#endif
