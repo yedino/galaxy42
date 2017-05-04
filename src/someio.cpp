@@ -29,7 +29,8 @@ void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::mic
 
 #elif defined ANTINET_cancelio
 void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout) {
-	DWORD ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+	DWORD ms_dword = boost::numeric_cast<DWORD>(ms);
 	int ret = setsockopt( sys_handler , SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&ms), sizeof(ms) );
 	if (ret != 0) {
 		int ret_errno = WSAGetLastError();
