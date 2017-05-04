@@ -18,8 +18,7 @@ c_card_selector::c_card_selector(const c_card_selector & other)
 }
 
 c_card_selector & c_card_selector::operator=(const c_card_selector & other) {
-	auto new_my_addr = other.m_my_addr->clone();
-	m_my_addr = std::move( new_my_addr );
+	m_my_addr = other.m_my_addr->clone();
 	return *this;
 }
 

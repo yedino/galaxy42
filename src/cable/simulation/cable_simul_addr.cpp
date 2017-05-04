@@ -10,8 +10,7 @@ unique_ptr<c_cable_base_addr> c_cable_simul_addr::clone() const { ///< polymorph
 }
 
 void c_cable_simul_addr::print(ostream & ostr) const {
-	auto uuid = m_addr;
-	ostr << "[transp-simul-" << uuid << "]" ;
+	ostr << "[transp-simul-" << m_addr << "]" ;
 }
 
 signed char c_cable_simul_addr::compare_same_class(const c_cable_base_addr & other) const {
@@ -20,6 +19,6 @@ signed char c_cable_simul_addr::compare_same_class(const c_cable_base_addr & oth
 		if ((this->m_addr) < (other_obj.m_addr)) return -1;
 		if ((this->m_addr) > (other_obj.m_addr)) return +1;
 		return 0;
-	} catch(std::bad_cast) { _throw_error_runtime("Can not compare addresses, it is other class"); }
+	} catch(const std::bad_cast &) { _throw_error_runtime("Can not compare addresses, it is other class"); }
 }
 

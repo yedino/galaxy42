@@ -16,9 +16,17 @@
  * therefore we can no longer just use one card for sending all UDP packets (if we want to send from different my source ip:port).
  *
  * It is also needed when listening, so that we will listen on specifi one IP for example.
+ *
+ * This provides comparsion operators op< op== op!= that work on polymorphic address type,
+ * and this class here is final, so it allows to be held as not-polymorphic key and still do polymorphic address comparsion.
+ * e.g.:
+ *   map< c_card_selector , ... >
+ * works as well as
+ *   map< unique_ptr< c_cable_base_addr > , ... , {comparator that dereferences keys and compares them} >
+ *
  */
 
-class c_card_selector {
+class c_card_selector final {
 	public:
 		c_card_selector()=default;
 		c_card_selector(unique_ptr<c_cable_base_addr> && my_addr);
@@ -26,15 +34,17 @@ class c_card_selector {
 		c_card_selector(const c_card_selector & other);
 		c_card_selector & operator=(const c_card_selector & other);
 
+		/// @{ comparsion operator, on polymorphic address
 		bool operator==(const c_card_selector & other) const;
 		bool operator!=(const c_card_selector & other) const;
 		bool operator<(const c_card_selector & other) const;
+		/// @}
 
 		void print(ostream & out) const;
 
-		t_cable_kind get_kind() const { return UsePtr(m_my_addr).get_kind(); }
-		auto & get_my_addr() { return m_my_addr; }
-		const auto & get_my_addr() const { return m_my_addr; }
+		inline t_cable_kind get_kind() const;
+		inline auto & get_my_addr();
+		inline const auto & get_my_addr() const;
 
 		friend class m_cable_cards; ///< to read addr etc without getters TODO
 
@@ -43,4 +53,8 @@ class c_card_selector {
 };
 
 ostream & operator<<(ostream & out, const c_card_selector & obj);
+
+t_cable_kind c_card_selector::get_kind() const { return UsePtr(m_my_addr).get_kind(); }
+auto & c_card_selector::get_my_addr() { return m_my_addr; }
+const auto & c_card_selector::get_my_addr() const { return m_my_addr; }
 

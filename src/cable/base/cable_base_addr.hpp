@@ -8,6 +8,10 @@ int get_default_galaxy_port();
 
 /**
   * Base class for representing address of given cable.
+  *
+  * It provides polymorphic comparsion operator op<, make it suitable to use e.g. as container keys like
+  * std::map< unique_ptr< this_class > , ... > with custom comparator function that dereferences,
+  * How ever instead you could just use our c_card_selector class.
   */
 class c_cable_base_addr {
 	protected:

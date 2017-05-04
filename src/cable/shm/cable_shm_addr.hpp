@@ -5,7 +5,7 @@
 
 class cable_shm_addr final : public c_cable_base_addr {
 	public:
-		typedef std::string t_addr; ///< actuall raw address data-type
+		using t_addr = std::string; ///< actuall raw address data-type
 
 		cable_shm_addr();
 		cable_shm_addr(const std::string &address);

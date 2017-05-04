@@ -19,7 +19,7 @@ c_cable_udp_addr::c_cable_udp_addr(const std::string &ip_string)
 unique_ptr<c_cable_base_addr> c_cable_udp_addr::clone() const { ///< polymorphic clone
 	unique_ptr<c_cable_udp_addr> ret = make_unique<c_cable_udp_addr>( m_addr );
 	unique_ptr<c_cable_base_addr> ret_base = std::move( ret );
-	return std::move(ret_base);
+	return ret_base;
 }
 
 signed char c_cable_udp_addr::compare_same_class(const c_cable_base_addr & other) const {
@@ -28,10 +28,8 @@ signed char c_cable_udp_addr::compare_same_class(const c_cable_base_addr & other
 		if ((this->m_addr) < (other_obj.m_addr)) return -1;
 		if ((this->m_addr) > (other_obj.m_addr)) return +1;
 		return 0;
-	} catch(std::bad_cast) { _throw_error_runtime("Can not compare addresses, it is other class"); }
+	} catch(const std::bad_cast &) { _throw_error_runtime("Can not compare addresses, it is other class"); }
 }
-
-
 
 void c_cable_udp_addr::print(std::ostream &ostr) const {
 	ostr << m_addr;
