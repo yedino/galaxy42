@@ -27,7 +27,7 @@ void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::mic
 	}
 }
 
-#else if defined ANTINET_cancelio
+#elif defined ANTINET_cancelio
 void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout) {
 	DWORD ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
 	int ret = setsockopt( sys_handler , SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&ms), sizeof(ms) );

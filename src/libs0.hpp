@@ -49,6 +49,7 @@ moved into e.g. src/utils/... and src/stdplus/... and this file will be purely i
 #include "tnetdbg.hpp"
 #include "strings_utils_simple.hpp"
 #include "mo_reader.hpp"
+#include "platform.hpp"
 
 #include "utils/check.hpp"
 
