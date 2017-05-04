@@ -9,7 +9,8 @@ enum class t_cable_kind {
 	kind_udp=3,
 };
 
-std::string to_string(t_cable_kind obj);
-std::ostream & operator<<(std::ostream & ostr, t_cable_kind obj);
+std::string to_string(const t_cable_kind & obj);
+
+std::ostream & operator<<(std::ostream & ostr, const t_cable_kind & obj);
 
 

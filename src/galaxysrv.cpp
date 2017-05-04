@@ -46,7 +46,7 @@ void c_galaxysrv::main_loop() {
 	c_card_selector listen1_selector = [this]() -> auto {
 		_fact("Starting to listen");
 		// start listener:
-		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP:w
+		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
 		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
 		_fact("Listen on " << listen1_selector );
