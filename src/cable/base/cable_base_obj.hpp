@@ -9,6 +9,13 @@
 #include <cable/selector.hpp>
 #include "someio.hpp"
 
+/**
+ * @section unblock
+ * We need a way to avoid infinite waiting for both blocking and async operations;
+ * This is done by providing thread-safe method unblock_and_stop().
+ * It will provide a way to unblock eventually the blocking-reads (e.g. by heaving socket option of timeout)
+ * and to unblock async reads (e.g. by calling io_service.stop() for ASIO).
+*/
 class c_card_selector;
 
 using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
@@ -60,5 +67,7 @@ class c_cable_base_obj : public c_someio {
 
 		virtual void listen_on(const c_card_selector & local_address)=0;
 
-
+		/// on some native socket given by caller, sets the timeout, used for blocking read - latency of exit flag #m_stop
+		/// call this from child classes on all sockets (e.g. asio sockets); see #unblock
+		virtual void set_sockopt_timeout(std::chrono::microseconds timeout) = 0;
 };
