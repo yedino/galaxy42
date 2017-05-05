@@ -136,6 +136,9 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	set_mtu(mtu);
 }
 
+HANDLE c_tuntap_windows_obj::get_native_handle(){
+	return m_stream_handle.native_handle();
+}
 
 // base on https://msdn.microsoft.com/en-us/library/windows/desktop/ms724256(v=vs.85).aspx
 std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {

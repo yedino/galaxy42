@@ -26,6 +26,28 @@ void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::mic
 		_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
+
+#elif defined ANTINET_cancelio
+void c_someio::set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout) {
+	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+	DWORD ms_dword = boost::numeric_cast<DWORD>(ms);
+	int ret = setsockopt( sys_handler , SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&ms_dword), sizeof(ms_dword) );
+	if (ret != 0) {
+		int ret_errno = WSAGetLastError();
+		_warn("Can not set timeout on sys_handler" << " ret=" << ret << " WSAGetLastError=" << ret_errno);
+		_throw_error_runtime("Can not set timeout on sys_handler");
+	}
+}
+
+void c_someio::close_all_tuntap_operations(t_native_tuntap_handler tuntap_handler) {
+	_check_input(tuntap_handler != nullptr);
+	// CancelIoEx doc https://msdn.microsoft.com/en-us/library/windows/desktop/aa363792(v=vs.85).aspx
+	BOOL ret = CancelIoEx(tuntap_handler, nullptr);
+	if (ret == 0) {
+		_warn("Can not cancel tuntap operations, GetLastError=" << GetLastError());
+		_throw_error_runtime("Can not cancel tuntap operations");
+	}
+}
 #endif
 
 std::chrono::microseconds c_someio::sockopt_timeout_get_default() const {

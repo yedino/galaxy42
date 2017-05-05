@@ -24,6 +24,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		void set_tun_parameters
 			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) override;
 
+		HANDLE get_native_handle();
 	private:
 		std::wstring m_register_tun_path;
 		std::wstring m_guid; // https://msdn.microsoft.com/en-us/library/windows/desktop/aa368767(v=vs.85).aspx
