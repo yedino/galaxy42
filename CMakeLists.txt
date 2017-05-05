@@ -262,6 +262,10 @@ include_directories(depends/json/src)
 #add local CTPL
 include_directories(depends/CTPL)
 
+#add local backward-cpp for backtrace printing
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/backward-cpp)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/depends/backward-cpp)
+
 #add local local lib sodiumpp
 set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
@@ -467,6 +471,12 @@ foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message("ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-release.elf ${_lib})
 endforeach()
+
+# This will add libraries, definitions and include directories needed by backward
+# by setting each property on the target.
+add_backward(tunserver.elf)
+add_backward(test-debug.elf)
+add_backward(test-release.elf)
 
 message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
