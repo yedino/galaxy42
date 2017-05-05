@@ -24,6 +24,6 @@ class c_the_program_tunserver : public c_the_program {
 
 		int m_http_dbg_port=9080; ///< the http-debug port
 
-		std::tuple<bool,int> base_options_commands_run();
+		std::tuple<bool,int> base_options_commands_run() override;
 };
 

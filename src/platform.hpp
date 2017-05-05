@@ -2,7 +2,7 @@
 // test for little/big edian is in src/c_ndp.cpp
 
 // any errors about not-returning value from non-void function, will be hard errors,
-// you can quiet them e.g. using DEAD_RETURN_I_AM_SURE();
+// you can quiet them e.g. using DEAD_RETURN();
 #pragma GCC diagnostic error "-Wreturn-type"
 
 // in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
