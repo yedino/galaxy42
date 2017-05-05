@@ -6,7 +6,7 @@
 
 class c_cable_simul_addr : public c_cable_base_addr {
 	public:
-		typedef int t_addr; ///< actuall type of my raw address. Instace of this will be in m_addrdata (::any)
+		using t_addr = int; ///< actuall type of my raw address. Instace of this will be in m_addrdata (::any)
 
 		c_cable_simul_addr(t_addr uuid);
 		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone

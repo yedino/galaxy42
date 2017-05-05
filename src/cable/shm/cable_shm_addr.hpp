@@ -12,7 +12,7 @@ class cable_shm_addr final : public c_cable_base_addr {
 
 		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
 
-	protected:
+	private:
 		t_addr m_addr; ///< actuall address
 
 		virtual signed char compare_same_class(const c_cable_base_addr & other) const override;

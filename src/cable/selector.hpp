@@ -43,10 +43,8 @@ class c_card_selector final {
 		void print(ostream & out) const;
 
 		inline t_cable_kind get_kind() const;
-		inline auto & get_my_addr();
-		inline const auto & get_my_addr() const;
-
-		friend class m_cable_cards; ///< to read addr etc without getters TODO
+		inline c_cable_base_addr & get_my_addr();
+		inline const c_cable_base_addr & get_my_addr() const;
 
 	private:
 		unique_ptr<c_cable_base_addr> m_my_addr; ///< polymorphic to have any address type
@@ -55,6 +53,7 @@ class c_card_selector final {
 ostream & operator<<(ostream & out, const c_card_selector & obj);
 
 t_cable_kind c_card_selector::get_kind() const { return UsePtr(m_my_addr).get_kind(); }
-auto & c_card_selector::get_my_addr() { return m_my_addr; }
-const auto & c_card_selector::get_my_addr() const { return m_my_addr; }
+c_cable_base_addr & c_card_selector::get_my_addr() { return UsePtr(m_my_addr); }
+const c_cable_base_addr & c_card_selector::get_my_addr() const { return UsePtr(m_my_addr); }
+/// [optimize-maybe] could remove this UsePtr if other functions guarantee object is in consistent state and that is not-null
 
