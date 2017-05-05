@@ -33,6 +33,7 @@ void c_the_program_tunserver::options_create_desc() {
 		auto & desc = m_boostPO_desc;
 		desc->add_options()
                     ("help", mo_file_reader::gettext("L_what_help_do").c_str())
+                    ("helptopic", po::value<string>(), mo_file_reader::gettext("L_what_help_do").c_str())
 
                     ("h", mo_file_reader::gettext("L_what_h_do").c_str())
 
@@ -201,7 +202,6 @@ std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 		_fact( std::endl << project_version_info() );
 		return std::tuple<bool,int>(true,0);
 	}
-
 	return std::tuple<bool,int>(false,0);
 }
 

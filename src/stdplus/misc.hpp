@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 
 #pragma once
 
@@ -124,7 +124,7 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 			+ " ("s + typeid(underlying_type).name()+")", std::vector<std::overflow_error>() );
 	}
 
-	DEAD_RETURN_I_AM_SURE();
+	DEAD_RETURN();
 }
 
 std::string to_string(const std::string & v); ///< just to have identical syntax
