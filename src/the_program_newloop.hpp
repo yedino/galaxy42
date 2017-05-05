@@ -7,6 +7,7 @@
 class c_the_program_newloop_pimpl;
 
 /// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
+/// This is the new-loop (with threads etc)
 class c_the_program_newloop : public c_the_program_tunserver {
 	public:
 		c_the_program_newloop();

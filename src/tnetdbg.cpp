@@ -68,7 +68,7 @@ void write_to_console(const std::string& obj) {
 
 void g_dbg_level_set(int level, std::string why, int quiet, int quiet_from_now_on) {
 	static int be_quiet_about_dbg_level_changes=false;
-	if (quiet==-1) { // automatically choose to be quite about this level change
+	if (quiet==-1) { // automatically choose to be (or not be) quite about this level change
 		if (be_quiet_about_dbg_level_changes==1) quiet=true;
 		else quiet=false;
 	}
@@ -86,12 +86,15 @@ void g_dbg_level_set(int level, std::string why, int quiet, int quiet_from_now_o
 		bool more_debug = level < g_dbg_level;
 		if ( more_debug) g_dbg_level = level; // increase before printing
 		if (!quiet) {
-			_note("Setting debug level to " << static_cast<int>(level) << " because: " << why);
+			_mark("Setting debug level to " << static_cast<int>(level) << " because: " << why);
 		}
 		if (!more_debug) g_dbg_level = level; // increase after printing
 	}
 }
 
+int g_dbg_level_get() {
+	return g_dbg_level;
+}
 
 const char * dbg__FILE__(const char * name) {
 	const char * s_target = "/galaxy42/";
