@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project (galaxy42)
 
 # IMPORTANT:
@@ -10,19 +10,27 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
-option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
-if(BUILD_STATIC_TUNSERVER)
-	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
-		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
-	endif()
-
-	if(NOT BOOST_LIBRARYDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
-		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
-	endif()
+if(MINGW)
+	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
+	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
+	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
+	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
+	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
 endif()
 
-if(MINGW)
-		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+if(WIN32 OR CYGWIN OR MINGW)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
+	add_custom_target(windowsService)
+	add_dependencies(windowsService galaxyService)
+endif()
+
+if(NOT MSVC AND NOT MINGW)
+	set(PTHREAD_LIB "pthread")
+	set(SODIUM_LIB "sodium")
+else()
+	set(SODIUM_LIB "${SODIUM_LIBRARY}")
+	set(MSVC_LIRARIES "iphlpapi")
 endif()
 
 #-----------------------------------------------------------------------------
@@ -110,15 +118,6 @@ message("\nBOOST NOT FOUND!")
 message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
-if (MINGW)
-	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
-	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
-	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
-	#set(GETTEXT_LIBS intl iconv pthread)
-	#set(GETTEXT_LIBS "iconv")
-	#message(FATAL_ERROR "${GETTEXT_LIBS}")
-endif()
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cotire/CMake")
 include(cotire)
@@ -177,6 +176,17 @@ message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("EXTLEVEL = ${EXTLEVEL}")
 message("COVERAGE = ${COVERAGE}")
 message("USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
+
+option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
+if(BUILD_STATIC_TUNSERVER)
+	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+
+	if(NOT BOOST_LIBRARYDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+endif()
 
 option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
 if (EXTLEVEL GREATER -1) # from0
@@ -325,10 +335,6 @@ if(BUILD_STATIC_TUNSERVER)
 	set(STATIC_FLAG "-Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
 endif()
 
-if(MINGW)
-	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
-endif()
-
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fPIE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
@@ -377,9 +383,9 @@ message("Sorting sources (from GLOB)")
 list(SORT SOURCES_GROUP_TUNSERVER)
 list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
-message("Sorted sources are:" "${SOURCES_GROUP_TUNSERVER}")
-message("Sorted sources are:" "${SOURCES_GROUP_CRYPTO}")
-message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
+#message("Sorted sources are:" "${SOURCES_GROUP_TUNSERVER}")
+#message("Sorted sources are:" "${SOURCES_GROUP_CRYPTO}")
+#message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
 
 if(NOT MSVC)
 	if(CMAKE_BUILD_TYPE STREQUAL "Fast")
@@ -408,11 +414,6 @@ include_directories(../antinet/src/antinet_sim/)
 add_executable(tunserver.elf src/g42-main.cpp )
 cotire(tunserver.elf)
 
-if(WIN32 OR CYGWIN OR MINGW)
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
-	add_custom_target(windowsService)
-	add_dependencies(windowsService galaxyService)
-endif()
 
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
 message("Libs for crypto are: (as string) '${LIBS_OPTIONAL_CRYPTO_clean}'")
@@ -433,24 +434,13 @@ message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 cotire(tunserver)
 
-if(MINGW)
-	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
-endif()
-
-if(NOT MSVC AND NOT MINGW)
-	set(PTHREAD_LIB "pthread")
-	set(SODIUM_LIB "sodium")
-else()
-	set(SODIUM_LIB "${SODIUM_LIBRARY}")
-	set(MSVC_LIRARIES "iphlpapi")
-endif()
 
 target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
-message("Sorted sources are:" "${TEST_SOURCES}")
+#message("Sorted sources are:" "${TEST_SOURCES}")
 
 #debug version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
