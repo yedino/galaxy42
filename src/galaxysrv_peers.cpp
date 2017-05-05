@@ -60,14 +60,15 @@ ostream& operator<<(ostream &ostr, const c_peer_connection & v){
 c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
+	const string literal_anyone = "anyone";
 	reasonable_size(simple);
 
-	_clue("Parsing: "<<simple);
+	_note("Parsing: "<<simple);
 	_check_input(simple.size()>=3); // some reasonable sized not-empty string
 
 	size_t pos1 = simple.find(separator); // was there any "@"
 
-	if (pos1 == string::npos) { // must be one-part format "VIRTUAL"
+	if (pos1 == string::npos) { // must be one-part format "VIRTUAL" (only contains the ID/ipv6, no cables)
 		vector<string> ret_id( { simple } ); // e.g. "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300"
 		vector<string> ret_cable{ };
 		// make sure this part does not contain ( or ) etc
@@ -82,7 +83,11 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 		_check_input( string::npos == part1.find(group_open) );
 		_check_input( string::npos == part1.find(group_close) );
 		_check_input( part1.size()>0 );
-		vector<string> ret_id( { part1 } ); // e.g. "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300"
+		vector<string> ret_id;
+		if (part1 != literal_anyone) {
+			ret_id.push_back( part1 ); // e.g. "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300"
+		} // else, it is 'anyone' VIRTUAL - so it is reported by empty string
+
 		// fd42::25f5@(udp:p.meshnet.pl:9042,cost=500)@(shm:test)@(tcp:[fe80::d44e]:9042)
 		//             B
 		//             B.............................X
@@ -137,8 +142,9 @@ void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
 }
 
 void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
-	_info("Adding peer from simplestring=" << simple);
+	_clue("Adding peer from simplestring=" << simple);
 	t_peering_reference_parse parse = parse_peer_reference(simple); // partially parsed
+	_dbg1("Done the parse itself");
 	bool id_anyone=true;
 	string id;
 	const auto & cables = parse.second;
@@ -146,10 +152,13 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 	auto reference = make_unique<t_peer_reference_newloop>();
 
 	if (parse.first.size()==1) { // there was 1 ID parsed
+		_dbg1("There is some ID in that reference.");
 		id_anyone=false;
 		id = parse.first.at(0);
 		reference->hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , id);
 	} else {
+		_dbg1("There is NO ID in that reference (anyone?)");
+		id_anyone=true;
 		_check(parse.first.size() == 0); // else there was no ID parsed
 		reference->hip = c_haship_addr::make_empty(); // clear it to be sure
 	}
