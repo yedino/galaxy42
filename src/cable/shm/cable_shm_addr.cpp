@@ -5,7 +5,7 @@ cable_shm_addr::cable_shm_addr()
 { }
 
 cable_shm_addr::cable_shm_addr(const std::string &address)
-: c_cable_base_addr( t_cable_kind::kind_shm  ),
+: c_cable_base_addr( t_cable_kind::kind_shm ),
 m_addr(address)
 {
 }
@@ -20,6 +20,6 @@ signed char cable_shm_addr::compare_same_class(const c_cable_base_addr & other) 
 		if ((this->m_addr) < (other_obj.m_addr)) return -1;
 		if ((this->m_addr) > (other_obj.m_addr)) return +1;
 		return 0;
-	} catch(std::bad_cast) { _throw_error_runtime("Can not compare addresses, it is other class"); }
+	} catch(const std::bad_cast &) { _throw_error_runtime("Can not compare addresses, it is other class"); }
 }
 

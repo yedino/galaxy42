@@ -18,6 +18,7 @@ c_card_selector::c_card_selector(const c_card_selector & other)
 }
 
 c_card_selector & c_card_selector::operator=(const c_card_selector & other) {
+	if (this == &other) return *this; // self
 	m_my_addr = other.m_my_addr->clone();
 	return *this;
 }

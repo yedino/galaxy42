@@ -31,7 +31,7 @@ class c_cable_cards final {
 
 		shared_ptr<c_asioservice_manager> m_asioservice_manager; ///< needed to create cables based on asio service
 
-		shared_ptr<c_asioservice_manager> get_asioservice(); ///< creates if needed and returns an asioservice manager
+		shared_ptr<c_asioservice_manager> & get_asioservice(); ///< creates if needed and returns an asioservice manager
 };
 
 

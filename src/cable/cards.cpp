@@ -31,7 +31,7 @@ unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector 
 	_throw_error_runtime("unsupported cable kind");
 }
 
-shared_ptr<c_asioservice_manager> c_cable_cards::get_asioservice() {
+shared_ptr<c_asioservice_manager> & c_cable_cards::get_asioservice() {
 	if (m_asioservice_manager == nullptr) {
 		_note("Need to allocate asioservice manager");
 		m_asioservice_manager = make_shared< c_asioservice_manager >( 4 ); // TODO option - ioservices

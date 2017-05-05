@@ -196,6 +196,7 @@ void c_galaxysrv_peers::help_peer_ref(ostream & ostr) {
 	"cabletype:data:port"
 	"a cable, with possible types are: \n"
 	"'udp4' 'udp6' 'tcp4' 'tcp6' 'ETH' (currently implemented: ...TODO) \n" // TODO-release update what is implemented
+	"@@@@@ WARNING: only 'udp' type is implemented currently! @@@@@"
 	"\n"
 	"When taking input from user (e.g. in the factory generating addresses) we also support \n"
 	"this conversions: \n"
