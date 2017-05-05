@@ -37,6 +37,8 @@ class c_cable_udp final : public c_asiocable {
 
 		void listen_on(const c_card_selector & local_address) override;
 
+		virtual void set_sockopt_timeout(std::chrono::microseconds timeout) override;
+
 		virtual void stop_threadsafe() override;
 
 		bool has_separate_rw() const noexcept; ///< do we use separate read and write socket, or is this the same socket
@@ -50,6 +52,23 @@ class c_cable_udp final : public c_asiocable {
 
 		Mutex m_enpoint_list_mutex;
 		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list;
+
+		void set_timeout_for_socket(std::chrono::microseconds timeout, boost::asio::ip::udp::socket &socket);
+		#ifdef ANTINET_socket_sockopt
+		using t_native_socket = boost::asio::ip::udp::socket::native_handle_type; ///< this platforms handler for native objects
+		static_assert(
+			std::is_same<
+				boost::asio::ip::udp::socket::native_handle_type ,
+				boost::asio::ip::tcp::socket::native_handle_type >
+				::value
+			, "Hmm can't find same native handler for e.g. UDP sockets and TCP sockets? Then what type to pass to set_sockopt_timeout here?"
+		);
+		#elif defined ANTINET_cancelio
+		using t_native_socket = SOCKET;
+		#elif
+		#error "ANTINET_socket_sockopt and ANTINET_cancelio not defined"
+		#endif
+
 };
 
 #endif // cable_UDP_HPP
