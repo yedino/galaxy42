@@ -320,6 +320,12 @@ int main(int argc, const char **argv) {
 	the_program->options_multioptions();
 	the_program->options_done();
 
+	std::cout << "BACKWARD_HAS_DW" << BACKWARD_HAS_DW  << std::endl;
+	std::cout << "BACKWARD_HAS_BFD" << BACKWARD_HAS_BFD << std::endl;
+	std::cout << "BACKWARD_HAS_UNWIND" << BACKWARD_HAS_UNWIND << std::endl;
+	std::cout << "BACKWARD_HAS_BACKTRACE" << BACKWARD_HAS_BACKTRACE<< std::endl;
+
+	print_detail_backtrace();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->options_commands_run();
 		if (done) return ret;

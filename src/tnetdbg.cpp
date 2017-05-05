@@ -121,3 +121,30 @@ std::string to_string(const std::wstring &input) {
 		ret += it;
 	return ret;
 }
+
+void print_simple_backtrace(size_t depth) {
+	using namespace backward;
+
+	StackTrace st; st.load_here(depth);
+
+	TraceResolver tr; tr.load_stacktrace(st);
+	for (size_t i = 0; i < st.size(); ++i) {
+		ResolvedTrace trace = tr.resolve(st[i]);
+		std::cout << "#" << i
+		          << " " << trace.object_filename
+		          << " " << trace.object_function
+		          << " [" << trace.addr << "]"
+		          << std::endl;
+	}
+}
+
+void print_detail_backtrace(size_t depth) {
+	using namespace backward;
+
+	StackTrace st; st.load_here(depth);
+	Printer p;
+	p.object = true;
+	p.color = true;
+	p.address = true;
+	p.print(st, stdout);
+}
