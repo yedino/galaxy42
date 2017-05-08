@@ -183,10 +183,13 @@ void c_the_program::options_parse_first() {
 	for (const auto & str : argt) _fact("commandline option: " << str << " ;");
 	_check(m_boostPO_desc);
 	namespace po = boost::program_options;
+
+	// back to argc/argv, so that boost::program_options can parse it
 	c_string_string_Cstyle args_cstyle( argt_exec , argt );
 	const int argc = args_cstyle.get_argc();
 	const char ** argv = args_cstyle.get_argv();
-	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // parse commandline, and store result
+
+	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // *** parse commandline, and store result
 	_dbg1( "Parsing with options: " << *m_boostPO_desc );
 	_goal("BoostPO parsed argm size=" << m_argm.size());
 	for(auto &arg: m_argm) _info("Argument in argm: " << arg.first );
