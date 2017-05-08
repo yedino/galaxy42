@@ -23,7 +23,7 @@
 #include <boost/asio.hpp> // to create local address
 
 void c_galaxysrv::main_loop() {
-	_goal("\n\nMain loop\n\n");
+	_goal("\n\nMain loop (new loop)\n\n");
 
 	auto world = make_shared<c_world>();
 //	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
@@ -58,6 +58,12 @@ void c_galaxysrv::main_loop() {
 	auto loop_tunread = [&]() {
 		try {
 			c_netbuf buf(9000);
+
+			boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
+			unique_ptr<c_cable_udp_addr> my_localhost = make_unique<c_cable_udp_addr>( ep );
+			c_card_selector my_selector( std::move(my_localhost) ); // will send from this my-address, to this peer
+			// pick up / create proper "card" (e.g. new socket from other my-address) and send from it:
+
 			while (!m_exiting) {
 				_dbg3("Reading TUN...");
 				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
@@ -72,10 +78,6 @@ void c_galaxysrv::main_loop() {
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
 
-				boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
-				unique_ptr<c_cable_udp_addr> my_addr = make_unique<c_cable_udp_addr>( ep );
-				c_card_selector my_selector( std::move(my_addr) ); // will send from this my-address, to this peer
-				// pick up / create proper "card" (e.g. new socket from other my-address) and send from it:
 				m_cable_cards.get_card(my_selector).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
 			} // loop
 			_note("Loop done");
