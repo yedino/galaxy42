@@ -26,6 +26,7 @@ class c_cable_base_addr {
 		std::string cable_type_name() const; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
 
 		inline bool operator==(const c_cable_base_addr &other) const;
+		inline bool operator!=(const c_cable_base_addr &other) const;
 		inline bool operator<(const c_cable_base_addr &other) const;
 
 		/// Factory - from parameter like "auto:1.2.3.4", "udp:5.6.7.8:9040", and returns child class e.g. c_cable_udp_addr. Throws if invalid.
@@ -55,6 +56,11 @@ inline t_cable_kind c_cable_base_addr::get_kind() const { return m_kind; }
 inline bool c_cable_base_addr::operator==(const c_cable_base_addr &other) const {
 	if (m_kind == other.m_kind) return 0 == compare_same_class(other);
 	return false;
+}
+
+inline bool c_cable_base_addr::operator!=(const c_cable_base_addr &other) const {
+	if (m_kind != other.m_kind) return true;
+	return 0 != compare_same_class(other);
 }
 
 inline bool c_cable_base_addr::operator<(const c_cable_base_addr &other) const {
