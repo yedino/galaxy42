@@ -95,15 +95,19 @@ void c_galaxysrv::main_loop() {
 				c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
 				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
+
+				// what cable address to send to:
+				c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
+
 				bool fwok = true;
-				// if ( peer_addr == UsePtr( peer_one_addr  ) ) { // TODONOW TODO
+				if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
+
 				if (fwok) {
 					_info("CABLE read, from " << his_door << make_report(chunk,20));
 					m_tuntap.send_to_tun(chunk.data(), chunk.size());
 					_info("Sent");
 				} else {
-					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << UsePtr(peer_one_addr) );
+					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
 				}
 			} // loop
 			_note("Loop done");
