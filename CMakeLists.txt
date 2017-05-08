@@ -10,6 +10,11 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+########################### CMAKE MODULES ###########################
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cotire/CMake")
+include(cotire)
+
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
@@ -41,7 +46,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-	set(GCC_WARN_FLAGS "-Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
+#	set(GCC_WARN_FLAGS "-Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	if(APPLE)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -67,6 +72,11 @@ if(WIN32 OR CYGWIN)
 #  set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
 endif()
 
+#message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+#message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
+#message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
+
+########################### BOOST ###########################
 set (Boost_USE_MULTITHREADED ON)
 if (BUILD_STATIC_TUNSERVER)
 	set (Boost_USE_STATIC_RUNTIME ON)
@@ -74,9 +84,6 @@ if (BUILD_STATIC_TUNSERVER)
 	set (Boost_USE_DEBUG_RUNTIME OFF)
 	set (sodium_USE_STATIC_LIBS ON)
 endif()
-message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
-message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
 if (CYGWIN)
 	set(BOOST_LOCALE_LINK_LIB boost_locale-mt boost_thread-mt boost_atomic-mt)
@@ -104,13 +111,17 @@ message("\nBOOST NOT FOUND!")
 message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${SODIUM_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cotire/CMake")
-include(cotire)
+IF(DEFINED USE_BOOST_MULTIPRECISION_DEFAULT)
+	SET(USE_BOOST_MULTIPRECISION_DEFAULT ${USE_BOOST_MULTIPRECISION_DEFAULT} CACHE INTERNAL "")
+ELSE()
+	SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
+ENDIF()
 
+
+########################### SODIUM ###########################
 find_package(Sodium)
 link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/) # for gitian build
 
@@ -125,6 +136,8 @@ message("\nSODIUM NOT FOUND!")
 message(FATAL_ERROR "SODIUM REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
+
+include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -153,11 +166,6 @@ ELSE()
    SET(COVERAGE OFF CACHE BOOL "")
 ENDIF()
 
-IF(DEFINED USE_BOOST_MULTIPRECISION_DEFAULT)
-   SET(USE_BOOST_MULTIPRECISION_DEFAULT ${USE_BOOST_MULTIPRECISION_DEFAULT} CACHE INTERNAL "")
-ELSE()
-   SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
-ENDIF()
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("EXTLEVEL = ${EXTLEVEL}")
