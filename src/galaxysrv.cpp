@@ -92,18 +92,18 @@ void c_galaxysrv::main_loop() {
 			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
 			while (!m_exiting) {
 				_dbg3("Reading cables...");
-				c_card_selector peer_addr; // in c++17 instead, use "tie" with decomposition declaration
-				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
+				c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
+				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
 				bool fwok = true;
 				// if ( peer_addr == UsePtr( peer_one_addr  ) ) { // TODONOW TODO
 				if (fwok) {
-					_info("CABLE read, from " << peer_addr << make_report(chunk,20));
+					_info("CABLE read, from " << his_door << make_report(chunk,20));
 					m_tuntap.send_to_tun(chunk.data(), chunk.size());
 					_info("Sent");
 				} else {
-					_info("Ignoring packet from unexpected peer " << peer_addr << ", we wanted data from " << UsePtr(peer_one_addr) );
+					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << UsePtr(peer_one_addr) );
 				}
 			} // loop
 			_note("Loop done");
