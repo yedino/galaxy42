@@ -55,6 +55,8 @@ void c_galaxysrv::main_loop() {
 		return listen1_selector;
 	} ();
 
+				_mark( sizeof( boost::asio::mutable_buffer )) ;
+
 	auto loop_tunread = [&]() {
 		try {
 			c_netbuf buf(9000);
@@ -67,18 +69,17 @@ void c_galaxysrv::main_loop() {
 			while (!m_exiting) {
 				_dbg3("Reading TUN...");
 				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
-				c_haship_addr src_addr;
-				c_haship_addr dst_addr;
-				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr);
-				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				_info("TUN read: " << make_report(chunk,20));
-				_info("src=" << src_addr << " " << "dst=" << dst_addr);
+				c_haship_addr src_addr; // set below
+				c_haship_addr dst_addr; // set below
+				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr); // ***
+				c_netchunk chunk( buf.data() , read ); // actually use part of buffer
+				_info("TUN read: " << "src=" << src_addr << " " << "dst=" << dst_addr << " TUN data: " << make_report(chunk,20));
 
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-
-				m_cable_cards.get_card(my_selector).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
+				c_cable_base_obj & door = m_cable_cards.get_card(my_selector);
+				door.send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
 			} // loop
 			_note("Loop done");
 		} catch (const std::exception &e) {_warn("Thread lambda (for tunread) got exception " << e.what());}
@@ -105,7 +106,7 @@ void c_galaxysrv::main_loop() {
 				if (fwok) {
 					_info("CABLE read, from " << his_door << make_report(chunk,20));
 					m_tuntap.send_to_tun(chunk.data(), chunk.size());
-					_info("Sent");
+					_info("Sent to tuntap");
 				} else {
 					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
 				}

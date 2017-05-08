@@ -41,6 +41,19 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *d
 	}
 }
 
+
+void c_cable_udp::send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) {
+	_dbg3("Seding (blocking) UDP, buffers count = " << buffers.size() << " dest = " << dest);
+	try {
+		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
+		_dbg4("UDP to " << destination_endpoint);
+		m_write_socket.send_to(buffers, destination_endpoint);
+	} catch(...) {
+		_warn("Can not send UDP");
+		throw;
+	}
+}
+
 void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
 	_dbg3("Seding (asyncblocking) UDP size=" << size << " dest=" << dest);
 	try {
