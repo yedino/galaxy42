@@ -359,8 +359,6 @@ list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
 
 include_directories(../antinet/src/antinet_sim/)
-# add_executable(ipclient.elf ipclient.cpp counter.cpp)
-# add_executable(ipserver.elf ipserver.cpp)
 add_executable(tunserver.elf src/g42-main.cpp )
 cotire(tunserver.elf)
 
@@ -385,7 +383,6 @@ target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
-#message("Sorted sources are:" "${TEST_SOURCES}")
 
 add_executable(unittests.elf ${TEST_SOURCES})
 target_link_libraries(unittests.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
@@ -409,11 +406,7 @@ message(STATUS "Release flags:                 ${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "Release with debug info flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message(STATUS "Warn pedantic flags:           ${WARN_PEDANTIC_FLAGS}")
 
-#file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
-# ^-- if using this, then SORT it.
-#add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
-#target_link_libraries(rpc_sender boost_system pthread)
-
+########################### CUSTOM TARGETS ###########################
 if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
 		COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
@@ -421,13 +414,8 @@ add_custom_target(run
 		DEPENDS unittests.elf
 		WORKING_DIRECTORY ./)
 
-add_custom_target(runcli
-		COMMAND ./ipclient.elf ::1 12006 ipv6 1200
-		DEPENDS ./ipclient.elf
-		WORKING_DIRECTORY ./)
-
 add_custom_command(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
+	TARGET tunserver.elf
 	POST_BUILD
 	COMMAND chmod g-wx,o-wx tunserver.elf
 	COMMAND cp tunserver.elf nocap-tunserver.elf
@@ -435,13 +423,13 @@ add_custom_command(
 	WORKING_DIRECTORY ./)
 
 add_custom_command(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
+	TARGET tunserver.elf
 	POST_BUILD
 	COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_custom_target(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
+	TARGET tunserver.elf
 	POST_BUILD
 	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
 	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
