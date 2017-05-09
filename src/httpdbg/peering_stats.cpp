@@ -1,4 +1,5 @@
 #include "peering_stats.hpp"
+#ifdef HTTP_DBG
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -145,3 +146,5 @@ void c_transmission_stats::reset_connection_time(){
 c_data_transmission_buffer & c_transmission_stats::get_data_buffer(){
 	return m_data_buffer;
 }
+
+#endif // HTTP_DBG

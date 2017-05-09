@@ -24,18 +24,13 @@ include(cotire)
 
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
-	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
-	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
+#	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
+#	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
+#	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
 	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
 	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
 endif()
 
-if(WIN32 OR CYGWIN OR MINGW)
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
-	add_custom_target(windowsService)
-	add_dependencies(windowsService galaxyService)
-endif()
 
 if (MSVC OR MINGW)
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
@@ -53,24 +48,6 @@ if(WIN32 OR CYGWIN)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
-
-
-
-# http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
-# If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
-# and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
-# to Debug prior to calling PROJECT()
-#
-#IF(DEFINED CMAKE_BUILD_TYPE)
-#   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
-#	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-#ELSE()
-#   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
-#	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-##ENDIF()
-
-# move bash ENV $variables to CMake set
-
 ########################### COVERAGE ###########################
 IF(DEFINED COVERAGE)
    SET(COVERAGE ${COVERAGE} CACHE BOOL "")
@@ -85,10 +62,6 @@ else()
 	message(STATUS "Disabling COVERAGE")
 	set(COVERAGE_CXX_FLAG "")
 endif()
-
-#message(STATUS "EXTLEVEL = ${EXTLEVEL}")
-#message(STATUS "COVERAGE = ${COVERAGE}")
-#message(STATUS "USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
 
 ########################### STATIC BUILD ###########################
 option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
@@ -328,9 +301,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
-#	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
-#	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g0")
-#	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -g3")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
@@ -339,18 +309,11 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
-	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wthread-safety")
-#	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
-#	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g0")
-#	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -g3")
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES MSVC) #TODO check this condition
 	set(WARN_PEDANTIC_FLAGS "/Wall")
-#	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Z7")
-#	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox")
-#	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Ox /Z7")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 endif()
@@ -360,29 +323,24 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${STATIC_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 
-#if (MSVC)
-#	if(NOT MSVC14)
-#		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
-#	endif()
-#endif()
-
-
-
-
-
-option(HTTP_DEBUGGER "Build with http debuger" OFF)
-
 # more directories of my main code
 
+########################### SOURCE FILES ###########################
 include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
 file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/stdplus/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
 
+if(WIN32 OR CYGWIN OR MINGW)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
+	add_custom_target(windowsService)
+	add_dependencies(windowsService galaxyService)
+endif()
+
+option(HTTP_DEBUGGER "Build with http debuger" OFF)
 if(HTTP_DEBUGGER)
 	add_definitions(-DHTTP_DBG)
-	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp)
 endif()
 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
@@ -390,13 +348,11 @@ file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
 
 if(APPLE)
-	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
 elseif(WIN32)
 
 else()
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
-	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
 endif()
 
 message(STATUS "Sorting sources (from GLOB)")
@@ -406,27 +362,6 @@ list(SORT SOURCES_GROUP_RPC)
 #message("Sorted sources are:" "${SOURCES_GROUP_TUNSERVER}")
 #message("Sorted sources are:" "${SOURCES_GROUP_CRYPTO}")
 #message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
-
-#if(NOT MSVC)
-#	if(CMAKE_BUILD_TYPE STREQUAL "Fast")
-#			message(STATUS "Fast build")
-#			add_definitions(-DRELEASEMODE_ -DNDEBUG)
-#			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
-
-#		elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#			message(STATUS "Debug build")
-#			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0")
-
-#		elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-#			message(STATUS "Release build")
-#			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2")
-#			# -DNDEBUG -DRELEASEMODE")
-#	else()
-#		message(STATUS "bad CMAKE_BUILD_TYPE flag")
-#		message(STATUS "usage is: cmake [Fast/Debug/Release] .")
-#		message( FATAL_ERROR "error" )
-#	endif()
-#endif()
 
 include_directories(../antinet/src/antinet_sim/)
 # add_executable(ipclient.elf ipclient.cpp counter.cpp)
@@ -473,7 +408,7 @@ foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 endforeach()
 
 #release version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
+set(CMAKE_CXX_FLAGS "-DRELEASEMODE=1")
 add_executable(test-release.elf ${TEST_SOURCES})
 target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
@@ -488,13 +423,14 @@ add_backward(tunserver.elf)
 add_backward(test-debug.elf)
 add_backward(test-release.elf)
 
-message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "C Flags:         ${CMAKE_C_FLAGS}")
-message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
-message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
-message(STATUS "Debug flags:     ${CMAKE_CXX_FLAGS_DEBUG}")
-message(STATUS "Release flags:   ${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "Release with debug info flags:     ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "C Flags:                       ${CMAKE_C_FLAGS}")
+message(STATUS "C++ Flags:                     ${CMAKE_CXX_FLAGS}")
+message(STATUS "C++ link flags:                ${CMAKE_CXX_LINK_FLAGS}")
+message(STATUS "Debug flags:                   ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "Release flags:                 ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "Release with debug info flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "Warn pedantic flags:           ${WARN_PEDANTIC_FLAGS}")
 
 #file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
 # ^-- if using this, then SORT it.
@@ -537,5 +473,3 @@ add_custom_target(
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 endif()
-
-# unset( USE_BOOST_MULTIPRECISION_DEFAULT )
