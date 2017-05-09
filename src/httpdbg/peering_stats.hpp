@@ -2,6 +2,8 @@
 #ifndef PEERING_STATS
 #define PEERING STATS 1
 
+#ifdef HTTP_DBG
+
 #include <ctime>
 #include <chrono>
 #include <string>
@@ -50,4 +52,5 @@ class c_transmission_stats{
 		c_data_transmission_buffer m_data_buffer;
 };
 
+#endif // HTTP_DBG
 #endif
