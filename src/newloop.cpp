@@ -2,6 +2,9 @@
 #include "utils/check.hpp"
 #include "utils/misc.hpp"
 
+/// @file - is probably deprecated TODO remove me later
+/// @owner rfree
+
 typedef string cable_id; // name next hop
 typedef string hip_id; // name end src/dst
 

@@ -55,7 +55,6 @@ void c_galaxysrv::main_loop() {
 		return listen1_selector;
 	} ();
 
-				_mark( sizeof( boost::asio::mutable_buffer )) ;
 
 	auto loop_tunread = [&]() {
 		try {
@@ -69,17 +68,31 @@ void c_galaxysrv::main_loop() {
 			while (!m_exiting) {
 				_dbg3("Reading TUN...");
 				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
-				c_haship_addr src_addr; // set below
-				c_haship_addr dst_addr; // set below
-				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr); // ***
+				c_haship_addr src_hip; // set below
+				c_haship_addr dst_hip; // set below
+				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_hip, dst_hip); // ***
 				c_netchunk chunk( buf.data() , read ); // actually use part of buffer
-				_info("TUN read: " << "src=" << src_addr << " " << "dst=" << dst_addr << " TUN data: " << make_report(chunk,20));
+				_info("TUN read: " << "src=" << src_hip << " " << "dst=" << dst_hip << " TUN data: " << make_report(chunk,20));
 
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
 				c_cable_base_obj & door = m_cable_cards.get_card(my_selector);
-				door.send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
+
+				using proto = c_protocolv3; /// ^TODO move
+				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
+				gen.push_byte_u( proto::e_proto_cmd_tunneled_data );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
+				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
+				// gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
+
+				string header = gen.str_move();
+				c_cable_base_obj::t_asio_buffers_send buffers{
+					{ header.data(), header.size() },
+					{ buf.data(), read }
+				};
+				door.send_to( UsePtr(peer_one_addr) , buffers);
 			} // loop
 			_note("Loop done");
 		} catch (const std::exception &e) {_warn("Thread lambda (for tunread) got exception " << e.what());}
@@ -89,8 +102,6 @@ void c_galaxysrv::main_loop() {
 	auto loop_cableread = [&]() {
 		try {
 			c_netbuf buf(9000);
-			string stopflag_name="/tmp/stop1";
-			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
 			while (!m_exiting) {
 				_dbg3("Reading cables...");
 				c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
