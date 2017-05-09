@@ -256,7 +256,9 @@ class c_symhash_state final : public c_crypto_system {
 class c_stream final /* because strange ctor init list functions */
 : public c_crypto_system
 {
+	#ifdef HTTP_DBG
     friend class ::c_httpdbg_raport;
+	#endif
 	private:
 		t_symkey m_KCT; ///< the main KCT for this stream
 
@@ -328,7 +330,9 @@ class c_stream final /* because strange ctor init list functions */
  * A CT, can be used to send data in both directions.
 */
 class c_crypto_tunnel {
+	#ifdef HTTP_DBG
     friend class ::c_httpdbg_raport;
+	#endif
 	private:
 		// TODO why 65:
 		const size_t m_ntru_dh_random_bytes_size = 65; // max size for NTRU_EES439EP1
