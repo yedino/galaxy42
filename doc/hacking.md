@@ -132,6 +132,10 @@ except for all constructors (including move and copy), destructor,
 and except for functions and operators that take same-class (or parent/child class) - like especially copy operator=,
 moving operator=, comparison operator< operator> operator== and such.
 
+## Attribute owner
+
+Owner of the file - e.g. nickname.
+
 # Building
 
 The build process should be described in the main README.md of this project.
@@ -250,6 +254,116 @@ and this throws proper tuntap_error*
 
 3) tunserver.c will catch then tuntap_error* and inform user
 ```
+
+## Network protocol
+
+`[[maindoc]]` - main documentation for network protocol
+
+
+tun from tuntap - are the IP data
+tap from tuntap - are the ethernet data, including usually IP data after ethernet header
+
+tuntap-data - the data as received by some tuntap driver
+tuntap-header - the header added by some tuntap driver, before the IP data, e.g. 4 bytes
+tuntap-added - all data added before the TUN
+
+ipv6-noaddr: are the headers of IPv6 and payload of IPv6, but with source and dest addresses removed
+ipv6-merit: currently = ipv6-noaddr; Data that are are part of IPv6 and are not "trivial" to know from higher layers.
+
+weld: array of ipv6-merit, that are all from same src, and to same dst
+e.g. ipv6-merit are joined into a weld by the original sender, delivered e2e, and then separated by final recipient.
+they are e2e encrypted and authenticated by src to dst.
+
+
+
+```
+
+Reading tuntap data:
+
+<================================== tuntap data ========================>
+tuntap-added <=========================== IP (as from TUN) =============>
+tuntap-header, ethernet-header <======================== ipv6 =====================>
+<========================= ipv6 ====================>
+<v,trf,flowl,payl,hdr,hop, src, dst, <ipv6 payload> >
+<v,trf,flowl,payl,hdr,hop,           <ipv6 payload> >
+<v,trf,flowl,payl,hdr,hop, <ipv6 payload> >
+<================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
+<================== ipv6-merit  =======> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
+
+Reading transport data:
+
+CMD,
+
+
+
+<============== ipv6-merit ============> <=ipv6-merit=>
+
+src,dst,[lN,l1,l2] <============== ipv6-merit ============> <=ipv6-merit=>
+<--- weld-header -><============== ipv6-merit ============> <=ipv6-merit=>
+<==================== weld to dst1 ======================================>
+
+Now zoom-out :
+
+<=weld dst1=> <=weld dst2=> <=weld dst3=> <!~~~weld dst1 via-me~~~!>
+ b10 B11 B12    b20  B21    b30 B31 B32    B40 ~~~~~~~~~~~~~~~~~~~~
+ buffers:
+ B11 - is memory with ipv6-merit (from one tunrap read)
+ B12 - is memory with ipv6-merit (from other tuntap read)
+ b10 - is memory in which we create weld-header (e.g src,dst) - they are same dst - we picked them to create weld
+ ,
+ B21 - ipv6-merit
+ b20 - weld-header
+ ,
+ B31 - ipv6-merit
+ B32 - ipv6-merit
+ b30 - weld-header
+ ,
+ B40 - part of e.g. UDP read of data that we pick to route
+
+via peer1     via peer2     via peer1     via peer1   <-- routing decisions
+<=weld dst1=>               <=weld dst3=> <!weld dst1 via-me!>   <--- via peer1
+<=weld dst1=> <=weld dst3=> <!weld dst1 via-me!>   <--- via peer8
+add hashes to each weld (each can do it for his own, in parallel) :
+<=weld dst1=>+H <=weld dst3=>+H <!weld dst1 via-me!>+H   <--- via peer8
+HH = hash of hashes
+{CMD,[pay],HH}(nonce,auth)<======== cart-payload via peer8 ======================>
+<============================== cart / cart-full via peer8 =============================>
+
+AUTH p2p
+
+/// <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred-->
+
+CMD,(l)<--shred--> ???
+
+cart to
+udp-transport(  )
+
+Example: (WIP/TODO)
+
+peer8 routes to dst1, dst2, dst3, dst4
+  100-dst1 , src0, dst1
+  100-dst1 , src0, dst1
+  100-dst1 , src0, dst1
+  500-dst2 , src0, dst2
+  500-dst3 , src0, dst3
+32000-dst4 , src0, dst4
+ 9000-dst4 , src6, dst4
+
+    (src0,dst1, 100,100,100) (src0,dst2,500) (src0,dst3,500) (src0,dst4,32000), (src6,dst4,9000)
+    eeeeeeeeeeeeeeeeeeeeeeee eeeeeeeeeeeeee  eeeeeeeeeeeeeee eeeeeeeeeeeeeeeee  ~~~~~~~~~~~~~~~~  e=encrypt+auth e2e
+    <-------------------------------------------------> <---------> <-----> <------> <----------> shreds example sizes
+    ccccccccccccccccccccccccccccccccccccccccccccccccccc ccccccccccc ccccccc cccccccc cccccccccccc cable sends:
+    c1                                                  c2          c3      c1       c4           various cables, but to peer8
+
+		CMD HH, p2p-auth;                                   c2          c3      c1       c4           various cables, but to peer8
+
+
+
+cart - shreds
+
+
+```
+
 
 ## Developing translations
 

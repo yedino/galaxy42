@@ -25,14 +25,14 @@ class c_cable_base_obj : public c_someio {
 	protected:
 		c_cable_base_obj()=default; // to be used by factory
 
+	public:
 		using t_asio_buffers_receive = std::vector< boost::asio::mutable_buffer >;
 		using t_asio_buffers_send = std::vector< boost::asio::const_buffer >;
 
-	public:
 		virtual ~c_cable_base_obj() = default;
 
 		virtual void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size)=0; ///< blocking function
-		virtual void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers)=0; ///< blocking function
+		virtual void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers)=0; ///< blocking function, gather buffers
 
 		/**
 		 * @brief async_send_to
