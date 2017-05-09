@@ -44,38 +44,10 @@ if(WIN32 OR CYGWIN)
 	add_definitions(-DWINVER=0x0601)
 	add_definitions(-D_WIN32_WINNT=0x0601)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
-#else()
-#  set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
 endif()
 
-#-----------------------------------------------------------------------------
-# Check which compiler to use
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-#	set(GCC_WARN_FLAGS "-Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
-elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-	if(APPLE)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
-	endif()
-	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wthread-safety")
-endif()
-
-#if (MSVC)
-#	if(NOT MSVC14)
-#		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
-#	endif()
-#endif()
 
 
-#message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-#message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
-#message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
 ########################### BOOST ###########################
 set (Boost_USE_MULTITHREADED ON)
@@ -102,14 +74,14 @@ endif()
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
 
 if (NOT Boost_FOUND)
-message("\nBOOST NOT FOUND!")
+	message("\nBOOST NOT FOUND!")
 	if (MSVC)
 		message(STATUS "\nNote (MSVC): \nPlease download and install package (or later):")
 		message(STATUS "    https://sourceforge.net/projects/boost/files/boost-binaries/ boost_1_61_0-msvc-14.0-64.exe \n")
 		message(STATUS "Add following argument for cmake (default install location):")
 		message(STATUS "    \"-DBOOST_ROOT=C:/local/boost_1_61_0 -DBOOST_LIBRARYDIR=C:/local/boost_1_61_0/lib64-msvc-14.0/\"\n\n")
 	endif()
-message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
+	message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
@@ -121,6 +93,15 @@ ELSE()
 	SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
 ENDIF()
 
+option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
+
+if(USE_BOOST_MULTIPRECISION)
+	message(STATUS "USE_BOOST_MULTIPRECISION is normall (on)")
+	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
+else()
+	message(STATUS "USE_BOOST_MULTIPRECISION is DISABLED")
+	add_definitions(-DUSE_BOOST_MULTIPRECISION=0)
+endif()
 
 ########################### SODIUM ###########################
 find_package(Sodium)
@@ -137,8 +118,8 @@ if (NOT SODIUM_FOUND)
 	message(FATAL_ERROR "SODIUM REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
-
 include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
+
 
 # http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -155,23 +136,26 @@ include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
 
 # move bash ENV $variables to CMake set
 
-IF(DEFINED EXTLEVEL)
-   SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
-ELSE()
-   SET(EXTLEVEL 0 CACHE STRING "")
-ENDIF()
-
+########################### COVERAGE ###########################
 IF(DEFINED COVERAGE)
    SET(COVERAGE ${COVERAGE} CACHE BOOL "")
 ELSE()
    SET(COVERAGE OFF CACHE BOOL "")
 ENDIF()
 
+if(COVERAGE)
+	message(STATUS "Enabling COVERAGE")
+	set(COVERAGE_CXX_FLAG "--coverage")
+else()
+	message(STATUS "Disabling COVERAGE")
+	set(COVERAGE_CXX_FLAG "")
+endif()
 
-message(STATUS "EXTLEVEL = ${EXTLEVEL}")
-message(STATUS "COVERAGE = ${COVERAGE}")
-message(STATUS "USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
+#message(STATUS "EXTLEVEL = ${EXTLEVEL}")
+#message(STATUS "COVERAGE = ${COVERAGE}")
+#message(STATUS "USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
 
+########################### STATIC BUILD ###########################
 option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
 if(BUILD_STATIC_TUNSERVER)
 	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
@@ -182,6 +166,16 @@ if(BUILD_STATIC_TUNSERVER)
 		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
 	endif()
 endif()
+
+if(BUILD_STATIC_TUNSERVER)
+	set(STATIC_FLAG "-Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
+endif()
+########################### EXTLEVEL OPTIONS ###########################
+IF(DEFINED EXTLEVEL)
+   SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
+ELSE()
+   SET(EXTLEVEL 0 CACHE STRING "")
+ENDIF()
 
 option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
 if (EXTLEVEL GREATER -1) # from0
@@ -201,16 +195,6 @@ endif()
 option(EXTLEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
 if (EXTLEVEL GREATER 29) # from 30
 	set(EXTLEVEL_IS_EXPERIMENT_DANGEROUS ON)
-endif()
-
-option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
-
-if(USE_BOOST_MULTIPRECISION)
-	message(STATUS "USE_BOOST_MULTIPRECISION is normall (on)")
-	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
-else()
-	message(STATUS "USE_BOOST_MULTIPRECISION is DISABLED")
-	add_definitions(-DUSE_BOOST_MULTIPRECISION=0)
 endif()
 
 if(EXTLEVEL_IS_NORMAL)
@@ -319,22 +303,47 @@ endif()
 # used e.g. by various crypto like ENABLE_CRYPTO_SIDH , ENABLE_CRYPTO_NTRU
 include_directories( build_extra )
 
-if(COVERAGE)
-	message(STATUS "Enabling COVERAGE")
-	set(COVERAGE_CXX_FLAG "--coverage")
-else()
-	message(STATUS "Disabling COVERAGE")
-	set(COVERAGE_CXX_FLAG "")
-endif()
 
-if(BUILD_STATIC_TUNSERVER)
-	set(STATIC_FLAG "-Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
+#-----------------------------------------------------------------------------
+# Check which compiler to use
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+########################### COMPILER FLAGS ###########################
+#set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
+if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+	if(APPLE)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
+	endif()
+	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wthread-safety")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES MSVC) #TODO check this condition
+	set(WARN_PEDANTIC_FLAGS "/Wall")
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fPIE")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
+
+#if (MSVC)
+#	if(NOT MSVC14)
+#		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
+#	endif()
+#endif()
+
+
+
+
+
+
+
 
 ADD_CUSTOM_TARGET(Fast
 		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Fast ${CMAKE_SOURCE_DIR}
