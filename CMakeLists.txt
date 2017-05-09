@@ -10,6 +10,13 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+ADD_CUSTOM_TARGET(Release
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+ADD_CUSTOM_TARGET(Debug
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+
 ########################### CMAKE MODULES ###########################
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cotire/CMake")
@@ -48,6 +55,130 @@ endif()
 
 
 
+
+# http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
+# If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
+# and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
+# to Debug prior to calling PROJECT()
+#
+#IF(DEFINED CMAKE_BUILD_TYPE)
+#   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
+#	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+#ELSE()
+#   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
+#	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+##ENDIF()
+
+# move bash ENV $variables to CMake set
+
+########################### COVERAGE ###########################
+IF(DEFINED COVERAGE)
+   SET(COVERAGE ${COVERAGE} CACHE BOOL "")
+ELSE()
+   SET(COVERAGE OFF CACHE BOOL "")
+ENDIF()
+
+if(COVERAGE)
+	message(STATUS "Enabling COVERAGE")
+	set(COVERAGE_CXX_FLAG "--coverage")
+else()
+	message(STATUS "Disabling COVERAGE")
+	set(COVERAGE_CXX_FLAG "")
+endif()
+
+#message(STATUS "EXTLEVEL = ${EXTLEVEL}")
+#message(STATUS "COVERAGE = ${COVERAGE}")
+#message(STATUS "USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
+
+########################### STATIC BUILD ###########################
+option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
+if(BUILD_STATIC_TUNSERVER)
+	if(MSVC)
+		message(FATAL_ERROR "Static build is not supportted")
+	endif()
+	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+
+	if(NOT BOOST_LIBRARYDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
+		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
+	endif()
+endif()
+
+if(BUILD_STATIC_TUNSERVER)
+	if(MSVC)
+		set(STATIC_FLAGS "")
+	else()
+		set(STATIC_FLAGS "-fPIC -fPIE -Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
+	endif()
+endif()
+########################### EXTLEVEL OPTIONS ###########################
+IF(DEFINED EXTLEVEL)
+   SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
+ELSE()
+   SET(EXTLEVEL 0 CACHE STRING "")
+ENDIF()
+
+option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
+if (EXTLEVEL GREATER -1) # from0
+	set(EXTLEVEL_IS_NORMAL ON)
+endif()
+
+option(EXTLEVEL_IS_PREVIEW "Enable the less tested code, that is not yet recommended for any real use" OFF)
+if (EXTLEVEL GREATER 9) # from 10
+	set(EXTLEVEL_IS_PREVIEW ON)
+endif()
+
+option(EXTLEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
+if (EXTLEVEL GREATER 19) # from 20
+	set(EXTLEVEL_IS_EXPERIMENT ON)
+endif()
+
+option(EXTLEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
+if (EXTLEVEL GREATER 29) # from 30
+	set(EXTLEVEL_IS_EXPERIMENT_DANGEROUS ON)
+endif()
+
+if(EXTLEVEL_IS_NORMAL)
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
+	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=0)
+endif()
+if(EXTLEVEL_IS_PREVIEW)
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_PREVIEW")
+	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=0)
+endif()
+if(EXTLEVEL_IS_EXPERIMENT)
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!")
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=0)
+endif()
+if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!! this code will be insecure!!!")
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=1)
+else()
+	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=0)
+endif()
+
+set(TXT_SIDH "Enable crypto: SIDH")
+if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS) ## {{match_extlevel_sidh}}
+	option(ENABLE_CRYPTO_SIDH TXT_SIDH ON)
+else()
+	option(ENABLE_CRYPTO_SIDH TXT_SIDH OFF)
+endif()
+
+set(TXT_NTRU "Enable crypto: NTru")
+if(EXTLEVEL_IS_EXPERIMENT) # {{match_extlevel_ntru}}
+	option(ENABLE_CRYPTO_NTRU TXT_NTRU ON)
+else()
+	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
+endif()
+
+########################### DEPENDS ###########################
 
 ########################### BOOST ###########################
 set (Boost_USE_MULTITHREADED ON)
@@ -119,124 +250,6 @@ if (NOT SODIUM_FOUND)
 endif()
 
 include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
-
-
-# http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
-# If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
-# and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
-# to Debug prior to calling PROJECT()
-#
-#IF(DEFINED CMAKE_BUILD_TYPE)
-#   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
-#	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-#ELSE()
-#   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
-#	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-##ENDIF()
-
-# move bash ENV $variables to CMake set
-
-########################### COVERAGE ###########################
-IF(DEFINED COVERAGE)
-   SET(COVERAGE ${COVERAGE} CACHE BOOL "")
-ELSE()
-   SET(COVERAGE OFF CACHE BOOL "")
-ENDIF()
-
-if(COVERAGE)
-	message(STATUS "Enabling COVERAGE")
-	set(COVERAGE_CXX_FLAG "--coverage")
-else()
-	message(STATUS "Disabling COVERAGE")
-	set(COVERAGE_CXX_FLAG "")
-endif()
-
-#message(STATUS "EXTLEVEL = ${EXTLEVEL}")
-#message(STATUS "COVERAGE = ${COVERAGE}")
-#message(STATUS "USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
-
-########################### STATIC BUILD ###########################
-option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
-if(BUILD_STATIC_TUNSERVER)
-	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
-		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
-	endif()
-
-	if(NOT BOOST_LIBRARYDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
-		message(FATAL_ERROR "BOOST_LIBRARYDIR is required when BUILD_STATIC_TUNSERVER is ON")
-	endif()
-endif()
-
-if(BUILD_STATIC_TUNSERVER)
-	set(STATIC_FLAG "-Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
-endif()
-########################### EXTLEVEL OPTIONS ###########################
-IF(DEFINED EXTLEVEL)
-   SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
-ELSE()
-   SET(EXTLEVEL 0 CACHE STRING "")
-ENDIF()
-
-option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
-if (EXTLEVEL GREATER -1) # from0
-	set(EXTLEVEL_IS_NORMAL ON)
-endif()
-
-option(EXTLEVEL_IS_PREVIEW "Enable the less tested code, that is not yet recommended for any real use" OFF)
-if (EXTLEVEL GREATER 9) # from 10
-	set(EXTLEVEL_IS_PREVIEW ON)
-endif()
-
-option(EXTLEVEL_IS_EXPERIMENT "Enable the experimental code, that has bugs" OFF)
-if (EXTLEVEL GREATER 19) # from 20
-	set(EXTLEVEL_IS_EXPERIMENT ON)
-endif()
-
-option(EXTLEVEL_IS_EXPERIMENT_DANGEROUS "Enable the most experimental code, that has bugs and vulnerabilities" OFF)
-if (EXTLEVEL GREATER 29) # from 30
-	set(EXTLEVEL_IS_EXPERIMENT_DANGEROUS ON)
-endif()
-
-if(EXTLEVEL_IS_NORMAL)
-	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
-	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=1)
-else()
-	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=0)
-endif()
-if(EXTLEVEL_IS_PREVIEW)
-	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_PREVIEW")
-	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=1)
-else()
-	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=0)
-endif()
-if(EXTLEVEL_IS_EXPERIMENT)
-	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!")
-	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=1)
-else()
-	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=0)
-endif()
-if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
-	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!! this code will be insecure!!!")
-	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=1)
-else()
-	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=0)
-endif()
-
-set(TXT_SIDH "Enable crypto: SIDH")
-if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS) ## {{match_extlevel_sidh}}
-	option(ENABLE_CRYPTO_SIDH TXT_SIDH ON)
-else()
-	option(ENABLE_CRYPTO_SIDH TXT_SIDH OFF)
-endif()
-
-set(TXT_NTRU "Enable crypto: NTru")
-if(EXTLEVEL_IS_EXPERIMENT) # {{match_extlevel_ntru}}
-	option(ENABLE_CRYPTO_NTRU TXT_NTRU ON)
-else()
-	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
-endif()
-
-########################### SUBMODULES ###########################
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(depends/googletest/googletest/include/)
@@ -261,6 +274,7 @@ set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(depends/sodiumpp/sodiumpp/include)
 
+########################### SIDH ###########################
 if(ENABLE_CRYPTO_SIDH AND NOT MSVC)
 	message(STATUS "Using crypto: SIDH")
 	if(NOT EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
@@ -278,6 +292,7 @@ else()
 	add_definitions(-DENABLE_CRYPTO_SIDH_CMAKE=0) # MATCH: must match also in project.hpp!
 endif()
 
+########################### NTru ###########################
 if(ENABLE_CRYPTO_NTRU AND NOT MSVC)
 	message(STATUS "Using crypto: NTru")
 	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=1) # MATCH: must match also in project.hpp!
@@ -304,17 +319,18 @@ endif()
 include_directories( build_extra )
 
 
-#-----------------------------------------------------------------------------
-# Check which compiler to use
+########################### COMPILER FLAGS ###########################
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-########################### COMPILER FLAGS ###########################
 #set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g0")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -g3")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	if(APPLE)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -322,15 +338,20 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wthread-safety")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g0")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -g3")
+
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES MSVC) #TODO check this condition
 	set(WARN_PEDANTIC_FLAGS "/Wall")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Z7")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Ox /Z7")
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fPIE")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${STATIC_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
-set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 #if (MSVC)
 #	if(NOT MSVC14)
@@ -341,19 +362,6 @@ set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
 
-
-
-
-
-ADD_CUSTOM_TARGET(Fast
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Fast ${CMAKE_SOURCE_DIR}
-		COMMAND make)
-ADD_CUSTOM_TARGET(Release
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-		COMMAND make)
-ADD_CUSTOM_TARGET(Debug
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-		COMMAND make)
 
 option(HTTP_DEBUGGER "Build with http debuger" OFF)
 
@@ -474,7 +482,7 @@ add_backward(test-debug.elf)
 add_backward(test-release.elf)
 
 message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "C Flags:       ${CMAKE_C_FLAGS}")
+message(STATUS "C Flags:         ${CMAKE_C_FLAGS}")
 message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
 
