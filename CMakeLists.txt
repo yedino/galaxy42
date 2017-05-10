@@ -10,12 +10,6 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
-ADD_CUSTOM_TARGET(Release
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-		COMMAND make)
-ADD_CUSTOM_TARGET(Debug
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-		COMMAND make)
 
 ########################### CMAKE MODULES ###########################
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -312,10 +306,12 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-elseif(${CMAKE_CXX_COMPILER_ID} MATCHES MSVC) #TODO check this condition
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	set(WARN_PEDANTIC_FLAGS "/Wall")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+else()
+	message(fatal_error "Compiler not supported")
 endif()
 
 
@@ -407,6 +403,13 @@ message(STATUS "Release with debug info flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
 message(STATUS "Warn pedantic flags:           ${WARN_PEDANTIC_FLAGS}")
 
 ########################### CUSTOM TARGETS ###########################
+add_custom_target(Release
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+add_custom_target(Debug
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+
 if(NOT MINGW AND NOT WIN32)
 add_custom_target(run
 		COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
