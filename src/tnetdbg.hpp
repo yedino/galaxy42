@@ -73,7 +73,6 @@ void write_to_console(const std::string& obj);
 	do { DBGLVL(LVL_EXTRA); oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	oss << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str()); } while(0)
-#define _stat(X) _fact_level( 90, 30, X)
 #define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 /// yellow code
