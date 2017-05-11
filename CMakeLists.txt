@@ -415,31 +415,30 @@ add_custom_target(Debug
 		COMMAND make)
 
 if(NOT MINGW AND NOT WIN32)
-add_custom_target(run
-		COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
-		DEPENDS ./tunserver.elf
-		DEPENDS unittests.elf
+	add_custom_target(run
+			COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
+			DEPENDS ./tunserver.elf
+			DEPENDS unittests.elf
+			WORKING_DIRECTORY ./)
+
+	add_custom_command(
+		TARGET tunserver.elf
+		POST_BUILD
+		COMMAND chmod g-wx,o-wx tunserver.elf
+		COMMAND cp tunserver.elf nocap-tunserver.elf
+		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
 		WORKING_DIRECTORY ./)
 
-add_custom_command(
-	TARGET tunserver.elf
-	POST_BUILD
-	COMMAND chmod g-wx,o-wx tunserver.elf
-	COMMAND cp tunserver.elf nocap-tunserver.elf
-	COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
-	WORKING_DIRECTORY ./)
+	add_custom_command(
+		TARGET tunserver.elf
+		POST_BUILD
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
-add_custom_command(
-	TARGET tunserver.elf
-	POST_BUILD
-	COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
-	WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-
-add_custom_target(
-	TARGET tunserver.elf
-	POST_BUILD
-	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
-	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
+	add_custom_target(
+		TARGET tunserver.elf
+		POST_BUILD
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
