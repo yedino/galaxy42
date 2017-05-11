@@ -10,8 +10,12 @@
 	#define ANTINET_linux
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
 #elif defined(_WIN32) || defined(__CYGWIN__)
+	#if defined (__MINGW32__)
+		#define ATTR_NODISCARD __attribute__((warn_unused_result))
+	#else // MSVC
+		#define ATTR_NODISCARD _Check_return_
+	#endif
 	#define ANTINET_windows
-	#define ATTR_NODISCARD _Check_return_
 	#if defined(__CYGWIN__)
 		//http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio/using.html
 		#ifndef __USE_W32_SOCKETS
