@@ -23,11 +23,11 @@ const char * dbg__FILE__(const char * name);
 
 /// stack trace printers
 ///@{
-void print_simple_backtrace(size_t depth=32); ///< Print regular stack trace with given depth
+std::string get_simple_backtrace(size_t depth=32); ///< Print regular stack trace with given depth
 
 /// Print stack trace with given depth in a detailed way with references to source code
-/// (works if source code is available)
-void print_detail_backtrace(size_t depth=32);
+/// (works only if source code is available - require also compilation debug '-g' flag)
+std::string get_detail_backtrace(size_t depth=32);
 ///@}
 
 /**
@@ -83,7 +83,8 @@ void write_to_console(const std::string& obj);
 	oss<<"\033[93m"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
 	oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str());\
-	print_detail_backtrace();\
+	oss.flush(); oss<<get_detail_backtrace(4);\
+	write_to_console(oss.str());\
 } while(0)
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
@@ -94,7 +95,8 @@ void write_to_console(const std::string& obj);
 	oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
-	print_detail_backtrace();\
+	oss.flush(); oss<<get_detail_backtrace();\
+	write_to_console(oss.str());\
 } while(0)
 
 #define _mark(X) do { DBGLVL(150); \
