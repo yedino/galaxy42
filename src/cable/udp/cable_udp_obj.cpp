@@ -86,9 +86,6 @@ size_t c_cable_udp::receive_from(c_card_selector &source, unsigned char *const d
 }
 
 void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
-	_warn("this function is disabled"); // need to fix it after switch to use c_card_selector
-	_UNUSED(data); _UNUSED(size); _UNUSED(handler);
-	/*
 	_dbg3("Receive (asyn) UDP");
 
 	auto endpoint_iterator = [this] {
@@ -108,11 +105,11 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 			Unique_lock<Mutex> lock(m_enpoint_list_mutex);
 			m_endpoint_list.erase(endpoint_iterator);
 			lock.unlock();
-
-			handler(data, bytes_transferred, std::move(source_addr_cable));
+			c_card_selector selector(std::move(source_addr_cable));
+			handler(data, bytes_transferred, selector);
 		} // lambda
 	);
-	*/
+
 }
 
 bool c_cable_udp::has_separate_rw() const noexcept { ///< do we use separate read and write socket, or is this the same socket
