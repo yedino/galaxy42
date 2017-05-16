@@ -115,6 +115,7 @@ then
 	# readlink on OSX have different behavior than in GNU
 	# to get same behavior we could use greadlink from coreutils package
 	# brew install coreutils
+	shopt -s expand_aliases
 	alias readlink="greadlink"
 else
 	echo "PLATFORM - NORMAL POSIX e.g. GNU/Linux ($platform)"
