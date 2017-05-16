@@ -212,6 +212,6 @@ template <typename T> std::string to_debug_b(const std::unique_ptr<T> & ptr)
 bool is_ascii_normal(const std::string str);
 
 /// Transform c-style array to wstring (useful for windows api functions when UNICODE is set)
-std::wstring carray_to_wstring(const char *cstr);
+std::wstring cstring_to_wstring(const char *cstr);
 
 #endif
