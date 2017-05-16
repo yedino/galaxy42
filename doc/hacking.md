@@ -275,32 +275,136 @@ e.g. ipv6-merit are joined into a weld by the original sender, delivered e2e, an
 they are e2e encrypted and authenticated by src to dst.
 
 
-
 ```
+
+=======================================================================================================================
+
+Overview
+
+Node can do 3 things: send locally-originating own data, receive data send to us, or route data between other nodes.
+Each action can have Motivation effects like sending/receiving tokens of gratitude.
+
+1) Sending data that we send locally:
+from TUNTAP (+packages) ---> (crypt-e2e, crypt-p2p) (+our or other bags) ---> cable send, e.g. UDP transport
+2) Receiving data that is sent to our host as end destination:
+cable receive, e.g. UDP transport ---> (decrypt-p2p) (-bags not to us) ---> (-split bags) ---> (decrypt-e2e) ---> to TUNTAP
+3) Receiving data that is not to us:
+cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other peer) ---> to cable e.g. UDP
+
+
+    tuntap read          cable read UDP
+      v    v                   |
+      .    |                   |
+ more ....>|                   |
+ tuntap    |                   |
+           v                   v
+       e2e-crypt       p2p-auth(verify)
+       e2e-auth(out)  [opt. p2p-encrypt]
+           |                   |
+           |                   |
+           |<----- no ---- < to us ? >
+           |  (routing)        |
+           |                  yes
+           |                   |
+           v                   v
+      p2p-auth(send)       e2e-decrypt
+           |              e2e-auth(out)
+           |                   |
+           v                   v
+         cable            tuntap write
+
+=======================================================================================================================
+
+Overflow of dataflow for Sending local data:
+
+Tuntap read gives us Ip Packets.
+IP Packets - Packet, as 2 buffers +src,dst
+Weld       - Weld is: (src,dst)<===ip version,flow,...ip payload....===><===ip version,flow,...ip payload....===>
+             Weld is collection of IP packets, optimized by joining them together.
+             Created by IP packet reads, concatenated (e.g. by choosing buffer position)
+             Array of packets that share same (src,dst).
+             (Possibly encrypted/authenticated together - **1**)
+Bag        - Bag is: <== weld-id, bag-id/bag-count , bag-data part of weld data ==>
+             Splited part of weld, that is going via one peer/path.
+             Small enough to usully be optimal for expected transport.
+             Authorized e2e. Encrypted e2e. (opt. we could instead encrypt the Weld **1**)
+             This crypto uses nonce value: nonce_e2e, it's calculated as:
+             nonce_e2e = bag_number_in_weld (+) weld_number_in_e2e (+) opt. e2e_salt - this is size-optimization **2**
+Cart       - Cart is:
+             {
+             p2p_authtag, p2p_nonce
+             path-{B,C}-3,thx5005, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+             path-{B,C}-3,thx5006, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+						 }
+						 Cart is collection of bags that are sent from us to given one peer.
+Fragment   - Fragment is a part of cart that fits into
+             cart#5811{B,C}, fragment nr 3/7, [.....cart-part....]
+
+FAQ:
+Does Bag need Dst (finall destination) info? No, because when Bag is handed to you in p2p, then you are told the
+agreement number (path number) and that implies the final destination e.g. Z.
+Data-hash is it needed? Not now, we assume it would be...
+
+
+Sidenotes:
+**1** though, the Authorization e2e must be for each bag,
+so that the finall recipient can check for each Bag is it correct - to confirm payment,
+unless we are in more Easy mode where all nodes trust each other more.
+
+**2** the nonce_e2e is derived from weld-id and bag-id, because this 2 IDs anyway must be attached (delivered with) the Bag
+(to re-order the bags to join them into welds, and to re-order welds possibly) - so we can use this numbers;
+Though, if we would be to maximazie anti-DPI protections, we could encrypt (e2e) the weld-id and bag-id to protect
+this meta-data from spying. Then, bag would have random nonce_e2e attached,
+and inside it we would encyypt+auth weld-id and bag-id.
+
+=======================================================================================================================
 
 Reading tuntap data:
 
+We get some data by reading tuntap (see src/tuntap/*)
+OS gives us tuntap data:
 <================================== tuntap data ========================>
 tuntap-added <=========================== IP (as from TUN) =============>
-tuntap-header, ethernet-header <======================== ipv6 =====================>
-<========================= ipv6 ====================>
+tuntap-header, ethernet-header <======================== ipv6 packet =====================>
+(delete tuntap-added)
+<========================= ipv6 packet ====================>
 <v,trf,flowl,payl,hdr,hop, src, dst, <ipv6 payload> >
+(take out src,dst)
 <v,trf,flowl,payl,hdr,hop,           <ipv6 payload> >
 <v,trf,flowl,payl,hdr,hop, <ipv6 payload> >
+[........................] [...............] (src,dst) <--- 2 buffers, one constant size
+^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
+
 <================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
-<================== ipv6-merit  =======> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
-
-Reading transport data:
-
-CMD,
-
+<================== ipv6-merit  ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
 
 
 <============== ipv6-merit ============> <=ipv6-merit=>
 
-src,dst,[lN,l1,l2] <============== ipv6-merit ============> <=ipv6-merit=>
+src,dst,[len_encoding] <============== ipv6-merit ============> <=ipv6-merit=>
 <--- weld-header -><============== ipv6-merit ============> <=ipv6-merit=>
 <==================== weld to dst1 ======================================>
+
+len_encoding:
+	1) 1 byte - number WN - of welds to send
+  2) WN times repeat:
+      either:
+			  a) an 2 byte value meaning the octet length of next merit; the value must be != 0
+	      b) if above 2 bytes are 0 then interpret next 4 byte value as the size of Jumbogram of next merit
+
+E.g. sending merits of sizes: 160, 255, 60000, 65535, 99015, 3735928559, 160, the len_encoding field will be:
+	1) value "7" for 7 welds, as 0x07
+	2) 7 numbers:
+			a) 160 = 0x00 0xA0
+			a) 255 = 0x00 0xFF
+			a) 60000 = 0xEA 0x60
+			a) 65535 = 0xFF 0xFF
+			b) 99015 = 0x00 0x00   0x00 0x01 0x82 0xC7
+			b) 3735928559 = 0x00 0x00   0xDE 0xAD 0xBE 0xEF
+			a) 160 = 0x00 0xA0
+So:
+0x07 0x00 0xA0 0x00 0xFF 0xEA 0x60 0xFF 0xFF 0x00 0x00   0x00 0x01 0x82 0xC7 0x00 0x00   0xDE 0xAD 0xBE 0xEF 0x00 0xA0
+
 
 Now zoom-out :
 
@@ -323,6 +427,51 @@ Now zoom-out :
 via peer1     via peer2     via peer1     via peer1   <-- routing decisions
 <=weld dst1=>               <=weld dst3=> <!weld dst1 via-me!>   <--- via peer1
 <=weld dst1=> <=weld dst3=> <!weld dst1 via-me!>   <--- via peer8
+
+0,1,2,3,5,aabbcccccc
+
+transport len max=300 . one letter is 100 bytes
+trport: aa
+trport: bb
+trport: ccc shred 1
+trport: cc  shred 2
+
+trport: aab shred part 1, len 2, [[len 1]]
+trport: bcc shred 2
+trport: ccc
+
+via peer 8, we want to send 4 welds:
+aa
+bbbbbbbbbb
+c
+ddddddd
+
+We pack it into carts as:
+
+aab entire weld_50122, for weld #50123 part 1/5
+bbb for weld_50123 part 2/5
+bbb for weld_50123 part 3/5
+bbb for weld_50123 part 4/5
+bcd for weld_50123 part 5/5, entier weld_50124, for weld_50125 part 1/3
+ddd for weld_50125 part 2/3
+ddd for weld_50125 part 3/3
+
+
+[shred-header][shred-data]
+[shred-header][shred-data]
+[shred-header][shred-data]
+
+shred-header:
+  marker: 1 byte with value 00
+or else:
+  weld number: 4 byte: 31 bit, plus 1 bit saying is it entire weld, or weld-shred,
+  if it's weld-shred then:
+    1 byte - weld-shred-nr,
+    1 byte - weld-shred-count,
+
+So shred-header has variable size: 1, or 4, 6 byte.
+
+
 add hashes to each weld (each can do it for his own, in parallel) :
 <=weld dst1=>+H <=weld dst3=>+H <!weld dst1 via-me!>+H   <--- via peer8
 HH = hash of hashes
