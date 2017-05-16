@@ -48,9 +48,22 @@ function usage {
 
 function platform_recognize {
 	uname -a # show info
-	uname -a | egrep '^CYGWIN' \
-		&& platform="cygwin" \
-		|| platform="posix"
+	if [[ -n $(uname -a | egrep "GNU/Linux") ]]
+	then
+		platform="gnu_linux"
+	elif [[ -n $(uname -a | egrep "Cygwin") ]]
+	then
+		platform="cygwin"
+	elif [[ -n $(uname -a | egrep "Darwin") ]]
+	then
+		platform="mac_osx"
+	else
+		platform="unknown"
+	fi
+
+	#uname -a | egrep '^CYGWIN' \
+	#	&& platform="cygwin" \
+	#	|| platform="posix"
 }
 
 function clean_previous_build {
@@ -64,7 +77,7 @@ echo "The 'do' script - that builds this project"
 echo ""
 
 platform_recognize
-echo "$platform"
+echo "Recognized platform: $platform"
 clean_previous_build
 
 # download external dependencies/submodules
@@ -78,6 +91,10 @@ for dir in depends/* ; do
 	fi
 done
 
+if [[ "$1" == "--help" ]] ; then
+	usage
+	exit 2 # <--- exit
+fi
 
 if [[ "$platform" == "cygwin" ]]
 then
@@ -91,14 +108,16 @@ then
 	cmake . || fail "Can not cmake (on Cygwin mode)"
 	make tunserver.elf || fail "Can not make (on Cygwin mode)"
 
+	exit 0
+
+elif [[ "$platform" == "mac_osx" ]]
+then
+	# readlink on OSX have different behavior than in GNU
+	# to get same behavior we could use greadlink from coreutils package
+	# brew install coreutils
+	alias readlink="greadlink"
 else
-
-	echo "PLATFORM - NORMAL POSIX e.g. Linux ($platform)"
-
-
-if [[ "$1" == "--help" ]] ; then
-	usage
-	exit 2 # <--- exit
+	echo "PLATFORM - NORMAL POSIX e.g. GNU/Linux ($platform)"
 fi
 
 [[ -z "$COVERAGE" ]] && COVERAGE="0"
@@ -194,5 +213,4 @@ make -j 2 || { echo "Error: the Make build failed - look above for any other war
 
 set +x
 popd
-fi # platform posix
 
