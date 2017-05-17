@@ -401,7 +401,7 @@ tuntap-header, ethernet-header <======================== ipv6 packet ===========
 (take out src,dst)
 <v,trf,flowl,payl,hdr,hop,           <ipv6 payload> >
 <v,trf,flowl,payl,hdr,hop, <ipv6 payload> >
-[........................] [...............] (src,dst) <--- 2 buffers, one constant size
+[.......................................] (src,dst) <--- 2 buffers, one constant size
 ^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
 
 
