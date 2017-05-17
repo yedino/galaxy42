@@ -317,27 +317,57 @@ cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other pee
 
 Overflow of dataflow for Sending local data:
 
+TODO: We assume that there is available a function AuthenticateEncrypt that reads from separate (fragmented) buffers,
+and outputs results to a new continous memory.
+
+
 Tuntap read gives us Ip Packets.
-IP Packets - Packet, as 2 buffers +src,dst
-Weld       - Weld is: (src,dst)<===ip version,flow,...ip payload....===><===ip version,flow,...ip payload....===>
-             Weld is collection of IP packets, optimized by joining them together.
-             Created by IP packet reads, concatenated (e.g. by choosing buffer position)
-             Array of packets that share same (src,dst).
-             (Possibly encrypted/authenticated together - **1**)
-Bag        - Bag is: <== weld-id, bag-id/bag-count , bag-data part of weld data ==>
-             Splited part of weld, that is going via one peer/path.
-             Small enough to usully be optimal for expected transport.
-             Authorized e2e. Encrypted e2e. (opt. we could instead encrypt the Weld **1**)
+
+Sizes of data:
+MTU on tuntap: 1304..65535 (usually 65535)
+MTU on cable: 68..65535 (usually 1280..9000) (maybe bigger for jumbograms on cable)
+MTU on path: same as MTU on cable
+Packet: 40..65535 (possibly larger for IPv6 Jumbograms https://en.wikipedia.org/wiki/Jumbogram)
+Merit: 8..65503 (as 65535-32)
+maxBigPerWeld - 10 (1..1024) - estimated amount of big (MTU size) packets in Weld
+maxPckPerWeld - 65530 (last few values can be reserved for other use)
+EmitInput: ~60 .. maxBigPerWeld×MTU
+Weld: ~60 .. maxBigPerWeld×MTU
+WeldHeader: 0 ?
+WeldPost: ~60 .. Weld.Max + Weld.Header.Max
+BagHeader: ??? < 16 ??? PathAgreementID is needed
+Bag: 1..65535 (usually 1..PathMTU) (maybe bigger for jumbograms on cable)
+Cart: 1..65535 (usually 1..CableMTU) (maybe bigger for jumbograms on cable) - can cause fragmentation
+maxFragPerCart: 65535 (encoded as varint)
+FragmentHeader: 2..2×3  + (cart id - 32 bit, rotating counter)
+Fragment: 1+header .. 65535
+
+IP Packets - Packet, as 2 buffers (IP headers - src,dst, IP payload) +src,dst
+Merit      - Packet, with removed src/dst headers (as Src/Dst can be provided by higher level)
+EmitInput  - Is concatenation of 1 or more merits, done to prepare less fragmented memory for Weld.
+Weld       - Weld is collection of IP packets, with same Dst, in form of array of Emitbuf, with fragmented memory.
+             Logic: (src,dst)<===ipv,flow,.ip payload.===><===ipv,flow,.ip payload..===>
+             Memory: EmitIn1{(src,dst)<=ipv,flow,payload=>} emit2{(src,dst)<=ipv,flow,payload=><=ipv,flow,payload=>
+             | Input: many buffers
+             | Crypto.
+             V Output: 1 buffer + header(and TAG)
+WeldPost   - Weld data after encryption e2e, and authenticated e2e (MAC-TAG is generated)
              This crypto uses nonce value: nonce_e2e, it's calculated as:
-             nonce_e2e = bag_number_in_weld (+) weld_number_in_e2e (+) opt. e2e_salt - this is size-optimization **2**
-Cart       - Cart is:
+             nonce_e2e = weld_number_in_e2e (+) opt. e2e_salt - this is size-optimization
+             Memory: 1 buffer (joined by AuthenticateEncrypt), plus 1 buffer with weld-header including TAG
+Bag        - Splited part of WeldPost. Small enough to usully be optimal for expected transport.
+             Memory: usually 1 buffer (part of the WeldPost), but one will have 2 buffers: part of WeldPost plus the weld-header
+             (we assume weld-header fits in bag)
+Cart       - Cart is collection of bags plus path-info, that is sent from us to given peer; It is p2p authorized.
              {
              p2p_authtag, p2p_nonce
              path-{B,C}-3,thx5005, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
              path-{B,C}-3,thx5006, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+             path-{B,D}-9,thx3111, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
 						 }
-						 Cart is collection of bags that are sent from us to given one peer.
-Fragment   - Fragment is a part of cart that fits into
+						 p2p_nonce = p2p_counter_in_path_hop_context (+) salt in hop_context
+						 hop_context is: my-peer (implied), plus other peer (known from other layer), e.g. "A,B"
+Fragment   - Fragment is a part of cart that fits into given CableMTU
              cart#5811{B,C}, fragment nr 3/7, [.....cart-part....]
 
 FAQ:
@@ -351,8 +381,8 @@ Sidenotes:
 so that the finall recipient can check for each Bag is it correct - to confirm payment,
 unless we are in more Easy mode where all nodes trust each other more.
 
-**2** the nonce_e2e is derived from weld-id and bag-id, because this 2 IDs anyway must be attached (delivered with) the Bag
-(to re-order the bags to join them into welds, and to re-order welds possibly) - so we can use this numbers;
+**2** the nonce_e2e is derived from weld-id because this ID anyway must be attached (delivered with) the Weld
+(to re-order the welds to join them into welds, and to re-order welds possibly) - so we can use this numbers;
 Though, if we would be to maximazie anti-DPI protections, we could encrypt (e2e) the weld-id and bag-id to protect
 this meta-data from spying. Then, bag would have random nonce_e2e attached,
 and inside it we would encyypt+auth weld-id and bag-id.
