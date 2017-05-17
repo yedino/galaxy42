@@ -81,13 +81,13 @@ void c_galaxysrv::main_loop() {
 
 				using proto = c_protocolv3; /// ^TODO move
 				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
-				gen.push_byte_u( proto::e_proto_cmd_tunneled_data );
+				gen.push_byte_u( proto::e_proto_cmd_data_one_merit_clear );
 				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
 				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
 				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
 				// gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
-
 				string header = gen.str_move();
+
 				c_cable_base_obj::t_asio_buffers_send buffers{
 					{ header.data(), header.size() },
 					{ buf.data(), read }
