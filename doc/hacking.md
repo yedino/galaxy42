@@ -291,7 +291,7 @@ cable receive, e.g. UDP transport ---> (decrypt-p2p) (-bags not to us) ---> (-sp
 3) Receiving data that is not to us:
 cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other peer) ---> to cable e.g. UDP
 
-
+        (emit)
     tuntap read          cable read UDP
       v    v                   |
       .    |                   |
@@ -303,7 +303,7 @@ cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other pee
            |                   |
            |                   |
            |<----- no ---- < to us ? >
-           |  (routing)        |
+           |   (routing)       |
            |                  yes
            |                   |
            v                   v
@@ -312,16 +312,41 @@ cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other pee
            |                   |
            v                   v
          cable            tuntap write
+                             (take)
 
 =======================================================================================================================
 
-Overflow of dataflow for Sending local data:
+Overview of dataflow for Sending local data:
 
 TODO: We assume that there is available a function AuthenticateEncrypt that reads from separate (fragmented) buffers,
-and outputs results to a new continous memory.
-
+and outputs results to a new continuous memory.
 
 Tuntap read gives us Ip Packets.
+
+IP Packets  - Packet, as 2 buffers (IP headers - src,dst, IP payload) +src,dst
+Merit       - Packet, with removed src/dst headers (as Src/Dst can be provided by higher level)
+EmitInput   - Is concatenation of 1 or more merits, done to prepare less fragmented memory for Weld.
+WeldBagStep - Produces Bags that are of mostly continuous memory and are e2e encrypted+authenticated,
+              processed as: Weld ---> WeldPost ---> Bag, as follows:
+Weld        - Weld is collection of IP packets, with same Dst, in form of array of Emitbuf, with fragmented memory.
+              Logic: (src,dst)<===ipv,flow,.ip payload.===><===ipv,flow,.ip payload..===>
+              Memory: (src,dst) EmitIn1{<=ipv,flow,payload=>} emit2{<=ipv,flow,payload=><=ipv,flow,payload=>
+Bag         - Splited parts of some Weld. Small enough to usully be optimal for expected transport.
+BagCrypto   - Bag that has e2e crypto applied, and includes nonce.
+              nonce_e2e = bag_id (+) weld_id (+) salt
+              bag_id is counter of bag, in context of weld_id
+              weld_id is counter of weld, in context of my src (sender) to given finall dst
+Cart        - Cart is collection of bags plus path-info, that is sent from us to given peer; It is p2p authorized.
+              {
+              p2p_authtag, p2p_nonce
+              path-{B,C}-3,thx5005, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+              path-{B,C}-3,thx5006, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+              path-{B,D}-9,thx3111, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+				      }
+				  		p2p_nonce = p2p_counter_in_path_hop_context (+) salt in hop_context
+						  hop_context is: my-peer (implied), plus other peer (known from other layer), e.g. "A,B"
+Fragment   -  Fragment is a part of cart that fits into given CableMTU
+              cart#5811{B,C}, fragment nr 3/7, [.....cart-part....]
 
 Sizes of data:
 MTU on tuntap: 1304..65535 (usually 65535)
@@ -339,36 +364,10 @@ BagHeader: ??? < 16 ??? PathAgreementID is needed
 Bag: 1..65535 (usually 1..PathMTU) (maybe bigger for jumbograms on cable)
 Cart: 1..65535 (usually 1..CableMTU) (maybe bigger for jumbograms on cable) - can cause fragmentation
 maxFragPerCart: 65535 (encoded as varint)
-FragmentHeader: 2..2×3  + (cart id - 32 bit, rotating counter)
-Fragment: 1+header .. 65535
+ShredHeader: 2..2×3  + (cart id - 32 bit, rotating counter)
+Shred: 1+header .. 65535
 
-IP Packets - Packet, as 2 buffers (IP headers - src,dst, IP payload) +src,dst
-Merit      - Packet, with removed src/dst headers (as Src/Dst can be provided by higher level)
-EmitInput  - Is concatenation of 1 or more merits, done to prepare less fragmented memory for Weld.
-Weld       - Weld is collection of IP packets, with same Dst, in form of array of Emitbuf, with fragmented memory.
-             Logic: (src,dst)<===ipv,flow,.ip payload.===><===ipv,flow,.ip payload..===>
-             Memory: EmitIn1{(src,dst)<=ipv,flow,payload=>} emit2{(src,dst)<=ipv,flow,payload=><=ipv,flow,payload=>
-             | Input: many buffers
-             | Crypto.
-             V Output: 1 buffer + header(and TAG)
-WeldPost   - Weld data after encryption e2e, and authenticated e2e (MAC-TAG is generated)
-             This crypto uses nonce value: nonce_e2e, it's calculated as:
-             nonce_e2e = weld_number_in_e2e (+) opt. e2e_salt - this is size-optimization
-             Memory: 1 buffer (joined by AuthenticateEncrypt), plus 1 buffer with weld-header including TAG
-Bag        - Splited part of WeldPost. Small enough to usully be optimal for expected transport.
-             Memory: usually 1 buffer (part of the WeldPost), but one will have 2 buffers: part of WeldPost plus the weld-header
-             (we assume weld-header fits in bag)
-Cart       - Cart is collection of bags plus path-info, that is sent from us to given peer; It is p2p authorized.
-             {
-             p2p_authtag, p2p_nonce
-             path-{B,C}-3,thx5005, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
-             path-{B,C}-3,thx5006, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
-             path-{B,D}-9,thx3111, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
-						 }
-						 p2p_nonce = p2p_counter_in_path_hop_context (+) salt in hop_context
-						 hop_context is: my-peer (implied), plus other peer (known from other layer), e.g. "A,B"
-Fragment   - Fragment is a part of cart that fits into given CableMTU
-             cart#5811{B,C}, fragment nr 3/7, [.....cart-part....]
+Max nonce for authencrypt: 24 byte (crypto_stream_xsalsa20.h: #define crypto_stream_xsalsa20_NONCEBYTES 24U)
 
 FAQ:
 Does Bag need Dst (finall destination) info? No, because when Bag is handed to you in p2p, then you are told the
@@ -405,6 +404,7 @@ tuntap-header, ethernet-header <======================== ipv6 packet ===========
 [........................] [...............] (src,dst) <--- 2 buffers, one constant size
 ^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
 
+
 <================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
 <================== ipv6-merit  ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
 
@@ -414,6 +414,10 @@ tuntap-header, ethernet-header <======================== ipv6 packet ===========
 src,dst,[len_encoding] <============== ipv6-merit ============> <=ipv6-merit=>
 <--- weld-header -><============== ipv6-merit ============> <=ipv6-merit=>
 <==================== weld to dst1 ======================================>
+
+..................................................................................
+TODO partially deprecated ???
+Weld can take out bags by looking into IPv6 length header?
 
 len_encoding:
 	1) 1 byte - number WN - of welds to send
@@ -434,6 +438,7 @@ E.g. sending merits of sizes: 160, 255, 60000, 65535, 99015, 3735928559, 160, th
 			a) 160 = 0x00 0xA0
 So:
 0x07 0x00 0xA0 0x00 0xFF 0xEA 0x60 0xFF 0xFF 0x00 0x00   0x00 0x01 0x82 0xC7 0x00 0x00   0xDE 0xAD 0xBE 0xEF 0x00 0xA0
+..................................................................................
 
 
 Now zoom-out :
