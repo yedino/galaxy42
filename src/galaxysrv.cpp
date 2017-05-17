@@ -108,6 +108,12 @@ void c_galaxysrv::main_loop() {
 				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 
+				using proto = c_protocolv3;
+				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), reinterpret_cast<char*>(chunk.data()), chunk.size());
+				proto::t_proto_cmd cmd = int_to_enum<proto::t_proto_cmd>(parser.pop_byte_u());
+				c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+				c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+
 				// what cable address to send to:
 				c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
 

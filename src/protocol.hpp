@@ -29,6 +29,17 @@ class c_protocolv3 {
 		} t_proto_cmd ;
 };
 
+inline bool enum_is_valid_value(c_protocolv3::t_proto_cmd value) {
+	switch (value) {
+		case c_protocolv3::e_proto_cmd_unused_old_version_0:
+		case c_protocolv3::e_proto_cmd_unused_old_version_1:
+		case c_protocolv3::e_proto_cmd_unused_old_version_2:
+		case c_protocolv3::e_proto_cmd_data_one_merit_clear:
+		return true;
+	}
+	return false;
+}
+
 // ------------------------------------------------------------------
 
 class c_protocol {
