@@ -6,7 +6,6 @@
 #include <boost/filesystem.hpp>
 #include "glue_sodiumpp_crypto.hpp"
 
-
 c_the_program::c_the_program() { }
 
 void c_the_program::take_args(int argc, const char **argv) {
@@ -180,7 +179,11 @@ void c_the_program::options_create_desc() { }
 
 void c_the_program::options_parse_first() {
 	_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
-	for (const auto & str : argt) _fact("commandline option: " << str << " ;");
+	for (const auto & str : argt)
+	{
+		_fact("commandline option: " << str << " ;");
+		if (str.size() == 0) _warn("Empty commandline arg");
+	}
 	_check(m_boostPO_desc);
 	namespace po = boost::program_options;
 
