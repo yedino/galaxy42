@@ -103,30 +103,35 @@ void c_galaxysrv::main_loop() {
 		try {
 			c_netbuf buf(9000);
 			while (!m_exiting) {
-				_dbg3("Reading cables...");
-				c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
-				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
-				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
+				try{
+					_dbg3("Reading cables...");
+					c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
+					size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+					c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 
-	//			using proto = c_protocolv3;
-				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), reinterpret_cast<char*>(chunk.data()), chunk.size());
-				// enum proto::t_proto_cmd cmd = int_to_enum<enum proto::t_proto_cmd>(parser.pop_byte_u());
-				c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
-				c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+					using proto = c_protocolv3;
+					trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), reinterpret_cast<char*>(chunk.data()), chunk.size());
+					proto::t_proto_cmd cmd = int_to_enum<proto::t_proto_cmd>(parser.pop_byte_u());
+					c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+					c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
 
-				// what cable address to send to:
-				c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
+					// what cable address to send to:
+					c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
 
-				bool fwok = true;
-				if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
+					bool fwok = true;
+					if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
 
-				if (fwok) {
-					_info("CABLE read, from " << his_door << make_report(chunk,20));
-					m_tuntap.send_to_tun(chunk.data(), chunk.size());
-					_info("Sent to tuntap");
-				} else {
-					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
+					if (fwok) {
+						_info("CABLE read, from " << his_door << make_report(chunk,20));
+						size_t offset = sizeof(cmd) + 2*g_ipv6_rfc::length_of_addr;
+						m_tuntap.send_to_tun_separated_addresses(chunk.data() + offset, chunk.size() - offset, src_hip, dst_hip);
+						_info("Sent to tuntap");
+					} else {
+						_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
+					}
 				}
+				catch(const std::exception & ex) { _warn("Cannot handle this packet. Exception: " << ex.what()); }
+				catch(...) { _warn("Cannot handle this packet. Unknown exception"); }
 			} // loop
 			_note("Loop done");
 		}
