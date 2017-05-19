@@ -18,7 +18,9 @@ class mock_posix_stream_descriptor {
 		                             const int &native_descriptor) {
 			_UNUSED(io_service);
 			_UNUSED(native_descriptor);
-			ON_CALL(*this, is_open()).WillByDefault(Return(true));
+			EXPECT_CALL(*this, is_open())
+			            .WillRepeatedly(Return(s_good_open));
+			s_good_open = true;
 		};
 	MOCK_METHOD0(is_open, bool());
 	MOCK_METHOD0(release, int());
@@ -29,6 +31,8 @@ class mock_posix_stream_descriptor {
 	MOCK_METHOD1(read_some, size_t(const std::array<boost::asio::mutable_buffer, 4>&));
 	MOCK_METHOD2(async_read_some, void(const boost::asio::mutable_buffer &,
 	                                   std::function<void(const boost::system::error_code&, size_t)>));
+	private:
+		static bool s_good_open;
 };
 
 } // namespace
