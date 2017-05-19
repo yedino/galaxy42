@@ -15,13 +15,7 @@ using ::testing::Return;
 class mock_posix_stream_descriptor {
 	public:
 		mock_posix_stream_descriptor(boost::asio::io_service & io_service,
-		                             const int &native_descriptor) {
-			_UNUSED(io_service);
-			_UNUSED(native_descriptor);
-			EXPECT_CALL(*this, is_open())
-			            .WillRepeatedly(Return(s_good_open));
-			s_good_open = true;
-		};
+		                             const int &native_descriptor);
 	MOCK_METHOD0(is_open, bool());
 	MOCK_METHOD0(release, int());
 	MOCK_METHOD1(assign, void(const int &));
