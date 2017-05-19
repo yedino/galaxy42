@@ -8,12 +8,6 @@ c_cable_base_addr::c_cable_base_addr(t_cable_kind kind)
 	: m_kind(kind)
 { }
 
-void c_cable_base_addr::print(std::ostream & ostr) const {
-	_UNUSED(ostr);
-	_throw_error_runtime("Trying to print abstract cable address");
-	// ostr << "[unknown-address-type]";
-}
-
 std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr const & obj) {
 	obj.print(ostr);
 	return ostr;

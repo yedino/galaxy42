@@ -6,8 +6,6 @@
 #include <boost/filesystem.hpp>
 #include "glue_sodiumpp_crypto.hpp"
 
-c_the_program::c_the_program() { }
-
 void c_the_program::take_args(int argc, const char **argv) {
 	if (argc>0) argt_exec=argv[0]; else argt_exec="";
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
@@ -18,7 +16,6 @@ void c_the_program::take_args(const string & _argt_exec , const vector<string> &
 	argt = _argt;
 }
 
-c_the_program::~c_the_program() { }
 
 void c_the_program::startup_console_first() {
 }

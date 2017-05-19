@@ -7,8 +7,8 @@
 /// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
 class c_the_program {
 	public:
-		c_the_program();
-		virtual ~c_the_program();
+		c_the_program()=default;
+		virtual ~c_the_program()=default;
 
 		virtual void take_args(int argc, const char **argv); ///< set the argc,argv
 		virtual void take_args(const string & _argt_exec , const vector<string> & _argt); ///< sets exec-name, and rest of args

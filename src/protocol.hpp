@@ -16,7 +16,7 @@ class c_protocolv3 {
 		/// max expected size of header of p2p-data. (for logical data, transport headers are something else)
 		constexpr static unsigned char max_header_size = 128;
 
-		typedef enum {
+		enum class t_proto_cmd {
 			e_proto_cmd_unused_old_version_0 = 0, // old version 0
 			e_proto_cmd_unused_old_version_1 = 1, // old version 1
 			e_proto_cmd_unused_old_version_2 = 2, // old version 2 (unused in old program?)
@@ -29,12 +29,12 @@ class c_protocolv3 {
 		} t_proto_cmd ;
 };
 
-inline bool enum_is_valid_value(c_protocolv3::t_proto_cmd value) {
+inline bool enum_is_valid_value(enum c_protocolv3::t_proto_cmd value) {
 	switch (value) {
-		case c_protocolv3::e_proto_cmd_unused_old_version_0:
-		case c_protocolv3::e_proto_cmd_unused_old_version_1:
-		case c_protocolv3::e_proto_cmd_unused_old_version_2:
-		case c_protocolv3::e_proto_cmd_data_one_merit_clear:
+		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_0:
+		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_1:
+		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_2:
+		case c_protocolv3::t_proto_cmd::e_proto_cmd_data_one_merit_clear:
 		return true;
 	}
 	return false;
@@ -65,7 +65,7 @@ version 1 - (experimental) protocol
 
 */
 
-typedef enum {
+enum class t_proto_cmd {
 	e_proto_cmd_test0 = 0,
 	e_proto_cmd_test1 = 1,
 	e_proto_cmd_tunneled_data = 2, // the tunneled data are following
@@ -74,7 +74,7 @@ typedef enum {
 	e_proto_cmd_public_ping_reply = 5, // simple public ping to the peer
 	e_proto_cmd_findhip_query = 10, // searching HIP - query
 	e_proto_cmd_findhip_reply = 11, // searching HIP - reply
-} t_proto_cmd ;
+};
 
 static bool command_is_valid_from_unknown_peer( t_proto_cmd cmd ); ///< is this command one that can come from an unknown peer (without any HIP and CA)
 

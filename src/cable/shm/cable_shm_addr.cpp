@@ -10,6 +10,10 @@ m_addr(address)
 {
 }
 
+void cable_shm_addr::print(std::ostream & ostr) const {
+	ostr << "shm: " << m_addr;
+}
+
 unique_ptr<c_cable_base_addr> cable_shm_addr::clone() const { ///< polymorphic clone
 	return make_unique<cable_shm_addr>( m_addr );
 }
