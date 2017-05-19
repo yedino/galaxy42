@@ -145,3 +145,4 @@ void c_transmission_stats::reset_connection_time(){
 c_data_transmission_buffer & c_transmission_stats::get_data_buffer(){
 	return m_data_buffer;
 }
+

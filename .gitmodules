@@ -23,8 +23,11 @@
 	url = https://github.com/nlohmann/json
 	branch = develop
 [submodule "cotire"]
-	path = cotire
+	path = depends/cotire
 	url = https://github.com/sakra/cotire
 [submodule "depends/CTPL"]
 	path = depends/CTPL
 	url = https://github.com/vit-vit/CTPL.git
+[submodule "depends/backward-cpp"]
+	path = depends/backward-cpp
+	url = https://github.com/hbdgr/backward-cpp

@@ -2,7 +2,6 @@
 
 #include "tnetdbg.hpp"
 
-#include <string>
 #include <cstring>
 
 unsigned char g_dbg_level = 100; // (extern)
@@ -123,4 +122,40 @@ std::string to_string(const std::wstring &input) {
 	for (const auto & it : input)
 		ret += it;
 	return ret;
+}
+
+std::string get_simple_backtrace(size_t depth) {
+	using namespace backward;
+
+	StackTrace st; st.load_here(depth);
+	std::ostringstream oss;
+
+	TraceResolver tr; tr.load_stacktrace(st);
+
+	for (size_t i = 0; i < st.size(); ++i) {
+		ResolvedTrace trace = tr.resolve(st[i]);
+		oss << "#" << i
+		    << " " << trace.object_filename
+		    << " " << trace.object_function
+		    << " [" << trace.addr << "]"
+		    << std::endl;
+	}
+
+	return oss.str();
+}
+
+std::string get_detail_backtrace(size_t depth) {
+	using namespace backward;
+
+	StackTrace st; st.load_here(depth);
+	std::ostringstream oss;
+
+	Printer p;
+	p.object = true;
+	p.color = true;
+	p.address = true;
+
+	p.print(st, oss);
+
+	return oss.str();
 }
