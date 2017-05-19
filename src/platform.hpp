@@ -10,10 +10,12 @@
 	#define ANTINET_linux
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
 #elif defined(_WIN32) || defined(__CYGWIN__)
+	#if defined (__MINGW32__)
+		#define ATTR_NODISCARD __attribute__((warn_unused_result))
+	#else // MSVC
+		#define ATTR_NODISCARD _Check_return_
+	#endif
 	#define ANTINET_windows
-	#define UNICODE
-	#define _UNICODE
-	#define ATTR_NODISCARD _Check_return_
 	#if defined(__CYGWIN__)
 		//http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio/using.html
 		#ifndef __USE_W32_SOCKETS
@@ -21,11 +23,9 @@
 		#endif
 	#endif
 
-	#define timegm _mkgmtime
+	time_t timegm(struct tm *timeptr);
 
-	//#include<sec_api/tchar_s.h>
-
-	std::wstring carray_to_wstring(const char *cstr);
+	std::wstring cstring_to_wstring(const char *cstr);
 	// inspiration:
 	// http://stackoverflow.com/questions/17258029/c-setenv-undefined-identifier-in-visual-studio/23616164#23616164
 	int setenv(const char *name, const char *value, int overwrite);
@@ -50,9 +50,4 @@
 #endif
 
 // ===========================================================================================================
-// TODO is this needed?
-#if defined (__MINGW32__)
-	#undef _assert
-#endif
-
 

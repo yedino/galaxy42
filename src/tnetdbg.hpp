@@ -11,6 +11,7 @@
 #include <string>
 #include "mo_reader.hpp"
 
+#include <backward.hpp>
 
 /// Current debug level. Plase change it only using g_dbg_level_set().
 extern unsigned char g_dbg_level;
@@ -19,6 +20,15 @@ extern unsigned char g_dbg_level;
 /// This macros will be moved later to glorious-cpp library or other
 
 const char * dbg__FILE__(const char * name);
+
+/// stack trace printers
+///@{
+std::string get_simple_backtrace(size_t depth=32); ///< Print regular stack trace with given depth
+
+/// Print stack trace with given depth in a detailed way with references to source code
+/// (works only if source code is available - require also compilation debug '-g' flag)
+std::string get_detail_backtrace(size_t depth=32);
+///@}
 
 /**
  * @brief Change debug level to given one; Also it can mute/unmute further notifications about changes to debug level using it.

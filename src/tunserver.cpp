@@ -762,10 +762,10 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 
 void c_tunserver::debug_peers() {
 	Lock_guard<Mutex> lg(m_peer_mutex);
-	if (!m_peer.size()) _stat("You have no peers currently.");
+	if (!m_peer.size()) _fact("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_stat("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
+		_fact("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -1415,7 +1415,7 @@ void c_tunserver::event_loop(int time) {
 
 			if (doit) {
 				time_last_idle = make_unique<decltype(time_now)>( time_now );
-				_stat("Status: " << node_title_bar);
+				_fact("Status: " << node_title_bar);
 				debug_peers();
 			}
 		}
