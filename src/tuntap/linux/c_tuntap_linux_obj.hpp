@@ -8,7 +8,6 @@
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 #include "../../test/mock_posix_stream_descriptor.hpp"
-//#define USE_MOCK
 
 class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, send_to_tun);
