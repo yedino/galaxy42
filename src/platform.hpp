@@ -21,11 +21,9 @@
 		#endif
 	#endif
 
-	#define timegm _mkgmtime
+	time_t timegm(struct tm *timeptr);
 
-	//#include<sec_api/tchar_s.h>
-
-	std::wstring carray_to_wstring(const char *cstr);
+	std::wstring cstring_to_wstring(const char *cstr);
 	// inspiration:
 	// http://stackoverflow.com/questions/17258029/c-setenv-undefined-identifier-in-visual-studio/23616164#23616164
 	int setenv(const char *name, const char *value, int overwrite);
