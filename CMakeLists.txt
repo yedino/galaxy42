@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.0)
 project (galaxy42)
 
 # IMPORTANT:
@@ -295,6 +295,10 @@ include_directories( build_extra )
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CMAKE_VERSION VERSION_LESS 3.1)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
+endif()
 
 #set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
