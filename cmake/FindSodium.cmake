@@ -40,16 +40,18 @@ else()
 endif()
 
 FIND_LIBRARY(SODIUM_LIBRARY NAMES ${SODIUM_NAMES}
-	HINTS
+    HINTS
     ${SODIUM_ROOT_DIR}/lib
     ${SODIUM_ROOT_DIR}/${SODIUM_BUILDTYPE_DIR}/Debug/v140/dynamic
     ${SODIUM_ROOT_DIR}/${SODIUM_BUILDTYPE_DIR}/Win32/Debug/v140/dynamic
+    ${CMAKE_FIND_ROOT_PATH}/sys-root/mingw/lib
 )
 
 find_path(SODIUM_INCLUDE_DIR NAMES sodium.h
     HINTS
     ${SODIUM_ROOT_DIR}/include
     ${SODIUM_ROOT_DIR}/src/libsodium/include
+	${CMAKE_FIND_ROOT_PATH}/sys-root/mingw/include
 )
 
 # handle the QUIETLY and REQUIRED arguments and set SODIUM_FOUND to TRUE if
