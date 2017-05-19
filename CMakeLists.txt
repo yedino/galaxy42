@@ -10,6 +10,10 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+if (NOT CMAKE_BUILD_TYPE)
+	message(STATUS "No build type selected, default to Debug")
+	set(CMAKE_BUILD_TYPE "Debug")
+endif()
 
 ########################### CMAKE MODULES ###########################
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -401,6 +405,7 @@ message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "C Flags:                       ${CMAKE_C_FLAGS}")
 message(STATUS "C++ Flags:                     ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ link flags:                ${CMAKE_CXX_LINK_FLAGS}")
+message(STATUS "Build type:                    ${CMAKE_BUILD_TYPE}")
 message(STATUS "Debug flags:                   ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "Release flags:                 ${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "Release with debug info flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")

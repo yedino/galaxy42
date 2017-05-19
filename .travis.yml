@@ -87,7 +87,6 @@ matrix:
         compiler: clang
 
     allow_failures:
-      - os: osx
       - env: EXTLEVEL=30
       - env: EXTLEVEL=20
       - env: EXTLEVEL=10
