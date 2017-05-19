@@ -11,6 +11,7 @@
 #include <string>
 #include "mo_reader.hpp"
 
+#include <backward.hpp>
 
 /// Current debug level. Plase change it only using g_dbg_level_set().
 extern unsigned char g_dbg_level;
@@ -19,6 +20,15 @@ extern unsigned char g_dbg_level;
 /// This macros will be moved later to glorious-cpp library or other
 
 const char * dbg__FILE__(const char * name);
+
+/// stack trace printers
+///@{
+void print_simple_backtrace(size_t depth=32); ///< Print regular stack trace with given depth
+
+/// Print stack trace with given depth in a detailed way with references to source code
+/// (works if source code is available)
+void print_detail_backtrace(size_t depth=32);
+///@}
 
 /**
  * @brief Change debug level to given one; Also it can mute/unmute further notifications about changes to debug level using it.
@@ -63,7 +73,6 @@ void write_to_console(const std::string& obj);
 	do { DBGLVL(LVL_EXTRA); oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	oss << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str()); } while(0)
-#define _stat(X) _fact_level( 90, 30, X)
 #define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 /// yellow code
@@ -74,6 +83,7 @@ void write_to_console(const std::string& obj);
 	oss<<"\033[93m"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
 	oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str());\
+	print_detail_backtrace();\
 } while(0)
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
@@ -84,6 +94,7 @@ void write_to_console(const std::string& obj);
 	oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
+	print_detail_backtrace();\
 } while(0)
 
 #define _mark(X) do { DBGLVL(150); \
@@ -92,7 +103,7 @@ void write_to_console(const std::string& obj);
 	oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	for (int i=0; i<70; ++i) oss<<'='; oss<<"\033[0m"<<::std::endl; \
 	write_to_console(oss.str());\
-	} while(0)
+} while(0)
 
 #else
 

@@ -2,6 +2,8 @@
 #ifndef HTTPDBG_HTTPDBG_SERVER
 #define HTTPDBG_HTTPDBG_SERVER
 
+#ifdef HTTP_DBG
+
 #include <thread>
 #include "../mutex.hpp"
 #include <memory>
@@ -77,4 +79,5 @@ class session : public std::enable_shared_from_this<session>
 		std::string m_reply;
 		const c_tunserver & tunserver_;
 };
+#endif
 #endif
