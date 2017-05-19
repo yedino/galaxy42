@@ -21,9 +21,7 @@ class c_cable_base_addr {
 		virtual ~c_cable_base_addr()=default;
 		virtual unique_ptr<c_cable_base_addr> clone() const =0; ///< polymorphic clone
 
-		virtual void print(std::ostream & ostr) const ; ///< displays human readalbe form of this address
-
-		std::string cable_type_name() const; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
+		virtual void print(std::ostream & ostr) const =0; ///< displays human readable form of this address
 
 		inline bool operator==(const c_cable_base_addr &other) const;
 		inline bool operator!=(const c_cable_base_addr &other) const;
