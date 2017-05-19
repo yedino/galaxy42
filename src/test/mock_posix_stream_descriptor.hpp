@@ -4,16 +4,22 @@
 #include "../../depends/googletest/googlemock/include/gmock/gmock.h"
 #include <boost/asio.hpp>
 #include <functional>
+#include <libs0.hpp>
 
 namespace mock {
 
 using ::testing::_;
 using ::testing::Invoke;
+using ::testing::Return;
 
 class mock_posix_stream_descriptor {
 	public:
 		mock_posix_stream_descriptor(boost::asio::io_service & io_service,
-		                             const int &native_descriptor){};
+		                             const int &native_descriptor) {
+			_UNUSED(io_service);
+			_UNUSED(native_descriptor);
+			ON_CALL(*this, is_open()).WillByDefault(Return(true));
+		};
 	MOCK_METHOD0(is_open, bool());
 	MOCK_METHOD0(release, int());
 	MOCK_METHOD1(assign, void(const int &));

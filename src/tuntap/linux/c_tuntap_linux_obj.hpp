@@ -7,9 +7,11 @@
 #include "../base/tuntap_base.hpp"
 #include <boost/asio.hpp>
 #include <libs0.hpp>
-
+#include "../../test/mock_posix_stream_descriptor.hpp"
+//#define USE_MOCK
 
 class c_tuntap_linux_obj final : public c_tuntap_base_obj {
+	FRIEND_TEST(tuntap, send_to_tun);
 	public:
 		c_tuntap_linux_obj(); ///< construct this object, throws if error
 
@@ -28,7 +30,12 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	private:
 		const int m_tun_fd; ///< the unix file descriptor. -1 is closed (this should not happen in correct object)
 		boost::asio::io_service m_io_service;
-		boost::asio::posix::stream_descriptor m_tun_stream;
+#ifdef USE_MOCK
+		using stream_type = mock::mock_posix_stream_descriptor;
+#else
+		using stream_type = boost::asio::posix::stream_descriptor;
+#endif
+		stream_type m_tun_stream;
 };
 
 #endif // ANTINET_linux
