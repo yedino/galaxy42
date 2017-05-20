@@ -2,8 +2,8 @@
 .PHONY: run all
 
 run:
-	( cd ../../build && make && ./test-debug.elf --gtest_filter=*cable*.* )
+	( cd ../../build && make && ./unittests.elf --gtest_filter=*cable*.* )
 
 all:
-	( cd ../../build && make && ./test-debug.elf )
+	( cd ../../build && make && ./unittests.elf )
 

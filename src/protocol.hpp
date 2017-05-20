@@ -65,7 +65,7 @@ version 1 - (experimental) protocol
 
 */
 
-enum class t_proto_cmd {
+enum class t_proto_cmd : unsigned char {
 	e_proto_cmd_test0 = 0,
 	e_proto_cmd_test1 = 1,
 	e_proto_cmd_tunneled_data = 2, // the tunneled data are following
@@ -75,11 +75,27 @@ enum class t_proto_cmd {
 	e_proto_cmd_findhip_query = 10, // searching HIP - query
 	e_proto_cmd_findhip_reply = 11, // searching HIP - reply
 };
-
 static bool command_is_valid_from_unknown_peer( t_proto_cmd cmd ); ///< is this command one that can come from an unknown peer (without any HIP and CA)
 
 
 };
+
+
+inline bool enum_is_valid_value(enum c_protocol::t_proto_cmd value) {
+	switch (value) {
+		case c_protocol::t_proto_cmd::e_proto_cmd_test0:
+		case c_protocol::t_proto_cmd::e_proto_cmd_test1:
+		case c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data:
+		case c_protocol::t_proto_cmd::e_proto_cmd_public_hi:
+		case c_protocol::t_proto_cmd::e_proto_cmd_public_ping_request:
+		case c_protocol::t_proto_cmd::e_proto_cmd_public_ping_reply:
+		case c_protocol::t_proto_cmd::e_proto_cmd_findhip_query:
+		case c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply:
+		return true;
+	}
+	return false;
+}
+
 
 // ------------------------------------------------------------------
 

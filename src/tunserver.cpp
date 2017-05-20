@@ -933,7 +933,6 @@ void c_tunserver::event_loop(int time) {
 	constexpr size_t buf_size=65536;
 	char buf[buf_size];
 
-	bool anything_happened=false; // in given loop iteration, for e.g. debug
 
 	bool was_connected=true;
 	{
@@ -952,6 +951,8 @@ void c_tunserver::event_loop(int time) {
 	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
 
 	while (time ? timer(time) : true) {
+		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+
 		try { // ---
 
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
@@ -992,8 +993,6 @@ void c_tunserver::event_loop(int time) {
 			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
 		*/
-
-		anything_happened=false;
 
 		m_event_manager.wait_for_event();
 
@@ -1083,7 +1082,7 @@ void c_tunserver::event_loop(int time) {
 			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) );
 			// let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			if (c_protocol::current_version < proto_version) throw std::runtime_error("proto_version too new!");
-			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
+			c_protocol::t_proto_cmd cmd = int_to_enum<c_protocol::t_proto_cmd>( buf[1] );
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
@@ -1095,7 +1094,7 @@ void c_tunserver::event_loop(int time) {
                 sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
-			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << static_cast<unsigned char>(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
+			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << enum_to_int(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
 			if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
 				_dbg1("Tunneled data");
@@ -1396,7 +1395,7 @@ void c_tunserver::event_loop(int time) {
 				}
 			}
 			else {
-				_warn("??????????????????? Unknown protocol command, cmd=" << static_cast<unsigned char>(cmd));
+				_warn("??????????????????? Unknown protocol command, cmd=" << enum_to_int(cmd));
 				continue; // skip this packet (main loop)
 			}
 			// ------------------------------------

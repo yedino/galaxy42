@@ -81,7 +81,7 @@ void c_galaxysrv::main_loop() {
 
 				using proto = c_protocolv3; /// ^TODO move
 				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
-				gen.push_byte_u( static_cast<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_one_merit_clear) );
+				gen.push_byte_u( enum_to_int_safe<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_one_merit_clear) );
 				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
 				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
 				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
@@ -108,7 +108,7 @@ void c_galaxysrv::main_loop() {
 				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 
-				using proto = c_protocolv3;
+	//			using proto = c_protocolv3;
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), reinterpret_cast<char*>(chunk.data()), chunk.size());
 				// enum proto::t_proto_cmd cmd = int_to_enum<enum proto::t_proto_cmd>(parser.pop_byte_u());
 				c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
