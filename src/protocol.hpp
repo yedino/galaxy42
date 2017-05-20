@@ -16,7 +16,7 @@ class c_protocolv3 {
 		/// max expected size of header of p2p-data. (for logical data, transport headers are something else)
 		constexpr static unsigned char max_header_size = 128;
 
-		enum class t_proto_cmd {
+		enum class t_proto_cmd : unsigned char {
 			e_proto_cmd_unused_old_version_0 = 0, // old version 0
 			e_proto_cmd_unused_old_version_1 = 1, // old version 1
 			e_proto_cmd_unused_old_version_2 = 2, // old version 2 (unused in old program?)
@@ -26,7 +26,7 @@ class c_protocolv3 {
 			//e_proto_cmd_public_ping_reply = 5, // simple public ping to the peer
 			//e_proto_cmd_findhip_query = 10, // searching HIP - query
 			//e_proto_cmd_findhip_reply = 11, // searching HIP - reply
-		} t_proto_cmd ;
+		} ;
 };
 
 inline bool enum_is_valid_value(enum c_protocolv3::t_proto_cmd value) {

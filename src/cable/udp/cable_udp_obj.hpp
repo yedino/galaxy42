@@ -66,7 +66,7 @@ class c_cable_udp final : public c_asiocable {
 		);
 		#elif defined ANTINET_cancelio
 		using t_native_socket = SOCKET;
-		#elif
+		#else
 		#error "ANTINET_socket_sockopt and ANTINET_cancelio not defined"
 		#endif
 

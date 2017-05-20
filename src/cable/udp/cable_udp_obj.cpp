@@ -172,7 +172,7 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, udp:
 		_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
-#elif
+#else
 	#error "ANTINET_socket_sockopt and ANTINET_cancelio not defined"
 #endif
 

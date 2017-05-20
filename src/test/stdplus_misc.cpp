@@ -126,7 +126,7 @@ template<typename T, bool = std::is_integral<T>::value>
 class c_test_enum
 {
 public:
-	enum class t_enum_numeric_limits : T{
+	enum class t_enum_numeric_limits : T {
 		min = std::numeric_limits<T>::min(),
 		two = 2,
 		max_half = std::numeric_limits<T>::max()/2,
