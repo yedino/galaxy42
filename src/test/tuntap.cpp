@@ -75,18 +75,18 @@ static std::array<unsigned char, 103> get_full_packet() {
 static std::tuple<
 	std::array<unsigned char, IPV6_LEN>, // src address
 	std::array<unsigned char, IPV6_LEN>, // dst address
-	std::array<unsigned char, 72> // ipv6 without src and dst
+	std::array<unsigned char, 71> // ipv6 without src and dst
 > get_separated_packet() {
 	std::array<unsigned char, IPV6_LEN> src {{0xfc, 0x72, 0xaa, 0x65, 0xc5, 0xc2, 0x4a, 0x2d, 0x05, 0x4e, 0x79, 0x47, 0xb6, 0x71, 0xe0, 0x0c}};
 	std::array<unsigned char, IPV6_LEN> dst {{0xfc, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-	std::array<unsigned char, 72> data{{0x00}};
+	std::array<unsigned char, 71> data{{0x00}};
 	return std::make_tuple(src, dst, data);
 }
 
 TEST(tuntap, send_to_tun_seperated) {
 	c_tuntap_linux_obj tuntap;
 	std::array<unsigned char, IPV6_LEN> src, dst;
-	std::array<unsigned char, 72> packet;
+	std::array<unsigned char, 71> packet;
 	std::tie(src, dst, packet) = get_separated_packet();
 
 	EXPECT_CALL(tuntap.m_tun_stream, write_some(_, _)).WillOnce(testing::Invoke(
@@ -149,5 +149,53 @@ TEST(tuntap, read_from_tun) {
 		tuntap.read_from_tun(receive_buffer.data(), receive_buffer.size())
 		,0U
 	);
+}
 
+TEST(tuntap, read_from_tun_separated_addresses) {
+	c_tuntap_linux_obj tuntap;
+	auto normal_process =
+	[](const std::array<boost::asio::mutable_buffer, 4> &bufs) -> size_t {
+		std::array<unsigned char, IPV6_LEN> src, dst;
+		std::array<unsigned char, 71> packet;
+		std::tie(src, dst, packet) = get_separated_packet();
+		// check buffers siazes
+		EXPECT_EQ(boost::asio::buffer_size(bufs.at(0)), 8U);
+		EXPECT_EQ(boost::asio::buffer_size(bufs.at(1)), IPV6_LEN);
+		EXPECT_EQ(boost::asio::buffer_size(bufs.at(2)), IPV6_LEN);
+		EXPECT_EQ(boost::asio::buffer_size(bufs.at(3)), 71U - 8);
+		// copy data into buffers
+		boost::asio::buffer_copy(bufs.at(0), boost::asio::buffer(packet.data(), 8));
+		boost::asio::buffer_copy(bufs.at(1), boost::asio::buffer(src.data(), src.size()));
+		boost::asio::buffer_copy(bufs.at(2), boost::asio::buffer(dst.data(), dst.size()));
+		boost::asio::buffer_copy(bufs.at(3), boost::asio::buffer(packet.data()+8, packet.size()-8));
+		return src.size() + dst.size() + packet.size();
+	};
+	auto error_process =
+	[](const std::array<boost::asio::mutable_buffer, 4> &bufs) -> size_t {
+		_UNUSED(bufs);
+		throw boost::system::system_error(boost::asio::error::eof);
+	};
+
+	EXPECT_CALL(tuntap.m_tun_stream, read_some(An<const std::array<boost::asio::mutable_buffer, 4>&>()))
+		.WillOnce(testing::Invoke(normal_process))
+		.WillOnce(testing::Invoke(normal_process))
+		.WillOnce(testing::Invoke(error_process))
+		.WillOnce(testing::Invoke(error_process));
+
+	std::array<unsigned char, IPV6_LEN> src, dst, expected_src, expected_dst;
+	std::array<unsigned char, 71> packet, expected_packet;
+	std::tie(expected_src, expected_dst, expected_packet) = get_separated_packet();
+	EXPECT_NO_THROW(tuntap.read_from_tun_separated_addresses(packet.data(), packet.size(), src, dst));
+	EXPECT_EQ(
+		tuntap.read_from_tun_separated_addresses(packet.data(), packet.size(), src, dst)
+		,103U - 32); // size of generated packet - addresses
+	EXPECT_EQ(src, expected_src);
+	EXPECT_EQ(dst, expected_dst);
+	EXPECT_EQ(packet, expected_packet);
+
+	// read with error
+	EXPECT_NO_THROW(tuntap.read_from_tun_separated_addresses(packet.data(), packet.size(), src, dst));
+	EXPECT_EQ(
+		tuntap.read_from_tun_separated_addresses(packet.data(), packet.size(), src, dst)
+		,0U); // size of generated packet
 }
