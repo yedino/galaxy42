@@ -26,7 +26,11 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 }
 
 size_t c_tuntap_linux_obj::send_to_tun(const unsigned char *data, size_t size) {
-	return m_tun_stream.write_some(boost::asio::buffer(data, size));
+	try {
+		return m_tun_stream.write_some(boost::asio::buffer(data, size));
+	} catch (const std::exception &) {
+		return 0; // error
+	}
 }
 
 size_t c_tuntap_linux_obj::send_to_tun_separated_addresses(const unsigned char *const data, size_t size,
@@ -43,7 +47,11 @@ size_t c_tuntap_linux_obj::send_to_tun_separated_addresses(const unsigned char *
 }
 
 size_t c_tuntap_linux_obj::read_from_tun(unsigned char *const data, size_t size) {
-	return m_tun_stream.read_some(boost::asio::buffer(data, size));
+	try {
+		return m_tun_stream.read_some(boost::asio::buffer(data, size));
+	} catch (const std::exception &) {
+		return 0; // error
+	}
 }
 
 size_t c_tuntap_linux_obj::read_from_tun_separated_addresses(unsigned char *const data, size_t size,
