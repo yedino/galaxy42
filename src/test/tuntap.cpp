@@ -6,6 +6,7 @@
 using testing::Return;
 using testing::_;
 using testing::Invoke;
+using testing::An;
 
 TEST(tuntap, bad_open) {
 	EXPECT_ANY_THROW(c_tuntap_linux_obj tuntap);
@@ -111,4 +112,42 @@ TEST(tuntap, send_to_tun_seperated) {
 		tuntap.send_to_tun_separated_addresses(packet.data(), packet.size(), src, dst),
 		0U
 	);
+}
+
+TEST(tuntap, read_from_tun) {
+	c_tuntap_linux_obj tuntap;
+	auto normal_process =
+	[](const boost::asio::mutable_buffers_1 &buf) {
+		std::array<unsigned char, 103> packet = get_full_packet(); // packet from tun
+		size_t return_packet_size = boost::asio::buffer_size(buf);
+		if (return_packet_size < packet.size())
+			throw boost::asio::error::message_size;
+		size_t ret = boost::asio::buffer_copy(buf, boost::asio::buffer(packet.data(), packet.size()));
+		return ret;
+	};
+	auto error_process =
+	[](const boost::asio::mutable_buffers_1 &buf) -> size_t {
+		_UNUSED(buf);
+		throw boost::system::system_error(boost::asio::error::eof);
+	};
+	EXPECT_CALL(tuntap.m_tun_stream, read_some(An<const boost::asio::mutable_buffers_1 &>()))
+		.WillOnce(testing::Invoke(normal_process))
+		.WillOnce(testing::Invoke(normal_process))
+		.WillOnce(testing::Invoke(error_process))
+		.WillOnce(testing::Invoke(error_process));
+
+	std::array<unsigned char, 1024> receive_buffer;
+	EXPECT_NO_THROW(tuntap.read_from_tun(receive_buffer.data(), receive_buffer.size()));
+	EXPECT_EQ(
+		tuntap.read_from_tun(receive_buffer.data(), receive_buffer.size())
+		,103U
+	);
+
+	// read with error
+	EXPECT_NO_THROW(tuntap.read_from_tun(receive_buffer.data(), receive_buffer.size()));
+	EXPECT_EQ(
+		tuntap.read_from_tun(receive_buffer.data(), receive_buffer.size())
+		,0U
+	);
+
 }

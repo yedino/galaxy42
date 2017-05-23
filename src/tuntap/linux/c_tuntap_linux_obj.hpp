@@ -13,6 +13,7 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, send_to_tun);
 	FRIEND_TEST(tuntap, send_to_tun_with_error);
 	FRIEND_TEST(tuntap, send_to_tun_seperated);
+	FRIEND_TEST(tuntap, read_from_tun);
 	public:
 		c_tuntap_linux_obj(); ///< construct this object, throws if error
 
