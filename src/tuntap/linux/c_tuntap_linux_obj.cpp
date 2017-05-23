@@ -65,7 +65,11 @@ size_t c_tuntap_linux_obj::read_from_tun_separated_addresses(unsigned char *cons
 	buffers.at(1) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
 	buffers.at(2) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
 	buffers.at(3) = boost::asio::buffer(data + 8, size - 8); // 8 bytes are filled in buffers.at(0)
-	return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+	try {
+		return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+	} catch (const std::exception &) {
+		return 0;
+	}
 }
 
 void c_tuntap_linux_obj::async_receive_from_tun(unsigned char *const data,
