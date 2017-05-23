@@ -20,22 +20,44 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
 	try {
-		set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
+		//set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
 	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
 	_goal("tuntap is opened correctly");
 }
 
 size_t c_tuntap_linux_obj::send_to_tun(const unsigned char *data, size_t size) {
-	return m_tun_stream.write_some(boost::asio::buffer(data, size));
+	try {
+		return m_tun_stream.write_some(boost::asio::buffer(data, size));
+	} catch (const std::exception &) {
+		return 0; // error
+	}
+}
+
+size_t c_tuntap_linux_obj::send_to_tun_separated_addresses(const unsigned char *const data, size_t size,
+	const std::array<unsigned char, IPV6_LEN> &src_binary_address,
+	const std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
+	_check_input(size >= 8);
+	std::array<boost::asio::const_buffer, 4> buffers;
+	buffers.at(0) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
+	buffers.at(1) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
+	buffers.at(2) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
+	buffers.at(3) = boost::asio::buffer(data + 8, size - 8); // 8 bytes are filled in buffers.at(0)
+	boost::system::error_code ec;
+	return m_tun_stream.write_some(buffers, ec);
 }
 
 size_t c_tuntap_linux_obj::read_from_tun(unsigned char *const data, size_t size) {
-	return m_tun_stream.read_some(boost::asio::buffer(data, size));
+	try {
+		return m_tun_stream.read_some(boost::asio::buffer(data, size));
+	} catch (const std::exception &) {
+		return 0; // error
+	}
 }
 
 size_t c_tuntap_linux_obj::read_from_tun_separated_addresses(unsigned char *const data, size_t size,
 	std::array<unsigned char, IPV6_LEN> &src_binary_address,
 	std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
+	_check_input(size >= 8);
 	// field sizes based on rfc2460
 	// https://tools.ietf.org/html/rfc2460
 	std::array<boost::asio::mutable_buffer, 4> buffers;

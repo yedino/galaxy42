@@ -22,8 +22,8 @@
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
-
 void c_the_program_tunserver::options_create_desc() {
+	_program_section;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -33,6 +33,7 @@ void c_the_program_tunserver::options_create_desc() {
 		auto & desc = m_boostPO_desc;
 		desc->add_options()
                     ("help", mo_file_reader::gettext("L_what_help_do").c_str())
+                    ("helptopic", po::value<string>(), mo_file_reader::gettext("L_what_help_do").c_str())
 
                     ("h", mo_file_reader::gettext("L_what_h_do").c_str())
 
@@ -151,6 +152,12 @@ void c_the_program_tunserver::options_create_desc() {
 
 
 void c_the_program_tunserver::options_multioptions() {
+	_program_section;
+	// option help is handled elsewhere
+
+	const auto & argm = m_argm;
+	UNUSED(argm);
+
 			#if EXTLEVEL_IS_PREVIEW
 			_info("BoostPO Will parse demo/devel options");
 
@@ -188,11 +195,18 @@ void c_the_program_tunserver::options_multioptions() {
 			#endif
 }
 
-std::tuple<bool,int> c_the_program_tunserver::options_commands_run() {
+std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
+	const auto & argm = m_argm;
+	if (argm.count("help")) { // usage
+		_fact( *m_boostPO_desc );
+		_fact( std::endl << project_version_info() );
+		return std::tuple<bool,int>(true,0);
+	}
 	return std::tuple<bool,int>(false,0);
 }
 
 int c_the_program_tunserver::main_execution() {
+	_program_section;
 		try { // try parsing
 			const auto & argm = m_argm;
 
@@ -202,8 +216,7 @@ int c_the_program_tunserver::main_execution() {
 			auto& myserver = * m_myserver_ptr;
 			myserver.set_desc(m_boostPO_desc);
 
-			_note("After devel/demo BoostPO code");
-
+			_clue("After devel/demo BoostPO code");
 
 			// --- debug level for main program ---
 			bool is_debug=false;
@@ -215,11 +228,6 @@ int c_the_program_tunserver::main_execution() {
 			if (argm.count("quiet") || argm.count("q")) g_dbg_level_set(200,"For quiet program run", true);
 			_note("BoostPO after parsing debug");
 
-			if (argm.count("help")) { // usage
-				_fact( *m_boostPO_desc );
-				_fact( std::endl << project_version_info() );
-				return 0;
-			}
 
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {

@@ -6,19 +6,33 @@
 #include <memory>
 #include "cable/base/cable_base_addr.hpp"
 
+#include <cable/selector.hpp>
 #include "someio.hpp"
 
+/**
+ * @section unblock
+ * We need a way to avoid infinite waiting for both blocking and async operations;
+ * This is done by providing thread-safe method unblock_and_stop().
+ * It will provide a way to unblock eventually the blocking-reads (e.g. by heaving socket option of timeout)
+ * and to unblock async reads (e.g. by calling io_service.stop() for ASIO).
+*/
+class c_card_selector;
+
 using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
-using read_handler = const std::function<void(const unsigned char *, std::size_t, std::unique_ptr<c_cable_base_addr> &&)> &;
+using read_handler = const std::function<void(const unsigned char *, std::size_t, c_card_selector &)> &;
 
 class c_cable_base_obj : public c_someio {
 	protected:
 		c_cable_base_obj()=default; // to be used by factory
 
 	public:
+		using t_asio_buffers_receive = std::vector< boost::asio::mutable_buffer >;
+		using t_asio_buffers_send = std::vector< boost::asio::const_buffer >;
+
 		virtual ~c_cable_base_obj() = default;
 
-		virtual void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size)=0; ///< block function
+		virtual void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size)=0; ///< blocking function
+		virtual void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers)=0; ///< blocking function, gather buffers
 
 		/**
 		 * @brief async_send_to
@@ -35,12 +49,12 @@ class c_cable_base_obj : public c_someio {
 
 		/**
 		 * @brief receive_from block function
-		 * @param source address of sender
+		 * @param OUT: source address of sender will be written here
 		 * @param data pointer to prealocated buffer
 		 * @param size size of prealocated buffer
 		 * @return number of readed bytes
 		 */
-		virtual size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size)=0;
+		virtual size_t receive_from(c_card_selector & source, unsigned char * const data, size_t size)=0;
 
 		/**
 		 * @brief async_receive_from
@@ -55,7 +69,9 @@ class c_cable_base_obj : public c_someio {
 		 */
 		virtual void async_receive_from(unsigned char * const data, size_t size, read_handler handler)=0;
 
-		virtual void listen_on(c_cable_base_addr & local_address)=0;
+		virtual void listen_on(const c_card_selector & local_address)=0;
 
-
+		/// on some native socket given by caller, sets the timeout, used for blocking read - latency of exit flag #m_stop
+		/// call this from child classes on all sockets (e.g. asio sockets); see #unblock
+		virtual void set_sockopt_timeout(std::chrono::microseconds timeout) = 0;
 };

@@ -410,8 +410,8 @@ TEST(crypto, save_and_open_user_key) {
 }
 
 ///@param level - memory use allowed: level=0 - basic tests,  level=1 also SIDH, level=2 also NTru
-void unittest_create_cryptolink(const int number_of_test, int level=0) {
-	for (std::remove_cv<decltype(number_of_test)>::type i = 0; i < number_of_test; ++i) {
+void unittest_create_cryptolink(const int number_of_test, int level, int packet_count) {
+	for (std::remove_cv<decltype(number_of_test)>::type test_nr = 0; test_nr < number_of_test; ++test_nr) {
 		// g_dbg_level_set(160, "start test");
 		c_multikeys_PAIR keypairA, keypairB;
 
@@ -444,13 +444,29 @@ void unittest_create_cryptolink(const int number_of_test, int level=0) {
 		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
 		AliceCT.create_CTf(packetstart_2); // A<<<---
 
-		const std::string msg(1024, 'm');
-		t_crypto_nonce nonce_used;
-		auto msg_encrypted = AliceCT.box(msg, nonce_used);
-		ASSERT_NE(msg, msg_encrypted);
-		auto msg_decrypted = BobCT.unbox(msg_encrypted, nonce_used);
-		ASSERT_EQ(msg, msg_decrypted);
+		const std::string msg1(1024, 'a');
+		const std::string msg2(1024, 'b');
+		for (int packet_nr=0; packet_nr<packet_count; ++packet_nr) {
+			t_crypto_nonce nonce1_used; // nonce nr 1: only to encrypt Alice->Bob here
+			t_crypto_nonce nonce2_used; // nonce nr 2: only to encrypt Bob->Alice here
+
+			auto msg1_encrypted = AliceCT.box(msg1, nonce1_used);
+			_mark("this test, packet_nr="<<packet_nr<<" nonce1_used="<<nonce1_used);
+			ASSERT_NE(msg1, msg1_encrypted);
+			auto msg1_decrypted = BobCT.unbox(msg1_encrypted, nonce1_used);
+			ASSERT_EQ(msg1, msg1_decrypted);
+
+			auto msg2_encrypted = BobCT.box(msg2, nonce2_used);
+			ASSERT_NE(msg2, msg2_encrypted);
+			auto msg2_decrypted = AliceCT.unbox(msg2_encrypted, nonce2_used);
+			ASSERT_EQ(msg2, msg2_decrypted);
+		}
 	}
+}
+
+TEST(crypto, tunnel_data) {
+	unittest_create_cryptolink(1,0, 10);
+
 }
 
 void test_locked_string(int times, int len) {

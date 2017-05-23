@@ -6,8 +6,10 @@
 
 #include "cable/simulation/cable_simul_addr.hpp"
 #include "cable/udp/cable_udp_addr.hpp"
+#include <cable/udp/cable_udp_obj.hpp>
 #include "cable/simulation/cable_simul_obj.hpp"
 #include "cable/simulation/world.hpp"
+#include <cable/selector.hpp>
 
 #include "libs0.hpp"
 #include "cable/kind.hpp"
@@ -21,7 +23,7 @@
 #include <boost/asio.hpp> // to create local address
 
 void c_galaxysrv::main_loop() {
-	_goal("\n\nMain loop\n\n");
+	_goal("\n\nMain loop (new loop)\n\n");
 
 	auto world = make_shared<c_world>();
 //	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
@@ -41,52 +43,99 @@ void c_galaxysrv::main_loop() {
 		this->start_exit(); // TODO-thread
 	}; // lambda exitwait
 
+	c_card_selector listen1_selector = [this]() -> auto {
+		_fact("Starting to listen");
+		// start listener:
+		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
+		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
+		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
+		_fact("Listen on " << listen1_selector );
+		m_cable_cards.get_card(listen1_selector).listen_on(listen1_selector);
+		_goal("Listening on " << listen1_selector );
+		return listen1_selector;
+	} ();
+
+
 	auto loop_tunread = [&]() {
 		try {
 			c_netbuf buf(9000);
+
+			boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
+			unique_ptr<c_cable_udp_addr> my_localhost = make_unique<c_cable_udp_addr>( ep );
+			c_card_selector my_selector( std::move(my_localhost) ); // will send from this my-address, to this peer
+			// pick up / create proper "card" (e.g. new socket from other my-address) and send from it:
+
 			while (!m_exiting) {
 				_dbg3("Reading TUN...");
-				size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
-				/*c_haship_addr src_addr;
-				c_haship_addr dst_addr;
-				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr);*/
-				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				_info("TUN read: " << make_report(chunk,20));
-				//_info("src address " << src_addr);
-				//_info("dst address " << dst_addr);
+				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
+				c_haship_addr src_hip; // set below
+				c_haship_addr dst_hip; // set below
+				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_hip, dst_hip); // ***
+				c_netchunk chunk( buf.data() , read ); // actually use part of buffer
+				_info("TUN read: " << "src=" << src_hip << " " << "dst=" << dst_hip << " TUN data: " << make_report(chunk,20));
+
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
+				c_cable_base_obj & door = m_cable_cards.get_card(my_selector);
+
+				using proto = c_protocolv3; /// ^TODO move
+				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
+				gen.push_byte_u( enum_to_int_safe<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_one_merit_clear) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
+				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
+				// gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
+				string header = gen.str_move();
+
+				c_cable_base_obj::t_asio_buffers_send buffers{
+					{ header.data(), header.size() },
+					{ buf.data(), read }
+				};
+				door.send_to( UsePtr(peer_one_addr) , buffers);
 			} // loop
 			_note("Loop done");
-		} catch (const std::exception &e) {_warn("Thread-lambda got exception " << e.what());}
-		catch(...) { _warn("Thread-lambda got exception"); }
+		} catch (const std::exception &e) {_warn("Thread lambda (for tunread) got exception " << e.what());}
+		catch(...) { _warn("Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
 
 	auto loop_cableread = [&]() {
 		try {
 			c_netbuf buf(9000);
-			string stopflag_name="/tmp/stop1";
-			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
 			while (!m_exiting) {
 				_dbg3("Reading cables...");
-				c_cable_udp_addr peer_addr;
-				size_t read =	m_cable_cards.get_card(e_cable_kind_udp).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
+				c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
+				size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
 				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				_info("CABLE read, from " << peer_addr << make_report(chunk,20));
-				m_tuntap.send_to_tun(chunk.data(), chunk.size());
-				if (boost::filesystem::exists(stopflag_name)) break;
+
+	//			using proto = c_protocolv3;
+				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), reinterpret_cast<char*>(chunk.data()), chunk.size());
+				// enum proto::t_proto_cmd cmd = int_to_enum<enum proto::t_proto_cmd>(parser.pop_byte_u());
+				c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+				c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+
+				// what cable address to send to:
+				c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
+
+				bool fwok = true;
+				if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
+
+				if (fwok) {
+					_info("CABLE read, from " << his_door << make_report(chunk,20));
+					m_tuntap.send_to_tun(chunk.data(), chunk.size());
+					_info("Sent to tuntap");
+				} else {
+					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
+				}
 			} // loop
 			_note("Loop done");
-		} catch(...) { _warn("Thread-lambda got exception"); }
+		}
+		catch(const std::exception & ex) { _warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
+		catch(...) { _warn("Thread-lambda loop_cableread got exception"); }
 	}; // lambda cableread
 
 	std::vector<unique_ptr<std::thread>> threads;
 
-	c_cable_udp_addr address_all;
-	address_all.init_addrdata( boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),9042) );
-	m_cable_cards.get_card(e_cable_kind_udp).listen_on( address_all );
 
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
 	threads.push_back( make_unique<std::thread>( loop_tunread ) );

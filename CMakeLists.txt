@@ -218,6 +218,7 @@ include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(depends/googletest/googletest/include/)
+include_directories(depends/googletest/googlemock/include/)
 
 #add local jsoncpp
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
@@ -304,6 +305,7 @@ endif()
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
+	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
@@ -313,6 +315,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
+	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
@@ -335,7 +338,17 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
+file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/* src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
+list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
+	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
+
+if(APPLE)
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
+elseif(NOT WIN32)
+	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
+endif()
 
 if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -348,15 +361,8 @@ if(HTTP_DEBUGGER)
 	add_definitions(-DHTTP_DBG)
 endif()
 
-list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
-
-if(APPLE)
-	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
-elseif(NOT WIN32)
-	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
-endif()
 
 message(STATUS "Sorting sources (from GLOB)")
 list(SORT SOURCES_GROUP_TUNSERVER)
@@ -364,8 +370,6 @@ list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
 
 include_directories(../antinet/src/antinet_sim/)
-add_executable(tunserver.elf src/g42-main.cpp )
-cotire(tunserver.elf)
 
 
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
@@ -380,18 +384,21 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 # LIBS-2 [new doc]
 
 ########################### TARGETS ###########################
-add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
-cotire(tunserver)
+add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+cotire(tunserver.elf)
 
-target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+target_link_libraries(tunserver.elf
+	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
 
-add_executable(unittests.elf ${TEST_SOURCES})
-target_link_libraries(unittests.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
+add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
+target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
+target_link_libraries(unittests.elf
+	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+	gtest gmock sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
 foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 	message(STATUS "ADDING LIBRARY FROM LIST: '${_lib}'")
 	target_link_libraries(test-debug.elf ${_lib})
@@ -400,7 +407,7 @@ endforeach()
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
 if(HAVE_BACKWARD AND NOT MINGW)
-	add_backward(tunserver)
+#	add_backward(tunserver)
 	add_backward(tunserver.elf)
 	add_backward(unittests.elf)
 endif()

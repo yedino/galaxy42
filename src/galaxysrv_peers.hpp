@@ -46,12 +46,14 @@ class c_galaxysrv_peers {
 		/// add peer from parsed reference.
 		void add_peer(unique_ptr<t_peer_reference_newloop> && ref);
 
-		void help_peer_ref(ostream & ostr); ///< see function body for documentation too! Displays help: peer reference formats
+		static void help_peer_ref(ostream & ostr); ///< see function body for documentation too! Displays help: peer reference formats
 
 		/// partially parsed reference. first is 0...1 elements the ID (HIP), and second is 0...N of cable reference
 		using t_peering_reference_parse = pair<vector<string> , vector<string>>;
 
 	protected:
+		/// Parses the string as specified in help_peer_ref() into format described in t_peering_reference_parse see it;
+		/// Includes parsing 'anyone@' token and other possible magical tokens if any (in future).
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
 
 		vector<unique_ptr<c_peer_connection>> m_peer; ///< my peers (connected or not), including unknown yet peers "anyone@cable"
