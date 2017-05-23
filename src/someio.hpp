@@ -47,7 +47,6 @@ class c_someio {
 
 		/// on some native socket given by caller, sets the timeout, used for blocking read - latency of exit flag #m_stop
 		/// call this from child classes on all sockets (e.g. asio sockets); see #unblock
-		void set_sockopt_timeout(t_native_socket sys_handler, std::chrono::microseconds timeout);
 
 		#ifdef ANTINET_cancelio
 		/**

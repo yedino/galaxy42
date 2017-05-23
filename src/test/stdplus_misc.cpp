@@ -126,7 +126,7 @@ template<typename T, bool = std::is_integral<T>::value>
 class c_test_enum
 {
 public:
-	enum class t_enum_numeric_limits : T{
+	enum class t_enum_numeric_limits : T {
 		min = std::numeric_limits<T>::min(),
 		two = 2,
 		max_half = std::numeric_limits<T>::max()/2,
@@ -192,4 +192,40 @@ TEST(stdplus_misc, function_enum_to_int_numeric_limits)
 	tup types{};
 	for_each(types, [](auto type){c_test_enum<decltype(type)> test; test_case_enum_numeric_limits(test);});
 }
+
+// ===========================================================================================================
+// example of enum-class with other underlying integer
+
+enum class t_vehicle : long int { car=1900555, ship=111222333 };
+/// ^ main color components, as seen by Mantis Shrimp https://en.wikipedia.org/wiki/Mantis_shrimp#Eyes
+inline bool enum_is_valid_value(t_vehicle value) {
+	switch (value) {
+		case t_vehicle::car :
+		case t_vehicle::ship :
+		return true;
+	}
+	return false;
+}
+
+void fun_taking_short(short int s) {
+	_info("short: " << s);
+}
+
+TEST(stdplus_misc, function_int_to_enum) {
+	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
+
+	t_vehicle myvalue{ t_vehicle::car };
+
+	auto int1 = enum_to_int( myvalue );
+	// short int int2{ enum_to_int( myvalue ) } ; // only warning
+	// short int int3{ enum_to_int( myvalue ) } ;
+	// int3 = enum_to_int( myvalue ) ; // warning only
+	fun_taking_short( enum_to_int( t_vehicle::ship ) );
+	// fun_taking_short( enum_to_int<short int>( t_vehicle::ship ) ); // warning
+	_info(int1);
+	// _info(int2);
+	// _info(int3);
+
+}
+
 

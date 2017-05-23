@@ -132,6 +132,10 @@ except for all constructors (including move and copy), destructor,
 and except for functions and operators that take same-class (or parent/child class) - like especially copy operator=,
 moving operator=, comparison operator< operator> operator== and such.
 
+## Attribute owner
+
+Owner of the file - e.g. nickname.
+
 # Building
 
 The build process should be described in the main README.md of this project.
@@ -250,6 +254,300 @@ and this throws proper tuntap_error*
 
 3) tunserver.c will catch then tuntap_error* and inform user
 ```
+
+## Network protocol
+
+`[[maindoc]]` - main documentation for network protocol
+
+
+tun from tuntap - are the IP data
+tap from tuntap - are the ethernet data, including usually IP data after ethernet header
+
+tuntap-data - the data as received by some tuntap driver
+tuntap-header - the header added by some tuntap driver, before the IP data, e.g. 4 bytes
+tuntap-added - all data added before the TUN
+
+ipv6-noaddr: are the headers of IPv6 and payload of IPv6, but with source and dest addresses removed
+ipv6-merit: currently = ipv6-noaddr; Data that are are part of IPv6 and are not "trivial" to know from higher layers.
+
+weld: array of ipv6-merit, that are all from same src, and to same dst
+e.g. ipv6-merit are joined into a weld by the original sender, delivered e2e, and then separated by final recipient.
+they are e2e encrypted and authenticated by src to dst.
+
+
+```
+
+=======================================================================================================================
+
+Overview
+
+Node can do 3 things: send locally-originating own data, receive data send to us, or route data between other nodes.
+Each action can have Motivation effects like sending/receiving tokens of gratitude.
+
+1) Sending data that we send locally:
+from TUNTAP (+packages) ---> (crypt-e2e, crypt-p2p) (+our or other bags) ---> cable send, e.g. UDP transport
+2) Receiving data that is sent to our host as end destination:
+cable receive, e.g. UDP transport ---> (decrypt-p2p) (-bags not to us) ---> (-split bags) ---> (decrypt-e2e) ---> to TUNTAP
+3) Receiving data that is not to us:
+cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other peer) ---> to cable e.g. UDP
+
+        (emit)
+    tuntap read          cable read UDP
+      v    v                   |
+      .    |                   |
+ more ....>|                   |
+ tuntap    |                   |
+           v                   v
+       e2e-crypt       p2p-auth(verify)
+       e2e-auth(out)  [opt. p2p-encrypt]
+           |                   |
+           |                   |
+           |<----- no ---- < to us ? >
+           |   (routing)       |
+           |                  yes
+           |                   |
+           v                   v
+      p2p-auth(send)       e2e-decrypt
+           |              e2e-auth(out)
+           |                   |
+           v                   v
+         cable            tuntap write
+                             (take)
+
+=======================================================================================================================
+
+Overview of dataflow for Sending local data:
+
+TODO: We assume that there is available a function AuthenticateEncrypt that reads from separate (fragmented) buffers,
+and outputs results to a new continuous memory.
+
+Tuntap read gives us Ip Packets.
+
+IP Packets  - Packet, as 2 buffers (IP headers - src,dst, IP payload) +src,dst
+Merit       - Packet, with removed src/dst headers (as Src/Dst can be provided by higher level)
+EmitInput   - Is concatenation of 1 or more merits, done to prepare less fragmented memory for Weld.
+WeldBagStep - Produces Bags that are of mostly continuous memory and are e2e encrypted+authenticated,
+              processed as: Weld ---> WeldPost ---> Bag, as follows:
+Weld        - Weld is collection of IP packets, with same Dst, in form of array of Emitbuf, with fragmented memory.
+              Logic: (src,dst)<===ipv,flow,.ip payload.===><===ipv,flow,.ip payload..===>
+              Memory: (src,dst) EmitIn1{<=ipv,flow,payload=>} emit2{<=ipv,flow,payload=><=ipv,flow,payload=>
+Bag         - Splited parts of some Weld. Small enough to usully be optimal for expected transport.
+BagCrypto   - Bag that has e2e crypto applied, and includes nonce.
+              nonce_e2e = bag_id (+) weld_id (+) salt
+              bag_id is counter of bag, in context of weld_id
+              weld_id is counter of weld, in context of my src (sender) to given finall dst
+Cart        - Cart is collection of bags plus path-info, that is sent from us to given peer; It is p2p authorized.
+              {
+              p2p_authtag, p2p_nonce
+              path-{B,C}-3,thx5005, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+              path-{B,C}-3,thx5006, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+              path-{B,D}-9,thx3111, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+				      }
+				  		p2p_nonce = p2p_counter_in_path_hop_context (+) salt in hop_context
+						  hop_context is: my-peer (implied), plus other peer (known from other layer), e.g. "A,B"
+Fragment   -  Fragment is a part of cart that fits into given CableMTU
+              cart#5811{B,C}, fragment nr 3/7, [.....cart-part....]
+
+Sizes of data:
+MTU on tuntap: 1304..65535 (usually 65535)
+MTU on cable: 68..65535 (usually 1280..9000) (maybe bigger for jumbograms on cable)
+MTU on path: same as MTU on cable
+Packet: 40..65535 (possibly larger for IPv6 Jumbograms https://en.wikipedia.org/wiki/Jumbogram)
+Merit: 8..65503 (as 65535-32)
+maxBigPerWeld - 10 (1..1024) - estimated amount of big (MTU size) packets in Weld
+maxPckPerWeld - 65530 (last few values can be reserved for other use)
+EmitInput: ~60 .. maxBigPerWeld×MTU
+Weld: ~60 .. maxBigPerWeld×MTU
+WeldHeader: 0 ?
+WeldPost: ~60 .. Weld.Max + Weld.Header.Max
+BagHeader: ??? < 16 ??? PathAgreementID is needed
+Bag: 1..65535 (usually 1..PathMTU) (maybe bigger for jumbograms on cable)
+Cart: 1..65535 (usually 1..CableMTU) (maybe bigger for jumbograms on cable) - can cause fragmentation
+maxFragPerCart: 65535 (encoded as varint)
+ShredHeader: 2..2×3  + (cart id - 32 bit, rotating counter)
+Shred: 1+header .. 65535
+
+Max nonce for authencrypt: 24 byte (crypto_stream_xsalsa20.h: #define crypto_stream_xsalsa20_NONCEBYTES 24U)
+
+FAQ:
+Does Bag need Dst (finall destination) info? No, because when Bag is handed to you in p2p, then you are told the
+agreement number (path number) and that implies the final destination e.g. Z.
+Data-hash is it needed? Not now, we assume it would be...
+
+
+Sidenotes:
+**1** though, the Authorization e2e must be for each bag,
+so that the finall recipient can check for each Bag is it correct - to confirm payment,
+unless we are in more Easy mode where all nodes trust each other more.
+
+**2** the nonce_e2e is derived from weld-id because this ID anyway must be attached (delivered with) the Weld
+(to re-order the welds to join them into welds, and to re-order welds possibly) - so we can use this numbers;
+Though, if we would be to maximazie anti-DPI protections, we could encrypt (e2e) the weld-id and bag-id to protect
+this meta-data from spying. Then, bag would have random nonce_e2e attached,
+and inside it we would encyypt+auth weld-id and bag-id.
+
+=======================================================================================================================
+
+Reading tuntap data:
+
+We get some data by reading tuntap (see src/tuntap/*)
+OS gives us tuntap data:
+<================================== tuntap data ========================>
+tuntap-added <=========================== IP (as from TUN) =============>
+tuntap-header, ethernet-header <======================== ipv6 packet =====================>
+(delete tuntap-added)
+<========================= ipv6 packet ====================>
+<v,trf,flowl,payl,hdr,hop, src, dst, <ipv6 payload> >
+(take out src,dst)
+<v,trf,flowl,payl,hdr,hop,           <ipv6 payload> >
+<v,trf,flowl,payl,hdr,hop, <ipv6 payload> >
+[.......................................] (src,dst) <--- 2 buffers, one constant size
+^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
+
+
+<================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
+<================== ipv6-merit  ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
+
+
+<============== ipv6-merit ============> <=ipv6-merit=>
+
+src,dst,[len_encoding] <============== ipv6-merit ============> <=ipv6-merit=>
+<--- weld-header -><============== ipv6-merit ============> <=ipv6-merit=>
+<==================== weld to dst1 ======================================>
+
+..................................................................................
+TODO partially deprecated ???
+Weld can take out bags by looking into IPv6 length header?
+
+len_encoding:
+	1) 1 byte - number WN - of welds to send
+  2) WN times repeat:
+      either:
+			  a) an 2 byte value meaning the octet length of next merit; the value must be != 0
+	      b) if above 2 bytes are 0 then interpret next 4 byte value as the size of Jumbogram of next merit
+
+E.g. sending merits of sizes: 160, 255, 60000, 65535, 99015, 3735928559, 160, the len_encoding field will be:
+	1) value "7" for 7 welds, as 0x07
+	2) 7 numbers:
+			a) 160 = 0x00 0xA0
+			a) 255 = 0x00 0xFF
+			a) 60000 = 0xEA 0x60
+			a) 65535 = 0xFF 0xFF
+			b) 99015 = 0x00 0x00   0x00 0x01 0x82 0xC7
+			b) 3735928559 = 0x00 0x00   0xDE 0xAD 0xBE 0xEF
+			a) 160 = 0x00 0xA0
+So:
+0x07 0x00 0xA0 0x00 0xFF 0xEA 0x60 0xFF 0xFF 0x00 0x00   0x00 0x01 0x82 0xC7 0x00 0x00   0xDE 0xAD 0xBE 0xEF 0x00 0xA0
+..................................................................................
+
+
+Now zoom-out :
+
+<=weld dst1=> <=weld dst2=> <=weld dst3=> <!~~~weld dst1 via-me~~~!>
+ b10 B11 B12    b20  B21    b30 B31 B32    B40 ~~~~~~~~~~~~~~~~~~~~
+ buffers:
+ B11 - is memory with ipv6-merit (from one tunrap read)
+ B12 - is memory with ipv6-merit (from other tuntap read)
+ b10 - is memory in which we create weld-header (e.g src,dst) - they are same dst - we picked them to create weld
+ ,
+ B21 - ipv6-merit
+ b20 - weld-header
+ ,
+ B31 - ipv6-merit
+ B32 - ipv6-merit
+ b30 - weld-header
+ ,
+ B40 - part of e.g. UDP read of data that we pick to route
+
+via peer1     via peer2     via peer1     via peer1   <-- routing decisions
+<=weld dst1=>               <=weld dst3=> <!weld dst1 via-me!>   <--- via peer1
+<=weld dst1=> <=weld dst3=> <!weld dst1 via-me!>   <--- via peer8
+
+0,1,2,3,5,aabbcccccc
+
+transport len max=300 . one letter is 100 bytes
+trport: aa
+trport: bb
+trport: ccc shred 1
+trport: cc  shred 2
+
+trport: aab shred part 1, len 2, [[len 1]]
+trport: bcc shred 2
+trport: ccc
+
+via peer 8, we want to send 4 welds:
+aa
+bbbbbbbbbb
+c
+ddddddd
+
+We pack it into carts as:
+
+aab entire weld_50122, for weld #50123 part 1/5
+bbb for weld_50123 part 2/5
+bbb for weld_50123 part 3/5
+bbb for weld_50123 part 4/5
+bcd for weld_50123 part 5/5, entier weld_50124, for weld_50125 part 1/3
+ddd for weld_50125 part 2/3
+ddd for weld_50125 part 3/3
+
+
+[shred-header][shred-data]
+[shred-header][shred-data]
+[shred-header][shred-data]
+
+shred-header:
+  marker: 1 byte with value 00
+or else:
+  weld number: 4 byte: 31 bit, plus 1 bit saying is it entire weld, or weld-shred,
+  if it's weld-shred then:
+    1 byte - weld-shred-nr,
+    1 byte - weld-shred-count,
+
+So shred-header has variable size: 1, or 4, 6 byte.
+
+
+add hashes to each weld (each can do it for his own, in parallel) :
+<=weld dst1=>+H <=weld dst3=>+H <!weld dst1 via-me!>+H   <--- via peer8
+HH = hash of hashes
+{CMD,[pay],HH}(nonce,auth)<======== cart-payload via peer8 ======================>
+<============================== cart / cart-full via peer8 =============================>
+
+AUTH p2p
+
+/// <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred-->
+
+CMD,(l)<--shred--> ???
+
+cart to
+udp-transport(  )
+
+Example: (WIP/TODO)
+
+peer8 routes to dst1, dst2, dst3, dst4
+  100-dst1 , src0, dst1
+  100-dst1 , src0, dst1
+  100-dst1 , src0, dst1
+  500-dst2 , src0, dst2
+  500-dst3 , src0, dst3
+32000-dst4 , src0, dst4
+ 9000-dst4 , src6, dst4
+
+    (src0,dst1, 100,100,100) (src0,dst2,500) (src0,dst3,500) (src0,dst4,32000), (src6,dst4,9000)
+    eeeeeeeeeeeeeeeeeeeeeeee eeeeeeeeeeeeee  eeeeeeeeeeeeeee eeeeeeeeeeeeeeeee  ~~~~~~~~~~~~~~~~  e=encrypt+auth e2e
+    <-------------------------------------------------> <---------> <-----> <------> <----------> shreds example sizes
+    ccccccccccccccccccccccccccccccccccccccccccccccccccc ccccccccccc ccccccc cccccccc cccccccccccc cable sends:
+    c1                                                  c2          c3      c1       c4           various cables, but to peer8
+
+		CMD HH, p2p-auth;                                   c2          c3      c1       c4           various cables, but to peer8
+
+
+
+cart - shreds
+
+
+```
+
 
 ## Developing translations
 

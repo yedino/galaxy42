@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
+
 
 #pragma once
 
@@ -90,7 +90,6 @@ std::string STR(const T & obj) { ///< stringify any object
  * convert integer into enum of given type, throw if this value is not represented in target enum
  * if expected_bad==true, then for invalid enum thrown exception type is 'expected_not_found'
  */
-
 template <typename TE, typename TI>
 TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std::is_integral<TI>::value>::type* = 0)
 {
@@ -124,7 +123,28 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 			+ " ("s + typeid(underlying_type).name()+")", std::vector<std::overflow_error>() );
 	}
 
-	DEAD_RETURN_I_AM_SURE();
+	DEAD_RETURN();
+}
+
+/**
+ * Converts enum to the underlying type
+*/
+template <typename TE>
+typename std::underlying_type<TE>::type enum_to_int(TE val_enum) {
+	using t_int = typename std::underlying_type<TE>::type;
+	return static_cast<t_int>(val_enum);
+}
+
+/**
+ * Converts enum to the underlying type, while caller state what type he expects to get
+ * to e.g. avoid unexpected narrowing conversion
+*/
+template <typename TI, typename TE>
+typename std::underlying_type<TE>::type enum_to_int_safe(TE val_enum) {
+	using t_int = typename std::underlying_type<TE>::type;
+	static_assert( std::is_same<t_int, TI>::value , "The actuall underlying_type is not matching the requested type");
+	t_int val_int{ static_cast<t_int>(val_enum) };
+	return val_int;
 }
 
 std::string to_string(const std::string & v); ///< just to have identical syntax

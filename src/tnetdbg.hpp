@@ -43,6 +43,9 @@ std::string get_detail_backtrace(size_t depth=32);
  */
 void g_dbg_level_set(int level, std::string why, int quiet=-1, int quiet_from_now_on=-1);
 
+/// gets the current debug level
+int g_dbg_level_get();
+
 #define _my__FILE__ (dbg__FILE__(__FILE__))
 
 #define SHOW_DEBUG
@@ -55,7 +58,7 @@ void write_to_console(const std::string& obj);
 
 #define DBGLVL(N) if (!(N>=g_dbg_level)) break
 
-#define _main_dbg(X) std::ostringstream oss; oss << X; write_to_console(oss.str())
+#define _main_dbg(X) std::ostringstream _dbg_oss; _dbg_oss << X; write_to_console(_dbg_oss.str())
 
 #define _dbg5(X) do { } while(0)
 #define _dbg4(X) do { DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
@@ -67,45 +70,42 @@ void write_to_console(const std::string& obj);
 #define _clue(X) do { DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
 #define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
-	std::ostringstream oss; \
-	oss<<"\033[92m"; \
-	oss<< X; \
-	do { DBGLVL(LVL_EXTRA); oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
-	oss << "\033[0m" << ::std::endl; \
-	write_to_console(oss.str()); } while(0)
+	std::ostringstream _dbg_oss; \
+	_dbg_oss<<"\033[92m"; \
+	_dbg_oss<< X; \
+	do { DBGLVL(LVL_EXTRA); _dbg_oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
+	_dbg_oss << "\033[0m" << ::std::endl; \
+	write_to_console(_dbg_oss.str()); } while(0)
+#define _stat(X) _fact_level( 90, 30, X)
 #define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 /// yellow code
 //        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
 
 #define _warn(X) do { DBGLVL(100); \
-	std::ostringstream oss; \
-	oss<<"\033[93m"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
-	oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
-	write_to_console(oss.str());\
-	oss.flush(); oss<<get_detail_backtrace(4);\
-	write_to_console(oss.str());\
+	std::ostringstream _dbg_oss; \
+	_dbg_oss<<"\033[93m"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
+	_dbg_oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
+	write_to_console(_dbg_oss.str());\
 } while(0)
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
 
 #define _erro(X) do { DBGLVL(200); \
-	std::ostringstream oss; \
-	oss<<"\033[91m\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
-	oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
-	oss<<"\n\n"; for (int i=0; i<70; ++i) oss<<'!'; oss<<"\033[0m"<<::std::endl; \
-	write_to_console(oss.str());\
-	oss.flush(); oss<<get_detail_backtrace();\
-	write_to_console(oss.str());\
+	std::ostringstream _dbg_oss; \
+	_dbg_oss<<"\033[91m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
+	_dbg_oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	_dbg_oss<<"\n\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<"\033[0m"<<::std::endl; \
+	write_to_console(_dbg_oss.str());\
 } while(0)
 
 #define _mark(X) do { DBGLVL(150); \
-	std::ostringstream oss; \
-	oss<<"\033[95m\n"; for (int i=0; i<70; ++i) oss<<'='; oss<<::std::endl; \
-	oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
-	for (int i=0; i<70; ++i) oss<<'='; oss<<"\033[0m"<<::std::endl; \
-	write_to_console(oss.str());\
-} while(0)
+	std::ostringstream _dbg_oss; \
+	_dbg_oss<<"\033[95m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'='; _dbg_oss<<::std::endl; \
+	_dbg_oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
+	for (int i=0; i<70; ++i) _dbg_oss<<'='; _dbg_oss<<"\033[0m"<<::std::endl; \
+	write_to_console(_dbg_oss.str());\
+	} while(0)
 
 #else
 
@@ -174,9 +174,9 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 // TODO-r-deprecate:
 #define _assert_throw(COND) do { \
 	if (!(COND)) { \
-		std::ostringstream oss; \
-		oss << "Assert-throw failed: " << "" # COND ; \
-		_throw_error( std::runtime_error(oss.str()) ); \
+		std::ostringstream _dbg_oss; \
+		_dbg_oss << "Assert-throw failed: " << "" # COND ; \
+		_throw_error( std::runtime_error(_dbg_oss.str()) ); \
 		}\
 	} while(0)
 

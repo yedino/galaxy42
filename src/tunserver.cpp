@@ -338,7 +338,7 @@ void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) 
 	data += string(1, static_cast<char>(byte_highest_ttl) );
 	data += string(";");
 
-	galaxy_node.nodep2p_foreach_cmd( c_protocol::e_proto_cmd_findhip_query , data );
+	galaxy_node.nodep2p_foreach_cmd( c_protocol::t_proto_cmd::e_proto_cmd_findhip_query , data );
 
 	m_ttl_used = byte_highest_ttl;
 	m_ask_time = std::chrono::steady_clock::now();
@@ -735,7 +735,7 @@ void c_tunserver::peering_ping_all_peers() {
 		gen.push_varstring( m_IDI_IDC_sig.serialize_bin());
 		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
-		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_udp_device.get_socket());
+		peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_public_hi, cmd_data, m_udp_device.get_socket());
 	}
 }
 
@@ -933,7 +933,6 @@ void c_tunserver::event_loop(int time) {
 	constexpr size_t buf_size=65536;
 	char buf[buf_size];
 
-	bool anything_happened=false; // in given loop iteration, for e.g. debug
 
 	bool was_connected=true;
 	{
@@ -952,6 +951,8 @@ void c_tunserver::event_loop(int time) {
 	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
 
 	while (time ? timer(time) : true) {
+		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+
 		try { // ---
 
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
@@ -992,8 +993,6 @@ void c_tunserver::event_loop(int time) {
 			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
 		*/
-
-		anything_happened=false;
 
 		m_event_manager.wait_for_event();
 
@@ -1083,7 +1082,7 @@ void c_tunserver::event_loop(int time) {
 			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) );
 			// let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			if (c_protocol::current_version < proto_version) throw std::runtime_error("proto_version too new!");
-			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
+			c_protocol::t_proto_cmd cmd = int_to_enum<c_protocol::t_proto_cmd>( buf[1] );
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
@@ -1095,9 +1094,9 @@ void c_tunserver::event_loop(int time) {
                 sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
-			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
+			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << enum_to_int(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
-			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
+			if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
 				_dbg1("Tunneled data");
 
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() , buf, size_read );
@@ -1243,7 +1242,7 @@ void c_tunserver::event_loop(int time) {
 				}
 
 			} // e_proto_cmd_tunneled_data
-			else if (cmd == c_protocol::e_proto_cmd_public_hi) { // [protocol]
+			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_public_hi) { // [protocol]
 				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
 				size_t offset1=2; assert( size_read >= offset1); // skip CMD headers (TODO instead use one parser)
 
@@ -1284,7 +1283,7 @@ void c_tunserver::event_loop(int time) {
 				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
 			}
 			}
-			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
+			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_findhip_query) { // [protocol]
 				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 				size_t offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
@@ -1336,7 +1335,7 @@ void c_tunserver::event_loop(int time) {
 							<< sender_as_peering_ptr
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
-						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
+						peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
                         //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 						_dbg1("send route response to " << sender_pip);
@@ -1354,7 +1353,7 @@ void c_tunserver::event_loop(int time) {
 				}
 
 			}
-			else if (cmd == c_protocol::e_proto_cmd_findhip_reply) { // [protocol]
+			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply) { // [protocol]
 				_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
 				// TODO-NOW format with hip etc
 				// TODO-NOW here we will parse pubkey probably
@@ -1396,7 +1395,7 @@ void c_tunserver::event_loop(int time) {
 				}
 			}
 			else {
-				_warn("??????????????????? Unknown protocol command, cmd="<<cmd);
+				_warn("??????????????????? Unknown protocol command, cmd=" << enum_to_int(cmd));
 				continue; // skip this packet (main loop)
 			}
 			// ------------------------------------
