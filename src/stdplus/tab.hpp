@@ -13,7 +13,6 @@ stdplus/tab focuses on containers support
 #include <utils/check.hpp>
 #include <utils/misc.hpp>
 
-
 namespace stdplus {
 
 /**
@@ -106,7 +105,37 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		size_t m_size;
 	};
 
+	template<typename T>
+	class tab_view
+	{
+	public:
+		using iterator = T*;
+		using const_iterator = const T*;
+
+		// TI = type of some iterator. it must be linear-memory. TODO: metaprogramming check
+		// of course (begin..end] must be from same container and must be a valid, linear range
+		template <typename TI>
+		tab_view(TI begin, TI end)
+			: m_begin(begin), m_end(end), m_size(end-begin) { }
+
+		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
+		tab_view(const TC & obj)
+			: m_begin(&(*obj.begin())), m_end(m_begin+obj.size()), m_size(obj.size()) { }
+
+		T & at(size_t ix) {
+			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_view out of range");
+			return *( m_begin + ix );
+		}
+
+		iterator begin() {return m_begin;}
+		iterator end() {return m_end;}
+		const_iterator begin() const {return m_begin;}
+		const_iterator end() const {return m_end;}
+		size_t size() const {return m_size;}
+	private:
+		iterator m_begin;
+		iterator m_end;
+		size_t m_size;
+	};
+
 } // namespace stdplus
-
-
-
