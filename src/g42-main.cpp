@@ -335,7 +335,7 @@ int main(int argc, const char **argv) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
 		return 1;
 	}
-	catch(std::exception& e) {
+	catch(const std::exception& e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 		 << e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		return 2;
