@@ -116,11 +116,29 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		// of course (begin..end] must be from same container and must be a valid, linear range
 		template <typename TI>
 		tab_view(TI begin, TI end)
-			: m_begin(begin), m_end(end), m_size(end-begin) { }
+				: m_begin(begin), m_end(end), m_size(end-begin) {
+			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+		}
 
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_view(const TC & obj)
-			: m_begin(&(*obj.begin())), m_end(m_begin+obj.size()), m_size(obj.size()) { }
+				: m_begin(obj.size()?&(obj.at(0)):nullptr), m_end(m_begin+obj.size()), m_size(obj.size()) { }
+
+		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
+		tab_view(TC & obj)
+				: m_begin(obj.size()?&(obj.at(0)):nullptr), m_end(m_begin+obj.size()), m_size(obj.size()) { }
+
+		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
+		tab_view(const TC & obj, size_t begin, size_t end)
+				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
+			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+		}
+
+		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
+		tab_view(TC & obj, size_t begin, size_t end)
+				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
+			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+		}
 
 		T & at(size_t ix) {
 			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_view out of range");
