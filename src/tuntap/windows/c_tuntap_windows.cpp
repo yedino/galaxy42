@@ -25,6 +25,9 @@
 #define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
+c_is_user_admin::c_is_user_admin() {
+
+}
 
 c_tuntap_windows_obj::c_tuntap_windows_obj()
 :

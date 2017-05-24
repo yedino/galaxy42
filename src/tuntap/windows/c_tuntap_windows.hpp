@@ -8,6 +8,11 @@
 #if defined(ANTINET_windows)
 #include <ifdef.h>
 
+class c_is_user_admin {
+	c_is_user_admin();
+	virtual ~c_is_user_admin() = default;
+};
+
 class c_tuntap_windows_obj final : c_tuntap_base_obj {
 	public:
 		c_tuntap_windows_obj();
