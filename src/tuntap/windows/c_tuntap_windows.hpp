@@ -9,11 +9,12 @@
 #include <ifdef.h>
 
 class c_is_user_admin {
-	c_is_user_admin();
-	virtual ~c_is_user_admin() = default;
+	public:
+		c_is_user_admin();
+		virtual ~c_is_user_admin() = default;
 };
 
-class c_tuntap_windows_obj final : c_tuntap_base_obj {
+class c_tuntap_windows_obj final : public c_tuntap_base_obj, c_is_user_admin {
 	public:
 		c_tuntap_windows_obj();
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
