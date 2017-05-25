@@ -23,8 +23,6 @@
 		#endif
 	#endif
 
-	time_t timegm(struct tm *timeptr);
-
 	std::wstring cstring_to_wstring(const char *cstr);
 	// inspiration:
 	// http://stackoverflow.com/questions/17258029/c-setenv-undefined-identifier-in-visual-studio/23616164#23616164
