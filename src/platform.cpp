@@ -2,12 +2,6 @@
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-// win reference to _mkgmtime:
-// https://msdn.microsoft.com/en-us/library/2093ets1.aspx
-time_t timegm(struct tm *timeptr) {
-	return _mkgmtime(timeptr);
-}
-
 int setenv(const char *name, const char *value, int overwrite) {
 	int errcode = 0;
 

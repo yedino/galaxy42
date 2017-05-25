@@ -27,7 +27,7 @@ time_t time_utils::gen_exact_date(int year,
 
 	// Daylight Saving Time flag. The value is positive if DST is in effect
 	tm.tm_isdst=isdst;
-	ret = timegm(&tm);
+	ret = std::mktime(&tm);
 	return ret;
 }
 
