@@ -1,4 +1,12 @@
 
+
+#include <array>
+#include <sstream>
+#include <exception>
+
+namespace stdplus {
+
+
 /**
  * Works like an array, but like a vector has a position so it can be added to end.
  * All elements are created once - on creation of this object, and are destroyed one - on destruction of this object.
@@ -87,4 +95,8 @@ void arrayvector<T,TMax>::pop_back() {
 	}
 	--m_current_size;
 }
+
+
+
+} // namespace
 
