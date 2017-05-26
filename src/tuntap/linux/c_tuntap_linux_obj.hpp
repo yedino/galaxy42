@@ -15,6 +15,7 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, send_to_tun_seperated);
 	FRIEND_TEST(tuntap, read_from_tun);
 	FRIEND_TEST(tuntap, read_from_tun_separated_addresses);
+	FRIEND_TEST(tuntap, async_receive_from_tun);
 	public:
 		c_tuntap_linux_obj(); ///< construct this object, throws if error
 
