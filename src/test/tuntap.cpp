@@ -2,11 +2,13 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "../tuntap/linux/c_tuntap_linux_obj.hpp"
+#include <boost/asio.hpp>
 
 using testing::Return;
 using testing::_;
 using testing::Invoke;
 using testing::An;
+using testing::WithArgs;
 
 TEST(tuntap, bad_open) {
 	EXPECT_ANY_THROW(c_tuntap_linux_obj tuntap);
@@ -198,4 +200,37 @@ TEST(tuntap, read_from_tun_separated_addresses) {
 	EXPECT_EQ(
 		tuntap.read_from_tun_separated_addresses(packet.data(), packet.size(), src, dst)
 		,0U); // size of generated packet
+}
+
+TEST(tuntap, async_receive_from_tun) {
+	c_tuntap_linux_obj tuntap;
+	// normal handler called by c_tuntap_linux_obj class
+	c_tuntap_linux_obj::read_handler read_handler =
+		[](const unsigned char *buf, std::size_t size, const boost::system::error_code& error) {
+			ASSERT_FALSE(error);
+			ASSERT_NE(buf, nullptr);
+			ASSERT_NE(size, 0U);
+			EXPECT_GE(size, 103U); // expected packet size
+		};
+
+	boost::asio::io_service io_service; // remote io_service i.e. from siom class
+	// asio internal
+	EXPECT_CALL(tuntap.m_tun_stream, async_read_some(_, _))
+		// normal read
+		.WillOnce(WithArgs<0, 1> (testing::Invoke(
+		[&] (const boost::asio::mutable_buffer &buf,
+		    std::function<void(const boost::system::error_code&, size_t)> handler) {
+				std::array<unsigned char, 103> packet = get_full_packet();
+				ASSERT_GE(boost::asio::buffer_size(buf), packet.size());
+				boost::asio::buffer_copy(buf, boost::asio::buffer(packet.data(), packet.size()));
+				// add handler to io_service
+				boost::system::error_code error_code;
+				io_service.post([=]{handler(error_code, packet.size());});
+		})));
+
+	std::array<unsigned char, 103> packet; // input buffer
+	std::array<unsigned char, 103> packet_expected = get_full_packet();
+	tuntap.async_receive_from_tun(packet.data(), packet.size(), read_handler);
+	EXPECT_EQ(io_service.poll_one(), 1U); // run one ready handler
+	EXPECT_EQ(packet, packet_expected);
 }
