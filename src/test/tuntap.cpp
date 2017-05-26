@@ -1,3 +1,6 @@
+#include <platform.hpp>
+#ifdef ANTINET_linux
+
 #include <array>
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -151,3 +154,6 @@ TEST(tuntap, read_from_tun) {
 	);
 
 }
+
+
+#endif
