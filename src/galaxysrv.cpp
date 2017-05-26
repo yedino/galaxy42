@@ -81,7 +81,7 @@ void c_galaxysrv::main_loop() {
 
 				using proto = c_protocolv3; /// ^TODO move
 				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
-				gen.push_byte_u( enum_to_int_safe<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_one_merit_clear) );
+				gen.push_byte_u( enum_to_int_safe<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_cart) );
 				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
 				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
 				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
