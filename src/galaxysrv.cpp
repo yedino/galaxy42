@@ -94,7 +94,7 @@ void c_galaxysrv::main_loop() {
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
 			} // loop
-			_note("Loop done");
+			_note("Loop done - tun read");
 		} catch (const std::exception &e) {_warn("Thread lambda (for tunread) got exception " << e.what());}
 		catch(...) { _warn("Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
@@ -128,7 +128,7 @@ void c_galaxysrv::main_loop() {
 					_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
 				}
 			} // loop
-			_note("Loop done");
+			_note("Loop done - cable reader");
 		}
 		catch(const std::exception & ex) { _warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
 		catch(...) { _warn("Thread-lambda loop_cableread got exception"); }
