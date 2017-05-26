@@ -5,17 +5,20 @@
 #include "platform.hpp"
 #include "tnetdbg.hpp"
 
-time_t time_utils::gen_exact_date(int year,
-                      int month,
-                      int day,
-                      int hour,
-                      int min,
-                      int sec,
-                      int isdst) {
+std::time_t time_utils::gen_exact_date(int year,
+                                                    int month,
+                                                    int day,
+                                                    int hour,
+                                                    int min,
+                                                    int sec,
+                                                    int isdst) {
+	using namespace boost::posix_time;
 
 	std::chrono::system_clock::time_point local_timepoint = std::chrono::system_clock::now();
 	std::time_t local_time = std::chrono::system_clock::to_time_t(local_timepoint);
-	std::istringstream iss(time_utils::get_zone_offset_local(local_time));
+
+	// we could use duration cast from boost::posix_time::time_duration
+	std::istringstream iss(time_utils::get_utc_offset_string());
 	std::tm *local_tm = std::localtime(&local_time);
 
 	// parsion string in ISO format to hour and minutes variables example -12:30 -> -12 hours, 30 minutes
@@ -43,9 +46,12 @@ time_t time_utils::gen_exact_date(int year,
 		// Daylight Saving Time flag. The value is positive if DST is in effect
 		tm.tm_isdst=isdst;
 	}
-	ret = std::mktime(&tm);
 
+	auto offset = time_utils::get_utc_offset();
 
+	ret = std::mktime(&tm);;
+
+	ptime ptime_from_tm(tm);
 	return ret;
 }
 
@@ -65,34 +71,44 @@ std::string time_utils::time_t_to_readable(const std::time_t &time, const std::s
 	std::string full_date = get_date_str(time);
 
 	if(zone.empty()) {
-		full_date += time_utils::get_zone_offset_local(time);
+		full_date += time_utils::get_utc_offset_string();
 	} else {
-		full_date += time_utils::get_zone_offset_universal(time, zone);
+		full_date += time_utils::get_zone_utc_offset(zone);
 	}
 
 	return full_date;
 }
 
-// use of std::strftime instead of std::put_time, because of no implementation in gcc version < 5 (4.9.2 on debian8)
 std::string time_utils::get_date_str(const std::time_t &time) {
-	char buff[35];
-	std::strftime(buff, sizeof(buff), "%FT%T", std::gmtime(&time));
+	using namespace boost::posix_time;
+	ptime  t = from_time_t(time);
 
-	return std::string(buff);
+	return to_iso_extended_string(t) ;
 }
 
-// use of std::strftime instead of std::put_time, because of no implementation in gcc version < 5 (4.9.2 on debian8)
-std::string time_utils::get_zone_offset_local(const std::time_t &time) {
+boost::posix_time::time_duration time_utils::get_utc_offset() {
+	using namespace boost::posix_time;
 
-	char buff[15];
-	std::strftime(buff, sizeof(buff), "%z", std::localtime(&time));
-	std::string zone_str(buff);
+	const ptime utc_now = second_clock::universal_time();
+	const ptime now = second_clock::local_time();
 
-	zone_str.insert(zone_str.end()-2,':');
-	return zone_str;
+	return now - utc_now;
 }
 
-std::string time_utils::get_zone_offset_universal(const std::time_t &time, const std::string &zone) {
+std::string time_utils::get_utc_offset_string() {
+	std::stringstream out;
+
+	using namespace boost::posix_time;
+	time_facet* tf = new time_facet();
+	tf->time_duration_format("%+%H:%M");
+	out.imbue(std::locale(out.getloc(), tf));
+
+	out << get_utc_offset();
+
+	return out.str();
+}
+
+std::string time_utils::get_zone_utc_offset(const std::string &zone) {
 
 	// save actual // char* because getenv could return null
 	char* ctz(getenv("TZ"));
@@ -105,7 +121,7 @@ std::string time_utils::get_zone_offset_universal(const std::time_t &time, const
 	}
 	tzset();
 
-	std::string zone_str = get_zone_offset_local(time);
+	std::string zone_str = get_utc_offset_string();
 
 	// back to actual
 	if(ctz != NULL) {

@@ -172,6 +172,9 @@ TEST(time_utils, all_zones_envirnoment_test) {
 	                         "Asia/Ho_Chi_Minh", "Pacific/Efate", "Pacific/Wallis", "Pacific/Apia", "Asia/Aden", "Indian/Mayotte",
 	                         "Africa/Johannesburg", "Africa/Lusaka", "Africa/Harare"};
 
+	// minimize failure spam:
+	//all_zones.erase(all_zones.begin()+3, all_zones.end());
+
 	for (auto &zone: all_zones) {
 		setenv("TZ", zone.c_str(), 1);
 
@@ -181,8 +184,11 @@ TEST(time_utils, all_zones_envirnoment_test) {
 			continue;
 		}
 		std::string formated = time_t_to_readable(gen_exact_date(2019,11,21,11,10,30));
+		std::string time_to_match = "2019-11-21T11:10:30";
 		//_mark("Testing zone: " << zone << " formated: " << formated);
-		EXPECT_NE(formated.find("2019-11-21T11:10:30"),std::string::npos);
+		EXPECT_NE(formated.find(time_to_match),std::string::npos)
+		        << "Generated time ["<< formated << "] for " << zone
+		        << " time zone did not match expected ["<< time_to_match <<"]";
 
 		unsetenv("TZ");
 	}
