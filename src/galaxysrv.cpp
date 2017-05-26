@@ -94,7 +94,7 @@ void c_galaxysrv::main_loop() {
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
 			} // loop
-			_note("Loop done");
+			_note("Loop done - tun read");
 		} catch (const std::exception &e) {_warn("Thread lambda (for tunread) got exception " << e.what());}
 		catch(...) { _warn("Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
@@ -133,7 +133,7 @@ void c_galaxysrv::main_loop() {
 				catch(const std::exception & ex) { _warn("Cannot handle this packet. Exception: " << ex.what()); }
 				catch(...) { _warn("Cannot handle this packet. Unknown exception"); }
 			} // loop
-			_note("Loop done");
+			_note("Loop done - cable reader");
 		}
 		catch(const std::exception & ex) { _warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
 		catch(...) { _warn("Thread-lambda loop_cableread got exception"); }

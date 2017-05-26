@@ -45,7 +45,40 @@
 
 #include "platform.hpp"
 
-// gal.peers.peers_add();
+#include "netbuf.hpp"
+
+
+/**
+ * This is both a Weld, and EI (Emit Input - buffer that forms it).
+ */
+class c_weld {
+	public:
+		std::mutex m_mutex; ///< mutex that you must own to operate on this object
+		bool m_empty; ///< if empty, then all other data is invalid and should not be used
+
+		boost::asio::ip::address_v6 m_dst; ///< the destination of this BI/Weld
+		std::chrono::steady_clock::time_point m_time_start; ///< time of oldest Merit here; to decide on latency on sending
+
+		c_netbuf buf; ///< our buffer - the entire memory
+		vector< c_netchunk > chunks; ///< chunks in our buffer, cuted out from buf
+};
+
+/**
+ * Queue with the Welds to be Emited.
+ * Emited from us (send from our tuntap, to next peer).
+ */
+class c_emitqueue {
+	public:
+		std::mutex m_mutex; ///< mutex that you must own to operate on this object
+		std::vector<  std::reference_wrapper< c_weld > > m_welds; ///< the welds that I want to send
+};
+
+/**
+ * Cart (e.g. while being created as a queue of welds)
+ */
+class c_cart {
+	public:
+};
 
 /// @owner magaNet_user
 class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e {
