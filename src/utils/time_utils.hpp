@@ -3,6 +3,7 @@
 
 #include <string>
 #include <chrono>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace time_utils {
 
@@ -19,13 +20,13 @@ namespace time_utils {
 	 * @param min minutes after the hour – [0, 59]
 	 * @param sec seconds after the minute – [0, 61](until C++11) / [0, 60] (since C++11)
 	 */
-	time_t gen_exact_date(int year,
-	                      int month,
-	                      int day,
-	                      int hour,
-	                      int min,
-	                      int sec,
-	                      int isdst = -1);
+	std::time_t gen_exact_date(int year,
+	                         int month,
+	                         int day,
+	                         int hour,
+	                         int min,
+	                         int sec,
+	                         int isdst = -1);
 
 	/// Convert t_timepoint to readable date in accordance with ISO 8601 - Combined date and time in UTC
 	/// Only leaving zone empyt guarantees thread safety
@@ -50,10 +51,13 @@ namespace time_utils {
 	 * or on linux in file:
 	 *   /usr/share/zoneinfo/zone.tab
 	 */
-	std::string get_zone_offset_universal(const time_t &time, const std::string &zone = "");
+	std::string get_zone_utc_offset(const std::string &zone = "");
+
+
+	boost::posix_time::time_duration get_utc_offset();
 
 	/// getting default timezone without getenv, setenv, tzset functions
-	std::string get_zone_offset_local(const std::time_t &time);
+	std::string get_utc_offset_string();
 }
 
 #endif // TIME_UTILS_HPP
