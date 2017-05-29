@@ -11,6 +11,7 @@ using testing::An;
 using testing::WithArgs;
 
 TEST(tuntap, bad_open) {
+	mock::mock_posix_stream_descriptor::s_good_open = false;
 	EXPECT_ANY_THROW(c_tuntap_linux_obj tuntap);
 }
 
