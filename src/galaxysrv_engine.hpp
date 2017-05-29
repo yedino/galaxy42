@@ -21,8 +21,6 @@ class c_weld {
 	public:
 		c_weld(size_t memsize);
 
-		Mutex m_mutex; ///< mutex that you must own to operate on this object
-
 		bool m_empty; ///< if empty, then all other data is invalid and should not be used, except for e.g. m_buf and things set by Clear()
 
 		void Clear(); ///< resets the weld to an empty container
@@ -41,7 +39,6 @@ class c_weld {
  */
 class c_emitqueue {
 	public:
-		Mutex m_mutex; ///< mutex that you must own to operate on this object
 		std::vector<  weak_ptr< c_weld > > m_welds; ///< the welds that I want to send
 };
 
@@ -111,6 +108,53 @@ std::lock_guard<TMutex> with_mutex<TMutex,TObj>::get_lock() const {
 */
 
 /**
+ * Vector of elements that are individually locked each, and that allows for safe resizing, and safe operating on elements
+ * Main operations:
+ * - Access and work on any random element by it's index.
+ * - Search elements checking a condition (under weak lock), if matched then hard lock and work on this element.
+ * - Easily grow entire vector (increase size), even if others are working on existing elements.
+ * - Shrink entire vecotr (decrease size) - e.g. by locking first the elements to be erased.
+ * There can be many threads running the above operations concurently.
+ * @owner rfree
+ */
+template <typename TObj>
+class vector_mutexed_sharedptr {
+	public:
+		MutexShared m_mutex_all; ///< protects the entire vector
+		vector< with_mutex< MutexShared, unique_ptr<TObj> > > m_data; ///< our data
+
+		vector_mutexed_sharedptr(const vector_mutexed_sharedptr<TObj> & other) = delete;
+		vector_mutexed_sharedptr(vector_mutexed_sharedptr<TObj> && other) = delete;
+		vector_mutexed_sharedptr<TObj> operator=(const vector_mutexed_sharedptr<TObj> & other) = delete;
+		vector_mutexed_sharedptr<TObj> operator=(vector_mutexed_sharedptr<TObj> && other) = delete;
+
+		void grow_to(size_t size); ///< safely increase size
+		template <typename TRet, typename TFun> TRet run_on(size_t ix, TFun & fun);
+};
+
+template <typename TObj>
+void vector_mutexed_sharedptr<TObj>::grow_to(size_t size) {
+	std::lock_guard<MutexShared> lg(m_mutex_all); // hard lock on container (avoid concurent resizes),
+	// but all existing elements can be worked on in background (as the ELEMENTS address does not change),
+	// provided that the other operations releases their lock on m_mutex_all only when they got the raw pointer/reference
+	// and loked that
+	m_data.resize(size);
+}
+
+template <typename TObj>
+template <typename TRet, typename TFun>
+TRet vector_mutexed_sharedptr<TObj>::run_on(size_t ix, TFun & fun) {
+	TObj * object = nullptr;
+	{
+		std::unique_lock<MutexShared> lg(m_mutex_all, std::defer_lock);
+		lg.mutex()->lock_shared(); // read lock on container
+		object = m_data.at(ix).get();
+		// unlocking container
+	}
+	return fun( object );
+}
+
+/**
  * Base of all the main engine logic, e.g. reading from tuntap, encryption, writting into cable/udp,
  * it can be later implemented in child class Galaxy - that has access to encryption, cables etc.
  */
@@ -119,9 +163,9 @@ class c_galaxysrv_engine {
 		c_galaxysrv_engine()=default;
 		virtual ~c_galaxysrv_engine()=default;
 
-		with_mutex<Mutex, vector< shared_ptr<  c_weld > > > m_welds;
-		vector< shared_ptr<  c_emitqueue > > m_emitqueues;
-
+	//vector< with_mutex< Mutex, shared_ptr< c_weld > > >
+	//	with_mutex<Mutex,  > m_welds;
+		// vector< shared_ptr<  c_emitqueue > > m_emitqueues;
 };
 
 
