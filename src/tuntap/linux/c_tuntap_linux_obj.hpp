@@ -11,6 +11,7 @@
 #include "../../test/mock_tuntap_system_functions.hpp"
 #include "../../i_tuntap_system_functions.hpp"
 
+#ifndef USE_MOCK
 class c_tuntap_system_functions final : public i_tuntap_system_functions {
 	public:
 		int ioctl(int fd, unsigned long request,  void *ifreq) override;
@@ -21,6 +22,7 @@ class c_tuntap_system_functions final : public i_tuntap_system_functions {
 		t_syserr NetPlatform_setMTU(const char* interfaceName,
 		                            uint32_t mtu) override;
 };
+#endif
 
 class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, send_to_tun);
@@ -29,6 +31,7 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, read_from_tun);
 	FRIEND_TEST(tuntap, read_from_tun_separated_addresses);
 	FRIEND_TEST(tuntap, async_receive_from_tun);
+	FRIEND_TEST(tuntap, set_tun_parameters);
 	public:
 		c_tuntap_linux_obj(); ///< construct this object, throws if error
 
@@ -49,7 +52,7 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 		boost::asio::io_service m_io_service;
 #ifdef USE_MOCK
 		using stream_type = mock::mock_posix_stream_descriptor;
-		using sys_functions_wrapper = mock::mock_tuntap_system_functions;
+		using sys_functions_wrapper = testing::NiceMock<mock::mock_tuntap_system_functions>;
 #else
 		using stream_type = boost::asio::posix::stream_descriptor;
 		using sys_functions_wrapper = c_tuntap_system_functions;

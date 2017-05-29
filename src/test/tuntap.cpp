@@ -234,3 +234,43 @@ TEST(tuntap, async_receive_from_tun) {
 	EXPECT_EQ(io_service.poll_one(), 1U); // run one ready handler
 	EXPECT_EQ(packet, packet_expected);
 }
+
+TEST(tuntap, set_tun_parameters) {
+	c_tuntap_linux_obj tuntap;
+	EXPECT_CALL(tuntap.m_tun_stream, release())
+		.WillRepeatedly(Return(10)); // return descriptor
+	EXPECT_CALL(tuntap.m_tun_stream, assign(_))
+		.Times(testing::AnyNumber());
+	std::array<unsigned char, IPV6_LEN> address;
+	address.fill(0xFF);
+	address.at(0) = 0xFD;
+	address.at(1) = 0x42;
+	const int prefix_len = 16;
+	const uint32_t mtu = 1500;
+	// normal use
+	EXPECT_NO_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
+
+	// ioctl error
+	EXPECT_CALL(tuntap.sys_fun, ioctl(_, _, _))
+		.WillOnce(Return(-1))
+		.WillRepeatedly(Return(0));
+	EXPECT_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu), std::runtime_error);
+
+	// NetPlatform_addAddress error
+	EXPECT_CALL(tuntap.sys_fun, NetPlatform_addAddress(_, _, _, _))
+		.WillOnce(Return(t_syserr{ -10 , 10 })) // return some error
+		.WillRepeatedly(Return(t_syserr{0, 0}));
+	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
+
+	// NetPlatform_setMTU error
+	EXPECT_CALL(tuntap.sys_fun, NetPlatform_setMTU(_, _))
+		.WillOnce(Return (t_syserr{ -10 , 10 })) // return some error
+		.WillRepeatedly(Return(t_syserr{0, 0}));
+	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
+
+	// bad ip
+	address.at(0) = 0xFC;
+	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
+	address.at(0) = 0xFD; address.at(1) = 0x22;
+	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
+}
