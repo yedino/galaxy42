@@ -26,8 +26,7 @@ class mock_posix_stream_descriptor {
 	MOCK_METHOD1(read_some, size_t(const std::array<boost::asio::mutable_buffer, 4>&));
 	MOCK_METHOD2(async_read_some, void(const boost::asio::mutable_buffer &,
 	                                   std::function<void(const boost::system::error_code&, size_t)>));
-	private:
-		static bool s_good_open;
+	static bool s_good_open;
 };
 
 } // namespace
