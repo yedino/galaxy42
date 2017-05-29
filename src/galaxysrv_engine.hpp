@@ -48,11 +48,14 @@ class c_bag_fragment {
 		size_t pos_begin, pos_end;
 };
 
+/*
+ *
+ */
 class c_bag {
 	public:
 		static constexpr int m_max_fragments = 4;
 
-		stdplus::arrayvector<c_bag_fragment, m_max_fragments> ;
+		stdplus::arrayvector<c_bag_fragment, m_max_fragments> m_fragments;
 };
 
 /**

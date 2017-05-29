@@ -57,6 +57,7 @@ moved into e.g. src/utils/... and src/stdplus/... and this file will be purely i
 
 #include "stdplus/misc.hpp"
 #include "mutex.hpp" // clang thread safety analysis
+#include "stdplus/eint.hpp"
 
 using std::string;
 using std::shared_ptr;
@@ -85,6 +86,8 @@ using std::runtime_error;
 using std::invalid_argument;
 
 using std::make_unique;
+
+using stdplus::eint::eint_minus;
 
 using namespace std::string_literals; // <=== using entire namespace
 

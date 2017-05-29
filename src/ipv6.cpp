@@ -4,8 +4,8 @@
 
 unsigned int ipv6_size_payload_from_header(stdplus::tab_view<unsigned char> tab) {
 	// https://en.wikipedia.org/wiki/IPv6_packet#Fixed_header
-	auto v_low  = static_cast<unsigned int>(tab.at(4));
-	auto v_high = static_cast<unsigned int>(tab.at(5));
+	auto v_high = static_cast<unsigned int>(tab.at(4));
+	auto v_low  = static_cast<unsigned int>(tab.at(5));
 	auto val = v_low + (v_high<<8);
 	return val;
 }
