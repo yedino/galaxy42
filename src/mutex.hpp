@@ -147,6 +147,8 @@ public:
   }
 };
 
+
+
 #ifdef USE_LOCK_STYLE_THREAD_SAFETY_ATTRIBUTES
 // The original version of thread safety analysis the following attribute
 // definitions.  These use a lock-based terminology.  They are still in use

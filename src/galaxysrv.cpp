@@ -30,6 +30,21 @@ void c_galaxysrv::main_loop() {
 //	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
 //	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
+	// ===========================================================================================================
+	_clue("Allocating in main loop");
+	size_t cfg_max_mtu = 9000;
+	size_t cfg_num_welds = 8;
+	size_t cfg_weld_memsize = cfg_max_mtu;
+	{
+		std::lock_guard<Mutex> lg{ this->m_welds.get_mutex_for_locking() };
+		auto & welds = this->m_welds.get( lg ); // this ref lives shorter then lock lg, so it is safe to use it
+
+		for (size_t i=0; i<cfg_num_welds; ++i) {
+			welds.push_back( make_shared<c_weld>(cfg_weld_memsize) );
+		}
+		_note("Allocated " << welds.size() << " welds");
+	}
+
 	auto loop_exitwait = [&]() {
 		string stopflag_name="/tmp/stop1";
 		_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
@@ -59,8 +74,6 @@ void c_galaxysrv::main_loop() {
 
 	auto loop_tunread = [&]() {
 		try {
-			c_netbuf buf(9000);
-
 			boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
 			unique_ptr<c_cable_udp_addr> my_localhost = make_unique<c_cable_udp_addr>( ep );
 			c_card_selector my_selector( std::move(my_localhost) ); // will send from this my-address, to this peer

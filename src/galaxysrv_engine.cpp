@@ -1,10 +1,12 @@
 
+#include "galaxysrv_engine.hpp"
 
 
-
-// this file left empty because:
-// youcompleteme author forbids people from less then 5 lines long source code
-// https://github.com/Valloric/YouCompleteMe/issues/1364
-
-
+c_weld::c_weld(size_t memsize)
+:
+m_empty(true),
+// Init here things that are documented in m_empty as always valid:
+m_buf( memsize )
+{
+}
 
