@@ -8,18 +8,8 @@
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 #include "../../test/mock_posix_stream_descriptor.hpp"
-
-class i_tuntap_system_functions {
-	public:
-		virtual int ioctl(int fd, unsigned long request, void *ifreq) = 0;
-		virtual t_syserr NetPlatform_addAddress(const char* interfaceName,
-		                                const uint8_t* address,
-		                                int prefixLen,
-		                                int addrFam) = 0;
-		virtual t_syserr NetPlatform_setMTU(const char* interfaceName,
-		                            uint32_t mtu) = 0;
-		virtual ~i_tuntap_system_functions() = default;
-};
+#include "../../test/mock_tuntap_system_functions.hpp"
+#include "../../i_tuntap_system_functions.hpp"
 
 class c_tuntap_system_functions final : public i_tuntap_system_functions {
 	public:
@@ -59,11 +49,11 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 		boost::asio::io_service m_io_service;
 #ifdef USE_MOCK
 		using stream_type = mock::mock_posix_stream_descriptor;
+		using sys_functions_wrapper = mock::mock_tuntap_system_functions;
 #else
 		using stream_type = boost::asio::posix::stream_descriptor;
-#endif
 		using sys_functions_wrapper = c_tuntap_system_functions;
-
+#endif
 		stream_type m_tun_stream;
 		sys_functions_wrapper sys_fun;
 };

@@ -2,6 +2,7 @@
 #define MOCK_POSIX_STREAM_DESCRIPTOR_HPP
 
 #include "../../depends/googletest/googlemock/include/gmock/gmock.h"
+#include "../tuntap/linux/c_tuntap_linux_obj.hpp"
 #include <boost/asio.hpp>
 #include <functional>
 #include <libs0.hpp>
