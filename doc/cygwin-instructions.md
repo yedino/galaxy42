@@ -99,20 +99,13 @@ $ make windowsService
 
 ##### Libraries list
 
-- libsodium-18.dll
-- libwinpthread-1.dll
-- libboost_system.dll
-- libboost_program_options.dll
-- libboost_locale-mt.dll
-- libboost_filesystem.dll
-- libstdc++-6.dll
-- libgcc_s_seh-1.dll
-- iconv.dll
-- icui18n57.dll
-- icuuc57.dll
-- icudata57.dll
+- libboost_filesystem-mt.dll
+- libboost_program_options-mt.dll
 - libboost_system-mt.dll
-- libboost_thread-mt.dll
+- libgcc_s_seh-1.dll
+- libsodium-18.dll
+- libstdc++-6.dll
+- libwinpthread-1.dll
 
 ##### Run as Administrator
 - Run cmd as Administrator(right mouse button -> Run as Administrator)

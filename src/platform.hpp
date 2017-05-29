@@ -22,7 +22,7 @@
 			#define __USE_W32_SOCKETS
 		#endif
 	#endif
-
+	#include <string>
 	std::wstring cstring_to_wstring(const char *cstr);
 	// inspiration:
 	// http://stackoverflow.com/questions/17258029/c-setenv-undefined-identifier-in-visual-studio/23616164#23616164
