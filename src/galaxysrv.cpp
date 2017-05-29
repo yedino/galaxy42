@@ -19,6 +19,7 @@
 #include "tuntap/windows/c_tuntap_windows.hpp"
 
 #include <boost/filesystem.hpp> // for flag-file
+#include <ipv6.hpp>
 
 #include <boost/asio.hpp> // to create local address
 
@@ -66,12 +67,19 @@ void c_galaxysrv::main_loop() {
 			// pick up / create proper "card" (e.g. new socket from other my-address) and send from it:
 
 			while (!m_exiting) {
+			try {
 				_dbg3("Reading TUN...");
 				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
 				c_haship_addr src_hip; // set below
 				c_haship_addr dst_hip; // set below
-				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_hip, dst_hip); // ***
-				c_netchunk chunk( buf.data() , read ); // actually use part of buffer
+				size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_hip, dst_hip); // ***
+				c_netchunk chunk( buf.data() , read_size_merit ); // actually use part of buffer
+				size_t read_ipv6size = ipv6_size_entireip_from_header( chunk.to_tab_view() );
+				size_t read_ipv6size_merit{ eint_minus( read_ipv6sizcallye , size_removed_from_merit ) };
+				if (read_ipv6size_merit != read_size_merit) {
+					_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
+					"tuntap driver", read_size_merit));
+				}
 				_info("TUN read: " << "src=" << src_hip << " " << "dst=" << dst_hip << " TUN data: " << make_report(chunk,20));
 
 				// *** routing decision ***
@@ -90,12 +98,14 @@ void c_galaxysrv::main_loop() {
 
 				c_cable_base_obj::t_asio_buffers_send buffers{
 					{ header.data(), header.size() },
-					{ buf.data(), read }
+					{ buf.data(), read_size_merit }
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
+
+			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) " << e.what()); }
 			} // loop
 			_note("Loop done - tun read");
-		} catch (const std::exception &e) {_warn("Thread lambda (for tunread) got exception " << e.what());}
+		} catch (const std::exception &e) {_erro("Thread lambda (for tunread) got exception and EXITED" << e.what());}
 		catch(...) { _warn("Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
 

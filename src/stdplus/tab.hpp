@@ -112,12 +112,17 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		using iterator = T*;
 		using const_iterator = const T*;
 
-		// TI = type of some iterator. it must be linear-memory. TODO: metaprogramming check
-		// of course (begin..end] must be from same container and must be a valid, linear range
+		/// of course (begin..end] must be from same container and must be a valid, linear range
 		template <typename TI>
 		tab_view(TI begin, TI end)
 				: m_begin(begin), m_end(end), m_size(end-begin) {
 			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+		}
+
+		/// of course (begin..begin+size] must be valid memory range
+		template <typename TI>
+		tab_view(TI begin, size_t size)
+				: m_begin(begin), m_end(begin+size), m_size(size) {
 		}
 
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check

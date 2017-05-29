@@ -1,4 +1,3 @@
-
 #include "netbuf.hpp"
 #include "tnetdbg.hpp"
 
@@ -20,6 +19,10 @@ void c_netchunk::report(std::ostream & ostr, int detail) const {
 
 size_t c_netchunk::size() const noexcept { return m_size; }
 c_netchunk::t_element * c_netchunk::data() const noexcept{ return m_data; }
+
+stdplus::tab_view<unsigned char> c_netchunk::to_tab_view() const {
+	return stdplus::tab_view<unsigned char>( m_data, m_size );
+}
 
 // -------------------------------------------------------------------
 
@@ -63,6 +66,10 @@ void c_netbuf::report(std::ostream & ostr, int detail) const {
 c_netbuf::t_element * c_netbuf::data() noexcept { return m_data; }
 
 c_netbuf::t_element const * c_netbuf::data() const noexcept { return m_data; }
+
+stdplus::tab_view<unsigned char> c_netbuf::to_tab_view() const {
+	return stdplus::tab_view<unsigned char>( m_data, m_size );
+}
 
 // -------------------------------------------------------------------
 

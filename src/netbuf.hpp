@@ -1,6 +1,7 @@
 #pragma once
 
 #include "libs0.hpp"
+#include <stdplus/tab.hpp>
 
 // -------------------------------------------------------------------
 
@@ -13,6 +14,8 @@ class c_netchunk final {
 
 		size_t size() const noexcept;
 		t_element * data() const noexcept;
+
+		stdplus::tab_view<unsigned char> to_tab_view() const;
 
 	public:
 		t_element * const m_data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
@@ -42,6 +45,8 @@ class c_netbuf final {
 		t_element const * data() const noexcept;
 
 		void report(std::ostream & ostr, int detail) const;
+
+		stdplus::tab_view<unsigned char> to_tab_view() const;
 
 	private:
 		t_element * m_data; ///< my actuall data storage

@@ -1,12 +1,15 @@
 
 #include "my_tests_lib.hpp"
 
-#include "../eint.hpp"
+#include "../stdplus/eint.hpp"
 
 #include <exception>
 #include <cmath>
 #include <type_traits>
 
+namespace eint {
+	using namespace stdplus::eint;
+}
 
 /// helper templates to calculate the correct expected result
 template <typename T>
