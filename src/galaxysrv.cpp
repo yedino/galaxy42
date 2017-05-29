@@ -75,7 +75,7 @@ void c_galaxysrv::main_loop() {
 				size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_hip, dst_hip); // ***
 				c_netchunk chunk( buf.data() , read_size_merit ); // actually use part of buffer
 				size_t read_ipv6size = ipv6_size_entireip_from_header( chunk.to_tab_view() );
-				size_t read_ipv6size_merit{ eint_minus( read_ipv6sizcallye , size_removed_from_merit ) };
+				size_t read_ipv6size_merit{ eint_minus( read_ipv6size , size_removed_from_merit ) };
 				if (read_ipv6size_merit != read_size_merit) {
 					_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
 					"tuntap driver", read_size_merit));
