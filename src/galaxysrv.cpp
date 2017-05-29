@@ -36,15 +36,10 @@ void c_galaxysrv::main_loop() {
 	size_t cfg_num_welds = 8;
 	size_t cfg_weld_memsize = cfg_max_mtu * 3;
 	{
-		/*
-		std::lock_guard<Mutex> lg{ this->m_welds.get_mutex_for_locking() };
-		auto & welds = this->m_welds.get( lg ); // this ref lives shorter then lock lg, so it is safe to use it
-
 		for (size_t i=0; i<cfg_num_welds; ++i) {
-			welds.push_back( make_shared<c_weld>(cfg_weld_memsize) );
+			m_welds.push_back( std::move( make_unique<c_weld>(cfg_weld_memsize) ) );
 		}
-		_note("Allocated " << welds.size() << " welds");
-		*/
+		_note("Allocated " << m_welds.size() << " welds");
 	}
 
 	auto loop_exitwait = [&]() {

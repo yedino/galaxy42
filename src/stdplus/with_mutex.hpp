@@ -1,4 +1,6 @@
 
+#pragma once
+
 ///@TODO@rob change it to stdplus/mutex_attributes.hpp when you would move the file there
 #include "../mutex.hpp"
 
@@ -14,6 +16,10 @@ namespace stdplus {
 template <typename TMutex, typename TObj>
 class with_mutex {
 	public:
+
+		with_mutex(const TObj & value); ///< construct me from value of TObj
+		with_mutex(TObj && value); ///< construct me by moving value of TObj
+
 		TObj& get( std::lock_guard<TMutex> & ); ///< access the object, after showing that you do hold the lock
 		const TObj& get( std::lock_guard<TMutex> & ) const; ///< access the object, after showing that you do hold the lock
 		TObj& get( std::unique_lock<TMutex> & lg ); ///< access the object, after showing that you do hold the lock
@@ -26,6 +32,16 @@ class with_mutex {
 		mutable TMutex m_mutex;
 		TObj m_obj GUARDED_BY( m_mutex ); ///< the object. Btw here we additionally use clang-static-analysis.
 };
+
+template <typename TMutex, typename TObj>
+with_mutex<TMutex,TObj>::with_mutex(const TObj & value)
+: m_obj(value)
+{ }
+
+template <typename TMutex, typename TObj>
+with_mutex<TMutex,TObj>::with_mutex(TObj && value)
+: m_obj(std::move(value))
+{ }
 
 template <typename TMutex, typename TObj>
 TObj& with_mutex<TMutex,TObj>::get( std::lock_guard<TMutex> & ) { return m_obj; }
