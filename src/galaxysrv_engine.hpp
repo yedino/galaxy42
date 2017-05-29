@@ -23,7 +23,9 @@ class c_weld {
 
 		Mutex m_mutex; ///< mutex that you must own to operate on this object
 
-		bool m_empty; ///< if empty, then all other data is invalid and should not be used, except for e.g. m_buf
+		bool m_empty; ///< if empty, then all other data is invalid and should not be used, except for e.g. m_buf and things set by Clear()
+
+		void Clear(); ///< resets the weld to an empty container
 
 		boost::asio::ip::address_v6 m_dst; ///< the destination of this BI/Weld
 		std::chrono::steady_clock::time_point m_time_start; ///< time of oldest Merit here; to decide on latency on sending
@@ -117,7 +119,7 @@ class c_galaxysrv_engine {
 		c_galaxysrv_engine()=default;
 		virtual ~c_galaxysrv_engine()=default;
 
-		with_mutex<MutexShared, vector< shared_ptr<  c_weld > > > m_welds;
+		with_mutex<Mutex, vector< shared_ptr<  c_weld > > > m_welds;
 		vector< shared_ptr<  c_emitqueue > > m_emitqueues;
 
 };
