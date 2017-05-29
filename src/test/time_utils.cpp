@@ -66,7 +66,7 @@ TEST(time_utils, exact_data_check) {
 	_mark("time Asia/Pyongyang: " << formated << ", formated_length: " << formated.length());
 	EXPECT_EQ(formated, "2017-10-01T00:00:00+08:30");
 
-	formated = time_t_to_readable(gen_exact_date(2022,12,15,15,0,0,1), "Pacific/Galapagos");
+	formated = time_t_to_readable(gen_exact_date(2022,12,15,15,0,0), "Pacific/Galapagos");
 	_mark("time Pacific/Galapagos: " << formated << ", formated_length: " << formated.length());
 	EXPECT_EQ(formated, "2022-12-15T15:00:00-06:00");
 }
@@ -178,11 +178,6 @@ TEST(time_utils, all_zones_envirnoment_test) {
 	for (auto &zone: all_zones) {
 		setenv("TZ", zone.c_str(), 1);
 
-		// Pacific/Marquesas and America/St_Johns exception
-		// I have no idea why this two zones do not works.
-		if(zone == "Pacific/Marquesas" || zone == "America/St_Johns") {
-			continue;
-		}
 		std::string formated = time_t_to_readable(gen_exact_date(2019,11,21,11,10,30));
 		std::string time_to_match = "2019-11-21T11:10:30";
 		//_mark("Testing zone: " << zone << " formated: " << formated);

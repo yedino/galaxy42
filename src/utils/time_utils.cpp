@@ -6,24 +6,19 @@
 #include "tnetdbg.hpp"
 
 std::time_t time_utils::gen_exact_date(int year,
-                                                    int month,
-                                                    int day,
-                                                    int hour,
-                                                    int min,
-                                                    int sec,
-                                                    int isdst) {
+                                       int month,
+                                       int day,
+                                       int hour,
+                                       int min,
+                                       int sec,
+                                       int isdst) {
 	using namespace boost::posix_time;
 
+
+	// local tm for recognizing Daylight Saving Time
 	std::chrono::system_clock::time_point local_timepoint = std::chrono::system_clock::now();
 	std::time_t local_time = std::chrono::system_clock::to_time_t(local_timepoint);
-
-	// we could use duration cast from boost::posix_time::time_duration
-	std::istringstream iss(time_utils::get_utc_offset_string());
 	std::tm *local_tm = std::localtime(&local_time);
-
-	// parsion string in ISO format to hour and minutes variables example -12:30 -> -12 hours, 30 minutes
-	short int l_hours, l_minutes; char ch;
-	iss >> l_hours >> ch >> l_minutes;
 
 	time_t ret;
 	std::tm tm;
@@ -34,8 +29,8 @@ std::time_t time_utils::gen_exact_date(int year,
 	tm.tm_mon = month -1;
 	tm.tm_mday = day;
 
-	tm.tm_hour = hour + l_hours;
-	tm.tm_min = min + l_minutes;
+	tm.tm_hour = hour;
+	tm.tm_min = min;
 	tm.tm_sec = sec;
 
 	// isdst less than zero means that the information is not available.
@@ -47,11 +42,14 @@ std::time_t time_utils::gen_exact_date(int year,
 		tm.tm_isdst=isdst;
 	}
 
-	auto offset = time_utils::get_utc_offset();
+	ret = std::mktime(&tm);
 
-	ret = std::mktime(&tm);;
+	// adding local utc offset in total second to std::mktime.
+	time_duration utc_offset = get_utc_offset();
+	auto l_seconds = utc_offset.total_seconds();
 
-	ptime ptime_from_tm(tm);
+	ret += l_seconds;
+
 	return ret;
 }
 
@@ -62,8 +60,9 @@ std::string time_utils::timepoint_to_readable(const time_utils::t_timepoint &tp,
 
 std::string time_utils::time_t_to_readable(const std::time_t &time, const std::string &zone) {
 
-	// Pacific/Marquesas and America/St_Johns exception
-	// I have no idea why this two zones do not works properly.
+	// Pacific/Marquesas and America/St_Johns warn
+	// This two zones might not works properly.
+	// However it looks like boost::date::time fixed this
 	if(zone == "Pacific/Marquesas" || zone == "America/St_Johns") {
 		_warn("Time for " << zone << " zone could not works properly!");
 	}
