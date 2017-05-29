@@ -34,7 +34,7 @@ void c_galaxysrv::main_loop() {
 	_clue("Allocating in main loop");
 	size_t cfg_max_mtu = 9000;
 	size_t cfg_num_welds = 8;
-	size_t cfg_weld_memsize = cfg_max_mtu;
+	size_t cfg_weld_memsize = cfg_max_mtu * 3;
 	{
 		std::lock_guard<Mutex> lg{ this->m_welds.get_mutex_for_locking() };
 		auto & welds = this->m_welds.get( lg ); // this ref lives shorter then lock lg, so it is safe to use it
@@ -81,7 +81,23 @@ void c_galaxysrv::main_loop() {
 
 			while (!m_exiting) {
 			try {
-				_dbg3("Reading TUN...");
+				_dbg2("Reading TUN...");
+
+				{
+					std::lock_guard<Mutex> lg_welds_RO{ this->m_welds.get_mutex_for_locking() }; // TODO make it RO lock
+					auto & welds_RO = this->m_welds.get( lg_welds_RO ); // this ref lives shorter then lock lg, so it is safe to use it
+					for(auto & one_weld_UNLOCKED : welds_RO) {
+						// [[optimize]] in theory we could unlock the lock on vector-of-welds, since now we work on the address
+						// of one c_weld and that address will not change even if vector would resize, if it's vector of shared_ptr etc
+						// how ever probably not worth it at all
+
+						// here we all shared pointer's operator-> without lock on that shared pointer, how ever no one should modify
+						// TODO ... that's bad idea as someone could maybe take another copy of shared pointer (so increase it's counter)
+						TODONOW
+						std::lock_guard<Mutex> lg_one_weld_RO{ one_weld_UNLOCKED.operator->()->m_mutex  }; // TODO make it RO lock
+					}
+				}
+
 				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
 				c_haship_addr src_hip; // set below
 				c_haship_addr dst_hip; // set below
