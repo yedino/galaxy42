@@ -9,6 +9,29 @@
 #include <libs0.hpp>
 #include "../../test/mock_posix_stream_descriptor.hpp"
 
+class i_tuntap_system_functions {
+	public:
+		virtual int ioctl(int fd, unsigned long request, void *ifreq) = 0;
+		virtual t_syserr NetPlatform_addAddress(const char* interfaceName,
+		                                const uint8_t* address,
+		                                int prefixLen,
+		                                int addrFam) = 0;
+		virtual t_syserr NetPlatform_setMTU(const char* interfaceName,
+		                            uint32_t mtu) = 0;
+		virtual ~i_tuntap_system_functions() = default;
+};
+
+class c_tuntap_system_functions final : public i_tuntap_system_functions {
+	public:
+		int ioctl(int fd, unsigned long request,  void *ifreq) override;
+		t_syserr NetPlatform_addAddress(const char* interfaceName,
+		                                const uint8_t* address,
+		                                int prefixLen,
+		                                int addrFam) override;
+		t_syserr NetPlatform_setMTU(const char* interfaceName,
+		                            uint32_t mtu) override;
+};
+
 class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, send_to_tun);
 	FRIEND_TEST(tuntap, send_to_tun_with_error);
@@ -39,7 +62,10 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 #else
 		using stream_type = boost::asio::posix::stream_descriptor;
 #endif
+		using sys_functions_wrapper = c_tuntap_system_functions;
+
 		stream_type m_tun_stream;
+		sys_functions_wrapper sys_fun;
 };
 
 #endif // ANTINET_linux
