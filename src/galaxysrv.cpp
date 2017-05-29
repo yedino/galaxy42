@@ -36,6 +36,7 @@ void c_galaxysrv::main_loop() {
 	size_t cfg_num_welds = 8;
 	size_t cfg_weld_memsize = cfg_max_mtu * 3;
 	{
+		/*
 		std::lock_guard<Mutex> lg{ this->m_welds.get_mutex_for_locking() };
 		auto & welds = this->m_welds.get( lg ); // this ref lives shorter then lock lg, so it is safe to use it
 
@@ -43,6 +44,7 @@ void c_galaxysrv::main_loop() {
 			welds.push_back( make_shared<c_weld>(cfg_weld_memsize) );
 		}
 		_note("Allocated " << welds.size() << " welds");
+		*/
 	}
 
 	auto loop_exitwait = [&]() {
@@ -83,6 +85,7 @@ void c_galaxysrv::main_loop() {
 			try {
 				_dbg2("Reading TUN...");
 
+/*
 				{
 					std::lock_guard<Mutex> lg_welds_RO{ this->m_welds.get_mutex_for_locking() }; // TODO make it RO lock
 					auto & welds_RO = this->m_welds.get( lg_welds_RO ); // this ref lives shorter then lock lg, so it is safe to use it
@@ -130,6 +133,7 @@ void c_galaxysrv::main_loop() {
 					{ buf.data(), read_size_merit }
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
+				*/
 
 			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) " << e.what()); }
 			} // loop
