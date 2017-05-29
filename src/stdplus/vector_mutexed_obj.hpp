@@ -1,3 +1,6 @@
+
+#pragma once
+
 /// @TODO@rob change it to stdplus/mutex_attributes.hpp when you would move the file there
 #include "../mutex.hpp"
 
@@ -27,11 +30,17 @@ class vector_mutexed_obj {
 		void grow_to(size_t size); ///< safely increase size
 		template <typename TRet, typename TFun> TRet run_on(size_t ix, TFun & fun);
 
+		void push_back(const TObj & obj); ///< allocate a copy of the object
+		void push_back(TObj && obj); ///< allocate object, move given obj into it
+		void push_back(std::unique_ptr<TObj> && obj_ptr); ///< move this unique-ptr owned object to end of this
+
 		/// Searches through the container until we find element for which given #fun_test function returns true,
 		/// then on it we run function #fun_run - this is done #how_many times, and the result of last execution of
 		/// fun_run is returned
 		template <typename TRet, typename TFunTest, typename TFunRun>
 		TRet run_on_matching(TFunTest & fun_test, TFunRun & fun_run, size_t how_many=1);
+
+		size_t size() const; ///< current size
 
 	private:
 		MutexShared m_mutex_all; ///< protects the entire vector
@@ -46,6 +55,27 @@ void vector_mutexed_obj<TObj>::grow_to(size_t size) {
 	// and loked that
 	m_data.resize(size);
 }
+
+template <typename TObj>
+void vector_mutexed_obj<TObj>::push_back(const TObj & obj) {
+	std::lock_guard<MutexShared> lg_all(m_mutex_all); // hard lock on container (avoid concurent resizes), see grow_to() comments
+	m_data.push_back(std::make_unique<TObj>(obj)); // allocate a copy, and push it
+	// @TODO@rfree bad. look at other push_back as example
+}
+
+template <typename TObj>
+void vector_mutexed_obj<TObj>::push_back(TObj && obj) {
+	std::lock_guard<MutexShared> lg_all(m_mutex_all); // hard lock on container (avoid concurent resizes), see grow_to() comments
+	m_data.push_back(std::make_unique<TObj>( std::move(obj) )); // allocate object, move data in
+	// @TODO@rfree bad. look at other push_back as example
+}
+
+template <typename TObj>
+void vector_mutexed_obj<TObj>::push_back(std::unique_ptr<TObj> && obj_ptr) {
+	std::lock_guard<MutexShared> lg_all(m_mutex_all); // hard lock on container (avoid concurent resizes), see grow_to() comments
+	m_data.push_back( stdplus::with_mutex<TObj,MutexShared>(std::move(obj_ptr)) ); // move in here entire unique_ptr
+}
+
 
 template <typename TObj>
 template <typename TRet, typename TFun>
@@ -96,3 +126,10 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 	} // access container
 	throw std::runtime_error("Internal error! Dead code reached in vector_mutexed_obj run_on_matching."); // DEAD_RETURN();
 }
+
+template <typename TObj>
+size_t vector_mutexed_obj<TObj>::size() const {
+	return m_data.size();
+}
+
+
