@@ -80,11 +80,11 @@ class with_mutex {
 	public:
 		TObj& get( std::lock_guard<TMutex> & ); ///< access the object, after showing that you do hold the lock
 		const TObj& get( std::lock_guard<TMutex> & ) const; ///< access the object, after showing that you do hold the lock
+		TObj& get( std::unique_lock<TMutex> & lg ); ///< access the object, after showing that you do hold the lock
+		const TObj& get( std::unique_lock<TMutex> & lg ) const; ///< access the object, after showing that you do hold the lock
 
-		// std::lock_guard<TMutex> get_lock() const; ///< lock the object, save the lock outside // TODO possible?
-
-		/// get the mutex, you should ONLY LOCK-GUARD IT, do not use it for any other purpose.
-		TMutex & get_mutex_for_locking() const;
+		std::unique_lock<TMutex> get_lock_RO() const; ///< lock the object (shared / RO lock), if possible for the Mutex type
+		std::unique_lock<TMutex> get_lock_RW() const; ///< lock the object (exclusive / RW lock), save the lock outside
 
 	private:
 		mutable TMutex m_mutex;
@@ -98,14 +98,22 @@ template <typename TMutex, typename TObj>
 const TObj& with_mutex<TMutex,TObj>::get( std::lock_guard<TMutex> & ) const { return m_obj; }
 
 template <typename TMutex, typename TObj>
-TMutex & with_mutex<TMutex,TObj>::get_mutex_for_locking() const { return m_mutex; }
+TObj& with_mutex<TMutex,TObj>::get( std::unique_lock<TMutex> & lg) { _chek_abort(lg.owns_lock());  return m_obj; }
 
-/*
 template <typename TMutex, typename TObj>
-std::lock_guard<TMutex> with_mutex<TMutex,TObj>::get_lock() const {
-	return std::lock_guard<TMutex>(m_mutex);
+const TObj& with_mutex<TMutex,TObj>::get( std::unique_lock<TMutex> & lg) const { _chek_abort(lg.owns_lock());  return m_obj; }
+
+template <typename TMutex, typename TObj>
+std::unique_lock<TMutex> with_mutex<TMutex,TObj>::get_lock_RO() const {
+	return std::unique_lock<TMutex>(m_mutex);
 }
-*/
+
+template <typename TMutex, typename TObj>
+std::unique_lock<TMutex> with_mutex<TMutex,TObj>::get_lock_RW() const {
+	std::unique_lock<TMutex> lg(m_mutex, std::defer_lock);
+	m_mutex.lock_shared();
+	return lg;
+}
 
 /**
  * Vector of elements that are individually locked each, and that allows for safe resizing, and safe operating on elements
@@ -118,23 +126,30 @@ std::lock_guard<TMutex> with_mutex<TMutex,TObj>::get_lock() const {
  * @owner rfree
  */
 template <typename TObj>
-class vector_mutexed_sharedptr {
+class vector_mutexed_obj {
 	public:
-		MutexShared m_mutex_all; ///< protects the entire vector
-		vector< with_mutex< MutexShared, unique_ptr<TObj> > > m_data; ///< our data
+		vector_mutexed_obj() = default;
 
-		vector_mutexed_sharedptr(const vector_mutexed_sharedptr<TObj> & other) = delete;
-		vector_mutexed_sharedptr(vector_mutexed_sharedptr<TObj> && other) = delete;
-		vector_mutexed_sharedptr<TObj> operator=(const vector_mutexed_sharedptr<TObj> & other) = delete;
-		vector_mutexed_sharedptr<TObj> operator=(vector_mutexed_sharedptr<TObj> && other) = delete;
+		vector_mutexed_obj(const vector_mutexed_obj<TObj> & other) = delete;
+		vector_mutexed_obj<TObj> operator=(const vector_mutexed_obj<TObj> & other) = delete;
 
 		void grow_to(size_t size); ///< safely increase size
 		template <typename TRet, typename TFun> TRet run_on(size_t ix, TFun & fun);
+
+		/// Searches through the container until we find element for which given #fun_test function returns true,
+		/// then on it we run function #fun_run - this is done #how_many times, and the result of last execution of
+		/// fun_run is returned
+		template <typename TRet, typename TFunTest, typename TFunRun>
+		TRet run_on_matching(TFunTest & fun_test, TFunRun & fun_run, size_t how_many=1);
+
+	private:
+		MutexShared m_mutex_all; ///< protects the entire vector
+		vector< with_mutex< MutexShared, unique_ptr<TObj> > > m_data; ///< our data
 };
 
 template <typename TObj>
-void vector_mutexed_sharedptr<TObj>::grow_to(size_t size) {
-	std::lock_guard<MutexShared> lg(m_mutex_all); // hard lock on container (avoid concurent resizes),
+void vector_mutexed_obj<TObj>::grow_to(size_t size) {
+	std::lock_guard<MutexShared> lg_all(m_mutex_all); // hard lock on container (avoid concurent resizes),
 	// but all existing elements can be worked on in background (as the ELEMENTS address does not change),
 	// provided that the other operations releases their lock on m_mutex_all only when they got the raw pointer/reference
 	// and loked that
@@ -143,15 +158,52 @@ void vector_mutexed_sharedptr<TObj>::grow_to(size_t size) {
 
 template <typename TObj>
 template <typename TRet, typename TFun>
-TRet vector_mutexed_sharedptr<TObj>::run_on(size_t ix, TFun & fun) {
-	TObj * object = nullptr;
+TRet vector_mutexed_obj<TObj>::run_on(size_t ix, TFun & fun) {
+	TObj * one_object_with_mutex = nullptr;
 	{
-		std::unique_lock<MutexShared> lg(m_mutex_all, std::defer_lock);
-		lg.mutex()->lock_shared(); // read lock on container
-		object = m_data.at(ix).get();
+		std::unique_lock<MutexShared> lg_all(m_mutex_all, std::defer_lock);	lg_all.mutex()->lock_shared(); // read lock on container
+		one_object_with_mutex = m_data.at(ix).get();
 		// unlocking container
 	}
-	return fun( object );
+
+	{
+		auto lg_one( one_object_with_mutex->get_lock_RW() );
+		return fun( one_object_with_mutex->get( lg_one ) );
+	}
+}
+
+template <typename TObj>
+template <typename TRet, typename TFunTest, typename TFunRun>
+TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fun_run, size_t how_many) {
+	size_t so_far=0; // how many objects matched so far
+
+	TObj * one_object_with_mutex = nullptr;
+	{
+		std::unique_lock<MutexShared> lg_all(m_mutex_all, std::defer_lock);	lg_all.mutex()->lock_shared(); // read lock on container
+		for (auto iter = m_data.begin(); iter<m_data.end(); ++iter) {
+			one_object_with_mutex = iter->get();
+			TObj * obj = nullptr;
+			bool matched=false;
+			{
+				auto lg_one_RO( one_object_with_mutex->get_lock_RO() ); // lock RO for test
+				obj = one_object_with_mutex->get( lg_one_RO );
+				matched = fun_test( *obj ); // <--- run the test
+				// unlock the one object
+			}
+			if (obj != nullptr ) { // test succeeded
+				auto lg_one_RW( one_object_with_mutex->get_lock_RW() ); // lock RW this time
+				++so_far;
+				if (so_far>=how_many) {
+					return fun_run( *obj ); // <--- run the modifier (and return, it's the last one)
+				} else {
+					fun_run( *obj ); // <--- run the modifier
+				}
+				// unlock the one object
+			}
+		} // test all objects in loop
+		// unlocking container
+	} // access container
+	DEAD_RETURN();
 }
 
 /**
@@ -163,9 +215,7 @@ class c_galaxysrv_engine {
 		c_galaxysrv_engine()=default;
 		virtual ~c_galaxysrv_engine()=default;
 
-	//vector< with_mutex< Mutex, shared_ptr< c_weld > > >
-	//	with_mutex<Mutex,  > m_welds;
-		// vector< shared_ptr<  c_emitqueue > > m_emitqueues;
+		vector_mutexed_obj< c_weld > m_welds;
 };
 
 
