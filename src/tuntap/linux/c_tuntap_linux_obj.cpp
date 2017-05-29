@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "../../haship.hpp"
 
+#ifndef USE_MOCK
 int c_tuntap_system_functions::ioctl(int fd, unsigned long request, void *ifreq) {
 	return ::ioctl(fd, request, ifreq);
 }
@@ -25,6 +26,7 @@ t_syserr c_tuntap_system_functions::NetPlatform_addAddress(const char *interface
 t_syserr c_tuntap_system_functions::NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
 	return ::NetPlatform_setMTU(interfaceName, mtu);
 }
+#endif
 
 /////////////////////////////////////////////////////////////////////
 
@@ -110,14 +112,16 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	int errcode_ioctl = sys_fun.ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	_check_sys(errcode_ioctl != -1);
-	_check_extern(binary_address[0] == 0xFD);
-	_check_extern(binary_address[1] == 0x42);
-	sys_fun.NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefix_len, Sockaddr_AF_INET6);
-	sys_fun.NetPlatform_setMTU(ifr.ifr_name, mtu);
+	_check_input(binary_address[0] == 0xFD);
+	_check_input(binary_address[1] == 0x42);
+	t_syserr err;
+	err = sys_fun.NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefix_len, Sockaddr_AF_INET6);
+	if (err.my_code != 0) throw std::runtime_error("NetPlatform_addAddress error");
+	err = sys_fun.NetPlatform_setMTU(ifr.ifr_name, mtu);
+	if (err.my_code != 0) throw std::runtime_error("NetPlatform_setMTU error");
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
 	_goal("Configuring tuntap options - done");
 }
-
 
 #endif // ANTINET_linux
