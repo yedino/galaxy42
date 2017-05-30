@@ -62,7 +62,7 @@ std::string time_utils::time_t_to_readable(const std::time_t &time, const std::s
 
 	// Pacific/Marquesas and America/St_Johns warn
 	// This two zones might not works properly.
-	// However it looks like boost::date::time fixed this
+	// However it looks like boost::date_time fixed this
 	if(zone == "Pacific/Marquesas" || zone == "America/St_Johns") {
 		_warn("Time for " << zone << " zone could not works properly!");
 	}
@@ -113,11 +113,9 @@ std::string time_utils::get_zone_utc_offset(const std::string &zone) {
 	char* ctz(getenv("TZ"));
 
 	// set variable zone
-	if(zone.empty()) {
-		setenv("TZ", "", 1);
-	} else {
-		setenv("TZ", zone.c_str(), 1);
-	}
+	auto err = setenv("TZ", zone.c_str(), 1);
+	if(err) _warn("Could not set TZ variable, time/date shown may be incorrect");
+
 	tzset();
 
 	std::string zone_str = get_utc_offset_string();
@@ -132,3 +130,4 @@ std::string time_utils::get_zone_utc_offset(const std::string &zone) {
 
 	return zone_str;
 }
+

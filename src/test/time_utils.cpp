@@ -56,6 +56,11 @@ TEST(time_utils, t_timepoint_overload) {
 	EXPECT_TRUE(formated.length() == 25);
 }
 
+// Getting exact time with zone utc offset on mingw is not supported for now.
+// The reason is that boost::date_time local_time() getting time from win setting not from TZ variable.
+// There is solution to use boost::local_time::tz_database and load date_time_zonespec.csv,
+// but this solution is not satisfactory.
+#ifndef ANTINET_windows
 TEST(time_utils, exact_data_check) {
 
 	std::string formated = time_t_to_readable(gen_exact_date(2017,10,21,12,1,3), "Europe/Warsaw");
@@ -69,6 +74,17 @@ TEST(time_utils, exact_data_check) {
 	formated = time_t_to_readable(gen_exact_date(2022,12,15,15,0,0), "Pacific/Galapagos");
 	_mark("time Pacific/Galapagos: " << formated << ", formated_length: " << formated.length());
 	EXPECT_EQ(formated, "2022-12-15T15:00:00-06:00");
+}
+#endif
+
+TEST(time_utils, daylight_saving) {
+
+	std::string formated = time_t_to_readable(gen_exact_date(2016,12,6,12,0,0,1), "Europe/Warsaw");
+	std::string time_to_match = "2016-12-06T12:00:00";
+	//_mark("Testing zone: " << zone << " formated: " << formated);
+	EXPECT_NE(formated.find(time_to_match),std::string::npos)
+			<< "Generated time ["<< formated
+			<< "] not match expected ["<< time_to_match <<"]";
 }
 
 TEST(time_utils, default_tz) {
@@ -176,15 +192,12 @@ TEST(time_utils, all_zones_envirnoment_test) {
 	//all_zones.erase(all_zones.begin()+3, all_zones.end());
 
 	for (auto &zone: all_zones) {
-		setenv("TZ", zone.c_str(), 1);
 
-		std::string formated = time_t_to_readable(gen_exact_date(2019,11,21,11,10,30));
+		std::string formated = time_t_to_readable(gen_exact_date(2019,11,21,11,10,30), zone.c_str());
 		std::string time_to_match = "2019-11-21T11:10:30";
 		//_mark("Testing zone: " << zone << " formated: " << formated);
 		EXPECT_NE(formated.find(time_to_match),std::string::npos)
 		        << "Generated time ["<< formated << "] for " << zone
 		        << " time zone did not match expected ["<< time_to_match <<"]";
-
-		unsetenv("TZ");
 	}
 }
