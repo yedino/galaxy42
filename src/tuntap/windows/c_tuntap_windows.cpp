@@ -25,6 +25,37 @@
 #define TAP_IOCTL_GET_VERSION			TAP_CONTROL_CODE (2, METHOD_BUFFERED)
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
+c_is_user_admin::c_is_user_admin() {
+	/*++
+		Routine Description: This routine returns TRUE if the caller's
+		process is a member of the Administrators local group. Caller is NOT
+		expected to be impersonating anyone and is expected to be able to
+		open its own process and process token.
+		Arguments: None.
+		Return Value:
+			TRUE - Caller has Administrators local group.
+			FALSE - Caller does not have Administrators local group. --
+	*/
+	BOOL b;
+	SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+	PSID AdministratorsGroup;
+	b = AllocateAndInitializeSid(
+		&NtAuthority,
+		2,
+		SECURITY_BUILTIN_DOMAIN_RID,
+		DOMAIN_ALIAS_RID_ADMINS,
+		0, 0, 0, 0, 0, 0,
+		&AdministratorsGroup);
+	if (b)
+	{
+		if (!CheckTokenMembership(NULL, AdministratorsGroup, &b))
+		{
+			b = FALSE;
+		}
+		FreeSid(AdministratorsGroup);
+	}
+	if (!b) _throw_error_runtime("Administrator permissions required");
+}
 
 c_tuntap_windows_obj::c_tuntap_windows_obj()
 :

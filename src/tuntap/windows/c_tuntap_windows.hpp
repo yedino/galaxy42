@@ -8,10 +8,20 @@
 #if defined(ANTINET_windows)
 #include <ifdef.h>
 
-class c_tuntap_windows_obj final : c_tuntap_base_obj {
+class c_is_user_admin {
+	public:
+		c_is_user_admin();
+		virtual ~c_is_user_admin() = default;
+};
+
+class c_tuntap_windows_obj final : public c_tuntap_base_obj, c_is_user_admin {
 	public:
 		c_tuntap_windows_obj();
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
+
+		size_t send_to_tun_separated_addresses(const unsigned char * const data, size_t size,
+			const std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			const std::array<unsigned char, IPV6_LEN> &dst_binary_address) override{_NOTREADY(); return 0;}
 
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
 

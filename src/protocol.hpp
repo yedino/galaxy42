@@ -29,7 +29,7 @@ class c_protocolv3 {
 		} ;
 };
 
-inline bool enum_is_valid_value(enum c_protocolv3::t_proto_cmd value) {
+inline bool enum_is_valid_value(c_protocolv3::t_proto_cmd value) {
 	switch (value) {
 		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_0:
 		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_1:
@@ -81,7 +81,7 @@ static bool command_is_valid_from_unknown_peer( t_proto_cmd cmd ); ///< is this 
 };
 
 
-inline bool enum_is_valid_value(enum c_protocol::t_proto_cmd value) {
+inline bool enum_is_valid_value(c_protocol::t_proto_cmd value) {
 	switch (value) {
 		case c_protocol::t_proto_cmd::e_proto_cmd_test0:
 		case c_protocol::t_proto_cmd::e_proto_cmd_test1:
