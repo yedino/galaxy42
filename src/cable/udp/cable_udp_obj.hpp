@@ -9,6 +9,7 @@
 #include "libs0.hpp"
 #include "../asiocable.hpp"
 #include "../asio_ioservice_manager.hpp"
+#include "../../test/mock_boost_udp_socket.hpp"
 
 #include <cable/selector.hpp>
 #include <cable/udp/cable_udp_addr.hpp>
@@ -47,14 +48,19 @@ class c_cable_udp final : public c_asiocable {
 
 	private:
 		t_multisocket_kind m_multisocket_kind; ///< what multisocket strategy we have
+		#ifdef USE_MOCK
+		using t_socket_type = mock::mock_boost_udp_socket;
+		#else
+		using t_socket_type = boost::asio::ip::udp::socket;
+		#endif
 
-		boost::asio::ip::udp::socket m_write_socket; ///< this is also used to read, if one_rw
-		boost::asio::ip::udp::socket m_read_socket;
+		t_socket_type m_write_socket; ///< this is also used to read, if one_rw
+		t_socket_type m_read_socket;
 
 		Mutex m_enpoint_list_mutex;
 		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list;
 
-		void set_timeout_for_socket(std::chrono::microseconds timeout, boost::asio::ip::udp::socket &socket);
+		void set_timeout_for_socket(std::chrono::microseconds timeout, t_socket_type &socket);
 		#ifdef ANTINET_socket_sockopt
 		using t_native_socket = boost::asio::ip::udp::socket::native_handle_type; ///< this platforms handler for native objects
 		static_assert(

@@ -144,7 +144,7 @@ void c_cable_udp::set_sockopt_timeout(std::chrono::microseconds timeout) {
 }
 
 #ifdef ANTINET_socket_sockopt
-void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, udp::socket &socket) {
+void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_socket_type &socket) {
 	// ideas from http://stackoverflow.com/questions/2876024/linux-is-there-a-read-or-recv-from-socket-with-timeout
 	t_native_socket sys_handler = socket.native_handle();
 	auto us = timeout.count();

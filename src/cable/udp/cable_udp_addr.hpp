@@ -7,7 +7,7 @@
 
 class c_cable_udp_addr final : public c_cable_base_addr {
 	public:
-		typedef boost::asio::ip::udp::endpoint t_addr; ///< actuall raw address. Instace of this will be in m_addrdata
+		using t_addr = boost::asio::ip::udp::endpoint; ///< actuall raw address. Instace of this will be in m_addrdata
 
 		c_cable_udp_addr() = default;
 		c_cable_udp_addr(const t_addr &endpoint);
