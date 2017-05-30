@@ -94,7 +94,7 @@ void c_galaxysrv::main_loop() {
 				auto func_find =
 					[=](const c_weld & weld) {
 						auto free_size = weld.get_free_size();
-						_dbg1("Testing weld, size: " << free_size );
+						_info("TESTING the weld "<<static_cast<const void*>(&weld)<<": free_size="<<free_size);
 						if (free_size >= cfg_max_mtu) return true;
 						return false;
 					}
@@ -102,6 +102,7 @@ void c_galaxysrv::main_loop() {
 
 				auto func_use = [=](c_weld & weld) -> c_tuntap_read_result {
 					// receive the data into some part of the selected weld's buffer
+					_note("USING the weld "<<static_cast<const void*>(&weld)<<" for tuntap read");
 
 					size_t packet_max = cfg_max_mtu;
 					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
@@ -154,12 +155,12 @@ void c_galaxysrv::main_loop() {
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
 
-			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) " << e.what());
+			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
 				throw;
 			}
 			} // loop
 			_note("Loop done - tun read");
-		} catch (const std::exception &e) {_erro("Thread lambda (for tunread) got exception and EXITED" << e.what());}
+		} catch (const std::exception &e) {_erro("Thread lambda (for tunread) got exception and EXITED - " << e.what());}
 		catch(...) { _warn("Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
 
