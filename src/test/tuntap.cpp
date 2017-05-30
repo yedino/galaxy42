@@ -1,3 +1,6 @@
+#include <platform.hpp>
+#ifdef ANTINET_linux
+
 #include <array>
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -275,3 +278,6 @@ TEST(tuntap, set_tun_parameters) {
 	address.at(0) = 0xFD; address.at(1) = 0x22;
 	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
 }
+
+
+#endif
