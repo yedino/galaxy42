@@ -16,17 +16,35 @@ namespace stdplus {
 template <typename TMutex, typename TObj>
 class with_mutex {
 	public:
+		/// Constructors and assign/move - based on myself
+		///@{
 
+		/// can NOT copy myself (anyway would be deleted, e.g. because my mutex is not copyable)
+		with_mutex(const with_mutex<TMutex,TObj> & brothe)=delete;
+		/// construct by moving other objecet (e.g. for vector's resize), it locks the brother while we move
+		with_mutex(with_mutex<TMutex,TObj> && brother) noexcept;
+		/// }@
+
+		/// Constructors and assign/move - based on contained object TObj
+		/// @{
 		with_mutex(const TObj & value); ///< construct me from value of TObj
-		with_mutex(TObj && value); ///< construct me by moving value of TObj
+		with_mutex(TObj && value) noexcept; ///< construct me by moving value of TObj
+		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
+		/// }@
 
-		TObj& get( std::lock_guard<TMutex> & ); ///< access the object, after showing that you do hold the lock
-		const TObj& get( std::lock_guard<TMutex> & ) const; ///< access the object, after showing that you do hold the lock
-		TObj& get( std::unique_lock<TMutex> & lg ); ///< access the object, after showing that you do hold the lock
-		const TObj& get( std::unique_lock<TMutex> & lg ) const; ///< access the object, after showing that you do hold the lock
+		/// lock the object (shared / RO lock) for reading it, caller should save the lock outside and use for .get()
+		UniqueLockGuardRO<TMutex> get_lock_RO() const;
 
-		std::unique_lock<TMutex> get_lock_RO() const; ///< lock the object (shared / RO lock), if possible for the Mutex type
-		std::unique_lock<TMutex> get_lock_RW() const; ///< lock the object (exclusive / RW lock), save the lock outside
+		/// lock the object (exclusive / RW lock), caller should save the lock outside and use for .get()
+		// The object must be  non-const object, because otherwise you would not be able to modify it anyway
+		// so you do not need RW lock
+		UniqueLockGuardRW<TMutex> get_lock_RW();
+
+		/// access the object (RW write), after you show that you do hold the RW lock
+		TObj& get( UniqueLockGuardRW<TMutex> & );
+
+		/// access the object (RO read only), after you show that you have RO (shared) lock
+		const TObj& get( UniqueLockGuardRO<TMutex> & ) const;
 
 	private:
 		mutable TMutex m_mutex;
@@ -39,32 +57,43 @@ with_mutex<TMutex,TObj>::with_mutex(const TObj & value)
 { }
 
 template <typename TMutex, typename TObj>
-with_mutex<TMutex,TObj>::with_mutex(TObj && value)
+with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 : m_obj(std::move(value))
 { }
 
 template <typename TMutex, typename TObj>
-TObj& with_mutex<TMutex,TObj>::get( std::lock_guard<TMutex> & ) { return m_obj; }
+with_mutex<TMutex,TObj>::with_mutex(with_mutex<TMutex,TObj> && brother) noexcept
+// :
+// m_mutex(std::move(brother.m_mutex)),
+// m_obj(std::move(brother.m_obj))
+{
+	std::unique_lock<TMutex> lg( brother.m_mutex );
+	m_obj = std::move( brother.m_obj );
+}
+
+
+
 
 template <typename TMutex, typename TObj>
-const TObj& with_mutex<TMutex,TObj>::get( std::lock_guard<TMutex> & ) const { return m_obj; }
-
-template <typename TMutex, typename TObj>
-TObj& with_mutex<TMutex,TObj>::get( std::unique_lock<TMutex> & lg) { _chek_abort(lg.owns_lock());  return m_obj; }
-
-template <typename TMutex, typename TObj>
-const TObj& with_mutex<TMutex,TObj>::get( std::unique_lock<TMutex> & lg) const { _chek_abort(lg.owns_lock());  return m_obj; }
-
-template <typename TMutex, typename TObj>
-std::unique_lock<TMutex> with_mutex<TMutex,TObj>::get_lock_RO() const {
-	return std::unique_lock<TMutex>(m_mutex);
+UniqueLockGuardRO<TMutex> with_mutex<TMutex,TObj>::get_lock_RO() const {
+	UniqueLockGuardRO<TMutex> lg(m_mutex);
+	return lg;
 }
 
 template <typename TMutex, typename TObj>
-std::unique_lock<TMutex> with_mutex<TMutex,TObj>::get_lock_RW() const {
-	std::unique_lock<TMutex> lg(m_mutex, std::defer_lock);
-	m_mutex.lock_shared();
+UniqueLockGuardRW<TMutex> with_mutex<TMutex,TObj>::get_lock_RW() {
+	UniqueLockGuardRW<TMutex> lg(m_mutex);
 	return lg;
+}
+
+template <typename TMutex, typename TObj>
+TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRW<TMutex> & ) {
+	return m_obj;
+}
+
+template <typename TMutex, typename TObj>
+const TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRO<TMutex> & ) const {
+	return m_obj;
 }
 
 }

@@ -31,6 +31,13 @@ T eint_minus(T a, T b) {
 	return c;
 }
 
+// TODO
+template <typename T>
+T eint_plus(T a, T b) {
+	T c = a + b;
+	return c;
+}
+
 } // namespace eint
 
 } // namespace stdplus
