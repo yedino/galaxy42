@@ -33,6 +33,9 @@ class c_weld {
 		c_netbuf m_buf; ///< our buffer - the entire memory; but used with pointers
 		size_t m_bufWrite; ///< write pointer to memory inside m_buf; [[optim-engine]]
 		size_t m_bufRead; ///< read pointer to memory inside m_buf ; [[optim-engine]] can use pointer here
+
+		size_t get_free_size() const; ///< return size that is free to be written at end
+		void adjust_bufWrite(size_t new_bufWrite); ///< sets new #m_bufWrite , e.g. to correct after over-reserving size for tuntap
 };
 
 /**

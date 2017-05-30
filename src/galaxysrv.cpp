@@ -37,8 +37,11 @@ void c_galaxysrv::main_loop() {
 	size_t cfg_weld_memsize = cfg_max_mtu * 3;
 	{
 		for (size_t i=0; i<cfg_num_welds; ++i) {
-			m_welds.push_back( std::move( make_unique<c_weld>(cfg_weld_memsize) ) );
+			_info("Creating weld #" << i);
+			c_weld new_weld(cfg_weld_memsize);
+			m_welds.push_back( std::move( new_weld  ) );
 		}
+		_mark("Allocations done");
 		_note("Allocated " << m_welds.size() << " welds");
 	}
 
@@ -80,57 +83,80 @@ void c_galaxysrv::main_loop() {
 			try {
 				_dbg2("Reading TUN...");
 
-/*
-				{
-					std::lock_guard<Mutex> lg_welds_RO{ this->m_welds.get_mutex_for_locking() }; // TODO make it RO lock
-					auto & welds_RO = this->m_welds.get( lg_welds_RO ); // this ref lives shorter then lock lg, so it is safe to use it
-					for(auto & one_weld_UNLOCKED : welds_RO) {
-						// [[optimize]] in theory we could unlock the lock on vector-of-welds, since now we work on the address
-						// of one c_weld and that address will not change even if vector would resize, if it's vector of shared_ptr etc
-						// how ever probably not worth it at all
+				struct c_tuntap_read_result {
+					c_tuntap_read_result(c_netchunk && _chunk) noexcept : chunk(std::move(_chunk)) {}
 
-						// here we all shared pointer's operator-> without lock on that shared pointer, how ever no one should modify
-						// TODO ... that's bad idea as someone could maybe take another copy of shared pointer (so increase it's counter)
-						TODONOW
-						std::lock_guard<Mutex> lg_one_weld_RO{ one_weld_UNLOCKED.operator->()->m_mutex  }; // TODO make it RO lock
+					c_netchunk chunk;
+					c_haship_addr src_hip;
+					c_haship_addr dst_hip;
+				};
+
+				auto func_find =
+					[=](const c_weld & weld) {
+						auto free_size = weld.get_free_size();
+						_dbg1("Testing weld, size: " << free_size );
+						if (free_size >= cfg_max_mtu) return true;
+						return false;
 					}
-				}
+				;
 
-				// size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
-				c_haship_addr src_hip; // set below
-				c_haship_addr dst_hip; // set below
-				size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_hip, dst_hip); // ***
-				c_netchunk chunk( buf.data() , read_size_merit ); // actually use part of buffer
-				size_t read_ipv6size = ipv6_size_entireip_from_header( chunk.to_tab_view() );
-				size_t read_ipv6size_merit{ eint_minus( read_ipv6size , size_removed_from_merit ) };
-				if (read_ipv6size_merit != read_size_merit) {
-					_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
-					"tuntap driver", read_size_merit));
-				}
-				_info("TUN read: " << "src=" << src_hip << " " << "dst=" << dst_hip << " TUN data: " << make_report(chunk,20));
+				auto func_use = [=](c_weld & weld) -> c_tuntap_read_result {
+					// receive the data into some part of the selected weld's buffer
+
+					size_t packet_max = cfg_max_mtu;
+					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
+
+					c_tuntap_read_result tuntap_result( // will store here result
+						std::move(  weld.m_buf.get_chunk( weld.m_bufWrite , packet_max)  ) // find empty chunk, will return it as result
+					);
+
+					// *** block here and read from tuntap ***
+					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
+						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
+						tuntap_result.src_hip, tuntap_result.dst_hip);
+
+					// adjust down size to actually used part of buffer
+					tuntap_result.chunk.shrink_to( read_size_merit );
+					weld.adjust_bufWrite( eint::eint_plus( old_buffWrite , read_size_merit ) );
+
+					size_t read_ipv6size = ipv6_size_entireip_from_header( tuntap_result.chunk.to_tab_view() );
+					size_t read_ipv6size_merit{ eint_minus( read_ipv6size , size_removed_from_merit ) };
+					if (read_ipv6size_merit != read_size_merit) {
+						_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
+						"tuntap driver", read_size_merit));
+					}
+					_info("TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
+						<< " TUN data: " << make_report(tuntap_result.chunk,20));
+					return tuntap_result;
+				};
+
+				c_tuntap_read_result tuntap_result = m_welds.run_on_matching<c_tuntap_read_result>( func_find, func_use, 1 );
 
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
 				c_cable_base_obj & door = m_cable_cards.get_card(my_selector);
 
+				// generate p2p:
 				using proto = c_protocolv3; /// ^TODO move
 				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
 				gen.push_byte_u( enum_to_int_safe<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_cart) );
-				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
-				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(tuntap_result.src_hip) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(tuntap_result.dst_hip) );
 				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
 				// gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
 				string header = gen.str_move();
 
+				// send:
 				c_cable_base_obj::t_asio_buffers_send buffers{
 					{ header.data(), header.size() },
-					{ buf.data(), read_size_merit }
+					{ tuntap_result.chunk.data(), tuntap_result.chunk.size() }
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
-				*/
 
-			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) " << e.what()); }
+			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) " << e.what());
+				throw;
+			}
 			} // loop
 			_note("Loop done - tun read");
 		} catch (const std::exception &e) {_erro("Thread lambda (for tunread) got exception and EXITED" << e.what());}

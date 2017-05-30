@@ -26,3 +26,9 @@ Noting them here to not forget and keep track.
 
 - we must drop permissions when running as root
 
+=== unit tests ===
+
+- add UT for stdplus::vector_mutexed_obj
+- add UT for stdplus::with_mutex
+
+
