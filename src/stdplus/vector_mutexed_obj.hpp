@@ -79,6 +79,7 @@ void vector_mutexed_obj<TObj>::push_back(TObj && obj) {
 	UniqueLockGuardRW<MutexShared> lg_all(m_mutex_all);
 	// here TObj's move-constructor is used (stdplus::with_mutex forwards it)
 	auto new_element = std::make_unique< t_one_with_mutex >( std::move(obj) );
+	m_data.push_back( std::move(new_element) );
 }
 
 /*
