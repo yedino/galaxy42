@@ -8,10 +8,10 @@ m_empty(true),
 // Init here things that are documented in m_empty as always valid:
 m_buf( memsize )
 {
-	Clear();
+	clear();
 }
 
-void c_weld::Clear() {
+void c_weld::clear() {
 	m_empty=true;
 	m_bufRead=0;
 	m_bufWrite=0;
