@@ -1,7 +1,8 @@
-
+#pragma once
 #include <sstream>
 #include <stdexcept>
 #include <typeinfo>
+#include <limits>
 
 namespace stdplus {
 
@@ -22,12 +23,53 @@ namespace eint {
 /// @TODO can variable "b" be silently converted to type T here, including narrowing? if yes then template on T1,T2 and
 /// ...check if b can be properly expanded to T1 ?
 template <typename T>
-T eint_minus(T a, T b) {
-	if (a<b) {
+T eint_minus(T a, T b, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
+	bool is_overflow=false;
+	T c = a - b;
+	//_erro( "min limit=" << std::numeric_limits<T>::min());
+	//_e_erro( "max limit=" << std::numeric_limits<T>::max());
+	//_e_erro("0 a=" << a << ", b=" << b << ", a-b=" <<c);
+	if ((a<=0) && (b>=0))
+	{
+		if ((a<c) || (b<c)) is_overflow = true;
+	}
+	else if ((a>=0) && (b<=0))
+	{
+		if ((a>c) || (b>c)) is_overflow = true;
+	}
+	else if ((a>=0) && (b>=0))
+	{
+		if (a<c) is_overflow = true;
+	}
+	else if ((a>=0) && (b<=0))
+	{
+		if (a>c) is_overflow = true;
+	}
+
+	if (is_overflow) {
 		std::ostringstream oss; oss<<"Math error when calculating (" << a << " - " << b << ") for T="<<typeid(T).name();
 		throw std::range_error(oss.str());
 	}
-	T c = a - b;
+	return c;
+}
+
+template <typename T>
+T eint_plus(T a, T b, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
+	bool is_overflow=false;
+	T c = a + b;
+	if ((a<=0) && (b<=0))
+	{
+		if ((a<c) || (b<c)) is_overflow = true;
+	}
+	else if ((a>=0) && (b>=0))
+	{
+		if ((a>c) || (b>c)) is_overflow = true;
+	}
+
+	if (is_overflow) {
+		std::ostringstream oss; oss<<"Math error when calculating (" << a << " - " << b << ") for T="<<typeid(T).name();
+		throw std::range_error(oss.str());
+	}
 	return c;
 }
 
