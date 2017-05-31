@@ -19,13 +19,13 @@
 /**
  * This is both a Weld, and EI (Emit Input - buffer that forms it).
  */
-class c_weld {
+class c_weld final {
 	public:
 		c_weld(size_t memsize);
 
 		bool m_empty; ///< if empty, then all other data is invalid and should not be used, except for e.g. m_buf and things set by Clear()
 
-		void Clear(); ///< resets the weld to an empty container
+		void clear(); ///< resets the weld to an empty container
 
 		boost::asio::ip::address_v6 m_dst; ///< the destination of this BI/Weld
 		std::chrono::steady_clock::time_point m_time_start; ///< time of oldest Merit here; to decide on latency on sending
@@ -39,10 +39,10 @@ class c_weld {
 };
 
 /**
- * Queue with the Welds to be Emited.
+ * A "Queue" (thugh with random access possible) with the Welds to be Emited.
  * Emited from us (send from our tuntap, to next peer).
  */
-class c_emitqueue {
+class c_emitqueue final {
 	public:
 		std::vector<  weak_ptr< c_weld > > m_welds; ///< the welds that I want to send
 };
@@ -50,7 +50,7 @@ class c_emitqueue {
 /**
  * Bag fragment represents light-weight "reference" to given weld's data in range [pos_begin .. pos_end)
  */
-class c_bag_fragment {
+class c_bag_fragment final {
 	public:
 		weak_ptr< c_weld > m_weld;
 		size_t pos_begin, pos_end;
@@ -59,7 +59,7 @@ class c_bag_fragment {
 /*
  *
  */
-class c_bag {
+class c_bag final {
 	public:
 		static constexpr int m_max_fragments = 4;
 
