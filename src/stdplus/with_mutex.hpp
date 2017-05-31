@@ -33,6 +33,7 @@ class with_mutex {
 		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
 
+		// TODO @rfree return m_mutex direct, otherwise RETURN_CAPABILITY macro from clang thread analyzer not works
 		/// lock the object (shared / RO lock) for reading it, caller should save the lock outside and use for .get()
 		UniqueLockGuardRO<TMutex> get_lock_RO() const;
 
