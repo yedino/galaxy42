@@ -50,13 +50,11 @@ TEST(eint, aggrinit_minus_int) {
 	long lmin  = std::numeric_limits<long>::min();
 	unsigned long ulmax  = std::numeric_limits<unsigned long>::max();
 	unsigned long ulmin  = std::numeric_limits<unsigned long>::min();
-	// unsigned char xxx{ eint::eint_minus(a,b) }; // good: compile-error
 	EXPECT_THROW( { unsigned int d{ eint::eint_minus(b,a) }; EXPECT_EQ(d,b-a); } , std::range_error );
 	EXPECT_THROW( { int z{ eint::eint_minus(y,x) }; EXPECT_EQ(z,y-x); } , std::range_error );
 	EXPECT_THROW( { long less_then_min{ eint::eint_minus(lmin,1L) }; EXPECT_EQ(less_then_min,lmin-1); }, std::range_error );
 	EXPECT_THROW( { long more_then_max{ eint::eint_minus(lmax,-1L) }; EXPECT_EQ(more_then_max,lmax+1); }, std::range_error );
 	EXPECT_THROW( { unsigned long less_then_min{ eint::eint_minus(ulmin,1UL) }; EXPECT_EQ(less_then_min,ulmin-1); }, std::range_error );
-	//EXPECT_THROW( { unsigned long more_then_max{ eint::eint_minus(ulmax,-1UL) }; EXPECT_EQ(more_then_max,ulmax+1); }, std::range_error );
 
 	long result1{ eint::eint_minus(lmin, -1L) };
 	long result2{ eint::eint_minus(lmax, 1L) };
@@ -77,7 +75,6 @@ TEST(eint, aggrinit_minus_int) {
 }
 
 TEST(eint, aggrinit_plus_int) {
-	::g_dbg_level_set(10,"test");
 	unsigned char a=251,b=250;
 	int x = std::numeric_limits<int>::min() / 4 * 3;
 	int y = std::numeric_limits<int>::min() / 2;
