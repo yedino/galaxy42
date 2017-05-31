@@ -52,7 +52,7 @@ class vector_mutexed_obj {
 		size_t size() const; ///< current size
 
 	private:
-		MutexShared m_mutex_all; ///< protects the entire vector
+		mutable MutexShared m_mutex_all; ///< protects the entire vector; mutable for size() etc
 		std::vector< t_one_with_mutex_ptr > m_data; ///< our data
 };
 
@@ -76,9 +76,10 @@ void vector_mutexed_obj<TObj>::push_back(const TObj & obj) {
 
 template <typename TObj>
 void vector_mutexed_obj<TObj>::push_back(TObj && obj) {
+	auto new_element = std::make_unique< t_one_with_mutex >( std::move(obj) );
+
 	UniqueLockGuardRW<MutexShared> lg_all(m_mutex_all);
 	// here TObj's move-constructor is used (stdplus::with_mutex forwards it)
-	auto new_element = std::make_unique< t_one_with_mutex >( std::move(obj) );
 	m_data.push_back( std::move(new_element) );
 }
 
@@ -156,6 +157,7 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 
 template <typename TObj>
 size_t vector_mutexed_obj<TObj>::size() const {
+	UniqueLockGuardRO<MutexShared> lg_all(m_mutex_all);
 	return m_data.size();
 }
 

@@ -168,7 +168,7 @@ private:
   t_mutex &mut;
 
 public:
-  LockGuard(t_mutex &mu) ACQUIRE(mu) : mut(mu) { mut.lock(); }
+  LockGuard(t_mutex &mu) ACQUIRE() : mut(mu) { mut.lock(); }
   ~LockGuard() RELEASE() { mut.unlock(); }
   void lock() ACQUIRE() { mut.lock(); }
   void unlock() RELEASE() { mut.unlock();  }
@@ -185,7 +185,7 @@ public:
   ~UniqueLockGuardRO() noexcept RELEASE_SHARED() {
   	try { if (m_locked) m_mut.unlock_shared(); } catch(...) { _mutexshield_abort("LG-RO destr"); } }
 
-  void lock() noexcept RELEASE_SHARED() {
+  void lock() noexcept ACQUIRE_SHARED() {
   	try {
   		if ( m_locked) _mutexshield_abort("LG-RO already locked");
 	  	m_mut.unlock_shared(); m_locked=false;
@@ -208,7 +208,7 @@ public:
   ~UniqueLockGuardRW() noexcept RELEASE() {
   	try { if (m_locked) m_mut.unlock(); } catch(...) { _mutexshield_abort("LG-RW destr"); } }
 
-  void lock() noexcept RELEASE() {
+  void lock() noexcept ACQUIRE() {
   	try {
   		if ( m_locked) _mutexshield_abort("LG-RW already locked");
 	  	m_mut.unlock(); m_locked=false;

@@ -39,6 +39,7 @@ class c_netbuf final {
 
 		c_netbuf(size_t size); ///< construct and allocate
 		~c_netbuf(); ///< free memory
+		void clear();
 
 		c_netbuf(const c_netbuf & brother) = delete;
 		c_netbuf(c_netbuf && brother) noexcept;
