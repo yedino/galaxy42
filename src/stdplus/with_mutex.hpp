@@ -20,7 +20,7 @@ class with_mutex {
 		///@{
 
 		/// can NOT copy myself (anyway would be deleted, e.g. because my mutex is not copyable)
-		with_mutex(const with_mutex<TMutex,TObj> & brothe)=delete;
+		with_mutex(const with_mutex<TMutex,TObj> & brothe) = delete;
 		/// construct by moving other objecet (e.g. for vector's resize), it locks the brother while we move
 		with_mutex(with_mutex<TMutex,TObj> && brother) noexcept;
 		/// }@
@@ -29,6 +29,7 @@ class with_mutex {
 		/// @{
 		with_mutex(const TObj & value); ///< construct me from value of TObj
 		with_mutex(TObj && value) noexcept; ///< construct me by moving value of TObj
+
 		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
 
@@ -52,6 +53,13 @@ class with_mutex {
 };
 
 template <typename TMutex, typename TObj>
+with_mutex<TMutex,TObj>::with_mutex(with_mutex<TMutex,TObj> && brother) noexcept
+{
+	UniqueLockGuardRW<TMutex> lg( brother.m_mutex );
+	m_obj = std::move( brother.m_obj );
+}
+
+template <typename TMutex, typename TObj>
 with_mutex<TMutex,TObj>::with_mutex(const TObj & value)
 : m_obj(value)
 { }
@@ -60,18 +68,6 @@ template <typename TMutex, typename TObj>
 with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 : m_obj(std::move(value))
 { }
-
-template <typename TMutex, typename TObj>
-with_mutex<TMutex,TObj>::with_mutex(with_mutex<TMutex,TObj> && brother) noexcept
-// :
-// m_mutex(std::move(brother.m_mutex)),
-// m_obj(std::move(brother.m_obj))
-{
-	std::unique_lock<TMutex> lg( brother.m_mutex );
-	m_obj = std::move( brother.m_obj );
-}
-
-
 
 
 template <typename TMutex, typename TObj>
