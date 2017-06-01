@@ -182,7 +182,7 @@ private:
 public:
   UniqueLockGuardRO(t_mutex &mu) noexcept ACQUIRE_SHARED(m_mut) : m_mut(mu), m_locked(true) {
   	try { m_mut.lock_shared(); } catch(...) { _mutexshield_abort("LG-RO constr"); } }
-  ~UniqueLockGuardRO() noexcept RELEASE() {
+  ~UniqueLockGuardRO() noexcept RELEASE_SHARED() {
   	try { if (m_locked) m_mut.unlock_shared(); } catch(...) { _mutexshield_abort("LG-RO destr"); } }
 
   void lock() noexcept ACQUIRE_SHARED(m_mut) {
