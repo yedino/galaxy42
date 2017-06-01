@@ -7,13 +7,13 @@
 
 using namespace boost::asio::ip;
 
-c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager, const c_card_selector &source_addr)
+c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector &source_addr)
 :
 	c_asiocable(iomanager)
 	,m_multisocket_kind( default_multisocket_kind() )
 	,m_write_socket( get_io_service(), (dynamic_cast<const c_cable_udp_addr&>(source_addr.get_my_addr())).get_addr() )
 	#ifdef ANTINET_socket_use_two_and_reuse
-	,m_read_socket(  get_io_service(), boost::asio::ip::udp::v4() )
+	,m_read_socket( get_io_service(), boost::asio::ip::udp::v4() )
 	#else
 	,m_read_socket( get_io_service() )
 	#endif

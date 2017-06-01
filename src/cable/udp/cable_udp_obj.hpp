@@ -20,14 +20,15 @@ enum class t_multisocket_kind {
 };
 
 class c_cable_udp final : public c_asiocable {
+	FRIEND_TEST(cable_udp, constructor);
 	public:
 		/**
 		 * create UDP cable to recv/send, using one source address (can be just port)
 		 * @param iomanager - use this manager
 		 * @param source_addr - we will send from this source address. Can be general ANY address e.g. 0.0.0.0:9042(?)
 		 * to enforce port, or a specific one to enforce entire source address.
-		*/
-		c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager, const c_card_selector &source_addr);
+		 */
+		c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector &source_addr);
 
 		void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) override;
 		void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) override;
