@@ -32,7 +32,7 @@ void c_galaxysrv::main_loop() {
 
 	// ===========================================================================================================
 	_clue("Allocating in main loop");
-	size_t cfg_max_mtu = 1600; // TODO read from tuntap card MTU + assert reasonable size thetn
+	size_t cfg_max_mtu = this->get_tuntap_mtu_current();
 	size_t cfg_num_welds = 8;
 	size_t cfg_weld_memsize = cfg_max_mtu * 3;
 	{
@@ -132,7 +132,7 @@ void c_galaxysrv::main_loop() {
 					}
 					_info("TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
 						<< " TUN data: " << make_report(tuntap_result.chunk,20));
-					return std::move(tuntap_result);
+					return tuntap_result;
 				};
 
 				c_tuntap_read_result tuntap_result = m_welds.run_on_matching<c_tuntap_read_result>( func_find, func_use, 1 );
@@ -234,8 +234,16 @@ void c_galaxysrv::start_exit() {
 	_goal("Start exiting - ok");
 }
 
+uint16_t c_galaxysrv::get_tuntap_mtu_default() const {
+	return 16*1024;
+}
+
+uint16_t c_galaxysrv::get_tuntap_mtu_current() const {
+	return this->get_tuntap_mtu_default(); // TODO@rob + TODO@rfree instead actually query the card's MTU now set
+}
+
 void c_galaxysrv::init_tuntap() {
-	m_tuntap.set_tun_parameters(get_my_hip(), 16, 16000);
+	m_tuntap.set_tun_parameters(get_my_hip(), 16, this->get_tuntap_mtu_default());
 }
 
 // my key @new
