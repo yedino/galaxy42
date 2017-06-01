@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+
+# Variables required from parent script:
+# TARGET_ARCH
+# BOOST_DIR
+# WRAP_DIR
+readonly BOOST_BUILD_THREADS=2
+
+# option_download_skip
+# option_allow_boost
+# option_verbose
+
+
+# importing functions for boost main and submodules download
+. "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost-submodul
+. "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost
+
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+
+
+# Universal boost options
+option_download_skip=0
+option_allow_boost=1
+option_verbose=0
+
+b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" "--with-date_time" )
+b2_opt_debug=( )
+if (( option_verbose ))
+then
+		b2_opt_debug=( "-d" "4" "--debug-building" )
+else
+		b2_opt_debug=( "-d" "0" "--debug-building" )
+fi
+
+
+# Setting target depends optins
+if [ -v ${TARGET_ARCH+x} ]
+then
+	echo "Require TARGET_ARCH variable not set, exiting/failing"
+	fail
+else
+	echo "Building boost libraries for TARGET='${TARGET_ARCH}'"
+
+
+	echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
+
+	boost_user_gcc="${WRAP_DIR}/${TARGET_ARCH}-g++ ;"
+	echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
+
+	if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
+
+	elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
+
+	fi
+fi
+
+# Checking build directories
+if [ -v ${BOOST_DIR+x} ]
+then
+	echo "Require BOOST_DIR variable not set, exiting/failing"
+	fail
+else
+	echo "Building boost in BOOST_DIR='${BOOST_DIR}'"
+	readonly BOOST_BUILD_DIR="${TARGET_ARCH}-build"
+fi
+
+# Main download and build
+if (( option_allow_boost ))
+then
+	printf "\n\nWill build boost now\n\n"
+
+	if (( option_download_skip ))
+	then
+		printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
+
+	else
+		# Download main boost repository
+		dl_boost
+		pushd boost || fail "Can not enter build dir"
+			# Download boost submodules in n=3 attempts
+			dl_boost_submodules_n 3
+		popd
+	fi
+
+	pushd boost || fail # cd
+
+		# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
+		git clean -xdf || fail
+		rm -rf "${BOOST_BUILD_DIR}" || fail
+		mkdir "${BOOST_BUILD_DIR}" || fail
+
+		# reset and claen boost submodules
+		git submodule foreach git reset --hard HEAD
+		git submodule foreach git clean -fdx
+
+		printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
+		printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
+
+		printf "\n\nBoost bootstrap...\n\n"
+		./bootstrap.sh --without-icu || fail
+		printf "\n\nBoost bootstrap is done.\n\n"
+
+		./b2 clean
+
+		printf "\n\nBoost b2 headers...\n\n"
+		./b2 -q headers || fail "b2 headers"
+
+		printf "\n\nStarting the b2 boost build\n"
+		set -x
+		./b2 \
+			"${b2_opt_debug[@]}" \
+			-a \
+			-j "${BOOST_BUILD_THREADS}" \
+			--prefix=/"$BOOST_DIR"/mingw_build \
+			--user-config=user-config.jam \
+			"${b2_opt_with_lib[@]}" \
+			toolset=gcc \
+			target-os=windows \
+			variant=release \
+			threading=multi \
+			threadapi=win32 \
+			link=shared \
+			runtime-link=shared \
+			-sNO_BZIP2=1 --sNO_ZLIB=1 \
+			--layout=tagged install \
+				|| {
+					set -x
+					fail "The b2 build of boost failed"
+				}
+	set +x
+
+		printf "\n\nDONE the b2 boost build\n\n"
+
+	popd
+
+else
+	printf "\n\nSkipping boost (as selected in options)\n\n"
+fi
+
