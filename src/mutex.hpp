@@ -168,7 +168,7 @@ private:
   t_mutex &mut;
 
 public:
-  LockGuard(t_mutex &mu) ACQUIRE() : mut(mu) { mut.lock(); }
+  LockGuard(t_mutex &mu) ACQUIRE(mu) : mut(mu) { mut.lock(); }
   ~LockGuard() RELEASE() { mut.unlock(); }
   void lock() ACQUIRE() { mut.lock(); }
   void unlock() RELEASE() { mut.unlock();  }
@@ -180,12 +180,12 @@ private:
   t_mutex & m_mut;
   bool m_locked; ///< not all mutex types know if they are locked apparentyl?
 public:
-  UniqueLockGuardRO(t_mutex &mu) noexcept ACQUIRE_SHARED() : m_mut(mu), m_locked(true) {
+  UniqueLockGuardRO(t_mutex &mu) noexcept ACQUIRE_SHARED(m_mut) : m_mut(mu), m_locked(true) {
   	try { m_mut.lock_shared(); } catch(...) { _mutexshield_abort("LG-RO constr"); } }
-  ~UniqueLockGuardRO() noexcept RELEASE_SHARED() {
+  ~UniqueLockGuardRO() noexcept RELEASE() {
   	try { if (m_locked) m_mut.unlock_shared(); } catch(...) { _mutexshield_abort("LG-RO destr"); } }
 
-  void lock() noexcept ACQUIRE_SHARED() {
+  void lock() noexcept ACQUIRE_SHARED(m_mut) {
   	try {
   		if ( m_locked) _mutexshield_abort("LG-RO already locked");
 	  	m_mut.unlock_shared(); m_locked=false;
@@ -203,7 +203,7 @@ private:
   t_mutex & m_mut;
   bool m_locked; ///< not all mutex types know if they are locked apparentyl?
 public:
-  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE() : m_mut(mu), m_locked(true) {
+  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE(m_mut) : m_mut(mu), m_locked(true) {
   	try { m_mut.lock(); } catch(...) { _mutexshield_abort("LG-RW constr"); } }
   ~UniqueLockGuardRW() noexcept RELEASE() {
   	try { if (m_locked) m_mut.unlock(); } catch(...) { _mutexshield_abort("LG-RW destr"); } }
