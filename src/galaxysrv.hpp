@@ -75,6 +75,9 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		void start_exit(); ///< start exiting: sets #m_exiting and tries to close connections etc.
 
+		uint16_t get_tuntap_mtu_default() const; ///< get the tuntap MTU size that we want to have by default, e.g. on startup
+		uint16_t get_tuntap_mtu_current() const; ///< get the tuntap MTU size that we have now
+
 	protected:
 
 		/// @name My crypto identity
