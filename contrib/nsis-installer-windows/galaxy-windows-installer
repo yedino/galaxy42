@@ -103,6 +103,14 @@ printf "\n%s\n" "WRAPPING makensis localy in $(pwd)"
 	sed -i '/START_FILES/r tmp.out' "${SCRIPT_DIR}/installer.nsi"
 	rm tmp.out
 
+	# download openvpn installer
+	local URL="https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.2-I601.exe"
+	wget "$URL" -P "${SCRIPT_DIR}" || { echo "Can not download $URL" ; exit 1 ; }
+	echo '78de440bbef035cad396012e175e3fb8de4f303da0dbff4a0c071a7ae6b002610527e42601ee6c211a26d9cc6536aaf694fcdf2f9154d1db14b6f8b2d6f36de0 openvpn-install-2.4.2-I601.exe' | sha512sum -c || {
+		echo "The checksum was unexpected! This can be download problem, or else some hacking attempt, please verify this!"
+		exit 1
+	}
+
 	# use wrapped
 	./makensis_wrapped "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
 	set +x
