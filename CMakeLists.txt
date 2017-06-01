@@ -443,6 +443,8 @@ if(NOT MINGW AND NOT WIN32)
 		COMMAND chmod g-wx,o-wx tunserver.elf
 		COMMAND cp tunserver.elf nocap-tunserver.elf
 		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
+		COMMAND chmod a+x tunserver.elf # e.g. valgrind needs this
+		COMMAND chmod a+x nocap-tunserver.elf # e.g. valgrind needs this
 		WORKING_DIRECTORY ./)
 
 	add_custom_command(
