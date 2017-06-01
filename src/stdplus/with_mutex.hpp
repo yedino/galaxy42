@@ -33,6 +33,7 @@ class with_mutex {
 		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
 
+#if 0
 		// TODO @rfree return m_mutex direct, otherwise RETURN_CAPABILITY macro from clang thread analyzer not works
 		/// lock the object (shared / RO lock) for reading it, caller should save the lock outside and use for .get()
 		UniqueLockGuardRO<TMutex> get_lock_RO() const;
@@ -41,12 +42,17 @@ class with_mutex {
 		// The object must be  non-const object, because otherwise you would not be able to modify it anyway
 		// so you do not need RW lock
 		UniqueLockGuardRW<TMutex> get_lock_RW();
+#endif
 
 		/// access the object (RW write), after you show that you do hold the RW lock
 		TObj& get( UniqueLockGuardRW<TMutex> & );
 
 		/// access the object (RO read only), after you show that you have RO (shared) lock
 		const TObj& get( UniqueLockGuardRO<TMutex> & ) const;
+
+		/// @warning caller should use this ONLY to pass this to constructor of a lock-guard like
+		// UniqueLockGuardRW / UniqueLockGuardRO
+		TMutex & get_mutex() const RETURN_CAPABILITY(this->m_mutex) ;
 
 	private:
 		mutable TMutex m_mutex;
@@ -71,6 +77,7 @@ with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 { }
 
 
+#if 0
 template <typename TMutex, typename TObj>
 UniqueLockGuardRO<TMutex> with_mutex<TMutex,TObj>::get_lock_RO() const {
 	UniqueLockGuardRO<TMutex> lg(m_mutex);
@@ -82,6 +89,7 @@ UniqueLockGuardRW<TMutex> with_mutex<TMutex,TObj>::get_lock_RW() {
 	UniqueLockGuardRW<TMutex> lg(m_mutex);
 	return lg;
 }
+#endif
 
 template <typename TMutex, typename TObj>
 TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRW<TMutex> & ) {
@@ -91,6 +99,11 @@ TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRW<TMutex> & ) {
 template <typename TMutex, typename TObj>
 const TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRO<TMutex> & ) const {
 	return m_obj;
+}
+
+template <typename TMutex, typename TObj>
+TMutex & with_mutex<TMutex,TObj>::get_mutex() const  {
+	return m_mutex;
 }
 
 }
