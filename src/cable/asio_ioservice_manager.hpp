@@ -12,8 +12,10 @@ class c_asioservice_manager_base {
 		virtual ~c_asioservice_manager_base() = default;
 		virtual void resize_to_at_least(size_t size_) = 0;
 		virtual boost::asio::io_service &get_next_ioservice() = 0;
-		virtual size_t capacity() const noexcept = 0;
-		virtual size_t size() const noexcept = 0;
+		// should be noexcept but gmock not support this yet
+		// https://github.com/google/googletest/issues/546
+		virtual size_t capacity() const = 0;
+		virtual size_t size() const = 0;
 		virtual void stop_all_threadsafe() = 0;
 };
 
