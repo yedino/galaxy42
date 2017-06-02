@@ -26,6 +26,11 @@ Noting them here to not forget and keep track.
 
 - we must drop permissions when running as root
 
+=== locking ===
+
+- too wide lock when sending via cable, in "TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:"
+- remove all halgrind warnings, see runhelgrind.sh
+
 === unit tests ===
 
 - add UT for stdplus::vector_mutexed_obj

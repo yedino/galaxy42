@@ -22,6 +22,7 @@
 #include <ipv6.hpp>
 
 #include <boost/asio.hpp> // to create local address
+#include <mutex.hpp>
 
 constexpr int cfg_jobs_tuntap_threads = 4;
 
@@ -66,13 +67,17 @@ void c_galaxysrv::main_loop() {
 		// start listener:
 		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
-		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
-		_fact("Listen on " << listen1_selector );
-		m_cable_cards.get_card(listen1_selector).listen_on(listen1_selector);
-		_goal("Listening on " << listen1_selector );
-		return listen1_selector;
+		c_card_selector listen1_selector_tmp( std::move(listen1) ); // will send from this my-address, to this peer
+		_fact("Listen on " << listen1_selector_tmp );
+		{
+			_mark("STARTING LISTEN (LOCKING-ERROR?)");
+			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
+			m_cable_cards.get(lg).get_card(listen1_selector_tmp).listen_on(listen1_selector_tmp);
+			_mark("STARTING LISTEN (LOCKING-ERROR?) - done");
+		}
+		_goal("Listening on " << listen1_selector_tmp );
+		return listen1_selector_tmp;
 	} ();
-
 
 	auto loop_tunread = [&](const int my_job_nr) {
 		auto my_name = [=]() -> std::string {
@@ -150,7 +155,7 @@ void c_galaxysrv::main_loop() {
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				c_cable_base_obj & door = m_cable_cards.get_card(my_selector);
+				auto & door = m_cable_cards.use_RW( [&](auto & obj) -> auto& { return obj.get_card(my_selector); }  );
 
 				// generate p2p:
 				using proto = c_protocolv3; /// ^TODO move
@@ -185,7 +190,12 @@ void c_galaxysrv::main_loop() {
 				try{
 					_dbg3("Reading cables...");
 					c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
-					size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+
+					// TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:
+					size_t read =	m_cable_cards.use_RW( [&](auto & obj) -> auto {
+						return obj.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+					} );
+
 					c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 
 					using proto = c_protocolv3;
@@ -243,7 +253,7 @@ void c_galaxysrv::main_loop() {
 void c_galaxysrv::start_exit() {
 	_goal("Start exiting");
 	m_exiting=1;
-	m_cable_cards.stop_threadsafe();
+	m_cable_cards.use_RW( [](auto & obj_cards) { obj_cards.stop_threadsafe(); } );
 	_goal("Start exiting - ok");
 }
 
