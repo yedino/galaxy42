@@ -11,6 +11,25 @@
 #include <unistd.h>
 #include "../../haship.hpp"
 
+#ifndef USE_MOCK
+int c_tuntap_system_functions::ioctl(int fd, unsigned long request, void *ifreq) {
+	return ::ioctl(fd, request, ifreq);
+}
+
+t_syserr c_tuntap_system_functions::NetPlatform_addAddress(const char *interfaceName,
+                                                           const uint8_t *address,
+                                                           int prefixLen,
+                                                           int addrFam) {
+	return ::NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+}
+
+t_syserr c_tuntap_system_functions::NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
+	return ::NetPlatform_setMTU(interfaceName, mtu);
+}
+#endif
+
+/////////////////////////////////////////////////////////////////////
+
 c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	m_tun_fd(open("/dev/net/tun", O_RDWR)),
 	m_io_service(),
@@ -65,7 +84,11 @@ size_t c_tuntap_linux_obj::read_from_tun_separated_addresses(unsigned char *cons
 	buffers.at(1) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
 	buffers.at(2) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
 	buffers.at(3) = boost::asio::buffer(data + 8, size - 8); // 8 bytes are filled in buffers.at(0)
-	return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+	try {
+		return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+	} catch (const std::exception &) {
+		return 0;
+	}
 }
 
 void c_tuntap_linux_obj::async_receive_from_tun(unsigned char *const data,
@@ -87,12 +110,15 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
-	int errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
+	int errcode_ioctl = sys_fun.ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	_check_sys(errcode_ioctl != -1);
-	_check_extern(binary_address[0] == 0xFD);
-	_check_extern(binary_address[1] == 0x42);
-	NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefix_len, Sockaddr_AF_INET6);
-	NetPlatform_setMTU(ifr.ifr_name, mtu);
+	_check_input(binary_address[0] == 0xFD);
+	_check_input(binary_address[1] == 0x42);
+	t_syserr err;
+	err = sys_fun.NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefix_len, Sockaddr_AF_INET6);
+	if (err.my_code != 0) throw std::runtime_error("NetPlatform_addAddress error");
+	err = sys_fun.NetPlatform_setMTU(ifr.ifr_name, mtu);
+	if (err.my_code != 0) throw std::runtime_error("NetPlatform_setMTU error");
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
 	_goal("Configuring tuntap options - done");

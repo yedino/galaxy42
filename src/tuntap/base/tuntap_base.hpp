@@ -42,7 +42,7 @@ constexpr size_t IPV6_LEN = 16;
 class c_tuntap_base_obj : protected c_someio {
 	public:
 		// the callback function that caller can provide
-		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code& error)>;
+		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code &)>;
 
 		virtual ~c_tuntap_base_obj();
 		/**

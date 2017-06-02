@@ -1,7 +1,7 @@
 #include "mock_posix_stream_descriptor.hpp"
 #include "../tuntap/linux/c_tuntap_linux_obj.hpp"
 
-bool mock::mock_posix_stream_descriptor::s_good_open = false;
+bool mock::mock_posix_stream_descriptor::s_good_open = true;
 
 mock::mock_posix_stream_descriptor::mock_posix_stream_descriptor(boost::asio::io_service &io_service, const int &native_descriptor) {
 	  _UNUSED(io_service);
