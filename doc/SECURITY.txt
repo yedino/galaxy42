@@ -35,7 +35,7 @@ GITIAN_LINUX_INCODE  = when building in Gitian, for Linux, then this library is 
 
 For windows gitian build we also depend on:
 - DLL libraries from Cygwin/Mingw, see contrib/nsis-installer-windows/bin - check for updates!
-
+- OpenVPN installer is downloaded and added into installer. Please make sure it's version (and file hash) is up-to-date, in script contrib/nsis-installer-windows/galaxy-windows-installer + in file contrib/nsis-installer-windows/installer.nsi
 - We also use custom Gitian project (git submodule).
 
 =============================
