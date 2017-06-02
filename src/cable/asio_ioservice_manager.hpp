@@ -5,7 +5,7 @@
 #include <boost/asio.hpp>
 
 /**
- * @brief The c_asioservice_manager_base class base class needed for mock
+ * @brief The c_asioservice_manager_base base class needed for mock
  */
 class c_asioservice_manager_base {
 	public:
