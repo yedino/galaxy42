@@ -7,7 +7,7 @@
 
 using namespace boost::asio::ip;
 
-c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector &source_addr)
+c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector_base &source_addr)
 :
 	c_asiocable(iomanager)
 	,m_multisocket_kind( default_multisocket_kind() )
