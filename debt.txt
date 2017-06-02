@@ -30,6 +30,7 @@ Noting them here to not forget and keep track.
 
 - too wide lock when sending via cable, in "TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:"
 - remove all halgrind warnings, see runhelgrind.sh
+- why there are problems is using > 1 io service? cards.cpp "make_shared< c_asioservice_manager >( 1 );"
 
 === unit tests ===
 

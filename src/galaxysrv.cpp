@@ -232,6 +232,7 @@ void c_galaxysrv::main_loop() {
 
 
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
+
 	for (int i=0; i<cfg_jobs_tuntap_threads; ++i) {
 		_mark("Starting tuntap thread #" << i);
 		threads.push_back( make_unique<std::thread>( loop_tunread , i ) );
