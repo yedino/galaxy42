@@ -16,6 +16,9 @@ namespace stdplus {
 template <typename TMutex, typename TObj>
 class with_mutex {
 	public:
+
+		with_mutex()=default;
+
 		/// Constructors and assign/move - based on myself
 		///@{
 
@@ -32,6 +35,18 @@ class with_mutex {
 
 		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
+
+		/// Safely (under RW exclusive lock) calls function #fun on the #m_obj as read-or-write function (can modify #m_obj)
+		/// @param fun is function that takes "TObj&"
+		/// @return the return type of given function #fun
+		template<typename TFun>
+		typename std::result_of<TFun(TObj&)>::type use_RW(const TFun & fun);
+
+		/// Safely (under RO shared lock) calls function #fun on the #m_obj as read-only (#m_obj is const)
+		/// @param fun is function that takes "const TObj&"
+		/// @return the return type of given function #fun
+		template<typename TFun>
+		typename std::result_of<TFun(const TObj &)>::type use_RO(const TFun & fun);
 
 #if 0
 		// TODO @rfree return m_mutex direct, otherwise RETURN_CAPABILITY macro from clang thread analyzer not works
@@ -75,6 +90,20 @@ template <typename TMutex, typename TObj>
 with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 : m_obj(std::move(value))
 { }
+
+template <typename TMutex, typename TObj>
+template<typename TFun>
+typename std::result_of<TFun(TObj&)>::type with_mutex<TMutex,TObj>::use_RW(const TFun & fun) {
+	UniqueLockGuardRW<TMutex> lg( m_mutex );
+	return fun( m_obj );
+}
+
+template <typename TMutex, typename TObj>
+template<typename TFun>
+typename std::result_of<TFun(const TObj&)>::type with_mutex<TMutex,TObj>::use_RO(const TFun & fun) {
+	UniqueLockGuardRO<TMutex> lg( m_mutex );
+	return fun( m_obj );
+}
 
 
 #if 0
