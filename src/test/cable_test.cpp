@@ -49,6 +49,13 @@ TEST(cable_Test, operators_test) {
 	EXPECT_LT(UsePtr(default_port_as_udp_addr2), UsePtr(default_as_udp_addr2));
 	EXPECT_LT(UsePtr(shm_addr1), UsePtr(default_as_udp_addr2));
 	EXPECT_LT(UsePtr(shm_addr1), UsePtr(shm_addr3));
+
+	EXPECT_NE(UsePtr(simul_addr), UsePtr(udp_addr2));
+	EXPECT_NE(UsePtr(udp_addr1), UsePtr(auto_as_udp_addr2));
+	EXPECT_NE(UsePtr(tcp_as_udp_addr2), UsePtr(udp_addr2));
+	EXPECT_NE(UsePtr(default_port_as_udp_addr2), UsePtr(default_as_udp_addr2));
+	EXPECT_NE(UsePtr(shm_addr1), UsePtr(default_as_udp_addr2));
+	EXPECT_NE(UsePtr(shm_addr1), UsePtr(shm_addr3));
 }
 
 TEST(cable_Test, selector_equall) {
@@ -87,3 +94,30 @@ TEST(c_asioservice_menager_test, resize_to_at_least_test)
 	EXPECT_EQ(manager.size(), size);
 	EXPECT_THROW(manager.resize_to_at_least(manager.capacity()+1), err_check_input);
 }
+
+TEST(c_assioservice_menager_test, get_next_ioservice )
+{
+	EXPECT_THROW(c_asioservice_manager(0), err_check_prog);
+	c_asioservice_manager man(1);
+	size_t size = man.capacity();
+	do
+	{
+		std::map<const boost::asio::io_service *, size_t> services;
+		c_asioservice_manager manager(size);
+		for (size_t i=0; i < size; i++)
+		{
+			services[&manager.get_next_ioservice()] = 0;
+		}
+		size_t iter = 5;
+		for (size_t i=0; i < size*iter; i++)
+		{
+			++(services.at(&manager.get_next_ioservice()));
+		}
+		for (size_t i=0; i < size; i++)
+		{
+			EXPECT_GT(services.at(&manager.get_next_ioservice()), iter - 2) ;
+		}
+		size /= 2;
+	}while (size >= 1);
+}
+

@@ -9,6 +9,8 @@
 #include "cable/cards.hpp"
 #include "cable/base/cable_base_addr.hpp"
 
+#include <stdplus/with_mutex.hpp>
+
 /// The "static" reference to a peer, not so much the run-time state of it.
 /// The #hip is my ID, or it can also be empty (hip.is_empty()) to rpresent that my HIP is not known yet....
 /// ...the not known HIP is for --peer anyone@(udp:p.meshnet.pl:9042)
@@ -57,6 +59,7 @@ class c_galaxysrv_peers {
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
 
 		vector<unique_ptr<c_peer_connection>> m_peer; ///< my peers (connected or not), including unknown yet peers "anyone@cable"
+		// stdplus::with_mutex<MutexShared,c_cable_cards> m_cable_cards; ///< my cards to use the cables (transports), this objects represent my virtual transport network "card"
 		c_cable_cards m_cable_cards; ///< my cards to use the cables (transports), this objects represent my virtual transport network "card"
 
 		FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test);
