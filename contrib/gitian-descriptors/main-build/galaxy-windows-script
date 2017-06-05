@@ -4,11 +4,8 @@
 set -o errexit
 set -o nounset
 
-readonly PROJECT_NAME="galaxy42"
-readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
-
-readonly WRAP_DIR="$HOME/wrapped"
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
 # import another functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
