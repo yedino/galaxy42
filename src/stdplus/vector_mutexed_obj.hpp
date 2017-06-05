@@ -97,7 +97,7 @@ void vector_mutexed_obj<TObj>::push_back(std::unique_ptr<TObj> && obj_ptr) {
 template <typename TObj>
 template <typename TRet, typename TFun>
 TRet vector_mutexed_obj<TObj>::run_on(size_t ix, TFun & fun) {
-	TObj * one_object_with_mutex = nullptr;
+	t_one_with_mutex * one_object_with_mutex = nullptr;
 	{
 		UniqueLockGuardRO<MutexShared> lg_all(m_mutex_all);
 		one_object_with_mutex = m_data.at(ix).get();
