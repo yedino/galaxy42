@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o nounset
+
 # Variables required from parent script:
 # TARGET_ARCH
 # BOOST_DIR
