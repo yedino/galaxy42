@@ -23,30 +23,22 @@ namespace eint {
 /// ...check if b can be properly expanded to T1 ?
 template <typename T>
 T eint_minus(T a, T b, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
+	static_assert(std::numeric_limits<T>::min()<=0, "Integral type not include 0");
+	static_assert(std::numeric_limits<T>::max()>=0, "Integral type not include 0"); // it is normal integer with 0 value
 	bool is_overflow=false;
-	T c = a - b;
-	if ((a<=0) && (b>=0))
+	if (b<0)
 	{
-		if ((a<c) || (b<c)) is_overflow = true;
+		if (std::numeric_limits<T>::max()+b < a) is_overflow = true;
 	}
-	else if ((a>=0) && (b<=0))
+	if (b>0)
 	{
-		if ((a>c) || (b>c)) is_overflow = true;
+		if (std::numeric_limits<T>::min()+b > a) is_overflow = true;
 	}
-	else if ((a>=0) && (b>=0))
-	{
-		if (a<c) is_overflow = true;
-	}
-	else if ((a>=0) && (b<=0))
-	{
-		if (a>c) is_overflow = true;
-	}
-
 	if (is_overflow) {
 		std::ostringstream oss; oss<<"Math error when calculating (" << a << " - " << b << ") for T="<<typeid(T).name();
 		throw std::range_error(oss.str());
 	}
-	return c;
+	return a-b;
 }
 
 /// Calculate (a+b) in safe way (see documentation and WARNINGS about this namespace)
@@ -54,22 +46,22 @@ T eint_minus(T a, T b, typename std::enable_if<std::is_integral<T>::value>::type
 /// ...check if b can be properly expanded to T1 ?
 template <typename T>
 T eint_plus(T a, T b, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
+	static_assert(std::numeric_limits<T>::min()<=0, "Integral type not include 0");
+	static_assert(std::numeric_limits<T>::max()>=0, "Integral type not include 0"); // it is normal integer with 0 value
 	bool is_overflow=false;
-	T c = a + b;
-	if ((a<=0) && (b<=0))
+	if (a>0)
 	{
-		if ((a<c) || (b<c)) is_overflow = true;
+		if (std::numeric_limits<T>::max()-a < b) is_overflow = true;
 	}
-	else if ((a>=0) && (b>=0))
+	if (a<0)
 	{
-		if ((a>c) || (b>c)) is_overflow = true;
+		if (std::numeric_limits<T>::min()-a > b) is_overflow = true;
 	}
-
 	if (is_overflow) {
-		std::ostringstream oss; oss<<"Math error when calculating (" << a << " - " << b << ") for T="<<typeid(T).name();
+		std::ostringstream oss; oss<<"Math error when calculating (" << a << " + " << b << ") for T="<<typeid(T).name();
 		throw std::range_error(oss.str());
 	}
-	return c;
+	return a+b;
 }
 
 } // namespace eint
