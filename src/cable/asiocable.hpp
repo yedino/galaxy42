@@ -6,28 +6,7 @@
 #include "asio_ioservice_manager.hpp"
 #include <boost/asio.hpp>
 #include "libs0.hpp"
-
-class init_ptr_checker {
-	public:
-		template<typename T, typename ...Types>
-		init_ptr_checker(T ptr, const Types&... ptrs) : init_ptr_checker(ptrs...) {
-			static_assert(std::is_pointer<T>::value, "Type is not pointer");
-			if (ptr == nullptr) throw std::invalid_argument("nullptr used");
-		}
-
-		template<typename T, typename ...Types>
-		init_ptr_checker(std::shared_ptr<T> &ptr, const Types&... ptrs) : init_ptr_checker(ptrs...) {
-			if (ptr == nullptr) throw std::invalid_argument("nullptr used");
-		}
-
-		template<typename T, typename ...Types>
-		init_ptr_checker(std::unique_ptr<T> &ptr, const Types&... ptrs) : init_ptr_checker(ptrs...) {
-			if (ptr == nullptr) throw std::invalid_argument("nullptr used");
-		}
-
-		init_ptr_checker() = default;
-		virtual ~init_ptr_checker() = default;
-};
+#include <utils/misc.hpp>
 
 /// This is middle class, for child classes that want to use an asio::io_service,
 /// give us the asio_ioservice_manager you want to use,
