@@ -19,6 +19,8 @@ enum class t_multisocket_kind {
 	separate_rw, ///< two sockets: separate read, and separate write sockets, probably we need SO_REUSEPORT
 };
 
+
+
 class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, constructor);
 	public:
@@ -48,6 +50,7 @@ class c_cable_udp final : public c_asiocable {
 		static t_multisocket_kind default_multisocket_kind(); ///< get the default strategy
 
 	private:
+		init_ptr_checker m_ptr_checker;
 		t_multisocket_kind m_multisocket_kind; ///< what multisocket strategy we have
 		#ifdef USE_MOCK
 		using t_socket_type = mock::mock_boost_udp_socket;

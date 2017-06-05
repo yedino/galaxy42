@@ -4,6 +4,7 @@
 
 c_asiocable::c_asiocable(shared_ptr<c_asioservice_manager_base> &iomanager)
 	:
+	m_ptr_checker(iomanager),
 	m_io_service( iomanager -> get_next_ioservice() ),
 	m_iomanager( iomanager )
 {
