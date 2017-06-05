@@ -35,7 +35,9 @@ TEST(with_mutex_test, constructor_test) {
 		auto ro_mutex = obj2.get_lock_RO();
 		EXPECT_EQ(obj2.get(ro_mutex), value);
 	}
-	// obj = std::move(2); // not compile it is BAD
-	//auto ro_mutex = obj.get_lock_RO();
-	//EXPECT_EQ(obj.get(ro_mutex), 2);
+	obj = std::move(2); // not compile it is BAD
+	{
+		auto ro_mutex = obj.get_lock_RO();
+		EXPECT_EQ(obj.get(ro_mutex), 2);
+	}
 }
