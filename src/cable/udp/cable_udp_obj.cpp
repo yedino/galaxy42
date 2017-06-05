@@ -89,7 +89,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 	_dbg3("Receive (asyn) UDP");
 
 	auto endpoint_iterator = [this] {
-		Unique_lock<Mutex> lock(m_enpoint_list_mutex);
+		LockGuard<Mutex> lock(m_enpoint_list_mutex);
 		m_endpoint_list.emplace_back();
 		auto ret = m_endpoint_list.end();
 		--ret;
@@ -102,7 +102,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 		{
 			_UNUSED(error);	// TODO: handler error - do not run handler then?
 			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *endpoint_iterator );
-			Unique_lock<Mutex> lock(m_enpoint_list_mutex);
+			LockGuard<Mutex> lock(m_enpoint_list_mutex);
 			m_endpoint_list.erase(endpoint_iterator);
 			lock.unlock();
 			c_card_selector selector(std::move(source_addr_cable));

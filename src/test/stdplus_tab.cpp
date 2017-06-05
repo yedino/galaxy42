@@ -161,3 +161,67 @@ TEST(stdplus_tab, bad_input){
 	EXPECT_NO_THROW(stdplus::copy_safe_apart(3, vec_view2, vec_view3));
 
 }
+
+TEST(stdplus_tab, tab_view_at){
+	std::vector<int> vec{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
+	unsigned char c_array[]{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
+	std::array<char, 20> std_array{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}};
+	stdplus::tab_view<int> tab_view_from_vec(vec);
+	stdplus::tab_view<unsigned char> tab_view_from_c_array(c_array, c_array+20);
+	stdplus::tab_view<char> tab_view_from_std_array(std_array);
+	EXPECT_EQ(vec.at(0), tab_view_from_vec.at(0));
+	EXPECT_EQ(vec.at(10), tab_view_from_vec.at(10));
+	EXPECT_EQ(vec.at(19), tab_view_from_vec.at(19));
+	EXPECT_EQ(vec.size(), tab_view_from_vec.size());
+	EXPECT_EQ(c_array[0], tab_view_from_c_array.at(0));
+	EXPECT_EQ(c_array[10], tab_view_from_c_array.at(10));
+	EXPECT_EQ(c_array[19], tab_view_from_c_array.at(19));
+	EXPECT_EQ(20U, tab_view_from_c_array.size());
+	EXPECT_EQ(std_array.at(0), tab_view_from_std_array.at(0));
+	EXPECT_EQ(std_array.at(10), tab_view_from_std_array.at(10));
+	EXPECT_EQ(std_array.at(19), tab_view_from_std_array.at(19));
+	EXPECT_EQ(std_array.size(), tab_view_from_std_array.size());
+	EXPECT_THROW(tab_view_from_c_array.at(-1), std::out_of_range);
+	EXPECT_THROW(tab_view_from_c_array.at(20), std::out_of_range);
+	EXPECT_THROW(tab_view_from_vec.at(-1), std::out_of_range);
+	EXPECT_THROW(tab_view_from_vec.at(20), std::out_of_range);
+	EXPECT_THROW(tab_view_from_std_array.at(-1), std::out_of_range);
+	EXPECT_THROW(tab_view_from_std_array.at(20), std::out_of_range);
+
+	stdplus::tab_view<int> tab_view_from_part_of_vec(vec, 5, 15);
+	stdplus::tab_view<unsigned char> tab_view_from_part_of_c_array(c_array+5, c_array+15);
+	stdplus::tab_view<char> tab_view_from_part_of_std_array(std_array, 5, 15);
+	EXPECT_EQ(vec.at(5), tab_view_from_part_of_vec.at(0));
+	EXPECT_EQ(vec.at(10), tab_view_from_part_of_vec.at(5));
+	EXPECT_EQ(vec.at(14), tab_view_from_part_of_vec.at(9));
+	EXPECT_EQ(10U, tab_view_from_part_of_vec.size());
+	EXPECT_EQ(c_array[5], tab_view_from_part_of_c_array.at(0));
+	EXPECT_EQ(c_array[10], tab_view_from_part_of_c_array.at(5));
+	EXPECT_EQ(c_array[14], tab_view_from_part_of_c_array.at(9));
+	EXPECT_EQ(10U, tab_view_from_part_of_c_array.size());
+	EXPECT_EQ(std_array.at(5), tab_view_from_part_of_std_array.at(0));
+	EXPECT_EQ(std_array.at(10), tab_view_from_part_of_std_array.at(5));
+	EXPECT_EQ(std_array.at(14), tab_view_from_part_of_std_array.at(9));
+	EXPECT_EQ(10U, tab_view_from_part_of_std_array.size());
+	EXPECT_THROW(tab_view_from_part_of_c_array.at(-1), std::out_of_range);
+	EXPECT_THROW(tab_view_from_part_of_c_array.at(10), std::out_of_range);
+	EXPECT_THROW(tab_view_from_part_of_vec.at(-1), std::out_of_range);
+	EXPECT_THROW(tab_view_from_part_of_vec.at(10), std::out_of_range);
+	EXPECT_THROW(tab_view_from_part_of_std_array.at(-1), std::out_of_range);
+	EXPECT_THROW(tab_view_from_part_of_std_array.at(10), std::out_of_range);
+
+	stdplus::tab_view<int> empty_tab_view_from_vec(vec, 5, 5);
+	stdplus::tab_view<unsigned char> empty_tab_view_from_c_array(c_array+5, c_array+5);
+	stdplus::tab_view<char> empty_tab_view_from_std_array(std_array, 5, 5);
+	EXPECT_EQ(0U, empty_tab_view_from_vec.size());
+	EXPECT_EQ(0U, empty_tab_view_from_c_array.size());
+	EXPECT_EQ(0U, empty_tab_view_from_std_array.size());
+	EXPECT_THROW(empty_tab_view_from_c_array.at(0), std::out_of_range);
+	EXPECT_THROW(empty_tab_view_from_vec.at(0), std::out_of_range);
+	EXPECT_THROW(empty_tab_view_from_std_array.at(0), std::out_of_range);
+	EXPECT_THROW(stdplus::tab_view<int> tab_view(vec, 5, 21), std::out_of_range);
+	EXPECT_THROW(stdplus::tab_view<char> tab_view(std_array, 1, 21), std::out_of_range);
+	EXPECT_THROW(stdplus::tab_view<int> tab_view(vec, 5, 4), std::invalid_argument);
+	EXPECT_THROW(stdplus::tab_view<char> tab_view(std_array, 7, 6), std::invalid_argument);
+	EXPECT_THROW(stdplus::tab_view<unsigned char> tab_view(c_array+7, c_array+6), std::invalid_argument);
+}
