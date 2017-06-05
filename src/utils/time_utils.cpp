@@ -5,6 +5,8 @@
 #include "platform.hpp"
 #include "tnetdbg.hpp"
 
+#include <boost/date_time/c_local_time_adjustor.hpp>
+
 std::time_t time_utils::gen_exact_date(int year,
                                        int month,
                                        int day,
@@ -45,7 +47,7 @@ std::time_t time_utils::gen_exact_date(int year,
 	ret = std::mktime(&tm);
 
 	// adding local utc offset in total second to std::mktime.
-	time_duration utc_offset = get_utc_offset();
+	time_duration utc_offset = get_utc_offset(ptime_from_tm(*local_tm));
 	auto l_seconds = utc_offset.total_seconds();
 
 	ret += l_seconds;
@@ -59,20 +61,14 @@ std::string time_utils::timepoint_to_readable(const time_utils::t_timepoint &tp,
 }
 
 std::string time_utils::time_t_to_readable(const std::time_t &time, const std::string &zone) {
-
-	// Pacific/Marquesas and America/St_Johns warn
-	// This two zones might not works properly.
-	// However it looks like boost::date_time fixed this
-	if(zone == "Pacific/Marquesas" || zone == "America/St_Johns") {
-		_warn("Time for " << zone << " zone could not works properly!");
-	}
+	using namespace boost::posix_time;
 
 	std::string full_date = get_date_str(time);
 
 	if(zone.empty()) {
-		full_date += time_utils::get_utc_offset_string();
+		full_date += time_utils::get_utc_offset_string(from_time_t(time));
 	} else {
-		full_date += time_utils::get_zone_utc_offset(zone);
+		full_date += time_utils::get_zone_utc_offset(from_time_t(time), zone);
 	}
 
 	return full_date;
@@ -85,16 +81,15 @@ std::string time_utils::get_date_str(const std::time_t &time) {
 	return to_iso_extended_string(t) ;
 }
 
-boost::posix_time::time_duration time_utils::get_utc_offset() {
-	using namespace boost::posix_time;
+boost::posix_time::time_duration time_utils::get_utc_offset(const boost::posix_time::ptime& utc_time) {
+	using boost::posix_time::ptime;
+	using boost::date_time::c_local_adjustor;
 
-	const ptime utc_now = second_clock::universal_time();
-	const ptime now = second_clock::local_time();
-
-	return now - utc_now;
+	const ptime local_time = c_local_adjustor<ptime>::utc_to_local(utc_time);
+	return local_time - utc_time;
 }
 
-std::string time_utils::get_utc_offset_string() {
+std::string time_utils::get_utc_offset_string(const boost::posix_time::ptime& utc_time) {
 	std::stringstream out;
 
 	using namespace boost::posix_time;
@@ -102,12 +97,13 @@ std::string time_utils::get_utc_offset_string() {
 	tf->time_duration_format("%+%H:%M");
 	out.imbue(std::locale(out.getloc(), tf));
 
-	out << get_utc_offset();
+	out << get_utc_offset(utc_time);
 
 	return out.str();
 }
 
-std::string time_utils::get_zone_utc_offset(const std::string &zone) {
+std::string time_utils::get_zone_utc_offset(const boost::posix_time::ptime& utc_time,
+                                            const std::string &zone) {
 
 	// save actual // char* because getenv could return null
 	char* ctz(getenv("TZ"));
@@ -118,7 +114,7 @@ std::string time_utils::get_zone_utc_offset(const std::string &zone) {
 
 	tzset();
 
-	std::string zone_str = get_utc_offset_string();
+	std::string zone_str = get_utc_offset_string(utc_time);
 
 	// back to actual
 	if(ctz != NULL) {

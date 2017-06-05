@@ -10,10 +10,10 @@ using namespace time_utils;
 
 TEST(time_utils, check_readable_time_length) {
 
-	std::string formated = time_t_to_readable(gen_exact_date(1023,6,1,1,1,1));
+	std::string formated = time_t_to_readable(gen_exact_date(1993,6,1,1,1,1));
 	EXPECT_TRUE(formated.length() == 25);
 
-	formated = time_t_to_readable(gen_exact_date(1923,12,30,2,2,2));
+	formated = time_t_to_readable(gen_exact_date(1983,12,30,2,2,2));
 	EXPECT_TRUE(formated.length() == 25);
 
 	formated = time_t_to_readable(gen_exact_date(2923,10,20,3,3,3));
@@ -33,11 +33,11 @@ TEST(time_utils, check_readable_time_regex) {
 	std::smatch result;
 
 
-	std::string formated = time_t_to_readable(gen_exact_date(1023,6,1,1,1,1));
+	std::string formated = time_t_to_readable(gen_exact_date(1993,6,1,1,1,1));
 	_mark("time: " << formated << ", formated_length: " << formated.length());
 	EXPECT_TRUE(std::regex_match(formated, result, re));
 
-	formated = time_t_to_readable(gen_exact_date(1923,12,30,2,2,2));
+	formated = time_t_to_readable(gen_exact_date(1983,12,30,2,2,2));
 	EXPECT_TRUE(std::regex_match(formated, result, re));
 	_mark("time: " << formated << ", formated_length: " << formated.length());
 
