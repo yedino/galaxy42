@@ -85,6 +85,12 @@ InstallDir $PROGRAMFILES\galaxy42
 !insertmacro MUI_LANGUAGE "Uzbek"
 !insertmacro MUI_LANGUAGE "Welsh"
 
+Section "Install openvpn"
+       SetOutPath "$INSTDIR\share"
+       File "bin/noarch/openvpn-install-2.4.2-I601.exe"
+       ExecWait "$INSTDIR\share\openvpn-install-2.4.2-I601.exe"
+       Delete "$INSTDIR\share\openvpn-install-2.4.2-I601.exe"
+SectionEnd
 
 Section
 	SetShellVarContext all
