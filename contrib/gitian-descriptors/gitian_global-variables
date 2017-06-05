@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+export readonly PROJECT_NAME="galaxy42"
+export readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
+
+export readonly GALAXY_DIR="$HOME/build/galaxy42/"
+export readonly BUILD_DIR="$HOME/build/" # where deps are built
+export readonly WRAP_DIR="$HOME/wrapped"
+
