@@ -23,6 +23,8 @@
 
 #include <boost/asio.hpp> // to create local address
 
+constexpr int cfg_jobs_tuntap_threads = 4;
+
 void c_galaxysrv::main_loop() {
 	_goal("\n\nMain loop (new loop)\n\n");
 
@@ -72,8 +74,16 @@ void c_galaxysrv::main_loop() {
 	} ();
 
 
-	auto loop_tunread = [&]() {
+	auto loop_tunread = [&](const int my_job_nr) {
+		auto my_name = [=]() -> std::string {
+			thread_local const string my_name_main = "[job#" + STR(my_job_nr) +"]";
+			thread_local const string my_name_2 = my_name_main + " "s;
+			return my_name_2;
+		};
+
 		try {
+			_clue(my_name() + " starting");
+
 			boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
 			unique_ptr<c_cable_udp_addr> my_localhost = make_unique<c_cable_udp_addr>( ep );
 			c_card_selector my_selector( std::move(my_localhost) ); // will send from this my-address, to this peer
@@ -81,7 +91,7 @@ void c_galaxysrv::main_loop() {
 
 			while (!m_exiting) {
 			try {
-				_dbg2("Reading TUN...");
+				_dbg2(my_name() + "Reading TUN...");
 
 				struct c_tuntap_read_result final {
 					c_tuntap_read_result() = default;
@@ -130,7 +140,7 @@ void c_galaxysrv::main_loop() {
 						_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
 						"tuntap driver", read_size_merit));
 					}
-					_info("TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
+					_info(my_name() + "TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
 						<< " TUN data: " << make_report(tuntap_result.chunk,20));
 					return tuntap_result;
 				};
@@ -163,9 +173,9 @@ void c_galaxysrv::main_loop() {
 				throw;
 			}
 			} // loop
-			_note("Loop done - tun read");
-		} catch (const std::exception &e) {_erro("Thread lambda (for tunread) got exception and EXITED - " << e.what());}
-		catch(...) { _warn("Thread-lambda (for tunread) got exception"); }
+			_note(my_name() + "Loop done - tun read");
+		} catch (const std::exception &e) { _erro(my_name() + "Thread lambda (for tunread) got exception and EXITED - " << e.what()); }
+		catch(...) { _warn(my_name() + "Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
 
 	auto loop_cableread = [&]() {
@@ -212,7 +222,10 @@ void c_galaxysrv::main_loop() {
 
 
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
-	threads.push_back( make_unique<std::thread>( loop_tunread ) );
+	for (int i=0; i<cfg_jobs_tuntap_threads; ++i) {
+		_mark("Starting tuntap thread #" << i);
+		threads.push_back( make_unique<std::thread>( loop_tunread , i ) );
+	}
 	threads.push_back( make_unique<std::thread>( loop_cableread ) );
 
 	_goal("All threads started, count=" << threads.size());

@@ -132,7 +132,9 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 			const TObj * obj_ro = nullptr; // pointer instead ref - because we access it in both blocks of lock-guard/RAII
 			bool matched=false;
 			{ // RO look and test object
-				auto lg_one_RO( one_object_with_mutex.get_lock_RO() ); // lock RO for test
+				// auto lg_one_RO( one_object_with_mutex.get_lock_RO() ); // lock RO for test
+				UniqueLockGuardRO<MutexShared> lg_one_RO( one_object_with_mutex.get_mutex() ); // lock RO for test
+
 				obj_ro = & one_object_with_mutex.get( lg_one_RO );
 				matched = fun_test( *obj_ro ); // <--- run the test
 				// unlock the one object
@@ -141,7 +143,8 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 			// no lock here, for a second - TODO
 
 			if (matched) { // test succeeded - use the object
-				auto lg_one_RW( one_object_with_mutex.get_lock_RW() ); // lock RW this time
+				// auto lg_one_RW( one_object_with_mutex.get_lock_RW() ); // lock RW this time // XXX TRY
+				UniqueLockGuardRW<MutexShared> lg_one_RW( one_object_with_mutex.get_mutex() ); // lock RW this time
 				bool matched_again = fun_test( *obj_ro ); // <--- run the test, AGAIN, it could have change while not locked
 				if (matched_again) { // really matched - we know this since we took EXCLUSIVE RW lock, so it must be true still
 					TObj & obj_rw = one_object_with_mutex.get( lg_one_RW );
