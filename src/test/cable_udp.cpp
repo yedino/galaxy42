@@ -20,11 +20,20 @@ TEST(cable_udp, constructor) {
 
 	// create normal
 	boost::asio::io_service io_service;
-	c_cable_udp_addr my_addr("127.0.0.1:9000");
+	c_cable_udp_addr my_addr("127.0.0.1:9000"); // should be mock TODO
 	EXPECT_CALL(Const(card_selector), get_my_addr())
-		.WillOnce(ReturnRef(my_addr));
+		.WillRepeatedly(ReturnRef(my_addr));
 	std::shared_ptr<c_asioservice_manager_base> asioservice_manage_ptr = std::make_shared<mock::mock_c_asioservice_manager>(1);
 	EXPECT_CALL(*dynamic_cast<mock::mock_c_asioservice_manager*>(asioservice_manage_ptr.get()), get_next_ioservice())
-		.WillOnce(ReturnRef(io_service));
+		.WillRepeatedly(ReturnRef(io_service));
 	EXPECT_NO_THROW(c_cable_udp cable2(asioservice_manage_ptr, card_selector));
+
+	// socket open error
+	mock::mock_boost_udp_socket::s_is_open = false;
+	EXPECT_THROW(c_cable_udp cable3(asioservice_manage_ptr, card_selector), std::runtime_error);
+
+	// set option error
+	mock::mock_boost_udp_socket::s_is_open = true;
+	mock::mock_boost_udp_socket::s_set_option_throws = true;
+	EXPECT_THROW(c_cable_udp cable4(asioservice_manage_ptr, card_selector), std::runtime_error);
 }
