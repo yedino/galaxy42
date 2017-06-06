@@ -109,7 +109,8 @@ TRet vector_mutexed_obj<TObj>::run_on(size_t ix, TFun & fun) {
 	}
 
 	{
-		auto lg_one( one_object_with_mutex->get_lock_RW() );
+		auto &mutex = one_object_with_mutex->get_mutex();
+		UniqueLockGuardRW<MutexShared> lg_one(mutex);
 		return fun( one_object_with_mutex->get( lg_one ) );
 	}
 }
