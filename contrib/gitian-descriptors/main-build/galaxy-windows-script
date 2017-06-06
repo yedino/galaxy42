@@ -167,6 +167,8 @@ printf "\nPWD=$PWD in script $0\n"
 
 
 # ** building boost **
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/${TARGET_ARCH}-build"
+
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
 popd || fail
@@ -243,25 +245,36 @@ printf "\n\n====================================================================
 printf "Main project ($PROJECT_NAME)...\n\n"
 
 ## Cross building galaxy42
-cd "$GALAXY_DIR"
+pushd "$GALAXY_DIR" || fail
 
-rm -rf CMakeFiles CMakeCache.txt # remove chache from previous build if any
-git submodule update --init --recursive
+	rm -rf CMakeFiles CMakeCache.txt # remove cache from previous build if any
 
-echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
-echo "SODIUM_ROOT: $SODIUM_ROOT"
+	git submodule update --init --recursive
 
-printf "\n\nMoving on to main build of actually our project:"
+	echo "BOOST_ROOT: ${BOOST_BUILD_DIR}"
+	echo "SODIUM_ROOT: ${SODIUM_ROOT}"
 
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH="$TARGET_ARCH" -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
-make tunserver.elf || fail "make of our project (main binary) failed"
-make galaxyService || fail "make of our project (main binary) failed"
+	printf "\n\nMoving on to main build of actually our project:"
+
+	cmake -DBOOST_ROOT="${BOOST_BUILD_DIR}" \
+	      -DSODIUM_ROOT_DIR="{$SODIUM_ROOT}" \
+	      -DSODIUM_LIBRARY="${SODIUM_ROOT}/lib/libsodium.dll.a" \
+	      -DSODIUM_INCLUDE_DIR="${SODIUM_ROOT}/include" \
+	      -DTARGET_ARCH="${TARGET_ARCH}" \
+	      -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" \
+	      -DCMAKE_BUILD_TYPE=Debug . \
+	      	|| fail "cmake of our project failed"
+
+	make tunserver.elf || fail "make of our project (main binary) failed"
+	make galaxyService || fail "make of our project (main binary) failed"
+
+popd
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
-sha256sum  /home/ubuntu/build/galaxy42/contrib/windows-service-wrapper/galaxyService.exe
-sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
-sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
+sha256sum  "${GALAXY_DIR}/contrib/windows-service-wrapper/galaxyService.exe"
+sha256sum  "${BOOST_BUILD_DIR}/lib/*.dll*" | sort
+sha256sum  "${SODIUM_DIR}/libsodium-win??/lib/*.dll*" | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"
