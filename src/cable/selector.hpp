@@ -52,7 +52,7 @@ class c_card_selector final : public c_card_selector_base {
 		bool operator<(const c_card_selector & other) const;
 		/// @}
 
-		void print(ostream & out) const;
+		void print(ostream & out) const override;
 
 		inline t_cable_kind get_kind() const override;
 		inline c_cable_base_addr & get_my_addr() override;

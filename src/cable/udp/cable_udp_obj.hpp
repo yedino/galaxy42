@@ -19,8 +19,6 @@ enum class t_multisocket_kind {
 	separate_rw, ///< two sockets: separate read, and separate write sockets, probably we need SO_REUSEPORT
 };
 
-
-
 class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, constructor);
 	public:
