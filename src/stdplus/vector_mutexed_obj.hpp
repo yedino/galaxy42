@@ -14,6 +14,10 @@
 /// e.g. in vector_mutexed_obj
 class error_no_match_found : public std::exception { public:	const char * what() const noexcept override; };
 
+/// Class for reporting when not enough matching objects was found in container,
+/// e.g. in vector_mutexed_obj
+class error_not_enough_match_found : public std::exception { public:	const char * what() const noexcept override; };
+
 /**
  * Vector of elements that are individually locked each, and that allows for safe resizing, and safe operating on elements
  * Main operations:
@@ -119,6 +123,7 @@ template <typename TObj>
 template <typename TRet, typename TFunTest, typename TFunRun>
 TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fun_run, size_t limit_matched) {
 	size_t so_far=0; // how many objects matched so far
+	bool is_not_enough = false;
 
 	{
 		UniqueLockGuardRO<MutexShared> lg_all(m_mutex_all);
@@ -145,11 +150,13 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 						return fun_run( obj_rw ); // <--- run the modifier (and return, it's the last one)
 					} else {
 						fun_run( obj_rw ); // <--- run the modifier
+						is_not_enough = true;
 					}
 				} // matched_again
 				// unlock the one object
 			}
 		} // test all objects in loop
+		if (is_not_enough) throw error_not_enough_match_found();
 		// unlocking container
 	} // access container
 	throw error_no_match_found();
