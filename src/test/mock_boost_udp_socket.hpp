@@ -14,8 +14,10 @@ class mock_boost_udp_socket final {
 		mock_boost_udp_socket(boost::asio::io_service &io_service,
 		                      const boost::asio::ip::udp &protocol);
 		mock_boost_udp_socket(boost::asio::io_service &io_service);
-		MOCK_METHOD0(is_open, bool());
-		MOCK_METHOD1(set_option, void(const int &));
+		bool is_open();
+		void set_option(const int &);
+//		MOCK_METHOD0(is_open, bool());
+//		MOCK_METHOD1(set_option, void(const int &));
 		MOCK_METHOD2(send_to, std::size_t(const boost::asio::const_buffer &,
 		             const boost::asio::ip::udp::endpoint &endpoint));
 		MOCK_METHOD2(send_to, std::size_t(const std::vector< boost::asio::const_buffer> &,
@@ -35,6 +37,8 @@ class mock_boost_udp_socket final {
 		MOCK_METHOD1(bind, void(const boost::asio::ip::udp::endpoint &));
 		MOCK_METHOD2(shutdown, void(boost::asio::ip::udp::socket::shutdown_type, boost::system::error_code &));
 		MOCK_METHOD0(close, void());
+		static bool s_is_open;
+		static bool s_set_option_throws;
 };
 
 } // namespace

@@ -24,6 +24,8 @@ c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, con
 		m_write_socket.set_option(option); // not so important when we have just 1 socket
 	#endif
 
+	if (!m_read_socket.is_open() || !m_write_socket.is_open())
+		throw std::runtime_error("UDP socket not open");
 	_note("Created UDP card: \n"
 		<< "  Read socket:  open="<< m_read_socket.is_open() << " native="<<m_read_socket.native_handle() << "\n"
 		<< "  Write socket: open="<< m_write_socket.is_open() << " native="<<m_write_socket.native_handle());
