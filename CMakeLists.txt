@@ -306,6 +306,7 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
+	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
@@ -313,9 +314,26 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
 	endif()
+	option(SANITIZER_THREAD "Enable clang thread sanitizer" OFF)
+	option(SANITIZER_ADDRESS "Enable clang address sanitizer" OFF)
+	option(SANITIZER_MEMORY "Enable clang memory sanitizer" OFF)
+	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable clang undefined behavior sanitizer" OFF)
+	if(SANITIZER_THREAD)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+	endif()
+	if(SANITIZER_ADDRESS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+	endif()
+	if(SANITIZER_MEMORY)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+	endif()
+	if(SANITIZER_UNDEFINED_BEHAVIOR)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
+	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall -Wno-unused-command-line-argument") # mostly used by dependencies
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
@@ -327,7 +345,7 @@ else()
 endif()
 
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${STATIC_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARN_PEDANTIC_FLAGS_FOR_C} ${STATIC_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 
@@ -448,7 +466,9 @@ if(NOT MINGW AND NOT WIN32)
 	add_custom_command(
 		TARGET tunserver.elf
 		POST_BUILD
-		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights cap on binary, ignoring."
+		COMMAND chmod a+x tunserver.elf
+		COMMAND chmod a+x nocap-tunserver.elf
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 	add_custom_target(
