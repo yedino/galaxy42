@@ -13,20 +13,8 @@ source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variable
 
 
 printf "\n\n=========================================================================\n\n"
-printf "PROJECT $PROJECT_NAME - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
+printf "PROJECT ${PROJECT_NAME} - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
 
-function fail() {
-	printf "\nERROR: the script failed (see above messages).\n\n"
-	exit 1
-}
-
-
-# --- parse options
-option_allow_boost=1
-option_allow_sodium=1
-option_shell_in_sodium=0
-option_download_skip=0
-option_verbose=0
 
 while getopts ":vbsSDh" opt; do
 	case $opt in
