@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-# Variables/Fuctions required from parent script:
+# Variables/Fuctions required in this script (some of them could be sourced from gitian_global-variables):
 #--------------------------
 # TARGET_ARCH
 # BUILD_DIR
@@ -17,15 +17,18 @@ set -o nounset
 # fail function
 #--------------------------
 
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
+
 readonly BOOST_BUILD_THREADS=2
 readonly BOOST_DIR="${BUILD_DIR}/boost"
-readonly USER_CONFIG_FILE="${BOOST_DIR}/user-config.jam"
+readonly USER_CONFIG_FILE="${BUILD_DIR}/boost_${TARGET_ARCH}_user-config.jam"
 
-# importing functions for boost main and submodules download
+# import functions for boost main and submodules download
 . "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
 . "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost
 
-# import functions
+# import fail function
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
 
 
@@ -57,7 +60,7 @@ then
 	else
 		# Download main boost repository
 		dl_boost
-		pushd boost || fail "Can not enter build dir"
+		pushd "${BOOST_DIR}" || fail "Can not enter boost build dir"
 			# Download boost submodules in n=3 attempts
 			dl_boost_submodules_n 3
 		popd
@@ -69,7 +72,6 @@ then
 			fail
 		else
 			echo "Building boost libraries for TARGET='${TARGET_ARCH}'"
-
 
 			echo "# This config was GENERATED (will be over-written) by $0." > "${USER_CONFIG_FILE}" || fail
 
@@ -84,7 +86,7 @@ then
 		fi
 	fi
 
-	pushd boost || fail # cd
+	pushd "${BOOST_DIR}" || fail "Can not enter boost build dir"
 
 		# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
 		git clean -xdf || fail
