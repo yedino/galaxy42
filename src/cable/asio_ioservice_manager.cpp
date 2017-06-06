@@ -87,7 +87,7 @@ boost::asio::io_service &c_asioservice_manager::get_next_ioservice() {
 	guard_inv;
 
 	m_last_ioservice++;
-	m_last_ioservice %= m_ioservice_array.size();
+	m_last_ioservice %= size();
 
 	_check(m_last_ioservice < m_ioservice_array.size());
 	return m_ioservice_array.at(m_last_ioservice);
