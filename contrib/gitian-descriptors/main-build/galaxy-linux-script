@@ -5,26 +5,23 @@ set -o errexit
 set -o nounset
 
 
-function_fdfix () {
-	echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
-	sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
-}
-function_fdfix
-
-
 readonly OUTDIR="$1"
 export OUTDIR
 
-readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-readonly WRAP_DIR="$HOME/wrapped"
+readonly TARGET_ARCH="x86_64-linux-gnu"
+export FAKETIME="$REFERENCE_DATETIME"
+
 
 # import functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
 . "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
+. "${GALAXY_DIR}"/share/script/lib/fdfix.sh
 
-export FAKETIME="$REFERENCE_DATETIME"
+# fix for /dev/fd
+fdfix
 
 # variable from above yml config
 echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
@@ -37,7 +34,7 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
 ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
-HOSTS="x86_64-linux-gnu"
+HOSTS="x86_64-linux-gnu"  # because of one host, HOSTS == TARGET_ARCH
 
 COMPILERS="g++ gcc"
 
@@ -152,10 +149,6 @@ EOF
   set +x
   printf "\n\n"
 
-#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
-# sh
-# printf "\n\n=== EXITED TEST SHELL ==="
-# sleep 1 # XXX
 
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
@@ -164,7 +157,7 @@ popd || fail
 echo "\nAll done regarding boost.\n"
 
 # *** main build starts here ***
-pushd galaxy42
+pushd "${GALAXY_DIR}" || fail
 	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
 	git clean -fdx
