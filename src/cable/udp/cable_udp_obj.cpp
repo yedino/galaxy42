@@ -71,6 +71,8 @@ void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned ch
 				handler(data, bytes_transferred);
 			} // lambda
 		);
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
 		_warn("Can not send UDP");
 		throw;
