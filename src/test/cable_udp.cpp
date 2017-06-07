@@ -188,3 +188,18 @@ TEST(cable_udp, async_send_to) {
 
 	EXPECT_EQ(io_service.poll(), 2U); // execute 2 handlers
 }
+
+TEST(cable_udp, receive_from) {
+	// create normal
+	mock::mock_c_card_selector card_selector;
+	boost::asio::io_service io_service; // remote io_service i.e. from siom class
+	c_cable_udp_addr my_addr("127.0.0.1:9000");
+	EXPECT_CALL(Const(card_selector), get_my_addr())
+		.WillRepeatedly(ReturnRef(my_addr));
+	std::shared_ptr<c_asioservice_manager_base> asioservice_manage_ptr = std::make_shared<mock::mock_c_asioservice_manager>(1);
+	EXPECT_CALL(*dynamic_cast<mock::mock_c_asioservice_manager*>(asioservice_manage_ptr.get()), get_next_ioservice())
+		.WillRepeatedly(ReturnRef(io_service));
+	c_cable_udp cable(asioservice_manage_ptr, card_selector);
+
+
+}

@@ -67,12 +67,12 @@ class c_cable_base_obj : public c_someio {
 
 		/**
 		 * @brief receive_from block function
-		 * @param OUT: source address of sender will be written here
+		 * @param source: source address of sender will be written here
 		 * @param data pointer to prealocated buffer
 		 * @param size size of prealocated buffer
 		 * @return number of readed bytes
 		 */
-		virtual size_t receive_from(c_card_selector & source, unsigned char * const data, size_t size)=0;
+		virtual size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size)=0;
 
 		/**
 		 * @brief async_receive_from

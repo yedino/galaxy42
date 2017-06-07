@@ -93,6 +93,10 @@ size_t c_cable_udp::receive_from(c_card_selector &source, unsigned char *const d
 	}
 }
 
+size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
+	return 0;
+}
+
 void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
 	_dbg3("Receive (asyn) UDP");
 

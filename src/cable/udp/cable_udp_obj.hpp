@@ -24,6 +24,7 @@ class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, send_to_one_buffer);
 	FRIEND_TEST(cable_udp, send_to_multiple_buffers);
 	FRIEND_TEST(cable_udp, async_send_to);
+	FRIEND_TEST(cable_udp, receive_from);
 	public:
 		/**
 		 * create UDP cable to recv/send, using one source address (can be just port)
@@ -38,8 +39,8 @@ class c_cable_udp final : public c_asiocable {
 		void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) override;
 		void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler) override;
 
-		size_t receive_from(c_card_selector & source, unsigned char * const data, size_t size) override;
-		size_t receive_from(c_cable_udp_addr & source, unsigned char * const data, size_t size) ;
+		size_t receive_from(c_card_selector & source, unsigned char * const data, size_t size);
+		size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size) override;
 		void async_receive_from(unsigned char * const data, size_t size, read_handler handler) override;
 
 		void listen_on(const c_card_selector & local_address) override;
