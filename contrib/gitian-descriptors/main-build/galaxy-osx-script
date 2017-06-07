@@ -11,9 +11,6 @@ export OUTDIR
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-export readonly TARGET_ARCH="x86_64-apple-darwin15"
-export FAKETIME="$REFERENCE_DATETIME"
-
 
 # import functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
@@ -23,12 +20,14 @@ export FAKETIME="$REFERENCE_DATETIME"
 # fix for /dev/fd
 fdfix
 
-
 # build osx cross toolchain
 pushd "${GALAXY_DIR}"
 	source ./contrib/macdeploy/build-cross-toolchain.sh
 	printf "sourced PATH = $PATH\n"
 popd
+
+export readonly TARGET_ARCH="x86_64-apple-darwin15"
+export FAKETIME="$REFERENCE_DATETIME"
 
 # variable from above yml config
 echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
@@ -71,7 +70,6 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 fi
 
 # Create faketime timestamp
-
 # Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
 export PATH_orig="${PATH}"
 create_global_faketime_wrappers "${FAKETIME_PROGS}" "${WRAP_DIR}"
@@ -79,31 +77,12 @@ create_per-host_faketime_wrappers "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR
 create_per-host_faketime_wrappers "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
 export PATH="${WRAP_DIR}:${PATH}"
 
-# Create the release tarball using (arbitrarily) the first host
-
-# ./autogen.sh # delete
-# CONFIG_SITE=${BASEPREFIX}/`echo "${HOST}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
-
-
-printf "\n\n\nDoing boost static build\n\n\n"
-
-printf "\nTEST TOOLS (in linux script):\n"
-set -x
-which gcc
-which ar
-which ranlib
-gcc -v || fail "test gcc"
-g++ -v || fail "test g++"
-ar --version || fail "test ar"
-ranlib --version || fail "test ranlib"
-g++ -print-prog-name=ar
-set +x
-printf "\n\n"
-
 
 # ** building boost **
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/${TARGET_ARCH}-build"
+
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libboost-build/build-boost-osx || fail "Failed to build dependence - boost lib for osx"
+	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
 popd || fail
 echo "\nAll done regarding boost.\n"
 
@@ -111,6 +90,7 @@ echo "\nAll done regarding boost.\n"
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libsodium-build/build-sodium "${HOST}" || fail "Failed to build dependence - libsodium for osx"
 popd
+
 
 # *** main build starts here ***
 pushd "${GALAXY_DIR}"
