@@ -75,7 +75,7 @@ then
 
 			echo "# This config was GENERATED (will be over-written) by $0." > "${USER_CONFIG_FILE}" || fail
 
-			if [[ $TARGET_ARCH == "x86_64-w64-mingw32" || $TARGET_ARCH == "i686-w64-mingw32"]]
+			if [[ $TARGET_ARCH == "x86_64-w64-mingw32" || $TARGET_ARCH == "i686-w64-mingw32" ]]
 			then
 				boost_user_gcc="${WRAP_DIR}/${TARGET_ARCH}-g++ ;"
 				build_target_os="windows"

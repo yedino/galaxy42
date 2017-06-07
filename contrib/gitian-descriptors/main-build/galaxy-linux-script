@@ -11,7 +11,7 @@ export OUTDIR
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-readonly TARGET_ARCH="x86_64-linux-gnu"
+export readonly TARGET_ARCH="x86_64-linux-gnu"
 export FAKETIME="$REFERENCE_DATETIME"
 
 
@@ -152,7 +152,7 @@ pushd "${GALAXY_DIR}" || fail
 	COVERAGE=0 \
 	EXTLEVEL=0 \
 	BUILD_STATIC=1 \
-	BUILD_SET_BOOST_ROOT="${BUILD_BUILD_DIR}" \
+	BUILD_SET_BOOST_ROOT="${BOOST_BUILD_DIR}" \
 	./do --go \
 		|| fail "Failed to do the main build of our project"
 
