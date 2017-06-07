@@ -67,6 +67,7 @@
 	#include "crypto/sidhpp.hpp"
 #endif
 
+#include <utils/privileges.hpp>
 
 // -------------------------------------------------------------------
 
@@ -236,10 +237,16 @@ int c_the_program_newloop::main_execution() {
 
 	pimpl->server = make_unique<c_galaxysrv>();
 
-	this->programtask_load_my_keys();
-	this->use_options_peerref();
-	this->programtask_tuntap();
+	my_cap::drop_privileges_after_root(); // [security] ok we're done with root
 
+	this->programtask_load_my_keys();
+	this->programtask_tuntap();
+	my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
+
+
+	this->use_options_peerref();
+
+	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
 	pimpl->server->main_loop();
 
 	_mark("newloop main_execution - DONE");

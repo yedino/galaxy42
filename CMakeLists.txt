@@ -314,21 +314,24 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
 	endif()
+	set(HELP_SANITIZER_MEMORY "Warning, clang memory sanitizer will produce FALSE positives since we do not rebuild all deps nor libc++ with that option")
 	option(SANITIZER_THREAD "Enable clang thread sanitizer" OFF)
 	option(SANITIZER_ADDRESS "Enable clang address sanitizer" OFF)
-	option(SANITIZER_MEMORY "Enable clang memory sanitizer" OFF)
+	option(SANITIZER_MEMORY "Enable clang memory sanitizer ${HELP_SANITIZER_MEMORY}" OFF)
 	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable clang undefined behavior sanitizer" OFF)
+	set(SANITIZER_DETAILED "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
 	if(SANITIZER_THREAD)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-sanitize-recover=thread ${SANITIZER_DETAILED}")
 	endif()
 	if(SANITIZER_ADDRESS)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-sanitize-recover=address ${SANITIZER_DETAILED}")
 	endif()
 	if(SANITIZER_MEMORY)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-sanitize-recover=memory ${SANITIZER_DETAILED}")
+		message("${HELP_SANITIZER_MEMORY}")
 	endif()
 	if(SANITIZER_UNDEFINED_BEHAVIOR)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined ${SANITIZER_DETAILED}")
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
@@ -401,13 +404,32 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 # LIBS-2 [new doc]
 
+
+########################### OPTIONAL LIBRARIES ###########################
+
+set(LIB_OPTIONAL_CAPNG "")
+if (UNIX AND NOT CYGWIN)
+	set(LIB_OPTIONAL_CAPNG "cap-ng")
+endif ()
+
 ########################### TARGETS ###########################
 add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 cotire(tunserver.elf)
 
-target_link_libraries(tunserver.elf
+set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
+	${LIB_OPTIONAL_CAPNG}
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES}
+)
+
+target_link_libraries(tunserver.elf
+	${LIBS_COMMON}
+	)
+#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
+#	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
@@ -415,12 +437,16 @@ list(SORT TEST_SOURCES)
 add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
 target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
 target_link_libraries(unittests.elf
-	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	gtest gmock sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
-foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-	message(STATUS "ADDING LIBRARY FROM LIST: '${_lib}'")
-	target_link_libraries(test-debug.elf ${_lib})
-endforeach()
+	${LIBS_COMMON}
+	gtest gmock
+)
+
+#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+#	gtest gmock sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
+#foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+#	message(STATUS "ADDING LIBRARY FROM LIST: '${_lib}'")
+#	target_link_libraries(test-debug.elf ${_lib})
+#endforeach()
 
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
