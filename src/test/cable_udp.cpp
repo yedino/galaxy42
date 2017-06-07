@@ -79,8 +79,57 @@ TEST(cable_udp, send_to_one_buffer) {
 	c_cable_udp_addr dst_address("192.168.0.1:9000");
 	EXPECT_THROW(cable.send_to(dst_address, send_buffer.data(), send_buffer.size()), std::runtime_error);
 
+	// normal send
+	EXPECT_CALL(cable.m_write_socket, send_to(An<const boost::asio::const_buffer &>(), An<const boost::asio::ip::udp::endpoint &>()))
+		.WillOnce(Invoke(
+			[] (const boost::asio::const_buffer &buf, const boost::asio::ip::udp::endpoint &) -> size_t {
+				return boost::asio::buffer_size(buf);
+			} // lambda
+	));
+	EXPECT_NO_THROW(cable.send_to(dst_address, send_buffer.data(), send_buffer.size()));
 }
 
 TEST(cable_udp, send_to_multiple_buffers) {
+	// create normal
+	mock::mock_c_card_selector card_selector;
+	boost::asio::io_service io_service;
+	c_cable_udp_addr my_addr("127.0.0.1:9000");
+	EXPECT_CALL(Const(card_selector), get_my_addr())
+		.WillRepeatedly(ReturnRef(my_addr));
+	std::shared_ptr<c_asioservice_manager_base> asioservice_manage_ptr = std::make_shared<mock::mock_c_asioservice_manager>(1);
+	EXPECT_CALL(*dynamic_cast<mock::mock_c_asioservice_manager*>(asioservice_manage_ptr.get()), get_next_ioservice())
+		.WillRepeatedly(ReturnRef(io_service));
+	c_cable_udp cable(asioservice_manage_ptr, card_selector);
 
+	// generate buffers
+	std::array<unsigned char, 1024> send_buffer, send_buffer2;
+	send_buffer.fill(0); send_buffer2.fill(1);
+	std::string send_buffer3(10, 10);
+	std::vector<boost::asio::const_buffer> buffers;
+	buffers.emplace_back(send_buffer.data(), send_buffer.size());
+	buffers.emplace_back(send_buffer2.data(), send_buffer2.size());
+	buffers.emplace_back(send_buffer3.data(), send_buffer3.size());
+
+	// invalid address argument
+	c_cable_bad_addr bad_addr;
+	EXPECT_THROW(cable.send_to(bad_addr, buffers), std::invalid_argument);
+
+	// asio sent_to error
+	EXPECT_CALL(cable.m_write_socket, send_to(An<const std::vector< boost::asio::const_buffer> &>(), An<const boost::asio::ip::udp::endpoint &>()))
+		.WillOnce(Invoke(
+			[] (const std::vector< boost::asio::const_buffer> &, const boost::asio::ip::udp::endpoint &) -> size_t {
+				throw boost::system::system_error(boost::asio::error::eof);
+			} // lambda
+	));
+	c_cable_udp_addr dst_address("192.168.0.1:9000");
+	EXPECT_THROW(cable.send_to(dst_address, buffers), std::runtime_error);
+
+	// normal send
+	EXPECT_CALL(cable.m_write_socket, send_to(An<const std::vector< boost::asio::const_buffer> &>(), An<const boost::asio::ip::udp::endpoint &>()))
+		.WillOnce(Invoke(
+			[] (const std::vector< boost::asio::const_buffer> &buffs, const boost::asio::ip::udp::endpoint &) -> size_t {
+				return boost::asio::buffer_size(buffs);
+			} // lambda
+	));
+	EXPECT_NO_THROW(cable.send_to(dst_address, buffers));
 }

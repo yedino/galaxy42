@@ -52,6 +52,8 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const t_asio_buffers_s
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
 		_dbg4("UDP to " << destination_endpoint);
 		m_write_socket.send_to(buffers, destination_endpoint);
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
 		_warn("Can not send UDP");
 		throw;
