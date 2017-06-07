@@ -75,13 +75,19 @@ then
 
 			echo "# This config was GENERATED (will be over-written) by $0." > "${USER_CONFIG_FILE}" || fail
 
-			boost_user_gcc="${WRAP_DIR}/${TARGET_ARCH}-g++ ;"
-			echo "using gcc : 4.9.2 : $boost_user_gcc" >> "${USER_CONFIG_FILE}" || fail
-
-			if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
-				:
-			elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
-				:
+			if [[ $TARGET_ARCH == "x86_64-w64-mingw32" || $TARGET_ARCH == "i686-w64-mingw32"]]
+			then
+				boost_user_gcc="${WRAP_DIR}/${TARGET_ARCH}-g++ ;"
+				build_target_os="windows"
+				# threadapi=win32 \ # is necessary?
+				link_type="shared"
+				echo "using gcc : 4.9.2 : ${boost_user_gcc}" >> "${USER_CONFIG_FILE}" || fail
+			elif [[ $TARGET_ARCH == "x86_64-linux-gnu" ]]
+			then
+				boost_user_gcc="${WRAP_DIR}/g++ ;"
+				build_target_os="linux"
+				link_type="static"
+				echo "using gcc : 5.4.0 : ${boost_user_gcc}" >> "${USER_CONFIG_FILE}" || fail
 			fi
 		fi
 	fi
@@ -112,19 +118,19 @@ then
 		printf "\n\nStarting the b2 boost build\n"
 		set -x
 		./b2 \
+			-q -a\
 			"${b2_opt_debug[@]}" \
-			-a \
 			-j "${BOOST_BUILD_THREADS}" \
 			--prefix="${BOOST_BUILD_DIR}" \
 			--user-config="${USER_CONFIG_FILE}" \
 			"${b2_opt_with_lib[@]}" \
 			toolset=gcc \
-			target-os=windows \
+			target-os="${build_target_os}" \
+			--build-type=complete \
 			variant=release \
 			threading=multi \
-			threadapi=win32 \
-			link=shared \
-			runtime-link=shared \
+			link="${link_type}" \
+			runtime-link="${link_type}" \
 			-sNO_BZIP2=1 --sNO_ZLIB=1 \
 			--layout=tagged install \
 				|| {
