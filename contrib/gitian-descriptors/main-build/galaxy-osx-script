@@ -11,7 +11,7 @@ export OUTDIR
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-readonly TARGET_ARCH="x86_64-apple-darwin15"
+export readonly TARGET_ARCH="x86_64-apple-darwin15"
 export FAKETIME="$REFERENCE_DATETIME"
 
 
