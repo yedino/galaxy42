@@ -102,7 +102,7 @@ pushd "${GALAXY_DIR}"
 	git clean -fdx
 	git submodule update --init --recursive
 
-	cmake	-DBOOST_ROOT="${BUILD_DIR}/boost/build-osx/" \
+	cmake	-DBOOST_ROOT="${BOOST_BUILD_DIR}" \
 			-DSODIUM_ROOT_DIR="${BUILD_DIR}/libsodium/libsodium-osx/" \
 			-DCMAKE_TOOLCHAIN_FILE="${GALAXY_DIR}/cmake/toolchain_macosx.cmake.in" \
 			. \

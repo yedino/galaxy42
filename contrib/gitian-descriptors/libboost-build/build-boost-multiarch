@@ -94,15 +94,16 @@ then
 			then
 				boost_user_gcc="${WRAP_DIR}/x86_64-apple-darwin15-clang++-libc++"
 				build_target_os="darwin"
-				build_toolset="darwin --toolset-root=\"${BUILD_DIR}/osxcross/target/bin/\""
+				build_toolset="darwin"
 				AR="${WRAP_DIR}/x86_64-apple-darwin15-ar"
 				LD="${WRAP_DIR}/x86_64-apple-darwin15-ld"
 				STRIP="${WRAP_DIR}/x86_64-apple-darwin15-strip"
 				RANLIB="${WRAP_DIR}/x86_64-apple-darwin15-ranlib"
-				printf "using darwin : : $boost_user_gcc : <linker-type>\"darwin\" <cxxflags>\"-arch x86_64 " >> "${USER_CONFIG_FILE}" || fail
-				printf "-std=c++14 -fvisibility=hidden -mmacosx-version-min=10.7 -march=core2 " >> "${USER_CONFIG_FILE}" || fail
-				printf "--sysroot=/${BUILD_DIR}/osxcross/target/SDK/MacOSX10.11.sdk\" <linkflags>\"\" " >> "${USER_CONFIG_FILE}" || fail
-				printf "<archiver>\"$AR\" <striper>\"$STRIP\" <ranlib>\"$RANLIB\" :  ;\n" >> "${USER_CONFIG_FILE}" || fail
+				printf "using darwin : : $boost_user_gcc : <linker-type>\"darwin\" <cxxflags>\"-arch x86_64" >> "${USER_CONFIG_FILE}" || fail
+				printf " -std=c++14 -fvisibility=hidden -mmacosx-version-min=10.7 -march=core2" >> "${USER_CONFIG_FILE}" || fail
+				printf " --sysroot=/${BUILD_DIR}/osxcross/target/SDK/MacOSX10.11.sdk\" <linkflags>\"\"" >> "${USER_CONFIG_FILE}" || fail
+				printf " <archiver>\"$AR\" <striper>\"$STRIP\" <ranlib>\"$RANLIB\" :  ;\n" >> "${USER_CONFIG_FILE}" || fail
+			fi
 		fi
 	fi
 
@@ -134,12 +135,12 @@ then
 		./b2 \
 			-q -a\
 			"${b2_opt_debug[@]}" \
+			"${b2_opt_with_lib[@]}" \
 			-j "${BOOST_BUILD_THREADS}" \
+			target-os="${build_target_os}" \
 			--prefix="${BOOST_BUILD_DIR}" \
 			--user-config="${USER_CONFIG_FILE}" \
-			"${b2_opt_with_lib[@]}" \
-			toolset="${build_toolset}" \
-			target-os="${build_target_os}" \
+			--toolset="${build_toolset}" \
 			--build-type=complete \
 			variant=release \
 			threading=multi \
@@ -156,7 +157,8 @@ then
 		# Other may useful b2 options
 		# architecture=x86 address-model=64 --arch=x86_64
 		# boost.locale.icu=off boost.locale.iconv=on
-		# threadapi=win32
+		# threadapi=win32	// win
+		# --toolset-root="${BUILD_DIR}/osxcross/target/bin/"	// osx
 
 		printf "\n\nDONE the b2 boost build\n\n"
 
