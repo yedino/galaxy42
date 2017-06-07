@@ -23,6 +23,7 @@ class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, constructor);
 	FRIEND_TEST(cable_udp, send_to_one_buffer);
 	FRIEND_TEST(cable_udp, send_to_multiple_buffers);
+	FRIEND_TEST(cable_udp, async_send_to);
 	public:
 		/**
 		 * create UDP cable to recv/send, using one source address (can be just port)

@@ -33,7 +33,7 @@ class c_cable_base_obj : public c_someio {
 
 		/**
 		 * @brief send_to
-		 * @param dest destination address, type must be c_cable_udp_addr, otherwise thows std::invalid_argument
+		 * @param dest destination address
 		 * @param data pointer to data buffer
 		 * @param size size of buffer ponted by data
 		 * @throws std::invalid_argument if dst is bad address type
@@ -60,6 +60,8 @@ class c_cable_base_obj : public c_someio {
 		 * 	const unsigned char *data, // send data pointer, address is equal async_send_to data parameter\n
 		 * 	size_t size // Number of sended bytes\n
 		 * );
+		 * @throws std::invalid_argument if dst is bad address type
+		 * @throws std::runtime_error if send error
 		 */
 		virtual void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler)=0;
 
