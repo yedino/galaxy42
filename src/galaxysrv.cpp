@@ -127,7 +127,7 @@ void c_galaxysrv::main_loop() {
 					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
 
 					c_tuntap_read_result tuntap_result( // will store here result
-						std::move(  weld.m_buf.get_chunk( weld.m_bufWrite , packet_max)  ) // find empty chunk, will return it as result
+						weld.m_buf.get_chunk( weld.m_bufWrite , packet_max) // find empty chunk, will return it as result
 					);
 
 					// *** block here and read from tuntap ***

@@ -22,6 +22,23 @@ void c_the_program::startup_console_first() {
 
 /// Show program version
 void c_the_program::startup_version() {
+
+
+
+
+
+
+	{
+	ostringstream oss;
+	oss << 5;
+	string x = oss.str();
+	}
+	{
+	ostringstream oss;
+	oss << 5;
+	string x = oss.str();
+	}
+
 	ostringstream oss; oss << "ver. "
 		<< project_version_number_major << "."
 		<< project_version_number_minor << "."
