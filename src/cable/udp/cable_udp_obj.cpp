@@ -22,6 +22,7 @@ c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, con
 		_note("Will set socket reuse");
 		boost::asio::socket_base::reuse_address option(true);
 		m_write_socket.set_option(option); // not so important when we have just 1 socket
+		// if faliture throws boost::system::system_error(child class of std::runtime_error)
 	#endif
 
 	if (!m_read_socket.is_open() || !m_write_socket.is_open())
@@ -37,12 +38,13 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *d
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
 		_dbg4("UDP to " << destination_endpoint);
 		m_write_socket.send_to(boost::asio::buffer(data, size), destination_endpoint);
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
 		_warn("Can not send UDP");
 		throw;
 	}
 }
-
 
 void c_cable_udp::send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) {
 	_dbg3("Seding (blocking) UDP, buffers count = " << buffers.size() << " dest = " << dest);

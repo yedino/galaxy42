@@ -21,12 +21,15 @@ enum class t_multisocket_kind {
 
 class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, constructor);
+	FRIEND_TEST(cable_udp, send_to_one_buffer);
+	FRIEND_TEST(cable_udp, send_to_multiple_buffers);
 	public:
 		/**
 		 * create UDP cable to recv/send, using one source address (can be just port)
 		 * @param iomanager - use this manager
 		 * @param source_addr - we will send from this source address. Can be general ANY address e.g. 0.0.0.0:9042(?)
 		 * to enforce port, or a specific one to enforce entire source address.
+		 * @throws std::runtime_error on failure
 		 */
 		c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector_base &source_addr);
 

@@ -31,7 +31,23 @@ class c_cable_base_obj : public c_someio {
 
 		virtual ~c_cable_base_obj() = default;
 
+		/**
+		 * @brief send_to
+		 * @param dest destination address, type must be c_cable_udp_addr, otherwise thows std::invalid_argument
+		 * @param data pointer to data buffer
+		 * @param size size of buffer ponted by data
+		 * @throws std::invalid_argument if dst is bad address type
+		 * @throws std::runtime_error if send error
+		 */
 		virtual void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size)=0; ///< blocking function
+
+		/**
+		 * @brief send_to
+		 * @param dest destination address
+		 * @param buffers vector of asio buffers
+		 * @throws std::invalid_argument if dst is bad address type
+		 * @throws std::runtime_error if send error
+		 */
 		virtual void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers)=0; ///< blocking function, gather buffers
 
 		/**
