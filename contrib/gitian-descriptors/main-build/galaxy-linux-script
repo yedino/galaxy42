@@ -134,27 +134,14 @@ EOF
   # CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
 
-  printf "\n\n\nDoing boost static build\n\n\n"
-
-  printf "\nTEST TOOLS (in linux script):\n"
-  set -x
-  which gcc
-  which ar
-  which ranlib
-  gcc -v || fail "test gcc"
-  g++ -v || fail "test g++"
-  ar --version || fail "test ar"
-  ranlib --version || fail "test ranlib"
-  g++ -print-prog-name=ar
-  set +x
-  printf "\n\n"
-
+# ** building boost **
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/${TARGET_ARCH}-build"
 
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
 popd || fail
-
 echo "\nAll done regarding boost.\n"
+
 
 # *** main build starts here ***
 pushd "${GALAXY_DIR}" || fail
@@ -165,7 +152,7 @@ pushd "${GALAXY_DIR}" || fail
 	COVERAGE=0 \
 	EXTLEVEL=0 \
 	BUILD_STATIC=1 \
-	BUILD_SET_BOOST_ROOT="$BUILD_DIR/boost/static-build/" \
+	BUILD_SET_BOOST_ROOT="${BUILD_BUILD_DIR}" \
 	./do --go \
 		|| fail "Failed to do the main build of our project"
 
