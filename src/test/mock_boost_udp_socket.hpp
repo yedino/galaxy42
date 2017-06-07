@@ -16,12 +16,10 @@ class mock_boost_udp_socket final {
 		mock_boost_udp_socket(boost::asio::io_service &io_service);
 		bool is_open();
 		void set_option(const int &);
-//		MOCK_METHOD0(is_open, bool());
-//		MOCK_METHOD1(set_option, void(const int &));
 		MOCK_METHOD2(send_to, std::size_t(const boost::asio::const_buffer &,
-		             const boost::asio::ip::udp::endpoint &endpoint));
+		             const boost::asio::ip::udp::endpoint &));
 		MOCK_METHOD2(send_to, std::size_t(const std::vector< boost::asio::const_buffer> &,
-		             const boost::asio::ip::udp::endpoint &endpoint));
+		             const boost::asio::ip::udp::endpoint &));
 		MOCK_METHOD3(async_send_to, void(
 		                                 const boost::asio::const_buffer &,
 		                                 const boost::asio::ip::udp::endpoint &endpoint,
