@@ -5,18 +5,24 @@ set -o errexit
 set -o nounset
 
 
-function_fdfix() {
-        echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
-        sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
-}
-function_fdfix
-
-
 readonly OUTDIR="$1"
 export OUTDIR
 
-readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
+
+readonly TARGET_ARCH="x86_64-apple-darwin15"
+export FAKETIME="$REFERENCE_DATETIME"
+
+
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
+. "${GALAXY_DIR}"/share/script/lib/fdfix.sh
+
+# fix for /dev/fd
+fdfix
+
 
 # build osx cross toolchain
 pushd "${GALAXY_DIR}"
@@ -24,13 +30,6 @@ pushd "${GALAXY_DIR}"
 	printf "sourced PATH = $PATH\n"
 popd
 
-readonly WRAP_DIR="$HOME/wrapped"
-
-# import functions
-. "${GALAXY_DIR}"/share/script/lib/fail.sh
-. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
-
-export FAKETIME="$REFERENCE_DATETIME"
 # variable from above yml config
 echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 # debug
@@ -42,7 +41,7 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
 
-HOST="x86_64-apple-darwin15"
+HOST="x86_64-apple-darwin15" # because of one host, HOSTS == TARGET_ARCH
 COMPILERS="clang clang++ clang++-libc++ install_name_tool"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
