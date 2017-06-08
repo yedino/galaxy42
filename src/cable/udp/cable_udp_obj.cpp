@@ -94,7 +94,20 @@ size_t c_cable_udp::receive_from(c_card_selector &source, unsigned char *const d
 }
 
 size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
-	return 0;
+	_dbg3("Receive (blocking) UDP");
+	try {
+		_UNUSED(dynamic_cast<c_cable_udp_addr&>(source)); // check type
+		udp::endpoint their_ep;
+		size_t readed_bytes = (has_separate_rw() ? m_read_socket : m_write_socket).receive_from(boost::asio::buffer(data, size), their_ep);
+		c_cable_udp_addr their_ep_addr( their_ep );
+		dynamic_cast<c_cable_udp_addr&>(source) = their_ep_addr;
+		return readed_bytes;
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
+	} catch ( ... ) {
+		_warn("Can nit receive UDP");
+		throw;
+	}
 }
 
 void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
@@ -203,4 +216,3 @@ void c_cable_udp::stop_threadsafe() {
 	_dbg1("Shutdown ec="<<ec);
 	m_write_socket.close();
 }
-
