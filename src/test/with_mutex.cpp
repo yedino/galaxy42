@@ -15,8 +15,7 @@ TEST(with_mutex_test, get_test) {
 		//UniqueLockGuardRW<MutexShared> lg_ro3(mutex3); // block test it is OK
 	}
 	{
-		auto &mutex = obj.get_mutex();
-		UniqueLockGuardRW<MutexShared> lg_rw(mutex);
+		UniqueLockGuardRW<MutexShared> lg_rw(obj.get_mutex());
 		obj.get(lg_rw) = 3;
 		EXPECT_EQ(obj.get(lg_rw), 3);
 		//auto &mutex2 = obj.get_mutex();

@@ -148,16 +148,19 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_range(TC & obj, size_t begin, size_t end)
 				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
-			if (end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+			// std::less not required for size_t, but using it to be like the other code above (and correct for review or copy-paste)
+			if (std::less<size_t>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
 		T & at(size_t ix) {
-			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_range out of range");
+			static_assert( std::numeric_limits< decltype(ix)>::min() >= 0, "Incorect type"); // no need to test ix<0 since it's type is non-negative
+			if (ix >= size()) throw std::out_of_range("Reading tab_range out of range");
 			return *( m_begin + ix );
 		}
 
 		const T & at(size_t ix) const {
-			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_view out of range");
+			static_assert( std::numeric_limits< decltype(ix)>::min() >= 0, "Incorect type"); // no need to test ix<0 since it's type is non-negative
+			if (ix >= size()) throw std::out_of_range("Reading tab_view out of range");
 			return *( m_begin + ix );
 		}
 
@@ -205,11 +208,13 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_view(const TC & obj, size_t begin, size_t end)
 				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
-			if (end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+			// std::less not required for size_t, but using it to be like the other code above (and correct for review or copy-paste)
+			if (std::less<size_t>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
 		const T & at(size_t ix) const {
-			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_view out of range");
+			static_assert( std::numeric_limits< decltype(ix)>::min() >= 0, "Incorect type"); // no need to test ix<0 since it's type is non-negative
+			if (ix >= size()) throw std::out_of_range("Reading tab_view out of range");
 			return *( m_begin + ix );
 		}
 
