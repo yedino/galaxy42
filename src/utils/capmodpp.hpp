@@ -1,5 +1,9 @@
 #pragma once
 
+#include <iostream>
+#include <map>
+#include <sstream>
+
 namespace capmodpp {
 
 /**
