@@ -3,21 +3,12 @@
 set -o errexit
 set -o nounset
 
-# Variables/Fuctions required in this script (some of them could be sourced from gitian_global-variables):
+# Variable required in this script
 #--------------------------
-# TARGET_ARCH
-# BUILD_DIR
-# WRAP_DIR
 # BOOST_BUILD_DIR
-#--------------------------
-# option_download_skip
-# option_allow_boost
-# option_verbose
-#--------------------------
-# fail function
-#--------------------------
+# TARGET_ARCH
 
-# source global variables
+# Source global variables : BUILD_DIR, WRAP_DIR - option_download_skip, option_allow_boost, option_verbose
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
 readonly BOOST_BUILD_THREADS=2
@@ -36,7 +27,6 @@ b2_opt_with_lib=( "--with-filesystem" \
                   "--with-system" \
                   "--with-program_options" \
                   "--with-thread" \
-                  "--with-locale" \
                   "--with-date_time" )
 
 b2_opt_debug=( )
