@@ -31,6 +31,8 @@ struct cap_state { ///< one capability entire state, including effective, permit
 
 std::ostream & operator<<(std::ostream & oss, const cap_state & obj);
 
+std::ostream & operator<<(std::ostream & oss, const cap_perm & obj);
+
 /**
  * map of states of permissions
  * logically it's field #state works like a table like:
@@ -77,6 +79,6 @@ struct cap_statechange_full {
 
 std::ostream & operator<<(std::ostream & oss, const cap_statechange_full & obj);
 
-};
+}
 
 
