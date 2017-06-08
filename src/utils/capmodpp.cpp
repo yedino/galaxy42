@@ -13,23 +13,7 @@
 #endif
 
 
-/**
- * Motivation, we want to apply following change to capabilities:
- *
- * CAP_NET_ADMIN eff=leave, permit=leave, inherit=disable, bounding=disable,
- * CAP_NET_RAW   eff=leave, permit=leave, inherit=disable, bounding=disable,
- * all_others:   eff=disable, permit=disable, inherit=disable, bounding=disable,
- *
- * So in short: we want to leave CAP NET_ADMIN as effective and permitet (but disable it's inheriting and bounding set),
- * same for CAP NET_RAW, and to all other CAPs we want to fully disable them.
- *
- * So we need to
- * 1) express such set of changes - type cap_statechange_full
- */
-
-typedef unsigned int cap_nr; ///< number of CAP, for libcap-ng, as in man capng_have_capability
-
-enum class cap_perm { no=0, yes=1 }; ///< one capability-type state can be yes or no
+namespace capmodpp {
 
 std::ostream & operator<<(std::ostream & oss, const cap_perm & obj) {
 	oss <<  ( (obj == cap_perm::yes) ? "YES" : "no" ) ;
@@ -115,4 +99,5 @@ std::ostream & operator<<(std::ostream & oss, const cap_statechange_full & obj) 
 }
 
 
+} // namespace
 
