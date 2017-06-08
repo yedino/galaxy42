@@ -26,11 +26,11 @@ namespace capmodpp {
 typedef unsigned int cap_nr; ///< number of CAP, for libcap-ng, as in man capng_have_capability
 
 enum class cap_perm { no=0, yes=1 }; ///< one capability-type state can be yes or no
-
+enum class cap_area_type { eff,permit,inherit,bounding }; ///< the area of a CAP: effective, permited, inheritable and bounding
 
 struct cap_state { ///< one capability entire state, including effective, permited, inheritable and bounding
 	cap_perm eff, permit, inherit, bounding; ///< this cap has enabled/disabled effective, permited, inheritable, effective
-	cap_state() : eff(cap_perm::no), permit(cap_perm::no), inherit(cap_perm::no), bounding(cap_perm::no) { }
+	cap_state();
 };
 
 std::ostream & operator<<(std::ostream & oss, const cap_state & obj);
@@ -49,6 +49,8 @@ struct cap_state_map {
 
 std::ostream & operator<<(std::ostream & oss, const cap_state_map & obj);
 
+cap_state_map read_process_caps();
+
 /// one capability-type state CHANGE: can be to enable, disable, or leave unchanged
 enum class cap_permchange { disable=0, enable=1, unchanged=2 };
 
@@ -58,8 +60,10 @@ std::ostream & operator<<(std::ostream & oss, const cap_permchange & obj);
 struct cap_statechange {
 	/// this cap has separate CHANGE decissions, for each area: effective, permited, inheritable, effective
 	cap_permchange eff, permit, inherit, bounding;
-	cap_statechange() : eff(cap_permchange::unchanged), permit(cap_permchange::unchanged),
-		inherit(cap_permchange::unchanged), bounding(cap_permchange::unchanged) { }
+
+	cap_statechange();
+	/// applies to given area (e.g. permited) given value (e.g. enable).
+	cap_statechange & set(cap_area_type area, cap_permchange value);
 };
 
 std::ostream & operator<<(std::ostream & oss, const cap_statechange & obj);
