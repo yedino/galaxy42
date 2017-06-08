@@ -135,8 +135,6 @@ create_per-host_linker_wrapper "${HOSTS}" "${COMPILERS}" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
 
-# *** main build starts here ***
-
 ## set compilators
 export CC="$HOME/wrapped/$TARGET_ARCH-gcc-posix"
 export CXX="$HOME/wrapped/$TARGET_ARCH-g++-posix"
@@ -155,99 +153,41 @@ printf "\nPWD=$PWD in script $0\n"
 
 
 # ** building boost **
-export readonly BOOST_BUILD_DIR="${BUILD_DIR}/${TARGET_ARCH}-build"
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/boost-build_${TARGET_ARCH}"
 
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
 popd || fail
 echo "\nAll done regarding boost.\n"
 
+# ** building libsodium **
+pushd "${GALAXY_DIR}" || fail
+	# import build-sodium function
+	. contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - libsodium for ${TARGET_ARCH}"
 
-printf "\n\n=========================================================================\n\n"
-printf "libsodium...\n\n"
-cd "$HOME/build/" || fail "Can not enter build dir"
-
-if ((option_shell_in_sodium)) ; then
-	printf "\nSTARTING TEST BASH (in sodium), while in PWD=$PWD\n"
-	bash
-	printf "\n\nresuming\n\n"
-fi
-
-
-# Setting libsodium path
-if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
-	SODIUM_ROOT="$HOME/build/libsodium/libsodium-win64"
-elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
-	SODIUM_ROOT="$HOME/build/libsodium/libsodium-win32"
-fi
-
-
-if ((option_allow_sodium)) ; then
-printf "\n\nBuilding libsodium now\n\n"
-## clone and build libsodium
-rm -rf libsodium # perhaps left over if we do some caching or testing
-set -x
-git clone https://github.com/jedisct1/libsodium.git || fail # check gitrev hash below!
-
-pushd libsodium || fail
-git checkout 1.0.11 || fail
-git clean -xdf
-
-expected_gitrev="2f4f718cd94adab547c210a78050762cf667dfca" # this is the gitrev hash of this boost version (as we seen it)
-confirm_gitrev=$(git log --format='%H' -1)
-[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
-	fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
-}
-
-
-./autogen.sh || fail
-
-
-printf "\n\nRunning the mingw-crossbuild-script(s) (of lib sodium)\n\n"
-
-if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
-	patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
-	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 64bit) - from file ($patched_msys_script)\n\n"
-	cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
-	./dist-build/msys2-win64.sh || fail
-elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
-	patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win32.sh"
-	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 32bit) - from file ($patched_msys_script)\n\n"
-	cp  "$patched_msys_script"  "./dist-build/msys2-win32.sh" || fail
-	./dist-build/msys2-win32.sh || fail
-fi
-
-printf "\n\nCrossbuild done (of lib sodium)"
+	# Get TARGET_ARCH, build, and export SODIUM_BUILD_DIR
+	build-sodium ${TARGET_ARCH}
 popd
 
-else
-	SODIUM_DIR="/home/ubuntu/build/libsodium"
-	[ -d "$SODIUM_DIR" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
-	printf "\n\nSkipping sodium (as selected in options)\n\n"
 
-fi
-
-
-
-printf "\n\n=========================================================================\n\n"
-printf "Main project ($PROJECT_NAME)...\n\n"
-
-## Cross building galaxy42
+# *** main build starts here ***
 pushd "$GALAXY_DIR" || fail
+	printf "\n\n=========================================================================\n\n"
+	printf "Main project ($PROJECT_NAME)...\n\n"
 
 	rm -rf CMakeFiles CMakeCache.txt # remove cache from previous build if any
 
 	git submodule update --init --recursive
 
 	echo "BOOST_ROOT: ${BOOST_BUILD_DIR}"
-	echo "SODIUM_ROOT: ${SODIUM_ROOT}"
+	echo "SODIUM_ROOT: ${SODIUM_BUILD_DIR}"
 
 	printf "\n\nMoving on to main build of actually our project:"
 
 	cmake -DBOOST_ROOT="${BOOST_BUILD_DIR}" \
-	      -DSODIUM_ROOT_DIR="{$SODIUM_ROOT}" \
-	      -DSODIUM_LIBRARY="${SODIUM_ROOT}/lib/libsodium.dll.a" \
-	      -DSODIUM_INCLUDE_DIR="${SODIUM_ROOT}/include" \
+	      -DSODIUM_ROOT_DIR="{$SODIUM_BUILD_DIR}" \
+	      -DSODIUM_LIBRARY="${SODIUM_BUILD_DIR}/lib/libsodium.dll.a" \
+	      -DSODIUM_INCLUDE_DIR="${SODIUM_BUILD_DIR}/include" \
 	      -DTARGET_ARCH="${TARGET_ARCH}" \
 	      -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" \
 	      -DCMAKE_BUILD_TYPE=Debug . \
@@ -262,7 +202,7 @@ echo "Printing checksums:"
 sha256sum *.exe | sort
 sha256sum  "${GALAXY_DIR}/contrib/windows-service-wrapper/galaxyService.exe"
 sha256sum  "${BOOST_BUILD_DIR}/lib/*.dll*" | sort
-sha256sum  "${SODIUM_DIR}/libsodium-win??/lib/*.dll*" | sort
+sha256sum  "${SODIUM_BUILD_DIR}/lib/*.dll*" | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"

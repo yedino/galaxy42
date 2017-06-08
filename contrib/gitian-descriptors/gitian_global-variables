@@ -9,7 +9,7 @@ readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
 readonly GALAXY_DIR="$HOME/build/galaxy42"
 readonly BUILD_DIR="$HOME/build" # where deps are built
 readonly WRAP_DIR="$HOME/wrapped"
-
+readonly OUTDIR="$HOME/out"
 
 # Parse Options
 # This variables could be changed manually or by parent script for example by parsing command line arguments

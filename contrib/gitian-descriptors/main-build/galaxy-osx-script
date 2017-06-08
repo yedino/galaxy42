@@ -4,13 +4,8 @@
 set -o errexit
 set -o nounset
 
-
-readonly OUTDIR="$1"
-export OUTDIR
-
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
-
 
 # import functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
@@ -87,8 +82,14 @@ popd || fail
 echo "\nAll done regarding boost.\n"
 
 # ** building libsodium **
+export readonly SODIUM_DIR="${BUILD_DIR}/libsodium"
+
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libsodium-build/build-sodium "${HOST}" || fail "Failed to build dependence - libsodium for osx"
+	# import build-sodium function
+	. contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - libsodium for ${TARGET_ARCH}"
+
+	# Get TARGET_ARCH, build, and export SODIUM_BUILD_DIR
+	build-sodium ${TARGET_ARCH}
 popd
 
 
@@ -103,7 +104,7 @@ pushd "${GALAXY_DIR}"
 	git submodule update --init --recursive
 
 	cmake	-DBOOST_ROOT="${BOOST_BUILD_DIR}" \
-			-DSODIUM_ROOT_DIR="${BUILD_DIR}/libsodium/libsodium-osx/" \
+			-DSODIUM_ROOT_DIR="${SODIUM_BUILD_DIR}" \
 			-DCMAKE_TOOLCHAIN_FILE="${GALAXY_DIR}/cmake/toolchain_macosx.cmake.in" \
 			. \
 			|| fail "create makefile for our project (cmake) failed"
