@@ -21,7 +21,7 @@ void drop_privileges_before_mainloop();
 /// verify (or else throw) that privileges are lowered to level as low as is enough for mainloop
 void verify_privileges_are_as_for_mainloop();
 
-};
+}
 
 
 
