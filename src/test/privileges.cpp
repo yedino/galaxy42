@@ -11,7 +11,7 @@
 
 TEST( privileges , create_print_capmodpp ) {
 
-	my_cap::
+	//my_cap::
 
 }
 
