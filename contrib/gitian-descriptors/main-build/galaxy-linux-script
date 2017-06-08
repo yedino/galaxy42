@@ -5,15 +5,11 @@ set -o errexit
 set -o nounset
 
 
-readonly OUTDIR="$1"
-export OUTDIR
-
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
 export readonly TARGET_ARCH="x86_64-linux-gnu"
 export FAKETIME="$REFERENCE_DATETIME"
-
 
 # import functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh

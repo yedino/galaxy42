@@ -74,7 +74,7 @@ export PATH="${WRAP_DIR}:${PATH}"
 
 
 # ** building boost **
-export readonly BOOST_BUILD_DIR="${BUILD_DIR}/${TARGET_ARCH}-build"
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/boost-build_${TARGET_ARCH}"
 
 pushd "${GALAXY_DIR}" || fail
 	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
