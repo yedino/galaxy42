@@ -1,4 +1,4 @@
-
+#pragma once
 
 namespace capmodpp {
 
@@ -29,10 +29,7 @@ struct cap_state { ///< one capability entire state, including effective, permit
 	cap_state() : eff(cap_perm::no), permit(cap_perm::no), inherit(cap_perm::no), bounding(cap_perm::no) { }
 };
 
-std::ostream & operator<<(std::ostream & oss, const cap_state & obj) {
-	oss << "eff="<<obj.eff<<" permit="<<obj.permit<<" inherit="<<obj.inherit<<" bound="<<obj.bounding;
-	return oss;
-}
+std::ostream & operator<<(std::ostream & oss, const cap_state & obj);
 
 /**
  * map of states of permissions
@@ -44,24 +41,12 @@ struct cap_state_map {
 	std::map<cap_nr, cap_state> state;
 };
 
-std::ostream & operator<<(std::ostream & oss, const cap_state_map & obj) {
-	for(const auto & item : obj.state) {
-		oss << item.first << ": " << item.second << "\n";
-	}
-	return oss;
-}
+std::ostream & operator<<(std::ostream & oss, const cap_state_map & obj);
 
 /// one capability-type state CHANGE: can be to enable, disable, or leave unchanged
 enum class cap_permchange { disable=0, enable=1, unchanged=2 };
 
-std::ostream & operator<<(std::ostream & oss, const cap_permchange & obj) {
-	switch (obj) {
-		case cap_permchange::unchanged: oss<<"    same   "; break;
-		case cap_permchange::enable:    oss<<"  +ENABLE+ "; break;
-		case cap_permchange::disable:   oss<<" -disable- "; break;
-	}
-	return oss;
-}
+std::ostream & operator<<(std::ostream & oss, const cap_permchange & obj);
 
 /// one capability entire state CHANGE, including effective, permited, inheritable and bounding
 struct cap_statechange {
@@ -70,10 +55,8 @@ struct cap_statechange {
 	cap_statechange() : eff(cap_permchange::unchanged), permit(cap_permchange::unchanged),
 		inherit(cap_permchange::unchanged), bounding(cap_permchange::unchanged) { }
 };
-std::ostream & operator<<(std::ostream & oss, const cap_statechange & obj) {
-	oss << "eff="<<obj.eff<<" permit="<<obj.permit<<" inherit="<<obj.inherit<<" bound="<<obj.bounding;
-	return oss;
-}
+
+std::ostream & operator<<(std::ostream & oss, const cap_statechange & obj);
 
 /**
  * map of states of CHANGES to permissions
@@ -85,25 +68,14 @@ struct cap_statechange_map {
 	std::map<cap_nr, cap_state> state;
 };
 
-std::ostream & operator<<(std::ostream & oss, const cap_statechange_map & obj) {
-	for(const auto & item : obj.state) {
-		oss << item.first << ": " << item.second << "\n";
-	}
-	return oss;
-}
+std::ostream & operator<<(std::ostream & oss, const cap_statechange_map & obj);
 
 struct cap_statechange_full {
 	cap_statechange_map given; ///< changes for defined CAPs
 	cap_permchange all_others; ///< how to change all others CAPs that are not mentioned in #given
 };
 
-std::ostream & operator<<(std::ostream & oss, const cap_statechange_full & obj) {
-	oss << obj.given << "\n" << "all_others: " << obj.all_others ;
-	return oss;
-}
-
-
-
+std::ostream & operator<<(std::ostream & oss, const cap_statechange_full & obj);
 
 };
 
