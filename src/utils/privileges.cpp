@@ -87,7 +87,7 @@ void verify_privileges_are_as_for_mainloop() {
 
 #endif
 
-};
+}
 
 
 
