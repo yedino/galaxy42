@@ -18,6 +18,7 @@ class c_cable_base_addr {
 		c_cable_base_addr(t_cable_kind kind); ///< creates address of given kind. Other details should be set in child class.
 
 	public:
+		c_cable_base_addr() = default; // for enable default ctor in child classes
 		virtual ~c_cable_base_addr()=default;
 		virtual unique_ptr<c_cable_base_addr> clone() const = 0; ///< polymorphic clone
 

@@ -60,7 +60,7 @@ class c_cable_base_obj : public c_someio {
 		 * 	const unsigned char *data, // send data pointer, address is equal async_send_to data parameter\n
 		 * 	size_t size // Number of sended bytes\n
 		 * );
-		 * @throws std::invalid_argument if dst is bad address type
+		 * @throws std::invalid_argument if dest is bad address type
 		 * @throws std::runtime_error if send error
 		 */
 		virtual void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler)=0;
@@ -71,6 +71,8 @@ class c_cable_base_obj : public c_someio {
 		 * @param data pointer to prealocated buffer
 		 * @param size size of prealocated buffer
 		 * @return number of readed bytes
+		 * @throws std::invalid_argument if source is bad address type
+		 * @throws std::runtime_error if receive error
 		 */
 		virtual size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size)=0;
 
