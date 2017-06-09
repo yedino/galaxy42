@@ -122,32 +122,32 @@ public:
 
 // Defines an annotated interface for mutexes.
 // These methods can be implemented to use any internal mutex implementation.
-#include <shared_mutex>
+#include <boost/thread/shared_mutex.hpp>
 class CAPABILITY("mutex") MutexShared {
 private:
-	std::shared_timed_mutex std_mutex;
+	boost::shared_mutex m_boost_shared_mutex;
 public:
   // Acquire/lock this mutex exclusively.  Only one thread can have exclusive
   // access at any one time.  Write operations to guarded data require an
   // exclusive lock.
-  void lock() ACQUIRE(){std_mutex.lock();}
+  void lock() ACQUIRE(){m_boost_shared_mutex.lock();}
   // Try to acquire the mutex.  Returns true on success, and false on failure.
-  bool try_lock() TRY_ACQUIRE(true){return std_mutex.try_lock();}
+  bool try_lock() TRY_ACQUIRE(true){return m_boost_shared_mutex.try_lock();}
 
   // Acquire/lock this mutex for read operations, which require only a shared
   // lock.  This assumes a multiple-reader, single writer semantics.  Multiple
   // threads may acquire the mutex simultaneously as readers, but a writer
   // must wait for all of them to release the mutex before it can acquire it
   // exclusively.
-  void lock_shared() ACQUIRE_SHARED(){std_mutex.lock_shared();}
+  void lock_shared() ACQUIRE_SHARED(){m_boost_shared_mutex.lock_shared();}
   // Try to acquire the mutex for read operations.
-  bool try_lock_shared() TRY_ACQUIRE_SHARED(true) { return std_mutex.try_lock_shared(); }
+  bool try_lock_shared() TRY_ACQUIRE_SHARED(true) { return m_boost_shared_mutex.try_lock_shared(); }
 
   // Release/unlock an exclusive mutex.
-  void unlock() RELEASE(){std_mutex.unlock();}
+  void unlock() RELEASE(){m_boost_shared_mutex.unlock();}
 
   // Release/unlock a shared mutex.
-  void unlock_shared() RELEASE_SHARED(){std_mutex.unlock_shared();}
+  void unlock_shared() RELEASE_SHARED(){m_boost_shared_mutex.unlock_shared();}
 
   // Assert that this mutex is currently held by the calling thread.
 //  void AssertHeld() ASSERT_CAPABILITY(this);

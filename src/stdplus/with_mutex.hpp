@@ -33,7 +33,7 @@ class with_mutex {
 		with_mutex(const TObj & value); ///< construct me from value of TObj
 		with_mutex(TObj && value) noexcept; ///< construct me by moving value of TObj
 
-		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
+		with_mutex<TMutex,TObj>& operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
 
 		/// Safely (under RW exclusive lock) calls function #fun on the #m_obj as read-or-write function (can modify #m_obj)
@@ -92,10 +92,11 @@ with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 { }
 
 template <typename TMutex, typename TObj>
-template<typename TFun>
-typename std::result_of<TFun(TObj&)>::type with_mutex<TMutex,TObj>::use_RW(const TFun & fun) {
+with_mutex<TMutex,TObj>& with_mutex<TMutex,TObj>::operator=(TObj && value) noexcept
+{
 	UniqueLockGuardRW<TMutex> lg( m_mutex );
-	return fun( m_obj );
+	m_obj = value;
+	return *this;
 }
 
 template <typename TMutex, typename TObj>
@@ -105,20 +106,13 @@ typename std::result_of<TFun(const TObj&)>::type with_mutex<TMutex,TObj>::use_RO
 	return fun( m_obj );
 }
 
-
-#if 0
 template <typename TMutex, typename TObj>
-UniqueLockGuardRO<TMutex> with_mutex<TMutex,TObj>::get_lock_RO() const {
-	UniqueLockGuardRO<TMutex> lg(m_mutex);
-	return lg;
+template<typename TFun>
+typename std::result_of<TFun(TObj&)>::type with_mutex<TMutex,TObj>::use_RW(const TFun & fun) {
+	UniqueLockGuardRW<TMutex> lg( m_mutex );
+	return fun( m_obj );
 }
 
-template <typename TMutex, typename TObj>
-UniqueLockGuardRW<TMutex> with_mutex<TMutex,TObj>::get_lock_RW() {
-	UniqueLockGuardRW<TMutex> lg(m_mutex);
-	return lg;
-}
-#endif
 
 template <typename TMutex, typename TObj>
 TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRW<TMutex> & ) {
