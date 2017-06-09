@@ -231,5 +231,45 @@ TEST(cable_udp, receive_from) {
 	EXPECT_NO_THROW(cable.receive_from(addr, buffer.data(), buffer.size()));
 	EXPECT_EQ(addr.get_addr(), expected_endpoint);
 	EXPECT_EQ(buffer, expected_buffer);
+}
 
+
+TEST(cable_udp, receive_from_selector) {
+	// create normal
+	mock::mock_c_card_selector card_selector;
+	boost::asio::io_service io_service; // remote io_service i.e. from siom class
+	c_cable_udp_addr my_addr("127.0.0.1:9000");
+	EXPECT_CALL(Const(card_selector), get_my_addr())
+		.WillRepeatedly(ReturnRef(my_addr));
+	std::shared_ptr<c_asioservice_manager_base> asioservice_manage_ptr = std::make_shared<mock::mock_c_asioservice_manager>(1);
+	EXPECT_CALL(*dynamic_cast<mock::mock_c_asioservice_manager*>(asioservice_manage_ptr.get()), get_next_ioservice())
+		.WillRepeatedly(ReturnRef(io_service));
+	c_cable_udp cable(asioservice_manage_ptr, card_selector);
+	std::array<unsigned char, 1024> buffer;
+
+	// receive with error
+	EXPECT_CALL(cable.m_write_socket, receive_from(_, _))
+		.WillOnce(Invoke(
+			[](const boost::asio::mutable_buffer &, boost::asio::ip::udp::endpoint &) ->std::size_t {
+			throw boost::system::system_error(boost::asio::error::eof);
+		} // lambda
+	));
+	EXPECT_THROW(cable.receive_from(card_selector, buffer.data(), buffer.size()), std::runtime_error);
+
+	// receive normal
+	boost::asio::ip::udp::endpoint expected_endpoint(boost::asio::ip::address_v4::from_string("192.168.1.1"), 9000);
+	std::array<unsigned char, 1024> expected_buffer;
+	expected_buffer.fill(1);
+	buffer.fill(0);
+	EXPECT_CALL(cable.m_write_socket, receive_from(_, _))
+		.WillOnce(Invoke([&](const boost::asio::mutable_buffer &buff, boost::asio::ip::udp::endpoint &endpoint) -> std::size_t {
+			endpoint = boost::asio::ip::udp::endpoint(expected_endpoint);
+			boost::asio::buffer_copy(buff, boost::asio::buffer(expected_buffer.data(), expected_buffer.size()));
+			return boost::asio::buffer_size(buff);
+		} // lambda
+	));
+
+	EXPECT_NO_THROW(cable.receive_from(card_selector, buffer.data(), buffer.size()));
+	EXPECT_EQ(buffer, expected_buffer);
+	EXPECT_EQ(dynamic_cast<c_cable_udp_addr*>(card_selector.m_my_addr.get())->get_addr(), expected_endpoint);
 }
