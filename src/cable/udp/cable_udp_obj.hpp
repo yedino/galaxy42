@@ -27,6 +27,7 @@ class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, async_send_to);
 	FRIEND_TEST(cable_udp, receive_from);
 	FRIEND_TEST(cable_udp, receive_from_selector);
+	FRIEND_TEST(cable_udp, async_receive_from);
 	#ifdef USE_MOCK
 		using t_socket_type = mock::mock_boost_udp_socket;
 		using t_selector_type = mock::mock_c_card_selector;
