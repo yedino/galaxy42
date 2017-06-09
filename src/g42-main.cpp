@@ -3,6 +3,7 @@
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
+#include "utils/privileges.hpp"
 
 namespace developer_tests {
 
@@ -302,6 +303,7 @@ int main(int argc, const char **argv) {
 	the_program->take_args(argt_exe , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
 	the_program->startup_version();
+	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
 	the_program->startup_data_dir();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();

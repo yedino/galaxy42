@@ -28,41 +28,39 @@ namespace my_cap {
 
 #ifdef ANTINET_linux
 
-void drop_privileges_after_tuntap() {
-	_fact("Dropping privileges - after tuntap");
-	auto doit = []() { // doing work in thread, see notes of this file
-		// based on https://people.redhat.com/sgrubb/libcap-ng/
-		capng_clear(CAPNG_SELECT_BOTH);
-		capng_apply(CAPNG_SELECT_BOTH);
-	};
-	doit();
+void drop_privileges_on_startup() {
+	_fact("Dropping privileges - on startup");
+
+	capmodpp::cap_statechange_full change;
+	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
+	change.set_given_cap("NET_ADMIN", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
+	change.set_given_cap("NET_RAW", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
+	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
+	change.security_apply_now();
 }
 
-void drop_privileges_after_root() {
-	_fact("Dropping privileges - after root");
 
-	auto doit = []() { // doing work in thread, see notes of this file
-		// based on https://people.redhat.com/sgrubb/libcap-ng/
-		capng_clear(CAPNG_SELECT_BOTH);
-		capng_apply(CAPNG_SELECT_BOTH);
-	};
-	doit();
+void drop_privileges_after_tuntap() {
+	_fact("Dropping privileges - after tuntap");
+
+	capmodpp::cap_statechange_full change;
+	change.set_all_others({capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
+	change.set_given_cap("NET_ADMIN", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
+	change.security_apply_now();
 }
 
 void drop_privileges_before_mainloop() {
 	_fact("Dropping privileges - before mainloop");
 
-	auto doit = []() { // doing work in thread, see notes of this file
-		// based on https://people.redhat.com/sgrubb/libcap-ng/
-		capng_clear(CAPNG_SELECT_BOTH);
-		capng_apply(CAPNG_SELECT_BOTH);
-	};
-	doit();
+	capmodpp::cap_statechange_full change;
+	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
+	change.security_apply_now();
 }
 
 void verify_privileges_are_as_for_mainloop() {
 	_info("Verifying privileges are dropped");
 
+	// using directly libcap-ng to confirm
 	auto doit = []() { // doing work in thread, see notes of this file
 		// based on https://people.redhat.com/sgrubb/libcap-ng/
 		bool have_any_cap = (capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);

@@ -237,12 +237,9 @@ int c_the_program_newloop::main_execution() {
 
 	pimpl->server = make_unique<c_galaxysrv>();
 
-	my_cap::drop_privileges_after_root(); // [security] ok we're done with root
-
 	this->programtask_load_my_keys();
 	this->programtask_tuntap();
 	my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
-
 
 	this->use_options_peerref();
 

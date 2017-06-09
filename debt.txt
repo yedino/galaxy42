@@ -25,6 +25,10 @@ Noting them here to not forget and keep track.
 === security ===
 
 - we must drop permissions when running as root
+- the utils/capmodpp.* code must check everywhere for error codes, from libcap-ng, and any other
+- utils/capmodpp.* utils/privileges.* code must assert that request cap change was applied
+- utils/capmodpp.* utils/privileges.* code review
+- review/confirmation from someone who understands fully CAP/ID transitions (when root dropping code is in place too)
 
 === locking ===
 
