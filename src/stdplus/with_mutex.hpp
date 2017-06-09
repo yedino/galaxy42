@@ -30,7 +30,7 @@ class with_mutex {
 		with_mutex(const TObj & value); ///< construct me from value of TObj
 		with_mutex(TObj && value) noexcept; ///< construct me by moving value of TObj
 
-		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
+		with_mutex<TMutex,TObj>& operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
 
 #if 0
@@ -76,6 +76,13 @@ with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 : m_obj(std::move(value))
 { }
 
+template <typename TMutex, typename TObj>
+with_mutex<TMutex,TObj>& with_mutex<TMutex,TObj>::operator=(TObj && value) noexcept
+{
+	UniqueLockGuardRW<TMutex> lg( m_mutex );
+	m_obj = value;
+	return *this;
+}
 
 #if 0
 template <typename TMutex, typename TObj>
