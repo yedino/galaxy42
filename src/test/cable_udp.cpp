@@ -273,3 +273,67 @@ TEST(cable_udp, receive_from_selector) {
 	EXPECT_EQ(buffer, expected_buffer);
 	EXPECT_EQ(dynamic_cast<c_cable_udp_addr*>(card_selector.m_my_addr.get())->get_addr(), expected_endpoint);
 }
+
+TEST(cable_udp, async_receive_from) {
+	// create normal
+	mock::mock_c_card_selector card_selector;
+	boost::asio::io_service io_service; // remote io_service i.e. from siom class
+	c_cable_udp_addr my_addr("127.0.0.1:9000");
+	EXPECT_CALL(Const(card_selector), get_my_addr())
+		.WillRepeatedly(ReturnRef(my_addr));
+	std::shared_ptr<c_asioservice_manager_base> asioservice_manage_ptr = std::make_shared<mock::mock_c_asioservice_manager>(1);
+	EXPECT_CALL(*dynamic_cast<mock::mock_c_asioservice_manager*>(asioservice_manage_ptr.get()), get_next_ioservice())
+		.WillRepeatedly(ReturnRef(io_service));
+	c_cable_udp cable(asioservice_manage_ptr, card_selector);
+	std::array<unsigned char, 1024> buffer;
+	buffer.fill(0);
+	std::array<unsigned char, 1024> expected_buffer;
+	expected_buffer.fill(1);
+	boost::asio::ip::udp::endpoint expected_endpoint(boost::asio::ip::address_v4::from_string("192.168.1.1"), 9000);
+
+	read_handler handler_normal = [&](const unsigned char *buff, std::size_t size, c_card_selector_base &selector) {
+		EXPECT_EQ(buff, buffer.data());
+		EXPECT_EQ(size, expected_buffer.size());
+		boost::asio::ip::udp::endpoint endpoint = dynamic_cast<c_cable_udp_addr&>(selector.get_my_addr()).get_addr();
+		EXPECT_EQ(endpoint, expected_endpoint);
+	};
+
+	read_handler handler_error = [&](const unsigned char *buff, std::size_t size, c_card_selector_base &selector) {
+		EXPECT_EQ(buff, buffer.data());
+		EXPECT_EQ(size, 0U);
+		_UNUSED(selector);
+	};
+
+	// read with error
+	EXPECT_CALL(cable.m_read_socket, async_receive_from(_, _, _))
+		.WillOnce(Invoke(
+			[&](const boost::asio::mutable_buffer &buff,
+			   boost::asio::ip::udp::endpoint &endpoint,
+			   std::function<void(const boost::system::error_code&, size_t)> handler) {
+					_UNUSED(buff); _UNUSED(endpoint);
+					boost::system::error_code error_code(boost::asio::error::eof);
+					// add handler to io_service
+					io_service.post([=]{handler(error_code, 0);});
+			} // lambda
+	));
+	EXPECT_NO_THROW(cable.async_receive_from(buffer.data(), buffer.size(), handler_error));
+
+	// read normal
+	EXPECT_CALL(cable.m_read_socket, async_receive_from(_, _, _))
+		.WillOnce(Invoke(
+			[&](const boost::asio::mutable_buffer &buff,
+			   boost::asio::ip::udp::endpoint &endpoint,
+			   std::function<void(const boost::system::error_code&, size_t)> handler) {
+					boost::system::error_code error_code;
+					size_t bytes_transferred = boost::asio::buffer_copy(buff, boost::asio::buffer(expected_buffer.data(), expected_buffer.size()));
+					endpoint = expected_endpoint;
+					// add handler to io_service
+					io_service.post([=]{handler(error_code, bytes_transferred);});
+
+			} // lambda
+	));
+
+	EXPECT_NO_THROW(cable.async_receive_from(buffer.data(), buffer.size(), handler_normal));
+
+	EXPECT_EQ(io_service.poll(), 2U); // execute 2 handlers
+}

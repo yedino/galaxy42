@@ -20,7 +20,7 @@ class c_card_selector;
 class c_card_selector_base;
 
 using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
-using read_handler = const std::function<void(const unsigned char *, std::size_t, c_card_selector &)> &;
+using read_handler = const std::function<void(const unsigned char *, std::size_t, c_card_selector_base &)> &;
 
 class c_cable_base_obj : public c_someio {
 	protected:
@@ -86,7 +86,7 @@ class c_cable_base_obj : public c_someio {
 		 * @param size size of prealocated buffer
 		 * @param handler The handler to be called when the receive operation completes. The function signature of the handler must be:\n
 		 * void handler(\n
-		 *	const unsigned char *data, // receive data pointer, address is equal async_receive_from data parameter\n
+		 * 	const unsigned char *data, // receive data pointer, address is equal async_receive_from data parameter\n
 		 * 	size_t size // Number of sended bytes\n
 		 * );
 		 */
