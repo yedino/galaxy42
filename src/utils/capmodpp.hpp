@@ -67,7 +67,7 @@ std::ostream & operator<<(std::ostream & oss, const cap_statechange & obj);
  * CAP_NET_RAW   eff=leave, permit=leave, inherit=disable, bounding=disable,
  */
 struct cap_statechange_map {
-	std::map<cap_nr, cap_state> state;
+	std::map<cap_nr, cap_statechange> state;
 };
 
 std::ostream & operator<<(std::ostream & oss, const cap_statechange_map & obj);
