@@ -122,7 +122,7 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		template <typename TI>
 		tab_range(TI begin, TI end)
 				: m_begin(begin), m_end(end), m_size(end-begin) {
-			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+			if(std::less<const T*>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
 		/// of course (begin..begin+size] must be valid memory range
@@ -148,11 +148,19 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_range(TC & obj, size_t begin, size_t end)
 				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
-			if (std::less<const T*>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
+			// std::less not required for size_t, but using it to be like the other code above (and correct for review or copy-paste)
+			if (std::less<size_t>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
 		T & at(size_t ix) {
-			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_range out of range");
+			static_assert( std::numeric_limits< decltype(ix)>::min() >= 0, "Incorect type"); // no need to test ix<0 since it's type is non-negative
+			if (ix >= size()) throw std::out_of_range("Reading tab_range out of range");
+			return *( m_begin + ix );
+		}
+
+		const T & at(size_t ix) const {
+			static_assert( std::numeric_limits< decltype(ix)>::min() >= 0, "Incorect type"); // no need to test ix<0 since it's type is non-negative
+			if (ix >= size()) throw std::out_of_range("Reading tab_view out of range");
 			return *( m_begin + ix );
 		}
 
@@ -173,25 +181,23 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 /**
  * Light-weight not-owning, read-only range of some linear memory array.
  * @owner mikurys
- * @TODO make it read only - like a real view
  */
 	template<typename T>
 	class tab_view
 	{
 	public:
-		using iterator = T*;
 		using const_iterator = const T*;
 
 		/// of course (begin..end] must be from same container and must be a valid, linear range
 		template <typename TI>
-		tab_view(TI begin, TI end)
+		tab_view(const TI begin, const TI end)
 				: m_begin(begin), m_end(end), m_size(end-begin) {
-			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+			if (std::less<const TI>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
 		/// of course (begin..begin+size] must be valid memory range
 		template <typename TI>
-		tab_view(TI begin, size_t size)
+		tab_view(const TI begin, size_t size)
 				: m_begin(begin), m_end(begin+size), m_size(size) {
 		}
 
@@ -200,34 +206,24 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 				: m_begin(obj.size()?&(obj.at(0)):nullptr), m_end(m_begin+obj.size()), m_size(obj.size()) { }
 
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
-		tab_view(TC & obj)
-				: m_begin(obj.size()?&(obj.at(0)):nullptr), m_end(m_begin+obj.size()), m_size(obj.size()) { }
-
-		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_view(const TC & obj, size_t begin, size_t end)
 				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
-			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
+			// std::less not required for size_t, but using it to be like the other code above (and correct for review or copy-paste)
+			if (std::less<size_t>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
-		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
-		tab_view(TC & obj, size_t begin, size_t end)
-				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
-			if(end<begin) throw std::invalid_argument("Incorect begin or end (end<begin).");
-		}
-
-		T & at(size_t ix) {
-			if (ix >= size() || ix < 0) throw std::out_of_range("Reading tab_view out of range");
+		const T & at(size_t ix) const {
+			static_assert( std::numeric_limits< decltype(ix)>::min() >= 0, "Incorect type"); // no need to test ix<0 since it's type is non-negative
+			if (ix >= size()) throw std::out_of_range("Reading tab_view out of range");
 			return *( m_begin + ix );
 		}
 
-		iterator begin() {return m_begin;}
-		iterator end() {return m_end;}
 		const_iterator begin() const {return m_begin;}
 		const_iterator end() const {return m_end;}
 		size_t size() const {return m_size;}
 	private:
-		iterator m_begin;
-		iterator m_end;
+		const_iterator m_begin;
+		const_iterator m_end;
 		size_t m_size;
 };
 
