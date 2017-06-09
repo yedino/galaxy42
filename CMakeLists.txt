@@ -334,7 +334,9 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined ${SANITIZER_DETAILED}")
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
-	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument")
+	# add it back when warnings are fixed (bug in clang?) TODO@rob ^---              "-Wthread-safety"
+
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall -Wno-unused-command-line-argument") # mostly used by dependencies
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
@@ -475,6 +477,7 @@ add_custom_target(Debug
 		COMMAND make)
 
 if(NOT MINGW AND NOT WIN32)
+
 	add_custom_target(run
 			COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
 			DEPENDS ./tunserver.elf
@@ -495,6 +498,16 @@ if(NOT MINGW AND NOT WIN32)
 		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights cap on binary, ignoring."
 		COMMAND chmod a+x tunserver.elf
 		COMMAND chmod a+x nocap-tunserver.elf
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+	add_custom_command(
+		TARGET unittests.elf
+		POST_BUILD
+		COMMAND chmod g-wx,o-wx unittests.elf
+		COMMAND cp unittests.elf nocap-unittests.elf
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" unittests.elf || echo "Can not set rights cap on binary, ignoring."
+		COMMAND chmod a+x unittests.elf
+		COMMAND chmod a+x nocap-unittests.elf
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 	add_custom_target(
