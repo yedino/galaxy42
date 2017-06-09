@@ -1,7 +1,8 @@
-
+#pragma once
 #include <sstream>
 #include <stdexcept>
 #include <typeinfo>
+#include <limits>
 
 namespace stdplus {
 
@@ -18,24 +19,67 @@ namespace stdplus {
 namespace eint {
 
 /// Calculate (a-b) in safe way (see documentation and WARNINGS about this namespace)
-/// @TODO now assumes T is UNSIGNED type!
 /// @TODO can variable "b" be silently converted to type T here, including narrowing? if yes then template on T1,T2 and
 /// ...check if b can be properly expanded to T1 ?
 template <typename T>
-T eint_minus(T a, T b) {
-	if (a<b) {
+T eint_minus(T a, T b, typename std::enable_if_t<std::is_integral<T>::value>* = 0) {
+	static_assert(std::numeric_limits<T>::min()<=0, "Integral type does not include 0");
+	static_assert(std::numeric_limits<T>::max()>=0, "Integral type does not include 0"); // it is normal integer with 0 value
+	bool is_overflow=false;
+	if (b<0) {
+		// Here with (b<0) the overflow can be e.g. 100 - (-30) = 130 that overflows e.g. signed char (max=127)
+		// This test detects (a=100 b=-30) as: (max+b < a) -> (127 + -30 < 100) -> (97<100) -> true
+		// Edge case overflow: (a=100 b=-28) as: (max+b < a) -> (127 + -28 < 100) -> (99<100) -> true
+		// Edge case no-overflow: (a=100 b=-27) as: (max+b < a) -> (127 + -27 < 100) -> (100<100) -> false
+		if (std::numeric_limits<T>::max()+b < a) is_overflow = true;
+		// We do not have to check min because if b<0, a-b will never < min, because (-b)>=0 so a-b>=a and a>=min
+	}
+	else if (b>0) {
+		// Here with (b>0) the overflow can be e.g. (-100) - 30 = (-130) that overflows e.g. signed char (min=(-128))
+		// This test detects (a=-100 b=30) as: (min+b > a) -> (-128 + 30 > -100) -> (-98>-100) -> true
+		// Edge case overflow: (a=-100 b=29) as: (min+b > a) -> (-128 + 29 > -100) -> (-99>-100) -> true
+		// Edge case no-overflow: (a=-100 b=28) as: (min+b > a) -> (-128 + 28 > -100) -> (-100>-100) -> false
+		if (std::numeric_limits<T>::min()+b > a) is_overflow = true;
+		// We do not have to check max because if b>0, a-b will never > max, because b>0 so a-b<=a and a<=max
+	}
+	// If b==0 no overflow
+	if (is_overflow) {
 		std::ostringstream oss; oss<<"Math error when calculating (" << a << " - " << b << ") for T="<<typeid(T).name();
 		throw std::range_error(oss.str());
 	}
-	T c = a - b;
-	return c;
+	return a-b;
 }
 
-// TODO
+/// Calculate (a+b) in safe way (see documentation and WARNINGS about this namespace)
+/// @TODO can variable "b" be silently converted to type T here, including narrowing? if yes then template on T1,T2 and
+/// ...check if b can be properly expanded to T1 ?
 template <typename T>
-T eint_plus(T a, T b) {
-	T c = a + b;
-	return c;
+T eint_plus(T a, T b, typename std::enable_if_t<std::is_integral<T>::value>* = 0) {
+	static_assert(std::numeric_limits<T>::min()<=0, "Integral type does not include 0");
+	static_assert(std::numeric_limits<T>::max()>=0, "Integral type does not include 0"); // it is normal integer with 0 value
+	bool is_overflow=false;
+	if (a>0) {
+		// Here with (a>0) the overflow can be e.g. 100 + 30 = 130 that overflows e.g. signed char (max=127)
+		// This test detects (a=100 b=30) as: (max-a < b) -> (127 - 100 < 30) -> (27<30) -> true
+		// Edge case overflow: (a=100 b=28) as: (max-a < b) -> (127 - 100 < 28) -> (27<28) -> true
+		// Edge case no-overflow: (a=100 b=27) as: (max-a < b) -> (127 - 100 < 27) -> (27<27) -> false
+		if (std::numeric_limits<T>::max()-a < b) is_overflow = true;
+		// We do not have to check min because if a>0, a+b will never < min, because a>0 so a+b>=b and b>=min
+	}
+	else if (a<0) {
+		// Here with (a<0) the overflow can be e.g. (-100) + (-30) = (-130) that overflows e.g. signed char (min=128)
+		// This test detects (a=-100 b=-30) as: (min-a > b) -> (-128 - (-100) > -30) -> (-28>-30) -> true
+		// Edge case overflow: (a=-100 b=-29) as: (min-a > b) -> (-128 - -(-100) > -29) -> (-28>-29) -> true
+		// Edge case no-overflow: (a=-100 b=-28) as: (min-a > b) -> (-128 - (-100) > -28) -> (-28>-28) -> false
+		if (std::numeric_limits<T>::min()-a > b) is_overflow = true;
+		// We do not have to check max because if a<0, a+b will never > max, because a<0 so a+b<=b and b<=max
+	}
+	// If b==0 no overflow
+	if (is_overflow) {
+		std::ostringstream oss; oss<<"Math error when calculating (" << a << " + " << b << ") for T="<<typeid(T).name();
+		throw std::range_error(oss.str());
+	}
+	return a+b;
 }
 
 } // namespace eint
