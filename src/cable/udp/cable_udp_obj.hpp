@@ -10,6 +10,7 @@
 #include "../asiocable.hpp"
 #include "../asio_ioservice_manager.hpp"
 #include "../../test/mock_boost_udp_socket.hpp"
+#include "../../test/mock_c_card_selector.hpp"
 
 #include <cable/selector.hpp>
 #include <cable/udp/cable_udp_addr.hpp>
@@ -25,6 +26,14 @@ class c_cable_udp final : public c_asiocable {
 	FRIEND_TEST(cable_udp, send_to_multiple_buffers);
 	FRIEND_TEST(cable_udp, async_send_to);
 	FRIEND_TEST(cable_udp, receive_from);
+	FRIEND_TEST(cable_udp, receive_from_selector);
+	#ifdef USE_MOCK
+		using t_socket_type = mock::mock_boost_udp_socket;
+		using t_selector_type = mock::mock_c_card_selector;
+	#else
+		using t_socket_type = boost::asio::ip::udp::socket;
+		using t_selector_type = c_card_selector;
+	#endif
 	public:
 		/**
 		 * create UDP cable to recv/send, using one source address (can be just port)
@@ -39,7 +48,7 @@ class c_cable_udp final : public c_asiocable {
 		void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) override;
 		void async_send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size, write_handler handler) override;
 
-		size_t receive_from(c_card_selector & source, unsigned char * const data, size_t size);
+		size_t receive_from(c_card_selector_base & source, unsigned char * const data, size_t size) override;
 		size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size) override;
 		void async_receive_from(unsigned char * const data, size_t size, read_handler handler) override;
 
@@ -55,11 +64,6 @@ class c_cable_udp final : public c_asiocable {
 	private:
 		init_ptr_checker m_ptr_checker;
 		t_multisocket_kind m_multisocket_kind; ///< what multisocket strategy we have
-		#ifdef USE_MOCK
-		using t_socket_type = mock::mock_boost_udp_socket;
-		#else
-		using t_socket_type = boost::asio::ip::udp::socket;
-		#endif
 
 		t_socket_type m_write_socket; ///< this is also used to read, if one_rw
 		t_socket_type m_read_socket;

@@ -17,6 +17,7 @@
  * and to unblock async reads (e.g. by calling io_service.stop() for ASIO).
 */
 class c_card_selector;
+class c_card_selector_base;
 
 using write_handler = const std::function<void(const unsigned char *, std::size_t)> &;
 using read_handler = const std::function<void(const unsigned char *, std::size_t, c_card_selector &)> &;
@@ -75,6 +76,8 @@ class c_cable_base_obj : public c_someio {
 		 * @throws std::runtime_error if receive error
 		 */
 		virtual size_t receive_from(c_cable_base_addr & source, unsigned char * const data, size_t size)=0;
+
+		virtual size_t receive_from(c_card_selector_base & source, unsigned char * const data, size_t size)=0;
 
 		/**
 		 * @brief async_receive_from
