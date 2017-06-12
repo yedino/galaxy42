@@ -134,6 +134,10 @@ TEST(xint,can_assign) {
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) ); // TODO
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) ); // TODO
 	UNUSED(a);
+	unsigned int b=0;
+	EXPECT_FALSE( overflow_impossible_in_assign(b, -1));
+	EXPECT_FALSE( overflow_impossible_in_assign(b, -128));
+	EXPECT_FALSE( overflow_impossible_in_assign(b, std::numeric_limits<int>::min()));
 }
 
 TEST(xint,normal_use_op4assign_loop) {
