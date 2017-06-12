@@ -20,6 +20,7 @@ addons:
       - libboost-program-options-dev
       - libboost-thread-dev
       - libboost-locale-dev
+      - libcap-ng-dev
       - libfftw3-dev
       - shellcheck
 
