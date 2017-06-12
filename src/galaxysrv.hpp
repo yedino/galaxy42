@@ -10,6 +10,7 @@
 #include "galaxysrv_cables.hpp"
 #include "galaxysrv_p2p.hpp"
 #include "galaxysrv_e2e.hpp"
+#include "galaxysrv_engine.hpp"
 
 #include "libs1.hpp"
 
@@ -45,10 +46,11 @@
 
 #include "platform.hpp"
 
-// gal.peers.peers_add();
+#include "netbuf.hpp"
+
 
 /// @owner magaNet_user
-class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e {
+class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e, c_galaxysrv_engine {
 	public:
 		c_galaxysrv()=default;
 		virtual ~c_galaxysrv()=default;
@@ -72,6 +74,9 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		void main_loop();
 
 		void start_exit(); ///< start exiting: sets #m_exiting and tries to close connections etc.
+
+		uint16_t get_tuntap_mtu_default() const; ///< get the tuntap MTU size that we want to have by default, e.g. on startup
+		uint16_t get_tuntap_mtu_current() const; ///< get the tuntap MTU size that we have now
 
 	protected:
 
