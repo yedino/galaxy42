@@ -7,8 +7,6 @@
 #include <stdplus/with_mutex.hpp>
 #include <stdplus/vector_mutexed_obj.hpp>
 
-#include <shared_mutex>
-
 
 /**
  * [[optim-engine]] this marker in comments of code will mark things that could be written in other way,

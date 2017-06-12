@@ -33,7 +33,7 @@ class with_mutex {
 		with_mutex(const TObj & value); ///< construct me from value of TObj
 		with_mutex(TObj && value) noexcept; ///< construct me by moving value of TObj
 
-		with_mutex<TMutex,TObj> operator=(TObj && value) noexcept; ///< move this value into me
+		with_mutex<TMutex,TObj>& operator=(TObj && value) noexcept; ///< move this value into me
 		/// }@
 
 		/// Safely (under RW exclusive lock) calls function #fun on the #m_obj as read-or-write function (can modify #m_obj)
@@ -105,6 +105,13 @@ typename std::result_of<TFun(const TObj&)>::type with_mutex<TMutex,TObj>::use_RO
 	return fun( m_obj );
 }
 
+template <typename TMutex, typename TObj>
+with_mutex<TMutex,TObj>& with_mutex<TMutex,TObj>::operator=(TObj && value) noexcept
+{
+	UniqueLockGuardRW<TMutex> lg( m_mutex );
+	m_obj = value;
+	return *this;
+}
 
 #if 0
 template <typename TMutex, typename TObj>
