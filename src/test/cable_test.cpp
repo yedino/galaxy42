@@ -7,6 +7,7 @@
 #include <cable/asio_ioservice_manager.hpp>
 #include <cable/selector.hpp>
 #include <iostream>
+#include <tnetdbg.hpp>
 
 TEST(cable_Test, operators_test) {
 	auto world = make_shared<c_world>();
@@ -66,8 +67,9 @@ TEST(cable_Test, selector_equall) {
 	EXPECT_TRUE( selA == selA );
 }
 
-TEST(c_asioservice_menager_test, resize_to_at_least_test)
+TEST(c_asioservice_manager_test, resize_to_at_least_test)
 {
+	g_dbg_level_set(170, "reduce marks and warnings spam from tests (int_to_enum etc)");
 	size_t size = 1;
 	c_asioservice_manager manager(size);
 	size_t capacity = manager.capacity();
@@ -95,8 +97,9 @@ TEST(c_asioservice_menager_test, resize_to_at_least_test)
 	EXPECT_THROW(manager.resize_to_at_least(manager.capacity()+1), err_check_input);
 }
 
-TEST(c_assioservice_menager_test, get_next_ioservice )
+TEST(c_assioservice_manager_test, get_next_ioservice )
 {
+	g_dbg_level_set(170, "reduce marks and warnings spam from tests (int_to_enum etc)");
 	EXPECT_THROW(c_asioservice_manager(0), err_check_prog);
 	c_asioservice_manager man(1);
 	size_t size = man.capacity();
