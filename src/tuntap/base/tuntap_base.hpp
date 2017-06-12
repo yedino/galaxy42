@@ -13,6 +13,10 @@
 #include "../depends/cjdns-code/syserr.h"
 #include "../../../depends/cjdns-code/NetPlatform.h"
 
+/// what is the size of headers that are removed when creating Merit
+/// e.g. two times IPv6 address, since that is what we are removing from tuntap IPv6 packet
+constexpr static size_t size_removed_from_merit = 2 * 16;
+
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
 
 /// @return error-code-netplatform as a human (developer) string (not translated, it's tech detail)
@@ -42,7 +46,7 @@ constexpr size_t IPV6_LEN = 16;
 class c_tuntap_base_obj : protected c_someio {
 	public:
 		// the callback function that caller can provide
-		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code& error)>;
+		using read_handler = std::function<void(const unsigned char *, std::size_t, const boost::system::error_code &)>;
 
 		virtual ~c_tuntap_base_obj();
 		/**
