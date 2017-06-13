@@ -185,7 +185,7 @@ void c_galaxysrv::main_loop() {
 				try{
 					_dbg3("Reading cables...");
 					c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
-					size_t read =	m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+					size_t read = m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
 					c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 
 					using proto = c_protocolv3;

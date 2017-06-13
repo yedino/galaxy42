@@ -4,6 +4,20 @@
 #include "libs0.hpp"
 #include <boost/asio.hpp>
 
+/**
+ * @brief The c_asioservice_manager_base base class needed for mock
+ */
+class c_asioservice_manager_base {
+	public:
+		virtual ~c_asioservice_manager_base() = default;
+		virtual void resize_to_at_least(size_t size_) = 0;
+		virtual boost::asio::io_service &get_next_ioservice() = 0;
+		// should be noexcept but gmock not support this yet
+		// https://github.com/google/googletest/issues/546
+		virtual size_t capacity() const = 0;
+		virtual size_t size() const = 0;
+		virtual void stop_all_threadsafe() = 0;
+};
 
 /**
 @brief Manager for objects that will use ioservice, provides them with a pool of ioservice objects;
@@ -21,21 +35,22 @@ all resizing must be done in one place, in #resize_to_at_least() !
 @warning All public operations must happen under mutex - #m_mutex
 @owner rf
 */
-class c_asioservice_manager final {
+
+class c_asioservice_manager final : public c_asioservice_manager_base {
 	public:
 		c_asioservice_manager(size_t size_); ///< start manager with size @param size_
 		~c_asioservice_manager();
 
 		/// [thread_safe] set object size to at least this given size. After this all internal arrays for threads
 		/// of number 0 .. size_-1 have created elements ready to be used
-		void resize_to_at_least(size_t size_);
+		void resize_to_at_least(size_t size_) override;
 
-		boost::asio::io_service &get_next_ioservice(); ///< [thread_safe] returns reference to an ioservice, it is valid as long as this object.
+		boost::asio::io_service &get_next_ioservice() override; ///< [thread_safe] returns reference to an ioservice, it is valid as long as this object.
 
-		size_t capacity() const noexcept; ///< [thread_safe] get capacity
-		size_t size() const noexcept; ///< [thread_safe] get current size
+		size_t capacity() const noexcept override; ///< [thread_safe] get capacity
+		size_t size() const noexcept override; ///< [thread_safe] get current size
 
-		void stop_all_threadsafe(); ///< [thread_safe] runs stop on all our ioservices
+		void stop_all_threadsafe() override; ///< [thread_safe] runs stop on all our ioservices
 
 		c_asioservice_manager(const c_asioservice_manager &)=delete; // not copyable
 		c_asioservice_manager& operator=(const c_asioservice_manager &)=delete; // not copyable
