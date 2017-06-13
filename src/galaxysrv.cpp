@@ -22,6 +22,7 @@
 #include <ipv6.hpp>
 
 #include <boost/asio.hpp> // to create local address
+#include <mutex.hpp>
 
 constexpr int cfg_jobs_tuntap_threads = 4;
 
@@ -68,11 +69,13 @@ void c_galaxysrv::main_loop() {
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
 		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
 		_fact("Listen on " << listen1_selector );
-		m_cable_cards.get_card(listen1_selector).listen_on(listen1_selector);
+		{
+			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
+			m_cable_cards.get(lg).get_card(listen1_selector).listen_on(listen1_selector);
+		}
 		_goal("Listening on " << listen1_selector );
 		return listen1_selector;
 	} ();
-
 
 	auto loop_tunread = [&](const int my_job_nr) {
 		auto my_name = [=]() -> std::string {
@@ -122,7 +125,7 @@ void c_galaxysrv::main_loop() {
 					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
 
 					c_tuntap_read_result tuntap_result( // will store here result
-						std::move(  weld.m_buf.get_chunk( weld.m_bufWrite , packet_max)  ) // find empty chunk, will return it as result
+						weld.m_buf.get_chunk( weld.m_bufWrite , packet_max) // find empty chunk, will return it as result
 					);
 
 					// *** block here and read from tuntap ***
@@ -150,7 +153,10 @@ void c_galaxysrv::main_loop() {
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				c_cable_base_obj & door = m_cable_cards.get_card(my_selector);
+				// TODO THREAD SAFE XXX TODO-NOW:
+				// the reference should be used all under lock, probably, not just obtained under lock,
+				// if the card is not thread-safe
+				auto & door = m_cable_cards.use_RW( [&](auto & obj) -> auto& { return obj.get_card(my_selector); }  );
 
 				// generate p2p:
 				using proto = c_protocolv3; /// ^TODO move
@@ -185,7 +191,12 @@ void c_galaxysrv::main_loop() {
 				try{
 					_dbg3("Reading cables...");
 					c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
-					size_t read = m_cable_cards.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+
+					// TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:
+					size_t read =	m_cable_cards.use_RW( [&](auto & obj) -> auto {
+						return obj.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+					} );
+
 					c_netchunk chunk( buf.data() , read ); // actually used part of buffer
 
 					using proto = c_protocolv3;
@@ -222,6 +233,7 @@ void c_galaxysrv::main_loop() {
 
 
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
+
 	for (int i=0; i<cfg_jobs_tuntap_threads; ++i) {
 		_mark("Starting tuntap thread #" << i);
 		threads.push_back( make_unique<std::thread>( loop_tunread , i ) );
@@ -243,7 +255,7 @@ void c_galaxysrv::main_loop() {
 void c_galaxysrv::start_exit() {
 	_goal("Start exiting");
 	m_exiting=1;
-	m_cable_cards.stop_threadsafe();
+	m_cable_cards.use_RW( [](auto & obj_cards) { obj_cards.stop_threadsafe(); } );
 	_goal("Start exiting - ok");
 }
 

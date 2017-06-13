@@ -11,6 +11,8 @@
 #include <string>
 #include "mo_reader.hpp"
 
+#include <mutex>
+
 #include <backward.hpp>
 
 /// Current debug level. Plase change it only using g_dbg_level_set().
@@ -56,9 +58,12 @@ extern const bool g_is_windows_console;
 
 void write_to_console(const std::string& obj);
 
-#define DBGLVL(N) if (!(N>=g_dbg_level)) break
+extern std::recursive_mutex _g_dbg_mutex;
 
-#define _main_dbg(X) std::ostringstream _dbg_oss; _dbg_oss << X; write_to_console(_dbg_oss.str())
+#define DBGLVL(N) if (!(N>=g_dbg_level)) break
+#define DBGLOCK std::lock_guard<std::recursive_mutex> _dbg_lock( _g_dbg_mutex );
+
+#define _main_dbg(X) { DBGLOCK; std::ostringstream _dbg_oss; _dbg_oss << X; write_to_console(_dbg_oss.str()); }
 
 #define _dbg5(X) do { } while(0)
 #define _dbg4(X) do { DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
@@ -69,19 +74,22 @@ void write_to_console(const std::string& obj);
 #define _note(X) do { DBGLVL( 50); _main_dbg("\033[36mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 #define _clue(X) do { DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
-#define _fact_level(LVL_MAIN, LVL_EXTRA, X) do { DBGLVL(LVL_MAIN); \
+#define _fact_level(LVL_MAIN, LVL_EXTRA, X) \
+	do { DBGLVL(LVL_MAIN); \
+	DBGLOCK; \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[92m"; \
 	_dbg_oss<< X; \
-	do { DBGLVL(LVL_EXTRA); _dbg_oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
+	do { \
+		DBGLVL(LVL_EXTRA); _dbg_oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	_dbg_oss << "\033[0m" << ::std::endl; \
 	write_to_console(_dbg_oss.str()); } while(0)
 #define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
-/// yellow code
-//        ::std::cerr<<"Warn! " << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; 
 
-#define _warn(X) do { DBGLVL(100); \
+#define _warn(X) \
+	do { DBGLVL(100); \
+	DBGLOCK; \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[93m"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
@@ -90,7 +98,9 @@ void write_to_console(const std::string& obj);
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
 
-#define _erro(X) do { DBGLVL(200); \
+#define _erro(X) \
+	do { DBGLVL(200); \
+	DBGLOCK; \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[91m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
@@ -98,7 +108,9 @@ void write_to_console(const std::string& obj);
 	write_to_console(_dbg_oss.str());\
 } while(0)
 
-#define _mark(X) do { DBGLVL(150); \
+#define _mark(X) \
+	do { DBGLVL(150); \
+	DBGLOCK; \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[95m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'='; _dbg_oss<<::std::endl; \
 	_dbg_oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
