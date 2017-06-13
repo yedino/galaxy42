@@ -12,7 +12,8 @@
 	#include <linux/types.h>
 	#include <cap-ng.h>
 #else
-	#error "Library capmodpp is not supported on this OS (because linux Capabilities are not supported)."
+	#error "Library capmodpp is not supported on this OS (because linux Capabilities are not supported) - do not include this."
+	// the file including this file, should put his #include into proper #ifdef
 #endif
 
 /**

@@ -97,8 +97,8 @@ const char * secure_capng_capability_to_name(unsigned int capability) {
 		throw capmodpp_error(oss.str());
 	}
 	auto ret = t_const_char_ptr { capng_capability_to_name(capability) };
-	bool fail = (ret==NULL);
-	bool badval = 0;
+	bool fail = (ret==nullptr);
+	bool badval = false;
 	if (fail||badval) {
 		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
 			<< " (ret="<<ret<<") in " << __func__
@@ -134,7 +134,7 @@ int secure_capng_name_to_capability(const char *name) {
 void secure_capng_get_caps_process() {
 	auto ret = int { capng_get_caps_process() }; /// does syscall to actually read state
 	bool fail = (ret!=0);
-	bool badval = 0;
+	bool badval = false;
 	if (fail||badval) {
 		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
 			<< " (ret="<<ret<<") in " << __func__
@@ -162,7 +162,7 @@ void secure_capng_update(capng_act_t action, capng_type_t type,unsigned int capa
 
 	auto ret = int { capng_update(action,type,capability) };
 	bool fail = (ret!=0);
-	bool badval = 0;
+	bool badval = false;
 	if (fail||badval) {
 		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
 			<< " (ret="<<ret<<") in " << __func__
@@ -178,7 +178,7 @@ void secure_capng_apply(capng_select_t set) {
 	}
 	auto ret = int { capng_apply(set) };
 	bool fail = (ret != 0);
-	bool badval = 0;
+	bool badval = false;
 	if (fail||badval) {
 		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
 			<< " (ret="<<ret<<") in " << __func__
