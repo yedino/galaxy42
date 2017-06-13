@@ -11,6 +11,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <map>
+
 #include <type_traits>
 
 // uses libcap-ng - to compare some things like CAP_LAST_CAP
@@ -21,6 +23,8 @@ using namespace std;
 #ifndef ANTINET_linux
 
 // nothing to test on non-linux
+TEST( privileges , nothing_to_test_on_this_platform ) {
+}
 
 #else
 
@@ -32,7 +36,7 @@ using t_rawcaps = map<string,long int>; // raw caps as read from e.g. /proc/self
 
 t_rawcaps read_slash_proc_rights() {
 	t_rawcaps caps;
-	std::string thefilename("/proc/self/status");
+	const std::string thefilename("/proc/self/status");
 	std::ifstream thefile(thefilename);
 	while (thefile.good()) {
 		string line="";
@@ -56,7 +60,7 @@ t_rawcaps read_slash_proc_rights() {
 					iss >> std::hex >> data_int;
 					bool ok = ( (!iss.fail()) && (iss.eof()) );
 					if (!ok) _throw_error_runtime("Can not parse Caps (from thefile "s + thefilename + ") - the line is: ["s + line + "]"s );
-					caps[name] = data_int;
+					caps.emplace(name,data_int); // insert new element
 				} // name
 			} // sep
 		} // Cap
@@ -86,7 +90,7 @@ TEST( privileges , name_and_capnr_conversions ) {
 
 	// example cap name that does not exist
 	// need to update this example if kernel would include such cap in future :)
-	EXPECT_THROW( capmodpp::cap_name_to_nr("MINE_BITCOINS") , std::runtime_error );
+	EXPECT_THROW( capmodpp::cap_name_to_nr("MINE_BITCOINS") , capmodpp::capmodpp_error );
 	EXPECT_NO_THROW( capmodpp::cap_name_to_nr("SYS_ADMIN") );
 }
 

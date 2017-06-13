@@ -1,5 +1,5 @@
 
-#pragma oncs
+#pragma once
 
 
 
