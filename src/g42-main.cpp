@@ -303,7 +303,13 @@ int main(int argc, const char **argv) {
 	the_program->take_args(argt_exe , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
 	the_program->startup_version();
+
 	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
+	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
+	// to report any problems with CAPs (eg compatibility issues),
+	// and we expect to have no exploitable code in this short code to setup console and show version
+	// (especially as none of it depends on user provided inputs)
+
 	the_program->startup_data_dir();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();

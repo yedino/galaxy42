@@ -14,6 +14,9 @@
 #include <cstring>
 
 #define debug_capmodpp 0
+#if (debug_capmodpp)
+	#pragma message "You are using special debug in this file. Do NOT DO THAT in production as it is insecure/UB"
+#endif
 
 namespace capmodpp {
 
@@ -81,8 +84,8 @@ capng_results_t secure_capng_have_capabilities(capng_select_t set) {
 bool safe_less_eq_than(int a, unsigned int b) {
 	if (a<0) return true; // because b can't be below 0
 	// now both a,b are >=0
-	unsigned int a_uns = static_cast<unsigned int>( a ); // it's unsigned so we can cast it like that. (example on chars: -128 will fit into 0..+256)
-	return a_uns <= b;
+	unsigned int a_unsign = static_cast<unsigned int>( a ); // it's unsigned so we can cast it like that
+	return a_unsign <= b;
 }
 
 const char * secure_capng_capability_to_name(unsigned int capability) {
@@ -129,7 +132,7 @@ int secure_capng_name_to_capability(const char *name) {
 }
 
 void secure_capng_get_caps_process() {
-	auto ret = int { capng_get_caps_process() };
+	auto ret = int { capng_get_caps_process() }; /// does syscall to actually read state
 	bool fail = (ret!=0);
 	bool badval = 0;
 	if (fail||badval) {
@@ -333,14 +336,14 @@ std::ostream & operator<<(std::ostream & ostr, const cap_permchange & obj) {
 
 cap_state_map read_process_caps() {
 	cap_state_map statemap;
-	secure_capng_get_caps_process(); // explicit re-read (though not 100% sure if capng isn't caching it there)
+	secure_capng_get_caps_process(); // read current state from syscall (igoring cached libng state)
 	for (cap_nr nr=0; nr<CAP_LAST_CAP; ++nr) {
 		cap_state state;
 		state.eff      = (secure_capng_have_capability(CAPNG_EFFECTIVE    , nr) > 0) ? cap_perm::yes : cap_perm::no;
 		state.permit   = (secure_capng_have_capability(CAPNG_PERMITTED    , nr) > 0) ? cap_perm::yes : cap_perm::no;
 		state.inherit  = (secure_capng_have_capability(CAPNG_INHERITABLE  , nr) > 0) ? cap_perm::yes : cap_perm::no;
 		state.bounding = (secure_capng_have_capability(CAPNG_BOUNDING_SET , nr) > 0) ? cap_perm::yes : cap_perm::no;
-		statemap.state[nr] = state;
+		statemap.state.emplace(nr,state);
 	}
 	return statemap;
 }
@@ -351,11 +354,11 @@ std::ostream & operator<<(std::ostream & ostr, const cap_statechange & obj) {
 }
 
 void cap_statechange_map::set(const std::string & capname , cap_statechange change) {
-	this->state[ cap_name_to_nr(capname) ] = change;
+	this->state.emplace( cap_name_to_nr(capname) , change);
 }
 
 void cap_statechange_map::print(std::ostream & ostr, int level) const {
-	size_t skipped=0;
+	size_t skipped{0};
 	for(const auto & item : this->state) {
 		bool interesting = item.second.is_change();
 		if ( (level>=20) || (interesting) ) {
@@ -419,7 +422,7 @@ void cap_statechange_full::security_apply_now() {
 	}
 
 	{
-		secure_capng_get_caps_process(); // cap-ng state = read current state (though this is NOT 100% sure to re-read now) TODO
+		secure_capng_get_caps_process(); // cap-ng state = read current state from syscall (igoring cached libng state)
 
 		// apply differences (old to new) to the cap-ng state:
 		for(const auto & item : state_new.state) {

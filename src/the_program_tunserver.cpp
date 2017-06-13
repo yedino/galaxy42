@@ -209,6 +209,7 @@ int c_the_program_tunserver::main_execution() {
 	_mark("Main execution of the old-loop");
 	_warn("Remember, that this old-loop code is NOT secured as new-loop code, e.g. is not droping CAP/root privileges!");
 	{ using namespace std::chrono_literals;	std::this_thread::sleep_for(1s); }
+	// ^ sleep to let user see this message clearly.
 
 	_program_section;
 		try { // try parsing

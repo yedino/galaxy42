@@ -155,6 +155,9 @@ void c_galaxysrv::main_loop() {
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
+				// TODO THREAD SAFE XXX TODO-NOW:
+				// the reference should be used all under lock, probably, not just obtained under lock,
+				// if the card is not thread-safe
 				auto & door = m_cable_cards.use_RW( [&](auto & obj) -> auto& { return obj.get_card(my_selector); }  );
 
 				// generate p2p:

@@ -83,6 +83,7 @@ const char * secure_capng_capability_to_name(unsigned int capability);
 int secure_capng_name_to_capability(const char *name);
 
 /// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @note this will: read current state from syscall (igoring cached libng state)
 /// @see int capng_get_caps_process(void)
 /// @return nothing is returned here (as it was used only to signal error)
 void secure_capng_get_caps_process();
@@ -127,7 +128,7 @@ enum class cap_perm { no=0, yes=1 }; ///< one capability-type state can be yes o
 
 struct cap_statechange;
 
-struct cap_state { ///< one capability entire state, including effective, permited, inheritable and bounding
+struct cap_state final { ///< one capability entire state, including effective, permited, inheritable and bounding
 	cap_perm eff, permit, inherit, bounding; ///< this cap has enabled/disabled effective, permited, inheritable, effective
 	cap_state();
 
@@ -161,7 +162,7 @@ cap_state_map read_process_caps();
 // @}
 
 // ===========================================================================================================
-// @group cap-permission CHANGES (enable / disable / leave unchanged)
+// @defgroup cap-permission CHANGES (enable / disable / leave unchanged)
 // @{
 
 /// one capability-type state CHANGE: can be to enable, disable, or leave unchanged
@@ -169,17 +170,21 @@ enum class cap_permchange { disable=0, enable=1, unchanged=2 };
 
 std::ostream & operator<<(std::ostream & ostr, const cap_permchange & obj);
 
-struct t_eff_value     { cap_permchange value; };
+// @{ this are hard-typedef types, so that we can write function that demands args t_eff_value, t_permit_value,
+// and it is static error in compilation to by mistake call it func(v_eff_enable, v_eff_enable) - the
+// second arg is hard type error as t_permit_value is other type then t_eff_value
+// with just a typedef/using, it would not be an error
+struct t_eff_value final     { cap_permchange value; };
 extern const t_eff_value v_eff_enable, v_eff_disable, v_eff_unchanged;
 
-struct t_permit_value  { cap_permchange value; };
+struct t_permit_value final  { cap_permchange value; };
 extern const t_permit_value v_permit_enable, v_permit_disable, v_permit_unchanged;
 
-struct t_inherit_value { cap_permchange value; };
+struct t_inherit_value final { cap_permchange value; };
 extern const t_inherit_value v_inherit_enable, v_inherit_disable, v_inherit_unchanged;
 
 /// one capability entire state CHANGE, including effective, permited, inheritable and bounding
-struct cap_statechange {
+struct cap_statechange final {
 	/// this cap has separate CHANGE decissions, for each area: effective, permited, inheritable, effective
 	cap_permchange eff, permit, inherit, bounding;
 
@@ -199,7 +204,7 @@ std::ostream & operator<<(std::ostream & ostr, const cap_statechange & obj);
  * CAP_NET_ADMIN eff=leave, permit=leave, inherit=disable, bounding=disable,
  * CAP_NET_RAW   eff=leave, permit=leave, inherit=disable, bounding=disable,
  */
-struct cap_statechange_map {
+struct cap_statechange_map final {
 	std::map<cap_nr, cap_statechange> state;
 
 	/// set the planned changed for cap named #capname to change value #change
@@ -210,7 +215,7 @@ struct cap_statechange_map {
 
 std::ostream & operator<<(std::ostream & ostr, const cap_statechange_map & obj);
 
-struct cap_statechange_full {
+struct cap_statechange_full final {
 	cap_statechange_map given; ///< changes for defined CAPs
 	cap_statechange all_others; ///< how to change all others CAPs that are not mentioned in #given
 

@@ -1,3 +1,8 @@
+
+#include "platform.hpp"
+
+#ifdef ANTINET_linux
+
 #include "my_tests_lib.hpp"
 
 #include "../utils/capmodpp.hpp"
@@ -107,3 +112,11 @@ TEST( capmodpp_test , cap_statechange_operator_test ) {
 		EXPECT_EQ(osstream.str(), std::string("eff=enable permit=enable inherit=enable bound=enable"));
 	}
 }
+
+#else
+
+TEST( capmodpp_test , nothing_to_test_on_this_platform ) {
+}
+
+#endif
+
