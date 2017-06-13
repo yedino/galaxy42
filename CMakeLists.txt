@@ -227,9 +227,9 @@ if (BUILD_STATIC_TUNSERVER)
 endif()
 
 if (MSVC)
-	set(BOOST_LIBS_LIST system filesystem thread)
+	set(BOOST_LIBS_LIST system filesystem thread date_time)
 else()
-	set(BOOST_LIBS_LIST system filesystem program_options thread)
+	set(BOOST_LIBS_LIST system filesystem program_options thread date_time)
 endif()
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
 
