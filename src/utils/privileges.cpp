@@ -63,7 +63,7 @@ void verify_privileges_are_as_for_mainloop() {
 	// using directly libcap-ng to confirm
 	auto doit = []() { // doing work in thread, see notes of this file
 		// based on https://people.redhat.com/sgrubb/libcap-ng/
-		bool have_any_cap = (capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
+		bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
 		if (have_any_cap) {
 			_erro("We still have some CAP capability, when we expected to have none by now!");
 			std::abort(); // <=== abort because security error

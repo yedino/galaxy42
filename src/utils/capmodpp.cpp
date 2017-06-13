@@ -1,21 +1,192 @@
 
-#include <platform.hpp>
+#include "platform.hpp" // just to detect OS type, is it ANTINET_linux
+
+#ifdef ANTINET_linux
+
+
 #include <iomanip>
 #include "capmodpp.hpp"
 
+#include <linux/types.h>
+#include <limits>
+#include <cap-ng.h>
 
-#ifdef ANTINET_linux
-	#include <linux/types.h>
-
-	// uses libcap-ng
-	#include <cap-ng.h>
-#else
-	#error "not supported"
-#endif
+#include <cstring>
 
 #define debug_capmodpp 0
 
 namespace capmodpp {
+
+/// @group typedefs to use in syntax auto x = type { .... }; while a C++ defect(?) disallows "multi-word" types.
+/// @{
+using t_const_char_ptr = const char *;
+/// @}
+
+
+capmodpp_error::capmodpp_error(const std::string & msg)
+: m_msg(msg) { }
+
+const char * capmodpp_error::what() const {
+	return m_msg.c_str();
+}
+
+// ===========================================================================================================
+
+// Wrapped functions
+// CODE STYLE - I use variables fail and badval; Fail is when underlying function signaled error, or there was some error seen
+// badval is when the returned value is not valid
+// I use both even in cases where there only one of them is needed, so entire code-blocks is identical in all of them
+// Could had used macro like assert_correct_result( (ret==CAPNG_FAIL) , ((ret==0)||(ret==1)) );
+// but not using it so code is more readable for security review.
+
+int secure_capng_have_capability(capng_type_t which, unsigned int capability) {
+	auto ret = int { capng_have_capability(which,capability) };
+	bool fail = (ret == CAPNG_FAIL);
+	bool badval = ! (  (ret==0) || (ret==1)  );
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for which="<<which<<" capability="<<capability<<".";
+		throw capmodpp_error(oss.str());
+	}
+	return ret;
+}
+
+capng_results_t secure_capng_have_capabilities(capng_select_t set) {
+	if (!(  (set==CAPNG_SELECT_CAPS)||(set==CAPNG_SELECT_BOUNDS)||(set==CAPNG_SELECT_BOTH)  )) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< ": set="<<set<<"." ;
+		throw capmodpp_error(oss.str());
+	}
+	auto ret = capng_results_t { capng_have_capabilities(set) };
+	bool fail = (ret == CAPNG_FAIL);
+	bool badval = ! (  (ret==CAPNG_NONE) || (ret==CAPNG_PARTIAL) || (ret==CAPNG_FULL)  );
+	static_assert(CAPNG_PARTIAL > 0 , "this value was promised to be greater-then 0.");
+	static_assert(CAPNG_FULL > 0 , "this value was promised to be greater-then 0.");
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for set="<<set<<".";
+		throw capmodpp_error(oss.str());
+	}
+	if ( (ret != CAPNG_FAIL) && (!( ret>0 )) ) {
+		std::ostringstream oss; oss<<"Error: " << " values other then CAPNG_FAIL were supposed to be >0, but are not:"
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for set="<<set<<".";
+		throw capmodpp_error(oss.str());
+	}
+	return ret;
+}
+
+// Test whether a<=b, in a safe way that doesn't cause UB
+bool safe_less_eq_than(int a, unsigned int b) {
+	if (a<0) return true; // because b can't be below 0
+	// now both a,b are >=0
+	unsigned int a_uns = static_cast<unsigned int>( a ); // it's unsigned so we can cast it like that. (example on chars: -128 will fit into 0..+256)
+	return a_uns <= b;
+}
+
+const char * secure_capng_capability_to_name(unsigned int capability) {
+	static_assert(std::numeric_limits<decltype(capability)>::is_signed==false, "This must be unsigned (as we do not test for >=0)");
+	bool inputok = (capability<=get_last_cap_nr());
+	if (!inputok) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__
+			<< " for capability="<<capability<<".";  // WARNING: output only values that are valid enough
+		throw capmodpp_error(oss.str());
+	}
+	auto ret = t_const_char_ptr { capng_capability_to_name(capability) };
+	bool fail = (ret==NULL);
+	bool badval = 0;
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for capability="<<capability<<".";
+		throw capmodpp_error(oss.str());
+	}
+	return ret;
+}
+
+int secure_capng_name_to_capability(const char *name) {
+	if (name == nullptr) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< " (name was null).";
+		throw capmodpp_error(oss.str());
+	}
+	auto len = size_t { std::strlen(name) };
+	if ( (len<=0) || (len > max_expected_cap_name_length)) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__
+			<< "(name had invalid length len="<<len<<").";
+		throw capmodpp_error(oss.str());
+	}
+	auto ret = int { capng_name_to_capability(name) };
+	bool fail = (ret==-1);
+	bool badval = ! ( (ret>=0) && safe_less_eq_than(ret , get_last_cap_nr()) );
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for name="<<name<<".";  // WARNING: output only values that are valid enough
+		throw capmodpp_error(oss.str());
+	}
+	return ret;
+}
+
+void secure_capng_get_caps_process() {
+	auto ret = int { capng_get_caps_process() };
+	bool fail = (ret!=0);
+	bool badval = 0;
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< "."
+			;
+		throw capmodpp_error(oss.str());
+	}
+}
+
+void secure_capng_update(capng_act_t action, capng_type_t type,unsigned int capability) {
+	if (!(  (action==CAPNG_DROP)||(action==CAPNG_ADD)   )) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< ": action="<<action<<"." ;
+		throw capmodpp_error(oss.str());
+	}
+	if (!(  (type==CAPNG_EFFECTIVE)||(type==CAPNG_PERMITTED)||(type==CAPNG_INHERITABLE)||(type==CAPNG_BOUNDING_SET)  )) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< ": type="<<type<<"." ;
+		throw capmodpp_error(oss.str());
+	}
+
+	if (!(  (capability<=get_last_cap_nr()) )) {
+		static_assert(std::numeric_limits<decltype(capability)>::is_signed==false, "This must be unsigned (as we do not test for >=0)");
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__ << ": capability="<<capability<<".";
+		throw capmodpp_error(oss.str());
+	}
+
+	auto ret = int { capng_update(action,type,capability) };
+	bool fail = (ret!=0);
+	bool badval = 0;
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for action="<<action<<",type="<<type<<"capability="<<capability;  // WARNING: output only values that are valid enough
+		throw capmodpp_error(oss.str());
+	}
+}
+
+void secure_capng_apply(capng_select_t set) {
+	if (!(  (set==CAPNG_SELECT_CAPS)||(set==CAPNG_SELECT_BOUNDS)||(set==CAPNG_SELECT_BOTH)   )) {
+		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< ": set="<<set<<"." ;
+		throw capmodpp_error(oss.str());
+	}
+	auto ret = int { capng_apply(set) };
+	bool fail = (ret != 0);
+	bool badval = 0;
+	if (fail||badval) {
+		std::ostringstream oss; oss<<"Error: " << (fail ? "FAILED":"") << " " << (badval ? "BAD-VALUE":"")
+			<< " (ret="<<ret<<") in " << __func__
+			<< " for set="<<set<<".";
+		throw capmodpp_error(oss.str());
+	}
+}
+
+
+
+// ===========================================================================================================
 
 const t_eff_value v_eff_enable{cap_permchange::enable};
 const t_eff_value v_eff_disable{cap_permchange::disable};
@@ -29,11 +200,14 @@ const t_inherit_value v_inherit_enable{cap_permchange::enable};
 const t_inherit_value v_inherit_disable{cap_permchange::disable};
 const t_inherit_value v_inherit_unchanged{cap_permchange::unchanged};
 
-cap_nr get_last_cap_nr() {
+cap_nr get_last_cap_nr() noexcept {
 	return CAP_LAST_CAP;
 }
 
-cap_nr get_cap_size() {
+cap_nr get_cap_size() noexcept {
+	auto constexpr last = CAP_LAST_CAP;
+	// can we add +1 without overflow, here:
+	static_assert( std::numeric_limits<cap_nr>::max() - last >= 1 , "CAP_LAST_CAP would overflow" );
 	return CAP_LAST_CAP+1;
 }
 
@@ -42,11 +216,11 @@ std::string cap_nr_to_name(cap_nr nr) {
 		std::ostringstream oss; oss << "invalid_cap_" << nr;
 		throw std::runtime_error(oss.str());
 	}
-	return capng_capability_to_name(nr);
+	return capmodpp::secure_capng_capability_to_name(nr);
 }
 
 cap_nr cap_name_to_nr(const std::string & name) {
-	auto nr = capng_name_to_capability(name.c_str());
+	auto nr = capmodpp::secure_capng_name_to_capability(name.c_str());
 	long int nr_long{ nr };
 	long int last_long{ get_last_cap_nr() };
 	if ((nr_long >= last_long ) || (nr<0)) {
@@ -159,13 +333,13 @@ std::ostream & operator<<(std::ostream & ostr, const cap_permchange & obj) {
 
 cap_state_map read_process_caps() {
 	cap_state_map statemap;
-	capng_get_caps_process(); // explicit re-read (though not 100% sure if capng isn't caching it there)
+	secure_capng_get_caps_process(); // explicit re-read (though not 100% sure if capng isn't caching it there)
 	for (cap_nr nr=0; nr<CAP_LAST_CAP; ++nr) {
 		cap_state state;
-		state.eff      = (capng_have_capability(CAPNG_EFFECTIVE    , nr) > 0) ? cap_perm::yes : cap_perm::no;
-		state.permit   = (capng_have_capability(CAPNG_PERMITTED    , nr) > 0) ? cap_perm::yes : cap_perm::no;
-		state.inherit  = (capng_have_capability(CAPNG_INHERITABLE  , nr) > 0) ? cap_perm::yes : cap_perm::no;
-		state.bounding = (capng_have_capability(CAPNG_BOUNDING_SET , nr) > 0) ? cap_perm::yes : cap_perm::no;
+		state.eff      = (secure_capng_have_capability(CAPNG_EFFECTIVE    , nr) > 0) ? cap_perm::yes : cap_perm::no;
+		state.permit   = (secure_capng_have_capability(CAPNG_PERMITTED    , nr) > 0) ? cap_perm::yes : cap_perm::no;
+		state.inherit  = (secure_capng_have_capability(CAPNG_INHERITABLE  , nr) > 0) ? cap_perm::yes : cap_perm::no;
+		state.bounding = (secure_capng_have_capability(CAPNG_BOUNDING_SET , nr) > 0) ? cap_perm::yes : cap_perm::no;
 		statemap.state[nr] = state;
 	}
 	return statemap;
@@ -245,7 +419,7 @@ void cap_statechange_full::security_apply_now() {
 	}
 
 	{
-		capng_get_caps_process(); // cap-ng state = read current state
+		secure_capng_get_caps_process(); // cap-ng state = read current state (though this is NOT 100% sure to re-read now) TODO
 
 		// apply differences (old to new) to the cap-ng state:
 		for(const auto & item : state_new.state) {
@@ -257,31 +431,31 @@ void cap_statechange_full::security_apply_now() {
 
 			if (cap_new.bounding != cap_old.bounding) {
 				if (dbg) std::cerr<<"applying BOUND nr = " << nr << std::endl;
-				auto ret = capng_update( (cap_new.bounding == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_BOUNDING_SET,    nr);
-				if (ret!=0) throw std::runtime_error("Can not apply CAP flag (bounding)");
+				secure_capng_update( (cap_new.bounding == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_BOUNDING_SET,    nr);
 			}
 			if (cap_new.permit != cap_old.permit) {
 				if (dbg) std::cerr<<"applying PERMIT nr = " << nr << std::endl;
-				auto ret = capng_update( (cap_new.permit   == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_PERMITTED   ,    nr);
-				if (ret!=0) throw std::runtime_error("Can not apply CAP flag");
+				secure_capng_update( (cap_new.permit   == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_PERMITTED   ,    nr);
 			}
 			if (cap_new.eff != cap_old.eff) {
 				if (dbg) std::cerr<<"applying EFF nr = " << nr << std::endl;
-				auto ret = capng_update( (cap_new.eff      == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_EFFECTIVE   ,    nr);
-				if (ret!=0) throw std::runtime_error("Can not apply CAP flag");
+				secure_capng_update( (cap_new.eff      == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_EFFECTIVE   ,    nr);
 			}
 			if (cap_new.inherit != cap_old.inherit) {
 				if (dbg) std::cerr<<"applying INHERIT nr = " << nr << std::endl;
-				auto ret = capng_update( (cap_new.inherit  == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_INHERITABLE ,    nr);
-				if (ret!=0) throw std::runtime_error("Can not apply CAP flag");
+				secure_capng_update( (cap_new.inherit  == cap_perm::yes) ? CAPNG_ADD : CAPNG_DROP, CAPNG_INHERITABLE ,    nr);
 			}
 		}
-		capng_apply(CAPNG_SELECT_BOTH); // <--- actually apply the cap-ng state to system
+		secure_capng_apply(CAPNG_SELECT_BOTH); // <--- actually apply the cap-ng state to system
 	}
 
 }
 
 
 }//namespace capmodpp
+
+#undef debug_capmodpp
+
+#endif
 
 
