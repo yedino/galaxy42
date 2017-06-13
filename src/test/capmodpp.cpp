@@ -22,7 +22,7 @@ TEST( capmodpp_test , cap_perm_operator_test ) {
 	{
 		std::ostringstream osstream;
 		osstream << no;
-		EXPECT_EQ(osstream.str(), std::string("no"));
+		EXPECT_EQ(osstream.str(), std::string("no."));
 	}
 }
 
@@ -31,25 +31,25 @@ TEST( capmodpp_test , cap_state_operator_test ) {
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=no permit=no inherit=no bound=no"));
+		EXPECT_EQ(osstream.str(), std::string("eff=no. permit=no. inherit=no. bound=no."));
 	}
 	test_obj.bounding=cap_perm::yes;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=no permit=no inherit=no bound=YES"));
+		EXPECT_EQ(osstream.str(), std::string("eff=no. permit=no. inherit=no. bound=YES"));
 	}
 	test_obj.eff=cap_perm::yes;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=YES permit=no inherit=no bound=YES"));
+		EXPECT_EQ(osstream.str(), std::string("eff=YES permit=no. inherit=no. bound=YES"));
 	}
 	test_obj.inherit=cap_perm::yes;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=YES permit=no inherit=YES bound=YES"));
+		EXPECT_EQ(osstream.str(), std::string("eff=YES permit=no. inherit=YES bound=YES"));
 	}
 	test_obj.permit=cap_perm::yes;
 	{
@@ -76,7 +76,7 @@ TEST( capmodpp_test , cap_permchange_operator_test ) {
 	{
 		std::ostringstream osstream;
 		osstream << disable;
-		EXPECT_NE(osstream.str().find("disable"), std::string::npos);
+		EXPECT_NE(osstream.str().find("remove"), std::string::npos);
 	}
 }
 
@@ -85,32 +85,32 @@ TEST( capmodpp_test , cap_statechange_operator_test ) {
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		//std::string out = "eff=" + STR(cap_permchange::unchanged) + " permit="
-		EXPECT_EQ(osstream.str(), std::string("eff=unchanged permit=unchanged inherit=unchanged bound=unchanged"));
+		//std::string out = "eff=" + STR(cap_permchange::(same)) + " permit="
+		EXPECT_EQ(osstream.str(), std::string("eff=(same) permit=(same) inherit=(same) bound=(same)"));
 	}
 	test_obj.bounding=cap_permchange::enable;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=unchanged permit=unchanged inherit=unchanged bound=enable"));
+		EXPECT_EQ(osstream.str(), std::string("eff=(same) permit=(same) inherit=(same) bound=ENABLE"));
 	}
 	test_obj.eff=cap_permchange::enable;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=enable permit=unchanged inherit=unchanged bound=enable"));
+		EXPECT_EQ(osstream.str(), std::string("eff=ENABLE permit=(same) inherit=(same) bound=ENABLE"));
 	}
 	test_obj.inherit=cap_permchange::enable;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=enable permit=unchanged inherit=enable bound=enable"));
+		EXPECT_EQ(osstream.str(), std::string("eff=ENABLE permit=(same) inherit=ENABLE bound=ENABLE"));
 	}
 	test_obj.permit=cap_permchange::enable;
 	{
 		std::ostringstream osstream;
 		osstream << test_obj;
-		EXPECT_EQ(osstream.str(), std::string("eff=enable permit=enable inherit=enable bound=enable"));
+		EXPECT_EQ(osstream.str(), std::string("eff=ENABLE permit=ENABLE inherit=ENABLE bound=ENABLE"));
 	}
 }
 

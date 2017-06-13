@@ -260,7 +260,7 @@ void cap_state::apply_change(const cap_statechange & change) {
 }
 
 std::ostream & operator<<(std::ostream & ostr, const cap_perm & obj) {
-	ostr <<  ( (obj == cap_perm::yes) ? "YES" : "no " ) ;
+	ostr <<  ( (obj == cap_perm::yes) ? "YES" : "no." ) ;
 	return ostr;
 }
 
