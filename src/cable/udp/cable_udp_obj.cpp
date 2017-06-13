@@ -7,13 +7,13 @@
 
 using namespace boost::asio::ip;
 
-c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager, const c_card_selector &source_addr)
+c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector_base &source_addr)
 :
 	c_asiocable(iomanager)
 	,m_multisocket_kind( default_multisocket_kind() )
 	,m_write_socket( get_io_service(), (dynamic_cast<const c_cable_udp_addr&>(source_addr.get_my_addr())).get_addr() )
 	#ifdef ANTINET_socket_use_two_and_reuse
-	,m_read_socket(  get_io_service(), boost::asio::ip::udp::v4() )
+	,m_read_socket( get_io_service(), boost::asio::ip::udp::v4() )
 	#else
 	,m_read_socket( get_io_service() )
 	#endif
@@ -22,8 +22,11 @@ c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager> & iomanager, const c_
 		_note("Will set socket reuse");
 		boost::asio::socket_base::reuse_address option(true);
 		m_write_socket.set_option(option); // not so important when we have just 1 socket
+		// if faliture throws boost::system::system_error(child class of std::runtime_error)
 	#endif
 
+	if (!m_read_socket.is_open() || !m_write_socket.is_open())
+		throw std::runtime_error("UDP socket not open");
 	_note("Created UDP card: \n"
 		<< "  Read socket:  open="<< m_read_socket.is_open() << " native="<<m_read_socket.native_handle() << "\n"
 		<< "  Write socket: open="<< m_write_socket.is_open() << " native="<<m_write_socket.native_handle());
@@ -35,12 +38,13 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *d
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
 		_dbg4("UDP to " << destination_endpoint);
 		m_write_socket.send_to(boost::asio::buffer(data, size), destination_endpoint);
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
 		_warn("Can not send UDP");
 		throw;
 	}
 }
-
 
 void c_cable_udp::send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) {
 	_dbg3("Seding (blocking) UDP, buffers count = " << buffers.size() << " dest = " << dest);
@@ -48,6 +52,8 @@ void c_cable_udp::send_to(const c_cable_base_addr & dest, const t_asio_buffers_s
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
 		_dbg4("UDP to " << destination_endpoint);
 		m_write_socket.send_to(buffers, destination_endpoint);
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
 		_warn("Can not send UDP");
 		throw;
@@ -65,21 +71,40 @@ void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned ch
 				handler(data, bytes_transferred);
 			} // lambda
 		);
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
 		_warn("Can not send UDP");
 		throw;
 	}
 }
 
-size_t c_cable_udp::receive_from(c_card_selector &source, unsigned char *const data, size_t size) {
+size_t c_cable_udp::receive_from(c_card_selector_base &source, unsigned char *const data, size_t size) {
 	_dbg3("Receive (blocking) UDP");
 	try {
 		udp::endpoint their_ep;
 		size_t readed_bytes = (has_separate_rw() ? m_read_socket : m_write_socket).receive_from(boost::asio::buffer(data, size), their_ep);
 		unique_ptr<c_cable_base_addr> their_ep_cable = make_unique<c_cable_udp_addr>( their_ep );
-		source = c_card_selector( std::move( their_ep_cable ) );
+		dynamic_cast<t_selector_type&>(source) = t_selector_type( std::move( their_ep_cable ) );
 		return readed_bytes;
 	} catch(...) {
+		_warn("Can not receive UDP");
+		throw;
+	}
+}
+
+size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
+	_dbg3("Receive (blocking) UDP");
+	try {
+		_UNUSED(dynamic_cast<c_cable_udp_addr&>(source)); // check type
+		udp::endpoint their_ep;
+		size_t readed_bytes = (has_separate_rw() ? m_read_socket : m_write_socket).receive_from(boost::asio::buffer(data, size), their_ep);
+		c_cable_udp_addr their_ep_addr( their_ep );
+		dynamic_cast<c_cable_udp_addr&>(source) = their_ep_addr;
+		return readed_bytes;
+	} catch (const std::bad_cast &) {
+		throw std::invalid_argument("bad dest parameter type");
+	} catch ( ... ) {
 		_warn("Can not receive UDP");
 		throw;
 	}
@@ -89,7 +114,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 	_dbg3("Receive (asyn) UDP");
 
 	auto endpoint_iterator = [this] {
-		Unique_lock<Mutex> lock(m_enpoint_list_mutex);
+		LockGuard<Mutex> lock(m_enpoint_list_mutex);
 		m_endpoint_list.emplace_back();
 		auto ret = m_endpoint_list.end();
 		--ret;
@@ -102,7 +127,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 		{
 			_UNUSED(error);	// TODO: handler error - do not run handler then?
 			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *endpoint_iterator );
-			Unique_lock<Mutex> lock(m_enpoint_list_mutex);
+			LockGuard<Mutex> lock(m_enpoint_list_mutex);
 			m_endpoint_list.erase(endpoint_iterator);
 			lock.unlock();
 			c_card_selector selector(std::move(source_addr_cable));
@@ -144,7 +169,7 @@ void c_cable_udp::set_sockopt_timeout(std::chrono::microseconds timeout) {
 }
 
 #ifdef ANTINET_socket_sockopt
-void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, udp::socket &socket) {
+void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_socket_type &socket) {
 	// ideas from http://stackoverflow.com/questions/2876024/linux-is-there-a-read-or-recv-from-socket-with-timeout
 	t_native_socket sys_handler = socket.native_handle();
 	auto us = timeout.count();
@@ -191,4 +216,3 @@ void c_cable_udp::stop_threadsafe() {
 	_dbg1("Shutdown ec="<<ec);
 	m_write_socket.close();
 }
-

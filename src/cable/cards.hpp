@@ -29,9 +29,9 @@ class c_cable_cards final {
 
 		map< c_card_selector , unique_ptr<c_cable_base_obj> > m_cards;
 
-		shared_ptr<c_asioservice_manager> m_asioservice_manager; ///< needed to create cables based on asio service
+		shared_ptr<c_asioservice_manager_base> m_asioservice_manager; ///< needed to create cables based on asio service
 
-		shared_ptr<c_asioservice_manager> & get_asioservice(); ///< creates if needed and returns an asioservice manager
+		shared_ptr<c_asioservice_manager_base> & get_asioservice(); ///< creates if needed and returns an asioservice manager
 };
 
 

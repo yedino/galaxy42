@@ -21,6 +21,7 @@ class c_protocolv3 {
 			e_proto_cmd_unused_old_version_1 = 1, // old version 1
 			e_proto_cmd_unused_old_version_2 = 2, // old version 2 (unused in old program?)
 			e_proto_cmd_data_one_merit_clear = 3, // data: just 1 merit (no bags/welds). No crypto (encrypt/auth).
+			e_proto_cmd_data_cart = 4, // data in the new format of a cart
 			//e_proto_cmd_public_hi = 3, // simple public peering
 			//e_proto_cmd_public_ping_request = 4, // simple public ping to the peer
 			//e_proto_cmd_public_ping_reply = 5, // simple public ping to the peer
@@ -35,6 +36,7 @@ inline bool enum_is_valid_value(c_protocolv3::t_proto_cmd value) {
 		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_1:
 		case c_protocolv3::t_proto_cmd::e_proto_cmd_unused_old_version_2:
 		case c_protocolv3::t_proto_cmd::e_proto_cmd_data_one_merit_clear:
+		case c_protocolv3::t_proto_cmd::e_proto_cmd_data_cart:
 		return true;
 	}
 	return false;
