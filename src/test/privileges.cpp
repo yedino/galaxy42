@@ -4,7 +4,6 @@
 
 #include "../tnetdbg.hpp"
 #include "../utils/privileges.hpp"
-#include "../utils/capmodpp.hpp"
 
 #include <exception>
 #include <cmath>
@@ -29,6 +28,8 @@ TEST( privileges , nothing_to_test_on_this_platform ) {
 #else
 
 #include <linux/types.h>
+
+#include "../utils/capmodpp.hpp"
 
 namespace detail {
 

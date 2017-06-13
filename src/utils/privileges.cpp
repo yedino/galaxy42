@@ -18,11 +18,10 @@
 
 	// uses libcap-ng
 	#include <cap-ng.h>
-#else
-	#error "not supported"
+
+	#include "utils/capmodpp.hpp"
 #endif
 
-#include "utils/capmodpp.hpp"
 
 namespace my_cap {
 
@@ -74,12 +73,15 @@ void verify_privileges_are_as_for_mainloop() {
 
 #else
 
+void drop_privileges_on_startup() {
+}
+
 void drop_privileges_after_tuntap() {
 }
-void drop_privileges_after_root() {
-}
+
 void drop_privileges_before_mainloop() {
 }
+
 void verify_privileges_are_as_for_mainloop() {
 }
 
