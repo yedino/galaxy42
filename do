@@ -1,10 +1,12 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 
+set -o errexit
+set -o nounset
 
-function fail() {
-	echo "Error (in $0): " "$@"
-	exit 1
-}
+readonly dir_base_of_source="$(readlink -e ./)"
+
+# import fail function
+. "${dir_base_of_source}"/share/script/lib/fail.sh
 
 function usage_mini {
 	echo ""
@@ -48,22 +50,26 @@ function usage {
 
 function platform_recognize {
 	uname -a # show info
-	if [[ -n $(uname -a | egrep "GNU/Linux") ]]
+	if [[ -n $(uname -a | grep "GNU/Linux") ]]
 	then
 		platform="gnu_linux"
-	elif [[ -n $(uname -a | egrep "Cygwin") ]]
+	elif [[ -n $(uname -a | grep "Cygwin") ]]
 	then
-		platform="cygwin"
-	elif [[ -n $(uname -a | egrep "Darwin") ]]
+		if [[ -n $(uname -a | grep "i686") ]]
+		then
+			platform="cygwin32"
+		elif [[ -n $(uname -a | grep "x86_64") ]]
+		then
+			platform="cygwin64"
+		else
+			platform="unknown"
+		fi
+	elif [[ -n $(uname -a | grep "Darwin") ]]
 	then
 		platform="mac_osx"
 	else
 		platform="unknown"
 	fi
-
-	#uname -a | egrep '^CYGWIN' \
-	#	&& platform="cygwin" \
-	#	|| platform="posix"
 }
 
 function clean_previous_build {
@@ -81,7 +87,7 @@ echo "Recognized platform: $platform"
 clean_previous_build
 
 # download external dependencies/submodules
-./download.sh || { echo "Downloads failed" ; exit 1 ; }
+./download.sh || fail "Downloads failed"
 
 for dir in depends/* ; do
 	count=$(find "$dir" | wc -l) ;
@@ -96,16 +102,22 @@ if [[ "$1" == "--help" ]] ; then
 	exit 2 # <--- exit
 fi
 
-if [[ "$platform" == "cygwin" ]]
+if [[ "$platform" == "cygwin32" ]]
 then
 
-	echo "PLATFORM - WINDOWS/CYGWIN ($platform)"
+	echo "PLATFORM - WINDOWS/CYGWIN 32-bit ($platform)"
 
-	# attention: this compilers are available on 32-bit cygwin version!
-	export CC="i686-w64-mingw32-gcc.exe"
-	export CXX="i686-w64-mingw32-g++.exe"
+	cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_32bit.cmake.in . || fail "Can not cmake (on Cygwin mode)"
+	make tunserver.elf || fail "Can not make (on Cygwin mode)"
 
-	cmake . || fail "Can not cmake (on Cygwin mode)"
+	exit 0
+
+elif [[ "$platform" == "cygwin64" ]]
+then
+
+	echo "PLATFORM - WINDOWS/CYGWIN 64-bit ($platform)"
+
+	cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_64bit.cmake.in . || fail "Can not cmake (on Cygwin mode)"
 	make tunserver.elf || fail "Can not make (on Cygwin mode)"
 
 	exit 0
@@ -117,14 +129,18 @@ then
 	# brew install coreutils
 	shopt -s expand_aliases
 	alias readlink="greadlink"
-else
+elif [[ "$platform" == "unknown" ]]
+then
+	fail "Unknown build platform! $(uname -a), abort/fail"
+elif [[ "$platform" == "gnu_linux" ]]
+then
 	echo "PLATFORM - NORMAL POSIX e.g. GNU/Linux ($platform)"
 fi
 
-[[ -z "$COVERAGE" ]] && COVERAGE="0"
-[[ -z "$EXTLEVEL" ]] && EXTLEVEL="0"
-
-[[ -z "$USE_BOOST_MULTIPRECISION_DEFAULT" ]] && USE_BOOST_MULTIPRECISION_DEFAULT="1"
+# Checking if variables are unset, if so setting default values
+[[ -z "${COVERAGE+x}" ]] && COVERAGE="0"
+[[ -z "${EXTLEVEL+x}" ]] && EXTLEVEL="0"
+[[ -z "${USE_BOOST_MULTIPRECISION_DEFAULT+x}" ]] && USE_BOOST_MULTIPRECISION_DEFAULT="1"
 
 echo ""
 echo "Running currently as:"
@@ -141,12 +157,11 @@ echo "===================================================================="
 echo ""
 
 
-COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || { echo "Building extra libraries failed" ; exit 1 ; }
+COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || fail "Building extra libraries failed"
 
-[ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
-dir_base_of_source="$(readlink -e ./)"
+[ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
 if [[ $OSTYPE == "linux-gnu" ]]; then
-	source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
+	source gettext.sh || fail "Gettext is not installed, please install it."
 
 	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
@@ -180,13 +195,14 @@ echo "=== language / translations - will compile langauges ==="
 contrib/tools/galaxy42-lang-update-all || fail "Compiling po to mo (gettext/translations)"
 
 
-echo "Will run cmake, PWD=$PWD USER=$USER, CC=$CC, CXX=$CXX, CPP=$CPP, PATH=$PATH"
+echo "Will run cmake, PWD=$PWD USER=$USER, PATH=$PATH"
+echo "CC=${CC:-"unset"}, CXX=${CXX:-"unset"}, CPP=${CPP:-"unset"}"
 echo "Which gcc, g++: "
 which gcc
 which g++
 
 FLAG_STATIC="OFF"
-if [[ "$BUILD_STATIC"  == "1" ]] ; then
+if [[ "${BUILD_STATIC:-}"  == "1" ]] ; then
 	printf "\n\n\nSTATIC BUILD ENABLED\n\n\n"
 	FLAG_STATIC="ON"
 fi
@@ -196,22 +212,24 @@ dir_build="$dir_base_of_source/build"
 echo "Will build into directory dir_build=$dir_build"
 mkdir -p $dir_build
 pushd $dir_build
-cmake  ..  \
-	-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC" \
-	-DEXTLEVEL="$EXTLEVEL" -DCOVERAGE="$COVERAGE" \
-	${BUILD_SET_BOOST_ROOT:+"-DBOOST_ROOT=$BUILD_SET_BOOST_ROOT"} \
-	$FLAG_BOOST_ROOT \
-	-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
-	|| { echo "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
-set +x
-# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
+	cmake  ..  \
+		-DBUILD_STATIC_TUNSERVER="$FLAG_STATIC" \
+		-DEXTLEVEL="$EXTLEVEL" \
+		-DCOVERAGE="$COVERAGE" \
+		${BUILD_SET_BOOST_ROOT:+"-DBOOST_ROOT=$BUILD_SET_BOOST_ROOT"} \
+		${FLAG_BOOST_ROOT:+"$FLAG_BOOST_ROOT"} \
+		-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
+			|| fail "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md"
+	set +x
+	# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
 
-set -x
-ln -s "$dir_base_of_source"/share share || echo "Link already exists"
+	set -x
+	ln -s "$dir_base_of_source"/share share || echo "Link already exists"
 
-make -j 2 || { echo "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md" ; exit 1 ; }
+	make -j 2 \
+		|| fail "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md"
 
-set +x
+	set +x
 popd
 

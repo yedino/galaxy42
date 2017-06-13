@@ -67,16 +67,11 @@ void c_galaxysrv::main_loop() {
 		// start listener:
 		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
-		c_card_selector listen1_selector_tmp( std::move(listen1) ); // will send from this my-address, to this peer
-		_fact("Listen on " << listen1_selector_tmp );
-		{
-			_mark("STARTING LISTEN (LOCKING-ERROR?)");
-			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
-			m_cable_cards.get(lg).get_card(listen1_selector_tmp).listen_on(listen1_selector_tmp);
-			_mark("STARTING LISTEN (LOCKING-ERROR?) - done");
-		}
-		_goal("Listening on " << listen1_selector_tmp );
-		return listen1_selector_tmp;
+		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
+		_fact("Listen on " << listen1_selector );
+		m_cable_cards.get_card(listen1_selector).listen_on(listen1_selector);
+		_goal("Listening on " << listen1_selector );
+		return listen1_selector;
 	} ();
 
 	auto loop_tunread = [&](const int my_job_nr) {
