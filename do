@@ -101,11 +101,7 @@ then
 
 	echo "PLATFORM - WINDOWS/CYGWIN ($platform)"
 
-	# attention: this compilers are available on 32-bit cygwin version!
-	export CC="i686-w64-mingw32-gcc.exe"
-	export CXX="i686-w64-mingw32-g++.exe"
-
-	cmake . || fail "Can not cmake (on Cygwin mode)"
+	cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_32bit.cmake.in . || fail "Can not cmake (on Cygwin mode)"
 	make tunserver.elf || fail "Can not make (on Cygwin mode)"
 
 	exit 0
