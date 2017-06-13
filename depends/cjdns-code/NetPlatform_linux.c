@@ -131,7 +131,7 @@ t_syserr NetPlatform_addAddress(const char* interfaceName,
 {
 		int err=0;
     struct ifreq ifRequest;
-    int s;
+    int s=0;
     int ifIndex;
     t_syserr s_and_syserr = socketForIfName(interfaceName, addrFam, &ifRequest);
     if (s_and_syserr.my_code < 0) return (t_syserr){ s , 0 }; // some error

@@ -6,6 +6,8 @@
 
 unsigned char g_dbg_level = 100; // (extern)
 
+std::recursive_mutex _g_dbg_mutex; // (extern)
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
 //#include <winbase.h>
