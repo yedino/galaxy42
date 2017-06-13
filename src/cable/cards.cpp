@@ -11,6 +11,7 @@
 
 
 unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector & selector) {
+	_note("Creating cablecard, selector="<<selector);
 	switch (selector.get_kind()) {
 		/*
 		case e_cable_kind_simul:
@@ -34,13 +35,14 @@ unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector 
 shared_ptr<c_asioservice_manager_base> &c_cable_cards::get_asioservice() {
 	if (m_asioservice_manager == nullptr) {
 		_note("Need to allocate asioservice manager");
-		m_asioservice_manager = make_shared< c_asioservice_manager >( 4 ); // TODO option - ioservices
-	}
+		m_asioservice_manager = make_shared< c_asioservice_manager >( 1 ); // TODO option - ioservices
+	} else _dbg1("Returning existing get_asioservice");
 	_check( m_asioservice_manager );
 	return m_asioservice_manager;
 }
 
 c_cable_base_obj & c_cable_cards::get_card(const c_card_selector & selector) {
+	_dbg1("get_card for selector="<<selector);
 	auto found = m_cards.find(selector);
 	if (found == m_cards.end()) {
 		_note("Create card for cable kind=" << static_cast<int>(selector.get_kind()) << ", selector=" << selector);
@@ -51,6 +53,7 @@ c_cable_base_obj & c_cable_cards::get_card(const c_card_selector & selector) {
 		_check( ! ( selector < selector ) ); // there was a bug
 		return UsePtr( m_cards.at( selector ) );
 	}
+	_dbg2("get_card for selector="<<selector<<" - already existing");
 	return UsePtr( found->second );
 }
 
