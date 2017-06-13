@@ -18,10 +18,11 @@ class c_cable_base_addr {
 		c_cable_base_addr(t_cable_kind kind); ///< creates address of given kind. Other details should be set in child class.
 
 	public:
+		c_cable_base_addr() = default; // for enable default ctor in child classes
 		virtual ~c_cable_base_addr()=default;
-		virtual unique_ptr<c_cable_base_addr> clone() const =0; ///< polymorphic clone
+		virtual unique_ptr<c_cable_base_addr> clone() const = 0; ///< polymorphic clone
 
-		virtual void print(std::ostream & ostr) const =0; ///< displays human readable form of this address
+		virtual void print(std::ostream & ostr) const = 0; ///< displays human readable form of this address
 
 		inline bool operator==(const c_cable_base_addr &other) const;
 		inline bool operator!=(const c_cable_base_addr &other) const;
@@ -39,7 +40,7 @@ class c_cable_base_addr {
 		  * @warning the caller must verify that other.kind == this->kind before calling this method, otherwise UB
 		  * @return values: -1 means this < other; 0 means this == other, +1 means this > other;
 		  */
-		virtual signed char compare_same_class(const c_cable_base_addr & other) const =0;
+		virtual signed char compare_same_class(const c_cable_base_addr & other) const = 0;
 
 };
 
