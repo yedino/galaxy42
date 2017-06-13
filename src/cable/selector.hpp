@@ -7,6 +7,18 @@
 #include <libs0.hpp>
 
 /**
+ * @brief The c_card_selector_base class needed for create mock
+ */
+class c_card_selector_base {
+	public:
+		virtual ~c_card_selector_base() = default;
+		virtual void print(ostream & out) const = 0;
+		virtual t_cable_kind get_kind() const = 0;
+		virtual c_cable_base_addr & get_my_addr() = 0;
+		virtual const c_cable_base_addr & get_my_addr() const = 0;
+};
+
+/**
  * This are selectors that choose which card to use to send with or to listen on.
  * For example "from udp 192.168.0.5 port 9042" or "from udp, any IP, port 9042",
  *
@@ -26,7 +38,7 @@
  *
  */
 
-class c_card_selector final {
+class c_card_selector final : public c_card_selector_base {
 	public:
 		c_card_selector()=default;
 		c_card_selector(unique_ptr<c_cable_base_addr> && my_addr);
@@ -40,11 +52,11 @@ class c_card_selector final {
 		bool operator<(const c_card_selector & other) const;
 		/// @}
 
-		void print(ostream & out) const;
+		void print(ostream & out) const override;
 
-		inline t_cable_kind get_kind() const;
-		inline c_cable_base_addr & get_my_addr();
-		inline const c_cable_base_addr & get_my_addr() const;
+		inline t_cable_kind get_kind() const override;
+		inline c_cable_base_addr & get_my_addr() override;
+		inline const c_cable_base_addr & get_my_addr() const override;
 
 	private:
 		unique_ptr<c_cable_base_addr> m_my_addr; ///< polymorphic to have any address type

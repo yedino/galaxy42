@@ -232,7 +232,7 @@ void c_the_program_newloop::programtask_tuntap() {
 int c_the_program_newloop::main_execution() {
 	_program_section;
 	_mark("newloop main_execution");
-	g_dbg_level_set(5, "Debug the newloop");
+//	g_dbg_level_set(5, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
 
