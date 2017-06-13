@@ -4,8 +4,16 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include <string>
 
-namespace capmodpp {
+#include "platform.hpp" // just to detect OS type, is it ANTINET_linux
+
+#ifdef ANTINET_linux
+	#include <linux/types.h>
+	#include <cap-ng.h>
+#else
+	#error "Library capmodpp is not supported on this OS (because linux Capabilities are not supported)."
+#endif
 
 /**
  * @file capmodpp - Capability Modifications CPP library
@@ -24,12 +32,84 @@ namespace capmodpp {
  * 1) express such set of changes - type cap_statechange_full
  */
 
+namespace capmodpp {
+
+/*
+ * Reports errors in capmodpp - errors when handling CAP Capability(8) privilages, program developers should probably
+ * never catch this exception class, nor by catch(...) nor by catch on this class,
+ * other then catching it in top of main() and the existing,
+ * or catching it and doing an abort;
+ * As this exception means program failed to execute expected security operations, and could be now in insecure state.
+ * Unless when implementing optional security functions.
+ * @warning If this is thrown then this usually means program is in insecure state and you should exit or abort (see above).
+ * @style This does not inherit from std::exception, to make developers catch it explicitly if they want to.
+ */
+class capmodpp_error {
+	public:
+		capmodpp_error(const std::string & msg);
+		virtual ~capmodpp_error()=default;
+		virtual const char * what() const;
+	private:
+		std::string m_msg;
+};
+
+// ===========================================================================================================
+/// @group low-level wrappers of native libcap-ng functions - adding more error handling, and exceptions
+/// @{
+
+/// We expect to never see longer Capability name (e.g. to detect strange values)
+constexpr size_t max_expected_cap_name_length = 256;
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see int capng_have_capability(capng_type_t which, unsigned int capability);
+/// @return 0 or 1 (this is guaranteed)
+int secure_capng_have_capability(capng_type_t which, unsigned int capability);
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see capng_results_t capng_have_capabilities(capng_select_t set);
+/// @return one of: {CAPNG_NONE, CAPNG_PARTIAL, CAPNG_FULL}, but will NOT return error value (this is guaranteed)
+/// @return in addition, it is guaranteed that values representing more-then-none, are integers that are greater then 0 (x>0)
+capng_results_t secure_capng_have_capabilities(capng_select_t set);
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see const char *capng_capability_to_name(unsigned int capability);
+/// @return a not-nullptr valid c-string (this is guaranteed)
+const char * secure_capng_capability_to_name(unsigned int capability);
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see int capng_name_to_capability(const char *name);
+/// @param #name is the name capability; our function will assert that it is not badvalue like NULL
+/// @return integer in range [0 .. get_cap_size] (this is guaranteed)
+int secure_capng_name_to_capability(const char *name);
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see int capng_get_caps_process(void)
+/// @return nothing is returned here (as it was used only to signal error)
+void secure_capng_get_caps_process();
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see int capng_update(capng_act_t action, capng_type_t type,unsigned int capability);
+/// @return nothing is returned here (as it was used only to signal error)
+void secure_capng_update(capng_act_t action, capng_type_t type,unsigned int capability);
+
+/// Wrapper around libcap-ng function, same API but it will throw capmodpp_error instead returning error-code.
+/// @see int capng_apply(capng_select_t set);
+void secure_capng_apply(capng_select_t set);
+
+
+/// @}
+
 // ===========================================================================================================
 
 typedef unsigned int cap_nr; ///< number of CAP (as defined by this OS/kernel), for libcap-ng, as in man capng_have_capability
 
-cap_nr get_last_cap_nr(); ///< returns the number of last CAP in system (last still valid number)
-cap_nr get_cap_size(); ///< returns the number of CAPs in system, so this is +1 of last valid number, so loop to < this value
+cap_nr get_last_cap_nr() noexcept;
+/// returns the number of last CAP in system (last still valid number)
+/// this function can not fail, so it is safe to used in low-level validations
+
+/// returns the number of CAPs in system, so this is +1 of last valid number, so loop to < this value
+/// this function can not fail, so it is safe to used in low-level validations
+cap_nr get_cap_size() noexcept;
 
 ///< returns string of CAP name, or "unknown" (unlikely, probably libcap-ng names it cap_n) or "invalid_cap_n" it out of range
 std::string cap_nr_to_name(cap_nr nr);
