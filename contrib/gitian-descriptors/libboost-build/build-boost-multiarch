@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+# Variable required in this script
+#--------------------------
+# BOOST_BUILD_DIR
+# TARGET_ARCH
+
+# Source global variables : BUILD_DIR, WRAP_DIR - option_download_skip, option_allow_boost, option_verbose
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
+
+readonly BOOST_BUILD_THREADS=2
+readonly BOOST_DIR="${BUILD_DIR}/boost"
+readonly USER_CONFIG_FILE="${BUILD_DIR}/boost_${TARGET_ARCH}_user-config.jam"
+
+# import functions for boost main and submodules download
+. "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
+. "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost
+
+# import fail function
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+
+
+b2_opt_with_lib=( "--with-filesystem" \
+                  "--with-system" \
+                  "--with-program_options" \
+                  "--with-thread" \
+                  "--with-date_time" )
+
+b2_opt_debug=( )
+if (( option_verbose ))
+then
+	b2_opt_debug=( "-d" "4" "--debug-building" )
+else
+	b2_opt_debug=( "-d" "0" "--debug-building" )
+fi
+
+
+# Main download and build
+if (( option_allow_boost ))
+then
+	printf "\n\nWill building boost in BOOST_DIR='${BOOST_DIR}', OUTPUT_DIR='${BOOST_BUILD_DIR}'\n\n"
+
+	if (( option_download_skip ))
+	then
+		printf "\n\nSkipping download (boost)\n\n"
+
+	else
+		# Download main boost repository
+		dl_boost
+		pushd "${BOOST_DIR}" || fail "Can not enter boost build dir"
+			# Download boost submodules in n=3 attempts
+			dl_boost_submodules_n 3
+		popd
+
+		# Setting target depends optins
+		if [ -v ${TARGET_ARCH+x} ]
+		then
+			echo "Require TARGET_ARCH variable not set, exiting/failing"
+			fail
+		else
+			echo "Building boost libraries for TARGET='${TARGET_ARCH}'"
+
+			echo "# This config was GENERATED (will be over-written) by $0." > "${USER_CONFIG_FILE}" || fail
+			build_toolset="gcc"
+			link_type="shared"
+
+			if [[ $TARGET_ARCH == "x86_64-w64-mingw32" || $TARGET_ARCH == "i686-w64-mingw32" ]]
+			then
+				boost_user_gcc="${WRAP_DIR}/${TARGET_ARCH}-g++ ;"
+				build_target_os="windows"
+				echo "using gcc : 4.9.2 : ${boost_user_gcc}" >> "${USER_CONFIG_FILE}" || fail
+
+			elif [[ $TARGET_ARCH == "x86_64-linux-gnu" ]]
+			then
+				boost_user_gcc="${WRAP_DIR}/g++ ;"
+				build_target_os="linux"
+				link_type="static"
+				echo "using gcc : 5.4.0 : ${boost_user_gcc}" >> "${USER_CONFIG_FILE}" || fail
+
+			elif [[ $TARGET_ARCH == "x86_64-apple-darwin15" ]]
+			then
+				boost_user_gcc="${WRAP_DIR}/x86_64-apple-darwin15-clang++-libc++"
+				build_target_os="darwin"
+				build_toolset="darwin"
+				AR="${WRAP_DIR}/x86_64-apple-darwin15-ar"
+				LD="${WRAP_DIR}/x86_64-apple-darwin15-ld"
+				STRIP="${WRAP_DIR}/x86_64-apple-darwin15-strip"
+				RANLIB="${WRAP_DIR}/x86_64-apple-darwin15-ranlib"
+				printf "using darwin : : $boost_user_gcc : <linker-type>\"darwin\" <cxxflags>\"-arch x86_64" >> "${USER_CONFIG_FILE}" || fail
+				printf " -std=c++14 -fvisibility=hidden -mmacosx-version-min=10.7 -march=core2" >> "${USER_CONFIG_FILE}" || fail
+				printf " --sysroot=/${BUILD_DIR}/osxcross/target/SDK/MacOSX10.11.sdk\" <linkflags>\"\"" >> "${USER_CONFIG_FILE}" || fail
+				printf " <archiver>\"$AR\" <striper>\"$STRIP\" <ranlib>\"$RANLIB\" :  ;\n" >> "${USER_CONFIG_FILE}" || fail
+			fi
+		fi
+	fi
+
+	pushd "${BOOST_DIR}" || fail "Can not enter boost build dir"
+
+		# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
+		git clean -xdf || fail
+		rm -rf "${BOOST_BUILD_DIR}" || fail
+		mkdir "${BOOST_BUILD_DIR}" || fail
+
+		# reset and claen boost submodules
+		git submodule foreach git reset --hard HEAD
+		git submodule foreach git clean -fdx
+
+		printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
+		printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
+
+		printf "\n\nBoost bootstrap...\n\n"
+		./bootstrap.sh --without-icu || fail
+		printf "\n\nBoost bootstrap is done.\n\n"
+
+		./b2 clean
+
+		printf "\n\nBoost b2 headers...\n\n"
+		./b2 -q headers || fail "b2 headers"
+
+		printf "\n\nStarting the b2 boost build\n"
+		set -x
+		./b2 \
+			-q -a\
+			"${b2_opt_debug[@]}" \
+			"${b2_opt_with_lib[@]}" \
+			-j "${BOOST_BUILD_THREADS}" \
+			target-os="${build_target_os}" \
+			--prefix="${BOOST_BUILD_DIR}" \
+			--user-config="${USER_CONFIG_FILE}" \
+			--toolset="${build_toolset}" \
+			--build-type=complete \
+			variant=release \
+			threading=multi \
+			link="${link_type}" \
+			runtime-link="${link_type}" \
+			-sNO_BZIP2=1 --sNO_ZLIB=1 \
+			--layout=tagged install \
+				|| {
+					set -x
+					fail "The b2 build of boost failed"
+				}
+		set +x
+
+		# Other may useful b2 options
+		# architecture=x86 address-model=64 --arch=x86_64
+		# boost.locale.icu=off boost.locale.iconv=on
+		# threadapi=win32	// win
+		# --toolset-root="${BUILD_DIR}/osxcross/target/bin/"	// osx
+
+		printf "\n\nDONE the b2 boost build\n\n"
+
+	popd
+
+else
+	printf "\n\nSkipping boost (as selected in options)\n\n"
+fi
+

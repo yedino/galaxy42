@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+readonly PROJECT_NAME="galaxy42"
+readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
+
+readonly GALAXY_DIR="$HOME/build/galaxy42"
+readonly BUILD_DIR="$HOME/build" # where deps are built
+readonly WRAP_DIR="$HOME/wrapped"
+readonly OUTDIR="$HOME/out"
+
+# Parse Options
+# This variables could be changed manually or by parent script for example by parsing command line arguments
+option_allow_boost=1
+option_allow_sodium=1
+option_shell_in_sodium=0
+option_download_skip=0
+option_verbose=0
+
