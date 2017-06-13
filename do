@@ -44,6 +44,7 @@ function usage {
 }
 
 function platform_recognize {
+	# this is used possibly before $dir_base_of_source is configured!
 	uname -a # show info
 	if [[ -n $(uname -a | grep "GNU/Linux") ]]
 	then
@@ -67,12 +68,20 @@ function platform_recognize {
 		# brew install coreutils
 		shopt -s expand_aliases
 		alias readlink="greadlink"
+		echo "Macosx: will use special readlink alias"
+		which readline
 	else
 		platform="unknown"
 	fi
 }
 
+
+platform_recognize # needed early for the correct readlink on macosx !
 readonly dir_base_of_source="$(readlink -e ./)"
+if [[ -z "$dir_base_of_source" ]] ; then
+	echo "Can not find base dir, aborting now"
+	exit 1
+fi
 
 # import fail function
 . "${dir_base_of_source}"/share/script/lib/fail.sh
@@ -87,7 +96,6 @@ echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
 echo ""
 
-platform_recognize
 echo "Recognized platform: $platform"
 clean_previous_build
 
