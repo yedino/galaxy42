@@ -11,7 +11,8 @@ TEST(utils_wrap_thread, simple_thread_replace) {
 	g_dbg_level_set(10,"test");
 	// we create an empty thread and immediately replace it with another one
 	wrap_thread wt;
-	wt = std::move(wrap_thread());
+	wt = wrap_thread();
+	// wt = std::move(wrap_thread());
 }
 
 TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {

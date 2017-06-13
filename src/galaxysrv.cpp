@@ -69,7 +69,10 @@ void c_galaxysrv::main_loop() {
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
 		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
 		_fact("Listen on " << listen1_selector );
-		m_cable_cards.get_card(listen1_selector).listen_on(listen1_selector);
+		{
+			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
+			m_cable_cards.get(lg).get_card(listen1_selector).listen_on(listen1_selector);
+		}
 		_goal("Listening on " << listen1_selector );
 		return listen1_selector;
 	} ();
