@@ -114,10 +114,5 @@ TEST( capmodpp_test , cap_statechange_operator_test ) {
 	}
 }
 
-#else
-
-TEST( capmodpp_test , nothing_to_test_on_this_platform ) {
-}
-
 #endif
 
