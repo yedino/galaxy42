@@ -4,15 +4,8 @@
 set -o errexit
 set -o nounset
 
-readonly PROJECT_NAME="galaxy42"
-readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
-
-readonly WRAP_DIR="$HOME/wrapped"
-
-# importing functions for boost main and submodules download
-. "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost-submodules
-. "${GALAXY_DIR}"/contrib/gitian-descriptors/libboost-build/dl-boost
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
 # import another functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
@@ -20,44 +13,32 @@ readonly WRAP_DIR="$HOME/wrapped"
 
 
 printf "\n\n=========================================================================\n\n"
-printf "PROJECT $PROJECT_NAME - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
+printf "PROJECT ${PROJECT_NAME} - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
 
-function fail() {
-	printf "\nERROR: the script failed (see above messages).\n\n"
-	exit 1
-}
-
-
-# --- parse options
-option_allow_boost=1
-option_allow_sodium=1
-option_shell_in_sodium=0
-option_download_skip=0
-option_verbose=0
 
 while getopts ":vbsSDh" opt; do
 	case $opt in
 		D)
-		echo "Skip all downloads"
-		option_download_skip=1
-		;;
+			echo "Skip all downloads"
+			option_download_skip=1
+			;;
 		v)
-		echo "Be verbose (show debug etc)"
-                option_verbose=1
-                ;;
+			echo "Be verbose (show debug etc)"
+			option_verbose=1
+			;;
 		b)
-		echo "Will Skip boost"
-                option_allow_boost=0
-                ;;
+			echo "Will Skip boost"
+			option_allow_boost=0
+			;;
 		s)
-		echo "Will Skip sodium"
-                option_allow_sodium=0
-                ;;
+			echo "Will Skip sodium"
+			option_allow_sodium=0
+			;;
 		S)
-		option_shell_in_sodium=1
-		;;
-                h)
-                cat <<EOF
+			option_shell_in_sodium=1
+			;;
+		h)
+			cat <<EOF
 
 This is the internal script to build Windows version of this project ($PROJECT_NAME).
 It should be called by Gitian, inside LXC.
@@ -79,13 +60,13 @@ Options:
 	TARGET_ARCH to x86_64-w64-mingw32 i686-w64-mingw32
 
 EOF
-                                exit 0
-                                ;;
-                        '?')
-                                printf "\n\nERROR: Unknown option, run with -h for help.\n"
-                                exit 1
-                                ;;
-          esac
+			exit 0
+			;;
+		'?')
+			printf "\n\nERROR: Unknown option, run with -h for help.\n"
+			exit 1
+			;;
+		esac
 done
 
 
@@ -154,8 +135,6 @@ create_per-host_linker_wrapper "${HOSTS}" "${COMPILERS}" "${WRAP_DIR}"
 export PATH=${WRAP_DIR}:${PATH}
 
 
-# *** main build starts here ***
-
 ## set compilators
 export CC="$HOME/wrapped/$TARGET_ARCH-gcc-posix"
 export CXX="$HOME/wrapped/$TARGET_ARCH-g++-posix"
@@ -172,185 +151,58 @@ printf "\nPWD=$PWD in script $0\n"
 #popd
 #printf "\n\n"
 
-## clone and build boost
-printf "\n\n=========================================================================\n\n"
-printf "boost...\n\n"
-readonly BOOST_DIR="$HOME/build/boost/"
 
-cd "$HOME/build/" || fail "Can not enter build dir"
+# ** building boost **
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/boost-build_${TARGET_ARCH}"
 
-option_download_skip=0  # XXXXXXXXXXXXXXXXX
-option_allow_boost=1
+pushd "${GALAXY_DIR}" || fail
+	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
+popd || fail
+echo "\nAll done regarding boost.\n"
 
-if (( option_allow_boost )) ; then
-    printf "\n\nWill build boost now\n\n"
+# ** building libsodium **
+pushd "${GALAXY_DIR}" || fail
+	# import build-sodium function
+	. contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - libsodium for ${TARGET_ARCH}"
 
-    if (( option_download_skip )) ; then
-        printf "\n\n\n\nSkipping download (boost)\n\n\n\n"
-
-    else
-        # Download main boost repository
-        dl_boost
-		pushd boost || fail "Can not enter build dir"
-			# Download boost submodules in n=3 attempts
-			dl_boost_submodules_n 3
-		popd
-    fi
-
-pushd boost || fail # cd
-pwd
-ls
-
-# delete it to have a clean build (even if we keept downloaded PREVIOUSLY files)
-git clean -xdf || fail
-rm -rf mingw_build || fail
-mkdir mingw_build || fail
-
-boost_user_gcc="$HOME/wrapped/$TARGET_ARCH-g++ ;"
-printf "\n\nWill set boost user config to use compiler: (%s)\n" "$boost_user_gcc"
-
-printf "\n\nBoost build - main part (PWD=$PWD). ls:\n" ; ls ; printf "\n\n"
-echo "# This config was GENERATED (will be over-written) by $0." > user-config.jam || fail
-echo "using gcc : 4.9.2 : $boost_user_gcc" >> user-config.jam || fail
-./bootstrap.sh --without-icu || fail
-
-printf "Starting the b2 boost build\n"
-set -x
-b2_opt_with_lib=( "--with-filesystem" "--with-system" "--with-program_options" "--with-thread" "--with-locale" "--with-date_time" )
-b2_opt_debug=( )
-if (( option_verbose )) ; then
-	b2_opt_debug=( "-d" "4" "--debug-building" )
-else
-	b2_opt_debug=( "-d" "0" "--debug-building" )
-fi
-
-./b2 headers
-
-./b2 \
-	"${b2_opt_debug[@]}" \
-	-a --user-config=user-config.jam toolset=gcc target-os=windows variant=release \
-	 --prefix=/"$BOOST_DIR"/mingw_build threading=multi  threadapi=win32 link=shared \
-	 "${b2_opt_with_lib[@]}" \
-	 runtime-link=shared \
-	-j 1 \
-	-sNO_BZIP2=1 --sNO_ZLIB=1 \
-	--layout=tagged install \
-	|| fail
-set +x
-
-
-printf "\nDONE the b2 boost build\n\n"
-
-# copy all boost includes for header only libraries
-find ./libs -maxdepth 6 -type d -print0 | while IFS= read -rd '' D; do
-	substr="include"
-	if  test "${D#*$substr}" != "$D" # looking for include dir's
-	then
-		end_of=$(echo $D | tail -c 8) # 8 = len(include) + end string char
-		#echo "$end_of"
-		if [ $end_of = $substr ]
-		then
-			cp -r "$D" ./mingw_build
-		fi
-	fi
-done
-
+	# Get TARGET_ARCH, build, and export SODIUM_BUILD_DIR
+	build-sodium ${TARGET_ARCH}
 popd
 
-else
-	printf "\n\nSkipping boost (as selected in options)\n\n"
 
-fi
+# *** main build starts here ***
+pushd "$GALAXY_DIR" || fail
+	printf "\n\n=========================================================================\n\n"
+	printf "Main project ($PROJECT_NAME)...\n\n"
 
+	rm -rf CMakeFiles CMakeCache.txt # remove cache from previous build if any
 
-printf "\n\n=========================================================================\n\n"
-printf "libsodium...\n\n"
+	git submodule update --init --recursive
 
-if ((option_shell_in_sodium)) ; then
-	printf "\nSTARTING TEST BASH (in sodium), while in PWD=$PWD\n"
-	bash
-	printf "\n\nresuming\n\n"
-fi
+	echo "BOOST_ROOT: ${BOOST_BUILD_DIR}"
+	echo "SODIUM_ROOT: ${SODIUM_BUILD_DIR}"
 
+	printf "\n\nMoving on to main build of actually our project:"
 
-# Setting libsodium path
-if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
-	SODIUM_ROOT="$HOME/build/libsodium/libsodium-win64"
-elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
-	SODIUM_ROOT="$HOME/build/libsodium/libsodium-win32"
-fi
+	cmake -DBOOST_ROOT="${BOOST_BUILD_DIR}" \
+	      -DSODIUM_ROOT_DIR="{$SODIUM_BUILD_DIR}" \
+	      -DSODIUM_LIBRARY="${SODIUM_BUILD_DIR}/lib/libsodium.dll.a" \
+	      -DSODIUM_INCLUDE_DIR="${SODIUM_BUILD_DIR}/include" \
+	      -DTARGET_ARCH="${TARGET_ARCH}" \
+	      -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" \
+	      -DCMAKE_BUILD_TYPE=Debug . \
+	      	|| fail "cmake of our project failed"
 
+	make tunserver.elf || fail "make of our project (main binary) failed"
+	make galaxyService || fail "make of our project (main binary) failed"
 
-if ((option_allow_sodium)) ; then
-printf "\n\nBuilding libsodium now\n\n"
-## clone and build libsodium
-rm -rf libsodium # perhaps left over if we do some caching or testing
-set -x
-git clone https://github.com/jedisct1/libsodium.git || fail # check gitrev hash below!
-
-pushd libsodium || fail
-git checkout 1.0.11 || fail
-git clean -xdf
-
-expected_gitrev="2f4f718cd94adab547c210a78050762cf667dfca" # this is the gitrev hash of this boost version (as we seen it)
-confirm_gitrev=$(git log --format='%H' -1)
-[[ "$confirm_gitrev" == "$expected_gitrev" ]] || {
-	fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
-}
-
-
-./autogen.sh || fail
-
-
-printf "\n\nRunning the mingw-crossbuild-script(s) (of lib sodium)\n\n"
-
-if [[ $TARGET_ARCH == "x86_64-w64-mingw32" ]]; then
-	patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win64.sh"
-	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 64bit) - from file ($patched_msys_script)\n\n"
-	cp  "$patched_msys_script"  "./dist-build/msys2-win64.sh" || fail
-	./dist-build/msys2-win64.sh || fail
-elif  [[ $TARGET_ARCH == "i686-w64-mingw32" ]]; then
-	patched_msys_script="$HOME/build/galaxy42/contrib/gitian-patch/msys2-win32.sh"
-	printf "\n\nPatching the mingw-crossbuild-script(s) (of lib sodium 32bit) - from file ($patched_msys_script)\n\n"
-	cp  "$patched_msys_script"  "./dist-build/msys2-win32.sh" || fail
-	./dist-build/msys2-win32.sh || fail
-fi
-
-printf "\n\nCrossbuild done (of lib sodium)"
 popd
-
-else
-	SODIUM_DIR="/home/ubuntu/build/libsodium"
-	[ -d "$SODIUM_DIR" ] || { echo "ERROR: $SODIUM_DIR directory does not exists, it looks like that sodium is not built. Skipping sodium build couldn't be done"; exit 1 ; }
-	printf "\n\nSkipping sodium (as selected in options)\n\n"
-
-fi
-
-
-
-printf "\n\n=========================================================================\n\n"
-printf "Main project ($PROJECT_NAME)...\n\n"
-
-## Cross building galaxy42
-cd "$GALAXY_DIR"
-
-rm -rf CMakeFiles CMakeCache.txt # remove chache from previous build if any
-git submodule update --init --recursive
-
-echo "BOOST_ROOT: "$BOOST_DIR"/mingw_build "
-echo "SODIUM_ROOT: $SODIUM_ROOT"
-
-printf "\n\nMoving on to main build of actually our project:"
-
-cmake -DBOOST_ROOT="$BOOST_DIR"/mingw_build -DSODIUM_ROOT_DIR="$SODIUM_ROOT" -DSODIUM_LIBRARY="$SODIUM_ROOT/lib/libsodium.dll.a" -DSODIUM_INCLUDE_DIR="$SODIUM_ROOT/include" -DTARGET_ARCH="$TARGET_ARCH" -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" -DCMAKE_BUILD_TYPE=Debug . || fail "cmake of our project failed"
-make tunserver.elf || fail "make of our project (main binary) failed"
-make galaxyService || fail "make of our project (main binary) failed"
 
 echo "Printing checksums:"
 sha256sum *.exe | sort
-sha256sum  /home/ubuntu/build/galaxy42/contrib/windows-service-wrapper/galaxyService.exe
-sha256sum  /home/ubuntu/build/boost/mingw_build/lib/*.dll* | sort
-sha256sum  /home/ubuntu/build/libsodium/libsodium-win??/lib/*.dll* | sort
+sha256sum  "${GALAXY_DIR}/contrib/windows-service-wrapper/galaxyService.exe"
+sha256sum  "${BOOST_BUILD_DIR}/lib/*.dll*" | sort
+sha256sum  "${SODIUM_BUILD_DIR}/lib/*.dll*" | sort
 
 ### </LICENCE> - end of licence block
 echo "Entire script in Gitian done"
