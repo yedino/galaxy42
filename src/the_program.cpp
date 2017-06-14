@@ -25,8 +25,10 @@ void c_the_program::startup_version() {
 	ostringstream oss; oss << "ver. "
 		<< project_version_number_major << "."
 		<< project_version_number_minor << "."
-		<< project_version_number_sub // << "."
-		<< project_version_number_patch ;
+		<< project_version_number_sub << "."
+		<< project_version_number_progress // << "."
+		<< project_version_number_patch
+		;
 	string ver_str = oss.str();
 	_fact( "" ); // newline
 	_fact( "Start... " << ver_str );

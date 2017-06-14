@@ -228,7 +228,16 @@ void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
+void example_ub_1_inside() {
+	short int i = -128;
+	i -= 5;
+	volatile auto x = i;
+	_mark("X (invalid value) = " << x);
+}
 
+void example_ub_1() {
+	example_ub_1_inside();
+}
 
 int c_the_program_newloop::main_execution() {
 	_program_section;
@@ -244,6 +253,9 @@ int c_the_program_newloop::main_execution() {
 	this->use_options_peerref();
 
 	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+
+	example_ub_1();
+
 	pimpl->server->main_loop();
 
 	_mark("newloop main_execution - DONE");
