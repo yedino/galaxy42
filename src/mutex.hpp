@@ -205,7 +205,7 @@ private:
   t_mutex & m_mut;
   bool m_locked; ///< not all mutex types know if they are locked apparentyl?
 public:
-  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE(m_mut) : m_mut(mu), m_locked(true) {
+  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE(mu) : m_mut(mu), m_locked(true) {
   	try { m_mut.lock(); } catch(...) { _mutexshield_abort("LG-RW constr"); } }
   ~UniqueLockGuardRW() noexcept RELEASE() {
   	try { if (m_locked) m_mut.unlock(); } catch(...) { _mutexshield_abort("LG-RW destr"); } }
