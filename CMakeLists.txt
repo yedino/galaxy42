@@ -151,6 +151,68 @@ else()
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
 endif()
 
+########################### COMPILER FLAGS ###########################
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CMAKE_VERSION VERSION_LESS 3.1)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
+endif()
+
+if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
+	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
+	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+	if(APPLE)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
+	endif()
+	set(HELP_SANITIZER_MEMORY "Warning, clang memory sanitizer will produce FALSE positives since we do not rebuild all deps nor libc++ with that option")
+	option(SANITIZER_THREAD "Enable clang thread sanitizer" OFF)
+	option(SANITIZER_ADDRESS "Enable clang address sanitizer" OFF)
+	option(SANITIZER_MEMORY "Enable clang memory sanitizer ${HELP_SANITIZER_MEMORY}" OFF)
+	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable clang undefined behavior sanitizer" OFF)
+	set(SANITIZER_DETAILED "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
+	if(SANITIZER_THREAD)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-sanitize-recover=thread ${SANITIZER_DETAILED}")
+	endif()
+	if(SANITIZER_ADDRESS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-sanitize-recover=address ${SANITIZER_DETAILED}")
+	endif()
+	if(SANITIZER_MEMORY)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-sanitize-recover=memory ${SANITIZER_DETAILED}")
+		message("${HELP_SANITIZER_MEMORY}")
+	endif()
+	if(SANITIZER_UNDEFINED_BEHAVIOR)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined ${SANITIZER_DETAILED}")
+	endif()
+	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
+
+	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
+	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall -Wno-unused-command-line-argument") # mostly used by dependencies
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+	set(WARN_PEDANTIC_FLAGS "/Wall")
+	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+else()
+	message(fatal_error "Compiler not supported")
+endif()
+
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARN_PEDANTIC_FLAGS_FOR_C} ${STATIC_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
+
+# more directories of my main code
+
 ########################### DEPENDS ###########################
 
 ########################### BOOST ###########################
@@ -291,70 +353,6 @@ endif()
 # used e.g. by various crypto like ENABLE_CRYPTO_SIDH , ENABLE_CRYPTO_NTRU
 include_directories( build_extra )
 
-
-########################### COMPILER FLAGS ###########################
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if (CMAKE_VERSION VERSION_LESS 3.1)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
-endif()
-
-#set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
-if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
-	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
-	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
-	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-	if(APPLE)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
-	endif()
-	set(HELP_SANITIZER_MEMORY "Warning, clang memory sanitizer will produce FALSE positives since we do not rebuild all deps nor libc++ with that option")
-	option(SANITIZER_THREAD "Enable clang thread sanitizer" OFF)
-	option(SANITIZER_ADDRESS "Enable clang address sanitizer" OFF)
-	option(SANITIZER_MEMORY "Enable clang memory sanitizer ${HELP_SANITIZER_MEMORY}" OFF)
-	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable clang undefined behavior sanitizer" OFF)
-	set(SANITIZER_DETAILED "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
-	if(SANITIZER_THREAD)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-sanitize-recover=thread ${SANITIZER_DETAILED}")
-	endif()
-	if(SANITIZER_ADDRESS)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-sanitize-recover=address ${SANITIZER_DETAILED}")
-	endif()
-	if(SANITIZER_MEMORY)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-sanitize-recover=memory ${SANITIZER_DETAILED}")
-		message("${HELP_SANITIZER_MEMORY}")
-	endif()
-	if(SANITIZER_UNDEFINED_BEHAVIOR)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined ${SANITIZER_DETAILED}")
-	endif()
-	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
-	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument")
-	# add it back when warnings are fixed (bug in clang?) TODO@rob ^---              "-Wthread-safety"
-
-	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
-	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall -Wno-unused-command-line-argument") # mostly used by dependencies
-	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	set(WARN_PEDANTIC_FLAGS "/Wall")
-	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-else()
-	message(fatal_error "Compiler not supported")
-endif()
-
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARN_PEDANTIC_FLAGS_FOR_C} ${STATIC_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
-
-# more directories of my main code
 
 ########################### SOURCE FILES ###########################
 include_directories( src/ )
