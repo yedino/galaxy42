@@ -160,7 +160,6 @@ if (CMAKE_VERSION VERSION_LESS 3.1)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
 endif()
 
-#set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
@@ -193,8 +192,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined ${SANITIZER_DETAILED}")
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
-	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument")
-	# add it back when warnings are fixed (bug in clang?) TODO@rob ^---              "-Wthread-safety"
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
 
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall -Wno-unused-command-line-argument") # mostly used by dependencies
