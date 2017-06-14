@@ -408,7 +408,7 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 ########################### OPTIONAL LIBRARIES ###########################
 
 set(LIB_OPTIONAL_CAPNG "")
-if (UNIX AND NOT CYGWIN)
+if (UNIX AND NOT CYGWIN AND NOT APPLE)
 	set(LIB_OPTIONAL_CAPNG "cap-ng")
 endif ()
 

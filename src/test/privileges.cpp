@@ -14,9 +14,6 @@
 
 #include <type_traits>
 
-// uses libcap-ng - to compare some things like CAP_LAST_CAP
-#include <cap-ng.h>
-
 using namespace std;
 
 #ifndef ANTINET_linux
@@ -30,6 +27,9 @@ TEST( privileges , nothing_to_test_on_this_platform ) {
 #include <linux/types.h>
 
 #include "../utils/capmodpp.hpp"
+
+// uses libcap-ng - to compare some things like CAP_LAST_CAP
+#include <cap-ng.h>
 
 namespace detail {
 
