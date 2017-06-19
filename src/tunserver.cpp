@@ -124,6 +124,9 @@ const char * g_demoname_default = "route_dij";
 
 #include "tunserver.hpp"
 
+#include "utils/privileges.hpp"
+
+
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 //const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
@@ -396,7 +399,9 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
+	,m_option_insecure_cap(this->m_argm->at("insecure-cap").as<bool>())
 {
+	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
 	});
@@ -1441,10 +1446,24 @@ void c_tunserver::event_loop(int time) {
 }
 
 void c_tunserver::run(int time) {
-	std::cout << mo_file_reader::gettext("L_starting_TUN") << std::endl;
+	_goal(mo_file_reader::gettext("L_starting_TUN"));
 
-	prepare_socket();
-	event_loop(time);
+	{
+		_fact("Will now prepare socket");
+		prepare_socket();
+		if (!m_option_insecure_cap) {
+			my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
+		} else _warn("NOT dropping CAP capability (program options?)");
+	}
+
+	{
+		if (!m_option_insecure_cap) {
+			my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+		} else _warn("NOT dropping CAP capability (program options?)");
+		_fact("Will now enter main event loop");
+		event_loop(time);
+		_fact("After main event loop");
+	}
 }
 
 
