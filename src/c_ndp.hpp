@@ -68,6 +68,10 @@ class c_ndp {
 				const uint8_t* header_with_content,
 				uint16_t length,
 				uint32_t next_hvalue);
+		static uint16_t checksum_ipv6_packet(
+				tab_view<uint8_t> source_destination_addr,
+				tab_view<uint8_t> header_with_content,
+				uint32_t next_hvalue);
 	private:
 		static std::array<unsigned char, 94> m_generate_neighbor_advertisement_packet;
 
@@ -80,8 +84,8 @@ bool c_ndp::is_packet_neighbor_solicitation(const T * const data, size_t size) n
 	// ethernet header = 14
 	// ipv6 header = 40
 	// tested on wireshark
-	const int offset_icmpv6_type = 14 + 40 + 0;
-	if (size <= (offset_icmpv6_type)) return false;
+	const int offset_icmpv6_type = 14 + 40 + 0; // +0 bytes inside ICMPv6 header to get the type
+	if (size <= (offset_icmpv6_type)) return false; // check size of packet
 	const unsigned char * const packet_type = data + offset_icmpv6_type;
 	if (*packet_type == 135) return true;
 	return false;
@@ -100,7 +104,10 @@ const std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement_new(
 		m_generate_neighbor_advertisement_packet.at(56) = 0x00;
 		m_generate_neighbor_advertisement_packet.at(57) = 0x00;
 
-		uint16_t checksum = checksum_ipv6_packet(&m_generate_neighbor_advertisement_packet.front() + 22, &m_generate_neighbor_advertisement_packet.front() + 54, 40, 58);
+		//uint16_t checksum = checksum_ipv6_packet(&m_generate_neighbor_advertisement_packet.front() + 22, &m_generate_neighbor_advertisement_packet.front() + 54, 40, 58);
+		tab_view<uint8_t> source_destination_addr(m_generate_neighbor_advertisement_packet.begin() + 22, 32);
+		tab_view<uint8_t> header_with_content(m_generate_neighbor_advertisement_packet.begin() + 54, 40);
+		uint16_t checksum = checksum_ipv6_packet(source_destination_addr, header_with_content, 58);
 		m_generate_neighbor_advertisement_packet.at(56) = checksum & 0xFF;
 		m_generate_neighbor_advertisement_packet.at(57) = checksum >> 8;
 		return m_generate_neighbor_advertisement_packet;
