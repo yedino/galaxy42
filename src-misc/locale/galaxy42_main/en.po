@@ -356,7 +356,7 @@ msgid "L_starting_httpdbg_server"
 msgstr "Starting http debugger server"
 
 msgid "L_starting_main_server"
-msgstr "Stating the TUN router"
+msgstr "Starting the TUN router"
 
 msgid "L_main_server_ended"
 msgstr "Main server ended"

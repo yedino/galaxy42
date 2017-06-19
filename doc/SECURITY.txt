@@ -39,15 +39,34 @@ For windows gitian build we also depend on:
 
 =============================
 
-We assume libcap-ng is not used by any other library, and that we're the only user of it (otheriwse there could be a race,
-as this lib doesn't have too thread-friendly API it seems).
+We assume libcap-ng is not used by any other library, and that we're the only user of it (how ever the code should
+be well enough to work even in most other cases, as the state "m" in that library is per-thread, and our capmodpp code
+should try to reload cap state from kernel in important places)
 If that is not correct assumption, then very carefully audit all code using that library, also in privileges.cpp to avoid
 any race.
+
+The binary file should have file-capabilities applied (as set by the build process / cmake),
+you can test that with:
+$ sudo getcap ./tunserver.elf
+./tunserver.elf = cap_net_admin+eip
+
+Droping capability:
+
+1) Start program as regular user. Due to setcap flags on file, it will have cap cap_net_admin,
+but it will drop it immediatelly when no longer needed.
+Run the program with option  ...
+Run program-tests to confirm, e.g. install libcap-ng-utils and run:
+sudo netcap | grep tunserver
+it should show no lines (no caps are applied)
+
+...
+
+
+
 
 =============================
 
 - what about sub-dependencies of above, e.g. deps used by lib boost (e.g. gettext maybe)?
-
 
 =============================
 

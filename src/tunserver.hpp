@@ -337,6 +337,8 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_peer_list(const std::string &input_json);
 		int m_port;
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
+
+		const bool m_option_insecure_cap; ///< should we do insecure cap (e.g. do NOT drop the capabilities); tests/debug
 };
 
 // ------------------------------------------------------------------
