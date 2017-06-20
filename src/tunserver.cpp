@@ -399,7 +399,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
-	,m_option_insecure_cap(this->m_argm->at("insecure-cap").as<bool>())
+	,m_option_insecure_cap( UsePtr(this->m_argm).at("insecure-cap").as<bool>())
 {
 	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
