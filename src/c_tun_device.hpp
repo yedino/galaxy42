@@ -77,6 +77,7 @@ class c_tun_device_linux final : public c_tun_device {
 
 #include "c_tun_device.hpp"
 #include "c_ndp.hpp"
+#include "tuntap/windows/c_tuntap_windows.hpp"
 #include <array>
 #include <boost/asio.hpp>
 #include <ifdef.h>
@@ -84,7 +85,7 @@ class c_tun_device_linux final : public c_tun_device {
 #include <windows.h>
 #include <vector>
 
-class c_tun_device_windows final : public c_tun_device {
+class c_tun_device_windows final : public c_tun_device, c_is_user_admin {
 	//friend class c_ndp;
 public:
   friend class c_event_manager_asio; // for io_service etc?

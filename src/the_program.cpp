@@ -6,9 +6,6 @@
 #include <boost/filesystem.hpp>
 #include "glue_sodiumpp_crypto.hpp"
 
-
-c_the_program::c_the_program() { }
-
 void c_the_program::take_args(int argc, const char **argv) {
 	if (argc>0) argt_exec=argv[0]; else argt_exec="";
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
@@ -19,7 +16,6 @@ void c_the_program::take_args(const string & _argt_exec , const vector<string> &
 	argt = _argt;
 }
 
-c_the_program::~c_the_program() { }
 
 void c_the_program::startup_console_first() {
 }
@@ -180,18 +176,34 @@ void c_the_program::options_create_desc() { }
 
 void c_the_program::options_parse_first() {
 	_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
+	for (const auto & str : argt)
+	{
+		_fact("commandline option: " << str << " ;");
+		if (str.size() == 0) _warn("Empty commandline arg");
+	}
 	_check(m_boostPO_desc);
 	namespace po = boost::program_options;
+
+	// back to argc/argv, so that boost::program_options can parse it
 	c_string_string_Cstyle args_cstyle( argt_exec , argt );
 	const int argc = args_cstyle.get_argc();
 	const char ** argv = args_cstyle.get_argv();
-	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // parse commandline, and store result
-	_note("BoostPO parsed argm size=" << m_argm.size());
+
+	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // *** parse commandline, and store result
+	_dbg1( "Parsing with options: " << *m_boostPO_desc );
+	_goal("BoostPO parsed argm size=" << m_argm.size());
+	for(auto &arg: m_argm) _info("Argument in argm: " << arg.first );
 }
 
 void c_the_program::options_multioptions() { }
-std::tuple<bool,int> c_the_program::options_commands_run() {
+
+std::tuple<bool,int> c_the_program::base_options_commands_run() {
 	return std::tuple<bool,int>(false,0);
+}
+
+std::tuple<bool,int> c_the_program::options_commands_run() {
+	_program_section;
+	return this->base_options_commands_run();
 }
 
 void c_the_program::options_done() {
@@ -199,7 +211,23 @@ void c_the_program::options_done() {
 			namespace po = boost::program_options;
 			po::notify(m_argm);  // !
 			_note("After BoostPO notify");
-			for(auto &arg: m_argm) _info("Argument in argm: " << arg.first );
+
+	for (const auto & opt : m_argm) {
+		ostringstream oss ; oss << "commandline option (parsed by boost PO): " << opt.first << " = ";
+		bool converted=false;
+		#define try_convert_as(TYPE) \
+			try { ostringstream oss2; oss2 << "(" << #TYPE << ") " << opt.second.as<TYPE>(); \
+			converted=1; oss<<oss2.str(); } \
+			catch(const boost::bad_any_cast &) {}
+		try_convert_as(string);
+		try_convert_as(int);
+		try_convert_as(bool);
+		#undef try_convert_as
+
+		if (!converted) oss << "(other type)";
+		oss << " ;";
+		_note(oss.str());
+	}
 }
 
 int c_the_program::main_execution() {

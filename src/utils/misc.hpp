@@ -39,3 +39,24 @@ class c_string_string_Cstyle final {
 		void append(const std::string & s);
 };
 
+class init_ptr_checker {
+	public:
+		template<typename T, typename ...Types>
+		init_ptr_checker(T ptr, const Types&... ptrs) : init_ptr_checker(ptrs...) {
+			static_assert(std::is_pointer<T>::value, "Type is not pointer");
+			if (ptr == nullptr) throw std::invalid_argument("nullptr used");
+		}
+
+		template<typename T, typename ...Types>
+		init_ptr_checker(std::shared_ptr<T> &ptr, const Types&... ptrs) : init_ptr_checker(ptrs...) {
+			if (ptr == nullptr) throw std::invalid_argument("nullptr used");
+		}
+
+		template<typename T, typename ...Types>
+		init_ptr_checker(std::unique_ptr<T> &ptr, const Types&... ptrs) : init_ptr_checker(ptrs...) {
+			if (ptr == nullptr) throw std::invalid_argument("nullptr used");
+		}
+
+		init_ptr_checker() = default;
+		virtual ~init_ptr_checker() = default;
+};

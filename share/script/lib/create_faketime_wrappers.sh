@@ -5,7 +5,8 @@
 #	create_per-host_faketime_wrappers "x86_64-apple-darwin15" "clang clang++" "/home/ubuntu/wrapperd/"
 
 if [ -v ${REFERENCE_DATETIME+x} ]; then
-	export readonly REFERENCE_DATETIME="2016-08-01 00:00:00"
+	echo "Require REFERENCE_DATETIME variable not set, exiting/failing"
+	exit 1
 else
 	echo "REFERENCE_DATETIME is set to '$REFERENCE_DATETIME'"
 fi

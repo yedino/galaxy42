@@ -12,6 +12,11 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 		c_tuntap_macosx_obj(); ///< construct this object, throws if error
 
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
+
+		size_t send_to_tun_separated_addresses(const unsigned char * const data, size_t size,
+			const std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			const std::array<unsigned char, IPV6_LEN> &dst_binary_address) override{_NOTREADY(); return 0;}
+
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
 		size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
 			std::array<unsigned char, IPV6_LEN> &src_binary_address,

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef THREAD_SAFETY_ANALYSIS_MUTEX_H
 #define THREAD_SAFETY_ANALYSIS_MUTEX_H
 
@@ -68,6 +70,12 @@
 #define NO_THREAD_SAFETY_ANALYSIS \
   THREAD_ANNOTATION_ATTRIBUTE__(no_thread_safety_analysis)
 
+#include <iostream>
+
+#define _mutexshield_abort(X) do { std::cerr<<"Critical error detected in mutexes: msg: " << X << " in " \
+	<< __FILE__ << ":" << __LINE__ << " must abort program NOW." << std::endl; \
+	std::abort(); \
+	} while(0)
 
 // Defines an annotated interface for mutexes.
 // These methods can be implemented to use any internal mutex implementation.
@@ -111,41 +119,113 @@ public:
 };
 
 
+// Defines an annotated interface for mutexes.
+// These methods can be implemented to use any internal mutex implementation.
+#include <boost/thread/shared_mutex.hpp>
+class CAPABILITY("mutex") MutexShared {
+private:
+	boost::shared_mutex m_boost_shared_mutex;
+public:
+  // Acquire/lock this mutex exclusively.  Only one thread can have exclusive
+  // access at any one time.  Write operations to guarded data require an
+  // exclusive lock.
+  void lock() ACQUIRE(){m_boost_shared_mutex.lock();}
+  // Try to acquire the mutex.  Returns true on success, and false on failure.
+  bool try_lock() TRY_ACQUIRE(true){return m_boost_shared_mutex.try_lock();}
+
+  // Acquire/lock this mutex for read operations, which require only a shared
+  // lock.  This assumes a multiple-reader, single writer semantics.  Multiple
+  // threads may acquire the mutex simultaneously as readers, but a writer
+  // must wait for all of them to release the mutex before it can acquire it
+  // exclusively.
+  void lock_shared() ACQUIRE_SHARED(){m_boost_shared_mutex.lock_shared();}
+  // Try to acquire the mutex for read operations.
+  bool try_lock_shared() TRY_ACQUIRE_SHARED(true) { return m_boost_shared_mutex.try_lock_shared(); }
+
+  // Release/unlock an exclusive mutex.
+  void unlock() RELEASE(){m_boost_shared_mutex.unlock();}
+
+  // Release/unlock a shared mutex.
+  void unlock_shared() RELEASE_SHARED(){m_boost_shared_mutex.unlock_shared();}
+
+  // Assert that this mutex is currently held by the calling thread.
+//  void AssertHeld() ASSERT_CAPABILITY(this);
+
+  // Assert that is mutex is currently held for read operations.
+//  void AssertReaderHeld() ASSERT_SHARED_CAPABILITY(this);
+
+  // For negative capabilities.
+//  const Mutex& operator!() const { return *this; }
+};
+
+
 // MutexLocker is an RAII class that acquires a mutex in its constructor, and
 // releases it in its destructor.
 template <class t_mutex>
-class SCOPED_CAPABILITY Lock_guard {
+class SCOPED_CAPABILITY LockGuard {
 private:
   t_mutex &mut;
 
 public:
-  Lock_guard(t_mutex &mu) ACQUIRE(mu) : mut(mu) {
-    mut.lock();
-  }
-  ~Lock_guard() RELEASE() {
-    mut.unlock();
-  }
+  LockGuard(t_mutex &mu) ACQUIRE(mut) : mut(mu) { mut.lock(); }
+  ~LockGuard() RELEASE() { mut.unlock(); }
+  void lock() ACQUIRE(mut) { mut.lock(); }
+  void unlock() RELEASE() { mut.unlock(); }
 };
 
 template <class t_mutex>
-class SCOPED_CAPABILITY Unique_lock {
+class SCOPED_CAPABILITY UniqueLockGuardRO {
 private:
-  std::unique_lock<t_mutex> unique_lock;
-
+  t_mutex & m_mut;
+  bool m_locked; ///< not all mutex types know if they are locked apparentyl?
 public:
-  Unique_lock(t_mutex &mu) ACQUIRE(mu) : unique_lock(mu) {}
+  UniqueLockGuardRO(t_mutex &mu) noexcept ACQUIRE_SHARED(m_mut) : m_mut(mu), m_locked(true) {
+  	try { m_mut.lock_shared(); } catch(...) { _mutexshield_abort("LG-RO constr"); } }
+//  ~UniqueLockGuardRO() noexcept RELEASE_SHARED() { // https://stackoverflow.com/questions/33608378/clang-thread-safety-annotation-and-shared-capabilities
+  ~UniqueLockGuardRO() noexcept RELEASE() {
+  	try { if (m_locked) m_mut.unlock_shared(); } catch(...) { _mutexshield_abort("LG-RO destr"); } }
 
-  ~Unique_lock() RELEASE() {
-  }
+  void lock() noexcept ACQUIRE_SHARED(m_mut) {
+  	try {
+  		if (m_locked) _mutexshield_abort("LG-RO already locked");
+	  	m_mut.lock_shared(); m_locked=true;
+	  } catch(...) { _mutexshield_abort("LG-RO lock"); } }
 
-  void unlock() RELEASE() {
-    unique_lock.unlock();
-  }
-
-  void lock() ACQUIRE() {
-    unique_lock.unlock();
-  }
+//  void unlock() noexcept RELEASE_SHARED() { // https://stackoverflow.com/questions/33608378/clang-thread-safety-annotation-and-shared-capabilities
+  void unlock() noexcept RELEASE() {
+  	try {
+  		if (!m_locked) _mutexshield_abort("LG-RO already unlocked");
+	  	m_mut.unlock_shared(); m_locked=false;
+	  } catch(...) { _mutexshield_abort("LG-RO unlock"); } }
 };
+
+template <class t_mutex>
+class SCOPED_CAPABILITY UniqueLockGuardRW {
+private:
+  t_mutex & m_mut;
+  bool m_locked; ///< not all mutex types know if they are locked apparentyl?
+public:
+  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE(mu) : m_mut(mu), m_locked(true) {
+  	try { m_mut.lock(); } catch(...) { _mutexshield_abort("LG-RW constr"); } }
+  ~UniqueLockGuardRW() noexcept RELEASE() {
+  	try { if (m_locked) m_mut.unlock(); } catch(...) { _mutexshield_abort("LG-RW destr"); } }
+
+  void lock() noexcept ACQUIRE(m_mut) {
+  	try {
+  		if (m_locked) _mutexshield_abort("LG-RW already locked");
+	  	m_mut.lock(); m_locked=true;
+	  } catch(...) { _mutexshield_abort("LG-RW lock"); } }
+  void unlock() noexcept RELEASE() {
+  	try {
+  		if (!m_locked) _mutexshield_abort("LG-RW already unlocked");
+	  	m_mut.unlock(); m_locked=false;
+	  } catch(...) { _mutexshield_abort("LG-RW unlock"); } }
+};
+
+//  UniqueLockGuard(t_mutex &mu, tag_lock_exclusive) ACQUIRE_SHARED(mu) : m_unique_lock(mu,std::defer_lock) {
+//  	mu->lock_shared();
+// 	}
+
 
 #ifdef USE_LOCK_STYLE_THREAD_SAFETY_ATTRIBUTES
 // The original version of thread safety analysis the following attribute
@@ -215,3 +295,5 @@ public:
 #endif  // USE_LOCK_STYLE_THREAD_SAFETY_ATTRIBUTES
 
 #endif  // THREAD_SAFETY_ANALYSIS_MUTEX_H
+
+#undef _mutexshield_abort

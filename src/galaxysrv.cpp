@@ -6,8 +6,10 @@
 
 #include "cable/simulation/cable_simul_addr.hpp"
 #include "cable/udp/cable_udp_addr.hpp"
+#include <cable/udp/cable_udp_obj.hpp>
 #include "cable/simulation/cable_simul_obj.hpp"
 #include "cable/simulation/world.hpp"
+#include <cable/selector.hpp>
 
 #include "libs0.hpp"
 #include "cable/kind.hpp"
@@ -17,15 +19,34 @@
 #include "tuntap/windows/c_tuntap_windows.hpp"
 
 #include <boost/filesystem.hpp> // for flag-file
+#include <ipv6.hpp>
 
 #include <boost/asio.hpp> // to create local address
+#include <mutex.hpp>
+
+constexpr int cfg_jobs_tuntap_threads = 4;
 
 void c_galaxysrv::main_loop() {
-	_goal("\n\nMain loop\n\n");
+	_goal("\n\nMain loop (new loop)\n\n");
 
 	auto world = make_shared<c_world>();
 //	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
 //	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
+
+	// ===========================================================================================================
+	_clue("Allocating in main loop");
+	size_t cfg_max_mtu = this->get_tuntap_mtu_current();
+	size_t cfg_num_welds = 8;
+	size_t cfg_weld_memsize = cfg_max_mtu * 3;
+	{
+		for (size_t i=0; i<cfg_num_welds; ++i) {
+			_info("Creating weld #" << i);
+			c_weld new_weld(cfg_weld_memsize);
+			m_welds.push_back( std::move( new_weld  ) );
+		}
+		_mark("Allocations done");
+		_note("Allocated " << m_welds.size() << " welds");
+	}
 
 	auto loop_exitwait = [&]() {
 		string stopflag_name="/tmp/stop1";
@@ -41,55 +62,182 @@ void c_galaxysrv::main_loop() {
 		this->start_exit(); // TODO-thread
 	}; // lambda exitwait
 
-	auto loop_tunread = [&]() {
+	c_card_selector listen1_selector = [this]() -> auto {
+		_fact("Starting to listen");
+		// start listener:
+		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
+		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
+		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
+		_fact("Listen on " << listen1_selector );
+		{
+			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
+			m_cable_cards.get(lg).get_card(listen1_selector).listen_on(listen1_selector);
+		}
+		_goal("Listening on " << listen1_selector );
+		return listen1_selector;
+	} ();
+
+	auto loop_tunread = [&](const int my_job_nr) {
+		auto my_name = [=]() -> std::string {
+			thread_local const string my_name_main = "[job#" + STR(my_job_nr) +"]";
+			thread_local const string my_name_2 = my_name_main + " "s;
+			return my_name_2;
+		};
+
 		try {
-			c_netbuf buf(9000);
+			_clue(my_name() + " starting");
+
+			boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
+			unique_ptr<c_cable_udp_addr> my_localhost = make_unique<c_cable_udp_addr>( ep );
+			c_card_selector my_selector( std::move(my_localhost) ); // will send from this my-address, to this peer
+			// pick up / create proper "card" (e.g. new socket from other my-address) and send from it:
+
 			while (!m_exiting) {
-				_dbg3("Reading TUN...");
-				size_t read = m_tuntap.read_from_tun( buf.data(), buf.size() );
-				/*c_haship_addr src_addr;
-				c_haship_addr dst_addr;
-				size_t read = m_tuntap.read_from_tun_separated_addresses(buf.data(), buf.size(), src_addr, dst_addr);*/
-				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				_info("TUN read: " << make_report(chunk,20));
-				//_info("src address " << src_addr);
-				//_info("dst address " << dst_addr);
+			try {
+				_dbg2(my_name() + "Reading TUN...");
+
+				struct c_tuntap_read_result final {
+					c_tuntap_read_result() = default;
+					c_tuntap_read_result(c_tuntap_read_result &&) = default;
+					c_tuntap_read_result(const c_tuntap_read_result &) = delete;
+
+					c_tuntap_read_result(c_netchunk && _chunk) noexcept : chunk(std::move(_chunk)) {}
+
+					c_netchunk chunk;
+					c_haship_addr src_hip;
+					c_haship_addr dst_hip;
+				};
+
+				auto func_find =
+					[=](const c_weld & weld) {
+						auto free_size = weld.get_free_size();
+						_info("TESTING the weld "<<static_cast<const void*>(&weld)<<": free_size="<<free_size);
+						if (free_size >= cfg_max_mtu) return true;
+						return false;
+					}
+				;
+
+				auto func_use = [=](c_weld & weld) -> c_tuntap_read_result {
+					// receive the data into some part of the selected weld's buffer
+					_note("USING the weld "<<static_cast<const void*>(&weld)<<" for tuntap read");
+
+					size_t packet_max = cfg_max_mtu;
+					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
+
+					c_tuntap_read_result tuntap_result( // will store here result
+						weld.m_buf.get_chunk( weld.m_bufWrite , packet_max) // find empty chunk, will return it as result
+					);
+
+					// *** block here and read from tuntap ***
+					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
+						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
+						tuntap_result.src_hip, tuntap_result.dst_hip);
+
+					// adjust down size to actually used part of buffer
+					tuntap_result.chunk.shrink_to( read_size_merit );
+					weld.adjust_bufWrite( eint::eint_plus( old_buffWrite , read_size_merit ) );
+
+					size_t read_ipv6size = ipv6_size_entireip_from_header( tuntap_result.chunk.to_tab_view() );
+					size_t read_ipv6size_merit{ eint_minus( read_ipv6size , size_removed_from_merit ) };
+					if (read_ipv6size_merit != read_size_merit) {
+						_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
+						"tuntap driver", read_size_merit));
+					}
+					_info(my_name() + "TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
+						<< " TUN data: " << make_report(tuntap_result.chunk,20));
+					return tuntap_result;
+				};
+
+				c_tuntap_read_result tuntap_result = m_welds.run_on_matching<c_tuntap_read_result>( func_find, func_use, 1 );
+
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
-				m_cable_cards.get_card(e_cable_kind_udp).send_to( UsePtr(peer_one_addr) , chunk.data() , chunk.size() );
+				// TODO THREAD SAFE XXX TODO-NOW:
+				// the reference should be used all under lock, probably, not just obtained under lock,
+				// if the card is not thread-safe
+				auto & door = m_cable_cards.use_RW( [&](auto & obj) -> auto& { return obj.get_card(my_selector); }  );
+
+				// generate p2p:
+				using proto = c_protocolv3; /// ^TODO move
+				trivialserialize::generator gen(proto::max_header_size); // [[optimize]] remove alloc/free from gen(), use static buffer for it
+				gen.push_byte_u( enum_to_int_safe<unsigned char>(proto::t_proto_cmd::e_proto_cmd_data_cart) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(tuntap_result.src_hip) );
+				gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(tuntap_result.dst_hip) );
+				// gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
+				// gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
+				string header = gen.str_move();
+
+				// send:
+				c_cable_base_obj::t_asio_buffers_send buffers{
+					{ header.data(), header.size() },
+					{ tuntap_result.chunk.data(), tuntap_result.chunk.size() }
+				};
+				door.send_to( UsePtr(peer_one_addr) , buffers);
+
+			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
+				throw;
+			}
 			} // loop
-			_note("Loop done");
-		} catch (const std::exception &e) {_warn("Thread-lambda got exception " << e.what());}
-		catch(...) { _warn("Thread-lambda got exception"); }
+			_note(my_name() + "Loop done - tun read");
+		} catch (const std::exception &e) { _erro(my_name() + "Thread lambda (for tunread) got exception and EXITED - " << e.what()); }
+		catch(...) { _warn(my_name() + "Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
 
 	auto loop_cableread = [&]() {
 		try {
 			c_netbuf buf(9000);
-			string stopflag_name="/tmp/stop1";
-			_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
 			while (!m_exiting) {
-				_dbg3("Reading cables...");
-				c_cable_udp_addr peer_addr;
-				size_t read =	m_cable_cards.get_card(e_cable_kind_udp).receive_from( peer_addr , buf.data() , buf.size() ); // ***********
-				c_netchunk chunk( buf.data() , read ); // actually used part of buffer
-				_info("CABLE read, from " << peer_addr << make_report(chunk,20));
-				m_tuntap.send_to_tun(chunk.data(), chunk.size());
-				if (boost::filesystem::exists(stopflag_name)) break;
+				try{
+					_dbg3("Reading cables...");
+					c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
+
+					// TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:
+					size_t read =	m_cable_cards.use_RW( [&](auto & obj) -> auto {
+						return obj.get_card(listen1_selector).receive_from( his_door , buf.data() , buf.size() ); // ***********
+					} );
+
+					c_netchunk chunk( buf.data() , read ); // actually used part of buffer
+
+					using proto = c_protocolv3;
+					trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid(), reinterpret_cast<char*>(chunk.data()), chunk.size());
+					proto::t_proto_cmd cmd = int_to_enum<proto::t_proto_cmd>(parser.pop_byte_u());
+					c_haship_addr src_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+					c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin(), parser.pop_bytes_n(g_ipv6_rfc::length_of_addr));
+
+					// what cable address to send to:
+					c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
+
+					bool fwok = true;
+					if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
+
+					if (fwok) {
+						_info("CABLE read, from " << his_door << make_report(chunk,20));
+						size_t offset = sizeof(cmd) + 2*g_ipv6_rfc::length_of_addr;
+						m_tuntap.send_to_tun_separated_addresses(chunk.data() + offset, chunk.size() - offset, src_hip, dst_hip);
+						_info("Sent to tuntap");
+					} else {
+						_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
+					}
+				}
+				catch(const std::exception & ex) { _warn("Cannot handle this packet. Exception: " << ex.what()); }
+				catch(...) { _warn("Cannot handle this packet. Unknown exception"); }
 			} // loop
-			_note("Loop done");
-		} catch(...) { _warn("Thread-lambda got exception"); }
+			_note("Loop done - cable reader");
+		}
+		catch(const std::exception & ex) { _warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
+		catch(...) { _warn("Thread-lambda loop_cableread got exception"); }
 	}; // lambda cableread
 
 	std::vector<unique_ptr<std::thread>> threads;
 
-	c_cable_udp_addr address_all;
-	address_all.init_addrdata( boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),9042) );
-	m_cable_cards.get_card(e_cable_kind_udp).listen_on( address_all );
 
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
-	threads.push_back( make_unique<std::thread>( loop_tunread ) );
+
+	for (int i=0; i<cfg_jobs_tuntap_threads; ++i) {
+		_mark("Starting tuntap thread #" << i);
+		threads.push_back( make_unique<std::thread>( loop_tunread , i ) );
+	}
 	threads.push_back( make_unique<std::thread>( loop_cableread ) );
 
 	_goal("All threads started, count=" << threads.size());
@@ -107,12 +255,20 @@ void c_galaxysrv::main_loop() {
 void c_galaxysrv::start_exit() {
 	_goal("Start exiting");
 	m_exiting=1;
-	m_cable_cards.stop_threadsafe();
+	m_cable_cards.use_RW( [](auto & obj_cards) { obj_cards.stop_threadsafe(); } );
 	_goal("Start exiting - ok");
 }
 
+uint16_t c_galaxysrv::get_tuntap_mtu_default() const {
+	return 16*1024;
+}
+
+uint16_t c_galaxysrv::get_tuntap_mtu_current() const {
+	return this->get_tuntap_mtu_default(); // TODO@rob + TODO@rfree instead actually query the card's MTU now set
+}
+
 void c_galaxysrv::init_tuntap() {
-	m_tuntap.set_tun_parameters(get_my_hip(), 16, 16000);
+	m_tuntap.set_tun_parameters(get_my_hip(), 16, this->get_tuntap_mtu_default());
 }
 
 // my key @new
