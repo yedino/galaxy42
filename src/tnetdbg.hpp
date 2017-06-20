@@ -83,7 +83,7 @@ void write_to_console(const std::string& obj);
 	oss<<"\033[93m"; for (int i=0; i<70; ++i) oss<<'!'; oss<<::std::endl; \
 	oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(oss.str());\
-	oss.flush(); oss<<get_detail_backtrace(4);\
+	oss.flush(); oss<<get_simple_backtrace(4);\
 	write_to_console(oss.str());\
 } while(0)
 /// red code
