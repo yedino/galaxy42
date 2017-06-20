@@ -125,6 +125,7 @@ const char * g_demoname_default = "route_dij";
 #include "tunserver.hpp"
 
 #include "utils/privileges.hpp"
+#include <boost/any.hpp>
 
 
 //const char * g_the_disclaimer =
@@ -390,7 +391,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
-c_tunserver::c_tunserver(int port, int rpc_port)
+c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
 :
 	m_my_name("unnamed-tunserver")
 	,m_udp_device(port)
@@ -399,7 +400,7 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
-	,m_option_insecure_cap( UsePtr(this->m_argm).at("insecure-cap").as<bool>())
+	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
 {
 	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
@@ -408,6 +409,13 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	m_rpc_server.add_rpc_function("peer_list", [this](const std::string &input_json) {
 		return rpc_peer_list(input_json);
 	});
+}
+
+boost::program_options::variables_map c_tunserver::get_default_early_argm() {
+	boost::program_options::variables_map early_argm;
+	boost::any x(false);
+	early_argm.insert( std::make_pair("insecure-cap"  ,  boost::program_options::variable_value(false,false) ) );
+	return early_argm;
 }
 
 #ifdef HTTP_DBG
@@ -421,7 +429,9 @@ void c_tunserver::set_desc(shared_ptr< boost::program_options::options_descripti
 }
 
 void c_tunserver::set_argm(shared_ptr< boost::program_options::variables_map > argm) {
-    m_argm = argm;
+	_check(argm);
+	m_argm = argm;
+  _check( m_option_insecure_cap == UsePtr(m_argm).at("insecure-cap").as<bool>() ); // should not change (e.g. vs ctor early_argm)
 }
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
