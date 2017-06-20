@@ -91,6 +91,8 @@ size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t siz
 		m_stream_handle.write_some(boost::asio::buffer(neighbor_advertisement_packet_array));
 		return 0;
 	}
+	if ((input_buffer.at(22) != 0xFD) || (input_buffer.at(23) != 0x42)) return 0; // check ipv6 src address
+	if ((input_buffer.at(38) != 0xFD) || (input_buffer.at(39) != 0x42)) return 0; // check ipv6 dst address
 	std::copy_n(input_buffer.begin() + 14, readed_size - 14, data); // without eth header
 	return readed_size - 14;
 }
