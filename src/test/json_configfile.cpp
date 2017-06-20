@@ -18,6 +18,19 @@ void delete_conf_files() {
 	datastore::remove("connect_to.seed.conf");
 }
 
+
+TEST(json_configfile, load_keys) {
+
+	generate_conf_files();
+	c_galaxyconf_load galaxyconf;
+	auto keypair_struct = galaxyconf.my_keypair_load();
+	EXPECT_EQ(keypair_struct.m_private_key_type,"master-dh");
+	EXPECT_EQ(keypair_struct.m_private_key,"ed25519:1fffffffffffffffffffaaaaaaaaaaabbbbbbbbbbbbbbbbcccccccccccc11111");
+	EXPECT_EQ(keypair_struct.m_public_key,"ed25519:1111111112222222233333333344444444445555555666666666.k");
+	EXPECT_EQ(keypair_struct.m_ipv6,"fd42:aaaa:bbbb:cccc:aaaa:bbbb:cccc:dddd");
+
+	delete_conf_files();
+}
 TEST(json_configfile, peer_references_haship) {
 
 	generate_conf_files();

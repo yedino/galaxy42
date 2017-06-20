@@ -2,8 +2,12 @@
 
 #pragma once
 
-
+#include "gtest/gtest_prod.h"
 #include <json/json.h>
+
+#include <json.hpp>
+using json = nlohmann::json;
+
 #include "c_json_genconf.hpp"
 #include "libs1.hpp"
 #include "c_peering.hpp"
@@ -89,8 +93,11 @@ class c_galaxyconf_load {
 	std::vector<t_auth_password> get_auth_passwords ();
 
   private:
+	FRIEND_TEST(json_configfile, load_keys);
+
 	std::string m_filename;
 	Json::Value m_root;
+	json m_json;
 	std::vector<t_peering_reference> m_peer_references;
 	std::vector<t_auth_password> m_auth_passwords;
 
