@@ -86,6 +86,7 @@ class c_galaxyconf_load {
 	c_galaxyconf_load (const c_galaxyconf_load &) = delete;
 
 	std::vector<t_peering_reference> get_peer_references ();
+	std::vector<t_auth_password> get_auth_passwords ();
 
   private:
 	std::string m_filename;

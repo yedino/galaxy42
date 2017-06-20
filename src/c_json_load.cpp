@@ -66,7 +66,8 @@ c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_
 
 		get_peers(peer_refs);	///< proper peer loading
 	} catch (std::invalid_argument &err) {
-		_info("Fail to load " << m_filename <<  " configuration file." << err.what());
+		_warn("Fail to load " << m_filename <<  " configuration file." << err.what());
+		throw;
 	}
 }
 
@@ -84,9 +85,11 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 		size_t pos = l_ip.find(':');
 		if(pos != std::string::npos) { // if there is :port
 			auto pair = tunserver_utils::parse_ip_string(l_ip);
-			peer_refs.emplace_back(t_peering_reference(pair.first, pair.second, l_hip));
+			auto t_perref = t_peering_reference(pair.first, pair.second, l_hip);
+			peer_refs.emplace_back(t_perref);
 		} else {
-			peer_refs.emplace_back(t_peering_reference(l_ip, l_hip));
+			auto t_perref = t_peering_reference(l_ip, l_hip);
+			peer_refs.emplace_back(t_perref);
 		}
 		i++;
 	}
@@ -107,12 +110,17 @@ c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(f
 		connect_to_load();
 
 	} catch (std::invalid_argument &err) {
-		_info("Fail to load " << m_filename <<  " configuration file." << err.what());
+		_warn("Fail to load " << m_filename <<  " configuration file." << err.what());
+		throw;
 	}
 }
 
 std::vector<t_peering_reference> c_galaxyconf_load::get_peer_references() {
 	return m_peer_references;
+}
+
+std::vector<t_auth_password> c_galaxyconf_load::get_auth_passwords() {
+	return m_auth_passwords;
 }
 
 t_my_keypair c_galaxyconf_load::my_keypair_load() {
@@ -152,7 +160,7 @@ void c_galaxyconf_load::auth_password_load() {
 }
 
 void c_galaxyconf_load::connect_to_load() {
-	if(m_root.get("authorizedPasswords","").isArray()) {
+	if(m_root.get("connectTo","").isArray()) {
 		Json::Value connect_to = m_root.get("connectTo","");
 		for(auto &filename : connect_to) {
 			std::cout << "Loading connectTo file: " << filename.asString() << std::endl;
@@ -167,19 +175,4 @@ void c_galaxyconf_load::connect_to_load() {
 		_throw_error( std::invalid_argument("Empty connectTo in " + m_filename + " file") );
 	}
 
-}
-
-// test - simple usage
-int json_test() {
-
-  try {
-	c_json_genconf::genconf();
-	c_galaxyconf_load galaxyconf("galaxy.conf");
-
-  } catch (std::exception &err) {
-		std::cout << err.what() << std::endl;
-		return 1;
-  }
-
-	return 0;
 }
