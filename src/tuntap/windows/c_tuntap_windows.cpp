@@ -85,6 +85,7 @@ size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t siz
 	std::array<unsigned char, 14 + 40 + 65535> input_buffer;
 	const unsigned char * const ipv6_begin = input_buffer.data();
 	size_t readed_size = m_stream_handle.read_some(boost::asio::buffer(input_buffer.data(), input_buffer.size()));
+	if (readed_size < (14 + 40)) return 0; // packet is smaller than eth header + ipv6 header, ignoring
 	if (c_ndp::is_packet_neighbor_solicitation(input_buffer.data(), readed_size)) {
 		const std::array<unsigned char, 94> neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement_new(m_mac_address, input_buffer);
 		m_stream_handle.write_some(boost::asio::buffer(neighbor_advertisement_packet_array));
@@ -107,7 +108,7 @@ size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
 		std::copy(ipv6_header_begin + 24, ipv6_header_begin + 40, dst_binary_address.begin());
 		// copy content without addresses
 		std::copy(ipv6_header_begin, ipv6_header_begin + 8, data); // before addresses
-		size_t ipv6_payload_size = readed_bytes - 14 - 40; // size of received bytes without eth and ipv6 header
+		size_t ipv6_payload_size = readed_bytes - 40; // size of received bytes without ipv6 header
 		std::copy(ipv6_header_begin + 40, ipv6_header_begin + 40 + ipv6_payload_size, data + 8);
 		return readed_bytes - src_binary_address.size() - dst_binary_address.size();
 }
