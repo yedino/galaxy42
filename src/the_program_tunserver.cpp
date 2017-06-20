@@ -220,7 +220,12 @@ int c_the_program_tunserver::main_execution() {
 
 			_check_user(argm.count("port") && argm.count("rpc-port"));
 			_fact("Will create a server");
-			m_myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
+			// *** creating the server object ***
+			m_myserver_ptr = std::make_unique<c_tunserver>(
+				argm.at("port").as<int>(),
+				argm.at("rpc-port").as<int>(),
+				argm
+			);
 
 			assert(m_myserver_ptr);
 			auto& myserver = * m_myserver_ptr;

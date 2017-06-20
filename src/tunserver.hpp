@@ -176,7 +176,15 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 
 class c_tunserver : public c_galaxy_node {
 	public:
-		c_tunserver(int port, int rpc_port);
+		/// Creates tunserver listening on given #port and #rpc_port
+		/// @param early_argm is the early state of argm (possibly will be changed later e.g. by devel/demo options - see set_argm)
+		/// this #early_argm is only to peek at some options needed early, for example options stored here as const,
+		/// like #m_option_insecure_cap
+		c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm);
+
+		/// to easily call constructor without providing real #early_argm, e.g. when using in an unittest
+		static boost::program_options::variables_map get_default_early_argm();
+
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
 		void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
