@@ -23,7 +23,7 @@ This program creates an secure connection between computers (like VPN).
 To **run from sources**, just use menu `./menu` and select install, then build, then run - for supported systems,
 or keep reading.
 
-To **use this program** from Command Line, simply:
+To **use this program** from Command Line (as regular user, or as root) simply:
 
   * on 1st computer run command: `./tunserver.elf`
 the program will start and will **print you on screen what is the virtual IP address** that is assigned to it by our program.
