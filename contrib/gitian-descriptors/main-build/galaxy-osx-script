@@ -4,19 +4,16 @@
 set -o errexit
 set -o nounset
 
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-function_fdfix() {
-        echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
-        sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
-}
-function_fdfix
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
+. "${GALAXY_DIR}"/share/script/lib/fdfix.sh
 
-
-readonly OUTDIR="$1"
-export OUTDIR
-
-readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
+# fix for /dev/fd
+fdfix
 
 # build osx cross toolchain
 pushd "${GALAXY_DIR}"
@@ -24,13 +21,9 @@ pushd "${GALAXY_DIR}"
 	printf "sourced PATH = $PATH\n"
 popd
 
-readonly WRAP_DIR="$HOME/wrapped"
-
-# import functions
-. "${GALAXY_DIR}"/share/script/lib/fail.sh
-. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
-
+export readonly TARGET_ARCH="x86_64-apple-darwin15"
 export FAKETIME="$REFERENCE_DATETIME"
+
 # variable from above yml config
 echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 # debug
@@ -42,7 +35,7 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
 
-HOST="x86_64-apple-darwin15"
+HOST="x86_64-apple-darwin15" # because of one host, HOSTS == TARGET_ARCH
 COMPILERS="clang clang++ clang++-libc++ install_name_tool"
 
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
@@ -72,7 +65,6 @@ if test -n "$GBUILD_CACHE_ENABLED"; then
 fi
 
 # Create faketime timestamp
-
 # Apply faketime for PROGS HOST_PROGS and (HOST)COMPILERS
 export PATH_orig="${PATH}"
 create_global_faketime_wrappers "${FAKETIME_PROGS}" "${WRAP_DIR}"
@@ -80,38 +72,26 @@ create_per-host_faketime_wrappers "${HOST}" "${FAKETIME_HOST_PROGS}" "${WRAP_DIR
 create_per-host_faketime_wrappers "${HOST}" "${COMPILERS}" "${WRAP_DIR}"
 export PATH="${WRAP_DIR}:${PATH}"
 
-# Create the release tarball using (arbitrarily) the first host
-
-# ./autogen.sh # delete
-# CONFIG_SITE=${BASEPREFIX}/`echo "${HOST}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
-
-
-printf "\n\n\nDoing boost static build\n\n\n"
-
-printf "\nTEST TOOLS (in linux script):\n"
-set -x
-which gcc
-which ar
-which ranlib
-gcc -v || fail "test gcc"
-g++ -v || fail "test g++"
-ar --version || fail "test ar"
-ranlib --version || fail "test ranlib"
-g++ -print-prog-name=ar
-set +x
-printf "\n\n"
-
 
 # ** building boost **
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/boost-build_${TARGET_ARCH}"
+
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libboost-build/build-boost-osx || fail "Failed to build dependence - boost lib for osx"
+	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
 popd || fail
 echo "\nAll done regarding boost.\n"
 
 # ** building libsodium **
+export readonly SODIUM_DIR="${BUILD_DIR}/libsodium"
+
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libsodium-build/build-sodium "${HOST}" || fail "Failed to build dependence - libsodium for osx"
+	# import build-sodium function
+	. contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - libsodium for ${TARGET_ARCH}"
+
+	# Get TARGET_ARCH, build, and export SODIUM_BUILD_DIR
+	build-sodium ${TARGET_ARCH}
 popd
+
 
 # *** main build starts here ***
 pushd "${GALAXY_DIR}"
@@ -123,8 +103,8 @@ pushd "${GALAXY_DIR}"
 	git clean -fdx
 	git submodule update --init --recursive
 
-	cmake	-DBOOST_ROOT="${BUILD_DIR}/boost/build-osx/" \
-			-DSODIUM_ROOT_DIR="${BUILD_DIR}/libsodium/libsodium-osx/" \
+	cmake	-DBOOST_ROOT="${BOOST_BUILD_DIR}" \
+			-DSODIUM_ROOT_DIR="${SODIUM_BUILD_DIR}" \
 			-DCMAKE_TOOLCHAIN_FILE="${GALAXY_DIR}/cmake/toolchain_macosx.cmake.in" \
 			. \
 			|| fail "create makefile for our project (cmake) failed"

@@ -5,6 +5,7 @@
 #include "c_ip46_addr.hpp" // TODO make portable
 #include "c_event_manager.hpp"
 
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper {
 	public:
 		virtual ~c_udp_wrapper() = default;
@@ -15,6 +16,7 @@ class c_udp_wrapper {
 
 #ifdef __linux__
 
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper_linux final : public c_udp_wrapper {
 	friend class c_event_manager_linux;
 	public:
@@ -37,6 +39,8 @@ class c_udp_wrapper_linux final : public c_udp_wrapper {
 
 #include <array>
 #include <boost/asio.hpp>
+
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper_asio final : public c_udp_wrapper {
         friend class c_event_manager_asio;
 	public:
@@ -57,7 +61,9 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 //  __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 #else
 
-#warning "using c_udp_wrapper_empty = It can not work!"
+#warning "using c_udp_wrapper_empty = It will not work (it's just a stump)!"
+
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper_empty final : public c_udp_wrapper {
 	public:
 		c_udp_wrapper_empty() = default;

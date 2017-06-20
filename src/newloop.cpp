@@ -1,6 +1,10 @@
 #include "libs1.hpp"
 #include "utils/check.hpp"
 #include "utils/misc.hpp"
+#include "netbuf.hpp"
+
+/// @file - is probably deprecated TODO remove me later
+/// @owner rfree
 
 typedef string cable_id; // name next hop
 typedef string hip_id; // name end src/dst
@@ -80,7 +84,7 @@ void test_debug_check() {
 }
 
 // -------------------------------------------------------------------
-
+/*
 template <typename T>
 struct c_to_report {
 	public:
@@ -111,13 +115,13 @@ class c_netchunk {
 		t_element * const data; // points to inside of some existing t_netbuf. you do *NOT* own the data.
 		const size_t size;
 };
-
+*/
 // -------------------------------------------------------------------
 
 /***
 	@brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
 */
-class c_netbuf {
+/*class c_netbuf {
 	public:
 		typedef c_netchunk::t_element t_element; ///< type of one elemenet
 
@@ -147,7 +151,7 @@ void c_netbuf::report(std::ostream & ostr, int detail) const {
 	if (detail>=1) ostr << " m_data@" << static_cast<const void*>(this) << ",size=" << m_data.size()
 		<< ",memory@" << static_cast<const void*>(m_data.data()) ;
 }
-
+*/
 // -------------------------------------------------------------------
 
 /**
