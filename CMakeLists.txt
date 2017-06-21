@@ -426,11 +426,11 @@ set(LIBS_COMMON
 )
 
 target_link_libraries(tunserver.elf
-	${LIBS_COMMON}
-	)
-#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
-#	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+#	${LIBS_COMMON}
+#	)
+	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
