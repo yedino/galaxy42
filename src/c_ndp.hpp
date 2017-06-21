@@ -62,12 +62,13 @@ class c_ndp {
 			const U & packet_neighbor_solicitation_container);
 
 		// next_hvalue: 58 icmpv6 and 17 for udpv6
-
+		[[deprecated]]
 		static uint16_t checksum_ipv6_packet(
 				const uint8_t* source_destination_addr,
 				const uint8_t* header_with_content,
 				uint16_t length,
 				uint32_t next_hvalue);
+
 		static uint16_t checksum_ipv6_packet(
 				tab_view<uint8_t> source_destination_addr,
 				tab_view<uint8_t> header_with_content,
