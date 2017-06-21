@@ -8,6 +8,8 @@ os:
   - linux
 dist: trusty
 
+group: edge
+
 addons:
   apt:
     sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
