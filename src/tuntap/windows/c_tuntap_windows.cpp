@@ -26,7 +26,7 @@
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
 c_is_user_admin::c_is_user_admin() {
-	/*++
+	/**
 		Routine Description: This routine returns TRUE if the caller's
 		process is a member of the Administrators local group. Caller is NOT
 		expected to be impersonating anyone and is expected to be able to
