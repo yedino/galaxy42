@@ -34,29 +34,57 @@ bool c_json_file_parser::parse_file(const std::string &filename) {
 	return 0;
 }
 
+std::stringstream remove_comments(std::istream &istr) {
+	std::stringstream ss;
+	for (std::string line; std::getline(istr, line); ) {
+			// load only lines that are not comment
+			size_t position;
+			if((position = line.find("//")) != std::string::npos) {
+				line.erase(position);
+			}
+			if(line.length() == 0) continue;
+			//std::cout << line << std::endl;
+			ss << line;
+	}
+	return ss;
+}
+json file_parse(const std::string &filename) {
+		json j;
+		// read a JSON file
+		std::ifstream file(filename);
+		auto ss = remove_comments(file);
+		ss >> j;
+		return j;
+}
+
 c_auth_password_load::c_auth_password_load(const std::string &filename, std::vector<t_auth_password> &auth_passwords) : m_filename(filename) {
 	try {
-		c_json_file_parser parser(filename);
-		m_root = parser.get_root();
+		m_json = file_parse(filename);
 
 		get_auth_passwords(auth_passwords); ///< proper auth loading
 	} catch (std::invalid_argument &err) {
-		_info("Fail to load " << m_filename << " configuration file." << err.what());
+		_info("Fail to load " << m_filename << " configuration file.\n" << err.what());
+		throw;
 	}
 }
 
 void c_auth_password_load::get_auth_passwords (std::vector<t_auth_password> &auth_passwords) {
 
-	Json::Value authpass_array = m_root["authorizedPasswords"];
-	size_t i = 0;
-	for(auto &authpass : authpass_array) {
-		std::string l_pass = authpass["password"].asString();
-		std::string l_myname = authpass["myname"].asString();
-		std::cout 	<< "auth ["<< i << "] : " << l_pass							//dbg
-					<< " with public key [" << l_myname << ']' <<  std::endl;		//dbg
-		auth_passwords.push_back({l_pass, l_myname});
-		i++;
+	if(m_json.at("authorizedPasswords").is_array()) {
+		auto auth_arr = m_json.at("authorizedPasswords");
+
+		size_t i = 0;
+		for(auto &authpass : auth_arr) {
+			std::string l_pass = authpass.at("password").get<std::string>();
+			std::string l_myname = authpass.at("myname").get<std::string>();
+			_dbg3("Loaded authorized password ["<< i << "] : " << l_pass << " with name [" << l_myname << ']');
+			auth_passwords.push_back({l_pass, l_myname});
+			i++;
+		}
+	} else {
+		_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
 	}
+
 }
 
 c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_peering_reference> &peer_refs) : m_filename(filename) {
@@ -95,46 +123,21 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 	}
 }
 
-std::stringstream remove_comments(std::istream &istr) {
-	std::stringstream ss;
-	for (std::string line; std::getline(istr, line); ) {
-			// load only lines that are not comment
-			size_t position;
-			if((position = line.find("//")) != std::string::npos) {
-				line.erase(position);
-			}
-			if(line.length() == 0) continue;
-			//std::cout << line << std::endl;
-			ss << line;
-	}
-	return ss;
-}
-json file_parse(const std::string &filename) {
-		json j;
-		// read a JSON file
-		std::ifstream file(filename);
-		auto ss = remove_comments(file);
-		ss >> j;
-		return j;
-}
-
-
 c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(filename) {
 	try {
 		m_json = file_parse(filename);
 
 		t_my_keypair my_keypair = my_keypair_load();
-		std::cout << "my info:\nprivKeyType[" << my_keypair.m_private_key_type
-				  << "]\nprivKey[" << my_keypair.m_private_key
-				  << "]\npubKey[" << my_keypair.m_public_key
-				  << "]\nipv6[" << my_keypair.m_ipv6
-				  << "]" << std::endl;
+		_dbg4 ("my info:\nprivKeyType[" << my_keypair.m_private_key_type
+		       << "]\nprivKey[" << my_keypair.m_private_key
+		       << "]\npubKey[" << my_keypair.m_public_key
+		       << "]\nipv6[" << my_keypair.m_ipv6 << "]");
 
 		auth_password_load();
 		connect_to_load();
 
 	} catch (std::invalid_argument &err) {
-		_warn("Fail to load " << m_filename <<  " configuration file." << err.what());
+		_warn("Fail to load " << m_filename <<  " configuration file.\n" << err.what());
 		throw;
 	}
 }
