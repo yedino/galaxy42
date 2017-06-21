@@ -3,15 +3,13 @@
 #pragma once
 
 #include "gtest/gtest_prod.h"
-#include <json/json.h>
+#include "libs1.hpp"
 
 #include <json.hpp>
 using json = nlohmann::json;
 
 #include "c_json_genconf.hpp"
-#include "libs1.hpp"
 #include "c_peering.hpp"
-#include "datastore.hpp"
 #include "strings_utils.hpp"
 
 struct t_my_keypair {
@@ -27,22 +25,17 @@ struct t_auth_password {
 };
 
 /**
- * @brief The c_json_file_parser class
- * 		  General class for parsing json files to root Json::Value,
- * 		  it also could be use for checking if json file is correctly formatted
+ * @brief The json_file_parser class
+ *        General class for parsing json files to json objects,
+ *        it also could be use for checking if json file is correctly formatted  (throw prasing errors)
  */
-class c_json_file_parser {
-  public:
-	c_json_file_parser (const std::string &filename);
+struct json_file_parser {
 
-    c_json_file_parser () = delete;
-    c_json_file_parser (const c_json_file_parser &) = delete;
+	json_file_parser () = delete;
+	json_file_parser (const json_file_parser &) = delete;
 
-	Json::Value get_root ();
-
-  private:
-	bool parse_file (const std::string &filename);
-	Json::Value m_root;   // will contains the root value after parsing.
+	static std::stringstream remove_comments(std::istream &istr);
+	static json parse_file(const std::string &filename);
 };
 
 class c_auth_password_load {
@@ -79,7 +72,6 @@ class c_connect_to_load {
   private:
 	json m_json;
 	std::string m_filename;
-	Json::Value m_root;
 };
 /**
  * @brief The c_galaxyconf_load class
