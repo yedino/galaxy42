@@ -59,6 +59,7 @@ class c_auth_password_load {
 
 	void get_auth_passwords (std::vector<t_auth_password> &auth_passwords);
   private:
+	json m_json;
 	std::string m_filename;
 	Json::Value m_root;
 };
@@ -95,8 +96,8 @@ class c_galaxyconf_load {
   private:
 	FRIEND_TEST(json_configfile, load_keys);
 
-	std::string m_filename;
 	json m_json;
+	std::string m_filename;
 	std::vector<t_peering_reference> m_peer_references;
 	std::vector<t_auth_password> m_auth_passwords;
 
