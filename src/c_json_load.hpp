@@ -34,7 +34,7 @@ struct json_file_parser {
 	json_file_parser () = delete;
 	json_file_parser (const json_file_parser &) = delete;
 
-	static std::stringstream remove_comments(std::istream &istr);
+	static std::string remove_comments(std::istream &istr);
 	static json parse_file(const std::string &filename);
 };
 

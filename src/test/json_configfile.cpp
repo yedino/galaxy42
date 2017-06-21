@@ -18,7 +18,6 @@ void delete_conf_files() {
 	datastore::remove("connect_to.seed.conf");
 }
 
-
 TEST(json_configfile, load_keys) {
 
 	generate_conf_files();
@@ -31,6 +30,7 @@ TEST(json_configfile, load_keys) {
 
 	delete_conf_files();
 }
+
 TEST(json_configfile, peer_references_haship) {
 
 	generate_conf_files();
@@ -78,8 +78,8 @@ TEST(json_configfile, auth_password_load) {
 	generate_conf_files();
 	c_galaxyconf_load galaxyconf;
 	auto auth_passwords = galaxyconf.get_auth_passwords();
-	_mark("Auth pass size: " << auth_passwords.size());
-	_mark("Auth pass list:");
 	EXPECT_EQ(auth_passwords.at(0).m_myname,"default_public_password");
 	EXPECT_EQ(auth_passwords.at(0).m_password,"C3yhZ8PjPoVFYwHfw0oKtNLxgMo5V9YUr7r4UXul");
+
+	delete_conf_files();
 }

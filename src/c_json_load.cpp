@@ -3,7 +3,7 @@
 #include "c_json_load.hpp"
 
 
-std::stringstream json_file_parser::remove_comments(std::istream &istr) {
+std::string json_file_parser::remove_comments(std::istream &istr) {
 	std::stringstream ss;
 	for (std::string line; std::getline(istr, line); ) {
 		// load only lines that are not comment
@@ -15,16 +15,14 @@ std::stringstream json_file_parser::remove_comments(std::istream &istr) {
 		//std::cout << line << std::endl;
 		ss << line;
 	}
-	return ss;
+	return ss.str();
 }
 
-json json_file_parser::parse_file(const std::__cxx11::string &filename) {
-	json j;
+json json_file_parser::parse_file(const std::string &filename) {
 	// read a JSON file
 	std::ifstream file(filename);
-	auto ss = remove_comments(file);
-	ss >> j;
-	return j;
+	auto str_content = remove_comments(file);
+	return json::parse(str_content);
 }
 
 
