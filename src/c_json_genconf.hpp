@@ -9,6 +9,9 @@
  * @brief The c_json_genconf class
  * 		  class with static members that allow generating different
  * 		  configuration files, using in galaxy network
+ *
+ *  //TODO generate_connectto_conf generate_authpass_conf should be related to generate_galaxy_conf
+ *  // for now runing unittests clould remove your cofiguration files
  */
 class c_json_genconf {
   public:
