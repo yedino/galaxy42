@@ -132,6 +132,7 @@ void c_galaxysrv::main_loop() {
 					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
 						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
 						tuntap_result.src_hip, tuntap_result.dst_hip);
+					if (read_size_merit == 0) _throw_error_runtime("Empty tun read");
 
 					// adjust down size to actually used part of buffer
 					tuntap_result.chunk.shrink_to( read_size_merit );
@@ -175,6 +176,7 @@ void c_galaxysrv::main_loop() {
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
 
+			} catch (const std::runtime_error &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
 			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
 				throw;
 			}
