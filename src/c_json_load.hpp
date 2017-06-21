@@ -61,7 +61,6 @@ class c_auth_password_load {
   private:
 	json m_json;
 	std::string m_filename;
-	Json::Value m_root;
 };
 
 class c_connect_to_load {
@@ -78,6 +77,7 @@ class c_connect_to_load {
 
 	void get_peers (std::vector<t_peering_reference> &peer_refs);
   private:
+	json m_json;
 	std::string m_filename;
 	Json::Value m_root;
 };

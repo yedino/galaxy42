@@ -89,8 +89,7 @@ void c_auth_password_load::get_auth_passwords (std::vector<t_auth_password> &aut
 
 c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_peering_reference> &peer_refs) : m_filename(filename) {
 	try {
-		c_json_file_parser parser(filename);
-		m_root = parser.get_root();
+		m_json = file_parse(filename);
 
 		get_peers(peer_refs);	///< proper peer loading
 	} catch (std::invalid_argument &err) {
@@ -101,26 +100,31 @@ c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_
 
 void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 
-	Json::Value connectTo_array = m_root["connectTo"];
-	uint32_t i = 0;
-	for(auto &peer_ref : connectTo_array) {
-		std::string l_ip = connectTo_array.getMemberNames()[i];
-		std::string l_hip = peer_ref["publicKey"].asString();
-		std::cout 	<< "Peer ["<< i << "] : " << l_ip							//dbg
-					<< " with HIP [" << l_hip << ']' <<  std::endl;		//dbg
+	if(m_json.at("connectTo").is_object()) {
+		auto connect_arr = m_json.at("connectTo");
 
-		// try to parse the :port
-		size_t pos = l_ip.find(':');
-		if(pos != std::string::npos) { // if there is :port
-			auto pair = tunserver_utils::parse_ip_string(l_ip);
-			auto t_perref = t_peering_reference(pair.first, pair.second, l_hip);
-			peer_refs.emplace_back(t_perref);
-		} else {
-			auto t_perref = t_peering_reference(l_ip, l_hip);
-			peer_refs.emplace_back(t_perref);
+		for (json::iterator it = connect_arr.begin(); it != connect_arr.end(); ++it) {
+			std::string l_ip = it.key();
+			std::string l_hip = it.value().at("publicKey").get<std::string>();
+
+			_dbg3("Peer loaded : " << l_ip << " with HIP [" << l_hip << ']');
+
+			// parse  :port
+			size_t pos = l_ip.find(':');
+			if(pos != std::string::npos) { // if there is :port
+				auto pair = tunserver_utils::parse_ip_string(l_ip);
+				auto t_perref = t_peering_reference(pair.first, pair.second, l_hip);
+				peer_refs.emplace_back(t_perref);
+			} else {
+				auto t_perref = t_peering_reference(l_ip, l_hip);
+				peer_refs.emplace_back(t_perref);
+			}
 		}
-		i++;
+
+	} else {
+		_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
 	}
+
 }
 
 c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(filename) {
