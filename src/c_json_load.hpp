@@ -96,7 +96,6 @@ class c_galaxyconf_load {
 	FRIEND_TEST(json_configfile, load_keys);
 
 	std::string m_filename;
-	Json::Value m_root;
 	json m_json;
 	std::vector<t_peering_reference> m_peer_references;
 	std::vector<t_auth_password> m_auth_passwords;

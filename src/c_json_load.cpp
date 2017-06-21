@@ -95,10 +95,34 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 	}
 }
 
+std::stringstream remove_comments(std::istream &istr) {
+	std::stringstream ss;
+	for (std::string line; std::getline(istr, line); ) {
+			// load only lines that are not comment
+			size_t position;
+			if((position = line.find("//")) != std::string::npos) {
+				line.erase(position);
+			}
+			if(line.length() == 0) continue;
+			//std::cout << line << std::endl;
+			ss << line;
+	}
+	return ss;
+}
+json file_parse(const std::string &filename) {
+		json j;
+		// read a JSON file
+		std::ifstream file(filename);
+		auto ss = remove_comments(file);
+		ss >> j;
+		return j;
+}
+
+
 c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(filename) {
 	try {
-		c_json_file_parser parser(filename);
-		m_root = parser.get_root();
+		m_json = file_parse(filename);
+
 		t_my_keypair my_keypair = my_keypair_load();
 		std::cout << "my info:\nprivKeyType[" << my_keypair.m_private_key_type
 				  << "]\nprivKey[" << my_keypair.m_private_key
@@ -124,55 +148,53 @@ std::vector<t_auth_password> c_galaxyconf_load::get_auth_passwords() {
 }
 
 t_my_keypair c_galaxyconf_load::my_keypair_load() {
-	std::string private_key_type = m_root.get("privateKeyType","").asString();
-	if(private_key_type == "") {
-		_throw_error( std::invalid_argument("empty privateKeyType field in your configuration file") );
+
+	std::string private_key_type = m_json.at("privateKeyType").get<std::string>();
+	std::string private_key = m_json.at("privateKey").get<std::string>();
+
+	json mypub_obj = m_json.at("myself-public");
+
+	if( !mypub_obj.is_object() ) {
+		_throw_error( std::invalid_argument("Bad format of myself-public section in confuguration file.") );
 	}
-	std::string private_key = m_root.get("privateKey","").asString();
-	if(private_key == "") {
-		_throw_error( std::invalid_argument("empty privateKey field in your configuration file") );
-	}
-	std::string public_key = m_root.get("myself-public","").get("publicKey","").asString();
-	if(public_key == "") {
-		_throw_error( std::invalid_argument("empty publicKey field in your configuration file") );
-	}
-	std::string ipv6 = m_root.get("myself-public","").get("ipv6","").asString();
-	if(private_key_type == "" || private_key == "" || public_key == "" || ipv6 == "") {
-		_throw_error( std::invalid_argument("empty ipv6 field in your configuration file") );
-	}
+
+	std::string public_key = mypub_obj.at("publicKey").get<std::string>();
+	std::string ipv6 = mypub_obj.at("ipv6").get<std::string>();
+
 	return t_my_keypair({private_key_type,private_key,public_key,ipv6});
 }
 
 void c_galaxyconf_load::auth_password_load() {
-	if(m_root.get("authorizedPasswords","").isArray()) {
-		Json::Value authpass_array = m_root.get("authorizedPasswords","");
-		for(auto &filename : authpass_array) {
-			std::cout << "Loading authorizedPassword file: " << filename.asString() << std::endl;
-			c_auth_password_load authpass_load(filename.asString(), m_auth_passwords);
+
+	if(m_json.at("authorizedPasswords").is_array()) {
+		auto auth_arr = m_json.at("authorizedPasswords").get<std::vector<std::string>>();
+		for(auto &filename : auth_arr) {
+			_dbg2("Loading authorizedPassword file: " << filename);
+			c_auth_password_load authpass_load(filename, m_auth_passwords);
 			for(auto &authpass : m_auth_passwords) {
-				std::cout << "auth -- password[" << authpass.m_password << "] myname["
-						  << authpass.m_myname << "]" << std::endl;
+				_dbg3("Loaded: authorized password [" << authpass.m_password
+				      << "] myname [" << authpass.m_myname << "]");
 			}
 		}
 	} else {
-		_throw_error( std::invalid_argument("Empty authorizedPasswords in " + m_filename + " file") );
+		_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
 	}
 }
 
 void c_galaxyconf_load::connect_to_load() {
-	if(m_root.get("connectTo","").isArray()) {
-		Json::Value connect_to = m_root.get("connectTo","");
-		for(auto &filename : connect_to) {
-			std::cout << "Loading connectTo file: " << filename.asString() << std::endl;
-			c_connect_to_load connect_to_load(filename.asString(), m_peer_references);
+
+	if(m_json.at("connectTo").is_array()) {
+		auto connect_arr = m_json.at("connectTo").get<std::vector<std::string>>();
+		for(auto &filename : connect_arr) {
+			_dbg2("Loading connectTo file: " << filename);
+			c_connect_to_load connect_to_load(filename, m_peer_references);
 			for(auto &peer : m_peer_references) {
-				std::cout << "peer -- ip[" << peer.peering_addr << "]"
-				<< " hip[" << peer.haship_addr << "]" << std::endl;
+				_dbg3("Loaded peer ip [" << peer.peering_addr << "]"
+				      << " hip[" << peer.haship_addr << "]");
 				// we do not load here pubkeys, just hip
 			}
 		}
 	} else {
-		_throw_error( std::invalid_argument("Empty connectTo in " + m_filename + " file") );
+		_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
 	}
-
 }
