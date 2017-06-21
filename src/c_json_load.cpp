@@ -2,64 +2,35 @@
 
 #include "c_json_load.hpp"
 
-c_json_file_parser::c_json_file_parser (const std::string &filename) {
 
-    if(parse_file(filename)) {
-        std::string msg = filename + " : bad configuration file";
-        _throw_error( std::invalid_argument(msg) );
-    }
-}
-
-Json::Value c_json_file_parser::get_root() {
-	return m_root;
-}
-
-bool c_json_file_parser::parse_file(const std::string &filename) {
-
-	if(!datastore::is_file_ok(filename)) {
-		return 1;
-	}
-
-    Json::CharReaderBuilder rbuilder;
-	std::ifstream file_stream(filename, std::ifstream::binary);
-    // Configure the Builder, then ...
-    std::string errs;
-	bool parsingSuccessful = Json::parseFromStream(rbuilder, file_stream, &m_root, &errs);
-    if (!parsingSuccessful) {
-        // report to the user the failure and their locations in the document.
-		std::cout  << "Failed to parse\n"
-                   << errs;
-        return 1;
-    }
-	return 0;
-}
-
-std::stringstream remove_comments(std::istream &istr) {
+std::stringstream json_file_parser::remove_comments(std::istream &istr) {
 	std::stringstream ss;
 	for (std::string line; std::getline(istr, line); ) {
-			// load only lines that are not comment
-			size_t position;
-			if((position = line.find("//")) != std::string::npos) {
-				line.erase(position);
-			}
-			if(line.length() == 0) continue;
-			//std::cout << line << std::endl;
-			ss << line;
+		// load only lines that are not comment
+		size_t position;
+		if((position = line.find("//")) != std::string::npos) {
+			line.erase(position);
+		}
+		if(line.length() == 0) continue;
+		//std::cout << line << std::endl;
+		ss << line;
 	}
 	return ss;
 }
-json file_parse(const std::string &filename) {
-		json j;
-		// read a JSON file
-		std::ifstream file(filename);
-		auto ss = remove_comments(file);
-		ss >> j;
-		return j;
+
+json json_file_parser::parse_file(const std::__cxx11::string &filename) {
+	json j;
+	// read a JSON file
+	std::ifstream file(filename);
+	auto ss = remove_comments(file);
+	ss >> j;
+	return j;
 }
+
 
 c_auth_password_load::c_auth_password_load(const std::string &filename, std::vector<t_auth_password> &auth_passwords) : m_filename(filename) {
 	try {
-		m_json = file_parse(filename);
+		m_json = json_file_parser::parse_file(filename);
 
 		get_auth_passwords(auth_passwords); ///< proper auth loading
 	} catch (std::invalid_argument &err) {
@@ -87,9 +58,10 @@ void c_auth_password_load::get_auth_passwords (std::vector<t_auth_password> &aut
 
 }
 
+
 c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_peering_reference> &peer_refs) : m_filename(filename) {
 	try {
-		m_json = file_parse(filename);
+		m_json = json_file_parser::parse_file(filename);
 
 		get_peers(peer_refs);	///< proper peer loading
 	} catch (std::invalid_argument &err) {
@@ -127,9 +99,10 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 
 }
 
+
 c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(filename) {
 	try {
-		m_json = file_parse(filename);
+		m_json = json_file_parser::parse_file(filename);
 
 		t_my_keypair my_keypair = my_keypair_load();
 		_dbg4 ("my info:\nprivKeyType[" << my_keypair.m_private_key_type
