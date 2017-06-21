@@ -28,10 +28,17 @@ void c_the_program::startup_version() {
 		<< project_version_number_sub << "."
 		<< project_version_number_progress // << "."
 		<< project_version_number_patch
+		#ifdef TOOLS_ARE_BROKEN // this is passed by CMake
+		<< " [broken-tools] "
+		#endif
 		;
 	string ver_str = oss.str();
 	_fact( "" ); // newline
 	_fact( "Start... " << ver_str );
+	#ifdef TOOLS_ARE_BROKEN
+		_warn("Warning, [broken-tools] it seems this program was built with partially broken tools/libraries "
+			"(details are shown when building, e.g. by cmake/ccmake)");
+	#endif
 }
 
 bool c_the_program::check_and_remove_special_cmdline(const string & name) {

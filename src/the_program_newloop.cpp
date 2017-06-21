@@ -228,15 +228,19 @@ void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
-void example_ub_1_inside() {
-	short int i = -128;
-	i -= 5;
+void example_ubsan_1_inside() { // to test UBSAN / ubsanitizer
+	_mark("MAKE UB...");
+	// TODO make it work for "signed char" as well
+	signed int i;
+	i = std::numeric_limits<decltype(i)>::max();
+	i += static_cast<decltype(i)>(5); // overflow of signed
 	volatile auto x = i;
-	_mark("X (invalid value) = " << x);
+	_mark("X (invalid value) = " << static_cast<signed long int>(x));
+	_mark("...MAKE UB");
 }
 
-void example_ub_1() {
-	example_ub_1_inside();
+void example_ubsan_1() {
+	example_ubsan_1_inside();
 }
 
 int c_the_program_newloop::main_execution() {
@@ -254,7 +258,12 @@ int c_the_program_newloop::main_execution() {
 
 	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
 
-	example_ub_1();
+	if (m_argm.count("special-ubsan1"))
+	{
+		_mark("Testing an UB");
+		example_ubsan_1();
+		_mark("Testing an UB - done");
+	}
 
 	pimpl->server->main_loop();
 

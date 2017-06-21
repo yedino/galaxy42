@@ -40,6 +40,7 @@ void c_the_program_tunserver::options_create_desc() {
                     ("debug", mo_file_reader::gettext("L_what_debug_do").c_str())
 
                     ("insecure-cap", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_options_insecure-ADVANCED").c_str())
+                    ("special-ubsan1", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_options_insecure-ADVANCED").c_str())
 
                     ("d", mo_file_reader::gettext("L_what_d_do").c_str())
 
