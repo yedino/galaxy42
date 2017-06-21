@@ -94,6 +94,8 @@ extern std::recursive_mutex _g_dbg_mutex;
 	_dbg_oss<<"\033[93m"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(_dbg_oss.str());\
+	_dbg_oss.flush(); _dbg_oss<<get_simple_backtrace(4);\
+	write_to_console(_dbg_oss.str());\
 } while(0)
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
@@ -105,6 +107,8 @@ extern std::recursive_mutex _g_dbg_mutex;
 	_dbg_oss<<"\033[91m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	_dbg_oss<<"\n\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<"\033[0m"<<::std::endl; \
+	write_to_console(_dbg_oss.str());\
+	_dbg_oss.flush(); _dbg_oss<<get_detail_backtrace();\
 	write_to_console(_dbg_oss.str());\
 } while(0)
 
