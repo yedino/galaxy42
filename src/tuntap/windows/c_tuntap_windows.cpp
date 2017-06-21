@@ -104,7 +104,7 @@ size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
 		std::array<unsigned char, 14 + 40 + 65535> input_buffer; // eth header + ipv6 header + max ipv6 payload
 		size_t readed_bytes = read_from_tun(input_buffer.data(), input_buffer.size());
 		if (readed_bytes == 0) return 0;
-		auto ipv6_header_begin = input_buffer.begin() + 14;
+		auto ipv6_header_begin = input_buffer.begin();
 		// copy addresses
 		std::copy(ipv6_header_begin + 8, ipv6_header_begin + 24, src_binary_address.begin());
 		std::copy(ipv6_header_begin + 24, ipv6_header_begin + 40, dst_binary_address.begin());

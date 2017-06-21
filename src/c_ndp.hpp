@@ -104,10 +104,9 @@ const std::array<unsigned char, 94> c_ndp::generate_neighbor_advertisement_new(
 		m_generate_neighbor_advertisement_packet.at(56) = 0x00;
 		m_generate_neighbor_advertisement_packet.at(57) = 0x00;
 
-		uint16_t checksum = checksum_ipv6_packet(&m_generate_neighbor_advertisement_packet.front() + 22, &m_generate_neighbor_advertisement_packet.front() + 54, 40, 58);
-		//tab_view<uint8_t> source_destination_addr(m_generate_neighbor_advertisement_packet.begin() + 22, 32);
-		//tab_view<uint8_t> header_with_content(m_generate_neighbor_advertisement_packet.begin() + 54, 40);
-		//uint16_t checksum = checksum_ipv6_packet(source_destination_addr, header_with_content, 58);
+		tab_view<uint8_t> source_destination_addr(&m_generate_neighbor_advertisement_packet.front() + 22, 32);
+		tab_view<uint8_t> header_with_content(&m_generate_neighbor_advertisement_packet.front() + 54, 40);
+		uint16_t checksum = checksum_ipv6_packet(source_destination_addr, header_with_content, 58);
 		m_generate_neighbor_advertisement_packet.at(56) = checksum & 0xFF;
 		m_generate_neighbor_advertisement_packet.at(57) = checksum >> 8;
 		return m_generate_neighbor_advertisement_packet;
