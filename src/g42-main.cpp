@@ -269,8 +269,6 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 #define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
 int main(int argc, const char **argv) {
-	unique_ptr<c_the_program> the_program = nullptr;
-
 	// parse early options:
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
@@ -285,6 +283,7 @@ int main(int argc, const char **argv) {
 
 	if (remove_and_count(argt, "--newloop" )) program_type = e_program_type_newloop;
 
+	unique_ptr<c_the_program> the_program = nullptr;
 	switch (program_type) {
 		case e_program_type_tunserver:
 			the_program = make_unique<c_the_program_tunserver>();

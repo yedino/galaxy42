@@ -68,7 +68,7 @@ class c_the_program {
 };
 
 // show title at start of main sections:
-#define _program_section _goal("\n======================================================================\n" \
+#define PROGRAM_SECTION_TITLE _goal("\n======================================================================\n" \
 	<< "Entering: " << __func__ )
 
 
