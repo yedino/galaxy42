@@ -29,7 +29,7 @@ struct t_auth_password {
  *        General class for parsing json files to json objects,
  *        it also could be use for checking if json file is correctly formatted  (throw prasing errors)
  */
-struct json_file_parser {
+struct json_file_parser final {
 
 	json_file_parser () = delete;
 	json_file_parser (const json_file_parser &) = delete;
@@ -38,7 +38,7 @@ struct json_file_parser {
 	static json parse_file(const std::string &filename);
 };
 
-class c_auth_password_load {
+class c_auth_password_load final {
   public:
 	/**
 	 * \brief Loading authorized passwords from configuration file
@@ -56,7 +56,7 @@ class c_auth_password_load {
 	std::string m_filename;
 };
 
-class c_connect_to_load {
+class c_connect_to_load final {
   public:
 	/**
 	 * \brief Loading peer references from configuration file

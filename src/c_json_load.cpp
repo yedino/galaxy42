@@ -12,7 +12,6 @@ std::string json_file_parser::remove_comments(std::istream &istr) {
 			line.erase(position);
 		}
 		if(line.length() == 0) continue;
-		//std::cout << line << std::endl;
 		ss << line;
 	}
 	return ss.str();
@@ -24,7 +23,6 @@ json json_file_parser::parse_file(const std::string &filename) {
 	auto str_content = remove_comments(file);
 	return json::parse(str_content);
 }
-
 
 c_auth_password_load::c_auth_password_load(const std::string &filename, std::vector<t_auth_password> &auth_passwords) : m_filename(filename) {
 	try {
@@ -47,22 +45,20 @@ void c_auth_password_load::get_auth_passwords (std::vector<t_auth_password> &aut
 			std::string l_pass = authpass.at("password").get<std::string>();
 			std::string l_myname = authpass.at("myname").get<std::string>();
 			_dbg3("Loaded authorized password ["<< i << "] : " << l_pass << " with name [" << l_myname << ']');
-			auth_passwords.push_back({l_pass, l_myname});
+			auth_passwords.push_back({std::move(l_pass), std::move(l_myname)});
 			i++;
 		}
 	} else {
 		_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
 	}
-
 }
-
 
 c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_peering_reference> &peer_refs) : m_filename(filename) {
 	try {
 		m_json = json_file_parser::parse_file(filename);
 
 		get_peers(peer_refs);	///< proper peer loading
-	} catch (std::invalid_argument &err) {
+	} catch (const std::invalid_argument &err) {
 		_warn("Fail to load " << m_filename <<  " configuration file." << err.what());
 		throw;
 	}
@@ -71,11 +67,13 @@ c_connect_to_load::c_connect_to_load(const std::string &filename, std::vector<t_
 void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 
 	if(m_json.at("connectTo").is_object()) {
-		auto connect_arr = m_json.at("connectTo");
+		auto connect_arr = m_json.at("connectTo").get<std::multimap<std::string,json>>();
 
-		for (json::iterator it = connect_arr.begin(); it != connect_arr.end(); ++it) {
-			std::string l_ip = it.key();
-			std::string l_hip = it.value().at("publicKey").get<std::string>();
+		for (auto &json_child_obj : connect_arr) {
+			// first element is a key (ip)
+			std::string l_ip = json_child_obj.first;
+			// second is a peer reference
+			std::string l_hip = json_child_obj.second.at("publicKey").get<std::string>();
 
 			_dbg3("Peer loaded : " << l_ip << " with HIP [" << l_hip << ']');
 
@@ -84,17 +82,15 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 			if(pos != std::string::npos) { // if there is :port
 				auto pair = tunserver_utils::parse_ip_string(l_ip);
 				auto t_perref = t_peering_reference(pair.first, pair.second, l_hip);
-				peer_refs.emplace_back(t_perref);
+				peer_refs.emplace_back(std::move(t_perref));
 			} else {
 				auto t_perref = t_peering_reference(l_ip, l_hip);
-				peer_refs.emplace_back(t_perref);
+				peer_refs.emplace_back(std::move(t_perref));
 			}
 		}
-
 	} else {
 		_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
 	}
-
 }
 
 
@@ -111,7 +107,7 @@ c_galaxyconf_load::c_galaxyconf_load(const std::string &filename) : m_filename(f
 		auth_password_load();
 		connect_to_load();
 
-	} catch (std::invalid_argument &err) {
+	} catch (const std::invalid_argument &err) {
 		_warn("Fail to load " << m_filename <<  " configuration file.\n" << err.what());
 		throw;
 	}
