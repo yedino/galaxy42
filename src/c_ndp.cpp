@@ -57,7 +57,7 @@ bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &pac
 	return false;
 }
 
-std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
+std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement(const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
 	std::array<uint8_t, 94> return_packet;
 	const uint8_t * const input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
 
@@ -161,6 +161,40 @@ uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, con
 
 	if (length & 1)
 		result += little_edian ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
+
+	uint32_t length_bigendian = length;
+	if(little_edian)
+		length_bigendian = htonl(length);
+
+	result += (length_bigendian >> 16) + (length_bigendian & 0xFFFF);
+	result += (next_hvalue >> 16)      + (next_hvalue & 0xFFFF);
+
+	while (result >> 16)
+		result = (result >> 16) + (result & 0xFFFF);
+
+	return ~result;
+}
+
+uint16_t c_ndp::checksum_ipv6_packet(tab_view<uint8_t> source_destination_addr, tab_view<uint8_t> header_with_content,	uint32_t next_hvalue) {
+	uint16_t length = header_with_content.size();
+	_check_abort(length > 0);
+	if(little_edian)
+		next_hvalue = htonl(next_hvalue);
+
+	uint64_t result = 0;
+	uint8_t sd_addr_size = 32;
+	for (uint8_t i = 0; i < sd_addr_size; i += 2) {
+		result += source_destination_addr.at(i);
+		result += source_destination_addr.at(i + 1) << 8;
+	}
+
+	for (uint32_t i = 0; i < length; i += 2) {
+		result += header_with_content.at(i);
+		result += header_with_content.at(i + 1) << 8;
+	}
+
+	if (length & 1)
+		result += little_edian ? (header_with_content.at(length - 1) << 8) : (header_with_content.at(length - 1));
 
 	uint32_t length_bigendian = length;
 	if(little_edian)
