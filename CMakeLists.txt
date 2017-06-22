@@ -226,6 +226,8 @@ endif()
 
 if (MSVC)
 	set(BOOST_LIBS_LIST system filesystem thread date_time)
+elseif (MINGW)
+	set(BOOST_LIBS_LIST system filesystem program_options date_time)
 else()
 	set(BOOST_LIBS_LIST system filesystem program_options thread date_time)
 endif()
@@ -419,11 +421,11 @@ set(LIBS_COMMON
 )
 
 target_link_libraries(tunserver.elf
-	${LIBS_COMMON}
-	)
-#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
-#	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+#	${LIBS_COMMON}
+#	)
+	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
