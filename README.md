@@ -20,10 +20,15 @@ This program creates an secure connection between computers (like VPN).
  * encrypted end-to-end
  * only one of the computers needs to have public Internet IP address (in future none will need)
 
+Works on: Debian 9 (Stretch) on amd64 is recommended, also other **Linuxes**, **Windows** 7, 8, 10, **Mac OS X**
+- see [doc/support-matrix.txt](doc/support-matrix.txt).
+
+* * *
+
 To **run from sources**, just use menu `./menu` and select install, then build, then run - for supported systems,
 or keep reading.
 
-To **use this program** from Command Line, simply:
+To **use this program** from Command Line (as regular user, or as root) simply:
 
   * on 1st computer run command: `./tunserver.elf`
 the program will start and will **print you on screen what is the virtual IP address** that is assigned to it by our program.

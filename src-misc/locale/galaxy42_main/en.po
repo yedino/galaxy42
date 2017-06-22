@@ -356,7 +356,7 @@ msgid "L_starting_httpdbg_server"
 msgstr "Starting http debugger server"
 
 msgid "L_starting_main_server"
-msgstr "Stating the TUN router"
+msgstr "Starting the TUN router"
 
 msgid "L_main_server_ended"
 msgstr "Main server ended"
@@ -384,3 +384,8 @@ msgstr "Get home directory:"
 
 msgid "L_what_netHelloInterval_do"
 msgstr "Set interval in seconds between pings"
+
+msgid "L_options_insecure-ADVANCED"
+msgstr ""
+"Special options only for developers! "
+"Should NOT be used by normal users!"

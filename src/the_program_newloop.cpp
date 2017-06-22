@@ -228,10 +228,21 @@ void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
+void example_ubsan_1_inside() { // to test UBSAN / ubsanitizer
+	_mark("UB test.");
+	// TODO make it work for "signed char" as well
+	signed int i;
+	i = std::numeric_limits<decltype(i)>::max();
+	i += static_cast<decltype(i)>(5); // overflow of signed
+	_mark("UB test done (program not aborted)");
+}
 
+void example_ubsan_1() {
+	example_ubsan_1_inside();
+}
 
 int c_the_program_newloop::main_execution() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 	_mark("newloop main_execution");
 //	g_dbg_level_set(5, "Debug the newloop");
 
@@ -244,6 +255,10 @@ int c_the_program_newloop::main_execution() {
 	this->use_options_peerref();
 
 	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+
+	if (m_argm.count("special-ubsan1"))	example_ubsan_1();
+	if (m_argm.count("special-warn1"))	_warn("Example warning printed out");
+
 	pimpl->server->main_loop();
 
 	_mark("newloop main_execution - DONE");

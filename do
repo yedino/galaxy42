@@ -195,6 +195,11 @@ fi
 echo "=== language / translations - will compile langauges ==="
 contrib/tools/galaxy42-lang-update-all || fail "Compiling po to mo (gettext/translations)"
 
+echo ""
+echo "===================================================================="
+echo "===================================================================="
+echo "===================================================================="
+echo ""
 
 echo "Will run cmake, PWD=$PWD USER=$USER, PATH=$PATH"
 echo "CC=${CC:-"unset"}, CXX=${CXX:-"unset"}, CPP=${CPP:-"unset"}"
