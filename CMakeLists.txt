@@ -321,11 +321,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_
 include_directories(depends/googletest/googletest/include/)
 include_directories(depends/googletest/googlemock/include/)
 
-#add local jsoncpp
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-include_directories(depends/jsoncpp/include)
-link_directories(depends/jsoncpp/src/lib_json)
-
 #add local nlohmann json
 include_directories(depends/json/src)
 
@@ -461,7 +456,7 @@ cotire(tunserver.elf)
 
 set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
 	${LIB_OPTIONAL_CAPNG}
 	${MINGW_LIBRARIES} ${MSVC_LIRARIES}
 )
@@ -471,7 +466,7 @@ target_link_libraries(tunserver.elf
 	)
 # TODO remove when confirmed that above LIBS_COMMON do work correctly instead (if no problem till max 2017-07-01)
 #	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
+#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
 #	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
@@ -486,7 +481,7 @@ target_link_libraries(unittests.elf
 )
 
 #	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-#	gtest gmock sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
+#	gtest gmock sodiumpp ${SODIUM_LIB} ${MINGW_LIBRARIES})
 #foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
 #	message(STATUS "ADDING LIBRARY FROM LIST: '${_lib}'")
 #	target_link_libraries(test-debug.elf ${_lib})
