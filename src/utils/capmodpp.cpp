@@ -337,7 +337,7 @@ std::ostream & operator<<(std::ostream & ostr, const cap_permchange & obj) {
 cap_state_map read_process_caps() {
 	cap_state_map statemap;
 	secure_capng_get_caps_process(); // read current state from syscall (igoring cached libng state)
-	for (cap_nr nr=0; nr<CAP_LAST_CAP; ++nr) {
+	for (cap_nr nr=0; nr<=CAP_LAST_CAP; ++nr) { // including the CAP_LAST_CAP (as it is alias for some valid CAP)
 		cap_state state;
 		state.eff      = (secure_capng_have_capability(CAPNG_EFFECTIVE    , nr) > 0) ? cap_perm::yes : cap_perm::no;
 		state.permit   = (secure_capng_have_capability(CAPNG_PERMITTED    , nr) > 0) ? cap_perm::yes : cap_perm::no;
