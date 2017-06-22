@@ -384,3 +384,8 @@ msgstr ""
 
 msgid "L_what_netHelloInterval_do"
 msgstr ""
+
+msgid "L_options_insecure-ADVANCED"
+msgstr ""
+"Special options only for developers! "
+"Should NOT be used by normal users!"

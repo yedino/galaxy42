@@ -391,3 +391,8 @@ msgstr "Pobrano ścieżkę katalogu domowego:"
 
 msgid "L_what_netHelloInterval_do"
 msgstr "Ustawia interwał w sekundach między pingami"
+
+msgid "L_options_insecure-ADVANCED"
+msgstr ""
+"Specjalne opcje tylko dla deweloperów, niebezpieczne! Nie powinny być "
+"używane przez zwykłego użytkownika!"

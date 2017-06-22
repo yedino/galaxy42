@@ -20,6 +20,11 @@ This program creates an secure connection between computers (like VPN).
  * encrypted end-to-end
  * only one of the computers needs to have public Internet IP address (in future none will need)
 
+Works on: Debian 9 (Stretch) on amd64 is recommended, also other **Linuxes**, **Windows** 7, 8, 10, **Mac OS X**
+- see [doc/support-matrix.txt](doc/support-matrix.txt).
+
+* * *
+
 To **run from sources**, just use menu `./menu` and select install, then build, then run - for supported systems,
 or keep reading.
 

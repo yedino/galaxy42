@@ -503,7 +503,8 @@ endif()
 ########################### FINALIZE OPTIONS #########################
 
 if (TOOLS_ARE_BROKEN)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTOOLS_ARE_BROKEN")  # pass on to the C++ option informing that tools are broken
+	# pass on to the C++ option informing that tools are broken
+	add_definitions(-DTOOLS_ARE_BROKEN=1)
 endif()
 
 message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
