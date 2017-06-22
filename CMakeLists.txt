@@ -175,6 +175,8 @@ endif()
 
 if (MSVC)
 	set(BOOST_LIBS_LIST system filesystem thread date_time)
+elseif (MINGW)
+	set(BOOST_LIBS_LIST system filesystem program_options date_time)
 else()
 	set(BOOST_LIBS_LIST system filesystem program_options thread date_time)
 endif()
