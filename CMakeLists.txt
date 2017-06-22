@@ -48,6 +48,10 @@ if(WIN32 OR CYGWIN)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
+########################### GENERAL ############################
+set(TOOLS_ARE_BROKEN OFF) # <-- set this flag to ON if we detect any problems, e.g. that user has broken libraries
+set(TOOLS_ARE_BROKEN_UB OFF) # <-- do we have some tools (e.g. libs) that include UBs (this means e.g. we can't use UBSAN correctly)
+
 ########################### COVERAGE ###########################
 IF(DEFINED COVERAGE)
    SET(COVERAGE ${COVERAGE} CACHE BOOL "")
@@ -151,7 +155,58 @@ else()
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
 endif()
 
+######################################################################
+########################### LIBS CHECK - FOR FLAGS ###################
+######################################################################
+# Quick check of libraries and dependencies,
+# to decide on flags to use.
+# (E.g. some buggy libraries will cause us to remove UBSAN or some other checks)
+
+
+########################### BOOST ###########################
+### boost - part 1 - just check version and decide does it affect our flags
+set (Boost_USE_MULTITHREADED ON)
+if (BUILD_STATIC_TUNSERVER)
+	set (Boost_USE_STATIC_RUNTIME ON)
+	set (Boost_USE_STATIC_LIBS ON)
+	set (Boost_USE_DEBUG_RUNTIME OFF)
+	set (sodium_USE_STATIC_LIBS ON)
+endif()
+
+if (MSVC)
+	set(BOOST_LIBS_LIST system filesystem thread date_time)
+else()
+	set(BOOST_LIBS_LIST system filesystem program_options thread date_time)
+endif()
+find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
+
+if(NOT Boost_FOUND)
+	message("\nBOOST NOT FOUND!")
+	if (MSVC)
+		message(STATUS "\nNote (MSVC): \nPlease download and install package (or later):")
+		message(STATUS "    https://sourceforge.net/projects/boost/files/boost-binaries/ boost_1_61_0-msvc-14.0-64.exe \n")
+		message(STATUS "Add following argument for cmake (default install location):")
+		message(STATUS "    \"-DBOOST_ROOT=C:/local/boost_1_61_0 -DBOOST_LIBRARYDIR=C:/local/boost_1_61_0/lib64-msvc-14.0/\"\n\n")
+	endif()
+	message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
+endif()
+
+message("Boost version variable is: ${Boost_VERSION}")
+set(Boost_IS_BROKEN_UB OFF)
+if ((Boost_VERSION GREATER 105399) AND (Boost_VERSION LESS 105700)) # 1.54 is broken, fix in 1.57
+	set(Boost_IS_BROKEN_UB ON)
+	message(WARNING "Warning: this Boost version is known to have a bug: https://svn.boost.org/trac10/ticket/12570")
+endif()
+
+if (Boost_IS_BROKEN_UB)
+	set(TOOLS_ARE_BROKEN ON)
+	set(TOOLS_ARE_BROKEN_UB ON)
+	message(WARNING "Warning: this Boost version has bug(s) - that will theoretically cause C++ UB (bug in our program), use other one if possible, we can not guarantee security of program built here!")
+endif()
+
+######################################################################
 ########################### COMPILER FLAGS ###########################
+######################################################################
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -172,11 +227,13 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
 	endif()
+
+	### clang sanitizers ###
 	set(HELP_SANITIZER_MEMORY "Warning, clang memory sanitizer will produce FALSE positives since we do not rebuild all deps nor libc++ with that option")
-	option(SANITIZER_THREAD "Enable clang thread sanitizer" OFF)
-	option(SANITIZER_ADDRESS "Enable clang address sanitizer" OFF)
-	option(SANITIZER_MEMORY "Enable clang memory sanitizer ${HELP_SANITIZER_MEMORY}" OFF)
-	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable clang undefined behavior sanitizer" OFF)
+	option(SANITIZER_THREAD "Enable TSAN - clang thread sanitizer" OFF)
+	option(SANITIZER_ADDRESS "Enable ASAN - clang address sanitizer" OFF)
+	option(SANITIZER_MEMORY "Enable MSAN - clang memory sanitizer ${HELP_SANITIZER_MEMORY}" OFF)
+	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable UBSAN - clang undefined behavior sanitizer" OFF)
 	set(SANITIZER_DETAILED "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
 	if(SANITIZER_THREAD)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-sanitize-recover=thread ${SANITIZER_DETAILED}")
@@ -189,7 +246,12 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		message("${HELP_SANITIZER_MEMORY}")
 	endif()
 	if(SANITIZER_UNDEFINED_BEHAVIOR)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined ${SANITIZER_DETAILED}")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=integer ${SANITIZER_DETAILED}")
+		if (NOT TOOLS_ARE_BROKEN_UB)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=undefined")
+		else()
+			message(WARNING "Warning: we have to partially disable UBSAN check (that is: program will continue to run, ignoring an UB!) because the tools used are broken and produce UBs.")
+		endif()
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
@@ -213,37 +275,12 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 
 # more directories of my main code
 
-########################### DEPENDS ###########################
+######################################################################
+########################### DEPENDS ##################################
+######################################################################
 
 ########################### BOOST ###########################
-set (Boost_USE_MULTITHREADED ON)
-if (BUILD_STATIC_TUNSERVER)
-	set (Boost_USE_STATIC_RUNTIME ON)
-	set (Boost_USE_STATIC_LIBS ON)
-	set (Boost_USE_DEBUG_RUNTIME OFF)
-	set (sodium_USE_STATIC_LIBS ON)
-endif()
-
-if (MSVC)
-	set(BOOST_LIBS_LIST system filesystem thread date_time)
-elseif (MINGW)
-	set(BOOST_LIBS_LIST system filesystem program_options date_time)
-else()
-	set(BOOST_LIBS_LIST system filesystem program_options thread date_time)
-endif()
-find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
-
-if(NOT Boost_FOUND)
-	message("\nBOOST NOT FOUND!")
-	if (MSVC)
-		message(STATUS "\nNote (MSVC): \nPlease download and install package (or later):")
-		message(STATUS "    https://sourceforge.net/projects/boost/files/boost-binaries/ boost_1_61_0-msvc-14.0-64.exe \n")
-		message(STATUS "Add following argument for cmake (default install location):")
-		message(STATUS "    \"-DBOOST_ROOT=C:/local/boost_1_61_0 -DBOOST_LIBRARYDIR=C:/local/boost_1_61_0/lib64-msvc-14.0/\"\n\n")
-	endif()
-	message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
-endif()
-
+### boost - part2
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
@@ -409,6 +446,10 @@ if (UNIX AND NOT CYGWIN AND NOT APPLE)
 	set(LIB_OPTIONAL_CAPNG "cap-ng")
 endif ()
 
+######################################################################
+######################################################################
+######################################################################
+
 ########################### TARGETS ###########################
 add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 cotire(tunserver.elf)
@@ -421,11 +462,12 @@ set(LIBS_COMMON
 )
 
 target_link_libraries(tunserver.elf
-#	${LIBS_COMMON}
-#	)
-	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
-	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+	${LIBS_COMMON}
+	)
+# TODO remove when confirmed that above LIBS_COMMON do work correctly instead (if no problem till max 2017-07-01)
+#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
+#	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
 
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
@@ -451,6 +493,13 @@ if(HAVE_BACKWARD AND NOT MINGW)
 #	add_backward(tunserver)
 	add_backward(tunserver.elf)
 	add_backward(unittests.elf)
+endif()
+
+########################### FINALIZE OPTIONS #########################
+
+if (TOOLS_ARE_BROKEN)
+	# pass on to the C++ option informing that tools are broken
+	add_definitions(-DTOOLS_ARE_BROKEN=1)
 endif()
 
 message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
