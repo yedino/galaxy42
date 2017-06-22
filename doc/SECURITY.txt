@@ -38,6 +38,16 @@ For windows gitian build we also depend on:
 - We also use custom Gitian project (git submodule).
 
 =============================
+Sanitiziers
+
+=== UBSAN ===
+Can be enabled in ccmake options when using clang compiler (works on Linux amd64).
+In such build, test it (in newloop) with option --special-ubsan1
+Run with env option:
+`export UBSAN_OPTIONS="print_stacktrace=1"`
+to see backtrace on such warnings, though only from traces done when CAP/capability are dropped (e.g. in main loop).
+
+=============================
 Cap (linux Capability)
 
 === libcap-ng ===

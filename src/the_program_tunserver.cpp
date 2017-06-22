@@ -23,7 +23,7 @@
 #endif
 
 void c_the_program_tunserver::options_create_desc() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -39,8 +39,12 @@ void c_the_program_tunserver::options_create_desc() {
 
                     ("debug", mo_file_reader::gettext("L_what_debug_do").c_str())
 
-                    ("insecure-cap", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_options_insecure-ADVANCED").c_str())
-                    ("special-ubsan1", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_options_insecure-ADVANCED").c_str())
+                    ("insecure-cap", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (do not modify/drop CAP/capability)").c_str())
+                    ("special-ubsan1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (execute an UB signed overflow - use this in newloop; test is done after dropping CAP/capability)").c_str())
+                    ("special-warn1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (show a _warn warning - use this in newloop; test is done after dropping CAP/capability)").c_str())
 
                     ("d", mo_file_reader::gettext("L_what_d_do").c_str())
 
@@ -155,7 +159,7 @@ void c_the_program_tunserver::options_create_desc() {
 
 
 void c_the_program_tunserver::options_multioptions() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 	// option help is handled elsewhere
 
 	const auto & argm = m_argm;
@@ -209,7 +213,7 @@ std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 }
 
 int c_the_program_tunserver::main_execution() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 	_mark("Main execution of the old-loop");
 
 	_warn("Remember, that this old-loop code is NOT secured as new-loop code, e.g. is not droping CAP/root privileges!");

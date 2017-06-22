@@ -211,7 +211,7 @@ std::tuple<bool,int> c_the_program::base_options_commands_run() {
 }
 
 std::tuple<bool,int> c_the_program::options_commands_run() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 	return this->base_options_commands_run();
 }
 

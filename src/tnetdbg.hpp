@@ -87,6 +87,9 @@ extern std::recursive_mutex _g_dbg_mutex;
 #define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 
+auto constexpr debug_config_warn_backtrace_level = 8; ///< the backtrace level used for _warn
+auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level used for _erro
+
 #define _warn(X) \
 	do { DBGLVL(100); \
 	DBGLOCK; \
@@ -94,11 +97,12 @@ extern std::recursive_mutex _g_dbg_mutex;
 	_dbg_oss<<"\033[93m"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
 	write_to_console(_dbg_oss.str());\
-	_dbg_oss.flush(); _dbg_oss<<get_simple_backtrace(4);\
+	_dbg_oss.clear(); _dbg_oss.flush(); \
+	_dbg_oss<<get_simple_backtrace( debug_config_warn_backtrace_level );\
 	write_to_console(_dbg_oss.str());\
 } while(0)
 /// red code
-//        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; 
+//        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl;
 
 #define _erro(X) \
 	do { DBGLVL(200); \
@@ -108,7 +112,8 @@ extern std::recursive_mutex _g_dbg_mutex;
 	_dbg_oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
 	_dbg_oss<<"\n\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<"\033[0m"<<::std::endl; \
 	write_to_console(_dbg_oss.str());\
-	_dbg_oss.flush(); _dbg_oss<<get_detail_backtrace();\
+	_dbg_oss.clear(); _dbg_oss.flush(); \
+	_dbg_oss<<get_simple_backtrace( debug_config_erro_backtrace_level );\
 	write_to_console(_dbg_oss.str());\
 } while(0)
 
