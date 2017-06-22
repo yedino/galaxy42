@@ -153,8 +153,8 @@ std::string get_detail_backtrace(size_t depth) {
 	std::ostringstream oss;
 
 	Printer p;
+	p.color_mode = ColorMode::always;
 	p.object = true;
-	p.color = true;
 	p.address = true;
 
 	p.print(st, oss);

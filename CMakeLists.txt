@@ -271,7 +271,6 @@ endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARN_PEDANTIC_FLAGS_FOR_C} ${STATIC_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
 
 # more directories of my main code
@@ -470,6 +469,7 @@ set(LIBS_COMMON
 target_link_libraries(tunserver.elf
 	${LIBS_COMMON}
 	)
+# TODO remove when confirmed that above LIBS_COMMON do work correctly instead (if no problem till max 2017-07-01)
 #	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 #	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean}
 #	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
