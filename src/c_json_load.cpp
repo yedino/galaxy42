@@ -29,7 +29,7 @@ c_auth_password_load::c_auth_password_load(const std::string &filename, std::vec
 		m_json = json_file_parser::parse_file(filename);
 
 		get_auth_passwords(auth_passwords); ///< proper auth loading
-	} catch (std::invalid_argument &err) {
+	} catch (const std::invalid_argument &err) {
 		_info("Fail to load " << m_filename << " configuration file.\n" << err.what());
 		throw;
 	}
