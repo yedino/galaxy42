@@ -42,7 +42,9 @@ void c_the_program_tunserver::options_create_desc() {
                     ("insecure-cap", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
 											+ " (do not modify/drop CAP/capability)").c_str())
                     ("special-ubsan1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
-											+ " (execute an UB signed overflow - use this in newloop; test is done after dropping CAP/capability)").c_str())
+											+ " (to test UBSAN: execute an UB signed overflow - use this in newloop; test is done after dropping CAP/capability)").c_str())
+                    ("special-tsan1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (to test TSAN: execute an concurent UB - use this in newloop; test is done after dropping CAP/capability)").c_str())
                     ("special-warn1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
 											+ " (show a _warn warning - use this in newloop; test is done after dropping CAP/capability)").c_str())
 

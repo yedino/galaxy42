@@ -228,17 +228,24 @@ void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
-void example_ubsan_1_inside() { // to test UBSAN / ubsanitizer
-	_mark("UB test.");
+void example_ubsan_1() { // to test UBSAN / ub sanitize
+	_mark("UBSAN test.");
 	// TODO make it work for "signed char" as well
 	signed int i;
 	i = std::numeric_limits<decltype(i)>::max();
 	i += static_cast<decltype(i)>(5); // overflow of signed
-	_mark("UB test done (program not aborted)");
+	_mark("UBSAN test done (program not aborted)");
 }
 
-void example_ubsan_1() {
-	example_ubsan_1_inside();
+void example_tsan_1() { // to test STAN / thread sanitizer
+	_mark("TSAN test.");
+	int data=10;
+	// run concurent update of data:
+	auto thread1 = std::thread( [&](){ data=20; } );
+	auto thread2 = std::thread( [&](){ data=30; } );
+	thread1.join();
+	thread2.join();
+	_mark("TSAN test done (program not aborted)");
 }
 
 int c_the_program_newloop::main_execution() {
@@ -256,8 +263,11 @@ int c_the_program_newloop::main_execution() {
 
 	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
 
-	if (m_argm.count("special-ubsan1"))	example_ubsan_1();
-	if (m_argm.count("special-warn1"))	_warn("Example warning printed out");
+	_mark("ubsan flag: " << m_argm.at("special-ubsan1").as<bool>() );
+
+	if (m_argm.at("special-ubsan1").as<bool>())	example_ubsan_1();
+	if (m_argm.at("special-tsan1").as<bool>())	example_tsan_1();
+	if (m_argm.at("special-warn1").as<bool>())	_warn("Example warning printed out");
 
 	pimpl->server->main_loop();
 
