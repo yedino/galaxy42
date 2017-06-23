@@ -1,35 +1,32 @@
 #!/usr/bin/env bash
 
-# Required global variable defined in build-sodium
+# Required global variable defined in parent script
 # readonly SODIUM_DIR="$HOME/build/libsodium/"
 
-# clone main libsodium repository 
-# checkout to choosen tag
-# and validate version hash
+# clone main libsodium repository
+# checkout to choosen tag and validate version hash
 
 dl_sodium () {
-	
-	local libsodium_version="1.0.11" # git tag
-	printf "\nDownloading libsodium in PWD=$PWD\n"
+	pushd "${BUILD_DIR}"
+		local libsodium_version="1.0.11" # git tag
+		printf "\nDownloading libsodium in PWD=${PWD}\n"
 
-    # download boost starting from cleaning previous build
- 	rm -rf libsodium # perhaps left over if we do some caching or testing
+		# download boost starting from cleaning previous build
+		rm -rf libsodium # perhaps left over if we do some caching or testing
 
- 	git clone -b "${libsodium_version}" https://github.com/jedisct1/libsodium.git || fail "git clone" # check gitrev hash below!
+		git clone -b "${libsodium_version}" https://github.com/jedisct1/libsodium.git || fail "git clone" # check gitrev hash below!
 
-    pushd libsodium || fail # cd
-    local PWD_sodium="$PWD/"
-    [[ "$PWD_sodium" == "$SODIUM_DIR" ]] \
-        || {
-            echo "The PWD (PWD_sodium=$PWD_sodium) is not the expected libsodium dir ($SODIUM_DIR) - aborting"
-            exit 0
-        }
+		pushd libsodium || fail # cd
+		local PWD_sodium="${PWD}"
+		[[ "${PWD_sodium}" == "${SODIUM_DIR}" ]] \
+			|| fail "FAIL: The PWD (PWD_sodium=${PWD_sodium}) is not the expected libsodium dir (${SODIUM_DIR}) - aborting"
 
-	local expected_gitrev="2f4f718cd94adab547c210a78050762cf667dfca" # this is the gitrev hash of this boost version (as we seen it)
-	local confirm_gitrev=$(git log --format='%H' -1)
-	[[ "$confirm_gitrev" == "$expected_gitrev" ]] \
-		|| {
-			fail "Git verification of hash: hash is $confirm_gitrev instead of expected $expected_gitrev"
-		}
- 	popd
+		local expected_gitrev="2f4f718cd94adab547c210a78050762cf667dfca" # this is the gitrev hash of this boost version (as we seen it)
+		local confirm_gitrev=$(git log --format='%H' -1)
+		[[ "${confirm_gitrev}" == "${expected_gitrev}" ]] \
+			|| {
+				fail "Git verification of hash: hash is ${confirm_gitrev} instead of expected ${expected_gitrev}"
+			}
+		popd
+	popd
 }

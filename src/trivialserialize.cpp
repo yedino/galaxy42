@@ -157,7 +157,7 @@ void parser::pop_bytes_n_into_buff(size_t size, char * buff) {
 	auto range1 = m_data_now;
 	m_data_now += size; // *** move
 	auto range2 = m_data_now;
-	stdplus::copy_and_assert_no_overlap_size(range1, range2, buff, size); // copy the result into output
+	stdplus::copy_iter_and_check_no_overlap(range1, range2, buff, size); // copy the result into output
 }
 
 uint64_t parser::pop_integer_uvarint() {

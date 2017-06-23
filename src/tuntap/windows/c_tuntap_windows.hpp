@@ -6,19 +6,35 @@
 #include <platform.hpp>
 
 #if defined(ANTINET_windows)
+#include <ifdef.h>
 
-class c_tuntap_windows_obj final : c_tuntap_base_obj {
+class c_is_user_admin {
+	public:
+		c_is_user_admin();
+		virtual ~c_is_user_admin() = default;
+};
+
+class c_tuntap_windows_obj final : public c_tuntap_base_obj, c_is_user_admin {
 	public:
 		c_tuntap_windows_obj();
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 
+		size_t send_to_tun_separated_addresses(const unsigned char * const data, size_t size,
+			const std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			const std::array<unsigned char, IPV6_LEN> &dst_binary_address) override{_NOTREADY(); return 0;}
+
 		size_t read_from_tun(unsigned char * const data, size_t size) override;
+
+		size_t read_from_tun_separated_addresses(unsigned char * const data, size_t size,
+			std::array<unsigned char, IPV6_LEN> &src_binary_address,
+			std::array<unsigned char, IPV6_LEN> &dst_binary_address) override;
 
 		void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) override;
 
 		void set_tun_parameters
 			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) override;
 
+		HANDLE get_native_handle();
 	private:
 		std::wstring m_register_tun_path;
 		std::wstring m_guid; // https://msdn.microsoft.com/en-us/library/windows/desktop/aa368767(v=vs.85).aspx
@@ -33,7 +49,7 @@ class c_tuntap_windows_obj final : c_tuntap_base_obj {
 		std::wstring get_human_name(const std::wstring &guid);
 		NET_LUID get_luid(const std::wstring &human_name);
 		HANDLE get_device_handle();
-		HANDLE open_tun_device(const std::wstring &guid); ///< returns opened handle for guid or INVALID_HANDLE_VALUE
+		HANDLE open_tun_device(const std::wstring &guid) noexcept; ///< returns opened handle for guid or INVALID_HANDLE_VALUE
 		std::array<uint8_t, mac_address_size> get_mac(HANDLE handle); ///< get handle to opened device (returned by get_device_handle())
 		void set_mtu(uint32_t mtu);
 

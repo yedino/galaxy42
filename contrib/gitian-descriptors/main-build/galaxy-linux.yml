@@ -19,6 +19,8 @@ packages:
 - "faketime" # used to force date
 - "gettext-base" # some scripts/tools used in build could be using gettext translations
 - "gettext" # for msgfmt and other advanced tools to compile language .po to .mo
+- "libdw-dev" # lib required by backward-cpp - for printing stack trace
+- "libcap-ng-dev"
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
@@ -28,7 +30,7 @@ files: []
 script: |
   datenow="$(date)" ; echo "Gitian moves to the Script section, in PWD=$PWD, at date=$datenow, with OUTDIR=$OUTDIR" ; datenow=""
   echo "ls:" ; ls
-  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-linux-script "$OUTDIR"
+  ./galaxy42/contrib/gitian-descriptors/main-build/galaxy-linux-script
   datenow="$(date)" ; echo "Gitian finished it's Script section, in PWD=$PWD, at date=$datenow, with OUTDIR=$OUTDIR" ; datenow=""
 
 #- "libboost-system-dev" # removed since when we moved to static lib boost (for static main program)

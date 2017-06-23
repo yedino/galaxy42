@@ -1,44 +1,63 @@
 #include "c_ndp.hpp"
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(ANTINET_windows)
 
 #include <iostream>
 #include <iomanip>
+#include <libs0.hpp>
 #include <boost/asio.hpp>
+
+static const bool little_edian = [] {
+	uint16_t number = 1;
+	return ((reinterpret_cast<unsigned char *>(&number))[0] == 1);
+}();
+
+// Here we build ethernet frame template (level 2) as in https://en.wikipedia.org/wiki/Ethernet_frame#Ethernet_II
+std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = {
+	//*** ethernet header ***//
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC will be set later
+	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same, only this seems to work; Tested 0xFD 00 ... 00 it does not work
+	0x86, 0xDD, 	// EtherType 0x86DD == IPv6 (https://en.wikipedia.org/wiki/EtherType)
+
+	//*** ipv6 header ***//
+	0x60, 0x00, 0x00, 0x00, // flow label
+	0x00, 0x28, // payload len, TODO current value is from wireshark
+	0x3A, // next header 56 == ICMPv6
+	0xFF, // hop limit
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // source ipv6 address (filled later in the code using this packet-template)
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address (filled later in the code using this packet-template)
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+	//*** icmpv6 ***//
+	// Below we have the body of NDP-reply, as in: https://tools.ietf.org/html/rfc4861#section-4.4
+	0x88, // type 136 (Neighbor Advertisement) https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol_version_6
+	0x00, // code
+	0x00, 0x00, // checksum (filled later in the code using this packet-template)
+	0xE0, // set flags R, S, O
+	0x00, 0x00, 0x00, // reserved
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // target ipv6 address (will be filed later)
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x02, 0x01, // options, works this way, tested in Wireshark; Could be explained more based on RFC4861 "Possible options:" in 4.4
+	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same
+	// optins described in https://tools.ietf.org/html/rfc4861#section-4.6
+	0x01, // type: source link-layer address
+	0x01, // length
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // link layer address
+};
 
 // size of array must be the same as in c_tun_device_windows::m_buffer 
 bool c_ndp::is_packet_neighbor_solicitation(const std::array<uint8_t, 9000> &packet_data) {
-/*	const uint8_t const * source_arrdess = &packet_data.front() + 22;
-	const uint8_t const * destination_arrdess = &packet_data.front() + 38;
-
-	std::cout << "src address ";
-	const uint8_t *it = source_arrdess;
-	for (int i = 0; i < 16; ++i) {
-		std::cout << std::hex << std::setw(2) << std::setfill('0') <<  static_cast<int>(*it);
-		++it;
-	}
-	std::cout << std::endl;
-
-	std::cout << "dst address ";
-	it = destination_arrdess;
-	for (int i = 0; i < 16; ++i) {
-		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*it);
-		++it;
-	}
-	std::cout << std::endl;
-	*/
 	// ethernet header = 14
 	// ipv6 header = 40
-	// tested od wireshark
+	// tested in wireshark
 	const uint8_t * const packet_type = &packet_data.front() + 14 + 40;
-
-	//std::cout << "packet type " << std::dec << std::setw(2) << std::setfill('0') << static_cast<int>(*packet_type) << std::endl;
 
 	if (*packet_type == 135) return true;
 	return false;
 }
 
-std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
+std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement(const std::array<uint8_t, 9000> &neighbor_solicitation_packet) {
 	std::array<uint8_t, 94> return_packet;
 	const uint8_t * const input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
 
@@ -124,22 +143,61 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement (const std::array
 }
 
 uint16_t c_ndp::checksum_ipv6_packet(const uint8_t *source_destination_addr, const uint8_t *header_with_content, uint16_t length, uint32_t next_hvalue) {
-
-	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+	_check_abort(length > 0);
+	if(little_edian)
 		next_hvalue = htonl(next_hvalue);
 
 	uint64_t result = 0;
 	uint8_t sd_addr_size = 32;
-	for (uint8_t i = 0; i < sd_addr_size/2; ++i)
-		result += reinterpret_cast<const uint16_t *>(source_destination_addr)[i];
-	for (uint32_t i = 0; i < length / 2; i++)
-		result += reinterpret_cast<const uint16_t *>(header_with_content)[i];
+	for (uint8_t i = 0; i < sd_addr_size; i += 2) {
+		result += source_destination_addr[i];
+		result += source_destination_addr[i + 1] << 8;
+	}
+
+	for (uint32_t i = 0; i < length; i += 2) {
+		result += header_with_content[i];
+		result += header_with_content[i + 1] << 8;
+	}
 
 	if (length & 1)
-		result += O32_HOST_ORDER == O32_BIG_ENDIAN ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
+		result += little_edian ? (header_with_content[length - 1] << 8) : (header_with_content[length - 1]);
 
-	uint32_t length_bigendian;
-	if(O32_HOST_ORDER == O32_LITTLE_ENDIAN)
+	uint32_t length_bigendian = length;
+	if(little_edian)
+		length_bigendian = htonl(length);
+
+	result += (length_bigendian >> 16) + (length_bigendian & 0xFFFF);
+	result += (next_hvalue >> 16)      + (next_hvalue & 0xFFFF);
+
+	while (result >> 16)
+		result = (result >> 16) + (result & 0xFFFF);
+
+	return ~result;
+}
+
+uint16_t c_ndp::checksum_ipv6_packet(tab_view<uint8_t> source_destination_addr, tab_view<uint8_t> header_with_content,	uint32_t next_hvalue) {
+	uint16_t length = header_with_content.size();
+	_check_abort(length > 0);
+	if(little_edian)
+		next_hvalue = htonl(next_hvalue);
+
+	uint64_t result = 0;
+	uint8_t sd_addr_size = 32;
+	for (uint8_t i = 0; i < sd_addr_size; i += 2) {
+		result += source_destination_addr.at(i);
+		result += source_destination_addr.at(i + 1) << 8;
+	}
+
+	for (uint32_t i = 0; i < length; i += 2) {
+		result += header_with_content.at(i);
+		result += header_with_content.at(i + 1) << 8;
+	}
+
+	if (length & 1)
+		result += little_edian ? (header_with_content.at(length - 1) << 8) : (header_with_content.at(length - 1));
+
+	uint32_t length_bigendian = length;
+	if(little_edian)
 		length_bigendian = htonl(length);
 
 	result += (length_bigendian >> 16) + (length_bigendian & 0xFFFF);

@@ -26,6 +26,7 @@
 #endif
 
 #include "galaxysrv.hpp" // ***
+#include "galaxysrv_peers.hpp" // e.g. for help
 
 // delete this block later:
 #include "cable/base/cable_base_addr.hpp"
@@ -66,6 +67,7 @@
 	#include "crypto/sidhpp.hpp"
 #endif
 
+#include <utils/privileges.hpp>
 
 // -------------------------------------------------------------------
 
@@ -152,7 +154,7 @@ void c_the_program_newloop::use_options_peerref() {
 			_info( peer_ref  );
 			UsePtr(pimpl->server).add_peer_simplestring( peer_ref );
 		}
-	} catch(std::exception &err) {
+	} catch(const std::exception &err) {
 		_warn(err.what());
 		ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
 	}
@@ -208,7 +210,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 			} else {
 				_fact( "You have no ID keys yet - so will create new keys for you." );
 
-				auto step_make_default_keys = [&]()	{
+				auto step_make_default_keys = [&]() {
 					ui::action_info_ok("Generating your new keys.");
 					const string IDI_name = UsePtr(pimpl->server).program_action_gen_key_simple();
 					UsePtr(pimpl->server).program_action_set_IDI(IDI_name);
@@ -226,24 +228,75 @@ void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
+void example_ubsan_1_inside() { // to test UBSAN / ubsanitizer
+	_mark("UB test.");
+	// TODO make it work for "signed char" as well
+	signed int i;
+	i = std::numeric_limits<decltype(i)>::max();
+	i += static_cast<decltype(i)>(5); // overflow of signed
+	_mark("UB test done (program not aborted)");
+}
 
+void example_ubsan_1() {
+	example_ubsan_1_inside();
+}
 
 int c_the_program_newloop::main_execution() {
+	PROGRAM_SECTION_TITLE;
 	_mark("newloop main_execution");
-	g_dbg_level_set(5, "Debug the newloop");
+//	g_dbg_level_set(5, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
 
 	this->programtask_load_my_keys();
-	this->use_options_peerref();
 	this->programtask_tuntap();
+	my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
+
+	this->use_options_peerref();
+
+	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+
+	if (m_argm.count("special-ubsan1"))	example_ubsan_1();
+	if (m_argm.count("special-warn1"))	_warn("Example warning printed out");
 
 	pimpl->server->main_loop();
-
-
 
 	_mark("newloop main_execution - DONE");
 
 	//	newloop_main( argt );
 	return 0;
 }
+
+std::tuple<bool,int> c_the_program_newloop::programtask_help(const string & topic) {
+	_info("Showing help for topic: " << topic);
+	std::tuple<bool,int> ret_ok(true,0), ret_bad(false,1);
+	if (topic=="peer") {
+		_goal("Information about the peer format:");
+		std::ostringstream oss;
+		c_galaxysrv_peers::help_peer_ref(oss);
+		_goal( oss.str() );
+		return ret_ok;
+	}
+	return ret_bad;
+}
+
+std::tuple<bool,int> c_the_program_newloop::base_options_commands_run() {
+	if (m_argm.count("helptopic")) {
+		_note("there is a helptopic");
+		string help_cmd;
+		try {
+			help_cmd = m_argm.at("helptopic").as<string>();
+		} catch(...) { _throw_error_runtime("--helptopic option can not be read"); }
+		return programtask_help(help_cmd);
+	}
+
+	if (m_argm.count("help")) {
+		string help_cmd;
+		try {
+			help_cmd = m_argm.at("help").as<string>();
+		} catch(...) { _throw_error_runtime("--help option can not be read"); }
+		return c_the_program_tunserver::base_options_commands_run(); ///< basic commands, e.g. with basic --help
+	}
+	return std::tuple<bool,int>(false,0);
+}
+

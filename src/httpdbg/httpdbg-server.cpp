@@ -7,6 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
+#ifdef HTTP_DBG
 
 #include <cstdlib>
 #include <iostream>
@@ -220,7 +221,7 @@ string c_httpdbg_raport::generate(string url) {
 	ostringstream out;
 	generate_current_date(out);
 
-	lock_guard<mutex> lg( m_target.get_my_mutex() );
+	Lock_guard<Mutex> lg( m_target.get_my_mutex() );
 
 	generate_table_of_peers(out, url);
 	generate_table_of_tunnels(out, url);
@@ -273,3 +274,4 @@ void c_httpdbg_server::stop(){
 void c_httpdbg_server::set_port(int port){
 	m_opt_port = port;
 }
+#endif

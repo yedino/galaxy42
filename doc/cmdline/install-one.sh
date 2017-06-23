@@ -71,5 +71,5 @@ abdialog_info_quit_big "Will install following default commandline options (one 
 
 cp "$xfrom" "$xtarget/" || abdialog_fail "Error: Can not copy from [$xfrom] to [$xtarget]."
 
-abdialog_info "Ok, istalled from [$xfrom] to [$xtarget]."
+abdialog_info "Ok, done. \n\nInstalled from [$xfrom] to [$xtarget]. \n\nNow use 'make run', or the .sh script to run program with loading this cmdline options."
 

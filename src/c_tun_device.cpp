@@ -238,6 +238,7 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 }
 
 size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
+	_dbg4("write to tun " << count << " bytes");
 	const size_t eth_header_size = 14;
 	const size_t eth_offset = 4;
 	std::vector<uint8_t> eth_frame(eth_header_size + count - eth_offset, 0);

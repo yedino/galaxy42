@@ -145,25 +145,25 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 // -------------------------------------------------------------------
 
 /// err_check_prog?
-#define _check(X) do { if(!(X)) { throw err_check_prog( #X );  } } while(0)
+#define _check(X) do { if(!(X)) { _throw_error( err_check_prog( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user if false
-#define _check_user(X) do { if(!(X)) { throw err_check_user( #X );  } } while(0)
+#define _check_user(X) do { if(!(X)) { _throw_error( err_check_user( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_input if false
-#define _check_input(X) do { if(!(X)) { throw err_check_input( #X );  } } while(0)
+#define _check_input(X) do { if(!(X)) { _throw_error( err_check_input( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys if false
-#define _check_sys(X) do { if(!(X)) { throw err_check_sys( #X );  } } while(0)
+#define _check_sys(X) do { if(!(X)) { _throw_error( err_check_sys( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern if false
-#define _check_extern(X) do { if(!(X)) { throw err_check_extern( #X );  } } while(0)
+#define _check_extern(X) do { if(!(X)) { _throw_error( err_check_extern( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user_soft if false
-#define _try_user(X) do { if(!(X)) { throw err_check_user_soft( #X );  } } while(0)
+#define _try_user(X) do { if(!(X)) { _throw_error( err_check_user_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_input_soft if false
-#define _try_input(X) do { if(!(X)) { throw err_check_input_soft( #X );  } } while(0)
+#define _try_input(X) do { if(!(X)) { _throw_error( err_check_input_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys_soft if false
-#define _try_sys(X) do { if(!(X)) { throw err_check_sys_soft( #X );  } } while(0)
+#define _try_sys(X) do { if(!(X)) { _throw_error( err_check_sys_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern_soft if false
-#define _try_extern(X) do { if(!(X)) { throw err_check_extern_soft( #X );  } } while(0)
+#define _try_extern(X) do { if(!(X)) { _throw_error( err_check_extern_soft( #X ) );  } } while(0)
 
 
 // always abort - for serious errors
@@ -188,8 +188,75 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 	return *ptr;
 }
 
+
 // -------------------------------------------------------------------
-/// name reasonable
+
+/// Where to run invariant check / which invariant (pre,post,both,...)
+typedef enum {
+	e_invariant_place_pre, ///< run check only before function main body
+	e_invariant_place_post, ///< run check only after function main body
+	e_invariant_place_both, ///< run all checks
+} t_invariant_place;
+
+/// This is a RAII that calls Precond() and Postcond() for an object. Use it like a lock-guard in your member functions.
+/// @owner rafal
+template<typename TC> class c_ig final {
+	public:
+		c_ig(const TC & thisobj, t_invariant_place place, int fromline, const char* fromfile)
+		: m_thisobj(thisobj), m_place(place), m_fromline(fromline), m_fromfile(fromfile)
+		{
+			if (!fromfile) { _erro("Invalid fromfile used in debug."); fromfile="(unknown source file)"; }
+			if ( (place==e_invariant_place_both) || (place==e_invariant_place_pre) ) {
+				try {
+					m_thisobj.Precond();
+				} catch(...) {
+					_erro("Pre-condition check caused error, for precondition from: "
+						<< m_fromfile << ":" << m_fromline
+					);
+					throw;
+				}
+			}
+		}
+
+		~c_ig() {
+			if ( (m_place==e_invariant_place_both) || (m_place==e_invariant_place_pre) ) {
+				try {
+					m_thisobj.Postcond();
+				} catch(...) {
+					_erro("Post-condition check caused error, for precondition from: "
+						<< m_fromfile << ":" << m_fromline
+					);
+					throw;
+				}
+			}
+		}
+
+	private:
+		const TC & m_thisobj;
+		t_invariant_place m_place;
+		int m_fromline;
+		const char* m_fromfile;
+};
+
+template<typename TC> c_ig<TC> make_ig(const TC & thisobj, t_invariant_place place, int fromline, const char * fromfile) {
+	return c_ig<TC>(thisobj,place,fromline,fromfile);
+}
+
+#define guard_inv auto invariant_guard_obj = make_ig(*this,e_invariant_place_both,__LINE__,__FILE__)
+
+#define guard_inv_post auto invariant_guard_obj = make_ig(*this,e_invariant_place_post,__LINE__,__FILE__)
+
+#define guard_inv_pre  auto invariant_guard_obj = make_ig(*this,e_invariant_place_pre,__LINE__,__FILE__)
+// ^-- in this case we could all together skip creation of the object. unless we want it for debug? Let's see what works.
+
+// -------------------------------------------------------------------
+
+#define guard_LOCK(MUTEX)	std::lock_guard< decltype(MUTEX) > lg(MUTEX)
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+/// @name reasonable
 /// @brief We want to check that objects we operate on stay in reasonable size.
 /// For example std::string does it more-or-less as that: size of std::string must be less then /2 or /4 of size_t
 /// after doing that one check, we know that all operations like string1+string2 will also be fitting inside the limit.
@@ -202,9 +269,9 @@ template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const cha
 /// This functions will check against this, and e.g. throw exception.
 /// They also can disaply warnings once we are getting closer to limit.
 /// @{
-constexpr size_t reasonable_size_limit_bytes    = 128 * 1024 * 1024; ///< objects should never get this big nor close to it
-constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get this many elements nor close
-constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this many times in worst case
+constexpr size_t reasonable_size_limit_bytes    =  32 * 1024 * 1024; ///< objects should never get [nearly] this big
+constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get [nearly] that many elements
+constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this (e.g. 4) times more over the limit
 constexpr size_t reasonable_size_mul_warning = 2; ///< display warning once objects are only N times smaller then the limit
 
 constexpr size_t reasonable_size_limit_bytes_divided_max  = reasonable_size_limit_bytes / reasonable_size_mul;

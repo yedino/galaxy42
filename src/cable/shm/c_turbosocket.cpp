@@ -109,7 +109,7 @@ void c_turbosocket::wait_for_connection() {
 	unsigned int priority = 0;
 	msg_queue.receive(shm_name.data(), shm_name.size(), recv_size, priority); // receive shm name
 	//std::cout << "receive shm name with size " << recv_size << std::endl;
-	for(auto &c : shm_name)
+	//for(auto &c : shm_name)
 		//std::cout << c;
 	//std::cout << std::endl;
 	open_shm(shm_name.data());
@@ -127,7 +127,7 @@ bool c_turbosocket::timed_wait_for_connection() { // TODO code duplication
 	bool ret = msg_queue.timed_receive(shm_name.data(), shm_name.size(), recv_size, priority, timeout_point);
 	if (!ret) return false;
 	//std::cout << "receive shm name with size " << recv_size << std::endl;
-	for(auto &c : shm_name)
+	//for(auto &c : shm_name)
 		//std::cout << c;
 	//std::cout << std::endl;
 	open_shm(shm_name.data());

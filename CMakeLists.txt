@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0)
 project (galaxy42)
 
 # IMPORTANT:
@@ -10,8 +10,69 @@ project (galaxy42)
 # {{match_extlevel_ntru}} - NTRU crypto lib (encr, and sign): now at level 20 (EXTLEVEL_IS_EXPERIMENT)
 #
 
+if (NOT CMAKE_BUILD_TYPE)
+	message(STATUS "No build type selected, default to Debug")
+	set(CMAKE_BUILD_TYPE "Debug")
+endif()
+
+########################### CMAKE MODULES ###########################
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
+include(cotire)
+
+if(MINGW)
+	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+#	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
+#	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
+#	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
+	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
+	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
+endif()
+
+
+if(CYGWIN)
+	set(SODIUM_LIB "sodium")
+elseif(MSVC OR MINGW)
+	set(SODIUM_LIB "${SODIUM_LIBRARY}")
+	set(MSVC_LIRARIES "iphlpapi")
+else()
+	set(PTHREAD_LIB "pthread")
+	set(SODIUM_LIB "sodium")
+endif()
+
+if(WIN32 OR CYGWIN)
+	add_definitions(-DUNICODE)
+	add_definitions(-D_UNICODE)
+	add_definitions(-DWINVER=0x0601)
+	add_definitions(-D_WIN32_WINNT=0x0601)
+	add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
+
+########################### GENERAL ############################
+set(TOOLS_ARE_BROKEN OFF) # <-- set this flag to ON if we detect any problems, e.g. that user has broken libraries
+set(TOOLS_ARE_BROKEN_UB OFF) # <-- do we have some tools (e.g. libs) that include UBs (this means e.g. we can't use UBSAN correctly)
+
+########################### COVERAGE ###########################
+IF(DEFINED COVERAGE)
+   SET(COVERAGE ${COVERAGE} CACHE BOOL "")
+ELSE()
+   SET(COVERAGE OFF CACHE BOOL "")
+ENDIF()
+
+if(COVERAGE)
+	message(STATUS "Enabling COVERAGE")
+	set(COVERAGE_CXX_FLAG "--coverage")
+else()
+	message(STATUS "Disabling COVERAGE")
+	set(COVERAGE_CXX_FLAG "")
+endif()
+
+########################### STATIC BUILD ###########################
 option(BUILD_STATIC_TUNSERVER "Build the static tunserver.elf" OFF)
 if(BUILD_STATIC_TUNSERVER)
+	if(MSVC)
+		message(FATAL_ERROR "Static build is not supportted")
+	endif()
 	if(NOT BOOST_INCLUDEDIR AND NOT BOOST_ROOT AND NOT BOOSTROOT)
 		message(FATAL_ERROR "BOOST_INCLUDEDIR or BOOST_ROOT is required when BUILD_STATIC_TUNSERVER is ON")
 	endif()
@@ -21,160 +82,19 @@ if(BUILD_STATIC_TUNSERVER)
 	endif()
 endif()
 
-if(MINGW)
-		add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-endif()
-
-#-----------------------------------------------------------------------------
-# Check which compiler to use
-
-if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-  INCLUDE(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG(-std=c++14 HAVE_STD14)
-  if(HAVE_STD14)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread")
-    set(GCC_WARN_FLAGS "-Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
-  else()
-    message(FATAL_ERROR "No advanced standard C++ support (-std=c++14 not defined).")
-  endif()
-elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-  set(CMAKE_COMPILER_IS_CLANGXX 1)
-  INCLUDE(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG(-std=c++14 HAVE_STD14)
-  if(HAVE_STD14)
-    if(APPLE)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
-      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
-    else()
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    endif()
-  else()
-    message(FATAL_ERROR "No C++14 support for Clang version. Please upgrade Clang to a version supporting C++14.")
-  endif()
-endif()
-
-if (MSVC)
-	if(NOT MSVC14)
-		message(FATAL_ERROR "MSVC version not supported, try MSVC 14")
+if(BUILD_STATIC_TUNSERVER)
+	if(MSVC)
+		set(STATIC_FLAGS "")
+	else()
+		set(STATIC_FLAGS "-fPIC -fPIE -Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
 	endif()
 endif()
-
-if(WIN32 OR CYGWIN)
-  add_definitions(-DUNICODE)
-  add_definitions(-D_UNICODE)
-  add_definitions(-DWINVER=0x0601)
-  add_definitions(-D_WIN32_WINNT=0x0601)
-  add_definitions(-DWIN32_LEAN_AND_MEAN)
-else()
-  set(PEDANTIC_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-missing-braces -Wcast-align -Wctor-dtor-privacy -Wdisabled-optimization -Winit-self -Wmissing-include-dirs -Wswitch-default -Wold-style-cast -Woverloaded-virtual -Wformat=2 -Wno-format-nonliteral ${GCC_WARN_FLAGS}")
-endif()
-
-set (Boost_DEBUG ON)
-set (Boost_USE_MULTITHREADED ON)
-if (BUILD_STATIC_TUNSERVER)
-	set (Boost_USE_STATIC_RUNTIME ON)
-	set (Boost_USE_STATIC_LIBS ON)
-	set (Boost_USE_DEBUG_RUNTIME OFF)
-	set (sodium_USE_STATIC_LIBS ON)
-endif()
-message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
-message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
-
-set (Boost_DEBUG OFF)
-if (CYGWIN)
-	set(BOOST_LOCALE_LINK_LIB boost_locale-mt boost_thread-mt boost_atomic-mt)
-	set(BOOST_THREAD_LINK_LIB boost_thread-mt boost_atomic-mt)
-else()
-	set(BOOST_LOCALE_LIB_SEARCH)
-	set(BOOST_THREAD_LIB_SEARCH thread atomic)
-endif()
-
-if (NOT MSVC)
-	set(BOOST_LIBS_LIST ${BOOST_LOCALE_LIB_SEARCH} system filesystem program_options)
-else()
-	set(BOOST_LIBS_LIST system filesystem thread ${BOOST_LOCALE_LIB_SEARCH})
-endif()
-find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
-
-if (NOT Boost_FOUND)
-message("\nBOOST NOT FOUND!")
-	if (MSVC)
-		message("\nNote (MSVC): \nPlease download and install package (or later):")
-		message("    https://sourceforge.net/projects/boost/files/boost-binaries/ boost_1_61_0-msvc-14.0-64.exe \n")
-		message("Add following argument for cmake (default install location):")
-		message("    \"-DBOOST_ROOT=C:/local/boost_1_61_0 -DBOOST_LIBRARYDIR=C:/local/boost_1_61_0/lib64-msvc-14.0/\"\n\n")
-	endif()
-message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
-endif()
-
-if (MINGW)
-	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
-	link_directories(depends/gettext/gettext-0.19.8/install_dir/lib)
-	link_directories(depends/gettext/libiconv-1.14/install_dir/lib)
-	#set(GETTEXT_LIBS intl iconv pthread)
-	#set(GETTEXT_LIBS "iconv")
-	#message(FATAL_ERROR "${GETTEXT_LIBS}")
-endif()
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cotire/CMake")
-include(cotire)
-
-find_package(Sodium)
-link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/)
-
-if (NOT SODIUM_FOUND)
-message("\nSODIUM NOT FOUND!")
-	if (MSVC)
-		message("\nNote (MSVC): \nPlease download and install package (or later):")
-		message("    https://download.libsodium.org/libsodium/releases/ libsodium-1.0.11-msvc.zip  \n")
-		message("Add following argument for cmake (install to location):")
-		message("    \"-DSODIUM_ROOT_DIR=C:/local/libsodium-1.0.11-msvc/\"\n\n")
-	endif()
-message(FATAL_ERROR "SODIUM REQUIRED AND NOT FOUND, NOW STOPPING")
-endif()
-
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${SODIUM_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIRS})
-
-# http://permalink.gmane.org/gmane.comp.programming.tools.cmake.user/15952
-# If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
-# and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
-# to Debug prior to calling PROJECT()
-#
-IF(DEFINED CMAKE_BUILD_TYPE)
-   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
-	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-ELSE()
-   SET(CMAKE_BUILD_TYPE Debug CACHE STRING # <--- the default build type is here!
-	   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-ENDIF()
-
-# move bash ENV $variables to CMake set
-
+########################### EXTLEVEL OPTIONS ###########################
 IF(DEFINED EXTLEVEL)
    SET(EXTLEVEL ${EXTLEVEL} CACHE STRING "")
 ELSE()
    SET(EXTLEVEL 0 CACHE STRING "")
 ENDIF()
-
-IF(DEFINED COVERAGE)
-   SET(COVERAGE ${COVERAGE} CACHE BOOL "")
-ELSE()
-   SET(COVERAGE OFF CACHE BOOL "")
-ENDIF()
-
-IF(DEFINED USE_BOOST_MULTIPRECISION_DEFAULT)
-   SET(USE_BOOST_MULTIPRECISION_DEFAULT ${USE_BOOST_MULTIPRECISION_DEFAULT} CACHE INTERNAL "")
-ELSE()
-   SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
-ENDIF()
-
-message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
-message("EXTLEVEL = ${EXTLEVEL}")
-message("COVERAGE = ${COVERAGE}")
-message("USE_BOOST_MULTIPRECISION_DEFAULT = ${USE_BOOST_MULTIPRECISION_DEFAULT}")
 
 option(EXTLEVEL_IS_NORMAL "Enable the normal stable code" ON)
 if (EXTLEVEL GREATER -1) # from0
@@ -196,36 +116,26 @@ if (EXTLEVEL GREATER 29) # from 30
 	set(EXTLEVEL_IS_EXPERIMENT_DANGEROUS ON)
 endif()
 
-option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
-
-if(USE_BOOST_MULTIPRECISION)
-	message("USE_BOOST_MULTIPRECISION is normall (on)")
-	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
-else()
-	message("USE_BOOST_MULTIPRECISION is DISABLED")
-	add_definitions(-DUSE_BOOST_MULTIPRECISION=0)
-endif()
-
 if(EXTLEVEL_IS_NORMAL)
-	message("EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_NORMAL")
 	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=1)
 else()
 	add_definitions(-DEXTLEVEL_IS_NORMAL_CMAKE=0)
 endif()
 if(EXTLEVEL_IS_PREVIEW)
-	message("EXTLEVEL enabling EXTLEVEL_IS_PREVIEW")
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_PREVIEW")
 	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=1)
 else()
 	add_definitions(-DEXTLEVEL_IS_PREVIEW_CMAKE=0)
 endif()
 if(EXTLEVEL_IS_EXPERIMENT)
-	message("EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!")
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!")
 	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=1)
 else()
 	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_CMAKE=0)
 endif()
 if(EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
-	message("EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!! this code will be insecure!!!")
+	message(STATUS "EXTLEVEL enabling EXTLEVEL_IS_EXPERIMENT !!! this code will be insecure!!!")
 	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=1)
 else()
 	add_definitions(-DEXTLEVEL_IS_EXPERIMENT_DANGEROUS_CMAKE=0)
@@ -245,14 +155,173 @@ else()
 	option(ENABLE_CRYPTO_NTRU TXT_NTRU OFF)
 endif()
 
+######################################################################
+########################### LIBS CHECK - FOR FLAGS ###################
+######################################################################
+# Quick check of libraries and dependencies,
+# to decide on flags to use.
+# (E.g. some buggy libraries will cause us to remove UBSAN or some other checks)
+
+
+########################### BOOST ###########################
+### boost - part 1 - just check version and decide does it affect our flags
+set (Boost_USE_MULTITHREADED ON)
+if (BUILD_STATIC_TUNSERVER)
+	set (Boost_USE_STATIC_RUNTIME ON)
+	set (Boost_USE_STATIC_LIBS ON)
+	set (Boost_USE_DEBUG_RUNTIME OFF)
+	set (sodium_USE_STATIC_LIBS ON)
+endif()
+
+if (MSVC)
+	set(BOOST_LIBS_LIST system filesystem thread date_time)
+elseif (MINGW)
+	set(BOOST_LIBS_LIST system filesystem program_options date_time)
+else()
+	set(BOOST_LIBS_LIST system filesystem program_options thread date_time)
+endif()
+find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_LIBS_LIST})
+
+if(NOT Boost_FOUND)
+	message("\nBOOST NOT FOUND!")
+	if (MSVC)
+		message(STATUS "\nNote (MSVC): \nPlease download and install package (or later):")
+		message(STATUS "    https://sourceforge.net/projects/boost/files/boost-binaries/ boost_1_61_0-msvc-14.0-64.exe \n")
+		message(STATUS "Add following argument for cmake (default install location):")
+		message(STATUS "    \"-DBOOST_ROOT=C:/local/boost_1_61_0 -DBOOST_LIBRARYDIR=C:/local/boost_1_61_0/lib64-msvc-14.0/\"\n\n")
+	endif()
+	message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
+endif()
+
+message("Boost version variable is: ${Boost_VERSION}")
+set(Boost_IS_BROKEN_UB OFF)
+if ((Boost_VERSION GREATER 105399) AND (Boost_VERSION LESS 105700)) # 1.54 is broken, fix in 1.57
+	set(Boost_IS_BROKEN_UB ON)
+	message(WARNING "Warning: this Boost version is known to have a bug: https://svn.boost.org/trac10/ticket/12570")
+endif()
+
+if (Boost_IS_BROKEN_UB)
+	set(TOOLS_ARE_BROKEN ON)
+	set(TOOLS_ARE_BROKEN_UB ON)
+	message(WARNING "Warning: this Boost version has bug(s) - that will theoretically cause C++ UB (bug in our program), use other one if possible, we can not guarantee security of program built here!")
+endif()
+
+######################################################################
+########################### COMPILER FLAGS ###########################
+######################################################################
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CMAKE_VERSION VERSION_LESS 3.1)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
+endif()
+
+if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
+	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
+	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+	if(APPLE)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
+	endif()
+
+	### clang sanitizers ###
+	set(HELP_SANITIZER_MEMORY "Warning, clang memory sanitizer will produce FALSE positives since we do not rebuild all deps nor libc++ with that option")
+	option(SANITIZER_THREAD "Enable TSAN - clang thread sanitizer" OFF)
+	option(SANITIZER_ADDRESS "Enable ASAN - clang address sanitizer" OFF)
+	option(SANITIZER_MEMORY "Enable MSAN - clang memory sanitizer ${HELP_SANITIZER_MEMORY}" OFF)
+	option(SANITIZER_UNDEFINED_BEHAVIOR "Enable UBSAN - clang undefined behavior sanitizer" OFF)
+	set(SANITIZER_DETAILED "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
+	if(SANITIZER_THREAD)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-sanitize-recover=thread ${SANITIZER_DETAILED}")
+	endif()
+	if(SANITIZER_ADDRESS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-sanitize-recover=address ${SANITIZER_DETAILED}")
+	endif()
+	if(SANITIZER_MEMORY)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-sanitize-recover=memory ${SANITIZER_DETAILED}")
+		message("${HELP_SANITIZER_MEMORY}")
+	endif()
+	if(SANITIZER_UNDEFINED_BEHAVIOR)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=integer ${SANITIZER_DETAILED}")
+		if (NOT TOOLS_ARE_BROKEN_UB)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=undefined")
+		else()
+			message(WARNING "Warning: we have to partially disable UBSAN check (that is: program will continue to run, ignoring an UB!) because the tools used are broken and produce UBs.")
+		endif()
+	endif()
+	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wno-unused-command-line-argument -Wthread-safety")
+
+	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
+	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall -Wno-unused-command-line-argument") # mostly used by dependencies
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+	set(WARN_PEDANTIC_FLAGS "/Wall")
+	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+else()
+	message(fatal_error "Compiler not supported")
+endif()
+
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARN_PEDANTIC_FLAGS_FOR_C} ${STATIC_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_PEDANTIC_FLAGS} ${STATIC_FLAGS} ${COVERAGE_CXX_FLAG}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
+
+# more directories of my main code
+
+######################################################################
+########################### DEPENDS ##################################
+######################################################################
+
+########################### BOOST ###########################
+### boost - part2
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+IF(DEFINED USE_BOOST_MULTIPRECISION_DEFAULT)
+	SET(USE_BOOST_MULTIPRECISION_DEFAULT ${USE_BOOST_MULTIPRECISION_DEFAULT} CACHE INTERNAL "")
+ELSE()
+	SET(USE_BOOST_MULTIPRECISION_DEFAULT ON CACHE INTERNAL "")
+ENDIF()
+
+option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
+
+if(USE_BOOST_MULTIPRECISION)
+	message(STATUS "USE_BOOST_MULTIPRECISION is normall (on)")
+	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
+else()
+	message(STATUS "USE_BOOST_MULTIPRECISION is DISABLED")
+	add_definitions(-DUSE_BOOST_MULTIPRECISION=0)
+endif()
+
+########################### SODIUM ###########################
+find_package(Sodium)
+link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/) # for gitian build
+
+if (NOT SODIUM_FOUND)
+	message("\nSODIUM NOT FOUND!")
+	if (MSVC)
+		message(STATUS "\nNote (MSVC): \nPlease download and install package (or later):")
+		message(STATUS "    https://download.libsodium.org/libsodium/releases/ libsodium-1.0.11-msvc.zip  \n")
+		message(STATUS "Add following argument for cmake (install to location):")
+		message(STATUS "    \"-DSODIUM_ROOT_DIR=C:/local/libsodium-1.0.11-msvc/\"\n\n")
+	endif()
+	message(FATAL_ERROR "SODIUM REQUIRED AND NOT FOUND, NOW STOPPING")
+endif()
+
+include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
 #add local gtest
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(depends/googletest/googletest/include/)
-
-#add local jsoncpp
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/jsoncpp ${CMAKE_CURRENT_BINARY_DIR}/jsoncpp)
-include_directories(depends/jsoncpp/include)
-link_directories(depends/jsoncpp/src/lib_json)
+include_directories(depends/googletest/googlemock/include/)
 
 #add local nlohmann json
 include_directories(depends/json/src)
@@ -260,13 +329,25 @@ include_directories(depends/json/src)
 #add local CTPL
 include_directories(depends/CTPL)
 
+#add local backward-cpp for backtrace printing
+set(HAVE_BACKWARD 0)
+if(NOT WIN32)
+	set(Backward_DIR ${CMAKE_BINARY_DIR}/depends/backward-cpp)
+	find_package(Backward)
+	if(Backward_FOUND)
+		set(HAVE_BACKWARD 1)
+	endif()
+endif()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/depends/backward-cpp)
+
 #add local local lib sodiumpp
 set (SODIUMPP_STATIC 1)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/sodiumpp ${CMAKE_CURRENT_BINARY_DIR}/sodiumpp)
 include_directories(depends/sodiumpp/sodiumpp/include)
 
+########################### SIDH ###########################
 if(ENABLE_CRYPTO_SIDH AND NOT MSVC)
-	message("Using crypto: SIDH")
+	message(STATUS "Using crypto: SIDH")
 	if(NOT EXTLEVEL_IS_EXPERIMENT_DANGEROUS)
     message( FATAL_ERROR "To use SIDH you must also enable proper EXTLEVEL for it (see the CMake file, or use defaults)" )
 	endif()
@@ -282,8 +363,9 @@ else()
 	add_definitions(-DENABLE_CRYPTO_SIDH_CMAKE=0) # MATCH: must match also in project.hpp!
 endif()
 
+########################### NTru ###########################
 if(ENABLE_CRYPTO_NTRU AND NOT MSVC)
-	message("Using crypto: NTru")
+	message(STATUS "Using crypto: NTru")
 	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=1) # MATCH: must match also in project.hpp!
 
 	set(NTRU_SIGN_DIR "depends/ntru-crypto/reference-code/C/Sign/PASS/src")
@@ -298,7 +380,7 @@ if(ENABLE_CRYPTO_NTRU AND NOT MSVC)
 	list(APPEND LIBS_OPTIONAL_CRYPTO "ntruencrypt")
 	list(APPEND LIBS_OPTIONAL_CRYPTO "ntrusign")
 
-	message("This is one part of NTRU (the sign), and there is other part of NTRU (encr) executed in other files (e.g. in scripts)")
+	message(STATUS "This is one part of NTRU (the sign), and there is other part of NTRU (encr) executed in other files (e.g. in scripts)")
   # NTRU Encrypt is in other file ---^
 else()
 	add_definitions(-DENABLE_CRYPTO_NTRU_CMAKE=0) # MATCH (name of this option) must match also in project.hpp!
@@ -307,100 +389,23 @@ endif()
 # used e.g. by various crypto like ENABLE_CRYPTO_SIDH , ENABLE_CRYPTO_NTRU
 include_directories( build_extra )
 
-if(COVERAGE)
-	message("Enabling COVERAGE")
-	set(COVERAGE_CXX_FLAG "--coverage")
-else()
-	message("Disabling COVERAGE")
-	set(COVERAGE_CXX_FLAG "")
-endif()
 
-if(BUILD_STATIC_TUNSERVER)
-	set(STATIC_FLAG "-Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
-endif()
-
-if(MINGW)
-	set(MINGW_LINK_FLAGS "-Wl,--allow-multiple-definition")
-endif()
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fPIE")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -pedantic -fPIC -fPIE ${STATIC_FLAG} ${COVERAGE_CXX_FLAG}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_LINK_FLAGS}")
-set(CMAKE_CXX_BASE_FLAGS "${CMAKE_CXX_FLAGS}")
-
-ADD_CUSTOM_TARGET(Fast
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Fast ${CMAKE_SOURCE_DIR}
-		COMMAND make)
-ADD_CUSTOM_TARGET(Release
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-		COMMAND make)
-ADD_CUSTOM_TARGET(Debug
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-		COMMAND make)
-
-option(HTTP_DEBUGGER "Build with http debuger" OFF)
-
-# more directories of my main code
-
+########################### SOURCE FILES ###########################
 include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/*.cpp src/crypto-sodium/*.cpp src/httpdbg/peering_stats.cpp src/utils/* src/cable/* src/cable/*/* src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
-
-if(HTTP_DEBUGGER)
-	add_definitions(-DHTTP_DBG)
-	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/httpdbg/httpdbg-server.cpp)
-endif()
-
-list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
-file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
-list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
+file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/* src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
+list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
+	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 
 if(APPLE)
-	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
-elseif(WIN32)
-
-else()
+elseif(NOT WIN32)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
-	add_compile_options(-Wextra -Wno-unused-command-line-argument)	# unrecognized compilation flags on msvc
 endif()
-
-message("Sorting sources (from GLOB)")
-list(SORT SOURCES_GROUP_TUNSERVER)
-list(SORT SOURCES_GROUP_CRYPTO)
-list(SORT SOURCES_GROUP_RPC)
-message("Sorted sources are:" "${SOURCES_GROUP_TUNSERVER}")
-message("Sorted sources are:" "${SOURCES_GROUP_CRYPTO}")
-message("Sorted sources are:" "${SOURCES_GROUP_RPC}")
-
-if(NOT MSVC)
-	if(CMAKE_BUILD_TYPE STREQUAL "Fast")
-			message("Fast build")
-			add_definitions(-DRELEASEMODE_ -DNDEBUG)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FAST_FLAGS} -g0 -Ofast")
-
-		elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-			message("Debug build")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0")
-
-		elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-			message("Release build")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O2")
-			# -DNDEBUG -DRELEASEMODE")
-	else()
-		message("bad CMAKE_BUILD_TYPE flag")
-		message("usage is: cmake [Fast/Debug/Release] .")
-		message( FATAL_ERROR "error" )
-	endif()
-endif()
-
-include_directories(../antinet/src/antinet_sim/)
-# add_executable(ipclient.elf ipclient.cpp counter.cpp)
-# add_executable(ipserver.elf ipserver.cpp)
-add_executable(tunserver.elf src/g42-main.cpp )
-cotire(tunserver.elf)
 
 if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -408,108 +413,153 @@ if(WIN32 OR CYGWIN OR MINGW)
 	add_dependencies(windowsService galaxyService)
 endif()
 
+option(HTTP_DEBUGGER "Build with http debuger" OFF)
+if(HTTP_DEBUGGER)
+	add_definitions(-DHTTP_DBG)
+endif()
+
+file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
+list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
+
+message(STATUS "Sorting sources (from GLOB)")
+list(SORT SOURCES_GROUP_TUNSERVER)
+list(SORT SOURCES_GROUP_CRYPTO)
+list(SORT SOURCES_GROUP_RPC)
+
+include_directories(../antinet/src/antinet_sim/)
+
+
 string(STRIP "${LIBS_OPTIONAL_CRYPTO}" LIBS_OPTIONAL_CRYPTO_clean)
-message("Libs for crypto are: (as string) '${LIBS_OPTIONAL_CRYPTO_clean}'")
+message(STATUS "Libs for crypto are: (as string) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 separate_arguments(LIBS_OPTIONAL_CRYPTO_clean)
 unset(LIBS_OPTIONAL_CRYPTO)
-message("Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
+message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 ## TODO check this for gitian
 # LIBS-1 [new doc]
 
 # LIBS-2 [new doc]
 
-#add_library(tunserver counter.cpp cjdns-code/NetPlatform_linux.c c_ip46_addr.cpp
-#	c_peering.cpp strings_utils.cpp haship.cpp testcase.cpp protocol.cpp libs0.cpp filestorage.cpp ../antinet/src/antinet_sim/c_tnetdbg.cpp
-#	trivialserialize.cpp glue_lockedstring_trivialserialize.cpp
-#	generate_config.cpp text_ui.cpp c_json_load.cpp c_json_genconf.cpp galaxy_debug.cpp
-#	rpc/rpc.cpp rpc/c_connection_base.cpp rpc/c_tcp_asio_node.cpp ${SOURCES_GROUP_CRYPTO})
-add_library(tunserver ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
-cotire(tunserver)
 
-if(MINGW)
-	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
-endif()
+########################### OPTIONAL LIBRARIES ###########################
 
-if(NOT MSVC AND NOT MINGW)
-	set(PTHREAD_LIB "pthread")
-	set(SODIUM_LIB "sodium")
-else()
-	set(SODIUM_LIB "${SODIUM_LIBRARY}")
-	set(MSVC_LIRARIES "iphlpapi")
-endif()
+set(LIB_OPTIONAL_CAPNG "")
+if (UNIX AND NOT CYGWIN AND NOT APPLE)
+	set(LIB_OPTIONAL_CAPNG "cap-ng")
+endif ()
 
-target_link_libraries(tunserver.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${LIBS_OPTIONAL_CRYPTO_clean} ${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+######################################################################
+######################################################################
+######################################################################
+
+########################### TARGETS ###########################
+add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+cotire(tunserver.elf)
+
+set(LIBS_COMMON
+	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
+	${LIB_OPTIONAL_CAPNG}
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES}
+)
+
+target_link_libraries(tunserver.elf
+	${LIBS_COMMON}
+	)
+# TODO remove when confirmed that above LIBS_COMMON do work correctly instead (if no problem till max 2017-07-01)
+#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+#	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
+#	${MINGW_LIBRARIES} ${MSVC_LIRARIES})
+
 #tests
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
-message("Sorted sources are:" "${TEST_SOURCES}")
 
-#debug version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-add_executable(test-debug.elf ${TEST_SOURCES})
-target_link_libraries(test-debug.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
-foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-	message("ADDING LIBRARY FROM LIST: '${_lib}'")
-	target_link_libraries(test-debug.elf ${_lib})
-endforeach()
+add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
+target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
+target_link_libraries(unittests.elf
+	${LIBS_COMMON}
+	gtest gmock
+)
 
-#release version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_BASE_FLAGS} -DRELEASEMODE=1")
-add_executable(test-release.elf ${TEST_SOURCES})
-target_link_libraries(test-release.elf tunserver ${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
-	gtest sodiumpp ${SODIUM_LIB} jsoncpp_lib_static ${MINGW_LIBRARIES})
-foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
-	message("ADDING LIBRARY FROM LIST: '${_lib}'")
-	target_link_libraries(test-release.elf ${_lib})
-endforeach()
+#	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
+#	gtest gmock sodiumpp ${SODIUM_LIB} ${MINGW_LIBRARIES})
+#foreach (_lib ${LIBS_OPTIONAL_CRYPTO_clean})
+#	message(STATUS "ADDING LIBRARY FROM LIST: '${_lib}'")
+#	target_link_libraries(test-debug.elf ${_lib})
+#endforeach()
 
-message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "C++ Flags:       ${CMAKE_CXX_FLAGS}")
-message(STATUS "C++ link flags:  ${CMAKE_CXX_LINK_FLAGS}")
-
-#file(GLOB SOURCES_GROUP_RPC rpc/*.cpp)
-# ^-- if using this, then SORT it.
-#add_executable(rpc_sender ${SOURCES_GROUP_RPC} ../antinet/src/antinet_sim/c_tnetdbg.cpp)
-#target_link_libraries(rpc_sender boost_system pthread)
-
-if(NOT MINGW AND NOT WIN32)
-add_custom_target(run
-		COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
-		DEPENDS ./tunserver.elf
-		DEPENDS test-debug.elf
-		WORKING_DIRECTORY ./)
-
-add_custom_target(runcli
-		COMMAND ./ipclient.elf ::1 12006 ipv6 1200
-		DEPENDS ./ipclient.elf
-		WORKING_DIRECTORY ./)
-
-add_custom_command(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
-	POST_BUILD
-#	COMMAND chmod g-wx,o-wx ipclient.elf
-#	COMMAND chmod g-wx,o-wx ipserver.elf
-	COMMAND chmod g-wx,o-wx tunserver.elf
-	COMMAND cp tunserver.elf nocap-tunserver.elf
-	COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
-	WORKING_DIRECTORY ./)
-
-add_custom_command(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
-	POST_BUILD
-	COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights on binary, ignoring."
-	WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-
-add_custom_target(
-	TARGET ipclient.elf ipserver.elf tunserver.elf
-	POST_BUILD
-	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
-	COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
+# This will add libraries, definitions and include directories needed by backward
+# by setting each property on the target.
+if(HAVE_BACKWARD AND NOT MINGW)
+#	add_backward(tunserver)
+	add_backward(tunserver.elf)
+	add_backward(unittests.elf)
 endif()
 
-# unset( USE_BOOST_MULTIPRECISION_DEFAULT )
+########################### FINALIZE OPTIONS #########################
+
+if (TOOLS_ARE_BROKEN)
+	# pass on to the C++ option informing that tools are broken
+	add_definitions(-DTOOLS_ARE_BROKEN=1)
+endif()
+
+message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "C Flags:                       ${CMAKE_C_FLAGS}")
+message(STATUS "C++ Flags:                     ${CMAKE_CXX_FLAGS}")
+message(STATUS "C++ link flags:                ${CMAKE_CXX_LINK_FLAGS}")
+message(STATUS "Build type:                    ${CMAKE_BUILD_TYPE}")
+message(STATUS "Debug flags:                   ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "Release flags:                 ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "Release with debug info flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "Warn pedantic flags:           ${WARN_PEDANTIC_FLAGS}")
+
+########################### CUSTOM TARGETS ###########################
+add_custom_target(Release
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+add_custom_target(Debug
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+		COMMAND make)
+
+if(NOT MINGW AND NOT WIN32)
+
+	add_custom_target(run
+			COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
+			DEPENDS ./tunserver.elf
+			DEPENDS unittests.elf
+			WORKING_DIRECTORY ./)
+
+	add_custom_command(
+		TARGET tunserver.elf
+		POST_BUILD
+		COMMAND chmod g-wx,o-wx tunserver.elf
+		COMMAND cp tunserver.elf nocap-tunserver.elf
+		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
+		WORKING_DIRECTORY ./)
+
+	add_custom_command(
+		TARGET tunserver.elf
+		POST_BUILD
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" tunserver.elf || echo "Can not set rights cap on binary, ignoring."
+		COMMAND chmod a+x tunserver.elf
+		COMMAND chmod a+x nocap-tunserver.elf
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+	add_custom_command(
+		TARGET unittests.elf
+		POST_BUILD
+		COMMAND chmod g-wx,o-wx unittests.elf
+		COMMAND cp unittests.elf nocap-unittests.elf
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/use-setcap" unittests.elf || echo "Can not set rights cap on binary, ignoring."
+		COMMAND chmod a+x unittests.elf
+		COMMAND chmod a+x nocap-unittests.elf
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+	add_custom_target(
+		TARGET tunserver.elf
+		POST_BUILD
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-source-help.sh"
+		COMMAND "${CMAKE_SOURCE_DIR}/share/script/show-program-help.sh"
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif()

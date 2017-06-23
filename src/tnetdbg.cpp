@@ -2,10 +2,11 @@
 
 #include "tnetdbg.hpp"
 
-#include <string>
 #include <cstring>
 
 unsigned char g_dbg_level = 100; // (extern)
+
+std::recursive_mutex _g_dbg_mutex; // (extern)
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
@@ -66,15 +67,35 @@ void write_to_console(const std::string& obj) {
 		::std::cerr << obj;
 }
 
-void g_dbg_level_set(unsigned char level, std::string why, bool quiet) {
-	bool more_debug = level < g_dbg_level;
-	if ( more_debug) g_dbg_level = level; // increase before printing
-	if (!quiet) {
-		_note("Setting debug level to " << static_cast<int>(level) << " because: " << why);
+void g_dbg_level_set(int level, std::string why, int quiet, int quiet_from_now_on) {
+	static int be_quiet_about_dbg_level_changes=false;
+	if (quiet==-1) { // automatically choose to be (or not be) quite about this level change
+		if (be_quiet_about_dbg_level_changes==1) quiet=true;
+		else quiet=false;
 	}
-	if (!more_debug) g_dbg_level = level; // increase after printing
+
+	if (quiet_from_now_on!=-1) { // change future reporting of level change
+		if (be_quiet_about_dbg_level_changes != quiet_from_now_on) {
+			auto tmp = g_dbg_level;  g_dbg_level=1; // show this one thing always:
+			_mark("From now on will: " << (quiet_from_now_on ? "be quiet about" : "report") << " changes of debug level");
+			g_dbg_level = tmp;
+			be_quiet_about_dbg_level_changes = quiet_from_now_on;
+		}
+	}
+
+	if (level != -1) {
+		bool more_debug = level < g_dbg_level;
+		if ( more_debug) g_dbg_level = level; // increase before printing
+		if (!quiet) {
+			_mark("Setting debug level to " << static_cast<int>(level) << " because: " << why);
+		}
+		if (!more_debug) g_dbg_level = level; // increase after printing
+	}
 }
 
+int g_dbg_level_get() {
+	return g_dbg_level;
+}
 
 const char * dbg__FILE__(const char * name) {
 	const char * s_target = "/galaxy42/";
@@ -103,4 +124,40 @@ std::string to_string(const std::wstring &input) {
 	for (const auto & it : input)
 		ret += it;
 	return ret;
+}
+
+std::string get_simple_backtrace(size_t depth) {
+	using namespace backward;
+
+	StackTrace st; st.load_here(depth);
+	std::ostringstream oss;
+
+	TraceResolver tr; tr.load_stacktrace(st);
+
+	for (size_t i = 0; i < st.size(); ++i) {
+		ResolvedTrace trace = tr.resolve(st[i]);
+		oss << "#" << i
+		    << " " << trace.object_filename
+		    << " " << trace.object_function
+		    << " [" << trace.addr << "]"
+		    << std::endl;
+	}
+
+	return oss.str();
+}
+
+std::string get_detail_backtrace(size_t depth) {
+	using namespace backward;
+
+	StackTrace st; st.load_here(depth);
+	std::ostringstream oss;
+
+	Printer p;
+	p.color_mode = ColorMode::always;
+	p.object = true;
+	p.address = true;
+
+	p.print(st, oss);
+
+	return oss.str();
 }

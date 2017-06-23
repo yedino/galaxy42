@@ -1,5 +1,4 @@
 
-
 - We developers should do following checks
 - And you (end-user) can verify it on your own too!
 
@@ -35,13 +34,68 @@ GITIAN_LINUX_INCODE  = when building in Gitian, for Linux, then this library is 
 
 For windows gitian build we also depend on:
 - DLL libraries from Cygwin/Mingw, see contrib/nsis-installer-windows/bin - check for updates!
-
+- OpenVPN installer is downloaded and added into installer. Please make sure its version (and file hash) is up-to-date, in script contrib/nsis-installer-windows/galaxy-windows-installer + in file contrib/nsis-installer-windows/installer.nsi
 - We also use custom Gitian project (git submodule).
+
+=============================
+Sanitiziers
+
+=== UBSAN ===
+Can be enabled in ccmake options when using clang compiler (works on Linux amd64).
+In such build, test it (in newloop) with option --special-ubsan1
+Run with env option:
+`export UBSAN_OPTIONS="print_stacktrace=1"`
+to see backtrace on such warnings, though only from traces done when CAP/capability are dropped (e.g. in main loop).
+
+=============================
+Cap (linux Capability)
+
+=== libcap-ng ===
+
+We assume libcap-ng is not used by any other library, and that we're the only user of it (how ever the code should
+be well enough to work even in most other cases, as the state "m" in that library is per-thread, and our capmodpp code
+should try to reload cap state from kernel in important places)
+If that is not correct assumption, then very carefully audit all code using that library, also in privileges.cpp to avoid
+any race.
+
+=== cap on binary ===
+
+The binary file should have file-capabilities applied (as set by the build process / cmake),
+you can test that with:
+$ sudo getcap ./tunserver.elf
+./tunserver.elf = cap_net_admin+eip
+
+=== methods to start program regarding cap ===
+
+1) run program as some user (or better a dedicated user like srv_yedino)
+2) or instead: run program as root. Program will drop most privilages (cap). (TODO though it does not yet change UID/GID/etc)!!
+
+=== testing if droping cap works ==
+
+Droping capability:
+
+The Cap Test: to see if program now runs with high cap (Capabilities),
+install libcap-ng-utils and run:
+sudo netcap | grep tunserver
+it should show 0 lines if program has no caps (verify if program is running at all, with ps aux | grep tunserver)
+Where tunserver is the name of binary e.g. from "tunserver.elf".
+
+Testing:
+1a) Start program as regular user, but add options: --insecure-cap 1 (also add option --d) ;
+Then The Cap Test should show that program DOES have some Cap, e.g. cap net_admin is not dropped.
+Program should work normally (create tuntap card).
+1b) Start program as regular user; Then The Cap Test should show no Cap on the program.
+Program should work normally (create tuntap card).
+
+2a) Start program as the root, but add options: --insecure-cap 1 (also add option --d) ;
+Then The Cap Test should show that program DOES have some Cap, e.g. cap net_admin is not dropped.
+Program should work normally (create tuntap card).
+2b) Start program as the root; Then The Cap Test should show no Cap on the program.
+Program should work normally (create tuntap card).
 
 =============================
 
 - what about sub-dependencies of above, e.g. deps used by lib boost (e.g. gettext maybe)?
-
 
 =============================
 

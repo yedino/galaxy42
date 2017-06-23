@@ -10,7 +10,7 @@ if ! brew info llvm &>/dev/null; then
 fi
 
 # install upgrade
-for pkg in llvm37 autoconf pkg-config cmake boost libsodium gettext msgpack shellcheck; do
+for pkg in llvm37 autoconf pkg-config cmake boost libsodium gettext msgpack shellcheck coreutils; do
 
 	if brew list -1 | grep -q "^${pkg}\$"; then
 		echo "Package '$pkg' is installed - checking if outdated"

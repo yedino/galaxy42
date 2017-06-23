@@ -20,12 +20,17 @@ This program creates an secure connection between computers (like VPN).
  * encrypted end-to-end
  * only one of the computers needs to have public Internet IP address (in future none will need)
 
+Works on: Debian 9 (Stretch) on amd64 is recommended, also other **Linuxes**, **Windows** 7, 8, 10, **Mac OS X**
+- see [doc/support-matrix.txt](doc/support-matrix.txt).
+
+* * *
+
 To **run from sources**, just use menu `./menu` and select install, then build, then run - for supported systems,
 or keep reading.
 
-To **use this program** from Command Line, simply:
+To **use this program** from Command Line (as regular user, or as root) simply:
 
- * on 1st computer run command: `./tunserver.elf`
+  * on 1st computer run command: `./tunserver.elf`
 the program will start and will **print you on screen what is the virtual IP address** that is assigned to it by our program.
 
  * on 2nd computer run command: `./tunserver.elf --peer YOURIP:9042-VIRTUALIP1`
@@ -44,6 +49,7 @@ To **build this program from source** we recommend:
   * other Unix systems might work - see [doc/build-other-unix.md](doc/build-other-unix.md)
   * Browse directory with more documentation: [doc/](doc/)
   * *advanced users:* to recreate **yourself** the **official binary** for Windows/Linux using **Gitian** deterministic-builds, see [doc/build-gitian.md](doc/build-gitian.md)
+
 
 Backup: your **private keys** that give ownership of your virtual IP address by default are in `~/.config/antinet/`
 (or just the `galaxy42/wallet` there).
@@ -77,14 +83,21 @@ also check if other people confirm same checksum of binary files, and you can al
 that it matches given source code (see below - "Security of binary install").
 
 * Using pre-built binary on **Windows**:
-you need to have TUN/TAP Driver installed first, e.g. get one from the OpenVPN project.
+you need to have TUN/TAP Driver installed first, e.g. get one from the [OpenVPN](https://github.com/yedino/galaxy42/blob/master/doc/msvc-instructions.md#create-tuntap-device) project.
+
 * Get the installer .exe, run it.
 * Results:
   * Program is in: Program files/galaxy42/tunserver.elf.exe
   * Program will be installed as service and will run on boot.
 * You can start program manually e.g. to specify command-line options:
-  * Disable the system service of Galaxy42
-  * Run the installed .exe program manually. It will work and you can specify --peer option ... as well as see own virtual IPv6 there.
+  * Disable the system service of Galaxy42 - e.g. by going to Task Manager, finding Services tab, finding there "Galaxy" service, and clicking to Stop/Disable it.
+  * Run the installed .exe program manually. It will work and you can specify --peer option ... as well as see own virtual IPv6 there. It MUST be run as ADMINISTRATOR (click Menu Start, find cmd, right-click and choose option 'Run as administrator')
+
+* HANDLE ERRORS:
+    * If problem finding the tuntap in registry:
+  We can not find the virtual tuntap network card. Did you installed the OpenVPN driver for it? Is it not disabled? Consult README.md for more infomation.
+    * If problem setting unicast address etc - then show suggestinon like
+  We can not configure the virtual card - are you running this program with Administrator privileges (e.g. from run-as-administrator command line? or with System privilages as Service?) Consult README.md for more infomation.
 
 * Using pre-built binary on **Linux**:
 * Get the installer .tar.gz and unpack it.
@@ -314,8 +327,3 @@ A: Do an `make clean` and try again. They can show up when you run more then onc
 That option is intended for use by automated tools only, and they start in clearn environment.
 You can also try: `find . -name "*.gcda" -print0 | xargs -0 rm`.
 See: http://stackoverflow.com/questions/22519530/dozens-of-profilinginvalid-arc-tag-when-running-code-coverage-in-xcode-5
-
-
-
-
-

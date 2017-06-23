@@ -1,32 +1,29 @@
 #include "cable_shm_addr.hpp"
 
+cable_shm_addr::cable_shm_addr()
+: c_cable_base_addr( t_cable_kind::kind_shm )
+{ }
+
 cable_shm_addr::cable_shm_addr(const std::string &address)
-: c_cable_base_addr( boost::any() ) // filled in below
+: c_cable_base_addr( t_cable_kind::kind_shm ),
+m_addr(address)
 {
-	init_addrdata(address);
 }
 
-std::string cable_shm_addr::cable_type_name() const {
-	return "shm"s;
+void cable_shm_addr::print(std::ostream & ostr) const {
+	ostr << "shm: " << m_addr;
 }
 
-bool cable_shm_addr::is_same(const c_cable_base_addr &other) const{
+unique_ptr<c_cable_base_addr> cable_shm_addr::clone() const { ///< polymorphic clone
+	return make_unique<cable_shm_addr>( m_addr );
+}
+
+signed char cable_shm_addr::compare_same_class(const c_cable_base_addr & other) const {
 	try {
-		return any_cast<t_addr>(other.get_addrdata())  ==  any_cast<t_addr>(get_addrdata());
-	} catch(...) {
-		return 0; // the other address has even other type then me, so it's different
-	}
+		auto other_obj = dynamic_cast<const cable_shm_addr&>( other );
+		if ((this->m_addr) < (other_obj.m_addr)) return -1;
+		if ((this->m_addr) > (other_obj.m_addr)) return +1;
+		return 0;
+	} catch(const std::bad_cast &) { _throw_error_runtime("Can not compare addresses, it is other class"); }
 }
 
-int cable_shm_addr::compare(const c_cable_base_addr &other) const{
-	try {
-		const t_addr & my_addr    = any_cast<t_addr>(this->get_addrdata());
-		const t_addr & other_addr = any_cast<t_addr>(other.get_addrdata());
-		if (my_addr < other_addr) return -1;
-		if (other_addr < my_addr) return +1;
-		_check(my_addr == other_addr);
-		return 0; // same
-	} catch(...) {
-		return this->cable_type_name().compare( other.cable_type_name() );
-	}
-}
