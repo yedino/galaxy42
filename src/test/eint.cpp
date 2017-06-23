@@ -112,3 +112,24 @@ TEST(eint, aggrinit_size_t) {
 	EXPECT_EQ(c,a-b);
 	EXPECT_EQ(ULL(c) , ULL(a)-ULL(b));
 }
+
+TEST(eint, eint_less_test) {
+	EXPECT_TRUE(eint::eint_less(1,2));
+	EXPECT_TRUE(eint::eint_less(0,1));
+	EXPECT_TRUE(eint::eint_less(-1,0));
+	EXPECT_TRUE(eint::eint_less(-2,-1));
+	EXPECT_TRUE(eint::eint_less(-1,2u));
+	EXPECT_TRUE(eint::eint_less(-1,2ul));
+	EXPECT_TRUE(eint::eint_less(-1l,2));
+	EXPECT_TRUE(eint::eint_less(-1ll,2));
+	EXPECT_TRUE(eint::eint_less(-1l,2ul));
+	EXPECT_TRUE(eint::eint_less(1l,2ul));
+	EXPECT_TRUE(eint::eint_less(1ll,2ul));
+	EXPECT_FALSE(eint::eint_less(1, 1));
+	EXPECT_FALSE(eint::eint_less(1, 1u));
+	EXPECT_FALSE(eint::eint_less(1, 1ull));
+	EXPECT_FALSE(eint::eint_less(1, 0ull));
+	EXPECT_FALSE(eint::eint_less(-1, -1));
+	EXPECT_FALSE(eint::eint_less(-1ll, -1));
+
+}
