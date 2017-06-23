@@ -81,6 +81,52 @@ T eint_plus(T a, T b, typename std::enable_if_t<std::is_integral<T>::value>* = 0
 	}
 	return a+b;
 }
+/*
+template <typename Ta, typename Tb>
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value>* = 0
+						, typename std::enable_if_t<std::is_integral<Tb>::value>* = 0) {
+	if ((std::is_unsigned<Ta>::value && std::is_signed<Tb>::value) && (sizeof(Ta) >= sizeof(Tb))){
+		if (b<0) return false;
+		else return a < static_cast<Ta>(b);
+	}
+	if ((std::is_signed<Ta>::value && std::is_unsigned<Tb>::value) && (sizeof(Tb) >= sizeof(Ta))){
+		if (a<0) return true;
+		else return static_cast<Tb>(a) < b;
+	}
+	return a<b;
+}
+*/
+template <typename Ta, typename Tb>
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
+						, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
+	if (sizeof(Ta) >= sizeof(Tb)){
+		if (b<0) return false;
+		else return a < static_cast<Ta>(b);
+	}
+	return a<b;
+}
+
+template <typename Ta, typename Tb>
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
+						, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
+	if (sizeof(Tb) >= sizeof(Ta)){
+		if (a<0) return true;
+		else return static_cast<Tb>(a) < b;
+	}
+	return a<b;
+}
+
+template <typename Ta, typename Tb>
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
+						, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
+	return a<b;
+}
+
+template <typename Ta, typename Tb>
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
+						, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
+	return a<b;
+}
 
 } // namespace eint
 
