@@ -176,7 +176,15 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 
 class c_tunserver : public c_galaxy_node {
 	public:
-		c_tunserver(int port, int rpc_port);
+		/// Creates tunserver listening on given #port and #rpc_port
+		/// @param early_argm is the early state of argm (possibly will be changed later e.g. by devel/demo options - see set_argm)
+		/// this #early_argm is only to peek at some options needed early, for example options stored here as const,
+		/// like #m_option_insecure_cap
+		c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm);
+
+		/// to easily call constructor without providing real #early_argm, e.g. when using in an unittest
+		static boost::program_options::variables_map get_default_early_argm();
+
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
 		void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
@@ -247,12 +255,12 @@ class c_tunserver : public c_galaxy_node {
 		void peering_ping_all_peers();
 		void debug_peers();
         #ifdef HTTP_DBG
-		std::mutex & get_my_mutex() const; ///< [thread] get lock guard on this
+		Mutex & get_my_mutex() const; ///< [thread] get lock guard on this
 		friend class c_httpdbg_raport; ///< this is authorized to read my data for debug. but [thread] lock access first!!!
         #endif
 	private:
         #ifdef HTTP_DBG
-		mutable std::mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
+		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
         #endif
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
@@ -283,7 +291,7 @@ class c_tunserver : public c_galaxy_node {
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
 		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
-		mutable std::mutex m_peer_mutex;
+		mutable Mutex m_peer_mutex;
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
@@ -337,6 +345,8 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_peer_list(const std::string &input_json);
 		int m_port;
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
+
+		const bool m_option_insecure_cap; ///< should we do insecure cap (e.g. do NOT drop the capabilities); tests/debug
 };
 
 // ------------------------------------------------------------------

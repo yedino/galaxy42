@@ -12,9 +12,34 @@ Intended for:
 # Summary for every developer!
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
+Know the Editor (below).
 
 Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
+
+Try to minimize technical debt by fixing things in [debt.txt](debt.txt).
+If you must move forward without writting things the good way for now, add information to that debt.txt.
+
+```cpp
+_dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
+_check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
+STR(...) to_string(...) "..."s
+to_debug(...);
+is_ascii_normal(str); reasonable_size(str); reasonable_size(vec);
+UsePtr(p).func();
+
+/**
+ * @codestyle
+ * @thread ...
+ * @owner rfree
+ */
+
+catch(const ex_type & ex){}
+
+UNUSED(x); DEAD_RETURN();
+```
+
+
 
 ```cpp
 
@@ -28,17 +53,18 @@ _mark(X) // hot topics (usually for testing)
 // TODO  ....  TODO@author
 thing_to_be_fixed_before_release ; // TODO-release
 
-is_ascii_normal // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
-
-assert() / _check_abort() / _check()
-1. abort on error (only guaranteed in debug mode) - assert() // from compiler
-2. abort on error (always guaranteed) - _check_abort() // our lib
-3. throw on error - _check() // our lib
+is_ascii_normal(str) // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
 
 Function: if throw - then std::exception (or child class).
 Member functions: assume are not thread safe for concurent writes to same object, unless:
 // [thread_safe] - thread safe functions.
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
+
+_check_abort() / _abort() / _check() / _try()
+1. abort on error (always guaranteed) - _check_abort() // our lib
+2. abort on error (only guaranteed in debug mode) - assert() // from compiler
+3a. throw on error - _check() - hard exception type // our library
+3b. throw on error - _try() - soft exception type // our library
 
 Throw:
 _throw_error_runtime("TTL too big");
@@ -68,12 +94,47 @@ try {
 reasonable_size( vec ); // <--- test potentially big objects on input, function start
 
 Catch it using:
-  catch(std::runtime_error &ex) // catch all errors, including check soft and hard errors
+  catch(const std::runtime_error &ex) // catch all errors, including check soft and hard errors
 -or-
 // catch soft (expected) error, but hard errors propagate
-  catch(err_check_soft &soft) { string info = soft.what_soft(); }
+  catch(const err_check_soft &soft) { string info = soft.what_soft(); }
 // for more see chapter Check-asserts
+
+enum class t_temper { cold=15, hot=80 }; // for (de)serializable Enums. See "Enum" below.
+inline bool enum_is_valid_value(t_temper value) {
+	switch (value) {
+		case t_temper::cold :
+		case t_temper::hot :
+		return true;
+	}
+	return false;
+}
+
+t_temper water_temp = int_to_enum<t_temper>( 80 ); // asserted
+
+
 ```
+
+# Doxygen tags attributes
+
+## Attribute @thread
+
+Popular kinds of thread safety used in this project:
+
+@thread `thread_safe` - applies to function: for member function it means that it is safe to call object of this class
+concurrently from different threads without any additional synchronization by caller;
+for free function it means that it is safe to call this free function
+concurrently from different threads without any additional synchronization by caller;
+
+@thread `thread_safe_public_myself` - applies to a class - means "Thread Safe on Public, if I'm just using Myself":
+all public function are `thread_safe` unless noted otherwise,
+except for all constructors (including move and copy), destructor,
+and except for functions and operators that take same-class (or parent/child class) - like especially copy operator=,
+moving operator=, comparison operator< operator> operator== and such.
+
+## Attribute owner
+
+Owner of the file - e.g. nickname.
 
 # Building
 
@@ -91,9 +152,10 @@ The use of this project/programs as end-user, is described in other places, see 
 
 # Developing
 
-To develop the program, we recommend mainly Debian Stable as the main environment at this time.
+To develop the program, we recommend mainly Debian Stable (Debian 9 Stretch, Amd64) as the main environment at this time;
+Ubuntu and Mint also are used by developers so we can recommend them (at least in some versions),
 
-IF YOU ADD ANY DEPENDENCY THEN write it in dependencies list in [SECURITY.txt].
+IF YOU ADD ANY DEPENDENCY (library) THEN write it in dependencies list in [SECURITY.txt].
 
 Contact us for any hints (be patient waiting for reply, but fell free to ask in few places or few times to catch us if
 we're bussy), see contact information in the main README.md of this project.
@@ -119,6 +181,37 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
 
+## Editor
+
+### Editing source code (and in general text files)
+
+Identation is done with tab-characters.
+Files should be in UTF-8, using Unix line-end markers (exceptions allowed for files edited on windows, temporarly).
+
+We assume/recommend to display tabs as 2-character-wide.
+We recommend keeping lines-length below 100-120, max 130 collumns (with following tab size).
+
+Following comment-line horizontal ruler ornaments are used (given here below as `.vimrc` macros to be pasted);
+Optionally, following marking of leave-block instructions (to be used especially when block is exited suddently instead at normal end of it)
+
+Recommended vimrc settings to use if that is your editor:
+
+```vim
+:set noexpandtab
+:set copyindent
+:set smarttab
+:set smartindent
+:set softtabstop=0
+:set shiftwidth=2
+:set tabstop=2
+
+iabbrev !!# // ###########################################################################################################
+iabbrev !!= // ===========================================================================================================
+iabbrev !!- // -------------------------------------------------------------------
+iabbrev !!r return ; // <=== return
+iabbrev !!b break ; // <=== break
+```
+
 ## Developing and code details
 
 # Developer handbook
@@ -129,10 +222,17 @@ Read also the Summary chapter first. More details are in file **utils/check.hpp*
 
 You can also catch:
 ```
-catch(err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
-catch(err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
-catch(err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
+catch(const err_check_user &ex) { string info = ex.what(); } // catch error (soft of hard) caused by user input
+catch(const err_check_sys &ex) { string info = ex.what(); }  // catch error (soft of hard) caused by system
+catch(const err_check_extern &ex) { string info = ex.what(); } // catch error (soft of hard) caused by external
 ```
+
+## Enum
+
+When using enums, try to use enum-class.
+If given enum needs to be (de)serializable or otherwise convertible from-integer, then provide override of function:
+`inline bool enum_is_valid_value(t_your_enum_type value);`
+that will return true if given enum has allowed value in it; else false. See unit tests (`stdplus_misc.cpp`) for example.
 
 ### Startup of TUN/TAP card
 
@@ -154,6 +254,300 @@ and this throws proper tuntap_error*
 
 3) tunserver.c will catch then tuntap_error* and inform user
 ```
+
+## Network protocol
+
+`[[maindoc]]` - main documentation for network protocol
+
+
+tun from tuntap - are the IP data
+tap from tuntap - are the ethernet data, including usually IP data after ethernet header
+
+tuntap-data - the data as received by some tuntap driver
+tuntap-header - the header added by some tuntap driver, before the IP data, e.g. 4 bytes
+tuntap-added - all data added before the TUN
+
+ipv6-noaddr: are the headers of IPv6 and payload of IPv6, but with source and dest addresses removed
+ipv6-merit: currently = ipv6-noaddr; Data that are are part of IPv6 and are not "trivial" to know from higher layers.
+
+weld: array of ipv6-merit, that are all from same src, and to same dst
+e.g. ipv6-merit are joined into a weld by the original sender, delivered e2e, and then separated by final recipient.
+they are e2e encrypted and authenticated by src to dst.
+
+
+```
+
+=======================================================================================================================
+
+Overview
+
+Node can do 3 things: send locally-originating own data, receive data send to us, or route data between other nodes.
+Each action can have Motivation effects like sending/receiving tokens of gratitude.
+
+1) Sending data that we send locally:
+from TUNTAP (+packages) ---> (crypt-e2e, crypt-p2p) (+our or other bags) ---> cable send, e.g. UDP transport
+2) Receiving data that is sent to our host as end destination:
+cable receive, e.g. UDP transport ---> (decrypt-p2p) (-bags not to us) ---> (-split bags) ---> (decrypt-e2e) ---> to TUNTAP
+3) Receiving data that is not to us:
+cable receive, e.g. UDP transport ---> (decrypt-p2p) ---> (encrypt-p2p other peer) ---> to cable e.g. UDP
+
+        (emit)
+    tuntap read          cable read UDP
+      v    v                   |
+      .    |                   |
+ more ....>|                   |
+ tuntap    |                   |
+           v                   v
+       e2e-crypt       p2p-auth(verify)
+       e2e-auth(out)  [opt. p2p-encrypt]
+           |                   |
+           |                   |
+           |<----- no ---- < to us ? >
+           |   (routing)       |
+           |                  yes
+           |                   |
+           v                   v
+      p2p-auth(send)       e2e-decrypt
+           |              e2e-auth(out)
+           |                   |
+           v                   v
+         cable            tuntap write
+                             (take)
+
+=======================================================================================================================
+
+Overview of dataflow for Sending local data:
+
+TODO: We assume that there is available a function AuthenticateEncrypt that reads from separate (fragmented) buffers,
+and outputs results to a new continuous memory.
+
+Tuntap read gives us Ip Packets.
+
+IP Packets  - Packet, as 2 buffers (IP headers - src,dst, IP payload) +src,dst
+Merit       - Packet, with removed src/dst headers (as Src/Dst can be provided by higher level)
+EmitInput   - Is concatenation of 1 or more merits, done to prepare less fragmented memory for Weld.
+WeldBagStep - Produces Bags that are of mostly continuous memory and are e2e encrypted+authenticated,
+              processed as: Weld ---> WeldPost ---> Bag, as follows:
+Weld        - Weld is collection of IP packets, with same Dst, in form of array of Emitbuf, with fragmented memory.
+              Logic: (src,dst)<===ipv,flow,.ip payload.===><===ipv,flow,.ip payload..===>
+              Memory: (src,dst) EmitIn1{<=ipv,flow,payload=>} emit2{<=ipv,flow,payload=><=ipv,flow,payload=>
+Bag         - Splited parts of some Weld. Small enough to usully be optimal for expected transport.
+BagCrypto   - Bag that has e2e crypto applied, and includes nonce.
+              nonce_e2e = bag_id (+) weld_id (+) salt
+              bag_id is counter of bag, in context of weld_id
+              weld_id is counter of weld, in context of my src (sender) to given finall dst
+Cart        - Cart is collection of bags plus path-info, that is sent from us to given peer; It is p2p authorized.
+              {
+              p2p_authtag, p2p_nonce
+              path-{B,C}-3,thx5005, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+              path-{B,C}-3,thx5006, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+              path-{B,D}-9,thx3111, passhash,   bag: <== weld-id, bag-id / bag-count , bag-data part of weld data ==>
+				      }
+				  		p2p_nonce = p2p_counter_in_path_hop_context (+) salt in hop_context
+						  hop_context is: my-peer (implied), plus other peer (known from other layer), e.g. "A,B"
+Fragment   -  Fragment is a part of cart that fits into given CableMTU
+              cart#5811{B,C}, fragment nr 3/7, [.....cart-part....]
+
+Sizes of data:
+MTU on tuntap: 1304..65535 (usually 65535)
+MTU on cable: 68..65535 (usually 1280..9000) (maybe bigger for jumbograms on cable)
+MTU on path: same as MTU on cable
+Packet: 40..65535 (possibly larger for IPv6 Jumbograms https://en.wikipedia.org/wiki/Jumbogram)
+Merit: 8..65503 (as 65535-32)
+maxBigPerWeld - 10 (1..1024) - estimated amount of big (MTU size) packets in Weld
+maxPckPerWeld - 65530 (last few values can be reserved for other use)
+EmitInput: ~60 .. maxBigPerWeld×MTU
+Weld: ~60 .. maxBigPerWeld×MTU
+WeldHeader: 0 ?
+WeldPost: ~60 .. Weld.Max + Weld.Header.Max
+BagHeader: ??? < 16 ??? PathAgreementID is needed
+Bag: 1..65535 (usually 1..PathMTU) (maybe bigger for jumbograms on cable)
+Cart: 1..65535 (usually 1..CableMTU) (maybe bigger for jumbograms on cable) - can cause fragmentation
+maxFragPerCart: 65535 (encoded as varint)
+ShredHeader: 2..2×3  + (cart id - 32 bit, rotating counter)
+Shred: 1+header .. 65535
+
+Max nonce for authencrypt: 24 byte (crypto_stream_xsalsa20.h: #define crypto_stream_xsalsa20_NONCEBYTES 24U)
+
+FAQ:
+Does Bag need Dst (finall destination) info? No, because when Bag is handed to you in p2p, then you are told the
+agreement number (path number) and that implies the final destination e.g. Z.
+Data-hash is it needed? Not now, we assume it would be...
+
+
+Sidenotes:
+**1** though, the Authorization e2e must be for each bag,
+so that the finall recipient can check for each Bag is it correct - to confirm payment,
+unless we are in more Easy mode where all nodes trust each other more.
+
+**2** the nonce_e2e is derived from weld-id because this ID anyway must be attached (delivered with) the Weld
+(to re-order the welds to join them into welds, and to re-order welds possibly) - so we can use this numbers;
+Though, if we would be to maximazie anti-DPI protections, we could encrypt (e2e) the weld-id and bag-id to protect
+this meta-data from spying. Then, bag would have random nonce_e2e attached,
+and inside it we would encyypt+auth weld-id and bag-id.
+
+=======================================================================================================================
+
+Reading tuntap data:
+
+We get some data by reading tuntap (see src/tuntap/*)
+OS gives us tuntap data:
+<================================== tuntap data ========================>
+tuntap-added <=========================== IP (as from TUN) =============>
+tuntap-header, ethernet-header <======================== ipv6 packet =====================>
+(delete tuntap-added)
+<========================= ipv6 packet ====================>
+<v,trf,flowl,payl,hdr,hop, src, dst, <ipv6 payload> >
+(take out src,dst)
+<v,trf,flowl,payl,hdr,hop,           <ipv6 payload> >
+<v,trf,flowl,payl,hdr,hop, <ipv6 payload> >
+[.......................................] (src,dst) <--- 2 buffers, one constant size
+^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
+
+
+<================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
+<================== ipv6-merit  ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
+
+
+<============== ipv6-merit ============> <=ipv6-merit=>
+
+src,dst,[len_encoding] <============== ipv6-merit ============> <=ipv6-merit=>
+<--- weld-header -><============== ipv6-merit ============> <=ipv6-merit=>
+<==================== weld to dst1 ======================================>
+
+..................................................................................
+TODO partially deprecated ???
+Weld can take out bags by looking into IPv6 length header?
+
+len_encoding:
+	1) 1 byte - number WN - of welds to send
+  2) WN times repeat:
+      either:
+			  a) an 2 byte value meaning the octet length of next merit; the value must be != 0
+	      b) if above 2 bytes are 0 then interpret next 4 byte value as the size of Jumbogram of next merit
+
+E.g. sending merits of sizes: 160, 255, 60000, 65535, 99015, 3735928559, 160, the len_encoding field will be:
+	1) value "7" for 7 welds, as 0x07
+	2) 7 numbers:
+			a) 160 = 0x00 0xA0
+			a) 255 = 0x00 0xFF
+			a) 60000 = 0xEA 0x60
+			a) 65535 = 0xFF 0xFF
+			b) 99015 = 0x00 0x00   0x00 0x01 0x82 0xC7
+			b) 3735928559 = 0x00 0x00   0xDE 0xAD 0xBE 0xEF
+			a) 160 = 0x00 0xA0
+So:
+0x07 0x00 0xA0 0x00 0xFF 0xEA 0x60 0xFF 0xFF 0x00 0x00   0x00 0x01 0x82 0xC7 0x00 0x00   0xDE 0xAD 0xBE 0xEF 0x00 0xA0
+..................................................................................
+
+
+Now zoom-out :
+
+<=weld dst1=> <=weld dst2=> <=weld dst3=> <!~~~weld dst1 via-me~~~!>
+ b10 B11 B12    b20  B21    b30 B31 B32    B40 ~~~~~~~~~~~~~~~~~~~~
+ buffers:
+ B11 - is memory with ipv6-merit (from one tunrap read)
+ B12 - is memory with ipv6-merit (from other tuntap read)
+ b10 - is memory in which we create weld-header (e.g src,dst) - they are same dst - we picked them to create weld
+ ,
+ B21 - ipv6-merit
+ b20 - weld-header
+ ,
+ B31 - ipv6-merit
+ B32 - ipv6-merit
+ b30 - weld-header
+ ,
+ B40 - part of e.g. UDP read of data that we pick to route
+
+via peer1     via peer2     via peer1     via peer1   <-- routing decisions
+<=weld dst1=>               <=weld dst3=> <!weld dst1 via-me!>   <--- via peer1
+<=weld dst1=> <=weld dst3=> <!weld dst1 via-me!>   <--- via peer8
+
+0,1,2,3,5,aabbcccccc
+
+transport len max=300 . one letter is 100 bytes
+trport: aa
+trport: bb
+trport: ccc shred 1
+trport: cc  shred 2
+
+trport: aab shred part 1, len 2, [[len 1]]
+trport: bcc shred 2
+trport: ccc
+
+via peer 8, we want to send 4 welds:
+aa
+bbbbbbbbbb
+c
+ddddddd
+
+We pack it into carts as:
+
+aab entire weld_50122, for weld #50123 part 1/5
+bbb for weld_50123 part 2/5
+bbb for weld_50123 part 3/5
+bbb for weld_50123 part 4/5
+bcd for weld_50123 part 5/5, entier weld_50124, for weld_50125 part 1/3
+ddd for weld_50125 part 2/3
+ddd for weld_50125 part 3/3
+
+
+[shred-header][shred-data]
+[shred-header][shred-data]
+[shred-header][shred-data]
+
+shred-header:
+  marker: 1 byte with value 00
+or else:
+  weld number: 4 byte: 31 bit, plus 1 bit saying is it entire weld, or weld-shred,
+  if it's weld-shred then:
+    1 byte - weld-shred-nr,
+    1 byte - weld-shred-count,
+
+So shred-header has variable size: 1, or 4, 6 byte.
+
+
+add hashes to each weld (each can do it for his own, in parallel) :
+<=weld dst1=>+H <=weld dst3=>+H <!weld dst1 via-me!>+H   <--- via peer8
+HH = hash of hashes
+{CMD,[pay],HH}(nonce,auth)<======== cart-payload via peer8 ======================>
+<============================== cart / cart-full via peer8 =============================>
+
+AUTH p2p
+
+/// <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred--> <--shred-->
+
+CMD,(l)<--shred--> ???
+
+cart to
+udp-transport(  )
+
+Example: (WIP/TODO)
+
+peer8 routes to dst1, dst2, dst3, dst4
+  100-dst1 , src0, dst1
+  100-dst1 , src0, dst1
+  100-dst1 , src0, dst1
+  500-dst2 , src0, dst2
+  500-dst3 , src0, dst3
+32000-dst4 , src0, dst4
+ 9000-dst4 , src6, dst4
+
+    (src0,dst1, 100,100,100) (src0,dst2,500) (src0,dst3,500) (src0,dst4,32000), (src6,dst4,9000)
+    eeeeeeeeeeeeeeeeeeeeeeee eeeeeeeeeeeeee  eeeeeeeeeeeeeee eeeeeeeeeeeeeeeee  ~~~~~~~~~~~~~~~~  e=encrypt+auth e2e
+    <-------------------------------------------------> <---------> <-----> <------> <----------> shreds example sizes
+    ccccccccccccccccccccccccccccccccccccccccccccccccccc ccccccccccc ccccccc cccccccc cccccccccccc cable sends:
+    c1                                                  c2          c3      c1       c4           various cables, but to peer8
+
+		CMD HH, p2p-auth;                                   c2          c3      c1       c4           various cables, but to peer8
+
+
+
+cart - shreds
+
+
+```
+
 
 ## Developing translations
 
@@ -223,7 +617,7 @@ To use Jenkins:
 
 Our Jenkins test suite defined by one pipeline can be checked in details in the Jenkinsfile located in the root directory of the project.
 At the moment test suite includes:
-	- native build on gcc debian8 linux and mingw/cygwin 32-bit windows
+	- native build on gcc Debian 8 Jessie linux and mingw/cygwin 32-bit windows
 	- unit tests passing
 	- integration tests passing
 	- deterministic build linux target
@@ -234,7 +628,7 @@ At the moment test suite includes:
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
 
-* SIOM - Service_IO Manager - asio::service_io manager, see asio_ioservice_manager.cpp
+* SIOM - `Service_IO Manager` - `asio::service_io` manager, see `asio_ioservice_manager.cpp`
 
 * Hash-Node (or just "Node") - is some sort of computer system that has a Hash-IP, and usually is connected with it to some network.
 For Galaxy42, a Node will be any computer running the Galaxy42 client program.

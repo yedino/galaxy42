@@ -124,7 +124,7 @@ __Possible errors:__
  or
  ``` Error LNK1112 module machine type 'x64' conflicts with target machine type 'X86'```
 - make sure you link correct version of 32-bit or 64-bit (libsodium/libboost) libraries.
- 
+
 ### Create TUN/TAP device
 __download/install openvps drivers for windows tap device__
 - [OpenVPN-Downloads](https://openvpn.net/index.php/open-source/downloads.html)
@@ -140,7 +140,8 @@ Windows 8 and newer
 
 ```my computer -> properties ->device manager -> action -> Add legacy hardware -> Install the hardware that I manually select from a list -> Network adapters -> Have disc -> locate tun driver (default path C:\Program Files\TAP_Windows\driver\OenVista.inf)```
 
-
+After installing (and restarting) your system will show a virtual network card in addition to your normal network cards:
+![Win TUNTAP](images/win_tuntap.png)
 
 ### Possible runtime errors (tunserver.elf.exe):
 ***cannon open shared library***

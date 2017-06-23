@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #ifndef include_strings_utils_hpp
 #define include_strings_utils_hpp
@@ -7,17 +7,9 @@
 
 #include <boost/any.hpp>
 
-// ====================================================================
+#include <strings_utils_base.hpp>
 
-enum t_debug_style {
-	e_debug_style_object=0,
-	e_debug_style_short_devel=1,
-	e_debug_style_crypto_devel=2,
-	e_debug_style_big=2,
-
-	e_debug_style_buf=100,
-
-};
+// -------------------------------------------------------------------
 
 struct string_as_bin;
 
@@ -37,7 +29,7 @@ bool operator==( const string_as_hex &a, const string_as_hex &b);
 unsigned char int2hexchar(unsigned char i); // 15 -> 'f'
 unsigned char hexchar2int(char c); // 'f' -> 15
 
-unsigned char doublehexchar2int(string s); // "fd" -> 253
+unsigned char doublehexchar2int(std::string s); // "fd" -> 253
 
 struct string_as_bin {
 	std::string bytes;
@@ -218,5 +210,8 @@ template <typename T> std::string to_debug_b(const std::unique_ptr<T> & ptr)
 {	return to_debug(ptr,e_debug_style_big); }
 
 bool is_ascii_normal(const std::string str);
+
+/// Transform c-style array to wstring (useful for windows api functions when UNICODE is set)
+std::wstring cstring_to_wstring(const char *cstr);
 
 #endif

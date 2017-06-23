@@ -9,7 +9,7 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <mutex>
+#include "../mutex.hpp"
 #include <string>
 #include <thread>
 #include <vector>
@@ -41,7 +41,7 @@ class c_rpc_server final {
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket;
 		std::unique_ptr<std::thread> m_thread_ptr;
-		std::mutex m_session_vector_mutex;
+		Mutex m_session_vector_mutex;
 		std::list<c_session> m_session_list;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
 		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key, shold be loaded from conf file TODO

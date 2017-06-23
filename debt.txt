@@ -1,0 +1,43 @@
+
+This are things TODO that we create when we postpone some needed things to go forward,
+creating technological debt.
+
+Noting them here to not forget and keep track.
+
+=== critical ===
+
+- PR 323, a5072877d8420ca382001a852174168a940932dd, (SIOM) - windows builds are broken (no socketopt) - need to fix this by using cancelio family of functions instead. Was merged to dev to not block development.
+
+=== important ===
+
+- PR 320 was merged without full review (as we need to use this threads now already). It needs at least more comments in few places. Notify @rfree with the review to sign-on the review, before deleting this item.
+
+=== disabled ===
+
+- disabled cable/udp async receive
+
+=== bad design ===
+
+=== better refactoring ===
+
+- PR 328, PR 327 - there are now asserts and .at and safe copy in arrays, but still would be even better to use some container view instead in this places (especially in NDP protocol, which is not important regarding performance)
+
+=== security ===
+
+- we must drop permissions when running as root
+- utils/capmodpp.* utils/privileges.* code must assert that request cap change was applied
+- utils/capmodpp.* utils/privileges.* code review
+- review/confirmation from someone who understands fully CAP/ID transitions (when root dropping code is in place too)
+
+=== locking ===
+
+- too wide lock when sending via cable, in "TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:"
+- remove all halgrind warnings, see runhelgrind.sh
+- why there are problems is using > 1 io service? cards.cpp "make_shared< c_asioservice_manager >( 1 );"
+
+=== unit tests ===
+
+- add UT for stdplus::vector_mutexed_obj
+- add UT for stdplus::with_mutex
+
+

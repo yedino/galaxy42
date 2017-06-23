@@ -7,8 +7,8 @@
 /// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
 class c_the_program {
 	public:
-		c_the_program();
-		virtual ~c_the_program();
+		c_the_program()=default;
+		virtual ~c_the_program()=default;
 
 		virtual void take_args(int argc, const char **argv); ///< set the argc,argv
 		virtual void take_args(const string & _argt_exec , const vector<string> & _argt); ///< sets exec-name, and rest of args
@@ -28,13 +28,18 @@ class c_the_program {
 		virtual void options_multioptions(); ///< parse some special options that add more options (e.g. developer tests)
 		virtual void options_done(); ///< done parsing of options+multioptions
 
-		virtual std::tuple<bool,int> options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
+		std::tuple<bool,int> options_commands_run(); ///< see base_options_commands_run()
 
 		virtual int main_execution(); ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
 
 		virtual bool check_and_remove_special_cmdline(const string & name); ///< checks if given command-line argument is given, if yes then remove it and return true
 
 	protected:
+
+
+		/// Partiall execution - call it from public functions, possible re-use it in child if you want
+		virtual std::tuple<bool,int> base_options_commands_run(); ///< run special commands given in command line; returns should we exit and with what exit-code
+
 		/// Raw command-line options
 		///@{
 		vector<string> argt; ///< the arguments with which the program is running, except for program name (see argt_exec)
@@ -61,4 +66,9 @@ class c_the_program {
 
 		string config_default_myname;
 };
+
+// show title at start of main sections:
+#define PROGRAM_SECTION_TITLE _goal("\n======================================================================\n" \
+	<< "Entering: " << __func__ )
+
 

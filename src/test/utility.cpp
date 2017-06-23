@@ -5,7 +5,11 @@
 
 TEST(utility, parse_ip_number) {
 	g_dbg_level_set(255, "start test");
-	c_tunserver myserver(9042, 42000);
+
+	c_tunserver myserver(19042, 42000, c_tunserver::get_default_early_argm());
+	// TODO, it should be possible to create myserver without
+	// any listening port (or tollerate port failure)
+
 	EXPECT_NO_THROW(myserver.add_peer_simplestring("192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"));
 	EXPECT_THROW   (myserver.add_peer_simplestring(""), std::invalid_argument);
 	EXPECT_THROW   (myserver.add_peer_simplestring("kjfahskdfhsh"), std::invalid_argument);

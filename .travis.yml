@@ -8,6 +8,8 @@ os:
   - linux
 dist: trusty
 
+group: edge
+
 addons:
   apt:
     sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
@@ -20,6 +22,7 @@ addons:
       - libboost-program-options-dev
       - libboost-thread-dev
       - libboost-locale-dev
+      - libcap-ng-dev
       - libfftw3-dev
       - shellcheck
 
@@ -87,7 +90,6 @@ matrix:
         compiler: clang
 
     allow_failures:
-      - os: osx
       - env: EXTLEVEL=30
       - env: EXTLEVEL=20
       - env: EXTLEVEL=10
@@ -101,10 +103,10 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - ./check
   - ./do --go
+  - ./build/unittests.elf    # run gtests
 
 after_success:
-  - ./build/test-release.elf    # run gtests
-  - if [[ "$COVERAGE" == "1" ]]; then coveralls -e src/test -e build_extra -e depends --gcov-options '\-lp' --gcov 'gcov-5' ; fi
+  - if [[ "$COVERAGE" == "1" ]]; then coveralls -i src/ -e src/test --gcov-options '\-lp' --gcov 'gcov-5' ; fi
 
 notifications:
   irc:

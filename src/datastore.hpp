@@ -116,7 +116,7 @@ private:
 	FRIEND_TEST(datastore, prepare_path);
 	FRIEND_TEST(datastore, write_load_string);
 	FRIEND_TEST(datastore, write_load_mlocked_string);
-
+	FRIEND_TEST(datastore, bad_file_confdir);
 	// TODO chmod's
 	/**
 	 * @brief prepare_file_for_write

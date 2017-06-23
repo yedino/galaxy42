@@ -7,18 +7,28 @@
 
 class c_cable_udp_addr final : public c_cable_base_addr {
 	public:
-		typedef boost::asio::ip::udp::endpoint t_addr; ///< actuall raw address. Instace of this will be in m_addrdata
+		using t_addr = boost::asio::ip::udp::endpoint; ///< actuall raw address. Instace of this will be in m_addrdata
 
 		c_cable_udp_addr() = default;
 		c_cable_udp_addr(const t_addr &endpoint);
 		c_cable_udp_addr(const std::string &ip_string); ///< Converts string like "100.200.50.50:32000"
-		void print(std::ostream & ostr) const override;
-		/// is my address the same (cable type, and address) to another.
-		std::string cable_type_name() const override; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
-		bool is_same(const c_cable_base_addr &other) const override;
 
-		/// return -1 if I am smaller, 0 if same, +1 if bigger, then the other address. Compares also across different cable-types
-		int compare(const c_cable_base_addr &other) const override;
+		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
+
+		void print(std::ostream & ostr) const override;
+
+		inline t_addr & get_addr();
+		inline const t_addr & get_addr() const;
+
+	protected:
+		t_addr m_addr;
+		virtual signed char compare_same_class(const c_cable_base_addr & other) const override;
 };
+
+// ===========================================================================================================
+// implementation
+
+inline c_cable_udp_addr::t_addr & c_cable_udp_addr::get_addr() { return m_addr; }
+inline const c_cable_udp_addr::t_addr & c_cable_udp_addr::get_addr() const { return m_addr; }
 
 #endif // cable_UDP_ADDR_HPP

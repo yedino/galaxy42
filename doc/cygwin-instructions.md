@@ -48,20 +48,17 @@ $ git clone https://github.com/yedino/galaxy42.git
 $ cd galaxy42
 $ git submodule update --init
 ```
-#### 2. Set compiler:
-- for 32-bit
+
+#### 2. Checking compiler:
+
+- for 32 bit
 ```sh
-$ export CC=i686-w64-mingw32-gcc
-$ export CXX=i686-w64-mingw32-g++
+$ i686-w64-mingw32-g++ -v
 ```
-- for 64-bitst
+
+- for 64 bit
 ```sh
-$ export CC=x86_64-w64-mingw32-gcc
-$ export CXX=x86_64-w64-mingw32-g++
-```
-  ###### Checking compiler
-```sh
-$ $CXX -v
+$ x86_64-w64-mingw32-g++ -v
 ```
 
   Version must be >= 5.0.0
@@ -70,13 +67,19 @@ $ $CXX -v
 
 
 ### 3. Building
+- for 32 bit
 ``` sh
-$ cmake .
+$ cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_32bit.cmake.in .
 $ make tunserver.elf
 ```
+- for 64 bit
+``` sh
+$ cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_64bit.cmake.in .
+$ make tunserver.elf
+```
+
 For building windows service wrapper
 ```sh
-$ cmake .
 $ make windowsService
 ```
 
@@ -96,20 +99,13 @@ $ make windowsService
 
 ##### Libraries list
 
-- libsodium-18.dll
-- libwinpthread-1.dll
-- libboost_system.dll
-- libboost_program_options.dll
-- libboost_locale-mt.dll
-- libboost_filesystem.dll
-- libstdc++-6.dll
-- libgcc_s_seh-1.dll
-- iconv.dll
-- icui18n57.dll
-- icuuc57.dll
-- icudata57.dll
+- libboost_filesystem-mt.dll
+- libboost_program_options-mt.dll
 - libboost_system-mt.dll
-- libboost_thread-mt.dll
+- libgcc_s_seh-1.dll
+- libsodium-18.dll
+- libstdc++-6.dll
+- libwinpthread-1.dll
 
 ##### Run as Administrator
 - Run cmd as Administrator(right mouse button -> Run as Administrator)

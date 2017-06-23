@@ -58,14 +58,26 @@ TEST(galaxysrv_peers, parse_peer_reference_test) {
 	peers.insert(pair<string, t_parsed_peer>(str, peer));
 
 	str = "anyone@(udp:p.meshnet.pl:9042)";
-	id = {"anyone"};
+	id = {};
 	cable = {"udp:p.meshnet.pl:9042"};
 	peer = t_parsed_peer(id, cable);
 	peers.insert(pair<string, t_parsed_peer>(str, peer));
 
+	str = "Anyone@(udp:p.meshnet.pl:9052)";
+	id = {"Anyone"};
+	cable = {"udp:p.meshnet.pl:9052"};
+	peer = t_parsed_peer(id, cable);
+	peers.insert(pair<string, t_parsed_peer>(str, peer));
+
 	str = "anyone@(bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=99999)";
-	id = {"anyone"};
+	id = {};
 	cable = {"bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=99999"};
+	peer = t_parsed_peer(id, cable);
+	peers.insert(pair<string, t_parsed_peer>(str, peer));
+
+	str = "ANYONE@(bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=9999)";
+	id = {"ANYONE"};
+	cable = {"bitmsg:BM-NBqsBxsE1F1pxAgKpMesHFhTy6UYbcFr,cost=9999"};
 	peer = t_parsed_peer(id, cable);
 	peers.insert(pair<string, t_parsed_peer>(str, peer));
 
@@ -149,6 +161,24 @@ TEST(galaxysrv_peers, parse_peer_reference_test) {
 	str = "anyone@(udp:p.meshnet.pl:9042)";
 	id = {"anyone", ""};
 	cable = {"udp:p.meshnet.pl:9042"};
+	peer = t_parsed_peer(id, cable);
+	incorect_peers.insert(pair<string, t_parsed_peer>(str, peer));
+
+	str = "Anyone@(udp:p.meshnet.pl:9043)";
+	id = {};
+	cable = {"udp:p.meshnet.pl:9043"};
+	peer = t_parsed_peer(id, cable);
+	incorect_peers.insert(pair<string, t_parsed_peer>(str, peer));
+
+	str = "ANYONE@(udp:p.meshnet.pl:9044)";
+	id = {};
+	cable = {"udp:p.meshnet.pl:9044"};
+	peer = t_parsed_peer(id, cable);
+	incorect_peers.insert(pair<string, t_parsed_peer>(str, peer));
+
+	str = "anyone@(udp:p.meshnet.pl:9045)";
+	id = {"anyone"};
+	cable = {"udp:p.meshnet.pl:9045"};
 	peer = t_parsed_peer(id, cable);
 	incorect_peers.insert(pair<string, t_parsed_peer>(str, peer));
 

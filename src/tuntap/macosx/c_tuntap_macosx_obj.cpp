@@ -19,42 +19,80 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
 }
 
 size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) {
-/* OLD STYLE todo - waiting for memory model
-size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
-    boost::system::error_code ec;
-    uint8_t *buf_ptr = static_cast<uint8_t *>(buf);
-    // TUN HEADER
-    buf_ptr[0] = 0x00;
-    buf_ptr[1] = 0x00;
-    buf_ptr[2] = 0x00;
-    buf_ptr[3] = 0x1E;
-
-    //size_t write_bytes = m_stream_handle_ptr->write_some(boost::asio::buffer(buf, count), ec);
-    size_t write_bytes = write(*m_stream_handle_ptr.get(), boost::asio::buffer(buf, count), ec);
-    if (ec) _throw_error_runtime("write to TUN error: " + ec.message());
-    return write_bytes;
+	std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};
+	std::array<boost::asio::const_buffer, 2> buffers;
+	buffers.at(0) = boost::asio::buffer(tun_header);
+	buffers.at(1) = boost::asio::buffer(data, size);
+	try {
+		size_t written_bytes = m_tun_stream.write_some(buffers);
+		if (written_bytes < tun_header.size()) throw std::runtime_error(""); // tun header not written
+		return written_bytes - tun_header.size();
+	} catch (const std::exception &) {
+		return 0;
+	}
 }
-*/
-	return m_tun_stream.write_some(boost::asio::buffer(data, size));
+
+size_t c_tuntap_macosx_obj::send_to_tun_separated_addresses(
+		const unsigned char * const data,
+		size_t size,
+		const std::array<unsigned char, IPV6_LEN> &src_binary_address,
+		const std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
+			_check_input(size >= 8);
+			std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};
+			std::array<boost::asio::const_buffer, 5> buffers;
+			buffers.at(0) = boost::asio::buffer(tun_header.data(), tun_header.size());
+			buffers.at(1) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
+			buffers.at(2) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
+			buffers.at(3) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
+			buffers.at(4) = boost::asio::buffer(data + 8, size - 8);
+			try {
+				size_t written_bytes = m_tun_stream.write_some(buffers);
+					if (written_bytes < tun_header.size()) throw std::runtime_error(""); // tun header not written
+					return written_bytes - tun_header.size();
+			} catch (const std::exception &) {
+				return 0;
+			}
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t size) {
-/* OLD STYLE todo - waiting for memory model
-size_t c_tun_device_apple::read_from_tun(void *buf, size_t count) {
-    assert(m_readed_bytes > 0);
-    if(m_readed_bytes > count) _throw_error_runtime("undersized buffer");
-    // TUN header
-    m_buffer[0] = 0x00;
-    m_buffer[1] = 0x00;
-    m_buffer[2] = 0x86;
-    m_buffer[3] = 0xDD;
-    std::copy_n(&m_buffer[0], m_readed_bytes, static_cast<uint8_t *>(buf));
-    size_t ret = m_readed_bytes;
-    m_readed_bytes = 0;
-    return ret;
+	std::array<boost::asio::mutable_buffer, 2> buffers;
+	std::array<unsigned char, 4> tun_header;
+	buffers.at(0) = boost::asio::buffer(tun_header);
+	buffers.at(1) = boost::asio::buffer(data, size);
+	try {
+		size_t readed_bytes = m_tun_stream.read_some(buffers);
+		if (readed_bytes < tun_header.size()) throw std::runtime_error("");
+		return readed_bytes - tun_header.size();
+	} catch (const std::exception &) {
+		return 0;
+	}
+/*	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x86;
+	data[3] = 0xDD;*/
 }
-*/
-	return m_tun_stream.read_some(boost::asio::buffer(data, size));
+
+size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
+		unsigned char * const data,
+		size_t size, std::array<unsigned char, IPV6_LEN> &src_binary_address,
+		std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
+			// field sizes based on rfc2460
+			// https://tools.ietf.org/html/rfc2460
+			_check_input(size > 8); // it must be strictly > 8, since we access 8th element below (data+8)
+			std::array<unsigned char, 4> tun_header;
+			std::array<boost::asio::mutable_buffer, 5> buffers;
+			buffers.at(0) = boost::asio::buffer(tun_header.data(), tun_header.size());
+			buffers.at(1) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
+			buffers.at(2) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
+			buffers.at(3) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
+			buffers.at(4) = boost::asio::buffer(data + 8, size - 8); // 8 first bytes of 'data' are filled using buffers.at(0)
+			try {
+				size_t readed_bytes = m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+				if (readed_bytes < tun_header.size()) throw std::runtime_error("");
+				return readed_bytes - tun_header.size();
+			} catch (const std::runtime_error &) {
+				return 0;
+			}
 }
 
 void c_tuntap_macosx_obj::async_receive_from_tun(unsigned char * const data,
@@ -129,6 +167,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
 	m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
+	_dbg1("interface name " << m_ifr_name);
 	return tun_fd;
 }
 
@@ -137,6 +176,7 @@ void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &
 
 	_check_input(binary_address[0] == 0xFD);
 	_check_input(binary_address[1] == 0x42);
+	_dbg1("set ip addres for interface name " << m_ifr_name);
 	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
 }
 

@@ -119,7 +119,7 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	trivialserialize::generator gen(data_size + 50);
 	gen.push_byte_u( c_protocol::current_version );
-	gen.push_byte_u( c_protocol::e_proto_cmd_tunneled_data );
+	gen.push_byte_u( enum_to_int_safe<unsigned char>(c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) );
 	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
 	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
 	gen.push_byte_u( ttl );
@@ -167,10 +167,10 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 }
 
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
-	_info("Send to peer (COMMAND): command="<<static_cast<int>(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
+	_info("Send to peer (COMMAND): command="<<enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
 	string_as_bin raw;
     raw.bytes += c_protocol::current_version;
-    raw.bytes += cmd;
+    raw.bytes += enum_to_int_safe<unsigned char>(cmd);
 	raw.bytes += bin.bytes;
 	this->send_data_RAW_udp(raw.bytes.c_str(), raw.bytes.size(), udp_socket);
 }

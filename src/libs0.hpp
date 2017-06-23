@@ -1,8 +1,22 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 #ifndef LIBS0_HPP
 #define LIBS0_HPP
+
+/**
+
+@file Libs0 is collection of basic commonly used library parts (global as well as local libraries),
+parts that developers of this project expect to be always ready to be used, e.g. most common containers, memory, debug.
+1) It included them,
+2) and it makes it available in global namespace by "using N::X", and occasionally by "using namespace N".
+
+Also, some entities (macros, functions, classes) are still defined here directly, how ever this will be eventually cleared out,
+moved into e.g. src/utils/... and src/stdplus/... and this file will be purely includes+usings.
+@owner rfree
+
+*/
+
 
 #include "project.hpp"
 
@@ -32,13 +46,18 @@
 #include <regex>
 #include <type_traits>
 
-#include <boost/numeric/conversion/cast.hpp>
-
 #include "tnetdbg.hpp"
 #include "strings_utils_simple.hpp"
 #include "mo_reader.hpp"
+#include "platform.hpp"
 
 #include "utils/check.hpp"
+
+#include <utils/unused.hpp>
+
+#include "stdplus/misc.hpp"
+#include "mutex.hpp" // clang thread safety analysis
+#include "stdplus/eint.hpp"
 
 using std::string;
 using std::shared_ptr;
@@ -66,12 +85,19 @@ using boost::numeric_cast;
 using std::runtime_error;
 using std::invalid_argument;
 
-#define UNUSED(expr) do { (void)(expr); } while (0)
+using std::make_unique;
+
+using stdplus::eint::eint_minus;
+
+using namespace std::string_literals; // <=== using entire namespace
+
+
+using namespace stdplus;
+
 #define SVAR(x) #x << " = " << x
 
 
-
-// === RELEASE OPTIONS ===
+// === RELEASE OPTIONS === (release/debug mode flags)
 #if defined (RELEASEMODE_)
 	#define OPTION_DEBUG_SHOW_SECRET_STRINGS 0
 #else
@@ -93,8 +119,7 @@ using std::invalid_argument;
 	#endif
 #endif
 
-// ??? decide: XXX
-#include "tnetdbg.hpp"
+// ==================================================================
 
 // --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
 /***
@@ -116,141 +141,9 @@ inline bool size_t_is_ok(size_t x) {
 }
 // -----------------------------------------
 
-// extending the std with helpfull tools
-namespace std {
-
 
 /*
-// this is due to enter C++14
-// http://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique (Args &&... args) {
-		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-*/
-
-}
-
-using std::make_unique;
-
-
-// extending the std with helpfull tools - by own idea
-namespace stdplus {
-
-template <typename T, typename U>
-T& unique_cast_ref(std::unique_ptr<U> & u) {
-	return dynamic_cast<T&>( * u.get() );
-}
-
-template <typename T, typename U>
-T* unique_cast_ptr(std::unique_ptr<U> & u) {
-	return dynamic_cast<T*>( u.get() );
-}
-
-template <typename T>
-std::string STR(const T & obj) {
-	std::ostringstream oss;
-	oss << obj;
-	return oss.str();
-}
-
-/// For exceptions that are not errors, but are expected
-/// alternative situation in program.
-class expected_exception : public std::exception {
-	public:
-		const char* what() const noexcept override;
-};
-
-/// Throw this if some element was not found, but this is normal situation.
-/// E.g. when public-key was not yet created at all (to differentiate
-/// from case where public-key was found but can not be loaded due to format errors etc)
-class expected_not_found : public stdplus::expected_exception {
-	public:
-		const char* what() const noexcept override;
-};
-
-
-template <typename TE, typename TI>
-TE int_to_enum(TI i) {
-	TE e = static_cast<TE>(i);
-	TI i_check = static_cast<TI>(e);
-	if (i_check != i) {
-		std::string err = "Can not convert integer " + std::to_string(i)
-		+ std::string(" to enum of type ") + std::string(typeid(TE).name())
-		+ std::string(" because it is truncated to other value: ") + std::to_string( i_check )
-		;
-		throw std::runtime_error(err);
-	}
-	return e;
-}
-
-std::string to_string(const std::string & v); ///< just to have identical syntax
-
-template<typename T> constexpr bool templated_always_false() { return false; }
-
-
-// === ranges, copy ===
-
-/**
- * @brief Checks if the range [start1,end1) overlaps (intersects) with range [start2,end2),
- * name "oc" is for Open,Closed range, name "ne" is for Not-Empty,
- * and asserted means that we assert validity of input data.
- * @note It assumes that ranges are properly defined end not-empty, that is: start1<end1 && start2<end2
- */
-
-#if defined (__MINGW32__)
-	#undef _assert
-#endif
-template <typename TIn, typename TOut> bool ranges_overlap_oc_ne_asserted(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
-	assert( (start1<end1) );
-	assert( (start2<end2) );
-	return ( start1 < end2 && start2 < end1 );
-}
-
-/**
- * @brief This asserts that range [start1,end1) does not overlap with range [start2,end2).
- * @note It asserts also that the given ranges are not-empty and valid (start<end).
- */
-template <typename TIn, typename TOut> void assert_not_ranges_overlap_oc_ne(TIn start1, TIn end1,  TOut start2, TOut end2) noexcept {
-	_UNUSED(start1);
-	_UNUSED(end1);
-	_UNUSED(start2);
-	_UNUSED(end2);
-	assert( ! ranges_overlap_oc_ne_asserted(start1,end1, start2,end2) );
-}
-
-/**
- * Very safe copy of memory from range [first..last) into [d_first, d_first+size)
- * It asserts following conditions:
- * - the memory ranges must not overlap
- * - they must be not-empty and valid (begin < end)
- * - the size given as argument must match the size of range [first..last)
- */
-template <typename TIn, typename TOut> void copy_and_assert_no_overlap_size(TIn first, TIn last, TOut d_first, size_t size) {
-	assert( boost::numeric_cast<size_t>(last-first) == size); // is size as expected
-	// check if the memory ranges do not overlap by any chance:
-	assert_not_ranges_overlap_oc_ne(first,last, d_first,d_first+size);
-	std::copy(first,last, d_first); // ***
-}
-
-
-} // namespace
-
-
-using namespace stdplus;
-
-
-namespace tunserver_utils {
-
-std::pair< std::string,int > parse_ip_string(const string& ip_string);
-
-}
-
-
-using namespace std::string_literals;
-
-#define PTR(X) (PTR_assert(X, __func__))
-template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
+template <typename T> const T & PTR_assert(const T & ptr, const char *func) {
 	if (!(ptr!=nullptr)) {
 		_erro("NULL pointer used! from func="<<func);
         throw std::invalid_argument("Null pointer");
@@ -259,17 +152,15 @@ template <typename T> const T & PTR_assert(const T & ptr,const char *func) {
 	}
 	return ptr;
 }
+*/
 
 
-#define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
-<<__func__<<" (line "<<__LINE__<<")"; \
-_erro(oss.str()); \
-throw std::runtime_error(oss.str()); \
-} while(0)
-
-#endif
 #if defined(_MSC_VER)
 const char * gettext(const char * s);
 char * bindtextdomain(const char * domainname, const char * dirname);
 char * textdomain(const char * domainname);
+#endif
+
+
+
 #endif

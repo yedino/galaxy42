@@ -124,6 +124,10 @@ const char * g_demoname_default = "route_dij";
 
 #include "tunserver.hpp"
 
+#include "utils/privileges.hpp"
+#include <boost/any.hpp>
+
+
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 //const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
@@ -338,7 +342,7 @@ void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) 
 	data += string(1, static_cast<char>(byte_highest_ttl) );
 	data += string(";");
 
-	galaxy_node.nodep2p_foreach_cmd( c_protocol::e_proto_cmd_findhip_query , data );
+	galaxy_node.nodep2p_foreach_cmd( c_protocol::t_proto_cmd::e_proto_cmd_findhip_query , data );
 
 	m_ttl_used = byte_highest_ttl;
 	m_ask_time = std::chrono::steady_clock::now();
@@ -387,7 +391,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
-c_tunserver::c_tunserver(int port, int rpc_port)
+c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
 :
 	m_my_name("unnamed-tunserver")
 	,m_udp_device(port)
@@ -396,7 +400,9 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
+	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
 {
+	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
 	});
@@ -405,8 +411,15 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	});
 }
 
+boost::program_options::variables_map c_tunserver::get_default_early_argm() {
+	boost::program_options::variables_map early_argm;
+	boost::any x(false);
+	early_argm.insert( std::make_pair("insecure-cap"  ,  boost::program_options::variable_value(false,false) ) );
+	return early_argm;
+}
+
 #ifdef HTTP_DBG
-std::mutex & c_tunserver::get_my_mutex() const {
+Mutex & c_tunserver::get_my_mutex() const {
 	return this->m_my_mutex; // TODO or const-cast here? from mutable?
 }
 #endif
@@ -416,7 +429,9 @@ void c_tunserver::set_desc(shared_ptr< boost::program_options::options_descripti
 }
 
 void c_tunserver::set_argm(shared_ptr< boost::program_options::variables_map > argm) {
-    m_argm = argm;
+	_check(argm);
+	m_argm = argm;
+  _check( m_option_insecure_cap == UsePtr(m_argm).at("insecure-cap").as<bool>() ); // should not change (e.g. vs ctor early_argm)
 }
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
@@ -431,7 +446,7 @@ string c_tunserver::get_my_ipv6_nice() const {
 
 
 int c_tunserver::get_my_stats_peers_known_count() const {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_mutex);
 	return m_peer.size();
 }
 
@@ -513,7 +528,7 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
-		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_mutex);
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	}
 }
@@ -535,7 +550,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
 
 	{ // lock
-		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_mutex);
 
 		try {
 			_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
@@ -700,7 +715,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 }
 
 void c_tunserver::peering_ping_all_peers() {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_mutex);
 	auto now = std::chrono::steady_clock::now();
 	_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
@@ -735,13 +750,13 @@ void c_tunserver::peering_ping_all_peers() {
 		gen.push_varstring( m_IDI_IDC_sig.serialize_bin());
 		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
-		peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_public_hi, cmd_data, m_udp_device.get_socket());
+		peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_public_hi, cmd_data, m_udp_device.get_socket());
 	}
 }
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -750,7 +765,7 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 }
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_mutex);
 	auto peer_iter = m_peer.find(addr);
 	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
 	c_peering & peer = * peer_iter->second;
@@ -761,11 +776,11 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 }
 
 void c_tunserver::debug_peers() {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
-	if (!m_peer.size()) _stat("You have no peers currently.");
+	LockGuard<Mutex> lg(m_peer_mutex);
+	if (!m_peer.size()) _fact("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_stat("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
+		_fact("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -788,7 +803,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 
 	// find c_peering to send to // TODO(r) this functionallity will be soon
 	// doubled with the route search in m_routing_manager below, remove it then
-	std::unique_lock<std::mutex> lg(m_peer_mutex);
+	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
@@ -845,7 +860,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 }
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
-	std::lock_guard<std::mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_mutex);
 	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
@@ -889,7 +904,7 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
 	std::ostringstream oss;
-	std::unique_lock<std::mutex> lg(m_peer_mutex);
+	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	for (const auto &peer : m_peer) {
 		oss << peer.second->get_pip();
 		oss << "-";
@@ -933,11 +948,10 @@ void c_tunserver::event_loop(int time) {
 	constexpr size_t buf_size=65536;
 	char buf[buf_size];
 
-	bool anything_happened=false; // in given loop iteration, for e.g. debug
 
 	bool was_connected=true;
 	{
-		std::lock_guard<std::mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_mutex);
 		if (! m_peer.size()) {
 			was_connected=false;
 			ui::action_info_ok(mo_file_reader::gettext("L_wait_for_connect"));
@@ -952,13 +966,15 @@ void c_tunserver::event_loop(int time) {
 	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
 
 	while (time ? timer(time) : true) {
+		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+
 		try { // ---
 
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
-			std::unique_lock<std::mutex> lg(m_peer_mutex);
+			UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 			if (m_peer.size()) { // event: conntected now
 				lg.unlock();
 				was_connected=true;
@@ -992,8 +1008,6 @@ void c_tunserver::event_loop(int time) {
 			_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
 		*/
-
-		anything_happened=false;
 
 		m_event_manager.wait_for_event();
 
@@ -1083,7 +1097,7 @@ void c_tunserver::event_loop(int time) {
 			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) );
 			// let's assume we will be backward compatible (but this will be not the case untill official stable version probably)
 			if (c_protocol::current_version < proto_version) throw std::runtime_error("proto_version too new!");
-			c_protocol::t_proto_cmd cmd = static_cast<c_protocol::t_proto_cmd>( buf[1] );
+			c_protocol::t_proto_cmd cmd = int_to_enum<c_protocol::t_proto_cmd>( buf[1] );
 
 			// recognize the peering HIP/CA (cryptoauth is TODO)
 			c_haship_addr sender_hip;
@@ -1095,9 +1109,9 @@ void c_tunserver::event_loop(int time) {
                 sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
-			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << cmd << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
+			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << enum_to_int(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
-			if (cmd == c_protocol::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
+			if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
 				_dbg1("Tunneled data");
 
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() , buf, size_read );
@@ -1243,7 +1257,7 @@ void c_tunserver::event_loop(int time) {
 				}
 
 			} // e_proto_cmd_tunneled_data
-			else if (cmd == c_protocol::e_proto_cmd_public_hi) { // [protocol]
+			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_public_hi) { // [protocol]
 				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
 				size_t offset1=2; assert( size_read >= offset1); // skip CMD headers (TODO instead use one parser)
 
@@ -1284,7 +1298,7 @@ void c_tunserver::event_loop(int time) {
 				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
 			}
 			}
-			else if (cmd == c_protocol::e_proto_cmd_findhip_query) { // [protocol]
+			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_findhip_query) { // [protocol]
 				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 				size_t offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
@@ -1336,7 +1350,7 @@ void c_tunserver::event_loop(int time) {
 							<< sender_as_peering_ptr
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
-						peer_udp->send_data_udp_cmd(c_protocol::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
+						peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
                         //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 						_dbg1("send route response to " << sender_pip);
@@ -1354,7 +1368,7 @@ void c_tunserver::event_loop(int time) {
 				}
 
 			}
-			else if (cmd == c_protocol::e_proto_cmd_findhip_reply) { // [protocol]
+			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply) { // [protocol]
 				_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
 				// TODO-NOW format with hip etc
 				// TODO-NOW here we will parse pubkey probably
@@ -1396,7 +1410,7 @@ void c_tunserver::event_loop(int time) {
 				}
 			}
 			else {
-				_warn("??????????????????? Unknown protocol command, cmd="<<cmd);
+				_warn("??????????????????? Unknown protocol command, cmd=" << enum_to_int(cmd));
 				continue; // skip this packet (main loop)
 			}
 			// ------------------------------------
@@ -1415,7 +1429,7 @@ void c_tunserver::event_loop(int time) {
 
 			if (doit) {
 				time_last_idle = make_unique<decltype(time_now)>( time_now );
-				_stat("Status: " << node_title_bar);
+				_fact("Status: " << node_title_bar);
 				debug_peers();
 			}
 		}
@@ -1442,10 +1456,24 @@ void c_tunserver::event_loop(int time) {
 }
 
 void c_tunserver::run(int time) {
-	std::cout << mo_file_reader::gettext("L_starting_TUN") << std::endl;
+	_goal(mo_file_reader::gettext("L_starting_TUN"));
 
-	prepare_socket();
-	event_loop(time);
+	{
+		_fact("Will now prepare socket");
+		prepare_socket();
+		if (!m_option_insecure_cap) {
+			my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
+		} else _warn("NOT dropping CAP capability (program options?)");
+	}
+
+	{
+		if (!m_option_insecure_cap) {
+			my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+		} else _warn("NOT dropping CAP capability (program options?)");
+		_fact("Will now enter main event loop");
+		event_loop(time);
+		_fact("After main event loop");
+	}
 }
 
 

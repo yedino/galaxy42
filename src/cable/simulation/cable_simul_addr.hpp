@@ -6,18 +6,22 @@
 
 class c_cable_simul_addr : public c_cable_base_addr {
 	public:
-		typedef int t_addr; ///< actuall type of my raw address. Instace of this will be in m_addrdata (::any)
+		using t_addr = int; ///< actuall type of my raw address. Instace of this will be in m_addrdata (::any)
 
 		c_cable_simul_addr(t_addr uuid);
+		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
 
-		virtual void print(ostream & ostr) const ;
+		virtual void print(ostream & ostr) const override;
 
-		std::string cable_type_name() const override; ///< return name of type of this cable, e.g.: "tcp" "udp" "ETH" "shm"
+		inline t_addr get_addr() const;
 
-		/// is my address the same (cable type, and address) to another.
-		virtual bool is_same(const c_cable_base_addr &other) const;
-
-		/// return -1 if I am smaller, 0 if same, +1 if bigger, then the other address. Compares also across different cable-types
-		virtual int compare(const c_cable_base_addr &other) const;
+	protected:
+		t_addr m_addr;
+		virtual signed char compare_same_class(const c_cable_base_addr & other) const override;
 };
+
+// ===========================================================================================================
+// implementation
+
+inline c_cable_simul_addr::t_addr c_cable_simul_addr::get_addr() const { return m_addr; }
 

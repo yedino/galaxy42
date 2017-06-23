@@ -7,6 +7,7 @@
 class c_the_program_newloop_pimpl;
 
 /// The object of main program. Usually just one object should exist per the process (unless you know what you're doing)
+/// This is the new-loop (with threads etc)
 class c_the_program_newloop : public c_the_program_tunserver {
 	public:
 		c_the_program_newloop();
@@ -28,6 +29,9 @@ class c_the_program_newloop : public c_the_program_tunserver {
 	protected:
 		bool m_pimpl_deleted = false; ///< assert: was delete yet called on pimpl? to avoid deleting it twice by mistake
 		c_the_program_newloop_pimpl * const pimpl;
+
+		std::tuple<bool,int> base_options_commands_run() override;
+		std::tuple<bool,int> programtask_help(const string & topic);
 
 		FRIEND_TEST(the_program_new_loop, use_options_peerref);
 };

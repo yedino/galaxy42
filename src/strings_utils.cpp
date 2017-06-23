@@ -238,3 +238,11 @@ bool is_ascii_normal(const std::string str){
 	else
 		return false;
 }
+
+std::wstring cstring_to_wstring(const char *cstr) {
+	const size_t cstr_size = strlen(cstr)+1;
+	std::wstring wc(cstr_size,0);
+	mbstowcs(&wc[0], cstr, cstr_size);
+
+	return wc;
+}
