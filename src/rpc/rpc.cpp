@@ -14,7 +14,7 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 	m_io_service(),
 	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
 	m_socket(m_io_service),
-	m_thread_ptr(nullptr),
+	m_thread(),
 	m_hmac_key()
 {
 	m_hmac_key.fill(0x42); // TODO load this from conf file
@@ -23,7 +23,7 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 		accept_handler(error);
 	});
 	_dbg("Starting RPC server thread");
-	m_thread_ptr = make_unique<std::thread>([this]() {
+	m_thread = std::thread([this]() {
 		_dbg("RPC thread start");
 		try {
 			boost::system::error_code ec;
@@ -42,20 +42,14 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 
 		_dbg("RPC thread stop");
 	}); // lambda
-	if (!m_thread_ptr)
-		throw std::runtime_error("Can not start rpc server thread");
 }
 
 c_rpc_server::~c_rpc_server() {
 	_dbg("rpc server destructor");
 	m_io_service.stop();
 	_dbg("io service stopped, join thread");
-	if (m_thread_ptr) {
-		m_thread_ptr->join();
-		_dbg("thread joined");
-	} else {
-		_dbg("thread pointer == nullptr, thread not joined");
-	}
+	m_thread.join();
+	_dbg("thread joined");
 }
 
 void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::string&)> &&function) {
