@@ -89,7 +89,7 @@ c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip
 	m_write_data()
 {
 	// start reading size (2 bytes)
-	async_read(m_socket, boost::asio::buffer(&m_data_size[0], m_data_size.size()),
+	async_read(m_socket, boost::asio::buffer(&m_data_size.at(0), m_data_size.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler_size(error, bytes_transferred);
 	});
@@ -107,10 +107,10 @@ void c_rpc_server::c_session::read_handler_size(const boost::system::error_code 
 		delete_me();
 		return;
 	}
-	uint16_t message_size = static_cast<uint16_t>(m_data_size[0] << 8);
-	message_size += m_data_size[1];
+	uint16_t message_size = static_cast<uint16_t>(m_data_size.at(0) << 8);
+	message_size += m_data_size.at(1);
 	m_received_data.resize(message_size, 0); // prepare buffer for message
-	async_read(m_socket, boost::asio::buffer(&m_received_data[0], m_received_data.size()),
+	async_read(m_socket, boost::asio::buffer(&m_received_data.at(0), m_received_data.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler(error, bytes_transferred);
 	});
@@ -145,7 +145,7 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 			return;
 		}
 		// continue reading
-		async_read(m_socket, boost::asio::buffer(&m_data_size[0], m_data_size.size()),
+		async_read(m_socket, boost::asio::buffer(&m_data_size.at(0), m_data_size.size()),
 			[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 				read_handler_size(error, bytes_transferred);
 		});
@@ -183,10 +183,10 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		assert(response.size() <= std::numeric_limits<uint16_t>::max());
 		uint16_t size = static_cast<uint16_t>(response.size());
 		m_write_data.resize(size + 2); ///< 2 first bytes for size
-		m_write_data[0] = static_cast<char>(size >> 8);
-		m_write_data[1] = static_cast<char>(size & 0xFF);
+		m_write_data.at(0) = static_cast<char>(size >> 8);
+		m_write_data.at(1) = static_cast<char>(size & 0xFF);
 		for (size_t i = 0; i < response.size(); ++i)
-			m_write_data[i + 2] = response[i];
+			m_write_data.at(i + 2) = response.at(i);
 		// send response
 
 		_dbg("send packet");
@@ -195,11 +195,11 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		int ret = crypto_auth_hmacsha512(hash.data(), reinterpret_cast<unsigned char *>(&m_write_data.at(2)), size, m_rpc_server_ptr->m_hmac_key.data());
 		if (ret != 0) _throw_error(std::runtime_error("crypto_auth_hmacsha512 error"));
 		_dbg("hmac");
-		for (const auto & byte : hash) std::cout << std::hex << "0x" << static_cast<int>(byte) << " ";
-		std::cout << std::dec << std::endl;
+		//for (const auto & byte : hash) std::cout << std::hex << "0x" << static_cast<int>(byte) << " ";
+		//std::cout << std::dec << std::endl;
 		std::array<boost::asio::const_buffer, 2> buffers = {
-			boost::asio::buffer(m_write_data.data(), m_write_data.size()),
-			boost::asio::buffer(hash.data(), hash.size())
+			{boost::asio::buffer(m_write_data.data(), m_write_data.size()),
+			boost::asio::buffer(hash.data(), hash.size())}
 		};
 		m_socket.async_write_some(buffers,
 			[this](const boost::system::error_code& error, std::size_t bytes_transferred) {
