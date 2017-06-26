@@ -8,7 +8,6 @@
 #include <functional>
 #include <list>
 #include <map>
-#include <memory>
 #include "../mutex.hpp"
 #include <string>
 #include <thread>
@@ -40,7 +39,7 @@ class c_rpc_server final {
 		boost::asio::io_service m_io_service;
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket;
-		std::unique_ptr<std::thread> m_thread_ptr;
+		std::thread m_thread;
 		Mutex m_session_vector_mutex;
 		std::list<c_session> m_session_list;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
@@ -62,6 +61,7 @@ class c_rpc_server final {
 				std::string m_received_data;
 				std::string m_write_data;
 				std::array<unsigned char, 2> m_data_size; // always first 2 bytes of packet == message size
+				std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key;
 
 				void read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred); ///< data readed to m_read_data_size
 				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
