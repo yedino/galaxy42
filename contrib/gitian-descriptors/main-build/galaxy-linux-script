@@ -5,26 +5,19 @@ set -o errexit
 set -o nounset
 
 
-function_fdfix () {
-	echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
-	sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
-}
-function_fdfix
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-
-readonly OUTDIR="$1"
-export OUTDIR
-
-readonly GALAXY_DIR="/home/ubuntu/build/galaxy42/"
-readonly BUILD_DIR="/home/ubuntu/build/" # where deps are built
-
-readonly WRAP_DIR="$HOME/wrapped"
+export readonly TARGET_ARCH="x86_64-linux-gnu"
+export FAKETIME="$REFERENCE_DATETIME"
 
 # import functions
 . "${GALAXY_DIR}"/share/script/lib/fail.sh
 . "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
+. "${GALAXY_DIR}"/share/script/lib/fdfix.sh
 
-export FAKETIME="$REFERENCE_DATETIME"
+# fix for /dev/fd
+fdfix
 
 # variable from above yml config
 echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
@@ -37,7 +30,7 @@ echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
 ### https://github.com/bitcoin/bitcoin/blob/0d0abcac1efeb94f441aa13714ba01ccfacc05c0/COPYING
 
 ##HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
-HOSTS="x86_64-linux-gnu"
+HOSTS="x86_64-linux-gnu"  # because of one host, HOSTS == TARGET_ARCH
 
 COMPILERS="g++ gcc"
 
@@ -137,34 +130,17 @@ EOF
   # CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/ # needed for hosts?
 
 
-  printf "\n\n\nDoing boost static build\n\n\n"
-
-  printf "\nTEST TOOLS (in linux script):\n"
-  set -x
-  which gcc
-  which ar
-  which ranlib
-  gcc -v || fail "test gcc"
-  g++ -v || fail "test g++"
-  ar --version || fail "test ar"
-  ranlib --version || fail "test ranlib"
-  g++ -print-prog-name=ar
-  set +x
-  printf "\n\n"
-
-#  printf "\n\n\n=== TEST SHELL - TRY IF GCC WORKS HERE ===\n"
-# sh
-# printf "\n\n=== EXITED TEST SHELL ==="
-# sleep 1 # XXX
+# ** building boost **
+export readonly BOOST_BUILD_DIR="${BUILD_DIR}/${TARGET_ARCH}-build"
 
 pushd "${GALAXY_DIR}" || fail
-	contrib/gitian-descriptors/libboost-build/build-boost-static || fail "Failed to build dependence - static boost lib"
+	contrib/gitian-descriptors/libboost-build/build-boost-multiarch || fail "Failed to build dependence - boost lib for ${TARGET_ARCH}"
 popd || fail
-
 echo "\nAll done regarding boost.\n"
 
+
 # *** main build starts here ***
-pushd galaxy42
+pushd "${GALAXY_DIR}" || fail
 	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
 
 	git clean -fdx
@@ -172,7 +148,7 @@ pushd galaxy42
 	COVERAGE=0 \
 	EXTLEVEL=0 \
 	BUILD_STATIC=1 \
-	BUILD_SET_BOOST_ROOT="$BUILD_DIR/boost/static-build/" \
+	BUILD_SET_BOOST_ROOT="${BOOST_BUILD_DIR}" \
 	./do --go \
 		|| fail "Failed to do the main build of our project"
 

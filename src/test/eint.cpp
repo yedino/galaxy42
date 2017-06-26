@@ -31,6 +31,7 @@ TEST(eint, aggrinit_narrow_uchar) {
 TEST(eint, aggrinit_narrow_init) {
 	unsigned int u1=250,u2=251;
 	unsigned int c{ u1-u2 }; // bad: no-compile-error
+	volatile auto unused = c;
 	// this shows why we need eint lib: above code using trivian types
 	// does not report runtime nor compile time error
 }

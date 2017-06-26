@@ -26,7 +26,7 @@
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
 c_is_user_admin::c_is_user_admin() {
-	/*++
+	/**
 		Routine Description: This routine returns TRUE if the caller's
 		process is a member of the Administrators local group. Caller is NOT
 		expected to be impersonating anyone and is expected to be able to
@@ -85,11 +85,14 @@ size_t c_tuntap_windows_obj::read_from_tun(unsigned char *const data, size_t siz
 	std::array<unsigned char, 14 + 40 + 65535> input_buffer;
 	const unsigned char * const ipv6_begin = input_buffer.data();
 	size_t readed_size = m_stream_handle.read_some(boost::asio::buffer(input_buffer.data(), input_buffer.size()));
+	if (readed_size < (14 + 40)) return 0; // packet is smaller than eth header + ipv6 header, ignoring
 	if (c_ndp::is_packet_neighbor_solicitation(input_buffer.data(), readed_size)) {
 		const std::array<unsigned char, 94> neighbor_advertisement_packet_array = c_ndp::generate_neighbor_advertisement_new(m_mac_address, input_buffer);
 		m_stream_handle.write_some(boost::asio::buffer(neighbor_advertisement_packet_array));
 		return 0;
 	}
+	if ((input_buffer.at(22) != 0xFD) || (input_buffer.at(23) != 0x42)) return 0; // check ipv6 src address
+	if ((input_buffer.at(38) != 0xFD) || (input_buffer.at(39) != 0x42)) return 0; // check ipv6 dst address
 	std::copy_n(input_buffer.begin() + 14, readed_size - 14, data); // without eth header
 	return readed_size - 14;
 }
@@ -101,13 +104,13 @@ size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
 		std::array<unsigned char, 14 + 40 + 65535> input_buffer; // eth header + ipv6 header + max ipv6 payload
 		size_t readed_bytes = read_from_tun(input_buffer.data(), input_buffer.size());
 		if (readed_bytes == 0) return 0;
-		auto ipv6_header_begin = input_buffer.begin() + 14;
+		auto ipv6_header_begin = input_buffer.begin();
 		// copy addresses
 		std::copy(ipv6_header_begin + 8, ipv6_header_begin + 24, src_binary_address.begin());
 		std::copy(ipv6_header_begin + 24, ipv6_header_begin + 40, dst_binary_address.begin());
 		// copy content without addresses
 		std::copy(ipv6_header_begin, ipv6_header_begin + 8, data); // before addresses
-		size_t ipv6_payload_size = readed_bytes - 14 - 40; // size of received bytes without eth and ipv6 header
+		size_t ipv6_payload_size = readed_bytes - 40; // size of received bytes without ipv6 header
 		std::copy(ipv6_header_begin + 40, ipv6_header_begin + 40 + ipv6_payload_size, data + 8);
 		return readed_bytes - src_binary_address.size() - dst_binary_address.size();
 }

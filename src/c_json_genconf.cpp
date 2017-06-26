@@ -14,7 +14,7 @@ void c_json_genconf::genconf() {
 void c_json_genconf::generate_galaxy_conf(const std::string &filename) {
 	std::ofstream conf_file (filename, std::ios::out | std::ios::binary);
 	if(conf_file.is_open()) {
-		std::cout << "Generating main configuration file: " << filename << std::endl;
+		_info("Generating main configuration file: " << filename);
 
 		conf_file << "{\n";
 		conf_file << "\t// Your private key - the private key should be at bottom of this file.\n";
@@ -33,15 +33,14 @@ void c_json_genconf::generate_galaxy_conf(const std::string &filename) {
 		conf_file << "\t\t\"connect_from.my.conf\"\t// <--- do not modify this line. Thanks to it, you can insert the new passwords in this file.\n";
 		conf_file << "\t],\n";
 		conf_file << "\n";
-		conf_file << "\t/* EXAMPLE DATA FOR FRIEND:\n";
-		conf_file << "--- Give your friend this text, after filling in the fields marked with XXX ----\n";
-		conf_file << "\t\"XXX_HERE_WRITE_YOUR_OWN_IP_ADDRESS_OR_DOMAIN:9042\": {\n";
-		conf_file << "\t\t\"password\": \"XXX_HERE_WRITE_ONE_OF_THE_PASSWORDS_ABOVE\",\n";
-		conf_file << "\t\t\"publicKey\": \"ed25519:1111111112222222233333333344444444445555555666666666.k\",\n";
-		conf_file << "\t\t\"ipv6\": \"fd42:aaaa:bbbb:cccc:aaaa:bbbb:cccc:dddd\",\n";
-		conf_file << "\t}\n";
-		conf_file << "--- above is for friend ---\n";
-		conf_file << "\t*/\n";
+		conf_file << "//\t EXAMPLE DATA FOR FRIEND:\n";
+		conf_file << "//--- Give your friend this text, after filling in the fields marked with XXX ----\n";
+		conf_file << "//\t\"XXX_HERE_WRITE_YOUR_OWN_IP_ADDRESS_OR_DOMAIN:9042\": {\n";
+		conf_file << "//\t\t\"password\": \"XXX_HERE_WRITE_ONE_OF_THE_PASSWORDS_ABOVE\",\n";
+		conf_file << "//\t\t\"publicKey\": \"ed25519:1111111112222222233333333344444444445555555666666666.k\",\n";
+		conf_file << "//\t\t\"ipv6\": \"fd42:aaaa:bbbb:cccc:aaaa:bbbb:cccc:dddd\",\n";
+		conf_file << "//\t}\n";
+		conf_file << "//--- above is for friend ---\n";
 		conf_file << "\n";
 		conf_file << "\t\"connectTo\" : [\n";
 		conf_file << "\t// --- below --- insert the credentials from friends\n";
@@ -63,7 +62,7 @@ void c_json_genconf::generate_galaxy_conf(const std::string &filename) {
 void c_json_genconf::generate_authpass_conf(const std::string &filename) {
 	std::ofstream conf_file (filename, std::ios::out | std::ios::binary);
 	if(conf_file.is_open()) {
-		std::cout << "Generating authorized passwords configuration file: " << filename << std::endl;
+		_info("Generating authorized passwords configuration file: " << filename);
 
 		conf_file << "{\n";
 		conf_file << "\t\"authorizedPasswords\" : [\n";
@@ -84,23 +83,21 @@ void c_json_genconf::generate_authpass_conf(const std::string &filename) {
 void c_json_genconf::generate_connectto_conf(const std::string &filename) {
 	std::ofstream conf_file (filename, std::ios::out | std::ios::binary);
 	if(conf_file.is_open()) {
-		std::cout << "Generating peer references -- connnet to configuration file: " << filename << std::endl;
+		_info("Generating peer references -- connnet to configuration file: " << filename);
 
 		conf_file << "{\n";
 		conf_file << "\t\"connectTo\" : {\n";
 		conf_file << "\t// --- below --- insert the credentials from friends\n";
 		conf_file << "\n";
-		conf_file << "\t\t/**\n";
-		conf_file << "\t\t * Testing peers:\n";
-		conf_file << "\t\t * // Peer nr 0\n";
-		conf_file << "\t\t *  \"192.168.0.57\" : {\n";
-		conf_file << "\t\t *  \t\"publicKey\" : \"asdasd\"\n";
-		conf_file << "\t\t *  },\n";
-		conf_file << "\t\t * // Peer nr 1\n";
-		conf_file << "\t\t *  \"[fc72:aa65:c5c2:4a2d:54e:7947:b671:e00c]\" : {\n";
-		conf_file << "\t\t *  \t\"publicKey\" : \"asdasd\"\n";
-		conf_file << "\t\t *  }\n";
-		conf_file << "\t\t */\n";
+		conf_file << "\t\t// Testing peers:\n";
+		conf_file << "\t\t// // Peer nr 0\n";
+		conf_file << "\t\t  \"192.168.0.57\" : {\n";
+		conf_file << "\t\t  \t\"publicKey\" : \"fd1c:b8e7:644d:ab7c:a659:4332:47bc:67c4\"\n";
+		conf_file << "\t\t  },\n";
+		conf_file << "\t\t// // Peer nr 1\n";
+		conf_file << "\t\t  \"192.168.0.66:19420\" : {\n";
+		conf_file << "\t\t  \t\"publicKey\" : \"fd1d:a8e7:644d:ab7c:a659:3372:47bc:67c4\"\n";
+		conf_file << "\t\t  }\n";
 		conf_file << "\n";
 		conf_file << "\t// --- above --- insert the credentials from friends\n";
 		conf_file << "\t}\n";

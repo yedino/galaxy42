@@ -269,9 +269,9 @@ template<typename TC> c_ig<TC> make_ig(const TC & thisobj, t_invariant_place pla
 /// This functions will check against this, and e.g. throw exception.
 /// They also can disaply warnings once we are getting closer to limit.
 /// @{
-constexpr size_t reasonable_size_limit_bytes    = 128 * 1024 * 1024; ///< objects should never get this big nor close to it
-constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get this many elements nor close
-constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this many times in worst case
+constexpr size_t reasonable_size_limit_bytes    =  32 * 1024 * 1024; ///< objects should never get [nearly] this big
+constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get [nearly] that many elements
+constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this (e.g. 4) times more over the limit
 constexpr size_t reasonable_size_mul_warning = 2; ///< display warning once objects are only N times smaller then the limit
 
 constexpr size_t reasonable_size_limit_bytes_divided_max  = reasonable_size_limit_bytes / reasonable_size_mul;

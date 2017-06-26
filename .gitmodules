@@ -6,10 +6,6 @@
 	path = depends/googletest
 	url = https://github.com/google/googletest.git
 	branch = master
-[submodule "jsoncpp"]
-	path = depends/jsoncpp
-	url = https://github.com/open-source-parsers/jsoncpp.git
-	branch = master
 [submodule "ntru-crypto"]
 	path = depends/ntru-crypto
 	url = https://github.com/yedino/ntru-crypto.git
@@ -30,4 +26,4 @@
 	url = https://github.com/vit-vit/CTPL.git
 [submodule "depends/backward-cpp"]
 	path = depends/backward-cpp
-	url = https://github.com/hbdgr/backward-cpp
+	url = https://github.com/bombela/backward-cpp

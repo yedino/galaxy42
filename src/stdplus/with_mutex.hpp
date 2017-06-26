@@ -92,10 +92,11 @@ with_mutex<TMutex,TObj>::with_mutex(TObj && value) noexcept
 { }
 
 template <typename TMutex, typename TObj>
-template<typename TFun>
-typename std::result_of<TFun(TObj&)>::type with_mutex<TMutex,TObj>::use_RW(const TFun & fun) {
+with_mutex<TMutex,TObj>& with_mutex<TMutex,TObj>::operator=(TObj && value) noexcept
+{
 	UniqueLockGuardRW<TMutex> lg( m_mutex );
-	return fun( m_obj );
+	m_obj = value;
+	return *this;
 }
 
 template <typename TMutex, typename TObj>
@@ -105,27 +106,14 @@ typename std::result_of<TFun(const TObj&)>::type with_mutex<TMutex,TObj>::use_RO
 	return fun( m_obj );
 }
 
+
 template <typename TMutex, typename TObj>
-with_mutex<TMutex,TObj>& with_mutex<TMutex,TObj>::operator=(TObj && value) noexcept
-{
+template<typename TFun>
+typename std::result_of<TFun(TObj&)>::type with_mutex<TMutex,TObj>::use_RW(const TFun & fun) {
 	UniqueLockGuardRW<TMutex> lg( m_mutex );
-	m_obj = value;
-	return *this;
+	return fun( m_obj );
 }
 
-#if 0
-template <typename TMutex, typename TObj>
-UniqueLockGuardRO<TMutex> with_mutex<TMutex,TObj>::get_lock_RO() const {
-	UniqueLockGuardRO<TMutex> lg(m_mutex);
-	return lg;
-}
-
-template <typename TMutex, typename TObj>
-UniqueLockGuardRW<TMutex> with_mutex<TMutex,TObj>::get_lock_RW() {
-	UniqueLockGuardRW<TMutex> lg(m_mutex);
-	return lg;
-}
-#endif
 
 template <typename TMutex, typename TObj>
 TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRW<TMutex> & ) {

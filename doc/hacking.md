@@ -25,7 +25,7 @@ _dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
 _check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
 STR(...) to_string(...) "..."s
 to_debug(...);
-is_ascii_normal(str); reasonable_size(vec);
+is_ascii_normal(str); reasonable_size(str); reasonable_size(vec);
 UsePtr(p).func();
 
 /**
@@ -152,7 +152,7 @@ The use of this project/programs as end-user, is described in other places, see 
 
 # Developing
 
-To develop the program, we recommend mainly Debian Stable (Jassie, Amd64) as the main environment at this time;
+To develop the program, we recommend mainly Debian Stable (Debian 9 Stretch, Amd64) as the main environment at this time;
 Ubuntu and Mint also are used by developers so we can recommend them (at least in some versions),
 
 IF YOU ADD ANY DEPENDENCY (library) THEN write it in dependencies list in [SECURITY.txt].
@@ -617,7 +617,7 @@ To use Jenkins:
 
 Our Jenkins test suite defined by one pipeline can be checked in details in the Jenkinsfile located in the root directory of the project.
 At the moment test suite includes:
-	- native build on gcc debian8 linux and mingw/cygwin 32-bit windows
+	- native build on gcc Debian 8 Jessie linux and mingw/cygwin 32-bit windows
 	- unit tests passing
 	- integration tests passing
 	- deterministic build linux target
