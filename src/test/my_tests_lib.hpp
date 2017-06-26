@@ -8,7 +8,6 @@
 // https://github.com/google/googletest/blob/master/googletest/include/gtest/gtest.h
 class TestsEnvReseter : public ::testing::EmptyTestEventListener {
 	public:
-	
 		long int m_count_tests_skipped;
 
 		TestsEnvReseter();
@@ -18,7 +17,6 @@ class TestsEnvReseter : public ::testing::EmptyTestEventListener {
 
 		// Fired after all test activities have ended.
 		void OnTestProgramEnd(const ::testing::UnitTest& unit_test) override;
-		
 		virtual void TestIsSkipped(const std::string & why);
 
 		static TestsEnvReseter & instance();

@@ -8,6 +8,8 @@ os:
   - linux
 dist: trusty
 
+group: edge
+
 addons:
   apt:
     sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
@@ -20,6 +22,7 @@ addons:
       - libboost-program-options-dev
       - libboost-thread-dev
       - libboost-locale-dev
+      - libcap-ng-dev
       - libfftw3-dev
       - shellcheck
 

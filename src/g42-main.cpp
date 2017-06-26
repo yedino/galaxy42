@@ -3,6 +3,7 @@
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
+#include "utils/privileges.hpp"
 
 namespace developer_tests {
 
@@ -268,8 +269,6 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 #define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
 int main(int argc, const char **argv) {
-	unique_ptr<c_the_program> the_program = nullptr;
-
 	// parse early options:
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
@@ -284,6 +283,7 @@ int main(int argc, const char **argv) {
 
 	if (remove_and_count(argt, "--newloop" )) program_type = e_program_type_newloop;
 
+	unique_ptr<c_the_program> the_program = nullptr;
 	switch (program_type) {
 		case e_program_type_tunserver:
 			the_program = make_unique<c_the_program_tunserver>();
@@ -302,6 +302,13 @@ int main(int argc, const char **argv) {
 	the_program->take_args(argt_exe , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
 	the_program->startup_version();
+
+	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
+	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
+	// to report any problems with CAPs (eg compatibility issues),
+	// and we expect to have no exploitable code in this short code to setup console and show version
+	// (especially as none of it depends on user provided inputs)
+
 	the_program->startup_data_dir();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();

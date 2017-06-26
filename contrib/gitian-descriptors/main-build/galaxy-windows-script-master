@@ -1,25 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-project_name="galaxy42"
+
+# source global variables
+source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
+
+readonly SCRIPT="${GALAXY_DIR}/contrib/gitian-descriptors/main-build/galaxy-windows-script"
+
+# import functions
+. "${GALAXY_DIR}"/share/script/lib/fail.sh
+. "${GALAXY_DIR}"/share/script/lib/fdfix.sh
+
+# fix for /dev/fd
+fdfix
+
+
 printf "\n\n=========================================================================\n\n"
-printf "PROJECT $project_name - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
-
-function fail() {
-	printf "\nERROR: the script failed (see above messages).\n\n"
-	exit 1
-}
-
-function_fdfix() {
-	echo "Applying fix for /dev/fd" # lxc lacks /dev/fd that is needed e.g for bash < <(....) redirection
-	sudo ln -s /proc/self/fd /dev/fd || { echo "Can not fix fd. Maybe not needed, ignoring." ; }
-}
-function_fdfix
-
-
-galaxy_dir="/home/ubuntu/build/galaxy42/"
-
-script="$galaxy_dir/contrib/gitian-descriptors/main-build/galaxy-windows-script"
-
+printf "PROJECT $PROJECT_NAME - INTERNAL (in-Gitian) WINDOWS BUILD SCRIPT\n"
 
 # --- options
 
@@ -44,14 +40,14 @@ while getopts ":h36C" opt; do
 
 This is the MASTER build script (that calls the other scripts).
 To see more options you can directly call the other script, like:
-$script -h
+${SCRIPT} -h
 
 This MASTER script should be called with option:
 -3 for 32bit build
 -6 for 64bit build
 -C skip the cd to directory that is expected inside Gitian. For fast tests outside of Gitian.
 
-any other FURTHER options will be also passed to the other script ($script)
+any other FURTHER options will be also passed to the other script (${SCRIPT})
 
 
 
@@ -78,16 +74,16 @@ if (( ! option_skip_cd )) ; then
 fi
 
 # ubuntu@gitian:~/build/galaxy42$ ls contrib/nsis-installer-windows/bin/x86/  ; x64
-nsis_bin_input="$galaxy_dir/contrib/nsis-installer-windows/bin/"
+nsis_bin_input="${GALAXY_DIR}/contrib/nsis-installer-windows/bin/"
 
 build="/home/ubuntu/build"
 
 if (( option_do_it_32bit )) ; then
 	export TARGET_ARCH="i686-w64-mingw32"
 	printf "\n\n%s\n" "Will build for TARGET_ARCH=$TARGET_ARCH"
-	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
-	cp "$galaxy_dir/tunserver.elf.exe" "$nsis_bin_input/x86/" || fail "copy (project binaries)"
-    cp "$galaxy_dir/./contrib/windows-service-wrapper/galaxyService.exe" "$nsis_bin_input/x86/"  || fail "copy (service wrapper)"
+	"${SCRIPT}" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
+	cp "${GALAXY_DIR}/tunserver.elf.exe" "$nsis_bin_input/x86/" || fail "copy (project binaries)"
+    cp "${GALAXY_DIR}/./contrib/windows-service-wrapper/galaxyService.exe" "$nsis_bin_input/x86/"  || fail "copy (service wrapper)"
 	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x86/" || fail "copy (deps libs)"
 	# TODO ^ nicer bash style (arrays/escaping)
 fi
@@ -95,10 +91,10 @@ fi
 if (( option_do_it_64bit )) ; then
 	export TARGET_ARCH="x86_64-w64-mingw32"
 	printf "\n\n%s\n" "Will build for TARGET_ARCH=$TARGET_ARCH"
-	"$script" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
-	cp "$galaxy_dir/tunserver.elf.exe" "$nsis_bin_input/x64/" || fail "copy (project binaries)"
+	"${SCRIPT}" "$@" || fail "Buil failed (for TARGET_ARCH=$TARGET_ARCH)"
+	cp "${GALAXY_DIR}/tunserver.elf.exe" "$nsis_bin_input/x64/" || fail "copy (project binaries)"
 	cp $(find $build/boost/mingw_build/  -name  '*.dll')  $(find $build/libsodium/src/libsodium/.libs/  -name  '*.dll') "$nsis_bin_input/x64/" || fail "copy (deps libs)"
-    cp "$galaxy_dir/./contrib/windows-service-wrapper/galaxyService.exe" "$nsis_bin_input/x64/" || fail "copy (service wrapper)"
+    cp "${GALAXY_DIR}/./contrib/windows-service-wrapper/galaxyService.exe" "$nsis_bin_input/x64/" || fail "copy (service wrapper)"
 	# TODO ^ nicer bash style (arrays/escaping)
 fi
 
@@ -107,11 +103,11 @@ printf "\n\nBinaries built (and results are copied) (for all selected 32/64 vers
 # .mo language files
 copy_noarch() {
 	# generate all .mo files
-	"${galaxy_dir}/contrib/tools/galaxy42-lang-update-all"
+	"${GALAXY_DIR}/contrib/tools/galaxy42-lang-update-all"
 	mkdir -p "${nsis_bin_input}/noarch/share" || fail "mkdir noarch"
-	cp -r --dereference "${galaxy_dir}/share/locale" "${nsis_bin_input}/noarch/share" || fail "copy (noarch files)"
+	cp -r --dereference "${GALAXY_DIR}/share/locale" "${nsis_bin_input}/noarch/share" || fail "copy (noarch files)"
 }
 copy_noarch
 
-"$galaxy_dir/contrib/nsis-installer-windows/galaxy-windows-installer" || fail "NSIS failed."
+"${GALAXY_DIR}/contrib/nsis-installer-windows/galaxy-windows-installer" || fail "NSIS failed."
 

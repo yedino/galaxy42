@@ -23,8 +23,35 @@ size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) 
 	std::array<boost::asio::const_buffer, 2> buffers;
 	buffers.at(0) = boost::asio::buffer(tun_header);
 	buffers.at(1) = boost::asio::buffer(data, size);
+	try {
+		size_t written_bytes = m_tun_stream.write_some(buffers);
+		if (written_bytes < tun_header.size()) throw std::runtime_error(""); // tun header not written
+		return written_bytes - tun_header.size();
+	} catch (const std::exception &) {
+		return 0;
+	}
+}
 
-	return m_tun_stream.write_some(buffers);
+size_t c_tuntap_macosx_obj::send_to_tun_separated_addresses(
+		const unsigned char * const data,
+		size_t size,
+		const std::array<unsigned char, IPV6_LEN> &src_binary_address,
+		const std::array<unsigned char, IPV6_LEN> &dst_binary_address) {
+			_check_input(size >= 8);
+			std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};
+			std::array<boost::asio::const_buffer, 5> buffers;
+			buffers.at(0) = boost::asio::buffer(tun_header.data(), tun_header.size());
+			buffers.at(1) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
+			buffers.at(2) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
+			buffers.at(3) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
+			buffers.at(4) = boost::asio::buffer(data + 8, size - 8);
+			try {
+				size_t written_bytes = m_tun_stream.write_some(buffers);
+					if (written_bytes < tun_header.size()) throw std::runtime_error(""); // tun header not written
+					return written_bytes - tun_header.size();
+			} catch (const std::exception &) {
+				return 0;
+			}
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t size) {
@@ -32,13 +59,17 @@ size_t c_tuntap_macosx_obj::read_from_tun(unsigned char * const data, size_t siz
 	std::array<unsigned char, 4> tun_header;
 	buffers.at(0) = boost::asio::buffer(tun_header);
 	buffers.at(1) = boost::asio::buffer(data, size);
-	size_t readed_bytes = m_tun_stream.read_some(buffers);
-	_check(size >= 4);
+	try {
+		size_t readed_bytes = m_tun_stream.read_some(buffers);
+		if (readed_bytes < tun_header.size()) throw std::runtime_error("");
+		return readed_bytes - tun_header.size();
+	} catch (const std::exception &) {
+		return 0;
+	}
 /*	data[0] = 0x00;
 	data[1] = 0x00;
 	data[2] = 0x86;
 	data[3] = 0xDD;*/
-	return readed_bytes - 4;
 }
 
 size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
@@ -48,12 +79,20 @@ size_t c_tuntap_macosx_obj::read_from_tun_separated_addresses(
 			// field sizes based on rfc2460
 			// https://tools.ietf.org/html/rfc2460
 			_check_input(size > 8); // it must be strictly > 8, since we access 8th element below (data+8)
-			std::array<boost::asio::mutable_buffer, 4> buffers;
-			buffers.at(0) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
-			buffers.at(1) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
-			buffers.at(2) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
-			buffers.at(3) = boost::asio::buffer(data + 8, size - 8); // 8 first bytes of 'data' are filled using buffers.at(0)
-			return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+			std::array<unsigned char, 4> tun_header;
+			std::array<boost::asio::mutable_buffer, 5> buffers;
+			buffers.at(0) = boost::asio::buffer(tun_header.data(), tun_header.size());
+			buffers.at(1) = boost::asio::buffer(data, 8); // version, traffic, flow label, payload length, next header, hop limit
+			buffers.at(2) = boost::asio::buffer(src_binary_address.data(), src_binary_address.size());
+			buffers.at(3) = boost::asio::buffer(dst_binary_address.data(), dst_binary_address.size());
+			buffers.at(4) = boost::asio::buffer(data + 8, size - 8); // 8 first bytes of 'data' are filled using buffers.at(0)
+			try {
+				size_t readed_bytes = m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
+				if (readed_bytes < tun_header.size()) throw std::runtime_error("");
+				return readed_bytes - tun_header.size();
+			} catch (const std::runtime_error &) {
+				return 0;
+			}
 }
 
 void c_tuntap_macosx_obj::async_receive_from_tun(unsigned char * const data,

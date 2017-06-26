@@ -67,16 +67,14 @@ void c_galaxysrv::main_loop() {
 		// start listener:
 		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
-		c_card_selector listen1_selector_tmp( std::move(listen1) ); // will send from this my-address, to this peer
-		_fact("Listen on " << listen1_selector_tmp );
+		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
+		_fact("Listen on " << listen1_selector );
 		{
-			_mark("STARTING LISTEN (LOCKING-ERROR?)");
 			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
-			m_cable_cards.get(lg).get_card(listen1_selector_tmp).listen_on(listen1_selector_tmp);
-			_mark("STARTING LISTEN (LOCKING-ERROR?) - done");
+			m_cable_cards.get(lg).get_card(listen1_selector).listen_on(listen1_selector);
 		}
-		_goal("Listening on " << listen1_selector_tmp );
-		return listen1_selector_tmp;
+		_goal("Listening on " << listen1_selector );
+		return listen1_selector;
 	} ();
 
 	auto loop_tunread = [&](const int my_job_nr) {
@@ -134,6 +132,7 @@ void c_galaxysrv::main_loop() {
 					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
 						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
 						tuntap_result.src_hip, tuntap_result.dst_hip);
+					if (read_size_merit == 0) _throw_error_runtime("Empty tun read");
 
 					// adjust down size to actually used part of buffer
 					tuntap_result.chunk.shrink_to( read_size_merit );
@@ -155,6 +154,9 @@ void c_galaxysrv::main_loop() {
 				// *** routing decision ***
 				// TODO for now just send to first-cable of first-peer:
 				auto const & peer_one_addr = m_peer.at(0)->m_reference.cable_addr.at(0); // what cable address to send to
+				// TODO THREAD SAFE XXX TODO-NOW:
+				// the reference should be used all under lock, probably, not just obtained under lock,
+				// if the card is not thread-safe
 				auto & door = m_cable_cards.use_RW( [&](auto & obj) -> auto& { return obj.get_card(my_selector); }  );
 
 				// generate p2p:
@@ -174,6 +176,7 @@ void c_galaxysrv::main_loop() {
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
 
+			} catch (const std::runtime_error &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
 			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
 				throw;
 			}
