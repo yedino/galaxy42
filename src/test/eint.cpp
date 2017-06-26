@@ -133,3 +133,47 @@ TEST(eint, eint_less_test) {
 	EXPECT_FALSE(eint::eint_less(-1ll, -1));
 
 }
+
+TEST(eint, eint_equal_test) {
+	EXPECT_FALSE(eint::eint_equal(1,2));
+	EXPECT_FALSE(eint::eint_equal(0,1));
+	EXPECT_FALSE(eint::eint_equal(-1,0));
+	EXPECT_FALSE(eint::eint_equal(-2,-1));
+	EXPECT_FALSE(eint::eint_equal(-1,2u));
+	EXPECT_FALSE(eint::eint_equal(-1,2ul));
+	EXPECT_FALSE(eint::eint_equal(-1l,2));
+	EXPECT_FALSE(eint::eint_equal(-1ll,2));
+	EXPECT_FALSE(eint::eint_equal(-1l,2ul));
+	EXPECT_FALSE(eint::eint_equal(1l,2ul));
+	EXPECT_FALSE(eint::eint_equal(1ll,2ul));
+	EXPECT_TRUE(eint::eint_equal(1, 1));
+	EXPECT_TRUE(eint::eint_equal(1, 1u));
+	EXPECT_TRUE(eint::eint_equal(1, 1ull));
+	EXPECT_TRUE(eint::eint_equal(-1, -1ll));
+	EXPECT_TRUE(eint::eint_equal(-1, -1));
+	EXPECT_TRUE(eint::eint_equal(-1ll, -1));
+
+}
+
+TEST(eint, eint_greater_test) {
+	EXPECT_TRUE(eint::eint_greater(std::numeric_limits<unsigned long>::max(), std::numeric_limits<long>::min()));
+	EXPECT_TRUE(eint::eint_greater(1, 0));
+	EXPECT_TRUE(eint::eint_greater(0, -1));
+	EXPECT_TRUE(eint::eint_greater(1u, 0));
+	EXPECT_TRUE(eint::eint_greater(0ul, -1));
+	EXPECT_TRUE(eint::eint_greater(1, 0u));
+	EXPECT_TRUE(eint::eint_greater(0, -1ll));
+	EXPECT_TRUE(eint::eint_greater(1, 0ull));
+	EXPECT_TRUE(eint::eint_greater(0ull, -1));
+	EXPECT_FALSE(eint::eint_greater(1,2));
+	EXPECT_FALSE(eint::eint_greater(0,1));
+	EXPECT_FALSE(eint::eint_greater(-1,0));
+	EXPECT_FALSE(eint::eint_greater(-2,-1));
+	EXPECT_FALSE(eint::eint_greater(-1,2u));
+	EXPECT_FALSE(eint::eint_greater(-1,2ul));
+	EXPECT_FALSE(eint::eint_greater(-1l,2));
+	EXPECT_FALSE(eint::eint_greater(-1ll,2));
+	EXPECT_FALSE(eint::eint_greater(-1l,2ul));
+	EXPECT_FALSE(eint::eint_greater(1l,2ul));
+	EXPECT_FALSE(eint::eint_greater(1ll,2ul));
+}
