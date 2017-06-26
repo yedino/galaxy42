@@ -97,34 +97,34 @@ bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value
 }
 */
 template <typename Ta, typename Tb>
-bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
-						, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
-	if (sizeof(Ta) >= sizeof(Tb)){
-		if (b<0) return false;
-		else return a < static_cast<Ta>(b);
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
+							, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
+							, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
+	if (b<0) return false;
+	else {
+		if (sizeof(Ta) >= sizeof(Tb)){
+			return a < static_cast<Ta>(b);
+		}
+		else return static_cast<Tb>(a)<b;
 	}
-	return a<b;
 }
 
 template <typename Ta, typename Tb>
-bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
-						, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
-	if (sizeof(Tb) >= sizeof(Ta)){
-		if (a<0) return true;
-		else return static_cast<Tb>(a) < b;
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
+							, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
+							, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
+	if (a<0) return true;
+	else {
+		if (sizeof(Tb) >= sizeof(Ta)){
+			return static_cast<Tb>(a) < b;
+		}
+		else return a<static_cast<Ta>(b);
 	}
-	return a<b;
 }
 
 template <typename Ta, typename Tb>
-bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
-						, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
-	return a<b;
-}
-
-template <typename Ta, typename Tb>
-bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
-						, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
+bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
+							, typename std::enable_if_t<std::is_signed<Ta>::value == std::is_signed<Tb>::value>* = 0) {
 	return a<b;
 }
 
