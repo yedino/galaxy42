@@ -82,73 +82,88 @@ T eint_plus(T a, T b, typename std::enable_if_t<std::is_integral<T>::value>* = 0
 	return a+b;
 }
 
+/// Compare (a<b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
 							, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
 							, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
-	if (b<0) return false;
+	if (b<0) return false; // if b<0 and a is unsigned then always (a>b)
 	else {
-		if (sizeof(Ta) >= sizeof(Tb)){
+		if (std::numeric_limits<Ta>::digits >= std::numeric_limits<Tb>::digits){
 			return a < static_cast<Ta>(b);
+			// if (b>=0 and type Tb don't have more bits than type Ta) then we can safely cast b to type Ta
 		}
-		else return static_cast<Tb>(a)<b;
+		else return static_cast<Tb>(a) < b;
+		// if (type Tb have more bits than type Ta) then we can safely cast a to type Tb
 	}
 }
 
+/// Compare (a<b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
 							, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
 							, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
-	if (a<0) return true;
+	if (a<0) return true; // if a<0 and b is unsigned then always (a<b)
 	else {
-		if (sizeof(Tb) >= sizeof(Ta)){
+		if (std::numeric_limits<Tb>::digits >= std::numeric_limits<Ta>::digits){
 			return static_cast<Tb>(a) < b;
+			// if (a>=0 and type Ta don't have more bits than type Tb) then we can safely cast a to type Tb
 		}
-		else return a<static_cast<Ta>(b);
+		else return a < static_cast<Ta>(b);
+		// if (type Ta have more bits than type Ta) then we can safely cast b to type Ta
 	}
 }
 
+/// Compare (a<b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_less(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
 							, typename std::enable_if_t<std::is_signed<Ta>::value == std::is_signed<Tb>::value>* = 0) {
-	return a<b;
+	return a<b; // if both type Ta and Tb are signed or unsigned we can safely compare a and b
 }
 
+/// Compare (a==b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_equal(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
 							, typename std::enable_if_t<std::is_unsigned<Ta>::value>* = 0
 							, typename std::enable_if_t<std::is_signed<Tb>::value>* = 0) {
-	if (b<0) return false;
+	if (b<0) return false; // if b<0 and a is unsigned then always (a>b)
 	else {
-		if (sizeof(Ta) >= sizeof(Tb)){
+		if (std::numeric_limits<Ta>::digits >= std::numeric_limits<Tb>::digits){
 			return a == static_cast<Ta>(b);
+			// if (b>=0 and type Tb don't have more bits than type Ta) then we can safely cast b to type Ta
 		}
 		else return static_cast<Tb>(a)==b;
+		// if (type Tb have more bits than type Ta) then we can safely cast a to type Tb
 	}
 }
 
+/// Compare (a==b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_equal(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
 							, typename std::enable_if_t<std::is_signed<Ta>::value>* = 0
 							, typename std::enable_if_t<std::is_unsigned<Tb>::value>* = 0) {
-	if (a<0) return false;
+	if (a<0) return false; // if a<0 and b is unsigned then always (a<b)
 	else {
-		if (sizeof(Tb) >= sizeof(Ta)){
+		if (std::numeric_limits<Tb>::digits >= std::numeric_limits<Ta>::digits){
 			return static_cast<Tb>(a) == b;
+			// if (a>=0 and type Ta don't have more bits than type Tb) then we can safely cast a to type Tb
 		}
 		else return a==static_cast<Ta>(b);
+		// if (type Ta have more bits than type Ta) then we can safely cast b to type Ta
 	}
 }
 
+/// Compare (a==b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_equal(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0
 							, typename std::enable_if_t<std::is_signed<Ta>::value == std::is_signed<Tb>::value>* = 0) {
-	return a==b;
+	return a==b; // if both type Ta and Tb are signed or unsigned we can safely compare a and b
 }
 
+/// Compare (a>b) in safe way (see documentation and WARNINGS about this namespace)
 template <typename Ta, typename Tb>
 bool eint_greater(Ta a, Tb b, typename std::enable_if_t<std::is_integral<Ta>::value && std::is_integral<Tb>::value>* = 0) {
-	return !eint_less(a, b);
+	return !(eint_less(a, b) || eint_equal(a, b) ); //!(a<=b)
 }
 
 } // namespace eint
