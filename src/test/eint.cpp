@@ -124,34 +124,34 @@ using tup = std::tuple<
 
 tup types{};
 
-	auto test_case = [](auto a, auto test_func){
+auto test_case = [](auto a, auto test_func){
 
-		auto create_set = [](auto x){
-			std::set<decltype(x)> x_set;
-			x_set.insert(0);
-			x_set.insert(1);
-			x_set.insert(std::numeric_limits<decltype(x)>::max());
-			x_set.insert(std::numeric_limits<decltype(x)>::max()-1);
-			x_set.insert(std::numeric_limits<decltype(x)>::min()+1);
-			x_set.insert(std::numeric_limits<decltype(x)>::max()/2);
-			x_set.insert(std::numeric_limits<decltype(x)>::min()/2);
-			x_set.insert(std::numeric_limits<decltype(x)>::min()+std::numeric_limits<decltype(x)>::max());
-			return x_set;
-		};
-
-		std::set<decltype(a)> a_set = create_set(a);
-
-		auto fun = [&](auto b){
-			std::set<decltype(b)> b_set = create_set(b);
-			for (auto x : a_set)
-				for (auto y : b_set)
-				{
-					test_func(x, y);
-				}
-		};
-
-		for_each(types, fun);
+	auto create_set = [](auto x){
+		std::set<decltype(x)> x_set;
+		x_set.insert(0);
+		x_set.insert(1);
+		x_set.insert(std::numeric_limits<decltype(x)>::max());
+		x_set.insert(std::numeric_limits<decltype(x)>::max()-1);
+		x_set.insert(std::numeric_limits<decltype(x)>::min()+1);
+		x_set.insert(std::numeric_limits<decltype(x)>::max()/2);
+		x_set.insert(std::numeric_limits<decltype(x)>::min()/2);
+		x_set.insert(std::numeric_limits<decltype(x)>::min()+std::numeric_limits<decltype(x)>::max());
+		return x_set;
 	};
+
+	std::set<decltype(a)> a_set = create_set(a);
+
+	auto fun = [&](auto b){
+		std::set<decltype(b)> b_set = create_set(b);
+		for (auto x : a_set)
+			for (auto y : b_set)
+			{
+				test_func(x, y);
+			}
+	};
+
+	for_each(types, fun);
+};
 
 TEST(eint, eint_less_test) {
 	EXPECT_TRUE(eint::eint_less(1,2));
