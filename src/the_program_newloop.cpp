@@ -250,6 +250,12 @@ void example_tsan_1() { // to test STAN / thread sanitizer
 
 int c_the_program_newloop::main_execution() {
 	PROGRAM_SECTION_TITLE;
+	_mark("ubsan flag: " << m_argm.at("special-ubsan1").as<bool>() );
+
+	if (m_argm.at("special-ubsan1").as<bool>())	example_ubsan_1();
+	if (m_argm.at("special-tsan1").as<bool>())	example_tsan_1();
+	if (m_argm.at("special-warn1").as<bool>())	_warn("Example warning printed out");
+
 	_mark("newloop main_execution");
 //	g_dbg_level_set(5, "Debug the newloop");
 
@@ -263,11 +269,6 @@ int c_the_program_newloop::main_execution() {
 
 	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
 
-	_mark("ubsan flag: " << m_argm.at("special-ubsan1").as<bool>() );
-
-	if (m_argm.at("special-ubsan1").as<bool>())	example_ubsan_1();
-	if (m_argm.at("special-tsan1").as<bool>())	example_tsan_1();
-	if (m_argm.at("special-warn1").as<bool>())	_warn("Example warning printed out");
 
 	pimpl->server->main_loop();
 
