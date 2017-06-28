@@ -1,0 +1,7 @@
+#!/bin/bash
+echo "Running with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
+echo "(assuming this program was built with UBSAN and TSAN)! this is not checked currently. Run ccmake ../ from the build/ dir to configure that."
+# TODO one day verify of the binary was built with this flags, or have separate binary with them e.g. in ./build/tsan-ubsan/
+sudo TSAN_OPTIONS="halt_on_error=1"
+# UBSAN_OPTIONS="halt_on_error=1" # TODO detect if boost version is wrong and work around
+./nocap-tunserver.elf "$@"
