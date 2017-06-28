@@ -5,9 +5,47 @@ This page described how to "Hack" this project - how to develop it, how to chang
 
 Intended for:
 
++ better bug-reports, debugging, testers
 + developers of this project
 + packagers, maintainers of this project
 + power users building own versions or modding this project
+
+# Debugging
+
+Run with option --d for debug
+
+## Debug tools
+
+Possible goals:
++ thread correctness: clang TSAN tool. (plus source-code uses clang Thread-Safety-Analysis).
++ UB other (including overflows): clang UBSAN tool.
++ memory correctness: valgrind (memcheck) tool.
+
+Tests to run (separatelly):
+1) To run tests for Thread and UB:
+build version with TSAN and UBSAN options in ccmake (requires clang)
+and run ./run-safe-thread-ub
+This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
+...due to clang bug(?): abort-on-error seemingly not working correctly sometimes (e.g. debian 8)
+`
+run-safe-thread-ub --special-tsan1=ON
+run-safe-thread-ub --special-unsan1=ON
+`
+will demonstrate errors that trigger TSAN / UBSAN.
+
+2) To run tests for Memory:
+build normal version (without ccmake option TSAN. UBSAN is allowed if you want)
+and run  ./run-safe-mem
+This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
+...due to valgrind bug(?): refusing to run capability (setcap) binaries.
+
+Example, this option --special... will trigger a demonstration error and abort:
+`
+./tunserver.elf --newloop --special-memcheck2=ON
+`
+
+
+# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
 # Summary for every developer!
 

@@ -536,6 +536,8 @@ if(NOT MINGW AND NOT WIN32)
 		COMMAND chmod g-wx,o-wx tunserver.elf
 		COMMAND cp tunserver.elf nocap-tunserver.elf
 		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
+		COMMAND cp "${CMAKE_SOURCE_DIR}/run-safe-mem" "./" || echo skip
+		COMMAND cp "${CMAKE_SOURCE_DIR}/run-safe-thread-ub" "./" || echo skip
 		WORKING_DIRECTORY ./)
 
 	add_custom_command(
