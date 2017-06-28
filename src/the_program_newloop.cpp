@@ -1,4 +1,4 @@
-
+;
 #include "the_program_newloop.hpp"
 #include "platform.hpp"
 #include "libs1.hpp"
@@ -223,9 +223,31 @@ void c_the_program_newloop::programtask_load_my_keys() {
 // ^ new ------------------------------------------------------------------
 }
 
-
 void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
+}
+
+void example_warn_1() {
+	_warn("Example warning printed out");
+}
+
+void example_memcheck_1() { // to test valgrind detection of errors
+	_mark("Valgrind memcheck test.");
+	vector<int> vec(100);
+	int* ptr = & vec.at(0);
+	ptr += 200;
+	volatile int read = *ptr;
+	volatile int result = (read==0) ? 0 : 1; // to silence "unused var" and to cause e.g. cause "jump depends on uninitialized"
+	_mark("Valgrdin memcheck test done (program not aborted), result"<<result);
+}
+
+void example_memcheck_2() { // to test valgrind detection of errors
+	_mark("Valgrind memcheck test.");
+	vector<int> vec(100);
+	vec[2000] = 42;
+	volatile auto * ptr = & vec[3000];
+	*ptr = 42;
+	_mark("Valgrdin memcheck test done (program not aborted), result");
 }
 
 void example_ubsan_1() { // to test UBSAN / ub sanitize
@@ -248,15 +270,36 @@ void example_tsan_1() { // to test STAN / thread sanitizer
 	_mark("TSAN test done (program not aborted)");
 }
 
+int c_the_program_newloop::run_special() {
+	bool tainted=false;
+	auto maybe_run_special = [&](const string & name, auto & func, bool do_taint) {
+		if (m_argm.at(name).as<bool>()) {
+			_goal("Run test: "<<name);
+			if (do_taint) tainted=true;
+			func();
+		} else _info("NOT running test "<<name);
+	};
+	maybe_run_special("special-warn1", example_warn_1, false);
+	maybe_run_special("special-ubsan1", example_ubsan_1, true);
+	maybe_run_special("special-tsan1", example_tsan_1, true);
+	maybe_run_special("special-memcheck1", example_memcheck_1, true);
+	maybe_run_special("special-memcheck2", example_memcheck_2, true);
+	if (tainted) {
+		_goal("After executing above tests, now the program is tainted, and must exit.");
+		return 2; // exit code
+	}
+	return 0;
+}
+
 int c_the_program_newloop::main_execution() {
 	PROGRAM_SECTION_TITLE;
-	_mark("ubsan flag: " << m_argm.at("special-ubsan1").as<bool>() );
-
-	if (m_argm.at("special-ubsan1").as<bool>())	example_ubsan_1();
-	if (m_argm.at("special-tsan1").as<bool>())	example_tsan_1();
-	if (m_argm.at("special-warn1").as<bool>())	_warn("Example warning printed out");
-
 	_mark("newloop main_execution");
+
+	{
+		auto ret = this->run_special();
+		if (ret) return ret;
+	}
+
 //	g_dbg_level_set(5, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
