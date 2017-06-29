@@ -22,7 +22,7 @@ def ircNotification(result) {
 }
 
 def native_linux(git_url, branch) {
-	build job: 'galaxy42_native',
+	build job: 'galaxy42_linux',
 		parameters: [	[$class: 'NodeParameterValue',
 							name: 'Multinode',
 							labels: ['debian'],
@@ -35,11 +35,39 @@ def native_linux(git_url, branch) {
 							value: "$branch" ] ]
 }
 
-def native_windows(git_url, branch) {
-	build job: 'galaxy42_native',
+def native_windows_mingw32(git_url, branch) {
+	build job: 'galaxy42_mingw_32bit',
 		parameters: [	[$class: 'NodeParameterValue',
 							name: 'Multinode',
 							labels: ['win32&&cygwin'],
+							nodeEligibility: [$class: 'AllNodeEligibility'] ],
+						[$class: 'StringParameterValue',
+							name: 'git_repository_url',
+							value: "$git_url" ],
+						[$class: 'StringParameterValue',
+							name: 'git_branch',
+							value: "$branch" ] ]
+}
+
+def native_windows_mingw64(git_url, branch) {
+	build job: 'galaxy42_mingw_64bit',
+		parameters: [	[$class: 'NodeParameterValue',
+							name: 'Multinode',
+							labels: ['win64&&cygwin'],
+							nodeEligibility: [$class: 'AllNodeEligibility'] ],
+						[$class: 'StringParameterValue',
+							name: 'git_repository_url',
+							value: "$git_url" ],
+						[$class: 'StringParameterValue',
+							name: 'git_branch',
+							value: "$branch" ] ]
+}
+
+def native_windows_msvc(git_url, branch) {
+	build job: 'galaxy42_MSVC',
+		parameters: [	[$class: 'NodeParameterValue',
+							name: 'Multinode',
+							labels: ['win64&&msvc'],
 							nodeEligibility: [$class: 'AllNodeEligibility'] ],
 						[$class: 'StringParameterValue',
 							name: 'git_repository_url',
@@ -59,10 +87,12 @@ properties([pipelineTriggers([	[$class: 'GitHubPushTrigger'],
 node('master') {
 
 	def build_native_linux = 1
-	def build_native_windows = 1
-	def build_native_all = 1
+	def build_native_windows_mingw32 = 1
+	def build_native_windows_mingw64 = 1
+	def build_native_windows_msvc = 1
 
-	def run_unit_test = 1
+	// Unit tests will be trigger as post-build action only for linux env.
+	def run_unit_test = 0
 	def run_integration_test = 0
 
 	def build_gitian_linux = 0
@@ -94,21 +124,27 @@ node('master') {
 
 	def failure_counter=0
 
-	if (build_native_all || build_native_linux && build_native_windows ) {
-		stage('native_build_parallel') {
-			parallel linux: {
-				native_linux(GIT_REPOSITORY_URL,GIT_BRANCH)
+	stage('native_build_parallel') {
+		parallel linux: {
+				if(build_native_linux) {
+					native_linux(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
 			},
-			windows: {
-				native_windows(GIT_REPOSITORY_URL,GIT_BRANCH)
+			windows_mingw32: {
+				if(build_native_windows_mingw32) {
+					native_windows_mingw32(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
+			},
+			windows_mingw64: {
+				if(build_native_windows_mingw64) {
+					native_windows_mingw64(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
+			},
+			windows_msvc: {
+				if(build_native_windows_msvc) {
+					native_windows_msvc(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
 			}
-		}
-	} else if ( build_native_linux ) {
-		stage 'linux_build'
-		native_linux(GIT_REPOSITORY_URL,GIT_BRANCH)
-	} else if ( build_native_windows) {
-		stage 'windows_build'
-		native_windows(GIT_REPOSITORY_URL,GIT_BRANCH)
 	}
 
 	if (run_unit_test) {
