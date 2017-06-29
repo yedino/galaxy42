@@ -15,6 +15,8 @@
 
 #ifdef ANTINET_linux
 	#include <linux/types.h>
+	#include <pwd.h>
+	#include <unistd.h>
 
 	// uses libcap-ng
 	#include <cap-ng.h>
@@ -26,6 +28,21 @@
 namespace my_cap {
 
 #ifdef ANTINET_linux
+static void change_user_if_root() {
+	uid_t uid = getuid();
+	if (uid != 0) return; // not root
+	const char* sudo_user_env = std::getenv("SUDO_USER");
+	if (sudo_user_env == nullptr) throw std::runtime_error("Cannot read SUDO_USER env") ; // get env error
+	std::string sudo_user_name(sudo_user_env);
+	struct passwd *pw = getpwnam(sudo_user_name.c_str());
+	if (pw == nullptr) throw std::runtime_error("getpwnam error");
+	uid_t normal_user_uid = pw->pw_uid;
+	assert(normal_user_uid != 0);
+	_fact("change process user id to " << normal_user_uid);
+	int setuid_ret = setuid(normal_user_uid);
+	if (setuid_ret == -1) throw std::runtime_error("setuid error");
+	assert(setuid_ret == 0);
+}
 
 void drop_privileges_on_startup() {
 	_fact("Dropping privileges - on startup");
@@ -36,6 +53,7 @@ void drop_privileges_on_startup() {
 	change.set_given_cap("NET_RAW", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
 	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
 	change.security_apply_now();
+	change_user_if_root();
 }
 
 
@@ -70,6 +88,7 @@ void verify_privileges_are_as_for_mainloop() {
 	};
 	doit();
 }
+
 
 #else
 
