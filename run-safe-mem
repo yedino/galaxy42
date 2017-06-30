@@ -21,7 +21,7 @@ ${program_for_flags} --print-flags-flavour | grep "$flagname" || {
 }
 # else, continue:
 
-myprint "$(tput setab 1)Enabling valgrind memcheck"
+myprint "$(tput setab 2)Enabling valgrind memcheck"
 
 cat <<EOF
   __  __ _____ __  __  ___  ______   __             __
