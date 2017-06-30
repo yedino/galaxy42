@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/bash -e
 readonly myname=$(basename "$BASH_SOURCE")
 function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "$*" "$(tput sgr0)" ; }
+function fail() { myprint "$(tput setab 1)Error $*" ; exit 1 ; }
 
 program_for_flags="./tunserver.elf"
 program_to_run="./tunserver.elf"
@@ -14,13 +15,14 @@ ${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run
 ((checks_existing++)) || :
 flagname="valgrind_memory_is_possible"
 ${program_for_flags} --print-flags-flavour | grep "$flagname" || {
-	((checks_enabled++)) || :
 	myprint "$(tput setab 1)Program to test flags ($program_for_flags) warned us that project is built with wrong flags for this test"
 	myprint "$(tput setab 1)...see documentation how to configure program for this. (search name '$flagname')"
 	exit 1 # <--- EXIT, giving up
 }
 # else, continue:
 
+
+((checks_enabled++)) || :
 myprint "$(tput setab 2)Enabling valgrind memcheck"
 
 cat <<EOF
@@ -32,10 +34,25 @@ cat <<EOF
 
 EOF
 
+# https://stackoverflow.com/questions/44081948/exit-valgrind-on-first-error
+# prepare for valgrind terminate on error
+	myprint "Preparing valgrind-killer"
+	myprint "Making tempdir"
+	tempdir=$(mktemp -d test.XXXXXXXXX -p '') || fail "Can not make tmpdir=$tmpdir"
+	chmod 700 "$tempdir" || fail "Can not chmod our tmpdir=$tmpdir"
+	function script_cleanup_tmp() {
+		rm -rf "$tempdir"
+	}
+	trap script_cleanup_tmp EXIT
+valgrind_log_dir="$tempdir/valgrind-log"
+valgrind_exitcode=67
+mkdir "$valgrind_log_dir"
+
 myprint "All seems fine, running ($program_to_run)"
 
+
 set -x
-sudo valgrind ./nocap-tunserver.elf "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
+sudo ./valgrind_with_log_kill "$valgrind_log_dir" "$valgrind_exitcode" ./nocap-tunserver.elf "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
 set +x
 
 echo
