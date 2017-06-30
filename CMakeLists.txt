@@ -251,7 +251,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	if(SANITIZER_UNDEFINED_BEHAVIOR)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=integer ${SANITIZER_DETAILED}")
 		if (NOT TOOLS_ARE_BROKEN_UB)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=un")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=undefined")
 			add_definitions(-DFLAVOUR_UBSAN_FULL) # we have full UBSAN and can rely on it
 		else()
 			message(WARNING "Warning: we have to partially disable UBSAN check (that is: program will continue to run, ignoring an UB!) because the tools used are broken and produce UBs.")
@@ -536,11 +536,17 @@ if(NOT MINGW AND NOT WIN32)
 	add_custom_command(
 		TARGET tunserver.elf
 		POST_BUILD
+		COMMAND rm -f "./nocap-tunserver.elf"
 		COMMAND chmod g-wx,o-wx tunserver.elf
 		COMMAND cp tunserver.elf nocap-tunserver.elf
+		COMMAND rm -f "./rundevel.sh"
 		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
-		COMMAND cp "${CMAKE_SOURCE_DIR}/run-safe-mem" "./" || echo skip
-		COMMAND cp "${CMAKE_SOURCE_DIR}/run-safe-thread-ub" "./" || echo skip
+		COMMAND rm -f "./run-safe-mem"
+		COMMAND rm -f "./run-safe-thread-ub"
+		COMMAND rm -f "./valgrind_log_watch"
+		COMMAND rm -f "./valgrind_with_log_kill"
+		COMMAND cp "${CMAKE_SOURCE_DIR}/qa/run-safe/*" "./" || echo skip
+
 		WORKING_DIRECTORY ./)
 
 	add_custom_command(
