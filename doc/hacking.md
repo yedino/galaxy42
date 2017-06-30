@@ -28,8 +28,8 @@ and run ./run-safe-thread-ub
 This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
 ...due to clang bug(?): abort-on-error seemingly not working correctly sometimes (e.g. debian 8)
 `
-run-safe-thread-ub --special-tsan1=ON
-run-safe-thread-ub --special-unsan1=ON
+./run-safe-thread-ub --special-tsan1=ON
+./run-safe-thread-ub --special-unsan1=ON
 `
 will demonstrate errors that trigger TSAN / UBSAN.
 
@@ -41,8 +41,17 @@ This will run as-root (at least) on some systems - instead of running as-user th
 
 Example, this option --special... will trigger a demonstration error and abort:
 `
-./tunserver.elf --newloop --special-memcheck2=ON
+./run-safe-mem --newloop --special-memcheck2=ON
 `
+
+### FAQ
+
+Q: Program can not run inside valgrind, tool says `valgrind_memory_is_possible`
+
+Q: Running in valgrind (memcheck tool) and it shows warnings `Warning: set address range perms: large range ... (noaccess)`
+and then dies.
+
+A: Program using TSAN can not be run in valgrind, use ccmake to disable TSAN flags and rebuild - when you want to run in valgrind.
 
 
 # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html

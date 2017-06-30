@@ -1,3 +1,28 @@
 #!/bin/bash
-echo "Running with SAFE MEMORY OPTIONS"
-sudo valgrind ./tunserver.elf "$@"
+readonly myname=$(basename "$BASH_SOURCE")
+function myprint { printf "[Script %s]: %s \n" "$myname" "$*" ; }
+
+program_for_flags="./tunserver.elf"
+program_to_run="./tunserver.elf"
+myprint "Running program ($program_to_run) with SAFE MEMORY OPTIONS"
+
+${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
+flagname="valgrind_memory_is_possible"
+${program_for_flags} --print-flags-flavour | grep "$flagname" || {
+	myprint "Program to test flags ($program_for_flags) warned us that project is built with wrong flags for this test"
+	myprint "...see documentation how to configure program for this. (search name '$flagname')"
+	exit 1
+}
+
+cat <<EOF
+  __  __ _____ __  __  ___  ______   __             __
+ |  \\/  | ____|  \\/  |/ _ \\|  _ \\ \\ / /  ___  __ _ / _| ___
+ | |\\/| |  _| | |\\/| | | | | |_) \\ V /  / __|/ __ | |_ / _ \\
+ | |  | | |___| |  | | |_| |  _ < | |   \\__ \\ (_| |  _|  __/
+ |_|  |_|_____|_|  |_|\\___/|_| \\_\\|_|   |___/\\__,_|_|  \\___|
+
+EOF
+
+myprint "All seems fine, running ($program_to_run)"
+set -x
+sudo valgrind ./nocap-tunserver.elf "$@"
