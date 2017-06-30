@@ -13,7 +13,6 @@
 
 #include <mutex>
 
-#include <backward.hpp>
 
 /// Current debug level. Plase change it only using g_dbg_level_set().
 extern unsigned char g_dbg_level;

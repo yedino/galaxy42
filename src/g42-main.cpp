@@ -268,12 +268,35 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 #define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
-int main(int argc, const char **argv) {
+void main_print_flavour() {
+	auto & out = std::cout;
+	out << "# Flavour defines:" << std::endl;
+	bool valgrind_memory_is_possible = true; // do conditions allow us to run in valgrind, e.g. TSAN maps too much memory so then =false
+	#if FLAVOUR_TSAN_FULL
+		valgrind_memory_is_possible = false;
+		out << "FLAVOUR_TSAN_FULL" << std::endl;
+	#endif
+	#if FLAVOUR_UBSAN_FULL
+		out << "FLAVOUR_UBSAN_FULL" << std::endl;
+	#endif
+	#if FLAVOUR_UBSAN_ONLY_REPORTS
+		out << "FLAVOUR_UBSAN_ONLY_REPORTS" << std::endl;
+	#endif
+
+	out <<  ( valgrind_memory_is_possible ? "valgrind_memory_is_possible" : "(valgrind NOT possible)" ) << std::endl;
+}
+
+int main(int argc, const char **argv) { // the main() function
 	// parse early options:
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
+
+	if (contains_value(argt,"--print-flags-flavour")) {
+		main_print_flavour();
+		return 0;
+	}
 
 	typedef enum {
 		e_program_type_tunserver = 1,
