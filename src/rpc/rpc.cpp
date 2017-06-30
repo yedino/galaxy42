@@ -78,8 +78,8 @@ void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it)
 /*************************************************************************************/
 
 c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr,
-                                                       boost::asio::ip::tcp::socket &&socket,
-                                                       const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key)
+                                   boost::asio::ip::tcp::socket &&socket,
+                                   const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key)
 :
 	m_rpc_server_ptr(rpc_server_ptr),
 	m_socket(std::move(socket)),
@@ -109,6 +109,7 @@ void c_rpc_server::c_session::read_handler_size(const boost::system::error_code 
 	uint16_t message_size = static_cast<uint16_t>(m_data_size.at(0) << 8);
 	message_size += m_data_size.at(1);
 	m_received_data.resize(message_size, 0); // prepare buffer for message
+	_dbg("message size = " << message_size);
 	async_read(m_socket, boost::asio::buffer(&m_received_data.at(0), m_received_data.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler_data(error, bytes_transferred);
@@ -116,41 +117,44 @@ void c_rpc_server::c_session::read_handler_size(const boost::system::error_code 
 }
 
 void c_rpc_server::c_session::read_handler_data(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	_dbg("readed " << bytes_transferred << " bytes");
-	try {
-		if (error) {
-			_dbg("asio error " << error.message());
-			delete_me();
-			return;
-		}
-		// parsing message
-		_dbg("received message " << m_received_data);
-		execute_rpc_command(m_received_data);
-	}
-	catch (const std::exception &e) {
-		_erro( "exception read_handler " << e.what());
-		_erro( "close connection\n" );
+	_dbg("readed " << bytes_transferred << " bytes of data");
+	if (error) {
+		_dbg("asio error " << error.message());
 		delete_me();
 		return;
 	}
+	// parsing message
+	_dbg("received message " << m_received_data);
+	async_read(m_socket, boost::asio::buffer(&m_hmac_authenticator.at(0), m_hmac_authenticator.size()),
+		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
+			read_handler_hmac(error, bytes_transferred);
+	});
 }
 
 void c_rpc_server::c_session::read_handler_hmac(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	_dbg("readed " << bytes_transferred << " bytes");
+	_dbg("readed " << bytes_transferred << " bytes of hmac authenticator");
 	_dbg("authenticate message");
 	if (error) {
 		_dbg("asio error " << error.message());
 		delete_me();
 		return;
 	}
-	int ret = crypto_auth_hmacsha512_verify(
-	                                                    m_hmac_authenticator.data(),
-	                                                    reinterpret_cast<const unsigned char *>(m_received_data.data()),
-	                                                    m_received_data.size(),
-	                                                    m_hmac_key.data()
+	int ret = crypto_auth_hmacsha512_verify(m_hmac_authenticator.data(),
+	                                        reinterpret_cast<const unsigned char *>(m_received_data.data()),
+	                                        m_received_data.size(),
+	                                        m_hmac_key.data()
 	);
 	if (ret == -1) {
 		_warn("hmac authentication error");
+		delete_me();
+		return;
+	}
+	assert(ret == 0);
+	try {
+		execute_rpc_command(m_received_data);
+	} catch (const std::exception &e) {
+		_erro( "exception read_handler " << e.what());
+		_erro( "close connection\n" );
 		delete_me();
 		return;
 	}
