@@ -50,7 +50,9 @@ class c_rpc_server final {
 
 		class c_session {
 			public:
-				c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
+				c_session(c_rpc_server *rpc_server_ptr,
+				                boost::asio::ip::tcp::socket &&socket,
+				                const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key);
 				c_session(c_session &&) = delete;
 				c_session & operator = (c_session && other) = delete;
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
@@ -61,10 +63,12 @@ class c_rpc_server final {
 				std::string m_received_data;
 				std::string m_write_data;
 				std::array<unsigned char, 2> m_data_size; // always first 2 bytes of packet == message size
-				std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key;
+				std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_authenticator;
+				std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key
 
 				void read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred); ///< data readed to m_read_data_size
-				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
+				void read_handler_data(const boost::system::error_code &error, std::size_t bytes_transferred);
+				void read_handler_hmac(const boost::system::error_code &error, std::size_t bytes_transferred);
 				void write_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
 				/**
 				 * @brief delete_me
