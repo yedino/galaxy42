@@ -38,6 +38,19 @@ void netClient::send_msg(const std::string &msg) {
 	size_t send_bytes = static_cast<size_t>(m_socket->write(packet));
 	if (send_bytes != static_cast<size_t>(packet.size()))
 		throw std::runtime_error("send packet error");
+	QByteArray authenticator(crypto_auth_hmacsha512_BYTES, 0);
+	std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> hmac_key; // TODO load from file!!!
+	hmac_key.fill(0x42);
+	int ret = crypto_auth_hmacsha512(
+		reinterpret_cast<unsigned char *>(authenticator.data()),
+		reinterpret_cast<const unsigned char *>(msg.data()),
+		msg.size(),
+		hmac_key.data());
+	if (ret == -1)
+		throw std::runtime_error("authentication error");
+	assert(ret == 0);
+	if (authenticator.size() != m_socket->write(authenticator))
+		throw std::runtime_error("send authenticator error");
 }
 
 void netClient::onTcpReceive() {
