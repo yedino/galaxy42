@@ -15,7 +15,7 @@ QMAKE_CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic
 TARGET = simpleGui
 TEMPLATE = app
 
-LIBS += -lboost_system
+LIBS += -lboost_system -lsodium
 
 
 SOURCES += \
