@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <QDebug>
+#include <sodium.h>
 
 #include "trivialserialize.hpp"
 
@@ -16,37 +17,26 @@ uint16_t dataeater::pop_msg_size() {
 	return msg_size;
 }
 
-void dataeater::processFresh() {}
-
 void dataeater::continiueProcessing() {
+	// reading 2 bytes of size
 	if(!m_is_processing) {
 		// change 4 to 2 because of no 0xff at the begin of packet
 		if (m_internal_buffer.size() < 2) {
 			return;
 		}
 
-		// Is it really neccessary?
-		//if(char (m_internal_buffer.front()) != char(0xff)) {	//frame should start with 0xff. If not - something goes wrong
-		//	m_internal_buffer.pop();
-		//	return false;
-		//}
-
 		m_frame_size = pop_msg_size();
-
 		qDebug() << "qframe size = " << m_frame_size;
-
 		m_current_index = 0;
-		//continiueProcessing();
 		m_is_processing = true;
-
 	}
 
+	// reading message data + authenticator
 	while (true) {
-		if (m_frame_size == m_current_index) {
+		if (m_current_index == (m_frame_size + crypto_auth_hmacsha512_BYTES)) {
 			m_commands_list.push(m_last_command);
 			m_last_command.clear();
 			m_is_processing = false;
-			processFresh();
 			return;
 		} else {
 			if(m_internal_buffer.empty()) break;
@@ -54,14 +44,13 @@ void dataeater::continiueProcessing() {
 		}
 		m_current_index++;
 	}
-
 }
 
 std::string dataeater::getLastCommand() {
 	if(m_commands_list.empty()) {
 		return std::string();
 	}
-	return std::string (m_commands_list.back());
+	return std::string(m_commands_list.back());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

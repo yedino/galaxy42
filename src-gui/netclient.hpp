@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <QTcpSocket>
+#include <sodium.h>
 #include "dataeater.hpp"
 #include "commandexecutor.hpp"
 
@@ -21,6 +22,13 @@ class netClient final : QObject {
 		std::weak_ptr<commandExecutor> m_cmd_exec;
 		std::unique_ptr<QTcpSocket> m_socket;
 		dataeater m_data_eater;
+		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key;
+		/**
+		 * @brief check_auth
+		 * @param cmd_and_auth data + crypto_auth_hmacsha512_BYTES bytes of HMAC-SHA-512
+		 * @return true if authentication pass
+		 */
+		bool check_auth(const std::string &cmd_and_auth);
 
 	private slots:
 		void onTcpReceive();
