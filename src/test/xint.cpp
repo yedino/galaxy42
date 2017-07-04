@@ -133,11 +133,19 @@ TEST(xint,can_assign) {
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) ); // TODO
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) ); // TODO
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) ); // TODO
+
+	EXPECT_TRUE( overflow_impossible_in_assign(a, -1));
+	EXPECT_TRUE( overflow_impossible_in_assign(a, -128));
+	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<int>::min()));
 	UNUSED(a);
-	unsigned int b=0;
-	EXPECT_FALSE( overflow_impossible_in_assign(b, -1));
-	EXPECT_FALSE( overflow_impossible_in_assign(b, -128));
-	EXPECT_FALSE( overflow_impossible_in_assign(b, std::numeric_limits<int>::min()));
+
+	uxint uxint_b=0;
+	EXPECT_TRUE( overflow_impossible_in_assign(uxint_b, 0));
+	EXPECT_TRUE( overflow_impossible_in_assign(uxint_b, 1));
+	EXPECT_TRUE( overflow_impossible_in_assign(uxint_b, 127));
+	EXPECT_FALSE( overflow_impossible_in_assign(uxint_b, -1));
+	EXPECT_FALSE( overflow_impossible_in_assign(uxint_b, -128));
+	//EXPECT_FALSE( overflow_impossible_in_assign(uxint_b, std::numeric_limits<int>::min()));
 }
 
 TEST(xint,normal_use_op4assign_loop) {
