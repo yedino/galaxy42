@@ -15,6 +15,7 @@
 /**
  * @file This file/module goal is mainly to provide a very safe interger type
  * that signals on any overflow or other UB (or not-mathematically-correct behavior).
+ * @owner rfree
  * @see xint
 */
 
@@ -39,8 +40,8 @@ typedef boost::multiprecision::number<
 		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
 uxbigint;
 
-
-
+/// This is the integer (signed) that we expect to ALWAYS give the correct result (never underflow/overflow)
+/// it is to be used in unit-tests, to compare results of other operations against it.
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<256, 4096,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
@@ -329,7 +330,8 @@ typedef safer_int<basic_xint> xint;
  * similar to xint type, see it for details how to use it.
  * @see xint
 */
-typedef safer_int<basic_uxint> uxint;
+typedef basic_uxint uxint; // @TODO TODONOW @rfree this should be instead this:
+// typedef safer_int<basic_uxint> uxint;  // ^
 
 template<typename T>
 uxint xsize(const T & obj) {
