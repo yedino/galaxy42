@@ -14,27 +14,31 @@
 
 /**
  * @file This file/module goal is mainly to provide a very safe interger type
- * that signals on any overflow or other UB (or not-mathematically-correct behavior).
+ * that will provided mathematically-correct results, or else always throw exception.
+ * It should be also have minimal overhead and be fast.
  * @owner rfree
  * @see xint
 */
 
+// Safe replacement for int64_t
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 basic_xint;
 
+// Safe replacement for uint64_t
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
 basic_uxint;
 
-
+// Safe values (signed) of any reasonable size (at least 128 bit), can be slower
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<128, 1024,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 xbigint;
 
+// Safe values (unsigned) of any reasonable size (at least 128 bit), can be slower
 typedef boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<128, 1024,
 		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
@@ -89,11 +93,21 @@ bool overflow_impossible_in_assign(safer_int<T> target, U value) {
 	}
 }
 
-struct safer_int_base { };
-
-
+/**
+ * This wraps some bigint like basic_xint, and provides some functions (or checks for them) then just the bigint
+ * (then just the boost's cpp_int backend).
+ * For any variable of type SAFE that is instance of this template class safer_int,
+ *   and for value INT that is either fundamental integral, or any instance of safer_int (possibly for other type T),
+ *   or fundamental float (then it will be rounded),
+ *   following operations will either provide mathematically-correct result or throw exception:
+ *   @@ SAFE
+ *   SAFE @@ INT
+ *   INT @@ SAFE
+ *   where the marker '@@' represents any applicable operator (binary or tetrary as needed)
+ * @owner rfree
+*/
 template<typename T>
-class safer_int : public safer_int_base {
+class safer_int {
 		#define TEMPLATE \
 		template<\
 			unsigned U1, unsigned U2, \
@@ -218,8 +232,12 @@ class safer_int : public safer_int_base {
 		#undef T_OBJECT
 };
 
+
 namespace std {
 
+/**
+ * The proper numeric_limits definition for our safer_int<>
+ */
 template <typename T>
 class numeric_limits<safer_int<T>> {
   // based on http://www.boost.org/doc/libs/1_53_0/boost/multiprecision/cpp_int/limits.hpp
@@ -264,9 +282,7 @@ class numeric_limits<safer_int<T>> {
 		BOOST_STATIC_CONSTEXPR bool traps = TL::traps;
 		BOOST_STATIC_CONSTEXPR bool tinyness_before = TL::tinyness_before;
 		BOOST_STATIC_CONSTEXPR float_round_style round_style = TL::round_style;
-
 };
-
 
 } // std
 

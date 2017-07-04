@@ -1,0 +1,13 @@
+#!/bin/bash
+prog="$1"
+tests="$GALAXY42_UNITTESTS"
+if [[ -z "$tests" ]] ; then
+	echo
+	echo "Add to your ~/.bashrc following env variable (and reload with cmd like source ~/.bashrc)"
+	echo "  export GALAXY42_UNITTESTS='*int*'"
+	echo "with name of pattern of tests"
+	echo "exiting from script ($BASH_SOURCE)"
+	echo
+fi
+set -x
+"$prog" --gtest_filter="$tests"
