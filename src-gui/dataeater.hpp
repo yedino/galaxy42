@@ -16,7 +16,6 @@ public:
 	template <class T>
 	void eat(const T &data);
 
-	bool hasNextCommand();
 	std::string getLastCommand();
 
 private:
@@ -25,13 +24,12 @@ private:
 	std::string m_last_command;
 
 	uint16_t pop_msg_size();
-	void processFresh();
 	void continiueProcessing();
 
 	bool m_is_processing;
 
 	int m_frame_size;
-	int m_current_index;
+	size_t m_current_index;
 };
 
 template <class T>
