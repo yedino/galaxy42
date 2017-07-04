@@ -11,11 +11,11 @@
 
 typedef long double t_correct1;
 
-
 TEST(xint,normal_use_init) {
-	xint a; a=0;
-	a=1;
-	a=100;
+	xint a;
+	EXPECT_NO_THROW( a=0; );
+	EXPECT_NO_THROW( a=1; );
+	EXPECT_NO_THROW( a=100; );
 	UNUSED(a);
 }
 
