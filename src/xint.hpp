@@ -74,13 +74,18 @@ struct is_specialization : std::false_type { };
 template <template<typename...> class R, typename... ARGS>
 struct is_specialization<R<ARGS...>, R> : std::true_type { };
 
-
+template<typename T> class safer_int;
 
 template <typename T, typename U>
-bool overflow_impossible_in_assign(T target, U value) {
-	if (value < std::numeric_limits<decltype(target)>::min()) return false;
-	if (value > std::numeric_limits<decltype(target)>::max()) return false;
-	return true; // no overflow
+bool overflow_impossible_in_assign(safer_int<T> target, U value) {
+	try{
+		if (value < std::numeric_limits<decltype(target)>::min()) return false;
+		if (value > std::numeric_limits<decltype(target)>::max()) return false;
+		return true; // no overflow
+	}catch(...)
+	{
+		return false;
+	}
 }
 
 struct safer_int_base { };
@@ -161,7 +166,7 @@ class safer_int : public safer_int_base {
 
 		template<typename U> operator safer_int<U> () const { safer_int<U> ret; ret.xi=xi; return ret; } // TODO check range
 		// operator const char* () const { return xi; } // TODO wtf?
-		template<typename U> operator U () const { U ret; ret=xi; return ret; } // TODO check range, numeric_cast?
+		template<typename U> operator U () const {const U ret=xi/*U ret; ret=xi*/; return ret; } // TODO check range, numeric_cast?
 
 		template<typename U> bool operator==(const safer_int<U> & obj) const { return xi==obj.xi; }
 		template<typename U> bool operator!=(const safer_int<U> & obj) const { return xi!=obj.xi; }
@@ -324,7 +329,7 @@ typedef safer_int<basic_xint> xint;
  * similar to xint type, see it for details how to use it.
  * @see xint
 */
-typedef basic_uxint uxint;
+typedef safer_int<basic_uxint> uxint;
 
 template<typename T>
 uxint xsize(const T & obj) {
