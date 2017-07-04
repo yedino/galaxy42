@@ -4,6 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	if (sodium_init() == -1) {
+		qDebug() << "sodium init error";
 		return 1;
 	}
 	QApplication a(argc, argv);

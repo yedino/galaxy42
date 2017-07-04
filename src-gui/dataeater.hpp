@@ -16,7 +16,7 @@ public:
 	template <class T>
 	void eat(const T &data);
 
-	std::string getLastCommand();
+	std::string getLastCommand(); ///< returns empty string or received data + crypto_auth_hmacsha512_BYTES bytes of hmac
 
 private:
 	std::queue<uint8_t> m_internal_buffer;
