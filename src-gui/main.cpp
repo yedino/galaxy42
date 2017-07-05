@@ -8,8 +8,10 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	QApplication a(argc, argv);
-	std::shared_ptr<MainWindow> w = MainWindow::create_shared_ptr();
-	w->show();
+//	std::shared_ptr<MainWindow> w = MainWindow::create_shared_ptr();
+//	w->show();
+	MainWindow w;
+	w.show();
 
 	return a.exec();
 }
