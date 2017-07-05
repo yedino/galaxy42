@@ -90,6 +90,11 @@ bool overflow_impossible_in_assign(safer_int<T> target, U value) {
 
 struct safer_int_base { };
 
+// Why we need safer_int
+// 1. there are no boost::multiprecision auto conversion between signed and unsigned types
+// (example: basic_uxint a; basic_xint b; a = b; //compilation error
+// 2. there are no auto conversion from float point fundamental types to boost multiprecision and
+//    numeric_cast does not detect overflows (example: boost::numeric_cast<uxint>(1.0e20l) does not throw and return 0
 
 template<typename T>
 class safer_int : public safer_int_base {
