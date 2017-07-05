@@ -50,11 +50,10 @@ int main(int argc, char **argv) {
 
 	// calculate authenticator
 	std::array<unsigned char, crypto_auth_hmacsha512_BYTES> authenticator;
-	crypto_auth_hmacsha512(
-						authenticator.data(),
-						reinterpret_cast<const unsigned char *>(rpc_message.data()),
-						rpc_message.size(),
-						hmac_key.data());
+	crypto_auth_hmacsha512(authenticator.data(),
+	                       reinterpret_cast<const unsigned char *>(rpc_message.data()),
+	                       rpc_message.size(),
+	                       hmac_key.data());
 
 	// send request
 	boost::asio::io_service io_service;
@@ -81,12 +80,10 @@ int main(int argc, char **argv) {
 	std::cout << "receive authenticator" << std::endl;
 	boost::asio::read(socket, boost::asio::buffer(&authenticator.at(0), authenticator.size()));
 
-	int ret = crypto_auth_hmacsha512_verify(
-											authenticator.data(),
-											reinterpret_cast<const unsigned char *>(receive_message.data()),
-											receive_message.size(),
-											hmac_key.data()
-											);
+	int ret = crypto_auth_hmacsha512_verify(authenticator.data(),
+	                                        reinterpret_cast<const unsigned char *>(receive_message.data()),
+	                                        receive_message.size(),
+	                                        hmac_key.data());
 	if (ret == -1) {
 		std::cout << "verification error" << std::endl;
 	} else {

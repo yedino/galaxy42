@@ -43,11 +43,9 @@ void MainWindow::showDebugPage(QByteArray &pageCode) {
 }
 
 void MainWindow::on_plusButton_clicked() {
-
 	m_dlg = std::make_unique<addressDialog>(this);
 	connect (m_dlg.get() ,SIGNAL(add_address(QString)),this,SLOT(update_peer_list(QString)));
 	m_dlg->show();
-
 }
 
 void MainWindow::update_peer_list(QString peer) {
@@ -55,9 +53,9 @@ void MainWindow::update_peer_list(QString peer) {
 	m_tun_process->add_address(peer);
 
 	ui->peerListWidget->clear();
-	std::cout << "Peers:" << '\n';
+	qDebug() << "Peers:";
 	for (const auto &peer : m_tun_process->get_peer_list()) {
-		std::cout << peer.to_string() << '\n';
+		qDebug() << peer.to_string();
 		ui->peerListWidget->addItem(QString::fromStdString(peer.to_string()));
 	}
 }
@@ -74,7 +72,7 @@ void MainWindow::on_minusButton_clicked() {
         delete_list.at(0)->setText("");
         ui->peerListWidget->sortItems(Qt::DescendingOrder);
     } catch(...){
-        qDebug()<<"co mam niby usunac?!";
+        qDebug() << "list is empty";
     }
 }
 
