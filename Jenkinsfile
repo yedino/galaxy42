@@ -124,28 +124,35 @@ node('master') {
 
 	def failure_counter=0
 
-	stage('native_build_parallel') {
+	//stage('native_build_parallel') {
 		parallel linux: {
-				if(build_native_linux) {
-					native_linux(GIT_REPOSITORY_URL,GIT_BRANCH)
+				stage('Native_Linux') {
+					if(build_native_linux) {
+						native_linux(GIT_REPOSITORY_URL,GIT_BRANCH)
+					}
 				}
 			},
 			windows_mingw32: {
-				if(build_native_windows_mingw32) {
-					native_windows_mingw32(GIT_REPOSITORY_URL,GIT_BRANCH)
+				stage('Native_Windows_mingw32') {
+					if(build_native_windows_mingw32) {
+						native_windows_mingw32(GIT_REPOSITORY_URL,GIT_BRANCH)
+					}
 				}
 			},
 			windows_mingw64: {
-				if(build_native_windows_mingw64) {
-					native_windows_mingw64(GIT_REPOSITORY_URL,GIT_BRANCH)
+				stage('Native_Windows_mingw64') {
+					if(build_native_windows_mingw64) {
+						native_windows_mingw64(GIT_REPOSITORY_URL,GIT_BRANCH)
+					}
 				}
 			},
 			windows_msvc: {
-				if(build_native_windows_msvc) {
-					native_windows_msvc(GIT_REPOSITORY_URL,GIT_BRANCH)
+				stage('Native_Windows_MSVC') {
+					if(build_native_windows_msvc) {
+						native_windows_msvc(GIT_REPOSITORY_URL,GIT_BRANCH)
+					}
 				}
 			}
-	}
 
 	if (run_unit_test) {
 		stage('unit_test') {
@@ -254,5 +261,8 @@ node('master') {
 		currentBuild.result = 'SUCCESS'
 	}
 
-	ircNotification(currentBuild.result)
+	agent {
+		label 'master'
+		ircNotification(currentBuild.result)
+	}
 }
