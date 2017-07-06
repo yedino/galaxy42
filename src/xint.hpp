@@ -188,8 +188,8 @@ class safer_int {
 		}
 
 		template<typename U> operator safer_int<U> () const { safer_int<U> ret; ret.xi=xi; return ret; } // TODO check range
-		// operator const char* () const { return xi; } // TODO wtf?
-		template<typename U> operator U () const {const U ret=xi/*U ret; ret=xi*/; return ret; } // TODO check range, numeric_cast?
+		// operator const char* () const { return xi; } // TODO ?
+		template<typename U> operator U () const { return boost::numeric_cast<U>(xi); }
 
 		template<typename U> bool operator==(const safer_int<U> & obj) const { return xi==obj.xi; }
 		template<typename U> bool operator!=(const safer_int<U> & obj) const { return xi!=obj.xi; }
