@@ -33,41 +33,33 @@ void use8u(uint8_t val) { _dbg3("Got: " << static_cast<int>(val) ); }
 // narrowing in function call
 // ===========================================================================================================
 
-// problem:
-void demo_why_not_just_cppint_narrowing_func_call_int() {
-	t_bigint64u x = get64u();
-	// use8u( x ); // does not compile, no such API in cppint
-	use8u( x.convert_to<uint64_t>() ); // mistake, caller should had casted to 8u
+TEST(xint, narrowing_func_call_int_PROBLEM) {
+	EXPECT_NO_THROW( {
+		t_bigint64u x = get64u();
+		// use8u( x ); // does not compile, no such API in cppint
+		use8u( x.convert_to<uint64_t>() ); // mistake, caller should had casted to 8u
+	}	);
 }
 
-// solution 1: (micro-example here)
 struct special_64u {
 	public:
 		special_64u(uint64_t val) : m_val(val) { }
 		template <typename T> operator T () { return numeric_cast<T>(m_val); }
 		private: uint64_t m_val;
 };
-void demo_why_not_just_cppint_narrowing_func_call_int_fixed_special() {
-	special_64u x = get64u();
-	use8u( x );
+TEST(xint, narrowing_func_call_int_FIX_special) {
+	EXPECT_THROW( {
+		special_64u x = get64u();
+		use8u( x );
+	} , boost::bad_numeric_cast );
 }
 
-TEST(xint, narrowing_func_call_int_special) {
-	EXPECT_NO_THROW( demo_why_not_just_cppint_narrowing_func_call_int() );
-	EXPECT_THROW( { demo_why_not_just_cppint_narrowing_func_call_int_fixed_special(); } , boost::bad_numeric_cast );
+TEST(xint, narrowing_func_call_int_FIX_xint) {
+	EXPECT_THROW( {
+		xint x = get64u();
+		use8u( x );
+	} , std::overflow_error );
 }
-
-// solution 2: xint
-void demo_why_not_just_cppint_narrowing_func_call_int_fixed_xint() {
-	xint x = get64u();
-	use8u( x );
-}
-
-TEST(xint, narrowing_func_call_int_xint) {
-	EXPECT_NO_THROW( demo_why_not_just_cppint_narrowing_func_call_int() );
-	EXPECT_THROW( { demo_why_not_just_cppint_narrowing_func_call_int_fixed_xint(); } , std::overflow_error );
-}
-
 
 #if 0 // turn off v1
 
