@@ -43,6 +43,10 @@ UNUSED(x); DEAD_RETURN();
 
 ```cpp
 
+auto w = widget{ 12, 34 }; // style from https://herbsutter.com/2013/08/12/gotw-94-solution-aaa-style-almost-always-auto/
+auto x = xint{ 5 };
+xint y = x; // also allowed
+
 _dbg4(X) // unorganized "removed" debug
 _dbg3(X) _dbg2(X) _dbg1(X) // debug "Load key=0x1234"
 _info(X) _note(X) _clue(X) // information, more important, bigger group

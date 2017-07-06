@@ -37,7 +37,14 @@ TEST(xint, narrowing_func_call_int_PROBLEM) {
 	EXPECT_NO_THROW( {
 		t_bigint64u x = get64u();
 		// use8u( x ); // does not compile, no such API in cppint
-		use8u( x.convert_to<uint64_t>() ); // mistake, caller should had casted to 8u
+		// int8_t y { x.convert_to<uint64_t>() }; // GOOD: this narrowing (of converted 64bit int to 8bit) is compilation error
+		int8_t z = x.convert_to<uint64_t>(); // BAD: this narrowing is not detecte
+		use8u( x.convert_to<uint64_t>() ); // BAD/GOOD: caller should casted to 8u. This mistake is detected only with -Wconversion
+		// ^-- comment out this test, when we enable -Wconversion
+
+		// use8u( { x.convert_to<uint64_t>() } ); // GOOD: mistake, caller should had casted to 8u. This is detected.
+		// But syntax is long.
+		use8u( z );
 	}	);
 }
 
@@ -61,7 +68,31 @@ TEST(xint, narrowing_func_call_int_FIX_xint) {
 	} , std::overflow_error );
 }
 
-#if 0 // turn off v1
+// ===========================================================================================================
+// correct result when combining with less-safe types
+// ===========================================================================================================
+
+template<typename TInt, typename TFunc>
+void mix_with_lesssafe_type(const TFunc & func) {
+	EXPECT_NO_THROW( {
+		TInt x = func();
+		x -= 10;
+		TInt y = x + 10;
+		UNUSED(x); UNUSED(y);
+	});
+	EXPECT_THROW( {
+		TInt x = func();
+		TInt y = x + 10;
+		UNUSED(x); UNUSED(y);
+	} , std::overflow_error );
+}
+
+TEST(xint, mix_with_lesssafe) {
+	mix_with_lesssafe_type<t_bigint64u>(get64u);
+	mix_with_lesssafe_type<xint>(get64u);
+}
+
+#if 1 // turn off v1
 
 TEST(xint,normal_use_init) {
 	xint a;
