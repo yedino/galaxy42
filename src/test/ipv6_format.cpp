@@ -2,6 +2,8 @@
 
 #include "../ipv6.hpp"
 #include <stdplus/tab.hpp>
+#include <type_traits>
+
 
 /* Frame (104 bytes) */
 static unsigned char icmp_frame00[104] = {
@@ -23,14 +25,16 @@ static unsigned char icmp_frame00[104] = {
 
 TEST(ipv6_format, payload_size) {
 	auto payload_size = 64;
-	stdplus::tab_view<unsigned char> icmp_view(icmp_frame00, icmp_frame00 + sizeof(icmp_frame00) );
+	stdplus::tab_view<unsigned char> icmp_view(icmp_frame00,
+	                                           icmp_frame00 + std::extent<decltype(icmp_frame00)>::value );
 	auto calculated_size = ipv6_size_payload_from_header(icmp_view);
 	EXPECT_EQ(calculated_size, payload_size);
 }
 
 TEST(ipv6_format, entrieip_size) {
 	auto entrieip_size = 104;
-	stdplus::tab_view<unsigned char> icmp_view(icmp_frame00, icmp_frame00 + sizeof(icmp_frame00) );
+	stdplus::tab_view<unsigned char> icmp_view(icmp_frame00,
+	                                           icmp_frame00 + std::extent<decltype(icmp_frame00)>::value );
 	auto calculated_size = ipv6_size_entireip_from_header(icmp_view);
 	EXPECT_EQ(calculated_size, entrieip_size);
 }
