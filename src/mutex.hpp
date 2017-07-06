@@ -169,8 +169,6 @@ private:
 public:
   LockGuard(t_mutex &mu) ACQUIRE(mut) : mut(mu) { mut.lock(); }
   ~LockGuard() RELEASE() { mut.unlock(); }
-  void lock() ACQUIRE(mut) { mut.lock(); }
-  void unlock() RELEASE() { mut.unlock(); }
 };
 
 template <class t_mutex>
