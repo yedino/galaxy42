@@ -6,10 +6,70 @@
 #include <exception>
 #include <cmath>
 #include <type_traits>
+#include <limits>
 
 #if USE_BOOST_MULTIPRECISION
 
 typedef long double t_correct1;
+
+
+/// What if we would only use boost's big int (cpp int, checked) directly:
+using t_bigint64s = boost::multiprecision::number<
+	boost::multiprecision::cpp_int_backend<64, 64,
+		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >;
+using t_bigint64u = boost::multiprecision::number<
+	boost::multiprecision::cpp_int_backend<64, 64,
+		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >;
+
+long double get_double() { return std::numeric_limits<long double>::max(); }
+uint64_t get64u() { return std::numeric_limits<uint64_t>::max(); }
+uint32_t get32u() { return std::numeric_limits<uint32_t>::max(); }
+uint16_t get16u() { return std::numeric_limits<uint16_t>::max(); }
+uint8_t get8u() { return std::numeric_limits<uint8_t>::max(); }
+void use64u(uint64_t val) { _dbg3("Got: " << val ); }
+void use8u(uint8_t val) { _dbg3("Got: " << static_cast<int>(val) ); }
+
+// ===========================================================================================================
+// narrowing in function call
+// ===========================================================================================================
+
+// problem:
+void demo_why_not_just_cppint_narrowing_func_call_int() {
+	t_bigint64u x = get64u();
+	// use8u( x ); // does not compile, no such API in cppint
+	use8u( x.convert_to<uint64_t>() ); // mistake, caller should had casted to 8u
+}
+
+// solution 1: (micro-example here)
+struct special_64u {
+	public:
+		special_64u(uint64_t val) : m_val(val) { }
+		template <typename T> operator T () { return numeric_cast<T>(m_val); }
+		private: uint64_t m_val;
+};
+void demo_why_not_just_cppint_narrowing_func_call_int_fixed_special() {
+	special_64u x = get64u();
+	use8u( x );
+}
+
+TEST(xint, narrowing_func_call_int_special) {
+	EXPECT_NO_THROW( demo_why_not_just_cppint_narrowing_func_call_int() );
+	EXPECT_THROW( { demo_why_not_just_cppint_narrowing_func_call_int_fixed_special(); } , boost::bad_numeric_cast );
+}
+
+// solution 2: xint
+void demo_why_not_just_cppint_narrowing_func_call_int_fixed_xint() {
+	xint x = get64u();
+	use8u( x );
+}
+
+TEST(xint, narrowing_func_call_int_xint) {
+	EXPECT_NO_THROW( demo_why_not_just_cppint_narrowing_func_call_int() );
+	EXPECT_THROW( { demo_why_not_just_cppint_narrowing_func_call_int_fixed_xint(); } , std::overflow_error );
+}
+
+
+#if 0 // turn off v1
 
 TEST(xint,normal_use_init) {
 	xint a;
@@ -548,6 +608,7 @@ TEST(xint, safe_create_xint_assign) {
 #undef maxni
 
 
+#endif // turn off v1
 
 #else
 
