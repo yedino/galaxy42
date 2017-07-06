@@ -96,6 +96,13 @@ bool overflow_impossible_in_assign(safer_int<T> target, U value) {
 /**
  * This wraps some bigint like basic_xint, and provides some functions (or checks for them) then just the bigint
  * (then just the boost's cpp_int backend).
+ *
+ * Why we need safer_int
+ * 1. there are no boost::multiprecision auto conversion between signed and unsigned types
+ * (example: basic_uxint a; basic_xint b; a = b; //compilation error
+ * 2. there are no auto conversion from float point fundamental types to boost multiprecision and
+ *    numeric_cast does not detect overflows (example: boost::numeric_cast<uxint>(1.0e20l) does not throw and return 0
+ *
  * For any variable of type SAFE that is instance of this template class safer_int,
  *   and for value INT that is either fundamental integral, or any instance of safer_int (possibly for other type T),
  *   or fundamental float (then it will be rounded),
@@ -106,6 +113,7 @@ bool overflow_impossible_in_assign(safer_int<T> target, U value) {
  *   where the marker '@@' represents any applicable operator (binary or tetrary as needed)
  * @owner rfree
 */
+
 template<typename T>
 class safer_int {
 		#define TEMPLATE \
