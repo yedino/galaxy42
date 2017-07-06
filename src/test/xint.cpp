@@ -92,6 +92,32 @@ TEST(xint, mix_with_lesssafe) {
 	mix_with_lesssafe_type<xint>(get64u);
 }
 
+// ===========================================================================================================
+
+TEST(xint, comparsions_int_OP_xint) {
+	int  A1i=100, A2i=100, Zi=200; // integers: A1,A2 are same;  Z is bigger
+	xint A1x=100, A2x=100, Zx=200; // same but as xint
+	// int @@ xint
+	EXPECT_TRUE ( A1i <  Zx  );
+	EXPECT_FALSE( A1i <  A2x );
+	EXPECT_FALSE(  Zi <  Zx  );
+
+	EXPECT_TRUE ( A1i <= Zx  );
+	EXPECT_TRUE ( A1i <= A2x );
+	EXPECT_FALSE(  Zi <= A1x );
+
+	EXPECT_FALSE ( A1i >  Zx  );
+	EXPECT_FALSE ( A1i >  A2x );
+	EXPECT_TRUE  ( Zi  >  A1x );
+
+	EXPECT_FALSE ( A1i >=  Zx  );
+	EXPECT_TRUE  ( A1i >=  A2x );
+	EXPECT_TRUE  ( Zi  >=  A1x );
+}
+
+
+// ===========================================================================================================
+
 #if 1 // turn off v1
 
 TEST(xint,normal_use_init) {
@@ -197,7 +223,7 @@ TEST(xint,normal_use_belowzero) {
 
 
 TEST(xint,can_assign_xint) {
-	xint a;
+	xint64 a;
 	/*
 	basic_xint b;
 	t_correct_int corr1(9LL);
@@ -211,11 +237,13 @@ TEST(xint,can_assign_xint) {
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 10000LL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
-	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) ); // TODO
-	EXPECT_TRUE ( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) ); // TODO
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) ); // TODO
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) ); // TODO
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) ); // TODO
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) );
+	EXPECT_TRUE ( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) );
+
+	// this will say false - because overflow can happen when assigning to 64bit safer int:
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) );
 
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -1));
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -128));
@@ -388,7 +416,7 @@ void math_tests_noproblem() {
 template <typename T_INT> bool is_safe_int() {
 	bool safetype =
 		(typeid(T_INT) == typeid(xint))
-		|| (typeid(T_INT) == typeid(uxint))
+		|| (typeid(T_INT) == typeid(xintu))
 	;
 	return safetype;
 }
@@ -457,7 +485,7 @@ TEST(xint, math1) {
 	test_xint::detail::math_tests_noproblem<long int>();
 	test_xint::detail::math_tests_noproblem<unsigned long int>();
 	test_xint::detail::math_tests_noproblem<xint>();
-	test_xint::detail::math_tests_noproblem<uxint>();
+	test_xint::detail::math_tests_noproblem<xintu>();
 }
 
 //const test_xint::detail::t_correct_int maxni = 0xFFFFFFFFFFFFFFFF; // max "normal integer" on this platform
@@ -468,7 +496,7 @@ TEST(xint, math1) {
 
 #define generate_tests_for_types(FUNCTION, V1,V2,V3,V4) \
 TEST(xint, FUNCTION ## _u_i) {	test_xint::detail::math_tests_ ## FUNCTION <uint64_t>(V1); } \
-TEST(xint, FUNCTION ## _u_xint) {	test_xint::detail::math_tests_ ## FUNCTION <uxint>(V2); } \
+TEST(xint, FUNCTION ## _u_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xintu>(V2); } \
 TEST(xint, FUNCTION ## _s_i) {	test_xint::detail::math_tests_ ## FUNCTION <int64_t>(V3); } \
 TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xint>(V4); }
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
@@ -497,14 +525,14 @@ TEST(xint, some_use) {
 }
 
 TEST(xint, range_u_incr) {
-	typedef uxint T;
+	typedef xintu T;
 	T a("0xFFFFFFFFFFFFFFFE");
 	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_u_decr) {
-	typedef uxint T;
+	typedef xintu T;
 	T a("0x0000000000000001");
 	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , T("0x0000000000000000"));
 	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , T("0x0000000000000000"));
@@ -537,22 +565,22 @@ TEST(xint, range_u_to_sizet) {
 	vector<int> tabBig(10*1000000);
 	ASSERT_EQ(tab10.size(),10u);
 	size_t sm = 0xFFFFFFFFFFFFFFFF;
-	uxint a = s1;
+	xintu a = s1;
 	xint as = s1;
 	UNUSED(a);
 	UNUSED(as);
-	EXPECT_THROW( { uxint x = uxint(s1)+uxint(s2)+uxint(s3)+uxint(s4); UNUSED(x); } , std::runtime_error );
-	{               uxint x = uxint(s1)+uxint(s2)+uxint(s3);  EXPECT_EQ(x,sm); }
-	EXPECT_THROW( { uxint x = uxint(s1)+uxint(tab10.size())+uxint(s4); UNUSED(x); } , std::runtime_error );
-	EXPECT_THROW( { uxint x = uxint(s1)+uxint(tab10.size())+1-1+1; UNUSED(x); } , std::runtime_error );
-	{               uxint x = uxint(s1)+uxint(tab10.size());  EXPECT_EQ(x,sm); }
+	EXPECT_THROW( { xintu x = xintu(s1)+xintu(s2)+xintu(s3)+xintu(s4); UNUSED(x); } , std::runtime_error );
+	{               xintu x = xintu(s1)+xintu(s2)+xintu(s3);  EXPECT_EQ(x,sm); }
+	EXPECT_THROW( { xintu x = xintu(s1)+xintu(tab10.size())+xintu(s4); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xintu(s1)+xintu(tab10.size())+1-1+1; UNUSED(x); } , std::runtime_error );
+	{               xintu x = xintu(s1)+xintu(tab10.size());  EXPECT_EQ(x,sm); }
 
-	EXPECT_THROW( { uxint x = uxint(tabBig.size()) * uxint(tabBig.size()) * uxint(tabBig.size()); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xintu(tabBig.size()) * xintu(tabBig.size()) * xintu(tabBig.size()); UNUSED(x); } , std::runtime_error );
 	//                              tabBig.size()  *       tabBig.size()
-	EXPECT_THROW( { uxint x = xsize(tabBig) * xsize(tabBig) * xsize(tabBig); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xsize(tabBig) * xsize(tabBig) * xsize(tabBig); UNUSED(x); } , std::runtime_error );
 
 	long int time_dell = 100000000000;
-	EXPECT_THROW( { uxint x = xsize(tabBig) * uxint(1000000) * uxint(time_dell); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xsize(tabBig) * xintu(1000000) * xintu(time_dell); UNUSED(x); } , std::runtime_error );
 }
 
 void someint(long long int x) {
@@ -560,9 +588,9 @@ void someint(long long int x) {
 }
 
 template <typename T>
-uxint make_uxint(T value) {	return numeric_cast<uint64_t>(value); }
+xintu make_xintu(T value) {	return numeric_cast<uint64_t>(value); }
 template <typename T>
-uxint make_xint(T value) {	return numeric_cast<int64_t>(value); }
+xintu make_xint(T value) {	return numeric_cast<int64_t>(value); }
 
 
 TEST(xint, range_b_to_sizet) {
@@ -571,10 +599,10 @@ TEST(xint, range_b_to_sizet) {
 	vector<int> tabBig(10*1000000);
 	ASSERT_EQ(tab10.size(),10u);
 	// size_t sm = 0xFFFFFFFFFFFFFFFF;
-	uxbigint points = s1, value=5000;
+	xintbigu points = s1, value=5000;
 	points *= value;
-	EXPECT_THROW( { uxint points_size( points ); size_t s( points_size ); UNUSED(s); }  , std::runtime_error );
-	              { uxint points_size( points/value ); size_t s( points_size ); EXPECT_EQ(s,s1); }
+	EXPECT_THROW( { xintu points_size( points ); size_t s( points_size ); UNUSED(s); }  , std::runtime_error );
+	              { xintu points_size( points/value ); size_t s( points_size ); EXPECT_EQ(s,s1); }
 
 	EXPECT_THROW( { size_t s( points ); UNUSED(s); }  , std::runtime_error );
 	              { size_t s( points/value ); UNUSED(s); }

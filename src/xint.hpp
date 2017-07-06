@@ -20,29 +20,44 @@
  * @see xint
 */
 
-// Safe replacement for int64_t
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	64, 64, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+basic_xint64;
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	64, 64,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
+basic_xint64u;
+
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	32, 32, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+basic_xint32;
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	32, 32,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
+basic_xint32u;
+
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	16, 16, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+basic_xint16;
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	16, 16,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
+basic_xint16u;
+
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	8, 8, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+basic_xint8;
+typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
+	8, 8,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
+basic_xint8u;
+
+
 typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<64, 64,
+	boost::multiprecision::cpp_int_backend<128, 4096,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
-basic_xint;
+basic_xintbig;
 
-// Safe replacement for uint64_t
 typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<64, 64,
+	boost::multiprecision::cpp_int_backend<128, 4096,
 		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
-basic_uxint;
-
-// Safe values (signed) of any reasonable size (at least 128 bit), can be slower
-typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<128, 1024,
-		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
-xbigint;
-
-// Safe values (unsigned) of any reasonable size (at least 128 bit), can be slower
-typedef boost::multiprecision::number<
-	boost::multiprecision::cpp_int_backend<128, 1024,
-		boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
-uxbigint;
+basic_xintbigu;
 
 /// This is the integer (signed) that we expect to ALWAYS give the correct result (never underflow/overflow)
 /// it is to be used in unit-tests, to compare results of other operations against it.
@@ -298,17 +313,16 @@ class numeric_limits<safer_int<T>> {
 
 #define CONDITION typename std::enable_if< std::is_integral<U>{}>::type* = nullptr
 template<typename U, typename T, CONDITION >
-bool operator>(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
+bool operator>(U obj, safer_int<T> saferint) { return (saferint < obj) && (saferint!=obj); }
 
 template<typename U, typename T, CONDITION >
-bool operator>=(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
+bool operator>=(U obj, safer_int<T> saferint) { return (saferint < obj) || (saferint==obj); }
 
 template<typename U, typename T, CONDITION >
-bool operator<(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
+bool operator<(U obj, safer_int<T> saferint) { return (saferint > obj) && (saferint!=obj); }
 
 template<typename U, typename T, CONDITION >
-bool operator<=(U obj, safer_int<T> safeint) { return !( (safeint < obj) || (safeint==obj) ); }
-// TODO XXX XXX ^--- this is error, on purpose (unit testing)
+bool operator<=(U obj, safer_int<T> saferint) { return (saferint > obj) || (saferint==obj); }
 #undef CONDITION
 
 
@@ -320,10 +334,10 @@ template<typename T, \
 	typename U5, boost::multiprecision::expression_template_option U6>
 #define T_OBJECT boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<U1, U2, U3, U4, U5>, U6>
 
-TEMPLATE bool operator>(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi < obj) || (safeint.xi==obj) ); }
-TEMPLATE bool operator<(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi > obj) || (safeint.xi==obj) ); }
-TEMPLATE bool operator>=(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi < obj) ); }
-TEMPLATE bool operator<=(T_OBJECT obj, safer_int<T> safeint) { return !( (safeint.xi > obj) ); }
+TEMPLATE bool operator>(T_OBJECT obj, safer_int<T> saferint) { return !( (saferint.xi < obj) || (saferint.xi==obj) ); }
+TEMPLATE bool operator<(T_OBJECT obj, safer_int<T> saferint) { return !( (saferint.xi > obj) || (saferint.xi==obj) ); }
+TEMPLATE bool operator>=(T_OBJECT obj, safer_int<T> saferint) { return !( (saferint.xi < obj) ); }
+TEMPLATE bool operator<=(T_OBJECT obj, safer_int<T> saferint) { return !( (saferint.xi > obj) ); }
 
 #undef TEMPLATE
 #undef T_OBJECT
@@ -336,30 +350,26 @@ std::ostream& operator<<(std::ostream& ostr, safer_int<T> obj) {
 	return ostr;
 }
 
-/**
- * @brief This is the safe integer (signed, 64 bit) - that signals any overflow/UB:
- * it will throw when overflow happens in operations on it, or creating it from other type,
- * or when converting it to other type.
- * Supported operations can be done between this type, and any of: other variables of same type (recommend),
- * or build-in integral types, or build-in float types, or the "naked" boost::multiprecision based on cpp_int.
- * The operations that can be done, are: ++ -- (pre and post), + - * /   += -= *= /=   negation  > < >= <= ==
- * and also construction and assigment.
- * Not all combinations are yet ideally tested, best use xint with int, and on same signess type (xint with signed types,
- * uxint with unsigned).
-*/
-typedef safer_int<basic_xint> xint;
+typedef safer_int<basic_xint64>  xint64;    ///< safe integer -  64 bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint64u> xint64u;   ///< safe integer -  64 bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint32>  xint32;    ///< safe integer -  32 bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint32u> xint32u;   ///< safe integer -  32 bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint16>  xint16;    ///< safe integer -  16 bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint16u> xint16u;   ///< safe integer -  16 bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint8  > xint8  ;   ///< safe integer -  8  bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xint8u > xint8u ;   ///< safe integer -  8  bit,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xintbig>  xintbig;  ///< safe integer -  large size,   signed (see class #safer_int and topic xint for details)
+typedef safer_int<basic_xintbigu> xintbigu; ///< safe integer -  large size,   signed (see class #safer_int and topic xint for details)
+
+using xint = xint64;   ///< safer interger - in recommended size >=64,   signed (see class #safer_int and topic xint for details)
+using xintu = xint64u; ///< safer interger - in recommended size >=64, unsigned (see class #safer_int and topic xint for details)
 
 /**
- * @brief This is the safe integer (unsigned, 64 bit) - that signals any overflow/UB;
- * similar to xint type, see it for details how to use it.
- * @see xint
-*/
-typedef basic_uxint uxint; // @TODO TODONOW @rfree this should be instead this:
-// typedef safer_int<basic_uxint> uxint;  // ^
-
+ * Returns sizeof of given object, but already in proper xint type
+ */
 template<typename T>
-uxint xsize(const T & obj) {
-	return uxint( obj.size() );
+xintu xsize(const T & obj) {
+	return xintu( obj.size() );
 }
 
 /*void foo() {
