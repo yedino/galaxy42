@@ -32,16 +32,21 @@ static void change_user_if_root() {
 	uid_t uid = getuid();
 	if (uid != 0) return; // not root
 	const char* sudo_user_env = std::getenv("SUDO_USER");
-	if (sudo_user_env == nullptr) throw std::runtime_error("Cannot read SUDO_USER env") ; // get env error
+	if (sudo_user_env == nullptr) throw std::runtime_error("SUDO_USER env is not set") ; // get env error
 	std::string sudo_user_name(sudo_user_env);
 	struct passwd *pw = getpwnam(sudo_user_name.c_str());
-	if (pw == nullptr) throw std::runtime_error("getpwnam error");
+	if (pw == nullptr) {
+		_fact("getpwnam error");
+		throw std::system_error(std::error_code(errno, std::system_category()));
+	}
 	uid_t normal_user_uid = pw->pw_uid;
-	assert(normal_user_uid != 0);
+	if (normal_user_uid == 0) throw std::runtime_error("The sudo was called by root");
 	_fact("change process user id to " << normal_user_uid);
 	int setuid_ret = setuid(normal_user_uid);
-	if (setuid_ret == -1) throw std::runtime_error("setuid error");
-	assert(setuid_ret == 0);
+	if (setuid_ret == -1) {
+		_fact("setuid error");
+		throw std::system_error(std::error_code(errno, std::system_category()));
+	}
 }
 
 void drop_privileges_on_startup() {
@@ -53,7 +58,14 @@ void drop_privileges_on_startup() {
 	change.set_given_cap("NET_RAW", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
 	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
 	change.security_apply_now();
-	change_user_if_root();
+	try {
+		change_user_if_root();
+	} catch (const std::system_error &) {
+		throw;
+	} catch (const std::runtime_error &e) {
+		_warn("Can not drop privileges to a regular user. We suggest to instead from a regular user call our program with sudo, and not run it directly as root");
+		_warn(e.what());
+	}
 }
 
 
