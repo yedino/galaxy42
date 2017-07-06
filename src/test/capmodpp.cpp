@@ -7,9 +7,11 @@
 #include "my_tests_lib.hpp"
 
 #include "../utils/capmodpp.hpp"
+#include <stdplus/misc.hpp>
 #include<sstream>
 
 using namespace capmodpp;
+using stdplus::STR;
 
 TEST( capmodpp_test , cap_perm_operator_test ) {
 	cap_perm yes = cap_perm::yes;
@@ -56,6 +58,23 @@ TEST( capmodpp_test , cap_state_operator_test ) {
 		std::ostringstream osstream;
 		osstream << test_obj;
 		EXPECT_EQ(osstream.str(), std::string("eff=YES permit=YES inherit=YES bound=YES"));
+	}
+}
+
+TEST( capmodpp_test , cap_state_map_operator_test ) {
+	cap_state_map test_obj;
+	{
+		std::ostringstream osstream;
+		osstream << test_obj;
+		std::string str = osstream.str();
+		EXPECT_NE(str.find("CAP state with 0 CAPs defined:"), std::string::npos);
+	}
+	test_obj.state = {{0, cap_state()}, {1, cap_state()}, {2, cap_state()} };
+	{
+		std::ostringstream osstream;
+		osstream << test_obj;
+		std::string str = osstream.str();
+		EXPECT_NE(str.find("CAP state with 3 CAPs defined:"), std::string::npos);
 	}
 }
 

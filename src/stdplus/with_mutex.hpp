@@ -113,7 +113,6 @@ typename std::result_of<TFun(TObj&)>::type with_mutex<TMutex,TObj>::use_RW(const
 	return fun( m_obj );
 }
 
-
 template <typename TMutex, typename TObj>
 TObj& with_mutex<TMutex,TObj>::get( UniqueLockGuardRW<TMutex> & ) {
 	return m_obj;
