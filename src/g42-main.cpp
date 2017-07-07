@@ -303,6 +303,9 @@ int main(int argc, const char **argv) {
 	the_program->startup_console_first();
 	the_program->startup_version();
 
+	g_dbg_level = 60;
+	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
+
 	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
 	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
 	// to report any problems with CAPs (eg compatibility issues),
@@ -316,8 +319,6 @@ int main(int argc, const char **argv) {
 	}
 	the_program->startup_locales();
 
-	g_dbg_level = 60;
-	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
 
 	the_program->init_library_sodium();
 
