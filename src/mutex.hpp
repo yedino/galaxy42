@@ -1,12 +1,12 @@
 #pragma once
 
 /**
-
-This is the header needed to use "Thread Safety Analysis" of clang.
-https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
-
-Developed based on versions from internet, with changes from us including rob, rfree.
-
+ * This is the header needed to use "Thread Safety Analysis" of clang.
+ * https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+ *
+ * Developed based on versions from internet, with changes from us including rob, rfree.
+ * @owner rob
+ *
 */
 
 #ifndef THREAD_SAFETY_ANALYSIS_MUTEX_H
@@ -86,7 +86,7 @@ Developed based on versions from internet, with changes from us including rob, r
 	std::abort(); \
 	} while(0)
 
-//angDefines an annotated interface for mutexes.
+// Defines an annotated interface for mutexes.
 // These methods can be implemented to use any internal mutex implementation.
 #include <mutex>
 class CAPABILITY("mutex") Mutex {

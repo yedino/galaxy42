@@ -268,8 +268,14 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 #define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
+/**
+ * Purpose of this function is to print some compilation "flavour" flags, e.g. is this a TSAN build or not.
+ * @warning This function is run instead of normal body of main(), therefore the main() must exit after calling it,
+ * and this function is free to not use our special conventions, e.g. it is free to directly use std::cout instead setting up
+ * our debug/console tools. (Also it does not expect any such normal tools to be set up for it).
+ */
 void main_print_flavour() {
-	auto & out = std::cout;
+	auto & out = std::cout; // we can directly use std::cout, in this special function
 	out << "# Flavour defines:" << std::endl;
 	bool valgrind_memory_is_possible = true; // do conditions allow us to run in valgrind, e.g. TSAN maps too much memory so then =false
 	#if FLAVOUR_TSAN_FULL
@@ -287,7 +293,9 @@ void main_print_flavour() {
 }
 
 int main(int argc, const char **argv) { // the main() function
+
 	// parse early options:
+	// this is done very early, we do not use console, nor boost program_options etc
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);

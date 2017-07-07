@@ -1,9 +1,13 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
 readonly myname=$(basename "$BASH_SOURCE")
 function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "$*" "$(tput sgr0)" ; }
 
-program_for_flags="./tunserver.elf"
-program_to_run="./tunserver.elf"
+readonly program_for_flags="./tunserver.elf"
+readonly program_to_run="./tunserver.elf"
 myprint "Running program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
 
 ${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
