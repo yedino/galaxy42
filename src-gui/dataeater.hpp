@@ -28,7 +28,7 @@ private:
 
 	bool m_is_processing;
 
-	int m_frame_size;
+	unsigned int m_frame_size;
 	size_t m_current_index;
 };
 
