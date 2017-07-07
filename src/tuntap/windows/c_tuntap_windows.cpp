@@ -105,13 +105,13 @@ size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
 		size_t readed_bytes = read_from_tun(input_buffer.data(), input_buffer.size());
 		if (readed_bytes == 0) return 0;
 		auto ipv6_header_begin = input_buffer.begin();
-		// copy addresses
-		std::copy(ipv6_header_begin + 8, ipv6_header_begin + 24, src_binary_address.begin());
-		std::copy(ipv6_header_begin + 24, ipv6_header_begin + 40, dst_binary_address.begin());
+		// copy addresses, stdplus::copy_iter_and_check_no_overlap() not needed, buffers are always different
+		std::copy(&input_buffer.at(8), &input_buffer.at(24), src_binary_address.begin());
+		std::copy(&input_buffer.at(24), &input_buffer.at(40), dst_binary_address.begin());
 		// copy content without addresses
-		std::copy(ipv6_header_begin, ipv6_header_begin + 8, data); // before addresses
+		std::copy(&input_buffer.at(0), &input_buffer.at(8), data); // before addresses
 		size_t ipv6_payload_size = readed_bytes - 40; // size of received bytes without ipv6 header
-		std::copy(ipv6_header_begin + 40, ipv6_header_begin + 40 + ipv6_payload_size, data + 8);
+		std::copy(&input_buffer.at(40), &input_buffer.at(40 + ipv6_payload_size), data + 8);
 		return readed_bytes - src_binary_address.size() - dst_binary_address.size();
 }
 
