@@ -40,13 +40,28 @@ static void change_user_if_root() {
 		throw std::system_error(std::error_code(errno, std::system_category()));
 	}
 	uid_t normal_user_uid = pw->pw_uid;
+	gid_t normal_user_gid = pw->pw_gid;
 	if (normal_user_uid == 0) throw std::runtime_error("The sudo was called by root");
-	_fact("change process user id to " << normal_user_uid);
+	_fact("try to change uid to " << normal_user_uid);
+	_fact("try to change gid to " << normal_user_gid);
+	capng_clear(CAPNG_SELECT_BOTH);
+	int ret = capng_update(CAPNG_ADD, static_cast<capng_type_t>(CAPNG_EFFECTIVE|CAPNG_PERMITTED), CAP_CHOWN);
+	if (ret == -1) {
+		_erro("capng_update error: " << ret);
+		throw std::system_error(std::error_code(), "capng_update error, return value: " + std::to_string(ret));
+	}
+	ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
+	if (ret != 0) {
+		_erro("capng_change_id error: " << ret);
+		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));
+	}
+
+/*	_fact("change process user id to " << normal_user_uid);
 	int setuid_ret = setuid(normal_user_uid);
 	if (setuid_ret == -1) {
 		_fact("setuid error");
 		throw std::system_error(std::error_code(errno, std::system_category()));
-	}
+	}*/
 }
 
 void drop_privileges_on_startup() {
@@ -57,7 +72,12 @@ void drop_privileges_on_startup() {
 	change.set_given_cap("NET_ADMIN", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 	change.set_given_cap("NET_RAW", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
 	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
-	change.security_apply_now();
+	//change.security_apply_now(); // TODO: must be commented, otherwise program works only with sudo called by root, this function must be called always after change_user_if_root()
+}
+
+
+void drop_privileges_after_tuntap() {
+	_fact("Dropping privileges - after tuntap");
 	try {
 		change_user_if_root();
 	} catch (const std::system_error &) {
@@ -66,11 +86,6 @@ void drop_privileges_on_startup() {
 		_warn("Can not drop privileges to a regular user. We suggest to instead from a regular user call our program with sudo, and not run it directly as root");
 		_warn(e.what());
 	}
-}
-
-
-void drop_privileges_after_tuntap() {
-	_fact("Dropping privileges - after tuntap");
 
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
