@@ -10,7 +10,7 @@
 
 #if USE_BOOST_MULTIPRECISION
 
-typedef long double t_correct1;
+using t_correct1 = long double;
 
 
 /// What if we would only use boost's big int (cpp int, checked) directly:
@@ -21,6 +21,8 @@ using t_bigint64u = boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >;
 
+namespace n_testfunc {
+
 long double get_double() { return std::numeric_limits<long double>::max(); }
 uint64_t get64u() { return std::numeric_limits<uint64_t>::max(); }
 uint32_t get32u() { return std::numeric_limits<uint32_t>::max(); }
@@ -29,13 +31,15 @@ uint8_t get8u() { return std::numeric_limits<uint8_t>::max(); }
 void use64u(uint64_t val) { _dbg3("Got: " << val ); }
 void use8u(uint8_t val) { _dbg3("Got: " << static_cast<int>(val) ); }
 
+} // namespace n_testfunc
+
 // ===========================================================================================================
 // narrowing in function call
 // ===========================================================================================================
 
 TEST(xint, narrowing_func_call_int_PROBLEM) {
 	EXPECT_NO_THROW( {
-		t_bigint64u x = get64u();
+		t_bigint64u x = n_testfunc::get64u();
 		// use8u( x ); // does not compile, no such API in cppint
 		// int8_t y { x.convert_to<uint64_t>() }; // GOOD: this narrowing (of converted 64bit int to 8bit) is compilation error
 		int8_t z = x.convert_to<uint64_t>(); // BAD: this narrowing is not detecte
@@ -56,14 +60,14 @@ struct special_64u {
 };
 TEST(xint, narrowing_func_call_int_FIX_special) {
 	EXPECT_THROW( {
-		special_64u x = get64u();
+		special_64u x = n_testfunc::get64u();
 		use8u( x );
 	} , boost::bad_numeric_cast );
 }
 
 TEST(xint, narrowing_func_call_int_FIX_xint) {
 	EXPECT_THROW( {
-		xint x = get64u();
+		xint x = n_testfunc::get64u();
 		use8u( x );
 	} , std::overflow_error );
 }
@@ -88,8 +92,8 @@ void mix_with_lesssafe_type(const TFunc & func) {
 }
 
 TEST(xint, mix_with_lesssafe) {
-	mix_with_lesssafe_type<t_bigint64u>(get64u);
-	mix_with_lesssafe_type<xint>(get64u);
+	mix_with_lesssafe_type<t_bigint64u>(n_testfunc::get64u);
+	mix_with_lesssafe_type<xint>(n_testfunc::get64u);
 }
 
 // ===========================================================================================================
@@ -117,8 +121,7 @@ TEST(xint, comparsions_int_OP_xint) {
 
 
 // ===========================================================================================================
-
-#if 1 // turn off v1
+// tests v1
 
 TEST(xint,normal_use_init) {
 	xint a;
@@ -525,14 +528,14 @@ TEST(xint, some_use) {
 }
 
 TEST(xint, range_u_incr) {
-	typedef xintu T;
+	using T = xintu;
 	T a("0xFFFFFFFFFFFFFFFE");
 	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_u_decr) {
-	typedef xintu T;
+	using T = xintu;
 	T a("0x0000000000000001");
 	EXPECT_NO_THROW( { a--; } );  EXPECT_EQ(a , T("0x0000000000000000"));
 	EXPECT_THROW( { a--; } , std::runtime_error );	EXPECT_EQ(a , T("0x0000000000000000"));
@@ -540,14 +543,14 @@ TEST(xint, range_u_decr) {
 }
 
 TEST(xint, range_s_incr) {
-	typedef xint T;
+	using T = xint;
 	T a("0xFFFFFFFFFFFFFFFE");
 	EXPECT_NO_THROW( { a++; } );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 	EXPECT_THROW( { a++; } , std::runtime_error );	EXPECT_EQ(a , T("0xFFFFFFFFFFFFFFFF"));
 }
 TEST(xint, range_s_decr) {
-	typedef xint T;
+	using T = xint;
 	T b("0xFFFFFFFFFFFFFFFE");
 	T a(0); a -= b;
 	EXPECT_NO_THROW( { a--; } );
@@ -659,7 +662,8 @@ TEST(xint, safe_create_xint_assign) {
 #undef maxni
 
 
-#endif // turn off v1
+// end of tests v1
+// ===========================================================================================================
 
 #else
 
