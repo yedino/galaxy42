@@ -398,7 +398,9 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/* src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
+file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/* src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*
+	src/special_behaviour/*
+)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp

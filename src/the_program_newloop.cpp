@@ -1,4 +1,4 @@
-;
+
 #include "the_program_newloop.hpp"
 #include "platform.hpp"
 #include "libs1.hpp"
@@ -68,6 +68,7 @@
 #endif
 
 #include <utils/privileges.hpp>
+#include "special_behaviour/special_demo.hpp" ///< demo functions for tsan, ubsan
 
 // -------------------------------------------------------------------
 
@@ -227,48 +228,6 @@ void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
-void example_warn_1() {
-	_warn("Example warning printed out");
-}
-
-void example_memcheck_1() { // to test valgrind detection of errors
-	_mark("Valgrind memcheck test.");
-	vector<int> vec(100);
-	int* ptr = & vec.at(0);
-	ptr += 200;
-	volatile int read = *ptr;
-	volatile int result = (read==0) ? 0 : 1; // to silence "unused var" and to cause e.g. cause "jump depends on uninitialized"
-	_mark("Valgrdin memcheck test done (program not aborted), result"<<result);
-}
-
-void example_memcheck_2() { // to test valgrind detection of errors
-	_mark("Valgrind memcheck test.");
-	vector<int> vec(100);
-	vec[2000] = 42;
-	volatile auto * ptr = & vec[3000];
-	*ptr = 42;
-	_mark("Valgrdin memcheck test done (program not aborted), result");
-}
-
-void example_ubsan_1() { // to test UBSAN / ub sanitize
-	_mark("UBSAN test.");
-	// TODO make it work for "signed char" as well
-	signed int i;
-	i = std::numeric_limits<decltype(i)>::max();
-	i += static_cast<decltype(i)>(5); // overflow of signed
-	_mark("UBSAN test done (program not aborted)");
-}
-
-void example_tsan_1() { // to test STAN / thread sanitizer
-	_mark("TSAN test.");
-	int data=10;
-	// run concurent update of data:
-	auto thread1 = std::thread( [&](){ data=20; } );
-	auto thread2 = std::thread( [&](){ data=30; } );
-	thread1.join();
-	thread2.join();
-	_mark("TSAN test done (program not aborted)");
-}
 
 int c_the_program_newloop::run_special() {
 	bool tainted=false;
@@ -279,11 +238,11 @@ int c_the_program_newloop::run_special() {
 			func();
 		} else _info("NOT running test "<<name);
 	};
-	maybe_run_special("special-warn1", example_warn_1, false);
-	maybe_run_special("special-ubsan1", example_ubsan_1, true);
-	maybe_run_special("special-tsan1", example_tsan_1, true);
-	maybe_run_special("special-memcheck1", example_memcheck_1, true);
-	maybe_run_special("special-memcheck2", example_memcheck_2, true);
+	maybe_run_special("special-warn1", n_special_behaviour::example_warn_1, false);
+	maybe_run_special("special-ubsan1", n_special_behaviour::example_ubsan_1, true);
+	maybe_run_special("special-tsan1", n_special_behaviour::example_tsan_1, true);
+	maybe_run_special("special-memcheck1", n_special_behaviour::example_memcheck_1, true);
+	maybe_run_special("special-memcheck2", n_special_behaviour::example_memcheck_2, true);
 	if (tainted) {
 		_goal("After executing above tests, now the program is tainted, and must exit.");
 		return 2; // exit code

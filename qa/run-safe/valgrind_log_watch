@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+
 # helper script for valgrind as root with kill on first error
 
 readonly myname=$(basename "$BASH_SOURCE")
