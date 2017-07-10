@@ -220,7 +220,7 @@ struct cap_statechange_full final {
 	cap_statechange_map given; ///< changes for defined CAPs
 	cap_statechange all_others; ///< how to change all others CAPs that are not mentioned in #given
 
-	void security_apply_now(); ///< SECURITY: apply now to current process the CAP changes as described by this object
+	void security_apply_now() const; ///< SECURITY: apply now to current process the CAP changes as described by this object
 	void print(std::ostream & ostr, int level=20) const; ///< Print to #ostr at verbosity #level 10=only important CAP-values, 20=all
 
 	void set_given_cap(const std::string & capname , cap_statechange change);

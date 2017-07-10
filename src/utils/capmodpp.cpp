@@ -188,7 +188,6 @@ void secure_capng_apply(capng_select_t set) {
 }
 
 
-
 // ===========================================================================================================
 
 const t_eff_value v_eff_enable{cap_permchange::enable};
@@ -359,6 +358,7 @@ void cap_statechange_map::set(const std::string & capname , cap_statechange chan
 
 void cap_statechange_map::print(std::ostream & ostr, int level) const {
 	size_t skipped{0};
+	ostr << "CAP state CHANGE with " << this->state.size() << " CAP CHANGES defined:\n";
 	for(const auto & item : this->state) {
 		bool interesting = item.second.is_change();
 		if ( (level>=20) || (interesting) ) {
@@ -394,7 +394,7 @@ void cap_statechange_full::set_all_others(cap_statechange change) {
 	all_others = change;
 }
 
-void cap_statechange_full::security_apply_now() {
+void cap_statechange_full::security_apply_now() const {
 	const bool dbg = debug_capmodpp;
 
 	// (1) read current privileges set - state_old
