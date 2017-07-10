@@ -190,14 +190,15 @@ Program can be given higher privileges on start in various ways, on Linux.
 * recommended way is to just start program and it will work thanks to setcap (part of our make, if you installed our scripts from ./install)
 * or else, if you do not have setcap, then just sudo the program with command as below
 
-| Method name | You started program as  | You started program with command  | Is program binary set setcap?       | Is program binary set SUID?         | Then config directory will be used | Then tuntap works? | Is this good idea?       |
-|             |                         |                                   | (this is YES by default)    | (this is NO by default)     | (for example)                      |                   |                          |
-| User+setcap | Alice (non-root)        | ./tunserver.elf                   | if yes                      | if no                       | /home/alice/.config/antinet...     | tuntap OK         | Yes, recommended         |
-| User+sudo   | Alice (non-root)        | sudo HOME="$HOME" ./tunserver.elf | if NO                       | if no                       | /home/alice/.config/antinet...     | tuntap OK         | Yes, if you can't use file setcap |
-|             | Alice (non-root)        | sudo HOME="$HOME" ./tunserver.elf | if yes                      | if no                       | /home/alice/.config/antinet...     | tuntap OK         | Allowed; but sudo not needed   |
-| Root+etc    | root                        | ./tunserver.elf  --read-etc="/etc/" --late-uid="nobody" | (does not matter)           | if no               | /etc/antinet...  | tuntap OK         | Ok for daemons starting from root. Will read files from /etc/ and then drop to given user. TODO NOT YET IMPLEMENTED |
-|             | root                        | ./tunserver.elf                    | (does not matter)           | if no                  | /root/.config/antinet...           | tuntap OK         | No! NOT SECURE (runs as root)! |
-|             | Alice (non-root)        | sudo              ./tunserver.elf | (does not matter)           | if no                       | /root/.config/antinet...           | -                 | No! no access to root files |
+| Method name | You started program as  | You started program with command  | Is program binary set setcap?     | Is program binary set SUID? | Then config directory will be used | Then tuntap works?| Is this good idea?       |
+| -           |                         |                                   | (this is YES by default)          | (this is NO by default)     | (for example)                      |                   |                          |
+| ---         | ---                     | ---                               | ---                               | ---                         | ---                                | ---               | ---                      |
+| User+setcap | Alice (non-root)        | ./tunserver.elf                   | if yes                            | if no                       | /home/alice/.config/antinet...     | tuntap OK         | Yes, recommended         |
+| User+sudo   | Alice (non-root)        | sudo HOME="$HOME" ./tunserver.elf | if NO                             | if no                       | /home/alice/.config/antinet...     | tuntap OK         | Yes, if you can't use file setcap |
+| -           | Alice (non-root)        | sudo HOME="$HOME" ./tunserver.elf | if yes                            | if no                       | /home/alice/.config/antinet...     | tuntap OK         | Allowed; but sudo not needed   |
+| Root+etc    | root                    | ./tunserver.elf  --read-etc="/etc/" --late-uid="nobody" | (does not matter) | if no                 | /etc/antinet...                    | tuntap OK         | Ok for daemons starting from root. Will read files from /etc/ and then drop to given user. TODO NOT YET IMPLEMENTED |
+| -           | root                    | ./tunserver.elf                   | (does not matter)                 | if no                       | /root/.config/antinet...           | tuntap OK         | No! NOT SECURE (runs as root)! |
+| -           | Alice (non-root)        | sudo              ./tunserver.elf | (does not matter)                 | if no                       | /root/.config/antinet...           | -                 | No! no access to root files |
 
 Other combinations (of this conditions, exporting env HOME, etc) are not supported currently.
 
