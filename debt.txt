@@ -21,6 +21,8 @@ Noting them here to not forget and keep track.
 === better refactoring ===
 
 - PR 328, PR 327 - there are now asserts and .at and safe copy in arrays, but still would be even better to use some container view instead in this places (especially in NDP protocol, which is not important regarding performance)
+- my_cap namespace should be rather e.g. n_mysecurity, and could be divided into tigusoft lib,
+(with our debug, the 2 functions on top - apply change and drop root), and into part customized for this project
 
 === security ===
 
