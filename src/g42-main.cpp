@@ -268,34 +268,7 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 #define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
-
-#include "utils/capmodpp.hpp" // XXX for tests
-
-int main() {
-	c_the_program_newloop the_program;
-	the_program.startup_console_first();
-	g_dbg_level = 20;
-
-	{
-		_mark("Drop 1 test");
-		capmodpp::cap_statechange_full change;
-		// TODO
-		change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-		change.set_given_cap("CHOWN", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable}); // !
-		change.set_given_cap("SETPCAP", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable}); // !
-		change.set_given_cap("SETGID", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable});
-		change.set_given_cap("SETUID", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable});
-		my_cap::security_apply_cap_change(change);
-	}
-
-	_mark("Drop 2");
-	my_cap::drop_root();
-	// my_cap::drop_privileges_on_startup();
-	//my_cap::drop_privileges_after_tuntap();
-	_mark("Done");
-}
-
-int main_normal(int argc, const char **argv) {
+int main(int argc, const char **argv) {
 	// parse early options:
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
@@ -333,6 +306,7 @@ int main_normal(int argc, const char **argv) {
 	g_dbg_level = 60;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
 
+	my_cap::security_drop_root_from_sudo(); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
 	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
 	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
 	// to report any problems with CAPs (eg compatibility issues),
