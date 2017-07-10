@@ -3,7 +3,7 @@
  * @see README.txt here , do not cover this with unit-tests
  */
 
-#include "special_behaviour/special_demo.hpp"
+#include "special_demo.hpp"
 
 #include "libs0.hpp"
 
