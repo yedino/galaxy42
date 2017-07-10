@@ -27,19 +27,44 @@
 
 namespace my_cap {
 
-static bool do_we_need_to_change_uid_or_gid() {
-	uid_t uid = getuid();
-	if (uid == 0) return true;
-	return false;
+void security_apply_cap_change(const capmodpp::cap_statechange_full & change) {
+	#ifdef ANTINET_linux
+	_note("Caps (before): " << capmodpp::read_process_caps() );
+	_clue("Caps (will apply): " << change);
+	change.security_apply_now();
+	_note("Caps (after):  " << capmodpp::read_process_caps() );
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
 }
 
-#ifdef ANTINET_linux
-static void change_user_if_root() {
-	_fact("Dropping root (if needed)");
-	_note("Caps (in change user): " << capmodpp::read_process_caps() );
-
+static bool do_we_need_to_change_uid_or_gid() {
+	#ifdef ANTINET_linux
 	uid_t uid = getuid();
-	if (uid != 0) { _note("We are not root anyway"); return; } // not root
+	uid_t euid = geteuid();
+	_note("uid="<<uid<<" euid="<<geteuid());
+	if (uid != euid) {
+		// see @warnings in .hpp
+		_erro("UID is different then EUID, is this program set chmod SUID? This is not supported currently. Aborting.");
+		std::abort(); // ! something is meesed up with security
+	}
+	if (euid==0) return true;
+	if (uid==0) return true;
+	return false;
+	#else
+		_note("This security operation is not available on this system, ignoring");
+		return false;
+	#endif
+}
+
+void security_drop_root_from_sudo() {
+	_fact("Dropping root (if we are root)");
+	#ifdef ANTINET_linux
+
+	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return; } // not root
+
+	_clue("Yes, will change UID/GID");
+	_note("Caps (when changing user): " << capmodpp::read_process_caps() );
 
 	const char* sudo_user_env = std::getenv("SUDO_USER");
 	if (sudo_user_env == nullptr) throw std::runtime_error("SUDO_USER env is not set") ; // get env error
@@ -68,6 +93,7 @@ static void change_user_if_root() {
 		_erro("capng_change_id error: " << ret);
 		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));
 	}
+	_fact("UID/GID change done");
 
 /*	_fact("change process user id to " << normal_user_uid);
 	int setuid_ret = setuid(normal_user_uid);
@@ -75,9 +101,18 @@ static void change_user_if_root() {
 		_fact("setuid error");
 		throw std::system_error(std::error_code(errno, std::system_category()));
 	}*/
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
+
+	if (do_we_need_to_change_uid_or_gid()) {
+		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
+		std::abort();
+	}
 }
 
 void drop_privileges_on_startup() {
+	#ifdef ANTINET_linux
 	_fact("Dropping privileges - on startup");
 
 	capmodpp::cap_statechange_full change;
@@ -88,78 +123,76 @@ void drop_privileges_on_startup() {
 
 	if (do_we_need_to_change_uid_or_gid()) {
 		// to drop root. is this really needed like that? needs more review.
-		_fact("Leaving SETUID/SETGID caps, to allow droping root UID later");
+		_fact("Leaving SETUID/SETGID (and PCAP) caps, to allow droping root UID later");
 		change.set_given_cap("SETUID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETGID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
+		change.set_given_cap("SETPCAP", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 	}
 
-	_note("Caps (before): " << capmodpp::read_process_caps() );
-	change.security_apply_now(); // TODO: must be commented, otherwise program works only with sudo called by root, this function must be called always after change_user_if_root()
-	// XXX SECURITY - this was uncommented (by @rob) - @rfree
-	_note("Caps (after):  " << capmodpp::read_process_caps() );
+	security_apply_cap_change(change);
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
 }
 
 
 void drop_privileges_after_tuntap() {
+	#ifdef ANTINET_linux
 	_fact("Dropping privileges - after tuntap");
-	_note("Caps (before): " << capmodpp::read_process_caps() );
-	try {
-		change_user_if_root();
-	} catch (const std::system_error &) {
-		throw;
-	} catch (const std::runtime_error &e) {
-		_warn("Can not drop privileges to a regular user. We suggest to instead from a regular user call our program with sudo, and not run it directly as root");
-		_warn(e.what());
-	}
 
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 	change.set_given_cap("NET_ADMIN", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-	change.security_apply_now();
+	change.set_given_cap("NET_RAW", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
+	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
 
-	_note("Caps (after):  " << capmodpp::read_process_caps() );
+	security_apply_cap_change(change);
+
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
 }
 
 void drop_privileges_before_mainloop() {
+	#ifdef ANTINET_linux
 	_fact("Dropping privileges - before mainloop");
-	_note("Caps (before): " << capmodpp::read_process_caps() );
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-	change.security_apply_now();
-	_note("Caps (after):  " << capmodpp::read_process_caps() );
+	security_apply_cap_change(change);
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
 }
 
 void verify_privileges_are_as_for_mainloop() {
+	#ifdef ANTINET_linux
 	_info("Verifying privileges are dropped");
 
-	// using directly libcap-ng to confirm
-	auto doit = []() { // doing work in thread, see notes of this file
-		// based on https://people.redhat.com/sgrubb/libcap-ng/
-		bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
-		if (have_any_cap) {
-			_erro("We still have some CAP capability, when we expected to have none by now!");
-			std::abort(); // <=== abort because security error
-		}
-	};
-	doit();
+	bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
+	if (have_any_cap) {
+		_erro("We still have some CAP capability, when we expected to have none by now. Aborting.");
+		std::abort(); // <=== abort because security error
+	}
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
 }
 
 
-#else
-
-void drop_privileges_on_startup() {
+void drop_root() {
+	#ifdef ANTINET_linux
+	try {
+		security_drop_root_from_sudo();
+	} catch (const std::system_error &) {
+		throw;
+	} catch (const std::runtime_error &e) {
+		_erro("Can not drop privileges to a regular user. We suggest to instead from a regular user call our program with sudo, and not run it directly as root");
+		_erro(e.what());
+	}
+	#else
+		_note("This security operation is not available on this system, ignoring");
+	#endif
 }
-
-void drop_privileges_after_tuntap() {
-}
-
-void drop_privileges_before_mainloop() {
-}
-
-void verify_privileges_are_as_for_mainloop() {
-}
-
-#endif
 
 }
 
