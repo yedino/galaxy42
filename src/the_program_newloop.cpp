@@ -68,7 +68,7 @@
 #endif
 
 #include <utils/privileges.hpp>
-#include "special_behaviour/special_demo.hpp" ///< demo functions for tsan, ubsan
+#include "test/special_behaviour/special_demo.hpp" ///< demo functions for tsan, ubsan
 
 // -------------------------------------------------------------------
 
