@@ -281,10 +281,8 @@ int main() {
 		capmodpp::cap_statechange_full change;
 		// TODO
 		change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-		//change.set_given_cap("SYS_TIME", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-		//change.set_given_cap("KILL", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-
-		change.set_given_cap("SETPCAP", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable});
+		change.set_given_cap("CHOWN", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable}); // !
+		change.set_given_cap("SETPCAP", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable}); // !
 		change.set_given_cap("SETGID", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable});
 		change.set_given_cap("SETUID", {capmodpp::v_eff_enable, capmodpp::v_permit_enable, capmodpp::v_inherit_enable});
 		my_cap::security_apply_cap_change(change);
