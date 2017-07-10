@@ -55,7 +55,7 @@ void MainWindow::update_peer_list(QString peer) {
 	ui->peerListWidget->clear();
 	qDebug() << "Peers:";
 	for (const auto &peer : m_tun_process->get_peer_list()) {
-		qDebug() << peer.to_string();
+		//qDebug() << peer.to_string();
 		ui->peerListWidget->addItem(QString::fromStdString(peer.to_string()));
 	}
 }
