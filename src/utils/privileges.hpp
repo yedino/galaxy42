@@ -23,7 +23,7 @@ void security_apply_cap_change(const capmodpp::cap_statechange_full & change);
 /**
  * If we are root (UID) then drops from root back to regular user who gained root by sudo, retains current CAPs
  * @warning NOT guaranteed to support double sudo (if user did e.g. sudo ./script and script does sudo ./program)
- * @pre Process must have sufficient CAPs needed for this special UID/GID change (TODO what is needed for it? testing now)
+ * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
  * @post User is not-root (not UID 0) or else exception is thrown
  */
 void security_drop_root_from_sudo();

@@ -119,7 +119,7 @@ void drop_privileges_on_startup() {
 	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
 	change.set_given_cap("NET_ADMIN", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 	change.set_given_cap("NET_RAW", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
-	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
+	// change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged}); // not yet used
 
 	if (do_we_need_to_change_uid_or_gid()) {
 		// to drop root. is this really needed like that? needs more review.
@@ -127,6 +127,7 @@ void drop_privileges_on_startup() {
 		change.set_given_cap("SETUID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETGID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETPCAP", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
+		change.set_given_cap("CHOWN", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 	}
 
 	security_apply_cap_change(change);
@@ -144,7 +145,7 @@ void drop_privileges_after_tuntap() {
 	change.set_all_others({capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 	change.set_given_cap("NET_ADMIN", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
 	change.set_given_cap("NET_RAW", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
-	change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
+	// change.set_given_cap("NET_BIND_SERVICE", {capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
 
 	security_apply_cap_change(change);
 
@@ -166,13 +167,19 @@ void drop_privileges_before_mainloop() {
 
 void verify_privileges_are_as_for_mainloop() {
 	#ifdef ANTINET_linux
-	_info("Verifying privileges are dropped");
+	_goal("Verifying privileges are dropped - before entering the main loop");
 
 	bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
 	if (have_any_cap) {
-		_erro("We still have some CAP capability, when we expected to have none by now. Aborting.");
+		_erro("We still have some CAP capability - when we expected to have none by now. Aborting.");
 		std::abort(); // <=== abort because security error
 	}
+
+	if (do_we_need_to_change_uid_or_gid()) {
+		_erro("We still have some UID/GID as root - when we expected to have none by now. Aborting.");
+		std::abort(); // <=== abort because security error
+	}
+
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
