@@ -239,6 +239,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	set(SANITIZER_DETAILED "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
 	if(SANITIZER_THREAD)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-sanitize-recover=thread ${SANITIZER_DETAILED}")
+		add_definitions(-DFLAVOUR_TSAN_FULL) # we have full TSAN and can rely on it
 	endif()
 	if(SANITIZER_ADDRESS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-sanitize-recover=address ${SANITIZER_DETAILED}")
@@ -251,8 +252,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=integer ${SANITIZER_DETAILED}")
 		if (NOT TOOLS_ARE_BROKEN_UB)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=undefined")
+			add_definitions(-DFLAVOUR_UBSAN_FULL) # we have full UBSAN and can rely on it
 		else()
 			message(WARNING "Warning: we have to partially disable UBSAN check (that is: program will continue to run, ignoring an UB!) because the tools used are broken and produce UBs.")
+			add_definitions(-DFLAVOUR_UBSAN_ONLY_REPORTS) # we have partiall UBSAN and can not rely on it's results
 		endif()
 	endif()
 	# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
@@ -395,7 +398,9 @@ include_directories( src/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/* src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*)
+file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/* src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/*
+	src/test/special_behaviour/*
+)
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp
@@ -533,9 +538,17 @@ if(NOT MINGW AND NOT WIN32)
 	add_custom_command(
 		TARGET tunserver.elf
 		POST_BUILD
+		COMMAND rm -f "./nocap-tunserver.elf"
 		COMMAND chmod g-wx,o-wx tunserver.elf
 		COMMAND cp tunserver.elf nocap-tunserver.elf
+		COMMAND rm -f "./rundevel.sh"
 		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
+		COMMAND rm -f "./run-safe-mem"
+		COMMAND rm -f "./run-safe-thread-ub"
+		COMMAND rm -f "./valgrind_log_watch"
+		COMMAND rm -f "./valgrind_with_log_kill"
+		COMMAND cp "${CMAKE_SOURCE_DIR}/qa/run-safe/*" "./" || echo skip
+
 		WORKING_DIRECTORY ./)
 
 	add_custom_command(

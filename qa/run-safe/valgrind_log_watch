@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+
+# helper script for valgrind as root with kill on first error
+
+readonly myname=$(basename "$BASH_SOURCE")
+function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 4)" "$myname" "$*" "$(tput sgr0)" ; }
+
+valgrind_pid="$1" ; shift
+valgrind_log_file="$1" ; shift
+
+watermark_string="Parent PID"
+myprint "Will kill process $valgrind_pid when triggered by log $valgrind_log_file, after line with $watermark_string"
+while true
+do
+	watermark_line=$( grep -n "$watermark_string" "$valgrind_log_file" | cut -d':' -f1 )
+	myprint "Looking for logfile to appear and print the standard headers, line=${waterline}."
+	sleep 1
+	if (( watermark_line > 2 )) ; then
+		myprint "Ok logfile seems to have the header, line=${watermark_line}."
+		break
+	fi
+done
+
+((watermark_line++)) || :
+myprint "Will trigger when logfile grows above line=${watermark_line}."
+
+while true
+do
+	sleep 1
+	lines_now=$(wc -l "$valgrind_log_file" | cut -d' ' -f 1)
+	# myprint "lines_now=$lines_now"
+	if (( lines_now > watermark_line )) ;	then
+		myprint "$(tput setab 1) It seems valgrind log file grown - errors spoted? Will terminate valgrind PID=$valgrind_pid now. (line: $lines_now)"
+		kill $valgrind_pid
+		sleep 1
+		myprint "$(tput setab 1) Valgrind should be killed now, exiting"
+	fi
+done
+

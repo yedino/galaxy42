@@ -4,6 +4,8 @@
 
 #include <cstring>
 
+#include <backward.hpp>
+
 unsigned char g_dbg_level = 100; // (extern)
 
 std::recursive_mutex _g_dbg_mutex; // (extern)
