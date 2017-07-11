@@ -121,6 +121,8 @@ void security_drop_root_from_sudo() {
 	}
 	*/
 	int ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
+	// TODO bounding set is NOT cleared!
+
 	if (ret != 0) {
 		_erro("capng_change_id error: " << ret);
 		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));

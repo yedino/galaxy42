@@ -26,12 +26,9 @@ Noting them here to not forget and keep track.
 
 === security ===
 
-- we must drop cap permissions when running as root [in progress]
-- we must drop root UID/GID when running as root [in progress]
-- the permission drop in drop_privileges_on_startup() must be agian enabled (it is causing problems for dropping UID)
-- utils/capmodpp.* utils/privileges.* code must assert that request cap change was applied
 - utils/capmodpp.* utils/privileges.* code review
 - review/confirmation from someone who understands fully CAP/ID transitions (when root dropping code is in place too)
+- should we also drop the Bounding part of all Caps?
 
 === special use cases ===
 - support for our program being chmod SUID (see utils/privileges.hpp warning comments) - now program will not run then
