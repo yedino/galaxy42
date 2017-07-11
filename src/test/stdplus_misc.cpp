@@ -5,6 +5,7 @@
 #include <utils/misc.hpp> // <- we're testing this
 #include "tnetdbg.hpp"
 #include <utility>
+#include "my_tests_lib.hpp"
 
 // ===========================================================================================================
 // example of enum-class
@@ -160,24 +161,6 @@ void test_case_enum_numeric_limits(c_test_enum<T>){
 
 	EXPECT_THROW(int_to_enum<t_enum>( std::numeric_limits<long long unsigned>::max() - 5 ), std::exception );
 }
-
-// -------------------------------------------------------------------
-/// TODO move to a lib?
-// http://stackoverflow.com/questions/1198260/iterate-over-tuple
-// run a function for each element of tuple
-template<std::size_t I = 0, typename FuncT, typename... Tp>
-inline typename std::enable_if<I == sizeof...(Tp), void>::type
-	for_each(std::tuple<Tp...> &, FuncT) // Unused arguments are given no names.
-	{ }
-
-template<std::size_t I = 0, typename FuncT, typename... Tp>
-inline typename std::enable_if<I < sizeof...(Tp), void>::type
-	for_each(std::tuple<Tp...>& t, FuncT f)
-	{
-		f(std::get<I>(t));
-		for_each<I + 1, FuncT, Tp...>(t, f);
-	}
-// -------------------------------------------------------------------
 
 TEST(stdplus_misc, function_enum_to_int_numeric_limits)
 {

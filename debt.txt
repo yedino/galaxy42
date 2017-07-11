@@ -11,6 +11,7 @@ Noting them here to not forget and keep track.
 === important ===
 
 - PR 320 was merged without full review (as we need to use this threads now already). It needs at least more comments in few places. Notify @rfree with the review to sign-on the review, before deleting this item.
+- xint needs more testing on all possible uses, and op>> and maybe few others too
 
 === disabled ===
 

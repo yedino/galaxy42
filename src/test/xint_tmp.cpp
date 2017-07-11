@@ -10,6 +10,9 @@
 #if USE_BOOST_MULTIPRECISION
 
 
+// ===========================================================================================================
+// tests v1
+
 TEST(xint_tmp, safe_create_float1) {
 	// g_dbg_level_set(30,"Details of test");
 
@@ -55,6 +58,10 @@ TEST(xint_tmp, compare_with_float) {
 	EXPECT_TRUE(bigger);
 }
 */
+
+
+// tests v1
+// ===========================================================================================================
 
 #else
 
