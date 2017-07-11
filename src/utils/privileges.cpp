@@ -27,12 +27,43 @@
 
 namespace my_cap {
 
+
+std::string get_security_info(bool verbose) noexcept {
+	try {
+		std::ostringstream oss;
+		try {
+			oss << "UID="<<getuid()<<"(EUID="<<geteuid()<<") GID="<<getgid()<<"(EGID="<<getegid()<<")" ;
+		} catch(const std::runtime_error ex) {
+			oss << "[error reading GID/UID: " << ex.what() << "]";
+		}
+		oss<<" ";
+		try {
+			auto caps_now = capmodpp::read_process_caps();
+			caps_now.print(oss, 0); // print one-liner
+			if (verbose) {
+				oss << "\nCap details:\n";
+				caps_now.print(oss, 20);
+			}
+		} catch(const std::runtime_error ex) {
+			oss << "[error reading caps: " << ex.what() << "]";
+		}
+		return oss.str();
+	} catch(...) {
+		_erro("Unexpected error");
+		throw; // trying to rethrow, will cause abort probably (if noexcept)
+	}
+}
+
+void print_security_info() {
+	_mark("Security info: " << get_security_info() );
+}
+
 void security_apply_cap_change(const capmodpp::cap_statechange_full & change) {
 	#ifdef ANTINET_linux
-	_note("Caps (before): " << capmodpp::read_process_caps() );
+	_note("Caps (before): " << get_security_info(true) );
 	_clue("Caps (will apply): " << change);
 	change.security_apply_now();
-	_note("Caps (after):  " << capmodpp::read_process_caps() );
+	_note("Caps (after):  " << get_security_info(true) );
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
@@ -166,23 +197,38 @@ void drop_privileges_before_mainloop() {
 }
 
 void verify_privileges_are_as_for_mainloop() {
+	try {
 	#ifdef ANTINET_linux
 	_goal("Verifying privileges are dropped - before entering the main loop");
 
-	bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
-	if (have_any_cap) {
-		_erro("We still have some CAP capability - when we expected to have none by now. Aborting.");
-		std::abort(); // <=== abort because security error
-	}
+	try {
+		bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
+		if (have_any_cap) {
+			_erro("We still have some CAP capability - when we expected to have none by now. Aborting.");
+			std::abort(); // <=== abort because security error
+		}
+	} catch(...) { _warn("Can not check cap"); throw ; }
 
-	if (do_we_need_to_change_uid_or_gid()) {
-		_erro("We still have some UID/GID as root - when we expected to have none by now. Aborting.");
-		std::abort(); // <=== abort because security error
-	}
+	try {
+		if (do_we_need_to_change_uid_or_gid()) {
+			_erro("We still have some UID/GID as root - when we expected to have none by now. Aborting.");
+			std::abort(); // <=== abort because security error
+		}
+	} catch(...) { _warn("Can not check uid/gid"); throw ; }
 
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
+	}
+	catch(const std::exception & ex) {
+		_erro("Error: " << ex.what());
+		throw ;
+	}
+	catch(...) {
+		_erro("Error (unknown type)");
+		throw ;
+	}
+	_fact("Security: privilages seem correct");
 }
 
 

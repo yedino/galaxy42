@@ -202,6 +202,14 @@ const t_inherit_value v_inherit_enable{cap_permchange::enable};
 const t_inherit_value v_inherit_disable{cap_permchange::disable};
 const t_inherit_value v_inherit_unchanged{cap_permchange::unchanged};
 
+bool operator!(cap_perm value) noexcept {
+	return value != cap_perm::yes;
+}
+bool is_true(cap_perm value) noexcept {
+	return value == cap_perm::yes;
+}
+
+
 cap_nr get_last_cap_nr() noexcept {
 	return CAP_LAST_CAP;
 }
@@ -242,6 +250,14 @@ bool cap_state::is_usable() const {
 	return false;
 }
 
+bool cap_state::is_any() const {
+	if (this->eff == cap_perm::yes) return true;
+	if (this->permit == cap_perm::yes) return true;
+	if (this->inherit == cap_perm::yes) return true;
+	if (this->bounding == cap_perm::yes) return true;
+	return false;
+}
+
 void apply_change_perm(cap_perm & perm , const cap_permchange & change) {
 	switch (change) {
 		case cap_permchange::enable: perm = cap_perm::yes; break;
@@ -269,18 +285,45 @@ std::ostream & operator<<(std::ostream & ostr, const cap_state & obj) {
 }
 
 void cap_state_map::print(std::ostream & ostr, int level) const {
-	ostr << "CAP state with " << this->state.size() << " CAPs defined:\n";
-	size_t skipped=0;
-	for(const auto & item : this->state) {
-		bool interesting = item.second.is_usable();
-		if ( (level>=20) || (interesting) ) {
-			ostr << std::setw(2) << item.first << ": " << item.second
-				<< " " << (interesting ? "******" : "      ")
-				<< " " << cap_nr_to_name(item.first)
-				<< "\n";
-		} else ++skipped;
+	if (level == 0) { // one-liner version
+		ostr << "CAP state: ";
+		auto count_all = this->state.size();
+		size_t count_usable=0, count_any=0;
+		std::ostringstream detail;
+		for(const auto & item : this->state) {
+			bool show=false;
+			if (item.second.is_usable()) { ++count_usable; show=true; }
+			if (item.second.is_any()) { ++count_any; show=true; }
+			bool first=true;
+			if (show) {
+				if (!first) detail << " ";
+				first=false;
+				detail << secure_capng_capability_to_name(item.first);
+				detail << "+";
+				if (is_true(item.second.eff)) detail<<"e";
+				if (is_true(item.second.permit)) detail<<"p";
+				if (is_true(item.second.inherit)) detail<<"i";
+				if (is_true(item.second.bounding)) detail<<"b";
+			}
+		}
+		ostr << " count: any=" << count_any << ", usable="<<count_usable<<" / "<<count_all << " [" << detail.str() << "]";
 	}
-	if (skipped) ostr << "Skipped " << skipped << " non-interesting items" << "\n";
+	else { // verbose version
+		ostr << "CAP state with " << this->state.size() << " CAPs defined:\n";
+		size_t skipped=0;
+		for(const auto & item : this->state) {
+			bool interesting = item.second.is_usable();
+			bool bounding = is_true(item.second.bounding);
+			if ( (level>=20) || (interesting) ) {
+				ostr << std::setw(2) << item.first << ": " << item.second << " ";
+				if (interesting) { ostr << "******"; }
+					else if (bounding) { ostr << " (b)  "; }
+					else ostr << "      ";
+				ostr << " " << cap_nr_to_name(item.first) << "\n";
+			} else ++skipped;
+		}
+		if (skipped) ostr << "Skipped " << skipped << " non-interesting items" << "\n";
+	}
 }
 
 std::ostream & operator<<(std::ostream & ostr, const cap_state_map & obj) {

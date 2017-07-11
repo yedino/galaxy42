@@ -5,6 +5,8 @@
 #include "the_program_newloop.hpp"
 #include "utils/privileges.hpp"
 
+#include "utils/capmodpp.hpp" // to capture it's exceptions
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -346,7 +348,13 @@ int main(int argc, const char **argv) {
 	}
 	catch(const std::exception& e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-		 << e.what() << mo_file_reader::gettext("L_exit_aplication") );
+			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
+		return 2;
+	}
+	catch(const capmodpp::capmodpp_error & e) {
+		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+			<< "(capmodpp_error) "
+			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		return 2;
 	}
 	catch(...) {

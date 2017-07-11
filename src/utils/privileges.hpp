@@ -15,6 +15,14 @@
 
 namespace my_cap {
 
+
+/**
+ * Returns summary of allowed CAPs, also UID/GID, and possibly other details
+ * In case of errors with checking state it should usually return proper information in the string, not throw.
+ * @param verbose if yes then produce one-liner short info, else more detailed text (with \n endlines)
+ */
+std::string get_security_info(bool verbose=false) noexcept;
+
 /**
  * Applies a CAPs change given in #change, can do debug before/after.
  */
