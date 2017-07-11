@@ -106,7 +106,7 @@ script:
   - ./build/unittests.elf    # run gtests
 
 after_success:
-  - if [[ "$COVERAGE" == "1" ]]; then coveralls -i 'src/' -e 'src/test/' -e 'src/special_behaviour/' --gcov-options '\-lp' --gcov 'gcov-5' ; fi
+  - if [[ "$COVERAGE" == "1" ]]; then coveralls -i 'src/' -e 'src/test/' --gcov-options '\-lp' --gcov 'gcov-5' ; fi
 
 notifications:
   irc:
