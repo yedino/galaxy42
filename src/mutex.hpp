@@ -167,7 +167,7 @@ private:
   t_mutex &mut;
 
 public:
-  LockGuard(t_mutex &mu) ACQUIRE(mut) : mut(mu) { mut.lock(); }
+  LockGuard(t_mutex &mu) ACQUIRE(mu) : mut(mu) { mut.lock(); }
   ~LockGuard() RELEASE() { mut.unlock(); }
 };
 
