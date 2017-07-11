@@ -120,6 +120,8 @@ void security_drop_root_from_sudo() {
 		throw std::system_error(std::error_code(), "capng_update error, return value: " + std::to_string(ret));
 	}
 	*/
+
+	capmodpp::secure_capng_get_caps_process(); // causes libng to initialize, if not already
 	int ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
 	// TODO bounding set is NOT cleared!
 
