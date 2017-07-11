@@ -133,19 +133,19 @@ properties([pipelineTriggers([  [$class: 'GitHubPushTrigger'],
 
 node('master') {
 
-	def build_native_linux = 0
-	def build_native_windows_mingw32 = 0
-	def build_native_windows_mingw64 = 0
-	def build_native_windows_msvc = 0
+	def build_native_linux = true
+	def build_native_windows_mingw32 = true
+	def build_native_windows_mingw64 = true
+	def build_native_windows_msvc = true
 
-	def should_run_unit_test = 1
-	def should_run_integration_test = 0
-	def should_run_memory_test = 1
-	def should_run_thread_ub_test = 1
+	def should_run_unit_test = true
+	def should_run_integration_test = false
+	def should_run_memory_test = true
+	def should_run_thread_ub_test = true
 
-	def build_gitian_linux = 0
-	def build_gitian_macosx = 0
-	def build_gitian_windows = 0
+	def build_gitian_linux = false
+	def build_gitian_macosx = false
+	def build_gitian_windows = false
 
 	def GIT_REPOSITORY_URL = scm.getUserRemoteConfigs()[0].getUrl()
 	println "GIT_URL: [$GIT_REPOSITORY_URL]"
