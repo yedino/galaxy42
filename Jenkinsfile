@@ -224,27 +224,33 @@ node('master') {
 		}
 	}
 
-	if (should_run_memory_test) {
-		stage('memory_test') {
-			try {
-				run_memory_test(GIT_REPOSITORY_URL,GIT_BRANCH)
-			} catch (all) {
-				println "Memory test fail, {$all}\nbut we continue."
-				failure_counter++
-			}
-		}
-	}
 
-	if (should_run_thread_ub_test) {
-		stage('thread_ub_test') {
-			try {
-				run_thread_ub_test(GIT_REPOSITORY_URL,GIT_BRANCH)
-			} catch (all) {
-				println "Thread and undefined behaviors test fail, {$all}\nbut we continue."
-				failure_counter++
+	parallel (
+		memory_test: {
+			if (should_run_memory_test) {
+				stage('memory_test') {
+					try {
+						run_memory_test(GIT_REPOSITORY_URL,GIT_BRANCH)
+					} catch (all) {
+						println "Memory test fail, {$all}\nbut we continue."
+						failure_counter++
+					}
+				}
+			}
+		},
+		thread_ub_test: {
+			if (should_run_thread_ub_test) {
+				stage('thread_ub_test') {
+					try {
+						run_thread_ub_test(GIT_REPOSITORY_URL,GIT_BRANCH)
+					} catch (all) {
+						println "Thread and undefined behaviors test fail, {$all}\nbut we continue."
+						failure_counter++
+					}
+				}
 			}
 		}
-	}
+	)
 
 	if (build_gitian_linux) {
 		stage('deterministic_linux') {
