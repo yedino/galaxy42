@@ -193,7 +193,7 @@ if(NOT Boost_FOUND)
 	message(FATAL_ERROR "BOOST REQUIRED AND NOT FOUND, NOW STOPPING")
 endif()
 
-message("Boost version variable is: ${Boost_VERSION}")
+message(STATUS "Boost version variable is: ${Boost_VERSION}")
 set(Boost_IS_BROKEN_UB OFF)
 if ((Boost_VERSION GREATER 105399) AND (Boost_VERSION LESS 105700)) # 1.54 is broken, fix in 1.57
 	set(Boost_IS_BROKEN_UB ON)

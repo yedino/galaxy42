@@ -60,7 +60,7 @@ capng_results_t secure_capng_have_capabilities(capng_select_t set) {
 		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< ": set="<<set<<"." ;
 		throw capmodpp_error(oss.str());
 	}
-	auto ret = capng_results_t { capng_have_capabilities(set) };
+	auto ret = capng_results_t { capng_have_capabilities(set) }; // *** main call
 	bool fail = (ret == CAPNG_FAIL);
 	bool badval = ! (  (ret==CAPNG_NONE) || (ret==CAPNG_PARTIAL) || (ret==CAPNG_FULL)  );
 	static_assert(CAPNG_PARTIAL > 0 , "this value was promised to be greater-then 0.");
@@ -71,8 +71,8 @@ capng_results_t secure_capng_have_capabilities(capng_select_t set) {
 			<< " for set="<<set<<".";
 		throw capmodpp_error(oss.str());
 	}
-	if ( (ret != CAPNG_FAIL) && (!( ret>0 )) ) {
-		std::ostringstream oss; oss<<"Error: " << " values other then CAPNG_FAIL were supposed to be >0, but are not:"
+	if ( (ret != CAPNG_FAIL) && (!( ret>=0 )) ) {
+		std::ostringstream oss; oss<<"Error: " << " values other then CAPNG_FAIL were supposed to be >=0, but are not:"
 			<< " (ret="<<ret<<") in " << __func__
 			<< " for set="<<set<<".";
 		throw capmodpp_error(oss.str());
@@ -188,7 +188,6 @@ void secure_capng_apply(capng_select_t set) {
 }
 
 
-
 // ===========================================================================================================
 
 const t_eff_value v_eff_enable{cap_permchange::enable};
@@ -202,6 +201,14 @@ const t_permit_value v_permit_unchanged{cap_permchange::unchanged};
 const t_inherit_value v_inherit_enable{cap_permchange::enable};
 const t_inherit_value v_inherit_disable{cap_permchange::disable};
 const t_inherit_value v_inherit_unchanged{cap_permchange::unchanged};
+
+bool operator!(cap_perm value) noexcept {
+	return value != cap_perm::yes;
+}
+bool is_true(cap_perm value) noexcept {
+	return value == cap_perm::yes;
+}
+
 
 cap_nr get_last_cap_nr() noexcept {
 	return CAP_LAST_CAP;
@@ -243,6 +250,14 @@ bool cap_state::is_usable() const {
 	return false;
 }
 
+bool cap_state::is_any() const {
+	if (this->eff == cap_perm::yes) return true;
+	if (this->permit == cap_perm::yes) return true;
+	if (this->inherit == cap_perm::yes) return true;
+	if (this->bounding == cap_perm::yes) return true;
+	return false;
+}
+
 void apply_change_perm(cap_perm & perm , const cap_permchange & change) {
 	switch (change) {
 		case cap_permchange::enable: perm = cap_perm::yes; break;
@@ -270,18 +285,45 @@ std::ostream & operator<<(std::ostream & ostr, const cap_state & obj) {
 }
 
 void cap_state_map::print(std::ostream & ostr, int level) const {
-	ostr << "CAP state with " << this->state.size() << " CAPs defined:\n";
-	size_t skipped=0;
-	for(const auto & item : this->state) {
-		bool interesting = item.second.is_usable();
-		if ( (level>=20) || (interesting) ) {
-			ostr << std::setw(2) << item.first << ": " << item.second
-				<< " " << (interesting ? "******" : "      ")
-				<< " " << cap_nr_to_name(item.first)
-				<< "\n";
-		} else ++skipped;
+	if (level == 0) { // one-liner version
+		ostr << "CAP state: ";
+		auto count_all = this->state.size();
+		size_t count_usable=0, count_any=0;
+		std::ostringstream detail;
+		bool first=true;
+		for(const auto & item : this->state) {
+			bool show=false;
+			if (item.second.is_usable()) { ++count_usable; show=true; }
+			if (item.second.is_any()) { ++count_any; show=true; }
+			if (show) {
+				if (!first) detail << ", ";
+				first=false;
+				detail << secure_capng_capability_to_name(item.first);
+				detail << "+";
+				if (is_true(item.second.eff)) detail<<"e";
+				if (is_true(item.second.permit)) detail<<"p";
+				if (is_true(item.second.inherit)) detail<<"i";
+				if (is_true(item.second.bounding)) detail<<"b";
+			}
+		}
+		ostr << " count: any=" << count_any << ", usable="<<count_usable<<" / "<<count_all << " [" << detail.str() << "]";
 	}
-	if (skipped) ostr << "Skipped " << skipped << " non-interesting items" << "\n";
+	else { // verbose version
+		ostr << "CAP state with " << this->state.size() << " CAPs defined:\n";
+		size_t skipped=0;
+		for(const auto & item : this->state) {
+			bool interesting = item.second.is_usable();
+			bool bounding = is_true(item.second.bounding);
+			if ( (level>=20) || (interesting) ) {
+				ostr << std::setw(2) << item.first << ": " << item.second << " ";
+				if (interesting) { ostr << "******"; }
+					else if (bounding) { ostr << " (b)  "; }
+					else ostr << "      ";
+				ostr << " " << cap_nr_to_name(item.first) << "\n";
+			} else ++skipped;
+		}
+		if (skipped) ostr << "Skipped " << skipped << " non-interesting items" << "\n";
+	}
 }
 
 std::ostream & operator<<(std::ostream & ostr, const cap_state_map & obj) {
@@ -359,6 +401,7 @@ void cap_statechange_map::set(const std::string & capname , cap_statechange chan
 
 void cap_statechange_map::print(std::ostream & ostr, int level) const {
 	size_t skipped{0};
+	ostr << "CAP state CHANGE with " << this->state.size() << " CAP CHANGES defined:\n";
 	for(const auto & item : this->state) {
 		bool interesting = item.second.is_change();
 		if ( (level>=20) || (interesting) ) {
@@ -394,7 +437,7 @@ void cap_statechange_full::set_all_others(cap_statechange change) {
 	all_others = change;
 }
 
-void cap_statechange_full::security_apply_now() {
+void cap_statechange_full::security_apply_now() const {
 	const bool dbg = debug_capmodpp;
 
 	// (1) read current privileges set - state_old

@@ -110,12 +110,21 @@ you need to have TUN/TAP Driver installed first, e.g. get one from the [OpenVPN]
 
 ## Security:
 
+* we drop root UID if run via sudo (see SudoCap below)
+* we use Capability and drop when possible, if using setcap (see SudoCap below)
+
+Planned:
+
+* code review - NOT yet
+* seccomp filter - NOT yet
+* separate process for network, with no filesystem access - NOT yet
+
 The source code is NOT yet reviewed, expect it to have bugs and exploits. For now we recommend to use it only in isolated VM
 or better yet on a separated test computer.
 
 When you build program from source, check the file [SECURITY.txt] for list of dependencies that you MUST monitor for security updates!
 
-### Security of binary install:
+### Security of binary download/install:
 
 We offer binary builds on web page:
 
@@ -139,7 +148,7 @@ then you must somehow provide identical version of the packages, otherwise it co
 
 Not implemented yet.
 
-### Security of source code:
+### Security and verificatin of source code:
 
 You can confirm that source code is indeed created by the developers - git tags are signed, and after them (e.g. on some work in progress branch)
 all following git commits (including git merges) are also signed.
@@ -168,9 +177,33 @@ Script that can help speed up this process is being written, e.g. one good versi
 
 ### Organizations and projects
 
-Galaxy42 - the main network routing.
-Antinet - the research project including Galaxy42, simulations for it, tokens for it, and everything else.
-Yedino - the bigger entity that manages creation of this projects and controlls most of copyrights and official issues.
+* Galaxy42 - the main network routing.
+* Antinet - the research project including Galaxy42, simulations for it, tokens for it, and everything else.
+* Yedino - the bigger entity that manages creation of this projects and controlls most of copyrights and official issues.
+
+### Advanced use
+
+#### Sudo/Cap on Linux
+
+Program can be given higher privileges on start in various ways, on Linux.
+
+* recommended way is to just start program and it will work thanks to setcap (part of our make, if you installed our scripts from ./install)
+* or else, if you do not have setcap, then just sudo the program with command as below
+
+| Method name | You are user...         | ... and run command:              | If binary is setcap               | If binary is SUID           | Then config directory will be used | Then tuntap works?| Good idea?               |
+| ---         | ---                     | ---                               | ---                               | ---                         | ---                                | ---               | ---                      |
+| user+setcap | alice                   | ./tunserver.elf                   | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Yes, recommended         |
+| user+sudo   | alice                   | sudo HOME="$HOME" ./tunserver.elf | if NO                             | if no                       | /home/alice/.config/               | tuntap OK         | Yes, if you can't use file setcap |
+| root+etc    | root                    | ./tunserver.elf --root-mode | (any)             | if no                 | /etc/                              | tuntap OK         | Yes, daemons starting from root. Will read files from /etc/ and then drop to given user. TODO NOT YET IMPLEMENTED |
+| (NO!)       | root                    | ./tunserver.elf             | (any)             | if no                 | /etc/                              | tuntap OK         | **No!** program will abort; or try to drop out to user who gained this root (e.g. from sudo su) |
+| (NO!)       | alice                   | sudo HOME="$HOME" ./tunserver.elf | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Allowed; but sudo not needed   |
+| (NO!)       | root                    | ./tunserver.elf                   | (any)                             | if no                       | /root/.config/                     | tuntap OK         | **No!** NOT SECURE |
+| (NO!)       | alice                   | sudo              ./tunserver.elf | (any)                             | if no                       | /root/.config/                     | tuntap OK         | **No!** no access to root files |
+
+Other combinations (of this conditions, exporting env HOME, etc) are not supported currently.
+
+Config file actually used can be this path plus "/antinet/", e.g. "/home/alice/.config/antinet/".
+
 
 * * *
 * * *
