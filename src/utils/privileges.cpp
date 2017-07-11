@@ -112,14 +112,15 @@ void security_drop_root_from_sudo() {
 	_fact("try to change uid to " << normal_user_uid);
 	_fact("try to change gid to " << normal_user_gid);
 
+/*
 	capng_clear(CAPNG_SELECT_BOTH); // ***
-
 	int ret = capng_update(CAPNG_ADD, static_cast<capng_type_t>(CAPNG_EFFECTIVE|CAPNG_PERMITTED), CAP_CHOWN);
 	if (ret == -1) {
 		_erro("capng_update error: " << ret);
 		throw std::system_error(std::error_code(), "capng_update error, return value: " + std::to_string(ret));
 	}
-	ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
+	*/
+	int ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
 	if (ret != 0) {
 		_erro("capng_change_id error: " << ret);
 		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));
