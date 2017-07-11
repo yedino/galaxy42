@@ -1,0 +1,36 @@
+#!/bin/bash
+set -o errexit
+set -o nounset
+
+readonly prog="$1"
+tests_file_tilda_dir="~/.devel" # the location of test-file, in nice tilda notation (~/...) - the directory part
+tests_file_tilda="$tests_file_tilda_dir/galaxy42.tests" # as above, the full filename
+tests_file=${tests_file_tilda/#\~/$HOME} # convert tilda to normal name as needed by some bash commands
+# https://stackoverflow.com/questions/5748216/tilde-expansion-not-working-in-bash
+
+tests=""
+[[ -z ${GALAXY42_UNITTESTS+x} ]] || tests="$GALAXY42_UNITTESTS" # read from env variable (maybe it's set by user)
+
+if [[ -z "$tests" ]] ; then
+	echo "Not in env, reading file"
+	if [[ -r "$tests_file" ]] ; then
+		tests=$(cat "$tests_file")
+		echo "Read tests filter from file ($tests_file)"
+	fi
+fi
+
+if [[ -z "$tests" ]] ; then
+	echo
+	echo "Error: unittests filter is not set (neither in env nor in file)"
+	echo "Create file $tests_file and there write 1 line with string with tests to run, e.g.:"
+	echo "  mkdir -p $tests_file_base && echo '*int*.*' > $tests_file"
+	echo "-or-"
+	echo "instead add to your ~/.bashrc following env variable (and reload with cmd like source ~/.bashrc)"
+	echo "  export GALAXY42_UNITTESTS='*int*'"
+	echo
+	exit 1
+fi
+
+set -x
+"$prog" --gtest_filter="$tests"
+
