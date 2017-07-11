@@ -965,6 +965,8 @@ void c_tunserver::event_loop(int time) {
 	auto time_loop_start = std::chrono::steady_clock::now(); // time now
 	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
 
+	my_cap::verify_privileges_are_as_for_mainloop(); // confirm we are secured for the main loop
+
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
 
