@@ -60,7 +60,7 @@ capng_results_t secure_capng_have_capabilities(capng_select_t set) {
 		std::ostringstream oss; oss<<"Error: " << "invalid input" << " in " << __func__	<< ": set="<<set<<"." ;
 		throw capmodpp_error(oss.str());
 	}
-	auto ret = capng_results_t { capng_have_capabilities(set) };
+	auto ret = capng_results_t { capng_have_capabilities(set) }; // *** main call
 	bool fail = (ret == CAPNG_FAIL);
 	bool badval = ! (  (ret==CAPNG_NONE) || (ret==CAPNG_PARTIAL) || (ret==CAPNG_FULL)  );
 	static_assert(CAPNG_PARTIAL > 0 , "this value was promised to be greater-then 0.");
@@ -71,8 +71,8 @@ capng_results_t secure_capng_have_capabilities(capng_select_t set) {
 			<< " for set="<<set<<".";
 		throw capmodpp_error(oss.str());
 	}
-	if ( (ret != CAPNG_FAIL) && (!( ret>0 )) ) {
-		std::ostringstream oss; oss<<"Error: " << " values other then CAPNG_FAIL were supposed to be >0, but are not:"
+	if ( (ret != CAPNG_FAIL) && (!( ret>=0 )) ) {
+		std::ostringstream oss; oss<<"Error: " << " values other then CAPNG_FAIL were supposed to be >=0, but are not:"
 			<< " (ret="<<ret<<") in " << __func__
 			<< " for set="<<set<<".";
 		throw capmodpp_error(oss.str());
