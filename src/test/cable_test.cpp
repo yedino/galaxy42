@@ -100,6 +100,9 @@ TEST(c_assioservice_menager_test, get_next_ioservice )
 	EXPECT_THROW(c_asioservice_manager(0), err_check_prog);
 	c_asioservice_manager man(1);
 	size_t size = man.capacity();
+
+	g_dbg_level_set(160,"disable marks from get_next_ioservice");
+
 	do
 	{
 		std::map<const boost::asio::io_service *, size_t> services;

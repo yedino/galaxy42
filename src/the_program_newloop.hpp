@@ -26,6 +26,8 @@ class c_the_program_newloop : public c_the_program_tunserver {
 		void programtask_tuntap(); ///< start tuntap
 		/// @}
 
+		int run_special(); ///< run special commands (eg --special-ubsan1); if returns non-zero then program must abort with this exit-code
+
 	protected:
 		bool m_pimpl_deleted = false; ///< assert: was delete yet called on pimpl? to avoid deleting it twice by mistake
 		c_the_program_newloop_pimpl * const pimpl;

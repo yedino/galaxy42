@@ -1,5 +1,14 @@
 #pragma once
 
+/**
+ * This is the header needed to use "Thread Safety Analysis" of clang.
+ * https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+ *
+ * Developed based on versions from internet, with changes from us including rob, rfree.
+ * @owner rob
+ *
+*/
+
 #ifndef THREAD_SAFETY_ANALYSIS_MUTEX_H
 #define THREAD_SAFETY_ANALYSIS_MUTEX_H
 
