@@ -95,7 +95,7 @@ void security_drop_root_from_sudo() {
 	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return; } // not root
 
 	_clue("Yes, will change UID/GID");
-	_note("Caps (when changing user): " << capmodpp::read_process_caps() );
+	_note("Caps (when changing user): " << get_security_info() );
 
 	const char* sudo_user_env = std::getenv("SUDO_USER");
 	if (sudo_user_env == nullptr) throw std::runtime_error("SUDO_USER env is not set") ; // get env error
@@ -125,6 +125,7 @@ void security_drop_root_from_sudo() {
 		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));
 	}
 	_fact("UID/GID change done");
+	_note("Caps (after changing user): " << get_security_info() );
 
 /*	_fact("change process user id to " << normal_user_uid);
 	int setuid_ret = setuid(normal_user_uid);

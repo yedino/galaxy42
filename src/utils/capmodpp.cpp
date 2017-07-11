@@ -290,13 +290,13 @@ void cap_state_map::print(std::ostream & ostr, int level) const {
 		auto count_all = this->state.size();
 		size_t count_usable=0, count_any=0;
 		std::ostringstream detail;
+		bool first=true;
 		for(const auto & item : this->state) {
 			bool show=false;
 			if (item.second.is_usable()) { ++count_usable; show=true; }
 			if (item.second.is_any()) { ++count_any; show=true; }
-			bool first=true;
 			if (show) {
-				if (!first) detail << " ";
+				if (!first) detail << ", ";
 				first=false;
 				detail << secure_capng_capability_to_name(item.first);
 				detail << "+";
