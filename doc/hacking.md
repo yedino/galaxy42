@@ -12,7 +12,7 @@ Intended for:
 
 # Debugging
 
-Run with option --d for debug
+Run with option --d for debug.
 
 ## Debug tools
 
@@ -67,9 +67,31 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 Try to minimize technical debt by fixing things in [debt.txt](debt.txt).
 If you must move forward without writting things the good way for now, add information to that debt.txt.
 
+Cheat sheet (this is compact/mnemonics, more elaborated version is later on; ask us if any questions)
+
 ```cpp
 _dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
-_check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
+
+auto x = xint{ 5 };
+xint y = 5;
+
+Handling exceptional situations:
+	_check_abort()                   --> will abort (guaranteed)
+	abort()                          --> can abort, but not always, e.g. only in debug mode
+	throw critical_exception("..."); --> catch(const some_special_exception&) / catch(const critical_exception&)
+	_check_input()     (this catch,) --> catch(const err_check_input&) also _user _sys _extern
+	_check_input()     (or this one) --> catch(const err_check_soft&) - all soft errors
+	_check_sys()    - same
+	_check_user()   - same
+	_check_extern() - same
+	_check()                         --> catch(const std::runtime_error&) catch with other errors, or only at top/main
+	_throw_error_runtime(...)        --> catch(const std::runtime_error&)
+	_throw_error_runtime("TTL too big");
+	_throw_error( std::invalid_argument("TTL too big") );
+	_throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
+	_try()                           --> catch(const err_check_soft&)
+Note: the abort() is provided by default by compiler.
+
 STR(...) to_string(...) "..."s
 to_debug(...);
 is_ascii_normal(str); reasonable_size(str); reasonable_size(vec);
@@ -77,11 +99,12 @@ UsePtr(p).func();
 
 /**
  * @codestyle
- * @thread ...
+ * @thread
  * @owner rfree
  */
+// TODO@author
 
-catch(const ex_type & ex){}
+catch(const ex_type & ex) {}
 
 UNUSED(x); DEAD_RETURN();
 ```
@@ -89,38 +112,21 @@ UNUSED(x); DEAD_RETURN();
 
 
 ```cpp
-
-auto w = widget{ 12, 34 }; // style from https://herbsutter.com/2013/08/12/gotw-94-solution-aaa-style-almost-always-auto/
-auto x = xint{ 5 };
-xint y = x; // also allowed
-
 _dbg4(X) // unorganized "removed" debug
 _dbg3(X) _dbg2(X) _dbg1(X) // debug "Load key=0x1234"
 _info(X) _note(X) _clue(X) // information, more important, bigger group
-_fact(X) _goal(X) // very improtant goals, shown to user
+_fact(X) _goal(X) // very improtant goals shown to user
 _warn(X) _erro(X) // warnings/errors
 _mark(X) // hot topics (usually for testing)
 
-// TODO  ....  TODO@author
-thing_to_be_fixed_before_release ; // TODO-release
+// TODO@author
 
 is_ascii_normal(str) // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
 
-Function: if throw - then std::exception (or child class).
+Function: if throw - then std::exception (or child class), or critical_exception.
 Member functions: assume are not thread safe for concurent writes to same object, unless:
 // [thread_safe] - thread safe functions.
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
-
-_check_abort() / _abort() / _check() / _try()
-1. abort on error (always guaranteed) - _check_abort() // our lib
-2. abort on error (only guaranteed in debug mode) - assert() // from compiler
-3a. throw on error - _check() - hard exception type // our library
-3b. throw on error - _try() - soft exception type // our library
-
-Throw:
-_throw_error_runtime("TTL too big");
-_throw_error( std::invalid_argument("TTL too big") );
-_throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
 
 try {
 	_check( ptr != nullptr ); // like assert
@@ -162,7 +168,6 @@ inline bool enum_is_valid_value(t_temper value) {
 }
 
 t_temper water_temp = int_to_enum<t_temper>( 80 ); // asserted
-
 
 ```
 
