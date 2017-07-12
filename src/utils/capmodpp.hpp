@@ -42,7 +42,7 @@ namespace capmodpp {
  * @warning If this is thrown then this usually means program is in insecure state and you should exit or abort (see above).
  * @style This does not inherit from std::exception, to make developers catch it explicitly if they want to.
  */
-class capmodpp_error : public std::exception {
+class capmodpp_error {
 	public:
 		capmodpp_error(const std::string & msg);
 		virtual ~capmodpp_error()=default;
