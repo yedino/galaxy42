@@ -113,3 +113,137 @@ TEST(eint, aggrinit_size_t) {
 	EXPECT_EQ(c,a-b);
 	EXPECT_EQ(ULL(c) , ULL(a)-ULL(b));
 }
+
+using tup = std::tuple<
+	char, unsigned char, signed char
+	,short, unsigned short
+	,int, unsigned int
+	,long, unsigned long
+	,long long, unsigned long long
+>;
+
+tup types{};
+
+auto test_case = [](auto a, auto test_func){
+
+	auto create_set = [](auto x){
+		std::set<decltype(x)> x_set;
+		x_set.insert(0);
+		x_set.insert(1);
+		x_set.insert(std::numeric_limits<decltype(x)>::max());
+		x_set.insert(std::numeric_limits<decltype(x)>::max()-1);
+		x_set.insert(std::numeric_limits<decltype(x)>::min()+1);
+		x_set.insert(std::numeric_limits<decltype(x)>::max()/2);
+		x_set.insert(std::numeric_limits<decltype(x)>::min()/2);
+		x_set.insert(std::numeric_limits<decltype(x)>::min()+std::numeric_limits<decltype(x)>::max());
+		return x_set;
+	};
+
+	std::set<decltype(a)> a_set = create_set(a);
+
+	auto fun = [&](auto b){
+		std::set<decltype(b)> b_set = create_set(b);
+		for (auto x : a_set)
+			for (auto y : b_set)
+			{
+				test_func(x, y);
+			}
+	};
+
+	for_each(types, fun);
+};
+
+TEST(eint, eint_less_test) {
+	EXPECT_TRUE(eint::eint_less(1,2));
+	EXPECT_TRUE(eint::eint_less(0,1));
+	EXPECT_TRUE(eint::eint_less(-1,0));
+	EXPECT_TRUE(eint::eint_less(-2,-1));
+	EXPECT_TRUE(eint::eint_less(-1,2u));
+	EXPECT_TRUE(eint::eint_less(-1,2ul));
+	EXPECT_TRUE(eint::eint_less(-1l,2));
+	EXPECT_TRUE(eint::eint_less(-1ll,2));
+	EXPECT_TRUE(eint::eint_less(-1l,2ul));
+	EXPECT_TRUE(eint::eint_less(1l,2ul));
+	EXPECT_TRUE(eint::eint_less(1ll,2ul));
+	EXPECT_FALSE(eint::eint_less(1, 1));
+	EXPECT_FALSE(eint::eint_less(1, 1u));
+	EXPECT_FALSE(eint::eint_less(1, 1ull));
+	EXPECT_FALSE(eint::eint_less(1, 0ull));
+	EXPECT_FALSE(eint::eint_less(-1, -1));
+	EXPECT_FALSE(eint::eint_less(-1ll, -1));
+
+	auto test_func = [](auto x, auto y){
+		bool expected_result = static_cast<long double>(x) < static_cast<long double>(y);
+		EXPECT_EQ(eint::eint_less(x,y), expected_result);
+	};
+
+	auto test_case_eint_less = [&test_func](auto a){test_case(a, test_func);};
+
+	for_each(types, test_case_eint_less);
+}
+
+TEST(eint, eint_equal_test) {
+	EXPECT_FALSE(eint::eint_equal(1,2));
+	EXPECT_FALSE(eint::eint_equal(0,1));
+	EXPECT_FALSE(eint::eint_equal(-1,0));
+	EXPECT_FALSE(eint::eint_equal(-2,-1));
+	EXPECT_FALSE(eint::eint_equal(-1,2u));
+	EXPECT_FALSE(eint::eint_equal(-1,2ul));
+	EXPECT_FALSE(eint::eint_equal(-1l,2));
+	EXPECT_FALSE(eint::eint_equal(-1ll,2));
+	EXPECT_FALSE(eint::eint_equal(-1l,2ul));
+	EXPECT_FALSE(eint::eint_equal(1l,2ul));
+	EXPECT_FALSE(eint::eint_equal(1ll,2ul));
+	EXPECT_TRUE(eint::eint_equal(1, 1));
+	EXPECT_TRUE(eint::eint_equal(1, 1u));
+	EXPECT_TRUE(eint::eint_equal(1, 1ull));
+	EXPECT_TRUE(eint::eint_equal(-1, -1ll));
+	EXPECT_TRUE(eint::eint_equal(-1, -1));
+	EXPECT_TRUE(eint::eint_equal(-1ll, -1));
+
+	auto test_func = [](auto x, auto y){
+		bool expected_result = static_cast<long double>(x) == static_cast<long double>(y);
+		EXPECT_EQ(eint::eint_equal(x,y), expected_result);
+	};
+
+	auto test_case_eint_equal = [&test_func](auto a){test_case(a, test_func);};
+
+	for_each(types, test_case_eint_equal);
+}
+
+TEST(eint, eint_greater_test) {
+	EXPECT_TRUE(eint::eint_greater(std::numeric_limits<unsigned long>::max(), std::numeric_limits<long>::min()));
+	EXPECT_TRUE(eint::eint_greater(1, 0));
+	EXPECT_TRUE(eint::eint_greater(0, -1));
+	EXPECT_TRUE(eint::eint_greater(1u, 0));
+	EXPECT_TRUE(eint::eint_greater(0ul, -1));
+	EXPECT_TRUE(eint::eint_greater(1, 0u));
+	EXPECT_TRUE(eint::eint_greater(0, -1ll));
+	EXPECT_TRUE(eint::eint_greater(1, 0ull));
+	EXPECT_TRUE(eint::eint_greater(0ull, -1));
+	EXPECT_FALSE(eint::eint_greater(1,2));
+	EXPECT_FALSE(eint::eint_greater(0,1));
+	EXPECT_FALSE(eint::eint_greater(-1,0));
+	EXPECT_FALSE(eint::eint_greater(-2,-1));
+	EXPECT_FALSE(eint::eint_greater(-1,2u));
+	EXPECT_FALSE(eint::eint_greater(-1,2ul));
+	EXPECT_FALSE(eint::eint_greater(-1l,2));
+	EXPECT_FALSE(eint::eint_greater(-1ll,2));
+	EXPECT_FALSE(eint::eint_greater(-1l,2ul));
+	EXPECT_FALSE(eint::eint_greater(1l,2ul));
+	EXPECT_FALSE(eint::eint_greater(1ll,2ul));
+	EXPECT_FALSE(eint::eint_greater(1, 1));
+	EXPECT_FALSE(eint::eint_greater(1, 1u));
+	EXPECT_FALSE(eint::eint_greater(1, 1ull));
+	EXPECT_FALSE(eint::eint_greater(-1, -1));
+	EXPECT_FALSE(eint::eint_greater(-1ll, -1));
+
+	auto test_func = [](auto x, auto y){
+		bool expected_result = static_cast<long double>(x) > static_cast<long double>(y);
+		EXPECT_EQ(eint::eint_greater(x,y), expected_result);
+	};
+
+	auto test_case_eint_greater = [&test_func](auto a){test_case(a, test_func);};
+
+	for_each(types, test_case_eint_greater);
+}

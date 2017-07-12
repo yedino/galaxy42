@@ -24,10 +24,14 @@
 #include <boost/asio.hpp> // to create local address
 #include <mutex.hpp>
 
+#include <utils/privileges.hpp> // to drop/verify before main loop
+
 constexpr int cfg_jobs_tuntap_threads = 4;
 
 void c_galaxysrv::main_loop() {
 	_goal("\n\nMain loop (new loop)\n\n");
+
+	my_cap::verify_privileges_are_as_for_mainloop(); // confirm we are secured for the main loop
 
 	auto world = make_shared<c_world>();
 //	unique_ptr<c_cable_base_obj> cable = make_unique<c_cable_simul_obj>( world );
