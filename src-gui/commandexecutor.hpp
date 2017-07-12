@@ -17,7 +17,6 @@ public:
 		};
 	order(const std::string &json_str);
 	order(e_type cmd);
-	~order() = default;
 	std::string get_str() const;
 	std::string get_cmd() const;
 	std::string get_msg() const;

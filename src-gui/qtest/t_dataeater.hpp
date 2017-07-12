@@ -18,7 +18,6 @@ private slots:
 
 		dataeater dataeater_test;
 		dataeater_test.eat(netClient::serialize_msg(j_parsed).toStdString());
-		dataeater_test.process();
 
 		std::string processed = dataeater_test.getLastCommand();
 
@@ -35,7 +34,6 @@ private slots:
 
 		for(int i = 0; i < 3; ++i) {
 			dataeater_test.eat(netClient::serialize_msg(j_parsed).toStdString());
-			dataeater_test.process();
 		}
 
 		for(int i = 0; i < 3; ++i) {
@@ -57,9 +55,7 @@ private slots:
 		std::string part2 = packet.substr(10);
 
 		dataeater_test.eat(part1);
-		dataeater_test.process();
 		dataeater_test.eat(part2);
-		dataeater_test.process();
 
 		std::string processed = dataeater_test.getLastCommand();
 
@@ -78,7 +74,6 @@ private slots:
 		for(const auto &i : packet) {
 			// eat char by char
 			dataeater_test.eat(i);
-			dataeater_test.process();
 		}
 
 		std::string processed = dataeater_test.getLastCommand();

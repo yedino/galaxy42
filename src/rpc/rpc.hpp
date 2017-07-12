@@ -8,7 +8,6 @@
 #include <functional>
 #include <list>
 #include <map>
-#include <memory>
 #include "../mutex.hpp"
 #include <string>
 #include <thread>
@@ -17,6 +16,10 @@
 /**
  * @brief The c_rpc_sever class
  * !!! NEVER CHANGE ADDRESS OF THIS CLASS OBJECT !!!
+ * network message format:
+ * n[2 octets] == size of message
+ * message[n octets] == message in json format
+ * crypto_hash_sha512_BYTES bytes of HMAC SHA-512
  */
 class c_rpc_server final {
 	public:
@@ -36,31 +39,41 @@ class c_rpc_server final {
 		boost::asio::io_service m_io_service;
 		boost::asio::ip::tcp::acceptor m_acceptor;
 		boost::asio::ip::tcp::socket m_socket;
-		std::unique_ptr<std::thread> m_thread_ptr;
+		std::thread m_thread;
 		Mutex m_session_vector_mutex;
 		std::list<c_session> m_session_list;
 		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
+		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key, shold be loaded from conf file TODO
 
 		void accept_handler(const boost::system::error_code &error);
 		void remove_session_from_vector(std::list<c_session>::iterator it);
 
 		class c_session {
 			public:
-				c_session(c_rpc_server *rpc_server_ptr, boost::asio::ip::tcp::socket &&socket);
+				c_session(c_rpc_server *rpc_server_ptr,
+				                boost::asio::ip::tcp::socket &&socket,
+				                const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key);
 				c_session(c_session &&) = delete;
 				c_session & operator = (c_session && other) = delete;
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
 			private:
-				std::list<c_session>::iterator m_iterator_in_session_list;
-				c_rpc_server *m_rpc_server_ptr;
+				std::list<c_session>::iterator m_iterator_in_session_list; // needed for delete_me()
+				c_rpc_server *m_rpc_server_ptr; // needed for delete_me()
 				boost::asio::ip::tcp::socket m_socket;
 				std::string m_received_data;
 				std::string m_write_data;
-				std::array<uint8_t, 2> m_data_size; // always first 2 bytes of packet == message size
+				std::array<unsigned char, 2> m_data_size; // always first 2 bytes of packet == message size
+				std::array<unsigned char, crypto_auth_hmacsha512_BYTES> m_hmac_authenticator;
+				std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key
 
 				void read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred); ///< data readed to m_read_data_size
-				void read_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
+				void read_handler_data(const boost::system::error_code &error, std::size_t bytes_transferred);
+				void read_handler_hmac(const boost::system::error_code &error, std::size_t bytes_transferred);
 				void write_handler(const boost::system::error_code &error, std::size_t bytes_transferred);
+				/**
+				 * @brief delete_me
+				 * remove this object from c_rpc_server::m_session_list
+				 */
 				void delete_me();
 				/**
 				 * @brief execute_rpc_command Parse and execute function from m_rpc_functions_map
