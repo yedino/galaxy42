@@ -32,7 +32,7 @@ namespace my_cap {
  * In case of errors with checking state it should usually return proper information in the string, not throw.
  * @param verbose if yes then produce one-liner short info, else more detailed text (with \n endlines)
  */
-static std::string get_security_info(bool verbose) noexcept {
+static std::string get_security_info(bool verbose = false) noexcept {
 	try {
 		std::ostringstream oss;
 		try {
