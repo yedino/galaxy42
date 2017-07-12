@@ -373,18 +373,18 @@ int main(int argc, const char **argv) { // the main() function
 		exit_code = the_program->main_execution(); // <---
 
 	} // try running server
-	catch(ui::exception_error_exit) {
+	catch(const ui::exception_error_exit &) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
 		return 1;
-	}
-	catch(const std::exception& e) {
-		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
+			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
+		return 2;
+	}
+	catch(const std::exception& e) {
+		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		return 2;
 	}

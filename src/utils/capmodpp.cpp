@@ -29,7 +29,7 @@ using t_const_char_ptr = const char *;
 capmodpp_error::capmodpp_error(const std::string & msg)
 : m_msg(msg) { }
 
-const char * capmodpp_error::what() const {
+const char * capmodpp_error::what() const noexcept {
 	return m_msg.c_str();
 }
 
