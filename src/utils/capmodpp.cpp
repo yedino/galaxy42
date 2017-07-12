@@ -1,16 +1,16 @@
 
 #include "platform.hpp" // just to detect OS type, is it ANTINET_linux
 
-#ifdef ANTINET_linux
 
 
 #include <iomanip>
 #include "capmodpp.hpp"
 
+#ifdef ANTINET_linux
 #include <linux/types.h>
 #include <limits>
 #include <cap-ng.h>
-
+#endif
 #include <cstring>
 
 #define debug_capmodpp 0
@@ -29,10 +29,11 @@ using t_const_char_ptr = const char *;
 capmodpp_error::capmodpp_error(const std::string & msg)
 : m_msg(msg) { }
 
-const char * capmodpp_error::what() const {
+const char * capmodpp_error::what() const noexcept {
 	return m_msg.c_str();
 }
 
+#ifdef ANTINET_linux
 // ===========================================================================================================
 
 // Wrapped functions
@@ -497,11 +498,11 @@ void cap_statechange_full::security_apply_now() const {
 
 }
 
+#endif
 
 }//namespace capmodpp
 
 #undef debug_capmodpp
 
-#endif
 
 

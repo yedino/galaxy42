@@ -26,8 +26,12 @@
 
 
 namespace my_cap {
-
-
+#ifdef ANTINET_linux
+/**
+ * Returns summary of allowed CAPs, also UID/GID, and possibly other details
+ * In case of errors with checking state it should usually return proper information in the string, not throw.
+ * @param verbose if yes then produce one-liner short info, else more detailed text (with \n endlines)
+ */
 std::string get_security_info(bool verbose) noexcept {
 	try {
 		std::ostringstream oss;
@@ -54,20 +58,21 @@ std::string get_security_info(bool verbose) noexcept {
 	}
 }
 
+
 void print_security_info() {
 	_mark("Security info: " << get_security_info() );
 }
 
-void security_apply_cap_change(const capmodpp::cap_statechange_full & change) {
-	#ifdef ANTINET_linux
+/**
+ * Applies a CAPs change given in #change, can do debug before/after.
+ */
+static void security_apply_cap_change(const capmodpp::cap_statechange_full & change) {
 	_note("Caps (before): " << get_security_info(true) );
 	_clue("Caps (will apply): " << change);
 	change.security_apply_now();
 	_note("Caps (after):  " << get_security_info(true) );
-	#else
-		_note("This security operation is not available on this system, ignoring");
-	#endif
 }
+#endif
 
 static bool do_we_need_to_change_uid_or_gid() {
 	#ifdef ANTINET_linux
@@ -88,7 +93,13 @@ static bool do_we_need_to_change_uid_or_gid() {
 	#endif
 }
 
-void security_drop_root_from_sudo() {
+/**
+ * If we are root (UID) then drops from root back to regular user who gained root by sudo, retains current CAPs
+ * @warning NOT guaranteed to support double sudo (if user did e.g. sudo ./script and script does sudo ./program)
+ * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
+ * @post User is not-root (not UID 0) or else exception is thrown
+ */
+static void security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
 	#ifdef ANTINET_linux
 

@@ -11,9 +11,6 @@
 #ifdef ANTINET_linux
 	#include <linux/types.h>
 	#include <cap-ng.h>
-#else
-	#error "Library capmodpp is not supported on this OS (because linux Capabilities are not supported) - do not include this."
-	// the file including this file, should put his #include into proper #ifdef
 #endif
 
 /**
@@ -49,10 +46,12 @@ class capmodpp_error {
 	public:
 		capmodpp_error(const std::string & msg);
 		virtual ~capmodpp_error()=default;
-		virtual const char * what() const;
+		virtual const char * what() const noexcept;
 	private:
 		std::string m_msg;
 };
+
+#ifdef ANTINET_linux
 
 // ===========================================================================================================
 /// @group low-level wrappers of native libcap-ng functions - adding more error handling, and exceptions
@@ -103,7 +102,7 @@ void secure_capng_apply(capng_select_t set);
 
 // ===========================================================================================================
 
-typedef unsigned int cap_nr; ///< number of CAP (as defined by this OS/kernel), for libcap-ng, as in man capng_have_capability
+using cap_nr = unsigned int; ///< number of CAP (as defined by this OS/kernel), for libcap-ng, as in man capng_have_capability
 
 cap_nr get_last_cap_nr() noexcept;
 /// returns the number of last CAP in system (last still valid number)
@@ -238,6 +237,8 @@ std::ostream & operator<<(std::ostream & ostr, const cap_statechange_full & obj)
 // @}
 // ===========================================================================================================
 
-}
-
-
+#else
+	#pragma message "Library capmodpp is not supported on this OS (because linux Capabilities are not supported) - do not include this."
+	// the file including this file, should put his #include into proper #ifdef
+#endif
+} // namespace

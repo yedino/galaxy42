@@ -15,26 +15,12 @@
 
 namespace my_cap {
 
-
 /**
  * Returns summary of allowed CAPs, also UID/GID, and possibly other details
  * In case of errors with checking state it should usually return proper information in the string, not throw.
  * @param verbose if yes then produce one-liner short info, else more detailed text (with \n endlines)
  */
-std::string get_security_info(bool verbose=false) noexcept;
-
-/**
- * Applies a CAPs change given in #change, can do debug before/after.
- */
-void security_apply_cap_change(const capmodpp::cap_statechange_full & change);
-
-/**
- * If we are root (UID) then drops from root back to regular user who gained root by sudo, retains current CAPs
- * @warning NOT guaranteed to support double sudo (if user did e.g. sudo ./script and script does sudo ./program)
- * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
- * @post User is not-root (not UID 0) or else exception is thrown
- */
-void security_drop_root_from_sudo();
+std::string get_security_info(bool verbose = false) noexcept;
 
 // ===========================================================================================================
 // commands for this project:
