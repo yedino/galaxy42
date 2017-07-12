@@ -13,7 +13,7 @@
 c_rpc_server::c_rpc_server(const unsigned short port)
 :
 	m_io_service(),
-	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string("127.0.0.1"), port)),
 	m_socket(m_io_service),
 	m_thread(),
 	m_hmac_key()
