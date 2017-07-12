@@ -903,9 +903,9 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	nlohmann::json ret;
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
-	std::ostringstream oss;
 	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	for (const auto &peer : m_peer) {
+		std::ostringstream oss;
 		oss << peer.second->get_pip();
 		oss << "-";
 		auto hip = peer.second->get_hip();
