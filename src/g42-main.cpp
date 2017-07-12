@@ -339,7 +339,7 @@ int main(int argc, const char **argv) { // the main() function
 	g_dbg_level = 60;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
 
-	my_cap::security_drop_root_from_sudo(); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
+	my_cap::drop_root(); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
 	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
 	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
 	// to report any problems with CAPs (eg compatibility issues),
@@ -373,18 +373,18 @@ int main(int argc, const char **argv) { // the main() function
 		exit_code = the_program->main_execution(); // <---
 
 	} // try running server
-	catch(ui::exception_error_exit) {
+	catch(const ui::exception_error_exit &) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
 		return 1;
-	}
-	catch(const std::exception& e) {
-		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
+			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
+		return 2;
+	}
+	catch(const std::exception& e) {
+		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		return 2;
 	}

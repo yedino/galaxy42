@@ -43,12 +43,12 @@ TEST(xint, narrowing_func_call_int_PROBLEM) {
 		// use8u( x ); // does not compile, no such API in cppint
 		// int8_t y { x.convert_to<uint64_t>() }; // GOOD: this narrowing (of converted 64bit int to 8bit) is compilation error
 		int8_t z = x.convert_to<uint64_t>(); // BAD: this narrowing is not detecte
-		use8u( x.convert_to<uint64_t>() ); // BAD/GOOD: caller should casted to 8u. This mistake is detected only with -Wconversion
+		n_testfunc::use8u( x.convert_to<uint64_t>() ); // BAD/GOOD: caller should casted to 8u. This mistake is detected only with -Wconversion
 		// ^-- comment out this test, when we enable -Wconversion
 
 		// use8u( { x.convert_to<uint64_t>() } ); // GOOD: mistake, caller should had casted to 8u. This is detected.
 		// But syntax is long.
-		use8u( z );
+		n_testfunc::use8u( z );
 	}	);
 }
 
@@ -61,14 +61,14 @@ struct special_64u {
 TEST(xint, narrowing_func_call_int_FIX_special) {
 	EXPECT_THROW( {
 		special_64u x = n_testfunc::get64u();
-		use8u( x );
+		n_testfunc::use8u( x );
 	} , boost::bad_numeric_cast );
 }
 
 TEST(xint, narrowing_func_call_int_FIX_xint) {
 	EXPECT_THROW( {
 		xint x = n_testfunc::get64u();
-		use8u( x );
+		n_testfunc::use8u( x );
 	} , std::overflow_error );
 }
 
