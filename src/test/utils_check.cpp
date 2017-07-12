@@ -5,6 +5,13 @@
 #include <stdexcept>
 #include <string>
 #include <memory>
+#include <list>
+#include <unordered_map>
+#include <unordered_set>
+#include <queue>
+#include <stack>
+#include "my_tests_lib.hpp"
+
 using std::string;
 
 TEST(utils_check, exception_check) {
@@ -277,5 +284,87 @@ TEST(utils_check, try_cached_as_check_what_message_test) {
 		if( msg.find(test_sentence) == string::npos )
 			FAIL();
 	}
+}
 
+TEST(utils_check, reasonable_size_string_test) {
+	{
+		std::string to_big_str(reasonable_size_limit_elements_divided_max+1u, 'a');
+		EXPECT_THROW(reasonable_size(to_big_str), err_check_input);
+	}
+	{
+		std::string not_to_big_str(reasonable_size_limit_elements_divided_max, 'a');
+		EXPECT_NO_THROW(reasonable_size(not_to_big_str));
+	}
+}
+
+TEST(utils_check, reasonable_size_containers_test) {
+	{
+		std::vector<char> too_big_vec(reasonable_size_limit_elements_divided_max+1u);
+		EXPECT_THROW(reasonable_size(too_big_vec), err_check_input);
+	}
+	{
+		std::vector<char> not_too_big_vec(reasonable_size_limit_elements_divided_max);
+		EXPECT_NO_THROW(reasonable_size(not_too_big_vec));
+	}
+	{
+		size_t size = reasonable_size_limit_bytes_divided_max/sizeof(std::vector<std::array<char, 100u> >::value_type) + 1u;
+		std::vector<std::array<char, 100u> > too_big_vec_by_size(size);
+		EXPECT_THROW(reasonable_size(too_big_vec_by_size), err_check_input);
+	}
+	{
+		size_t size = reasonable_size_limit_bytes_divided_max/sizeof(std::vector<std::array<char, 100u> >::value_type);
+		std::vector<std::array<char, 100u> > not_too_big_vec_by_size(size);
+		EXPECT_NO_THROW(reasonable_size(not_too_big_vec_by_size));
+	}
+	{
+		std::multimap<char, char> too_big_map;
+		for(size_t i=0; i<reasonable_size_limit_elements_divided_max+1; i++)
+		{
+			too_big_map.insert(std::make_pair<char, char>('a', 'b'));
+		}
+		EXPECT_THROW(reasonable_size(too_big_map), err_check_input);
+	}
+	{
+		std::multimap<char, char> not_too_big_map;
+		for(size_t i=0; i<reasonable_size_limit_elements_divided_max; i++)
+		{
+			not_too_big_map.insert(std::make_pair<char, char>('a', 'b'));
+		}
+		EXPECT_NO_THROW(reasonable_size(not_too_big_map));
+	}
+	{
+		size_t size = reasonable_size_limit_bytes_divided_max/sizeof(std::multimap<char, std::array<long double, 100u> >::value_type) + 1u;
+		std::multimap<char, std::array<long double, 100u> > too_big_map_by_size;
+		for(size_t i=0; i<size; i++)
+		{
+			too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{}));
+		}
+		EXPECT_THROW(reasonable_size(too_big_map_by_size), err_check_input);
+	}
+	{
+		size_t size = reasonable_size_limit_bytes_divided_max/sizeof(std::multimap<char, std::array<long double, 100u> >::value_type);
+		std::multimap<char, std::array<long double, 100u> > not_too_big_map_by_size;
+		for(size_t i=0; i<size; i++)
+		{
+			not_too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{}));
+		}
+		EXPECT_NO_THROW(reasonable_size(not_too_big_map_by_size));
+	}
+}
+
+TEST(utils_check, reasonable_size_empty_containers_test) {
+	using tup = std::tuple<
+		std::vector<char>, std::list<unsigned char>
+		,std::set<signed char>, std::multiset<size_t>
+		,std::unordered_set<signed char>
+		,std::unordered_multiset<size_t>
+		,std::map<short, unsigned short>
+		,std::multimap<int, unsigned int>
+		,std::unordered_map<short, unsigned short>
+		,std::unordered_multimap<int, unsigned int>
+		,std::queue<int>, std::stack<signed char>
+	>;
+
+	tup container_types{};
+	for_each(container_types, [](auto empty_container){EXPECT_NO_THROW(reasonable_size(empty_container));});
 }
