@@ -24,7 +24,7 @@ static unsigned char icmp_frame00[104] = {
 
 
 TEST(ipv6_format, payload_size) {
-	auto payload_size = 64;
+	auto payload_size = 64u;
 	stdplus::tab_view<unsigned char> icmp_view(icmp_frame00,
 	                                           icmp_frame00 + std::extent<decltype(icmp_frame00)>::value );
 	auto calculated_size = ipv6_size_payload_from_header(icmp_view);
@@ -32,7 +32,7 @@ TEST(ipv6_format, payload_size) {
 }
 
 TEST(ipv6_format, entrieip_size) {
-	auto entrieip_size = 104;
+	auto entrieip_size = 104u;
 	stdplus::tab_view<unsigned char> icmp_view(icmp_frame00,
 	                                           icmp_frame00 + std::extent<decltype(icmp_frame00)>::value );
 	auto calculated_size = ipv6_size_entireip_from_header(icmp_view);

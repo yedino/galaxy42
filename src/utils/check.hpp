@@ -20,7 +20,8 @@
 struct tag_err_check_named{};
 
 /**
- * @brief A general class to catch soft errors.
+ * @brief A general class to catch try_soft errors (errors that are very expected).
+ * @note use this in catch(...) to catch all soft errors
  *
  * It can only be used to inherit to some class that also inherits from err_check_base
  * use case is that you catch (err_check_soft &ex) and you can then still ex->what() propertly (it will dynamic cast itself
@@ -33,7 +34,10 @@ class err_check_soft {
 		err_check_soft() = default;
 };
 
-/// base of all exceptions thrown by our _check system
+/**
+	* Base of all exceptions thrown by our _check system.
+	* @note better do NOT use it in any catch directly
+	*/
 class err_check_base : public std::runtime_error {
 	protected:
 		const bool m_serious;
@@ -44,8 +48,11 @@ class err_check_base : public std::runtime_error {
 };
 // -------------------------------------------------------------------
 
-/// This class is for exeption representing: programming error. This is fault in program execution.
-/// This errors are always hard errors.
+/**
+ * This class is for exeption representing: programming error. This is fault in program execution.
+ * This is always a hard error (as there is no child class for soft variant of it).
+ * @note use this in catch(...) to catch the hard error from _check()
+ */
 class err_check_prog : public err_check_base {
 	public:
 		err_check_prog(const char *what); ///< create hard error, from this message (can add cause string)
