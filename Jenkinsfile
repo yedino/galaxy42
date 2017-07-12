@@ -139,7 +139,7 @@ node('master') {
 	def build_native_windows_msvc = true
 
 	def should_run_unit_test = true
-	def should_run_integration_test = false
+	def should_run_integration_test = true
 	def should_run_memory_test = true
 	def should_run_thread_ub_test = true
 
