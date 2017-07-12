@@ -14,6 +14,96 @@
 
 using std::string;
 
+namespace detail {
+
+namespace example_1 { ///< This is a nice demo of throwing various levels of exceptions/asserts
+
+struct example_critical_error { };
+
+enum class orders { do_bad_soft_input, do_bad_soft_sys, do_bad_hard_sys, do_bad_array_index, do_bad_check, do_critical, do_our_assert, do_silly_throw, do_nothing  };
+enum class what_happened { nothing_yet, got_soft_input_error, got_soft_error_some_type,
+	got_std_exception, got_critical_error , got_unknown_exception , all_fine } ;
+
+// --- demo ---
+what_happened start_me(orders order) {
+	int size=5;
+	if (order == orders::do_bad_soft_input) size=99999;
+	_try_input(size < 10);
+
+	int ix=5;
+	std::vector<float> vec(100);
+	if (order == orders::do_bad_array_index) ix=99999;
+	auto val = vec.at(ix);
+	_dbg4(val);
+
+	bool file_opened=true;
+	if (order == orders::do_bad_soft_sys) file_opened=false;
+	_try_sys( file_opened ); // soft error, e.g. this files often file to open
+
+	bool tmp_ok=true;
+	if (order == orders::do_bad_hard_sys) tmp_ok=false;
+	_check_sys(tmp_ok); // hard error
+
+	int size_half = size/2;
+	if (order == orders::do_bad_check) size_half *= 5; // programming error
+	_check(size_half <= size);
+
+	// assert()
+	if (order == orders::do_our_assert) _check_abort( 2+2 == 5); // will abort here then
+	if (order == orders::do_critical) throw example_critical_error();
+
+	if (order == orders::do_silly_throw) throw 42;
+
+	return what_happened::all_fine;
+}
+
+what_happened	typical_main_program(orders order) {
+	what_happened happened{ what_happened::nothing_yet };
+	try {
+		try {
+			happened = start_me(order); // ***
+		}
+		catch(const err_check_input &ex) {
+			happened = what_happened::got_soft_input_error;
+		}
+		catch(const err_check_soft &ex) {
+			happened = what_happened::got_soft_error_some_type;
+		}
+		_dbg3("Ok program worked");
+		return happened; // program worked despite expected soft problems
+	}
+	catch(const std::exception &) { happened = what_happened::got_std_exception; }
+	catch(const example_critical_error &) { happened = what_happened::got_critical_error; }
+	catch(...) { happened = what_happened::got_unknown_exception; } // <-- rethrow if not main()
+	return happened;
+}
+// --- demo ---
+
+} // namespace example_1
+} // namespace detail
+
+TEST(utils_check, typical_use_exceptions) {
+	using namespace detail::example_1;
+	EXPECT_NO_THROW(  typical_main_program( orders::do_nothing )  );
+	EXPECT_EQ( typical_main_program( orders::do_nothing ), what_happened::all_fine  );
+	EXPECT_EQ( typical_main_program( orders::do_bad_soft_input ) , what_happened::got_soft_input_error  );
+	EXPECT_EQ( typical_main_program( orders::do_bad_soft_sys ) , what_happened::got_soft_error_some_type  );
+
+	// no other catch, so std::exception:
+	EXPECT_EQ( typical_main_program( orders::do_bad_hard_sys ) , what_happened::got_std_exception  );
+	EXPECT_EQ( typical_main_program( orders::do_bad_check ) , what_happened::got_std_exception  );
+
+	EXPECT_EQ( typical_main_program( orders::do_bad_array_index) , what_happened::got_std_exception  );
+	EXPECT_EQ( typical_main_program( orders::do_critical) , what_happened::got_critical_error  );
+	EXPECT_EQ( typical_main_program( orders::do_silly_throw) , what_happened::got_unknown_exception  );
+	EXPECT_EQ( typical_main_program( orders::do_bad_soft_input) , what_happened::got_soft_input_error  );
+}
+
+TEST(utils_check, typical_use_abort) {
+	using namespace detail::example_1;
+	EXPECT_DEATH( typical_main_program( orders::do_our_assert ) , ""); // program will abort
+}
+
 TEST(utils_check, exception_check) {
 
 	EXPECT_THROW({
