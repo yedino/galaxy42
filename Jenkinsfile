@@ -77,33 +77,78 @@ def native_windows_msvc(git_url, branch) {
 		             		value: "$branch" ] ]
 }
 
+def run_unit_test(git_url, branch) {
+	build job: 'galaxy42_unit-tests',
+		parameters: [	[$class: 'LabelParameterValue',
+		             		name: 'UnitTest',
+		             		label: 'allow_unittests' ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_repository_url',
+		             		value: "$git_url" ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_branch',
+		             		value: "$branch" ] ]
+}
 
-// build trigger
-properties([pipelineTriggers([	[$class: 'GitHubPushTrigger'],
+def run_integration_test() {
+	build job: 'galaxy42_integration-tests',
+		parameters: [	[$class: 'LabelParameterValue',
+		             		name: 'Integration',
+		             		labels: ['allow_integrationtests'] ] ]
+}
+
+def run_memory_test(git_url, branch) {
+	build job: 'g42_safe-memory',
+		parameters: [	[$class: 'NodeParameterValue',
+		             		name: 'MemTest',
+		             		labels: ['allow_clang_sanitizer'],
+		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_repository_url',
+		             		value: "$git_url" ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_branch',
+		             		value: "$branch" ] ]
+}
+
+def run_thread_ub_test(git_url, branch) {
+	build job: 'g42_safe-thread-ub',
+		parameters: [	[$class: 'NodeParameterValue',
+		             		name: 'ThubTest',
+		             		labels: ['allow_clang_sanitizer'],
+		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_repository_url',
+		             		value: "$git_url" ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_branch',
+		             		value: "$branch" ] ]
+}
+
+// build trigger - checking changes every 5 min
+properties([pipelineTriggers([  [$class: 'GitHubPushTrigger'],
                                 [$class: "SCMTrigger", scmpoll_spec: "H/5 * * * *"]
                              ])
           ])
 
 node('master') {
 
-	def build_native_linux = 1
-	def build_native_windows_mingw32 = 1
-	def build_native_windows_mingw64 = 1
-	def build_native_windows_msvc = 1
+	def build_native_linux = true
+	def build_native_windows_mingw32 = true
+	def build_native_windows_mingw64 = true
+	def build_native_windows_msvc = true
 
-	// Unit tests will be trigger as post-build action only for linux env.
-	def run_unit_test = 0
-	def run_integration_test = 0
+	def should_run_unit_test = true
+	def should_run_integration_test = true
+	def should_run_memory_test = true
+	def should_run_thread_ub_test = true
 
-	def build_gitian_linux = 0
-	def build_gitian_macosx = 0
-	def build_gitian_windows = 0
+	def build_gitian_linux = false
+	def build_gitian_macosx = false
+	def build_gitian_windows = false
 
 	def GIT_REPOSITORY_URL = scm.getUserRemoteConfigs()[0].getUrl()
 	println "GIT_URL: [$GIT_REPOSITORY_URL]"
-
-	//def GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-	//println "GIT COMMIT: [$GIT_REPOSITORY_URL]"
 
 	//git repository branch could be passed on jenkins build configuration as regular expresion, more info: Jenkins Git plugin
 	//def GIT_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
@@ -124,66 +169,91 @@ node('master') {
 
 	def failure_counter=0
 
-	stage('native_build_parallel') {
-		parallel linux: {
-				if(build_native_linux) {
+	parallel (
+		linux: {
+			if(build_native_linux) {
+				stage('linux') {
 					native_linux(GIT_REPOSITORY_URL,GIT_BRANCH)
 				}
-			},
-			windows_mingw32: {
-				if(build_native_windows_mingw32) {
+			}
+		},
+		windows_mingw32: {
+			if(build_native_windows_mingw32) {
+				stage('windows_mingw32') {
 					native_windows_mingw32(GIT_REPOSITORY_URL,GIT_BRANCH)
 				}
-			},
-			windows_mingw64: {
-				if(build_native_windows_mingw64) {
+			}
+		},
+		windows_mingw64: {
+			if(build_native_windows_mingw64) {
+				stage('windows_mingw64') {
 					native_windows_mingw64(GIT_REPOSITORY_URL,GIT_BRANCH)
 				}
-			},
-			windows_msvc: {
-				if(build_native_windows_msvc) {
+			}
+		},
+		windows_msvc: {
+			if(build_native_windows_msvc) {
+				stage('windows_MSVC') {
 					native_windows_msvc(GIT_REPOSITORY_URL,GIT_BRANCH)
 				}
 			}
-	}
+		}
+	)
 
-	if (run_unit_test) {
+	if (should_run_unit_test) {
 		stage('unit_test') {
 			try {
-				build job: 'galaxy42_unit-tests',
-					parameters: [	[$class: 'LabelParameterValue',
-					             		name: 'Unit',
-					             		label: 'allow_unittests' ],
-					             	[$class: 'StringParameterValue',
-					             		name: 'git_repository_url',
-					             		value: "${GIT_REPOSITORY_URL}" ],
-					             	[$class: 'StringParameterValue',
-					             		name: 'git_branch',
-					             		value: "${GIT_BRANCH}" ] ]
+				run_unit_test(GIT_REPOSITORY_URL,GIT_BRANCH)
 			} catch (all) {
-					println "Integration_tests probably fails, but we continue to next stage."
-					println "Check individual item build console log for details."
-					failure_counter++
+				println "Unit_Test fail, {$all}\nbut we continue."
+				failure_counter++
 			}
 		}
 	}
-	if (run_integration_test) {
+
+
+	if (should_run_integration_test) {
 		stage('integration_tests') {
 			try {
-				build job: 'galaxy42_integration-tests',
-					parameters: [	[$class: 'LabelParameterValue',
-					             		name: 'Integration',
-					             		label: 'allow_integrationtests' ] ]
-
+				run_integration_test()
 			} catch (all) {
-				println "Integration_tests probably fails, but we continue to next stage."
+				println "Integration_tests probably fails, {$all}\nbut we continue to next stage."
 				println "Check individual item build console log for details."
 				failure_counter++
 			}
 		}
 	}
+
+
+	parallel (
+		memory_test: {
+			if (should_run_memory_test) {
+				stage('memory_test') {
+					try {
+						run_memory_test(GIT_REPOSITORY_URL,GIT_BRANCH)
+					} catch (all) {
+						println "Memory test fail, {$all}\nbut we continue."
+						failure_counter++
+					}
+				}
+			}
+		},
+		thread_ub_test: {
+			if (should_run_thread_ub_test) {
+				stage('thread_ub_test') {
+					try {
+						run_thread_ub_test(GIT_REPOSITORY_URL,GIT_BRANCH)
+					} catch (all) {
+						println "Thread and undefined behaviors test fail, {$all}\nbut we continue."
+						failure_counter++
+					}
+				}
+			}
+		}
+	)
+
 	if (build_gitian_linux) {
-		stage('Gitian_build_linux') {
+		stage('deterministic_linux') {
 			try {
 				build job: 'galaxy42_gitian_-L',
 					parameters: [	[$class: 'NodeParameterValue',
@@ -198,14 +268,14 @@ node('master') {
 					             		value: "${GIT_BRANCH}" ] ]
 
 			} catch (all) {
-				println "Gitian_build_linux probably fails, but we continue to next stage."
+				println "Gitian_build_linux probably fails, {$all}\nbut we continue to next stage."
 				println "Check individual item build console log for details."
 				failure_counter++
 			}
 		}
 	}
 	if (build_gitian_macosx) {
-		stage('Gitian_build_macosx') {
+		stage('deterministic_macosx') {
 			try {
 				build job: 'galaxy42_gitian_-M',
 					parameters: [	[$class: 'NodeParameterValue',
@@ -219,14 +289,14 @@ node('master') {
 					             		name: 'git_branch',
 					             		value: "${GIT_BRANCH}" ] ]
 			} catch (all) {
-				println "Gitian_build_macosx probably fails, but we continue to next stage."
+				println "Gitian_build_macosx probably fails, {$all}\nbut we continue to next stage."
 				println "Check individual item build console log for details."
 				failure_counter++
 			}
 		}
 	}
 	if (build_gitian_windows) {
-		stage('Gitian_build_windows') {
+		stage('deterministic_windows') {
 			try {
 				build job: 'galaxy42_gitian_-W',
 					parameters: [	[$class: 'NodeParameterValue',
@@ -240,7 +310,7 @@ node('master') {
 					             		name: 'git_branch',
 					             		value: "${GIT_BRANCH}" ] ]
 			} catch (all) {
-				println "Gitian_build_windows probably fails, but we continue to next stage."
+				println "Gitian_build_windows probably fails, {$all}\nbut we continue to next stage."
 				failure_counter++
 			}
 		}
@@ -254,5 +324,8 @@ node('master') {
 		currentBuild.result = 'SUCCESS'
 	}
 
-	ircNotification(currentBuild.result)
+	node('debian') {
+		ircNotification(currentBuild.result)
+	}
 }
+
