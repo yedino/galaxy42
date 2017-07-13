@@ -372,10 +372,11 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
-	size_t pos1 = simple.find('-');
-	string part_pip = simple.substr(0,pos1);
-	string part_hip = simple.substr(pos1+1);
 	try {
+		size_t pos1 = simple.find('-');
+		if (pos1 == std::string::npos) throw std::out_of_range("");
+		string part_pip = simple.substr(0,pos1);
+		string part_hip = simple.substr(pos1+1);
 		_info("Peer pip="<<part_pip<<" hip="<<part_hip);
 		auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
 		_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
