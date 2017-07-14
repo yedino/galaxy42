@@ -254,8 +254,9 @@ std::string drop_root(bool home_always_env) {
 	std::string home_dir;
 	#ifdef ANTINET_linux
 	try {
-		if (security_drop_root_from_sudo()) {
-			home_dir = getenv("HOME");
+		if (security_drop_root_from_sudo() && home_always_env) {
+			struct passwd *pw = getpwuid(getuid());
+			home_dir = pw->pw_dir;
 		}
 	} catch (const std::system_error &) {
 		throw;
