@@ -95,6 +95,8 @@ TEST(stdplus_tab, basicuse) {
 	testcase_vectorlike_copyall<  std::vector<int> , std::vector<int>  > ( 10 ) ;
 
 	std::array<int,2> arr1,arr2;
+	arr1.fill(0);
+	arr2.fill(1);
 	testcase_arraylike(arr1,arr2);
 }
 
