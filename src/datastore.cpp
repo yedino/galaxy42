@@ -296,7 +296,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	return parent_path;
 }
 
-static std::string datastore::home_dir;
+std::string datastore::home_dir;
 
 void datastore::set_home(const std::string &home) {home_dir = home;}
 
