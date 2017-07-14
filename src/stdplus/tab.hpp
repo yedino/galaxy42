@@ -206,14 +206,14 @@ class throw_if_less_init_list final {
 	public:
 		using const_iterator = const T*;
 
-		/// of course (begin..end] must be from same container and must be a valid, linear range
+		/// of course [begin..end) must be from same container and must be a valid, linear range
 		template <typename TI>
 		tab_view(const TI begin, const TI end)
 				: m_begin(begin), m_end(end), m_size(end-begin) {
 			if (std::less<const TI>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
-		/// of course (begin..begin+size] must be valid memory range
+		/// of course [begin..begin+size) must be valid memory range
 		template <typename TI>
 		tab_view(const TI begin, size_t size)
 				: m_begin(begin), m_end(begin+size), m_size(size) {
