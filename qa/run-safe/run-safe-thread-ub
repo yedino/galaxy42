@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Run this script with 1st argument "MAIN" (normal main program), or "TESTS" (to run unit tests), or name of binary to run.
 
 set -o errexit
 set -o nounset
@@ -6,10 +7,14 @@ set -o nounset
 readonly myname=$(basename "$BASH_SOURCE")
 function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "$*" "$(tput sgr0)" ; }
 
-readonly program_for_flags="./tunserver.elf"
-readonly program_to_run="./tunserver.elf"
+readonly program_for_flags="./nocap-tunserver.elf"
+program_to_run="MAIN"
+[[ -z ${1+x} ]] || program_to_run="$1"
+[[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
+[[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests"
 myprint "Running program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
 
+myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
 ${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
 
 checks_enabled=0 # count checks we will enable
