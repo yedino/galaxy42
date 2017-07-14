@@ -99,11 +99,11 @@ static bool do_we_need_to_change_uid_or_gid() {
  * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
  * @post User is not-root (not UID 0) or else exception is thrown
  */
-static void security_drop_root_from_sudo() {
+static bool security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
 	#ifdef ANTINET_linux
 
-	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return; } // not root
+	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return false; } // not root
 
 	_clue("Yes, will change UID/GID");
 	_note("Caps (when changing user): " << get_security_info() );
@@ -157,6 +157,7 @@ static void security_drop_root_from_sudo() {
 		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
 		std::abort();
 	}
+	return true;
 }
 
 void drop_privileges_on_startup() {
@@ -249,10 +250,13 @@ void verify_privileges_are_as_for_mainloop() {
 }
 
 
-void drop_root() {
+std::string drop_root(bool home_always_env) {
+	std::string home_dir;
 	#ifdef ANTINET_linux
 	try {
-		security_drop_root_from_sudo();
+		if (security_drop_root_from_sudo()) {
+			home_dir = getenv("HOME");
+		}
 	} catch (const std::system_error &) {
 		throw;
 	} catch (const std::runtime_error &e) {
@@ -262,6 +266,7 @@ void drop_root() {
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
+	return home_dir;
 }
 
 }
