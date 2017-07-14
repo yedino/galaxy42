@@ -396,3 +396,8 @@ msgid "L_options_insecure-ADVANCED"
 msgstr ""
 "Specjalne opcje tylko dla deweloperów, niebezpieczne! Nie powinny być "
 "używane przez zwykłego użytkownika!"
+
+msgid "L_what_home-env_option_do"
+msgstr ""
+"Program pobiera scieżkę do katalogu home ze zmiennej środowiskowej HOME. "
+"Działa tylko na linuksie."

@@ -389,3 +389,6 @@ msgid "L_options_insecure-ADVANCED"
 msgstr ""
 "Special options only for developers! "
 "Should NOT be used by normal users!"
+
+msgid "L_what_home-env_option_do"
+msgstr "Set home directory path from HOME env. Works only on linuks"
