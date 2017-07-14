@@ -11,8 +11,8 @@ readonly program_for_flags="./nocap-tunserver.elf"
 program_to_run="MAIN"
 [[ -z ${1+x} ]] || program_to_run="$1"
 [[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
-[[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests"
-myprint "Running program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
+[[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests.elf"
+myprint "Will run program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
 
 myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
 ${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
@@ -58,7 +58,7 @@ EOF
 (( checks_enabled < checks_existing )) && myprint "$(tput setab 3)Warning: only some checks are enabled ($checks_enabled/$checks_existing)" ;
 
 set -x
-./nocap-tunserver.elf "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
+sudo "$program_to_run" "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
 set +x
 
 echo
