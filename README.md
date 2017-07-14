@@ -193,7 +193,9 @@ Program can be given higher privileges on start in various ways, on Linux.
 | Method name | You are user...         | ... and run command:              | If binary is setcap               | If binary is SUID           | Then config directory will be used | Then tuntap works?| Good idea?               |
 | ---         | ---                     | ---                               | ---                               | ---                         | ---                                | ---               | ---                      |
 | user+setcap | alice                   | ./tunserver.elf                   | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Yes, recommended         |
-| user+sudo   | alice                   | sudo HOME="$HOME" ./tunserver.elf | if NO                             | if no                       | /home/alice/.config/               | tuntap OK         | Yes, if you can't use file setcap |
+| user+setcap | alice                   | HOME="$HOME/profile1/" ./tunserver.elf | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Yes, recommended         |
+| user+sudo   | alice                   | ./tunserver.elf | if NO                             | if no                       | /home/alice/.config/               | tuntap OK         | Yes, if you can't use file setcap |
+| user+sudo   | alice                   | sudo HOME="$HOME/profile1/" ./tunserver.elf --home-env | if NO                             | if no                       | /home/alice/profile1/.config/               | tuntap OK         | Yes, if you can't use file setcap |
 | root+etc    | root                    | ./tunserver.elf --root-mode | (any)             | if no                 | /etc/                              | tuntap OK         | Yes, daemons starting from root. Will read files from /etc/ and then drop to given user. TODO NOT YET IMPLEMENTED |
 | (NO!)       | root                    | ./tunserver.elf             | (any)             | if no                 | /etc/                              | tuntap OK         | **No!** program will abort; or try to drop out to user who gained this root (e.g. from sudo su) |
 | (NO!)       | alice                   | sudo HOME="$HOME" ./tunserver.elf | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Allowed; but sudo not needed   |
@@ -203,6 +205,15 @@ Program can be given higher privileges on start in various ways, on Linux.
 Other combinations (of this conditions, exporting env HOME, etc) are not supported currently.
 
 Config file actually used can be this path plus "/antinet/", e.g. "/home/alice/.config/antinet/".
+
+Possible user transitions:
+```
+alice                 ---> OUR PROGRAM (with cap)             ---> READ FILES (HOME=alice, user=alice)
+alice ---sudo--> root ---> OUR PROGRAM ---drop sudo---> alice ---> READ FILES (HOME=root! , user=alice)
+alice ---sudo--> root ---> OUR PROGRAM ---drop SUID---> alice ---> READ FILES (HOME=root! , user=alice) ---???---> nobody [TODO] (saved uid?)
+                 ^--- user_program_start                ^--- user_normal                                           ^--- user_mainloop
+```
+
 
 
 * * *
