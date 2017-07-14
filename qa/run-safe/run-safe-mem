@@ -6,14 +6,18 @@ readonly myname=$(basename "$BASH_SOURCE")
 function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "$*" "$(tput sgr0)" ; }
 function fail() { myprint "$(tput setab 1)Error $*" ; exit 1 ; }
 
-readonly program_for_flags="./tunserver.elf"
-readonly program_to_run="./tunserver.elf"
-myprint "Running program ($program_to_run) with SAFE MEMORY OPTIONS"
+readonly program_for_flags="./nocap-tunserver.elf"
+program_to_run="MAIN"
+[[ -z ${1+x} ]] || program_to_run="$1"
+[[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
+[[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests.elf"
+myprint "Will run program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
+
+myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
+${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
 
 checks_enabled=0 # count checks we will enable
 checks_existing=0 # count how many checks we could have run
-
-${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
 
 ((checks_existing++)) || :
 flagname="valgrind_memory_is_possible"
@@ -55,7 +59,7 @@ myprint "All seems fine, running ($program_to_run)"
 
 
 set -x
-sudo ./valgrind_with_log_kill "$valgrind_log_dir" "$valgrind_exitcode" ./nocap-tunserver.elf "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
+sudo ./valgrind_with_log_kill "$valgrind_log_dir" "$valgrind_exitcode" "$program_to_run" "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
 set +x
 
 echo
