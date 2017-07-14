@@ -111,8 +111,9 @@ public:
 	static b_fs::path get_parent_path(t_datastore file_type,
 								 const std::string &filename);
 
-
+	static void set_home(const std::string &home);
 private:
+	static std::string home_dir;
 	FRIEND_TEST(datastore, prepare_path);
 	FRIEND_TEST(datastore, write_load_string);
 	FRIEND_TEST(datastore, write_load_mlocked_string);

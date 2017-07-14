@@ -25,7 +25,7 @@ std::string get_security_info(bool verbose = false) noexcept;
 // ===========================================================================================================
 // commands for this project:
 
-void drop_root();
+std::string drop_root(bool set_home_dir); // drop root (galaxy42 function)
 
 /// call this as soon as possible - to drop any privilages that are not needed anywhere
 void drop_privileges_on_startup();
