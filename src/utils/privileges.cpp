@@ -11,6 +11,7 @@
 #include <thread>
 #include <map>
 #include <iostream>
+#include "datastore.hpp"
 
 
 #ifdef ANTINET_linux
@@ -98,12 +99,13 @@ static bool do_we_need_to_change_uid_or_gid() {
  * @warning NOT guaranteed to support double sudo (if user did e.g. sudo ./script and script does sudo ./program)
  * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
  * @post User is not-root (not UID 0) or else exception is thrown
+ * @return home directory to regular user if root is successfully dropped else empty string.
  */
-static bool security_drop_root_from_sudo() {
+static std::string security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
 	#ifdef ANTINET_linux
 
-	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return false; } // not root
+	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return std::string(); } // not root
 
 	_clue("Yes, will change UID/GID");
 	_note("Caps (when changing user): " << get_security_info() );
@@ -157,7 +159,8 @@ static bool security_drop_root_from_sudo() {
 		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
 		std::abort();
 	}
-	return true;
+	std::string home_dir = pw->pw_dir;
+	return home_dir;
 }
 
 void drop_privileges_on_startup() {
@@ -251,12 +254,11 @@ void verify_privileges_are_as_for_mainloop() {
 
 
 std::string drop_root(bool home_always_env) {
-	std::string home_dir;
+	std::string home_dir = security_drop_root_from_sudo();
 	#ifdef ANTINET_linux
 	try {
-		if (security_drop_root_from_sudo() && home_always_env) {
-			struct passwd *pw = getpwuid(getuid());
-			home_dir = pw->pw_dir;
+		if (home_always_env) {
+			return std::string();
 		}
 	} catch (const std::system_error &) {
 		throw;
@@ -267,6 +269,7 @@ std::string drop_root(bool home_always_env) {
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
+	datastore::set_home(home_dir);
 	return home_dir;
 }
 
