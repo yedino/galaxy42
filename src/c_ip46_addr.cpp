@@ -106,7 +106,7 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
 	if (ret) _throw_error( invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
 	if (!result) _throw_error( invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
-	auto result_deleter = [&](struct addrinfo *result){ if (!result) _throw_error(runtime_error("NULL in freeaddrinfo"); freeaddrinfo(result)); };
+	auto result_deleter = [&](struct addrinfo *result){ if (!result) _throw_error(runtime_error("NULL in freeaddrinfo")); freeaddrinfo(result); };
 	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
 
 	if(result_ptr->ai_family == AF_INET) {
