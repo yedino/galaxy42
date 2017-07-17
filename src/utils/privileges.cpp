@@ -103,6 +103,7 @@ static bool do_we_need_to_change_uid_or_gid() {
  */
 static std::string security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
+	std::string home_dir;
 	#ifdef ANTINET_linux
 
 	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return std::string(); } // not root
@@ -151,6 +152,7 @@ static std::string security_drop_root_from_sudo() {
 		_fact("setuid error");
 		throw std::system_error(std::error_code(errno, std::system_category()));
 	}*/
+	home_dir = pw->pw_dir;
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
@@ -159,7 +161,6 @@ static std::string security_drop_root_from_sudo() {
 		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
 		std::abort();
 	}
-	std::string home_dir = pw->pw_dir;
 	return home_dir;
 }
 
