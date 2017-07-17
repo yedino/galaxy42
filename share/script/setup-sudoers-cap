@@ -1,0 +1,30 @@
+#!/bin/bash
+# argument: one string, with space-separated list of users (in sudo syntax, that is groups are allowed as %groupname)
+
+param_users_list="$1"
+
+printf "\nInstalling sudoers settings (for cap tool)\n"
+
+sudoers_dir='/etc/sudoers.d'
+if [[ ! -w "$sudoers_dir" ]]
+then
+	echo "Can not write to $sudoers_dir - please create this directory and configure sudoers (visudo) to includedir that file."
+	echo "Consider writting a patch to do that automatically, or tell us, if this is a problem on popular platforms."
+	exit 1
+fi
+
+sudoers_file="$sudoers_dir/captool-yedino"
+echo "# users/groups allowed to sudo run the cap tool for Yedino (galaxy42)" > "$sudoers_file" # create new file
+
+read -r -a tab <<< "$param_users_list" ; for user_element in "${tab[@]}" ; do
+	regexp='^%{0,1}[a-zA-Z][a-zA-Z0-9_.-]{0,99}$'
+	[[ ! "$user_element" =~ $regexp ]] && {
+		echo "ERROR: Strange user name given ($user_element) - aborting!"
+		exit 1
+	}
+	echo "Allowing for user/group: $user_element"
+	echo "$user_element" 'ALL=(ALL)NOPASSWD:/usr/local/bin/setcap_net_admin --normal -u --current -f *' >> "$sudoers_file"
+done
+
+printf "All done (in $0)\n\n"
+
