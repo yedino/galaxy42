@@ -313,12 +313,15 @@ function install_captool() {
 	[[ ! -z "$SUDO_USER" ]] && normaluser="$SUDO_USER" # guessing the name of normal user (e.g. the one who called sudo install)
 	sudo_cap_users_suggest="$sudo_cap_users_suggest $normaluser"
 
-	# explain the next form:
-	abdialog --title "$(eval_gettext "L_install_option_sudo_cap_users_title")" \
-		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
-		--yesno "$L_install_option_sudo_cap_users" 20 60 2>&1 >/dev/tty || abdialog_exit # shellcheck disable=SC2069
-  # ask the users list as explained:
-	sudo_cap_users=$(abdialog  --inputbox "$(gettext "L_install_option_sudo_cap_users")" \
+#	# explain the next form:
+#	abdialog --title "$(eval_gettext "L_install_option_sudo_cap_users_title")" \
+#		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+#		--yesno "$L_install_option_sudo_cap_users" 20 60 2>&1 >/dev/tty || abdialog_exit # shellcheck disable=SC2069
+#  # ask the users list as explained:
+
+	sudo_cap_users=$(abdialog  \
+		--title "$(eval_gettext "L_install_option_sudo_cap_users_title")" \
+		--inputbox "$(gettext "L_install_option_sudo_cap_users")" \
 			20 70 "$sudo_cap_users_suggest" \
 			2>&1 >/dev/tty ) || abdialog_exit
 
@@ -439,8 +442,8 @@ response_menu_task2="" # will fill it with filtered version
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
 		captool_maybe)
-			text="$(eval_gettext "L_install_option_sudo_cap_allow_title")"
-			abdialog --title "$(gettext 'L_install_option_sudo_cap_allow')" \
+			text="$(eval_gettext "L_install_option_sudo_cap_allow")"
+			abdialog --title "$(gettext 'L_install_option_sudo_cap_allow_title')" \
 				--yesno "$text" 20 60 && response_menu_task2="$response_menu_task2 captool" # add this option if user agreed
 		;;
 		*)
