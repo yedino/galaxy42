@@ -425,10 +425,15 @@ template <typename T_INT> bool is_safe_int() {
 }
 
 template<typename T_INT>
-void math_tests_overflow_incr(T_INT val) { bool safetype = is_safe_int<T_INT>();
+void math_tests_overflow_incr(T_INT val) {
+	bool safetype = is_safe_int<T_INT>(); // is this given type T_INT a safe type, so we can try to overflow it,
+	// and doing such test will not be an UB
 	// @hint: if this fails, then it can be called from code "generate_tests_for_types" go fix that
 	T_INT a = val;	t_correct_int a_corr = a;
-	auto func = [&]() { a_corr+=1; a++; } ;
+	auto func = [&]() {
+		a_corr+=1;
+		a++;
+	} ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
 
 	_note("Will increment first time: " << a << " (a_corr="<<a_corr<<")" );
@@ -438,25 +443,39 @@ void math_tests_overflow_incr(T_INT val) { bool safetype = is_safe_int<T_INT>();
 	_note("Will increment again: " << a );
 	if (safetype) { EXPECT_THROW( func() , std::runtime_error ); }
 	else { // should not fit for given val
-		EXPECT_NO_THROW( func() ); // usafe type fils to throw
-		EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
+		// test nothing for unsafe types, as the test would cause a real UB to happen
+		// and an UB could in theory break all tests and do anything.
+
+		// EXPECT_NO_THROW( func() ); // usafe type fils to throw
+		// EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
 	}
 	#undef db
 }
 
 template<typename T_INT>
-void math_tests_overflow_decr(T_INT val) { bool safetype = is_safe_int<T_INT>();
+void math_tests_overflow_decr(T_INT val) {
+	bool safetype = is_safe_int<T_INT>(); // is this given type T_INT a safe type, so we can try to overflow it,
+	// and doing such test will not be an UB
+
 	T_INT a = val;	t_correct_int a_corr = a;
 	EXPECT_EQ(a,a_corr);
-	auto func = [&]() { a_corr-=1; a--; } ;
+	auto func = [&]() {
+		a_corr-=1;
+		a--;
+	} ;
 	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
-	if (safetype) {  EXPECT_THROW( func() , std::runtime_error ); }
+	if (safetype) {
+		EXPECT_THROW( func() , std::runtime_error );
+	}
 	else { // should not fit for given val
-		EXPECT_NO_THROW( func() ); // usafe type fils to throw
-		EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
+		// test nothing for unsafe types, as the test would cause a real UB to happen
+		// and an UB could in theory break all tests and do anything.
+
+		// EXPECT_NO_THROW( func() ); // usafe type fils to throw
+		// EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
 	}
 	#undef db
 }
@@ -493,7 +512,7 @@ TEST(xint, math1) {
 
 //const test_xint::detail::t_correct_int maxni = 0xFFFFFFFFFFFFFFFF; // max "normal integer" on this platform
 #define maxni 0xFFFFFFFFFFFFFFFFULL // max "normal integer" on this platform
-
+#define maxni_half 0x7FFFFFFFFFFFFFFFLL // max "normal integer" on this platform. signed, to allow - this value to reach the minimum signed value
 
 //static_assert(maxni == std::numeric_limits<uint64_t>::max() , "Unexpected max size of normal integer");
 
@@ -505,7 +524,7 @@ TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xi
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
 
 generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
-generate_tests_for_types( overflow_decr , +1, +1, -(maxni/2), -xint(maxni-1) )
+generate_tests_for_types( overflow_decr , +1, +1, -maxni_half, -xint(maxni-1) )
 
 TEST(xint, some_use) {
 	xint a("0xFFFFFFFFFFFFFFFF");
