@@ -163,12 +163,12 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	_warn( mo_file_reader::gettext("L_what_exception_program_throw") << ": " << except_var.what() \
 
 // TODO-r-deprecate: ?
-#define _throw_error_detail( EXCEPT , MSG ) do { auto except_var = EXCEPT;  \
+#define _throw_error_detail( EXCEPT , MSG ) do { auto except_var = (EXCEPT);  \
 	_warn( "Except: " << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
-#define _throw_error( EXCEPT ) do { auto except_var = EXCEPT;  \
+#define _throw_error( EXCEPT ) do { auto except_var = (EXCEPT);  \
 	_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
@@ -179,7 +179,7 @@ namespace ui { class exception_error_exit; }
 
 void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 
-#define _throw_exit( EXCEPT ) do { auto except_var = EXCEPT;  \
+#define _throw_exit( EXCEPT ) do { auto except_var = (EXCEPT);  \
 	must_be_exception_type_error_exit(except_var); /* assert (in compile time) that EXCEPT is of proper exception type */ \
 	_warn("Going to throw exception (for EXIT) What: " << except_var.what() \
 		<< "."); \
