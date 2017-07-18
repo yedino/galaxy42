@@ -434,7 +434,6 @@ void math_tests_overflow_incr(T_INT val) {
 		a_corr+=1;
 		a++;
 	} ;
-	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
 
 	_note("Will increment first time: " << a << " (a_corr="<<a_corr<<")" );
 	EXPECT_NO_THROW( func() );
@@ -446,7 +445,7 @@ void math_tests_overflow_incr(T_INT val) {
 		// test nothing for unsafe types, as the test would cause a real UB to happen
 		// and an UB could in theory break all tests and do anything.
 
-		// EXPECT_NO_THROW( func() ); // usafe type fils to throw
+		// EXPECT_NO_THROW( func() ); // usafe type fails to throw
 		// EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
 	}
 	#undef db
@@ -463,7 +462,6 @@ void math_tests_overflow_decr(T_INT val) {
 		a_corr-=1;
 		a--;
 	} ;
-	#define db do { _mark("safe="<<safetype<<"; a="<<a<<" a_corr="<<a_corr); } while(0)
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
@@ -474,7 +472,7 @@ void math_tests_overflow_decr(T_INT val) {
 		// test nothing for unsafe types, as the test would cause a real UB to happen
 		// and an UB could in theory break all tests and do anything.
 
-		// EXPECT_NO_THROW( func() ); // usafe type fils to throw
+		// EXPECT_NO_THROW( func() ); // usafe type fails to throw
 		// EXPECT_NE(a , a_corr); // unsafe type has mathematically-invalid value
 	}
 	#undef db
@@ -511,8 +509,9 @@ TEST(xint, math1) {
 }
 
 //const test_xint::detail::t_correct_int maxni = 0xFFFFFFFFFFFFFFFF; // max "normal integer" on this platform
-#define maxni 0xFFFFFFFFFFFFFFFFULL // max "normal integer" on this platform
-#define maxni_half 0x7FFFFFFFFFFFFFFFLL // max "normal integer" on this platform. signed, to allow - this value to reach the minimum signed value
+constexpr auto maxni = std::numeric_limits<uint64_t>::max();
+constexpr auto minnui = std::numeric_limits<int64_t>::min();
+
 
 //static_assert(maxni == std::numeric_limits<uint64_t>::max() , "Unexpected max size of normal integer");
 
@@ -524,7 +523,7 @@ TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xi
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
 
 generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
-generate_tests_for_types( overflow_decr , +1, +1, -maxni_half, -xint(maxni-1) )
+generate_tests_for_types( overflow_decr , +1, +1, minnui+1, -xint(maxni-1) )
 
 TEST(xint, some_use) {
 	xint a("0xFFFFFFFFFFFFFFFF");
