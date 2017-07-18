@@ -26,9 +26,10 @@ std::string get_security_info(bool verbose = false) noexcept;
 // commands for this project:
 
 /**
+ * @brief drop root (galaxy42 function)
  * @return home directory to regular user if home_always_env==false and root is successfully dropped else empty string.
  */
-std::string drop_root(bool home_always_env); // drop root (galaxy42 function)
+void drop_root(bool home_always_env);
 
 /// call this as soon as possible - to drop any privilages that are not needed anywhere
 void drop_privileges_on_startup();

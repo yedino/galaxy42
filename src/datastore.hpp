@@ -110,8 +110,9 @@ public:
 	 */
 	static b_fs::path get_parent_path(t_datastore file_type,
 								 const std::string &filename);
-
-///< Set the home directory e.g. "/home/bob/". If given empty string "", then it will set the auto mode (e.g. take env HOME)
+/**
+ * Set the home directory e.g. "/home/bob/". If given empty string "", then it will set the auto mode (e.g. take env HOME)
+ */
 	static void set_home(const std::string &home);
 private:
 	static std::string home_dir;
