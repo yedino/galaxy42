@@ -10,43 +10,68 @@
 
 #if USE_BOOST_MULTIPRECISION
 
-using t_correct1 = long double;
-
-
 /// What if we would only use boost's big int (cpp int, checked) directly:
+
 using t_bigint64s = boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >;
+
 using t_bigint64u = boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >;
 
+/// Functions to convert char to int, for easy displaying of it as a number, not as a character (in debug etc)
+template <typename T> T show_int(T val) { return val; }
+int show_int(char val) { return val; }
+int show_int(unsigned char val) { return val; }
+int show_int(signed char val) { return val; }
+
 namespace n_testfunc {
 
+/// Example functions that return values that are at verge of [under/]overflowing
 long double get_double() { return std::numeric_limits<long double>::max(); }
 uint64_t get64u() { return std::numeric_limits<uint64_t>::max(); }
 uint32_t get32u() { return std::numeric_limits<uint32_t>::max(); }
 uint16_t get16u() { return std::numeric_limits<uint16_t>::max(); }
-uint8_t get8u() { return std::numeric_limits<uint8_t>::max(); }
+uint8_t  get8u()  { return std::numeric_limits< uint8_t>::max(); }
+
+ int64_t get64s() { return std::numeric_limits< int64_t>::max(); }
+ int32_t get32s() { return std::numeric_limits< int32_t>::max(); }
+ int16_t get16s() { return std::numeric_limits< int16_t>::max(); }
+ int8_t  get8s()  { return std::numeric_limits<  int8_t>::max(); }
+
 void use64u(uint64_t val) { _dbg3("Got: " << val ); }
 void use8u(uint8_t val) { _dbg3("Got: " << static_cast<int>(val) ); }
 
 } // namespace n_testfunc
 
 // ===========================================================================================================
+// sizes and ranges of xint
+// ===========================================================================================================
+
+TEST(xint, xint_range_and_size) {
+	xint64 xi;
+	_mark( "size of: "<<sizeof(xi)<<" range: "
+		<< '[' << std::numeric_limits<decltype(xi)>::min() << "..."
+		<< std::numeric_limits<decltype(xi)>::max() << ']' );
+}
+
+// ===========================================================================================================
 // narrowing in function call
 // ===========================================================================================================
 
+/// Narrowing of int - this demonstrates the problem: that some mistaken code is not catched compile nor runtime
 TEST(xint, narrowing_func_call_int_PROBLEM) {
 	EXPECT_NO_THROW( {
 		t_bigint64u x = n_testfunc::get64u();
 		// use8u( x ); // does not compile, no such API in cppint
 		// int8_t y { x.convert_to<uint64_t>() }; // GOOD: this narrowing (of converted 64bit int to 8bit) is compilation error
-		int8_t z = x.convert_to<uint64_t>(); // BAD: this narrowing is not detecte
-		n_testfunc::use8u( x.convert_to<uint64_t>() ); // BAD/GOOD: caller should casted to 8u. This mistake is detected only with -Wconversion
-		// ^-- comment out this test, when we enable -Wconversion
+		int8_t z = x.convert_to<uint64_t>(); // BAD: this narrowing (in assign z=...) is not detected
+		n_testfunc::use8u( x.convert_to<uint64_t>() ); // BAD/GOOD: caller should casted to 8u. This mistake...
+		// ...is detected only with -Wconversion clang/gcc. (msvc: untested).
+		// ^-- comment out this test, when we enable -Wconversion TODO
 
-		// use8u( { x.convert_to<uint64_t>() } ); // GOOD: mistake, caller should had casted to 8u. This is detected.
+		// use8u( { x.convert_to<uint64_t>() } ); // GOOD: mistake, caller should had casted to 8u. This is detected (clang/gcc).
 		// But syntax is long.
 		n_testfunc::use8u( z );
 	}	);
@@ -58,16 +83,17 @@ struct special_64u {
 		template <typename T> operator T () { return numeric_cast<T>(m_val); }
 		private: uint64_t m_val;
 };
+/// Narrowing of int - solution using our tiny local type to demonstrate how it works
 TEST(xint, narrowing_func_call_int_FIX_special) {
 	EXPECT_THROW( {
 		special_64u x = n_testfunc::get64u();
 		n_testfunc::use8u( x );
 	} , boost::bad_numeric_cast );
 }
-
+// Narrowing of int - solution with the xint - the one that we are really testing here
 TEST(xint, narrowing_func_call_int_FIX_xint) {
 	EXPECT_THROW( {
-		xint x = n_testfunc::get64u();
+		xint64u x = n_testfunc::get64u();
 		n_testfunc::use8u( x );
 	} , std::overflow_error );
 }
@@ -76,31 +102,54 @@ TEST(xint, narrowing_func_call_int_FIX_xint) {
 // correct result when combining with less-safe types
 // ===========================================================================================================
 
+/// Test that it will throw on overflow when we take some safe-int type TInt, and do mixed expressions x += (fundamental int)
+/// func should return a value that overflows when incremented; but can withstand -= 10.
 template<typename TInt, typename TFunc>
 void mix_with_lesssafe_type(const TFunc & func) {
+	_mark("TInt="<<typeid(TInt).name()<<" for func returning:" << show_int(func()));
 	EXPECT_NO_THROW( {
 		TInt x = func();
-		x -= 10;
+		_mark("After creation from func, x="<<x);
+		x -= 10; // so it will be in-range even after the following line:
 		TInt y = x + 10;
 		UNUSED(x); UNUSED(y);
 	});
 	EXPECT_THROW( {
 		TInt x = func();
-		TInt y = x + 10;
+		TInt y = x + 10; // overflows
 		UNUSED(x); UNUSED(y);
 	} , std::overflow_error );
 }
 
-TEST(xint, mix_with_lesssafe) {
-	mix_with_lesssafe_type<t_bigint64u>(n_testfunc::get64u);
-	mix_with_lesssafe_type<xint>(n_testfunc::get64u);
+/// Call above test for given types/functions
+TEST(xint, mix_with_lesssafe_increment_unsigned) {
+	mix_with_lesssafe_type<xintu  >(n_testfunc::get64u);
+	mix_with_lesssafe_type<xint64u>(n_testfunc::get64u);
+	mix_with_lesssafe_type<xint32u>(n_testfunc::get32u);
+	mix_with_lesssafe_type<xint16u>(n_testfunc::get16u);
+	mix_with_lesssafe_type<xint8u >(n_testfunc::get8u);
 }
+
+/// Call above test for given types/functions
+TEST(xint, mix_with_lesssafe_increment_signed) {
+	mix_with_lesssafe_type<xintu  >(n_testfunc::get64s);
+	mix_with_lesssafe_type<xint64>(n_testfunc::get64s);
+	mix_with_lesssafe_type<xint32>(n_testfunc::get32s);
+	mix_with_lesssafe_type<xint16>(n_testfunc::get16s);
+	mix_with_lesssafe_type<xint8 >(n_testfunc::get8s);
+}
+
+// ===========================================================================================================
+// TODO: narrowing in return
+// ===========================================================================================================
+
 
 // ===========================================================================================================
 
 TEST(xint, comparsions_int_OP_xint) {
 	int  A1i=100, A2i=100, Zi=200; // integers: A1,A2 are same;  Z is bigger
 	xint A1x=100, A2x=100, Zx=200; // same but as xint
+	UNUSED(A2i);
 	// int @@ xint
 	EXPECT_TRUE ( A1i <  Zx  );
 	EXPECT_FALSE( A1i <  A2x );
@@ -225,14 +274,8 @@ TEST(xint,normal_use_belowzero) {
 }
 
 
-TEST(xint,can_assign_xint) {
-	xint64 a;
-	/*
-	basic_xint b;
-	t_correct_int corr1(9LL);
-	_warn( std::numeric_limits<decltype(a)>::max() );
-	_warn( std::numeric_limits<decltype(b)>::max() );
-	*/
+TEST(xint,can_assign_xint_to_unsigned) {
+	xint64u a;
 
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0LL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 9LL) );
@@ -241,16 +284,29 @@ TEST(xint,can_assign_xint) {
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) );
-	EXPECT_TRUE ( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) ); // 2^64 -1
+	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<uint64_t>::max()) );
 
 	// this will say false - because overflow can happen when assigning to 64bit safer int:
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) );
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) );
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) );
+}
 
+TEST(xint,can_assign_xint_to_signed) {
+	xint64 a;
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 9LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 100LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 10000LL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) );
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)/2) ); // 2^64 /2
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -1));
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -128));
-	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<int>::min()));
+	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<uint64_t>::min()) + 1 ); // +1 because of...
+	//... the "-128" limitation of xint (see xint header)
 	UNUSED(a);
 }
 
@@ -390,19 +446,6 @@ namespace detail {
 
 
 
-/*
-template<typename T_INT,
-typename std::enable_if<std::is_signed<T_INT>{}>::type* = nullptr >
-signed long long int round_co(t_correct1 v) {
-	return static_cast<signed long long int>( std::round( v ) );
-}
-
-template<typename T_INT,
-typename std::enable_if<! std::is_signed<T_INT>{}>::type* = nullptr >
-unsigned long long int round_co(t_correct1 v) {
-	return static_cast<unsigned long long int>( std::round( v ) );
-}
-*/
 template<typename T_INT>
 void math_tests_noproblem() {
 	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 , 1000000 };
@@ -510,18 +553,22 @@ TEST(xint, math1) {
 
 //const test_xint::detail::t_correct_int maxni = 0xFFFFFFFFFFFFFFFF; // max "normal integer" on this platform
 constexpr auto maxni = std::numeric_limits<uint64_t>::max();
-constexpr auto minnui = std::numeric_limits<int64_t>::min();
-
+constexpr auto minnui = std::numeric_limits<int64_t>::min() + 1; // +1 because we can not express "-128" - see xint header
 
 //static_assert(maxni == std::numeric_limits<uint64_t>::max() , "Unexpected max size of normal integer");
 
+// macro to generate more unit-tests TEST(...)
+// in each test, we take a test function-template given in arg FUNCTION, for example overflow_incr function,
+// we choose the template type for it - to use uint64_t, xint, etc...
+// and we call it...
 #define generate_tests_for_types(FUNCTION, V1,V2,V3,V4) \
-TEST(xint, FUNCTION ## _u_i) {	test_xint::detail::math_tests_ ## FUNCTION <uint64_t>(V1); } \
-TEST(xint, FUNCTION ## _u_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xintu>(V2); } \
-TEST(xint, FUNCTION ## _s_i) {	test_xint::detail::math_tests_ ## FUNCTION <int64_t>(V3); } \
-TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xint>(V4); }
+	TEST(xint, FUNCTION ## _u_i) {	test_xint::detail::math_tests_ ## FUNCTION <uint64_t>(V1); } \
+	TEST(xint, FUNCTION ## _u_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xintu>(V2); } \
+	TEST(xint, FUNCTION ## _s_i) {	test_xint::detail::math_tests_ ## FUNCTION <int64_t>(V3); } \
+	TEST(xint, FUNCTION ## _s_xint) {	test_xint::detail::math_tests_ ## FUNCTION <xint>(V4); }
 // we use max_u64-1 for SIGNED xint too, because it can in fact express it it seems?
 
+// this generates tests like xint.overflow_incr_s_xint and such
 generate_tests_for_types( overflow_incr , maxni-1, maxni-1, maxni/2-1, xint(maxni-1) )
 generate_tests_for_types( overflow_decr , +1, +1, minnui+1, -xint(maxni-1) )
 

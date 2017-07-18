@@ -16,33 +16,34 @@
  * @file This file/module goal is mainly to provide a very safe interger type
  * that will provided mathematically-correct results, or else always throw exception.
  * It should be also have minimal overhead and be fast.
+ *
  * @owner rfree
  * @see xint
 */
 
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
-	64, 64, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+	64-1, 64-1, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 basic_xint64;
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
-	64, 64,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
+	64  , 64  ,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
 basic_xint64u;
 
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
-	32, 32, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+	32-1, 32-1, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 basic_xint32;
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
-	32, 32,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
+	32  , 32  ,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
 basic_xint32u;
 
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
-	16, 16, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+	16-1, 16-1, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 basic_xint16;
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
 	16, 16,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
 basic_xint16u;
 
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
-	8, 8, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
+	8-1, 8-1, boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >
 basic_xint8;
 typedef boost::multiprecision::number< boost::multiprecision::cpp_int_backend<
 	8, 8,	boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> >
@@ -350,6 +351,22 @@ std::ostream& operator<<(std::ostream& ostr, safer_int<T> obj) {
 	return ostr;
 }
 
+/**
+ * xint family functions:
+ * are guaranteed to express numbers in range [0 .. 2^N-1] for unsigned xintNu types,
+ * e.g. xint8u is 0 .. 255
+ * are guaranteed to express numbers in range [-((2^N)/2 -1) .. (2^N)/2 -1] for signed xintNu types,
+ * e.g. xint8u is -127 .. +127. Note that this differs from signed char, it can express -128, we can not.
+ *
+ * Range could be larger, especially support for -((2^N)/2 -1) e.g. -128, might be added later.
+ *
+ * sizeof this type should be at most x2 larger then size of fundamental type with same range (except for the "-128" problem)
+ *
+ * In any case,
+ * for all values it can express, when doing mathemathical operations on this type, it will correctly store and express
+ * the mathematically correct result;
+ * for other values it is guaranteed to throw exception.
+ */
 typedef safer_int<basic_xint64>  xint64;    ///< safe integer -  64 bit,   signed (see class #safer_int and topic xint for details)
 typedef safer_int<basic_xint64u> xint64u;   ///< safe integer -  64 bit,   signed (see class #safer_int and topic xint for details)
 typedef safer_int<basic_xint32>  xint32;    ///< safe integer -  32 bit,   signed (see class #safer_int and topic xint for details)
