@@ -12,30 +12,34 @@ Intended for:
 
 # Debugging
 
-Run with option --d for debug.
+Run program (e.g. ./tunserver.elf) with option --d for debug.
+Also applies to many run scripts like: ./run-safe-thread-ub --d , ./run-safe-mem --d , ./rundevel.sh --d.
 
 ## Debug tools
 
-Possible goals:
+Possible goals for tools:
 + thread correctness: clang TSAN tool. (plus source-code uses clang Thread-Safety-Analysis).
 + UB other (including overflows): clang UBSAN tool.
 + memory correctness: valgrind (memcheck) tool.
 
-Tests you should run (separatelly):
+Tests you should run threfore (separate tests):
 
 1) Test for Thread and UB:
-a) build version with TSAN and UBSAN options in ccmake (requires clang)
-b) and run ./run-safe-thread-ub
+a) build version with TSAN and UBSAN options in ccmake (requires clang compiler to be set first!).
+b) and run ./run-safe-thread-ub - look for errors.
+
 This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
 ...due to clang bug(?): abort-on-error seemingly not working correctly sometimes (e.g. debian 8)
+
+Do check/demonstrate how this tool is working, run it with options (to trigger TSAN/UBSAN errors - then this tests should abort
+and show error messages for this example bugs in code):
 `
 ./run-safe-thread-ub --special-tsan1=ON
 ./run-safe-thread-ub --special-unsan1=ON
 `
-will demonstrate errors that trigger TSAN / UBSAN.
 
-2) To run tests for Memory:
-a) build normal version (without ccmake option TSAN. UBSAN is allowed if you want)
+2) To run tests for Memory, using valgrind:
+a) build normal version (without ccmake options TSAN nor ASAN; UBSAN is allowed if you want)
 and run  ./run-safe-mem
 This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
 ...due to valgrind bug(?): refusing to run capability (setcap) binaries.
@@ -45,7 +49,7 @@ Example, this option --special... will trigger a demonstration error and abort:
 ./run-safe-mem --newloop --special-memcheck2=ON
 `
 
-### FAQ
+### FAQ for the Debug Tools
 
 Q: Program can not run inside valgrind, tool says `valgrind_memory_is_possible`
 
