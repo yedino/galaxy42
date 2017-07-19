@@ -12,13 +12,14 @@
 template<typename T>
 size_t performance_test(const size_t m, const size_t n) {
 	T **tab = new T*[m];
+	size_t T_max = std::numeric_limits<T>::max();
 	for (size_t i=0; i<m; i++) {
 		tab[i] = new T[n];
 	}
 	auto t1 = std::chrono::steady_clock::now();
 	for (size_t i=0; i<m; i++) {
 		for (size_t j=0; j<n; j++) {
-			tab[i][j] = ((i+n)*j)%(m+n);
+			tab[i][j] = (static_cast<T>(i%T_max)/static_cast<T>(j%T_max))%T_max;
 		}
 	}
 	auto t2 = std::chrono::steady_clock::now();
@@ -42,8 +43,8 @@ TEST(xint, performance) {
 	_mark("int16_t test time in ms: " << performance_test<int16_t>(5000, 5000));
 	_mark("xint16u test time in ms: " << performance_test<xint16u>(5000, 5000));
 	_mark("uint16_t test time in ms: " << performance_test<uint16_t>(5000, 5000));
-	_mark("xint8 test time in ms: " << performance_test<xint8>(100, 100));
-	_mark("int8_t test time in ms: " << performance_test<int8_t>(100, 100));
+	_mark("xint8 test time in ms: " << performance_test<xint8>(50, 50));
+	_mark("int8_t test time in ms: " << performance_test<int8_t>(50, 50));
 	_mark("xint8u test time in ms: " << performance_test<xint8u>(100, 100));
 	_mark("uint8_t test time in ms: " << performance_test<uint8_t>(100, 100));
 }
