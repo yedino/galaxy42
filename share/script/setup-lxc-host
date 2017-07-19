@@ -104,6 +104,14 @@ sed -i -e "s|__VAR_lxc_all|$opt_all_if|g" "$ourscript"
 sh "$ourscript" || { echo "It seems our lxc network script ($ourscript) failed to run."; exit 1; }
 
 printf "\nInstalling sudoers settings\n"
+sudoers_dir='/etc/sudoers.d'
+if [[ ! -w "$sudoers_dir" ]]
+then
+	echo "Can not write to $sudoers_dir - please create this directory and configure sudoers (visudo) to includedir that file."
+	echo "Consider writting a patch to do that automatically, or tell us, if this is a problem on popular platforms."
+	exit 1
+fi
+
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc    # new file
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-execute" >> /etc/sudoers.d/gitian-lxc
 

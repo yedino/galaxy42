@@ -12,6 +12,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <sodium.h> // for sha512 key size e.g. crypto_auth_hmacsha512_KEYBYTES
 
 /**
  * @brief The c_rpc_sever class
