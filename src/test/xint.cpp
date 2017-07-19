@@ -722,11 +722,6 @@ TEST(xint, safe_create_xint_assign) {
 	EXPECT_THROW( func(false)  , std::runtime_error );
 }
 
-
-
-#undef maxni
-
-
 // end of tests v1
 // ===========================================================================================================
 
