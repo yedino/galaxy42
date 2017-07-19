@@ -76,7 +76,7 @@ void c_tun_device_linux::set_ipv6_address
 	assert(binary_address[0] == 0xFD);
 	assert(binary_address[1] == 0x42);
 	_fact("Setting IP address");
-	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address, prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);
 	_note("Configured network IP for " << ifr.ifr_name);
 	m_ip6_ok=true;
@@ -619,7 +619,7 @@ void c_tun_device_apple::set_ipv6_address
         (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
     assert(binary_address[0] == 0xFD);
     assert(binary_address[1] == 0x42);
-    Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+    Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address, prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tun_device_apple::set_mtu(uint32_t mtu) {
