@@ -235,20 +235,24 @@ class safer_int {
 		template<typename U> safer_int<T> & operator+=(safer_int<U> obj) { xi+=obj.xi; return *this; }
 		template<typename U> safer_int<T> & operator-=(safer_int<U> obj) { xi-=obj.xi; return *this; }
 		template<typename U> safer_int<T> & operator/=(safer_int<U> obj) { xi/=obj.xi; return *this; }
+		template<typename U> safer_int<T> & operator%=(safer_int<U> obj) { xi%=obj.xi; return *this; }
 		template<typename U> safer_int<T> & operator*=(safer_int<U> obj) { xi*=obj.xi; return *this; }
 		template<typename U> safer_int<T> & operator+=(U obj) { xi+=obj; return *this; }
 		template<typename U> safer_int<T> & operator-=(U obj) { xi-=obj; return *this; }
 		template<typename U> safer_int<T> & operator/=(U obj) { xi/=obj; return *this; }
+		template<typename U> safer_int<T> & operator%=(U obj) { xi%=obj; return *this; }
 		template<typename U> safer_int<T> & operator*=(U obj) { xi*=obj; return *this; }
 
 		template<typename U> safer_int<T> operator+(safer_int<U> obj) { auto tmp=*this; tmp.xi+=obj.xi; return tmp; }
 		template<typename U> safer_int<T> operator-(safer_int<U> obj) { auto tmp=*this; tmp.xi-=obj.xi; return tmp; }
 		template<typename U> safer_int<T> operator*(safer_int<U> obj) { auto tmp=*this; tmp.xi*=obj.xi; return tmp; }
 		template<typename U> safer_int<T> operator/(safer_int<U> obj) { auto tmp=*this; tmp.xi/=obj.xi; return tmp; }
+		template<typename U> safer_int<T> operator%(safer_int<U> obj) { auto tmp=*this; tmp.xi%=obj.xi; return tmp; }
 		template<typename U> safer_int<T> operator+(U obj) { auto tmp=*this; tmp.xi+=obj; return tmp; }
 		template<typename U> safer_int<T> operator-(U obj) { auto tmp=*this; tmp.xi-=obj; return tmp; }
 		template<typename U> safer_int<T> operator*(U obj) { auto tmp=*this; tmp.xi*=obj; return tmp; }
 		template<typename U> safer_int<T> operator/(U obj) { auto tmp=*this; tmp.xi/=obj; return tmp; }
+		template<typename U> safer_int<T> operator%(U obj) { auto tmp=*this; tmp.xi%=obj; return tmp; }
 		// TODO check also for comparsion with buildint T, because it could be that build-in T is wider then some cpp_int
 
 		void print(std::ostream& ostr) const { ostr<<xi; }
