@@ -292,7 +292,7 @@ function install_captool() {
 	install_for_touse
 	install_for_devel
 	install_packages libcap2-bin  sudo
-	install_packages_NOW # we need sudo package instaled right now . (and we need it to created /etc/sudoers.d/)
+	install_packages_NOW # we need sudo package installed right now . (and we need it to created /etc/sudoers.d/)
 
 	echo "--------------------------------------------------------------"
 

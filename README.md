@@ -187,8 +187,12 @@ Script that can help speed up this process is being written, e.g. one good versi
 
 Program can be given higher privileges on start in various ways, on Linux.
 
-* recommended way is to just start program and it will work thanks to setcap (part of our make, if you installed our scripts from ./install)
-* or else, if you do not have setcap, then just sudo the program with command as below
+* recommended way is to just start program and it will work thanks to setcap flags on the binary
+  * flags are set by our make (if you installed our scripts like cap-tool from ./install, this it the default)
+  * this will not work if curren mountpoint has mount flags like nosuid (then remount it, e.g. for Mint ecryptfs: mount -i ... -o remount,nosuid)
+* or else, if you do not have setcap, then just run the program via sudo - it will start as root
+  * it will drop root very soon, back to the user who started sudo
+  * it will also use the home of user who started the sudo (by default, see --home-enf to change)
 
 | Method name | You are user...         | ... and run command:              | If binary is setcap               | If binary is SUID           | Then config directory will be used | Then tuntap works?| Good idea?               |
 | ---         | ---                     | ---                               | ---                               | ---                         | ---                                | ---               | ---                      |
@@ -206,12 +210,6 @@ Other combinations (of this conditions, exporting env HOME, etc) are not support
 
 Config file actually used can be this path plus "/antinet/", e.g. "/home/alice/.config/antinet/".
 
-Possible user transitions:
-```
-alice                 ---> OUR PROGRAM (with cap)             ---> READ FILES (HOME=alice, user=alice)
-alice ---sudo--> root ---> OUR PROGRAM ---drop sudo---> alice ---> READ FILES (HOME=root! , user=alice)
-alice ---sudo--> root ---> OUR PROGRAM ---drop SUID---> alice ---> READ FILES (HOME=root! , user=alice) ---???---> nobody [TODO] (saved uid?)
-                 ^--- user_program_start                ^--- user_normal                                           ^--- user_mainloop
 ```
 
 
