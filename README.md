@@ -187,13 +187,19 @@ Script that can help speed up this process is being written, e.g. one good versi
 
 Program can be given higher privileges on start in various ways, on Linux.
 
-* recommended way is to just start program and it will work thanks to setcap (part of our make, if you installed our scripts from ./install)
-* or else, if you do not have setcap, then just sudo the program with command as below
+* recommended way is to just start program and it will work thanks to setcap flags on the binary
+  * flags are set by our make (if you installed our scripts like cap-tool from ./install, this it the default)
+  * this will not work if curren mountpoint has mount flags like nosuid (then remount it, e.g. for Mint ecryptfs: mount -i ... -o remount,suid)
+* or else, if you do not have setcap, then just run the program via sudo - it will start as root
+  * it will drop root very soon, back to the user who started sudo
+  * it will also use the home of user who started the sudo (by default, see --home-env below to set any home dir)
 
 | Method name | You are user...         | ... and run command:              | If binary is setcap               | If binary is SUID           | Then config directory will be used | Then tuntap works?| Good idea?               |
 | ---         | ---                     | ---                               | ---                               | ---                         | ---                                | ---               | ---                      |
 | user+setcap | alice                   | ./tunserver.elf                   | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Yes, recommended         |
-| user+sudo   | alice                   | sudo HOME="$HOME" ./tunserver.elf | if NO                             | if no                       | /home/alice/.config/               | tuntap OK         | Yes, if you can't use file setcap |
+| user+setcap | alice                   | HOME="$HOME/profile1/" ./tunserver.elf | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Yes, recommended         |
+| user+sudo   | alice                   | ./tunserver.elf | if NO                             | if no                       | /home/alice/.config/               | tuntap OK         | Yes, if you can't use file setcap |
+| user+sudo   | alice                   | sudo HOME="$HOME/profile1/" ./tunserver.elf --home-env | if NO                             | if no                       | /home/alice/profile1/.config/               | tuntap OK         | Yes, if you can't use file setcap |
 | root+etc    | root                    | ./tunserver.elf --root-mode | (any)             | if no                 | /etc/                              | tuntap OK         | Yes, daemons starting from root. Will read files from /etc/ and then drop to given user. TODO NOT YET IMPLEMENTED |
 | (NO!)       | root                    | ./tunserver.elf             | (any)             | if no                 | /etc/                              | tuntap OK         | **No!** program will abort; or try to drop out to user who gained this root (e.g. from sudo su) |
 | (NO!)       | alice                   | sudo HOME="$HOME" ./tunserver.elf | if yes                            | if no                       | /home/alice/.config/               | tuntap OK         | Allowed; but sudo not needed   |
@@ -203,6 +209,9 @@ Program can be given higher privileges on start in various ways, on Linux.
 Other combinations (of this conditions, exporting env HOME, etc) are not supported currently.
 
 Config file actually used can be this path plus "/antinet/", e.g. "/home/alice/.config/antinet/".
+
+```
+
 
 
 * * *
