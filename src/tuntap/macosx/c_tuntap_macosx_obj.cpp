@@ -177,7 +177,7 @@ void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &
 	_check_input(binary_address[0] == 0xFD);
 	_check_input(binary_address[1] == 0x42);
 	_dbg1("set ip addres for interface name " << m_ifr_name);
-	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address.data(), prefixLen, Sockaddr_AF_INET6);
+	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address, prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tuntap_macosx_obj::set_mtu(uint32_t mtu) {
