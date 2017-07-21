@@ -27,8 +27,6 @@
 
 
 namespace my_cap {
-
-std::string home_dir;
 #ifdef ANTINET_linux
 /**
  * Returns summary of allowed CAPs, also UID/GID, and possibly other details
@@ -101,16 +99,18 @@ static bool do_we_need_to_change_uid_or_gid() {
  * @warning NOT guaranteed to support double sudo (if user did e.g. sudo ./script and script does sudo ./program)
  * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
  * @post User is not-root (not UID 0) or else exception is thrown
- * @return home directory to regular user if root is successfully dropped else empty string.
+ * @return struct with variables that might be changed after droop root (for expmple string with regular user home path
+ * if root is successfully dropped else empty string).
  */
-static void security_drop_root_from_sudo() {
+static t_changes_from_sudo security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
 	#ifdef ANTINET_linux
+	t_changes_from_sudo changes;
 
 	if ( ! do_we_need_to_change_uid_or_gid()) {
 		_note("We are not root anyway");
-		home_dir = ""; // for now, set the default behaviour of datastore
-		return;
+		changes.m_home_dir = ""; // for now, set the default behaviour of datastore
+		return changes;
 	} // not root
 
 	_clue("Yes, will change UID/GID");
@@ -143,7 +143,7 @@ static void security_drop_root_from_sudo() {
 	_note("Caps (after changing user): " << get_security_info() );
 
 	if (pw->pw_dir != nullptr)
-		home_dir = pw->pw_dir;
+		changes.m_home_dir = pw->pw_dir;
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
@@ -152,6 +152,7 @@ static void security_drop_root_from_sudo() {
 		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
 		std::abort();
 	}
+	return changes;
 }
 
 void drop_privileges_on_startup() {
@@ -246,8 +247,9 @@ void verify_privileges_are_as_for_mainloop() {
 
 void drop_root(bool home_always_env) {
 	#ifdef ANTINET_linux
+	t_changes_from_sudo changes;
 	try {
-		security_drop_root_from_sudo();
+		changes = security_drop_root_from_sudo();
 	} catch (const std::system_error &) {
 		throw;
 	} catch (const std::runtime_error &e) {
@@ -258,9 +260,10 @@ void drop_root(bool home_always_env) {
 		_note("This security operation is not available on this system, ignoring");
 	#endif
 	if (home_always_env) {
-		home_dir = std::string();
+		datastore::set_home(std::string());
+	} else {
+		datastore::set_home(changes.m_home_dir);
 	}
-	datastore::set_home(home_dir);
 }
 
 }

@@ -16,6 +16,13 @@
 namespace my_cap {
 
 /**
+ * @brief The t_changes_from_sudo struct to keep changes after droop sudo
+ */
+struct t_changes_from_sudo {
+	std::string m_home_dir;
+};
+
+/**
  * Returns summary of allowed CAPs, also UID/GID, and possibly other details
  * In case of errors with checking state it should usually return proper information in the string, not throw.
  * @param verbose if yes then produce one-liner short info, else more detailed text (with \n endlines)
@@ -27,7 +34,6 @@ std::string get_security_info(bool verbose = false) noexcept;
 
 /**
  * @brief drop root (galaxy42 function)
- * @return home directory to regular user if home_always_env==false and root is successfully dropped else empty string.
  */
 void drop_root(bool home_always_env);
 
