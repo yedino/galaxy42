@@ -195,7 +195,7 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_so
 }
 
 #elif defined ANTINET_cancelio
-void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, udp::socket &socket) {
+void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_socket_type &socket) {
 	t_native_socket sys_handler = socket.native_handle();
 	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
 	DWORD ms_dword = boost::numeric_cast<DWORD>(ms);

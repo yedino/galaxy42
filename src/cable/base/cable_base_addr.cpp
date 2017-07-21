@@ -27,7 +27,7 @@ unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & 
 				return std::make_unique<c_cable_udp_addr>(part2);
 			}
 			else if(part1=="shm"){
-				auto iter = find_if(part2.begin(), part2.end(), [](char c) { return !isalnum(c); });
+				auto iter = find_if(part2.begin(), part2.end(), [](char c) { return !isalnum(static_cast<int>(c)); });
 				if( iter == part2.end() )
 					return std::make_unique<cable_shm_addr>(part2);
 				else
@@ -52,3 +52,19 @@ int get_default_galaxy_port(){
 	return 9042;
 }
 
+t_cable_kind c_cable_base_addr::get_kind() const { return m_kind; }
+
+bool c_cable_base_addr::operator==(const c_cable_base_addr &other) const {
+	if (m_kind == other.m_kind) return 0 == compare_same_class(other);
+	return false;
+}
+
+bool c_cable_base_addr::operator!=(const c_cable_base_addr &other) const {
+	if (m_kind != other.m_kind) return true;
+	return 0 != compare_same_class(other);
+}
+
+bool c_cable_base_addr::operator<(const c_cable_base_addr &other) const {
+	if (m_kind == other.m_kind) return -1 == compare_same_class(other);
+	return m_kind < other.m_kind;
+}
