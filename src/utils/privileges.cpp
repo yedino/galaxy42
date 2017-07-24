@@ -104,9 +104,9 @@ static bool do_we_need_to_change_uid_or_gid() {
  */
 static t_changes_from_sudo security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
-	#ifdef ANTINET_linux
 	t_changes_from_sudo changes;
 
+	#ifdef ANTINET_linux
 	if ( ! do_we_need_to_change_uid_or_gid()) {
 		_note("We are not root anyway");
 		changes.m_home_dir = ""; // for now, set the default behaviour of datastore
@@ -246,8 +246,8 @@ void verify_privileges_are_as_for_mainloop() {
 
 
 void drop_root(bool home_always_env) {
-	#ifdef ANTINET_linux
 	t_changes_from_sudo changes;
+	#ifdef ANTINET_linux
 	try {
 		changes = security_drop_root_from_sudo();
 	} catch (const std::system_error &) {
