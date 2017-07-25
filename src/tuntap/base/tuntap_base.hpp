@@ -16,6 +16,7 @@
 /// what is the size of headers that are removed when creating Merit
 /// e.g. two times IPv6 address, since that is what we are removing from tuntap IPv6 packet
 constexpr static size_t size_removed_from_merit = 2 * 16;
+constexpr size_t IPV6_LEN = 16;
 
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
 
@@ -32,7 +33,7 @@ std::string NetPlatform_syserr_to_string(t_syserr syserr);
  * Errors are thrown as tuntap_error*
  */
 void Wrap_NetPlatform_addAddress(const char* interfaceName,
-                                 const uint8_t* address,
+                                 const std::array<unsigned char, IPV6_LEN> address,
                                  int prefixLen,
                                  int addrFam);
 
@@ -40,7 +41,6 @@ void Wrap_NetPlatform_addAddress(const char* interfaceName,
 void Wrap_NetPlatform_setMTU(const char* interfaceName,
                              uint32_t mtu);
 
-constexpr size_t IPV6_LEN = 16;
 /// Abstract class for API of tuntap driver, that allows to set own IP, and then send data to TUN/TAP, and read from it
 /// Errors are either thrown, or reported to callere-provided handler (if the error happens async.)
 class c_tuntap_base_obj : protected c_someio {
