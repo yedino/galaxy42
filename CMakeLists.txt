@@ -260,7 +260,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	set(WARN_PEDANTIC_FLAGS "/Wall")
+	set(WARN_PEDANTIC_FLAGS "/W4")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 else()
@@ -316,6 +316,9 @@ endif()
 
 include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
 #add local gtest
+if (MSVC)
+	set(gtest_force_shared_crt ON CACHE BOOL "Enable gtest_force_shared_crt")
+endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(depends/googletest/googletest/include/)
 include_directories(depends/googletest/googlemock/include/)
@@ -453,7 +456,9 @@ endif ()
 
 ########################### TARGETS ###########################
 add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
-cotire(tunserver.elf)
+if (NOT MSVC) #TODO
+	cotire(tunserver.elf)
+endif()
 
 set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
