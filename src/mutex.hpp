@@ -1,5 +1,13 @@
-
 #pragma once
+
+/**
+ * This is the header needed to use "Thread Safety Analysis" of clang.
+ * https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+ *
+ * Developed based on versions from internet, with changes from us including rob, rfree.
+ * @owner rob
+ *
+*/
 
 #ifndef THREAD_SAFETY_ANALYSIS_MUTEX_H
 #define THREAD_SAFETY_ANALYSIS_MUTEX_H
@@ -170,8 +178,6 @@ private:
 public:
   LockGuard(t_mutex &mu) ACQUIRE(mu) : mut(mu) { mut.lock(); }
   ~LockGuard() RELEASE() { mut.unlock(); }
-  void lock() ACQUIRE() { mut.lock(); }
-  void unlock() RELEASE() { mut.unlock();  }
 };
 
 template <class t_mutex>
@@ -182,15 +188,18 @@ private:
 public:
   UniqueLockGuardRO(t_mutex &mu) noexcept ACQUIRE_SHARED(m_mut) : m_mut(mu), m_locked(true) {
   	try { m_mut.lock_shared(); } catch(...) { _mutexshield_abort("LG-RO constr"); } }
-  ~UniqueLockGuardRO() noexcept RELEASE_SHARED() {
+//  ~UniqueLockGuardRO() noexcept RELEASE_SHARED() { // https://stackoverflow.com/questions/33608378/clang-thread-safety-annotation-and-shared-capabilities
+  ~UniqueLockGuardRO() noexcept RELEASE() {
   	try { if (m_locked) m_mut.unlock_shared(); } catch(...) { _mutexshield_abort("LG-RO destr"); } }
 
   void lock() noexcept ACQUIRE_SHARED(m_mut) {
   	try {
-  		if ( m_locked) _mutexshield_abort("LG-RO already locked");
-	  	m_mut.unlock_shared(); m_locked=false;
+  		if (m_locked) _mutexshield_abort("LG-RO already locked");
+	  	m_mut.lock_shared(); m_locked=true;
 	  } catch(...) { _mutexshield_abort("LG-RO lock"); } }
-  void unlock() noexcept RELEASE_SHARED() {
+
+//  void unlock() noexcept RELEASE_SHARED() { // https://stackoverflow.com/questions/33608378/clang-thread-safety-annotation-and-shared-capabilities
+  void unlock() noexcept RELEASE() {
   	try {
   		if (!m_locked) _mutexshield_abort("LG-RO already unlocked");
 	  	m_mut.unlock_shared(); m_locked=false;
@@ -203,15 +212,15 @@ private:
   t_mutex & m_mut;
   bool m_locked; ///< not all mutex types know if they are locked apparentyl?
 public:
-  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE(m_mut) : m_mut(mu), m_locked(true) {
+  UniqueLockGuardRW(t_mutex &mu) noexcept ACQUIRE(mu) : m_mut(mu), m_locked(true) {
   	try { m_mut.lock(); } catch(...) { _mutexshield_abort("LG-RW constr"); } }
   ~UniqueLockGuardRW() noexcept RELEASE() {
   	try { if (m_locked) m_mut.unlock(); } catch(...) { _mutexshield_abort("LG-RW destr"); } }
 
-  void lock() noexcept ACQUIRE() {
+  void lock() noexcept ACQUIRE(m_mut) {
   	try {
-  		if ( m_locked) _mutexshield_abort("LG-RW already locked");
-	  	m_mut.unlock(); m_locked=false;
+  		if (m_locked) _mutexshield_abort("LG-RW already locked");
+	  	m_mut.lock(); m_locked=true;
 	  } catch(...) { _mutexshield_abort("LG-RW lock"); } }
   void unlock() noexcept RELEASE() {
   	try {

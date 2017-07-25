@@ -14,7 +14,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(new Ui::MainWindow),
+	ui(std::make_unique<Ui::MainWindow>()),
 	m_tun_process(std::make_unique<tunserverProcess>()),
 	m_dlg(nullptr)
 {
@@ -33,40 +33,19 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 std::shared_ptr<MainWindow> MainWindow::create_shared_ptr() {
-	// TODO
-	std::shared_ptr<MainWindow> ret(new MainWindow);// = std::make_shared<MainWindow>();
+	std::shared_ptr<MainWindow> ret = std::make_shared<MainWindow>();
 	ret->m_cmd_exec = commandExecutor::construct(ret);
 	return ret;
 }
 
-MainWindow::MainWindow(MainWindow &&other) {
-	if (this == &other)
-		return;
-	m_cmd_exec = std::move(other.m_cmd_exec);
-	ui = other.ui;
-	other.ui = nullptr;
-	//m_tun_process = other.m_tunserver_process;
-	//other.m_tunserver_process = nullptr;
-	m_dlg = other.m_dlg;
-	other.m_dlg = nullptr;
-}
-
-MainWindow::~MainWindow()
-{
-	delete ui;
-	delete m_dlg;
-}
-
 void MainWindow::showDebugPage(QByteArray &pageCode) {
-
+	Q_UNUSED(pageCode);
 }
 
 void MainWindow::on_plusButton_clicked() {
-
-	m_dlg = new addressDialog(this);
-	connect (m_dlg,SIGNAL(add_address(QString)),this,SLOT(update_peer_list(QString)));
+	m_dlg = std::make_unique<addressDialog>(this);
+	connect (m_dlg.get() ,SIGNAL(add_address(QString)),this,SLOT(update_peer_list(QString)));
 	m_dlg->show();
-
 }
 
 void MainWindow::update_peer_list(QString peer) {
@@ -74,9 +53,9 @@ void MainWindow::update_peer_list(QString peer) {
 	m_tun_process->add_address(peer);
 
 	ui->peerListWidget->clear();
-	std::cout << "Peers:" << '\n';
+	qDebug() << "Peers:";
 	for (const auto &peer : m_tun_process->get_peer_list()) {
-		std::cout << peer.to_string() << '\n';
+		//qDebug() << peer.to_string();
 		ui->peerListWidget->addItem(QString::fromStdString(peer.to_string()));
 	}
 }
@@ -93,7 +72,7 @@ void MainWindow::on_minusButton_clicked() {
         delete_list.at(0)->setText("");
         ui->peerListWidget->sortItems(Qt::DescendingOrder);
     } catch(...){
-        qDebug()<<"co mam niby usunac?!";
+        qDebug() << "list is empty";
     }
 }
 

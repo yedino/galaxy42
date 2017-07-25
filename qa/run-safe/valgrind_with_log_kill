@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+
+# helper script for valgrind as root with kill on first error
+
+readonly myname=$(basename "$BASH_SOURCE")
+function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 4)" "$myname" "$*" "$(tput sgr0)" ; }
+
+valgrind_log_dir="$1" ; shift
+valgrind_exitcode="$1" ; shift
+program="$1" ; shift
+
+myprint "Starting program $program with log file at $valgrind_log_dir. Exit code to use on valgrind error: $valgrind_exitcode"
+
+valgrind_log_file="$valgrind_log_dir/valgrind.log"
+
+
+	function script_cleanup_jobs() {
+		myprint "TRAP"
+		sleep 0.1
+		myprint "from script valgrind_with_log_kill: trap, killing the child procesess now..."
+		kill $(jobs -p)
+		myprint "from script valgrind_with_log_kill: children are killed now."
+		# this cleanup is not always bullet-proof (e.g. when process hangs or ignores TERM signal)
+		# though... it's the valgrind process, so it should be good I hope
+	}
+	trap script_cleanup_jobs EXIT # trap because we will spawn now background process:
+
+# run in background
+valgrind --log-file="$valgrind_log_file" --error-exitcode="$valgrind_exitcode" "$program" "$@"  &
+valgrind_pid="$!"
+
+./valgrind_log_watch "$valgrind_pid" "$valgrind_log_file" &
+log_watch_pid="$!"
+
+myprint "Waiting for valgrind to finish in background"
+
+wait "$valgrind_pid" && { program_return=$? ; } || { program_return=$? ; }
+
+(( $program_return == 0 )) && { myprint "$(tput setab 2)Exited with no error code" ;
+} || {
+	myprint "$(tput setab 1) The valgrind log file was: (showing it because got exit code $program_return from program $program)"
+	printf "%s\n" "$(tput setab 1)"
+	cat "$valgrind_log_file"
+	printf "%s\n" "$(tput sgr0)"
+}
+
+# ignore error (bash -e), and capture result
+
+myprint "Exiting with code $program_return"
+exit $program_return

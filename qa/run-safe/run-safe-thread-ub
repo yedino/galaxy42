@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Run this script with 1st argument "MAIN" (normal main program), or "TESTS" (to run unit tests), or name of binary to run.
+
+set -o errexit
+set -o nounset
+
+readonly myname=$(basename "$BASH_SOURCE")
+function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "$*" "$(tput sgr0)" ; }
+
+readonly program_for_flags="./nocap-tunserver.elf"
+program_to_run="MAIN"
+[[ -z ${1+x} ]] || program_to_run="$1"
+[[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
+[[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests.elf"
+myprint "Will run program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
+
+myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
+${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
+
+checks_enabled=0 # count checks we will enable
+checks_existing=0 # count how many checks we could have run
+
+((checks_existing++)) || :
+${program_for_flags} --print-flags-flavour | grep "FLAVOUR_TSAN_FULL" && {
+	((checks_enabled++)) || :
+	export TSAN_OPTIONS="halt_on_error=1"
+	myprint "Ok, we will HALT on TSAN errors"
+	echo -e "$(tput setab 2)"
+	cat << EOF
+ _____ ____    _    _   _
+|_   _/ ___|  / \\  | \\ | |
+  | | \\___ \\ / _ \\ |  \\| |
+  | |  ___) / ___ \\| |\\  |
+  |_| |____/_/   \\_\\_| \\_|
+
+EOF
+	echo -e "$(tput sgr0 2)"
+} || { myprint "Warning: will not halt on TSAN errors"; }
+
+((checks_existing++)) || :
+${program_for_flags} --print-flags-flavour | grep "FLAVOUR_UBSAN_FULL" && {
+	((checks_enabled++)) || :
+	export UBSAN_OPTIONS="halt_on_error=1"
+	myprint "Ok, we will HALT on UBSAN errors"
+	echo -e "$(tput setab 2)"
+	cat << EOF
+	 _   _ ____ ____    _    _   _
+	 | | | | __ ) ___|  / \\  | \\ | |
+	 | | | |  _ \\___ \\ / _ \\ |  \\| |
+	 | |_| | |_) |__) / ___ \\| |\\  |
+	  \\___/|____/____/_/   \\_\\_| \\_|
+
+EOF
+	echo -e "$(tput sgr0 2)"
+} || { myprint "Warning: will not halt on UBSAN errors"; }
+
+(( checks_enabled == 0 )) && { myprint "Error: can not run any checks, exiting" ; exit 1 ; }
+(( checks_enabled < checks_existing )) && myprint "$(tput setab 3)Warning: only some checks are enabled ($checks_enabled/$checks_existing)" ;
+
+set -x
+sudo "$program_to_run" "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
+set +x
+
+echo
+(( $program_return == 0 )) && { myprint "$(tput setab 2)Exited with no error code" ;
+	} || { myprint "$(tput setab 1)Exited with error code: $program_return" ; }
+
+(( checks_enabled < checks_existing )) && myprint "$(tput setab 3)Warning: only some checks are enabled ($checks_enabled/$checks_existing)" ;
+
+exit $program_return

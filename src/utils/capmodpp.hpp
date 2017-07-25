@@ -11,9 +11,6 @@
 #ifdef ANTINET_linux
 	#include <linux/types.h>
 	#include <cap-ng.h>
-#else
-	#error "Library capmodpp is not supported on this OS (because linux Capabilities are not supported) - do not include this."
-	// the file including this file, should put his #include into proper #ifdef
 #endif
 
 /**
@@ -49,10 +46,12 @@ class capmodpp_error {
 	public:
 		capmodpp_error(const std::string & msg);
 		virtual ~capmodpp_error()=default;
-		virtual const char * what() const;
+		virtual const char * what() const noexcept;
 	private:
 		std::string m_msg;
 };
+
+#ifdef ANTINET_linux
 
 // ===========================================================================================================
 /// @group low-level wrappers of native libcap-ng functions - adding more error handling, and exceptions
@@ -103,7 +102,7 @@ void secure_capng_apply(capng_select_t set);
 
 // ===========================================================================================================
 
-typedef unsigned int cap_nr; ///< number of CAP (as defined by this OS/kernel), for libcap-ng, as in man capng_have_capability
+using cap_nr = unsigned int; ///< number of CAP (as defined by this OS/kernel), for libcap-ng, as in man capng_have_capability
 
 cap_nr get_last_cap_nr() noexcept;
 /// returns the number of last CAP in system (last still valid number)
@@ -126,6 +125,7 @@ enum class cap_area_type { eff,permit,inherit,bounding }; ///< the area of a CAP
 // @{
 
 enum class cap_perm { no=0, yes=1 }; ///< one capability-type state can be yes or no
+bool is_true(cap_perm value) noexcept; ///< to convert to boolean, it will be TRUE if permision if granted (yes)
 
 struct cap_statechange;
 
@@ -135,10 +135,15 @@ struct cap_state final { ///< one capability entire state, including effective, 
 
 	void apply_change(const cap_statechange & change); ///< apply given change to my state
 
-	/// is this CAP potentially usable as-is or by spawning a child, e.g. is it eff or permit or inherit,
-	/// though NOT taking into accounts more advanced tricks (e.g. some other CAP allowing to rise any cap or create a new
-	/// process with full CAPs etc
+	/**
+ 	 * is this CAP potentially usable as-is or by spawning a child, e.g. is it eff or permit or inherit,
+	 * though NOT taking into accounts more advanced tricks (e.g. some other CAP allowing to rise any cap or create a new
+	 * process with full CAPs etc
+	 */
 	bool is_usable() const;
+
+	bool is_any() const; ///< TODO is anything enabled here
+
 };
 
 std::ostream & operator<<(std::ostream & ostr, const cap_state & obj);
@@ -153,7 +158,7 @@ std::ostream & operator<<(std::ostream & ostr, const cap_perm & obj);
  */
 struct cap_state_map {
 	std::map<cap_nr, cap_state> state;
-	void print(std::ostream & ostr, int level=20) const; ///< Print to #ostr at verbosity #level 10=only important CAP-values, 20=all
+	void print(std::ostream & ostr, int level=20) const; ///< Print to #ostr at verbosity #level 0=oneliner, 10=only important CAP-values, 20=all
 };
 
 std::ostream & operator<<(std::ostream & ostr, const cap_state_map & obj);
@@ -220,7 +225,7 @@ struct cap_statechange_full final {
 	cap_statechange_map given; ///< changes for defined CAPs
 	cap_statechange all_others; ///< how to change all others CAPs that are not mentioned in #given
 
-	void security_apply_now(); ///< SECURITY: apply now to current process the CAP changes as described by this object
+	void security_apply_now() const; ///< SECURITY: apply now to current process the CAP changes as described by this object
 	void print(std::ostream & ostr, int level=20) const; ///< Print to #ostr at verbosity #level 10=only important CAP-values, 20=all
 
 	void set_given_cap(const std::string & capname , cap_statechange change);
@@ -232,6 +237,8 @@ std::ostream & operator<<(std::ostream & ostr, const cap_statechange_full & obj)
 // @}
 // ===========================================================================================================
 
-}
-
-
+#else
+	#pragma message "Library capmodpp is not supported on this OS (because linux Capabilities are not supported) - do not include this."
+	// the file including this file, should put his #include into proper #ifdef
+#endif
+} // namespace

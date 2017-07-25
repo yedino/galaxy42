@@ -82,6 +82,21 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 }
 
 /**
+ * @brief The throw_if_less_init_list class needed for avoid overflow in init list
+ */
+namespace internal {
+
+class throw_if_less_init_list final {
+	public:
+		throw_if_less_init_list() = default;
+		throw_if_less_init_list(const size_t a, const size_t b) { ///< @throw std::invalid argument if a < b
+			if (a < b) throw std::invalid_argument("Incorect begin or end (end<begin).");
+		}
+};
+
+} // namespace internal
+
+/**
  * View for SequenceContainer and also ContiguousIterator(as defined for C++17)
  * e.g. std::vector<> will work.
  * The container view is valid until the container iterators are valid.
@@ -112,8 +127,8 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
  * @owner mikurys
  */
 	template<typename T>
-	class tab_range
-	{
+	class tab_range {
+		internal::throw_if_less_init_list m_throw_if_less_init_list; ///< must be first field in class for check as first init list member
 	public:
 		using iterator = T*;
 		using const_iterator = const T*;
@@ -141,13 +156,13 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_range(const TC & obj, size_t begin, size_t end)
-				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
+				: m_throw_if_less_init_list(end, begin), m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
 			if (std::less<const T*>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_range(TC & obj, size_t begin, size_t end)
-				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
+				: m_throw_if_less_init_list(end, begin), m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
 			// std::less not required for size_t, but using it to be like the other code above (and correct for review or copy-paste)
 			if (std::less<size_t>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
@@ -182,20 +197,23 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
  * Light-weight not-owning, read-only range of some linear memory array.
  * @owner mikurys
  */
+
+
 	template<typename T>
-	class tab_view
-	{
+	class tab_view {
+	private:
+		internal::throw_if_less_init_list m_throw_if_less_init_list; ///< must be first field in class for check as first init list member
 	public:
 		using const_iterator = const T*;
 
-		/// of course (begin..end] must be from same container and must be a valid, linear range
+		/// of course [begin..end) must be from same container and must be a valid, linear range
 		template <typename TI>
 		tab_view(const TI begin, const TI end)
 				: m_begin(begin), m_end(end), m_size(end-begin) {
 			if (std::less<const TI>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}
 
-		/// of course (begin..begin+size] must be valid memory range
+		/// of course [begin..begin+size) must be valid memory range
 		template <typename TI>
 		tab_view(const TI begin, size_t size)
 				: m_begin(begin), m_end(begin+size), m_size(size) {
@@ -207,7 +225,7 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 
 		template <typename TC> // TC = type of some container. it must be linear-memory. TODO: metaprogramming check
 		tab_view(const TC & obj, size_t begin, size_t end)
-				: m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
+				: m_throw_if_less_init_list(end, begin), m_begin(&(obj.at(begin))), m_end(&(obj.at(end-1))+1), m_size(end-begin) {
 			// std::less not required for size_t, but using it to be like the other code above (and correct for review or copy-paste)
 			if (std::less<size_t>()(end,begin)) throw std::invalid_argument("Incorect begin or end (end<begin).");
 		}

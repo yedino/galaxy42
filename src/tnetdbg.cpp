@@ -4,9 +4,11 @@
 
 #include <cstring>
 
+#include <backward.hpp>
+
 unsigned char g_dbg_level = 100; // (extern)
 
-std::recursive_mutex _g_dbg_mutex; // (extern)
+std::recursive_mutex g_dbg_mutex; // (extern)
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
@@ -74,6 +76,7 @@ void g_dbg_level_set(int level, std::string why, int quiet, int quiet_from_now_o
 		else quiet=false;
 	}
 
+	std::lock_guard<std::recursive_mutex> lg(g_dbg_mutex);
 	if (quiet_from_now_on!=-1) { // change future reporting of level change
 		if (be_quiet_about_dbg_level_changes != quiet_from_now_on) {
 			auto tmp = g_dbg_level;  g_dbg_level=1; // show this one thing always:
@@ -153,8 +156,8 @@ std::string get_detail_backtrace(size_t depth) {
 	std::ostringstream oss;
 
 	Printer p;
+	p.color_mode = ColorMode::always;
 	p.object = true;
-	p.color = true;
 	p.address = true;
 
 	p.print(st, oss);

@@ -5,9 +5,61 @@ This page described how to "Hack" this project - how to develop it, how to chang
 
 Intended for:
 
++ better bug-reports, debugging, testers
 + developers of this project
 + packagers, maintainers of this project
 + power users building own versions or modding this project
+
+# Debugging
+
+Run program (e.g. ./tunserver.elf) with option --d for debug.
+Also applies to many run scripts like: ./run-safe-thread-ub --d , ./run-safe-mem --d , ./rundevel.sh --d.
+
+## Debug tools
+
+Possible goals for tools:
++ thread correctness: clang TSAN tool. (plus source-code uses clang Thread-Safety-Analysis).
++ UB other (including overflows): clang UBSAN tool.
++ memory correctness: valgrind (memcheck) tool.
+
+Tests you should run threfore (separate tests):
+
+1) Test for Thread and UB:
+a) build version with TSAN and UBSAN options in ccmake (requires clang compiler to be set first!).
+b) and run ./run-safe-thread-ub - look for errors.
+
+This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
+...due to clang bug(?): abort-on-error seemingly not working correctly sometimes (e.g. debian 8)
+
+Do check/demonstrate how this tool is working, run it with options (to trigger TSAN/UBSAN errors - then this tests should abort
+and show error messages for this example bugs in code):
+`
+./run-safe-thread-ub --special-tsan1=ON
+./run-safe-thread-ub --special-unsan1=ON
+`
+
+2) To run tests for Memory, using valgrind:
+a) build normal version (without ccmake options TSAN nor ASAN; UBSAN is allowed if you want)
+and run  ./run-safe-mem
+This will run as-root (at least) on some systems - instead of running as-user the normal version (tunserver.elf that has setcap)
+...due to valgrind bug(?): refusing to run capability (setcap) binaries.
+
+Example, this option --special... will trigger a demonstration error and abort:
+`
+./run-safe-mem --newloop --special-memcheck2=ON
+`
+
+### FAQ for the Debug Tools
+
+Q: Program can not run inside valgrind, tool says `valgrind_memory_is_possible`
+
+Q: Running in valgrind (memcheck tool) and it shows warnings `Warning: set address range perms: large range ... (noaccess)`
+and then dies.
+
+A: Program using TSAN can not be run in valgrind, use ccmake to disable TSAN flags and rebuild - when you want to run in valgrind.
+
+
+# https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
 # Summary for every developer!
 
@@ -20,21 +72,44 @@ Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 Try to minimize technical debt by fixing things in [debt.txt](debt.txt).
 If you must move forward without writting things the good way for now, add information to that debt.txt.
 
+Cheat sheet (this is compact/mnemonics, more elaborated version is later on; ask us if any questions)
+
 ```cpp
 _dbg4() _dbg3 _dbg2 _dbg1 _info _note _clue _fact _warn _erro _mark
-_check_abort()->abort!  _check()->catch(err_check)  _try->catch(err_check_soft)
+
+auto x = xint{ 5 };
+xint y = 5;
+
+Handling exceptional situations:
+	_check_abort()                   --> will abort (guaranteed)
+	abort()                          --> can abort, but not always, e.g. only in debug mode
+	throw critical_exception("..."); --> catch(const some_special_exception&) / catch(const critical_exception&)
+	_check_input()     (this catch,) --> catch(const err_check_input&) also _user _sys _extern
+	_check_input()     (or this one) --> catch(const err_check_soft&) - all soft errors
+	_check_sys()    - same
+	_check_user()   - same
+	_check_extern() - same
+	_check()                         --> catch(const std::runtime_error&) catch with other errors, or only at top/main
+	_throw_error_runtime(...)        --> catch(const std::runtime_error&)
+	_throw_error_runtime("TTL too big");
+	_throw_error( std::invalid_argument("TTL too big") );
+	_throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
+	_try()                           --> catch(const err_check_soft&)
+Note: the abort() is provided by default by compiler.
+
 STR(...) to_string(...) "..."s
 to_debug(...);
-is_ascii_normal(str); reasonable_size(vec);
+is_ascii_normal(str); reasonable_size(str); reasonable_size(vec);
 UsePtr(p).func();
 
 /**
  * @codestyle
- * @thread ...
+ * @thread
  * @owner rfree
  */
+// TODO@author
 
-catch(const ex_type & ex){}
+catch(const ex_type & ex) {}
 
 UNUSED(x); DEAD_RETURN();
 ```
@@ -42,34 +117,21 @@ UNUSED(x); DEAD_RETURN();
 
 
 ```cpp
-
 _dbg4(X) // unorganized "removed" debug
 _dbg3(X) _dbg2(X) _dbg1(X) // debug "Load key=0x1234"
 _info(X) _note(X) _clue(X) // information, more important, bigger group
-_fact(X) _goal(X) // very improtant goals, shown to user
+_fact(X) _goal(X) // very improtant goals shown to user
 _warn(X) _erro(X) // warnings/errors
 _mark(X) // hot topics (usually for testing)
 
-// TODO  ....  TODO@author
-thing_to_be_fixed_before_release ; // TODO-release
+// TODO@author
 
 is_ascii_normal(str) // Are all chars "normal", that is of value from 32 to 126 (inclusive), so printable, except for 127 DEL char
 
-Function: if throw - then std::exception (or child class).
+Function: if throw - then std::exception (or child class), or critical_exception.
 Member functions: assume are not thread safe for concurent writes to same object, unless:
 // [thread_safe] - thread safe functions.
 auto ptr = make_unique<foo>(); .... UsePtr(ptr).method();
-
-_check_abort() / _abort() / _check() / _try()
-1. abort on error (always guaranteed) - _check_abort() // our lib
-2. abort on error (only guaranteed in debug mode) - assert() // from compiler
-3a. throw on error - _check() - hard exception type // our library
-3b. throw on error - _try() - soft exception type // our library
-
-Throw:
-_throw_error_runtime("TTL too big");
-_throw_error( std::invalid_argument("TTL too big") );
-_throw_error_runtime( join_string_sep("Invalid IP format (char ':')", ip_string) );
 
 try {
 	_check( ptr != nullptr ); // like assert
@@ -112,7 +174,6 @@ inline bool enum_is_valid_value(t_temper value) {
 
 t_temper water_temp = int_to_enum<t_temper>( 80 ); // asserted
 
-
 ```
 
 # Doxygen tags attributes
@@ -152,7 +213,7 @@ The use of this project/programs as end-user, is described in other places, see 
 
 # Developing
 
-To develop the program, we recommend mainly Debian Stable (Jassie, Amd64) as the main environment at this time;
+To develop the program, we recommend mainly Debian Stable (Debian 9 Stretch, Amd64) as the main environment at this time;
 Ubuntu and Mint also are used by developers so we can recommend them (at least in some versions),
 
 IF YOU ADD ANY DEPENDENCY (library) THEN write it in dependencies list in [SECURITY.txt].
@@ -617,7 +678,7 @@ To use Jenkins:
 
 Our Jenkins test suite defined by one pipeline can be checked in details in the Jenkinsfile located in the root directory of the project.
 At the moment test suite includes:
-	- native build on gcc debian8 linux and mingw/cygwin 32-bit windows
+	- native build on gcc Debian 8 Jessie linux and mingw/cygwin 32-bit windows
 	- unit tests passing
 	- integration tests passing
 	- deterministic build linux target

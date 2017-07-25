@@ -5,27 +5,23 @@
 #include <QListWidget>
 #include <QTcpSocket>
 #include <QVector>
+#include <memory>
+#include <utility>
 
 
 #include "addressdialog.hpp"
 #include "dataeater.hpp"
 #include "commandexecutor.hpp"
 #include "tunserver_process.hpp"
-
-
-namespace Ui {
-class MainWindow;
-}
+#include "ui_mainwindow.h"
 
 class commandExecutor;
 
-class MainWindow final : public QMainWindow
-{
+class MainWindow final : public QMainWindow {
 	Q_OBJECT
 public:
+	explicit MainWindow(QWidget *parent = nullptr);
 	static std::shared_ptr<MainWindow> create_shared_ptr();
-	MainWindow (MainWindow &&other);
-	~MainWindow();
 
 	void start_tunserver(std::vector <peer_reference> &peer_list, const QString &tunserver_path);
 
@@ -52,10 +48,9 @@ private slots:
 private:
 	std::shared_ptr<commandExecutor> m_cmd_exec;
 
-	Ui::MainWindow *ui;
+	std::unique_ptr<Ui::MainWindow> ui;
 	std::unique_ptr<tunserverProcess> m_tun_process;
-	addressDialog *m_dlg;
-	explicit MainWindow(QWidget *parent = nullptr);
+	std::unique_ptr<addressDialog> m_dlg;
 
 signals:
 	void ask_for_peerlist();

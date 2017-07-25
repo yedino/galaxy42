@@ -23,7 +23,7 @@
 #endif
 
 void c_the_program_tunserver::options_create_desc() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 		namespace po = boost::program_options;
 		unsigned line_length = 120;
 
@@ -38,6 +38,20 @@ void c_the_program_tunserver::options_create_desc() {
                     ("h", mo_file_reader::gettext("L_what_h_do").c_str())
 
                     ("debug", mo_file_reader::gettext("L_what_debug_do").c_str())
+
+                    ("insecure-cap", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (do not modify/drop CAP/capability)").c_str())
+
+                    ("special-warn1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (show a _warn warning - use this in newloop; test is done after dropping CAP/capability)").c_str())
+                    ("special-ubsan1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (to test UBSAN: execute an UB signed overflow - use this in newloop; test is done after dropping CAP/capability)").c_str())
+                    ("special-tsan1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (to test TSAN: execute an concurent UB - use this in newloop; test is done after dropping CAP/capability)").c_str())
+                    ("special-memcheck1", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (to test valgrind/memcheck: execute an invalid memory access - use this in newloop; test is done after dropping CAP/capability)").c_str())
+                    ("special-memcheck2", po::value<bool>()->default_value(false), (mo_file_reader::gettext("L_options_insecure-ADVANCED")
+											+ " (like memcheck1)").c_str())
 
                     ("d", mo_file_reader::gettext("L_what_d_do").c_str())
 
@@ -65,9 +79,10 @@ void c_the_program_tunserver::options_create_desc() {
             #endif
                         ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
                         ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
-                        ("rpc-port", po::value<int>()->default_value(9043), mo_file_reader::gettext("L_rpcPort_do").c_str())
+                        ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::gettext("L_rpcPort_do").c_str())
                     ("remove-peers", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_remove_peers_do").c_str())
                     ("remove-peers-timeout", po::value<unsigned int>()->default_value(30), mo_file_reader::gettext("L_remove_peers_timeout_do").c_str())
+										("home-env", mo_file_reader::gettext("L_what_home-env_option_do").c_str())
 
 
 			#if EXTLEVEL_IS_PREVIEW
@@ -152,7 +167,7 @@ void c_the_program_tunserver::options_create_desc() {
 
 
 void c_the_program_tunserver::options_multioptions() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 	// option help is handled elsewhere
 
 	const auto & argm = m_argm;
@@ -206,17 +221,25 @@ std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 }
 
 int c_the_program_tunserver::main_execution() {
+	PROGRAM_SECTION_TITLE;
 	_mark("Main execution of the old-loop");
+
 	_warn("Remember, that this old-loop code is NOT secured as new-loop code, e.g. is not droping CAP/root privileges!");
 	{ using namespace std::chrono_literals;	std::this_thread::sleep_for(1s); }
 	// ^ sleep to let user see this message clearly.
 
-	_program_section;
 		try { // try parsing
 			const auto & argm = m_argm;
 
 			_check_user(argm.count("port") && argm.count("rpc-port"));
-			m_myserver_ptr = std::make_unique<c_tunserver>(argm.at("port").as<int>(), argm.at("rpc-port").as<int>());
+			_fact("Will create a server");
+			// *** creating the server object ***
+			m_myserver_ptr = std::make_unique<c_tunserver>(
+				argm.at("port").as<int>(),
+				argm.at("rpc-port").as<int>(),
+				argm
+			);
+
 			assert(m_myserver_ptr);
 			auto& myserver = * m_myserver_ptr;
 			myserver.set_desc(m_boostPO_desc);
@@ -560,7 +583,8 @@ int c_the_program_tunserver::main_execution() {
 		_note(mo_file_reader::gettext("L_starting_main_server"));
 		_check(m_myserver_ptr);
 		_goal("My server: calling run");
-		m_myserver_ptr->run(); // <---
+		m_myserver_ptr->run(); // <--- ENTERING THE MAIN LOOP (old loop) ***
+
 		_goal("My server: returned");
 		_note(mo_file_reader::gettext("L_main_server_ended"));
 

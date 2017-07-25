@@ -1,6 +1,7 @@
 
 # the default directory for building
 build/
+build-*/
 
 # temporary var files, including created by running-in-place program
 # especially for developer tools, script
