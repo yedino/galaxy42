@@ -298,6 +298,8 @@ int main(int argc, const char **argv) { // the main() function
 
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
+	int int_max = std::numeric_limits<int>::max();
+	int_max++;
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
