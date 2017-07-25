@@ -124,6 +124,10 @@ const char * g_demoname_default = "route_dij";
 
 #include "tunserver.hpp"
 
+#include "utils/privileges.hpp"
+#include <boost/any.hpp>
+
+
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
 //const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
@@ -368,10 +372,11 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
-	size_t pos1 = simple.find('-');
-	string part_pip = simple.substr(0,pos1);
-	string part_hip = simple.substr(pos1+1);
 	try {
+		size_t pos1 = simple.find('-');
+		if (pos1 == std::string::npos) throw std::out_of_range("");
+		string part_pip = simple.substr(0,pos1);
+		string part_hip = simple.substr(pos1+1);
 		_info("Peer pip="<<part_pip<<" hip="<<part_hip);
 		auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
 		_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
@@ -387,7 +392,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
-c_tunserver::c_tunserver(int port, int rpc_port)
+c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
 :
 	m_my_name("unnamed-tunserver")
 	,m_udp_device(port)
@@ -396,13 +401,22 @@ c_tunserver::c_tunserver(int port, int rpc_port)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
+	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
 {
+	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
 	});
 	m_rpc_server.add_rpc_function("peer_list", [this](const std::string &input_json) {
 		return rpc_peer_list(input_json);
 	});
+}
+
+boost::program_options::variables_map c_tunserver::get_default_early_argm() {
+	boost::program_options::variables_map early_argm;
+	boost::any x(false);
+	early_argm.insert( std::make_pair("insecure-cap"  ,  boost::program_options::variable_value(false,false) ) );
+	return early_argm;
 }
 
 #ifdef HTTP_DBG
@@ -416,7 +430,9 @@ void c_tunserver::set_desc(shared_ptr< boost::program_options::options_descripti
 }
 
 void c_tunserver::set_argm(shared_ptr< boost::program_options::variables_map > argm) {
-    m_argm = argm;
+	_check(argm);
+	m_argm = argm;
+  _check( m_option_insecure_cap == UsePtr(m_argm).at("insecure-cap").as<bool>() ); // should not change (e.g. vs ctor early_argm)
 }
 
 void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
@@ -888,9 +904,9 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	nlohmann::json ret;
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
-	std::ostringstream oss;
 	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	for (const auto &peer : m_peer) {
+		std::ostringstream oss;
 		oss << peer.second->get_pip();
 		oss << "-";
 		auto hip = peer.second->get_hip();
@@ -949,6 +965,8 @@ void c_tunserver::event_loop(int time) {
 
 	auto time_loop_start = std::chrono::steady_clock::now(); // time now
 	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
+
+	my_cap::verify_privileges_are_as_for_mainloop(); // confirm we are secured for the main loop
 
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
@@ -1441,10 +1459,24 @@ void c_tunserver::event_loop(int time) {
 }
 
 void c_tunserver::run(int time) {
-	std::cout << mo_file_reader::gettext("L_starting_TUN") << std::endl;
+	_goal(mo_file_reader::gettext("L_starting_TUN"));
 
-	prepare_socket();
-	event_loop(time);
+	{
+		_fact("Will now prepare socket");
+		prepare_socket();
+		if (!m_option_insecure_cap) {
+			my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
+		} else _warn("NOT dropping CAP capability (program options?)");
+	}
+
+	{
+		if (!m_option_insecure_cap) {
+			my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+		} else _warn("NOT dropping CAP capability (program options?)");
+		_fact("Will now enter main event loop");
+		event_loop(time);
+		_fact("After main event loop");
+	}
 }
 
 

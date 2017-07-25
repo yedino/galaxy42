@@ -5,6 +5,8 @@
 #include "the_program_newloop.hpp"
 #include "utils/privileges.hpp"
 
+#include "utils/capmodpp.hpp" // to capture it's exceptions
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -268,14 +270,43 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 #define _early_cerr( X ) do { std::cerr << X << std::endl; } while(0)
 
-int main(int argc, const char **argv) {
-	unique_ptr<c_the_program> the_program = nullptr;
+/**
+ * Purpose of this function is to print some compilation "flavour" flags, e.g. is this a TSAN build or not.
+ * @warning This function is run instead of normal body of main(), therefore the main() must exit after calling it,
+ * and this function is free to not use our special conventions, e.g. it is free to directly use std::cout instead setting up
+ * our debug/console tools. (Also it does not expect any such normal tools to be set up for it).
+ */
+void main_print_flavour() {
+	auto & out = std::cout; // we can directly use std::cout, in this special function
+	out << "# Flavour defines:" << std::endl;
+	bool valgrind_memory_is_possible = true; // do conditions allow us to run in valgrind, e.g. TSAN maps too much memory so then =false
+	#if FLAVOUR_TSAN_FULL
+		valgrind_memory_is_possible = false;
+		out << "FLAVOUR_TSAN_FULL" << std::endl;
+	#endif
+	#if FLAVOUR_UBSAN_FULL
+		out << "FLAVOUR_UBSAN_FULL" << std::endl;
+	#endif
+	#if FLAVOUR_UBSAN_ONLY_REPORTS
+		out << "FLAVOUR_UBSAN_ONLY_REPORTS" << std::endl;
+	#endif
+
+	out <<  ( valgrind_memory_is_possible ? "valgrind_memory_is_possible" : "(valgrind NOT possible)" ) << std::endl;
+}
+
+int main(int argc, const char **argv) { // the main() function
 
 	// parse early options:
+	// this is done very early, we do not use console, nor boost program_options etc
 	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
+
+	if (contains_value(argt,"--print-flags-flavour")) {
+		main_print_flavour();
+		return 0;
+	}
 
 	typedef enum {
 		e_program_type_tunserver = 1,
@@ -285,6 +316,7 @@ int main(int argc, const char **argv) {
 
 	if (remove_and_count(argt, "--newloop" )) program_type = e_program_type_newloop;
 
+	unique_ptr<c_the_program> the_program = nullptr;
 	switch (program_type) {
 		case e_program_type_tunserver:
 			the_program = make_unique<c_the_program_tunserver>();
@@ -304,6 +336,11 @@ int main(int argc, const char **argv) {
 	the_program->startup_console_first();
 	the_program->startup_version();
 
+	g_dbg_level = 60;
+	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
+
+	my_cap::drop_root(remove_and_count(argt, "--home-env" )); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
+
 	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
 	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
 	// to report any problems with CAPs (eg compatibility issues),
@@ -317,8 +354,6 @@ int main(int argc, const char **argv) {
 	}
 	the_program->startup_locales();
 
-	g_dbg_level = 60;
-	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
 
 	the_program->init_library_sodium();
 
@@ -339,13 +374,19 @@ int main(int argc, const char **argv) {
 		exit_code = the_program->main_execution(); // <---
 
 	} // try running server
-	catch(ui::exception_error_exit) {
+	catch(const ui::exception_error_exit &) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
 		return 1;
 	}
+	catch(const capmodpp::capmodpp_error & e) {
+		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+			<< "(capmodpp_error) "
+			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
+		return 2;
+	}
 	catch(const std::exception& e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-		 << e.what() << mo_file_reader::gettext("L_exit_aplication") );
+			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		return 2;
 	}
 	catch(...) {

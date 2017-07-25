@@ -68,6 +68,7 @@
 #endif
 
 #include <utils/privileges.hpp>
+#include "test/special_behaviour/special_demo.hpp" ///< demo functions for tsan, ubsan
 
 // -------------------------------------------------------------------
 
@@ -223,16 +224,41 @@ void c_the_program_newloop::programtask_load_my_keys() {
 // ^ new ------------------------------------------------------------------
 }
 
-
 void c_the_program_newloop::programtask_tuntap() {
 	pimpl->server->init_tuntap();
 }
 
 
+int c_the_program_newloop::run_special() {
+	bool tainted=false;
+	auto maybe_run_special = [&](const string & name, auto & func, bool do_taint) {
+		if (m_argm.at(name).as<bool>()) {
+			_goal("Run test: "<<name);
+			if (do_taint) tainted=true;
+			func();
+		} else _info("NOT running test "<<name);
+	};
+	maybe_run_special("special-warn1", n_special_behaviour::example_warn_1, false);
+	maybe_run_special("special-ubsan1", n_special_behaviour::example_ubsan_1, true);
+	maybe_run_special("special-tsan1", n_special_behaviour::example_tsan_1, true);
+	maybe_run_special("special-memcheck1", n_special_behaviour::example_memcheck_1, true);
+	maybe_run_special("special-memcheck2", n_special_behaviour::example_memcheck_2, true);
+	if (tainted) {
+		_goal("After executing above tests, now the program is tainted, and must exit.");
+		return 2; // exit code
+	}
+	return 0;
+}
 
 int c_the_program_newloop::main_execution() {
-	_program_section;
+	PROGRAM_SECTION_TITLE;
 	_mark("newloop main_execution");
+
+	{
+		auto ret = this->run_special();
+		if (ret) return ret;
+	}
+
 //	g_dbg_level_set(5, "Debug the newloop");
 
 	pimpl->server = make_unique<c_galaxysrv>();
@@ -244,6 +270,8 @@ int c_the_program_newloop::main_execution() {
 	this->use_options_peerref();
 
 	my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
+
+
 	pimpl->server->main_loop();
 
 	_mark("newloop main_execution - DONE");

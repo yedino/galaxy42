@@ -70,7 +70,7 @@ class c_cable_udp final : public c_asiocable {
 		t_socket_type m_read_socket;
 
 		Mutex m_enpoint_list_mutex;
-		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list;
+		std::list<boost::asio::ip::udp::endpoint> m_endpoint_list GUARDED_BY(m_enpoint_list_mutex);
 
 		void set_timeout_for_socket(std::chrono::microseconds timeout, t_socket_type &socket);
 		#ifdef ANTINET_socket_sockopt

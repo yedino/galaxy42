@@ -7,12 +7,14 @@ On supported Linuxes, just run two commands:
 ```
 
 This should work on:
-  * Debian 8 (amd64)
-  * Devuan 8 (amd64)
-  * Probably also other Linux Debian versions above 8
+  * Debian 9 (Stretch) (amd64, and 32bit i686)
+  * Debian 8 (Jessie) (amd64, and 32bit i686)
+  * Devuan 8 (Jessie) (amd64, and 32bit i686)
+  * Probably also other Linux Debian versions above 9
   * Ubuntu 15.10 (amd64)
   * Probably also other Linux Ubuntu versions above 15.10
   * Probably Fedora 25 (amd64)
+  * Mint 18.1 (amd64)
   * Also on some related systems.
 
 * * *

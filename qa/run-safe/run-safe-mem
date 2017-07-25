@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+
+readonly myname=$(basename "$BASH_SOURCE")
+function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "$*" "$(tput sgr0)" ; }
+function fail() { myprint "$(tput setab 1)Error $*" ; exit 1 ; }
+
+readonly program_for_flags="./nocap-tunserver.elf"
+program_to_run="MAIN"
+[[ -z ${1+x} ]] || program_to_run="$1"
+[[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
+[[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests.elf"
+myprint "Will run program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
+
+myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
+${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
+
+checks_enabled=0 # count checks we will enable
+checks_existing=0 # count how many checks we could have run
+
+((checks_existing++)) || :
+flagname="valgrind_memory_is_possible"
+${program_for_flags} --print-flags-flavour | grep "$flagname" || {
+	myprint "$(tput setab 1)Program to test flags ($program_for_flags) warned us that project is built with wrong flags for this test"
+	myprint "$(tput setab 1)...see documentation how to configure program for this. (search name '$flagname')"
+	exit 1 # <--- EXIT, giving up
+}
+# else, continue:
+
+
+((checks_enabled++)) || :
+myprint "$(tput setab 2)Enabling valgrind memcheck"
+
+cat <<EOF
+  __  __ _____ __  __  ___  ______   __             __
+ |  \\/  | ____|  \\/  |/ _ \\|  _ \\ \\ / /  ___  __ _ / _| ___
+ | |\\/| |  _| | |\\/| | | | | |_) \\ V /  / __|/ __ | |_ / _ \\
+ | |  | | |___| |  | | |_| |  _ < | |   \\__ \\ (_| |  _|  __/
+ |_|  |_|_____|_|  |_|\\___/|_| \\_\\|_|   |___/\\__,_|_|  \\___|
+
+EOF
+
+# https://stackoverflow.com/questions/44081948/exit-valgrind-on-first-error
+# prepare for valgrind terminate on error
+	myprint "Preparing valgrind-killer"
+	myprint "Making tempdir"
+	tempdir=$(mktemp -d test.XXXXXXXXX -p '') || fail "Can not make tmpdir=$tmpdir"
+	chmod 700 "$tempdir" || fail "Can not chmod our tmpdir=$tmpdir"
+	function script_cleanup_tmp() {
+		rm -rf "$tempdir"
+	}
+	trap script_cleanup_tmp EXIT
+valgrind_log_dir="$tempdir/valgrind-log"
+valgrind_exitcode=67
+mkdir "$valgrind_log_dir"
+
+myprint "All seems fine, running ($program_to_run)"
+
+
+set -x
+sudo ./valgrind_with_log_kill "$valgrind_log_dir" "$valgrind_exitcode" "$program_to_run" "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result
+set +x
+
+echo
+(( $program_return == 0 )) && { myprint "$(tput setab 2)Exited with no error code" ;
+	} || { myprint "$(tput setab 1)Exited with error code: $program_return" ; }
+
+(( checks_enabled < checks_existing )) && myprint "$(tput setab 3)Warning: only some checks are enabled ($checks_enabled/$checks_existing)" ;
+
+exit $program_return

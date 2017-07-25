@@ -1,10 +1,2 @@
 
 #include "stdplus/tab.hpp"
-
-
-
-
-
-
-
-

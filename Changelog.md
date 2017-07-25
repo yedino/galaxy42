@@ -1,5 +1,7 @@
 # Galaxy42 - Changelog
 
+(Also see README.md as the newest changelog entry might be there).
+
 ### Version v0.3.1b (pre-alpha) [up to Release Candidate: rc8]
 
 * Important changes:

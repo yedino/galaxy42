@@ -3,11 +3,39 @@
 /**
  * @file setting Capabilities, like the CAP capability for Linux systems.
  * @author rfree
+ * @warning TODO support of regular_user->root_user by means of starting program that is SUID-root,
+ * ...now we probably incorrect detect regular user id (from env sudo)
+ * @warning TODO support of root->regular_user by means of starting program that is SUID-regular user
+ * ...program should ignore that it has getuid()==0 if geteuid()==0 - easy but first need to verify
+ * ...that this is the correct safe solution
  */
 
 #include "platform.hpp"
+#include <utils/capmodpp.hpp>
 
 namespace my_cap {
+
+/**
+ * @brief The t_changes_from_sudo struct to keep changes after droop sudo
+ */
+struct t_changes_from_sudo {
+	std::string m_home_dir;
+};
+
+/**
+ * Returns summary of allowed CAPs, also UID/GID, and possibly other details
+ * In case of errors with checking state it should usually return proper information in the string, not throw.
+ * @param verbose if yes then produce one-liner short info, else more detailed text (with \n endlines)
+ */
+std::string get_security_info(bool verbose = false) noexcept;
+
+// ===========================================================================================================
+// commands for this project:
+
+/**
+ * @brief drop root (galaxy42 function)
+ */
+void drop_root(bool home_always_env);
 
 /// call this as soon as possible - to drop any privilages that are not needed anywhere
 void drop_privileges_on_startup();

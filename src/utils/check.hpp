@@ -20,7 +20,8 @@
 struct tag_err_check_named{};
 
 /**
- * @brief A general class to catch soft errors.
+ * @brief A general class to catch try_soft errors (errors that are very expected).
+ * @note use this in catch(...) to catch all soft errors
  *
  * It can only be used to inherit to some class that also inherits from err_check_base
  * use case is that you catch (err_check_soft &ex) and you can then still ex->what() propertly (it will dynamic cast itself
@@ -33,7 +34,10 @@ class err_check_soft {
 		err_check_soft() = default;
 };
 
-/// base of all exceptions thrown by our _check system
+/**
+	* Base of all exceptions thrown by our _check system.
+	* @note better do NOT use it in any catch directly
+	*/
 class err_check_base : public std::runtime_error {
 	protected:
 		const bool m_serious;
@@ -44,8 +48,11 @@ class err_check_base : public std::runtime_error {
 };
 // -------------------------------------------------------------------
 
-/// This class is for exeption representing: programming error. This is fault in program execution.
-/// This errors are always hard errors.
+/**
+ * This class is for exeption representing: programming error. This is fault in program execution.
+ * This is always a hard error (as there is no child class for soft variant of it).
+ * @note use this in catch(...) to catch the hard error from _check()
+ */
 class err_check_prog : public err_check_base {
 	public:
 		err_check_prog(const char *what); ///< create hard error, from this message (can add cause string)
@@ -269,9 +276,9 @@ template<typename TC> c_ig<TC> make_ig(const TC & thisobj, t_invariant_place pla
 /// This functions will check against this, and e.g. throw exception.
 /// They also can disaply warnings once we are getting closer to limit.
 /// @{
-constexpr size_t reasonable_size_limit_bytes    = 128 * 1024 * 1024; ///< objects should never get this big nor close to it
-constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get this many elements nor close
-constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this many times in worst case
+constexpr size_t reasonable_size_limit_bytes    =  32 * 1024 * 1024; ///< objects should never get [nearly] this big
+constexpr size_t reasonable_size_limit_elements =   4 * 1000 * 1000; ///< objects should never get [nearly] that many elements
+constexpr size_t reasonable_size_mul = 4; ///< we expects objects to grow this (e.g. 4) times more over the limit
 constexpr size_t reasonable_size_mul_warning = 2; ///< display warning once objects are only N times smaller then the limit
 
 constexpr size_t reasonable_size_limit_bytes_divided_max  = reasonable_size_limit_bytes / reasonable_size_mul;
@@ -284,11 +291,11 @@ void reasonable_size(const std::string & obj); ///< will throw if string is unre
 template<typename T> void reasonable_size(const T & obj) { ///< will throw if this some container is too big, see #reasonable
 	const size_t elements = obj.size();
 	if (! (elements < reasonable_size_limit_elements_divided_warn) ) {
-		_warn("Object @"<<static_cast<void*>(&obj)<<" starts to get too big: elemens="<<elements);
+		_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: elemens="<<elements);
 	}
 	_check_input(elements <= reasonable_size_limit_elements_divided_max);
 
-	const size_t bytes = elements * sizeof(obj.at(0));
+	const size_t bytes = elements * sizeof(typename T::value_type);
 	if (! (bytes < reasonable_size_limit_bytes_divided_warn) ) {
 		_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: bytes="<<bytes);
 	}

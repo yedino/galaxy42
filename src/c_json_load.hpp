@@ -2,12 +2,14 @@
 
 #pragma once
 
-
-#include <json/json.h>
-#include "c_json_genconf.hpp"
+#include "gtest/gtest_prod.h"
 #include "libs1.hpp"
+
+#include <json.hpp>
+using json = nlohmann::json;
+
+#include "c_json_genconf.hpp"
 #include "c_peering.hpp"
-#include "datastore.hpp"
 #include "strings_utils.hpp"
 
 struct t_my_keypair {
@@ -23,25 +25,20 @@ struct t_auth_password {
 };
 
 /**
- * @brief The c_json_file_parser class
- * 		  General class for parsing json files to root Json::Value,
- * 		  it also could be use for checking if json file is correctly formatted
+ * @brief The json_file_parser class
+ *        General class for parsing json files to json objects,
+ *        it also could be use for checking if json file is correctly formatted  (throw prasing errors)
  */
-class c_json_file_parser {
-  public:
-	c_json_file_parser (const std::string &filename);
+struct json_file_parser final {
 
-    c_json_file_parser () = delete;
-    c_json_file_parser (const c_json_file_parser &) = delete;
+	json_file_parser () = delete;
+	json_file_parser (const json_file_parser &) = delete;
 
-	Json::Value get_root ();
-
-  private:
-	bool parse_file (const std::string &filename);
-	Json::Value m_root;   // will contains the root value after parsing.
+	static std::string remove_comments(std::istream &istr);
+	static json parse_file(const std::string &filename);
 };
 
-class c_auth_password_load {
+class c_auth_password_load final {
   public:
 	/**
 	 * \brief Loading authorized passwords from configuration file
@@ -55,11 +52,11 @@ class c_auth_password_load {
 
 	void get_auth_passwords (std::vector<t_auth_password> &auth_passwords);
   private:
+	json m_json;
 	std::string m_filename;
-	Json::Value m_root;
 };
 
-class c_connect_to_load {
+class c_connect_to_load final {
   public:
 	/**
 	 * \brief Loading peer references from configuration file
@@ -73,8 +70,8 @@ class c_connect_to_load {
 
 	void get_peers (std::vector<t_peering_reference> &peer_refs);
   private:
+	json m_json;
 	std::string m_filename;
-	Json::Value m_root;
 };
 /**
  * @brief The c_galaxyconf_load class
@@ -86,10 +83,13 @@ class c_galaxyconf_load {
 	c_galaxyconf_load (const c_galaxyconf_load &) = delete;
 
 	std::vector<t_peering_reference> get_peer_references ();
+	std::vector<t_auth_password> get_auth_passwords ();
 
   private:
+	FRIEND_TEST(json_configfile, load_keys);
+
+	json m_json;
 	std::string m_filename;
-	Json::Value m_root;
 	std::vector<t_peering_reference> m_peer_references;
 	std::vector<t_auth_password> m_auth_passwords;
 

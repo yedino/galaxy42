@@ -3,11 +3,6 @@
 set -o errexit
 set -o nounset
 
-readonly dir_base_of_source="$(readlink -e ./)"
-
-# import fail function
-. "${dir_base_of_source}"/share/script/lib/fail.sh
-
 function usage_mini {
 	echo ""
 	echo "--- Short help ---"
@@ -67,6 +62,11 @@ function platform_recognize {
 	elif [[ -n $(uname -a | grep "Darwin") ]]
 	then
 		platform="mac_osx"
+		# readlink on OSX have different behavior than in GNU
+		# to get same behavior we could use greadlink from coreutils package
+		# brew install coreutils
+		shopt -s expand_aliases
+		alias readlink="greadlink"
 	else
 		platform="unknown"
 	fi
@@ -84,6 +84,11 @@ echo ""
 
 platform_recognize
 echo "Recognized platform: $platform"
+readonly dir_base_of_source="$(readlink -e ./)"
+
+# import fail function
+. "${dir_base_of_source}"/share/script/lib/fail.sh
+
 clean_previous_build
 
 # download external dependencies/submodules
@@ -124,11 +129,7 @@ then
 
 elif [[ "$platform" == "mac_osx" ]]
 then
-	# readlink on OSX have different behavior than in GNU
-	# to get same behavior we could use greadlink from coreutils package
-	# brew install coreutils
-	shopt -s expand_aliases
-	alias readlink="greadlink"
+	echo "PLATFORM - DARWIN ($platform)"
 elif [[ "$platform" == "unknown" ]]
 then
 	fail "Unknown build platform! $(uname -a), abort/fail"
@@ -194,6 +195,11 @@ fi
 echo "=== language / translations - will compile langauges ==="
 contrib/tools/galaxy42-lang-update-all || fail "Compiling po to mo (gettext/translations)"
 
+echo ""
+echo "===================================================================="
+echo "===================================================================="
+echo "===================================================================="
+echo ""
 
 echo "Will run cmake, PWD=$PWD USER=$USER, PATH=$PATH"
 echo "CC=${CC:-"unset"}, CXX=${CXX:-"unset"}, CPP=${CPP:-"unset"}"

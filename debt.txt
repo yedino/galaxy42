@@ -11,6 +11,7 @@ Noting them here to not forget and keep track.
 === important ===
 
 - PR 320 was merged without full review (as we need to use this threads now already). It needs at least more comments in few places. Notify @rfree with the review to sign-on the review, before deleting this item.
+- xint needs more testing on all possible uses, and op>> and maybe few others too
 
 === disabled ===
 
@@ -21,15 +22,19 @@ Noting them here to not forget and keep track.
 === better refactoring ===
 
 - PR 328, PR 327 - there are now asserts and .at and safe copy in arrays, but still would be even better to use some container view instead in this places (especially in NDP protocol, which is not important regarding performance)
+- my_cap namespace should be rather e.g. n_mysecurity, and could be divided into tigusoft lib,
+(with our debug, the 2 functions on top - apply change and drop root), and into part customized for this project
 
 === security ===
 
-- we must drop permissions when running as root
-- utils/capmodpp.* utils/privileges.* code must assert that request cap change was applied
 - utils/capmodpp.* utils/privileges.* code review
 - review/confirmation from someone who understands fully CAP/ID transitions (when root dropping code is in place too)
+- should we also drop the Bounding part of all Caps?
 
-=== locking ===
+=== special use cases ===
+- support for our program being chmod SUID (see utils/privileges.hpp warning comments) - now program will not run then
+
+=== thread locking ===
 
 - too wide lock when sending via cable, in "TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:"
 - remove all halgrind warnings, see runhelgrind.sh
