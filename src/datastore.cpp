@@ -244,7 +244,17 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 									const std::string &filename) {
 
 #if defined(__linux__) || defined(__MACH__)
-	b_fs::path user_home(getenv("HOME"));
+	b_fs::path user_home;
+	if (home_dir.size()==0) {
+		const char *home_env = getenv("HOME");
+		if (home_env == nullptr) {
+			// we want to read home directory from env but HOME env is not set
+			throw std::runtime_error("We cannot read HOME env");
+		}
+		user_home = b_fs::path(home_env);
+	} else {
+		user_home = b_fs::path(home_dir);
+	}
 #elif defined(_WIN32) || defined(__CYGWIN__)
 	//b_fs::path user_home(getenv("APPDATA"));
 	HMODULE hModule = GetModuleHandleW(nullptr);
@@ -289,6 +299,13 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	_dbg3("parent_path: " << parent_path);
 
 	return parent_path;
+}
+
+std::string datastore::home_dir;
+
+void datastore::set_home(const std::string &home) {
+	_note("Setting datastore home=" << home);
+	home_dir = home;
 }
 
 b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
