@@ -11,9 +11,8 @@
 #include <tnetdbg.hpp>
 
 
-namespace eint {
-	using namespace stdplus::eint;
-}
+namespace eint = stdplus::eint;
+
 
 /// helper templates to calculate the correct expected result
 template <typename T>
