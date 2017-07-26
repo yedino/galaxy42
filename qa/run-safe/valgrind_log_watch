@@ -15,7 +15,7 @@ myprint "Will kill process $valgrind_pid when triggered by log $valgrind_log_fil
 while true
 do
 	watermark_line=$( grep -n "$watermark_string" "$valgrind_log_file" | cut -d':' -f1 )
-	myprint "Looking for logfile to appear and print the standard headers, line=${waterline}."
+	myprint "Looking for logfile to appear and print the standard headers, line=${watermark_line}."
 	sleep 1
 	if (( watermark_line > 2 )) ; then
 		myprint "Ok logfile seems to have the header, line=${watermark_line}."
