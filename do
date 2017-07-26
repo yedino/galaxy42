@@ -14,6 +14,9 @@ function usage_mini {
 	echo "  COVERAGE=0 EXTLEVEL=30 ./do --go  # no coverage, build with experimental features enabled (dangerous!!)"
 	echo "  COVERAGE=1 EXTLEVEL=0  ./do --go  # coverage - for build test bots"
 	echo ""
+	echo "For faster multithread build you can use THREADS env variable:"
+	echo "  THREADS=2 COVERAGE=1 EXTLEVEL=0  ./do --go"
+	echo ""
 	echo "Run do --help to see all options, there are special work-arounds."
 }
 
@@ -29,6 +32,8 @@ function usage_main {
 	echo "  20 is the EXPERIMENTAL code, not recommended, for developers only."
 	echo "  30 is the EXPERIMENTAL-DANGEROUS code, that we expect to very likely have exploits "
 	echo "    or grave bugs, run only in VM for some testets."
+	echo ""
+	echo "THREADS=... sets threads number that you want to use for faster build. (default THREADS=1) "
 	echo ""
 	echo "Special options include:"
 	echo "BUILD_STATIC=1 if this is set to 1, then we will tell CMake to build static version of the program (it requires static deps)"
@@ -72,6 +77,17 @@ function platform_recognize {
 	fi
 }
 
+function thread_setting {
+	if [[ -z ${THREADS+x} ]]
+	then
+		echo "THREADS variable is not set, will use default (THREADS=1)"
+		readonly THREADS=1
+	else
+		echo "Will run build script with THREADS=${THREADS}"
+	fi
+}
+
+
 function clean_previous_build {
 	make clean || { echo "(can not make clean - but this is probably normal at first run)" ; }
 	rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but this is probably normal at first run)" ; }
@@ -86,6 +102,7 @@ platform_recognize
 echo "Recognized platform: $platform"
 readonly dir_base_of_source="$(readlink -e ./)"
 
+thread_setting
 # import fail function
 . "${dir_base_of_source}"/share/script/lib/fail.sh
 
@@ -113,7 +130,7 @@ then
 	echo "PLATFORM - WINDOWS/CYGWIN 32-bit ($platform)"
 
 	cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_32bit.cmake.in . || fail "Can not cmake (on Cygwin mode)"
-	make tunserver.elf || fail "Can not make (on Cygwin mode)"
+	make -j"${THREADS}" tunserver.elf || fail "Can not make (on Cygwin mode)"
 
 	exit 0
 
@@ -123,7 +140,7 @@ then
 	echo "PLATFORM - WINDOWS/CYGWIN 64-bit ($platform)"
 
 	cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_cygwin_64bit.cmake.in . || fail "Can not cmake (on Cygwin mode)"
-	make tunserver.elf || fail "Can not make (on Cygwin mode)"
+	make -j"${THREADS}" tunserver.elf || fail "Can not make (on Cygwin mode)"
 
 	exit 0
 
@@ -147,6 +164,8 @@ echo ""
 echo "Running currently as:"
 echo "* COVERAGE=$COVERAGE"
 echo "* EXTLEVEL=$EXTLEVEL"
+echo ""
+echo "* THREADS=$THREADS"
 echo ""
 echo "* USE_BOOST_MULTIPRECISION_DEFAULT=$USE_BOOST_MULTIPRECISION_DEFAULT"
 echo ""
@@ -233,7 +252,7 @@ pushd $dir_build
 	set -x
 	ln -s "$dir_base_of_source"/share share || echo "Link already exists"
 
-	make -j 2 \
+	make -j"${THREADS}" \
 		|| fail "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md"
 
 	set +x
