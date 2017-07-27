@@ -40,7 +40,7 @@ void Wrap_NetPlatform_addAddress(const char *interfaceName,
 
 #if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
 
-	auto addr_asio_ipv6 = boost::asio::ip::address_v6{ make_address( address ) };
+	auto addr_asio_ipv6 = boost::asio::ip::address_v6{ make_ipv6_address( address ) };
 	_check_input(interfaceName);
 
 	_fact("Setting IP address: interfaceName=" << interfaceName
