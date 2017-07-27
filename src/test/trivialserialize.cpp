@@ -113,9 +113,9 @@ TEST(serialize, empty_vector) {
 	generator gen(1);
 	std::vector<std::string> input;
 	gen.push_vector_string(input);
-	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() );
-	auto output_vector = parser.pop_vector_string();
-	ASSERT_TRUE(output_vector.empty());
+	EXPECT_THROW(trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , gen.str() ), std::invalid_argument);
+//	auto output_vector = parser.pop_vector_string();
+//	ASSERT_TRUE(output_vector.empty());
 }
 
 TEST(serialize, empty_element_as_last) {
