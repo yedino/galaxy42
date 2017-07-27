@@ -244,9 +244,9 @@ TEST(xint,can_assign_xint) {
 	EXPECT_TRUE ( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) );
 
 	// this will say false - because overflow can happen when assigning to 64bit safer int:
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) );
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) );
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+1) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+2) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+200) );
 
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -1));
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -128));
@@ -405,7 +405,7 @@ unsigned long long int round_co(t_correct1 v) {
 */
 template<typename T_INT>
 void math_tests_noproblem() {
-	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 , 1000000 };
+	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 };
 	for (auto testsize : testsize_tab) {
 		T_INT a=0;
 		int n=testsize;

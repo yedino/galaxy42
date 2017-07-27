@@ -7,7 +7,7 @@
 #include <cmath>
 #include <type_traits>
 #include <limits>
-
+#include <xint.hpp>
 #include <tnetdbg.hpp>
 
 
@@ -172,7 +172,7 @@ TEST(eint, eint_less_test) {
 	EXPECT_FALSE(eint::eint_less(-1ll, -1));
 
 	auto test_func = [](auto x, auto y){
-		bool expected_result = static_cast<long double>(x) < static_cast<long double>(y);
+		bool expected_result = static_cast<t_correct_int>(x) < static_cast<t_correct_int>(y);
 		EXPECT_EQ(eint::eint_less(x,y), expected_result);
 	};
 
@@ -201,7 +201,7 @@ TEST(eint, eint_equal_test) {
 	EXPECT_TRUE(eint::eint_equal(-1ll, -1));
 
 	auto test_func = [](auto x, auto y){
-		bool expected_result = static_cast<long double>(x) == static_cast<long double>(y);
+		bool expected_result = static_cast<t_correct_int>(x) == static_cast<t_correct_int>(y);
 		EXPECT_EQ(eint::eint_equal(x,y), expected_result);
 	};
 
@@ -238,7 +238,7 @@ TEST(eint, eint_greater_test) {
 	EXPECT_FALSE(eint::eint_greater(-1ll, -1));
 
 	auto test_func = [](auto x, auto y){
-		bool expected_result = static_cast<long double>(x) > static_cast<long double>(y);
+		bool expected_result = static_cast<t_correct_int>(x) > static_cast<t_correct_int>(y);
 		EXPECT_EQ(eint::eint_greater(x,y), expected_result);
 	};
 
