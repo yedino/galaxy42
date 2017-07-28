@@ -4,39 +4,23 @@
 
 namespace detail {
 
-/// Type TAsioAddr is needed to defer attempts to compile this function body untill after it is potentially-disabled
-/// Type TAsioAddrBytes tells us does boost::asio use std::array or boost::array
-template <typename TAsioAddr, typename TAsioAddrBytes>
-boost::asio::ip::address_v6 make_ipv6_address_conversion( const std::array<unsigned char,16> & thebytes ,
-	typename std::enable_if_t<std::is_same< TAsioAddrBytes, std::array<unsigned char,16> >::value>* = 0
-	)
-{
-	TAsioAddr addr(thebytes); // asio wants std::array, and we have that, perfect
-	return addr;
-}
 
-
-/// Type TAsioAddr is needed to defer attempts to compile this function body untill after it is potentially-disabled
-/// Type TAsioAddrBytes tells us does boost::asio use std::array or boost::array
-template <typename TAsioAddr, typename TAsioAddrBytes>
-boost::asio::ip::address_v6 make_ipv6_address_conversion( const std::array<unsigned char,16> & thebytes ,
-	typename std::enable_if_t<std::is_same< TAsioAddrBytes, boost::array<unsigned char,16> >::value>* = 0
-	)
-{
-	constexpr auto thebytes_size = std::tuple_size<std::remove_reference_t<decltype(thebytes)>>::value ;
-	boost::array<unsigned char, thebytes_size > thebytes_boost;
-	for (int i=0; i<thebytes_size; ++i) thebytes_boost[i] = thebytes[i];
-	boost::asio::ip::address_v6 addr(thebytes_boost);
-	return addr;
+/**
+ * To normalize boost ASIO API, this will convert std::array into bytes_type used in your asio lib version
+ * (that is, also to std::array or copy/convert to boost::array)
+ */
+boost::asio::ip::address_v6::bytes_type make_ipv6_address_bytes( const std::array<unsigned char,16> & bytes_std) {
+	boost::asio::ip::address_v6::bytes_type bytes_asio;
+	// static_assert( bytes_asio_size == std::tuple_size<decltype(bytes_std)>::value  , "The address size is invalid" );
+	// can't test size of boost array in compile time. anyway, rather impossible to be invalid
+	std::copy( bytes_std.cbegin(), bytes_std.cend(), bytes_asio.begin() );
+	return bytes_asio;
 }
 
 } // namespace detail
 
 
 boost::asio::ip::address_v6 make_ipv6_address(const std::array<unsigned char,16> & thebytes) {
-	return detail::make_ipv6_address_conversion<
-			boost::asio::ip::address_v6 , // address format we want
-			boost::asio::ip::address_v6::bytes_type // byte format thatwe provide
-		>( thebytes );
+	return boost::asio::ip::address_v6( detail::make_ipv6_address_bytes( thebytes ) );
 }
 
