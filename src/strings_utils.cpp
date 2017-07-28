@@ -232,7 +232,19 @@ std::ostream & operator<<(std::ostream & os, boost::any & obj) {
 }
 
 bool is_ascii_normal(const std::string str){
-	auto it = find_if(str.begin(), str.end(), [](auto x){return !isprint(x);	} );
+	auto it = find_if(str.begin(), str.end(), [](int x) {
+		// The behavior is undefined if the value of ch is not representable as unsigned char and is not equal to EOF.
+		// http://en.cppreference.com/w/cpp/string/byte/isprint
+		bool in_range =
+			(x >= std::numeric_limits<unsigned char>::min()) ||
+			(x <= std::numeric_limits<unsigned char>::max());
+		static_assert( (EOF) < 0 , "EOF must be negative value"); // http://en.cppreference.com/w/c/io
+		bool valid = in_range; // no need to test regarding EOF, as EOF is < 0
+		if (!valid) return true;
+
+		return !isprint(x);
+	});
+
 	if(it == str.end())
 		return true;
 	else

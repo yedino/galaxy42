@@ -13,8 +13,13 @@ TEST(datastore, custom_string_save) {
 
 TEST(datastore, prepare_path) {
 
-	std::string home(getenv("HOME"));
-	_dbg2("Home dir: "  << home);
+	const char *home_env_value = getenv("HOME");
+	if (home_env_value) {
+		std::string home(getenv("HOME"));
+		_dbg2("Home dir: " << home);
+	} else {
+		_dbg2("env read error");
+	}
 
 	b_fs::path PRV_dir = datastore::create_path_for(e_datastore_galaxy_wallet_PRV, "bannedname!_key");
 	_dbg2(PRV_dir);
