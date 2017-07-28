@@ -141,7 +141,7 @@ function install_for_build() {
 
 
 		install_packages g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext
-		install_packages libboost-locale-dev libboost-date-time-dev libdw-dev
+		install_packages libboost-locale-dev libboost-date-time-dev libdw-dev libboost-thread-dev
 		install_packages libcap-ng-dev
 	elif (("platforminfo[is_family_redhat]")) ; then
 		install_packages gcc-c++ boost-devel libsodium-devel
@@ -292,7 +292,7 @@ function install_captool() {
 	install_for_touse
 	install_for_devel
 	install_packages libcap2-bin  sudo
-	install_packages_NOW # we need sudo right now
+	install_packages_NOW # we need sudo package installed right now . (and we need it to created /etc/sudoers.d/)
 
 	echo "--------------------------------------------------------------"
 
@@ -300,22 +300,57 @@ function install_captool() {
 	#./share/script/install-as-root/setcap_scripts/install
 	cd ./share/script/install-as-root/setcap_scripts/
 	run_with_root_privilages "./install" "-y" || fail "Installer of the captool failed."
+	cd "$pwd"
 
 
-	echo "--------------------------------------------------------------"
-	echo "--------------------------------------------------------------"
-	echo "Installing 'captool' :"
-	echo
-	echo "Now we will open sudo configuration program (visudo)"
-	echo
-	echo "In that program, copy/paste following line:"
-	echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/setcap_net_admin --normal -u --current -f *"
-	echo "... but, replace the first word ('alice') with the user name of the user that should be allowed to build this program and grant it CAP_NET_ADMIN rights"
-	echo ""
-	echo "Press ENTER when ready to edit the configuration."
-	echo ""
-	read _
-	run_with_root_privilages "visudo" || fail "Program visudo (for captool) failed."
+	sudo_cap_users_suggest=""
+	getent group admin >/dev/null &&  sudo_cap_users_suggest="$sudo_cap_users_suggest %admin"
+	if [[ -z "$sudo_cap_users_suggest" ]] ; then
+		getent group sudo >/dev/null &&  sudo_cap_users_suggest="$sudo_cap_users_suggest %sudo"
+	fi
+
+	normaluser="$USER"
+	[[ ! -z "$SUDO_USER" ]] && normaluser="$SUDO_USER" # guessing the name of normal user (e.g. the one who called sudo install)
+	sudo_cap_users_suggest="$sudo_cap_users_suggest $normaluser"
+
+#	# explain the next form:
+#	abdialog --title "$(eval_gettext "L_install_option_sudo_cap_users_title")" \
+#		--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+#		--yesno "$L_install_option_sudo_cap_users" 20 60 2>&1 >/dev/tty || abdialog_exit # shellcheck disable=SC2069
+#  # ask the users list as explained:
+
+	sudo_cap_users=$(abdialog  \
+		--title "$(eval_gettext "L_install_option_sudo_cap_users_title")" \
+		--inputbox "$(gettext "L_install_option_sudo_cap_users")" \
+			20 70 "$sudo_cap_users_suggest" \
+			2>&1 >/dev/tty ) || abdialog_exit
+
+	run_with_root_privilages "./share/script/setup-sudoers-cap" "$sudo_cap_users" || {
+		echo "Error - press enter to configure sudo for cap tool - manually"
+		read _
+
+		text="$(eval_gettext "L_warning_sudo_cap_install_failed_title \$packages_str")"
+		abdialog --title "$(gettext 'L_warning_sudo_cap_install_failed')" \
+			--yes-button "$(gettext "Ok")" --no-button "$(gettext "Quit")" \
+				--msgbox "$text" 20 60 || abdialog_exit
+
+		echo ""
+		echo "--------------------------------------------------------------"
+		echo "--------------------------------------------------------------"
+		echo "Installing 'captool' (manually) :"
+		echo
+		echo "Now we will open sudo configuration program (visudo)"
+		echo
+		echo "In that program, copy/paste following line:"
+		echo "alice ALL=(ALL)NOPASSWD:/usr/local/bin/setcap_net_admin --normal -u --current -f *"
+		echo "but, replace the first word ('alice') with the user name of the user that should be allowed to "
+		echo "build this program and grant it CAP rights including e.g. CAP_NET_ADMIN"
+		echo ""
+		echo "Press ENTER when ready to edit the configuration."
+		echo ""
+		read _
+		run_with_root_privilages "visudo" || fail "Program visudo (for captool) failed."
+	}
 
 	cd "$pwd"
 }
@@ -378,11 +413,11 @@ response=$( abdialog  --menu  "$(eval_gettext "menu_main_title \$programname:")"
 
 response_menu_task=""
 
-if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose" ; fi
-if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose" ; fi
-if [[ "$response" == "devel2" ]] ; then response_menu_task="warn build touse devel devel2 bgitian verbose captool" ; fi
-if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect" ; fi
-if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect" ; fi
+if [[ "$response" == "simple" ]] ; then response_menu_task="warn build touse verbose captool_maybe" ; fi
+if [[ "$response" == "devel" ]] ; then response_menu_task="warn build touse devel bgitian verbose captool_maybe" ; fi
+if [[ "$response" == "devel2" ]] ; then response_menu_task="warn build touse devel devel2 bgitian verbose captool_maybe" ; fi
+if [[ "$response" == "x_build_use" ]] ; then response_menu_task="build touse autoselect captool" ; fi
+if [[ "$response" == "x_devel" ]] ; then response_menu_task="build touse devel bgitian autoselect captool" ; fi
 if [[ "$response" == "x_devel2" ]] ; then response_menu_task="build touse devel devel2 bgitian autoselect captool" ; fi
 if [[ "$response" == "custom" ]] ; then
 # shellcheck disable=SC2069
@@ -402,7 +437,21 @@ fi
 
 [[ -z "$response_menu_task" ]] && exit
 
-
+# parse options so far, e.g. ask questions for the "_maybe" options
+response_menu_task2="" # will fill it with filtered version
+read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+	case "$item" in
+		captool_maybe)
+			text="$(eval_gettext "L_install_option_sudo_cap_allow")"
+			abdialog --title "$(gettext 'L_install_option_sudo_cap_allow_title')" \
+				--yesno "$text" 20 60 && response_menu_task2="$response_menu_task2 captool" # add this option if user agreed
+		;;
+		*)
+		response_menu_task2="$response_menu_task2 $item"
+		;;
+	esac
+done
+response_menu_task="$response_menu_task2"
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	case "$item" in
