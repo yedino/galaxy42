@@ -238,9 +238,10 @@ bool is_ascii_normal(const std::string str){
 		bool in_range =
 			(x >= std::numeric_limits<unsigned char>::min()) ||
 			(x <= std::numeric_limits<unsigned char>::max());
-		bool valid = in_range && ( x!= EOF );
-
+		static_assert( (EOF) < 0 , "EOF must be negative value"); // http://en.cppreference.com/w/c/io
+		bool valid = in_range; // no need to test regarding EOF, as EOF is < 0
 		if (!valid) return true;
+
 		return !isprint(x);
 	});
 
