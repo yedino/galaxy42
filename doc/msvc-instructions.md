@@ -1,16 +1,16 @@
-# GALAXY42 compilation on msvc (Visual Studio 2015):
+# GALAXY42 compilation on msvc (Visual Studio 2017):
 
 ### Process instructions for:
 
 - version:
-	```commit ca9aefcdc45f2b4dc76fd83e5de9a22636459ed9```
+	```commit 963e23ba9decdf58b1663913b7579132371562e7```
 	- It should be similar or easier for newer versions
 
 ### Used tools:
 - Cygwin (for git)
     - could be other tool that supports git
-- Visual Studio Community 2015
-- Cmake-GUI 3.6.0
+- Visual Studio Community 2017
+- Cmake-GUI 3.9.0
 
 ### Cygwin:
 ```sh
@@ -27,7 +27,7 @@ __Provide dependencies (libboost and libsodium):__
 - Pre-compiled binaries can be found on libboost/libsodium official pages.
 Download and install/unpack libraries. I used:
     - [Libsodium Releases](https://download.libsodium.org/libsodium/releases/)
-    - [Prebuild Boost Binaries For Windows v.1.6.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/)
+    - [Prebuild Boost Binaries For MSVC toolset 14.1](https://sourceforge.net/projects/boost/files/boost-binaries/1.64.0/)
 
 __Open CMake-gui:__
 - __Settings:__
@@ -41,44 +41,61 @@ __Set cmake variables:__
 - "Type": PATH
 - "Value":
 	- for SODIUM_ROOT_DIR: full path to directory, where you install/unpack "Libsodium Releases"
-	- for BOOST_ROOT: full path to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.1"
-	- for BOOST_LIBRARYDIR: go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.1", open folder (lib32-msvc-14.0/lib64-msvc-14.0 or similar) complies with your system version (x32 or x64) and copy path
+	- for BOOST_ROOT: full path to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4"
+	- for BOOST_LIBRARYDIR: go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4", open folder (lib32-msvc-14.0/lib64-msvc-14.1 or similar) complies with your system version (x32 or x64) and copy path
 
 ```
 click configure
-* for 32-bit build choose Visual Studio 14 2015
-* for 64-bit build choose Visual Studio 14 2015 Win64
+* for 32-bit build choose Visual Studio 15 2017
+* for 64-bit build choose Visual Studio 15 2017 Win64
 click generate
 ```
 __Cmake output:__
 ```
-	The C compiler identification is MSVC 18.0.40629.0
-	The CXX compiler identification is MSVC 18.0.40629.0
-	Check for working C compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe
-	Check for working C compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe -- works
-	Detecting C compiler ABI info
-	Detecting C compiler ABI info - done
-	Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe
-	Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio 12.0/VC/bin/cl.exe -- works
-	Detecting CXX compiler ABI info
-	Detecting CXX compiler ABI info - done
-	Detecting CXX compile features
-	Detecting CXX compile features - done
-	CMAKE_BUILD_TYPE = debug
-	EXTLEVEL = 0
-	COVERAGE = OFF
-	EXTLEVEL enabling EXTLEVEL_IS_NORMAL
-	Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE)
-	Looking for pthread.h
-	Looking for pthread.h - not found
-	Found Threads: TRUE
-	JsonCpp Version: 1.7.2
-	Could NOT find PythonInterp (missing:  PYTHON_EXECUTABLE) (Required is at least version "2.6")
-	Disabling COVERAGE
-	Debug build
-	Libs for crypto are: (as string) ''
-	Libs for crypto are: (as list) ''
-	Configuring done
+The C compiler identification is MSVC 19.10.25019.0
+The CXX compiler identification is MSVC 19.10.25019.0
+Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.10.25017/bin/HostX86/x64/cl.exe
+Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.10.25017/bin/HostX86/x64/cl.exe -- works
+Detecting C compiler ABI info
+Detecting C compiler ABI info - done
+Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.10.25017/bin/HostX86/x64/cl.exe
+Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.10.25017/bin/HostX86/x64/cl.exe -- works
+Detecting CXX compiler ABI info
+Detecting CXX compiler ABI info - done
+Detecting CXX compile features
+Detecting CXX compile features - done
+No build type selected, default to Debug
+cotire 1.7.9 loaded.
+Disabling COVERAGE
+EXTLEVEL enabling EXTLEVEL_IS_NORMAL
+Looking for pthread.h
+Looking for pthread.h - not found
+Found Threads: TRUE  
+Boost version: 1.64.0
+Found the following Boost libraries:
+  system
+  filesystem
+  thread
+  date_time
+  chrono
+  atomic
+Boost version variable is: 106400
+USE_BOOST_MULTIPRECISION is normal (on)
+Found Sodium: C:/msvc2017_libs/libsodium-1.0.13/x64/Debug/v141/dynamic/libsodium.lib  
+Found PythonInterp: C:/cygwin64/bin/python (found version "1.4")
+Sorting sources (from GLOB)
+Libs for crypto are: (as string) ''
+Libs for crypto are: (as list) ''
+C++ Compiler ID:               MSVC
+C Flags:                       /DWIN32 /D_WINDOWS /W3  
+C++ Flags:                     /DWIN32 /D_WINDOWS /W3 /GR /EHsc /W4  
+C++ link flags:                
+Build type:                    Debug
+Debug flags:                   /MDd /Zi /Ob0 /Od /RTC1
+Release flags:                 /MD /O2 /Ob2
+Release with debug info flags: /MD /Zi /O2 /Ob1
+Warn pedantic flags:           /W4
+Configuring done
 ```
 
 __Possible errors:__
@@ -95,16 +112,18 @@ __Possible errors:__
 
 	For solutions configuration Debug
 ```
-boost_filesystem-vc140-mt-gd-1_61.dll
-boost_locale-vc140-mt-gd-1_61.dll
-boost_system-vc140-mt-gd-1_61.dll
+boost_date_time-vc141-mt-gd-1_64.dll
+boost_filesystem-vc141-mt-gd-1_64.dll
+boost_locale-vc141-mt-gd-1_64.dll
+boost_system-vc141-mt-gd-1_64.dll
 libsodium.dll
 ```
 	For solutions configuration Release
 ```
-boost_filesystem-vc140-mt-1_61.dll
-boost_locale-vc140-mt-1_61.dll
-boost_system-vc140-mt-1_61.dll
+boost_date_time-vc141-mt-1_64.dll
+boost_filesystem-vc141-mt-1_64.dll
+boost_locale-vc141-mt-1_64.dll
+boost_system-vc141-mt-1_64.dll
 libsodium.dll
 ```
 
