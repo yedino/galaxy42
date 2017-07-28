@@ -17,13 +17,7 @@ dir_base_of_source="./" # path to reach the root of source code (from starting l
 
 echo "Starting installer..."
 
-echo "First, will prepare translations of texts used in the installer..."
-bash contrib/tools/galaxy42-lang-update-all "SCRIPTS_INSTALL" || {
-	echo "Warning: can not prepare translations for installer. Will continiue without them."
-	sleep 2
-}
-echo "Translations prepared - proceeding with installer."
-echo
+source "${dir_base_of_source}share/script/need_translations.sh"
 
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 export TEXTDOMAIN="galaxy42_installer"

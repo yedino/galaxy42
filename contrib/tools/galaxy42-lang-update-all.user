@@ -24,7 +24,7 @@ fi
 
 if [[ "$target" == "SCRIPTS_INSTALL" ]]; then
 	for catal in galaxy42_installer g42bashutils galaxy42_scripts ; do
-				 contrib/tools/lang-updater -C -n "$catal" shell
+				 contrib/tools/lang-updater -C    "$catal" shell
 	done
 fi
 
