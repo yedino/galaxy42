@@ -449,21 +449,6 @@ TEST(xint,normal_use_op4assign_loop) {
 namespace test_xint {
 namespace detail {
 
-
-
-/*
-template<typename T_INT,
-typename std::enable_if<std::is_signed<T_INT>{}>::type* = nullptr >
-signed long long int round_co(t_correct1 v) {
-	return static_cast<signed long long int>( std::round( v ) );
-}
-
-template<typename T_INT,
-typename std::enable_if<! std::is_signed<T_INT>{}>::type* = nullptr >
-unsigned long long int round_co(t_correct1 v) {
-	return static_cast<unsigned long long int>( std::round( v ) );
-}
-*/
 template<typename T_INT>
 void math_tests_noproblem() {
 	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 };
