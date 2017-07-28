@@ -48,13 +48,7 @@ function usage_main {
 }
 
 function prepare_languages() {
-	echo "First, will prepare translations of texts used in this script ($0)"
-	bash contrib/tools/galaxy42-lang-update-all "SCRIPTS_INSTALL" || {
-		echo "Warning: can not prepare translations for this script ($0). Will continiue without them."
-		sleep 2
-	}
-	echo "Proceeding with script ($0)"
-	echo
+	source "share/script/need_translations.sh"
 }
 
 function usage {
