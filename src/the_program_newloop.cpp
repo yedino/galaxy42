@@ -254,6 +254,21 @@ int c_the_program_newloop::main_execution() {
 	PROGRAM_SECTION_TITLE;
 	_mark("newloop main_execution");
 
+	_clue("Setting debug level (main loop - new loop)");
+	bool is_debug=false;
+	if (m_argm.count("debug") || m_argm.count("d")) is_debug=true;
+	_note("Will we keep debug: is_debug="<<is_debug);
+
+	g_dbg_level_set(config_default_basic_dbg_level, "For normal program run");
+	if (is_debug) g_dbg_level_set(10,"For debug program run");
+	if (m_argm.count("dlevel")) {
+		auto dlevel = int{  m_argm.at("dlevel").as<int>()  };
+		if (dlevel != -1) {
+			_note("Option --dlevel sets new level type: " << dlevel);
+			g_dbg_level_set( dlevel , "Set by --dlevel" );
+		}
+	}
+
 	{
 		auto ret = this->run_special();
 		if (ret) return ret;
