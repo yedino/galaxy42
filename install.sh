@@ -15,6 +15,10 @@
 [ -r "toplevel" ] || { echo "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"; exit 1; }
 dir_base_of_source="./" # path to reach the root of source code (from starting location of this script)
 
+echo "Starting installer..."
+
+source "${dir_base_of_source}share/script/need_translations.sh"
+
 source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
 export TEXTDOMAIN="galaxy42_installer"
 # share/locale/pl/LC_MESSAGES/galaxy42_installer.mo

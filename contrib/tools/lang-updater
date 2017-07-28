@@ -33,12 +33,10 @@ function usage() {
 
 }
 
-printf "
-
-This script is for translators (of human languages) and for developers creating translations.
-Use -h for help.
-
-"
+# printf "
+#This script is for translators (of human languages) and for developers creating translations.
+#Use -h for help.
+#"
 
 
 # prepare variables
@@ -55,8 +53,13 @@ MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp
 function do_compile() {
 	for lang in $list_of_languages
 	do
-		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || {
-			echo "Can not convert a po file to mo"
+		input_file="src-misc/locale/${textdomain}/${lang}.po"
+		if [[ ! -e "$input_file" ]] ;  then continue ; fi
+		mkdir -p "./share/locale/${lang}/LC_MESSAGES/" || {
+			fail "Can not create directory for mo file."
+		}
+		msgfmt --endianness=little "$input_file" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || {
+			echo "Can not convert a po file to mo ($input_file)"
 			if (( opt_notcare )) ; then
 				echo "skipping"
 			else
@@ -71,7 +74,9 @@ function lang_new_and_translate() {
 	# -j
 	for lang in $list_of_languages
 	do
-		msgmerge --update "src-misc/locale/${textdomain}/${lang}.po" "${mainfile_messages_pot}"  || {
+		input_file="src-misc/locale/${textdomain}/${lang}.po"
+		if [[ ! -e "$input_file" ]] ;  then continue ; fi
+		msgmerge --update "$input_file" "${mainfile_messages_pot}"  || {
 			echo "Error in msgmerge for lang=$lang"
 			continue
 		}
@@ -152,11 +157,7 @@ shift 1
 sourcefile=("$@") # e.g. ('install.sh') or a list ('a.cpp' 'b.cpp')
 mainfile_messages_pot="src-misc/locale/${textdomain}/messages.pot"
 
-echo
-echo "Textdomain: $textdomain"
-echo "Sourcefile(s): " "${sourcefile[@]}"
-echo "Main .POT file: $mainfile_messages_pot"
-echo
+echo "Textdomain: $textdomain ; Sourcefile(s): " "${sourcefile[@]} ; Main .POT file: $mainfile_messages_pot"
 
 if ((cmd_update)) ; then
 	lang_new_and_translate
