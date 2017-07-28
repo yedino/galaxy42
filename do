@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+#
+# Does the automated build, should work on Linux, Mac, Windows Cygwin
+#
+
 set -o errexit
 set -o nounset
 
@@ -41,6 +45,10 @@ function usage_main {
 	echo ""
 	echo "Program command line options:"
 	echo "  --help shows the help and exits"
+}
+
+function prepare_languages() {
+	source "share/script/need_translations.sh"
 }
 
 function usage {
@@ -97,6 +105,8 @@ echo ""
 echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
 echo ""
+
+prepare_languages
 
 platform_recognize
 echo "Recognized platform: $platform"
