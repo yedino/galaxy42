@@ -281,7 +281,7 @@ ENDIF()
 option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
 
 if(USE_BOOST_MULTIPRECISION)
-	message(STATUS "USE_BOOST_MULTIPRECISION is normall (on)")
+	message(STATUS "USE_BOOST_MULTIPRECISION is normal (on)")
 	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
 else()
 	message(STATUS "USE_BOOST_MULTIPRECISION is DISABLED")
