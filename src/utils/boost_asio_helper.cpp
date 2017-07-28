@@ -1,6 +1,6 @@
 
 #include "utils/boost_asio_helper.hpp"
-#include <tuple>
+#include "stdplus/tab.hpp"
 
 namespace detail {
 
@@ -13,7 +13,7 @@ boost::asio::ip::address_v6::bytes_type make_ipv6_address_bytes( const std::arra
 	boost::asio::ip::address_v6::bytes_type bytes_asio;
 	// static_assert( bytes_asio_size == std::tuple_size<decltype(bytes_std)>::value  , "The address size is invalid" );
 	// can't test size of boost array in compile time. anyway, rather impossible to be invalid
-	std::copy( bytes_std.cbegin(), bytes_std.cend(), bytes_asio.begin() );
+	stdplus::copy_safe_apart( 16 , bytes_std , bytes_asio );
 	return bytes_asio;
 }
 
