@@ -54,6 +54,7 @@ void c_the_program_tunserver::options_create_desc() {
 											+ " (like memcheck1)").c_str())
 
                     ("d", mo_file_reader::gettext("L_what_d_do").c_str())
+                    ("dlevel", po::value<int>()->default_value(-1), mo_file_reader::gettext("L_option_dlevel").c_str())
 
                     ("quiet", mo_file_reader::gettext("L_what_quiet_do").c_str())
 
@@ -247,12 +248,20 @@ int c_the_program_tunserver::main_execution() {
 			_clue("After devel/demo BoostPO code");
 
 			// --- debug level for main program ---
+			_clue("Setting debug level (main loop - old loop)");
 			bool is_debug=false;
 			if (argm.count("debug") || argm.count("d")) is_debug=true;
 			_note("Will we keep debug: is_debug="<<is_debug);
 
 			g_dbg_level_set(config_default_basic_dbg_level, "For normal program run");
 			if (is_debug) g_dbg_level_set(10,"For debug program run");
+			if (argm.count("dlevel")) {
+				auto dlevel = int{  argm.at("dlevel").as<int>()  };
+				if (dlevel != -1) {
+					_note("Option --dlevel sets new level type: " << dlevel);
+					g_dbg_level_set( dlevel , "Set by --dlevel" );
+				}
+			}
 			if (argm.count("quiet") || argm.count("q")) g_dbg_level_set(200,"For quiet program run", true);
 			_note("BoostPO after parsing debug");
 
