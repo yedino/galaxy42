@@ -289,13 +289,14 @@ TEST(xint,can_assign_xint_to_unsigned) {
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) );
-	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) ); // 2^64 -1
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max()) - 1)); // 2^64 - 1
 	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<uint64_t>::max()) );
 
 	// this will say false - because overflow can happen when assigning to 64bit safer int:
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+1) );
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+2) );
 	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+200) );
+}
 
 TEST(xint,can_assign_xint_to_signed) {
 	xint64 a;
