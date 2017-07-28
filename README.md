@@ -68,8 +68,9 @@ For more details, including correct naming and **glossary**, and advanced techni
  * On Windows:
    * Installer for Windows now does install the OpenVPN tuntap driver.
  * On Linux/root:
-   * You can run program as root via sudo (this is safe), program will read keys of user who run the sudo (or choose other home with option --home-env and env variable HOME, see docs).
-   * You can run program as root, with --home-env and set HOME to /etc/yedino/ (could be good for linux distributions system-wide galaxy).
+   * You can run program as root via sudo ./program (this is safe), program will read keys of user who run the sudo (or choose other home with option --home-env and env variable HOME, see docs).
+   * Running just as root is not supported unless it is the root login console (otherwise it could try to drop back to user who obtained the root console) will be supported in future.
+   * You can run program as root (if you obtained root without sudo, options for other cases - in future), with --home-env and set HOME to /etc/yedino/ (could be good for linux distributions system-wide galaxy).
    * Running as regular user still works, the ./install.sh installs proper tools for it now by default (setcap-tool after build).
 * **Security fixes** (in this **pre-alpha** test versions, that always warns that program is not yet secure).
   * threads-insufficient-locking: in debug code. Probably not affecting old program (as it was single-thread), only --newloop, fixed in 912ccd8734e8a6722205b8b49c0395c84efccb5b.
