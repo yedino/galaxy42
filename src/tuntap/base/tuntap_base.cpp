@@ -1,5 +1,4 @@
 #include "tuntap_base.hpp"
-
 #include "libs0.hpp"
 
 std::string NetPlatform_error_code_to_string(int err) {
@@ -33,19 +32,27 @@ std::string NetPlatform_syserr_to_string(t_syserr syserr) {
 }
 
 void Wrap_NetPlatform_addAddress(const char *interfaceName,
-                                 const uint8_t *address,
+                                 const std::array<unsigned char, IPV6_LEN> address,
                                  int prefixLen,
                                  int addrFam) {
 
 #if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
-	_fact("Setting IP address: interfaceName="<<interfaceName
-		  // <<" address="<<address // TODO print address correctly
-		  <<" prefixLen="<<prefixLen
-		  <<" addrFam="<<addrFam);
-	t_syserr syserr = NetPlatform_addAddress(interfaceName, address, prefixLen, addrFam);
+
+	auto addr_asio_ipv6 = boost::asio::ip::address_v6(address);
+	_check_input(interfaceName);
+
+	_fact("Setting IP address: interfaceName=" << interfaceName
+	                                           << " address=" << addr_asio_ipv6
+	                                           << " prefixLen=" << prefixLen
+	                                           << " addrFam=" << addrFam);
+
+	t_syserr syserr = NetPlatform_addAddress(interfaceName, address.data(), prefixLen, addrFam);
 	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
-	_goal("IP address set as "<<address<<" prefix="<<prefixLen<<" on interface " << interfaceName << " family " << addrFam
-		  << " result: " << NetPlatform_syserr_to_string(syserr));
+	_goal("IP address set as " << addr_asio_ipv6
+	                           << " prefix=" << prefixLen
+	                           << " on interface " << interfaceName
+	                           << " family " << addrFam
+	                           << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
 	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif

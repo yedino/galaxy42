@@ -11,6 +11,7 @@
 #include <thread>
 #include <map>
 #include <iostream>
+#include "datastore.hpp"
 
 
 #ifdef ANTINET_linux
@@ -98,12 +99,19 @@ static bool do_we_need_to_change_uid_or_gid() {
  * @warning NOT guaranteed to support double sudo (if user did e.g. sudo ./script and script does sudo ./program)
  * @pre Process must have CAPs needed for this special UID change: CAP_SETUID, CAP_SETGID, CAP_SETPCAP, CAP_CHOWN
  * @post User is not-root (not UID 0) or else exception is thrown
+ * @return struct with variables that might be changed after droop root (for expmple string with regular user home path
+ * if root is successfully dropped else empty string).
  */
-static void security_drop_root_from_sudo() {
+static t_changes_from_sudo security_drop_root_from_sudo() {
 	_fact("Dropping root (if we are root)");
-	#ifdef ANTINET_linux
+	t_changes_from_sudo changes;
 
-	if ( ! do_we_need_to_change_uid_or_gid()) { _note("We are not root anyway"); return; } // not root
+	#ifdef ANTINET_linux
+	if ( ! do_we_need_to_change_uid_or_gid()) {
+		_note("We are not root anyway");
+		changes.m_home_dir = ""; // for now, set the default behaviour of datastore
+		return changes;
+	} // not root
 
 	_clue("Yes, will change UID/GID");
 	_note("Caps (when changing user): " << get_security_info() );
@@ -123,15 +131,6 @@ static void security_drop_root_from_sudo() {
 	_fact("try to change uid to " << normal_user_uid);
 	_fact("try to change gid to " << normal_user_gid);
 
-/*
-	capng_clear(CAPNG_SELECT_BOTH); // ***
-	int ret = capng_update(CAPNG_ADD, static_cast<capng_type_t>(CAPNG_EFFECTIVE|CAPNG_PERMITTED), CAP_CHOWN);
-	if (ret == -1) {
-		_erro("capng_update error: " << ret);
-		throw std::system_error(std::error_code(), "capng_update error, return value: " + std::to_string(ret));
-	}
-	*/
-
 	capmodpp::secure_capng_get_caps_process(); // causes libng to initialize, if not already
 	int ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
 	// TODO bounding set is NOT cleared!
@@ -143,12 +142,8 @@ static void security_drop_root_from_sudo() {
 	_fact("UID/GID change done");
 	_note("Caps (after changing user): " << get_security_info() );
 
-/*	_fact("change process user id to " << normal_user_uid);
-	int setuid_ret = setuid(normal_user_uid);
-	if (setuid_ret == -1) {
-		_fact("setuid error");
-		throw std::system_error(std::error_code(errno, std::system_category()));
-	}*/
+	if (pw->pw_dir != nullptr)
+		changes.m_home_dir = pw->pw_dir;
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
@@ -157,6 +152,7 @@ static void security_drop_root_from_sudo() {
 		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
 		std::abort();
 	}
+	return changes;
 }
 
 void drop_privileges_on_startup() {
@@ -249,10 +245,11 @@ void verify_privileges_are_as_for_mainloop() {
 }
 
 
-void drop_root() {
+void drop_root(bool home_always_env) {
+	t_changes_from_sudo changes;
 	#ifdef ANTINET_linux
 	try {
-		security_drop_root_from_sudo();
+		changes = security_drop_root_from_sudo();
 	} catch (const std::system_error &) {
 		throw;
 	} catch (const std::runtime_error &e) {
@@ -262,6 +259,11 @@ void drop_root() {
 	#else
 		_note("This security operation is not available on this system, ignoring");
 	#endif
+	if (home_always_env) {
+		datastore::set_home(std::string());
+	} else {
+		datastore::set_home(changes.m_home_dir);
+	}
 }
 
 }

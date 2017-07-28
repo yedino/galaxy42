@@ -27,13 +27,16 @@ TEST(eint, aggrinit_narrow_uchar) {
 	EXPECT_NE(u1,u2);
 }
 
+/*
 TEST(eint, aggrinit_narrow_init) {
 	unsigned int u1=250,u2=251;
-	unsigned int c{ u1-u2 }; // bad: no-compile-error
-	volatile auto unused = c;
+	// ub sanitizer shows error here so it is commented out.
+	// unsigned int c{ u1-u2 }; // bad: no-compile-error
+	// volatile auto unused = c;
 	// this shows why we need eint lib: above code using trivian types
 	// does not report runtime nor compile time error
 }
+*/
 
 TEST(eint, eint_minus_uchar) {
 	unsigned char u1=250,u2=251;

@@ -337,3 +337,6 @@ msgstr ""
 
 msgid "L_what_netHelloInterval_do"
 msgstr ""
+
+msgid "L_what_home-env_option_do"
+msgstr ""

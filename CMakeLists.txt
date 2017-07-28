@@ -494,6 +494,10 @@ target_link_libraries(unittests.elf
 
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
+add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+target_link_libraries(performancetests.elf
+	${LIBS_COMMON})
+
 if(HAVE_BACKWARD AND NOT MINGW)
 #	add_backward(tunserver)
 	add_backward(tunserver.elf)
