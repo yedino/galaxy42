@@ -7,12 +7,26 @@ if [[ $EUID -eq 0 ]]; then
 	exit 1
 fi
 
-for catal in galaxy42_installer g42bashutils galaxy42_scripts ; do
-       contrib/tools/lang-updater -C -n "$catal" shell
-done
-for catal in galaxy42_main ; do
-       contrib/tools/lang-updater -C -n "$catal" c++
-done
+if [[ -z ${1+x} ]]; then
+	target="ALL"
+else
+	target="$1"
+fi
 
-printf "%s\n" "Done in $0."
+if [[ "$target" == "ALL" ]]; then
+	for catal in galaxy42_installer g42bashutils galaxy42_scripts ; do
+				 contrib/tools/lang-updater -C -n "$catal" shell
+	done
+	for catal in galaxy42_main ; do
+				 contrib/tools/lang-updater -C -n "$catal" c++
+	done
+fi
+
+if [[ "$target" == "SCRIPTS_INSTALL" ]]; then
+	for catal in galaxy42_installer g42bashutils galaxy42_scripts ; do
+				 contrib/tools/lang-updater -C -n "$catal" shell
+	done
+fi
+
+printf "%s\n" "Done in $0 (target=$target)."
 

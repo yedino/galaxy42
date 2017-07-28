@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+#
+# Does the automated build, should work on Linux, Mac, Windows Cygwin
+#
+
 set -o errexit
 set -o nounset
 
@@ -36,6 +40,16 @@ function usage_main {
 	echo ""
 	echo "Program command line options:"
 	echo "  --help shows the help and exits"
+}
+
+function prepare_languages() {
+	echo "First, will prepare translations of texts used in this script ($0)"
+	bash contrib/tools/galaxy42-lang-update-all "SCRIPTS_INSTALL" || {
+		echo "Warning: can not prepare translations for this script ($0). Will continiue without them."
+		sleep 2
+	}
+	echo "Proceeding with script ($0)"
+	echo
 }
 
 function usage {
@@ -81,6 +95,8 @@ echo ""
 echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
 echo ""
+
+prepare_languages
 
 platform_recognize
 echo "Recognized platform: $platform"
