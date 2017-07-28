@@ -55,6 +55,9 @@ function do_compile() {
 	do
 		input_file="src-misc/locale/${textdomain}/${lang}.po"
 		if [[ ! -e "$input_file" ]] ;  then continue ; fi
+		mkdir -p "./share/locale/${lang}/LC_MESSAGES/" || {
+			fail "Can not create directory for mo file."
+		}
 		msgfmt --endianness=little "$input_file" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || {
 			echo "Can not convert a po file to mo ($input_file)"
 			if (( opt_notcare )) ; then
