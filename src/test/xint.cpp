@@ -12,6 +12,8 @@
 
 /// What if we would only use boost's big int (cpp int, checked) directly:
 
+
+/// What if we would only use boost's big int (cpp int, checked) directly:
 using t_bigint64s = boost::multiprecision::number<
 	boost::multiprecision::cpp_int_backend<64, 64,
 		boost::multiprecision::signed_magnitude, boost::multiprecision::checked, void> >;
@@ -287,13 +289,13 @@ TEST(xint,can_assign_xint_to_unsigned) {
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, 0xFFFFFFFFLL) );
 	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFLL)) );
-	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)-1) ); // 2^64 -1
+	EXPECT_TRUE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max()) - 1)); // 2^64 - 1
 	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<uint64_t>::max()) );
 
 	// this will say false - because overflow can happen when assigning to 64bit safer int:
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+1) );
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+2) );
-	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(0xFFFFFFFFFFFFFFFFLL)+200) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+1) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+2) );
+	EXPECT_FALSE( overflow_impossible_in_assign(a, t_correct_int(std::numeric_limits<uint64_t>::max())+200) );
 }
 
 TEST(xint,can_assign_xint_to_signed) {
@@ -447,11 +449,9 @@ TEST(xint,normal_use_op4assign_loop) {
 namespace test_xint {
 namespace detail {
 
-
-
 template<typename T_INT>
 void math_tests_noproblem() {
-	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 , 1000000 };
+	vector<int> testsize_tab = { 1, 2, 50, 1000, 10000 };
 	for (auto testsize : testsize_tab) {
 		T_INT a=0;
 		int n=testsize;
@@ -726,6 +726,11 @@ TEST(xint, safe_create_xint_assign) {
 	EXPECT_THROW( func(true)  , std::runtime_error );
 	EXPECT_THROW( func(false)  , std::runtime_error );
 }
+
+
+
+#undef maxni
+
 
 // end of tests v1
 // ===========================================================================================================

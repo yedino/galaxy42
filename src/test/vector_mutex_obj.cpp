@@ -23,7 +23,7 @@ TEST(vector_mutexed_obj_test, grow_to_test_in_threads) {
 }
 
 TEST(vector_mutexed_obj_test, push_back_test_in_threads) {
-	vector_mutexed_obj<char> vec;
+	vector_mutexed_obj<size_t> vec;
 
 	std::thread t1([&](){for (size_t i : {0, 1, 2, 3, 4, 5, 6}) vec.push_back((i) ); });
 	std::thread t2([&](){for (size_t i : {7, 8, 9, 10, 11, 12}) vec.push_back((i) ); });

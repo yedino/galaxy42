@@ -29,17 +29,6 @@ if(MINGW)
 	set(MINGW_LIBRARIES ws2_32 iphlpapi mswsock)
 endif()
 
-
-if(CYGWIN)
-	set(SODIUM_LIB "sodium")
-elseif(MSVC OR MINGW)
-	set(SODIUM_LIB "${SODIUM_LIBRARY}")
-	set(MSVC_LIRARIES "iphlpapi")
-else()
-	set(PTHREAD_LIB "pthread")
-	set(SODIUM_LIB "sodium")
-endif()
-
 if(WIN32 OR CYGWIN)
 	add_definitions(-DUNICODE)
 	add_definitions(-D_UNICODE)
@@ -260,7 +249,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	set(WARN_PEDANTIC_FLAGS "/Wall")
+	set(WARN_PEDANTIC_FLAGS "/W4")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 else()
@@ -292,7 +281,7 @@ ENDIF()
 option(USE_BOOST_MULTIPRECISION "Can we use boost::multiprecision - it was broken https://svn.boost.org/trac/boost/ticket/12181" ${USE_BOOST_MULTIPRECISION_DEFAULT})
 
 if(USE_BOOST_MULTIPRECISION)
-	message(STATUS "USE_BOOST_MULTIPRECISION is normall (on)")
+	message(STATUS "USE_BOOST_MULTIPRECISION is normal (on)")
 	add_definitions(-DUSE_BOOST_MULTIPRECISION=1)
 else()
 	message(STATUS "USE_BOOST_MULTIPRECISION is DISABLED")
@@ -315,7 +304,20 @@ if (NOT SODIUM_FOUND)
 endif()
 
 include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
+if(CYGWIN)
+	set(SODIUM_LIB "sodium")
+elseif(MSVC OR MINGW)
+	set(SODIUM_LIB "${SODIUM_LIBRARY}")
+	set(MSVC_LIRARIES "iphlpapi")
+else()
+	set(PTHREAD_LIB "pthread")
+	set(SODIUM_LIB "sodium")
+endif()
+
 #add local gtest
+if (MSVC)
+	set(gtest_force_shared_crt ON CACHE BOOL "Enable gtest_force_shared_crt")
+endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/depends/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
 include_directories(depends/googletest/googletest/include/)
 include_directories(depends/googletest/googlemock/include/)
@@ -453,7 +455,9 @@ endif ()
 
 ########################### TARGETS ###########################
 add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
-cotire(tunserver.elf)
+if (NOT MSVC) #TODO
+	cotire(tunserver.elf)
+endif()
 
 set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
