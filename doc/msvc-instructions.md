@@ -80,7 +80,7 @@ Found the following Boost libraries:
   chrono
   atomic
 Boost version variable is: 106400
-USE_BOOST_MULTIPRECISION is normall (on)
+USE_BOOST_MULTIPRECISION is normal (on)
 Found Sodium: C:/msvc2017_libs/libsodium-1.0.13/x64/Debug/v141/dynamic/libsodium.lib  
 Found PythonInterp: C:/cygwin64/bin/python (found version "1.4")
 Sorting sources (from GLOB)
