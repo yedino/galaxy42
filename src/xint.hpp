@@ -156,7 +156,7 @@ class safer_int {
 
 		/// construct from various "int" types
 		template<typename U, typename std::enable_if<
-			std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
+			std::is_integral<U>::value && std::is_fundamental<U>::value  >::type* = nullptr>
 		safer_int(U obj) : xi(obj)
 		{
 			// _warn("Creating from INT, type=" << typeid(U).name() << " value=" << obj );
@@ -165,7 +165,7 @@ class safer_int {
 
 		/// construct from various "float" types
 		template<typename U, typename std::enable_if<
-			std::is_arithmetic<U>{} && ! std::is_integral<U>{} && std::is_fundamental<U>{}  >::type* = nullptr>
+			std::is_arithmetic<U>::value && ! std::is_integral<U>::value && std::is_fundamental<U>::value  >::type* = nullptr>
 		safer_int(U obj)
 		{
 			// TODO check is there is no more normal way of doing this all - comparing buildin float/double to boost cpp_int
@@ -316,7 +316,7 @@ class numeric_limits<safer_int<T>> {
 
 // Comparsions like: int > xint:
 
-#define CONDITION typename std::enable_if< std::is_integral<U>{}>::type* = nullptr
+#define CONDITION typename std::enable_if< std::is_integral<U>::value>::type* = nullptr
 template<typename U, typename T, CONDITION >
 bool operator>(U obj, safer_int<T> saferint) { return (saferint < obj) && (saferint!=obj); }
 

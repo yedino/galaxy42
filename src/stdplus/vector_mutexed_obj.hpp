@@ -43,7 +43,7 @@ class vector_mutexed_obj {
 		void grow_to(size_t size); ///< safely increase size
 		template <typename TRet, typename TFun> TRet run_on(size_t ix, TFun & fun);
 
-//		void push_back(const TObj & obj); ///< allocate a copy of the object
+		void push_back(const TObj & obj); ///< allocate a copy of the object
 		void push_back(TObj && obj); ///< allocate one-element, move given TObj rref into it
 //		void push_back(t_one_with_mutex_ptr && obj_ptr); ///< move this unique-ptr one-element into us (append at end)
 
@@ -69,14 +69,15 @@ void vector_mutexed_obj<TObj>::grow_to(size_t size) {
 	if (!(size > m_data.size())) return; // nothing to do
 	m_data.resize(size);
 }
-/*
+
 template <typename TObj>
 void vector_mutexed_obj<TObj>::push_back(const TObj & obj) {
-//	LockGuard<MutexShared> lg_all(m_mutex_all); // hard lock on container (avoid concurent resizes), see grow_to() comments
-//	m_data.push_back(std::make_unique<TObj>(obj)); // allocate a copy, and push it
+	auto new_element = std::make_unique< t_one_with_mutex >( obj ); // copy
+	LockGuard<MutexShared> lg_all(m_mutex_all); // hard lock on container (avoid concurent resizes), see grow_to() comments
+	m_data.push_back(std::move(new_element)); // allocate a copy, and push it
 	// @TODO@rfree bad. look at other push_back as example
 }
-*/
+
 
 template <typename TObj>
 void vector_mutexed_obj<TObj>::push_back(TObj && obj) {
