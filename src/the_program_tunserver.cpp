@@ -84,8 +84,8 @@ void c_the_program_tunserver::options_create_desc() {
                     ("remove-peers-timeout", po::value<unsigned int>()->default_value(30), mo_file_reader::gettext("L_remove_peers_timeout_do").c_str())
 										("home-env", mo_file_reader::gettext("L_what_home-env_option_do").c_str())
 
-                     ("set-prefix", po::value<std::string>()->default_value("0xFD42"), mo_file_reader::gettext("L_setThePrefix").c_str())
-                     ("mask-len", po::value<unsigned short>()->default_value(16), mo_file_reader::gettext("L_setMaskLength").c_str())
+                     ("set-prefix", po::value<std::string>()->default_value("fd42"), mo_file_reader::gettext("L_setThePrefix").c_str())
+//                     ("mask-len", po::value<unsigned short>()->default_value(16), mo_file_reader::gettext("L_setMaskLength").c_str())
 
 
 			#if EXTLEVEL_IS_PREVIEW
