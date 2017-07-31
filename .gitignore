@@ -8,10 +8,8 @@ build-*/
 vartmp/
 
 # mo compiled gettext files
-
-share/locale/*/LC_MESSAGES/galaxy42_main.mo
-share/locale/*/LC_MESSAGES/g42bashutils.mo
-share/locale/*/LC_MESSAGES/galaxy42_scripts.mo
+# the scripts like ./do and ./install will rebuild this translations on their own if they need them
+share/locale/*/LC_MESSAGES/*.mo
 
 # directories copied from source
 # (the source is e.g. git submodule but in other location)

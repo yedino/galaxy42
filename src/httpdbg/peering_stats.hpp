@@ -19,10 +19,10 @@ class c_data_transmission_buffer{
 		std::string get_charts_as_js_str(std::string var, bool display_big_chart);
 
 	private:
-		boost::circular_buffer<int> m_data_sent_buffer;
-		boost::circular_buffer<int> m_data_read_buffer;
-		boost::circular_buffer<int> m_packets_sent_buffer;
-		boost::circular_buffer<int> m_packets_read_buffer;
+		boost::circular_buffer<size_t> m_data_sent_buffer;
+		boost::circular_buffer<size_t> m_data_read_buffer;
+		boost::circular_buffer<size_t> m_packets_sent_buffer;
+		boost::circular_buffer<size_t> m_packets_read_buffer;
 		long m_last_sent;
 		long m_last_read;
 		int m_interval;

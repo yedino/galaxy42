@@ -314,8 +314,15 @@ template <int S> void generator::push_bytes_sizeoctets(const std::string & data)
  * it must be technically valid, e.g. not nullptr string).
  * And this asserts must be always-on, because this is for parsing unsafe external data. TODO(r) abort() that can not be disabled
  */
-class parser {
+class parser final {
 	private:
+		class init_list_throw_if final {
+			public:
+				init_list_throw_if() = default;
+				template<typename Tobj, typename Texception, typename Tcomparator>
+				init_list_throw_if(const Tobj &obj, Texception exception, Tcomparator comparator);
+		};
+		init_list_throw_if m_init_list_throw_if;
 		// TODO(r): pick a guideline and use existing view idiom like that:
 		const char * const  m_data_begin; ///< the begining of string
 		const char * m_data_now; ///< current position (must be inside string, must be in range begin..end)
@@ -466,6 +473,11 @@ template <int S> std::string parser::pop_bytes_sizeoctets() {
 	return pop_bytes_n( size );
 }
 
+
+template<typename Tobj, typename Texception, typename Tcomparator>
+inline parser::init_list_throw_if::init_list_throw_if(const Tobj &obj, Texception exception, Tcomparator comparator) {
+	if (comparator(obj)) throw exception;
+}
 
 } // namespace
 
