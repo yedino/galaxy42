@@ -192,11 +192,19 @@ void c_the_program_newloop::programtask_load_my_keys() {
 				have_keys_configured=0;
 			}
 
+			const std::string ipv6_prefix = [&] {
+				std::string ret = m_argm.at("set-prefix").as<std::string>();
+				std::transform(ret.cbegin(), ret.cend(), ret.begin(),
+					[](unsigned char c){return std::tolower(c);}
+				);
+				return ret;
+			}(); // lambda
+
 			if (have_keys_configured) {
 				bool ok=false;
 
 				try {
-					UsePtr(pimpl->server).configure_mykey();
+					UsePtr(pimpl->server).configure_mykey(ipv6_prefix);
 					ok=true;
 				} catch UI_CATCH("Loading your key");
 
@@ -216,7 +224,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 					const string IDI_name = UsePtr(pimpl->server).program_action_gen_key_simple();
 					UsePtr(pimpl->server).program_action_set_IDI(IDI_name);
 					ui::action_info_ok("Your new keys are created.");
-					UsePtr(pimpl->server).configure_mykey();
+					UsePtr(pimpl->server).configure_mykey(ipv6_prefix);
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
@@ -225,6 +233,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 }
 
 void c_the_program_newloop::programtask_tuntap() {
+
 	pimpl->server->init_tuntap();
 }
 

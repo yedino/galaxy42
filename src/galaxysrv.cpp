@@ -278,7 +278,7 @@ void c_galaxysrv::init_tuntap() {
 }
 
 // my key @new
-void c_galaxysrv::configure_mykey() {
+void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -292,6 +292,7 @@ void c_galaxysrv::configure_mykey() {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	my_IDI->set_ipv6_prefix(ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting our address HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;

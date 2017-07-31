@@ -112,8 +112,8 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	int errcode_ioctl = sys_fun.ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	_check_sys(errcode_ioctl != -1);
-	_check_input(binary_address[0] == 0xFD);
-	_check_input(binary_address[1] == 0x42);
+//	_check_input(binary_address[0] == 0xFD);
+//	_check_input(binary_address[1] == 0x42);
 	t_syserr err;
 	err = sys_fun.NetPlatform_addAddress(ifr.ifr_name, binary_address.data(), prefix_len, Sockaddr_AF_INET6);
 	if (err.my_code != 0) throw std::runtime_error("NetPlatform_addAddress error");

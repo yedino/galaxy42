@@ -57,7 +57,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		/// load my (this node's) keypair from it's default store (e.g. config files)
 		/// if your files seem to not be yet created, then throws expected_not_found
-		void configure_mykey();
+		void configure_mykey(const std::string &ipv6_prefix);
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
