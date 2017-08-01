@@ -214,6 +214,22 @@ void c_galaxysrv::main_loop() {
 					// what cable address to send to:
 					c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
 
+					auto check_ipv6_prefix = [this](const c_haship_addr &addr) {
+						if (addr.at(0) != m_my_hip_prefix.at(0)) return false;
+						if (addr.at(1) != m_my_hip_prefix.at(1)) return false;
+						return true;
+					}; // lambda
+
+					const bool good_src_ipv6_prefix = check_ipv6_prefix(src_hip);
+					const bool good_dst_ipv6_prefix = check_ipv6_prefix(dst_hip);
+					if (!good_src_ipv6_prefix) {
+						_info("Bad packet src prefix");
+						continue;
+					} else if (!good_dst_ipv6_prefix) {
+						_info("Bad packet dst prefix");
+						continue;
+					}
+
 					bool fwok = true;
 					if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
 
@@ -357,6 +373,8 @@ void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
+	m_my_hip_prefix.at(0) = m_my_hip.at(0);
+	m_my_hip_prefix.at(1) = m_my_hip.at(1);
 }
 
 c_haship_addr c_galaxysrv::get_my_hip() const {
