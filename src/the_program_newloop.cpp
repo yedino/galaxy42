@@ -192,12 +192,20 @@ void c_the_program_newloop::programtask_load_my_keys() {
 				have_keys_configured=0;
 			}
 
-			const std::string ipv6_prefix = [&] {
+			const std::string ipv6_prefix = [this] {
 				std::string ret = m_argm.at("set-prefix").as<std::string>();
 				_check_input(ret.size() == 4);
 				std::transform(ret.cbegin(), ret.cend(), ret.begin(),
 					[](unsigned char c){return std::tolower(c);}
 				);
+				_check_input(ret.at(0) == 'f');
+				_check_input(ret.at(1) == 'd');
+				_check_input(ret.at(2) == '4');
+				if (ret.at(3) == '2') UsePtr(pimpl->server).set_prefix_len(16);
+				else if (ret.at(3) == '3') UsePtr(pimpl->server).set_prefix_len(24);
+				else if (ret.at(3) == '4') throw std::invalid_argument("address reserved");
+				else if (ret.at(3) == '5') throw std::invalid_argument("address reserved");
+				else throw std::invalid_argument("address not supported");
 				return ret;
 			}(); // lambda
 
