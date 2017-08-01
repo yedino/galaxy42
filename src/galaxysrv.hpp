@@ -90,6 +90,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		/// 'signature' - msg=IDC_pub, signer=IDI - it proves that IDI authorized this IDC
 		antinet_crypto::c_multisign m_IDI_IDC_sig;
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
+		std::array<unsigned char, 2> m_my_hip_prefix; ///< first 16 bits of ipv6 address, i.e. fd42
 
 		/// @}
 

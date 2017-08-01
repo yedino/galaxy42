@@ -194,6 +194,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 
 			const std::string ipv6_prefix = [&] {
 				std::string ret = m_argm.at("set-prefix").as<std::string>();
+				_check_input(ret.size() == 4);
 				std::transform(ret.cbegin(), ret.cend(), ret.begin(),
 					[](unsigned char c){return std::tolower(c);}
 				);
