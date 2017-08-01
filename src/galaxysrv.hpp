@@ -66,6 +66,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}
 
+		void set_prefix_len(int prefix_len); ///< set prefix len, must be called before init_tuntap()
 		void init_tuntap();
 
 		c_haship_addr get_my_hip() const; ///< get your main hash-ip (ipv6)
@@ -108,6 +109,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		/// @}
 
 		bool m_exiting=false; ///< are we now in exiting mode, then we should be refusing/closing connections etc
+		int m_prefix_len = -1; ///< tun ipv6 address prefix length
 };
 
 // -------------------------------------------------------------------

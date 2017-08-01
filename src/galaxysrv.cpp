@@ -290,7 +290,8 @@ uint16_t c_galaxysrv::get_tuntap_mtu_current() const {
 }
 
 void c_galaxysrv::init_tuntap() {
-	m_tuntap.set_tun_parameters(get_my_hip(), 16, this->get_tuntap_mtu_default());
+	assert(m_prefix_len != -1);
+	m_tuntap.set_tun_parameters(get_my_hip(), m_prefix_len, this->get_tuntap_mtu_default());
 }
 
 // my key @new
@@ -410,6 +411,10 @@ std::string c_galaxysrv::program_action_gen_key_simple() {
 	auto output_file = IDI_name;
 	generate_crypto::create_keys(output_file, keys, true); // ***
 	return IDI_name;
+}
+
+void c_galaxysrv::set_prefix_len(int prefix_len) {
+	m_prefix_len = prefix_len;
 }
 
 void c_galaxysrv::program_action_gen_key(const boost::program_options::variables_map & argm) {
