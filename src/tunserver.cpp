@@ -410,6 +410,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("peer_list", [this](const std::string &input_json) {
 		return rpc_peer_list(input_json);
 	});
+	m_rpc_server.add_rpc_function("sending_test", [this](const std::string &input_json) {
+		return rpc_sending_test(input_json);
+	});
 }
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
@@ -926,6 +929,25 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	return ret.dump();
 }
 
+string c_tunserver::rpc_sending_test(const string &input_json) {
+	auto input = nlohmann::json::parse(input_json);
+	auto packet_size = input["size"].get<size_t>();
+	auto packet_count = input["count"].get<size_t>();
+	c_peering_udp my_peer(t_peering_reference("127.0.0.1", m_port, m_my_hip.get_hip_as_string(true)), m_udp_device);
+	std::vector<char> packet(packet_size);
+	antinet_crypto::t_crypto_nonce nonce;
+	const auto time_start = std::chrono::steady_clock::now();
+	for (size_t i = 0; i < packet_count; i++) {
+		my_peer.send_data_udp(packet.data(), packet.size(), m_udp_device.get_socket(), m_my_hip, m_my_hip, 3, nonce);
+	}
+	const auto time_stop = std::chrono::steady_clock::now();
+	auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_stop - time_start).count();
+	nlohmann::json ret;
+	ret["cmd"] = "sending_test";
+	ret["time_ms"] = time_ms;
+	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
+	return ret.dump();
+}
 
 void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
