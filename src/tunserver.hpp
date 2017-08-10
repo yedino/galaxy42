@@ -343,6 +343,7 @@ class c_tunserver : public c_galaxy_node {
 		c_rpc_server m_rpc_server;
 		std::string rpc_ping(const std::string &input_json);
 		std::string rpc_peer_list(const std::string &input_json);
+		std::string rpc_sending_test(const std::string &input_json);
 		int m_port;
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
 
