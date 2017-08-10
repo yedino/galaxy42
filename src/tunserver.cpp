@@ -413,6 +413,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("sending_test", [this](const std::string &input_json) {
 		return rpc_sending_test(input_json);
 	});
+	m_rpc_server.add_rpc_function("add_peer", [this](const std::string &input_json) {
+		return rpc_add_peer(input_json);
+	});
 }
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
@@ -946,6 +949,21 @@ string c_tunserver::rpc_sending_test(const string &input_json) {
 	ret["cmd"] = "sending_test";
 	ret["time_ms"] = time_ms;
 	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
+	return ret.dump();
+}
+
+string c_tunserver::rpc_add_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "add_peer";
+	try{
+		add_peer_simplestring(peer);
+		ret["msg"] = "peer added";
+	} catch(const std::invalid_argument &ex) {
+		ret["msg"] = "bad peer format";
+	}
 	return ret.dump();
 }
 
