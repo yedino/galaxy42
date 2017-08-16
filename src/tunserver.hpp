@@ -205,6 +205,9 @@ class c_tunserver : public c_galaxy_node {
 
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		void delete_peer(const t_peering_reference & peer_ref); ///< delete this as peer (just from reference)
+		void delete_peer_simplestring(const string & simple); ///< delete this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		void delete_all_peers(); ///< delete all peers
 		///! add this user (or append existing user) with his actuall public key data
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
@@ -291,7 +294,9 @@ class c_tunserver : public c_galaxy_node {
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
 		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
+		t_peers_by_haship m_peer_black_list; ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_black_list_mutex!
 		mutable Mutex m_peer_mutex;
+		mutable Mutex m_peer_black_list_mutex;
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
@@ -345,10 +350,13 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_peer_list(const std::string &input_json);
 		std::string rpc_sending_test(const std::string &input_json);
 		std::string rpc_add_peer(const std::string &input_json);
+		std::string rpc_delete_peer(const std::string &input_json);
+		std::string rpc_delete_all_peers(const std::string &input_json);
 		int m_port;
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
 
 		const bool m_option_insecure_cap; ///< should we do insecure cap (e.g. do NOT drop the capabilities); tests/debug
+		t_peering_reference parse_peer_simplestring(const string& simple);
 };
 
 // ------------------------------------------------------------------
