@@ -368,19 +368,24 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
+t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
+{
+	size_t pos1 = simple.find('-');
+	if (pos1 == std::string::npos) throw std::out_of_range("");
+	string part_pip = simple.substr(0,pos1);
+	string part_hip = simple.substr(pos1+1);
+	_info("Peer pip="<<part_pip<<" hip="<<part_hip);
+	auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
+	_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
+	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
+}
+
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
-		size_t pos1 = simple.find('-');
-		if (pos1 == std::string::npos) throw std::out_of_range("");
-		string part_pip = simple.substr(0,pos1);
-		string part_hip = simple.substr(pos1+1);
-		_info("Peer pip="<<part_pip<<" hip="<<part_hip);
-		auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
-		_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
-		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
+		this->add_peer(parse_peer_simplestring(simple));
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -389,6 +394,30 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 //                _throw_error( std::invalid_argument("Bad peer format") );
 		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 
+	}
+}
+
+void c_tunserver::delete_peer(const t_peering_reference &peer_ref)
+{
+	_mark("delete_peer (delete only!) " << peer_ref );
+	{
+		LockGuard<Mutex> lg(m_peer_mutex);
+		auto iter = m_peer.find(peer_ref.haship_addr);
+		if (iter != m_peer.end())
+			m_peer.erase(iter);
+	}
+
+}
+
+void c_tunserver::delete_peer_simplestring(const string &simple)
+{
+	_dbg1("Deleting peer from simplestring=" << simple);
+	try {
+		this->delete_peer(parse_peer_simplestring(simple));
+	}
+	catch (const std::exception &e) {
+		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
+		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 	}
 }
 
@@ -415,6 +444,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("add_peer", [this](const std::string &input_json) {
 		return rpc_add_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("delete_peer", [this](const std::string &input_json) {
+		return rpc_delete_peer(input_json);
 	});
 }
 
@@ -565,11 +597,15 @@ unique_ptr<c_haship_pubkey> && pubkey)
 
 		auto find = m_peer.find( peer_hip );
 		if (find == m_peer.end()) { // no such peer yet
-			auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
-			_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
-			peering_ptr->set_pubkey(std::move(pubkey));
-			_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
-			m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+			LockGuard<Mutex> lg_peer_black_list(m_peer_black_list_mutex);
+			auto iter = m_peer_black_list.find( peer_hip );
+			if (iter == m_peer_black_list.end()) { // no such peer on black list yet
+				auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+				_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
+				peering_ptr->set_pubkey(std::move(pubkey));
+				_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
+				m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+			}
 		} else { // update existing
 			auto & peering_ptr = find->second;
 			peering_ptr->update_last_ping_time();
@@ -964,6 +1000,30 @@ string c_tunserver::rpc_add_peer(const string &input_json)
 	} catch(const std::invalid_argument &ex) {
 		ret["msg"] = "bad peer format";
 	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_delete_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "delete_peer";
+	try{
+		delete_peer_simplestring(peer);
+		ret["msg"] = "peer deleted";
+	} catch(const std::invalid_argument &ex) {
+		ret["msg"] = "bad peer format";
+	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_delete_all_peers(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "delete_all_peers";
 	return ret.dump();
 }
 
