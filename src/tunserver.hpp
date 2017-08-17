@@ -204,8 +204,10 @@ class c_tunserver : public c_galaxy_node {
 		int get_my_stats_peers_known_count() const; ///< get the number of currently known peers, for information
 
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
+		void add_peer_to_black_list(const t_peering_reference & peer_ref); ///< add this to black list (just from reference)
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
 		void delete_peer(const t_peering_reference & peer_ref); ///< delete this as peer (just from reference)
+		void delete_peer_from_black_list(const t_peering_reference & peer_ref); ///< delete this from black list (just from reference)
 		void delete_peer_simplestring(const string & simple); ///< delete this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
 		void delete_all_peers(); ///< delete all peers
 		///! add this user (or append existing user) with his actuall public key data

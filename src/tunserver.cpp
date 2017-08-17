@@ -385,7 +385,9 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
-		this->add_peer(parse_peer_simplestring(simple));
+		t_peering_reference peering_ref = parse_peer_simplestring(simple);
+		add_peer(peering_ref);
+		delete_peer_from_black_list(peering_ref);
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -393,7 +395,6 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
 		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
-
 	}
 }
 
@@ -406,14 +407,26 @@ void c_tunserver::delete_peer(const t_peering_reference &peer_ref)
 		if (iter != m_peer.end())
 			m_peer.erase(iter);
 	}
+}
 
+void c_tunserver::delete_peer_from_black_list(const t_peering_reference &peer_ref)
+{
+	_mark("delete peer from black list (delete only!) " << peer_ref );
+	{
+		LockGuard<Mutex> lg(m_peer_black_list_mutex);
+		auto iter = m_peer_black_list.find(peer_ref.haship_addr);
+		if (iter != m_peer_black_list.end())
+			m_peer_black_list.erase(iter);
+	}
 }
 
 void c_tunserver::delete_peer_simplestring(const string &simple)
 {
 	_dbg1("Deleting peer from simplestring=" << simple);
 	try {
-		this->delete_peer(parse_peer_simplestring(simple));
+		t_peering_reference peering_ref = parse_peer_simplestring(simple);
+		delete_peer(peering_ref);
+		add_peer_to_black_list(peering_ref);
 	}
 	catch (const std::exception &e) {
 		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
@@ -569,6 +582,17 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	{
 		LockGuard<Mutex> lg(m_peer_mutex);
 		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+	}
+}
+
+void c_tunserver::add_peer_to_black_list(const t_peering_reference &peer_ref)
+{
+	_mark("add_peer to black list (add only!) " << peer_ref );
+	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+	// key is unique in map
+	{
+		LockGuard<Mutex> lg(m_peer_black_list_mutex);
+		m_peer_black_list.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 	}
 }
 
