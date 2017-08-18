@@ -434,6 +434,21 @@ void c_tunserver::delete_peer_simplestring(const string &simple)
 	}
 }
 
+void c_tunserver::delete_all_peers()
+{
+	_mark("delete all peers (delete only!) ");
+	{
+		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg_block_list(m_peer_black_list_mutex);
+		for( auto &peer : m_peer)
+		{
+			m_peer_black_list.emplace(std::move(peer));
+		}
+		m_peer.clear();
+	}
+
+}
+
 c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
 :
 	m_my_name("unnamed-tunserver")
@@ -460,6 +475,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("delete_peer", [this](const std::string &input_json) {
 		return rpc_delete_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("delete_all_peers", [this](const std::string &input_json) {
+		return rpc_delete_all_peers(input_json);
 	});
 }
 
@@ -1044,10 +1062,11 @@ string c_tunserver::rpc_delete_peer(const string &input_json)
 
 string c_tunserver::rpc_delete_all_peers(const string &input_json)
 {
-	auto input = nlohmann::json::parse(input_json);
-	auto peer = input["peer"].get<std::string>();
+	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "delete_all_peers";
+	delete_all_peers();
+	ret["msg"] = "All peers deleted";
 	return ret.dump();
 }
 
