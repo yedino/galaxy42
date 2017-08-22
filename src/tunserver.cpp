@@ -387,7 +387,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	try {
 		t_peering_reference peering_ref = parse_peer_simplestring(simple);
 		add_peer(peering_ref);
-		delete_peer_from_black_list(peering_ref);
+		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -398,35 +398,36 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
-void c_tunserver::delete_peer(const t_peering_reference &peer_ref)
+void c_tunserver::delete_peer(const c_haship_addr &hip)
 {
-	_mark("delete_peer (delete only!) " << peer_ref );
+	_mark("delete_peer (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_mutex);
-		auto iter = m_peer.find(peer_ref.haship_addr);
+		auto iter = m_peer.find(hip);
 		if (iter != m_peer.end())
 			m_peer.erase(iter);
 	}
 }
 
-void c_tunserver::delete_peer_from_black_list(const t_peering_reference &peer_ref)
+void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
 {
-	_mark("delete peer from black list (delete only!) " << peer_ref );
+	_mark("delete peer from black list (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_black_list_mutex);
-		auto iter = m_peer_black_list.find(peer_ref.haship_addr);
+		auto iter = m_peer_black_list.find(hip);
 		if (iter != m_peer_black_list.end())
 			m_peer_black_list.erase(iter);
 	}
 }
 
-void c_tunserver::delete_peer_simplestring(const string &simple)
+void c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
 {
 	_dbg1("Deleting peer from simplestring=" << simple);
 	try {
-		t_peering_reference peering_ref = parse_peer_simplestring(simple);
-		delete_peer(peering_ref);
-		add_peer_to_black_list(peering_ref);
+		c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), simple);
+		delete_peer(hip);
+		if (is_banned)
+			add_peer_to_black_list(hip);
 	}
 	catch (const std::exception &e) {
 		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
@@ -434,19 +435,19 @@ void c_tunserver::delete_peer_simplestring(const string &simple)
 	}
 }
 
-void c_tunserver::delete_all_peers()
+void c_tunserver::delete_all_peers(bool is_banned)
 {
 	_mark("delete all peers (delete only!) ");
 	{
 		LockGuard<Mutex> lg(m_peer_mutex);
 		LockGuard<Mutex> lg_block_list(m_peer_black_list_mutex);
-		for( auto &peer : m_peer)
+		if (is_banned)
 		{
-			m_peer_black_list.emplace(std::move(peer));
+			for( auto &peer : m_peer)
+				m_peer_black_list.emplace(peer.first);
 		}
 		m_peer.clear();
 	}
-
 }
 
 c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
@@ -478,6 +479,12 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("delete_all_peers", [this](const std::string &input_json) {
 		return rpc_delete_all_peers(input_json);
+	});
+	m_rpc_server.add_rpc_function("ban_peer", [this](const std::string &input_json) {
+		return rpc_ban_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("ban_all_peers", [this](const std::string &input_json) {
+		return rpc_ban_all_peers(input_json);
 	});
 }
 
@@ -603,14 +610,13 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	}
 }
 
-void c_tunserver::add_peer_to_black_list(const t_peering_reference &peer_ref)
+void c_tunserver::add_peer_to_black_list(const c_haship_addr &hip)
 {
-	_mark("add_peer to black list (add only!) " << peer_ref );
-	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+	_mark("add_peer to black list (add only!) " << hip );
 	// key is unique in map
 	{
 		LockGuard<Mutex> lg(m_peer_black_list_mutex);
-		m_peer_black_list.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+		m_peer_black_list.emplace(std::move(hip));
 	}
 }
 
@@ -1052,7 +1058,7 @@ string c_tunserver::rpc_delete_peer(const string &input_json)
 	nlohmann::json ret;
 	ret["cmd"] = "delete_peer";
 	try{
-		delete_peer_simplestring(peer);
+		delete_peer_simplestring(peer, false);
 		ret["msg"] = "peer deleted";
 	} catch(const std::invalid_argument &ex) {
 		ret["msg"] = "bad peer format";
@@ -1065,8 +1071,33 @@ string c_tunserver::rpc_delete_all_peers(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "delete_all_peers";
-	delete_all_peers();
+	delete_all_peers(false);
 	ret["msg"] = "All peers deleted";
+	return ret.dump();
+}
+
+string c_tunserver::rpc_ban_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "ban_peer";
+	try{
+		delete_peer_simplestring(peer, true);
+		ret["msg"] = "peer banned";
+	} catch(const std::invalid_argument &ex) {
+		ret["msg"] = "bad peer format";
+	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_ban_all_peers(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "ban_all_peers";
+	delete_all_peers(true);
+	ret["msg"] = "All peers banned";
 	return ret.dump();
 }
 
