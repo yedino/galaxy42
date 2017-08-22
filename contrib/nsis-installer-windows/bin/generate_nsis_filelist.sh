@@ -17,19 +17,19 @@ gen_x86_64() {
 		find ${SCRIPT_DIR}/x64 -regex ".*\.\(dll\|exe\)" \
 			| sort \
 			| awk -F "x64/" '{print "\t\tFILE bin/x64/"$2}'
-			
-	else 
+
+	else
 		echo "Can't find x64 dir in $SCRIPT_DIR, skipping..."
 	fi
 }
 gen_i686() {
-	
+
 	if ( is_dir "${SCRIPT_DIR}/x86" ); then
 		find ${SCRIPT_DIR}/x86 -regex ".*\.\(dll\|exe\)" \
 			| sort \
 			| awk -F "x86/" '{print "\t\tFILE bin/x86/"$2}'
 
-	else 
+	else
 		echo "Can't find x86 dir in $SCRIPT_DIR, skipping..."
 	fi
 
@@ -51,16 +51,16 @@ gen_noarch() {
 		while IFS=  read -r -d $'\0'; do
 			path_list+=("$REPLY")
 		done < <(find ${SCRIPT_DIR}/noarch -regex ".*.LC_MESSAGES.*.mo" -print0 | sort -z)
-		
+
 		# pasing path to get nsis record example:  /.../rest_of_path/share/locale/en/LC_MESSAGES/g42bashutils.mo  -->
 		# FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\g42bashutils.mo	bin/noarch/share/locale/en/LC_MESSAGES/g42bashutils.mo
-		
+
 		for path in "${path_list[@]}"; do
 			local filename=$( echo "${path}" | awk -F "noarch/" '{print $2}' )
 			local win_format_file=$(echo "$filename" | sed 's/\//\\/g')
 			printf "\tFILE /oname=\$INSTDIR\\%s\tbin/noarch/%s\n" "${win_format_file}" "${filename}"
 		done
-	else 
+	else
 		echo  -e '\t\t' | echo "Can't find noarch dir in $SCRIPT_DIR, skipping..."
 	fi
 }
