@@ -213,7 +213,7 @@ void c_galaxysrv::main_loop() {
 
 					// what cable address to send to:
 					c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
-
+					// TODO @rob: make full verification for different address prefixes like fd43
 					auto check_ipv6_prefix = [this](const c_haship_addr &addr) {
 						if (addr.at(0) != m_my_hip_prefix.at(0)) return false;
 						if (addr.at(1) != m_my_hip_prefix.at(1)) return false;
