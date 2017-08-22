@@ -24,3 +24,34 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   Request: {"cmd":"peer_list","msg":"[]"}
   Response: {"cmd":"peer_list","msg":"[/**list of connected peers**/]"}
   ```
+* Add peer
+  ```
+  Request: {"cmd":"add_peer","peer":"<ipv4>:<galaxy_port>-<ipv6>"}
+  Response: {"cmd":"add_peer","msg":"peer added"}
+  or
+  Response: {"cmd":"add_peer","msg":"bad peer format"}
+  ```
+* Delete peer
+  ```
+  Request: {"cmd":"delete_peer","peer":"<ipv6>"}
+  Response: {"cmd":"delete_peer","msg":"peer deleted"}
+  or
+  Response: {"cmd":"delete_peer","msg":"bad peer format"}
+  ```
+* Delete all peers
+  ```
+  Request: {"cmd":"delete_all_peer"}
+  Response: {"cmd":"delete_all_peer","msg":"All peers deleted"}
+  ```
+* Ban peer
+  ```
+  Request: {"cmd":"ban_peer","peer":"<ipv6>"}
+  Response: {"cmd":"ban_peer","msg":"peer banned"}
+  or
+  Response: {"cmd":"ban_peer","msg":"bad peer format"}
+  ```
+* Ban all peers
+  ```
+  Request: {"cmd":"ban_all_peer"}
+  Response: {"cmd":"ban_all_peer","msg":"All peers banned"}
+  ```
