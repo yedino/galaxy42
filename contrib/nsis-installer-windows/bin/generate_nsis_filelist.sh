@@ -3,8 +3,10 @@
 set -o errexit
 set -o nounset
 
-readonly GALAXY42_DIR="$HOME/build/galaxy42"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# import fail function
+. "${SCRIPT_DIR}/../../../share/script/lib/fail.sh"
 
 is_dir() {
 	local dir="$1"
@@ -54,6 +56,11 @@ gen_noarch() {
 
 		# pasing path to get nsis record example:  /.../rest_of_path/share/locale/en/LC_MESSAGES/g42bashutils.mo  -->
 		# FILE /oname=$INSTDIR\share\locale\en\LC_MESSAGES\g42bashutils.mo	bin/noarch/share/locale/en/LC_MESSAGES/g42bashutils.mo
+
+		if [[ ${#path_list[@]} == 0 ]];
+		then
+			fail "It looks like language files (*.mo) are missing, check if language files generation works properly\n"
+		fi
 
 		for path in "${path_list[@]}"; do
 			local filename=$( echo "${path}" | awk -F "noarch/" '{print $2}' )
