@@ -14,8 +14,8 @@ rpc_port = 46000
 
 program = '../../build/tunserver.elf'
 program_options = dict()
-program_options['--port'] = str(rpc_port)
-program_options['--rpc-port'] = '46000'
+program_options['--rpc-port'] = str(rpc_port)
+program_options['--port'] = '29042'
 rpc_tester = '../rpc_tester/rpc_tester'
 peer = '194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5'
 
@@ -30,21 +30,17 @@ rpc_commands['delete_all_peers'] = '{"cmd":"delete_all_peers"}'
 rpc_commands['ban_all_peers'] = '{"cmd":"ban_all_peers"}'
 rpc_commands['peer_list'] = '{"cmd":"peer_list","msg":"[]"}'
 
-
 def _ok(output):
     return '\033[92m{}\033[0m'.format(output)
 
-
 def _fail(output):
     return '\033[91m{}\033[0m'.format(output)
-
 
 def ping(ipv6):
     """
     Returns True if ipv6 (string) responds to a ping request.
     """
-    return os.system("ping6 -c 1 " + ipv6) == 0
-
+    return os.system("ping6 -c 3 " + ipv6) == 0
 
 def run_galaxy():
     """
@@ -55,10 +51,9 @@ def run_galaxy():
     Popen(args, env=galaxy_env, stderr=DEVNULL, stdout=DEVNULL)
     print('Running galaxy with command: ', ''.join([arg + ' ' for arg in args]))
 
-
 def run_rpc_command(rpc_command):
     """
-    Send rpc_command (string) to galaxy rpc server using rpc_tester. 
+    Send rpc_command (string) to galaxy rpc server using rpc_tester.
     """
     args = ['--port', program_options['--rpc-port'], '--message', rpc_commands[rpc_command]]
     args.insert(0, rpc_tester)
@@ -68,10 +63,9 @@ def run_rpc_command(rpc_command):
         if 'RPC response' in line:
             print(line)
 
-
 def send_rpc_command(rpc_command):
     """
-    Send rpc_command (string) to galaxy rpc server using python libs. 
+    Send rpc_command (string) to galaxy rpc server using python libs.
     """
     print('Sending RPC command:', rpc_command)
     buff_size = 256*256
