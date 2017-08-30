@@ -5,14 +5,42 @@
 
 using namespace boost;
 
+void asiotest_udpserv() {
+#if 0
+	asio::io_service ios;
+
+  if (1) {
+		char inbuf_data[64];
+		auto inbuf = asio::buffer( inbuf_data , std::extent<decltype(inbuf_data)>::value );
+		asio::ip::udp::socket mysocket(ios); // active udp
+		_note("bind");
+		mysocket.open( asio::ip::udp::v4() );
+		mysocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , 9000 ) );
+		asio::ip::udp::endpoint remote_ep;
+		_note("receive");
+
+		// TODO
+
+	//	mysocket.async_receive
+
+		/*size_t read_size = mysocket.receive_from( inbuf , remote_ep ); // ***
+		_note("got data from remote " << remote_ep);
+		_note("read: ["<<std::string(&inbuf_data[0],read_size)<<"]");
+		*/
+	}
+#endif
+}
+
 void asiotest()
 {
+#if 0
 	_mark("asiotest");
 
   int port_num = 3456;
 
-	asio::io_service ios;
-	asio::ip::tcp protocol_tcp = asio::ip::tcp::v4();
+//  asiotest_udpserv();
+
+  asio::ip::tcp protocol_tcp = asio::ip::tcp::v4();
   asio::ip::udp protocol_udp = asio::ip::udp::v4();
 
 	if (1) { // UDP server/client - anyway active socket
@@ -58,5 +86,6 @@ void asiotest()
 		_note("read: ["<<std::string(&inbuf_data[0],read_size)<<"]");
 	}
 
+#endif
 }
 
