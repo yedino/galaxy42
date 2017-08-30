@@ -11,19 +11,25 @@
 
 #include <stdplus/with_mutex.hpp>
 
-/// The "static" reference to a peer, not so much the run-time state of it.
-/// The #hip is my ID, or it can also be empty (hip.is_empty()) to rpresent that my HIP is not known yet....
-/// ...the not known HIP is for --peer anyone@(udp:p.meshnet.pl:9042)
+/** This represents a reference to peer (also knownas "peer invite")
+ * It is mostly the "static" reference to a peer (without some run-time information).
+ * The #hip is my ID, or it can also be empty (hip.is_empty()) to represent that my HIP is not known yet (reference
+ * to physical addr) ... the not known HIP is for --peer anyone@(udp:p.meshnet.pl:9042)
+ * @loopver newloop
+ */
 struct t_peer_reference_newloop {
 	c_haship_addr hip; ///< identity of this peer as his HIP
 	vector< unique_ptr<c_cable_base_addr> > cable_addr; ///< known cable-addresses (transport addresses) to this peer
 	map<string,boost::any> options; ///< map of options for this peer, e.g. "score" => int(100)
+
 	void print(ostream &ostr) const;
 };
 ostream& operator<<(ostream &ostr, const t_peer_reference_newloop & v);
 
-/// The "runtime" state of peer to which I could be connected/connecting
-/// The identity (HIP) of if can be empty, this means unknown (anyone@cable) HIP.
+/**
+ * The "runtime" state of peer to which I could be connected/connecting
+ * The identity (HIP) of if can be empty, this means unknown (anyone@cable) HIP.
+ */
 class c_peer_connection {
 	public:
 		t_peer_reference_newloop m_reference; ///< address informations with HIP and list of cable addresses
@@ -53,10 +59,15 @@ class c_galaxysrv_peers {
 		/// partially parsed reference. first is 0...1 elements the ID (HIP), and second is 0...N of cable reference
 		using t_peering_reference_parse = pair<vector<string> , vector<string>>;
 
-	protected:
-		/// Parses the string as specified in help_peer_ref() into format described in t_peering_reference_parse see it;
-		/// Includes parsing 'anyone@' token and other possible magical tokens if any (in future).
+		/* Parses the string as specified in help_peer_ref() into format described in t_peering_reference_parse see it;
+		 * Includes parsing 'anyone@' token and other possible magical tokens if any (in future).
+		 */
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
+
+		/// Parses the string as specified in help_peer_ref(). This is the full parse (not just splitting string)
+		unique_ptr<t_peer_reference_newloop> parse_peer_simplestring(const string & simple);
+
+	protected:
 
 		vector<unique_ptr<c_peer_connection>> m_peer; ///< my peers (connected or not), including unknown yet peers "anyone@cable"
 

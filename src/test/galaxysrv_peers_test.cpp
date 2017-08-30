@@ -1,12 +1,47 @@
-#include <galaxysrv_peers.hpp>
+
 #include "gtest/gtest.h"
 #include "libs1.hpp"
 
-using t_parsed_peer=c_galaxysrv_peers::t_peering_reference_parse;
+#include <galaxysrv_peers.hpp>
+
+using t_parsed_peer = c_galaxysrv_peers::t_peering_reference_parse;
 using namespace std;
 
-TEST(galaxysrv_peers, parse_peer_reference_test) {
-	c_galaxysrv_peers test_srv_peers;
+/// to access the class and protected methods:
+class c_galaxysrv_peers_TEST : public c_galaxysrv_peers {
+	public:
+};
+
+
+TEST(galaxysrv_peers, parse_peer_reference_demotest) {
+	c_galaxysrv_peers_TEST test_srv_peers;
+//	EXPECT_THROW(test_srv_peers.parse_peer_simplestring("VIRTUAL@(CABLE)(CABLE)"), err_check_input);
+
+  EXPECT_NO_THROW( test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107:9042)") );
+
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.999:9042)") , err_check_input );
+	//                                                                                                              !
+
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4dafff@(udp:192.168.1.107:9042)") , err_check_input );
+	//                                                                                              !
+
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4dx@(udp:192.168.1.107:9042)") , err_check_input );
+	//                                                                                             !
+
+	// wrong port:
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107:65536)") , err_check_input );
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107:-1)") , err_check_input );
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107:)") , err_check_input );
+	EXPECT_THROW(    test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107)") , err_check_input );
+
+	// wrong protocol:
+  EXPECT_THROW( test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(tcp:192.168.1.107:9042)") , err_check_input );
+  EXPECT_THROW( test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(xyzproto:192.168.1.107:9042)") , err_check_input );
+}
+
+
+TEST(galaxysrv_peers, parse_peer_reference_test_easy) {
+	c_galaxysrv_peers_TEST test_srv_peers;
 	map<string, t_parsed_peer> peers;
 
 	string str = "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5@(udp:76.31.171.15:9042)"s;
@@ -106,7 +141,16 @@ TEST(galaxysrv_peers, parse_peer_reference_test) {
 		for(pair<string, t_parsed_peer> element2 : peers)
 			if(element1 != element2)
 				EXPECT_NE(test_srv_peers.parse_peer_reference(element1.first), element2.second);
+}
 
+TEST(galaxysrv_peers, parse_peer_reference_test_incorrect) {
+	c_galaxysrv_peers_TEST test_srv_peers;
+	map<string, t_parsed_peer> peers;
+
+	string str;
+	vector<string> id;
+	vector<string> cable;
+	t_parsed_peer peer;
 
 	map<string, t_parsed_peer> incorect_peers;
 
@@ -201,15 +245,14 @@ TEST(galaxysrv_peers, parse_peer_reference_test) {
 		for(pair<string, t_parsed_peer> element2 : incorect_peers)
 			if(element1 != element2)
 				EXPECT_NE(test_srv_peers.parse_peer_reference(element1.first), element2.second);
-
 }
 
-// in this test, we want to test only preparser syntax
-// so real address and cable are replaced by VIRTUAL and CABLE hard-strings
-TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test) {
+// in this test, we want to test only function to pre-parser reference syntax
+// so real address and cable are replaced by VIRTUAL and CABLE placeholder strings
+TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test_old) {
 	// g_dbg_level_set(10,"checking tests");
 
-	c_galaxysrv_peers test_srv_peers;
+	c_galaxysrv_peers_TEST test_srv_peers;
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)(CABLE)"), err_check_input);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE"), err_check_input);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE("), err_check_input);

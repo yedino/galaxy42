@@ -26,7 +26,7 @@
 
 #include <utils/privileges.hpp> // to drop/verify before main loop
 
-constexpr int cfg_jobs_tuntap_threads = 4;
+// constexpr int cfg_jobs_tuntap_threads = 4;
 
 
 void asiotest();
