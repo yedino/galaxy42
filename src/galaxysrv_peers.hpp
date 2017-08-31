@@ -62,7 +62,7 @@ class c_galaxysrv_peers {
 		/* Parses the string as specified in help_peer_ref() into format described in t_peering_reference_parse see it;
 		 * Includes parsing 'anyone@' token and other possible magical tokens if any (in future).
 		 */
-		t_peering_reference_parse parse_peer_reference(const string & simple) const;
+		static t_peering_reference_parse parse_peer_reference(const string & simple);
 
 		/// Parses the string as specified in help_peer_ref(). This is the full parse (not just splitting string)
 		static unique_ptr<t_peer_reference_newloop> parse_peer_simplestring(const string & simple);
