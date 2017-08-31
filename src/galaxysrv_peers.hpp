@@ -65,7 +65,7 @@ class c_galaxysrv_peers {
 		t_peering_reference_parse parse_peer_reference(const string & simple) const;
 
 		/// Parses the string as specified in help_peer_ref(). This is the full parse (not just splitting string)
-		unique_ptr<t_peer_reference_newloop> parse_peer_simplestring(const string & simple);
+		static unique_ptr<t_peer_reference_newloop> parse_peer_simplestring(const string & simple);
 
 	protected:
 
