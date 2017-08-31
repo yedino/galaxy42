@@ -3,10 +3,10 @@
 
 namespace apigalaxy {
 
-is_valid_peer_reference(std::string simple){
+bool is_valid_peer_reference(std::string simple){
 	try{
-		c_galaxysrv_peers::parse_peer_simplestring(simple)
-	} catch(const err_check_input &ex){
+		c_galaxysrv_peers::parse_peer_simplestring(simple);
+	} catch(const err_check_input &){
 		return false;
 	}
 	return true;

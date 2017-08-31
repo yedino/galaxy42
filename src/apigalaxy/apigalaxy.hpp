@@ -1,9 +1,11 @@
 #ifndef APIGALAXY_HPP
 #define APIGALAXY_HPP
 
+#include <string>
+
 namespace apigalaxy {
 
-is_valid_peer_reference(std::string);
+bool is_valid_peer_reference(std::string);
 
 } // namespace apigalaxy
 
