@@ -57,7 +57,7 @@ ostream& operator<<(ostream &ostr, const c_peer_connection & v){
 	return ostr;
 }
 
-c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
+c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple){
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
 	const string literal_anyone = "anyone";
