@@ -206,6 +206,7 @@ class c_tunserver : public c_galaxy_node {
 		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
 		void add_peer_to_black_list(const c_haship_addr & hip); ///< add this to black list
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		void add_peer_simplestring_new_format(const string & simple); ///< add this as peer, from a simple string new format
 		void delete_peer(const c_haship_addr &hip); ///< delete this as peer
 		void delete_peer_from_black_list(const c_haship_addr & hip); ///< delete this from black list
 		void delete_peer_simplestring(const string & simple, bool is_banned); ///< delete this as peer, from a simple string if is_banned==true also add peer to black list
@@ -352,11 +353,13 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_peer_list(const std::string &input_json);
 		std::string rpc_sending_test(const std::string &input_json);
 		std::string rpc_add_peer(const std::string &input_json);
+		std::string rpc_add_peer_new_format(const std::string &input_json);
 		std::string rpc_delete_peer(const std::string &input_json);
 		std::string rpc_delete_all_peers(const std::string &input_json);
 		std::string rpc_ban_peer(const std::string &input_json);
 		std::string rpc_ban_all_peers(const std::string &input_json);
 		std::string rpc_get_galaxy_ipv6(const std::string &input_json);
+		std::string rpc_get_galaxy_new_format_reference(const std::string &input_json);
 		int m_port;
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
 

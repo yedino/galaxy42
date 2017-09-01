@@ -126,7 +126,7 @@ const char * g_demoname_default = "route_dij";
 
 #include "utils/privileges.hpp"
 #include <boost/any.hpp>
-
+#include <galaxysrv_peers.hpp>
 
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
@@ -398,6 +398,26 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
+void c_tunserver::add_peer_simplestring_new_format(const string &simple)
+{
+	try {
+		c_galaxysrv_peers::t_peering_reference_parse parse = c_galaxysrv_peers::parse_peer_reference(simple); // partially parsed
+		_check_input(parse.first.size() > 0);
+		_check_input(parse.second.size() > 0);
+		std::string cable = parse.second[0];
+		auto begin = cable.find(":");
+		_check_input(begin != std::string::npos);
+		auto end = cable.rfind(":");
+		std::string ipv4 = cable.substr(begin+1, end);
+		t_peering_reference peering_ref(ipv4, parse.first[0]);
+		add_peer(peering_ref);
+		delete_peer_from_black_list(peering_ref.haship_addr);
+	}
+	catch (const std::exception &e) {
+		throw err_check_input("Bad peer new format");
+	}
+}
+
 void c_tunserver::delete_peer(const c_haship_addr &hip)
 {
 	_mark("delete_peer (delete only!) " << hip);
@@ -488,6 +508,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("get_galaxy_ipv6", [this](const std::string &input_json) {
 		return rpc_get_galaxy_ipv6(input_json);
+	});
+	m_rpc_server.add_rpc_function("get_galaxy_new_format_reference", [this](const std::string &input_json) {
+		return rpc_get_galaxy_new_format_reference(input_json);
 	});
 }
 
@@ -1043,13 +1066,19 @@ string c_tunserver::rpc_add_peer(const string &input_json)
 {
 	auto input = nlohmann::json::parse(input_json);
 	auto peer = input["peer"].get<std::string>();
+	auto format = input["format"].get<std::string>();
 	nlohmann::json ret;
 	ret["cmd"] = "add_peer";
 	try{
-		add_peer_simplestring(peer);
+		if (format == "old")
+			add_peer_simplestring(peer);
+		else if (format == "new")
+			add_peer_simplestring_new_format(peer);
 		ret["msg"] = "peer added";
-	} catch(const std::invalid_argument &ex) {
-		ret["msg"] = "bad peer format";
+	} catch(const std::invalid_argument &) {
+		ret["msg"] = "bad peer old format";
+	} catch(const err_check_input &) {
+		ret["msg"] = "bad peer new format";
 	}
 	return ret.dump();
 }
@@ -1109,8 +1138,22 @@ string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_galaxy_ipv6";
-	delete_all_peers(true);
-	ret["ipv6"] = get_my_ipv6_nice();
+	ret["msg"] = get_my_ipv6_nice();
+	return ret.dump();
+}
+
+string c_tunserver::rpc_get_galaxy_new_format_reference(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto ipv4_list = input["msg"].get<std::vector<std::string> >();
+	nlohmann::json ret;
+	ret["cmd"] = "get_galaxy_new_format_reference";
+	ostringstream oss;
+	oss << get_my_ipv6_nice();
+	for (auto ipv4 : ipv4_list) {
+		oss << "@(udp:" << ipv4 << ':' << get_my_port() << ')';
+	}
+	ret['msg'] = oss.str();
 	return ret.dump();
 }
 
