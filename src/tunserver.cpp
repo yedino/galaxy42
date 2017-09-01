@@ -405,15 +405,18 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 		_check_input(parse.first.size() > 0);
 		_check_input(parse.second.size() > 0);
 		std::string cable = parse.second[0];
-		auto begin = cable.find(":");
+		// udp:194.28.50.88:19042
+		auto begin = cable.find(':');
 		_check_input(begin != std::string::npos);
-		auto end = cable.rfind(":");
-		std::string ipv4 = cable.substr(begin+1, end);
+		std::string ipv4_with_port = cable.substr(begin+1);
+        auto end = ipv4_with_port.find(':');
+        _check_input(end != std::string::npos);
+        std::string ipv4 = ipv4_with_port.substr(0, end);
 		t_peering_reference peering_ref(ipv4, parse.first[0]);
 		add_peer(peering_ref);
 		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
-	catch (const std::exception &e) {
+	catch (const std::exception &) {
 		throw err_check_input("Bad peer new format");
 	}
 }
@@ -1153,7 +1156,7 @@ string c_tunserver::rpc_get_galaxy_new_format_reference(const string &input_json
 	for (auto ipv4 : ipv4_list) {
 		oss << "@(udp:" << ipv4 << ':' << get_my_port() << ')';
 	}
-	ret['msg'] = oss.str();
+	ret["msg"] = oss.str();
 	return ret.dump();
 }
 
