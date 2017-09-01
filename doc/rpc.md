@@ -47,8 +47,8 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   ```
 * Delete all peers
   ```
-  Request: {"cmd":"delete_all_peer"}
-  Response: {"cmd":"delete_all_peer","msg":"All peers deleted"}
+  Request: {"cmd":"delete_all_peers"}
+  Response: {"cmd":"delete_all_peers","msg":"All peers deleted"}
   ```
 * Ban peer
   ```
@@ -69,6 +69,6 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   ```
 * Get galaxy new format reference
   ```
-  Request: {"cmd":"get_galaxy_new_format_reference"}
+  Request: {"cmd":"get_galaxy_new_format_reference", "msg":[/*list of ipv4 addresses */]}
   Response: {"cmd":"get_galaxy_new_format_reference","msg":"<galaxy-new-format-reference>"}
   ```
