@@ -486,6 +486,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("ban_all_peers", [this](const std::string &input_json) {
 		return rpc_ban_all_peers(input_json);
 	});
+	m_rpc_server.add_rpc_function("get_galaxy_ipv6", [this](const std::string &input_json) {
+		return rpc_get_galaxy_ipv6(input_json);
+	});
 }
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
@@ -1098,6 +1101,16 @@ string c_tunserver::rpc_ban_all_peers(const string &input_json)
 	ret["cmd"] = "ban_all_peers";
 	delete_all_peers(true);
 	ret["msg"] = "All peers banned";
+	return ret.dump();
+}
+
+string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "get_galaxy_ipv6";
+	delete_all_peers(true);
+	ret["ipv6"] = get_my_ipv6_nice();
 	return ret.dump();
 }
 
