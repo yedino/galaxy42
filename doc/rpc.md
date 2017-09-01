@@ -26,10 +26,17 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   ```
 * Add peer
   ```
-  Request: {"cmd":"add_peer","peer":"<ipv4>:<galaxy_port>-<ipv6>"}
+  //for old format
+  Request: {"cmd":"add_peer","format":"old","peer":"<ipv4>:<galaxy_port>-<ipv6>"}
+  or
+  //for new format
+  Request: {"cmd":"add_peer","format":"new","peer":"<ipv6>@(udp:<ipv4>:<galaxy_port>)"}
   Response: {"cmd":"add_peer","msg":"peer added"}
   or
-  Response: {"cmd":"add_peer","msg":"bad peer format"}
+  //for old format
+  Response: {"cmd":"add_peer","msg":"bad peer old format"}
+  //for new format
+  Response: {"cmd":"add_peer","msg":"bad peer new format"}
   ```
 * Delete peer
   ```
@@ -54,4 +61,14 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   ```
   Request: {"cmd":"ban_all_peer"}
   Response: {"cmd":"ban_all_peer","msg":"All peers banned"}
+  ```
+* Get galaxy ipv6
+  ```
+  Request: {"cmd":"get_galaxy_ipv6"}
+  Response: {"cmd":"get_galaxy_ipv6","msg":"<ipv6>"}
+  ```
+* Get galaxy new format reference
+  ```
+  Request: {"cmd":"get_galaxy_new_format_reference"}
+  Response: {"cmd":"get_galaxy_new_format_reference","msg":"<galaxy-new-format-reference>"}
   ```
