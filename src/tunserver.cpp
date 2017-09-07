@@ -126,7 +126,7 @@ const char * g_demoname_default = "route_dij";
 
 #include "utils/privileges.hpp"
 #include <boost/any.hpp>
-
+#include <galaxysrv_peers.hpp>
 
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
@@ -368,19 +368,26 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
+t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
+{
+	size_t pos1 = simple.find('-');
+	if (pos1 == std::string::npos) throw std::out_of_range("");
+	string part_pip = simple.substr(0,pos1);
+	string part_hip = simple.substr(pos1+1);
+	_info("Peer pip="<<part_pip<<" hip="<<part_hip);
+	auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
+	_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
+	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
+}
+
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
-		size_t pos1 = simple.find('-');
-		if (pos1 == std::string::npos) throw std::out_of_range("");
-		string part_pip = simple.substr(0,pos1);
-		string part_hip = simple.substr(pos1+1);
-		_info("Peer pip="<<part_pip<<" hip="<<part_hip);
-		auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
-		_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
-		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
+		t_peering_reference peering_ref = parse_peer_simplestring(simple);
+		add_peer(peering_ref);
+		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -388,7 +395,81 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
 		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+	}
+}
 
+void c_tunserver::add_peer_simplestring_new_format(const string &simple)
+{
+	try {
+		c_galaxysrv_peers::t_peering_reference_parse parse = c_galaxysrv_peers::parse_peer_reference(simple); // partially parsed
+		_check_input(parse.first.size() > 0);
+		_check_input(parse.second.size() > 0);
+		std::string cable = parse.second[0];
+		// udp:194.28.50.88:19042
+		auto begin = cable.find(':');
+		_check_input(begin != std::string::npos);
+		std::string ipv4_with_port = cable.substr(begin+1);
+		auto end = ipv4_with_port.find(':');
+		_check_input(end != std::string::npos);
+		std::string ipv4 = ipv4_with_port.substr(0, end);
+		t_peering_reference peering_ref(ipv4, parse.first[0]);
+		add_peer(peering_ref);
+		delete_peer_from_black_list(peering_ref.haship_addr);
+	}
+	catch (const std::exception &) {
+		throw err_check_input("Bad peer new format");
+	}
+}
+
+void c_tunserver::delete_peer(const c_haship_addr &hip)
+{
+	_mark("delete_peer (delete only!) " << hip);
+	{
+		LockGuard<Mutex> lg(m_peer_mutex);
+		auto iter = m_peer.find(hip);
+		if (iter != m_peer.end())
+			m_peer.erase(iter);
+	}
+}
+
+void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
+{
+	_mark("delete peer from black list (delete only!) " << hip);
+	{
+		LockGuard<Mutex> lg(m_peer_black_list_mutex);
+		auto iter = m_peer_black_list.find(hip);
+		if (iter != m_peer_black_list.end())
+			m_peer_black_list.erase(iter);
+	}
+}
+
+void c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
+{
+	_dbg1("Deleting peer from simplestring=" << simple);
+	try {
+		c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), simple);
+		delete_peer(hip);
+		if (is_banned)
+			add_peer_to_black_list(hip);
+	}
+	catch (const std::exception &e) {
+		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
+		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+	}
+}
+
+void c_tunserver::delete_all_peers(bool is_banned)
+{
+	_mark("delete all peers (delete only!) ");
+	{
+		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg_black_list(m_peer_black_list_mutex);
+		if (is_banned)
+		{
+			for( auto &peer : m_peer)
+				m_peer_black_list.emplace(peer.first);
+		}
+		m_peer.clear();
 	}
 }
 
@@ -409,6 +490,30 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("peer_list", [this](const std::string &input_json) {
 		return rpc_peer_list(input_json);
+	});
+	m_rpc_server.add_rpc_function("sending_test", [this](const std::string &input_json) {
+		return rpc_sending_test(input_json);
+	});
+	m_rpc_server.add_rpc_function("add_peer", [this](const std::string &input_json) {
+		return rpc_add_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("delete_peer", [this](const std::string &input_json) {
+		return rpc_delete_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("delete_all_peers", [this](const std::string &input_json) {
+		return rpc_delete_all_peers(input_json);
+	});
+	m_rpc_server.add_rpc_function("ban_peer", [this](const std::string &input_json) {
+		return rpc_ban_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("ban_all_peers", [this](const std::string &input_json) {
+		return rpc_ban_all_peers(input_json);
+	});
+	m_rpc_server.add_rpc_function("get_galaxy_ipv6", [this](const std::string &input_json) {
+		return rpc_get_galaxy_ipv6(input_json);
+	});
+	m_rpc_server.add_rpc_function("get_galaxy_new_format_reference", [this](const std::string &input_json) {
+		return rpc_get_galaxy_invitation(input_json);
 	});
 }
 
@@ -534,6 +639,16 @@ void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	}
 }
 
+void c_tunserver::add_peer_to_black_list(const c_haship_addr &hip)
+{
+	_mark("add_peer to black list (add only!) " << hip );
+	// key is unique in map
+	{
+		LockGuard<Mutex> lg(m_peer_black_list_mutex);
+		m_peer_black_list.emplace(std::move(hip));
+	}
+}
+
 void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
 unique_ptr<c_haship_pubkey> && pubkey)
 {
@@ -559,11 +674,15 @@ unique_ptr<c_haship_pubkey> && pubkey)
 
 		auto find = m_peer.find( peer_hip );
 		if (find == m_peer.end()) { // no such peer yet
-			auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
-			_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
-			peering_ptr->set_pubkey(std::move(pubkey));
-			_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
-			m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+			LockGuard<Mutex> lg_peer_black_list(m_peer_black_list_mutex);
+			auto iter = m_peer_black_list.find( peer_hip );
+			if (iter == m_peer_black_list.end()) { // no such peer on black list yet
+				auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+				_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
+				peering_ptr->set_pubkey(std::move(pubkey));
+				_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
+				m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+			}
 		} else { // update existing
 			auto & peering_ptr = find->second;
 			peering_ptr->update_last_ping_time();
@@ -922,10 +1041,126 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	}
 	lg.unlock();
 	ret["cmd"] = "peer_list";
-	ret["msg"] = refs;
+	ret["peers"] = refs;
+	ret["msg"] = "ok:";
 	return ret.dump();
 }
 
+string c_tunserver::rpc_sending_test(const string &input_json) {
+	auto input = nlohmann::json::parse(input_json);
+	auto packet_size = input["size"].get<size_t>();
+	auto packet_count = input["count"].get<size_t>();
+	c_peering_udp my_peer(t_peering_reference("127.0.0.1", m_port, m_my_hip.get_hip_as_string(true)), m_udp_device);
+	std::vector<char> packet(packet_size);
+	antinet_crypto::t_crypto_nonce nonce;
+	const auto time_start = std::chrono::steady_clock::now();
+	for (size_t i = 0; i < packet_count; i++) {
+		my_peer.send_data_udp(packet.data(), packet.size(), m_udp_device.get_socket(), m_my_hip, m_my_hip, 3, nonce);
+	}
+	const auto time_stop = std::chrono::steady_clock::now();
+	auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_stop - time_start).count();
+	nlohmann::json ret;
+	ret["cmd"] = "sending_test";
+	ret["time_ms"] = time_ms;
+	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
+	ret["msg"] = "ok:";
+	return ret.dump();
+}
+
+string c_tunserver::rpc_add_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	auto format = input["format"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "add_peer";
+	try{
+		if (format == "0.1")
+			add_peer_simplestring(peer);
+		else if (format == "1.0")
+			add_peer_simplestring_new_format(peer);
+		ret["msg"] = "ok: Peer added";
+	} catch(const std::exception &) {
+		ret["msg"] = "fail: Bad peer format";
+	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_delete_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "delete_peer";
+	try{
+		delete_peer_simplestring(peer, false);
+		ret["msg"] = "ok: Peer deleted";
+	} catch(const std::invalid_argument &) {
+		ret["msg"] = "fail: Bad peer format";
+	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_delete_all_peers(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "delete_all_peers";
+	delete_all_peers(false);
+	ret["msg"] = "ok: All peers deleted";
+	return ret.dump();
+}
+
+string c_tunserver::rpc_ban_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "ban_peer";
+	try{
+		delete_peer_simplestring(peer, true);
+		ret["msg"] = "ok: Peer banned";
+	} catch(const std::invalid_argument &ex) {
+		ret["msg"] = "fail: Bad peer format";
+	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_ban_all_peers(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "ban_all_peers";
+	delete_all_peers(true);
+	ret["msg"] = "ok: All peers banned";
+	return ret.dump();
+}
+
+string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "get_galaxy_ipv6";
+	ret["ipv6"] = get_my_ipv6_nice();
+	ret["msg"] = "ok:";
+	return ret.dump();
+}
+
+string c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto ipv4_list = input["msg"].get<std::vector<std::string> >();
+	nlohmann::json ret;
+	ret["cmd"] = "get_galaxy_invitation";
+	ostringstream oss;
+	oss << get_my_ipv6_nice();
+	for (auto ipv4 : ipv4_list) {
+		oss << "@(udp:" << ipv4 << ':' << get_my_port() << ')';
+	}
+	ret["inv"] = oss.str();
+	ret["msg"] = "ok:";
+	return ret.dump();
+}
 
 void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
