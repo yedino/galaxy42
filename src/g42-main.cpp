@@ -308,20 +308,24 @@ int main(int argc, const char **argv) { // the main() function
 		return 0;
 	}
 
-	typedef enum {
+	enum class t_program_type {
 		e_program_type_tunserver = 1,
 		e_program_type_newloop = 100,
-	} t_program_type;
-	t_program_type program_type = e_program_type_tunserver;
+	};
 
-	if (remove_and_count(argt, "--newloop" )) program_type = e_program_type_newloop;
+	const t_program_type program_type = [&argt] {
+		if (remove_and_count(argt, "--newloop" ))
+			return t_program_type::e_program_type_newloop;
+		else
+			return t_program_type::e_program_type_tunserver;
+	}();
 
 	unique_ptr<c_the_program> the_program = nullptr;
 	switch (program_type) {
-		case e_program_type_tunserver:
+		case t_program_type::e_program_type_tunserver:
 			the_program = make_unique<c_the_program_tunserver>();
 		break;
-		case e_program_type_newloop:
+		case t_program_type::e_program_type_newloop:
 			the_program = make_unique<c_the_program_newloop>();
 		break;
 		default: break;
