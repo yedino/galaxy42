@@ -409,9 +409,9 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 		auto begin = cable.find(':');
 		_check_input(begin != std::string::npos);
 		std::string ipv4_with_port = cable.substr(begin+1);
-        auto end = ipv4_with_port.find(':');
-        _check_input(end != std::string::npos);
-        std::string ipv4 = ipv4_with_port.substr(0, end);
+		auto end = ipv4_with_port.find(':');
+		_check_input(end != std::string::npos);
+		std::string ipv4 = ipv4_with_port.substr(0, end);
 		t_peering_reference peering_ref(ipv4, parse.first[0]);
 		add_peer(peering_ref);
 		delete_peer_from_black_list(peering_ref.haship_addr);
@@ -463,7 +463,7 @@ void c_tunserver::delete_all_peers(bool is_banned)
 	_mark("delete all peers (delete only!) ");
 	{
 		LockGuard<Mutex> lg(m_peer_mutex);
-		LockGuard<Mutex> lg_block_list(m_peer_black_list_mutex);
+		LockGuard<Mutex> lg_black_list(m_peer_black_list_mutex);
 		if (is_banned)
 		{
 			for( auto &peer : m_peer)
@@ -1095,7 +1095,7 @@ string c_tunserver::rpc_delete_peer(const string &input_json)
 	try{
 		delete_peer_simplestring(peer, false);
 		ret["msg"] = "ok: Peer deleted";
-	} catch(const std::invalid_argument &ex) {
+	} catch(const std::invalid_argument &) {
 		ret["msg"] = "fail: Bad peer format";
 	}
 	return ret.dump();
