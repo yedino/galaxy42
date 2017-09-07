@@ -22,5 +22,50 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
 * Peer list
   ```
   Request: {"cmd":"peer_list","msg":"[]"}
-  Response: {"cmd":"peer_list","msg":"[/**list of connected peers**/]"}
+  Response: {"cmd":"peer_list","peers":"[/**list of connected peers**/]", "msg":"ok:"}
+  ```
+* Add peer
+  ```
+  //for old format
+  Request: {"cmd":"add_peer","format":"0.1","peer":"<ipv4>:<galaxy_port>-<ipv6>"}
+  or
+  //for new format
+  Request: {"cmd":"add_peer","format":"1.0","peer":"<ipv6>@(udp:<ipv4>:<galaxy_port>)"}
+  Response: {"cmd":"add_peer","msg":"ok: Peer added"}
+  or
+  Response: {"cmd":"add_peer","msg":"fail: Bad peer format"}
+  ```
+* Delete peer
+  ```
+  Request: {"cmd":"delete_peer","peer":"<ipv6>"}
+  Response: {"cmd":"delete_peer","msg":"ok: Peer deleted"}
+  or
+  Response: {"cmd":"delete_peer","msg":"fail: Bad peer format"}
+  ```
+* Delete all peers
+  ```
+  Request: {"cmd":"delete_all_peers"}
+  Response: {"cmd":"delete_all_peers","msg":"ok: All peers deleted"}
+  ```
+* Ban peer
+  ```
+  Request: {"cmd":"ban_peer","peer":"<ipv6>"}
+  Response: {"cmd":"ban_peer","msg":"ok: Peer banned"}
+  or
+  Response: {"cmd":"ban_peer","msg":"fail: Bad peer format"}
+  ```
+* Ban all peers
+  ```
+  Request: {"cmd":"ban_all_peer"}
+  Response: {"cmd":"ban_all_peer","msg":"ok: All peers banned"}
+  ```
+* Get galaxy ipv6
+  ```
+  Request: {"cmd":"get_galaxy_ipv6"}
+  Response: {"cmd":"get_galaxy_ipv6","ipv6":"<ipv6>", "msg":"ok:"}
+  ```
+* Get galaxy new format reference
+  ```
+  Request: {"cmd":"get_galaxy_invitation", "msg":[/*list of ipv4 addresses */]}
+  Response: {"cmd":"get_galaxy_invitaion","inv":"<galaxy-new-format-invitation>", "msg":"ok:"}
   ```
