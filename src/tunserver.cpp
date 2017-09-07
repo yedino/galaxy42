@@ -513,7 +513,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 		return rpc_get_galaxy_ipv6(input_json);
 	});
 	m_rpc_server.add_rpc_function("get_galaxy_new_format_reference", [this](const std::string &input_json) {
-		return rpc_get_galaxy_new_format_reference(input_json);
+		return rpc_get_galaxy_invitation(input_json);
 	});
 }
 
@@ -1075,9 +1075,9 @@ string c_tunserver::rpc_add_peer(const string &input_json)
 	nlohmann::json ret;
 	ret["cmd"] = "add_peer";
 	try{
-		if (format == "old")
+		if (format == "0.1")
 			add_peer_simplestring(peer);
-		else if (format == "new")
+		else if (format == "1.0")
 			add_peer_simplestring_new_format(peer);
 		ret["msg"] = "ok: Peer added";
 	} catch(const std::exception &) {
@@ -1141,16 +1141,17 @@ string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_galaxy_ipv6";
-	ret["msg"] = get_my_ipv6_nice();
+	ret["ipv6"] = get_my_ipv6_nice();
+	ret["msg"] = "ok:";
 	return ret.dump();
 }
 
-string c_tunserver::rpc_get_galaxy_new_format_reference(const string &input_json)
+string c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
 {
 	auto input = nlohmann::json::parse(input_json);
 	auto ipv4_list = input["msg"].get<std::vector<std::string> >();
 	nlohmann::json ret;
-	ret["cmd"] = "get_galaxy_new_format_reference";
+	ret["cmd"] = "get_galaxy_invitation";
 	ostringstream oss;
 	oss << get_my_ipv6_nice();
 	for (auto ipv4 : ipv4_list) {
