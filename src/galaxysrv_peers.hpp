@@ -11,6 +11,8 @@
 
 #include <stdplus/with_mutex.hpp>
 
+#include "gtest/gtest_prod.h"
+
 /** This represents a reference to peer (also knownas "peer invite")
  * It is mostly the "static" reference to a peer (without some run-time information).
  * The #hip is my ID, or it can also be empty (hip.is_empty()) to represent that my HIP is not known yet (reference
@@ -43,6 +45,11 @@ class c_peer_connection {
 ostream& operator<<(ostream &ostr, const c_peer_connection & v);
 
 class c_galaxysrv_peers {
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_demotest);
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test_easy);
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test_incorrect);
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test_old);
+
 	protected:
 		c_galaxysrv_peers()=default;
 		virtual ~c_galaxysrv_peers()=default;
