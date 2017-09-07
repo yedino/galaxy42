@@ -26,9 +26,16 @@
 
 #include <utils/privileges.hpp> // to drop/verify before main loop
 
-constexpr int cfg_jobs_tuntap_threads = 4;
+// constexpr int cfg_jobs_tuntap_threads = 4;
+
+
+void asiotest();
 
 void c_galaxysrv::main_loop() {
+
+	asiotest();
+
+#if 0
 	_goal("\n\nMain loop (new loop)\n\n");
 
 	my_cap::verify_privileges_are_as_for_mainloop(); // confirm we are secured for the main loop
@@ -272,6 +279,8 @@ void c_galaxysrv::main_loop() {
 	}
 	_fact("After joining all threads");
 	_goal("All threads joined, count=" << threads.size());
+#endif
+
 }
 
 void c_galaxysrv::start_exit() {
