@@ -30,6 +30,7 @@ Noting them here to not forget and keep track.
 - utils/capmodpp.* utils/privileges.* code review
 - review/confirmation from someone who understands fully CAP/ID transitions (when root dropping code is in place too)
 - should we also drop the Bounding part of all Caps?
+- make full verification for different address prefixes like fd43
 
 === special use cases ===
 - support for our program being chmod SUID (see utils/privileges.hpp warning comments) - now program will not run then

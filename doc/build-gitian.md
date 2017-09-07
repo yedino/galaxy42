@@ -153,3 +153,12 @@ A: If you have both br0 and lxcbr0 bridges in ip devices. Sometimes one bridge i
 Q: Network seems to not work in LXC
 
 A: Make sure you given proper access to Gitian lxc-net to allow it to use your PROPER network card. Maybe run install again and give access to all network cards for lxc-net.
+
+Q: sudo: unknown user: ubuntu
+A: Look at the target-bin/bootstrap-fixup.in file in gitian-builder project.
+    On some systems (ubuntu 16.04, debian9) this if statement could be false:
+    ```
+    if grep /lxc/gitian /proc/1/cgroup > /dev/null; then
+    ```
+    Therefore, user is not created
+

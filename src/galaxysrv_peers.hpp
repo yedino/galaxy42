@@ -23,7 +23,6 @@ struct t_peer_reference_newloop {
 	c_haship_addr hip; ///< identity of this peer as his HIP
 	vector< unique_ptr<c_cable_base_addr> > cable_addr; ///< known cable-addresses (transport addresses) to this peer
 	map<string,boost::any> options; ///< map of options for this peer, e.g. "score" => int(100)
-
 	void print(ostream &ostr) const;
 };
 ostream& operator<<(ostream &ostr, const t_peer_reference_newloop & v);
