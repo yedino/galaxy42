@@ -7,14 +7,8 @@
 using t_parsed_peer = c_galaxysrv_peers::t_peering_reference_parse;
 using namespace std;
 
-/// to access the class and protected methods:
-class c_galaxysrv_peers_TEST : public c_galaxysrv_peers {
-	public:
-};
-
-
 TEST(galaxysrv_peers, parse_peer_reference_demotest) {
-	c_galaxysrv_peers_TEST test_srv_peers;
+	c_galaxysrv_peers test_srv_peers;
 //	EXPECT_THROW(test_srv_peers.parse_peer_simplestring("VIRTUAL@(CABLE)(CABLE)"), err_check_input);
 
   EXPECT_NO_THROW( test_srv_peers.parse_peer_simplestring("fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107:9042)") );
@@ -41,7 +35,7 @@ TEST(galaxysrv_peers, parse_peer_reference_demotest) {
 
 
 TEST(galaxysrv_peers, parse_peer_reference_test_easy) {
-	c_galaxysrv_peers_TEST test_srv_peers;
+	c_galaxysrv_peers test_srv_peers;
 	map<string, t_parsed_peer> peers;
 
 	string str = "fd42:f6c4:9d19:f128:30df:b289:aef0:25f5@(udp:76.31.171.15:9042)"s;
@@ -144,7 +138,7 @@ TEST(galaxysrv_peers, parse_peer_reference_test_easy) {
 }
 
 TEST(galaxysrv_peers, parse_peer_reference_test_incorrect) {
-	c_galaxysrv_peers_TEST test_srv_peers;
+	c_galaxysrv_peers test_srv_peers;
 	map<string, t_parsed_peer> peers;
 
 	string str;
@@ -252,7 +246,7 @@ TEST(galaxysrv_peers, parse_peer_reference_test_incorrect) {
 TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test_old) {
 	// g_dbg_level_set(10,"checking tests");
 
-	c_galaxysrv_peers_TEST test_srv_peers;
+	c_galaxysrv_peers test_srv_peers;
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE)(CABLE)"), err_check_input);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE"), err_check_input);
 	EXPECT_THROW(test_srv_peers.parse_peer_reference("VIRTUAL@(CABLE("), err_check_input);
