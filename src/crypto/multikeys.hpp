@@ -150,8 +150,8 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		friend class c_multikeys_PAIR;
 		friend class c_crypto_system;
 
-		typedef c_multikeys_general<t_pubkey>::t_cryptolists_general  t_cryptolists_pubkey;
-
+		using t_cryptolists_pubkey = c_multikeys_general<t_pubkey>::t_cryptolists_general;
+		std::string m_ipv6_prefix = "fd42";
 	public:
 		c_multikeys_pub();
 		virtual t_crypto_system_type get_system_type() const;
@@ -187,6 +187,8 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 									  const std::string &msg,
 									  const c_multikeys_pub &pubkeys);
 		/// @}
+
+		void set_ipv6_prefix(const std::string &prefix);
 };
 
 // ==================================================================
@@ -300,6 +302,8 @@ class c_multikeys_PAIR {
 		virtual t_crypto_system_type get_system_type() const;
 
 		const c_multikeys_pub & read_pub() const;
+
+		void set_ipv6_prefix(const std::string &prefix);
 
 };
 
