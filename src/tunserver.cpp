@@ -1041,7 +1041,8 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	}
 	lg.unlock();
 	ret["cmd"] = "peer_list";
-	ret["msg"] = refs;
+	ret["peers"] = refs;
+	ret["msg"] = "ok:";
 	return ret.dump();
 }
 
@@ -1062,6 +1063,7 @@ string c_tunserver::rpc_sending_test(const string &input_json) {
 	ret["cmd"] = "sending_test";
 	ret["time_ms"] = time_ms;
 	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
+	ret["msg"] = "ok:";
 	return ret.dump();
 }
 
@@ -1077,11 +1079,9 @@ string c_tunserver::rpc_add_peer(const string &input_json)
 			add_peer_simplestring(peer);
 		else if (format == "new")
 			add_peer_simplestring_new_format(peer);
-		ret["msg"] = "peer added";
-	} catch(const std::invalid_argument &) {
-		ret["msg"] = "bad peer old format";
-	} catch(const err_check_input &) {
-		ret["msg"] = "bad peer new format";
+		ret["msg"] = "ok: Peer added";
+	} catch(const std::exception &) {
+		ret["msg"] = "fail: Bad peer format";
 	}
 	return ret.dump();
 }
@@ -1094,9 +1094,9 @@ string c_tunserver::rpc_delete_peer(const string &input_json)
 	ret["cmd"] = "delete_peer";
 	try{
 		delete_peer_simplestring(peer, false);
-		ret["msg"] = "peer deleted";
+		ret["msg"] = "ok: Peer deleted";
 	} catch(const std::invalid_argument &ex) {
-		ret["msg"] = "bad peer format";
+		ret["msg"] = "fail: Bad peer format";
 	}
 	return ret.dump();
 }
@@ -1107,7 +1107,7 @@ string c_tunserver::rpc_delete_all_peers(const string &input_json)
 	nlohmann::json ret;
 	ret["cmd"] = "delete_all_peers";
 	delete_all_peers(false);
-	ret["msg"] = "All peers deleted";
+	ret["msg"] = "ok: All peers deleted";
 	return ret.dump();
 }
 
@@ -1119,9 +1119,9 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 	ret["cmd"] = "ban_peer";
 	try{
 		delete_peer_simplestring(peer, true);
-		ret["msg"] = "peer banned";
+		ret["msg"] = "ok: Peer banned";
 	} catch(const std::invalid_argument &ex) {
-		ret["msg"] = "bad peer format";
+		ret["msg"] = "fail: Bad peer format";
 	}
 	return ret.dump();
 }
@@ -1132,7 +1132,7 @@ string c_tunserver::rpc_ban_all_peers(const string &input_json)
 	nlohmann::json ret;
 	ret["cmd"] = "ban_all_peers";
 	delete_all_peers(true);
-	ret["msg"] = "All peers banned";
+	ret["msg"] = "ok: All peers banned";
 	return ret.dump();
 }
 
@@ -1156,7 +1156,8 @@ string c_tunserver::rpc_get_galaxy_new_format_reference(const string &input_json
 	for (auto ipv4 : ipv4_list) {
 		oss << "@(udp:" << ipv4 << ':' << get_my_port() << ')';
 	}
-	ret["msg"] = oss.str();
+	ret["inv"] = oss.str();
+	ret["msg"] = "ok:";
 	return ret.dump();
 }
 
