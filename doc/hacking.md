@@ -694,7 +694,7 @@ At the moment test suite includes:
 * Yedino-P2P is the network protocol (secure, by default encrypted) that transports data between Yedino Nodes.
 It uses own port by default UDP 9042, can work over LAN, Internet and others.
 
-* Yedino-Virtual-IP (shortcut "Y-IP) - is the IP adddress that is owned by Node and that is given to virtual network card created by Node.
+* Yedino-Virtual-IP (shortcut "Y-IP) - is the IP address that is owned by Node and that is given to virtual network card created by Node.
 This virtual IP address, that is based upon a **cryptographic hash** and is derived from some **public key**.
 Use of given Yedino-Virtual-IP as owner of this address (receiving data addressed to this IP, or sending data from this IP) requires access to the associated **IP-Key-Secret**
 which makes it secure (authenticated).
@@ -707,8 +707,8 @@ This IP is also a **globally-unique IP** address - no other Node will have such 
 * Peer (noun) - Node that will send/receive Yedino packets directly from/to me
 
 * Invite - is text code that allows to connect to given Node as to Peer (to peer it).
-* Public-invite - is the short comfortable Invite. It is less private in hidding your  (some other users will see e.g. your peering IP - for example some 3rd-party Seed servers can see it)
-* Full-invite - is the long, more roboust and more private (but less comfortable) version of Invite.
+* Public-invite - is the short comfortable Invite. It is less private in hiding your  (some other users will see e.g. your peering IP - for example some 3rd-party Seed servers can see it)
+* Full-invite - is the long, more robust and more private (but less comfortable) version of Invite.
 It lists usually all network IPs and ports of the Node.
 If you will keep this information private then no one except Nodes you give it to will see it. E.g. it is NOT published into 3rd-party Seed servers.
 
@@ -727,7 +727,7 @@ fd44:a777 - Yedino private-net "A777"
 "allow-endpoint" (verb)  - Allow to connect into my virtIP as endpoint (send/receive data into my local servers running here)
 "allowed-endpoint" (noun)
 
-"Allow peering strangers" - all Nodes, even not added by you as Peers, can route Yedino-P2P trafic through you by default.
+"Allow peering strangers" - all Nodes, even not added by you as Peers, can route Yedino-P2P traffic through you by default.
 Info: They can connect as your Peer (but this does NOT mean they access you as endpoint, that is another setting).
 
 "Allow endpoint connections for strangers" - all Endpoints (all Nodes) can by default access your local servers running on this computer.
