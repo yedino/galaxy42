@@ -422,10 +422,13 @@ endif()
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
 
+file(GLOB SOURCES_API_GALAXY src/apigalaxy/*)
+
 message(STATUS "Sorting sources (from GLOB)")
 list(SORT SOURCES_GROUP_TUNSERVER)
 list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
+list(SORT SOURCES_API_GALAXY)
 
 include_directories(../antinet/src/antinet_sim/)
 
@@ -454,6 +457,8 @@ endif ()
 ######################################################################
 
 ########################### TARGETS ###########################
+add_library(apigalaxy ${SOURCES_API_GALAXY})
+
 add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 if (NOT MSVC) #TODO
 	cotire(tunserver.elf)
@@ -463,7 +468,7 @@ set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
 	${LIB_OPTIONAL_CAPNG}
-	${MINGW_LIBRARIES} ${MSVC_LIRARIES}
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES} apigalaxy
 )
 
 target_link_libraries(tunserver.elf
