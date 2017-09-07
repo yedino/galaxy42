@@ -11,6 +11,8 @@
 
 #include <stdplus/with_mutex.hpp>
 
+#include "gtest/gtest_prod.h"
+
 /** This represents a reference to peer (also knownas "peer invite")
  * It is mostly the "static" reference to a peer (without some run-time information).
  * The #hip is my ID, or it can also be empty (hip.is_empty()) to represent that my HIP is not known yet (reference
@@ -21,7 +23,6 @@ struct t_peer_reference_newloop {
 	c_haship_addr hip; ///< identity of this peer as his HIP
 	vector< unique_ptr<c_cable_base_addr> > cable_addr; ///< known cable-addresses (transport addresses) to this peer
 	map<string,boost::any> options; ///< map of options for this peer, e.g. "score" => int(100)
-
 	void print(ostream &ostr) const;
 };
 ostream& operator<<(ostream &ostr, const t_peer_reference_newloop & v);
@@ -43,6 +44,11 @@ class c_peer_connection {
 ostream& operator<<(ostream &ostr, const c_peer_connection & v);
 
 class c_galaxysrv_peers {
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_demotest);
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test_easy);
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_test_incorrect);
+	FRIEND_TEST(galaxysrv_peers, parse_peer_reference_throw_exceptions_test_old);
+
 	protected:
 		c_galaxysrv_peers()=default;
 		virtual ~c_galaxysrv_peers()=default;
@@ -62,10 +68,10 @@ class c_galaxysrv_peers {
 		/* Parses the string as specified in help_peer_ref() into format described in t_peering_reference_parse see it;
 		 * Includes parsing 'anyone@' token and other possible magical tokens if any (in future).
 		 */
-		t_peering_reference_parse parse_peer_reference(const string & simple) const;
+		static t_peering_reference_parse parse_peer_reference(const string & simple);
 
 		/// Parses the string as specified in help_peer_ref(). This is the full parse (not just splitting string)
-		unique_ptr<t_peer_reference_newloop> parse_peer_simplestring(const string & simple);
+		static unique_ptr<t_peer_reference_newloop> parse_peer_simplestring(const string & simple);
 
 	protected:
 
