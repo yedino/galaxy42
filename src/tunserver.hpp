@@ -203,7 +203,7 @@ class c_tunserver : public c_galaxy_node {
 		string get_my_ipv6_nice() const; ///< returns the main HIP IPv6 of this node in a nice format (e.g. hexdot)
 		int get_my_stats_peers_known_count() const; ///< get the number of currently known peers, for information
 
-		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
+		bool add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference), @returns true if peer added or false if peer already exists
 		void add_peer_to_black_list(const c_haship_addr & hip); ///< add this to black list
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
 		void add_peer_simplestring_new_format(const string & simple); ///< add this as peer, from a simple string new format
@@ -296,10 +296,10 @@ class c_tunserver : public c_galaxy_node {
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
 		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
-		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
-		std::set<c_haship_addr> m_peer_black_list; ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_black_list_mutex!
 		mutable Mutex m_peer_mutex;
 		mutable Mutex m_peer_black_list_mutex;
+		t_peers_by_haship m_peer GUARDED_BY(m_peer_mutex); ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
+		std::set<c_haship_addr> m_peer_black_list GUARDED_BY(m_peer_black_list_mutex); ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_black_list_mutex!
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
