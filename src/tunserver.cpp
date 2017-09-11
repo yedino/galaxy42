@@ -421,14 +421,17 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 	}
 }
 
-void c_tunserver::delete_peer(const c_haship_addr &hip)
+bool c_tunserver::delete_peer(const c_haship_addr &hip)
 {
 	_mark("delete_peer (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_mutex);
 		auto iter = m_peer.find(hip);
-		if (iter != m_peer.end())
+		if (iter != m_peer.end()) {
 			m_peer.erase(iter);
+			return true;
+		}
+		return false;
 	}
 }
 
@@ -443,14 +446,15 @@ void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
 	}
 }
 
-void c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
+bool c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
 {
 	_dbg1("Deleting peer from simplestring=" << simple);
 	try {
 		c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), simple);
-		delete_peer(hip);
+		bool peer_deleted = delete_peer(hip);
 		if (is_banned)
 			add_peer_to_black_list(hip);
+		return peer_deleted;
 	}
 	catch (const std::exception &e) {
 		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
@@ -1015,6 +1019,7 @@ string c_tunserver::rpc_ping(const string &input_json) {
 	nlohmann::json ret;
 	ret["cmd"] = "ping";
 	ret["msg"] = "pong";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 
@@ -1043,6 +1048,7 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	ret["cmd"] = "peer_list";
 	ret["peers"] = refs;
 	ret["msg"] = "ok:";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 
@@ -1064,6 +1070,7 @@ string c_tunserver::rpc_sending_test(const string &input_json) {
 	ret["time_ms"] = time_ms;
 	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
 	ret["msg"] = "ok:";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 
@@ -1080,8 +1087,10 @@ string c_tunserver::rpc_add_peer(const string &input_json)
 		else if (format == "1.0")
 			add_peer_simplestring_new_format(peer);
 		ret["msg"] = "ok: Peer added";
+		ret["state"] = "ok";
 	} catch(const std::exception &) {
 		ret["msg"] = "fail: Bad peer format";
+		ret["state"] = "error";
 	}
 	return ret.dump();
 }
@@ -1093,10 +1102,17 @@ string c_tunserver::rpc_delete_peer(const string &input_json)
 	nlohmann::json ret;
 	ret["cmd"] = "delete_peer";
 	try{
-		delete_peer_simplestring(peer, false);
-		ret["msg"] = "ok: Peer deleted";
+		bool peer_deleted = delete_peer_simplestring(peer, false);
+		if (peer_deleted) {
+			ret["msg"] = "ok: Peer deleted";
+			ret["state"] = "ok";
+		} else {
+			ret["msg"] = "ok: Peer not found";
+			ret["state"] = "nothing_done";
+		}
 	} catch(const std::invalid_argument &) {
 		ret["msg"] = "fail: Bad peer format";
+		ret["state"] = "error";
 	}
 	return ret.dump();
 }
@@ -1108,6 +1124,7 @@ string c_tunserver::rpc_delete_all_peers(const string &input_json)
 	ret["cmd"] = "delete_all_peers";
 	delete_all_peers(false);
 	ret["msg"] = "ok: All peers deleted";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 
@@ -1120,8 +1137,10 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 	try{
 		delete_peer_simplestring(peer, true);
 		ret["msg"] = "ok: Peer banned";
+		ret["state"] = "ok";
 	} catch(const std::invalid_argument &ex) {
 		ret["msg"] = "fail: Bad peer format";
+		ret["state"] = "error";
 	}
 	return ret.dump();
 }
@@ -1133,6 +1152,7 @@ string c_tunserver::rpc_ban_all_peers(const string &input_json)
 	ret["cmd"] = "ban_all_peers";
 	delete_all_peers(true);
 	ret["msg"] = "ok: All peers banned";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 
@@ -1143,6 +1163,7 @@ string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
 	ret["cmd"] = "get_galaxy_ipv6";
 	ret["ipv6"] = get_my_ipv6_nice();
 	ret["msg"] = "ok:";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 
@@ -1159,6 +1180,7 @@ string c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
 	}
 	ret["inv"] = oss.str();
 	ret["msg"] = "ok:";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 

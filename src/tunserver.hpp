@@ -207,9 +207,9 @@ class c_tunserver : public c_galaxy_node {
 		void add_peer_to_black_list(const c_haship_addr & hip); ///< add this to black list
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
 		void add_peer_simplestring_new_format(const string & simple); ///< add this as peer, from a simple string new format
-		void delete_peer(const c_haship_addr &hip); ///< delete this as peer
+		bool delete_peer(const c_haship_addr &hip); ///< delete this as peer, @return true if peer deleted, false if peer not found
 		void delete_peer_from_black_list(const c_haship_addr & hip); ///< delete this from black list
-		void delete_peer_simplestring(const string & simple, bool is_banned); ///< delete this as peer, from a simple string if is_banned==true also add peer to black list
+		bool delete_peer_simplestring(const string & simple, bool is_banned); ///< delete this as peer, from a simple string if is_banned==true also add peer to black list
 		void delete_all_peers(bool is_banned); ///< delete all peers if is_banned=true also add peer to black list
 		///! add this user (or append existing user) with his actuall public key data
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
