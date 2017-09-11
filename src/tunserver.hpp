@@ -295,11 +295,10 @@ class c_tunserver : public c_galaxy_node {
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
-		mutable Mutex m_peer_mutex;
-		mutable Mutex m_peer_black_list_mutex;
-		t_peers_by_haship m_peer GUARDED_BY(m_peer_mutex); ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
-		std::set<c_haship_addr> m_peer_black_list GUARDED_BY(m_peer_black_list_mutex); ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_black_list_mutex!
+		using t_peers_by_haship = std::map< c_haship_addr, unique_ptr<c_peering> >; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
+		mutable Mutex m_peer_etc_mutex; ///< one mutex protects m_peer and m_peer_black_list for avoid possible deadlocks
+		t_peers_by_haship m_peer GUARDED_BY(m_peer_etc_mutex); ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_etc_mutex!
+		std::set<c_haship_addr> m_peer_black_list GUARDED_BY(m_peer_etc_mutex); ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_etc_mutex!
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 

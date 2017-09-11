@@ -425,7 +425,7 @@ bool c_tunserver::delete_peer(const c_haship_addr &hip)
 {
 	_mark("delete_peer (delete only!) " << hip);
 	{
-		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto iter = m_peer.find(hip);
 		if (iter != m_peer.end()) {
 			m_peer.erase(iter);
@@ -439,7 +439,7 @@ void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
 {
 	_mark("delete peer from black list (delete only!) " << hip);
 	{
-		LockGuard<Mutex> lg(m_peer_black_list_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto iter = m_peer_black_list.find(hip);
 		if (iter != m_peer_black_list.end())
 			m_peer_black_list.erase(iter);
@@ -466,8 +466,7 @@ void c_tunserver::delete_all_peers(bool is_banned)
 {
 	_mark("delete all peers (delete only!) ");
 	{
-		LockGuard<Mutex> lg(m_peer_mutex);
-		LockGuard<Mutex> lg_black_list(m_peer_black_list_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		if (is_banned)
 		{
 			for( auto &peer : m_peer)
@@ -556,7 +555,7 @@ string c_tunserver::get_my_ipv6_nice() const {
 
 
 int c_tunserver::get_my_stats_peers_known_count() const {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	return m_peer.size();
 }
 
@@ -638,7 +637,7 @@ bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
-		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto ret_pair = m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
 		return ret_pair.second;
 	}
@@ -649,7 +648,7 @@ void c_tunserver::add_peer_to_black_list(const c_haship_addr &hip)
 	_mark("add_peer to black list (add only!) " << hip );
 	// key is unique in map
 	{
-		LockGuard<Mutex> lg(m_peer_black_list_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		m_peer_black_list.emplace(std::move(hip));
 	}
 }
@@ -671,7 +670,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
 
 	{ // lock
-		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 
 		try {
 			_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
@@ -679,7 +678,6 @@ unique_ptr<c_haship_pubkey> && pubkey)
 
 		auto find = m_peer.find( peer_hip );
 		if (find == m_peer.end()) { // no such peer yet
-			LockGuard<Mutex> lg_peer_black_list(m_peer_black_list_mutex);
 			auto iter = m_peer_black_list.find( peer_hip );
 			if (iter == m_peer_black_list.end()) { // no such peer on black list yet
 				auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
@@ -840,7 +838,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 }
 
 void c_tunserver::peering_ping_all_peers() {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto now = std::chrono::steady_clock::now();
 	_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
@@ -881,7 +879,7 @@ void c_tunserver::peering_ping_all_peers() {
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -890,7 +888,7 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 }
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto peer_iter = m_peer.find(addr);
 	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
 	c_peering & peer = * peer_iter->second;
@@ -901,7 +899,7 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 }
 
 void c_tunserver::debug_peers() {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	if (!m_peer.size()) _fact("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
@@ -917,7 +915,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
 	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
-	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
+	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	if (m_peer.size() == 0) {
 		_warn("I have no peers, I can not route anywhere.");
 		return false;
@@ -985,7 +983,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 }
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
@@ -1029,7 +1027,7 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	nlohmann::json ret;
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
-	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
+	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	for (const auto &peer : m_peer) {
 		std::ostringstream oss;
 		oss << peer.second->get_pip();
@@ -1209,7 +1207,7 @@ void c_tunserver::event_loop(int time) {
 
 	bool was_connected=true;
 	{
-		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		if (! m_peer.size()) {
 			was_connected=false;
 			ui::action_info_ok(mo_file_reader::gettext("L_wait_for_connect"));
@@ -1234,7 +1232,7 @@ void c_tunserver::event_loop(int time) {
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
-			UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
+			UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 			if (m_peer.size()) { // event: conntected now
 				lg.unlock();
 				was_connected=true;
@@ -1305,7 +1303,7 @@ void c_tunserver::event_loop(int time) {
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
 				try{
-					LockGuard<Mutex> lg(m_peer_mutex);
+					LockGuard<Mutex> lg(m_peer_etc_mutex);
 					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
 				}catch(std::out_of_range&){
 					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
@@ -1330,7 +1328,7 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
 				try{
-					LockGuard<Mutex> lg(m_peer_mutex);
+					LockGuard<Mutex> lg(m_peer_etc_mutex);
 					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
 				}catch(std::out_of_range&){
 					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
@@ -1511,7 +1509,7 @@ void c_tunserver::event_loop(int time) {
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
 					try{
-						LockGuard<Mutex> lg(m_peer_mutex);
+						LockGuard<Mutex> lg(m_peer_etc_mutex);
 						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
 					}catch(std::out_of_range&){
 						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
@@ -1619,7 +1617,7 @@ void c_tunserver::event_loop(int time) {
 						_dbg1("send route response to " << sender_pip);
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
 						try{
-							LockGuard<Mutex> lg(m_peer_mutex);
+							LockGuard<Mutex> lg(m_peer_etc_mutex);
 							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
 						}catch(std::out_of_range&){
 							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
