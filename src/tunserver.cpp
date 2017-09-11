@@ -633,13 +633,14 @@ void c_tunserver::configure_mykey() {
 }
 
 // add peer
-void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
+bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	_mark("add_peer (add only!) " << peer_ref );
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
 		LockGuard<Mutex> lg(m_peer_mutex);
-		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+		auto ret_pair = m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+		return ret_pair.second;
 	}
 }
 
@@ -916,6 +917,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
 	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
+	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	if (m_peer.size() == 0) {
 		_warn("I have no peers, I can not route anywhere.");
 		return false;
@@ -927,7 +929,6 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 
 	// find c_peering to send to // TODO(r) this functionallity will be soon
 	// doubled with the route search in m_routing_manager below, remove it then
-	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
@@ -1074,14 +1075,13 @@ string c_tunserver::rpc_sending_test(const string &input_json) {
 	return ret.dump();
 }
 
-string c_tunserver::rpc_add_peer(const string &input_json)
-{
+string c_tunserver::rpc_add_peer(const string &input_json) {
 	auto input = nlohmann::json::parse(input_json);
 	auto peer = input["peer"].get<std::string>();
 	auto format = input["format"].get<std::string>();
 	nlohmann::json ret;
 	ret["cmd"] = "add_peer";
-	try{
+	try {
 		if (format == "0.1")
 			add_peer_simplestring(peer);
 		else if (format == "1.0")
@@ -1305,6 +1305,7 @@ void c_tunserver::event_loop(int time) {
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
 				try{
+					LockGuard<Mutex> lg(m_peer_mutex);
 					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
 				}catch(std::out_of_range&){
 					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
@@ -1329,6 +1330,7 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
 				try{
+					LockGuard<Mutex> lg(m_peer_mutex);
 					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
 				}catch(std::out_of_range&){
 					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
@@ -1509,6 +1511,7 @@ void c_tunserver::event_loop(int time) {
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
 					try{
+						LockGuard<Mutex> lg(m_peer_mutex);
 						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
 					}catch(std::out_of_range&){
 						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
@@ -1616,6 +1619,7 @@ void c_tunserver::event_loop(int time) {
 						_dbg1("send route response to " << sender_pip);
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
 						try{
+							LockGuard<Mutex> lg(m_peer_mutex);
 							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
 						}catch(std::out_of_range&){
 							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
