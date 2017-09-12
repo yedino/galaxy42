@@ -380,14 +380,15 @@ t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
 	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
 }
 
-void c_tunserver::add_peer_simplestring(const string & simple) {
+void c_tunserver::add_peer_simplestring(const string & simple, bool delete_from_black_list) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
 		t_peering_reference peering_ref = parse_peer_simplestring(simple);
 		add_peer(peering_ref);
-		delete_peer_from_black_list(peering_ref.haship_addr);
+		if (delete_from_black_list)
+			delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -398,7 +399,7 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 	}
 }
 
-void c_tunserver::add_peer_simplestring_new_format(const string &simple)
+void c_tunserver::add_peer_simplestring_new_format(const string &simple, bool delete_from_black_list)
 {
 	try {
 		c_galaxysrv_peers::t_peering_reference_parse parse = c_galaxysrv_peers::parse_peer_reference(simple); // partially parsed
@@ -414,7 +415,8 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 		std::string ipv4 = ipv4_with_port.substr(0, end);
 		t_peering_reference peering_ref(ipv4, parse.first[0]);
 		add_peer(peering_ref);
-		delete_peer_from_black_list(peering_ref.haship_addr);
+		if (delete_from_black_list)
+			delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &) {
 		throw err_check_input("Bad peer new format");
@@ -484,6 +486,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_tun_header_offset_ipv6(0)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
+	,m_unban_if_banned(true)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
 {
@@ -1081,9 +1084,9 @@ string c_tunserver::rpc_add_peer(const string &input_json) {
 	ret["cmd"] = "add_peer";
 	try {
 		if (format == "0.1")
-			add_peer_simplestring(peer);
+			add_peer_simplestring(peer, m_unban_if_banned);
 		else if (format == "1.0")
-			add_peer_simplestring_new_format(peer);
+			add_peer_simplestring_new_format(peer, m_unban_if_banned);
 		ret["msg"] = "ok: Peer added";
 		ret["state"] = "ok";
 	} catch(const std::exception &) {
@@ -1136,7 +1139,7 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 		delete_peer_simplestring(peer, true);
 		ret["msg"] = "ok: Peer banned";
 		ret["state"] = "ok";
-	} catch(const std::invalid_argument &ex) {
+	} catch(const std::invalid_argument &) {
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
 	}
