@@ -1082,14 +1082,8 @@ string c_tunserver::rpc_add_peer(const string &input_json) {
 	ret["cmd"] = "add_peer";
 	auto can_i_add_peer = [this](const c_haship_addr &hip) {
 		if (m_unban_if_banned) return true; // I can always add peer
-		bool peer_on_black_list = false;
-		{
-			LockGuard<Mutex> lg(m_peer_etc_mutex);
-			auto it = m_peer_black_list.find(hip); // check if peer is on balck list
-			if (it != m_peer_black_list.end()) // peer on black list
-				peer_on_black_list = true;
-		}
-		if (peer_on_black_list) return false;
+		bool is_peer_on_black_list = peer_on_black_list(hip);
+		if (is_peer_on_black_list) return false;
 		else return false;
 	}; // lambda
 
@@ -1163,10 +1157,16 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 	auto peer = input["peer"].get<std::string>();
 	nlohmann::json ret;
 	ret["cmd"] = "ban_peer";
-	try{
-		delete_peer_simplestring(peer, true);
-		ret["msg"] = "ok: Peer banned";
-		ret["state"] = "ok";
+	c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), peer);
+	try {
+		if (peer_on_black_list(hip)) {
+			ret["msg"] = "nothing done, peer is banned";
+			ret["state"] = "nothing_done";
+		} else {
+			delete_peer_simplestring(peer, true);
+			ret["msg"] = "ok: Peer banned";
+			ret["state"] = "ok";
+		}
 	} catch(const std::invalid_argument &) {
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
@@ -1211,6 +1211,14 @@ string c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
 	ret["msg"] = "ok:";
 	ret["state"] = "ok";
 	return ret.dump();
+}
+
+bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
+	auto it = m_peer_black_list.find(hip); // check if peer is on balck list
+	if (it != m_peer_black_list.end()) // peer on black list
+		return true;
+	return false;
 }
 
 void c_tunserver::event_loop(int time) {
