@@ -359,6 +359,8 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_get_galaxy_ipv6(const std::string &input_json);
 		std::string rpc_get_galaxy_invitation(const std::string &input_json);
 
+		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
+
 		int m_port;
 		std::atomic<bool> m_unban_if_banned; ///< if false rpc_add_peer not works for peers on balck list
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
