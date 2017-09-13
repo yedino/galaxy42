@@ -380,15 +380,14 @@ t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
 	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
 }
 
-void c_tunserver::add_peer_simplestring(const string & simple, bool delete_from_black_list) {
+void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
 		t_peering_reference peering_ref = parse_peer_simplestring(simple);
 		add_peer(peering_ref);
-		if (delete_from_black_list)
-			delete_peer_from_black_list(peering_ref.haship_addr);
+		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -399,7 +398,7 @@ void c_tunserver::add_peer_simplestring(const string & simple, bool delete_from_
 	}
 }
 
-void c_tunserver::add_peer_simplestring_new_format(const string &simple, bool delete_from_black_list)
+void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 {
 	try {
 		c_galaxysrv_peers::t_peering_reference_parse parse = c_galaxysrv_peers::parse_peer_reference(simple); // partially parsed
@@ -415,8 +414,7 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple, bool de
 		std::string ipv4 = ipv4_with_port.substr(0, end);
 		t_peering_reference peering_ref(ipv4, parse.first[0]);
 		add_peer(peering_ref);
-		if (delete_from_black_list)
-			delete_peer_from_black_list(peering_ref.haship_addr);
+		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &) {
 		throw err_check_input("Bad peer new format");
@@ -1082,13 +1080,38 @@ string c_tunserver::rpc_add_peer(const string &input_json) {
 	auto format = input["format"].get<std::string>();
 	nlohmann::json ret;
 	ret["cmd"] = "add_peer";
+	auto can_i_add_peer = [this](const c_haship_addr &hip) {
+		if (m_unban_if_banned) return true; // I can always add peer
+		bool peer_on_black_list = false;
+		{
+			LockGuard<Mutex> lg(m_peer_etc_mutex);
+			auto it = m_peer_black_list.find(hip); // check if peer is on balck list
+			if (it != m_peer_black_list.end()) // peer on black list
+				peer_on_black_list = true;
+		}
+		if (peer_on_black_list) return false;
+		else return false;
+	}; // lambda
+
 	try {
-		if (format == "0.1")
-			add_peer_simplestring(peer, m_unban_if_banned);
-		else if (format == "1.0")
-			add_peer_simplestring_new_format(peer, m_unban_if_banned);
-		ret["msg"] = "ok: Peer added";
-		ret["state"] = "ok";
+		if (format == "0.1") {
+			auto hip = parse_peer_simplestring(peer).haship_addr;
+			if (can_i_add_peer(hip)) { // peer on black list
+				add_peer_simplestring(peer);
+				ret["msg"] = "ok: Peer added";
+				ret["state"] = "ok";
+			} else {
+				ret["msg"] = "failed: peer is banned and you said to not unban him";
+				ret["state"] = "blocked";
+			}
+		}
+		else if (format == "1.0") {
+			// TODO
+			add_peer_simplestring_new_format(peer);
+			ret["msg"] = "ok: Peer added";
+			ret["state"] = "ok";
+		}
+
 	} catch(const std::exception &) {
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
