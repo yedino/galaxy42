@@ -1093,23 +1093,28 @@ string c_tunserver::rpc_add_peer(const string &input_json) {
 		else return false;
 	}; // lambda
 
+	c_haship_addr hip;
 	try {
 		if (format == "0.1") {
-			auto hip = parse_peer_simplestring(peer).haship_addr;
-			if (can_i_add_peer(hip)) { // peer on black list
-				add_peer_simplestring(peer);
-				ret["msg"] = "ok: Peer added";
-				ret["state"] = "ok";
-			} else {
-				ret["msg"] = "failed: peer is banned and you said to not unban him";
-				ret["state"] = "blocked";
-			}
+			hip = parse_peer_simplestring(peer).haship_addr;
 		}
 		else if (format == "1.0") {
-			// TODO
-			add_peer_simplestring_new_format(peer);
+			size_t at_position = peer.find('@');
+			if (at_position == std::string::npos) throw std::invalid_argument("@ character not found");
+			auto hip_str = peer;
+			hip_str.erase(at_position);
+			hip = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), hip_str);
+		}
+		else throw std::invalid_argument("Bad format");
+
+		if (can_i_add_peer(hip)) { // peer on black list
+			if (format == "0.1") add_peer_simplestring(peer);
+			else if (format == "1.0") add_peer_simplestring_new_format(peer);
 			ret["msg"] = "ok: Peer added";
 			ret["state"] = "ok";
+		} else {
+			ret["msg"] = "failed: peer is banned and you said to not unban him";
+			ret["state"] = "blocked";
 		}
 
 	} catch(const std::exception &) {
