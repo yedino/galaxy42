@@ -1179,10 +1179,12 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 
 string c_tunserver::rpc_ban_list(const string &input_json) {
 	_UNUSED(input_json);
+	nlohmann::json ret;
 	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
-	nlohmann::json ret(m_peer_black_list);
+	ret["peers"] = m_peer_black_list;
 	lg.unlock();
-	ret["msg"] = "ok: Peer banned";
+	ret["cmd"] = "ban_list";
+	ret["msg"] = "ok";
 	ret["state"] = "ok";
 	return ret.dump();
 }
