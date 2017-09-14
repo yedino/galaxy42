@@ -59,6 +59,11 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   Request: {"cmd":"ban_all_peer","state":"ok"}
   Response: {"cmd":"ban_all_peer","msg":"ok: All peers banned","state":"ok"}
   ```
+* Ban list
+  ```
+  Request: {"cmd":"ban_list","state":"ok"}
+  Response: {"peers":[<ipv6_1>, <ipv6_2> ...],"cmd":"ban_list","msg":"ok","state":"ok"}
+  ```
 * Get galaxy ipv6
   ```
   Request: {"cmd":"get_galaxy_ipv6","state":"ok"}
