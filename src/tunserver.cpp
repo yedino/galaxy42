@@ -510,6 +510,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("ban_peer", [this](const std::string &input_json) {
 		return rpc_ban_peer(input_json);
 	});
+	m_rpc_server.add_rpc_function("ban_list", [this](const std::string &input_json) {
+		return rpc_ban_list(input_json);
+	});
 	m_rpc_server.add_rpc_function("ban_all_peers", [this](const std::string &input_json) {
 		return rpc_ban_all_peers(input_json);
 	});
@@ -1171,6 +1174,16 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
 	}
+	return ret.dump();
+}
+
+string c_tunserver::rpc_ban_list(const string &input_json) {
+	_UNUSED(input_json);
+	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
+	nlohmann::json ret(m_peer_black_list);
+	lg.unlock();
+	ret["msg"] = "ok: Peer banned";
+	ret["state"] = "ok";
 	return ret.dump();
 }
 

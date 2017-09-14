@@ -355,6 +355,7 @@ class c_tunserver : public c_galaxy_node {
 		std::string rpc_delete_peer(const std::string &input_json);
 		std::string rpc_delete_all_peers(const std::string &input_json);
 		std::string rpc_ban_peer(const std::string &input_json);
+		std::string rpc_ban_list(const std::string &input_json);
 		std::string rpc_ban_all_peers(const std::string &input_json);
 		std::string rpc_get_galaxy_ipv6(const std::string &input_json);
 		std::string rpc_get_galaxy_invitation(const std::string &input_json);
