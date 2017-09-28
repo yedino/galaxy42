@@ -37,6 +37,7 @@
 #include "c_udp_wrapper.hpp"
 #include "c_event_manager.hpp"
 #include <ctime>
+#include <json.hpp>
 #ifdef HTTP_DBG
 #include "httpdbg/httpdbg-server.hpp"
 #endif
@@ -348,18 +349,18 @@ class c_tunserver : public c_galaxy_node {
 
 
 		c_rpc_server m_rpc_server;
-		std::string rpc_ping(const std::string &input_json);
-		std::string rpc_peer_list(const std::string &input_json);
-		std::string rpc_sending_test(const std::string &input_json);
-		std::string rpc_add_peer(const std::string &input_json);
-		std::string rpc_delete_peer(const std::string &input_json);
-		std::string rpc_delete_all_peers(const std::string &input_json);
-		std::string rpc_ban_peer(const std::string &input_json);
-		std::string rpc_ban_list(const std::string &input_json);
-		std::string rpc_ban_all_peers(const std::string &input_json);
-		std::string rpc_get_galaxy_ipv6(const std::string &input_json);
-		std::string rpc_get_galaxy_invitation(const std::string &input_json);
-
+		nlohmann::json rpc_ping(const std::string &input_json);
+		nlohmann::json rpc_peer_list(const std::string &input_json);
+		nlohmann::json rpc_sending_test(const std::string &input_json);
+		nlohmann::json rpc_add_peer(const std::string &input_json);
+		nlohmann::json rpc_delete_peer(const std::string &input_json);
+		nlohmann::json rpc_delete_all_peers(const std::string &input_json);
+		nlohmann::json rpc_ban_peer(const std::string &input_json);
+		nlohmann::json rpc_ban_list(const std::string &input_json);
+		nlohmann::json rpc_ban_all_peers(const std::string &input_json);
+		nlohmann::json rpc_get_galaxy_ipv6(const std::string &input_json);
+		nlohmann::json rpc_get_galaxy_invitation(const std::string &input_json);
+		nlohmann::json rpc_hello(const std::string &input_json);
 		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
 
 		int m_port;
