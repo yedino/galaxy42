@@ -16,7 +16,7 @@ std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr const & obj) {
 unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & str) {
 	try{
 		size_t pos1 = str.find(':');
-		if (pos1 == string::npos) { // try if is udp (format 194.28.50.88)
+		if (pos1 == string::npos) { // try if is udp (format 192.166.218.58)
 			return std::make_unique<c_cable_udp_addr>(join_string(str, ":", get_default_galaxy_port()));
 		}
 		else {
@@ -36,7 +36,7 @@ unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & 
 				else
 					_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 			}
-			else // try if is udp (format 194.28.50.88:9042)
+			else // try if is udp (format 192.166.218.58:9042)
 			{
 				return std::make_unique<c_cable_udp_addr>(str);
 			}
