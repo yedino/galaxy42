@@ -11,18 +11,18 @@
 
 TEST(cable_Test, operators_test) {
 	auto world = make_shared<c_world>();
-	auto udp_addr1 = c_cable_base_addr::cable_make_addr("udp:194.28.50.88:9042");
+	auto udp_addr1 = c_cable_base_addr::cable_make_addr("udp:192.166.218.58:9042");
 	auto udp_addr2 = c_cable_base_addr::cable_make_addr("udp:192.166.218.59:9042");
-	auto auto_as_udp_addr1 = c_cable_base_addr::cable_make_addr("auto:194.28.50.88:9042");
-	auto auto_as_udp_addr2 = c_cable_base_addr::cable_make_addr("auto:194.28.50.88:9043");
+	auto auto_as_udp_addr1 = c_cable_base_addr::cable_make_addr("auto:192.166.218.58:9042");
+	auto auto_as_udp_addr2 = c_cable_base_addr::cable_make_addr("auto:192.166.218.58:9043");
 	EXPECT_THROW(
 	{
-		auto tcp_as_udp_addr1 = c_cable_base_addr::cable_make_addr("tcp:194.28.50.88:9042");
+		auto tcp_as_udp_addr1 = c_cable_base_addr::cable_make_addr("tcp:192.166.218.58:9042");
 		auto tcp_as_udp_addr2 = c_cable_base_addr::cable_make_addr("tcp:192.165.219.88:19042");
 	}, err_check_input);
-	auto default_as_udp_addr1 = c_cable_base_addr::cable_make_addr("194.28.50.88:9042");
+	auto default_as_udp_addr1 = c_cable_base_addr::cable_make_addr("192.166.218.58:9042");
 	auto default_as_udp_addr2 = c_cable_base_addr::cable_make_addr("92.66.18.8:1942");
-	auto default_port_as_udp_addr1 = c_cable_base_addr::cable_make_addr("194.28.50.88");
+	auto default_port_as_udp_addr1 = c_cable_base_addr::cable_make_addr("192.166.218.58");
 	auto default_port_as_udp_addr2 = c_cable_base_addr::cable_make_addr("12.16.28.5");
 	auto simul_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 	auto shm_addr1 = c_cable_base_addr::cable_make_addr("shm:test1");
@@ -60,7 +60,7 @@ TEST(cable_Test, operators_test) {
 }
 
 TEST(cable_Test, selector_equall) {
-	auto udp_addr1 = c_cable_base_addr::cable_make_addr("udp:194.28.50.88:9042");
+	auto udp_addr1 = c_cable_base_addr::cable_make_addr("udp:192.166.218.58:9042");
 	c_card_selector selA( std::move( udp_addr1 ));
 	EXPECT_FALSE( selA < selA );
 	EXPECT_FALSE( selA != selA );

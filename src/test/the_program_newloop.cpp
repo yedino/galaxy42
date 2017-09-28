@@ -16,16 +16,16 @@ TEST(the_program_new_loop, use_options_peerref) {
 	g_dbg_level_set(200, "Be quiet in test (no fact output)");
 
 	string argt_exe = "my_exec_name";
-	vector<string> argt {"--peer", "194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
-						 "--peer", "auto:194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
-						 "--peer", "udp:194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
-						 "--peer", "tcp:194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+	vector<string> argt {"--peer", "192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+						 "--peer", "auto:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+						 "--peer", "udp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+						 "--peer", "tcp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
 						 "--peer", "shm:test1-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"};
 	/*
-	"--peer 194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
-	"--peer auto:194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
-	"--peer udp:194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
-	"--peer tcp:194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
+	"--peer 192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
+	"--peer auto:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
+	"--peer udp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
+	"--peer tcp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
 	"--peer shm:test1-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5 [NOT_IMPLEMENTED]"
 	*/
 	c_the_program_newloop my_program;

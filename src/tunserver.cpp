@@ -405,7 +405,7 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 		_check_input(parse.first.size() > 0);
 		_check_input(parse.second.size() > 0);
 		std::string cable = parse.second[0];
-		// udp:194.28.50.88:19042
+		// udp:192.166.218.58:19042
 		auto begin = cable.find(':');
 		_check_input(begin != std::string::npos);
 		std::string ipv4_with_port = cable.substr(begin+1);
