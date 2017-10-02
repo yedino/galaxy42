@@ -276,7 +276,7 @@ TEST(tuntap, set_tun_parameters) {
 	address.at(0) = 0xFC;
 	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
 	address.at(0) = 0xFD; address.at(1) = 0x22;
-	EXPECT_ANY_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
+	EXPECT_NO_THROW(tuntap.set_tun_parameters(address, prefix_len, mtu));
 }
 
 

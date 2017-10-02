@@ -57,7 +57,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		/// load my (this node's) keypair from it's default store (e.g. config files)
 		/// if your files seem to not be yet created, then throws expected_not_found
-		void configure_mykey();
+		void configure_mykey(const std::string &ipv6_prefix);
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
@@ -66,6 +66,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}
 
+		void set_prefix_len(int prefix_len); ///< set prefix len, must be called before init_tuntap()
 		void init_tuntap();
 
 		c_haship_addr get_my_hip() const; ///< get your main hash-ip (ipv6)
@@ -90,6 +91,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		/// 'signature' - msg=IDC_pub, signer=IDI - it proves that IDI authorized this IDC
 		antinet_crypto::c_multisign m_IDI_IDC_sig;
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
+		std::array<unsigned char, 2> m_my_hip_prefix; ///< first 16 bits of ipv6 address, i.e. fd42
 
 		/// @}
 
@@ -107,6 +109,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 		/// @}
 
 		bool m_exiting=false; ///< are we now in exiting mode, then we should be refusing/closing connections etc
+		int m_prefix_len = -1; ///< tun ipv6 address prefix length
 };
 
 // -------------------------------------------------------------------
