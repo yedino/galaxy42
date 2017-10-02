@@ -13,7 +13,7 @@
 c_rpc_server::c_rpc_server(const unsigned short port)
 :
 	m_io_service(),
-	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::any(), port)),
+	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string("127.0.0.1"), port)),
 	m_socket(m_io_service),
 	m_thread(),
 	m_hmac_key()
@@ -194,7 +194,6 @@ std::string c_rpc_server::c_session::get_command_id()
 	sstream << m_session_id << "-srv" << ++m_rpc_command_counter;
 	return sstream.str();
 }
-
 
 void c_rpc_server::c_session::delete_me() {
 	if (m_socket.is_open()) {
