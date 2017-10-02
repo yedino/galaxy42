@@ -66,6 +66,8 @@ A: Program using TSAN can not be run in valgrind, use ccmake to disable TSAN fla
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
 Know the Editor (below).
 
+Know the Code Style - see example in .cpp file: [[.//style_example.cpp]] (src/style_example.cpp).
+
 Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
 
