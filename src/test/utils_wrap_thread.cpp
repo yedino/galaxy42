@@ -34,6 +34,7 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 			 wrap_thread(std::chrono::seconds(2), [&](){
 					while(!endflag) {
 						int volatile x=1,y=2; x=y; // to not have thread that never makes progress
+						if (x==y) { }
 					}
 			} );
 			vec.at(1) = std::move(mythread) ;
