@@ -135,14 +135,17 @@ void c_galaxysrv::main_loop() {
 					size_t packet_max = cfg_max_mtu;
 					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
 
+					_dbg1("Prepare tuntap read result");
 					c_tuntap_read_result tuntap_result( // will store here result
 						weld.m_buf.get_chunk( weld.m_bufWrite , packet_max) // find empty chunk, will return it as result
 					);
 
 					// *** block here and read from tuntap ***
+					_dbg1("Tuntap - do the read...");
 					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
 						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
 						tuntap_result.src_hip, tuntap_result.dst_hip);
+					_dbg1("Read tuntap merit=" << read_size_merit);
 					if (read_size_merit == 0) _throw_error_runtime("Empty tun read");
 
 					// adjust down size to actually used part of buffer
