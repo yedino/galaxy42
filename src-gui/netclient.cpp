@@ -2,14 +2,14 @@
 #include <cassert>
 #include <memory>
 
-netClient::netClient(std::shared_ptr<commandExecutor> cmd_exec_ptr)
+netClient::netClient(commandExecutor* cmd_exec_ptr)
 :
 	m_cmd_exec(cmd_exec_ptr),
 	m_socket(std::make_unique<QTcpSocket>()),
 	m_hmac_key()
 {
 	connect(m_socket.get(), SIGNAL(readyRead()),this, SLOT(onTcpReceive()));
-	m_hmac_key.fill(0x42); // TODO load from settings!!!
+    m_hmac_key.fill(0x42); // @todo load from settings!!!
 }
 
 void netClient::startConnect(const QHostAddress &address, uint16_t port) {
@@ -18,6 +18,11 @@ void netClient::startConnect(const QHostAddress &address, uint16_t port) {
 	if(!m_socket->waitForConnected(5000)) {
 		qDebug() << "Error: " << m_socket->errorString();
 	}
+}
+
+void netClient::closeConnection()
+{
+    m_socket->close();
 }
 
 bool netClient::is_connected() {
@@ -34,7 +39,8 @@ bool netClient::is_connected() {
 }
 
 void netClient::send_msg(const std::string &msg) {
-	if (!is_connected()) return;
+    if (!is_connected()) return;
+    qDebug()<<"send:"<<msg.c_str();
 	QByteArray packet = serialize_msg(msg);
 	size_t send_bytes = static_cast<size_t>(m_socket->write(packet));
 	if (send_bytes != static_cast<size_t>(packet.size()))
@@ -67,7 +73,7 @@ void netClient::onTcpReceive() {
 		}
 		last_cmd.erase(last_cmd.end() - crypto_auth_hmacsha512_BYTES, last_cmd.end());
 		qDebug() << "last command " << QString::fromStdString(last_cmd);
-		auto cmd_exec_ptr = m_cmd_exec.lock();
+        auto cmd_exec_ptr = m_cmd_exec;//.lock();
 		cmd_exec_ptr->parseAndExecMsg(last_cmd);
 	}
 }
