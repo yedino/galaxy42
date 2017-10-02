@@ -2,6 +2,8 @@
 #include <QProcess>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QNetworkInterface>
+#include <QSettings>
 
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
@@ -10,15 +12,39 @@
 #include "dataeater.hpp"
 #include "debugdialog.hpp"
 #include "get_host_info.hpp"
+#include "quickstartdialog.h"
+#include "nodecontrolerdialog.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(std::make_unique<Ui::MainWindow>()),
-	m_tun_process(std::make_unique<tunserverProcess>()),
-	m_dlg(nullptr)
+    ui(new Ui::MainWindow),
+    m_tun_process(std::make_unique<tunserverProcess>())
+//	m_dlg(nullptr)
 {
 	ui->setupUi(this);
+
+    QString ip = getLocalIps().at(0);
+    QString vip = getLocalVips().at(0).split('%').at(0);
+    ui->quickStart->setIps(ip,vip);
+    connect(ui->quickStart,SIGNAL(connectNet(QString)),this,SLOT(connectToNet(QString)));
+    connect(ui->quickStart,SIGNAL(createNet()),this,SLOT(createNet()));
+
+    connect(ui->peerListWidget_2,SIGNAL(addPeer(QString)),this,SLOT(onAddPeer(QString)));
+    connect(ui->peerListWidget_2,SIGNAL(removePeer(QString)),this,SLOT(onRemovePeer(QString)));
+    connect(ui->peerListWidget_2,SIGNAL(banPeer(QString)),this,SLOT(onBanBeer(QString)));
+
+    ui->oldGuiDock->hide();
+    initSettings();
+
+    m_cmd_exec = new commandExecutor(this) ;//commandExecutor::construct(std::make_shared<MainWindow>(this));//std::make_shared<commandExecutor>(new commandExecutor(this));	//commandExecutor::construct(ret);
+    m_sender = new CommandSender(m_cmd_exec,this);
+    m_cmd_exec->setSender(m_sender);
+    loadSettings();
+//    startNewCrpcConnection(m_host_ip,m_host_port.toInt());
+//    NodeControlerDialog dlg(this);
+//    dlg.exec();
+//    add_host_info(QString("192.168.1.105"),42000);
 
 	/* load peers from file - TODO
 	ParamsContainer params;
@@ -32,9 +58,19 @@ MainWindow::MainWindow(QWidget *parent) :
 	*/
 }
 
+void MainWindow::startNewCrpcConnection(const QString &host,uint port )
+{
+    m_cmd_exec = new commandExecutor(this) ;//commandExecutor::construct(std::make_shared<MainWindow>(this));//std::make_shared<commandExecutor>(new commandExecutor(this));	//commandExecutor::construct(ret);
+    m_sender = new CommandSender(m_cmd_exec,this);
+    m_cmd_exec->setSender(m_sender);
+    m_cmd_exec->startConnect(QHostAddress(host), port);		//! @todo zastanowic sie nad zrywaniem poprzedniego polaczenia
+    m_sender->sendCommand(CommandSender::orderType::GETNAME);
+
+}
+
 std::shared_ptr<MainWindow> MainWindow::create_shared_ptr() {
 	std::shared_ptr<MainWindow> ret = std::make_shared<MainWindow>();
-	ret->m_cmd_exec = commandExecutor::construct(ret);
+//	ret->m_cmd_exec = commandExecutor::construct(ret);
 	return ret;
 }
 
@@ -80,34 +116,101 @@ void MainWindow::on_run_tunserver_clicked() {
 	m_tun_process->run();
 }
 
-void MainWindow::add_host_info(QString host, uint16_t port) {
+void MainWindow::add_host_info(QString host, uint16_t port)
+{
 
 	qDebug() << "Host: " << host << "Port:" << port << '\n';
 	if (host.isEmpty()) {
-		host = "127.0.0.1";
+        host = "127.0.0.1";
 		qDebug() << "use default 'localhost (127.0.0.1)' host";
 	}
 	if (port == 0) {
 		port = 42000;
 		qDebug() << "use default '42000' port";
-	}
-	m_cmd_exec->startConnect(QHostAddress(host), port);
+    }
+
+    QSettings settings;
+
+    settings.setValue("rpcConnection/Ip",host);
+    settings.setValue("rpcConnection/port",port);
+//    settings.setValue("");
+//    m_cmd_exec->startConnect(QHostAddress(host), port);		//! @todo zastanowic sie nad zrywaniem poprzedniego polaczenia
+        startNewCrpcConnection(host,port);
 }
 
 void MainWindow::on_connectButton_clicked() {
-	hostDialog host_dialog;
+/*
+    hostDialog host_dialog;
 
 	connect (&host_dialog, SIGNAL(host_info(QString, uint16_t)),
 			 this, SLOT(add_host_info(QString, uint16_t)));
 
 	if (host_dialog.exec() == QDialog::Accepted){
 		qDebug() << "host inforation accepted";
-	}
+    }
+*/
+
+//    add_host_info(m_host_ip,m_host_port.toInt());
+}
+
+
+void MainWindow::connectToNet(QString net_id)
+{
+
+   try{
+//        nlohmann::json j;
+//        j["cmd"]="add_peer";
+//        j["peer"] = net_id.toStdString();
+//        add ord(j.dump());
+//        m_cmd_exec->sendNetRequest(ord);
+//        onCreateGalaxyConnection();
+
+        MeshPeer peer;
+        peer.setName("quick add");
+        peer.setInvitation(net_id);
+
+//        addPeerOrder ord(peer);
+//        ui->peerListWidget_2->getModel()->addPeer(peer);
+//        ui->peerListWidget_2->
+//        m_cmd_exec->sendNetRequest(ord);
+//        addPeerOrder ord;
+//            m_cmd_exec->sendNetRequest(ord);
+        m_sender->sendCommand(CommandSender::orderType::ADDPEER,peer);
+
+    } catch(std::exception &e) {
+        qDebug()<<e.what();
+    }
+
+    // potrzebne komendy - utworz prywatna , zmien na publiczna, sprawdz czy prywatna, sprawdz czy dopuszcza wielu uzytkownikow
+    // zablokuj mozliwosc tworzenia dla wielu uzytkownikow
+}
+
+void MainWindow::createNet()
+{
+   try {
+        onCreateGalaxyConnection();
+    } catch(std::exception &e) {
+        qDebug()<<e.what();
+    }
+
+}
+
+void MainWindow::deletePeer(const std::string &peer_id) {
+   try{
+        MeshPeer peer;
+        peer.setVip(QString::fromStdString( peer_id));
+        m_sender->sendCommand(CommandSender::orderType::DELETEPEER,peer);
+    } catch(std::exception &e) {
+        qDebug()<<e.what();
+    }
 }
 
 void MainWindow::on_ping_clicked() {
-	order ord(order::e_type::PING);
-	m_cmd_exec->sendNetRequest(ord);
+
+//    pingOrder ord;
+//    m_cmd_exec->sendNetRequest(ord);
+    m_sender->sendCommand(CommandSender::orderType::PING);
+
 }
 
 // not used yed
@@ -135,3 +238,213 @@ void MainWindow::on_actionDebug_triggered() {
 		dialog.exec();
 		dialog.show();
 }
+
+void MainWindow::onCreateGalaxyConnection()
+{
+
+    QStringList list_ips = getLocalIps();
+
+    std::vector <std::string> ips;
+
+    for (auto &it:list_ips){
+        ips.push_back(it.toStdString());
+    }
+//    getGalaxyOrder ord(ips);
+//    m_cmd_exec->sendNetRequest(ord);
+
+
+//	getGalaxyOrder order
+}
+
+
+QStringList MainWindow::getLocalIps()
+{
+    QStringList ret_val;
+
+    foreach (const QHostAddress &address, QNetworkInterface::allAddresses()){
+         if (address.protocol() == QAbstractSocket::IPv4Protocol && address
+                 != QHostAddress(QHostAddress::LocalHost) && !address.isLoopback())
+         ret_val.push_back( address.toString());
+    }
+
+    return ret_val;
+}
+
+QStringList MainWindow::getLocalVips()
+{
+    QStringList ret_val;
+    foreach (const QHostAddress &address, QNetworkInterface::allAddresses()){
+         if (address.protocol() == QAbstractSocket::IPv6Protocol && address
+                 != QHostAddress(QHostAddress::LocalHost) && !address.isLoopback())
+         ret_val.push_back( address.toString());
+    }
+    return ret_val;
+}
+
+void MainWindow::onGetMyInvitatiom(std::string ipv6)
+{
+    ui->quickStart->setIps("aaa" ,QString::fromStdString(ipv6));
+}
+
+void MainWindow::errorNotification(QString err)
+{
+    ui->debugWidget->addItem(err);
+}
+
+void MainWindow::addDebugInfo(const QString &str)
+{
+    ui->debugWidget->addItem(str);
+}
+
+void MainWindow::loadSettings()
+{
+    QSettings setings;
+    QString ip = setings.value("rpcConnection/Ip").toString();
+    QString port = setings.value("rpcConnection/port").toString();
+    if (port.size()== 0) port="42000";			//domyslny port
+    if(ip.size() == 0) ip="127.0.0.1";			//domyslnie na maszynie lokalnej
+    m_host_port = port;
+    m_host_ip = ip;
+
+    qDebug()<<"ip & port"<<ip<<" "<<port;
+
+}
+
+void MainWindow::initSettings()
+{
+    QSettings setings;
+    if(setings.allKeys().size() >= 2) {			//nie trzeba inicializowac
+        return;
+    }
+
+    setings.beginGroup("rpcConnection");
+    setings.setValue("connectionsNum","1" );		// liczba dostepnych polaczen
+    setings.setValue("Ip","127.0.0.1");				// Ip noda rpc
+    setings.setValue("port","42000");				// port noda rpc
+    setings.endGroup();
+
+    setings.beginGroup("gui/mainWindow");
+    setings.endGroup();
+}
+
+void MainWindow::onAllowFriend(bool val)
+{
+
+        //! @todo dodac wykonanie rozazow gdy tylko dodane w protokole rpc
+
+}
+
+void MainWindow::onAllowPeer(bool val)
+{
+        //! @todo dodac wykonanie rozazow gdy tylko dodane w protokole rpc
+}
+
+void MainWindow::on_banButton_clicked()
+{
+//    QList<QListWidgetItem> items = ui->peerListWidget->selectedItems();
+
+//    items
+
+//    banAllOrder ord;
+
+
+    /*
+    const auto &delete_list = ui->peerListWidget->selectedItems();
+    if(delete_list.isEmpty()) return;
+    try{
+        // double validating
+        m_tun_process->del_peer(peer_reference::get_validated_ref(delete_list.at(0)->text().toStdString()));
+
+        ui->peerListWidget->removeItemWidget(delete_list.at(0));
+        delete_list.at(0)->setText("");
+        ui->peerListWidget->sortItems(Qt::DescendingOrder);
+    } catch(...){
+        qDebug() << "list is empty";
+    }
+    */
+
+}
+
+void MainWindow::onAddPerrToList(const QString &peer_string)
+{
+//    MeshPeer peer(peer_string.toStdString());
+//    addPeerOrder ord;
+//    addPeerOrder ord(peer);
+//    m_cmd_exec->sendNetRequest(ord);
+//    m_sender->sendCommand(CommandSender::orderType::ADDPEER,peer);
+}
+
+void MainWindow::onBanBeer(const QString& vip)
+{
+    try{
+        MeshPeer peer;
+        peer.setVip(vip);
+        m_sender->sendCommand(CommandSender::orderType::BANPEER,peer);
+    } catch(std::exception &e){
+        qDebug()<<"problem whie order execution";
+    }
+}
+
+void MainWindow::onRemovePeer(const QString& vip)
+{
+    try{
+        MeshPeer peer;
+        peer.setVip(vip);
+        m_sender->sendCommand(CommandSender::orderType::DELETEPEER,peer);
+    } catch(std::exception &e)
+    {
+        qDebug ()<<"problem while order execution"<<e.what();
+    }
+}
+
+void MainWindow::onAddPeer(const QString& peer_str)		//! funkcja wywolywana na add z listy peer
+{
+    try{
+        MeshPeer peer;
+        peer.setInvitation(peer_str);
+        m_sender->sendCommand(CommandSender::orderType::ADDPEER,peer);
+    }catch(std::exception& e){
+        qDebug()<<"problem while order execution";
+    }
+}
+
+
+void MainWindow::onSendMessage(const QString &vip, const QString &msg)	//! funkcja wywolywana na send msg z listy peer
+{
+    MeshPeer peer;
+    peer.setVip(vip);
+    // to wiadomosc std string
+    //! @todo wykonanie komendy msg
+}
+
+void MainWindow::onFindPeer(const QString &vip)			//! funkcja wywolywana na find z listy peer
+{
+    //dobrac wlasciwa komende
+}
+
+void MainWindow::on_actionsettings_triggered()
+{
+    qDebug()<<"settings";
+    hostDialog dlg;
+    connect(&dlg,SIGNAL(host_info(QString,uint16_t)),this,SLOT(add_host_info(QString,uint16_t)));
+    dlg.exec();
+//    addressDialog dialog;
+//    dialog.exec();
+}
+
+void MainWindow::onPeerRemoved(const QString &vip)
+{
+    ui->peerListWidget_2->onPeerRemoved(vip);
+}
+
+void MainWindow::onPeerAdded(const QString &invitation)
+{
+
+    ui->peerListWidget_2->onPeerAdded(invitation);
+}
+
+//void MainWindow::onPeerBanned(const QString &vip)
+//{
+////	ui->peerListWidget_2->onPeerBanned()
+//}
+
