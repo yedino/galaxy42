@@ -1,7 +1,8 @@
+#include <json.hpp>
+
 #include <QtTest/QtTest>
 #include "../dataeater.hpp"
 #include "../netclient.hpp"
-#include "../json.hpp"
 
 using nlohmann::json;
 
