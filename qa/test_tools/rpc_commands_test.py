@@ -17,7 +17,7 @@ program_options = dict()
 program_options['--rpc-port'] = str(rpc_port)
 program_options['--port'] = '29042'
 rpc_tester = '../rpc_tester/rpc_tester'
-peer = '194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5'
+peer = '192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5'
 
 galaxy_env = os.environ.copy()
 galaxy_env["LANG"] = "en_US.UTF-8"
