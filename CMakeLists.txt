@@ -391,6 +391,7 @@ include_directories( build_extra )
 
 ########################### SOURCE FILES ###########################
 include_directories( src/ )
+include_directories( src-tools/netmodel/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
@@ -408,6 +409,9 @@ elseif(NOT WIN32)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
+file(GLOB SOURCES_GROUP_TOOLS_NETMODEL src-tools/netmodel/*.cpp
+)
+
 if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
 	add_custom_target(windowsService)
@@ -424,8 +428,9 @@ list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cp
 
 file(GLOB SOURCES_API_GALAXY src/apigalaxy/*)
 
-message(STATUS "Sorting sources (from GLOB)")
+message(STATUS "Sorting sources (from GLOB) - must be sorted for Gitian to be deterministic")
 list(SORT SOURCES_GROUP_TUNSERVER)
+list(SORT SOURCES_GROUP_TOOLS_NETMODEL)
 list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
 list(SORT SOURCES_API_GALAXY)
@@ -459,7 +464,7 @@ endif ()
 ########################### TARGETS ###########################
 add_library(apigalaxy ${SOURCES_API_GALAXY})
 
-add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 if (NOT MSVC) #TODO
 	cotire(tunserver.elf)
 endif()
@@ -483,7 +488,7 @@ target_link_libraries(tunserver.elf
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
 
-add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
+add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
 target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
 target_link_libraries(unittests.elf
 	${LIBS_COMMON}
@@ -499,7 +504,7 @@ target_link_libraries(unittests.elf
 
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
-add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 target_link_libraries(performancetests.elf
 	${LIBS_COMMON})
 
