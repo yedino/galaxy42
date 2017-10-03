@@ -8,15 +8,8 @@
 #endif
 
 
-// warning: including .cpp code here
-// (untill CMake update - @rob) TODO
-
-#include "../src-tools/netmodel/netmodel.cpp"
-
-
 void asiotest()
 {
-	int ret = n_netmodel::netmodel_main(0,nullptr); // TODO args
-	UNUSED(ret);
+	_erro("This test is empty");
 }
 
