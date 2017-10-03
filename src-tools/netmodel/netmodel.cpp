@@ -20,6 +20,8 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <atomic>
 #include <mutex>
 
+#include "../src/libs0.hpp" // libs for Antinet
+
 #ifndef ANTINET_PART_OF_YEDINO
 
 #define print_debug(X) { ::std::ostringstream _dbg_oss; _dbg_oss<<__LINE__<<": "<<X<<::std::endl;  ::std::cerr<<_dbg_oss.str(); }
@@ -245,7 +247,7 @@ t_inbuf & c_inbuf_tab::get(size_t ix) {
 void handler_signal_term(const boost::system::error_code& error , int signal_number)
 {
 	_goal("Signal! (control-C?) " << signal_number);
-	UNUSED(error);	
+	UNUSED(error);
 	g_atomic_exit = true;
 }
 // ==================================================================

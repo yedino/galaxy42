@@ -7,6 +7,8 @@
 
 #include "utils/capmodpp.hpp" // to capture it's exceptions
 
+#include "../src-tools/netmodel/netmodel.hpp"
+
 namespace developer_tests {
 
 string make_pubkey_for_peer_nr(int peer_nr) {
@@ -306,6 +308,10 @@ int main(int argc, const char **argv) { // the main() function
 	if (contains_value(argt,"--print-flags-flavour")) {
 		main_print_flavour();
 		return 0;
+	}
+
+	if (contains_value(argt,"--mode-bench")) {
+		return n_netmodel::netmodel_main(argc,argv);
 	}
 
 	enum class t_program_type {
