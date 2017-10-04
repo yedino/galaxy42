@@ -462,6 +462,8 @@ int get_from_cmdline(const string & name, t_mycmdline &cmdline, int def) {
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
+	_goal("Starting " << __FUNCTION__ << " with " << options.size() << " arguments");
+	for (const auto & arg: options) _note("Arg: ["<<arg<<"]");
 	// the main "loop"
 
 	g_atomic_exit=false;
@@ -514,12 +516,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	{
 		auto opt_addr = options.at(0);
 		auto opt_port = options.at(1);
-		_note("Peer address ["<<opt_addr<<"] and prot ["<<opt_port<<"]");
+		_goal("Peer address ["<<opt_addr<<"] and prot ["<<opt_port<<"]");
 		peer_pegs.emplace_back(
 			asio::ip::address_v4::from_string(opt_addr) ,
 			safe_atoi(opt_port));
 	}
-	_note("Got peer(s) " << peer_pegs.size());
+	_goal("Got peer(s) " << peer_pegs.size());
 
 	bool tuntap_set=false;
 	bool cfg_tuntap_blocking=false;
@@ -1069,13 +1071,14 @@ void asiotest_udpserv(std::vector<std::string> options) {
 }
 
 int netmodel_main(int argc, const char **argv) {
+	_goal("Entering the network model");
 	crypto::init();
 	std::vector< std::string> options;
 	for (int i=1; i<argc; ++i) options.push_back(argv[i]);
 	for (const string & arg : options) if ((arg=="dbg")||(arg=="debug")||(arg=="d")) g_debug = true;
-	_goal("Starting program");
+	_goal("Starting netmodel");
   asiotest_udpserv(options);
-	_goal("Normal exit");
+	_goal("Normal exit of netmodel");
 	return 0;
 }
 
@@ -1085,6 +1088,7 @@ int netmodel_main(int argc, const char **argv) {
 
 #else
 int main(int argc, const char **argv) {
+	_goal("Starting the network model tool (stand alone program)");
 	return n_netmodel::netmodel_main(argc,argv);
 }
 #endif
