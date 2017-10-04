@@ -401,6 +401,7 @@ file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/style_example.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 
 if(APPLE)
