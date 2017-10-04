@@ -53,7 +53,7 @@ c_rpc_server::~c_rpc_server() {
 	dbg("thread joined");
 }
 
-void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::string&)> &&function) {
+void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<nlohmann::json (const std::string&)> &&function) {
 	m_rpc_functions_map.emplace(rpc_function_name, std::move(function)); // TODO forward arguments
 }
 
@@ -61,7 +61,7 @@ void c_rpc_server::accept_handler(const boost::system::error_code &error) {
 	dbg("Connected");
 	if (!error) {
 		LockGuard<Mutex> lg(m_session_vector_mutex);
-		m_session_list.emplace_back(this, std::move(m_socket), m_hmac_key);
+		m_session_list.emplace_back(this, std::move(m_socket), m_hmac_key, ++m_session_counter);
 		m_session_list.back().set_iterator_in_session_list(--m_session_list.end()); // set internal interator to me
 	}
 	// continue waiting for new connection
@@ -79,13 +79,15 @@ void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it)
 
 c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr,
                                    boost::asio::ip::tcp::socket &&socket,
-                                   const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key)
+                                   const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key,
+                                   xint session_id)
 :
 	m_rpc_server_ptr(rpc_server_ptr),
 	m_socket(std::move(socket)),
 	m_received_data(),
 	m_write_data(),
-	m_hmac_key(hmac_key)
+	m_hmac_key(hmac_key),
+	m_session_id(session_id)
 {
 	// start reading size (2 bytes)
 	async_read(m_socket, boost::asio::buffer(&m_data_size.at(0), m_data_size.size()),
@@ -186,6 +188,12 @@ void c_rpc_server::c_session::set_iterator_in_session_list(std::list<c_session>:
 	m_iterator_in_session_list = it;
 }
 
+std::string c_rpc_server::c_session::get_command_id()
+{
+	std::stringstream sstream;
+	sstream << m_session_id << "-srv" << ++m_rpc_command_counter;
+	return sstream.str();
+}
 
 void c_rpc_server::c_session::delete_me() {
 	if (m_socket.is_open()) {
@@ -202,7 +210,9 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		const std::string cmd_name = j.begin().value();
 		dbg("cmd name " << cmd_name);
 		// calling rpc function
-		const std::string response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		nlohmann::json json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		json_response["id"] = get_command_id();
+		const std::string response = json_response.dump();
 		// serialize response
 		assert(response.size() <= std::numeric_limits<uint16_t>::max());
 		uint16_t size = static_cast<uint16_t>(response.size());

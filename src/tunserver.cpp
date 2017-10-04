@@ -510,9 +510,6 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("ban_peer", [this](const std::string &input_json) {
 		return rpc_ban_peer(input_json);
 	});
-	m_rpc_server.add_rpc_function("ban_list", [this](const std::string &input_json) {
-		return rpc_ban_list(input_json);
-	});
 	m_rpc_server.add_rpc_function("ban_all_peers", [this](const std::string &input_json) {
 		return rpc_ban_all_peers(input_json);
 	});
@@ -521,6 +518,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("get_galaxy_new_format_reference", [this](const std::string &input_json) {
 		return rpc_get_galaxy_invitation(input_json);
+	});
+	m_rpc_server.add_rpc_function("hello", [this](const std::string &input_json) {
+		return rpc_hello(input_json);
 	});
 }
 
@@ -1016,17 +1016,17 @@ bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_ex
 	return true;
 }
 
-string c_tunserver::rpc_ping(const string &input_json) {
+nlohmann::json c_tunserver::rpc_ping(const string &input_json) {
 	_UNUSED(input_json); // TODO?
 	//Json::Value input(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "ping";
 	ret["msg"] = "pong";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_peer_list(const string &input_json) {
+nlohmann::json c_tunserver::rpc_peer_list(const string &input_json) {
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	std::vector<std::string> refs;
@@ -1052,10 +1052,10 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	ret["peers"] = refs;
 	ret["msg"] = "ok:";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_sending_test(const string &input_json) {
+nlohmann::json c_tunserver::rpc_sending_test(const string &input_json) {
 	auto input = nlohmann::json::parse(input_json);
 	auto packet_size = input["size"].get<size_t>();
 	auto packet_count = input["count"].get<size_t>();
@@ -1074,10 +1074,10 @@ string c_tunserver::rpc_sending_test(const string &input_json) {
 	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
 	ret["msg"] = "ok:";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_add_peer(const string &input_json) {
+nlohmann::json c_tunserver::rpc_add_peer(const string &input_json) {
 	auto input = nlohmann::json::parse(input_json);
 	auto peer = input["peer"].get<std::string>();
 	auto format = input["format"].get<std::string>();
@@ -1118,10 +1118,10 @@ string c_tunserver::rpc_add_peer(const string &input_json) {
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
 	}
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_delete_peer(const string &input_json)
+nlohmann::json c_tunserver::rpc_delete_peer(const string &input_json)
 {
 	auto input = nlohmann::json::parse(input_json);
 	auto peer = input["peer"].get<std::string>();
@@ -1140,10 +1140,10 @@ string c_tunserver::rpc_delete_peer(const string &input_json)
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
 	}
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_delete_all_peers(const string &input_json)
+nlohmann::json c_tunserver::rpc_delete_all_peers(const string &input_json)
 {
 	_UNUSED(input_json);
 	nlohmann::json ret;
@@ -1151,10 +1151,10 @@ string c_tunserver::rpc_delete_all_peers(const string &input_json)
 	delete_all_peers(false);
 	ret["msg"] = "ok: All peers deleted";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_ban_peer(const string &input_json)
+nlohmann::json c_tunserver::rpc_ban_peer(const string &input_json)
 {
 	auto input = nlohmann::json::parse(input_json);
 	auto peer = input["peer"].get<std::string>();
@@ -1174,10 +1174,10 @@ string c_tunserver::rpc_ban_peer(const string &input_json)
 		ret["msg"] = "fail: Bad peer format";
 		ret["state"] = "error";
 	}
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_ban_list(const string &input_json) {
+nlohmann::json c_tunserver::rpc_ban_list(const string &input_json) {
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
@@ -1186,10 +1186,10 @@ string c_tunserver::rpc_ban_list(const string &input_json) {
 	ret["cmd"] = "ban_list";
 	ret["msg"] = "ok";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_ban_all_peers(const string &input_json)
+nlohmann::json c_tunserver::rpc_ban_all_peers(const string &input_json)
 {
 	_UNUSED(input_json);
 	nlohmann::json ret;
@@ -1197,10 +1197,10 @@ string c_tunserver::rpc_ban_all_peers(const string &input_json)
 	delete_all_peers(true);
 	ret["msg"] = "ok: All peers banned";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
+nlohmann::json c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
 {
 	_UNUSED(input_json);
 	nlohmann::json ret;
@@ -1208,10 +1208,10 @@ string c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
 	ret["ipv6"] = get_my_ipv6_nice();
 	ret["msg"] = "ok:";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
-string c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
+nlohmann::json c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
 {
 	auto input = nlohmann::json::parse(input_json);
 	auto ipv4_list = input["msg"].get<std::vector<std::string> >();
@@ -1224,8 +1224,16 @@ string c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
 	}
 	ret["inv"] = oss.str();
 	ret["msg"] = "ok:";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_hello(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "hello";
 	ret["state"] = "ok";
-	return ret.dump();
+	return ret;
 }
 
 bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
