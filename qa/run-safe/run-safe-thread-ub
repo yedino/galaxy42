@@ -9,9 +9,15 @@ function myprint { printf "%s[Script %s]: %s %s\n" "$(tput setab 6)" "$myname" "
 
 readonly program_for_flags="./nocap-tunserver.elf"
 program_to_run="MAIN"
-[[ -z ${1+x} ]] || program_to_run="$1"
+[[ -z ${1+x} ]] || {
+	program_to_run="$1"
+	shift
+}
 [[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
 [[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests.elf"
+[[ ! -x "$program_to_run" ]] && { myprint "$(tput setab 3)Can not run program ($program_to_run).
+To this script ($0) provide (as 1st command line argument) the name of program to run (after you build it),
+or word 'MAIN' or word 'TEST'." ; exit 1 ; }
 myprint "Will run program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
 
 myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
@@ -35,7 +41,7 @@ ${program_for_flags} --print-flags-flavour | grep "FLAVOUR_TSAN_FULL" && {
 
 EOF
 	echo -e "$(tput sgr0 2)"
-} || { myprint "Warning: will not halt on TSAN errors"; }
+} || { myprint "$(tput setab 3)Warning: will not halt on TSAN errors (program says it's not built with options allowing TSAN)"; }
 
 ((checks_existing++)) || :
 ${program_for_flags} --print-flags-flavour | grep "FLAVOUR_UBSAN_FULL" && {
@@ -52,10 +58,11 @@ ${program_for_flags} --print-flags-flavour | grep "FLAVOUR_UBSAN_FULL" && {
 
 EOF
 	echo -e "$(tput sgr0 2)"
-} || { myprint "Warning: will not halt on UBSAN errors"; }
+} || { myprint "$(tput setab 3)Warning: will not halt on UBSAN errors (program says it's not built with options allowing UBSAN)"; }
 
-(( checks_enabled == 0 )) && { myprint "Error: can not run any checks, exiting" ; exit 1 ; }
-(( checks_enabled < checks_existing )) && myprint "$(tput setab 3)Warning: only some checks are enabled ($checks_enabled/$checks_existing)" ;
+(( checks_enabled == 0 )) && { myprint "$(tput setab 1)Error: can not run any checks, exiting (reconfigure program and enable SANITIZERS)" ; exit 1 ; }
+(( checks_enabled < checks_existing )) && myprint "$(tput setab 3)Warning: only some checks are enabled ($checks_enabled/$checks_existing)
+Perhaps reconfigure program to try to enable more SANITIZER options." ;
 
 set -x
 sudo "$program_to_run" "$@" && { program_return=$? ; } || { program_return=$? ; } # ignore error (bash -e), and capture result

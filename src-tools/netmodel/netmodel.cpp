@@ -53,10 +53,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #define ANTINET_IF_DEBUG(X) ;
 #endif
 
-
-
 #define addrvoid(X) ( static_cast<const void*>( & (X) ) )
-
 
 namespace n_netmodel {
 
@@ -462,6 +459,8 @@ int get_from_cmdline(const string & name, t_mycmdline &cmdline, int def) {
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
+	_goal("Starting " << __FUNCTION__ << " with " << options.size() << " arguments");
+	for (const auto & arg: options) _note("Arg: ["<<arg<<"]");
 	// the main "loop"
 
 	g_atomic_exit=false;
@@ -514,12 +513,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	{
 		auto opt_addr = options.at(0);
 		auto opt_port = options.at(1);
-		_note("Peer address ["<<opt_addr<<"] and prot ["<<opt_port<<"]");
+		_goal("Peer address ["<<opt_addr<<"] and prot ["<<opt_port<<"]");
 		peer_pegs.emplace_back(
 			asio::ip::address_v4::from_string(opt_addr) ,
 			safe_atoi(opt_port));
 	}
-	_note("Got peer(s) " << peer_pegs.size());
+	_goal("Got peer(s) " << peer_pegs.size());
 
 	bool tuntap_set=false;
 	bool cfg_tuntap_blocking=false;
@@ -655,7 +654,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	}
 	_note("TUNTAP: ios threads are running.");
 
-
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 	_goal("All ios run are running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
@@ -705,7 +703,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// --- welds var ---
 	vector<c_weld> welds;
 	std::mutex welds_mutex;
-
 
 	// stop / show stats
 	_goal("The stop thread"); // exit flag --> ios.stop()
@@ -834,7 +831,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	}
 
 	vector<std::thread> tuntap_flow;
-
 
 	// tuntap: DO WORK
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
@@ -1004,7 +1000,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			auto & this_socket_and_strand = wire_socket.at(socket_nr);
 
 			// [asioflow]
-			this_socket_and_strand.get_strand().post([&, inbuf_nr] {
+			this_socket_and_strand.get_strand().post([&inbuf_tab, &mutex_handlerflow_socket_wire,   &this_socket_and_strand, inbuf_nr, inbuf_asio] {
 				this_socket_and_strand.get_unsafe_assume_in_strand().get().async_receive_from( inbuf_asio , inbuf_tab.get(inbuf_nr).m_ep ,
 						[&this_socket_and_strand, &inbuf_tab , inbuf_nr, &mutex_handlerflow_socket_wire](const boost::system::error_code & ec, std::size_t bytes_transferred) {
 							_dbg1("Handler (FIRST), size="<<bytes_transferred);
@@ -1069,13 +1065,14 @@ void asiotest_udpserv(std::vector<std::string> options) {
 }
 
 int netmodel_main(int argc, const char **argv) {
+	_goal("Entering the network model");
 	crypto::init();
 	std::vector< std::string> options;
 	for (int i=1; i<argc; ++i) options.push_back(argv[i]);
 	for (const string & arg : options) if ((arg=="dbg")||(arg=="debug")||(arg=="d")) g_debug = true;
-	_goal("Starting program");
+	_goal("Starting netmodel");
   asiotest_udpserv(options);
-	_goal("Normal exit");
+	_goal("Normal exit of netmodel");
 	return 0;
 }
 
@@ -1085,8 +1082,7 @@ int netmodel_main(int argc, const char **argv) {
 
 #else
 int main(int argc, const char **argv) {
+	_goal("Starting the network model tool (stand alone program)");
 	return n_netmodel::netmodel_main(argc,argv);
 }
 #endif
-
-
