@@ -129,6 +129,10 @@ for dir in depends/* ; do
 	fi
 done
 
+if [[ "${1:-""}" == "-h" ]] ; then
+	usage
+	exit 2 # <--- exit
+fi
 if [[ "${1:-""}" == "--help" ]] ; then
 	usage
 	exit 2 # <--- exit
