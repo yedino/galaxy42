@@ -54,7 +54,7 @@ QVariant peersModel::data(const QModelIndex &index, int role) const
             return QVariant();
         break;
         }
-    } else if(role == Qt::DecorationRole) {				//! @todo dodac ikonki dla poszczegolnych stanow
+    } else if(role == Qt::DecorationRole) {				//! @todo add icons for proper states
         switch (m_peers_list.at( index.row())->status) {
         case MeshPeer::defalut:
             return QIcon(":defalut");
@@ -105,7 +105,7 @@ void peersModel::addPeer(QString serialized_peer)
                 peer->comm_status = MeshPeer::sended;
 //               peer->comm_status = MeshPeer::acknowled;
                 qDebug()<<"added peer";
-                return;									// niczego nie trzeba dodawac wystarczy zmienic stan
+                return;
             }
         }
         peer->status = MeshPeer::connected;
@@ -115,7 +115,7 @@ void peersModel::addPeer(QString serialized_peer)
         qDebug()<< "can't create peer::"<< QString(e.what());
         return;
     }
-    auto idx = index(0,0);		//dodawanie zawsze jako pierwszy - zastanowic sie czy najlepsze rozwiazanie
+    auto idx = index(0,0);
 
     beginInsertRows(idx,0,1);
     m_peers_list.push_back(peer);
@@ -132,7 +132,7 @@ void peersModel::addPeer(const MeshPeer &pp)
                 peer->status = MeshPeer::connected;
 //               peer->comm_status = MeshPeer::acknowled;
                 qDebug()<<"added peer";
-                return;									// niczego nie trzeba dodawac wystarczy zmienic stan
+                return;
             }
         }
         peer->status = MeshPeer::connected;
@@ -156,7 +156,7 @@ void peersModel::removePeer(const QModelIndex& index)
         return;
     }
 
-    beginRemoveRows(index,index.row(),index.row());	//Fixme tu jest zapewne blad przy usuwaniu - znalezc jak otrzymac parent index
+    beginRemoveRows(index,index.row(),index.row());
     m_peers_list.removeAt(index.row());
     endRemoveRows();
 }

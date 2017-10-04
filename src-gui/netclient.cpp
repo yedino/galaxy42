@@ -1,22 +1,26 @@
 #include "netclient.hpp"
 #include <cassert>
 #include <memory>
+#include <QHostAddress>
 
 netClient::netClient(commandExecutor* cmd_exec_ptr)
 :
 	m_cmd_exec(cmd_exec_ptr),
-	m_socket(std::make_unique<QTcpSocket>()),
 	m_hmac_key()
 {
-	connect(m_socket.get(), SIGNAL(readyRead()),this, SLOT(onTcpReceive()));
+	m_socket =  nullptr;//new QTcpSocket(this);
+	m_socket = new QTcpSocket(this);
+	connect(m_socket, SIGNAL(readyRead()),this, SLOT(onTcpReceive()));
     m_hmac_key.fill(0x42); // @todo load from settings!!!
 }
 
 void netClient::startConnect(const QHostAddress &address, uint16_t port) {
-	m_socket->connectToHost(address, port);
-	// we need to wait...
-	if(!m_socket->waitForConnected(5000)) {
-		qDebug() << "Error: " << m_socket->errorString();
+
+	m_socket->connectToHost(address , port);
+	if(!m_socket->waitForConnected(50000))
+		qDebug()<<m_socket->errorString();
+	else{
+		qDebug()<<"socket connected";
 	}
 }
 
