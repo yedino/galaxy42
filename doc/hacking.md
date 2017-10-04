@@ -10,6 +10,18 @@ Intended for:
 + packagers, maintainers of this project
 + power users building own versions or modding this project
 
+# Basic environment setup
+
+Run ./install.sh and set up the tools.
+
+As developer, you might add to ~/.bashrc lines to choose clang++ as compiler, or to choose given version of it,
+and line to wrap in ccache the compilator for fast recompile.  
+E.g. add to ~/.bashrc :
+```
+export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang++-4.0 -E"
+export CC="ccache $CC" ; export CXX="ccache $CXX" ; export CPP="ccache $CPP"
+```
+
 # Debugging
 
 Run program (e.g. ./tunserver.elf) with option --d for debug.
