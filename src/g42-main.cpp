@@ -300,7 +300,7 @@ int main(int argc, const char **argv) { // the main() function
 
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
-	string argt_exe = (argc>=1) ? argv[0] : ""; // exec name
+	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
@@ -310,8 +310,11 @@ int main(int argc, const char **argv) { // the main() function
 		return 0;
 	}
 
-	if (contains_value(argt,"--mode-bench")) {
-		return n_netmodel::netmodel_main(argc,argv);
+	if ( remove_and_count(argt,"--mode-bench") ) {
+		c_string_string_Cstyle args_cstyle( argt_exec , argt );
+		const int again_argc = args_cstyle.get_argc();
+		const char ** again_argv = args_cstyle.get_argv();
+		return n_netmodel::netmodel_main( again_argc , again_argv );
 	}
 
 	enum class t_program_type {
@@ -342,7 +345,7 @@ int main(int argc, const char **argv) { // the main() function
 		return 1;
 	}
 
-	the_program->take_args(argt_exe , argt); // takes again args, with removed special early args
+	the_program->take_args(argt_exec , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
 	the_program->startup_version();
 
