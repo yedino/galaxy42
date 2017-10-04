@@ -15,7 +15,7 @@ QMAKE_CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic
 TARGET = simpleGui
 TEMPLATE = app
 
-INCLUDEPATH = ../depends/json/src
+INCLUDEPATH = ../depends/json/src	#path to json.hpp
 #LIBS += -lboost_system -lsodiu
 
 SOURCES += \
@@ -36,9 +36,9 @@ SOURCES += \
     meshpeer.cpp \
     peersmodel.cpp \
     order.cpp \
-        peerlistform.cpp \
+    peerlistform.cpp \
     addpeerdialog.cpp\
-        peereditdialog.cpp \
+    peereditdialog.cpp \
     rpccounter.cpp \
     sendedcommand.cpp \
     commandsender.cpp \
@@ -64,7 +64,7 @@ HEADERS += \
     peersmodel.h \
     order.hpp\
         peerlistform.h \
-        peersmodel.h \
+   peersmodel.h \
     addpeerdialog.h\
         peereditdialog.h \
     rpccounter.h \
@@ -117,9 +117,18 @@ test {
 
 
 win32: LIBS += -L$$PWD/../../repo/libsodium-win32/lib/ -lsodium
+linux: LIBS += -lsodium
 
-INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
-DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
+macos {
+        LIBS += -L/usr/local/lib -lsodium
+        INCLUDEPATH += /usr/local/include/
+        INCLUDEPATH += ~/nlohmanjson/src/
+}
+
+win32 {
+        INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
+        DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
+}
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/sodium.lib
 else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium.a

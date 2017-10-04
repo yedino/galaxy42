@@ -54,11 +54,11 @@ public slots:
 
     void addDebugInfo(const QString &str);
 
-    void onBanBeer(const QString &vip);		//! funkcja wywolywana na Ban  z listy peer
-    void onRemovePeer(const QString &vip);		//! funkcja wywolywana na Remove z listy peer
-    void onAddPeer(const QString &vip);		//! funkcja wywolywana na add z listy peer
-    void onSendMessage(const QString &vip,const QString &msg);	//! funkcja wywolywana na send msg z listy peer
-    void onFindPeer(const QString &vip);			//! funkcja wywolywana na find z listy peer
+    void onBanBeer(const QString &vip);
+    void onRemovePeer(const QString &vip);
+    void onAddPeer(const QString &vip);
+    void onSendMessage(const QString &vip,const QString &msg);
+    void onFindPeer(const QString &vip);
 
     void onPeerRemoved(const QString &vip);
     void onPeerAdded(const QString &vip);

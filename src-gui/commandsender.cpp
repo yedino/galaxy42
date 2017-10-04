@@ -66,26 +66,26 @@ std::shared_ptr<order> CommandSender::prepareCommand(CommandSender::orderType ty
     std::shared_ptr<order> ord;
 
     switch (type) {
-    case orderType::PING:
-        if(m_client_name.size() == 0)
-            throw std::runtime_error ("no client name provided - can't send command");
-            ord = std::make_shared<pingOrder>( new pingOrder(m_counter.getRpcId()));		//! @todo przerobic na zwaierajaca rpc_num
+        case orderType::PING:
+            if(m_client_name.size() == 0)
+                throw std::runtime_error ("no client name provided - can't send command");
+            ord = std::make_shared<pingOrder>(m_counter.getRpcId());
         break;
-    case orderType::DELETEALL:
-        if(m_client_name.size() == 0)
-            throw std::runtime_error ("no client name provided - can't send command");
-            ord = std::make_shared<deleteAllPeersOrder>(new deleteAllPeersOrder(m_counter.getRpcId()));
+        case orderType::DELETEALL:
+            if(m_client_name.size() == 0)
+                throw std::runtime_error ("no client name provided - can't send command");
+            ord = std::make_shared<deleteAllPeersOrder>(m_counter.getRpcId());
         break;
-    case orderType::BANALL:
-        if(m_client_name.size() == 0)
-            throw std::runtime_error ("no client name provided - can't send command");
-            ord = std::make_shared<banAllOrder> (new banAllOrder(m_counter.getRpcId()));
+        case orderType::BANALL:
+            if(m_client_name.size() == 0)
+                throw std::runtime_error ("no client name provided - can't send command");
+            ord = std::make_shared<banAllOrder> (m_counter.getRpcId());
         break;
-    case orderType::GETNAME:
-            ord = std::make_shared<getClientName> (new getClientName());
+        case orderType::GETNAME:
+            ord = std::make_shared<getClientName> ();
         break;
-    default:
-        throw std::runtime_error ("unproper number of parameters for this function");
+        default:
+            throw std::runtime_error ("unproper number of parameters for this function");
         break;
     }
     return ord;
