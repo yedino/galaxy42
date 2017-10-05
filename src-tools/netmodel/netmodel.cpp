@@ -173,14 +173,14 @@ void c_timerfoo::print_info(std::ostream & ostr) const {
 	double current_size_speed  = current_size  / ellapsed_sec; // in B/s
 	double current_count_speed = current_count / ellapsed_sec; // in B/s
 
-	const double MB = 1*1000*1000;
+	const double mega = (1*1000*1000);
 
 	int detail=0;
 	if (detail>=2) { ostr << std::setw(9) << current_size  << " B "; }
-	ostr << std::setw(4) << (current_size_speed/MB)  << " MB/s" ;
+	ostr << std::setw(4) << (current_size_speed*8.f/mega)  << " Mb/s" ;
 	ostr << " ";
 	if (detail>=1) { ostr << std::setw(6) << current_count << " p "; }
-	ostr << std::setw(4) << (current_count_speed/MB) << " Mp/s" ;
+	ostr << std::setw(4) << (current_count_speed/mega) << " Mp/s" ;
 }
 
 std::ostream & operator<<(std::ostream & ostr, c_timerfoo & timer) {
