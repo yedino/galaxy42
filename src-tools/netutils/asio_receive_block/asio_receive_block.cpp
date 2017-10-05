@@ -42,7 +42,7 @@ double corrected_avg(std::vector<double> tab) {
 	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
 }
 
-void server(boost::asio::io_service& io_service, unsigned short port)
+double server(boost::asio::io_service& io_service, unsigned short port)
 {
 	udp::socket sock(io_service, udp::endpoint(udp::v4(), port));
 
@@ -70,9 +70,10 @@ void server(boost::asio::io_service& io_service, unsigned short port)
 				boost::asio::buffer(data, max_length), sender_endpoint);
 		received_packets++;
 		received_bytes += length;  received_bytes_all += length;
-		if (received_packets % 50000 == 0) {
+
+		if (received_packets % 500000 == 0) {
 			auto time_now = std::chrono::steady_clock::now();
-			double sec = ( std::chrono::duration_cast<std::chrono::milliseconds>(time_now - start_time) ).count() / 1000.;
+			double sec = ( std::chrono::duration_cast<std::chrono::microseconds>(time_now - start_time) ).count() / (1000.*1000.);
 			double speed = ((received_bytes * 8) / (1000*1000)) / sec ;
 			std::cout << "     " << "Receive packages:" << received_packets
 				<< ", receive bytes:" << received_bytes
@@ -81,14 +82,15 @@ void server(boost::asio::io_service& io_service, unsigned short port)
 
 			++count_interval;
 
-			if ( count_interval == 1 ) {
+			if ( count_interval == 2 ) {
 				//std::cout << "(restarting counter)" << std::endl;
 				++count_fulltest;
 				speed_tab.push_back(speed);
 
-				if ( count_fulltest==14 ) {
+				if ( count_fulltest== 10 ) {
 					auto avg = corrected_avg(speed_tab);
-					std::cout << "\n" << "## Result = " << avg << " ";
+					auto the_result = avg;
+					std::cout << "\n" << "## Result = " << the_result << " ";
 					std::cout << "(mediana: " << mediana(speed_tab)
 						<< " nice_avg: " << corrected_avg(speed_tab) << ")";
 					std::cout << "\n\n";
@@ -99,6 +101,7 @@ void server(boost::asio::io_service& io_service, unsigned short port)
 
 					std::cout << avg <<std::endl;
 					all_done=true;
+					return the_result;
 				}
 
 				received_bytes = 0;  received_bytes_all = 0;
@@ -110,6 +113,8 @@ void server(boost::asio::io_service& io_service, unsigned short port)
 		}
 
 	}
+
+	return 0; // returns above
 }
 
 int main(int argc, char* argv[])
@@ -124,7 +129,14 @@ int main(int argc, char* argv[])
 
 		boost::asio::io_service io_service;
 
-		server(io_service, std::atoi(argv[1]));
+		std::vector<double> result_tab;
+		for (int restult_run=0; restult_run<10; ++restult_run) {
+			result_tab.push_back( server(io_service, std::atoi(argv[1])) );
+		}
+		sort(result_tab.begin(), result_tab.end());
+		auto best = result_tab.at( result_tab.size()-1 );
+		std::cout << "\n\n" << "##### typical: " << corrected_avg(result_tab) << " best: " << best << " Mb/s" << "\n" << std::endl;
+		std::cout << corrected_avg(result_tab) << " " << best << std::endl;
 	}
 	catch (std::exception& e)
 	{
@@ -133,3 +145,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
