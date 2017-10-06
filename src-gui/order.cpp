@@ -239,13 +239,13 @@ addPeerOrder::addPeerOrder(const std::string &json_str,commandExecutor * executo
         using nlohmann::json;
         json j = json::parse(json_str);
         m_executor = executor;
-        m_msg = j["msg"];
+			m_re = j["re"];
+		m_msg = j["msg"];
         m_state = j["state"];
-        m_id = j["id"];
-        if(m_state == "ok"){
+		m_id = j["id"];
+		if(m_state == "ok"){
 //            m_format = j["format"];
 //            m_peer = j["peer"];
-            m_re = j["re"];
         }
 
     } catch(std::exception &e) {
@@ -263,7 +263,7 @@ std::string addPeerOrder::get_str() const
 void addPeerOrder::execute(MainWindow &main_window)
 {
     if(m_state.find("error") != std::string::npos){ //if contains error
-        main_window.errorNotification(QString::fromStdString(m_msg));
+		main_window.errorNotification(QString::fromStdString(m_msg));
     }else{
         auto ord_ptr =  m_executor->getOrder(QString::fromStdString(m_re));
         auto ord = ord_ptr.get();

@@ -313,9 +313,14 @@ void MainWindow::loadSettings()
 void MainWindow::initSettings()
 {
     QSettings setings;
-    if(setings.allKeys().size() >= 2) {			//nie trzeba inicializowac
-        return;
-    }
+//    if(setings.allKeys().size() >= 2) {			//nie trzeba inicializowac
+//        return;
+//	}
+
+	if( setings.contains("rpcConnection/Ip"))
+	{
+			return;
+	}
 
     setings.beginGroup("rpcConnection");
     setings.setValue("connectionsNum","1" );		// liczba dostepnych polaczen
@@ -323,8 +328,6 @@ void MainWindow::initSettings()
     setings.setValue("port","42000");				// port noda rpc
     setings.endGroup();
 
-    setings.beginGroup("gui/mainWindow");
-    setings.endGroup();
 }
 
 void MainWindow::onAllowFriend(bool val)

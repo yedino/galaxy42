@@ -4,6 +4,7 @@
 #include <memory>
 #include <QTcpSocket>
 #include <sodium.h>
+#include <array>
 #include "dataeater.hpp"
 #include "commandexecutor.hpp"
 
@@ -21,7 +22,7 @@ class netClient final : QObject {
         void closeConnection();
 private:
         commandExecutor* m_cmd_exec;
-		std::unique_ptr<QTcpSocket> m_socket;
+		QTcpSocket* m_socket;
 		dataeater m_data_eater;
 		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key;
 		/**
