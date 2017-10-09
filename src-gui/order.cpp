@@ -1,73 +1,6 @@
 #include "order.hpp"
 #include "mainwindow.hpp"
 #include "nodecontrolerdialog.h"
-/*
- *	komenda hello
- * komenda czego klient chce sluchac
- *
- *
- * 			// format odpowiedzi: jezeli zawieraja error: to znaczy ze cos poszlo nie tak , ok jezeli wszystko w porzadku , warrning - jezeli cos moze byc nie w porzadku - np ususwanie peera ktorego nie bylo
-    Ping
-
-    Request: {"cmd":"ping","msg":"ping","state":"ok"}
-    Response: {"cmd":"ping","msg":"pong","state":"ok"}
-
-    Peer list
-
-    Request: {"cmd":"peer_list","msg":"[]","state":"ok"}
-    Response: {"cmd":"peer_list","peers":"[*list of connected peers*]", "msg":"ok:","state":"ok"}
-
-    Add peer
-
-    //for old format
-    Request: {"cmd":"add_peer","format":"0.1","peer":"<ipv4>:<galaxy_port>-<ipv6>","state":"ok"}
-    or
-    //for new format
-    Request: {"cmd":"add_peer","format":"1.0","peer":"<ipv6>@(udp:<ipv4>:<galaxy_port>)","state":"ok"}
-    Response: {"cmd":"add_peer","msg":"ok: Peer added","state":"ok"}
-    or
-    Response: {"cmd":"add_peer","msg":"fail: Bad peer format","state":"error"}
-
-    Delete peer
-
-    Request: {"cmd":"delete_peer","peer":"<ipv6>","state":"ok"}
-    Response: {"cmd":"delete_peer","msg":"ok: Peer deleted","state":"ok"}
-    or
-    Response: {"cmd":"delete_peer","msg":"fail: Bad peer format","state":"error"}
-
-    Delete all peers
-
-    Request: {"cmd":"delete_all_peers","state":"ok"}
-    Response: {"cmd":"delete_all_peers","msg":"ok: All peers deleted","state":"ok"}
-
-    Ban peer
-
-    Request: {"cmd":"ban_peer","peer":"<ipv6>","state":"ok"}
-    Response: {"cmd":"ban_peer","msg":"ok: Peer banned","state":"ok"}
-    or
-    Response: {"cmd":"ban_peer","msg":"fail: Bad peer format","state":"error"}
-
-    Ban all peers
-
-    Request: {"cmd":"ban_all_peer","state":"ok"}
-    Response: {"cmd":"ban_all_peer","msg":"ok: All peers banned","state":"ok"}
-
-    Ban list
-
-    Request: {"cmd":"ban_list","state":"ok"}
-    Response: {"peers":[<ipv6_1>, <ipv6_2> ...],"cmd":"ban_list","msg":"ok","state":"ok"}
-
-    Get galaxy ipv6
-
-    Request: {"cmd":"get_galaxy_ipv6","state":"ok"}
-    Response: {"cmd":"get_galaxy_ipv6","ipv6":"<ipv6>", "msg":"ok:","state":"ok"}
-
-    Get galaxy new format reference
-
-    Request: {"cmd":"get_galaxy_invitation", "msg":[*list of ipv4 addresses *],"state":"ok"}
-    Response: {"cmd":"get_galaxy_invitaion","inv":"<galaxy-new-format-invitation>", "msg":"ok:","state":"ok"}
-
-*/
 
 std::string setIps::get_str() const
 {
@@ -101,7 +34,7 @@ void setIps::execute(MainWindow &main_window)
         main_window.errorNotification(QString::fromStdString(m_msg));
     } else {
         main_window.addDebugInfo(QString::fromStdString(m_msg));
-        main_window.onGetMyInvitatiom(m_msg);		//! dodac ip
+        main_window.onGetMyInvitatiom(m_msg);
     }
 }
 
@@ -346,8 +279,7 @@ banAllOrder::banAllOrder(const std::string &json_str): order(json_str)
 
 void banAllOrder::execute(MainWindow &main_window)
 {
-    if(m_msg.find("bad") != std::string::npos ) { //! nieprawidlowy format peera
-        //! @todo dopisac do mainWindow - dialog z wystepujacymi bledami
+    if(m_msg.find("bad") != std::string::npos ) {
         main_window.errorNotification(QString::fromStdString(m_msg));
     }else {
         main_window.addDebugInfo(QString::fromStdString(m_msg));
@@ -380,8 +312,7 @@ deletePeerOrder::deletePeerOrder(const std::string &json_str):order(json_str)
 
 void deletePeerOrder::execute(MainWindow &main_window)
 {
-    if(m_state == "ok" ) { //! nieprawidlowy format peera
-        //! @todo dopisac do mainWindow - dialog z wystepujacymi bledami
+    if(m_state == "ok" ) {
 //        main_window.addDebugInfo(QString::fromStdString(m_msg));
 //           main_window.onPeerRemoved(QString::fromStdString(m_peer));
     } else {
@@ -406,8 +337,7 @@ deleteAllPeersOrder::deleteAllPeersOrder(const RpcId& id):order(id)
 
 void deleteAllPeersOrder::execute(MainWindow &main_window)
 {
-    if(m_msg.find("error:") != std::string::npos ) { //! nieprawidlowy format peera
-        //! @todo dopisac do mainWindow - dialog z wystepujacymi bledami
+    if(m_msg.find("error:") != std::string::npos ) {
         main_window.errorNotification(QString::fromStdString(m_msg));
     }else {
         main_window.addDebugInfo(QString::fromStdString(m_msg));
@@ -444,7 +374,6 @@ order::order(order::e_type cmd) {
 }
 
 std::string order::get_str() const {
-//	nlohmann::json j{{"cmd", m_cmd} , {"msg", m_msg}};
     nlohmann::json j;
     j["cmd"] = m_cmd;
     j["msg"] = m_msg;

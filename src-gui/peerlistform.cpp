@@ -103,12 +103,10 @@ void PeerListForm::removeActionSlot(bool)
 {
     qDebug()<<"remove peer";
     if(m_index.isValid()) {
- //       QString vip = m_index.sibling(m_index.row(),peersModel::vip).data().toString();
         QModelIndex work_index = m_index.sibling(m_index.row(),peersModel::vip);
 
         QString vip = m_model->data(work_index).toString();
         emit (removePeer(vip));
-//        m_model->removePeer(work_index);
         onPeerRemoved(vip);
     }
 }

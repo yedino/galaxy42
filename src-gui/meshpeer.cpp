@@ -40,7 +40,6 @@ void MeshPeer::deserialize(const std::string &serilized_obj)
     if(obj_name != "MeshPeer") {
         throw std::runtime_error ("can't deserialize error");
     }
-    //! @todo dodac sprawdzanie wersji serializowanych danych
 
     m_name = QString::fromStdString(j.at("name").get<std::string>());
     m_ip = QString::fromStdString(j.at("ip").get<std::string>());

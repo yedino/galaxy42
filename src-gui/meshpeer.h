@@ -18,11 +18,11 @@ public:
 
     enum COMMANDSTATUS {
         none = 0,
-        sended,			//wyslano do noda galaxy
-        recived,		//otrzymano potwierdzenie z sieci galaxy
-        acknowled,		//zsynchronizowano w sieci galaxy
-        timeout,		// timeout komendy
-        fail			//nieudane wykonnie komendy na no
+        sended,
+        recived,
+        acknowled,
+        timeout,
+        fail
     } comm_status;
 
 
@@ -45,25 +45,24 @@ public:
 
 
     explicit MeshPeer(QObject *parent = nullptr);
-
     explicit MeshPeer(const MeshPeer& peer);
     MeshPeer(const QString& serialized_obj, QObject *parent = nullptr);
 
 
     /**
-     * @brief setName ustawia nazwe urzytkownika
+     * @brief setName set name of user
      * @param name imie
      */
     inline void setName(const QString &name){m_name = name;}
     /**
-     * @brief getName pobiera nazwe
-     * @return nazwa uzytkownika
+     * @brief getName geting name of user
+     * @return user name
      */
     inline QString getName() const {return m_name;}
 
     /**
-     * @brief setIP sprawdza i ustawia dane ip, w  razie niepowodzenia wyrzuca std::runtime_exception
-     * @param ip nowe ip
+     * @brief setIP test and set ip if unproper throw std::runtime_exception
+     * @param ip new ip
      */
     inline void setIP(const QString& ip)
     {
@@ -72,30 +71,30 @@ public:
     }
 
     /**
-     * @brief getIp zwraca ip
+     * @brief getIp return ip
      * @return
      */
     inline QString getIp() const {return m_ip;}
 
     /**
-     * @brief setVip sprawdza virtual ip i ustawia go w klasie- w razie niepowodzenia - wyrzuca wyjatek
+     * @brief setVip try and set virtual vip(ipv6) if fail throw std::runtime exception
      * @param vip virtual ip danego peera
      */
     inline void setVip(const QString& vip)
     {
-        //@todo dorobic sprawdzenie czy prawidlowy vip
+        //!@todo test if ip is proper
         m_vip = vip;
     }
 
     /**
-     * @brief getVip zwraca virtual ip danego peera
+     * @brief getVip return vip of peer
      * @return
      */
     inline QString getVip()const{return m_vip;}
 
     /**
-     * @brief getInvitation sklada invitation- na podstawie wlasnego vip i ip
-     * @return nr zaproszenia
+     * @brief getInvitation prepare invitation
+     * @return inbitation
      */
     inline QString getInvitation() const
     {
@@ -106,8 +105,8 @@ public:
     }
 
     /**
-     * @brief setInvitation ustawia wlasciwosci obiektu na podstwie numeru zaproszenia
-     * @param invitation zaproszenie
+     * @brief setInvitation sets params of object via invitation
+     * @param invitation
      */
     inline void setInvitation(const QString& invitation)
     {

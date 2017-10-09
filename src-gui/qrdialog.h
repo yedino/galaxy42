@@ -9,16 +9,16 @@ class QrDialog;
 
 
 /**
- * @brief The QrDialog class klasa reprezentujaca dialog qr kodu .
+ * @brief The QrDialog class represents dialog shows QR code.
  */
 class QrDialog : public QDialog
 {
     Q_OBJECT
-    QGraphicsScene m_scene;		//! scena na ktorej malowany jest obrazek
-    QPixmap m_code;				//! obrazek z qr codem
+    QGraphicsScene m_scene;		//! scene with qr picture
+    QPixmap m_code;				//! qr picture
 
 public:
-    explicit QrDialog(QPixmap &qr_code,QWidget *parent = 0);	//! konstruktor przyjmujacy i kopiujacy qr kod
+    explicit QrDialog(QPixmap &qr_code,QWidget *parent = 0);	//!
     ~QrDialog();
 
 private:

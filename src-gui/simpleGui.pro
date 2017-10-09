@@ -37,13 +37,14 @@ SOURCES += \
     meshpeer.cpp \
     peersmodel.cpp \
     order.cpp \
-        peerlistform.cpp \
+    peerlistform.cpp \
     addpeerdialog.cpp\
-        peereditdialog.cpp \
+    peereditdialog.cpp \
     rpccounter.cpp \
     sendedcommand.cpp \
     commandsender.cpp \
-    nodecontrolerdialog.cpp
+    nodecontrolerdialog.cpp\
+#    trivialserialize.cpp \
 
 
 HEADERS += \
@@ -69,7 +70,8 @@ HEADERS += \
     rpccounter.h \
     sendedcommand.h \
     commandsender.h \
-    nodecontrolerdialog.h
+    nodecontrolerdialog.h\
+#    trivialserialize.hpp
 
 FORMS += \
     mainwindow.ui \
@@ -115,11 +117,18 @@ test {
 
 
 win32: LIBS += -L$$PWD/../../repo/libsodium-win32/lib/ -lsodium
-macos:INCLUDEPATH += /usr/local/include/
-macos:INCLUDEPATH += /Users/apple/gal42/depends/json/src/  # json path for macos
+linux: LIBS += -lsodium
 
-win32:INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
-win32:DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
+macos {
+        LIBS += -L/usr/local/lib -lsodium
+        INCLUDEPATH += /usr/local/include/
+        INCLUDEPATH += ~/nlohmanjson/src/
+}
+
+win32 {
+        INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
+        DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
+}
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/sodium.lib
 else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium.a
