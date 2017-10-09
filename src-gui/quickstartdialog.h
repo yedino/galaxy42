@@ -45,21 +45,21 @@ public:
     void setIps(const QString &ip,const QString &vip);
 signals:
 
-    void allowFriend(bool);				//! sygnal o dopuszczeniu znajomego do sieci
-    void allowStranger(bool);			//!sygnal o dopuszczeniu nieznajomych do sieci
-    void createNet();					//! sygnal tworzacy siec prywatna
-    void connectNet(QString net);		//!sygnal podlaczenia do sieci
-    void addUser(QString user_id);		//!sygnal dodania usera
-    void removeUser(QString user_id);	//!sygnal usuniecia usera
+    void allowFriend(bool);				//! signal that allow firend
+    void allowStranger(bool);			//!sygnal that allow strangers to net
+    void createNet();					//! sygnal create net
+    void connectNet(QString net);		//!sygnal connect net
+    void addUser(QString user_id);		//!sygnal that add user
+    void removeUser(QString user_id);	//!sygnal remove usera
 
 
 public slots:
-    void chooseInvate(QString invate);	//! slot dla sygnalu pobierajacego dane zaproszenia(np z ksiazki adresowej)
+    void chooseInvate(QString invate);	//! slot from chose invittaion from address book
 
 private slots:
 
-    void on_allowFriendsBox_clicked(bool checked);		//! slot checkboxa pozwolenia przyjaciolom na laczenie
-    void on_allowStrangersBox_clicked(bool checked);	//! slot check boxa pozwolenia nieznajomym na laczenie
+    void on_allowFriendsBox_clicked(bool checked);		//! slot  of signal allow friend to connect
+    void on_allowStrangersBox_clicked(bool checked);	//! slot check boxa stranger to connect
 
 
     void on_wwwButton_clicked();

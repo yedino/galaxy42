@@ -26,7 +26,7 @@ public:
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override
     {
         parent.column();
         return 4;

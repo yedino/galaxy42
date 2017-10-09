@@ -6,7 +6,7 @@
 
 class RpcCounter;
 
-class RpcId {				//klasa mozliwa do stworzenia tylko przez rpcCounter
+class RpcId {				//class with is could be created from RpcCounter- to make sure the RpcIp is uniqe
 public:
     std::string m_id;
 protected:

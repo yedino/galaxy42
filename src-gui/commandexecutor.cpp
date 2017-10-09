@@ -53,11 +53,15 @@ void commandExecutor::sendNetRequest(const order &ord) {
         if (!m_net_client->is_connected()) {
             QSettings settings;
             QString ip = settings.value("rpcConnection/Ip").toString();
-            int port = settings.value("rpcConnection/port").toInt();
+			int port = settings.value("rpcConnection/port").toInt();
+			if (ip.size() ==0)  {
+				ip= "127.0.0.1";
+				port = 42000;
+			}
             m_net_client->startConnect(QHostAddress(ip),port);
        }
     } catch(std::exception& e) {
-            qDebug(e.what());
+			qDebug() <<e.what();
     }
 
     try {
