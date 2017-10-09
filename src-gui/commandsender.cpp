@@ -99,19 +99,19 @@ std::shared_ptr<order> CommandSender::prepareCommand(CommandSender::orderType ty
         case orderType::ADDPEER:
         if(m_client_name.size() == 0)
             throw std::runtime_error ("no client name provided - can't send command");
-              ord = std::make_shared<addPeerOrder> (new addPeerOrder(m_counter.getRpcId(),peer));
+			  ord = std::make_shared<addPeerOrder> (m_counter.getRpcId(),peer);
         break;
 
         case orderType::DELETEPEER:
         if(m_client_name.size() == 0)
             throw std::runtime_error ("no client name provided - can't send command");
-            ord = std::make_shared<deletePeerOrder> (new deletePeerOrder(m_counter.getRpcId(),peer));
+			ord = std::make_shared<deletePeerOrder> (m_counter.getRpcId(),peer);
         break;
 
         case orderType::BANPEER:
             if(m_client_name.size() == 0)
             throw std::runtime_error ("no client name provided - can't send command");
-            ord = std::make_shared<banPeerOrder> (new banPeerOrder(m_counter.getRpcId(),peer));
+			ord = std::make_shared<banPeerOrder> (m_counter.getRpcId(),peer);
         break;
         default:
             throw std::runtime_error ("can't create order with this params list");

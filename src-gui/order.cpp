@@ -396,7 +396,6 @@ std::string deletePeerOrder::get_str() const
     j["peer"] = m_peer;
     j["state"] = m_state;
     return j.dump();
-
 }
 
 deleteAllPeersOrder::deleteAllPeersOrder(const RpcId& id):order(id)
