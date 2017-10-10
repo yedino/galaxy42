@@ -5,42 +5,14 @@
 #include <algorithm>
 #include <cassert>
 
+#include "../../tools_helper.hpp"
+
 using boost::asio::ip::udp;
 
 using t_counter = uint64_t;
 
 enum { max_length = 65535 };
 
-double mediana(std::vector<double> tab) {
-	assert(tab.size()>=1);
-
-	// std::nth_element(tab.begin(), tab.begin() + tab.size()/2, tab.end()); // odd
-
-	sort(tab.begin(), tab.end());
-
-	if (1==(tab.size() % 2 )) {
-			return tab.at( tab.size()/2 ); // mediana odd    [10 *20 30]
-	} else {
-		auto a = tab.at( tab.size()/2 );
-		auto b = tab.at( tab.size()/2 +1 );
-		return (a+b)/2.;
-		// mediana odd    [10 *20 *30 40]
-	}
-}
-
-double corrected_avg(std::vector<double> tab) {
-	auto size = tab.size();
-	auto margin = size/4;
-	if (margin<1) margin=1;
-
-	auto pos1 = 0+margin, pos2=size-1-margin;
-	int len = pos2-pos1;
-	assert(len>=1);
-
-	//	std::cerr<<"Avg from "<<pos1<<" to " <<pos2 << " len="<<len<<" size="<<size<<std::endl;
-
-	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
-}
 
 double server(boost::asio::io_service& io_service, unsigned short port)
 {
