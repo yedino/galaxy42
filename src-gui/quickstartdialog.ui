@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>519</width>
+    <width>403</width>
     <height>250</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>499</width>
+        <width>383</width>
         <height>230</height>
        </rect>
       </property>
@@ -79,8 +79,8 @@
                 <widget class="QLineEdit" name="myInviteEdit">
                  <property name="minimumSize">
                   <size>
-                   <width>90</width>
-                   <height>10</height>
+                   <width>0</width>
+                   <height>0</height>
                   </size>
                  </property>
                  <property name="dragEnabled">

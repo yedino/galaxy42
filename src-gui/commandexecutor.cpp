@@ -13,12 +13,21 @@ std::shared_ptr<commandExecutor> commandExecutor::construct(std::shared_ptr<Main
 //	ret->m_net_client = std::make_shared<netClient>(ret);
     ret->m_net_client = new netClient(ret.get());
 
-    connect(ret.get(),SIGNAL(ErrorOccured(QString)),window->GetStatusObject() ,SLOT(onErrorOccured(QString)));
-    connect(ret.get(),SIGNAL(Connected()),window->GetStatusObject() ,SLOT(onConnectionSuccess()));
-    connect(ret.get(),SIGNAL(Disconnected()),window->GetStatusObject() ,SLOT(onLostConnection()));
-
     return ret;
 }
+
+void commandExecutor::resetConnection()
+{
+//    m_net_client - disconnect
+    m_net_client->closeConnection();
+    emit Disconnected();
+//    m_net_client->
+    ;
+//    sendNetRequest(m_sender->prepareCommand(CommandSender::orderType::GETNAME).get());
+//    if(star)
+    m_sender->sendCommand(CommandSender::orderType::GETNAME);
+}
+
 
 void commandExecutor::parseAndExecMsg(const std::string &msg) {
     std::unique_ptr <order> ord;
@@ -102,6 +111,7 @@ commandExecutor::commandExecutor(MainWindow* win):
     connect(this,SIGNAL(ErrorOccured(QString)),win->GetStatusObject() ,SLOT(onErrorOccured(QString)));
     connect(this,SIGNAL(Connected()),win->GetStatusObject() ,SLOT(onConnectionSuccess()));
     connect(this,SIGNAL(Disconnected()),win->GetStatusObject() ,SLOT(onLostConnection()));
+    connect(this,SIGNAL(GetSesionId()),win->GetStatusObject(),SLOT(onGetSessionId()));
 
 }
 
@@ -118,6 +128,7 @@ commandExecutor::commandExecutor(std::shared_ptr<MainWindow> window)
     connect(this,SIGNAL(ErrorOccured(QString)),window->GetStatusObject() ,SLOT(onErrorOccured(QString)));
     connect(this,SIGNAL(Connected()),window->GetStatusObject() ,SLOT(onConnectionSuccess()));
     connect(this,SIGNAL(Disconnected()),window->GetStatusObject() ,SLOT(onLostConnection()));
+    connect(this,SIGNAL(GetSesionId()),window->GetStatusObject(),SLOT(onGetSessionId()));
 }
 
 void commandExecutor::timer_slot() {

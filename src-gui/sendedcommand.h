@@ -19,6 +19,10 @@ public:
 
     void addOrder(std::shared_ptr<order> added_order,const QString &rpc_num)
     {
+        if(rpc_num.size() == 0){
+            return;
+        }
+
         if( m_orders.contains(rpc_num) ){
             throw std::runtime_error("rpc num allrady exist");
         }

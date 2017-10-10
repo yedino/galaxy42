@@ -2,10 +2,12 @@
 #include <QModelIndex>
 #include <QContextMenuEvent>
 #include <QDebug>
+#include <QMessageBox>
 
 #include "peerlistform.h"
 #include "ui_peerlistform.h"
 #include "peereditdialog.h"
+#include "mainwindow.hpp"
 
 PeerListForm::PeerListForm(QWidget *parent) :
     QWidget(parent),
@@ -16,6 +18,8 @@ PeerListForm::PeerListForm(QWidget *parent) :
     ui->listView->setModel(model);
     model->sort(peersModel::name);
     m_model = model;
+
+
 }
 
 PeerListForm::~PeerListForm()
@@ -25,6 +29,13 @@ PeerListForm::~PeerListForm()
 
 void PeerListForm::contextMenuEvent(QContextMenuEvent *event)
 {
+    if(m_main_window){
+        if(! m_main_window->isWorking())
+//        QMessageBox box(" no working connection");
+            //       box.exec();
+         return;
+    }
+
     m_index = QModelIndex();
     if (ui->listView->currentIndex().isValid()){
         m_index = ui->listView->currentIndex();
