@@ -35,6 +35,14 @@ class commandExecutor final : public QObject {
 
         std::shared_ptr<order> getOrder(const QString& rpc_id);
 
+signals:
+
+    void Connected();
+    void Disconnected();
+    void ConnectionError();
+    void GetSesionId();
+    void ErrorOccured(QString err);
+
 private:
         MainWindow* m_main_window;
         netClient* m_net_client;

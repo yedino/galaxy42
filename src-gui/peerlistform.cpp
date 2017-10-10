@@ -25,7 +25,6 @@ PeerListForm::~PeerListForm()
 
 void PeerListForm::contextMenuEvent(QContextMenuEvent *event)
 {
-
     m_index = QModelIndex();
     if (ui->listView->currentIndex().isValid()){
         m_index = ui->listView->currentIndex();
@@ -47,6 +46,8 @@ void PeerListForm::contextMenuEvent(QContextMenuEvent *event)
     connect(send_massage,SIGNAL(triggered(bool)), this, SLOT(sendMessageActionSlot(bool)));
     connect(ping_action,SIGNAL(triggered(bool)), this, SLOT(pingActionSlot(bool)));
     connect(find_action,SIGNAL(triggered(bool)),this,SLOT(findActionSlot(bool)));
+    connect(ban_all_action,SIGNAL(triggered(bool)),this,SLOT(banAllSlot(bool)));
+    connect(remove_all_action,SIGNAL(triggered(bool)),this,SLOT(deleteAllSlot(bool)));
 
     QMenu menu;
 
@@ -103,12 +104,10 @@ void PeerListForm::removeActionSlot(bool)
 {
     qDebug()<<"remove peer";
     if(m_index.isValid()) {
- //       QString vip = m_index.sibling(m_index.row(),peersModel::vip).data().toString();
         QModelIndex work_index = m_index.sibling(m_index.row(),peersModel::vip);
 
         QString vip = m_model->data(work_index).toString();
         emit (removePeer(vip));
-//        m_model->removePeer(work_index);
         onPeerRemoved(vip);
     }
 }
@@ -177,4 +176,18 @@ void PeerListForm::onPeerRemoved(const QString &vip)
 void PeerListForm::addPeer(const MeshPeer & peer)
 {
 //	m_model->addPeer();
+}
+
+
+
+void PeerListForm::banAllSlot(bool)
+{
+//    m_model->bannAll();
+    emit banAll();
+}
+
+void PeerListForm::deleteAllSlot(bool)
+{
+//    m_model->removeAll();
+    emit deleteAll();
 }

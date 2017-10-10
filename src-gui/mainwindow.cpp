@@ -4,6 +4,7 @@
 #include <QHostAddress>
 #include <QNetworkInterface>
 #include <QSettings>
+#include <QMessageBox>
 
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
@@ -14,7 +15,7 @@
 #include "get_host_info.hpp"
 #include "quickstartdialog.h"
 #include "nodecontrolerdialog.h"
-
+#include "statusform.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -33,14 +34,19 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->peerListWidget_2,SIGNAL(addPeer(QString)),this,SLOT(onAddPeer(QString)));
     connect(ui->peerListWidget_2,SIGNAL(removePeer(QString)),this,SLOT(onRemovePeer(QString)));
     connect(ui->peerListWidget_2,SIGNAL(banPeer(QString)),this,SLOT(onBanBeer(QString)));
+    connect(ui->peerListWidget_2,SIGNAL(deleteAll()),this,SLOT(onDeleteAll()));
+    connect(ui->peerListWidget_2,SIGNAL(banAll()),this,SLOT(onBanAll()));
 
     ui->oldGuiDock->hide();
     initSettings();
+    m_status_form = new StatusForm(this);
 
     m_cmd_exec = new commandExecutor(this) ;//commandExecutor::construct(std::make_shared<MainWindow>(this));//std::make_shared<commandExecutor>(new commandExecutor(this));	//commandExecutor::construct(ret);
     m_sender = new CommandSender(m_cmd_exec,this);
     m_cmd_exec->setSender(m_sender);
     loadSettings();
+    ui->statusBar->addPermanentWidget(m_status_form);
+
 //    startNewCrpcConnection(m_host_ip,m_host_port.toInt());
 //    NodeControlerDialog dlg(this);
 //    dlg.exec();
@@ -63,7 +69,7 @@ void MainWindow::startNewCrpcConnection(const QString &host,uint port )
     m_cmd_exec = new commandExecutor(this) ;//commandExecutor::construct(std::make_shared<MainWindow>(this));//std::make_shared<commandExecutor>(new commandExecutor(this));	//commandExecutor::construct(ret);
     m_sender = new CommandSender(m_cmd_exec,this);
     m_cmd_exec->setSender(m_sender);
-    m_cmd_exec->startConnect(QHostAddress(host), port);		//! @todo zastanowic sie nad zrywaniem poprzedniego polaczenia
+    m_cmd_exec->startConnect(QHostAddress(host), port);		//! @todo think abaut last connection...
     m_sender->sendCommand(CommandSender::orderType::GETNAME);
 
 }
@@ -133,8 +139,6 @@ void MainWindow::add_host_info(QString host, uint16_t port)
 
     settings.setValue("rpcConnection/Ip",host);
     settings.setValue("rpcConnection/port",port);
-//    settings.setValue("");
-//    m_cmd_exec->startConnect(QHostAddress(host), port);		//! @todo zastanowic sie nad zrywaniem poprzedniego polaczenia
         startNewCrpcConnection(host,port);
 }
 
@@ -181,8 +185,6 @@ void MainWindow::connectToNet(QString net_id)
         qDebug()<<e.what();
     }
 
-    // potrzebne komendy - utworz prywatna , zmien na publiczna, sprawdz czy prywatna, sprawdz czy dopuszcza wielu uzytkownikow
-    // zablokuj mozliwosc tworzenia dla wielu uzytkownikow
 }
 
 void MainWindow::createNet()
@@ -288,7 +290,17 @@ void MainWindow::onGetMyInvitatiom(std::string ipv6)
 
 void MainWindow::errorNotification(QString err)
 {
-    ui->debugWidget->addItem(err);
+//    ui->debugWidget->addItem(err);
+    static bool error_flag = false;
+    if (error_flag) {
+        return ;
+    }
+
+     error_flag = true;
+
+    QMessageBox::warning(this,tr("Error"),err);
+
+     error_flag = false;
 }
 
 void MainWindow::addDebugInfo(const QString &str)
@@ -301,8 +313,8 @@ void MainWindow::loadSettings()
     QSettings setings;
     QString ip = setings.value("rpcConnection/Ip").toString();
     QString port = setings.value("rpcConnection/port").toString();
-    if (port.size()== 0) port="42000";			//domyslny port
-    if(ip.size() == 0) ip="127.0.0.1";			//domyslnie na maszynie lokalnej
+    if (port.size()== 0) port="42000";			//! @todo add ability of changing port
+    if(ip.size() == 0) ip="127.0.0.1";			//localhost
     m_host_port = port;
     m_host_ip = ip;
 
@@ -329,14 +341,13 @@ void MainWindow::initSettings()
 
 void MainWindow::onAllowFriend(bool val)
 {
-
-        //! @todo dodac wykonanie rozazow gdy tylko dodane w protokole rpc
+    //! @todo implement allow firends
 
 }
 
 void MainWindow::onAllowPeer(bool val)
 {
-        //! @todo dodac wykonanie rozazow gdy tylko dodane w protokole rpc
+        //! @todo implement allow strangers
 }
 
 void MainWindow::on_banButton_clicked()
@@ -397,7 +408,7 @@ void MainWindow::onRemovePeer(const QString& vip)
     }
 }
 
-void MainWindow::onAddPeer(const QString& peer_str)		//! funkcja wywolywana na add z listy peer
+void MainWindow::onAddPeer(const QString& peer_str)
 {
     try{
         MeshPeer peer;
@@ -409,7 +420,7 @@ void MainWindow::onAddPeer(const QString& peer_str)		//! funkcja wywolywana na a
 }
 
 
-void MainWindow::onSendMessage(const QString &vip, const QString &msg)	//! funkcja wywolywana na send msg z listy peer
+void MainWindow::onSendMessage(const QString &vip, const QString &msg)
 {
     MeshPeer peer;
     peer.setVip(vip);
@@ -417,7 +428,7 @@ void MainWindow::onSendMessage(const QString &vip, const QString &msg)	//! funkc
     //! @todo wykonanie komendy msg
 }
 
-void MainWindow::onFindPeer(const QString &vip)			//! funkcja wywolywana na find z listy peer
+void MainWindow::onFindPeer(const QString &vip)
 {
     //dobrac wlasciwa komende
 }
@@ -448,3 +459,19 @@ void MainWindow::onPeerAdded(const QString &invitation)
 ////	ui->peerListWidget_2->onPeerBanned()
 //}
 
+
+void MainWindow::onBanAll()
+{
+    m_sender->sendCommand(CommandSender::orderType::BANALL);
+}
+
+void MainWindow::onDeleteAll()
+{
+    m_sender->sendCommand(CommandSender::orderType::DELETEALL);
+}
+
+StatusForm* MainWindow::GetStatusObject()
+{
+    return m_status_form;
+    ;
+}

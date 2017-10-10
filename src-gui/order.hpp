@@ -64,6 +64,7 @@ public:
     virtual void execute(MainWindow &main_window) = 0;
     virtual ~order(){;}
 
+
 protected:
     std::string m_cmd;
     std::string m_msg;
@@ -73,7 +74,10 @@ protected:
     std::vector<std::string> m_msg_array;
     std::string m_rpc_name;
     std::string m_re;
-    commandExecutor *m_executor;
+    commandExecutor *m_executor = nullptr;
+    std::string m_peer;
+
+    std::string getPeerName();
 };
 
 
@@ -143,12 +147,11 @@ public:
     addPeerOrder(const RpcId& id,const MeshPeer &peer);
     addPeerOrder(const std::string &json_str,commandExecutor *executor);
     virtual std::string get_str() const;
-    void execute(MainWindow &main_window);
+    void execute(MainWindow &main_window) override;
 
 protected:
 //    MeshPeer m_peer_obj;
     std::string m_format;
-    std::string m_peer;
 };
 
 class banAllOrder final: public order
@@ -170,7 +173,7 @@ public:
     deletePeerOrder (deletePeerOrder *ord):order(ord){;}
     deletePeerOrder (const RpcId& Id,const MeshPeer &peer);
 
-    deletePeerOrder(const std::string &json_str);
+    deletePeerOrder(const std::string &json_str,commandExecutor *executor);
     void execute(MainWindow &main_window);
     virtual std::string get_str() const;
 protected:
@@ -218,11 +221,10 @@ public :
     }
 
     banPeerOrder(const RpcId& Id,const MeshPeer &peer);
-    banPeerOrder(const std::string &json_str);
+    banPeerOrder(const std::string &json_str,commandExecutor* exec);
     std::string get_str() const;
     void execute(MainWindow &main_window);
 protected:
-    std::string m_peer;
 
 };
 
