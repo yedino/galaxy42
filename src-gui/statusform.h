@@ -9,7 +9,7 @@ namespace Ui {
 class StatusForm;
 }
 
-class StatusForm : public QStatusBar
+class StatusForm : public QWidget
 {
     Q_OBJECT
 
@@ -26,12 +26,21 @@ public slots:
     void onConnectionSuccess();
     void onLostConnection();
     void onGetSessionId();
+    bool isWorking();
+
+signals:
+    netConnect(bool);
+
+private slots:
+    void on_pushButton_clicked();
 
 private:
 
     commandExecutor *m_executor = nullptr;
     QTimer m_timer;
     QTimer m_reconnectTimmer;
+
+    bool m_is_working = false;
 
     Ui::StatusForm *ui;
 };

@@ -68,6 +68,8 @@ public slots:
     void onBanAll();
     void onDeleteAll();
 
+    bool isWorking();
+
 private slots:
 
     void onAddPerrToList(const QString &peer);
@@ -89,6 +91,8 @@ private slots:
     void onAllowPeer(bool);
     void on_actionsettings_triggered();
 
+    void onNetConnected(bool);
+
 private:
     commandExecutor *m_cmd_exec;
 
@@ -102,6 +106,7 @@ private:
     QString m_host_ip;
     CommandSender* m_sender;
     StatusForm *m_status_form;
+
 
 signals:
 	void ask_for_peerlist();

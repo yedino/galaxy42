@@ -5,6 +5,7 @@
 
 #include "meshpeer.h"
 #include "peersmodel.h"
+class MainWindow;
 
 namespace Ui {
 class PeerListForm;
@@ -17,12 +18,15 @@ class PeerListForm : public QWidget
    peersModel *m_model;
 
    QModelIndex m_index; 	//last selected index
+    MainWindow *m_main_window = nullptr;
 
 public:
     explicit PeerListForm(QWidget *parent = 0);
     ~PeerListForm();
 
     peersModel* getModel();
+
+    void setMainWindow(MainWindow *mw){m_main_window = mw;}
 
     void onPeerBanned(const QString &vip);
     void onPeerAdded(const QString &vip);

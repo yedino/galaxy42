@@ -5,6 +5,7 @@
 #include <QNetworkInterface>
 #include <QSettings>
 #include <QMessageBox>
+#include <QErrorMessage>
 
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
@@ -25,11 +26,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
+    ui->peerListWidget_2->setMainWindow(this);
+
     QString ip = getLocalIps().at(0);
     QString vip = getLocalVips().at(0).split('%').at(0);
     ui->quickStart->setIps(ip,vip);
     connect(ui->quickStart,SIGNAL(connectNet(QString)),this,SLOT(connectToNet(QString)));
     connect(ui->quickStart,SIGNAL(createNet()),this,SLOT(createNet()));
+    connect(ui->quickStart, SIGNAL(allowFriend(bool)),this,SLOT(onAllowFriend(bool)));
+    connect(ui->quickStart, SIGNAL(allowStranger(bool)),this,SLOT(onAllowPeer(bool)));
+
 
     connect(ui->peerListWidget_2,SIGNAL(addPeer(QString)),this,SLOT(onAddPeer(QString)));
     connect(ui->peerListWidget_2,SIGNAL(removePeer(QString)),this,SLOT(onRemovePeer(QString)));
@@ -37,7 +43,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->peerListWidget_2,SIGNAL(deleteAll()),this,SLOT(onDeleteAll()));
     connect(ui->peerListWidget_2,SIGNAL(banAll()),this,SLOT(onBanAll()));
 
-    ui->oldGuiDock->hide();
+
+
+//    ui->oldGuiDock->hide();
     initSettings();
     m_status_form = new StatusForm(this);
 
@@ -45,23 +53,13 @@ MainWindow::MainWindow(QWidget *parent) :
     m_sender = new CommandSender(m_cmd_exec,this);
     m_cmd_exec->setSender(m_sender);
     loadSettings();
+
     ui->statusBar->addPermanentWidget(m_status_form);
 
-//    startNewCrpcConnection(m_host_ip,m_host_port.toInt());
-//    NodeControlerDialog dlg(this);
-//    dlg.exec();
-//    add_host_info(QString("192.168.1.105"),42000);
+    connect(m_status_form,SIGNAL(netConnect(bool)),this,SLOT(onNetConnected(bool)));
 
-	/* load peers from file - TODO
-	ParamsContainer params;
-	params.readParams("peers.json");
-	m_peer_lst = params.getPeerList();
-
-	for(auto it : m_peer_lst){
-		QString peer_val = QString::fromStdString(it.m_ipv6);
-		ui->peerListWidget->addItem(peer_val);
-	}
-	*/
+    m_status_form->setExecutor(m_cmd_exec);
+    isWorking();
 }
 
 void MainWindow::startNewCrpcConnection(const QString &host,uint port )
@@ -94,16 +92,16 @@ void MainWindow::update_peer_list(QString peer) {
 
 	m_tun_process->add_address(peer);
 
-	ui->peerListWidget->clear();
+//	ui->peerListWidget->clear();
 	qDebug() << "Peers:";
 	for (const auto &peer : m_tun_process->get_peer_list()) {
 		//qDebug() << peer.to_string();
-		ui->peerListWidget->addItem(QString::fromStdString(peer.to_string()));
+//		ui->peerListWidget->addItem(QString::fromStdString(peer.to_string()));
 	}
 }
 
 void MainWindow::on_minusButton_clicked() {
-
+/*
 	const auto &delete_list = ui->peerListWidget->selectedItems();
 	if(delete_list.isEmpty()) return;
 	try{
@@ -116,6 +114,7 @@ void MainWindow::on_minusButton_clicked() {
     } catch(...){
         qDebug() << "list is empty";
     }
+    */
 }
 
 void MainWindow::on_run_tunserver_clicked() {
@@ -143,7 +142,15 @@ void MainWindow::add_host_info(QString host, uint16_t port)
 }
 
 void MainWindow::on_connectButton_clicked() {
-/*
+
+
+    if( ! isWorking()) {
+        QErrorMessage message(this);
+        message.showMessage(tr("can't connect to node"));
+        message.exec();
+        return;
+    }
+    /*
     hostDialog host_dialog;
 
 	connect (&host_dialog, SIGNAL(host_info(QString, uint16_t)),
@@ -160,6 +167,13 @@ void MainWindow::on_connectButton_clicked() {
 
 void MainWindow::connectToNet(QString net_id)
 {
+    if( ! isWorking()) {
+        QErrorMessage message(this);
+        message.showMessage(tr("can't connect to node"));
+        message.exec();
+        return;
+    }
+
 
    try{
 //        nlohmann::json j;
@@ -223,14 +237,14 @@ void MainWindow::SavePeers(QString file_name) {
 }
 
 void MainWindow::add_to_debug_window(const std::string &message) {
-	ui->debugWidget->addItem(message.c_str());
-	ui->debugWidget->scrollToBottom();
+//	ui->debugWidget->addItem(message.c_str());
+//	ui->debugWidget->scrollToBottom();
 }
 
 void MainWindow::show_peers(const std::vector<std::string> &peers) {
-	ui->peerListWidget->clear();
+//	ui->peerListWidget->clear();
 	for (const auto &element : peers) {
-		ui->peerListWidget->addItem(QString(element.c_str()));
+//		ui->peerListWidget->addItem(QString(element.c_str()));
 	}
 }
 
@@ -305,7 +319,7 @@ void MainWindow::errorNotification(QString err)
 
 void MainWindow::addDebugInfo(const QString &str)
 {
-    ui->debugWidget->addItem(str);
+//    ui->debugWidget->addItem(str);
 }
 
 void MainWindow::loadSettings()
@@ -343,11 +357,24 @@ void MainWindow::onAllowFriend(bool val)
 {
     //! @todo implement allow firends
 
+    if( ! isWorking()) {
+        QErrorMessage message(this);
+        message.showMessage(tr("can't connect to node"));
+        message.exec();
+        return;
+    }
+
 }
 
 void MainWindow::onAllowPeer(bool val)
 {
         //! @todo implement allow strangers
+    if( ! isWorking()) {
+        QErrorMessage message(this);
+        message.showMessage(tr("can't connect to node"));
+        message.exec();
+        return;
+    }
 }
 
 void MainWindow::on_banButton_clicked()
@@ -460,6 +487,14 @@ void MainWindow::onPeerAdded(const QString &invitation)
 //}
 
 
+bool MainWindow::isWorking()
+{
+    bool value = m_status_form->isWorking();
+    ui->peerListWidget_2->setEnabled(value);
+    ui->quickStart->setEnabled(value);
+    return value;
+}
+
 void MainWindow::onBanAll()
 {
     m_sender->sendCommand(CommandSender::orderType::BANALL);
@@ -474,4 +509,18 @@ StatusForm* MainWindow::GetStatusObject()
 {
     return m_status_form;
     ;
+}
+
+void MainWindow::onNetConnected(bool val)
+{
+    isWorking();
+    if(!val) {
+        QErrorMessage message(this);
+        message.showMessage(tr("can't connect to node. check File ->settings"));
+        message.exec();
+    } else {
+        QErrorMessage msg(this);
+        msg.showMessage("connected to node");
+        msg.exec();
+    }
 }
