@@ -22,6 +22,8 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #include "../src/libs0.hpp" // libs for Antinet
 
+#include "../src-tools/tools_helper.hpp"
+
 #ifndef ANTINET_PART_OF_YEDINO
 
 #define print_debug(X) { ::std::ostringstream _dbg_oss; _dbg_oss<<__LINE__<<": "<<X<<::std::endl;  ::std::cerr<<_dbg_oss.str(); }
@@ -126,35 +128,98 @@ struct t_mytime {
 	t_mytime(std::chrono::time_point<std::chrono::steady_clock> time_) noexcept { m_time = time_; }
 };
 
+/**
+Timer that is incremented by .add(), then periodically .step() is called and optionally calc_speed_now and cout<<this;
+It should be thread-safe to use (maybe not well tested yet)
+*/
 class c_timerfoo {
 	public:
-		using t_my_count = long int;
-		using t_my_size = long int;
+		using t_my_count = uint64_t;
+		using t_my_size = uint64_t;
 
-		c_timerfoo();
+		c_timerfoo(int step_till_reset);
 		void add(t_my_count count, t_my_size size_totall) noexcept; ///< e.g. (3,1024) means we got 3 packets, that in sum have size 1024 B
 		std::string get_info() const ;
 		void print_info(std::ostream & ostr) const ;
 
+		void step(); ///< one step of the cycle
+		void calc_speed_now();
+		double get_speed() const;
+
 	private:
+		void reset();
+		void calc_avg();
+
 		std::atomic<t_mytime> m_time_started;
 		std::atomic<t_my_count> m_count;
 		std::atomic<t_my_size> m_size;
+
+		std::atomic<double> m_speed_now, m_speed_pck_now; ///< calculated speed. Mbit/s, pck/s
+		mutable std::mutex m_mutex; ///< protects some stats like speed_tab
+
+		std::vector<double> m_speed_tab; ///< under mutex!
+		int m_step_nr; ///< under mutex!
+		int m_step_till_reset; ///< under mutex!
+		double m_speed_avg1, m_speed_avg2; ///< under mutex
+
+		double m_best_result; ///< best so far result, taken from average of viable size. is not reseted.
 };
 
-c_timerfoo::c_timerfoo() : m_time_started(t_mytime{}), m_count(0), m_size(0) {
+c_timerfoo::c_timerfoo(int step_till_reset) : m_time_started(t_mytime{}), m_count(0), m_size(0),
+m_speed_now(0), m_speed_pck_now(0), m_step_nr(0),
+m_step_till_reset(step_till_reset),
+m_best_result(0)
+{
 }
+
+void c_timerfoo::reset() {
+	m_time_started=t_mytime{};
+	m_count=0;
+	m_size=0;
+	m_speed_now=0;
+	m_speed_pck_now=0;
+	{
+		std::lock_guard< std::mutex > lg(m_mutex);
+		m_speed_tab.clear();
+	}
+	m_step_nr=0;
+}
+
+void c_timerfoo::step() {
+	this->calc_speed_now();
+	bool should_reset=false;
+	{
+		std::lock_guard< std::mutex > lg(m_mutex);
+		m_speed_tab.push_back( get_speed() ); // *** add
+		++m_step_nr;
+		if ( (m_step_till_reset>0) && (m_step_nr >= m_step_till_reset) ) {
+			should_reset=true;
+
+			if ( ( m_size > 5 * 1000 * 1000 ) && (m_count > 10*1000 ) ) {
+				m_best_result = std::max( m_speed_avg1 , m_best_result );
+			}
+		}
+	}
+	this->calc_avg();
+	if (should_reset) this->reset();
+}
+
+double c_timerfoo::get_speed() const { return m_speed_now; }
 
 void c_timerfoo::add(t_my_count count, t_my_size size_totall) noexcept {
 	// [counter]
+
+	if (this->m_count == 0) {
+		t_mytime time_now( std::chrono::steady_clock::now() );
+		t_mytime time_zero;
+		this->m_time_started.compare_exchange_strong(
+			time_zero,
+			time_now
+		);
+	}
+
 	this->m_count += count;
 	this->m_size += size_totall;
-	t_mytime time_now( std::chrono::steady_clock::now() );
-	t_mytime time_zero;
-	this->m_time_started.compare_exchange_strong(
-		time_zero,
-		time_now
-	);
 }
 
 std::string c_timerfoo::get_info() const {
@@ -163,24 +228,45 @@ std::string c_timerfoo::get_info() const {
 	return oss.str();
 }
 
-void c_timerfoo::print_info(std::ostream & ostr) const {
+void c_timerfoo::calc_speed_now() {
 	auto time_now = std::chrono::steady_clock::now();
 	auto time_started = this->m_time_started.load().m_time;
 	t_my_size current_size = this->m_size.load();
 	t_my_count current_count = this->m_count.load();
 
-	double ellapsed_sec = ( std::chrono::duration_cast<std::chrono::milliseconds>(time_now - time_started) ).count() / 1000.;
+	double ellapsed_sec = (
+		std::chrono::duration_cast<std::chrono::microseconds>(time_now - time_started) ).count()
+		/ (1000.*1000. );
 	double current_size_speed  = current_size  / ellapsed_sec; // in B/s
 	double current_count_speed = current_count / ellapsed_sec; // in B/s
 
 	const double mega = (1*1000*1000);
 
+	m_speed_now = current_size_speed * 8. / mega;
+	m_speed_pck_now = current_count_speed / mega;
+}
+
+void c_timerfoo::calc_avg() {
+	std::lock_guard< std::mutex > lg(m_mutex);
+	m_speed_avg1 = mediana( m_speed_tab );
+	m_speed_avg2 = corrected_avg( m_speed_tab );
+}
+
+void c_timerfoo::print_info(std::ostream & ostr) const {
+	std::lock_guard< std::mutex > lg(m_mutex);
+
+	t_my_size current_size = this->m_size.load();
+	t_my_count current_count = this->m_count.load();
+
 	int detail=0;
 	if (detail>=2) { ostr << std::setw(9) << current_size  << " B "; }
-	ostr << std::setw(4) << (current_size_speed*8.f/mega)  << " Mb/s" ;
+	ostr << std::setw(4) << m_speed_avg1
+		<< " (" << std::setw(4) << m_speed_now
+		<< " best=" << std::setw(4) << m_best_result << ")"
+		<< " Mb/s" ;
 	ostr << " ";
 	if (detail>=1) { ostr << std::setw(6) << current_count << " p "; }
-	ostr << std::setw(4) << (current_count_speed/mega) << " Mp/s" ;
+	ostr << std::setw(4) << m_speed_pck_now << " Mp/s" ;
 }
 
 std::ostream & operator<<(std::ostream & ostr, c_timerfoo & timer) {
@@ -190,15 +276,15 @@ std::ostream & operator<<(std::ostream & ostr, c_timerfoo & timer) {
 
 // ============================================================================
 
-c_timerfoo g_speed_wire_recv;
+c_timerfoo g_speed_wire_recv(10);
 
 std::atomic<bool> g_atomic_exit;
 std::atomic<int> g_running_tuntap_jobs;
 
 std::atomic<long int> g_state_tuntap2wire_started;
 std::atomic<long int> g_state_tuntap_fullbuf;
-c_timerfoo g_state_tuntap2wire_in_handler1;
-c_timerfoo g_state_tuntap2wire_in_handler2;
+c_timerfoo g_state_tuntap2wire_in_handler1(0);
+c_timerfoo g_state_tuntap2wire_in_handler2(0);
 
 // ============================================================================
 // Wire
@@ -384,6 +470,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 					[&mysocket, &inbuf_tab , inbuf_nr, & mutex_handlerflow_socket](const boost::system::error_code & ec, std::size_t bytes_transferred_again)
 					{
 						_dbg1("Handler (again), size="<<bytes_transferred_again<<", ec="<<ec.message());
+						if (ec) _erro("Handler (again), size="<<bytes_transferred_again<<", ec="<<ec.message());
 						handler_receive(e_algo_receive::after_next_read, ec,bytes_transferred_again, mysocket, inbuf_tab,inbuf_nr, mutex_handlerflow_socket);
 					}
 			);
@@ -396,6 +483,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 					[&mysocket, &inbuf_tab , inbuf_nr, & mutex_handlerflow_socket](const boost::system::error_code & ec, std::size_t bytes_transferred_again)
 					{
 						_dbg1("Handler (again), size="<<bytes_transferred_again<<", ec="<<ec.message());
+						if (ec) _erro("Handler (again), size="<<bytes_transferred_again<<", ec="<<ec.message());
 						handler_receive(e_algo_receive::after_next_read, ec,bytes_transferred_again, mysocket, inbuf_tab,inbuf_nr, mutex_handlerflow_socket);
 					}
 			);
@@ -506,6 +594,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const int cfg_tuntap_ios_threads_per_one = func_cmdline("tuntap_ios_thr"); // for each ios of tuntap (if any ios are created for tuntap) how many threads to .run it in
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
+
+	const int cfg_run_timeout = func_cmdline_def("run_timeout", 30);
 
 	vector<asio::ip::udp::endpoint> peer_pegs;
 	//peer_pegs.emplace_back( asio::ip::address_v4::from_string("127.0.0.1") , 9000 );
@@ -705,11 +795,29 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::mutex welds_mutex;
 
 	// stop / show stats
-	_goal("The stop thread"); // exit flag --> ios.stop()
+	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
 	std::thread thread_stop(
 		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex] {
-			for (int i=0; true; ++i) {
+
+			std::vector<double> speed_tab;
+
+			auto run_time_start = std::chrono::steady_clock::now();
+
+			for (long int sample=0; true; ++sample) {
 				std::this_thread::sleep_for( std::chrono::milliseconds(500) );
+
+
+				auto run_time_now = std::chrono::steady_clock::now();
+				int run_time_ellapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time_start - run_time_now) ).count();
+				if ( run_time_ellapsed_sec > cfg_run_timeout) {
+					_mark("Test will end now, time allapsed: " << run_time_ellapsed_sec);
+					g_atomic_exit = true;
+				}
+
+
+				g_speed_wire_recv.step();
+				g_state_tuntap2wire_in_handler1.step();
+				g_state_tuntap2wire_in_handler2.step();
 
 				// [counter] read
 				std::ostringstream oss;
