@@ -22,13 +22,6 @@ void quickStartDialog::setIps(const QString &ip,const QString &invitation)
     ui->vipEdit->setText(vip);
     ui->myInviteEdit->setText(invitation);
 
-//   ui->vipEdit->setText(vip);
-//   QString invite = QString (vip+"-"+ip);
-//   ui->myInviteEdit->setText(vip);
-
-//   QStringList <QString> adresses = vip.split('@');
-//   QStringList <QString> ipv4adresses;
-//   QString virtualIp;
 }
 
 
@@ -39,7 +32,7 @@ quickStartDialog::~quickStartDialog()
 
 void quickStartDialog::chooseInvate(QString invate)
 {
-    ui->InviteEdit->setText(invate);		//@todo dodac sprawdzenie czy invate jest prawidlowe
+    ui->InviteEdit->setText(invate);		//!@todo check if invitation is propere
 }
 
 void quickStartDialog::on_allowFriendsBox_clicked(bool checked)
@@ -72,7 +65,7 @@ void quickStartDialog::on_connectButton_clicked()
         QString ip = ui->InviteEdit->text();
         ip = ip.split('-').at(0);
 
-        emit connectNet(ip);		//!@todo dorobic sprawdzenie czy wprowadzony tekst jest poprawny
+        emit connectNet(ip);		//!@todo chech if ip is propere
     }
 }
 
@@ -83,7 +76,7 @@ void quickStartDialog::on_QrScanButton_clicked()
 
 void quickStartDialog::on_QrZoomButton_clicked()
 {
-    QPixmap qr_code;			//@todo wstawic zeczywisty qrcode
+    QPixmap qr_code;			//!@todo add real qrCode
     QrDialog dlg(qr_code);
     dlg.exec();
 }

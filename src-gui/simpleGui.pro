@@ -42,7 +42,8 @@ SOURCES += \
     rpccounter.cpp \
     sendedcommand.cpp \
     commandsender.cpp \
-    nodecontrolerdialog.cpp
+    nodecontrolerdialog.cpp \
+    statusform.cpp
 
 
 HEADERS += \
@@ -70,7 +71,8 @@ HEADERS += \
     rpccounter.h \
     sendedcommand.h \
     commandsender.h \
-    nodecontrolerdialog.h
+    nodecontrolerdialog.h \
+    statusform.h
 
 FORMS += \
     mainwindow.ui \
@@ -85,7 +87,8 @@ FORMS += \
         peerlistform.ui \
     peereditdialog.ui\
         addpeerdialog.ui \
-    nodecontrolerdialog.ui
+    nodecontrolerdialog.ui \
+    statusform.ui
 
 
 debug {

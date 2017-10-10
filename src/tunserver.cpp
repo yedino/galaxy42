@@ -1080,7 +1080,7 @@ nlohmann::json c_tunserver::rpc_sending_test(const string &input_json) {
 nlohmann::json c_tunserver::rpc_add_peer(const string &input_json) {
 	auto input = nlohmann::json::parse(input_json);
 	auto peer = input["peer"].get<std::string>();
-	auto format = input["format"].get<std::string>();
+        auto format = input["format"].get<std::string>();
 	nlohmann::json ret;
 	ret["cmd"] = "add_peer";
 	auto can_i_add_peer = [this](const c_haship_addr &hip) {

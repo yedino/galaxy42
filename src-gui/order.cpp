@@ -1,73 +1,6 @@
 #include "order.hpp"
 #include "mainwindow.hpp"
 #include "nodecontrolerdialog.h"
-/*
- *	komenda hello
- * komenda czego klient chce sluchac
- *
- *
- * 			// format odpowiedzi: jezeli zawieraja error: to znaczy ze cos poszlo nie tak , ok jezeli wszystko w porzadku , warrning - jezeli cos moze byc nie w porzadku - np ususwanie peera ktorego nie bylo
-    Ping
-
-    Request: {"cmd":"ping","msg":"ping","state":"ok"}
-    Response: {"cmd":"ping","msg":"pong","state":"ok"}
-
-    Peer list
-
-    Request: {"cmd":"peer_list","msg":"[]","state":"ok"}
-    Response: {"cmd":"peer_list","peers":"[*list of connected peers*]", "msg":"ok:","state":"ok"}
-
-    Add peer
-
-    //for old format
-    Request: {"cmd":"add_peer","format":"0.1","peer":"<ipv4>:<galaxy_port>-<ipv6>","state":"ok"}
-    or
-    //for new format
-    Request: {"cmd":"add_peer","format":"1.0","peer":"<ipv6>@(udp:<ipv4>:<galaxy_port>)","state":"ok"}
-    Response: {"cmd":"add_peer","msg":"ok: Peer added","state":"ok"}
-    or
-    Response: {"cmd":"add_peer","msg":"fail: Bad peer format","state":"error"}
-
-    Delete peer
-
-    Request: {"cmd":"delete_peer","peer":"<ipv6>","state":"ok"}
-    Response: {"cmd":"delete_peer","msg":"ok: Peer deleted","state":"ok"}
-    or
-    Response: {"cmd":"delete_peer","msg":"fail: Bad peer format","state":"error"}
-
-    Delete all peers
-
-    Request: {"cmd":"delete_all_peers","state":"ok"}
-    Response: {"cmd":"delete_all_peers","msg":"ok: All peers deleted","state":"ok"}
-
-    Ban peer
-
-    Request: {"cmd":"ban_peer","peer":"<ipv6>","state":"ok"}
-    Response: {"cmd":"ban_peer","msg":"ok: Peer banned","state":"ok"}
-    or
-    Response: {"cmd":"ban_peer","msg":"fail: Bad peer format","state":"error"}
-
-    Ban all peers
-
-    Request: {"cmd":"ban_all_peer","state":"ok"}
-    Response: {"cmd":"ban_all_peer","msg":"ok: All peers banned","state":"ok"}
-
-    Ban list
-
-    Request: {"cmd":"ban_list","state":"ok"}
-    Response: {"peers":[<ipv6_1>, <ipv6_2> ...],"cmd":"ban_list","msg":"ok","state":"ok"}
-
-    Get galaxy ipv6
-
-    Request: {"cmd":"get_galaxy_ipv6","state":"ok"}
-    Response: {"cmd":"get_galaxy_ipv6","ipv6":"<ipv6>", "msg":"ok:","state":"ok"}
-
-    Get galaxy new format reference
-
-    Request: {"cmd":"get_galaxy_invitation", "msg":[*list of ipv4 addresses *],"state":"ok"}
-    Response: {"cmd":"get_galaxy_invitaion","inv":"<galaxy-new-format-invitation>", "msg":"ok:","state":"ok"}
-
-*/
 
 std::string setIps::get_str() const
 {
@@ -101,7 +34,7 @@ void setIps::execute(MainWindow &main_window)
         main_window.errorNotification(QString::fromStdString(m_msg));
     } else {
         main_window.addDebugInfo(QString::fromStdString(m_msg));
-        main_window.onGetMyInvitatiom(m_msg);		//! dodac ip
+        main_window.onGetMyInvitatiom(m_msg);
     }
 }
 
@@ -218,7 +151,7 @@ std::string getGalaxyOrder::get_str() const
     j["cmd"]= m_cmd;
     j["msg"] = m_msg_array;
     j["state"] = m_state;
-
+    j["id"] = m_id;
 
     return j.dump();
 }
@@ -242,12 +175,12 @@ addPeerOrder::addPeerOrder(const std::string &json_str,commandExecutor * executo
         m_msg = j["msg"];
         m_state = j["state"];
         m_id = j["id"];
-        if(m_state == "ok"){
-//            m_format = j["format"];
-//            m_peer = j["peer"];
             m_re = j["re"];
+        if(m_state == "ok") {
+            if(j.find("peer") != j.end()) {
+                m_peer = j["peer"];
+            }
         }
-
     } catch(std::exception &e) {
         qDebug()<<"add peers parse error"<<json_str.c_str();
     }
@@ -265,12 +198,9 @@ void addPeerOrder::execute(MainWindow &main_window)
     if(m_state.find("error") != std::string::npos){ //if contains error
         main_window.errorNotification(QString::fromStdString(m_msg));
     }else{
-        auto ord_ptr =  m_executor->getOrder(QString::fromStdString(m_re));
-        auto ord = ord_ptr.get();
-
-       try {
-            addPeerOrder* add_ord = dynamic_cast<addPeerOrder*>(ord);
-            main_window.onPeerAdded(QString::fromStdString( add_ord->m_peer ));
+        try{
+            std::string peer = getPeerName();
+            main_window.onPeerAdded(QString::fromStdString( peer ));
        } catch(std::bad_cast &e) {
             qDebug()<<e.what();
         }
@@ -283,10 +213,11 @@ banPeerOrder::banPeerOrder(const RpcId& id,const MeshPeer &peer):order(id)
     m_cmd = "ban_peer";
     m_state = "ok";
     m_peer = peer.getVip().toStdString();
+
 //    m_peer = peer.getVip();
 }
 
-banPeerOrder::banPeerOrder(const std::string &json_str)
+banPeerOrder::banPeerOrder(const std::string &json_str,commandExecutor* exec)
 {
 /*
     Ban peer
@@ -296,6 +227,7 @@ banPeerOrder::banPeerOrder(const std::string &json_str)
     or
     Response: {"cmd":"ban_peer","msg":"fail: Bad peer format","state":"error"}
 */
+    m_executor = exec;
     try {
         using nlohmann::json;
         json j = json::parse(json_str);
@@ -304,12 +236,14 @@ banPeerOrder::banPeerOrder(const std::string &json_str)
         m_state = j["state"];
 
         if(m_state == "ok"){
-            m_peer = j["peer"];
+            if(j.find("peer") != j.end() ){
+                m_peer = j["peer"];
+            }
             m_re = j["re"];
         }
 
     } catch(std::exception &e) {
-        qDebug()<<"add peers parse error"<<json_str.c_str();
+        qDebug()<<"ban peers parse error"<<json_str.c_str();
     }
 
 }
@@ -317,13 +251,18 @@ banPeerOrder::banPeerOrder(const std::string &json_str)
 std::string banPeerOrder::get_str() const
 {
 
-    nlohmann::json j{{"cmd", m_cmd} , {"peer",m_peer} , {"state",m_state}};
+    nlohmann::json j{{"cmd", m_cmd} , {"peer",m_peer} , {"state",m_state},{"id",m_id}};
     return j.dump();
 }
 
 void banPeerOrder::execute(MainWindow &main_window)
 {
-
+    try {
+        std::string peer = getPeerName();
+//        main_window.onBanBeer(peer);
+    } catch (std::exception &e) {
+        qDebug()<<e.what();
+    }
 }
 
 
@@ -346,8 +285,7 @@ banAllOrder::banAllOrder(const std::string &json_str): order(json_str)
 
 void banAllOrder::execute(MainWindow &main_window)
 {
-    if(m_msg.find("bad") != std::string::npos ) { //! nieprawidlowy format peera
-        //! @todo dopisac do mainWindow - dialog z wystepujacymi bledami
+    if(m_msg.find("bad") != std::string::npos ) {
         main_window.errorNotification(QString::fromStdString(m_msg));
     }else {
         main_window.addDebugInfo(QString::fromStdString(m_msg));
@@ -364,7 +302,7 @@ deletePeerOrder::deletePeerOrder(const RpcId& id,const MeshPeer &peer)
 
 }
 
-deletePeerOrder::deletePeerOrder(const std::string &json_str):order(json_str)
+deletePeerOrder::deletePeerOrder(const std::string &json_str,commandExecutor *exec):order(json_str)
 {
     try {
         using nlohmann::json;
@@ -372,7 +310,7 @@ deletePeerOrder::deletePeerOrder(const std::string &json_str):order(json_str)
         m_msg = j["msg"];
         m_state = j["state"];
         m_re = j["re"];
-
+        m_executor = exec;
     } catch(std::exception &e) {
         qDebug()<<"delete peer order"<<json_str.c_str();
     }
@@ -380,12 +318,18 @@ deletePeerOrder::deletePeerOrder(const std::string &json_str):order(json_str)
 
 void deletePeerOrder::execute(MainWindow &main_window)
 {
-    if(m_state == "ok" ) { //! nieprawidlowy format peera
-        //! @todo dopisac do mainWindow - dialog z wystepujacymi bledami
+    if(m_state == "ok" ) {
 //        main_window.addDebugInfo(QString::fromStdString(m_msg));
 //           main_window.onPeerRemoved(QString::fromStdString(m_peer));
     } else {
-        main_window.errorNotification(QString::fromStdString(m_msg));
+
+        try{
+            std::string peer = getPeerName();
+//			main_window.onDeletePeer(peer);
+        } catch(std::exception &e) {
+            qDebug()<<e.what();
+        }
+ //      main_window.errorNotification(QString::fromStdString(m_msg));
     }
 }
 
@@ -395,6 +339,7 @@ std::string deletePeerOrder::get_str() const
     j["cmd"]= m_cmd;
     j["peer"] = m_peer;
     j["state"] = m_state;
+//    j["rpc"]
     return j.dump();
 
 }
@@ -407,8 +352,7 @@ deleteAllPeersOrder::deleteAllPeersOrder(const RpcId& id):order(id)
 
 void deleteAllPeersOrder::execute(MainWindow &main_window)
 {
-    if(m_msg.find("error:") != std::string::npos ) { //! nieprawidlowy format peera
-        //! @todo dopisac do mainWindow - dialog z wystepujacymi bledami
+    if(m_msg.find("error:") != std::string::npos ) {
         main_window.errorNotification(QString::fromStdString(m_msg));
     }else {
         main_window.addDebugInfo(QString::fromStdString(m_msg));
@@ -445,7 +389,6 @@ order::order(order::e_type cmd) {
 }
 
 std::string order::get_str() const {
-//	nlohmann::json j{{"cmd", m_cmd} , {"msg", m_msg}};
     nlohmann::json j;
     j["cmd"] = m_cmd;
     j["msg"] = m_msg;
@@ -464,6 +407,23 @@ std::string order::get_msg() const {
 
 std::vector<std::string> order::get_msg_array() const {
     return m_msg_array;
+}
+
+std::string order::getPeerName()
+{
+    if(!m_peer.empty()){
+        return m_peer;
+    }
+
+    if(m_executor == nullptr){
+        throw std::runtime_error (" no known executor");
+    }
+
+    auto ord_ptr =  m_executor->getOrder(QString::fromStdString(m_re));
+    auto ord = ord_ptr.get();
+    addPeerOrder* add_ord = dynamic_cast<addPeerOrder*>(ord);
+    return add_ord->m_peer;
+
 }
 
 

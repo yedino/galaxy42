@@ -33,17 +33,17 @@ peer_reference peer_reference::get_validated_ref(std::string ref) {
 		} else
 			throw std::invalid_argument("bad format of input remote address and port");
 /*
-		boost::system::error_code ec;
-		// validate ipv4
-		boost::asio::ip::address_v4::from_string(r_ipv4, ec);
-		if (ec)
-			throw std::invalid_argument("bad format of input remote IPv4 address");
-		// validate ipv6
-		boost::asio::ip::address_v6::from_string(r_ipv6, ec);
-		if(ec)
-			throw std::invalid_argument("bad format of input remote IPv6 address");
+        boost::system::error_code ec;
+        // validate ipv4
+        boost::asio::ip::address_v4::from_string(r_ipv4, ec);
+        if (ec)
+            throw std::invalid_argument("bad format of input remote IPv4 address");
+        // validate ipv6
+        boost::asio::ip::address_v6::from_string(r_ipv6, ec);
+        if(ec)
+            throw std::invalid_argument("bad format of input remote IPv6 address");
 */
-	} else
+    } else
 		throw std::invalid_argument("bad format of input ref - missing '-'");
 	return {r_ipv4 ,stoi(r_port), r_ipv6};
 }

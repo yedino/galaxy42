@@ -35,10 +35,11 @@ public slots:
     void sendMessageActionSlot(bool);
     void findActionSlot(bool);
     void onPeerFounded(QString, QString);
-
     void onPeerRemoved(const QString &peer);
-
     void addPeer(const MeshPeer & peer);
+
+    void banAllSlot(bool);
+    void deleteAllSlot(bool);
 signals:
 
     void pingPeer(QString);
@@ -47,6 +48,9 @@ signals:
     void addPeer(QString);
     void sendMessage(QString,QString);
     void findPeer(QString);
+
+    void banAll();
+    void deleteAll();
 
 protected slots:
     void contextMenuEvent(QContextMenuEvent *event);

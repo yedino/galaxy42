@@ -12,12 +12,14 @@ netClient::netClient(commandExecutor* cmd_exec_ptr)
     m_hmac_key.fill(0x42); // @todo load from settings!!!
 }
 
-void netClient::startConnect(const QHostAddress &address, uint16_t port) {
+bool netClient::startConnect(const QHostAddress &address, uint16_t port) {
 	m_socket->connectToHost(address, port);
 	// we need to wait...
 	if(!m_socket->waitForConnected(5000)) {
 		qDebug() << "Error: " << m_socket->errorString();
-	}
+        return false;
+    }
+    return true;
 }
 
 void netClient::closeConnection()

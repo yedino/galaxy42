@@ -24,7 +24,7 @@ NodeControlerDialog::NodeControlerDialog(MainWindow* mw,QHostAddress address, ui
     m_executor->setSender(m_sender);
     QString host;
 
-    m_executor->startConnect(QHostAddress(address), port);		//! @todo zastanowic sie nad zrywaniem poprzedniego polaczenia
+    m_executor->startConnect(QHostAddress(address), port);		//! @todo think abaout last send
 }
 
 NodeControlerDialog::~NodeControlerDialog()

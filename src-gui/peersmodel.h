@@ -43,6 +43,8 @@ public slots:
     void confirmDeletePeer(const MeshPeer& peer);
     void confirmBanPeer(const MeshPeer & peer);
     void updatePeerList(QList<MeshPeer*> new_list);
+    void deletaAllPeers();
+    void banAllPeers();
 
     MeshPeer* findPeer(QString value,Columns col);
 

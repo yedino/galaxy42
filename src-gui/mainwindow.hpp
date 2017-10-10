@@ -18,6 +18,7 @@
 
 class commandExecutor;
 class CommandSender;
+class StatusForm;
 
 namespace Ui {
 class MainWindow;
@@ -40,6 +41,7 @@ public:
 
     void startNewCrpcConnection(const QString &host, uint port);
 
+    StatusForm *GetStatusObject();
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
@@ -62,6 +64,9 @@ public slots:
 
     void onPeerRemoved(const QString &vip);
     void onPeerAdded(const QString &vip);
+
+    void onBanAll();
+    void onDeleteAll();
 
 private slots:
 
@@ -96,6 +101,7 @@ private:
     QString m_host_port;
     QString m_host_ip;
     CommandSender* m_sender;
+    StatusForm *m_status_form;
 
 signals:
 	void ask_for_peerlist();
