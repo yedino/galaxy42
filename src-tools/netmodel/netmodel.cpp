@@ -206,7 +206,7 @@ c_timerfoo g_state_tuntap2wire_in_handler2;
 
 /// input buffer, e.g. for reading from wire
 struct t_inbuf {
-	char m_data[1024];
+	char m_data[65535];
 	static size_t size();
 	asio::ip::udp::endpoint m_ep;
 };
