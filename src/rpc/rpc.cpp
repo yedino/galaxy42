@@ -211,9 +211,11 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		const std::string cmd_name = j.begin().value();
 		dbg("cmd name " << cmd_name);
 		// calling rpc function
-		m_rpc_server_ptr->m_rpc_functions_map_mutex.lock();
-		nlohmann::json json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
-		m_rpc_server_ptr->m_rpc_functions_map_mutex.unlock();
+		nlohmann::json json_response;
+		{
+			LockGuard<Mutex> lg(m_rpc_server_ptr->m_rpc_functions_map_mutex);
+			json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		}
 		json_response["id"] = get_command_id();
 		const std::string response = json_response.dump();
 		// serialize response
