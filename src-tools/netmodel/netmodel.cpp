@@ -837,7 +837,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_mark("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		std::thread thr = std::thread(
-			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep]()
+			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, &cfg_size_tuntap_maxread]()
 			{
 				++g_running_tuntap_jobs;
 				int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
