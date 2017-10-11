@@ -21,6 +21,8 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <mutex>
 
 #include "../src/libs0.hpp" // libs for Antinet
+#include "../src/stdplus/tab.hpp"
+#include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
 
@@ -444,6 +446,7 @@ TT get_from_cmdline(const string & name, t_mycmdline &cmdline, TT def) {
 	bool got_it = set_from_cmdline(the_val, name, cmdline, false);
 	if (!got_it) the_val=def;
 	return the_val;
+}
 
 
 void asiotest_udpserv(std::vector<std::string> options) {
@@ -481,18 +484,23 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const vector<int> cfg_wire_ios_cpu // [4] = 7 would mean: for wire ios index #4, run it on cpu number #7
 	=
 	[&mycmdline]() {
-		_goal("parse - look for cpu");
 		vector<int> ret;
 		string choice = get_from_cmdline("wire_cpu", mycmdline, std::string(""));
-		_goal("cpu configuration: " << choice);
+		_info("cpu configuration: " << choice);
+		auto the_size = choice.size();
+		if (the_size<1) return ret;
+		// --- size>1 ---
 		size_t pos1=0;
 		while (true) {
-			_mark("parse, pos1="<<pos1);
+			// _mark("parse, pos1="<<pos1);
 			size_t pos2 = choice.find(',',pos1);
-			if (pos2 == string::npos) break;
+			if (pos2 == string::npos) pos2=choice.size()-1;
 			string cpu_str = choice.substr(pos1,pos2);
+			ret.push_back( safe_atoi( cpu_str ) );
+			// _mark("cpu_str="<<cpu_str);
+			if ( pos2 >= (the_size-1) ) break;
 			pos1=pos2+1;
-			_mark(cpu_str);
+			// _mark(cpu_str);
 		}
 		return ret;
 	} ();
@@ -628,9 +636,20 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	vector<std::thread> ios_wire_thread;
 	for (int ios_nr = 0; ios_nr < cfg_num_ios; ++ios_nr) {
 		for (int ios_thread=0; ios_thread<cfg_num_thread_per_ios; ++ios_thread) {
-			_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread);
+			int cpu_nr = container_get_or_default( cfg_wire_ios_cpu , ios_thread , -1 );
+			_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread
+				<< " cpu="<<cpu_nr);
+
 			std::thread thread_run(
-				[&ios_wire, ios_thread, ios_nr] {
+				[&ios_wire, ios_thread, ios_nr, cpu_nr] {
+
+					try {
+						stdplus::affinity::set_current_thread_affinity( cpu_nr );
+					}
+					catch (const std::exception & ex) {
+						_erro("Can not set CPU: " << ex.what());
+					}
+
 					while (!g_atomic_exit) {
 						ios_wire.at( ios_nr )->run(); // <=== this blocks, for entire main loop, and runs (async) handlers here
 						_note("WIRE: ios worker run (ios_thread="<<ios_thread<<" on ios_nr=" << ios_nr <<") is done... will restat?");
@@ -860,7 +879,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// tuntap: DO WORK
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
-		_mark("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
+		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		std::thread thr = std::thread(
 			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep]()
@@ -1015,7 +1034,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		assert(inbuf_nr >= 0);
 		assert(socket_nr_raw >= 0);
 		int socket_nr = socket_nr_raw % wire_socket.size(); // spread it (rotate)
-		_mark("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
+		_note("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
 
 		auto inbuf_asio = asio::buffer( inbuf_tab.addr(inbuf_nr) , t_inbuf::size() );
 		_dbg1("buffer size is: " << asio::buffer_size( inbuf_asio ) );
