@@ -3,7 +3,6 @@
 
 #include "gtest/gtest.h"
 
-#include <ctpl_stl.h>
 #include "../libs0.hpp"
 /*
 #include "../galaxysrv.hpp"
