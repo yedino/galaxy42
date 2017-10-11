@@ -46,20 +46,20 @@ public:
 signals:
 
     void allowFriend(bool);				//! signal that allow firend
-    void allowStranger(bool);			//!sygnal that allow strangers to net
-    void createNet();					//! sygnal create net
-    void connectNet(QString net);		//!sygnal connect net
-    void addUser(QString user_id);		//!sygnal that add user
-    void removeUser(QString user_id);	//!sygnal remove usera
+    void allowStranger(bool);			//!signal that allow strangers to net
+    void createNet();					//!signal create net
+    void connectNet(QString net);		//!signal connect net
+    void addUser(QString user_id);		//!signal that add user
+    void removeUser(QString user_id);	//!signal remove usera
 
 
 public slots:
-    void chooseInvate(QString invate);	//! slot from chose invittaion from address book
+    void chooseInvate(QString invate);	//! slot for option: chose invittaion from address book
 
 private slots:
 
-    void on_allowFriendsBox_clicked(bool checked);		//! slot  of signal allow friend to connect
-    void on_allowStrangersBox_clicked(bool checked);	//! slot check boxa stranger to connect
+    void on_allowFriendsBox_clicked(bool checked);		//! slot for option: allow friend to connect
+    void on_allowStrangersBox_clicked(bool checked);	//! slot for option: allow stranger to connect
 
 
     void on_wwwButton_clicked();

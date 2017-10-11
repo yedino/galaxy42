@@ -43,7 +43,8 @@ SOURCES += \
     sendedcommand.cpp \
     commandsender.cpp \
     nodecontrolerdialog.cpp \
-    statusform.cpp
+    statusform.cpp \
+    processrunner.cpp
 
 
 HEADERS += \
@@ -72,7 +73,8 @@ HEADERS += \
     sendedcommand.h \
     commandsender.h \
     nodecontrolerdialog.h \
-    statusform.h
+    statusform.h \
+    processrunner.h
 
 FORMS += \
     mainwindow.ui \
@@ -126,3 +128,7 @@ DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/sodium.lib
 else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium.a
+
+TRANSLATIONS = hellotr_pl.ts
+
+#include "trivialserialize.hpp"

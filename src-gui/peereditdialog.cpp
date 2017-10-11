@@ -5,12 +5,12 @@
 #include "ui_peereditdialog.h"
 
 
-PeerEditDialog::PeerEditDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::PeerEditDialog)
+PeerEditDialog::PeerEditDialog( QWidget *parent ) :
+    QDialog( parent ),
+    ui( new Ui::PeerEditDialog )
 {
-    ui->setupUi(this);
-    ui->buttonBox->button(ui->buttonBox->Ok)->setEnabled(false);
+    ui->setupUi( this );
+    ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
 }
 
 
@@ -18,14 +18,14 @@ QString PeerEditDialog::getPeerString()
 {
     MeshPeer peer;
     try {
-        peer.setName(ui->nameEdit->text());
-        peer.setIP(ui->ipEdit->text());
-        peer.setVip(ui->VipEdit->text());
-    } catch (std::exception &e) {
+        peer.setName( ui->nameEdit->text() );
+        peer.setIP( ui->ipEdit->text() );
+        peer.setVip( ui->VipEdit->text() );
+    } catch ( std::exception &e ) {
         //! @todo add dialog with error
     }
 
-    return QString::fromStdString(peer.serialize());
+    return QString::fromStdString( peer.serialize() );
 }
 
 PeerEditDialog::~PeerEditDialog()
@@ -33,12 +33,12 @@ PeerEditDialog::~PeerEditDialog()
     delete ui;
 }
 
-void PeerEditDialog::setData(const QString &name, const QString &vip, const QString &ip)
+void PeerEditDialog::setData( const QString &name, const QString &vip, const QString &ip )
 {
-    ui->nameEdit->setText(name);
-    ui->ipEdit->setText(ip);
-    ui->VipEdit->setText(vip);
-    ui->inviteEdit->setText(createInvitation());
+    ui->nameEdit->setText( name );
+    ui->ipEdit->setText( ip );
+    ui->VipEdit->setText( vip );
+    ui->inviteEdit->setText( createInvitation() );
 }
 
 void PeerEditDialog::on_QrScanButton_clicked()
@@ -57,7 +57,7 @@ void PeerEditDialog::on_VipEdit_editingFinished()
     //! @todo implement
 
 
-    ui->inviteEdit->setText(createInvitation());
+    ui->inviteEdit->setText( createInvitation() );
 }
 
 QString PeerEditDialog::createInvitation()
@@ -65,29 +65,29 @@ QString PeerEditDialog::createInvitation()
     QString ip = ui->ipEdit->text();
     QString vip = ui->VipEdit->text();
 
-    if(ip.size() > 0) {
-        if( QHostAddress(ip).protocol() != QAbstractSocket::IPv4Protocol ) {
+    if( ip.size() > 0 ) {
+        if( QHostAddress( ip ).protocol() != QAbstractSocket::IPv4Protocol ) {
             qDebug()<<"ip is unproper";
-            ui->buttonBox->button(ui->buttonBox->Ok)->setEnabled(false);
+            ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
     } else {
-        ui->buttonBox->button(ui->buttonBox->Ok)->setEnabled(false);
+        ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
         return QString ();
     }
 
-    if(vip>0) {
-        if( QHostAddress(vip).protocol() != QAbstractSocket::IPv6Protocol ) {
+    if( vip>0 ) {
+        if( QHostAddress( vip ).protocol() != QAbstractSocket::IPv6Protocol ) {
             qDebug()<<"vip is unproper";
-            ui->buttonBox->button(ui->buttonBox->Ok)->setEnabled(false);
+            ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
     } else {
-            ui->buttonBox->button(ui->buttonBox->Ok)->setEnabled(false);
-            return QString();
+        ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
+        return QString();
     }
 
-    ui->buttonBox->button(ui->buttonBox->Ok)->setEnabled(true);
+    ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( true );
 
     QString invitation = vip+"@"+ip;
     return invitation;
@@ -97,12 +97,12 @@ void PeerEditDialog::on_ipEdit_editingFinished()
 {
     //! @todo add check data
 
-    ui->inviteEdit->setText(createInvitation());
+    ui->inviteEdit->setText( createInvitation() );
 }
 
 void PeerEditDialog::on_buttonBox_accepted()
 {
-    emit editPeer(getPeerString());
+    emit editPeer( getPeerString() );
 }
 
 
