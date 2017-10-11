@@ -400,7 +400,16 @@ struct t_mycmdline {
 	void add(const string & arg) { m_arg.push_back(arg); m_used.push_back(false); }
 };
 
-// T must be integral. Will set target_var with the number from "foo=42", when name="foo". Provide the cmdline;
+template <typename TT>
+TT assign_from_string(const std::string & s) {
+	return safe_atoi(s);
+}
+template <>
+std::string assign_from_string<std::string>(const std::string & s) {
+	return s;
+}
+
+// Will set target_var with the number from "foo=42", when name="foo". Provide the cmdline;
 // Throws if required==true but value is not found.
 // Returns if the value was found.
 template<typename T>
@@ -414,7 +423,7 @@ bool set_from_cmdline(T & target_var, const string & name, t_mycmdline &cmdline,
 		if (one_name == name) {
 			string val=arg.substr(pos+1);
 			_note("argument ["<<name<<"] = ["<<val<<"] (ix="<<ix<<")");
-			target_var = safe_atoi(val);
+			target_var = assign_from_string<T>( val );
 			cmdline.m_used.at(ix) = true; // it was used
 			return true;
 		}
@@ -424,17 +433,18 @@ bool set_from_cmdline(T & target_var, const string & name, t_mycmdline &cmdline,
 }
 
 int get_from_cmdline(const string & name, t_mycmdline &cmdline) {
-	int the_val=0;
+	int the_val = int{};
 	set_from_cmdline(the_val, name, cmdline, true);
 	return the_val;
 }
 
-int get_from_cmdline(const string & name, t_mycmdline &cmdline, int def) {
-	int the_val=0;
+template <typename TT>
+TT get_from_cmdline(const string & name, t_mycmdline &cmdline, TT def) {
+	TT the_val = TT{};
 	bool got_it = set_from_cmdline(the_val, name, cmdline, false);
 	if (!got_it) the_val=def;
 	return the_val;
-}
+
 
 void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Starting " << __FUNCTION__ << " with " << options.size() << " arguments");
@@ -467,6 +477,25 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const int cfg_num_inbuf = func_cmdline("wire_buf"); // e.g. 32 ; this is also the number of flows (wire/p2p connections)
 	const int cfg_num_socket_wire = func_cmdline("wire_sock"); // 2 ; number of sockets - wire (p2p)
 	const int cfg_buf_socket_spread = func_cmdline_def("wire_spread",0); // 0 is: (buf0,sock0),(b1,s1),(b2,s0),(b3,s1),(b4s0) ; 1 is (b0,s0),(b1,s0),(b2,s1),(b3,s1)
+
+	const vector<int> cfg_wire_ios_cpu // [4] = 7 would mean: for wire ios index #4, run it on cpu number #7
+	=
+	[&mycmdline]() {
+		_goal("parse - look for cpu");
+		vector<int> ret;
+		string choice = get_from_cmdline("wire_cpu", mycmdline, std::string(""));
+		_goal("cpu configuration: " << choice);
+		size_t pos1=0;
+		while (true) {
+			_mark("parse, pos1="<<pos1);
+			size_t pos2 = choice.find(',',pos1);
+			if (pos2 == string::npos) break;
+			string cpu_str = choice.substr(pos1,pos2);
+			pos1=pos2+1;
+			_mark(cpu_str);
+		}
+		return ret;
+	} ();
 
 	const int cfg_port_faketuntap = 2345;
 
