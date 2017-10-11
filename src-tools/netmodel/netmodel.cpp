@@ -713,11 +713,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
 				oss << "; ";
 				oss << "Tuntap: ";
-				oss << "start="<<g_state_tuntap2wire_started<<' ';
-				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
-				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
-				oss <<" fullBuf="<<g_state_tuntap_fullbuf<<" ";
+				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
+//				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
+//				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
+				oss <<" fullBuf="<<g_state_tuntap_fullbuf.load(std::memory_order_relaxed)<<" ";
 				oss << "; ";
+
 				oss << "Welds: ";
 				{
 					std::lock_guard<std::mutex> lg(welds_mutex);
@@ -882,7 +883,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					); // start(post) handler: TUNTAP->WIRE start
 
 					_dbg4("TUNTAP-WIRE posted: weld=" << wire_socket_nr << " to P2P socket="<<wire_socket_nr);
-					++g_state_tuntap2wire_started;
+					g_state_tuntap2wire_started.fetch_add(std::memory_order_relaxed);
 
 				}; // send the full weld
 
@@ -911,7 +912,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						}
 						else {
 							_dbg4("No free tuntap buffers! - fullbuffer!");
-							++g_state_tuntap_fullbuf;
+							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
 							func_send_weld(0); // TODO choose weld
 							// forced send
 							continue ; // <---
