@@ -7,20 +7,20 @@
 #include "quickstartdialog.h"
 #include "ui_quickstartdialog.h"
 
-quickStartDialog::quickStartDialog(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::quickStartDialog)
+quickStartDialog::quickStartDialog( QWidget *parent ) :
+    QWidget( parent ),
+    ui( new Ui::quickStartDialog )
 {
-   ui->setupUi(this);
+    ui->setupUi( this );
 }
 
-void quickStartDialog::setIps(const QString &ip,const QString &invitation)
+void quickStartDialog::setIps( const QString &ip,const QString &invitation )
 {
     qDebug()<<"set invitations";
 
-    QString vip = IpReader::readVipFromInvitation(invitation);
-    ui->vipEdit->setText(vip);
-    ui->myInviteEdit->setText(invitation);
+    QString vip = IpReader::readVipFromInvitation( invitation );
+    ui->vipEdit->setText( vip );
+    ui->myInviteEdit->setText( invitation );
 
 }
 
@@ -30,42 +30,43 @@ quickStartDialog::~quickStartDialog()
     delete ui;
 }
 
-void quickStartDialog::chooseInvate(QString invate)
+void quickStartDialog::chooseInvate( QString invate )
 {
-    ui->InviteEdit->setText(invate);		//!@todo check if invitation is propere
+    ui->InviteEdit->setText( invate );		//!@todo check if invitation is propere
 }
 
-void quickStartDialog::on_allowFriendsBox_clicked(bool checked)
+void quickStartDialog::on_allowFriendsBox_clicked( bool checked )
 {
-    emit(allowFriend(checked));
+    emit( allowFriend( checked ) );
 }
 
 
-void quickStartDialog::on_allowStrangersBox_clicked(bool checked)
+void quickStartDialog::on_allowStrangersBox_clicked( bool checked )
 {
-    emit(allowStranger(checked));
+    emit( allowStranger( checked ) );
 }
 
 void quickStartDialog::on_wwwButton_clicked()
 {
     QString page_address = "www.google.com";
 
-    QUrl url(page_address);
-    bool done =	QDesktopServices::openUrl(url);
-    if(!done) {
-        QMessageBox msg(QMessageBox::Warning ,QString("browser problem"),QString("can't open browser"));
+    QUrl url( page_address );
+    bool done =	QDesktopServices::openUrl( url );
+    if( !done ) {
+        QMessageBox msg( QMessageBox::Warning,QString( tr( "browser problem" ) ),QString( tr( "can't open browser" ) ) );
+        msg.exec();
     }
 }
 
 void quickStartDialog::on_connectButton_clicked()
 {
-    if(ui->InviteEdit->text().isEmpty()) {
+    if( ui->InviteEdit->text().isEmpty() ) {
         emit createNet();
     } else {
         QString ip = ui->InviteEdit->text();
-        ip = ip.split('-').at(0);
+        ip = ip.split( '-' ).at( 0 );
 
-        emit connectNet(ip);		//!@todo chech if ip is propere
+        emit connectNet( ip );		//!@todo check if ip is propere
     }
 }
 
@@ -77,6 +78,6 @@ void quickStartDialog::on_QrScanButton_clicked()
 void quickStartDialog::on_QrZoomButton_clicked()
 {
     QPixmap qr_code;			//!@todo add real qrCode
-    QrDialog dlg(qr_code);
+    QrDialog dlg( qr_code );
     dlg.exec();
 }
