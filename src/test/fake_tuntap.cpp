@@ -63,15 +63,6 @@ size_t c_tuntap_fake_kernel::readtun( char * buf , size_t bufsize ) { // semanti
 	return size_full;
 }
 
-void thread_test()
-{
-	// thread pool example
-	unsigned int number_of_threads = 4;
-	auto fun = [](int id) {_note("thread id="<<id);};
-	ctpl::thread_pool tp(number_of_threads);
-	for(unsigned int i=0; i<10; i++) tp.push(fun);
-}
-
 c_tuntap_fake::c_tuntap_fake( c_tuntap_fake_kernel & kernel )
 	: m_kernel( kernel )
 {
