@@ -797,7 +797,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
 	std::thread thread_stop(
-		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex] {
+		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout] {
 
 			std::vector<double> speed_tab;
 
@@ -806,14 +806,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			for (long int sample=0; true; ++sample) {
 				std::this_thread::sleep_for( std::chrono::milliseconds(500) );
 
-
 				auto run_time_now = std::chrono::steady_clock::now();
-				int run_time_ellapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time_start - run_time_now) ).count();
+				int run_time_ellapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time_start - run_time_now).count();
 				if ( run_time_ellapsed_sec > cfg_run_timeout) {
 					_mark("Test will end now, time allapsed: " << run_time_ellapsed_sec);
 					g_atomic_exit = true;
 				}
-
 
 				g_speed_wire_recv.step();
 				g_state_tuntap2wire_in_handler1.step();
