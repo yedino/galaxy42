@@ -12,14 +12,15 @@ class commandExecutor;
 class netClient final : QObject {
 		Q_OBJECT
 	public:
-		netClient(std::shared_ptr<commandExecutor> cmd_exec_ptr);
-		void startConnect(const QHostAddress &address, uint16_t port);
+        netClient(commandExecutor* cmd_exec_ptr);
+        bool startConnect(const QHostAddress &address, uint16_t port);
 		bool is_connected();
 		void send_msg(const std::string &msg);
 
-		static QByteArray serialize_msg(const std::string &msg);
-	private:
-		std::weak_ptr<commandExecutor> m_cmd_exec;
+        static QByteArray serialize_msg(const std::string &msg);
+        void closeConnection();
+private:
+        commandExecutor* m_cmd_exec;
 		std::unique_ptr<QTcpSocket> m_socket;
 		dataeater m_data_eater;
 		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key;
