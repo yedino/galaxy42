@@ -556,14 +556,14 @@ if(NOT MINGW AND NOT WIN32)
 		COMMAND cp tunserver.elf nocap-tunserver.elf
 		# remove and copy again scripts: run
 		COMMAND rm -f "./rundevel.sh"
-		COMMAND cp "${CMAKE_SOURCE_DIR}/src/scripts/run/rundevel.sh" "./" || echo "Can not copy file"
+		COMMAND cp "${CMAKE_SOURCE_DIR}/src/scripts/run/rundevel.sh" "${CMAKE_BINARY_DIR}/" || echo "Can not copy file"
 		# remove and copy again scripts: qa/run-safe
 		# remove here all files copied [[list_qa_run_safe_files]]
 		COMMAND rm -f "./run-safe-mem"
 		COMMAND rm -f "./run-safe-thread-ub"
 		COMMAND rm -f "./valgrind_log_watch"
 		COMMAND rm -f "./valgrind_with_log_kill"
-		COMMAND cp "${CMAKE_SOURCE_DIR}/qa/run-safe/*" "./" || echo skip
+		COMMAND cp "${CMAKE_SOURCE_DIR}/qa/run-safe/*" "${CMAKE_BINARY_DIR}/" || echo skip
 
 		WORKING_DIRECTORY ./)
 
