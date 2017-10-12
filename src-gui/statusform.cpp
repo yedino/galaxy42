@@ -10,9 +10,8 @@ StatusForm::StatusForm( QWidget *parent ) :
     ui( new Ui::StatusForm )
 {
     ui->setupUi( this );
-
-    connect( &m_timer,SIGNAL( timeout() ),this,SLOT( onTickTimmer() ) );
-    connect( &m_reconnectTimmer,SIGNAL( timeout() ),this,SLOT( onReConnectTimmer() ) );
+    connect( &m_timer,SIGNAL( timeout() ),this,SLOT( onTickTimmer() ) );				// no check ping timmer yet
+    connect( &m_reconnectTimmer,SIGNAL( timeout() ),this,SLOT( onReConnectTimmer() ) );	//no reconnect timer yet
     m_is_working = false;
 }
 
@@ -52,7 +51,7 @@ void StatusForm::onConnectionSuccess()
 {
     // ustaw stan na wlaczony
     ui->statusInycator->setChecked( true );
-    ui->statusInycator->setStatusTip( tr( "connected - no rpc server dectected" ) );
+    ui->statusInycator->setStatusTip( tr( "connected - no rpc server detecected" ) );
     ui->statusInycator->setText( tr( "connected - no node" ) );
 
     if( m_is_working ) {
@@ -66,9 +65,9 @@ void StatusForm::onLostConnection()
 
     QErrorMessage msg ;
     msg.showMessage( QString( tr( "connection lost" ) ) );
-    ui->statusInycator->setStatusTip( tr( "unconnected" ) );
+    ui->statusInycator->setStatusTip( tr( "disconnected" ) );
     ui->statusInycator->setChecked( false );
-    ui->statusInycator->setText( tr( "unconnected" ) );
+    ui->statusInycator->setText( tr( "disconnected" ) );
 
     if( m_is_working ) {
         m_is_working = false;
@@ -88,7 +87,7 @@ void StatusForm::onGetSessionId()
 {
     ui->statusInycator->setChecked( true );
     ui->statusInycator->setStatusTip( tr( "got rpc id" ) );
-    ui->statusInycator->setText( tr( "got rpc id" ) );
+    ui->statusInycator->setText( tr( "All Ok" ) );
     m_is_working = true;
     emit netConnect( m_is_working );
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>403</width>
-    <height>250</height>
+    <width>406</width>
+    <height>256</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>383</width>
-        <height>230</height>
+        <width>386</width>
+        <height>236</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
@@ -57,6 +57,10 @@
             <widget class="QPushButton" name="wwwButton">
              <property name="text">
               <string>open www</string>
+             </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/globe-model</normaloff>:/globe-model</iconset>
              </property>
             </widget>
            </item>
@@ -155,6 +159,10 @@
              <property name="text">
               <string>Connect peer!</string>
              </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/dns</normaloff>:/dns</iconset>
+             </property>
             </widget>
            </item>
            <item>
@@ -164,12 +172,20 @@
                <property name="text">
                 <string>Allow-endpoint for friends</string>
                </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/grooup</normaloff>:/grooup</iconset>
+               </property>
               </widget>
              </item>
              <item>
               <widget class="QCheckBox" name="allowStrangersBox">
                <property name="text">
                 <string>Allow peering strangers</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/glob-telcom</normaloff>:/glob-telcom</iconset>
                </property>
               </widget>
              </item>
@@ -198,6 +214,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

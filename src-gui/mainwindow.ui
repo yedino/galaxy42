@@ -25,7 +25,7 @@
    </property>
    <widget class="QMenu" name="menu_Plik">
     <property name="title">
-     <string>P&amp;lik</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionDebug"/>
     <addaction name="actionsettings"/>
@@ -158,16 +158,23 @@
    </widget>
   </widget>
   <action name="actionDebug">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/ladybird</normaloff>:/ladybird</iconset>
+   </property>
    <property name="text">
     <string>&amp;Debug</string>
    </property>
   </action>
   <action name="actionsettings">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/setting-tool</normaloff>:/setting-tool</iconset>
+   </property>
    <property name="text">
-    <string>settings</string>
+    <string>&amp;Settings</string>
    </property>
   </action>
-  <zorder>oldGuiDock</zorder>
   <zorder>peerListDock</zorder>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
@@ -185,6 +192,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

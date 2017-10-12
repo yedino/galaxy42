@@ -65,20 +65,21 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
 {
     std::shared_ptr<order> ord;
 
+    if ( orderType::GETNAME && m_client_name.size() == 0 ) {
+            throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
+    }
+
     switch ( type ) {
     case orderType::PING:
         if( m_client_name.size() == 0 )
-            throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
         ord = std::make_shared<pingOrder>( m_counter.getRpcId() );
         break;
     case orderType::DELETEALL:
         if( m_client_name.size() == 0 )
-            throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
         ord = std::make_shared<deleteAllPeersOrder>( m_counter.getRpcId() );
         break;
     case orderType::BANALL:
         if( m_client_name.size() == 0 )
-            throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
         ord = std::make_shared<banAllOrder> ( m_counter.getRpcId() );
         break;
     case orderType::GETNAME:
@@ -94,20 +95,18 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
 std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType type, const MeshPeer &peer )
 {
     std::shared_ptr<order> ord;
+        if( m_client_name.size() == 0 ) throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
 
     switch ( type ) {
     case orderType::ADDPEER:
-        if( m_client_name.size() == 0 ) throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
         ord = std::make_shared<addPeerOrder> ( m_counter.getRpcId(),peer );
         break;
 
     case orderType::DELETEPEER:
-        if( m_client_name.size() == 0 ) throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
         ord = std::make_shared<deletePeerOrder> ( m_counter.getRpcId(),peer );
         break;
 
     case orderType::BANPEER:
-        if( m_client_name.size() == 0 ) throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
         ord = std::make_shared<banPeerOrder> ( m_counter.getRpcId(),peer );
         break;
     default:

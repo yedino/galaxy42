@@ -20,10 +20,9 @@ class CommandSender;
 
 class commandExecutor final : public QObject {
 		Q_OBJECT
-
     public:
 		static std::shared_ptr<commandExecutor> construct(std::shared_ptr<MainWindow> window);
-		void parseAndExecMsg(const std::string &msg); ///< parse network msg
+        void parseAndExecMsg(const std::string &msg); ///< parse network msg
 		void sendNetRequest(const order &ord); ///< send order via network
 		void startConnect(const QHostAddress &address, uint16_t port);
 

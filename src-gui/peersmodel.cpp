@@ -57,21 +57,21 @@ QVariant peersModel::data( const QModelIndex &index, int role ) const
     } else if( role == Qt::DecorationRole ) {				//! @todo add icons for proper states
         switch ( m_peers_list.at( index.row() )->status ) {
         case MeshPeer::defalut:
-            return QIcon( ":defalut" );
+            return QIcon( ":status-offlline" );
         case MeshPeer::connected:
-            return QIcon( ":connecting" );
+            return QIcon( ":status-online" );
 //            return QColor(Qt::red);
             break;
         case MeshPeer::disconnected:
-            return QIcon( ":peer" );
+            return QIcon( ":disconnect" );
 //            return QColor(Qt::green);
             break;
         case MeshPeer::banned:
-            return QIcon( ":banned" );
+            return QIcon( ":ladybird" );
 //            return QColor(Qt::blue);
             break;
         case MeshPeer::bfrend:
-            return QIcon( ":peer" );
+            return QIcon( ":status-online" );
 //            return QColor(Qt::cyan);
             break;
         default:
@@ -80,11 +80,11 @@ QVariant peersModel::data( const QModelIndex &index, int role ) const
     } else if( role == Qt::ForegroundRole ) {
         switch ( m_peers_list.at( index.row() )->comm_status ) {
         case MeshPeer::sended:
-            return QBrush( QColor( Qt::yellow ) );
+            return QBrush( QColor( Qt::darkYellow ) );
         case MeshPeer::recived:
             return QBrush ( QColor( Qt::blue ) );
         case MeshPeer::acknowled:
-            return QBrush( QColor( Qt::green ) );
+            return QBrush( QColor( Qt::darkGreen ) );
         default:
             return QBrush( QColor( Qt::gray ) );
             break;
