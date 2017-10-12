@@ -74,7 +74,7 @@ void c_multisign::add_signature(t_crypto_system_type crypto_type, const string &
 std::vector<string> c_multisign::get_signature_vec(t_crypto_system_type crypto_type) const {
 	std::vector<std::string> signatures_vec;
 	for (size_t i = 0; i < get_count_keys_in_system(crypto_type); ++i) {
-		signatures_vec.emplace_back(std::move(get_signature(crypto_type, i)));
+		signatures_vec.emplace_back(get_signature(crypto_type, i));
 	}
 	return signatures_vec;
 }
