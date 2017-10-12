@@ -16,17 +16,24 @@ constexpr size_t max_length = 65535;
 constexpr size_t threads_count = 2;
 
 char data[threads_count][max_length];
+auto buffer1 = boost::asio::buffer(data[0], max_length);
+auto buffer2 = boost::asio::buffer(data[1], max_length);
 c_timerfoo g_timer(20);
 
-void handler(const boost::system::error_code &ec, size_t length, udp::socket &sock, char *data, std::mutex &sock_mutex)
+void handler(const boost::system::error_code &ec, size_t length, udp::socket &sock, decltype(buffer1) buffer, std::mutex &sock_mutex)
 {
 	//std::cout << "get packet sizze:" << length << std::endl;
 	g_timer.add(1, length);
 
 	std::lock_guard<std::mutex> lg(sock_mutex);
+	/*
 	sock.async_receive(
 			boost::asio::buffer(data, max_length)
 			, [&sock, &data, &sock_mutex](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, data, sock_mutex);} );
+			*/
+	sock.async_receive(
+			boost::asio::buffer(data, max_length)
+			, [&sock, &buffer, &sock_mutex](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, buffer, sock_mutex);} );
 }
 
 double run_tests(boost::asio::io_service& io_service, unsigned short port, size_t threads_count)
@@ -47,12 +54,20 @@ double run_tests(boost::asio::io_service& io_service, unsigned short port, size_
 
 	{
 		std::lock_guard<std::mutex> lg(sock_mutex);
+		/*
 		for (size_t i=0; i<threads_count; i++)
 		{
 			sock.async_receive(
 					boost::asio::buffer(data[i], max_length)
 					, [&sock, &sock_mutex, i](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, data[i], sock_mutex);} );
 		}
+		*/
+		sock.async_receive(
+				buffer1
+				, [&sock, &sock_mutex](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, buffer1, sock_mutex);} );
+		sock.async_receive(
+				buffer2
+				, [&sock, &sock_mutex](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, buffer2, sock_mutex);} );
 	}
 
 	std::thread thread_stop(
