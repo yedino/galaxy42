@@ -15,6 +15,16 @@ stdplus/tab focuses on containers support
 
 namespace stdplus {
 
+template <typename TT>
+typename TT::value_type container_get_or_default(
+	const TT & tab,
+	typename TT::size_type ix,
+	typename TT::value_type def
+) {
+	if ( ix >= tab.size() ) return def;
+	return tab[ ix ];
+}
+
 /**
  * Check if elements of container are stored contiguously
  */
