@@ -303,14 +303,14 @@ void MainWindow::loadSettings()
 void MainWindow::initSettings()
 {
     QSettings setings;
-    if( setings.allKeys().size() >= 2 ) {			//nie trzeba inicializowac
+    if( setings.allKeys().size() >= 2 ) {			//no need to initialize
         return;
     }
 
     setings.beginGroup( "rpcConnection" );
-    setings.setValue( "connectionsNum","1" );		// liczba dostepnych polaczen
-    setings.setValue( "Ip","127.0.0.1" );				// Ip noda rpc
-    setings.setValue( "port","42000" );				// port noda rpc
+    setings.setValue( "connectionsNum","1" );		// no of known nodes
+    setings.setValue( "Ip","127.0.0.1" );				// Ip of rpc node
+    setings.setValue( "port","42000" );				// port of rpc node
     setings.endGroup();
 
     setings.beginGroup( "gui/mainWindow" );
