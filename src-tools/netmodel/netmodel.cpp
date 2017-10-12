@@ -122,50 +122,10 @@ class with_strand {
 
 int g_stage_sleep_time = 0; ///< sleep between stages of startup, was used to debug some race conditions
 
-// ============================================================================
-
-/**
-Mini timer that just collects data, and later appends them to main c_timerfoo
-*/
-class c_timeradd {
-	public:
-		using t_my_size = c_timerfoo::t_my_size;
-		using t_my_count = c_timerfoo::t_my_count;
-
-		/// @warning the parent_timer must live as long as this object, or ub!
-		c_timeradd(c_timerfoo & parent_timer, t_my_count update_interval_count);
-
-		void add(t_my_count count, t_my_size size_totall) noexcept; ///< e.g. (3,1024) means we got 3 packets, that in sum have size 1024 B
-
-	private:
-		t_my_count m_count;
-		t_my_count m_update_interval_count;
-		t_my_size m_size;
-		c_timerfoo & m_parent_timer;
-};
-
-c_timeradd::c_timeradd(c_timerfoo & parent_timer, t_my_count update_interval_count)
-:
-m_count(0),
-m_update_interval_count(update_interval_count),
-m_size(0),
-m_parent_timer(parent_timer)
-{ }
-
-void c_timeradd::add(t_my_count count, t_my_size size_totall) noexcept {
-	m_count += count;
-	m_size += size_totall;
-
-	if ( m_count > m_update_interval_count ) {
-		m_parent_timer.add( m_count , m_size ); // *** increment parent
-		m_count = 0;
-		m_size = 0;
-	}
-}
 
 // ============================================================================
 
-c_timerfoo g_speed_wire_recv(20); // global counter
+c_timerfoo g_speed_wire_recv(30); // global counter
 
 std::atomic<bool> g_atomic_exit;
 std::atomic<int> g_running_tuntap_jobs;
@@ -274,7 +234,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 		<< " read: ["<<std::string( & inbuf.m_data[0] , bytes_transferred)<<"]"
 	);
 
-	thread_local c_timeradd tl_speed_wire_recv( g_speed_wire_recv , 100*1000 );
+	thread_local c_timeradd tl_speed_wire_recv( g_speed_wire_recv , 1*1000 );
 
 	if ((algo_step==e_algo_receive::after_first_read) || (algo_step==e_algo_receive::after_next_read)) {
 		tl_speed_wire_recv.add(1, bytes_transferred); // [counter] inc
@@ -742,7 +702,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			auto run_time_start = std::chrono::steady_clock::now();
 
 			for (long int sample=0; true; ++sample) {
-				std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+				std::this_thread::sleep_for( std::chrono::milliseconds(500) );
 
 				auto run_time_now = std::chrono::steady_clock::now();
 				int run_time_ellapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time_start - run_time_now).count();
@@ -752,8 +712,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}
 
 				g_speed_wire_recv.step();
-				g_state_tuntap2wire_in_handler1.step();
-				g_state_tuntap2wire_in_handler2.step();
+//				g_state_tuntap2wire_in_handler1.step();
+//				g_state_tuntap2wire_in_handler2.step();
 
 				// [counter] read
 				std::ostringstream oss;
