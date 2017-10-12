@@ -44,9 +44,11 @@ void set_current_thread_affinity(int cpu_nr) {
 	}
 
 #elif defined(stdplus_platform_windows)
-
-	// see stdplus/platform.hpp for MSVC/cygwin detection
-	throw std::runtime_error("Setting thread cpu affinity not supported on this platform currently.");
+	DWORD mask = 0;
+	mask = 1 << (cpu-1);
+	HANDLE this_thread_handle = GetCurrentThread();
+	if (SetThreadAffinityMask(this_thread_handle, mask) == 0)
+		throw std::runtime_error("SetThreadAffinityMask error, GetLastError = " + std::to_string(GetLastError()));
 
 #elif defined(stdplus_platform_macosx)
 
