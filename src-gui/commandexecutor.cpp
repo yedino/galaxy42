@@ -18,21 +18,20 @@ std::shared_ptr<commandExecutor> commandExecutor::construct( std::shared_ptr<Mai
 
 void commandExecutor::resetConnection()
 {
-//    m_net_client - disconnect
     m_net_client->closeConnection();
     emit Disconnected();
-//    m_net_client->
-    ;
-//    sendNetRequest(m_sender->prepareCommand(CommandSender::orderType::GETNAME).get());
-//    if(star)
     m_sender->sendCommand( CommandSender::orderType::GETNAME );
 }
 
 
+/**
+ * @brief commandExecutor::parseAndExecMsg function that parsing incomming message into order, and than execute it
+ * @param msg incomming message
+ */
 void commandExecutor::parseAndExecMsg( const std::string &msg ) {
     std::unique_ptr <order> ord;
     basicOrder inputOrder( msg );
-    if( inputOrder.get_cmd() == "ping" ) {				//fragment fabryki - wytwarza obiekt odpowiedniej klasy ...
+    if( inputOrder.get_cmd() == "ping" ) {				//factory method- creating objects of concrete commands...
         ord = std::make_unique <pingOrder>( msg );
     } else if( inputOrder.get_cmd() == "peer_list" ) {
         ord = std::make_unique <peerListOrder>( msg );
@@ -58,13 +57,16 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
     }
 
     try {
-        ord->execute( *m_main_window );				// a pozniej go wykonuje - nie jest thread safe
+        ord->execute( *m_main_window );				//...and execute this
     } catch( std::runtime_error &e ) {
-//        qDebug()<<e.what();
         emit ErrorOccured( QString( e.what() ) );
     }
 }
 
+/**
+ * @brief commandExecutor::sendNetRequest function send order
+ * @param ord -order to be send
+ */
 void commandExecutor::sendNetRequest( const order &ord ) {
 
     try {
@@ -101,6 +103,7 @@ void commandExecutor::startConnect( const QHostAddress &address, uint16_t port )
     }
 
 }
+
 
 commandExecutor::commandExecutor( MainWindow* win ):
     m_main_window( win ),
@@ -152,7 +155,6 @@ void commandExecutor::setSenderRpcName( const QString& name )
 {
     if( !m_sender ) {
         throw std::runtime_error( "no sender attached" );
-
     }
 
     emit GetSesionId();

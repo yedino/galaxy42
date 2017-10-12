@@ -19,7 +19,7 @@ public:
     inline void setExecutor(commandExecutor *executor){m_executor = executor ;}
 
 public slots:
-   void onTickTimmer();
+    void onTickTimmer();
     void onReConnectTimmer();
     void onReConnect();
     void onErrorOccured(QString err);

@@ -32,7 +32,7 @@ quickStartDialog::~quickStartDialog()
 
 void quickStartDialog::chooseInvate( QString invate )
 {
-    ui->InviteEdit->setText( invate );		//!@todo check if invitation is propere
+    ui->InviteEdit->setText( invate );		//!@todo check if invitation is proper
 }
 
 void quickStartDialog::on_allowFriendsBox_clicked( bool checked )
@@ -66,7 +66,7 @@ void quickStartDialog::on_connectButton_clicked()
         QString ip = ui->InviteEdit->text();
         ip = ip.split( '-' ).at( 0 );
 
-        emit connectNet( ip );		//!@todo check if ip is propere
+        emit connectNet( ip );		//!@todo check if ip is proper
     }
 }
 
@@ -78,6 +78,7 @@ void quickStartDialog::on_QrScanButton_clicked()
 void quickStartDialog::on_QrZoomButton_clicked()
 {
     QPixmap qr_code;			//!@todo add real qrCode
+//    ui->QrZoomButton->setIcon(); //setting new icons
     QrDialog dlg( qr_code );
     dlg.exec();
 }

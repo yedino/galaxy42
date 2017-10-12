@@ -18,9 +18,7 @@ public:
     static QStringList readIpFromInvitation(const QString &invitation)
     {
         QString splited = invitation.split('@').at(1);
-
         QStringList splited_ip = splited.split(":");
-
         QString  ip = splited.split(':').at(1)+":"+splited.split(':').at(2);
         return ip.split('@');
     }
@@ -54,7 +52,7 @@ signals:
 
 
 public slots:
-    void chooseInvate(QString invate);	//! slot for option: chose invittaion from address book
+    void chooseInvate(QString invite);	//! slot for option: chose invittaion from address book
 
 private slots:
 
@@ -63,11 +61,8 @@ private slots:
 
 
     void on_wwwButton_clicked();
-
     void on_connectButton_clicked();
-
     void on_QrScanButton_clicked();
-
     void on_QrZoomButton_clicked();
 
 private:

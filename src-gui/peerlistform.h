@@ -15,9 +15,9 @@ class PeerListForm : public QWidget
 {
     Q_OBJECT
 
-   peersModel *m_model;
+    peersModel *m_model;
 
-   QModelIndex m_index; 	//last selected index
+    QModelIndex m_index; 	//last selected index
     MainWindow *m_main_window = nullptr;
 
 public:
@@ -58,6 +58,11 @@ signals:
 
 protected slots:
     void contextMenuEvent(QContextMenuEvent *event);
+
+private slots:
+    void on_pushButton_clicked();
+
+    void on_pushButton_2_clicked();
 
 private:
     Ui::PeerListForm *ui;

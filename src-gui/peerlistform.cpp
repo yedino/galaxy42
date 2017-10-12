@@ -42,11 +42,11 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     }
 
     QPoint global_pos = event->globalPos();
-    QAction* add_action = new QAction( tr( "add" ),ui->listView );
-    QAction* ban_action = new QAction( tr( "ban" ),ui->listView );
-    QAction* ban_all_action  =new QAction( tr( "ban all" ),ui->listView );
-    QAction* remove_action = new QAction( tr( "remove" ),ui->listView );
-    QAction *remove_all_action = new QAction( tr( "remove all" ),ui->listView );
+    QAction* add_action = new QAction(QIcon(":add"), tr( "add" ),ui->listView );
+    QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "ban" ),ui->listView );
+    QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("ban all" ),ui->listView );
+    QAction* remove_action = new QAction( QIcon(":remove"), tr("remove" ),ui->listView );
+    QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "remove all" ),ui->listView );
     QAction* send_massage = new QAction( tr( "send msg" ),ui->listView );
     QAction* ping_action = new QAction( tr( "ping" ),ui->listView );
     QAction* find_action = new QAction( tr( "find" ),ui->listView );
@@ -201,4 +201,16 @@ void PeerListForm::deleteAllSlot( bool )
 {
 //    m_model->removeAll();
     emit deleteAll();
+}
+
+void PeerListForm::on_pushButton_clicked()
+{
+    addActionSlot(true);
+}
+
+
+
+void PeerListForm::on_pushButton_2_clicked()
+{
+    removeActionSlot(true);
 }

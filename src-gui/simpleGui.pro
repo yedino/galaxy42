@@ -132,3 +132,7 @@ else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium
 TRANSLATIONS = hellotr_pl.ts
 
 #include "trivialserialize.hpp"
+
+RESOURCES += \
+    icons.qrc
+

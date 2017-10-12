@@ -22,7 +22,6 @@ MainWindow::MainWindow( QWidget *parent ) :
     QMainWindow( parent ),
     ui( new Ui::MainWindow ),
     m_tun_process( std::make_unique<tunserverProcess>() )
-//	m_dlg(nullptr)
 {
     ui->setupUi( this );
 
@@ -43,13 +42,10 @@ MainWindow::MainWindow( QWidget *parent ) :
     connect( ui->peerListWidget_2,SIGNAL( deleteAll() ),this,SLOT( onDeleteAll() ) );
     connect( ui->peerListWidget_2,SIGNAL( banAll() ),this,SLOT( onBanAll() ) );
 
-
-
-//    ui->oldGuiDock->hide();
     initSettings();
     m_status_form = new StatusForm( this );
 
-    m_cmd_exec = new commandExecutor( this ) ; //commandExecutor::construct(std::make_shared<MainWindow>(this));//std::make_shared<commandExecutor>(new commandExecutor(this));	//commandExecutor::construct(ret);
+    m_cmd_exec = new commandExecutor( this ) ;
     m_sender = new CommandSender( m_cmd_exec,this );
     m_cmd_exec->setSender( m_sender );
     loadSettings();
@@ -62,14 +58,14 @@ MainWindow::MainWindow( QWidget *parent ) :
     isWorking();
 }
 
-void MainWindow::startNewCrpcConnection( const QString &host,uint port )
+
+void MainWindow::startNewCrpcConnection( const QString &host,uint port )//!@todo move to statusForm
 {
-    m_cmd_exec = new commandExecutor( this ) ; //commandExecutor::construct(std::make_shared<MainWindow>(this));//std::make_shared<commandExecutor>(new commandExecutor(this));	//commandExecutor::construct(ret);
+    m_cmd_exec = new commandExecutor( this ) ;
     m_sender = new CommandSender( m_cmd_exec,this );
     m_cmd_exec->setSender( m_sender );
-    m_cmd_exec->startConnect( QHostAddress( host ), port );		//! @todo think abaut last connection...
+    m_cmd_exec->startConnect( QHostAddress( host ), port );
     m_sender->sendCommand( CommandSender::orderType::GETNAME );
-
 }
 
 std::shared_ptr<MainWindow> MainWindow::create_shared_ptr() {
@@ -92,7 +88,6 @@ void MainWindow::update_peer_list( QString peer ) {
 
     m_tun_process->add_address( peer );
 
-//	ui->peerListWidget->clear();
     qDebug() << "Peers:";
     for ( const auto &peer : m_tun_process->get_peer_list() ) {
         //qDebug() << peer.to_string();
@@ -143,25 +138,12 @@ void MainWindow::add_host_info( QString host, uint16_t port )
 
 void MainWindow::on_connectButton_clicked() {
 
-
     if( ! isWorking() ) {
         QErrorMessage message( this );
         message.showMessage( tr( "can't connect to node" ) );
         message.exec();
         return;
     }
-    /*
-    hostDialog host_dialog;
-
-    connect (&host_dialog, SIGNAL(host_info(QString, uint16_t)),
-    		 this, SLOT(add_host_info(QString, uint16_t)));
-
-    if (host_dialog.exec() == QDialog::Accepted){
-    	qDebug() << "host inforation accepted";
-    }
-    */
-
-//    add_host_info(m_host_ip,m_host_port.toInt());
 }
 
 
@@ -174,25 +156,11 @@ void MainWindow::connectToNet( QString net_id )
         return;
     }
 
-
     try {
-//        nlohmann::json j;
-//        j["cmd"]="add_peer";
-//        j["peer"] = net_id.toStdString();
-//        add ord(j.dump());
-//        m_cmd_exec->sendNetRequest(ord);
-//        onCreateGalaxyConnection();
 
         MeshPeer peer;
         peer.setName( "quick add" );
         peer.setInvitation( net_id );
-
-//        addPeerOrder ord(peer);
-//        ui->peerListWidget_2->getModel()->addPeer(peer);
-//        ui->peerListWidget_2->
-//        m_cmd_exec->sendNetRequest(ord);
-//        addPeerOrder ord;
-//            m_cmd_exec->sendNetRequest(ord);
         m_sender->sendCommand( CommandSender::orderType::ADDPEER,peer );
 
     } catch( std::exception &e ) {
@@ -222,11 +190,7 @@ void MainWindow::deletePeer( const std::string &peer_id ) {
 }
 
 void MainWindow::on_ping_clicked() {
-
-//    pingOrder ord;
-//    m_cmd_exec->sendNetRequest(ord);
     m_sender->sendCommand( CommandSender::orderType::PING );
-
 }
 
 // not used yed
@@ -490,8 +454,8 @@ void MainWindow::onPeerAdded( const QString &invitation )
 bool MainWindow::isWorking()
 {
     bool value = m_status_form->isWorking();
-    ui->peerListWidget_2->setEnabled( value );
-    ui->quickStart->setEnabled( value );
+//    ui->peerListWidget_2->setEnabled( value );
+//    ui->quickStart->setEnabled( value );
     return value;
 }
 
