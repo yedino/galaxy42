@@ -21,6 +21,8 @@ namespace affinity {
 
 void set_current_thread_affinity(int cpu_nr) {
 
+	if ( cpu_nr == -1 ) return ; // no affinity
+
 #if defined(stdplus_platform_linux)
 
 	if ( (cpu_nr < 0) || (cpu_nr >= CPU_SETSIZE ) ) {
@@ -58,7 +60,6 @@ void set_current_thread_affinity(int cpu_nr) {
 
 #endif
 
-	
 }
 
 

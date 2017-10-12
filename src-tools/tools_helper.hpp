@@ -9,7 +9,7 @@
 #include <mutex>
 #include <atomic>
 
-#define DEBUG_TOOLS_HELPER 1
+#define DEBUG_TOOLS_HELPER 0
 
 template<typename TFloat>
 TFloat mediana(std::vector<TFloat> tab) {
