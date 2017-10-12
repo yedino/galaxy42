@@ -446,18 +446,20 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	[&mycmdline]() {
 		vector<int> ret;
 		string choice = get_from_cmdline("wire_cpu", mycmdline, std::string(""));
-		_info("cpu configuration: " << choice);
+		_mark("cpu configuration: \"" << choice << "\"");
 		auto the_size = choice.size();
 		if (the_size<1) return ret;
 		// --- size>1 ---
 		size_t pos1=0;
 		while (true) {
 			// _mark("parse, pos1="<<pos1);
-			size_t pos2 = choice.find(',',pos1);
-			if (pos2 == string::npos) pos2=choice.size()-1;
-			string cpu_str = choice.substr(pos1,pos2);
+			size_t pos2 = choice.find(',', pos1);
+			if (pos2 == string::npos) pos2=choice.size();
+			// _mark("parse, pos2="<<pos2);
+
+			string cpu_str = choice.substr(pos1,pos2-pos1);
+			// _mark("cpu_str=\""<<cpu_str<<"\"");
 			ret.push_back( safe_atoi( cpu_str ) );
-			// _mark("cpu_str="<<cpu_str);
 			if ( pos2 >= (the_size-1) ) break;
 			pos1=pos2+1;
 			// _mark(cpu_str);
@@ -598,7 +600,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		for (int ios_thread=0; ios_thread<cfg_num_thread_per_ios; ++ios_thread) {
 			int cpu_nr = container_get_or_default( cfg_wire_ios_cpu , ios_thread , -1 );
 			_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread
-				<< " cpu="<<cpu_nr);
+				<< " cpu=" << cpu_nr << " --- cpu ---");
 
 			std::thread thread_run(
 				[&ios_wire, ios_thread, ios_nr, cpu_nr] {
