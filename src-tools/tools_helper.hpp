@@ -9,7 +9,7 @@
 #include <mutex>
 #include <atomic>
 
-#define DEBUG_TOOLS_HELPER 1
+#define DEBUG_TOOLS_HELPER 0
 
 template<typename TFloat>
 TFloat mediana(std::vector<TFloat> tab) {
@@ -140,7 +140,7 @@ void c_timerfoo::step() {
 	{
 		std::lock_guard< std::mutex > lg(m_mutex);
 		auto speed_now = get_speed(); // *** current speed
-		if ( m_ellapsed_used_in_current > 0.3 ) { // discard samples from too small time periods to avoid noise
+		if ( m_ellapsed_used_in_current > 0.5 ) { // discard samples from too small time periods to avoid noise
 			m_speed_tab.push_back( speed_now ); // *** add
 		}
 		if (m_debug) {
