@@ -20,14 +20,12 @@ c_timerfoo g_timer(20);
 
 void handler(const boost::system::error_code &ec, size_t length, udp::socket &sock, char *data, std::mutex &sock_mutex)
 {
-	std::cout << "get packet sizze:" << length << std::endl;
+	//std::cout << "get packet sizze:" << length << std::endl;
 	g_timer.add(1, length);
 
-	udp::endpoint sender_endpoint;
-
 	std::lock_guard<std::mutex> lg(sock_mutex);
-	sock.async_receive_from(
-			boost::asio::buffer(data, max_length), sender_endpoint
+	sock.async_receive(
+			boost::asio::buffer(data, max_length)
 			, [&sock, &data, &sock_mutex](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, data, sock_mutex);} );
 }
 
@@ -45,16 +43,14 @@ double run_tests(boost::asio::io_service& io_service, unsigned short port, size_
 
 	for (size_t i=0; i<threads_count; i++) threads.emplace_back([&io_service](){io_service.run();});
 
-	udp::endpoint sender_endpoint;
-
 	//std::vector<double> speed_tab; // restuls
 
 	{
 		std::lock_guard<std::mutex> lg(sock_mutex);
 		for (size_t i=0; i<threads_count; i++)
 		{
-			sock.async_receive_from(
-					boost::asio::buffer(data[i], max_length), sender_endpoint
+			sock.async_receive(
+					boost::asio::buffer(data[i], max_length)
 					, [&sock, &sock_mutex, i](const boost::system::error_code &ec, size_t length){handler(ec, length, sock, data[i], sock_mutex);} );
 		}
 	}
