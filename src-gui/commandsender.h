@@ -57,9 +57,6 @@ private:
 
 
     bool m_wait_name_flag = false;
-//
-//	commandExecutor& executor;
-//
 };
 
 #endif // COMMANDSENDER_H

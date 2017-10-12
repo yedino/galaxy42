@@ -4,7 +4,6 @@
 #include <QDebug>
 #include <sodium.h>
 
-#include "trivialserialize.hpp"
 
 dataeater::dataeater(): m_is_processing(false){}
 

@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui network
-greaterThan(QT_MAJOR_VERSION, 4.8): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 QMAKE_CC = gcc
 QMAKE_CXX = g++
@@ -16,7 +16,8 @@ TARGET = simpleGui
 TEMPLATE = app
 
 INCLUDEPATH = ../depends/json/src
-#LIBS += -lboost_system -lsodiu
+macos: LIBS += -L /usr/local/lib
+LIBS += -lsodium
 
 SOURCES += \
     main.cpp \
@@ -63,8 +64,6 @@ HEADERS += \
     meshpeer.h \
     peersmodel.h \
     order.hpp\
-        peerlistform.h \
-        peersmodel.h \
     addpeerdialog.h\
         peereditdialog.h \
     rpccounter.h \
@@ -78,7 +77,6 @@ FORMS += \
     debugdialog.ui \
     get_host_info.ui \
     quickstartdialog.ui \
-    peerlistform.ui \
     connectionstatusform.ui \
     qrdialog.ui \
     quickstartform.ui \
@@ -117,9 +115,11 @@ test {
 
 
 win32: LIBS += -L$$PWD/../../repo/libsodium-win32/lib/ -lsodium
+macos:INCLUDEPATH += /usr/local/include/
+macos:INCLUDEPATH += /Users/apple/gal42/depends/json/src/  # json path for macos
 
-INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
-DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
+win32:INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
+win32:DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/sodium.lib
 else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium.a
