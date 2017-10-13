@@ -6,6 +6,7 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <iomanip>
 
 template<typename TFloat>
 TFloat mediana(std::vector<TFloat> tab) {
@@ -45,7 +46,6 @@ TFloat corrected_avg(std::vector<TFloat> tab) {
 
 	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
 }
-
 
 /// simple time value
 struct t_mytime {
@@ -200,5 +200,3 @@ std::ostream & operator<<(std::ostream & ostr, c_timerfoo & timer) {
 	timer.print_info(ostr);
 	return ostr;
 }
-
-
