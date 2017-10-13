@@ -1,12 +1,15 @@
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <numeric>
 #include <cassert>
 #include <chrono>
 #include <thread>
+#include <mutex>
 #include <atomic>
-#include <iomanip>
+
+#define DEBUG_TOOLS_HELPER 0
 
 template<typename TFloat>
 TFloat mediana(std::vector<TFloat> tab) {
@@ -47,6 +50,7 @@ TFloat corrected_avg(std::vector<TFloat> tab) {
 	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
 }
 
+
 /// simple time value
 struct t_mytime {
 	using t_timevalue = std::chrono::time_point<std::chrono::steady_clock>;
@@ -73,6 +77,7 @@ class c_timerfoo {
 		void calc_speed_now();
 		double get_speed() const;
 
+		void set_debug(int value);
 	private:
 		void reset();
 		void calc_avg();
@@ -90,17 +95,33 @@ class c_timerfoo {
 		double m_speed_avg1, m_speed_avg2; ///< under mutex
 
 		double m_best_result; ///< best so far result, taken from average of viable size. is not reseted.
+
+		int m_debug;
+
+		double m_ellapsed_used_in_current; ///< what was the ellapsed time used in calculating most recent current speed 
+		/// (e.g. if low then speed is bad)
 };
 
 c_timerfoo::c_timerfoo(int step_till_reset) : m_time_started(t_mytime{}), m_count(0), m_size(0),
 m_speed_now(0), m_speed_pck_now(0), m_step_nr(0),
 m_step_till_reset(step_till_reset),
-m_best_result(0)
+m_best_result(0),
+m_debug(false),
+m_ellapsed_used_in_current(0)
 {
+	reset(); // to make sure all is nice
+
+	set_debug(DEBUG_TOOLS_HELPER);
 }
 
+void c_timerfoo::set_debug(int value) { m_debug = value; }
+
 void c_timerfoo::reset() {
-	m_time_started=t_mytime{};
+	if (m_debug) {
+		std::cerr << "Reseting timer " << (void*)(this) << " ------------------- \n";
+	}
+
+	m_time_started = std::chrono::steady_clock::now();
 	m_count=0;
 	m_size=0;
 	m_speed_now=0;
@@ -110,6 +131,7 @@ void c_timerfoo::reset() {
 		m_speed_tab.clear();
 	}
 	m_step_nr=0;
+	m_ellapsed_used_in_current=0;
 }
 
 void c_timerfoo::step() {
@@ -117,7 +139,18 @@ void c_timerfoo::step() {
 	bool should_reset=false;
 	{
 		std::lock_guard< std::mutex > lg(m_mutex);
-		m_speed_tab.push_back( get_speed() ); // *** add
+		auto speed_now = get_speed(); // *** current speed
+		if ( m_ellapsed_used_in_current > 0.5 ) { // discard samples from too small time periods to avoid noise
+			m_speed_tab.push_back( speed_now ); // *** add
+		}
+		if (m_debug) {
+			std::cerr << "Adding sample to timer " << (void*)(this) << " "
+				<< "speed_now=" << speed_now << " "
+				<< "array: {";
+			for (auto const & x : m_speed_tab) std::cerr << x << " ";
+			std::cerr << "}";
+			std::cerr	<< "\n";
+		}
 		++m_step_nr;
 		if ( (m_step_till_reset>0) && (m_step_nr >= m_step_till_reset) ) {
 			should_reset=true;
@@ -135,14 +168,9 @@ double c_timerfoo::get_speed() const { return m_speed_now; }
 
 void c_timerfoo::add(t_my_count count, t_my_size size_totall) noexcept {
 	// [counter]
-
-	if (this->m_count == 0) {
-		t_mytime time_now( std::chrono::steady_clock::now() );
-		t_mytime time_zero;
-		this->m_time_started.compare_exchange_strong(
-			time_zero,
-			time_now
-		);
+	if (m_debug >= 2) {
+		std::cerr << "*** ADD *** Timer - adding data - (" << ((void*)this) << "), adding size="<<size_totall<<" count="<<count
+			<< " after add: m_size=" << m_size << ", m_count=" << m_count << "\n";
 	}
 
 	this->m_count += count;
@@ -164,10 +192,21 @@ void c_timerfoo::calc_speed_now() {
 	double ellapsed_sec = (
 		std::chrono::duration_cast<std::chrono::microseconds>(time_now - time_started) ).count()
 		/ (1000.*1000. );
+
+	m_ellapsed_used_in_current = ellapsed_sec;
+
 	double current_size_speed  = current_size  / ellapsed_sec; // in B/s
 	double current_count_speed = current_count / ellapsed_sec; // in B/s
 
 	const double mega = (1*1000*1000);
+
+	if (m_debug) {
+		std::cerr << std::setprecision(4)  << std::fixed
+			<< "Speed now in timer " << (void*)(this) << ": "
+			<< " ellapsed=" << ellapsed_sec << " current_size=" << current_size
+			<< " so speed=" << ( current_size_speed*8.f / (1000. * 1000.) ) << " Mbit/s"
+		<< "\n";
+	}
 
 	m_speed_now = current_size_speed * 8. / mega;
 	m_speed_pck_now = current_count_speed / mega;
@@ -187,9 +226,10 @@ void c_timerfoo::print_info(std::ostream & ostr) const {
 
 	int detail=0;
 	if (detail>=2) { ostr << std::setw(9) << current_size  << " B "; }
-	ostr << std::setw(4) << m_speed_avg1
-		<< " (" << std::setw(4) << m_speed_now
-		<< " best=" << std::setw(4) << m_best_result << ")"
+	ostr << std::setw(4)
+	  << "avg=" << m_speed_avg1
+		<< " (now=" << std::setw(4) << m_speed_now << ")"
+		<< " bestAvg=" << std::setw(4) << m_best_result << ""
 		<< " Mb/s" ;
 	ostr << " ";
 	if (detail>=1) { ostr << std::setw(6) << current_count << " p "; }
@@ -200,3 +240,54 @@ std::ostream & operator<<(std::ostream & ostr, c_timerfoo & timer) {
 	timer.print_info(ostr);
 	return ostr;
 }
+
+// ============================================================================
+
+/**
+Mini timer that just collects data, and later appends them to main c_timerfoo
+NOT THREAD SAFE - use in 1 thread! (usually as thread_local)
+*/
+class c_timeradd {
+	public:
+		using t_my_size = c_timerfoo::t_my_size;
+		using t_my_count = c_timerfoo::t_my_count;
+
+		/// @warning the parent_timer must live as long as this object, or ub!
+		c_timeradd(c_timerfoo & parent_timer, t_my_count update_interval_count);
+
+		void add(t_my_count count, t_my_size size_totall) noexcept; ///< e.g. (3,1024) means we got 3 packets, that in sum have size 1024 B
+
+	private:
+		t_my_count m_count;
+		t_my_count m_update_interval_count;
+		t_my_size m_size;
+		c_timerfoo & m_parent_timer;
+};
+
+c_timeradd::c_timeradd(c_timerfoo & parent_timer, t_my_count update_interval_count)
+:
+m_count(0),
+m_update_interval_count(update_interval_count),
+m_size(0),
+m_parent_timer(parent_timer)
+{ }
+
+void c_timeradd::add(t_my_count count, t_my_size size_totall) noexcept {
+	m_count += count;
+	m_size += size_totall;
+
+	if ( m_count > m_update_interval_count ) {
+		#if DEBUG_TOOLS_HELPER >= 2
+		std::cerr << " timeradd (" << ((void*)this) << ") will now add to his main timer (because " << m_count << " > " << m_update_interval_count << " \n";
+		#endif
+
+		m_parent_timer.add( m_count , m_size ); // *** increment parent
+		m_count = 0;
+		m_size = 0;
+
+		#if DEBUG_TOOLS_HELPER >= 2
+		std::cerr << " timeradd (" << ((void*)this) << ") added to his main timer... Now count=" << m_count << " vs interval=" << m_update_interval_count << " \n\n";
+		#endif
+	}
+}
+
