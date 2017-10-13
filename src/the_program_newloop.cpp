@@ -15,7 +15,6 @@
 #include "galaxy_debug.hpp"
 
 #include "newloop.hpp"
-#include <ctpl_stl.h>
 #include <c_crypto.hpp>
 
 #ifdef HTTP_DBG
