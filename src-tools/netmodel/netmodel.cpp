@@ -21,6 +21,8 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <mutex>
 
 #include "../src/libs0.hpp" // libs for Antinet
+#include "../src/stdplus/tab.hpp"
+#include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
 
@@ -120,50 +122,10 @@ class with_strand {
 
 int g_stage_sleep_time = 0; ///< sleep between stages of startup, was used to debug some race conditions
 
-// ============================================================================
-
-/**
-Mini timer that just collects data, and later appends them to main c_timerfoo
-*/
-class c_timeradd {
-	public:
-		using t_my_size = c_timerfoo::t_my_size;
-		using t_my_count = c_timerfoo::t_my_count;
-
-		/// @warning the parent_timer must live as long as this object, or ub!
-		c_timeradd(c_timerfoo & parent_timer, t_my_count update_interval_count);
-
-		void add(t_my_count count, t_my_size size_totall) noexcept; ///< e.g. (3,1024) means we got 3 packets, that in sum have size 1024 B
-
-	private:
-		t_my_count m_count;
-		t_my_count m_update_interval_count;
-		t_my_size m_size;
-		c_timerfoo & m_parent_timer;
-};
-
-c_timeradd::c_timeradd(c_timerfoo & parent_timer, t_my_count update_interval_count)
-:
-m_count(0),
-m_update_interval_count(update_interval_count),
-m_size(0),
-m_parent_timer(parent_timer)
-{ }
-
-void c_timeradd::add(t_my_count count, t_my_size size_totall) noexcept {
-	m_count += count;
-	m_size += size_totall;
-
-	if ( m_count > m_update_interval_count ) {
-		m_parent_timer.add( m_count , m_size ); // *** increment parent
-		m_count = 0;
-		m_size = 0;
-	}
-}
 
 // ============================================================================
 
-c_timerfoo g_speed_wire_recv(20); // global counter
+c_timerfoo g_speed_wire_recv(30); // global counter
 
 std::atomic<bool> g_atomic_exit;
 std::atomic<int> g_running_tuntap_jobs;
@@ -272,7 +234,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 		<< " read: ["<<std::string( & inbuf.m_data[0] , bytes_transferred)<<"]"
 	);
 
-	thread_local c_timeradd tl_speed_wire_recv( g_speed_wire_recv , 100*1000 );
+	thread_local c_timeradd tl_speed_wire_recv( g_speed_wire_recv , 1*1000 );
 
 	if ((algo_step==e_algo_receive::after_first_read) || (algo_step==e_algo_receive::after_next_read)) {
 		tl_speed_wire_recv.add(1, bytes_transferred); // [counter] inc
@@ -400,7 +362,16 @@ struct t_mycmdline {
 	void add(const string & arg) { m_arg.push_back(arg); m_used.push_back(false); }
 };
 
-// T must be integral. Will set target_var with the number from "foo=42", when name="foo". Provide the cmdline;
+template <typename TT>
+TT assign_from_string(const std::string & s) {
+	return safe_atoi(s);
+}
+template <>
+std::string assign_from_string<std::string>(const std::string & s) {
+	return s;
+}
+
+// Will set target_var with the number from "foo=42", when name="foo". Provide the cmdline;
 // Throws if required==true but value is not found.
 // Returns if the value was found.
 template<typename T>
@@ -414,7 +385,7 @@ bool set_from_cmdline(T & target_var, const string & name, t_mycmdline &cmdline,
 		if (one_name == name) {
 			string val=arg.substr(pos+1);
 			_note("argument ["<<name<<"] = ["<<val<<"] (ix="<<ix<<")");
-			target_var = safe_atoi(val);
+			target_var = assign_from_string<T>( val );
 			cmdline.m_used.at(ix) = true; // it was used
 			return true;
 		}
@@ -424,17 +395,19 @@ bool set_from_cmdline(T & target_var, const string & name, t_mycmdline &cmdline,
 }
 
 int get_from_cmdline(const string & name, t_mycmdline &cmdline) {
-	int the_val=0;
+	int the_val = int{};
 	set_from_cmdline(the_val, name, cmdline, true);
 	return the_val;
 }
 
-int get_from_cmdline(const string & name, t_mycmdline &cmdline, int def) {
-	int the_val=0;
+template <typename TT>
+TT get_from_cmdline(const string & name, t_mycmdline &cmdline, TT def) {
+	TT the_val = TT{};
 	bool got_it = set_from_cmdline(the_val, name, cmdline, false);
 	if (!got_it) the_val=def;
 	return the_val;
 }
+
 
 void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Starting " << __FUNCTION__ << " with " << options.size() << " arguments");
@@ -467,6 +440,32 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const int cfg_num_inbuf = func_cmdline("wire_buf"); // e.g. 32 ; this is also the number of flows (wire/p2p connections)
 	const int cfg_num_socket_wire = func_cmdline("wire_sock"); // 2 ; number of sockets - wire (p2p)
 	const int cfg_buf_socket_spread = func_cmdline_def("wire_spread",0); // 0 is: (buf0,sock0),(b1,s1),(b2,s0),(b3,s1),(b4s0) ; 1 is (b0,s0),(b1,s0),(b2,s1),(b3,s1)
+
+	const vector<int> cfg_wire_ios_cpu // [4] = 7 would mean: for wire ios index #4, run it on cpu number #7
+	=
+	[&mycmdline]() {
+		vector<int> ret;
+		string choice = get_from_cmdline("wire_cpu", mycmdline, std::string(""));
+		_mark("cpu configuration: \"" << choice << "\"");
+		auto the_size = choice.size();
+		if (the_size<1) return ret;
+		// --- size>1 ---
+		size_t pos1=0;
+		while (true) {
+			// _mark("parse, pos1="<<pos1);
+			size_t pos2 = choice.find(',', pos1);
+			if (pos2 == string::npos) pos2=choice.size();
+			// _mark("parse, pos2="<<pos2);
+
+			string cpu_str = choice.substr(pos1,pos2-pos1);
+			// _mark("cpu_str=\""<<cpu_str<<"\"");
+			ret.push_back( safe_atoi( cpu_str ) );
+			if ( pos2 >= (the_size-1) ) break;
+			pos1=pos2+1;
+			// _mark(cpu_str);
+		}
+		return ret;
+	} ();
 
 	const int cfg_port_faketuntap = 2345;
 
@@ -599,9 +598,20 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	vector<std::thread> ios_wire_thread;
 	for (int ios_nr = 0; ios_nr < cfg_num_ios; ++ios_nr) {
 		for (int ios_thread=0; ios_thread<cfg_num_thread_per_ios; ++ios_thread) {
-			_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread);
+			int cpu_nr = container_get_or_default( cfg_wire_ios_cpu , ios_thread , -1 );
+			_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread
+				<< " cpu=" << cpu_nr << " --- cpu ---");
+
 			std::thread thread_run(
-				[&ios_wire, ios_thread, ios_nr] {
+				[&ios_wire, ios_thread, ios_nr, cpu_nr] {
+
+					try {
+						stdplus::affinity::set_current_thread_affinity( cpu_nr );
+					}
+					catch (const std::exception & ex) {
+						_erro("Can not set CPU: " << ex.what());
+					}
+
 					while (!g_atomic_exit) {
 						ios_wire.at( ios_nr )->run(); // <=== this blocks, for entire main loop, and runs (async) handlers here
 						_note("WIRE: ios worker run (ios_thread="<<ios_thread<<" on ios_nr=" << ios_nr <<") is done... will restat?");
@@ -694,7 +704,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			auto run_time_start = std::chrono::steady_clock::now();
 
 			for (long int sample=0; true; ++sample) {
-				std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+				std::this_thread::sleep_for( std::chrono::milliseconds(500) );
 
 				auto run_time_now = std::chrono::steady_clock::now();
 				int run_time_ellapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time_start - run_time_now).count();
@@ -704,8 +714,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}
 
 				g_speed_wire_recv.step();
-				g_state_tuntap2wire_in_handler1.step();
-				g_state_tuntap2wire_in_handler2.step();
+//				g_state_tuntap2wire_in_handler1.step();
+//				g_state_tuntap2wire_in_handler2.step();
 
 				// [counter] read
 				std::ostringstream oss;
@@ -713,11 +723,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
 				oss << "; ";
 				oss << "Tuntap: ";
-				oss << "start="<<g_state_tuntap2wire_started<<' ';
-				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
-				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
-				oss <<" fullBuf="<<g_state_tuntap_fullbuf<<" ";
+				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
+//				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
+//				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
+				oss <<" fullBuf="<<g_state_tuntap_fullbuf.load(std::memory_order_relaxed)<<" ";
 				oss << "; ";
+
 				oss << "Welds: ";
 				{
 					std::lock_guard<std::mutex> lg(welds_mutex);
@@ -830,7 +841,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// tuntap: DO WORK
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
-		_mark("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
+		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		std::thread thr = std::thread(
 			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep]()
@@ -882,7 +893,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					); // start(post) handler: TUNTAP->WIRE start
 
 					_dbg4("TUNTAP-WIRE posted: weld=" << wire_socket_nr << " to P2P socket="<<wire_socket_nr);
-					++g_state_tuntap2wire_started;
+					g_state_tuntap2wire_started.fetch_add(std::memory_order_relaxed);
 
 				}; // send the full weld
 
@@ -911,7 +922,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						}
 						else {
 							_dbg4("No free tuntap buffers! - fullbuffer!");
-							++g_state_tuntap_fullbuf;
+							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
 							func_send_weld(0); // TODO choose weld
 							// forced send
 							continue ; // <---
@@ -985,7 +996,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		assert(inbuf_nr >= 0);
 		assert(socket_nr_raw >= 0);
 		int socket_nr = socket_nr_raw % wire_socket.size(); // spread it (rotate)
-		_mark("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
+		_note("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
 
 		auto inbuf_asio = asio::buffer( inbuf_tab.addr(inbuf_nr) , t_inbuf::size() );
 		_dbg1("buffer size is: " << asio::buffer_size( inbuf_asio ) );

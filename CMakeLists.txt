@@ -543,7 +543,7 @@ add_custom_target(Debug
 if(NOT MINGW AND NOT WIN32)
 
 	add_custom_target(run
-			COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
+			COMMAND "${CMAKE_BINARY_DIR}/rundevel.sh"
 			DEPENDS ./tunserver.elf
 			DEPENDS unittests.elf
 			WORKING_DIRECTORY ./)
