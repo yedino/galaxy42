@@ -49,7 +49,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #endif
 
-#define ANTINET_DEBUG_MODE 1 ///< if 1, then e.g. debug here is enabled, and some asserts/checks are executed
+#define ANTINET_DEBUG_MODE 0 ///< if 1, then e.g. debug here is enabled, and some asserts/checks are executed
 
 #if ANTINET_IF_DEBUG
 #define ANTINET_IF_DEBUG(X) (X);
@@ -267,8 +267,8 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 			// https://nacl.cr.yp.to/stream.html
 			crypto_stream_xor(
 				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // out
-				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // in
-				std::extent<decltype(inbuf.m_data)>::value, // in len
+				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // bytes_transferred ])), // in XXX TODO
+				bytes_transferred,
 				crypto::nonce.data(), // nonce
 				crypto::secret_key.data() // secret key
 			);
