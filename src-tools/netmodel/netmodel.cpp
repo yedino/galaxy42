@@ -263,14 +263,15 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 			if (rrr==0) _note("rrr="<<static_cast<int>(rrr));
 		}
 		else if (cfg_test_crypto_task < 0) {
-			int ret = crypto_stream_xor(
+			// this function always returns 0
+			// https://nacl.cr.yp.to/stream.html
+			crypto_stream_xor(
 				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // out
 				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // in
 				std::extent<decltype(inbuf.m_data)>::value, // in len
 				crypto::nonce.data(), // nonce
 				crypto::secret_key.data() // secret key
 			);
-			if (!ret) _erro("Crypto error: " << ret);
 		}
 		else {
 			// nothing. Just avoid warnings / deadcode optimize / unused
