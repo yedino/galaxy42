@@ -35,21 +35,15 @@ void handler(const boost::system::error_code &ec, size_t length, udp::socket &so
 
 	g_timer.add(1, length);
 
-	std::lock_guard<std::mutex> lg(sock_mutex);
-
 	if (ec)
 	{
-
 		static size_t counter = 0;
-		if (counter%1000 == 0)
-		{
-			std::cout << ec << std::endl;
-			std::cout << ec.message() << std::endl;
-		}
-
+		std::cout << ec << std::endl;
+		std::cout << ec.message() << std::endl;
 		counter++;
-
 	}
+
+	std::lock_guard<std::mutex> lg(sock_mutex);
 
 	sock.async_receive(
 			buffer
