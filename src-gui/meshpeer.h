@@ -81,7 +81,7 @@ public:
      */
     inline void setVip(const QString& vip)
     {
-        //@todo dorobic sprawdzenie czy prawidlowy vip
+        //@todo check if vip is proper
         m_vip = vip;
     }
 

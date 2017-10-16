@@ -67,7 +67,7 @@ QString PeerEditDialog::createInvitation()
 
     if( ip.size() > 0 ) {
         if( QHostAddress( ip ).protocol() != QAbstractSocket::IPv4Protocol ) {
-            qDebug()<<"ip is unproper";
+            qDebug()<<"ip is improper";
             ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
@@ -78,7 +78,7 @@ QString PeerEditDialog::createInvitation()
 
     if( vip>0 ) {
         if( QHostAddress( vip ).protocol() != QAbstractSocket::IPv6Protocol ) {
-            qDebug()<<"vip is unproper";
+            qDebug()<<"vip is improper";
             ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
