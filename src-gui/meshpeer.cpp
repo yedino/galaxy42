@@ -3,7 +3,7 @@
 
 MeshPeer::MeshPeer( QObject *parent ) : QObject( parent )
 {
-    status = disconnected;
+    status = STATUS::disconnected;
 }
 
 
@@ -16,7 +16,7 @@ MeshPeer::MeshPeer( const MeshPeer &peer ):m_name( peer.getName() ),m_ip( peer.g
 
 MeshPeer::MeshPeer( const QString &serialized_obj, QObject *parent ):QObject( parent )
 {
-    status = disconnected;
+    status = STATUS::disconnected;
     deserialize( serialized_obj.toStdString() );
 }
 

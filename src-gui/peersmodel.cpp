@@ -55,22 +55,26 @@ QVariant peersModel::data( const QModelIndex &index, int role ) const
             break;
         }
     } else if( role == Qt::DecorationRole ) {				//! @todo add icons for proper states
+        if(m_peers_list.at(index.row())->comm_status == MeshPeer::COMMANDSTATUS::sended) {
+            return QIcon(":status-busy");
+        }
+
         switch ( m_peers_list.at( index.row() )->status ) {
-        case MeshPeer::defalut:
+        case MeshPeer::STATUS::defalut:
             return QIcon( ":status-offlline" );
-        case MeshPeer::connected:
+        case MeshPeer::STATUS::connected:
             return QIcon( ":status-online" );
 //            return QColor(Qt::red);
             break;
-        case MeshPeer::disconnected:
+        case MeshPeer::STATUS::disconnected:
             return QIcon( ":disconnect" );
 //            return QColor(Qt::green);
             break;
-        case MeshPeer::banned:
+        case MeshPeer::STATUS::banned:
             return QIcon( ":ladybird" );
 //            return QColor(Qt::blue);
             break;
-        case MeshPeer::bfrend:
+        case MeshPeer::STATUS::bfrend:
             return QIcon( ":status-online" );
 //            return QColor(Qt::cyan);
             break;
@@ -79,11 +83,11 @@ QVariant peersModel::data( const QModelIndex &index, int role ) const
         }
     } else if( role == Qt::ForegroundRole ) {
         switch ( m_peers_list.at( index.row() )->comm_status ) {
-        case MeshPeer::sended:
+        case MeshPeer::COMMANDSTATUS::sended:
             return QBrush( QColor( Qt::darkYellow ) );
-        case MeshPeer::recived:
+        case MeshPeer::COMMANDSTATUS::recived:
             return QBrush ( QColor( Qt::blue ) );
-        case MeshPeer::acknowled:
+        case MeshPeer::COMMANDSTATUS::acknowled:
             return QBrush( QColor( Qt::darkGreen ) );
         default:
             return QBrush( QColor( Qt::gray ) );
@@ -99,17 +103,17 @@ void peersModel::addPeer( QString serialized_peer )
 
     try {
         peer = new MeshPeer( serialized_peer,this );
-        foreach ( auto it, m_peers_list ) {
+        for ( auto it: m_peers_list ) {
             if( it->getVip() == peer->getVip() ) {
-                peer->status = MeshPeer::connected;
-                peer->comm_status = MeshPeer::sended;
+                peer->status = MeshPeer::STATUS::connected;
+                peer->comm_status = MeshPeer::COMMANDSTATUS::sended;
 //               peer->comm_status = MeshPeer::acknowled;
                 qDebug()<<"added peer";
                 return;
             }
         }
-        peer->status = MeshPeer::connected;
-        peer->comm_status = MeshPeer::acknowled;
+        peer->status = MeshPeer::STATUS::connected;
+        peer->comm_status = MeshPeer::COMMANDSTATUS::sended;
     } catch ( std::runtime_error &e ) {
         //! @todo dodac okno dialogowe bledu
         qDebug()<< "can't create peer::"<< QString( e.what() );
@@ -127,16 +131,16 @@ void peersModel::addPeer( const MeshPeer &pp )
     MeshPeer *peer;
     try {
         peer = new MeshPeer( pp );
-        foreach ( auto it, m_peers_list ) {
+        for ( auto it: m_peers_list ) {
             if( it->getVip() == peer->getVip() ) {
-                peer->status = MeshPeer::connected;
+                peer->status = MeshPeer::STATUS::connected;
 //               peer->comm_status = MeshPeer::acknowled;
                 qDebug()<<"added peer";
                 return;
             }
         }
-        peer->status = MeshPeer::connected;
-        peer->comm_status = MeshPeer::acknowled;
+//        peer->status = MeshPeer::connected;
+//        peer->comm_status = MeshPeer::acknowled;
 
         QModelIndex ix = index( m_peers_list.size() );
         beginInsertRows( ix,m_peers_list.size(),m_peers_list.size()+1 );
@@ -165,15 +169,15 @@ void peersModel::confirmAddPeer( const MeshPeer& peer )
 {
     try {
         auto pp = findPeer( peer );
-        pp->status = MeshPeer::connected;
-        pp->comm_status = MeshPeer::acknowled;
+        pp->status = MeshPeer::STATUS::connected;
+        pp->comm_status = MeshPeer::COMMANDSTATUS::acknowled;
 
     } catch( std::runtime_error &e ) {
         qDebug()<<e.what();
         beginInsertRows( createIndex( m_peers_list.size(),0 ),m_peers_list.size(),m_peers_list.size()+1 );
         MeshPeer *pp = new MeshPeer( peer );
-        pp->status = MeshPeer::connected;
-        pp->comm_status = MeshPeer::acknowled;
+        pp->status = MeshPeer::STATUS::connected;
+        pp->comm_status = MeshPeer::COMMANDSTATUS::acknowled;
         pp->setName( "quick add" );
         m_peers_list.push_back( pp );
         endInsertRows();
@@ -204,8 +208,8 @@ void peersModel::confirmBanPeer( const MeshPeer & peer )
 {
     try {
         auto pp = findPeer( peer );
-        pp->status = MeshPeer::banned;
-        pp->comm_status = MeshPeer::recived;
+        pp->status = MeshPeer::STATUS::banned;
+        pp->comm_status = MeshPeer::COMMANDSTATUS::recived;
 
     } catch( std::runtime_error &e ) {
         qDebug()<<e.what();
@@ -217,7 +221,7 @@ void peersModel::updatePeerList( QList<MeshPeer*> new_list )
     deleteOldList();
 
     foreach ( auto it, new_list ) {
-        it->comm_status = MeshPeer::acknowled;
+        it->comm_status = MeshPeer::COMMANDSTATUS::acknowled;
     }
 
     beginInsertRows( createIndex( 0,0 ),0,new_list.size() );
@@ -279,6 +283,6 @@ void peersModel::deletaAllPeers()
 void peersModel::banAllPeers()
 {
     foreach ( auto it, m_peers_list ) {
-        it->status = MeshPeer::banned;
+        it->status = MeshPeer::STATUS::banned;
     }
 }
