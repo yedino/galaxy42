@@ -24,7 +24,7 @@ NodeControlerDialog::NodeControlerDialog( MainWindow* mw,QHostAddress address, u
     m_executor->setSender( m_sender );
     QString host;
 
-    m_executor->startConnect( QHostAddress( address ), port );		//! @todo think abaout last send
+    m_executor->startConnect( QHostAddress( address ), port );		//! @todo think about last send
 }
 
 NodeControlerDialog::~NodeControlerDialog()
