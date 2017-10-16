@@ -45,7 +45,7 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     QAction* add_action = new QAction(QIcon(":add"), tr( "add" ),ui->listView );
     QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "ban" ),ui->listView );
     QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("ban all" ),ui->listView );
-    QAction* remove_action = new QAction( QIcon(":remove"), tr("remove" ),ui->listView );
+    QAction* remove_action = new QAction( QIcon(":delete"), tr("remove" ),ui->listView );
     QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "remove all" ),ui->listView );
     QAction* send_massage = new QAction( tr( "send msg" ),ui->listView );
     QAction* ping_action = new QAction( tr( "ping" ),ui->listView );
@@ -99,6 +99,7 @@ void PeerListForm::addActionSlot( bool )
         peer.setName( dlg.getName() );
         peer.setIP( dlg.getIp() );
         peer.setVip( dlg.getVip() );
+        peer.comm_status = MeshPeer::COMMANDSTATUS::sended;
         m_model->addPeer( QString::fromStdString( peer.serialize() ) );
         emit ( addPeer( invitation ) );
     }
@@ -148,7 +149,7 @@ void PeerListForm::onPeerFounded( QString invitation,QString vip )
     MeshPeer* peer = m_model->findPeer( vip,peersModel::vip );
 
     peer->setInvitation( invitation );
-    peer->status = MeshPeer::connected;
+    peer->status = MeshPeer::STATUS::connected;
 }
 
 void PeerListForm::onPeerBanned( const QString &vip )

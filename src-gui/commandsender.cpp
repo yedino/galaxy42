@@ -65,7 +65,7 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
 {
     std::shared_ptr<order> ord;
 
-    if ( orderType::GETNAME && m_client_name.size() == 0 ) {
+    if ( type != orderType::GETNAME && m_client_name.size() == 0 ) {
             throw std::runtime_error ( tr( "no client name provided - can't send command" ).toStdString() );
     }
 

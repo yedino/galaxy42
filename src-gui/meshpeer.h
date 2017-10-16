@@ -14,7 +14,7 @@ class MeshPeer : public QObject
 
 public:
 
-    enum COMMANDSTATUS {
+    enum class COMMANDSTATUS {
         none = 0,
         sended,			//send to node rpc
         recived,		//get conformation from rpc
@@ -24,7 +24,7 @@ public:
     } comm_status;
 
 
-    enum STATUS {
+    enum class STATUS {
         defalut = 0,	//unknown status -propably error
         connected,		//peer is connected
         disconnected,	//peer is disconnected
@@ -34,7 +34,7 @@ public:
         banned			//peer is banned
     } status;
 
-    enum SOURCE {
+    enum class SOURCE {
         my = 0,			//created by me
         rpcExternal,	//get from external rpc client of this node(script may be)
         seed,			//get from seed
