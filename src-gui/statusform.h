@@ -38,7 +38,7 @@ private:
 
     commandExecutor *m_executor = nullptr;
     QTimer m_timer;
-    QTimer m_reconnectTimmer;
+    QTimer m_reconnectTimer;
 
     bool m_is_working = false;
 

@@ -11,7 +11,7 @@ StatusForm::StatusForm( QWidget *parent ) :
 {
     ui->setupUi( this );
     connect( &m_timer,SIGNAL( timeout() ),this,SLOT( onTickTimmer() ) );				// no check ping timmer yet
-    connect( &m_reconnectTimmer,SIGNAL( timeout() ),this,SLOT( onReConnectTimmer() ) );	//no reconnect timer yet
+    connect( &m_reconnectTimer,SIGNAL( timeout() ),this,SLOT( onReConnectTimmer() ) );	//no reconnect timer yet
     m_is_working = false;
 }
 
