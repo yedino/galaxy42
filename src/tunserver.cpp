@@ -564,7 +564,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 }
 
 // my key @deprecated (newloop)
-void c_tunserver::configure_mykey() {
+void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -579,6 +579,7 @@ void c_tunserver::configure_mykey() {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	my_IDI->set_ipv6_prefix(ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
@@ -745,12 +746,12 @@ void c_tunserver::prepare_socket() {
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
-		assert(address[1] == 0x42);
+//		assert(address[1] == 0x42);
 
 		_fact("Will configure the tun device");
 		try {
 			m_tun_device.init();
-			m_tun_device.set_ipv6_address(address, 16);
+			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
 			_fact("Done init of event manager - for this tuntap");
@@ -1904,6 +1905,10 @@ void c_tunserver::enable_remove_peers() {
 void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
 	_info("set peer remove timeout " << timeout_seconds);
 	peer_timeout = std::chrono::seconds(timeout_seconds);
+}
+
+void c_tunserver::set_prefix_len(int prefix) {
+	m_prefix_len = prefix;
 }
 
 // ------------------------------------------------------------------
