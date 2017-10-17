@@ -507,12 +507,28 @@ int c_the_program_tunserver::main_execution() {
 				_info("Can not load keys list or IDI configuration");
 				have_keys_configured=0;
 			}
+			const std::string ipv6_prefix = [this, &myserver] {
+				std::string ret = m_argm.at("set-prefix").as<std::string>();
+				_check_input(ret.size() == 4);
+				std::transform(ret.cbegin(), ret.cend(), ret.begin(),
+					[](unsigned char c){return std::tolower(c);}
+				);
+				_check_input(ret.at(0) == 'f');
+				_check_input(ret.at(1) == 'd');
+				_check_input(ret.at(2) == '4');
+				if (ret.at(3) == '2') myserver.set_prefix_len(16);
+				else if (ret.at(3) == '3') myserver.set_prefix_len(24);
+				else if (ret.at(3) == '4') throw std::invalid_argument("address reserved");
+				else if (ret.at(3) == '5') throw std::invalid_argument("address reserved");
+				else throw std::invalid_argument("address not supported");
+				return ret;
+			}(); // lambda
 
 			if (have_keys_configured) {
 				bool ok=false;
 
 				try {
-					myserver.configure_mykey();
+					myserver.configure_mykey(ipv6_prefix);
 					ok=true;
 				} catch UI_CATCH("Loading your key");
 
@@ -532,7 +548,7 @@ int c_the_program_tunserver::main_execution() {
 					const string IDI_name = myserver.program_action_gen_key_simple();
 					myserver.program_action_set_IDI(IDI_name);
 					ui::action_info_ok("Your new keys are created.");
-					myserver.configure_mykey();
+					myserver.configure_mykey(ipv6_prefix);
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );
