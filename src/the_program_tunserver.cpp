@@ -517,7 +517,7 @@ int c_the_program_tunserver::main_execution() {
 				_check_input(ret.at(1) == 'd');
 				_check_input(ret.at(2) == '4');
 				if (ret.at(3) == '2') myserver.set_prefix_len(16);
-				else if (ret.at(3) == '3') myserver.set_prefix_len(24);
+				else if (ret.at(3) == '3') myserver.set_prefix_len(16);
 				else if (ret.at(3) == '4') throw std::invalid_argument("address reserved");
 				else if (ret.at(3) == '5') throw std::invalid_argument("address reserved");
 				else throw std::invalid_argument("address not supported");
