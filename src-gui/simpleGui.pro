@@ -122,6 +122,7 @@ test {
 
 
 win32: LIBS += -L$$PWD/../../repo/libsodium-win32/lib/ -lsodium
+linux: LIBS += -lsodium
 
 INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
 DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
