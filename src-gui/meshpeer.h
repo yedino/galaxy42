@@ -12,35 +12,33 @@ class MeshPeer : public QObject
     QString m_vip;
     QString m_net_name;
 
-
 public:
 
-
-    enum COMMANDSTATUS {
+    enum class COMMANDSTATUS {
         none = 0,
-        sended,			//wyslano do noda galaxy
-        recived,		//otrzymano potwierdzenie z sieci galaxy
-        acknowled,		//zsynchronizowano w sieci galaxy
-        timeout,		// timeout komendy
-        fail			//nieudane wykonnie komendy na no
+        sended,			//send to node rpc
+        recived,		//get conformation from rpc
+        acknowled,		//state acknowled
+        timeout,		//timeot of command
+        fail			//failed to execute
     } comm_status;
 
 
-    enum STATUS {
-        defalut = 0,
-        connected,
-        disconnected,
-        stranger,
-        known,
-        bfrend,
-        banned
+    enum class STATUS {
+        defalut = 0,	//unknown status -propably error
+        connected,		//peer is connected
+        disconnected,	//peer is disconnected
+        stranger,		//peer is stranger
+        known,			//peer is known()
+        bfrend,			//peer is a friend
+        banned			//peer is banned
     } status;
 
-    enum SOURCE {
-        my = 0,
-        rpcExternal,
-        seed,
-        inbound
+    enum class SOURCE {
+        my = 0,			//created by me
+        rpcExternal,	//get from external rpc client of this node(script may be)
+        seed,			//get from seed
+        inbound			// some stranger-tuneling by this node
     } source;
 
 
@@ -51,19 +49,19 @@ public:
 
 
     /**
-     * @brief setName ustawia nazwe urzytkownika
-     * @param name imie
+     * @brief setName set user name
+     * @param user name
      */
     inline void setName(const QString &name){m_name = name;}
     /**
-     * @brief getName pobiera nazwe
-     * @return nazwa uzytkownika
+     * @brief getName gets user name
+     * @return user name
      */
     inline QString getName() const {return m_name;}
 
     /**
-     * @brief setIP sprawdza i ustawia dane ip, w  razie niepowodzenia wyrzuca std::runtime_exception
-     * @param ip nowe ip
+     * @brief setIP check and sets ip of user - if improper throw exception
+     * @param ip new ip
      */
     inline void setIP(const QString& ip)
     {
@@ -72,30 +70,30 @@ public:
     }
 
     /**
-     * @brief getIp zwraca ip
-     * @return
+     * @brief getIp return ip of user
+     * @return ip
      */
     inline QString getIp() const {return m_ip;}
 
     /**
-     * @brief setVip sprawdza virtual ip i ustawia go w klasie- w razie niepowodzenia - wyrzuca wyjatek
-     * @param vip virtual ip danego peera
+     * @brief setVip check and set virtual ip of user if improper throw exception
+     * @param vip virtual ip
      */
     inline void setVip(const QString& vip)
     {
-        //@todo dorobic sprawdzenie czy prawidlowy vip
+        //@todo check if vip is proper
         m_vip = vip;
     }
 
     /**
-     * @brief getVip zwraca virtual ip danego peera
+     * @brief getVip return virtual ip of user
      * @return
      */
     inline QString getVip()const{return m_vip;}
 
     /**
-     * @brief getInvitation sklada invitation- na podstawie wlasnego vip i ip
-     * @return nr zaproszenia
+     * @brief getInvitation create invitation based on ip and vip of user
+     * @return invitation
      */
     inline QString getInvitation() const
     {
@@ -106,8 +104,8 @@ public:
     }
 
     /**
-     * @brief setInvitation ustawia wlasciwosci obiektu na podstwie numeru zaproszenia
-     * @param invitation zaproszenie
+     * @brief setInvitation reading ip and vip basedon invitation
+     * @param invitation
      */
     inline void setInvitation(const QString& invitation)
     {

@@ -1,6 +1,6 @@
 #include "sendedcommand.h"
 
-SendedCommands::SendedCommands(QObject *parent) : QObject(parent)
+SendedCommands::SendedCommands( QObject *parent ) : QObject( parent )
 {
 
 }

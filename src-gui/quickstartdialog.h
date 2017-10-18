@@ -18,9 +18,7 @@ public:
     static QStringList readIpFromInvitation(const QString &invitation)
     {
         QString splited = invitation.split('@').at(1);
-
         QStringList splited_ip = splited.split(":");
-
         QString  ip = splited.split(':').at(1)+":"+splited.split(':').at(2);
         return ip.split('@');
     }
@@ -45,29 +43,26 @@ public:
     void setIps(const QString &ip,const QString &vip);
 signals:
 
-    void allowFriend(bool);				//! sygnal o dopuszczeniu znajomego do sieci
-    void allowStranger(bool);			//!sygnal o dopuszczeniu nieznajomych do sieci
-    void createNet();					//! sygnal tworzacy siec prywatna
-    void connectNet(QString net);		//!sygnal podlaczenia do sieci
-    void addUser(QString user_id);		//!sygnal dodania usera
-    void removeUser(QString user_id);	//!sygnal usuniecia usera
+    void allowFriend(bool);				//! signal that allow firend
+    void allowStranger(bool);			//!signal that allow strangers to net
+    void createNet();					//!signal create net
+    void connectNet(QString net);		//!signal connect net
+    void addUser(QString user_id);		//!signal that add user
+    void removeUser(QString user_id);	//!signal remove usera
 
 
 public slots:
-    void chooseInvate(QString invate);	//! slot dla sygnalu pobierajacego dane zaproszenia(np z ksiazki adresowej)
+    void chooseInvate(QString invite);	//! slot for option: chose invittaion from address book
 
 private slots:
 
-    void on_allowFriendsBox_clicked(bool checked);		//! slot checkboxa pozwolenia przyjaciolom na laczenie
-    void on_allowStrangersBox_clicked(bool checked);	//! slot check boxa pozwolenia nieznajomym na laczenie
+    void on_allowFriendsBox_clicked(bool checked);		//! slot for option: allow friend to connect
+    void on_allowStrangersBox_clicked(bool checked);	//! slot for option: allow stranger to connect
 
 
     void on_wwwButton_clicked();
-
     void on_connectButton_clicked();
-
     void on_QrScanButton_clicked();
-
     void on_QrZoomButton_clicked();
 
 private:

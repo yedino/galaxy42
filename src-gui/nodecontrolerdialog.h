@@ -16,11 +16,9 @@ class NodeControlerDialog : public QDialog
 
 public:
 
-
     explicit NodeControlerDialog(QWidget *parent = 0);
     explicit NodeControlerDialog(MainWindow *mw,QHostAddress address ,uint port);
     ~NodeControlerDialog();
-
 
     void onNewPeerList(const QStringList &peerList);
 
@@ -39,7 +37,6 @@ private:
 
     CommandSender* m_sender;
     commandExecutor *m_executor;
-
 
 };
 
