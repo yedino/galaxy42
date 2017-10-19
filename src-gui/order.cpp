@@ -220,7 +220,7 @@ banPeerOrder::banPeerOrder( const RpcId& id,const MeshPeer &peer ):order( id )
 //    m_peer = peer.getVip();
 }
 
-banPeerOrder::banPeerOrder( const std::string &json_str,commandExecutor* exec )
+banPeerOrder::banPeerOrder( const std::string &json_str,commandExecutor* exec ):order()
 {
     /*
         Ban peer
@@ -305,33 +305,33 @@ deletePeerOrder::deletePeerOrder( const RpcId& id,const MeshPeer &peer )
 
 }
 
-deletePeerOrder::deletePeerOrder( const std::string &json_str,commandExecutor *exec ):order( json_str )
+deletePeerOrder::deletePeerOrder( const std::string &json_str,commandExecutor *exec ):order()
 {
     try {
         using nlohmann::json;
         json j = json::parse( json_str );
+        m_executor = exec;
         m_msg = j["msg"];
         m_state = j["state"];
         m_re = j["re"];
-        m_executor = exec;
     } catch( std::exception &e ) {
-        qDebug()<<"delete peer order"<<json_str.c_str();
+        qDebug()<<"delete peer order problem:"<<json_str.c_str()<<" :"<<e.what();
     }
 }
 
 void deletePeerOrder::execute( MainWindow &main_window )
 {
     if( m_state == "ok" ) {
+        try {
+            QString peer =QString::fromStdString( getPeerName());
+            main_window.onDeletePeer(peer);
+        } catch( std::exception &e ) {
+            qDebug()<<e.what();
+        }
 //        main_window.addDebugInfo(QString::fromStdString(m_msg));
 //           main_window.onPeerRemoved(QString::fromStdString(m_peer));
     } else {
 
-        try {
-            std::string peer = getPeerName();
-//			main_window.onDeletePeer(peer);
-        } catch( std::exception &e ) {
-            qDebug()<<e.what();
-        }
 //      main_window.errorNotification(QString::fromStdString(m_msg));
     }
 }

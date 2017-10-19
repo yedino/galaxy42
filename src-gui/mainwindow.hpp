@@ -64,6 +64,7 @@ public slots:
 
     void onPeerRemoved(const QString &vip);
     void onPeerAdded(const QString &vip);
+    void onDeletePeer(QString &vip);
 
     void onBanAll();
     void onDeleteAll();

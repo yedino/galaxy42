@@ -488,3 +488,9 @@ void MainWindow::onNetConnected( bool val )
         msg.exec();
     }
 }
+
+
+void MainWindow::onDeletePeer( QString &vip )
+{
+    ui->peerListWidget_2->onPeerRemoved(vip);
+}
