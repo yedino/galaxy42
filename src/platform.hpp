@@ -11,6 +11,8 @@
 static_assert( CHAR_BIT == 8 , "This code requires CHAR_BIT == 8.");
 static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 
+// see also stdplus/platform.hpp
+
 // in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
 #if __linux__
 	#define ANTINET_linux

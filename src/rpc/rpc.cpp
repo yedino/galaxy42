@@ -54,7 +54,8 @@ c_rpc_server::~c_rpc_server() {
 }
 
 void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<nlohmann::json (const std::string&)> &&function) {
-	m_rpc_functions_map.emplace(rpc_function_name, std::move(function)); // TODO forward arguments
+	LockGuard<Mutex> lg(m_rpc_functions_map_mutex);
+	m_rpc_functions_map.emplace(rpc_function_name, std::move(function));
 }
 
 void c_rpc_server::accept_handler(const boost::system::error_code &error) {
@@ -210,7 +211,11 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
                 const std::string cmd_name = j["cmd"];//.begin().value();
                 dbg("cmd name " << cmd_name);
 		// calling rpc function
-		nlohmann::json json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		nlohmann::json json_response;
+		{
+			LockGuard<Mutex> lg(m_rpc_server_ptr->m_rpc_functions_map_mutex);
+			json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		}
 		json_response["id"] = get_command_id();
 
 		if(j.find("id")!= j.end()) {
