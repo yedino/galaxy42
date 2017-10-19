@@ -286,3 +286,14 @@ void peersModel::banAllPeers()
         it->status = MeshPeer::STATUS::banned;
     }
 }
+
+
+void  peersModel::startActionOnIndex(const QModelIndex &index)
+{
+    try{
+        size_t i = index.row();
+        m_peers_list.at(i)->comm_status = MeshPeer::COMMANDSTATUS::sended;
+    }catch(std::exception &e){
+        qDebug()<<e.what();
+    }
+}
