@@ -223,7 +223,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 	std::mutex & mutex_handlerflow_socket)
 {
 	if (!! ec) {
-		_note("Handler hit error, ec="<<ec.message());
+		_erro("Handler hit error, ec="<<ec.message());
 		return;
 	}
 
@@ -818,9 +818,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		socket_array.push_back( with_strand<ThreadObject<boost::asio::ip::udp::socket>>(*one_ios, *one_ios) );
 		boost::asio::ip::udp::socket & thesocket = socket_array.back().get_unsafe_assume_in_strand().get();
 
+		auto addr_listen = asio::ip::address::from_string("0.0.0.0");
+		// asio::ip::address_v4::any();
+		// if (nr_sock==0) addr_listen = asio::ip::address::from_string("192.168.113.16");
+		// if (nr_sock==1) addr_listen = asio::ip::address::from_string("192.168.1.102");
+		_mark("Using special addressing (TEST!)"); // XXX TODO
+		_mark("Listen on: " << addr_listen);
+
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-		thesocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , port_nr ) );
+		thesocket.bind( asio::ip::udp::endpoint( addr_listen , port_nr ) );
 	}
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
