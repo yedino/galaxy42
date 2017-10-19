@@ -45,7 +45,8 @@ class c_rpc_server final {
 		std::thread m_thread;
 		Mutex m_session_vector_mutex;
 		std::list<c_session> m_session_list;
-		std::map<std::string, std::function<nlohmann::json(const std::string)>> m_rpc_functions_map;
+		Mutex m_rpc_functions_map_mutex;
+		std::map<std::string, std::function<nlohmann::json(const std::string)>> m_rpc_functions_map GUARDED_BY(m_rpc_functions_map_mutex);
 		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key, shold be loaded from conf file TODO
 		xint m_session_counter = 0;
 
