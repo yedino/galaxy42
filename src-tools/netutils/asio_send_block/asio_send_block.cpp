@@ -20,8 +20,10 @@ class c_maintask {
 		c_maintask();
 
 		int run(int argc, char *argv[]);
+		int run_remote(int argc, char *argv[]);
 
-		void print_help_sendcommand();
+		void print_usage() const;
+		void print_help_sendcommand() const;
 
 	private:
 		// asio var:
@@ -52,7 +54,9 @@ class c_maintask {
 		std::string message;
 		bool interactive;
 		mysize_t bytes, count, request_length;
-		bool count_infinite; // infinute count sends forever
+		bool count_infinite; // infinite count sends forever
+
+	//	udp::socket m_remote_sock; ///< local socket to receive remote commands (in remote mode)
 };
 
 c_maintask::c_maintask()
@@ -60,26 +64,47 @@ c_maintask::c_maintask()
 {
 }
 
-void c_maintask::print_help_sendcommand() {
+void c_maintask::print_help_sendcommand() const {
 	std::cout << "SendCommand: " << endl
 		<< "  foo 0 1    - this will send text foo (1 time)" << std::endl
 		<< "  abc 50 1000   - this will send message of letter 'a' repeated 50 times. This msg will be sent 1000 times."
 		<<std::endl;
 }
 
-int c_maintask::run(int argc, char *argv[])
-{
-	if (argc < 3) {
+void c_maintask::print_usage() const {
+		std::cout << std::endl;
 		std::cout << "Usage: ./client <host> <port> <max_speed> SendCommand" << std::endl;
 		std::cout << "e.g.:  ./client <host> <port> <max_speed> <msg> <msgbytes> <count> " << std::endl;
 		std::cout << "e.g.:  ./client 127.0.0.1 9000  999000    foo   1500       -1 " << std::endl;
+		std::cout << "e.g.:  ./client remote_cmd 192.168.70.17 9000 " << std::endl;
+		std::cout << "or instead allow remote access (remote controll of this sending, WARNING can make your computer spam/DDoS other computer) " << std::endl;
+		std::cout << "e.g.:  ./client remote <listen_on_ip><port>  <authorized_ip> <max_time_hours> <pass>  " << std::endl;
+		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   192.168.70.16   72 secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   0.0.0.0         4  secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote       0.0.0.0 19000   0.0.0.0         4  secret1" << std::endl;
+		std::cout << std::endl;
+}
+
+int c_maintask::run_remote(int argc, char *argv[]) {
+	if (argc < 6) {
+		print_usage();
+		return 1;
+	}
+	// TODO
+	return 0;
+}
+
+int c_maintask::run(int argc, char *argv[])
+{
+	if (argc < 3) {
+		print_usage();
 		print_help_sendcommand();
 		return 1;
 	}
 	host = argv[1];
 	port = argv[2];
 	speed = std::stoi(argv[3]);
-	burst=50;
+	burst = 50;
 
 	interactive=true;
 	count_infinite=false; // infinute count sends forever
@@ -205,8 +230,20 @@ int c_maintask::run(int argc, char *argv[])
 
 int main(int argc, char *argv[]) {
 	std::cout << std::setprecision(2) << std::setw(6) << std::fixed ;
+
 	c_maintask maintask;
-	return maintask.run(argc,argv);
+
+	bool run_remote = false;
+	if (argc>=2) {
+		if ( std::string(argv[1]) == std::string("remote") ) run_remote = true;
+	}
+
+	if (run_remote) {
+		return maintask.run_remote(argc,argv);
+	}
+	else {
+		return maintask.run(argc,argv);
+	}
 }
 
 
