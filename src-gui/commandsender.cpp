@@ -39,7 +39,6 @@ void CommandSender::sendCommand( orderType type, const MeshPeer &peer )
         auto ord = prepareCommand( type,peer );
         m_executor->sendNetRequest( *ord );
         m_sended->addOrder( ord,QString::fromStdString( ord->getId() ) );
-
     } catch( std::runtime_error &e ) {
         qDebug()<< "exception while sending :" << e.what();
     }

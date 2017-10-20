@@ -63,9 +63,7 @@ HEADERS += \
     connectionstatusform.h \
     qrdialog.h \
     meshpeer.h \
-    peersmodel.h \
     order.hpp\
-        peerlistform.h \
         peersmodel.h \
     addpeerdialog.h\
         peereditdialog.h \
@@ -82,7 +80,6 @@ FORMS += \
     debugdialog.ui \
     get_host_info.ui \
     quickstartdialog.ui \
-    peerlistform.ui \
     connectionstatusform.ui \
     qrdialog.ui \
     quickstartform.ui \
@@ -90,7 +87,8 @@ FORMS += \
     peereditdialog.ui\
         addpeerdialog.ui \
     nodecontrolerdialog.ui \
-    statusform.ui
+    statusform.ui \
+    addressbookform.ui
 
 
 debug {
@@ -121,14 +119,23 @@ test {
 }
 
 
+macos {
+        LIBS += -L /usr/local/lib -lsodium
+        INCLUDEPATH += /usr/local/include/
+        INCLUDEPATH += $$PWD/../depends/json/src/
+
+}
+
 win32: LIBS += -L$$PWD/../../repo/libsodium-win32/lib/ -lsodium
 linux: LIBS += -lsodium
 
-INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include
-DEPENDPATH += $$PWD/../../repo/libsodium-win32/include
+win32:{
+        INCLUDEPATH += $$PWD/../../repo/libsodium-win32/include # path to sodium manual set
+        DEPENDPATH += $$PWD/../../repo/libsodium-win32/include	#path to sodium manual path
+}
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/sodium.lib
-else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium.a
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/sodium.lib # path to sodium manual se
+else:win32-g++: PRE_TARGETDEPS += $$PWD/../../repo/libsodium-win32/lib/libsodium.a  #path to sodium manual path
 
 TRANSLATIONS = hellotr_pl.ts
 
