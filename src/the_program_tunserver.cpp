@@ -523,7 +523,7 @@ int c_the_program_tunserver::main_execution() {
 				else throw std::invalid_argument("address not supported");
 				return ret;
 			}(); // lambda
-
+			myserver.set_prefix(ipv6_prefix);
 			if (have_keys_configured) {
 				bool ok=false;
 

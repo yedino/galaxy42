@@ -579,7 +579,8 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
-	my_IDI->set_ipv6_prefix(ipv6_prefix);
+	//my_IDI->set_ipv6_prefix(ipv6_prefix);
+	my_IDI->set_ipv6_prefix(m_ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
@@ -1601,6 +1602,7 @@ void c_tunserver::event_loop(int time) {
 			try {
 				antinet_crypto::c_multikeys_pub his_IDI;
 				his_IDI.load_from_bin(bin_his_IDI_pub.bytes);
+				his_IDI.set_ipv6_prefix(m_ipv6_prefix);
 				antinet_crypto::c_multisign his_IDI_IDC_sig;
 				his_IDI_IDC_sig.load_from_bin(bin_his_IDI_IDC_sig.bytes);
 				antinet_crypto::c_multikeys_pub::multi_sign_verify(his_IDI_IDC_sig, bin_his_IDC_pub.bytes, his_IDI);
@@ -1909,6 +1911,10 @@ void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
 
 void c_tunserver::set_prefix_len(int prefix) {
 	m_prefix_len = prefix;
+}
+
+void c_tunserver::set_prefix(const string &prefix) {
+	m_ipv6_prefix = prefix;
 }
 
 // ------------------------------------------------------------------
