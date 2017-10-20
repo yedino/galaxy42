@@ -237,6 +237,7 @@ class c_tunserver : public c_galaxy_node {
 		void enable_remove_peers();
 		void set_remove_peer_tometout(unsigned int timeout_seconds);
 		void set_prefix_len(int prefix);
+		void set_prefix(const std::string &prefix);
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -267,6 +268,7 @@ class c_tunserver : public c_galaxy_node {
 		friend class c_httpdbg_raport; ///< this is authorized to read my data for debug. but [thread] lock access first!!!
         #endif
 		int m_prefix_len;
+		std::string m_ipv6_prefix; // i.e. "fd42"
 	private:
         #ifdef HTTP_DBG
 		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
