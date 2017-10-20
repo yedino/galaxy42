@@ -611,6 +611,7 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 
 	// save signature and IDI publickey in tunserver
 	m_my_IDI_pub = my_IDI->m_pub;
+	m_my_IDI_pub.set_ipv6_prefix(m_ipv6_prefix);
 	m_IDI_IDC_sig = IDC_IDI_signature;
 
 	// remove IDP from RAM
