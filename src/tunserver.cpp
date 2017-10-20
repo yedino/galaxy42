@@ -636,6 +636,7 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
+	m_my_IDC.set_ipv6_prefix(m_ipv6_prefix);
 }
 
 // add peer
