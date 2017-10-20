@@ -23,6 +23,12 @@ public:
         fail			//failed to execute
     } comm_status;
 
+    enum class SOURCE {
+        my = 0,			//created by me
+        rpcExternal,	//get from external rpc client of this node(script may be)
+        seed,			//get from seed
+        inbound			// some stranger-tuneling by this node
+    } source;
 
     enum class STATUS {
         defalut = 0,	//unknown status -propably error
@@ -34,12 +40,6 @@ public:
         banned			//peer is banned
     } status;
 
-    enum class SOURCE {
-        my = 0,			//created by me
-        rpcExternal,	//get from external rpc client of this node(script may be)
-        seed,			//get from seed
-        inbound			// some stranger-tuneling by this node
-    } source;
 
 
     explicit MeshPeer(QObject *parent = nullptr);

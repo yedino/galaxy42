@@ -121,6 +121,7 @@ void peerListOrder::execute( MainWindow &main_window )
 
 getGalaxyOrder::getGalaxyOrder( const RpcId &id, const std::vector<std::string> &ipv4_list )
 {
+    Q_UNUSED(id)
     m_cmd ="get_galaxy_new_format_reference";
     m_msg_array = ipv4_list;
 }
@@ -260,9 +261,11 @@ std::string banPeerOrder::get_str() const
 
 void banPeerOrder::execute( MainWindow &main_window )
 {
+
     try {
-        std::string peer = getPeerName();
+        QString peer = QString::fromStdString(getPeerName());
 //        main_window.onBanBeer(peer);
+        main_window.onPeerBanned(peer);
     } catch ( std::exception &e ) {
         qDebug()<<e.what();
     }

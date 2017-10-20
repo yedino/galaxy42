@@ -7,5 +7,5 @@ processRunner::processRunner( QObject *parent ) : QObject( parent )
 
 bool processRunner::startTunserver()
 {
-
+    return false;
 }

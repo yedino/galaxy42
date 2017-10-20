@@ -38,7 +38,7 @@ MainWindow::MainWindow( QWidget *parent ) :
 
     connect( ui->peerListWidget_2,SIGNAL( addPeer( QString ) ),this,SLOT( onAddPeer( QString ) ) );
     connect( ui->peerListWidget_2,SIGNAL( removePeer( QString ) ),this,SLOT( onRemovePeer( QString ) ) );
-    connect( ui->peerListWidget_2,SIGNAL( banPeer( QString ) ),this,SLOT( onBanBeer( QString ) ) );
+    connect( ui->peerListWidget_2,SIGNAL( banPeer( QString ) ),this,SLOT( onBanPeer( QString ) ) );
     connect( ui->peerListWidget_2,SIGNAL( deleteAll() ),this,SLOT( onDeleteAll() ) );
     connect( ui->peerListWidget_2,SIGNAL( banAll() ),this,SLOT( onBanAll() ) );
 
@@ -90,6 +90,7 @@ void MainWindow::update_peer_list( QString peer ) {
 
     qDebug() << "Peers:";
     for ( const auto &peer : m_tun_process->get_peer_list() ) {
+        Q_UNUSED(peer);
         //qDebug() << peer.to_string();
 //		ui->peerListWidget->addItem(QString::fromStdString(peer.to_string()));
     }
@@ -201,13 +202,15 @@ void MainWindow::SavePeers( QString file_name ) {
 }
 
 void MainWindow::add_to_debug_window( const std::string &message ) {
-//	ui->debugWidget->addItem(message.c_str());
+    Q_UNUSED(message);
+    //	ui->debugWidget->addItem(message.c_str());
 //	ui->debugWidget->scrollToBottom();
 }
 
 void MainWindow::show_peers( const std::vector<std::string> &peers ) {
 //	ui->peerListWidget->clear();
     for ( const auto &element : peers ) {
+        Q_UNUSED(element);
 //		ui->peerListWidget->addItem(QString(element.c_str()));
     }
 }
@@ -283,6 +286,7 @@ void MainWindow::errorNotification( QString err )
 
 void MainWindow::addDebugInfo( const QString &str )
 {
+    Q_UNUSED(str);
 //    ui->debugWidget->addItem(str);
 }
 
@@ -320,7 +324,7 @@ void MainWindow::initSettings()
 void MainWindow::onAllowFriend( bool val )
 {
     //! @todo implement allow firends
-
+    Q_UNUSED(val)
     if( ! isWorking() ) {
         QErrorMessage message( this );
         message.showMessage( tr( "can't connect to node" ) );
@@ -333,6 +337,7 @@ void MainWindow::onAllowFriend( bool val )
 void MainWindow::onAllowPeer( bool val )
 {
     //! @todo implement allow strangers
+    Q_UNUSED(val);
     if( ! isWorking() ) {
         QErrorMessage message( this );
         message.showMessage( tr( "can't connect to node" ) );
@@ -369,6 +374,7 @@ void MainWindow::on_banButton_clicked()
 
 void MainWindow::onAddPerrToList( const QString &peer_string )
 {
+    Q_UNUSED(peer_string);
 //    MeshPeer peer(peer_string.toStdString());
 //    addPeerOrder ord;
 //    addPeerOrder ord(peer);
@@ -376,7 +382,12 @@ void MainWindow::onAddPerrToList( const QString &peer_string )
 //    m_sender->sendCommand(CommandSender::orderType::ADDPEER,peer);
 }
 
-void MainWindow::onBanBeer( const QString& vip )
+void MainWindow::onPeerBanned(const QString &vip)
+{
+    ui->peerListWidget_2->onPeerBanned(vip);
+}
+
+void MainWindow::onBanPeer( const QString& vip )
 {
     try {
         MeshPeer peer;
@@ -413,6 +424,8 @@ void MainWindow::onAddPeer( const QString& peer_str )
 
 void MainWindow::onSendMessage( const QString &vip, const QString &msg )
 {
+    Q_UNUSED(vip);
+    Q_UNUSED(msg);
     MeshPeer peer;
     peer.setVip( vip );
     // to wiadomosc std string
@@ -421,6 +434,7 @@ void MainWindow::onSendMessage( const QString &vip, const QString &msg )
 
 void MainWindow::onFindPeer( const QString &vip )
 {
+    Q_UNUSED(vip)
     //dobrac wlasciwa komende
 }
 

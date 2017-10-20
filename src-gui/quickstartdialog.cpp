@@ -18,7 +18,7 @@ quickStartDialog::quickStartDialog( QWidget *parent ) :
 void quickStartDialog::setIps( const QString &ip,const QString &invitation )
 {
     qDebug()<<"set invitations";
-
+    Q_UNUSED(ip)
     QString vip = IpReader::readVipFromInvitation( invitation );
     ui->vipEdit->setText( vip );
     ui->myInviteEdit->setText( invitation );

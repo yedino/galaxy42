@@ -252,7 +252,6 @@ void  peersModel::deleteOldList()
 
 MeshPeer* peersModel::findPeer( QString value,Columns col )
 {
-    MeshPeer *peer;
     for( int i=0; i < m_peers_list.size() ; ++i ) {
         if( data( index( i,col ) ).toString() == value ) return m_peers_list.at( i );
     }

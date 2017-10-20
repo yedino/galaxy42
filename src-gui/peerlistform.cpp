@@ -189,6 +189,7 @@ void PeerListForm::onPeerRemoved( const QString &vip )
 
 void PeerListForm::addPeer( const MeshPeer & peer )
 {
+    Q_UNUSED(peer)
 //	m_model->addPeer();
 }
 
