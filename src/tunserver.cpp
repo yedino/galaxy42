@@ -1612,6 +1612,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
 					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey->set_ipv6_prefix(m_ipv6_prefix);
 					_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
