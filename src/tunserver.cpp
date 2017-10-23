@@ -722,7 +722,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
 	c_haship_addr hip( c_haship_addr::tag_constr_by_addr_bin() , pubkey.get_ipv6_string_bin() );
-
 	auto find = m_tunnel.find(hip);
 	if (find == m_tunnel.end()) { // we don't have tunnel to him yet
 		_info("Creating a CT to HIP=" << hip);
@@ -1621,6 +1620,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add node
 					c_haship_pubkey his_pubkey;
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( his_pubkey );
 				}
 			} catch (std::invalid_argument &) {
@@ -1730,6 +1730,7 @@ void c_tunserver::event_loop(int time) {
 					_info("GOT CORRECT REPLY - USING IT");
 
 					_warn("Cool, we got there a pubkey.");
+					pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( pubkey );
 
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost , pubkey );
