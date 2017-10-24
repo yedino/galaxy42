@@ -45,6 +45,8 @@ public slots:
     void updatePeerList(QList<MeshPeer*> new_list);
     void deletaAllPeers();
     void banAllPeers();
+    void startActionOnIndex(const QModelIndex &index);
+//    void r(const QModelIndex& index);
 
     MeshPeer* findPeer(QString value,Columns col);
 

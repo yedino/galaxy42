@@ -29,7 +29,7 @@ public slots:
     bool isWorking();
 
 signals:
-    netConnect(bool);
+    void netConnect(bool);
 
 private slots:
     void on_pushButton_clicked();

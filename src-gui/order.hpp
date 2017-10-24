@@ -142,8 +142,7 @@ protected:
 class addPeerOrder final: public order
 {
 public:
-    addPeerOrder(addPeerOrder *ord):order(ord)
-    {m_format = ord->m_format; m_peer = ord->m_peer;}
+    addPeerOrder(addPeerOrder *ord):order(ord){m_format = ord->m_format; m_peer = ord->m_peer;}
     addPeerOrder(const RpcId& id,const MeshPeer &peer);
     addPeerOrder(const std::string &json_str,commandExecutor *executor);
     virtual std::string get_str() const;
