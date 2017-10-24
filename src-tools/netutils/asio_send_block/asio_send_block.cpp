@@ -7,11 +7,52 @@
 #include <chrono>
 #include <limits>
 #include <thread>
+#include <functional>
+
+#define _warn(X) { std::cerr << __LINE__ << " Warning: " << X << std::endl; }
+#define _info(X) { std::cerr << __LINE__ << " Info: " << X << std::endl; }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+class c_rpc final {
+	public:
+		c_rpc(std::function<void(const std::string &)> f);
+		void start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port);
+	private:
+		boost::asio::io_service m_io_service;
+		boost::asio::ip::tcp::socket m_socket;
+		std::function<void(const std::string &)>m_rpc_fun;
+		std::string m_input_buffer;
+};
+
+c_rpc::c_rpc(std::function<void(const std::string &)> f)
+:
+	m_io_service(),
+	m_socket(m_io_service),
+	m_rpc_fun(f),
+	m_input_buffer()
+{
+}
+
+void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port) {
+	boost::asio::ip::tcp::acceptor acceptor(m_io_service, boost::asio::ip::tcp::endpoint(listen_address, port));
+	acceptor.accept(m_socket);
+	boost::asio::streambuf input_stream;
+	const std::string ok_message = "OK";
+	while (true) {
+		_info("RPC read...");
+		boost::asio::read_until(m_socket, input_stream, '\n');
+		std::istream istream(&input_stream);
+		std::getline(istream, m_input_buffer);
+		_info("RPC read... done: [" << m_input_buffer << "]");
+		m_rpc_fun(m_input_buffer);
+		boost::asio::write(m_socket, boost::asio::buffer(ok_message));
+	}
+}
+///////////////////////////////////////////////////////////////////////////////////////////
 
 using boost::asio::ip::udp;
 using std::endl;
-
-#define _warn(X) { std::cerr << "Warning: " << X << std::endl; }
 
 enum { max_length = 655035 };
 
@@ -95,8 +136,10 @@ void c_maintask::print_help_sendcommand() const {
 void c_maintask::print_usage() const {
 		std::cout << std::endl;
 		std::cout << "Usage: ./client <host> <port> <max_speed> SendCommand" << std::endl;
-		std::cout << "e.g.:  ./client <host> <port> <max_speed> <msg> <msgbytes> <count> " << std::endl;
+		std::cout << "e.g.:  ./client <host> <port> <max_speed> <msg> <msgbytes> <count> [maxTime sec] [maxData GB]" << std::endl;
 		std::cout << "e.g.:  ./client 127.0.0.1 9000  999000    foo   1500       -1 " << std::endl;
+		std::cout << "e.g.:  ./client 127.0.0.1 9000  999000    foo   1500       -1 10 -1 " << std::endl;
+		std::cout << "\nor start server accepting remote RPC commands: \n";
 		std::cout << "e.g.:  ./client remote_cmd 192.168.70.17 9000 " << std::endl;
 		std::cout << "or instead allow remote access (remote controll of this sending, WARNING can make your computer spam/DDoS other computer) " << std::endl;
 		std::cout << "e.g.:  ./client remote <listen_on_ip><port>  <authorized_ip> <max_time_hours> <pass>  " << std::endl;
@@ -122,6 +165,9 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 		if (m_rpc_password.size()<3) throw std::runtime_error("insecure (short) or missing RPC password (configured here)");
 		if (password_given != m_rpc_password) throw std::runtime_error("invalid RPC password given");
 		if (word_SEND != "SEND") throw std::runtime_error("word 'SEND'");
+
+		args.erase( args.begin() , args.begin()+2 );
+
 	} catch(const std::exception &ex) {
 		_warn("Can not parse RPC: " << ex.what() << " rpc was [" << rpc_cmd << "]");
 		throw ;
@@ -140,33 +186,33 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 }
 
 int c_maintask::run_remote(int argc, const char * argv[]) {
-	std::cout << "Starting remote server " << std::endl;
+	_info("Starting remote server");
+	if (argc < 7) { print_usage(); return 1; }
 
-	// listen TCP
+	this->m_rpc_password = argv[6];
+	_info("RPC password has length: " << this->m_rpc_password.size());
 
-	// handler:
-	// string rpc_text;
-	//
-	// read ... s  ;  rpc_text += s;
+	c_rpc rpc([this](const std::string &rpc_data) {
+			std::cout << "rpc data [" << rpc_data << "]\n";
+			try {
+				run_rpc_command_string(rpc_data);
+			} catch(const std::exception &ex) {
+				_info("RPC request failed [" << ex.what() << ")");
+			}
+		}
+	);
 
-
-
-  // NOT NOW
-	// NO find first \n... ;  rpc_command = rpc_textsubstr(0, pos_newline);   rcp_text = rpc_text.substr(pos_newline);
-	// NO s = ".............. \n ............. \n ............ \n"
-
-	// s = "secret1 SEND 127.0.0.1 9000  999000    foo   1500       -1"
-
-	if (argc < 6) {
-		print_usage();
-		return 1;
-	}
-	// TODO
+	boost::asio::ip::address_v4 listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
+	unsigned short port = std::atoi(argv[3]);
+	_info("RPC will listen on: " << listen_address << ":" << port);
+	rpc.start_listen(listen_address, port); // blocks
 	return 0;
 }
 
 int c_maintask::run(int argc, const char * argv[])
 {
+	_info("Starting the sending run");
+
 	if (argc < 3) {
 		print_usage();
 		print_help_sendcommand();
@@ -303,9 +349,6 @@ int main(int argc, const char * argv[]) {
 
 	c_maintask maintask;
 
-	maintask.run_rpc_command_string("secret1 SEND 127.0.0.1 9000 999000 foo 1500 -1 ");
-	return 1;
-
 	bool run_remote = false;
 	if (argc>=2) {
 		if ( std::string(argv[1]) == std::string("remote") ) run_remote = true;
@@ -318,6 +361,7 @@ int main(int argc, const char * argv[]) {
 		return maintask.run(argc,argv);
 	}
 }
+
 
 
 
