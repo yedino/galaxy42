@@ -577,7 +577,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_goal("Creating ios (WIRE) nr "<<i);
 		ios_wire.emplace_back( std::make_unique<asio::io_service>() );
 		ios_wire_work.emplace_back( std::make_unique<asio::io_service::work>( * ios_wire.back() ) );
-		_goal("Creating ios (WIRE) nr "<<i<<" - done");
 	}
 
 	_note("Create ios (TUNTAP)");
@@ -587,7 +586,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_goal("Creating ios (TUNTAP) nr "<<i);
 		ios_tuntap.emplace_back( std::make_unique<asio::io_service>() );
 		ios_tuntap_work.emplace_back( std::make_unique<asio::io_service::work>( * ios_tuntap.back() ) );
-		_goal("Creating ios (TUNTAP) nr "<<i<<" - done");
 	}
 
 	boost::asio::signal_set signals( ios_general, SIGINT);
@@ -1004,7 +1002,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		assert(inbuf_nr >= 0);
 		assert(socket_nr_raw >= 0);
 		int socket_nr = socket_nr_raw % wire_socket.size(); // spread it (rotate)
-		_note("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
+		_goal("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
 
 		auto inbuf_asio = asio::buffer( inbuf_tab.addr(inbuf_nr) , t_inbuf::size() );
 		_dbg1("buffer size is: " << asio::buffer_size( inbuf_asio ) );

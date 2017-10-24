@@ -11,23 +11,39 @@
 using boost::asio::ip::udp;
 using std::endl;
 
+#define _warn(X) { std::cerr << "Warning: " << X << std::endl; }
+
 enum { max_length = 655035 };
 
 using mysize_t = uint64_t; // size_t is too small to count some things, and overflows, e.g. on r-pi
+
+template <class TOut>
+void explode(const std::string & text, char sep, TOut & output) {
+    std::istringstream iss(text);
+    std::string word;
+    while (std::getline(iss, word, sep)) output.push_back(word);
+}
+
+std::vector<std::string> explode(const std::string & text, char sep) {
+	std::vector<std::string> ret;
+	explode(text,sep,ret);
+	return ret;
+}
 
 class c_maintask {
 	public:
 		c_maintask();
 
-		int run(int argc, char *argv[]);
-		int run_remote(int argc, char *argv[]);
+		int run(int argc, const char * argv []);
+		int run_remote(int argc, const char * argv []);
 
-		void run_rpc_command_string(const std::string & rpc_cmd);
+		std::string run_rpc_command_string(const std::string & rpc_cmd);
 
 		void print_usage() const;
 		void print_help_sendcommand() const;
 
 	private:
+
 		// asio var:
 		boost::asio::io_service io_service;
 		udp::socket mysocket;
@@ -50,13 +66,15 @@ class c_maintask {
 		double target_speed;
 
 		// conf:
-		char *host;
-		char *port;
+		const char *host;
+		const char *port;
 		mysize_t speed;
 		std::string message;
 		bool interactive;
 		mysize_t bytes, count, request_length;
 		bool count_infinite; // infinite count sends forever
+
+		std::string m_rpc_password;
 
 	//	udp::socket m_remote_sock; ///< local socket to receive remote commands (in remote mode)
 };
@@ -64,6 +82,7 @@ class c_maintask {
 c_maintask::c_maintask()
 : mysocket(io_service), resolver(io_service)
 {
+	m_rpc_password="";
 }
 
 void c_maintask::print_help_sendcommand() const {
@@ -89,10 +108,38 @@ void c_maintask::print_usage() const {
 		std::cout << std::endl;
 }
 
-void c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
+std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
+	std::string ret;
+	ret += "RPC-result ";
+	std::cout << "RPC command to execute: [" << rpc_cmd << "]" << std::endl;
+	std::vector<std::string> args = explode(rpc_cmd, ' ');
+	std::cout << "RPC command args size: " << args.size() << std::endl;
+
+	try {
+		std::string password_given = args.at(0);
+		std::string word_SEND = args.at(1);
+
+		if (m_rpc_password.size()<3) throw std::runtime_error("insecure (short) or missing RPC password (configured here)");
+		if (password_given != m_rpc_password) throw std::runtime_error("invalid RPC password given");
+		if (word_SEND != "SEND") throw std::runtime_error("word 'SEND'");
+	} catch(const std::exception &ex) {
+		_warn("Can not parse RPC: " << ex.what() << " rpc was [" << rpc_cmd << "]");
+		throw ;
+	}
+
+	args.insert( args.begin(), "program_name" );
+
+	size_t argc = args.size();
+	const char ** argv = new const char * [ argc ];
+	for (size_t i=0; i<argc; ++i) argv[i] = args.at(i).c_str(); // ! points to memory owned by strings in vector args!
+	this->run( argc, argv );
+	delete [] argv;
+
+	std::cout << "RPC command DONE      : [" << rpc_cmd << "]" << std::endl;
+	return ret;
 }
 
-int c_maintask::run_remote(int argc, char *argv[]) {
+int c_maintask::run_remote(int argc, const char * argv[]) {
 	std::cout << "Starting remote server " << std::endl;
 
 	// listen TCP
@@ -118,7 +165,7 @@ int c_maintask::run_remote(int argc, char *argv[]) {
 	return 0;
 }
 
-int c_maintask::run(int argc, char *argv[])
+int c_maintask::run(int argc, const char * argv[])
 {
 	if (argc < 3) {
 		print_usage();
@@ -251,10 +298,13 @@ int c_maintask::run(int argc, char *argv[])
 	return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char * argv[]) {
 	std::cout << std::setprecision(2) << std::setw(6) << std::fixed ;
 
 	c_maintask maintask;
+
+	maintask.run_rpc_command_string("secret1 SEND 127.0.0.1 9000 999000 foo 1500 -1 ");
+	return 1;
 
 	bool run_remote = false;
 	if (argc>=2) {
