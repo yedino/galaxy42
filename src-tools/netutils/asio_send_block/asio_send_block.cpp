@@ -22,6 +22,8 @@ class c_maintask {
 		int run(int argc, char *argv[]);
 		int run_remote(int argc, char *argv[]);
 
+		void run_rpc_command_string(const std::string & rpc_cmd);
+
 		void print_usage() const;
 		void print_help_sendcommand() const;
 
@@ -82,10 +84,32 @@ void c_maintask::print_usage() const {
 		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   192.168.70.16   72 secret1" << std::endl;
 		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   0.0.0.0         4  secret1" << std::endl;
 		std::cout << "e.g.:  ./client remote       0.0.0.0 19000   0.0.0.0         4  secret1" << std::endl;
+		std::cout << "then send TCP text: 'secret1 SEND [args for normal run] \\n'  (\\n means to end the TCP text with a newline)" << std::endl;
+		std::cout << "then send TCP text: 'secret1 SEND 127.0.0.1 9000  999000    foo   1500       -1 \\n'" << std::endl;
 		std::cout << std::endl;
 }
 
+void c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
+}
+
 int c_maintask::run_remote(int argc, char *argv[]) {
+	std::cout << "Starting remote server " << std::endl;
+
+	// listen TCP
+
+	// handler:
+	// string rpc_text;
+	//
+	// read ... s  ;  rpc_text += s;
+
+
+
+  // NOT NOW
+	// NO find first \n... ;  rpc_command = rpc_textsubstr(0, pos_newline);   rcp_text = rpc_text.substr(pos_newline);
+	// NO s = ".............. \n ............. \n ............ \n"
+
+	// s = "secret1 SEND 127.0.0.1 9000  999000    foo   1500       -1"
+
 	if (argc < 6) {
 		print_usage();
 		return 1;
@@ -133,7 +157,6 @@ int c_maintask::run(int argc, char *argv[])
 
 	// the main loop, mainly used for interactive mode
 	while(true) {
-
 		if (interactive) {
 			std::cout << "\n";
 			print_help_sendcommand();
