@@ -7,6 +7,43 @@
 #include <chrono>
 #include <limits>
 #include <thread>
+#include <functional>
+
+///////////////////////////////////////////////////////////////////////////////////////////
+class c_rpc final {
+	public:
+		c_rpc(std::function<void(const std::string &)> f);
+		void start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port);
+	private:
+		boost::asio::io_service m_io_service;
+		boost::asio::ip::tcp::socket m_socket;
+		std::function<void(const std::string &)>m_rpc_fun;
+		std::string m_input_buffer;
+};
+
+c_rpc::c_rpc(std::function<void(const std::string &)> f)
+:
+	m_io_service(),
+	m_socket(m_io_service),
+	m_rpc_fun(f),
+	m_input_buffer()
+{
+}
+
+void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port) {
+	boost::asio::ip::tcp::acceptor acceptor(m_io_service, boost::asio::ip::tcp::endpoint(listen_address, port));
+	acceptor.accept(m_socket);
+	boost::asio::streambuf input_stream;
+	const std::string ok_message = "OK";
+	while (true) {
+		boost::asio::read_until(m_socket, input_stream, '\n');
+		std::istream istream(&input_stream);
+		std::getline(istream, m_input_buffer);
+		m_rpc_fun(m_input_buffer);
+		boost::asio::write(m_socket, boost::asio::buffer(ok_message));
+	}
+}
+///////////////////////////////////////////////////////////////////////////////////////////
 
 using boost::asio::ip::udp;
 using std::endl;
@@ -89,12 +126,12 @@ void c_maintask::print_usage() const {
 		std::cout << std::endl;
 }
 
+
 void c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 }
 
 int c_maintask::run_remote(int argc, char *argv[]) {
 	std::cout << "Starting remote server " << std::endl;
-
 	// listen TCP
 
 	// handler:
@@ -114,7 +151,16 @@ int c_maintask::run_remote(int argc, char *argv[]) {
 		print_usage();
 		return 1;
 	}
-	// TODO
+
+	c_rpc rpc([this](const std::string &rpc_data) {
+			std::cout << "rpc data " << rpc_data << '\n';
+			run_rpc_command_string(rpc_data);
+		}
+	);
+	boost::asio::ip::address_v4 listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
+	unsigned short port = std::atoi(argv[3]);
+	rpc.start_listen(listen_address, port); // blocks
+
 	return 0;
 }
 
@@ -251,6 +297,7 @@ int c_maintask::run(int argc, char *argv[])
 	return 0;
 }
 
+
 int main(int argc, char *argv[]) {
 	std::cout << std::setprecision(2) << std::setw(6) << std::fixed ;
 
@@ -268,6 +315,7 @@ int main(int argc, char *argv[]) {
 		return maintask.run(argc,argv);
 	}
 }
+
 
 
 
