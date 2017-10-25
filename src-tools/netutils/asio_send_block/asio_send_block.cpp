@@ -40,14 +40,15 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 	boost::asio::streambuf input_stream;
 	const std::string ok_message = "OK\n";
 	while (true) {
-		_info("RPC read...");
+		_info("RPC command read...");
 		boost::asio::read_until(m_socket, input_stream, '\n');
 		std::istream istream(&input_stream);
 		std::getline(istream, m_input_buffer);
-		_info("RPC read... done: [" << m_input_buffer << "]");
+		_info("RPC command read... done: [" << m_input_buffer << "]");
+
 		m_rpc_fun(m_input_buffer);
+
 		boost::asio::write(m_socket, boost::asio::buffer(ok_message));
-		break; // <--- only one command per connection now
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +152,7 @@ void c_maintask::print_help_sendcommand() const {
 void c_maintask::print_usage_rpc_cmd() const {
 	std::cout << "secret1 SEND [args for normal run]  <--- this text, ending with a NEW LINE.\n";
 	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 1472  -1  \n";
-	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 8972  -1 60 -1 (no time limit, 60 seconds, no GB limit) \n";
+	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 8972  -1 5 -1 (no time limit, 5 seconds, no GB limit) \n";
 }
 
 void c_maintask::print_usage() const {
@@ -164,9 +165,9 @@ void c_maintask::print_usage() const {
 		std::cout << "e.g.:  ./client remote_cmd 192.168.70.17 9000 " << std::endl;
 		std::cout << "or instead allow remote access (remote controll of this sending, WARNING can make your computer spam/DDoS other computer) " << std::endl;
 		std::cout << "e.g.:  ./client remote <listen_on_ip><port>  <authorized_ip> <max_time_hours> <pass>  " << std::endl;
-		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   192.168.70.16   72 secret1" << std::endl;
-		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   0.0.0.0         4  secret1" << std::endl;
-		std::cout << "e.g.:  ./client remote       0.0.0.0 19000   0.0.0.0         4  secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote 192.168.70.17 9011   192.168.70.16   72 secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote 192.168.70.17 9011   0.0.0.0         4  secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote       0.0.0.0 9011   0.0.0.0         4  secret1" << std::endl;
 		std::cout << "then send TCP text like e.g.: \n";
 		print_usage_rpc_cmd();
 		std::cout << std::endl;
@@ -199,7 +200,16 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 	const char ** argv = new const char * [ argc ];
 	for (size_t i=0; i<argc; ++i) argv[i] = args.at(i).c_str(); // ! points to memory owned by strings in vector args!
 	for (size_t i=0; i<argc; ++i) _info("argv["<<i<<"] = [" << argv[i] << "]");
-	this->run( argc, argv );
+	std::string error_msg="(no error)";
+	try {
+
+		c_maintask maintask_once; // fresh new program (to not reuse our object this)
+		maintask_once.run( argc, argv );
+
+	} catch (const std::exception & ex) {
+		error_msg = ex.what();
+		_warn("Exception while tryint to execute RPC command: " << error_msg);
+	}
 	delete [] argv;
 
 	std::cout << "RPC command DONE      : [" << rpc_cmd << "]" << std::endl;
