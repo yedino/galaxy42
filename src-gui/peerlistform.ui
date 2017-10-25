@@ -31,14 +31,22 @@
        <item>
         <widget class="QPushButton" name="pushButton">
          <property name="text">
-          <string>+</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme=":add" resource="icons.qrc">
+           <normaloff>:/add</normaloff>:/add</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_2">
          <property name="text">
-          <string>-</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme=":delete" resource="icons.qrc">
+           <normaloff>:/delete</normaloff>:/delete</iconset>
          </property>
         </widget>
        </item>
@@ -48,6 +56,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>
