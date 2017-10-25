@@ -18,6 +18,7 @@
 
 class commandExecutor;
 class CommandSender;
+class StatusForm;
 
 namespace Ui {
 class MainWindow;
@@ -40,6 +41,7 @@ public:
 
     void startNewCrpcConnection(const QString &host, uint port);
 
+    StatusForm *GetStatusObject();
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
@@ -54,14 +56,20 @@ public slots:
 
     void addDebugInfo(const QString &str);
 
-    void onBanBeer(const QString &vip);		//! funkcja wywolywana na Ban  z listy peer
-    void onRemovePeer(const QString &vip);		//! funkcja wywolywana na Remove z listy peer
-    void onAddPeer(const QString &vip);		//! funkcja wywolywana na add z listy peer
-    void onSendMessage(const QString &vip,const QString &msg);	//! funkcja wywolywana na send msg z listy peer
-    void onFindPeer(const QString &vip);			//! funkcja wywolywana na find z listy peer
+    void onBanBeer(const QString &vip);		//! slot of ban one peer
+    void onRemovePeer(const QString &vip);		//! slot of remove one peer
+    void onAddPeer(const QString &vip);		//! slot of add peer
+    void onSendMessage(const QString &vip,const QString &msg);	//! slot that sended message (no rpc command now - so not working)
+    void onFindPeer(const QString &vip);			//! slot that loogking for peer (no rpc command now - not working)
 
     void onPeerRemoved(const QString &vip);
     void onPeerAdded(const QString &vip);
+    void onDeletePeer(QString &vip);
+
+    void onBanAll();
+    void onDeleteAll();
+
+    bool isWorking();
 
 private slots:
 
@@ -84,6 +92,8 @@ private slots:
     void onAllowPeer(bool);
     void on_actionsettings_triggered();
 
+    void onNetConnected(bool);
+
 private:
     commandExecutor *m_cmd_exec;
 
@@ -96,6 +106,8 @@ private:
     QString m_host_port;
     QString m_host_ip;
     CommandSender* m_sender;
+    StatusForm *m_status_form;
+
 
 signals:
 	void ask_for_peerlist();
