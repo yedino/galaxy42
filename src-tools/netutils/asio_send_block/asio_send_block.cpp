@@ -16,21 +16,23 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
 class c_rpc final {
 	public:
-		c_rpc(std::function<void(const std::string &)> f);
+		c_rpc(std::function<void(const std::string &)> f, unsigned int hours_timeout);
 		void start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port);
 	private:
 		boost::asio::io_service m_io_service;
 		boost::asio::ip::tcp::socket m_socket;
 		std::function<void(const std::string &)>m_rpc_fun;
 		std::string m_input_buffer;
+		std::chrono::steady_clock::time_point m_stop_point;
 };
 
-c_rpc::c_rpc(std::function<void(const std::string &)> f)
+c_rpc::c_rpc(std::function<void(const std::string &)> f, unsigned int hours_timeout)
 :
 	m_io_service(),
 	m_socket(m_io_service),
 	m_rpc_fun(f),
-	m_input_buffer()
+	m_input_buffer(),
+	m_stop_point(std::chrono::steady_clock::now() + std::chrono::hours(hours_timeout))
 {
 }
 
@@ -39,7 +41,7 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 	acceptor.accept(m_socket);
 	boost::asio::streambuf input_stream;
 	const std::string ok_message = "OK";
-	while (true) {
+	while (std::chrono::steady_clock::now() <  m_stop_point) {
 		_info("RPC read...");
 		boost::asio::read_until(m_socket, input_stream, '\n');
 		std::istream istream(&input_stream);
@@ -199,7 +201,8 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 			} catch(const std::exception &ex) {
 				_info("RPC request failed [" << ex.what() << ")");
 			}
-		}
+		},
+		std::stoi(argv[5]) // timeout in hours
 	);
 
 	boost::asio::ip::address_v4 listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
