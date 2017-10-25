@@ -1,23 +1,23 @@
 #include <json.hpp>
 #include "meshpeer.h"
 
-MeshPeer::MeshPeer(QObject *parent) : QObject(parent)
+MeshPeer::MeshPeer( QObject *parent ) : QObject( parent )
 {
-    status = disconnected;
+    status = STATUS::disconnected;
 }
 
 
-MeshPeer::MeshPeer(const MeshPeer &peer):m_name(peer.getName()),m_ip(peer.getIp()),m_vip(peer.getVip()),
-                                        comm_status(peer.comm_status), status(peer.status),source(source),QObject(peer.parent())
+MeshPeer::MeshPeer( const MeshPeer &peer ):m_name( peer.getName() ),m_ip( peer.getIp() ),m_vip( peer.getVip() ),
+    comm_status( peer.comm_status ), status( peer.status ),source( source ),QObject( peer.parent() )
 {
     ;
 }
 
 
-MeshPeer::MeshPeer(const QString &serialized_obj, QObject *parent):QObject(parent)
+MeshPeer::MeshPeer( const QString &serialized_obj, QObject *parent ):QObject( parent )
 {
-   status = disconnected;
-   deserialize(serialized_obj.toStdString());
+    status = STATUS::disconnected;
+    deserialize( serialized_obj.toStdString() );
 }
 
 std::string MeshPeer::serialize() const
@@ -31,20 +31,19 @@ std::string MeshPeer::serialize() const
     return j.dump();
 }
 
-void MeshPeer::deserialize(const std::string &serilized_obj)
+void MeshPeer::deserialize( const std::string &serilized_obj )
 {
-    nlohmann::json j = nlohmann::json::parse(serilized_obj);
+    nlohmann::json j = nlohmann::json::parse( serilized_obj );
 
 
-    std::string obj_name = j.at("obj").get<std::string>();
-    if(obj_name != "MeshPeer") {
-        throw std::runtime_error ("can't deserialize error");
+    std::string obj_name = j.at( "obj" ).get<std::string>();
+    if( obj_name != "MeshPeer" ) {
+        throw std::runtime_error ( tr( "can't deserialize error" ).toStdString() );
     }
-    //! @todo dodac sprawdzanie wersji serializowanych danych
 
-    m_name = QString::fromStdString(j.at("name").get<std::string>());
-    m_ip = QString::fromStdString(j.at("ip").get<std::string>());
-    m_vip = QString::fromStdString(j.at("vip").get<std::string>());
+    m_name = QString::fromStdString( j.at( "name" ).get<std::string>() );
+    m_ip = QString::fromStdString( j.at( "ip" ).get<std::string>() );
+    m_vip = QString::fromStdString( j.at( "vip" ).get<std::string>() );
 
     return;
 }

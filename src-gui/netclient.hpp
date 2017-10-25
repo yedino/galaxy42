@@ -13,7 +13,7 @@ class netClient final : QObject {
 		Q_OBJECT
 	public:
         netClient(commandExecutor* cmd_exec_ptr);
-		void startConnect(const QHostAddress &address, uint16_t port);
+        bool startConnect(const QHostAddress &address, uint16_t port);
 		bool is_connected();
 		void send_msg(const std::string &msg);
 

@@ -208,8 +208,8 @@ void c_rpc_server::c_session::delete_me() {
 void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
 	try {
 		nlohmann::json j = nlohmann::json::parse(input_message);
-		const std::string cmd_name = j.begin().value();
-		dbg("cmd name " << cmd_name);
+                const std::string cmd_name = j["cmd"];//.begin().value();
+                dbg("cmd name " << cmd_name);
 		// calling rpc function
 		nlohmann::json json_response;
 		{
@@ -217,7 +217,13 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 			json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
 		}
 		json_response["id"] = get_command_id();
+
+		if(j.find("id")!= j.end()) {
+		        json_response["re"] = j["id"];
+		}
+
 		const std::string response = json_response.dump();
+
 		// serialize response
 		assert(response.size() <= std::numeric_limits<uint16_t>::max());
 		uint16_t size = static_cast<uint16_t>(response.size());
