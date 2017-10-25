@@ -62,6 +62,9 @@ kill -0 "$myserver_pid" || fail "Server is not alive at PID $myserver_pid"
 
 # --- server probably is alive now, at that PID
 
+echo "Waiting for galaxy connect"
+sleep 5
+
 echo "Starting the test:"
 
 timestart=$(date +%s)
