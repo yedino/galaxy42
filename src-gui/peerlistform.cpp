@@ -18,8 +18,6 @@ PeerListForm::PeerListForm( QWidget *parent ) :
     ui->listView->setModel( model );
     model->sort( peersModel::name );
     m_model = model;
-
-
 }
 
 PeerListForm::~PeerListForm()
@@ -84,10 +82,10 @@ void PeerListForm::addActionSlot( bool )
 {
     qDebug()<<"add peer";
 
-    if( m_index.isValid() ) {
-        QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::invitation ) ).toString();
-        emit ( addPeer( vip ) );
-    } else {
+//    if( m_index.isValid() ) {
+//        QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::invitation ) ).toString();
+//        emit ( addPeer( vip ) );
+//    } else {
         PeerEditDialog dlg;
         dlg.exec();
         QString invitation = dlg.getInvitation();
@@ -102,7 +100,7 @@ void PeerListForm::addActionSlot( bool )
         peer.comm_status = MeshPeer::COMMANDSTATUS::sended;
         m_model->addPeer( QString::fromStdString( peer.serialize() ) );
         emit ( addPeer( invitation ) );
-    }
+//    }
 }
 
 void PeerListForm::banActionSlot( bool )
