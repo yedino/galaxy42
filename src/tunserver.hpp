@@ -189,7 +189,7 @@ class c_tunserver : public c_galaxy_node {
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
 		void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
-		void configure_mykey(); ///<  load my (this node's) keypair
+		void configure_mykey(const std::string &ipv6_prefix); ///<  load my (this node's) keypair
 		void run(int time = 0); ///< run the main loop
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
@@ -236,6 +236,8 @@ class c_tunserver : public c_galaxy_node {
 		int get_ip_protocol_number(const std::string& data) const;
 		void enable_remove_peers();
 		void set_remove_peer_tometout(unsigned int timeout_seconds);
+		void set_prefix_len(int prefix);
+		void set_prefix(const std::string &prefix);
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -265,6 +267,8 @@ class c_tunserver : public c_galaxy_node {
 		Mutex & get_my_mutex() const; ///< [thread] get lock guard on this
 		friend class c_httpdbg_raport; ///< this is authorized to read my data for debug. but [thread] lock access first!!!
         #endif
+		int m_prefix_len;
+		std::string m_ipv6_prefix; // i.e. "fd42"
 	private:
         #ifdef HTTP_DBG
 		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)

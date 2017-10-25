@@ -564,7 +564,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 }
 
 // my key @deprecated (newloop)
-void c_tunserver::configure_mykey() {
+void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -579,6 +579,8 @@ void c_tunserver::configure_mykey() {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	//my_IDI->set_ipv6_prefix(ipv6_prefix);
+	my_IDI->set_ipv6_prefix(m_ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
@@ -609,6 +611,7 @@ void c_tunserver::configure_mykey() {
 
 	// save signature and IDI publickey in tunserver
 	m_my_IDI_pub = my_IDI->m_pub;
+	m_my_IDI_pub.set_ipv6_prefix(m_ipv6_prefix);
 	m_IDI_IDC_sig = IDC_IDI_signature;
 
 	// remove IDP from RAM
@@ -633,6 +636,7 @@ void c_tunserver::configure_mykey() {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
+	m_my_IDC.set_ipv6_prefix(m_ipv6_prefix);
 }
 
 // add peer
@@ -718,7 +722,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
 	c_haship_addr hip( c_haship_addr::tag_constr_by_addr_bin() , pubkey.get_ipv6_string_bin() );
-
 	auto find = m_tunnel.find(hip);
 	if (find == m_tunnel.end()) { // we don't have tunnel to him yet
 		_info("Creating a CT to HIP=" << hip);
@@ -745,12 +748,12 @@ void c_tunserver::prepare_socket() {
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
-		assert(address[1] == 0x42);
+//		assert(address[1] == 0x42);
 
 		_fact("Will configure the tun device");
 		try {
 			m_tun_device.init();
-			m_tun_device.set_ipv6_address(address, 16);
+			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
 			_fact("Done init of event manager - for this tuntap");
@@ -1600,6 +1603,7 @@ void c_tunserver::event_loop(int time) {
 			try {
 				antinet_crypto::c_multikeys_pub his_IDI;
 				his_IDI.load_from_bin(bin_his_IDI_pub.bytes);
+				his_IDI.set_ipv6_prefix(m_ipv6_prefix);
 				antinet_crypto::c_multisign his_IDI_IDC_sig;
 				his_IDI_IDC_sig.load_from_bin(bin_his_IDI_IDC_sig.bytes);
 				antinet_crypto::c_multikeys_pub::multi_sign_verify(his_IDI_IDC_sig, bin_his_IDC_pub.bytes, his_IDI);
@@ -1607,6 +1611,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
 					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey->set_ipv6_prefix(m_ipv6_prefix);
 					_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
@@ -1615,6 +1620,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add node
 					c_haship_pubkey his_pubkey;
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( his_pubkey );
 				}
 			} catch (std::invalid_argument &) {
@@ -1724,6 +1730,7 @@ void c_tunserver::event_loop(int time) {
 					_info("GOT CORRECT REPLY - USING IT");
 
 					_warn("Cool, we got there a pubkey.");
+					pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( pubkey );
 
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost , pubkey );
@@ -1904,6 +1911,14 @@ void c_tunserver::enable_remove_peers() {
 void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
 	_info("set peer remove timeout " << timeout_seconds);
 	peer_timeout = std::chrono::seconds(timeout_seconds);
+}
+
+void c_tunserver::set_prefix_len(int prefix) {
+	m_prefix_len = prefix;
+}
+
+void c_tunserver::set_prefix(const string &prefix) {
+	m_ipv6_prefix = prefix;
 }
 
 // ------------------------------------------------------------------
