@@ -38,28 +38,47 @@ c_rpc::c_rpc(std::function<void(const std::string &)> f, unsigned int hours_time
 
 void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port) {
 	boost::asio::ip::tcp::acceptor acceptor(m_io_service, boost::asio::ip::tcp::endpoint(listen_address, port));
-	acceptor.accept(m_socket);
 
-	boost::asio::ip::tcp::endpoint local_endpoint, remote_endpoint;
-	local_endpoint = m_socket.local_endpoint();
-	boost::asio::ip::address_v4 local_mask = boost::asio::ip::address_v4::netmask(local_endpoint.address().to_v4());
-	remote_endpoint = m_socket.remote_endpoint();
-	boost::asio::ip::address_v4 remote_mask = boost::asio::ip::address_v4::netmask(remote_endpoint.address().to_v4());
-	if (local_mask != remote_mask)
-		throw std::runtime_error("Bad remote address netmask, local: " + local_mask.to_string() + " remote " + remote_mask.to_string());
-
-	boost::asio::streambuf input_stream;
-	const std::string ok_message = "OK\n";
 	while (true) {
-		_info("RPC command read...");
-		boost::asio::read_until(m_socket, input_stream, '\n');
-		std::istream istream(&input_stream);
-		std::getline(istream, m_input_buffer);
-		_info("RPC command read... done: [" << m_input_buffer << "]");
+		std::cout << "\n\n\n";
+		_info("Will wait for connection on " << listen_address << ":" << port);
 
-		m_rpc_fun(m_input_buffer);
+		acceptor.accept(m_socket);
 
-		boost::asio::write(m_socket, boost::asio::buffer(ok_message));
+		boost::asio::ip::tcp::endpoint local_endpoint, remote_endpoint;
+		local_endpoint = m_socket.local_endpoint();
+		remote_endpoint = m_socket.remote_endpoint();
+
+		_info("Got connection to RPC, from: " << remote_endpoint << " to our local endpoint " << local_endpoint);
+
+		// automatic mask for given IP class?
+		boost::asio::ip::address_v4 local_mask = boost::asio::ip::address_v4::netmask(local_endpoint.address().to_v4());
+		boost::asio::ip::address_v4 remote_mask = boost::asio::ip::address_v4::netmask(remote_endpoint.address().to_v4());
+
+		if (local_mask != remote_mask)
+			throw std::runtime_error("Bad remote address netmask, local: " + local_mask.to_string() + " remote " + remote_mask.to_string());
+
+		const std::string ok_message = "DONE\n";
+		try {
+			while (true) { // for each command in one TCP connection
+				std::cout << "\n\n";
+				_info("RPC command read...");
+				boost::asio::streambuf input_stream;
+				boost::asio::read_until(m_socket, input_stream, '\n');
+				std::istream istream(&input_stream);
+				std::getline(istream, m_input_buffer);
+				_info("RPC command read...: [" << m_input_buffer << "]");
+				boost::asio::write(m_socket, boost::asio::buffer("START"));
+
+				m_rpc_fun(m_input_buffer); // ***
+
+				boost::asio::write(m_socket, boost::asio::buffer(ok_message));
+			}
+		} catch(const std::exception & ex) {
+			_info("RPC session/TCP ended with exception: " << ex.what());
+		}
+
+		m_socket.close();
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +358,7 @@ int c_maintask::run(int argc, const char * argv[])
 			<< "\"" << std::endl;
 		std::cerr << endl;
 
-		conf_print_interval = std::chrono::milliseconds(1000); // how often should we print stats
+		conf_print_interval = std::chrono::milliseconds(300); // how often should we print stats
 		time_start = std::chrono::steady_clock::now();
 		time_print_next = time_start + conf_print_interval ; // when should we next time print the stats
 
