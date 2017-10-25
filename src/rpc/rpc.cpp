@@ -7,7 +7,7 @@
 
 #include <libs0.hpp>
 
-#define _dbg(X) _info("RPC: " << X);
+#define dbg(X) _info("RPC: " << X);
 //#define _dbg(X) std::cout << "RPC: " << X << std::endl;
 
 c_rpc_server::c_rpc_server(const unsigned short port)
@@ -23,46 +23,47 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
 		accept_handler(error);
 	});
-	_dbg("Starting RPC server thread");
+	dbg("Starting RPC server thread");
 	m_thread = std::thread([this]() {
-		_dbg("RPC thread start");
+		dbg("RPC thread start");
 		try {
 			boost::system::error_code ec;
-			_dbg("io_service run");
+			dbg("io_service run");
 			m_io_service.run(ec);
-			_dbg("end of io_service run");
+			dbg("end of io_service run");
 			if (ec)
-				_dbg("error code " << ec.message());
-			_dbg("io_service reset");
+				dbg("error code " << ec.message());
+			dbg("io_service reset");
 			m_io_service.reset();
 		} catch (const std::exception &e) {
-			_dbg("io_service exception" << e.what());
+			dbg("io_service exception" << e.what());
 		} catch (...) {
-			_dbg("catch unhandled exception");
+			dbg("catch unhandled exception");
 		}
 
-		_dbg("RPC thread stop");
+		dbg("RPC thread stop");
 	}); // lambda
 }
 
 c_rpc_server::~c_rpc_server() {
-	_dbg("rpc server destructor");
+	dbg("rpc server destructor");
 	m_io_service.stop();
-	_dbg("io service stopped, join thread");
+	dbg("io service stopped, join thread");
 	m_thread.join();
-	_dbg("thread joined");
+	dbg("thread joined");
 }
 
-void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<std::string (const std::string&)> &&function) {
-	m_rpc_functions_map.emplace(rpc_function_name, std::move(function)); // TODO forward arguments
+void c_rpc_server::add_rpc_function(const std::string &rpc_function_name, std::function<nlohmann::json (const std::string&)> &&function) {
+	LockGuard<Mutex> lg(m_rpc_functions_map_mutex);
+	m_rpc_functions_map.emplace(rpc_function_name, std::move(function));
 }
 
 void c_rpc_server::accept_handler(const boost::system::error_code &error) {
-	_dbg("Connected");
+	dbg("Connected");
 	if (!error) {
 		LockGuard<Mutex> lg(m_session_vector_mutex);
-		m_session_list.emplace_back(this, std::move(m_socket), m_hmac_key);
-		m_session_list.back().set_iterator_in_session_list(--m_session_list.end());
+		m_session_list.emplace_back(this, std::move(m_socket), m_hmac_key, ++m_session_counter);
+		m_session_list.back().set_iterator_in_session_list(--m_session_list.end()); // set internal interator to me
 	}
 	// continue waiting for new connection
 	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
@@ -79,13 +80,15 @@ void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it)
 
 c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr,
                                    boost::asio::ip::tcp::socket &&socket,
-                                   const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key)
+                                   const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key,
+                                   xint session_id)
 :
 	m_rpc_server_ptr(rpc_server_ptr),
 	m_socket(std::move(socket)),
 	m_received_data(),
 	m_write_data(),
-	m_hmac_key(hmac_key)
+	m_hmac_key(hmac_key),
+	m_session_id(session_id)
 {
 	// start reading size (2 bytes)
 	async_read(m_socket, boost::asio::buffer(&m_data_size.at(0), m_data_size.size()),
@@ -95,21 +98,21 @@ c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr,
 }
 
 void c_rpc_server::c_session::read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	_dbg("read handler size");
+	dbg("read handler size");
 	if (error) {
-		_dbg("asio error " << error.message());
+		dbg("asio error " << error.message());
 		delete_me();
 		return;
 	}
 	if (bytes_transferred != 2) {
-		_dbg("bytes_transferred != 2");
+		dbg("bytes_transferred != 2");
 		delete_me();
 		return;
 	}
 	uint16_t message_size = static_cast<uint16_t>(m_data_size.at(0) << 8);
 	message_size += m_data_size.at(1);
 	m_received_data.resize(message_size, 0); // prepare buffer for message
-	_dbg("message size = " << message_size);
+	dbg("message size = " << message_size);
 	async_read(m_socket, boost::asio::buffer(&m_received_data.at(0), m_received_data.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler_data(error, bytes_transferred);
@@ -117,14 +120,14 @@ void c_rpc_server::c_session::read_handler_size(const boost::system::error_code 
 }
 
 void c_rpc_server::c_session::read_handler_data(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	_dbg("readed " << bytes_transferred << " bytes of data");
+	dbg("readed " << bytes_transferred << " bytes of data");
 	if (error) {
-		_dbg("asio error " << error.message());
+		dbg("asio error " << error.message());
 		delete_me();
 		return;
 	}
 	// parsing message
-	_dbg("received message " << m_received_data);
+	dbg("received message " << m_received_data);
 	async_read(m_socket, boost::asio::buffer(&m_hmac_authenticator.at(0), m_hmac_authenticator.size()),
 		[this](const boost::system::error_code &error, std::size_t bytes_transferred) {
 			read_handler_hmac(error, bytes_transferred);
@@ -132,10 +135,10 @@ void c_rpc_server::c_session::read_handler_data(const boost::system::error_code 
 }
 
 void c_rpc_server::c_session::read_handler_hmac(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	_dbg("readed " << bytes_transferred << " bytes of hmac authenticator");
-	_dbg("authenticate message");
+	dbg("readed " << bytes_transferred << " bytes of hmac authenticator");
+	dbg("authenticate message");
 	if (error) {
-		_dbg("asio error " << error.message());
+		dbg("asio error " << error.message());
 		delete_me();
 		return;
 	}
@@ -164,7 +167,7 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 	UNUSED(bytes_transferred);
 	try {
 		if (error) {
-			_dbg("asio error " << error.message());
+			dbg("asio error " << error.message());
 			delete_me();
 			return;
 		}
@@ -186,6 +189,12 @@ void c_rpc_server::c_session::set_iterator_in_session_list(std::list<c_session>:
 	m_iterator_in_session_list = it;
 }
 
+std::string c_rpc_server::c_session::get_command_id()
+{
+	std::stringstream sstream;
+	sstream << m_session_id << "-srv" << ++m_rpc_command_counter;
+	return sstream.str();
+}
 
 void c_rpc_server::c_session::delete_me() {
 	if (m_socket.is_open()) {
@@ -199,10 +208,22 @@ void c_rpc_server::c_session::delete_me() {
 void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
 	try {
 		nlohmann::json j = nlohmann::json::parse(input_message);
-		const std::string cmd_name = j.begin().value();
-		_dbg("cmd name " << cmd_name);
+                const std::string cmd_name = j["cmd"];//.begin().value();
+                dbg("cmd name " << cmd_name);
 		// calling rpc function
-		const std::string response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		nlohmann::json json_response;
+		{
+			LockGuard<Mutex> lg(m_rpc_server_ptr->m_rpc_functions_map_mutex);
+			json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		}
+		json_response["id"] = get_command_id();
+
+		if(j.find("id")!= j.end()) {
+		        json_response["re"] = j["id"];
+		}
+
+		const std::string response = json_response.dump();
+
 		// serialize response
 		assert(response.size() <= std::numeric_limits<uint16_t>::max());
 		uint16_t size = static_cast<uint16_t>(response.size());
@@ -213,12 +234,12 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 			m_write_data.at(i + 2) = response.at(i);
 		// send response
 
-		_dbg("send packet");
-		_dbg(m_write_data);
+		dbg("send packet");
+		dbg(m_write_data);
 		std::array<unsigned char, crypto_auth_hmacsha512_BYTES> hash;
 		int ret = crypto_auth_hmacsha512(hash.data(), reinterpret_cast<unsigned char *>(&m_write_data.at(2)), size, m_rpc_server_ptr->m_hmac_key.data());
 		if (ret != 0) _throw_error(std::runtime_error("crypto_auth_hmacsha512 error"));
-		_dbg("hmac");
+		dbg("hmac");
 		//for (const auto & byte : hash) std::cout << std::hex << "0x" << static_cast<int>(byte) << " ";
 		//std::cout << std::dec << std::endl;
 		std::array<boost::asio::const_buffer, 2> buffers = {

@@ -9,9 +9,7 @@ struct peer_reference {
 	std::string m_ipv4;
 	int m_port;
 	std::string m_ipv6;
-
 	std::string to_string() const;
-
 	static peer_reference get_validated_ref(std::string ref);
 };
 
