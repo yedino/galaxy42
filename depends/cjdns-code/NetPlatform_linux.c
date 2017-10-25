@@ -41,6 +41,7 @@
 #include <arpa/inet.h>
 #include <linux/ipv6_route.h>
 #include <stdint.h>
+#include <linux/ipv6.h>
 
 /**
  * This hack exists because linux/in.h and linux/in6.h define
