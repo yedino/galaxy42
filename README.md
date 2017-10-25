@@ -61,63 +61,24 @@ For more details, including correct naming and **glossary**, and advanced techni
 
 ## Release notes
 
-### Version v0.3.2b (pre-alpha)
+### Version v0.3.3a (pre-alpha)
 
-* Summary: lots of security tools, fixes, internal libs; started newloop and new peers/transports;
-* Important changes:
- * On Windows:
-   * Installer for Windows now does install the OpenVPN tuntap driver.
- * On Linux/root:
-   * You can run program as root via sudo ./program (this is safe), program will read keys of user who run the sudo (or choose other home with option --home-env and env variable HOME, see docs).
-   * Running just as root is not supported unless it is the root login console (otherwise it could try to drop back to user who obtained the root console) will be supported in future.
-   * You can run program as root (if you obtained root without sudo, options for other cases - in future), with --home-env and set HOME to /etc/yedino/ (could be good for linux distributions system-wide galaxy).
-   * Running as regular user still works, the ./install.sh installs proper tools for it now by default (setcap-tool after build).
-* **Security fixes** (in this **pre-alpha** test versions, that always warns that program is not yet secure).
-  * threads-insufficient-locking: in debug code. Probably not affecting old program (as it was single-thread), only --newloop, fixed in 912ccd8734e8a6722205b8b49c0395c84efccb5b.
-  * reading-invalid-memory: in displaying tuntap address. Probably would only leak part of random memory to local user. Fixed in 7465120a13018a7d743a9a5b4d062719f7127442.
-  * not-deallocating-memory: in `c_ip46_addr::is_ipv4`. Could in theory lead to crash out-of-memory. Fixed in 20693d745743b67d3f2754c121d84766d4c55e2c.
-  * remote-public-information-leak: via RPC you could peek list of peers of any reachable node, as it was listening on all addresses, without password. Though anyway network by designed is not hidding it's topology information. Fix: RPC is now listening only on localhost.
-  * theoretical	reading-invalid-memory: when reading malformed packet that was not correct IPv6 but somehow would be sent locally to tuntap (probably not possible to trigger): e.g. 7ab333c917042ac1766a1d713427a78fdd019469 + a6be5c844798e9f4373c17d7e8122900e2496e25.
-  * various other potential UBs fixed (probably no effect in practice) including 063e9763fe2316ad74f3a6311f5710613e771903.
-* Security tools:
-	* Added UBSAN from clang to sanitize in runtime common undefined behavior (including under/overflows, including on unsigned int).
-	* Added TSAN from clang to sanitize in runtime thread errors.
-	* Added ASAN from clang to sanitize in runtime address errors (simpler memory checker).
-	* MSAN is not yet enabled, until we prepare tools to build all libs with it.
-	* Added/integrated valgrind memory checks.
-	* Use ./qa/run-safe/run-safe-thread-ub and run-safe-mem for above tests.
-	* Added static: clang thread safety analyzer.
-* Security Linux:
-  * Run as root - then it drops root privileges, and CAP privileges on start.
-  * As soon as it's not needed it drops CAPs (e.g. after setting tuntap).
-* Secure coding:
-  * `xint` - the overflow-checking integer is ready to use.
-  * `eint` - simple asserts before math operations (fast).
-  * `_check / _try` - throw exceptions.
-  * `tab_view / tab_range` - checked fast containers.
-  * `wrap_thread` - avoids UB like leaving detached thread running.
-  * `copy_safe_apart` - safer version of `std::copy`.
-  * `int_to_enum` - safer enum conversions.
-* Debuggig:
-  * warning and errors show backtrace.
-* Unit tests:
-  * UBSAN uncovered some wrong tests of xint.
-  * Added many new tests.
-* End users on Mac OS X.
-  * The translations (mo) are now correctly installed by Mac installer.
-* GUI program (you need to build it from sources, not distributed yet)
-  * Command to get and show peers via RPC.
-* Various internal changes:
-  * Removed boost locale.
-  * New build system for Cygwin.
-  * Preparing thread-pool CTPL library.
-  * Classes for various transports, not just ipv4/ipv6 (and their addresses).
-  * Added `time_utils`.
-* Rewrite (--newloop)
-  * This is just testing, this mode is NOT USABLE yet; run program with --newloop for it.
-  * new peer format: --newloop --peer "fd42:e5ca:4e2a:cd13:5435:5e4e:45bf:e4da@(udp:192.168.1.107:9042)".
-  * Data from tuntap is read in multiple threads.
-* Translations - RU, UA
+* Summary: multi-threading tools, tests, network model, utils; RPC commands, and GUI.
+* GUI.
+ * Basic GUI works, but is for testing from source code (is not connected to build system).
+  * Connecting to RPC (not encrypted yet!).
+  * Adding peers.
+* Creating netmodel (not ready yet).
+ * Multi-thread.
+* Creating utils to test network speed.
+* Deps
+ * Updated external libraries.
+* Fixes
+ * Possible race in RPC, in 13f3eaf0d73f3e48db3892bf11d4956f67a4cd1f
+ * Fix building in build/ or in top-dir, with proper copy of some files, see 6e3a3a75ac758eb1886b0c026d67ecd16064d75f
+* Code
+ * Affinity mini lib.
+ * Fixed some C++ warnings.
 
 Older release notes are in [Changelog.md](Changelog.md).
 
