@@ -39,6 +39,15 @@ c_rpc::c_rpc(std::function<void(const std::string &)> f, unsigned int hours_time
 void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port) {
 	boost::asio::ip::tcp::acceptor acceptor(m_io_service, boost::asio::ip::tcp::endpoint(listen_address, port));
 	acceptor.accept(m_socket);
+
+	boost::asio::ip::tcp::endpoint local_endpoint, remote_endpoint;
+	local_endpoint = m_socket.local_endpoint();
+	boost::asio::ip::address_v4 local_mask = boost::asio::ip::address_v4::netmask(local_endpoint.address().to_v4());
+	remote_endpoint = m_socket.remote_endpoint();
+	boost::asio::ip::address_v4 remote_mask = boost::asio::ip::address_v4::netmask(remote_endpoint.address().to_v4());
+	if (local_mask != remote_mask)
+		throw std::runtime_error("Bad remote address netmask, local: " + local_mask.to_string() + " remote " + remote_mask.to_string());
+
 	boost::asio::streambuf input_stream;
 	const std::string ok_message = "OK";
 	while (std::chrono::steady_clock::now() <  m_stop_point) {
