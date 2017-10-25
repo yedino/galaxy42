@@ -38,7 +38,7 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 	boost::asio::ip::tcp::acceptor acceptor(m_io_service, boost::asio::ip::tcp::endpoint(listen_address, port));
 	acceptor.accept(m_socket);
 	boost::asio::streambuf input_stream;
-	const std::string ok_message = "OK";
+	const std::string ok_message = "OK\n";
 	while (true) {
 		_info("RPC read...");
 		boost::asio::read_until(m_socket, input_stream, '\n');
@@ -47,6 +47,7 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 		_info("RPC read... done: [" << m_input_buffer << "]");
 		m_rpc_fun(m_input_buffer);
 		boost::asio::write(m_socket, boost::asio::buffer(ok_message));
+		break; // <--- only one command per connection now
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,6 +72,19 @@ std::vector<std::string> explode(const std::string & text, char sep) {
 	return ret;
 }
 
+std::string remove_extra_whitespace(const std::string  & str) {
+	std::string ret;
+	bool last_was = false; // was whitespace
+	const auto len = str.size();
+	for (size_t i=0; i<len; ++i) {
+		char c = str[i];
+		bool now_is = (c == ' '); // now it is a whitespace?:w
+		if ( ! (last_was && now_is) ) ret += c;
+		last_was = now_is;
+	}
+	return ret;
+}
+
 class c_maintask {
 	public:
 		c_maintask();
@@ -82,6 +96,7 @@ class c_maintask {
 
 		void print_usage() const;
 		void print_help_sendcommand() const;
+		void print_usage_rpc_cmd() const;
 
 	private:
 
@@ -97,7 +112,7 @@ class c_maintask {
 
 		// other var:
 		mysize_t counter_sleep_no, counter_sleep_yes;
-		mysize_t packets_sent, size_sent;
+		mysize_t packets_sent, size_sent; // size is in [Bytes]
 
 		std::chrono::microseconds conf_print_interval; // how often should we print stats
 		std::chrono::steady_clock::time_point time_start;
@@ -133,6 +148,12 @@ void c_maintask::print_help_sendcommand() const {
 		<<std::endl;
 }
 
+void c_maintask::print_usage_rpc_cmd() const {
+	std::cout << "secret1 SEND [args for normal run]  <--- this text, ending with a NEW LINE.\n";
+	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 1472  -1  \n";
+	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 8972  -1 60 -1 (no time limit, 60 seconds, no GB limit) \n";
+}
+
 void c_maintask::print_usage() const {
 		std::cout << std::endl;
 		std::cout << "Usage: ./client <host> <port> <max_speed> SendCommand" << std::endl;
@@ -146,16 +167,16 @@ void c_maintask::print_usage() const {
 		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   192.168.70.16   72 secret1" << std::endl;
 		std::cout << "e.g.:  ./client remote 192.168.70.17 19000   0.0.0.0         4  secret1" << std::endl;
 		std::cout << "e.g.:  ./client remote       0.0.0.0 19000   0.0.0.0         4  secret1" << std::endl;
-		std::cout << "then send TCP text: 'secret1 SEND [args for normal run] \\n'  (\\n means to end the TCP text with a newline)" << std::endl;
-		std::cout << "then send TCP text: 'secret1 SEND 127.0.0.1 9000  999000    foo   1500       -1 \\n'" << std::endl;
+		std::cout << "then send TCP text like e.g.: \n";
+		print_usage_rpc_cmd();
 		std::cout << std::endl;
 }
 
 std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 	std::string ret;
 	ret += "RPC-result ";
-	std::cout << "RPC command to execute: [" << rpc_cmd << "]" << std::endl;
-	std::vector<std::string> args = explode(rpc_cmd, ' ');
+	std::cout << "RPC command to execute: [" << rpc_cmd << "]\n" << std::endl;
+	std::vector<std::string> args = explode( remove_extra_whitespace(rpc_cmd) , ' ');
 	std::cout << "RPC command args size: " << args.size() << std::endl;
 
 	try {
@@ -167,7 +188,6 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 		if (word_SEND != "SEND") throw std::runtime_error("word 'SEND'");
 
 		args.erase( args.begin() , args.begin()+2 );
-
 	} catch(const std::exception &ex) {
 		_warn("Can not parse RPC: " << ex.what() << " rpc was [" << rpc_cmd << "]");
 		throw ;
@@ -178,6 +198,7 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 	size_t argc = args.size();
 	const char ** argv = new const char * [ argc ];
 	for (size_t i=0; i<argc; ++i) argv[i] = args.at(i).c_str(); // ! points to memory owned by strings in vector args!
+	for (size_t i=0; i<argc; ++i) _info("argv["<<i<<"] = [" << argv[i] << "]");
 	this->run( argc, argv );
 	delete [] argv;
 
@@ -193,7 +214,7 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 	_info("RPC password has length: " << this->m_rpc_password.size());
 
 	c_rpc rpc([this](const std::string &rpc_data) {
-			std::cout << "rpc data [" << rpc_data << "]\n";
+			_info("rpc data [" << rpc_data << "]\n\n");
 			try {
 				run_rpc_command_string(rpc_data);
 			} catch(const std::exception &ex) {
@@ -205,6 +226,8 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 	boost::asio::ip::address_v4 listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
 	unsigned short port = std::atoi(argv[3]);
 	_info("RPC will listen on: " << listen_address << ":" << port);
+	_info("You can use following RPC commands:");
+	this->print_usage_rpc_cmd();
 	rpc.start_listen(listen_address, port); // blocks
 	return 0;
 }
@@ -239,6 +262,12 @@ int c_maintask::run(int argc, const char * argv[])
 			count_infinite=false;
 		}
 	}
+
+	double limit_data_gb = -1 ; // -1 means infinite
+	double limit_time_sec = -1 ; // -1 means infinite
+
+	if (argc > 7) limit_time_sec = atof(argv[7]);
+	if (argc > 8) limit_data_gb  = atof(argv[8]);
 
 	mysocket.open( udp::v4() );
 	endpoint = * resolver.resolve({udp::v4(), host, port});
@@ -299,8 +328,12 @@ int c_maintask::run(int argc, const char * argv[])
 
 		auto func_done = [this](decltype(packets_sent) packets_sent) -> bool {
 			if (this->count_infinite) return false;
-			return (packets_sent >= this->count) ;
+			if (packets_sent >= this->count) return true;
+			return false;
 		};
+
+		auto limit_time_timepoint = std::chrono::steady_clock::now()
+			+ std::chrono::seconds( static_cast<long int>(limit_time_sec));
 
 		while ( ! func_done(packets_sent) ) {
 			for (mysize_t b=0; b<burst; ++b) {
@@ -337,6 +370,18 @@ int c_maintask::run(int argc, const char * argv[])
 					<< " Sleep: yes=" << counter_sleep_yes << ", no=" << counter_sleep_no
 					<< "\n"
 				;
+
+				if (limit_time_sec > 0) {
+					if (time_now >= limit_time_timepoint) { _info("Time limit reached, exiting");
+						break;
+					}
+				}
+				if (limit_data_gb > 0)  {
+					if (size_sent >= (limit_data_gb*1024*1024*1024)) {
+						_info("Size limit reached, exiting");
+						break;
+					}
+				}
 			}
 		}
 		if (!interactive) break;
