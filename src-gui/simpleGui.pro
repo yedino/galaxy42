@@ -44,7 +44,8 @@ SOURCES += \
     commandsender.cpp \
     nodecontrolerdialog.cpp \
     statusform.cpp \
-    processrunner.cpp
+    processrunner.cpp \
+    addressmodel.cpp
 
 
 HEADERS += \
@@ -72,7 +73,8 @@ HEADERS += \
     commandsender.h \
     nodecontrolerdialog.h \
     statusform.h \
-    processrunner.h
+    processrunner.h \
+    addressmodel.h
 
 FORMS += \
     mainwindow.ui \

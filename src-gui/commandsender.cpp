@@ -53,6 +53,9 @@ void CommandSender::sendCommand( CommandSender::orderType type )
 
     try {
         auto ord = prepareCommand( type );
+        if (ord == nullptr) {
+            throw ("can't create order type" );
+        }
         m_executor->sendNetRequest( *ord );
         m_sended->addOrder( ord,QString::fromStdString( ord->getId() ) );
     } catch( std::runtime_error &e ) {
@@ -70,15 +73,12 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
 
     switch ( type ) {
     case orderType::PING:
-        if( m_client_name.size() == 0 )
         ord = std::make_shared<pingOrder>( m_counter.getRpcId() );
         break;
     case orderType::DELETEALL:
-        if( m_client_name.size() == 0 )
         ord = std::make_shared<deleteAllPeersOrder>( m_counter.getRpcId() );
         break;
     case orderType::BANALL:
-        if( m_client_name.size() == 0 )
         ord = std::make_shared<banAllOrder> ( m_counter.getRpcId() );
         break;
     case orderType::GETNAME:

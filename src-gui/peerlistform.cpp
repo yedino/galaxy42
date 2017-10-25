@@ -110,6 +110,8 @@ void PeerListForm::banActionSlot( bool )
     qDebug()<<"ban peer";
     QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::vip ) ).toString();
     m_model->startActionOnIndex(m_index);
+//    m_model->ac;
+    onPeerBanned(vip);			//!@todo on peer banned
     emit ( banPeer( vip ) );
 }
 
@@ -121,8 +123,8 @@ void PeerListForm::removeActionSlot( bool )
         QModelIndex work_index = m_index.sibling( m_index.row(),peersModel::vip );
         QString vip = m_model->data( work_index ).toString();
         m_model->startActionOnIndex(work_index);
-        emit ( removePeer( vip ) );
-//        onPeerRemoved( vip );
+        emit ( removePeer( vip ) ); //!@todo on peer removed
+        onPeerRemoved( vip );
     }
 }
 

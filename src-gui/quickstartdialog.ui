@@ -42,6 +42,15 @@
            </item>
            <item>
             <widget class="QLineEdit" name="vipEdit">
+             <property name="toolTip">
+              <string>ip v6</string>
+             </property>
+             <property name="statusTip">
+              <string>my ipv6</string>
+             </property>
+             <property name="whatsThis">
+              <string>Ip v6</string>
+             </property>
              <property name="text">
               <string notr="true"/>
              </property>

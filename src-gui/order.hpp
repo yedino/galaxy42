@@ -160,6 +160,7 @@ public:
     banAllOrder(const RpcId& Id);
     banAllOrder(const std::string &json_str);
     void execute(MainWindow &main_window);
+    std::string get_str() const;
 
 protected:
 
@@ -190,6 +191,7 @@ public:
     }
 
     void execute(MainWindow &main_window);
+    std::string get_str() const;
 protected:
 
 };
