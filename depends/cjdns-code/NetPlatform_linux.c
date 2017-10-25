@@ -1,14 +1,20 @@
 /*
- * Code from cjdns project
+ * Code based on code from cjdns project
  * https://github.com/cjdelisle/cjdns
- *
+
+ * [UPDATE]
+ * This file should be up-to-date about backporting important fixes
+ * taken from cjdns as upstream
+ * up to versin efd7d7f82be405fe47f6806b6cc9c0043885bc2e
+ * from https://github.com/cjdelisle/cjdns/
+ * from 2017-06-24
+
+ * Initial/related commit
  * commit 3b7802f00ab588edb3bb3d27f36b47f4b4524433
  * Author: rob <rob@mail.l>
  * Date:   Tue Feb 2 11:23:05 2016 +0000
- *
  *   [fix] default limit
- *
- *
+
  * You may redistribute this program and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any later version.
@@ -19,7 +25,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
  #ifdef __linux__
@@ -41,6 +47,7 @@
 #include <arpa/inet.h>
 #include <linux/ipv6_route.h>
 #include <stdint.h>
+#include <linux/ipv6.h>
 
 /**
  * This hack exists because linux/in.h and linux/in6.h define
@@ -173,6 +180,7 @@ t_syserr NetPlatform_addAddress(const char* interfaceName,
         }
 
         uint32_t x = ~0 << (32 - prefixLen);
+        uint32_t x = (uint32_t)~0 << (32 - prefixLen);
         x = Endian_hostToBigEndian32(x);
         memcpy(&sin.sin_addr, &x, 4);
         memcpy(&ifRequest.ifr_addr, &sin, sizeof(struct sockaddr_in));
