@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>406</width>
-    <height>256</height>
+    <width>459</width>
+    <height>273</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,48 +24,64 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>386</width>
-        <height>236</height>
+        <width>439</width>
+        <height>253</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QLabel" name="vipLabel">
-             <property name="text">
-              <string>My Public-Invite:  </string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="vipEdit">
-             <property name="toolTip">
-              <string>ip v6</string>
-             </property>
-             <property name="statusTip">
-              <string>my ipv6</string>
-             </property>
-             <property name="whatsThis">
-              <string>Ip v6</string>
-             </property>
-             <property name="text">
-              <string notr="true"/>
-             </property>
-             <property name="dragEnabled">
-              <bool>true</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QLabel" name="vipLabel">
+               <property name="text">
+                <string>My Public-Invite:  </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="vipEdit">
+               <property name="toolTip">
+                <string>ip v6</string>
+               </property>
+               <property name="statusTip">
+                <string>my  ip v6 address</string>
+               </property>
+               <property name="whatsThis">
+                <string>This is IP v6 of working node</string>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QPushButton" name="wwwButton">
+             <property name="minimumSize">
+              <size>
+               <width>71</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>71</width>
+               <height>25</height>
+              </size>
+             </property>
              <property name="text">
-              <string>open www</string>
+              <string>www</string>
              </property>
              <property name="icon">
               <iconset resource="icons.qrc">
@@ -75,7 +91,7 @@
            </item>
           </layout>
          </item>
-         <item row="1" column="0">
+         <item row="2" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <layout class="QVBoxLayout" name="verticalLayout">
@@ -88,23 +104,29 @@
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QLineEdit" name="myInviteEdit">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="dragEnabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="myInviteEdit">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="statusTip">
+                <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+               </property>
+               <property name="whatsThis">
+                <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <spacer name="verticalSpacer">
@@ -129,6 +151,12 @@
                <height>71</height>
               </size>
              </property>
+             <property name="maximumSize">
+              <size>
+               <width>71</width>
+               <height>71</height>
+              </size>
+             </property>
              <property name="text">
               <string>Qr Code</string>
              </property>
@@ -136,7 +164,7 @@
            </item>
           </layout>
          </item>
-         <item row="2" column="0">
+         <item row="3" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -148,12 +176,31 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="InviteEdit"/>
+              <widget class="QLineEdit" name="InviteEdit">
+               <property name="statusTip">
+                <string>IP v6 and IP v4 of node where you want to connect</string>
+               </property>
+               <property name="whatsThis">
+                <string>IP v6 and IP v4 of node where you want to connect</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
            <item>
             <widget class="QPushButton" name="QrScanButton">
+             <property name="minimumSize">
+              <size>
+               <width>71</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>71</width>
+               <height>20</height>
+              </size>
+             </property>
              <property name="text">
               <string>Scan QR</string>
              </property>
@@ -161,7 +208,7 @@
            </item>
           </layout>
          </item>
-         <item row="3" column="0">
+         <item row="4" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
             <widget class="QPushButton" name="connectButton">
