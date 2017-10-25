@@ -50,7 +50,6 @@ TFloat corrected_avg(std::vector<TFloat> tab) {
 	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
 }
 
-
 /// simple time value
 struct t_mytime {
 	using t_timevalue = std::chrono::time_point<std::chrono::steady_clock>;
@@ -98,7 +97,7 @@ class c_timerfoo {
 
 		int m_debug;
 
-		double m_ellapsed_used_in_current; ///< what was the ellapsed time used in calculating most recent current speed 
+		double m_ellapsed_used_in_current; ///< what was the ellapsed time used in calculating most recent current speed
 		/// (e.g. if low then speed is bad)
 
 		std::atomic<t_my_size> m_total_bytes;
@@ -254,6 +253,13 @@ void c_timerfoo::print_info(std::ostream & ostr) const {
 
 		<< " Mb/s" ;
 	ostr << " ";
+
+	std::ofstream result_file("/tmp/result.txt");
+	if (result_file.is_open())
+	{
+		result_file << m_total_speed_bytes;
+		result_file.close();
+	}
 	if (detail>=1) { ostr << std::setw(6) << current_count << " p "; }
 	ostr << std::setw(4) << m_speed_pck_now << " Mp/s" ;
 }
@@ -312,4 +318,3 @@ void c_timeradd::add(t_my_count count, t_my_size size_totall) noexcept {
 		#endif
 	}
 }
-
