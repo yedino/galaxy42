@@ -12,6 +12,9 @@ class MeshPeer : public QObject
     QString m_vip;
     QString m_net_name;
 
+    int m_ip_port;
+    int m_vip_port;
+
 public:
 
     enum class COMMANDSTATUS {
@@ -23,13 +26,6 @@ public:
         fail			//failed to execute
     } comm_status;
 
-    enum class SOURCE {
-        my = 0,			//created by me
-        rpcExternal,	//get from external rpc client of this node(script may be)
-        seed,			//get from seed
-        inbound			// some stranger-tuneling by this node
-    } source;
-
     enum class STATUS {
         defalut = 0,	//unknown status -propably error
         connected,		//peer is connected
@@ -40,6 +36,12 @@ public:
         banned			//peer is banned
     } status;
 
+    enum class SOURCE {
+        my = 0,			//created by me
+        rpcExternal,	//get from external rpc client of this node(script may be)
+        seed,			//get from seed
+        inbound			// some stranger-tuneling by this node
+    } source;
 
 
     explicit MeshPeer(QObject *parent = nullptr);
@@ -119,6 +121,11 @@ public:
 
     std::string serialize() const;
     void deserialize(const std::string& serilized_obj);
+
+    inline int getPort() const{return m_ip_port;}
+    inline int getVipPort() const {return m_vip_port;}
+    inline void setPort(int port){m_ip_port = port;}
+    inline void setVipPort(int port){m_vip_port = port;}
 
 };
 

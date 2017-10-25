@@ -274,7 +274,7 @@ void banPeerOrder::execute( MainWindow &main_window )
 
 banAllOrder::banAllOrder( const RpcId& id ): order( id )
 {
-    m_cmd = "ban_all_peer";
+    m_cmd = "ban_all_peers";
 }
 
 banAllOrder::banAllOrder( const std::string &json_str ): order( json_str )
@@ -296,6 +296,13 @@ void banAllOrder::execute( MainWindow &main_window )
     } else {
         main_window.addDebugInfo( QString::fromStdString( m_msg ) );
     }
+}
+
+
+std::string banAllOrder::get_str() const
+{
+    nlohmann::json j{{"cmd", m_cmd}, {"state",m_state},{"id",m_id}};
+    return j.dump();
 }
 
 deletePeerOrder::deletePeerOrder( const RpcId& id,const MeshPeer &peer )
@@ -352,7 +359,7 @@ std::string deletePeerOrder::get_str() const
 
 deleteAllPeersOrder::deleteAllPeersOrder( const RpcId& id ):order( id )
 {
-    m_cmd = "delete_all_peer";
+    m_cmd = "delete_all_peers";
     m_state = "ok";
 }
 
@@ -364,6 +371,12 @@ void deleteAllPeersOrder::execute( MainWindow &main_window )
         main_window.addDebugInfo( QString::fromStdString( m_msg ) );
     }
     return;
+}
+
+std::string deleteAllPeersOrder::get_str() const
+{
+    nlohmann::json j{{"cmd", m_cmd}, {"state",m_state},{"id",m_id}};
+    return j.dump();
 }
 
 
@@ -427,8 +440,7 @@ std::string order::getPeerName()
 
     auto ord_ptr =  m_executor->getOrder( QString::fromStdString( m_re ) );
     auto ord = ord_ptr.get();
-    addPeerOrder* add_ord = dynamic_cast<addPeerOrder*>( ord );
-    return add_ord->m_peer;
+    return ord->m_peer;
 
 }
 
