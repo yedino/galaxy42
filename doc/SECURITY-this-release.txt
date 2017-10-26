@@ -1,17 +1,17 @@
 
 
 ---------------------
-Checking started on: [                ] (UTC)
+Checking started on: [2017-10-24 12:00] (UTC)
 Checking done on:    [                ] (UTC)
 
-[ ] We pick our own code in version without known security issues
+[x] We pick our own code in version without known security issues
 
 [ ] sodiumpp submodule and upstream tracking !
 [ ] nlohmann_json submodule
 [ ] backward-cpp submodule
 [ ] cotire submodule
 [ ] googletest submodule
-[ ] cjdns/netplatform upstream tracking !
+[x] cjdns/netplatform upstream tracking ! - checked (rfree) yesterday, imported fixes
 [ ] libqt5 library release for Linux
 [ ] libqt5 library release for Windows (mingw)
 [ ] libqt5 library release for Macosxupstream
