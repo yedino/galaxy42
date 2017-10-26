@@ -23,6 +23,7 @@ double server(boost::asio::io_service& io_service, unsigned short port)
 	t_counter received_bytes_all = 0;
 	t_counter received_packets_all = 0;
 	auto start_time = std::chrono::steady_clock::now();
+	auto start_time_totall = std::chrono::steady_clock::now();
 
 	char data[max_length];
 	udp::endpoint sender_endpoint;
@@ -46,10 +47,13 @@ double server(boost::asio::io_service& io_service, unsigned short port)
 		if (received_packets % 500000 == 0) {
 			auto time_now = std::chrono::steady_clock::now();
 			double sec = ( std::chrono::duration_cast<std::chrono::microseconds>(time_now - start_time) ).count() / (1000.*1000.);
+			double sec_total = ( std::chrono::duration_cast<std::chrono::microseconds>(time_now - start_time_totall) ).count() / (1000.*1000.);
 			double speed = ((received_bytes * 8) / (1000*1000)) / sec ;
 			std::cout << "     " << "Receive packages:" << received_packets
 				<< ", receive bytes:" << received_bytes
-				<< ", speed:" << speed << " Mbits/s" << std::endl;
+				<< ", speed:" << speed
+				<< " Totall=" << (received_bytes_all*8 / sec_total / (1000.*1000.))
+				<< " Mbits/s" << std::endl;
 				//<< ", speed:" << ((static_cast<double>(received_bytes) * 8) / (1000*1000)) / sec << " Mbits/s" << std::endl;
 
 			++count_interval;
@@ -76,8 +80,8 @@ double server(boost::asio::io_service& io_service, unsigned short port)
 					return the_result;
 				}
 
-				received_bytes = 0;  received_bytes_all = 0;
-				received_packets = 0;  received_packets_all = 0;
+				received_bytes = 0;
+				received_packets = 0;
 				start_time = std::chrono::steady_clock::now();
 
 				count_interval=0;

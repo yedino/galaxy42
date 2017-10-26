@@ -50,7 +50,6 @@ TFloat corrected_avg(std::vector<TFloat> tab) {
 	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
 }
 
-
 /// simple time value
 struct t_mytime {
 	using t_timevalue = std::chrono::time_point<std::chrono::steady_clock>;
@@ -98,8 +97,12 @@ class c_timerfoo {
 
 		int m_debug;
 
-		double m_ellapsed_used_in_current; ///< what was the ellapsed time used in calculating most recent current speed 
+		double m_ellapsed_used_in_current; ///< what was the ellapsed time used in calculating most recent current speed
 		/// (e.g. if low then speed is bad)
+
+		std::atomic<t_my_size> m_total_bytes;
+		std::atomic<t_mytime> m_total_start;
+		double m_total_speed_bytes;
 };
 
 c_timerfoo::c_timerfoo(int step_till_reset) : m_time_started(t_mytime{}), m_count(0), m_size(0),
@@ -107,7 +110,10 @@ m_speed_now(0), m_speed_pck_now(0), m_step_nr(0),
 m_step_till_reset(step_till_reset),
 m_best_result(0),
 m_debug(false),
-m_ellapsed_used_in_current(0)
+m_ellapsed_used_in_current(0),
+m_total_bytes(0),
+m_total_start(t_mytime{}),
+m_total_speed_bytes(0)
 {
 	reset(); // to make sure all is nice
 
@@ -175,6 +181,11 @@ void c_timerfoo::add(t_my_count count, t_my_size size_totall) noexcept {
 
 	this->m_count += count;
 	this->m_size += size_totall;
+
+	if( m_total_bytes == 0) {
+		m_total_start = std::chrono::steady_clock::now();
+	}
+	this->m_total_bytes += size_totall;
 }
 
 std::string c_timerfoo::get_info() const {
@@ -216,6 +227,14 @@ void c_timerfoo::calc_avg() {
 	std::lock_guard< std::mutex > lg(m_mutex);
 	m_speed_avg1 = mediana( m_speed_tab );
 	m_speed_avg2 = corrected_avg( m_speed_tab );
+
+	auto time_now = std::chrono::steady_clock::now();
+	auto ellapsed = time_now - m_total_start.load().m_time;
+	double ellapsed_sec =
+		std::chrono::duration_cast<std::chrono::microseconds>(ellapsed).count()
+		/ (1000.*1000. );
+
+	m_total_speed_bytes = (m_total_bytes*8 / ellapsed_sec) / (1000.*1000.);
 }
 
 void c_timerfoo::print_info(std::ostream & ostr) const {
@@ -230,8 +249,17 @@ void c_timerfoo::print_info(std::ostream & ostr) const {
 	  << "avg=" << m_speed_avg1
 		<< " (now=" << std::setw(4) << m_speed_now << ")"
 		<< " bestAvg=" << std::setw(4) << m_best_result << ""
+		<< " Total=" << std::setw(4) << m_total_speed_bytes
+
 		<< " Mb/s" ;
 	ostr << " ";
+
+	std::ofstream result_file("/tmp/result.txt");
+	if (result_file.is_open())
+	{
+		result_file << m_total_speed_bytes;
+		result_file.close();
+	}
 	if (detail>=1) { ostr << std::setw(6) << current_count << " p "; }
 	ostr << std::setw(4) << m_speed_pck_now << " Mp/s" ;
 }
@@ -290,4 +318,3 @@ void c_timeradd::add(t_my_count count, t_my_size size_totall) noexcept {
 		#endif
 	}
 }
-
