@@ -23,6 +23,9 @@ Source of dependency:
 
 We must track following dependencies, this is a form for checking them;
 
+
+Copy this text into SECURITY-this-release.txt (and commit an not-checked version), then commit checked ([x]) version,
+
 ---------------------
 Checking started on: [                ] (UTC)
 Checking done on:    [                ] (UTC)
