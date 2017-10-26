@@ -11,7 +11,7 @@ Checking done on:    [                ] (UTC)
 [ ] backward-cpp submodule
 [ ] cotire submodule
 [ ] googletest submodule
-[x] cjdns/netplatform upstream tracking ! - checked (rfree) yesterday, imported fixes
+[x] cjdns/netplatform upstream tracking ! --- checked (rfree) yesterday, imported fixes
 [ ] libqt5 library release for Linux
 [ ] libqt5 library release for Windows (mingw)
 [ ] libqt5 library release for Macosxupstream
