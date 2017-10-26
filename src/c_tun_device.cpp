@@ -74,7 +74,7 @@ void c_tun_device_linux::set_ipv6_address
 	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
 
 	assert(binary_address[0] == 0xFD);
-	assert(binary_address[1] == 0x42);
+//	assert(binary_address[1] == 0x42);
 	_fact("Setting IP address");
 	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address, prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);

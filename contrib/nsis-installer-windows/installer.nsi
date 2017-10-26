@@ -87,9 +87,9 @@ InstallDir $PROGRAMFILES\galaxy42
 
 Section "Install openvpn"
        SetOutPath "$INSTDIR\share"
-       File "bin/noarch/openvpn-install-2.4.2-I601.exe"
-       ExecWait "$INSTDIR\share\openvpn-install-2.4.2-I601.exe"
-       Delete "$INSTDIR\share\openvpn-install-2.4.2-I601.exe"
+       File "bin/noarch/openvpn-install-2.4.4-I601.exe"
+       ExecWait "$INSTDIR\share\openvpn-install-2.4.4-I601.exe"
+       Delete "$INSTDIR\share\openvpn-install-2.4.4-I601.exe"
 SectionEnd
 
 Section
@@ -105,7 +105,6 @@ Section
 	!insertmacro SERVICE start "galaxy" ""
 SectionEnd
 
-
 Section "Uninstall"
 	SetShellVarContext all
 	!insertmacro SERVICE stop "galaxy" ""
@@ -113,7 +112,6 @@ Section "Uninstall"
 	!insertmacro SERVICE delete "galaxy" ""
 	RMDir /r $INSTDIR
 SectionEnd
-
 
 Function .onInit
 	!insertmacro MUI_LANGDLL_DISPLAY
