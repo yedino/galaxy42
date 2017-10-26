@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <mutex>
-#include <vector>
+#include <array>
 #include <type_traits>
 
 #include "../../tools_helper.hpp"
@@ -17,7 +17,7 @@ using t_counter = uint64_t;
 constexpr size_t max_length = 65535;
 size_t threads_count = 1;
 
-char data[20][max_length];
+std::array< char[max_length] , 20 > data;
 
 using buf_type = decltype(boost::asio::buffer(data[0], max_length));
 std::vector<buf_type> buffers;
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 
 		boost::asio::io_service io_service;
 
-		run_tests(io_service, std::atoi(argv[1]), threads_count);
+		run_tests(io_service, std::stoi(argv[1]), threads_count);
 	}
 	catch (std::exception& e)
 	{

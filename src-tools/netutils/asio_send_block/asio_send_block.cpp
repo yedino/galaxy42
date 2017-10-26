@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
 class c_rpc final {
 	public:
-		c_rpc(std::function<void(const std::string &)> f, unsigned int hours_timeout);
+		c_rpc(std::function<void(const std::string &)> f, unsigned int timeout_minutes);
 		void start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port);
 	private:
 		boost::asio::io_service m_io_service;
@@ -24,16 +24,24 @@ class c_rpc final {
 		std::function<void(const std::string &)>m_rpc_fun;
 		std::string m_input_buffer;
 		std::chrono::steady_clock::time_point m_stop_point;
+
+		bool rpc_time_limit_hit() const;
 };
 
-c_rpc::c_rpc(std::function<void(const std::string &)> f, unsigned int hours_timeout)
+c_rpc::c_rpc(std::function<void(const std::string &)> f, unsigned int timeout_minutes)
 :
 	m_io_service(),
 	m_socket(m_io_service),
 	m_rpc_fun(f),
 	m_input_buffer(),
-	m_stop_point(std::chrono::steady_clock::now() + std::chrono::hours(hours_timeout))
+	m_stop_point(std::chrono::steady_clock::now() + std::chrono::minutes(timeout_minutes))
 {
+	_info("Starting RPC server with max timeout_minutes=" << timeout_minutes);
+}
+
+bool c_rpc::rpc_time_limit_hit() const {
+	if ( std::chrono::steady_clock::now() >= m_stop_point ) return true;
+	return false;
 }
 
 void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port) {
@@ -43,7 +51,9 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 		std::cout << "\n\n\n";
 		_info("Will wait for connection on " << listen_address << ":" << port);
 
-		acceptor.accept(m_socket);
+		if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
+		acceptor.accept(m_socket); // blocks
+		if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
 
 		boost::asio::ip::tcp::endpoint local_endpoint, remote_endpoint;
 		local_endpoint = m_socket.local_endpoint();
@@ -61,6 +71,7 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 		const std::string ok_message = "DONE\n";
 		try {
 			while (true) { // for each command in one TCP connection
+				if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
 				std::cout << "\n\n";
 				_info("RPC command read...");
 				boost::asio::streambuf input_stream;
@@ -68,7 +79,7 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 				std::istream istream(&input_stream);
 				std::getline(istream, m_input_buffer);
 				_info("RPC command read...: [" << m_input_buffer << "]");
-				boost::asio::write(m_socket, boost::asio::buffer("START"));
+				boost::asio::write(m_socket, boost::asio::buffer("START\n"));
 
 				m_rpc_fun(m_input_buffer); // ***
 
@@ -94,7 +105,7 @@ template <class TOut>
 void explode(const std::string & text, char sep, TOut & output) {
     std::istringstream iss(text);
     std::string word;
-    while (std::getline(iss, word, sep)) output.push_back(word);
+    while (std::getline(iss, word, sep)) output.push_back(std::move(word));
 }
 
 std::vector<std::string> explode(const std::string & text, char sep) {
@@ -194,7 +205,7 @@ void c_maintask::print_usage() const {
 		std::cout << "\nor start server accepting remote RPC commands: \n";
 		std::cout << "e.g.:  ./client remote_cmd 192.168.70.17 9000 " << std::endl;
 		std::cout << "or instead allow remote access (remote controll of this sending, WARNING can make your computer spam/DDoS other computer) " << std::endl;
-		std::cout << "e.g.:  ./client remote <listen_on_ip><port>  <authorized_ip> <max_time_hours> <pass>  " << std::endl;
+		std::cout << "e.g.:  ./client remote <listen_on_ip><port>  <authorized_ip> <max_time_minutes> <pass>  " << std::endl;
 		std::cout << "e.g.:  ./client remote 192.168.70.17 9011   192.168.70.16   72 secret1" << std::endl;
 		std::cout << "e.g.:  ./client remote 192.168.70.17 9011   0.0.0.0         4  secret1" << std::endl;
 		std::cout << "e.g.:  ./client remote       0.0.0.0 9011   0.0.0.0         4  secret1" << std::endl;
@@ -228,20 +239,19 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 	args.insert( args.begin(), "program_name" );
 
 	size_t argc = args.size();
-	const char ** argv = new const char * [ argc ];
+	std::vector<const char*> argv( argc , nullptr );
 	for (size_t i=0; i<argc; ++i) argv[i] = args.at(i).c_str(); // ! points to memory owned by strings in vector args!
 	for (size_t i=0; i<argc; ++i) _info("argv["<<i<<"] = [" << argv[i] << "]");
 	std::string error_msg="(no error)";
 	try {
 
 		c_maintask maintask_once; // fresh new program (to not reuse our object this)
-		maintask_once.run( argc, argv );
+		maintask_once.run( argc, & argv.at(0) );
 
 	} catch (const std::exception & ex) {
 		error_msg = ex.what();
 		_warn("Exception while tryint to execute RPC command: " << error_msg);
 	}
-	delete [] argv;
 
 	std::cout << "RPC command DONE      : [" << rpc_cmd << "]" << std::endl;
 	return ret;
@@ -262,11 +272,11 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 				_info("RPC request failed [" << ex.what() << ")");
 			}
 		},
-		std::stoi(argv[5]) // timeout in hours
+		std::stoi(argv[5]) // timeout
 	);
 
 	boost::asio::ip::address_v4 listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
-	unsigned short port = std::atoi(argv[3]);
+	unsigned short port = std::stoi(argv[3]);
 	_info("RPC will listen on: " << listen_address << ":" << port);
 	_info("You can use following RPC commands:");
 	this->print_usage_rpc_cmd();
@@ -294,8 +304,8 @@ int c_maintask::run(int argc, const char * argv[])
 	if (argc >= 2+3+1) {
 		interactive=false;
 		message = argv[4];
-		bytes = atoi(argv[5]);
-		double count_exact = atof(argv[6]);
+		bytes = std::stoi(argv[5]);
+		double count_exact = std::stod(argv[6]);
 		if (count_exact < 0) {
 			count=0; count_infinite=true;
 		}
