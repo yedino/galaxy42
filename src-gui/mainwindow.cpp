@@ -497,8 +497,8 @@ void MainWindow::onNetConnected( bool val )
         message.showMessage( tr( "can't connect to node. check File ->settings" ) );
         message.exec();
     } else {
-        QErrorMessage msg( this );
-        msg.showMessage( "connected to node" );
+        QMessageBox msg( this );
+        msg.setText( "connected to node" );
         msg.exec();
     }
 }

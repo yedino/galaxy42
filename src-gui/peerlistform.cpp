@@ -16,8 +16,10 @@ PeerListForm::PeerListForm( QWidget *parent ) :
     ui->setupUi( this );
     peersModel * model = new peersModel( this );
     ui->listView->setModel( model );
-    model->sort( peersModel::name );
+//    model->sort( peersModel::Columns::name );
     m_model = model;
+//    m_model->sort();
+    m_model->sort((int)peersModel::Columns::status);
 }
 
 PeerListForm::~PeerListForm()
@@ -100,13 +102,15 @@ void PeerListForm::addActionSlot( bool )
         peer.comm_status = MeshPeer::COMMANDSTATUS::sended;
         m_model->addPeer( QString::fromStdString( peer.serialize() ) );
         emit ( addPeer( invitation ) );
+
+    m_model->sort((int)peersModel::Columns::status);
 //    }
 }
 
 void PeerListForm::banActionSlot( bool )
 {
     qDebug()<<"ban peer";
-    QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::vip ) ).toString();
+    QString vip = m_model->data( m_index.sibling( m_index.row(),(int)peersModel::Columns::vip ) ).toString();
     m_model->startActionOnIndex(m_index);
 //    m_model->ac;
     onPeerBanned(vip);			//!@todo on peer banned
@@ -117,8 +121,7 @@ void PeerListForm::removeActionSlot( bool )
 {
     qDebug()<<"remove peer";
     if( m_index.isValid() ) {
-
-        QModelIndex work_index = m_index.sibling( m_index.row(),peersModel::vip );
+        QModelIndex work_index = m_index.sibling( m_index.row(),(int)peersModel::Columns::vip );
         QString vip = m_model->data( work_index ).toString();
         m_model->startActionOnIndex(work_index);
         emit ( removePeer( vip ) ); //!@todo on peer removed
@@ -130,7 +133,7 @@ void PeerListForm::pingActionSlot( bool )
 {
     qDebug()<<"ping peer";
 
-    QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::vip ) ).toString();
+    QString vip = m_model->data( m_index.sibling( m_index.row(),(int)peersModel::Columns::vip ) ).toString();
     emit ( pingPeer( vip ) );
 
 }
@@ -142,13 +145,13 @@ peersModel* PeerListForm::getModel()
 
 void PeerListForm::findActionSlot( bool )
 {
-    QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::vip ) ).toString();
+    QString vip = m_model->data( m_index.sibling( m_index.row(),(int)peersModel::Columns::vip ) ).toString();
     emit( findPeer( vip ) );
 }
 
 void PeerListForm::onPeerFounded( QString invitation,QString vip )
 {
-    MeshPeer* peer = m_model->findPeer( vip,peersModel::vip );
+    MeshPeer* peer = m_model->findPeer( vip,peersModel::Columns::vip );
 
     peer->setInvitation( invitation );
     peer->status = MeshPeer::STATUS::connected;
@@ -193,17 +196,16 @@ void PeerListForm::addPeer( const MeshPeer & peer )
 //	m_model->addPeer();
 }
 
-
-
 void PeerListForm::banAllSlot( bool )
 {
-//    m_model->bannAll();
+    m_model->banAllPeers();
     emit banAll();
 }
 
 void PeerListForm::deleteAllSlot( bool )
 {
 //    m_model->removeAll();
+    m_model->deletaAllPeers();
     emit deleteAll();
 }
 
@@ -212,9 +214,8 @@ void PeerListForm::on_pushButton_clicked()
     addActionSlot(true);
 }
 
-
-
 void PeerListForm::on_pushButton_2_clicked()
 {
-    removeActionSlot(true);
+        m_index = ui->listView->currentIndex();
+        if(m_index.isValid()) removeActionSlot(true);
 }
