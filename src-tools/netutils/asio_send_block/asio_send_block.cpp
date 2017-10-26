@@ -17,7 +17,7 @@
 class c_rpc final {
 	public:
 		c_rpc(std::function<void(const std::string &)> f, unsigned int timeout_minutes);
-		void start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port);
+		void start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port, boost::asio::ip::address_v4 rpc_authorized_ip);
 	private:
 		boost::asio::io_service m_io_service;
 		boost::asio::ip::tcp::socket m_socket;
@@ -44,8 +44,10 @@ bool c_rpc::rpc_time_limit_hit() const {
 	return false;
 }
 
-void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port) {
+void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned short port, boost::asio::ip::address_v4 rpc_authorized_ip) {
 	boost::asio::ip::tcp::acceptor acceptor(m_io_service, boost::asio::ip::tcp::endpoint(listen_address, port));
+
+	struct c_raii_guard { std::function<void()> f; ~c_raii_guard() { f(); } }; // TODO move to stdplus lib?
 
 	while (true) {
 		std::cout << "\n\n\n";
@@ -53,6 +55,8 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 
 		if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
 		acceptor.accept(m_socket); // blocks
+		c_raii_guard raii_socket{ [this](){ this->m_socket.close(); } };
+
 		if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
 
 		boost::asio::ip::tcp::endpoint local_endpoint, remote_endpoint;
@@ -61,12 +65,22 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 
 		_info("Got connection to RPC, from: " << remote_endpoint << " to our local endpoint " << local_endpoint);
 
+		if ( rpc_authorized_ip != boost::asio::ip::address_v4::any() ) {
+			if (rpc_authorized_ip != remote_endpoint.address()) {
+				_warn("IP is not authorized! Allowed is: " << rpc_authorized_ip << " instead of " << remote_endpoint);
+				continue ; // <--- !
+			}
+		}
+
+		/*
+		// TODO this doesn't work well, especially breaks on localhost (that needs to listen on 0.0.0.0)
 		// automatic mask for given IP class?
 		boost::asio::ip::address_v4 local_mask = boost::asio::ip::address_v4::netmask(local_endpoint.address().to_v4());
 		boost::asio::ip::address_v4 remote_mask = boost::asio::ip::address_v4::netmask(remote_endpoint.address().to_v4());
-
-		if (local_mask != remote_mask)
+		if (local_mask != remote_mask) {
 			throw std::runtime_error("Bad remote address netmask, local: " + local_mask.to_string() + " remote " + remote_mask.to_string());
+		}
+		*/
 
 		const std::string ok_message = "DONE\n";
 		try {
@@ -89,7 +103,6 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 			_info("RPC session/TCP ended with exception: " << ex.what());
 		}
 
-		m_socket.close();
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -275,12 +288,16 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 		std::stoi(argv[5]) // timeout
 	);
 
-	boost::asio::ip::address_v4 listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
-	unsigned short port = std::stoi(argv[3]);
-	_info("RPC will listen on: " << listen_address << ":" << port);
+	boost::asio::ip::address_v4 rpc_listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
+	unsigned short rpc_port = std::stoi(argv[3]);
+	boost::asio::ip::address_v4 rpc_authorized_ip = boost::asio::ip::address_v4::from_string(argv[4]);
+	_info( "any : " << boost::asio::ip::address_v4::any() );
+	_info("RPC will listen on: " << rpc_listen_address << ":" << rpc_port
+		<< " and will allow connections from: "
+		<< rpc_authorized_ip << (rpc_authorized_ip==boost::asio::ip::address_v4::any() ? "(any)" : ""));
 	_info("You can use following RPC commands:");
 	this->print_usage_rpc_cmd();
-	rpc.start_listen(listen_address, port); // blocks
+	rpc.start_listen(rpc_listen_address, rpc_port, rpc_authorized_ip); // blocks
 	return 0;
 }
 
