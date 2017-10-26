@@ -10,6 +10,12 @@
     <height>273</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -45,7 +51,7 @@
              <item>
               <widget class="QLineEdit" name="vipEdit">
                <property name="toolTip">
-                <string>ip v6</string>
+                <string>Filed with your IP v6 - copy and paste it in &quot;paste invite&quot; field in your's friends computer to connect with him</string>
                </property>
                <property name="statusTip">
                 <string>my  ip v6 address</string>
@@ -114,11 +120,17 @@
                  <height>0</height>
                 </size>
                </property>
+               <property name="toolTip">
+                <string>IP v6 and IP v4 of this node - place in &quot;Paste invate&quot; field if you want to connect to </string>
+               </property>
                <property name="statusTip">
                 <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
                </property>
                <property name="whatsThis">
                 <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+               </property>
+               <property name="text">
+                <string/>
                </property>
                <property name="dragEnabled">
                 <bool>true</bool>
@@ -177,6 +189,9 @@
              </item>
              <item>
               <widget class="QLineEdit" name="InviteEdit">
+               <property name="toolTip">
+                <string>IP v6 and IP v4 of node where you want to connect</string>
+               </property>
                <property name="statusTip">
                 <string>IP v6 and IP v4 of node where you want to connect</string>
                </property>
@@ -212,6 +227,9 @@
           <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
             <widget class="QPushButton" name="connectButton">
+             <property name="toolTip">
+              <string>Connect to node (form &quot;Paset Invate&quot; field)</string>
+             </property>
              <property name="text">
               <string>Connect peer!</string>
              </property>
