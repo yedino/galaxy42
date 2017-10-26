@@ -252,4 +252,17 @@ protected:
 };
 
 
+class serverMsg final:public order
+{
+public:
+    serverMsg(const std::string &json_str);
+    void execute(MainWindow &main_window);
+
+protected:
+    std::string m_lvl;
+private:
+    std::string get_str() const{return std::string();}
+};
+
+
 #endif // ORDER_HPP

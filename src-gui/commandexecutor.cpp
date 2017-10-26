@@ -51,6 +51,8 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
         ord = std::make_unique <getGalaxyOrder>( msg );
     } else if( inputOrder.get_cmd() == "hello" ) {
         ord = std::make_unique<getClientName>( msg,this );
+    }else if (inputOrder.get_cmd() =="server_msg"){
+        ord = std::make_unique<serverMsg>(msg);
     } else {
         qDebug()<<"unknown command";
         return;

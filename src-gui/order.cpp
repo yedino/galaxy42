@@ -476,3 +476,24 @@ void getClientName::execute( MainWindow & )
         qDebug()<< "can't get name ";
     }
 }
+
+serverMsg::serverMsg(const std::string &json_str)
+{
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_msg = j["msg"];
+        m_lvl = j["lvl"];
+
+    } catch (std::exception &e) {
+        qDebug()<<e.what();
+    }
+}
+
+
+void serverMsg::execute(MainWindow &)
+{
+    qDebug()<<QString::fromStdString(m_state) <<" "<< QString::fromStdString(m_lvl)<<" "<<QString::fromStdString(m_msg);
+    //!@todo use app debug system while exists
+}
+
