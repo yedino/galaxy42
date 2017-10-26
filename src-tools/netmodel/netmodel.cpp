@@ -49,7 +49,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #endif
 
-#define ANTINET_DEBUG_MODE 1 ///< if 1, then e.g. debug here is enabled, and some asserts/checks are executed
+#define ANTINET_DEBUG_MODE 0 ///< if 1, then e.g. debug here is enabled, and some asserts/checks are executed
 
 #if ANTINET_IF_DEBUG
 #define ANTINET_IF_DEBUG(X) (X);
@@ -223,7 +223,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 	std::mutex & mutex_handlerflow_socket)
 {
 	if (!! ec) {
-		_note("Handler hit error, ec="<<ec.message());
+		_erro("Handler hit error, ec="<<ec.message());
 		return;
 	}
 
@@ -263,14 +263,15 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 			if (rrr==0) _note("rrr="<<static_cast<int>(rrr));
 		}
 		else if (cfg_test_crypto_task < 0) {
-			int ret = crypto_stream_xor(
+			// this function always returns 0
+			// https://nacl.cr.yp.to/stream.html
+			crypto_stream_xor(
 				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // out
-				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // in
-				std::extent<decltype(inbuf.m_data)>::value, // in len
+				reinterpret_cast<unsigned char *>(&(inbuf.m_data[0])), // bytes_transferred ])), // in XXX TODO
+				bytes_transferred,
 				crypto::nonce.data(), // nonce
 				crypto::secret_key.data() // secret key
 			);
-			if (!ret) _erro("Crypto error: " << ret);
 		}
 		else {
 			// nothing. Just avoid warnings / deadcode optimize / unused
@@ -576,7 +577,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_goal("Creating ios (WIRE) nr "<<i);
 		ios_wire.emplace_back( std::make_unique<asio::io_service>() );
 		ios_wire_work.emplace_back( std::make_unique<asio::io_service::work>( * ios_wire.back() ) );
-		_goal("Creating ios (WIRE) nr "<<i<<" - done");
 	}
 
 	_note("Create ios (TUNTAP)");
@@ -586,7 +586,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_goal("Creating ios (TUNTAP) nr "<<i);
 		ios_tuntap.emplace_back( std::make_unique<asio::io_service>() );
 		ios_tuntap_work.emplace_back( std::make_unique<asio::io_service::work>( * ios_tuntap.back() ) );
-		_goal("Creating ios (TUNTAP) nr "<<i<<" - done");
 	}
 
 	boost::asio::signal_set signals( ios_general, SIGINT);
@@ -817,9 +816,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		socket_array.push_back( with_strand<ThreadObject<boost::asio::ip::udp::socket>>(*one_ios, *one_ios) );
 		boost::asio::ip::udp::socket & thesocket = socket_array.back().get_unsafe_assume_in_strand().get();
 
+		auto addr_listen = asio::ip::address::from_string("0.0.0.0");
+		// asio::ip::address_v4::any();
+		// if (nr_sock==0) addr_listen = asio::ip::address::from_string("192.168.113.16");
+		// if (nr_sock==1) addr_listen = asio::ip::address::from_string("192.168.1.102");
+		_mark("Using special addressing (TEST!)"); // XXX TODO
+		_mark("Listen on: " << addr_listen);
+
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-		thesocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , port_nr ) );
+		thesocket.bind( asio::ip::udp::endpoint( addr_listen , port_nr ) );
 	}
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
@@ -996,7 +1002,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		assert(inbuf_nr >= 0);
 		assert(socket_nr_raw >= 0);
 		int socket_nr = socket_nr_raw % wire_socket.size(); // spread it (rotate)
-		_note("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
+		_goal("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
 
 		auto inbuf_asio = asio::buffer( inbuf_tab.addr(inbuf_nr) , t_inbuf::size() );
 		_dbg1("buffer size is: " << asio::buffer_size( inbuf_asio ) );
