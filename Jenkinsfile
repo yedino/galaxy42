@@ -132,6 +132,7 @@ properties([pipelineTriggers([  [$class: 'GitHubPushTrigger'],
           ])
 
 node('master') {
+	properties([disableConcurrentBuilds()])
 
 	def build_native_linux = true
 	def build_native_windows_mingw32 = true
