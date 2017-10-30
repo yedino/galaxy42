@@ -12,11 +12,11 @@ group: edge
 
 addons:
   apt:
-    sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+    sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0']
     packages:
       - gcc-5
       - g++-5
-      - clang-3.7
+      - clang-4.0
       - libboost-system-dev
       - libboost-filesystem-dev
       - libboost-program-options-dev
@@ -43,7 +43,7 @@ before_install:
 
 install:
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-5" CC="gcc-5"  ; fi
-  - if [[ "$CC" == "clang" ]]; then export CXX="clang++-3.7" CC="clang-3.7"  ; fi
+  - if [[ "$CC" == "clang" ]]; then export CXX="clang++-4.0" CC="clang-4.0"  ; fi
   - echo "PATH=${PATH}"
   - echo "CC=${CC}, $(which ${CC})"
   - echo "CXX=${CXX}, $(which ${CXX})"
