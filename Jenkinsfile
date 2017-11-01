@@ -101,7 +101,7 @@ def run_memory_test(git_url, branch) {
 	build job: 'g42_safe-memory',
 		parameters: [	[$class: 'NodeParameterValue',
 		             		name: 'MemTest',
-		             		labels: ['allow_clang_sanitizer'],
+		             		labels: ['allow_memtest'],
 		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
 		             	[$class: 'StringParameterValue',
 		             		name: 'git_repository_url',
@@ -115,7 +115,7 @@ def run_thread_ub_test(git_url, branch) {
 	build job: 'g42_safe-thread-ub',
 		parameters: [	[$class: 'NodeParameterValue',
 		             		name: 'ThubTest',
-		             		labels: ['allow_clang_sanitizer'],
+		             		labels: ['allow_thread_ub_test'],
 		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
 		             	[$class: 'StringParameterValue',
 		             		name: 'git_repository_url',
@@ -132,6 +132,7 @@ properties([pipelineTriggers([  [$class: 'GitHubPushTrigger'],
           ])
 
 node('master') {
+	properties([disableConcurrentBuilds()])
 
 	def build_native_linux = true
 	def build_native_windows_mingw32 = true
