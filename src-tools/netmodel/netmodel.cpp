@@ -413,12 +413,38 @@ TT get_from_cmdline(const string & name, t_mycmdline &cmdline, TT def) {
 	return the_val;
 }
 
-uint32_t pseudo_random(uint32_t & state) {
-	state = (state*5147) % 104729 +7;
-	return state;
-}
+// https://stackoverflow.com/questions/1640258/need-a-fast-random-generator-for-c
+namespace xorshf96 {
+	thread_local static unsigned long x=123456789, y=362436069, z=424242422;
 
-void cryptotest_no_threads(uint32_t param_msg_size) {
+	void init_state(long int seed) {
+		auto prime1 = 2147483647 ; // https://en.wikipedia.org/wiki/2147483647
+		x = x % prime1 + seed;
+		y = y % prime1 + seed * 251;
+		z = z % prime1 + seed * 7;
+	}
+
+	// period 2^96-1
+	// MT-safe (since using thread_local globals for state)
+	inline unsigned long get_value(void) {
+		unsigned long t;
+		x ^= x << 16;
+		x ^= x >> 5;
+		x ^= x << 1;
+		t = x;
+		x = y;
+		y = z;
+		z = t ^ x ^ y;
+		return z;
+	}
+};
+inline uint32_t pseudo_random() {	return xorshf96::get_value(); }
+
+struct t_crypto_bench_options {
+	int quality=1; // more samples. E.g. value 10 should be around 10 times longer and so on
+};
+
+void cryptotest_no_threads(uint32_t param_msg_size, t_crypto_bench_options bench_options) {
 	const size_t msg_size = param_msg_size;
 	std::vector<unsigned char> msg_buf(msg_size);
 	std::vector<unsigned char> hmac_buf(crypto_onetimeauth_BYTES);
@@ -426,19 +452,31 @@ void cryptotest_no_threads(uint32_t param_msg_size) {
 	std::vector<unsigned char> key(crypto_onetimeauth_KEYBYTES);
 	std::fill_n( & key[0], crypto_onetimeauth_KEYBYTES, 0xfd);
 
-	const uint32_t test_repeat = std::max( static_cast<uint32_t>(30), static_cast<uint32_t>( (  60*1000*1000) / msg_size ));
+	const uint32_t test_repeat = std::max( static_cast<uint32_t>(30),
+		static_cast<uint32_t>( ( bench_options.quality* 50*1000*1000) / msg_size ));
 
-	uint32_t rnd = std::rand();
+	xorshf96::init_state( std::rand() );
 
 	auto start_point = std::chrono::steady_clock::now();
 	auto test_repeat_point1 = (test_repeat / 5);
+
+	char hash_state[4]; // we use results of crypot as pseudo random function - this is it's state
+	std::fill_n( & hash_state[0] , 4 , 0);
+
+	auto hmac_buf_size = hmac_buf.size();
+	auto  msg_buf_size  =  msg_buf.size();
+	auto  key_buf_size  =      key.size();
+	// uint32_t hmac_buf_size_bitmask = 1 << (  static_cast<int>(std::log2( hmac_buf.size())  )-1);
+
 	for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
-		if (test_repeat_nr == test_repeat_point1) start_point = std::chrono::steady_clock::now();
-	//	hmac_buf[ pseudo_random(rnd) % hmac_buf.size() ] = pseudo_random(rnd)%256;
-	//	key[ pseudo_random(rnd) % key.size() ] = pseudo_random(rnd)%256;
-	//	msg_buf[ pseudo_random(rnd) % msg_buf.size() ] = pseudo_random(rnd)%256;
-		crypto_onetimeauth( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]);
-	//	crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, key);
+		if (test_repeat_nr == test_repeat_point1) start_point = std::chrono::steady_clock::now(); // !
+
+		hmac_buf[ hash_state[0] % hmac_buf_size ] = hash_state[1];
+		msg_buf [ hash_state[1] %  msg_buf_size ] = hash_state[2];
+		key     [ hash_state[2] %  key_buf_size ] = hash_state[3];
+
+		crypto_onetimeauth( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]); // ***
+		std::copy_n( & hmac_buf[0] , 4 , & hash_state[0]); // use crypto result as random
 	}
 	auto test_repeat_actually = test_repeat - test_repeat_point1; // how many tests were really done, considering warmup etc
 	auto test_bytes_done = test_repeat_actually * msg_size;
@@ -456,15 +494,44 @@ void cryptotest_main(std::vector<std::string> options) {
 	_goal("Testing crypto");
 	// https://download.libsodium.org/doc/advanced/poly1305.html
 
-	std::set<uint32_t> range_msgsize;
-	for (uint32_t i=16;    i<=1500; ++i) { auto v=i; range_msgsize.insert( v ); }
-	for (uint32_t i=1500; i<=9000; i+=8) { auto v=(i/16)*16;  range_msgsize.insert( v ); }
-	for (uint32_t i=9000; i<=32000; i+=128) { auto v=(i/64)*64; range_msgsize.insert( v ); }
-	for (uint32_t i=32000; i<=64000; i+=256) { auto v=(i/64)*64; range_msgsize.insert( v ); }
-	for (uint32_t i=64000; i<=1024*1024*8; i+=1024*128) { auto v=(i/1024)*1024; range_msgsize.insert( v ); }
+	t_crypto_bench_options bench_options;
 
-	cryptotest_no_threads(512);
-//	for(auto v : range_msgsize) cryptotest_no_threads(v);
+	t_mycmdline mycmdline;
+	for (const string & arg : options) mycmdline.add(arg);
+	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
+	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
+	UNUSED(func_cmdline);
+
+	bench_options.quality = func_cmdline_def("quality",1);
+	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
+	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
+
+	std::set<uint32_t> range_msgsize;
+
+	if (opt_range_one > 0) {
+		opt_range_kind=0;
+		range_msgsize.insert( opt_range_one );
+	}
+
+	if (opt_range_kind==1) {
+		for (uint32_t i=16;    i<=1500; i+=16) { auto v=i; range_msgsize.insert( v ); }
+		for (uint32_t i=1500; i<=9000; i+=16) { auto v=(i/16)*16;  range_msgsize.insert( v ); }
+		for (uint32_t i=9000; i<=32000; i+=128) { auto v=(i/64)*64; range_msgsize.insert( v ); }
+		for (uint32_t i=32000; i<=64000; i+=1024) { auto v=(i/64)*64; range_msgsize.insert( v ); }
+		for (uint32_t i=64000; i<=1024*1024*8; i+=1024*512) { auto v=(i/1024)*1024; range_msgsize.insert( v ); }
+	}
+	else if (opt_range_kind==2) {
+		for (uint32_t i=16;    i<=1500; ++i) { auto v=i; range_msgsize.insert( v ); }
+		for (uint32_t i=1500; i<=9000; i+=8) { auto v=(i/16)*16;  range_msgsize.insert( v ); }
+		for (uint32_t i=9000; i<=32000; i+=128) { auto v=(i/64)*64; range_msgsize.insert( v ); }
+		for (uint32_t i=32000; i<=64000; i+=256) { auto v=(i/64)*64; range_msgsize.insert( v ); }
+		for (uint32_t i=64000; i<=1024*1024*8; i+=1024*128) { auto v=(i/1024)*1024; range_msgsize.insert( v ); }
+	}
+	else if (opt_range_kind==3) {
+		for (uint32_t i=16;    i<=64000; ++i) { auto v=i; range_msgsize.insert( v ); }
+	}
+
+	for(auto v : range_msgsize) cryptotest_no_threads(v, bench_options);
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
