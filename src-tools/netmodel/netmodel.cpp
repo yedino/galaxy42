@@ -442,16 +442,38 @@ inline uint32_t pseudo_random() {	return xorshf96::get_value(); }
 
 struct t_crypto_bench_options {
 	int quality=1; // more samples. E.g. value 10 should be around 10 times longer and so on
+	int modify_data=1; // should we modify data that we run in loop; 0=no, same data  1=modify a little
 };
 
-void cryptotest_no_threads(uint32_t param_msg_size, t_crypto_bench_options bench_options) {
-	const size_t msg_size = param_msg_size;
-	std::vector<unsigned char> msg_buf(msg_size);
-	std::vector<unsigned char> hmac_buf(crypto_onetimeauth_BYTES);
+// Code inspired by sodium_tests.cpp @mikurys @rob
 
-	std::vector<unsigned char> key(crypto_onetimeauth_KEYBYTES);
-	std::fill_n( & key[0], crypto_onetimeauth_KEYBYTES, 0xfd);
+template<typename F, bool allow_mt, size_t max_threads_count = 16>
+class c_crypto_benchloop {
+	public:
+    c_crypto_benchloop(F fun);
+		double run_test(uint32_t param_msg_size, const t_crypto_bench_options bench_options,
+			vector<unsigned char> & hmac_buf, vector<unsigned char> & msg_buf, vector<unsigned char> & key_buf
+		);
+	private:
+    const F m_test_fun;
+};
 
+template<typename F, bool allow_mt, size_t max_threads_count>
+c_crypto_benchloop<F, allow_mt, max_threads_count>
+::c_crypto_benchloop(F fun)
+: m_test_fun(fun)
+{
+}
+
+
+template<typename F, bool allow_mt, size_t max_threads_count>
+double
+c_crypto_benchloop<F, allow_mt, max_threads_count>
+::run_test(uint32_t param_msg_size, const t_crypto_bench_options bench_options,
+			vector<unsigned char> & hmac_buf, vector<unsigned char> & msg_buf, vector<unsigned char> & key_buf
+		)
+{
+	const auto msg_size = param_msg_size;
 	const uint32_t test_repeat = std::max( static_cast<uint32_t>(30),
 		static_cast<uint32_t>( ( bench_options.quality* 50*1000*1000) / msg_size ));
 
@@ -465,29 +487,78 @@ void cryptotest_no_threads(uint32_t param_msg_size, t_crypto_bench_options bench
 
 	auto hmac_buf_size = hmac_buf.size();
 	auto  msg_buf_size  =  msg_buf.size();
-	auto  key_buf_size  =      key.size();
+	auto  key_buf_size  =  key_buf.size();
 	// uint32_t hmac_buf_size_bitmask = 1 << (  static_cast<int>(std::log2( hmac_buf.size())  )-1);
 
+
 	for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
-		if (test_repeat_nr == test_repeat_point1) start_point = std::chrono::steady_clock::now(); // !
+		if (test_repeat_nr == test_repeat_point1) start_point = std::chrono::steady_clock::now(); // ! [timer]
 
-		hmac_buf[ hash_state[0] % hmac_buf_size ] = hash_state[1];
-		msg_buf [ hash_state[1] %  msg_buf_size ] = hash_state[2];
-		key     [ hash_state[2] %  key_buf_size ] = hash_state[3];
+		if (bench_options.modify_data) {
+			hmac_buf[ hash_state[0] % hmac_buf_size ] = hash_state[1];
+			msg_buf [ hash_state[1] %  msg_buf_size ] = hash_state[2];
+			key_buf [ hash_state[2] %  key_buf_size ] = hash_state[3];
+		}
 
-		crypto_onetimeauth( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]); // ***
+		this->m_test_fun();
+
 		std::copy_n( & hmac_buf[0] , 4 , & hash_state[0]); // use crypto result as random
 	}
+	auto end_point = std::chrono::steady_clock::now(); // [timer]
+
+	// additional checks after loop for sanity
+	/*
+	if (crypto_op == -10) {
+		bool verif_correct = 0 == crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]);
+		if (!verif_correct) throw std::runtime_error("Verifiation failed (single test)");
+	}*/
+
 	auto test_repeat_actually = test_repeat - test_repeat_point1; // how many tests were really done, considering warmup etc
 	auto test_bytes_done = test_repeat_actually * msg_size;
-	auto end_point = std::chrono::steady_clock::now();
 	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - start_point).count() / (1000.*1000.*1000.f);
 	auto giga_bytes_per_second = (test_bytes_done / ellapsed) / (1000*1000*1000.f);
-	const char * func_name="verif";
-	_goal("Speed " << func_name << " msg_size: " << msg_size << " Gbit/s: " << giga_bytes_per_second*8);
+	return giga_bytes_per_second * 8;
+}
 
-	bool verif_correct = 0 == crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]);
-	if (!verif_correct) throw std::runtime_error("Verifiation failed");
+void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypto_bench_options bench_options)
+{
+
+	uint32_t res1=0; // e.g. for counting failed verification, avoid unused var warning
+
+	const size_t msg_size = param_msg_size;
+	std::vector<unsigned char> msg_buf(msg_size);
+	std::vector<unsigned char> hmac_buf(crypto_onetimeauth_BYTES);
+	std::vector<unsigned char> key_buf(crypto_onetimeauth_KEYBYTES);
+	std::fill_n( & key_buf[0], crypto_onetimeauth_KEYBYTES, 0xfd);
+
+	auto crypto_func_auth = [&]() {
+		crypto_onetimeauth( & hmac_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
+	};
+	auto crypto_func_veri = [&]() {
+		if (0 != crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, & key_buf[0])) ++res1;
+	};
+
+	double speed_gbps = 0;
+	std::string func_name="unknown_crypto";
+
+	switch (crypto_op) {
+		case -10:
+		{
+			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
+			func_name = "auth_poly1305";
+			speed_gbps = benchloop.run_test(param_msg_size, bench_options, msg_buf, hmac_buf, key_buf);
+		}
+		break;
+		case -20:
+		{
+			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
+			func_name = "veri_poly1305";
+			speed_gbps = benchloop.run_test(param_msg_size, bench_options, msg_buf, hmac_buf, key_buf);
+		}
+		break;
+		default: throw runtime_error("Unknown crypto_op");
+	}
+	std::cout << "Speed " << func_name << " msg_size: " << msg_size << " Gbit/s: " << speed_gbps << std::endl; // output result
 }
 
 void cryptotest_main(std::vector<std::string> options) {
@@ -505,6 +576,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	bench_options.quality = func_cmdline_def("quality",1);
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
+	int crypto_op = func_cmdline_def("crypto",-10); // crypto op, see source of cryptotest_* functions
 
 	std::set<uint32_t> range_msgsize;
 
@@ -531,7 +603,9 @@ void cryptotest_main(std::vector<std::string> options) {
 		for (uint32_t i=16;    i<=64000; ++i) { auto v=i; range_msgsize.insert( v ); }
 	}
 
-	for(auto v : range_msgsize) cryptotest_no_threads(v, bench_options);
+	_goal("Will run number of tests: " << range_msgsize.size() );
+
+	for(auto v : range_msgsize) cryptotest_no_threads(crypto_op, v, bench_options);
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
