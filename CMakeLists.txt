@@ -410,7 +410,7 @@ elseif(NOT WIN32)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
-file(GLOB SOURCES_GROUP_TOOLS_NETMODEL src-tools/netmodel/*.cpp
+file(GLOB SOURCES_GROUP_TOOLS_NETMODEL src-tools/netmodel/*.cpp src-tools/netmodel/*/*.cpp
 )
 
 if(WIN32 OR CYGWIN OR MINGW)
