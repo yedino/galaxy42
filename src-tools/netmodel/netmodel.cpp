@@ -20,11 +20,15 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <atomic>
 #include <mutex>
 
+#include <algorithm>
+
 #include "../src/libs0.hpp" // libs for Antinet
 #include "../src/stdplus/tab.hpp"
 #include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
+
+#include "crypto_bench/sodium_tests.hpp"
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -409,13 +413,58 @@ TT get_from_cmdline(const string & name, t_mycmdline &cmdline, TT def) {
 	return the_val;
 }
 
-void cryptotes_main(std::vector<std::string> options) {
-	_note("Testing crypto");
+uint32_t pseudo_random(uint32_t & state) {
+	state = (state*5147) % 104729 +7;
+	return state;
+}
 
+void cryptotest_no_threads(uint32_t param_msg_size) {
+	const size_t msg_size = param_msg_size;
+	std::vector<unsigned char> msg_buf(msg_size);
+	std::vector<unsigned char> hmac_buf(crypto_onetimeauth_BYTES);
+
+	std::vector<unsigned char> key(crypto_onetimeauth_KEYBYTES);
+	std::fill_n( & key[0], crypto_onetimeauth_KEYBYTES, 0xfd);
+
+	const uint32_t test_repeat = std::max( static_cast<uint32_t>(30), static_cast<uint32_t>( (  60*1000*1000) / msg_size ));
+
+	uint32_t rnd = std::rand();
+
+	auto start_point = std::chrono::steady_clock::now();
+	auto test_repeat_point1 = (test_repeat / 5);
+	for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
+		if (test_repeat_nr == test_repeat_point1) start_point = std::chrono::steady_clock::now();
+	//	hmac_buf[ pseudo_random(rnd) % hmac_buf.size() ] = pseudo_random(rnd)%256;
+	//	key[ pseudo_random(rnd) % key.size() ] = pseudo_random(rnd)%256;
+	//	msg_buf[ pseudo_random(rnd) % msg_buf.size() ] = pseudo_random(rnd)%256;
+		crypto_onetimeauth( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]);
+	//	crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, key);
+	}
+	auto test_repeat_actually = test_repeat - test_repeat_point1; // how many tests were really done, considering warmup etc
+	auto test_bytes_done = test_repeat_actually * msg_size;
+	auto end_point = std::chrono::steady_clock::now();
+	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - start_point).count() / (1000.*1000.*1000.f);
+	auto giga_bytes_per_second = (test_bytes_done / ellapsed) / (1000*1000*1000.f);
+	const char * func_name="verif";
+	_goal("Speed " << func_name << " msg_size: " << msg_size << " Gbit/s: " << giga_bytes_per_second*8);
+
+	bool verif_correct = 0 == crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]);
+	if (!verif_correct) throw std::runtime_error("Verifiation failed");
+}
+
+void cryptotest_main(std::vector<std::string> options) {
+	_goal("Testing crypto");
 	// https://download.libsodium.org/doc/advanced/poly1305.html
 
+	std::set<uint32_t> range_msgsize;
+	for (uint32_t i=16;    i<=1500; ++i) { auto v=i; range_msgsize.insert( v ); }
+	for (uint32_t i=1500; i<=9000; i+=8) { auto v=(i/16)*16;  range_msgsize.insert( v ); }
+	for (uint32_t i=9000; i<=32000; i+=128) { auto v=(i/64)*64; range_msgsize.insert( v ); }
+	for (uint32_t i=32000; i<=64000; i+=256) { auto v=(i/64)*64; range_msgsize.insert( v ); }
+	for (uint32_t i=64000; i<=1024*1024*8; i+=1024*128) { auto v=(i/1024)*1024; range_msgsize.insert( v ); }
 
-
+	cryptotest_no_threads(512);
+//	for(auto v : range_msgsize) cryptotest_no_threads(v);
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
@@ -1099,7 +1148,7 @@ int netmodel_main(int argc, const char **argv) {
 			asiotest_udpserv(options);
 		break;
 		case t_testmode::e_testmode_crypto:
-			cryptotes_main(options);
+			cryptotest_main(options);
 		break;
 	}
 
@@ -1114,6 +1163,7 @@ int netmodel_main(int argc, const char **argv) {
 #else
 int main(int argc, const char **argv) {
 	_goal("Starting the network model tool (stand alone program)");
+	std::srand( time(nullptr) );
 	return n_netmodel::netmodel_main(argc,argv);
 }
 #endif
