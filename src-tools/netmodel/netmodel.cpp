@@ -440,102 +440,102 @@ namespace xorshf96 {
 };
 inline uint32_t pseudo_random() {	return xorshf96::get_value(); }
 
-struct t_crypto_bench_options {
+struct t_crypt_opt {
 	int quality=1; // more samples. E.g. value 10 should be around 10 times longer and so on
 	int modify_data=1; // should we modify data that we run in loop; 0=no, same data  1=modify a little
 };
 
-// Code inspired by sodium_tests.cpp @mikurys @rob
+using t_bytes = std::vector<unsigned char>; ///< shortcut for: typical unsigned char network/crypto buffer, runtime size
+using t_hash_random_state = char[4]; ///< using part of crypto hash (of cyphertext) as random bytes for 0-cost random generator
 
+/// This class runs tight loop of some crypto operations, and meastures the time/speed.
+/// Provide it a lambda doing main work e.g. on 3 buffers (like msg, hmac, key), and also provide same buffers to function again
+/// so that it can mutate them between iterations and measure their size to calculate totall data.
+/// Code inspired by sodium_tests.cpp @mikurys @rob (sodium_tests.cpp here)
 template<typename F, bool allow_mt, size_t max_threads_count = 16>
 class c_crypto_benchloop {
 	public:
     c_crypto_benchloop(F fun);
-		double run_test(uint32_t param_msg_size, const t_crypto_bench_options bench_options,
-			vector<unsigned char> & hmac_buf, vector<unsigned char> & msg_buf, vector<unsigned char> & key_buf
-		);
+
+    /// run tests, return speed as Gbps
+    /// @param msg_buf - input message (e.g. in text to de/encrypt, or input msg for HMAC)
+    /// @param two_buf - other buffer used depending on crypto function (decrypted/encrypted text, hmac resulting tag, or expected tag to compare with)
+    /// @param key_buf - the key buffer
+		double run_test_3buf(const t_crypt_opt bench_opt, t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf);
+
 	private:
     const F m_test_fun;
+		std::chrono::time_point<std::chrono::steady_clock> m_time_started;
+		double time_finish(size_t bytes_transferred); ///< return speed, looking at passed time, for given amount of bytes done
+
+		void modify_buffers(const t_crypt_opt & bench_opt, t_hash_random_state & state,
+			t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3);
 };
 
 template<typename F, bool allow_mt, size_t max_threads_count>
 c_crypto_benchloop<F, allow_mt, max_threads_count>
 ::c_crypto_benchloop(F fun)
 : m_test_fun(fun)
+{ }
+
+template<typename F, bool allow_mt, size_t max_threads_count>
+void c_crypto_benchloop<F, allow_mt, max_threads_count>
+::modify_buffers(const t_crypt_opt & bench_opt, t_hash_random_state & state,
+	t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3)
 {
+	if (bench_opt.modify_data) {
+		buf1[ state[0] % size1 ] = state[1];
+		buf2[ state[1] % size2 ] = state[2];
+		buf3[ state[2] % size3 ] = state[3];
+	}
 }
 
+template<typename F, bool allow_mt, size_t max_threads_count>
+double c_crypto_benchloop<F, allow_mt, max_threads_count>
+::run_test_3buf(const t_crypt_opt bench_opt, t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf)
+{
+	uint32_t msg_buf_size =  msg_buf.size(), two_buf_size = two_buf.size(), key_buf_size = key_buf.size();
+	const uint32_t test_repeat = std::max<uint32_t>(30, (bench_opt.quality * 50*1000*1000) / msg_buf_size );
+	auto test_repeat_point1 = (test_repeat / 5); // run that many iterations as warmup
+	_info("Running tests count: " << test_repeat << " minus warmup: " << test_repeat_point1);
+
+	t_hash_random_state hash_state; // we use results of crypot as pseudo random function - this is it's state
+	std::fill_n( & hash_state[0] , 4 , 0x00);
+
+	for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
+		if (test_repeat_nr == test_repeat_point1) m_time_started = std::chrono::steady_clock::now(); // ! [timer]
+		this->modify_buffers(bench_opt, hash_state, msg_buf, msg_buf_size, two_buf, two_buf_size, key_buf, key_buf_size);
+		this->m_test_fun(); // ***
+		std::copy_n( & two_buf[0] , 4 , & hash_state[0]); // use crypto result as random
+	}
+	return time_finish( static_cast<size_t>(msg_buf_size) * static_cast<size_t>(test_repeat - test_repeat_point1) );
+}
 
 template<typename F, bool allow_mt, size_t max_threads_count>
 double
 c_crypto_benchloop<F, allow_mt, max_threads_count>
-::run_test(uint32_t param_msg_size, const t_crypto_bench_options bench_options,
-			vector<unsigned char> & hmac_buf, vector<unsigned char> & msg_buf, vector<unsigned char> & key_buf
-		)
-{
-	const auto msg_size = param_msg_size;
-	const uint32_t test_repeat = std::max( static_cast<uint32_t>(30),
-		static_cast<uint32_t>( ( bench_options.quality* 50*1000*1000) / msg_size ));
-
-	xorshf96::init_state( std::rand() );
-
-	auto start_point = std::chrono::steady_clock::now();
-	auto test_repeat_point1 = (test_repeat / 5);
-
-	char hash_state[4]; // we use results of crypot as pseudo random function - this is it's state
-	std::fill_n( & hash_state[0] , 4 , 0);
-
-	auto hmac_buf_size = hmac_buf.size();
-	auto  msg_buf_size  =  msg_buf.size();
-	auto  key_buf_size  =  key_buf.size();
-	// uint32_t hmac_buf_size_bitmask = 1 << (  static_cast<int>(std::log2( hmac_buf.size())  )-1);
-
-
-	for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
-		if (test_repeat_nr == test_repeat_point1) start_point = std::chrono::steady_clock::now(); // ! [timer]
-
-		if (bench_options.modify_data) {
-			hmac_buf[ hash_state[0] % hmac_buf_size ] = hash_state[1];
-			msg_buf [ hash_state[1] %  msg_buf_size ] = hash_state[2];
-			key_buf [ hash_state[2] %  key_buf_size ] = hash_state[3];
-		}
-
-		this->m_test_fun();
-
-		std::copy_n( & hmac_buf[0] , 4 , & hash_state[0]); // use crypto result as random
-	}
+::time_finish(size_t bytes_transferred) {
 	auto end_point = std::chrono::steady_clock::now(); // [timer]
-
-	// additional checks after loop for sanity
-	/*
-	if (crypto_op == -10) {
-		bool verif_correct = 0 == crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, & key[0]);
-		if (!verif_correct) throw std::runtime_error("Verifiation failed (single test)");
-	}*/
-
-	auto test_repeat_actually = test_repeat - test_repeat_point1; // how many tests were really done, considering warmup etc
-	auto test_bytes_done = test_repeat_actually * msg_size;
-	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - start_point).count() / (1000.*1000.*1000.f);
-	auto giga_bytes_per_second = (test_bytes_done / ellapsed) / (1000*1000*1000.f);
+	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - m_time_started).count() / (1000.*1000.*1000.f);
+	auto giga_bytes_per_second = (bytes_transferred / ellapsed) / (1000*1000*1000.f);
 	return giga_bytes_per_second * 8;
 }
 
-void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypto_bench_options bench_options)
+void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
-
 	uint32_t res1=0; // e.g. for counting failed verification, avoid unused var warning
 
 	const size_t msg_size = param_msg_size;
 	std::vector<unsigned char> msg_buf(msg_size);
-	std::vector<unsigned char> hmac_buf(crypto_onetimeauth_BYTES);
+	std::vector<unsigned char> mac_buf(crypto_onetimeauth_BYTES);
 	std::vector<unsigned char> key_buf(crypto_onetimeauth_KEYBYTES);
 	std::fill_n( & key_buf[0], crypto_onetimeauth_KEYBYTES, 0xfd);
 
 	auto crypto_func_auth = [&]() {
-		crypto_onetimeauth( & hmac_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
+		crypto_onetimeauth( & mac_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
 	};
 	auto crypto_func_veri = [&]() {
-		if (0 != crypto_onetimeauth_verify( & hmac_buf[0], & msg_buf[0], msg_size, & key_buf[0])) ++res1;
+		if (0 != crypto_onetimeauth_verify( & mac_buf[0], & msg_buf[0], msg_size, & key_buf[0])) ++res1;
 	};
 
 	double speed_gbps = 0;
@@ -546,14 +546,14 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypto_benc
 		{
 			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
 			func_name = "auth_poly1305";
-			speed_gbps = benchloop.run_test(param_msg_size, bench_options, msg_buf, hmac_buf, key_buf);
+			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, mac_buf, key_buf);
 		}
 		break;
 		case -20:
 		{
 			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			func_name = "veri_poly1305";
-			speed_gbps = benchloop.run_test(param_msg_size, bench_options, msg_buf, hmac_buf, key_buf);
+			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, mac_buf, key_buf);
 		}
 		break;
 		default: throw runtime_error("Unknown crypto_op");
@@ -565,7 +565,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	_goal("Testing crypto");
 	// https://download.libsodium.org/doc/advanced/poly1305.html
 
-	t_crypto_bench_options bench_options;
+	t_crypt_opt bench_opt;
 
 	t_mycmdline mycmdline;
 	for (const string & arg : options) mycmdline.add(arg);
@@ -573,7 +573,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
 	UNUSED(func_cmdline);
 
-	bench_options.quality = func_cmdline_def("quality",1);
+	bench_opt.quality = func_cmdline_def("quality",1);
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
 	int crypto_op = func_cmdline_def("crypto",-10); // crypto op, see source of cryptotest_* functions
@@ -605,7 +605,7 @@ void cryptotest_main(std::vector<std::string> options) {
 
 	_goal("Will run number of tests: " << range_msgsize.size() );
 
-	for(auto v : range_msgsize) cryptotest_no_threads(crypto_op, v, bench_options);
+	for(auto v : range_msgsize) cryptotest_no_threads(crypto_op, v, bench_opt);
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
