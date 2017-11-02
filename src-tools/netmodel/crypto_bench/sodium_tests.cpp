@@ -9,7 +9,7 @@
 #include <cmath>
 #include <condition_variable>
 #include <mutex>
-#include "affinity.hpp"
+#include <stdplus/affinity.hpp>
 
 // F = void(buffin*, buffout*, buffin_size, buffout_size) F have to be thread-safe
 
