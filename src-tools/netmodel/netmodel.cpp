@@ -409,6 +409,14 @@ TT get_from_cmdline(const string & name, t_mycmdline &cmdline, TT def) {
 	return the_val;
 }
 
+void cryptotes_main(std::vector<std::string> options) {
+	_note("Testing crypto");
+
+	// https://download.libsodium.org/doc/advanced/poly1305.html
+
+
+
+}
 
 void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Starting " << __FUNCTION__ << " with " << options.size() << " arguments");
@@ -1082,9 +1090,19 @@ int netmodel_main(int argc, const char **argv) {
 	crypto::init();
 	std::vector< std::string> options;
 	for (int i=1; i<argc; ++i) options.push_back(argv[i]);
+	enum class t_testmode { e_testmode_net, e_testmode_crypto } testmode = t_testmode::e_testmode_net;
 	for (const string & arg : options) if ((arg=="dbg")||(arg=="debug")||(arg=="d")) g_debug = true;
+	for (const string & arg : options) if ((arg=="onlycrypto")) testmode = t_testmode::e_testmode_crypto;
 	_goal("Starting netmodel");
-  asiotest_udpserv(options);
+	switch (testmode) {
+		case t_testmode::e_testmode_net:
+			asiotest_udpserv(options);
+		break;
+		case t_testmode::e_testmode_crypto:
+			cryptotes_main(options);
+		break;
+	}
+
 	_goal("Normal exit of netmodel");
 	return 0;
 }
