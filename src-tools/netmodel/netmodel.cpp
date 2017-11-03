@@ -539,17 +539,28 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 	uint32_t res1=0; // e.g. for counting failed verification, avoid unused var warning
 
 	const size_t msg_size = param_msg_size;
-	std::vector<unsigned char> msg_buf(msg_size);
-	std::vector<unsigned char> mac_buf(crypto_onetimeauth_BYTES);
-	std::vector<unsigned char> key_buf(crypto_onetimeauth_KEYBYTES);
-	std::fill_n( & key_buf[0], crypto_onetimeauth_KEYBYTES, 0xfd);
+	std::vector<unsigned char> msg_buf;
+	std::vector<unsigned char> two_buf;
+	std::vector<unsigned char> key_buf;
+	std::vector<unsigned char> nonce_buf;
 
 	auto crypto_func_auth = [&]() {
-		crypto_onetimeauth( & mac_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
+		crypto_onetimeauth( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
 	};
 	auto crypto_func_veri = [&]() {
-		if (0 != crypto_onetimeauth_verify( & mac_buf[0], & msg_buf[0], msg_size, & key_buf[0])) ++res1;
+		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0])) ++res1;
 	};
+
+	// https://download.libsodium.org/doc/advanced/salsa20.html
+	auto crypto_func_encr = [&]() {
+		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+	};
+	auto crypto_func_decr = [&]() { // yeap it's identical to encrypt
+		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+	};
+
+	// TODO
+	// https://download.libsodium.org/doc/secret-key_cryptography/authenticated_encryption.html
 
 	double speed_gbps = 0;
 	std::string func_name="unknown_crypto";
@@ -557,17 +568,44 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 	switch (crypto_op) {
 		case -10:
 		{
-			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
 			func_name = "auth_poly1305";
-			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, mac_buf, key_buf);
+			msg_buf.resize(msg_size, 0x00);
+			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
+			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
+			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}
 		break;
 		case -11:
 		{
-			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			func_name = "veri_poly1305";
-			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, mac_buf, key_buf);
+			msg_buf.resize(msg_size, 0x00);
+			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
+			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
+			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}
+		case -12:
+		{
+			func_name = "encrypt_salsa20";
+			msg_buf.resize(msg_size, 0x00);
+			two_buf.resize(msg_size, 0x00);
+			nonce_buf.resize(crypto_stream_salsa20_NONCEBYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
+			c_crypto_benchloop<decltype(crypto_func_encr),false,1> benchloop(crypto_func_encr);
+			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
+		}
+		case -13:
+		{
+			func_name = "decrypt_salsa20";
+			msg_buf.resize(msg_size, 0x00);
+			two_buf.resize(msg_size, 0x00);
+			nonce_buf.resize(crypto_stream_salsa20_NONCEBYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
+			c_crypto_benchloop<decltype(crypto_func_decr),false,1> benchloop(crypto_func_decr);
+			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
+		}
+		break;
 		break;
 		default: throw runtime_error("Unknown crypto_op");
 	}
