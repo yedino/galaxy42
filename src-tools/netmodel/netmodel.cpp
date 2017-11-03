@@ -441,9 +441,18 @@ namespace xorshf96 {
 inline uint32_t pseudo_random() {	return xorshf96::get_value(); }
 
 struct t_crypt_opt {
-	int quality=1; // more samples. E.g. value 10 should be around 10 times longer and so on
-	int modify_data=1; // should we modify data that we run in loop; 0=no, same data  1=modify a little
+	uint32_t loops; // longer loops. E.g. value 10 bigger should be around 10 times longer and so on
+	uint32_t samples; // more samples - more tests. then mediana can be calculated over them
+
+	int modify_data; // should we modify data that we run in loop; 0=no, same data  1=modify a little
+
+	t_crypt_opt();
 };
+t_crypt_opt::t_crypt_opt() {
+	loops = 10;
+	samples = 10;
+	modify_data = 1;
+}
 
 using t_bytes = std::vector<unsigned char>; ///< shortcut for: typical unsigned char network/crypto buffer, runtime size
 using t_hash_random_state = char[4]; ///< using part of crypto hash (of cyphertext) as random bytes for 0-cost random generator
@@ -495,20 +504,24 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 ::run_test_3buf(const t_crypt_opt bench_opt, t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf)
 {
 	uint32_t msg_buf_size =  msg_buf.size(), two_buf_size = two_buf.size(), key_buf_size = key_buf.size();
-	const uint32_t test_repeat = std::max<uint32_t>(30, (bench_opt.quality * 50*1000*1000) / msg_buf_size );
+	const uint32_t test_repeat = std::max<uint32_t>(50, (bench_opt.loops * 10*1000*1000) / msg_buf_size );
 	auto test_repeat_point1 = (test_repeat / 5); // run that many iterations as warmup
 	_info("Running tests count: " << test_repeat << " minus warmup: " << test_repeat_point1);
 
-	t_hash_random_state hash_state; // we use results of crypot as pseudo random function - this is it's state
-	std::fill_n( & hash_state[0] , 4 , 0x00);
+	vector<double> result_tab;
+	for (uint32_t sample=0; sample < bench_opt.samples; ++sample) {
+		t_hash_random_state hash_state; // we use results of crypot as pseudo random function - this is it's state
+		std::fill_n( & hash_state[0] , 4 , 0x00);
 
-	for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
-		if (test_repeat_nr == test_repeat_point1) m_time_started = std::chrono::steady_clock::now(); // ! [timer]
-		this->modify_buffers(bench_opt, hash_state, msg_buf, msg_buf_size, two_buf, two_buf_size, key_buf, key_buf_size);
-		this->m_test_fun(); // ***
-		std::copy_n( & two_buf[0] , 4 , & hash_state[0]); // use crypto result as random
+		for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
+			if (test_repeat_nr == test_repeat_point1) m_time_started = std::chrono::steady_clock::now(); // ! [timer]
+			this->modify_buffers(bench_opt, hash_state, msg_buf, msg_buf_size, two_buf, two_buf_size, key_buf, key_buf_size);
+			this->m_test_fun(); // ***
+			std::copy_n( & two_buf[0] , 4 , & hash_state[0]); // use crypto result as random
+		}
+		result_tab.push_back( time_finish( msg_buf_size * (test_repeat - test_repeat_point1) ) );
 	}
-	return time_finish( static_cast<size_t>(msg_buf_size) * static_cast<size_t>(test_repeat - test_repeat_point1) );
+	return mediana( result_tab );
 }
 
 template<typename F, bool allow_mt, size_t max_threads_count>
@@ -549,7 +562,7 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, mac_buf, key_buf);
 		}
 		break;
-		case -20:
+		case -11:
 		{
 			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			func_name = "veri_poly1305";
@@ -566,6 +579,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	// https://download.libsodium.org/doc/advanced/poly1305.html
 
 	t_crypt_opt bench_opt;
+	const t_crypt_opt bench_opt_def; // defaults
 
 	t_mycmdline mycmdline;
 	for (const string & arg : options) mycmdline.add(arg);
@@ -573,7 +587,8 @@ void cryptotest_main(std::vector<std::string> options) {
 	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
 	UNUSED(func_cmdline);
 
-	bench_opt.quality = func_cmdline_def("quality",1);
+	bench_opt.loops = func_cmdline_def("loops", bench_opt_def.loops);
+	bench_opt.samples = func_cmdline_def("samples", bench_opt_def.samples);
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
 	int crypto_op = func_cmdline_def("crypto",-10); // crypto op, see source of cryptotest_* functions
@@ -585,21 +600,31 @@ void cryptotest_main(std::vector<std::string> options) {
 		range_msgsize.insert( opt_range_one );
 	}
 
-	if (opt_range_kind==1) {
+	if (opt_range_kind>=1) {
+		range_msgsize.insert(64);
+		range_msgsize.insert(128);
+		range_msgsize.insert(512);
+		range_msgsize.insert(1472);
+		range_msgsize.insert(8960);
+		range_msgsize.insert(140*64 *2); // 35840 = 2 jumbo
+		range_msgsize.insert(140*64 *4); // 35840 = 4 jumbo
+		range_msgsize.insert(65536);
+	}
+	if (opt_range_kind>=2) {
 		for (uint32_t i=16;    i<=1500; i+=16) { auto v=i; range_msgsize.insert( v ); }
 		for (uint32_t i=1500; i<=9000; i+=16) { auto v=(i/16)*16;  range_msgsize.insert( v ); }
 		for (uint32_t i=9000; i<=32000; i+=128) { auto v=(i/64)*64; range_msgsize.insert( v ); }
 		for (uint32_t i=32000; i<=64000; i+=1024) { auto v=(i/64)*64; range_msgsize.insert( v ); }
 		for (uint32_t i=64000; i<=1024*1024*8; i+=1024*512) { auto v=(i/1024)*1024; range_msgsize.insert( v ); }
 	}
-	else if (opt_range_kind==2) {
+	if (opt_range_kind>=3) {
 		for (uint32_t i=16;    i<=1500; ++i) { auto v=i; range_msgsize.insert( v ); }
 		for (uint32_t i=1500; i<=9000; i+=8) { auto v=(i/16)*16;  range_msgsize.insert( v ); }
 		for (uint32_t i=9000; i<=32000; i+=128) { auto v=(i/64)*64; range_msgsize.insert( v ); }
 		for (uint32_t i=32000; i<=64000; i+=256) { auto v=(i/64)*64; range_msgsize.insert( v ); }
 		for (uint32_t i=64000; i<=1024*1024*8; i+=1024*128) { auto v=(i/1024)*1024; range_msgsize.insert( v ); }
 	}
-	else if (opt_range_kind==3) {
+	if (opt_range_kind>=4) {
 		for (uint32_t i=16;    i<=64000; ++i) { auto v=i; range_msgsize.insert( v ); }
 	}
 
