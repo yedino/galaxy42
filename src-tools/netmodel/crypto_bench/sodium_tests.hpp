@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sodium.h>
 #include <algorithm>
+#include <numeric>
 #include <vector>
 #include <thread>
 #include <fstream>
