@@ -47,7 +47,13 @@ TFloat corrected_avg(std::vector<TFloat> tab) {
 
 	//	std::cerr<<"Avg from "<<pos1<<" to " <<pos2 << " len="<<len<<" size="<<size<<std::endl;
 
-	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , 0 ) / len;
+	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , static_cast<TFloat>(0) ) / len;
+}
+
+template<typename TFloat>
+TFloat average(std::vector<TFloat> tab) {
+	auto acc = std::accumulate( tab.begin() , tab.end() , static_cast<TFloat>(0) );
+	return acc / TFloat(tab.size());
 }
 
 /// simple time value

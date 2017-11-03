@@ -437,21 +437,32 @@ namespace xorshf96 {
 		z = t ^ x ^ y;
 		return z;
 	}
-};
+}
 inline uint32_t pseudo_random() {	return xorshf96::get_value(); }
 
 struct t_crypt_opt {
-	uint32_t loops; // longer loops. E.g. value 10 bigger should be around 10 times longer and so on
-	uint32_t samples; // more samples - more tests. then mediana can be calculated over them
+	uint32_t loops; ///< longer loops. E.g. value 10 bigger should be around 10 times longer and so on
+	uint32_t samples; ///< more samples - more tests. then mediana can be calculated over them
 
-	int modify_data; // should we modify data that we run in loop; 0=no, same data  1=modify a little
+	int modify_data; ///< should we modify data that we run in loop; 0=no, same data  1=modify a little
+
+	int threads; ///< how many threads to use. -1 means autodetect number of cores
 
 	t_crypt_opt();
+
+	void calculate();
 };
 t_crypt_opt::t_crypt_opt() {
 	loops = 10;
 	samples = 10;
 	modify_data = 1;
+	threads = -1;
+}
+
+void t_crypt_opt::calculate() {
+	if (threads == -1) {
+		threads = std::thread::hardware_concurrency();
+	}
 }
 
 using t_bytes = std::vector<unsigned char>; ///< shortcut for: typical unsigned char network/crypto buffer, runtime size
@@ -476,14 +487,15 @@ class c_crypto_benchloop {
 		double run_test_4buf(const t_crypt_opt bench_opt, t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf);
 
 	private:
-    const F m_test_fun;
-		std::chrono::time_point<std::chrono::steady_clock> m_time_started;
-		double time_finish(size_t bytes_transferred); ///< return speed, looking at passed time, for given amount of bytes done
+    const F m_test_fun; ///< the function to be tested
+
+		/// return speed, looking at passed time, for given amount of bytes done
+		double time_finish(size_t bytes_transferred, std::chrono::time_point<std::chrono::steady_clock> time_started);
 
 		void modify_buffers(const t_crypt_opt & bench_opt, t_hash_random_state & state,
-			t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3);
+			t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3) const;
 		void modify_buffers(const t_crypt_opt & bench_opt, t_hash_random_state & state,
-			t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3, t_bytes & buf4, size_t size4);
+			t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3, t_bytes & buf4, size_t size4) const;
 };
 
 template<typename F, bool allow_mt, size_t max_threads_count>
@@ -495,7 +507,7 @@ c_crypto_benchloop<F, allow_mt, max_threads_count>
 template<typename F, bool allow_mt, size_t max_threads_count>
 void c_crypto_benchloop<F, allow_mt, max_threads_count>
 ::modify_buffers(const t_crypt_opt & bench_opt, t_hash_random_state & state,
-	t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3) {
+	t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3) const {
 	modify_buffers(bench_opt,state, buf1,size1, buf2,size2, buf3,size3, buf3,0);
 }
 
@@ -503,6 +515,7 @@ template<typename F, bool allow_mt, size_t max_threads_count>
 void c_crypto_benchloop<F, allow_mt, max_threads_count>
 ::modify_buffers(const t_crypt_opt & bench_opt, t_hash_random_state & state,
 	t_bytes & buf1, size_t size1, t_bytes & buf2, size_t size2, t_bytes & buf3, size_t size3, t_bytes & buf4, size_t size4)
+	const
 {
 	if (bench_opt.modify_data) {
 		buf1[ state[0] % size1 ] = state[1];
@@ -520,6 +533,88 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 	return run_test_4buf(bench_opt, msg_buf, two_buf, key_buf, zero_buf);
 }
 
+/*
+
+template<typename F, size_t max_buff_size, size_t max_threads_count>
+void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::function<void(unsigned char*, unsigned char*, size_t, size_t)> init_buffer_lambda)
+{
+    std::array<size_t, max_threads_count> thread_results; //tests results from threads in ms
+    std::array<std::thread, max_threads_count> threads;
+	std::array<std::condition_variable, max_threads_count> thread_cv;
+	std::array<bool, max_threads_count> thread_ready_flag;
+	std::condition_variable trigger_cv; // if notifyed all threads starts
+	std::mutex thread_mutex;
+	bool threads_started = false; // protected by thread_mutex
+    constexpr size_t iterations = 1000000;
+
+    auto thread_lambda = [&init_buffer_lambda, &thread_results, &iterations, this, &thread_cv, &thread_mutex, &threads_started, &trigger_cv, &thread_ready_flag]
+	(size_t buff_size, size_t return_array_index) {
+        try {
+            stdplus::affinity::set_current_thread_affinity(return_array_index % 8);
+        }
+        catch (const std::exception & ex) {
+            std::cerr << "Can not set CPU: " << ex.what();
+        }
+
+        std::vector<unsigned char> inbuff(buff_size);
+        std::vector<unsigned char> outbuff(buff_size);
+        init_buffer_lambda(inbuff.data(), outbuff.data(), buff_size, buff_size);
+
+		std::unique_lock<std::mutex> lg(thread_mutex);
+		thread_ready_flag.at(return_array_index) = true;
+		thread_cv.at(return_array_index).notify_all(); // i am readry to work
+		trigger_cv.wait(lg, [&threads_started]{return threads_started;}); // wait for start
+
+        auto start_point = std::chrono::steady_clock::now();
+        for (size_t j=0; j<iterations; j++)
+        {
+            m_test_fun(inbuff.data(), outbuff.data(), buff_size, max_buff_size);
+        }
+        auto end_point = std::chrono::steady_clock::now();
+        thread_results.at(return_array_index) = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - start_point).count();
+    };
+
+
+    for (size_t ii=4096; ii < max_buff_size;) // iterate through buffer size
+    {
+        //for (size_t threads_count=0; threads_count<max_threads_count; threads_count++) // iterate through threads count
+        {
+            size_t threads_count = 8;
+            thread_results.fill(0);
+			thread_ready_flag.fill(false); // all threads are not ready
+            for (size_t j=0; j<=threads_count; j++) // iterate through threads count
+            {
+                threads.at(j) = std::move(std::thread(thread_lambda, i, j));
+            }
+
+			for (size_t j=0; j<=threads_count; j++) { // waiting for all threads
+				std::unique_lock<std::mutex> lg(thread_mutex);
+				thread_cv.at(j).wait(lg, [&thread_ready_flag, &j]{return thread_ready_flag.at(j);});
+			}
+
+			{ // run all threads
+				std::unique_lock<std::mutex> lg(thread_mutex);
+				threads_started = true;
+			}
+			trigger_cv.notify_all();
+
+
+            for (size_t j=0; j<=threads_count; j++) // iterate through threads count
+            {
+                threads.at(j).join();
+            }
+			threads_started = false;
+            size_t time_ms = std::accumulate(thread_results.begin(), thread_results.end(), 0);
+            m_file << i << '\t' << threads_count+1 << '\t' << (time_ms/static_cast<double>(iterations))/((threads_count+1)*(threads_count+1))<< '\n'; // buff_size threads_count time_ms
+            // threads_count+1 becouse array index starts from 0
+
+        }
+        std::cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" << i << '/' << max_buff_size << std::flush;
+    }
+}
+
+*/
+
 template<typename F, bool allow_mt, size_t max_threads_count>
 double c_crypto_benchloop<F, allow_mt, max_threads_count>
 ::run_test_4buf(const t_crypt_opt bench_opt, t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf)
@@ -528,38 +623,133 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 		keyB_buf_size = keyB_buf.size();
 	const uint32_t test_repeat = std::max<uint32_t>(50, (bench_opt.loops * 10*1000*1000) / msg_buf_size );
 	auto test_repeat_point1 = (test_repeat / 5); // run that many iterations as warmup
-	_info("Running tests count: " << test_repeat << " minus warmup: " << test_repeat_point1);
-	vector<double> result_tab;
-	for (uint32_t sample=0; sample < bench_opt.samples; ++sample) {
-		t_hash_random_state hash_state; // we use results of crypot as pseudo random function - this is it's state
-		std::fill_n( & hash_state[0] , 4 , 0x00);
-		for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
-			if (test_repeat_nr == test_repeat_point1) m_time_started = std::chrono::steady_clock::now(); // ! [timer]
-			this->modify_buffers(bench_opt, hash_state, msg_buf, msg_buf_size, two_buf, two_buf_size, key_buf, key_buf_size,
-				keyB_buf, keyB_buf_size);
-			this->m_test_fun(); // ***
-			std::copy_n( & two_buf[0] , 4 , & hash_state[0]); // use crypto result as random
+	const auto sample_end = bench_opt.samples;
+	const uint32_t worker_count = bench_opt.threads; // how many worker (threads) to use
+	_note("Testing: samples: " << sample_end << " in " << worker_count << " thread(s), "
+		<< "msg buf size="<<msg_buf_size<<"; Iterations per sample count: " << test_repeat << " minus warmup: " << test_repeat_point1);
+
+	vector<double> result_sample; // results from given samples
+
+	for (uint32_t sample=0; sample < sample_end; ++sample) {
+		std::vector<double> worker_result( worker_count , {0} ); // for each worker: speed in Gbps. Each N-th worker owns N-th element so is MT-safe-for-SUCH use (only!)
+
+		// workers notify main that they are ready:
+		uint32_t worker_ready_countdown; // how many remain and are NOT yet ready
+		std::condition_variable worker_ready_cv; // will notify via this cv
+		std::mutex worker_ready_mu; // the lock
+		// main notifies workers that it's time to start working
+		bool worker_start_flag; // should worker start working now?
+		std::condition_variable worker_start_cv; // will notify via this cv
+		std::mutex worker_start_mu; // the lock
+
+		std::vector<std::thread> worker_thread;
+
+		worker_ready_countdown = worker_count; // will need this many threads to be ready before start
+		worker_start_flag = false; // do not start yet
+
+		for (uint32_t worker_nr=0; worker_nr < worker_count; ++worker_nr) {
+			_dbg2("Spawning worker="<<worker_nr);
+			std::thread work( [
+				test_repeat_point1, test_repeat,
+				msg_buf,  msg_buf_size,
+				two_buf,  two_buf_size,
+				key_buf,  key_buf_size,
+				keyB_buf, keyB_buf_size,
+				bench_opt, // read this options
+				& worker_result // write result here
+				// start barier:
+				,worker_nr , & worker_ready_cv, & worker_ready_countdown, & worker_ready_mu,
+				& worker_start_cv, & worker_start_flag, & worker_start_mu
+				]( const decltype(this) my_this, uint32_t worker_nr ) // access this to call some thread-safe methods
+				mutable // to modify copied buffers
+				-> void
+			{
+				try {
+					t_bytes local_msg_buf  = msg_buf;
+					t_bytes local_two_buf  = two_buf;
+					t_bytes local_key_buf  = key_buf;
+					t_bytes local_keyB_buf = keyB_buf;
+					std::chrono::time_point<std::chrono::steady_clock> local_time_started;
+
+					t_hash_random_state hash_state; // we use results of crypot as pseudo random function - this is it's state
+					std::fill_n( & hash_state[0] , 4 , 0x00);
+
+					{ // send signall: worker -> main, that we're ready to start
+						std::unique_lock<std::mutex> lg( worker_ready_mu );
+						--worker_ready_countdown; // I am ready, so one less. Safe: under lock
+						lg.unlock();
+						worker_ready_cv.notify_one(); // tell main to check
+					}
+					{ // wait for main's order: worker <- main
+						std::unique_lock<std::mutex> lg( worker_start_mu );
+						worker_start_cv.wait(lg, [ & worker_start_flag ](){ return worker_start_flag; });
+					}
+
+					_dbg2("work#"<<worker_nr<<" starting iterations");
+					for (uint32_t test_repeat_nr=0; test_repeat_nr < test_repeat; ++test_repeat_nr) {
+						if (test_repeat_nr == test_repeat_point1) local_time_started = std::chrono::steady_clock::now(); // ! [timer]
+						my_this->modify_buffers(bench_opt, hash_state, local_msg_buf, msg_buf_size, local_two_buf, two_buf_size, local_key_buf, key_buf_size,
+							keyB_buf, keyB_buf_size);
+
+						my_this->m_test_fun( local_msg_buf, local_two_buf, local_key_buf, local_keyB_buf); // ***
+
+						std::copy_n( & local_two_buf[0] , 4 , & hash_state[0]); // use crypto result as random
+					} // test iteration
+					_dbg2("work#"<<worker_nr<<" done iterations");
+					auto my_speed = my_this->time_finish( msg_buf_size * (test_repeat - test_repeat_point1) , local_time_started );
+					_dbg2("work#"<<worker_nr<<" done, speed=" << my_speed);
+					worker_result.at(worker_nr) = my_speed;
+				} catch(const std::exception & ex) { _erro("Worker thread error: " << ex.what()); throw ; }
+			} // end woker lambda
+			,this , worker_nr ); // thread created
+			worker_thread.push_back( std::move(work) );
+		} // loop spawning workers
+		_info("workers are spawned");
+
+		// workers are now starting, some (or all) maybe even decreased worker_ready_countdown already
+		{
+			// waiting untill countdown is 0, checking when signalled via cv by workers
+			std::unique_lock<std::mutex> lg( worker_ready_mu );
+			worker_ready_cv.wait(lg, [ & worker_ready_countdown ](){ return worker_ready_countdown==0; });
 		}
-		result_tab.push_back( time_finish( msg_buf_size * (test_repeat - test_repeat_point1) ) );
-	}
-	return mediana( result_tab );
+
+		// tell all workers to start now
+		{
+			std::unique_lock<std::mutex> lg( worker_start_mu );
+			worker_start_flag = true;
+			lg.unlock();
+			worker_start_cv.notify_all();
+		}
+
+		_dbg1("workers started");
+		for (auto & work : worker_thread) work.join(); // wait
+		_dbg3("workers joined");
+		double speed_avg = average( worker_result );
+		result_sample.push_back( worker_count * speed_avg );
+		_dbg2("sample added: " << result_sample.back() << " speed per one: " << speed_avg );
+	} // sample
+	return mediana( result_sample );
 }
 
 
 template<typename F, bool allow_mt, size_t max_threads_count>
 double
 c_crypto_benchloop<F, allow_mt, max_threads_count>
-::time_finish(size_t bytes_transferred) {
+::time_finish(size_t bytes_transferred, std::chrono::time_point<std::chrono::steady_clock> time_started) {
 	auto end_point = std::chrono::steady_clock::now(); // [timer]
-	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - m_time_started).count() / (1000.*1000.*1000.f);
+	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - time_started).count() / (1000.*1000.*1000.f);
 	auto giga_bytes_per_second = (bytes_transferred / ellapsed) / (1000*1000*1000.f);
 	return giga_bytes_per_second * 8;
 }
 
-void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
-{
-	uint32_t res1=0; // e.g. for counting failed verification, avoid unused var warning
+void nothing() { // TODO
+	thread_local volatile bool x;
+	x=1;
 
+}
+
+void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
+{
 	const size_t msg_size = param_msg_size;
 	std::vector<unsigned char> msg_buf;
 	std::vector<unsigned char> two_buf;
@@ -567,31 +757,38 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 	std::vector<unsigned char> keyB_buf; // the other buffer, used in eg packet forwarding (verify, auth to other key)
 	std::vector<unsigned char> nonce_buf;
 
-	auto crypto_func_auth = [&]() {
+	auto crypto_func_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+		UNUSED(keyB_buf);
 		crypto_onetimeauth( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
 	};
-	auto crypto_func_veri = [&]() {
-		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0])) ++res1;
+	auto crypto_func_veri = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+		UNUSED(keyB_buf);
+		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0])) nothing();
 	};
-	auto crypto_func_veri_and_auth = [&]() {
-		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, &  key_buf[0])) ++res1; // verify incoming
+	auto crypto_func_veri_and_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+		UNUSED(keyB_buf);
+		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, &  key_buf[0])) nothing(); // verify incoming
 		// assume it was ok
 		crypto_onetimeauth       ( & two_buf[0], & msg_buf[0], msg_size, & keyB_buf[0]); // auth to other peer (keyB)
 	};
 
 	// https://download.libsodium.org/doc/advanced/salsa20.html
-	auto crypto_func_encr = [&]() {
+	auto crypto_func_encr = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
-	auto crypto_func_decr = [&]() { // yeap it's identical to encrypt
+	auto crypto_func_decr = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
+		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/secret-key_cryptography/authenticated_encryption.html
-	auto crypto_func_makebox = [&]() {
+	auto crypto_func_makebox = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+		UNUSED(keyB_buf);
 		crypto_secretbox_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
-	auto crypto_func_openbox = [&]() {
+	auto crypto_func_openbox = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+		UNUSED(keyB_buf);
 		crypto_secretbox_open_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
 
@@ -599,27 +796,23 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 	std::string func_name="unknown_crypto";
 
 	switch (crypto_op) {
-		case -10:
-		{
+		case -10:	{
 			func_name = "auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
-		}
-		break;
-		case -11:
-		{
+		} break;
+		case -11: {
 			func_name = "veri_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
-		}
-		case -12:
-		{
+		} break;
+		case -12:	{
 			func_name = "encrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
@@ -627,9 +820,8 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr),false,1> benchloop(crypto_func_encr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
-		}
-		case -13:
-		{
+		} break;
+		case -13:	{
 			func_name = "decrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
@@ -637,10 +829,8 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr),false,1> benchloop(crypto_func_decr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
-		}
-		break;
-		case -14:
-		{
+		}	break;
+		case -14:	{
 			func_name = "makebox_encrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
@@ -648,10 +838,8 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_makebox),false,1> benchloop(crypto_func_makebox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
-		}
-		break;
-		case -15:
-		{
+		} break;
+		case -15:	{
 			func_name = "openbox_decrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
 			two_buf.resize(msg_size, 0x00);
@@ -659,10 +847,8 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_openbox),false,1> benchloop(crypto_func_openbox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
-		}
-		break;
-		case -20:
-		{
+		}	break;
+		case -20:	{
 			func_name = "veri_and_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
@@ -670,11 +856,11 @@ void cryptotest_no_threads(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			keyB_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri_and_auth),false,1> benchloop(crypto_func_veri_and_auth);
 			speed_gbps = benchloop.run_test_4buf(bench_opt, msg_buf, two_buf, key_buf, keyB_buf);
-		}
-		break;
+		}	break;
 		default: throw runtime_error("Unknown crypto_op (enum)");
 	}
-	std::cout << "Speed " << func_name << " msg_size: " << msg_size << " Gbit/s: " << speed_gbps << std::endl; // output result
+	std::cout << "Testing " << func_name << " msg_size_bytes: " << msg_size << " Speed_in_Gbit_per_sec: " << speed_gbps
+		<< " threads: " << bench_opt.threads << std::endl; // output result
 }
 
 void cryptotest_main(std::vector<std::string> options) {
@@ -692,6 +878,8 @@ void cryptotest_main(std::vector<std::string> options) {
 
 	bench_opt.loops = func_cmdline_def("loops", bench_opt_def.loops);
 	bench_opt.samples = func_cmdline_def("samples", bench_opt_def.samples);
+	bench_opt.threads = func_cmdline_def("thr", bench_opt_def.samples);
+	bench_opt.calculate(); // ***
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
 	int crypto_op = func_cmdline_def("crypto",-10); // crypto op, see source of cryptotest_* functions
@@ -731,9 +919,22 @@ void cryptotest_main(std::vector<std::string> options) {
 		for (uint32_t i=16;    i<=64000; ++i) { auto v=i; range_msgsize.insert( v ); }
 	}
 
-	_goal("Will run number of tests: " << range_msgsize.size() );
+	std::set<int> range_threadcount;
+	if (bench_opt.threads == -2) { // iterate on thread counts
+		int max_threads = std::thread::hardware_concurrency() * 2;
+		for (int t=1; t<max_threads; ++t) range_threadcount.insert(t);
+	}
+	else range_threadcount.insert( bench_opt.threads );
 
-	for(auto v : range_msgsize) cryptotest_no_threads(crypto_op, v, bench_opt);
+	_goal("Will test various msg-size, count: " << range_msgsize.size() );
+	_goal("Will test various thread-count, count: " << range_threadcount.size() );
+
+	for(auto thr : range_threadcount) {
+		_clue("For thread count: " << thr);
+		auto bench_this_one = bench_opt;
+		bench_this_one.threads = thr;
+		for(auto msg_size : range_msgsize) cryptotest_mesure_one(crypto_op, msg_size, bench_this_one);
+	}
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
