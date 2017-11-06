@@ -68,7 +68,6 @@ Configuration options, set env variables:
 EOF
 }
 
-
 # --- parse options ---
 
 option_platform_windows=0
@@ -184,9 +183,6 @@ fi
 
 }
 
-
-
-
 # --- tmp dir ---
 
 my_dir="$PWD"
@@ -200,10 +196,10 @@ mkdir -p "$my_tmp" || exit
 # --- config ---
 
 # Where from get the Gitian tool itself:
-gitiansoftware_url="https://github.com/yedino/gitian-builder.git"
+gitiansoftware_url="https://github.com/devrandom/gitian-builder.git"
 #"https://github.com/devrandom/gitian-builder.git"
-     gitiansoftware_checkout="0db6c052004c51a3f163048fe2a207af0854b78e" # can be tag etc
-gitiansoftware_checkout_hash="0db6c052004c51a3f163048fe2a207af0854b78e" # must be a hash to confirm
+     gitiansoftware_checkout="a918531859ecc7d391ce37a7d7435a222c6b9af3" # can be tag etc
+gitiansoftware_checkout_hash="a918531859ecc7d391ce37a7d7435a222c6b9af3" # must be a hash to confirm
 # "ee1b69d6949810069453d5540af7a0b3ca63ea8d"
 
 gitian_suite=xenial
@@ -427,7 +423,6 @@ function target_download() {
 	printf "\n\n\n"
 }
 
-
 function string_limitlen() {
 	thestr="$1" ; elipsis="-" ;
 	l1=3 ; l2=1 ; l3=${#elipsis} ;
@@ -467,7 +462,6 @@ function gitian_show_result() {
 function gitian_run_build_once() {
 	my_banner "Building ($var_platform_name)"
 	[[ -z "${var_platform_name}" ]] && fail "Internal error: set platform name for gitian_run_build_once"
-
 
 	gitian_yml_file="main-build/galaxy-${var_platform_name}.yml" # must be under contrib/gitian-descriptors/
 	gitian_yml_file_full="$my_dir/contrib/gitian-descriptors/${gitian_yml_file}"
@@ -543,7 +537,6 @@ function gitian_run_build_all_platforms() {
 info_host=$(get_host_info)
 echo "Running on host (shortcut name): $info_host"
 
-
 function gitian_config_specific_platforms() {
 	# setting devices for ubuntu <= 14
 	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
@@ -558,7 +551,6 @@ function gitian_config_specific_platforms() {
 		fi
 	fi
 }
-
 
 function check_options_platform() {
 	if  (( ! ( option_platform_windows || option_platform_linux || option_platform_osx ) )) ; then
@@ -645,7 +637,6 @@ function run_onlyresult() {
 	set_env
 	gitian_check_net_devices "loud"
 
-
 	# this would allow to run -W, -L and -M in one program call. Not sure if that is 100% supported,
 	if (( option_platform_windows )) ; then
 		any=1
@@ -699,10 +690,6 @@ printf "\n\n%s\n\n" "Apt-cacher that should be used is detected as: ${midutils_a
 run_with_root_privilages "service" "$midutils_apt_cacher_version_name_service" "restart" || \
 	fail "Restarting apt-cacher (version: ${midutils_apt_cacher_version_name_service}."
 
-
-
 # start main:
 
 main_run_action
-
-
