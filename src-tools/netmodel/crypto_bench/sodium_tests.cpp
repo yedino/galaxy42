@@ -11,11 +11,12 @@ int sodium_tests_main() {
     }
 
     // poly auth
-    unsigned char key[crypto_onetimeauth_KEYBYTES];
-    std::fill_n(key, crypto_onetimeauth_KEYBYTES, 0xfd);
+    std::array<unsigned char, crypto_onetimeauth_KEYBYTES> key;
+	
+    std::fill_n(key.data(), crypto_onetimeauth_KEYBYTES, 0xfd);
 //     crypto_onetimeauth_keygen(key); // was introduced in libsodium 1.0.12.
     auto poly = [&key](unsigned char* buff_in, unsigned char* buff_out, size_t in_size, size_t){
-        crypto_onetimeauth(buff_out, buff_in, in_size, key);
+        crypto_onetimeauth(buff_out, buff_in, in_size, key.data());
     };
     {
         crypto_test<decltype(poly)> crypt(poly, "poly_auth_results.txt");
@@ -24,7 +25,7 @@ int sodium_tests_main() {
 
     // poly verify
     auto poly_verify = [&key](unsigned char* buff_in, unsigned char* buff_out, size_t in_size, size_t){
-        if (crypto_onetimeauth_verify(buff_out, buff_in, in_size, key) != 0) {
+        if (crypto_onetimeauth_verify(buff_out, buff_in, in_size, key.data()) != 0) {
            std::cerr << "Poly verification fail" << std::endl;
            std::abort();
         }
