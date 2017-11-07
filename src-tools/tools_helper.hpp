@@ -11,8 +11,9 @@
 
 #define DEBUG_TOOLS_HELPER 0
 
-template<typename TFloat>
-TFloat mediana(std::vector<TFloat> tab) {
+template<typename TData>
+long double mediana(std::vector<TData> tab) {
+	static_assert(std::is_arithmetic<TData>::value, "type must be floating point");
 	if (tab.size()<=0) return 0;
 	assert(tab.size()>=1);
 
@@ -26,13 +27,13 @@ TFloat mediana(std::vector<TFloat> tab) {
 		auto a = tab.at( tab.size()/2 -1 );
 		auto b = tab.at( tab.size()/2  );
 
-		return (a+b)/2.;
+		return (a+b) / static_cast<long double>(2.0);
 		// mediana odd    [10 *20 *30 40]
 	}
 }
 
-template<typename TFloat>
-TFloat corrected_avg(std::vector<TFloat> tab) {
+template<typename TData>
+long double corrected_avg(std::vector<TData> tab) {
 	auto size = tab.size();
 	if (size<=0) return 0;
 	if (size<=1) return tab.at(0);
@@ -47,13 +48,13 @@ TFloat corrected_avg(std::vector<TFloat> tab) {
 
 	//	std::cerr<<"Avg from "<<pos1<<" to " <<pos2 << " len="<<len<<" size="<<size<<std::endl;
 
-	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , static_cast<TFloat>(0) ) / len;
+	return std::accumulate( & tab.at(pos1) , & tab.at(pos2) , static_cast<long double>(0.0) ) / len;
 }
 
-template<typename TFloat>
-TFloat average(std::vector<TFloat> tab) {
-	auto acc = std::accumulate( tab.begin() , tab.end() , static_cast<TFloat>(0) );
-	return acc / TFloat(tab.size());
+template<typename TData>
+long double average(std::vector<TData> tab) {
+	auto acc = std::accumulate( tab.begin() , tab.end() , static_cast<long double>(0.0) );
+	return acc / static_cast<long double>(tab.size());
 }
 
 /// simple time value
