@@ -441,23 +441,15 @@ namespace xorshf96 {
 inline uint32_t pseudo_random() {	return xorshf96::get_value(); }
 
 struct t_crypt_opt {
-	uint32_t loops; ///< longer loops. E.g. value 10 bigger should be around 10 times longer and so on
-	uint32_t samples; ///< more samples - more tests. then mediana can be calculated over them
+	uint32_t loops=10; ///< longer loops. E.g. value 10 bigger should be around 10 times longer and so on
+	uint32_t samples=10; ///< more samples - more tests. then mediana can be calculated over them
 
-	int modify_data; ///< should we modify data that we run in loop; 0=no, same data  1=modify a little
+	int modify_data=1; ///< should we modify data that we run in loop; 0=no, same data  1=modify a little
 
-	int threads; ///< how many threads to use. -1 means autodetect number of cores
-
-	t_crypt_opt();
+	int threads=-1; ///< how many threads to use. -1 means autodetect number of cores
 
 	void calculate();
 };
-t_crypt_opt::t_crypt_opt() {
-	loops = 10;
-	samples = 10;
-	modify_data = 1;
-	threads = -1;
-}
 
 void t_crypt_opt::calculate() {
 	if (threads == -1) {
@@ -617,7 +609,9 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 					auto my_speed = my_this->time_finish( msg_buf_size * (test_repeat - test_repeat_point1) , local_time_started );
 					_dbg2("work#"<<worker_nr<<" done, speed=" << my_speed);
 					worker_result.at(worker_nr) = my_speed;
-				} catch(const std::exception & ex) { _erro("Worker thread error: " << ex.what()); throw ; }
+				}
+				catch(const std::exception & ex) { _erro("Worker thread error: " << ex.what()); }
+				catch(...) { _erro("Worker thread error (unknown)"); }
 			} // end woker lambda
 			,this , worker_nr ); // thread created
 			worker_thread.push_back( std::move(work) );
@@ -655,8 +649,8 @@ double
 c_crypto_benchloop<F, allow_mt, max_threads_count>
 ::time_finish(size_t bytes_transferred, std::chrono::time_point<std::chrono::steady_clock> time_started) {
 	auto end_point = std::chrono::steady_clock::now(); // [timer]
-	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - time_started).count() / (1000.*1000.*1000.f);
-	auto giga_bytes_per_second = (bytes_transferred / ellapsed) / (1000*1000*1000.f);
+	auto ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end_point - time_started).count() / (1000.*1000.*1000.);
+	auto giga_bytes_per_second = (bytes_transferred / ellapsed) / (1000*1000*1000.);
 	return giga_bytes_per_second * 8;
 }
 
@@ -776,7 +770,7 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			c_crypto_benchloop<decltype(crypto_func_veri_and_auth),false,1> benchloop(crypto_func_veri_and_auth);
 			speed_gbps = benchloop.run_test_4buf(bench_opt, msg_buf, two_buf, key_buf, keyB_buf);
 		}	break;
-		default: throw runtime_error("Unknown crypto_op (enum)");
+		default: throw std::invalid_argument("Unknown crypto_op (enum)");
 	}
 	std::cout << "Testing " << func_name << " msg_size_bytes: " << msg_size << " Speed_in_Gbit_per_sec: " << speed_gbps
 		<< " threads: " << bench_opt.threads << std::endl; // output result
@@ -849,6 +843,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	if (crypto_op == -100) { // special case - many crypto_op to test
 		range_crypto_op.insert(-11);
 		range_crypto_op.insert(-12);
+		_erro("NOT FULLY IMPLEMENTED YET"); // remove this warning when it's done and all crypto is here
 		// TODO
 	}
 	else range_crypto_op.insert( crypto_op ); // one op given by it's number

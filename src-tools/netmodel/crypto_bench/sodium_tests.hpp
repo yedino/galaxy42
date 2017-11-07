@@ -55,10 +55,12 @@ void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::fun
         std::vector<unsigned char> outbuff(buff_size);
         init_buffer_lambda(inbuff.data(), outbuff.data(), buff_size, buff_size);
 
+		{
 		std::unique_lock<std::mutex> lg(thread_mutex);
 		thread_ready_flag.at(return_array_index) = true;
 		thread_cv.at(return_array_index).notify_all(); // i am readry to work
 		trigger_cv.wait(lg, [&threads_started]{return threads_started;}); // wait for start
+		}
 
         auto start_point = std::chrono::steady_clock::now();
         for (size_t j=0; j<iterations; j++)
