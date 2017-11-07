@@ -666,6 +666,16 @@ void nothing() { // TODO
 
 }
 
+enum class e_crypto_test {
+	auth_poly1305 = -10,
+	veri_poly1305 = -11,
+	encrypt_salsa20 = -12,
+	decrypt_salsa20 = -13,
+	makebox_encrypt_xsalsa20_auth_poly1305 = -14,
+	openbox_decrypt_xsalsa20_auth_poly1305 = -15,
+	veri_and_auth_poly1305 = -20
+};
+
 void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
 	const size_t msg_size = param_msg_size;
@@ -847,9 +857,13 @@ void cryptotest_main(std::vector<std::string> options) {
 
 	std::set<int> range_crypto_op; // which crypto tests to run
 	if (crypto_op == -100) { // special case - many crypto_op to test
-		range_crypto_op.insert(-11);
-		range_crypto_op.insert(-12);
-		// TODO
+		// TODO: foreach enum
+		range_crypto_op.insert(static_cast<int>(e_crypto_test::auth_poly1305));
+		range_crypto_op.insert(static_cast<int>(e_crypto_test::encrypt_salsa20));
+		range_crypto_op.insert(static_cast<int>(e_crypto_test::decrypt_salsa20));
+		range_crypto_op.insert(static_cast<int>(e_crypto_test::makebox_encrypt_xsalsa20_auth_poly1305));
+		range_crypto_op.insert(static_cast<int>(e_crypto_test::openbox_decrypt_xsalsa20_auth_poly1305));
+		range_crypto_op.insert(static_cast<int>(e_crypto_test::veri_and_auth_poly1305));
 	}
 	else range_crypto_op.insert( crypto_op ); // one op given by it's number
 
@@ -868,7 +882,7 @@ void cryptotest_main(std::vector<std::string> options) {
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
-	_goal("Starting " << __FUNCTION__ << " with " << options.size() << " arguments");
+	_goal("Starting " << __func__ << " with " << options.size() << " arguments");
 	for (const auto & arg: options) _note("Arg: ["<<arg<<"]");
 	// the main "loop"
 
