@@ -32,8 +32,8 @@
        </property>
        <property name="gridSize">
         <size>
-         <width>10</width>
-         <height>10</height>
+         <width>20</width>
+         <height>20</height>
         </size>
        </property>
       </widget>

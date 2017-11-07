@@ -43,13 +43,13 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
 
     QPoint global_pos = event->globalPos();
     QAction* add_action = new QAction(QIcon(":add"), tr( "add" ),ui->listView );
-    QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "ban" ),ui->listView );
-    QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("ban all" ),ui->listView );
     QAction* remove_action = new QAction( QIcon(":delete"), tr("remove" ),ui->listView );
     QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "remove all" ),ui->listView );
-    QAction* send_massage = new QAction( tr( "send msg" ),ui->listView );
+    QAction* send_massage = new QAction( tr( "send messsage" ),ui->listView );
     QAction* ping_action = new QAction( tr( "ping" ),ui->listView );
     QAction* find_action = new QAction( tr( "find" ),ui->listView );
+    QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "ban" ),ui->listView );
+    QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("ban all" ),ui->listView );
 
     connect( add_action, SIGNAL( triggered( bool ) ), this, SLOT( addActionSlot( bool ) ) );
     connect( ban_action,SIGNAL( triggered( bool ) ), this, SLOT( banActionSlot( bool ) ) );
@@ -64,13 +64,22 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
 
     menu.addAction( add_action );
     if( m_index.isValid() ) {
-        menu.addAction( ban_action );
         menu.addAction( remove_action );
+    }
+    menu.addAction( remove_all_action );
+
+    if(m_index.isValid() ) {
         menu.addAction( send_massage );
     }
+
     menu.addAction( find_action );
+
+
+    if(m_index.isValid() ) {
+        menu.addAction( ban_action );
+    }
     menu.addAction( ban_all_action );
-    menu.addAction( remove_all_action );
+
     menu.exec( global_pos );
 
 }
