@@ -673,7 +673,12 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 	std::vector<unsigned char> two_buf;
 	std::vector<unsigned char> key_buf;
 	std::vector<unsigned char> keyB_buf; // the other buffer, used in eg packet forwarding (verify, auth to other key)
-	std::vector<unsigned char> nonce_buf;
+
+	size_t nonce_max_size = std::max(
+		std::max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
+		crypto_stream_chacha20_NONCEBYTES
+	);
+	const std::vector<unsigned char> nonce_buf( nonce_max_size , 0x00);
 
 	auto crypto_func_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
@@ -691,21 +696,21 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 	};
 
 	// https://download.libsodium.org/doc/advanced/salsa20.html
-	auto crypto_func_encr = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+	auto crypto_func_encr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
-	auto crypto_func_decr = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
+	auto crypto_func_decr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
 		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/secret-key_cryptography/authenticated_encryption.html
-	auto crypto_func_makebox = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+	auto crypto_func_makebox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_secretbox_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 	};
-	auto crypto_func_openbox = [msg_size, nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
+	auto crypto_func_openbox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0==crypto_secretbox_open_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0])) nothing();
 	};
@@ -734,7 +739,6 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			func_name = "encrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			nonce_buf.resize(crypto_stream_salsa20_NONCEBYTES, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr),false,1> benchloop(crypto_func_encr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
@@ -743,7 +747,6 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			func_name = "decrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			nonce_buf.resize(crypto_stream_salsa20_NONCEBYTES, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr),false,1> benchloop(crypto_func_decr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
@@ -752,7 +755,6 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			func_name = "makebox_encrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
-			nonce_buf.resize(crypto_stream_salsa20_NONCEBYTES, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_makebox),false,1> benchloop(crypto_func_makebox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
@@ -761,7 +763,6 @@ void cryptotest_mesure_one(int crypto_op, uint32_t param_msg_size, t_crypt_opt b
 			func_name = "openbox_decrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			nonce_buf.resize(crypto_stream_salsa20_NONCEBYTES, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_openbox),false,1> benchloop(crypto_func_openbox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
@@ -802,7 +803,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
 	int crypto_op = func_cmdline_def("crypto",-10); // crypto op, see source of cryptotest_* functions
 
-	std::set<uint32_t> range_msgsize;
+	std::set<uint32_t> range_msgsize; // run tests on which "msgsize" parameter
 
 	if (opt_range_one > 0) {
 		opt_range_kind=0;
@@ -837,21 +838,32 @@ void cryptotest_main(std::vector<std::string> options) {
 		for (uint32_t i=16;    i<=64000; ++i) { auto v=i; range_msgsize.insert( v ); }
 	}
 
-	std::set<int> range_threadcount;
+	std::set<int> range_threadcount; // run tests on which thread-count
 	if (bench_opt.threads == -2) { // iterate on thread counts
 		int max_threads = std::thread::hardware_concurrency() * 2;
 		for (int t=1; t<max_threads; ++t) range_threadcount.insert(t);
 	}
 	else range_threadcount.insert( bench_opt.threads );
 
+	std::set<int> range_crypto_op; // which crypto tests to run
+	if (crypto_op == -100) { // special case - many crypto_op to test
+		range_crypto_op.insert(-11);
+		range_crypto_op.insert(-12);
+		// TODO
+	}
+	else range_crypto_op.insert( crypto_op ); // one op given by it's number
+
 	_goal("Will test various msg-size, count: " << range_msgsize.size() );
 	_goal("Will test various thread-count, count: " << range_threadcount.size() );
+	_goal("Will test various crypto_op, count: " << range_crypto_op.size() );
 
 	for(auto thr : range_threadcount) {
 		_clue("For thread count: " << thr);
 		auto bench_this_one = bench_opt;
 		bench_this_one.threads = thr;
-		for(auto msg_size : range_msgsize) cryptotest_mesure_one(crypto_op, msg_size, bench_this_one);
+		for(auto crypto_op_current : range_crypto_op) {
+			for(auto msg_size : range_msgsize) cryptotest_mesure_one(crypto_op_current, msg_size, bench_this_one);
+		}
 	}
 }
 
