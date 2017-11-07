@@ -47,7 +47,7 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "remove all" ),ui->listView );
     QAction* send_massage = new QAction( tr( "send messsage" ),ui->listView );
     QAction* ping_action = new QAction( tr( "ping" ),ui->listView );
-    QAction* find_action = new QAction( tr( "find" ),ui->listView );
+    QAction* find_action = new QAction( tr( "discovery peer" ),ui->listView );
     QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "ban" ),ui->listView );
     QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("ban all" ),ui->listView );
 
