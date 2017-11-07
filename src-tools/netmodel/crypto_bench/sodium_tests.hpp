@@ -41,11 +41,12 @@ void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::fun
 	std::mutex thread_mutex;
 	bool threads_started = false; // protected by thread_mutex
     constexpr size_t iterations = 1000000;
+	const size_t number_of_cpu = std::thread::hardware_concurrency();
 
-    auto thread_lambda = [&init_buffer_lambda, &thread_results, &iterations, this, &thread_cv, &thread_mutex, &threads_started, &trigger_cv, &thread_ready_flag]
-	(size_t buff_size, size_t return_array_index) {
+    auto thread_lambda = [&init_buffer_lambda, &thread_results, &iterations, this, &thread_cv, &thread_mutex, &threads_started, &trigger_cv, &thread_ready_flag, &number_of_cpu]
+	(size_t buff_size, size_t return_array_index, size_t number_of_concurrent_threads) {
         try {
-            stdplus::affinity::set_current_thread_affinity(return_array_index % 8);
+            stdplus::affinity::set_current_thread_affinity(return_array_index % number_of_cpu);
         }
         catch (const std::exception & ex) {
             std::cerr << "Can not set CPU: " << ex.what();
@@ -63,7 +64,7 @@ void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::fun
 		}
 
         auto start_point = std::chrono::steady_clock::now();
-        for (size_t j=0; j<iterations; j++)
+        for (size_t j=0; j < iterations / number_of_concurrent_threads; j++)
         {
             m_test_fun(inbuff.data(), outbuff.data(), buff_size, max_buff_size);
         }
@@ -92,7 +93,7 @@ void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::fun
 			thread_ready_flag.fill(false); // all threads are not ready
             for (size_t j=0; j<=threads_count; j++) // iterate through threads count
             {
-                threads.at(j) = std::move(std::thread(thread_lambda, i, j));
+                threads.at(j) = std::thread(thread_lambda, i, j, threads_count+1);
             }
 
 			for (size_t j=0; j<=threads_count; j++) { // waiting for all threads
@@ -104,6 +105,7 @@ void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::fun
 				std::unique_lock<std::mutex> lg(thread_mutex);
 				threads_started = true;
 			}
+			auto start_point = std::chrono::steady_clock::now();
 			trigger_cv.notify_all();
 
 
@@ -111,9 +113,12 @@ void crypto_test<F, max_buff_size, max_threads_count>::test_buffer_size(std::fun
             {
                 threads.at(j).join();
             }
-			threads_started = false;
-            size_t time_ms = std::accumulate(thread_results.begin(), thread_results.end(), 0);
-            m_file << i << '\t' << threads_count+1 << '\t' << (time_ms/static_cast<double>(iterations))/((threads_count+1)*(threads_count+1))<< '\n'; // buff_size threads_count time_ms
+		auto stop_point = std::chrono::steady_clock::now();
+		threads_started = false;
+		size_t time_ms = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_point - start_point).count();
+		m_file << i << '\t' << threads_count << '\t' << time_ms/static_cast<double>(iterations) << '\n';
+            //size_t time_ms = std::accumulate(thread_results.begin(), thread_results.end(), 0);
+            //m_file << i << '\t' << threads_count+1 << '\t' << (time_ms/static_cast<double>(iterations))/((threads_count+1)*(threads_count+1))<< '\n'; // buff_size threads_count time_ms
             // threads_count+1 becouse array index starts from 0
 
         }
