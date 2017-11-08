@@ -448,6 +448,7 @@ struct t_crypt_opt {
 
 	int threads=-1; ///< how many threads to use. -1 means autodetect number of cores
 
+	t_crypt_opt() { }
 	void calculate();
 };
 
@@ -812,8 +813,13 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 		}	break;
 		default: throw std::invalid_argument("Unknown crypto_op (enum)");
 	}
-	std::cout << "Testing " << func_name << " msg_size_bytes: " << msg_size << " Speed_in_Gbit_per_sec: " << speed_gbps
-		<< " threads: " << bench_opt.threads << std::endl; // output result
+	std::cout
+		<< "Testing: " << func_name
+		<< " msg_size_bytes: " << msg_size
+		<< " Speed_in_Gbit_per_sec: " << speed_gbps
+		<< " threads: " << bench_opt.threads
+		<< " crypto_nr: " << static_cast<int>(crypto_op)
+		<< std::endl; // output result
 }
 
 void cryptotest_main(std::vector<std::string> options) {
