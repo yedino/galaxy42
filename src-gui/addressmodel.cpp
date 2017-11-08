@@ -67,11 +67,13 @@ bool addressModel::setHeaderData(int section, Qt::Orientation orientation, const
 QModelIndex addressModel::index(int row, int column, const QModelIndex &parent) const
 {
     // FIXME: Implement me!
+    return QModelIndex();
 }
 
 QModelIndex addressModel::parent(const QModelIndex &index) const
 {
     // FIXME: Implement me!
+    return QModelIndex();
 }
 
 int addressModel::rowCount(const QModelIndex &parent) const
@@ -93,6 +95,7 @@ int addressModel::columnCount(const QModelIndex &parent) const
 
 bool addressModel::hasChildren(const QModelIndex &parent) const
 {
+    return false;
     // FIXME: Implement me!
 }
 
@@ -160,6 +163,7 @@ bool addressModel::insertRows(int row, int count, const QModelIndex &parent)
     beginInsertRows(parent, row, row + count - 1);
     // FIXME: Implement me!
     endInsertRows();
+    return false;
 }
 
 bool addressModel::insertColumns(int column, int count, const QModelIndex &parent)
@@ -167,6 +171,7 @@ bool addressModel::insertColumns(int column, int count, const QModelIndex &paren
     beginInsertColumns(parent, column, column + count - 1);
     // FIXME: Implement me!
     endInsertColumns();
+    return false;
 }
 
 bool addressModel::removeRows(int row, int count, const QModelIndex &parent)
@@ -175,6 +180,7 @@ bool addressModel::removeRows(int row, int count, const QModelIndex &parent)
     m_peers.removeAt(row);
     // FIXME: Implement me!
     endRemoveRows();
+    return false;
 }
 
 bool addressModel::removeColumns(int column, int count, const QModelIndex &parent)
@@ -182,4 +188,5 @@ bool addressModel::removeColumns(int column, int count, const QModelIndex &paren
     beginRemoveColumns(parent, column, column + count - 1);
     // FIXME: Implement me!
     endRemoveColumns();
+    return false;
 }
