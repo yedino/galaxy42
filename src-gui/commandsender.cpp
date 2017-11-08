@@ -54,7 +54,7 @@ void CommandSender::sendCommand( CommandSender::orderType type )
     try {
         auto ord = prepareCommand( type );
         if (ord == nullptr) {
-            throw ("can't create order type" );
+            throw std::runtime_error("can't create order type" );
         }
         m_executor->sendNetRequest( *ord );
         m_sended->addOrder( ord,QString::fromStdString( ord->getId() ) );

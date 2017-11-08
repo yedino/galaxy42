@@ -17,7 +17,7 @@ PeerListForm::PeerListForm( QWidget *parent ) :
     peersModel * model = new peersModel( this );
     ui->listView->setModel( model );
     m_model = model;
-    m_model->sort((int)peersModel::Columns::status);
+    m_model->sort(static_cast <int >(peersModel::Columns::status));
 }
 
 PeerListForm::~PeerListForm()
@@ -48,7 +48,7 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     QAction *remove_all_action = new QAction(QIcon(":group-delete"), tr( "Remove all peers" ),ui->listView );
     QAction* send_massage = new QAction(QIcon(":letter"), tr( "Send messsage to peer" ),ui->listView );
     QAction* ping_action = new QAction( tr( "Ping" ),ui->listView );
-    QAction* find_action = new QAction(QIcon(":search"), tr( "Discovery peer" ),ui->listView );
+    QAction* find_action = new QAction(QIcon(":search"), tr( "Discover peer" ),ui->listView );
     QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "Ban peer" ),ui->listView );
     QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("Ban all peers" ),ui->listView );
 
@@ -113,14 +113,14 @@ void PeerListForm::addActionSlot( bool )
         m_model->addPeer( QString::fromStdString( peer.serialize() ) );
         emit ( addPeer( invitation ) );
 
-    m_model->sort((int)peersModel::Columns::status);
+    m_model->sort(static_cast <int >(peersModel::Columns::status));
 //    }
 }
 
 void PeerListForm::banActionSlot( bool )
 {
     qDebug()<<"ban peer";
-    QString vip = m_model->data( m_index.sibling( m_index.row(),(int)peersModel::Columns::vip ) ).toString();
+    QString vip = m_model->data( m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip ) ) ).toString();
     m_model->startActionOnIndex(m_index);
 //    m_model->ac;
     onPeerBanned(vip);			//!@todo on peer banned
@@ -132,7 +132,7 @@ void PeerListForm::removeActionSlot( bool )
     qDebug()<<"remove peer";
     m_index =getCurrentSelection();
     if( m_index.isValid() ) {
-        QModelIndex work_index = m_index.sibling( m_index.row(),(int)peersModel::Columns::vip );
+        QModelIndex work_index = m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip) );
         QString vip = m_model->data( work_index ).toString();
         m_model->startActionOnIndex(work_index);
         emit ( removePeer( vip ) ); //!@todo on peer removed
@@ -144,7 +144,7 @@ void PeerListForm::pingActionSlot( bool )
 {
     qDebug()<<"ping peer";
 
-    QString vip = m_model->data( m_index.sibling( m_index.row(),(int)peersModel::Columns::vip ) ).toString();
+    QString vip = m_model->data( m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip) ) ).toString();
     emit ( pingPeer( vip ) );
 
 }
@@ -156,7 +156,7 @@ peersModel* PeerListForm::getModel()
 
 void PeerListForm::findActionSlot( bool )
 {
-    QString vip = m_model->data( m_index.sibling( m_index.row(),(int)peersModel::Columns::vip ) ).toString();
+    QString vip = m_model->data( m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip ) ) ).toString();
     emit( findPeer( vip ) );
 }
 

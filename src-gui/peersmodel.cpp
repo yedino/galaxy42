@@ -258,7 +258,7 @@ void  peersModel::deleteOldList()
 MeshPeer* peersModel::findPeer( QString value,Columns col )
 {
     for( int i=0; i < m_peers_list.size() ; ++i ) {
-        if( data( index( i,(int)col ) ).toString() == value ) return m_peers_list.at( i );
+        if( data( index( i,static_cast <int >( col) ) ).toString() == value ) return m_peers_list.at( i );
     }
 
     throw std::runtime_error ( tr( "can't find peer" ).toStdString() );
@@ -267,7 +267,7 @@ MeshPeer* peersModel::findPeer( QString value,Columns col )
 QModelIndex peersModel::findIndex( const QString& value, Columns col )
 {
     for ( int i=0 ; i < m_peers_list.size(); ++i ) {
-        QModelIndex idx = index( i,(int)col );
+        QModelIndex idx = index( i,static_cast <int >( col) );
         if( data( idx ).toString() == value ) return idx;
     }
     return QModelIndex();
