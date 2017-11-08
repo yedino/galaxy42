@@ -1,0 +1,214 @@
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
+#include <boost/asio.hpp>
+#include <chrono>
+#include <limits>
+#include <thread>
+
+using boost::asio::ip::udp;
+using std::endl;
+
+enum { max_length = 655035 };
+
+using mysize_t = uint64_t; // size_t is too small to count some things, and overflows, e.g. on r-pi
+
+class c_maintask {
+	public:
+		c_maintask();
+
+		int run(int argc, char *argv[]);
+
+		void print_help_sendcommand();
+
+	private:
+		// asio var:
+		boost::asio::io_service io_service;
+		udp::socket mysocket;
+		udp::resolver resolver;
+		udp::endpoint endpoint;
+
+		// buffers:
+		char request[max_length];
+		mysize_t burst;
+
+		// other var:
+		mysize_t counter_sleep_no, counter_sleep_yes;
+		mysize_t packets_sent, size_sent;
+
+		std::chrono::microseconds conf_print_interval; // how often should we print stats
+		std::chrono::steady_clock::time_point time_start;
+		std::chrono::steady_clock::time_point time_print_next;
+
+		double target_speed_Mbit_sec;
+		double target_speed;
+
+		// conf:
+		char *host;
+		char *port;
+		mysize_t speed;
+		std::string message;
+		bool interactive;
+		mysize_t bytes, count, request_length;
+		bool count_infinite; // infinute count sends forever
+};
+
+c_maintask::c_maintask()
+: mysocket(io_service), resolver(io_service)
+{
+}
+
+void c_maintask::print_help_sendcommand() {
+	std::cout << "SendCommand: " << endl
+		<< "  foo 0 1    - this will send text foo (1 time)" << std::endl
+		<< "  abc 50 1000   - this will send message of letter 'a' repeated 50 times. This msg will be sent 1000 times."
+		<<std::endl;
+}
+
+int c_maintask::run(int argc, char *argv[])
+{
+	if (argc < 3) {
+		std::cout << "Usage: ./client <host> <port> <max_speed> SendCommand" << std::endl;
+		std::cout << "e.g.:  ./client <host> <port> <max_speed> <msg> <msgbytes> <count> " << std::endl;
+		std::cout << "e.g.:  ./client 127.0.0.1 9000  999000    foo   1500       -1 " << std::endl;
+		print_help_sendcommand();
+		return 1;
+	}
+	host = argv[1];
+	port = argv[2];
+	speed = std::stoi(argv[3]);
+	burst=50;
+
+	interactive=true;
+	count_infinite=false; // infinute count sends forever
+
+	if (argc >= 2+3+1) {
+		interactive=false;
+		message = argv[4];
+		bytes = atoi(argv[5]);
+		double count_exact = atof(argv[6]);
+		if (count_exact < 0) {
+			count=0; count_infinite=true;
+		}
+		else {
+			count = static_cast<decltype(count)>(count_exact);
+			count_infinite=false;
+		}
+	}
+
+	mysocket.open( udp::v4() );
+	endpoint = * resolver.resolve({udp::v4(), host, port});
+
+	std::cout << std::endl;
+
+	counter_sleep_no=0;
+	counter_sleep_yes=0;
+
+	// the main loop, mainly used for interactive mode
+	while(true) {
+
+		if (interactive) {
+			std::cout << "\n";
+			print_help_sendcommand();
+			std::cout << "Enter: message bytes count";
+			std::cout << std::endl << "-> ";
+			std::cin >> message >> bytes >> count;
+			std::cout<<"\n";
+		}
+		if (message.size() > max_length) {
+			std::cout << "too long message" << std::endl;
+			continue;
+		}
+
+		if (bytes == 0) {
+			request_length = message.size();
+			std::cout << "Using length: " << request_length << std::endl;
+			assert(request_length < max_length-1);
+			std::strncpy( request , message.c_str() , request_length);
+		}
+		else {
+			request_length = bytes;
+			assert(message.size()>=1);
+			char ch = message.at(0);
+			std::fill_n(request, request_length, ch);
+		}
+
+		std::cerr << "Sending now ";
+		if (count_infinite) std::cerr << " infinite "; else std::cerr << count;
+		std::cerr << " time(s) an UDP packet: ";
+		std::cerr << "datagram: size " << request_length << " B " << "\n";
+		// std::cerr << "request=\"" << request << "\"" << "\n";
+		std::cerr << "message=\"" << message << "\"" << "\n";
+		std::cerr << "data begins with \""
+			<< std::string(request, request + std::min(static_cast<size_t>(10),request_length))
+			<< "\"" << std::endl;
+		std::cerr << endl;
+
+		conf_print_interval = std::chrono::milliseconds(1000); // how often should we print stats
+		time_start = std::chrono::steady_clock::now();
+		time_print_next = time_start + conf_print_interval ; // when should we next time print the stats
+
+		target_speed_Mbit_sec = speed; // [MegaBit/sec]
+		target_speed = (target_speed_Mbit_sec/8); // [Byte/microSec]
+
+		packets_sent=0;
+		size_sent= 0;
+
+		auto func_done = [this](decltype(packets_sent) packets_sent) -> bool {
+			if (this->count_infinite) return false;
+			return (packets_sent >= this->count) ;
+		};
+
+		while ( ! func_done(packets_sent) ) {
+			for (mysize_t b=0; b<burst; ++b) {
+
+				auto buf = boost::asio::buffer(request, request_length); // *
+
+				// [asioflow]
+				mysocket.send_to(buf, endpoint); // ***
+
+				++packets_sent;
+				size_sent += request_length;
+				if ( func_done(packets_sent) ) break;
+			} // burst sending done
+
+			auto time_now = std::chrono::steady_clock::now();
+			double ellapsed_now =  std::chrono::duration_cast<std::chrono::microseconds>
+				( time_now - time_start ).count(); // [microSec, since start]
+			auto size_next = size_sent + burst * request_length; // [Byte] that much data will be sent after next burst
+			auto ellapsed_next = size_next / target_speed; // [microSec]
+			auto sleep_next = ellapsed_next - ellapsed_now; // [microSec]
+			if (sleep_next > 0) {
+				++counter_sleep_yes;
+				std::this_thread::sleep_for(std::chrono::microseconds( static_cast<long int>(sleep_next) ));
+			}
+			else ++counter_sleep_no;
+
+			if (time_now > time_print_next ) {
+				time_print_next = time_now + conf_print_interval ;
+				auto speed_totall_Mbit = ( (size_sent*1000.*1000.) / (ellapsed_now*1000*1000) )* 8;
+
+				std::cout << "Sent: " << packets_sent << " pck, " << size_sent << " B" << ". "
+					<< speed_totall_Mbit << " Mbit/sec "
+					<< " limit=" << target_speed_Mbit_sec << " Burst= " << burst << " pck;"
+					<< " Sleep: yes=" << counter_sleep_yes << ", no=" << counter_sleep_no
+					<< "\n"
+				;
+			}
+		}
+		if (!interactive) break;
+	}
+	return 0;
+}
+
+int main(int argc, char *argv[]) {
+	std::cout << std::setprecision(2) << std::setw(6) << std::fixed ;
+	c_maintask maintask;
+	return maintask.run(argc,argv);
+}
+
+
+
+

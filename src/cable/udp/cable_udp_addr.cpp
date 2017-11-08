@@ -11,9 +11,20 @@ c_cable_udp_addr::c_cable_udp_addr(const t_addr &endpoint)
 c_cable_udp_addr::c_cable_udp_addr(const std::string &ip_string)
 	: c_cable_base_addr(t_cable_kind::kind_udp) // filled in below
 {
-	std::pair<std::string, int> parsed = tunserver_utils::parse_ip_string(ip_string);
-	udp::endpoint endpoint(address::from_string(parsed.first), static_cast<unsigned short>(parsed.second));
-	m_addr = endpoint;
+	std::pair<std::string, int> parsed;
+	try {
+		parsed = tunserver_utils::parse_ip_string(ip_string);
+	} catch (const std::invalid_argument & ex) {
+		const string msg = "Can not parse IP string="s + ip_string + ", ("s + ex.what() +")"s;
+		_throw_error( err_check_input( msg.c_str() ));
+	}
+	try {
+		udp::endpoint endpoint(address::from_string(parsed.first), static_cast<unsigned short>(parsed.second));
+		m_addr = endpoint;
+	} catch (const boost::system::error_code & ex) {
+		const string msg = "Bad endpoint="s + ip_string + ", ("s + ex.message() +")"s;
+		_throw_error( err_check_input( msg.c_str() ));
+	}
 }
 
 unique_ptr<c_cable_base_addr> c_cable_udp_addr::clone() const { ///< polymorphic clone

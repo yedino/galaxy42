@@ -13,6 +13,8 @@
 #include <thread>
 #include <vector>
 #include <sodium.h> // for sha512 key size e.g. crypto_auth_hmacsha512_KEYBYTES
+#include <xint.hpp>
+#include <json.hpp>
 
 /**
  * @brief The c_rpc_sever class
@@ -34,7 +36,7 @@ class c_rpc_server final {
 		 * @brief add_rpc_function
 		 * @param function must be thread safe(will be called from another thread)
 		 */
-		void add_rpc_function(const std::string &rpc_function_name, std::function<std::string(const std::string &)> &&function);
+		void add_rpc_function(const std::string &rpc_function_name, std::function<nlohmann::json(const std::string &)> &&function);
 	private:
 		class c_session;
 		boost::asio::io_service m_io_service;
@@ -43,8 +45,10 @@ class c_rpc_server final {
 		std::thread m_thread;
 		Mutex m_session_vector_mutex;
 		std::list<c_session> m_session_list;
-		std::map<std::string, std::function<std::string(const std::string)>> m_rpc_functions_map;
+		Mutex m_rpc_functions_map_mutex;
+		std::map<std::string, std::function<nlohmann::json(const std::string)>> m_rpc_functions_map GUARDED_BY(m_rpc_functions_map_mutex);
 		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key, shold be loaded from conf file TODO
+		xint m_session_counter = 0;
 
 		void accept_handler(const boost::system::error_code &error);
 		void remove_session_from_vector(std::list<c_session>::iterator it);
@@ -53,7 +57,8 @@ class c_rpc_server final {
 			public:
 				c_session(c_rpc_server *rpc_server_ptr,
 				                boost::asio::ip::tcp::socket &&socket,
-				                const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key);
+				                const std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> &hmac_key,
+				                xint session_id);
 				c_session(c_session &&) = delete;
 				c_session & operator = (c_session && other) = delete;
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
@@ -66,7 +71,10 @@ class c_rpc_server final {
 				std::array<unsigned char, 2> m_data_size; // always first 2 bytes of packet == message size
 				std::array<unsigned char, crypto_auth_hmacsha512_BYTES> m_hmac_authenticator;
 				std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key
+				const xint m_session_id;
+				xint m_rpc_command_counter = 499; // next command will have number 500
 
+				std::string get_command_id();
 				void read_handler_size(const boost::system::error_code &error, std::size_t bytes_transferred); ///< data readed to m_read_data_size
 				void read_handler_data(const boost::system::error_code &error, std::size_t bytes_transferred);
 				void read_handler_hmac(const boost::system::error_code &error, std::size_t bytes_transferred);

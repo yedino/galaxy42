@@ -23,7 +23,7 @@ void t_peer_reference_newloop::print(ostream &ostr) const{
 			}
 		}
 	}
-	if(options.size())
+	if (options.size())
 		ostr << "\b\b";
 	ostr << '}' << endl;
 }
@@ -57,7 +57,7 @@ ostream& operator<<(ostream &ostr, const c_peer_connection & v){
 	return ostr;
 }
 
-c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple) const{
+c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_reference(const string & simple){
 	// @TODO not using std::regex since it had compatibility problems. Consider using when possible (bug#J446).
 	const char separator='@', group_open='(', group_close=')';
 	const string literal_anyone = "anyone";
@@ -141,8 +141,7 @@ void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
 	m_peer.push_back( std::move( peer ) );
 }
 
-void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
-	_clue("Adding peer from simplestring=" << simple);
+unique_ptr<t_peer_reference_newloop> c_galaxysrv_peers::parse_peer_simplestring(const string & simple) {
 	t_peering_reference_parse parse = parse_peer_reference(simple); // partially parsed
 	_dbg1("Done the parse itself");
 	bool id_anyone=true;
@@ -155,7 +154,12 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 		_dbg1("There is some ID in that reference.");
 		id_anyone=false;
 		id = parse.first.at(0);
-		reference->hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , id);
+		try {
+			reference->hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , id);
+		} catch(const std::invalid_argument &ex) {
+			const string msg = "Invalid HIP address="s + id + " ("s + ex.what() + ")"s;
+			_throw_error( err_check_input(msg.c_str()) );
+		}
 	} else {
 		_dbg1("There is NO ID in that reference (anyone?)");
 		id_anyone=true;
@@ -166,9 +170,16 @@ void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
 	_note("Cables: " << cables.size());
 	for(const auto & cablestr : cables) {
 		_note("Cable: " << cablestr); // cablestr like udp:192.168.1.107:9042
-		unique_ptr<c_cable_base_addr> cable_addr = c_cable_base_addr::cable_make_addr( cablestr );
+		// this really converts the string with IP, into the parsed IP (parsed cable address):
+		unique_ptr<c_cable_base_addr> cable_addr = c_cable_base_addr::cable_make_addr( cablestr ); // *** <---
 		reference->cable_addr.push_back( std::move(cable_addr) );
 	}
+	return reference;
+}
+
+void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
+	_clue("Adding peer from simplestring=" << simple);
+	auto reference = parse_peer_simplestring( simple );
 	this->add_peer( std::move( reference ) ); // ***
 }
 

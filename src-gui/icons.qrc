@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="add">../recources/gui/icons/Add.png</file>
+        <file alias="chart-org">../recources/gui/icons/Chart-Organisation.png</file>
+        <file alias="delete">../recources/gui/icons/Delete.png</file>
+        <file alias="disconnect">../recources/gui/icons/Disconnect.png</file>
+        <file alias="dns">../recources/gui/icons/Dns.png</file>
+        <file alias="glob-telcom">../recources/gui/icons/Global-Telecom.png</file>
+        <file alias="globe-model">../recources/gui/icons/Globe-Model.png</file>
+        <file alias="grooup">../recources/gui/icons/Group.png</file>
+        <file alias="Ip-class">../recources/gui/icons/Ip-Class.png</file>
+        <file alias="key-go">../recources/gui/icons/Key-Go.png</file>
+        <file alias="ladybird">../recources/gui/icons/Ladybird.png</file>
+        <file alias="multitool">../recources/gui/icons/Multitool.png</file>
+        <file alias="setting-tool">../recources/gui/icons/Setting-Tools.png</file>
+        <file alias="status-away">../recources/gui/icons/Status-Away.png</file>
+        <file alias="status-busy">../recources/gui/icons/Status-Busy.png</file>
+        <file alias="status-offline">../recources/gui/icons/Status-Offline.png</file>
+        <file alias="status-online">../recources/gui/icons/Status-Online.png</file>
+        <file alias="question">../recources/gui/icons/Question.png</file>
+        <file alias="search">../recources/gui/icons/Magnifier.png</file>
+        <file alias="letter">../recources/gui/icons/Script-Edit.png</file>
+        <file alias="group-delete">../recources/gui/icons/Group-Delete.png</file>
+        </qresource>
+</RCC>

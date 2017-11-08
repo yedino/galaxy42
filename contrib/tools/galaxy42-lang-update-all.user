@@ -7,7 +7,7 @@ if [[ $EUID -eq 0 ]]; then
 	exit 1
 fi
 
-if [[ -z ${1+x} ]]; then
+if [[ -z $1 ]]; then
 	target="ALL"
 else
 	target="$1"
