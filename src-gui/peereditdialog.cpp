@@ -1,4 +1,5 @@
 #include <QHostAddress>
+#include <QMessageBox>
 
 #include "meshpeer.h"
 #include "peereditdialog.h"
@@ -67,7 +68,14 @@ QString PeerEditDialog::createInvitation()
 
     if( ip.size() > 0 ) {
         if( QHostAddress( ip ).protocol() != QAbstractSocket::IPv4Protocol ) {
+                QMessageBox box(tr("IP is improper"),
+                                tr("IP is improper"),
+                                QMessageBox::Warning,
+                                QMessageBox::Ok,
+                                QMessageBox::Escape,
+                                QMessageBox::NoButton);
             qDebug()<<"ip is improper";
+            box.exec();
             ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
@@ -78,7 +86,13 @@ QString PeerEditDialog::createInvitation()
 
     if( vip>0 ) {
         if( QHostAddress( vip ).protocol() != QAbstractSocket::IPv6Protocol ) {
-            qDebug()<<"vip is improper";
+
+            QMessageBox box(tr("VIP is improper"),tr("VIP is improper"),
+                                QMessageBox::Warning,
+                                QMessageBox::Ok,
+                                QMessageBox::Escape,
+                                QMessageBox::NoButton);
+            box.exec();
             ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }

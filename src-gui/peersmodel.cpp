@@ -276,6 +276,11 @@ QModelIndex peersModel::findIndex( const QString& value, Columns col )
 
 void peersModel::deletaAllPeers()
 {
+    if(m_peers_list.size() == 0){
+        qDebug()<<"nothing to remove";
+        return;
+    }
+
     beginRemoveRows( index( 0 ),0,m_peers_list.size()-1 );
     foreach ( auto it, m_peers_list ) {
         delete it;
