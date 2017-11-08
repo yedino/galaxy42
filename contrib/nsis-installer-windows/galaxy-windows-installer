@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-
 readonly galaxy42_dir="$HOME/build/galaxy42"
 readonly WRAP_DIR="$HOME/wrapped"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,10 +28,10 @@ popd || fail "popd $installer_bin_dir dir"
 rm -rf zlib
 git clone https://github.com/madler/zlib || fail "git clone"
 pushd zlib || fail
-	git checkout v1.2.8 || fail "git checkout"
+	git checkout v1.2.11 || fail "git checkout"
 
 	confirm_gitver=$(git log --format='%H' -1)
-	expected_gitrev='50893291621658f355bc5b4d450a8d06a563053d'
+	expected_gitrev='cacf7f1d4e3d44d871b605da3b647f07d718623f'
 	[[ "$confirm_gitver" == "$expected_gitrev" ]] || {
 		fail "Git verification of hash: hash is $confirm_gitver instead of expected $expected_gitrev"
 	}
@@ -50,7 +49,7 @@ printf "\n\n\nBuilding NSIS itself\n\n\n"
 rm -rf nsis
 git clone https://github.com/kichik/nsis || fail "clone NSIS"
 pushd nsis || fail
-	git checkout 430d70ce926f96949f424244c31297b5b678165e || fail "Checkout" # version with i686-w64-mingw32, waiting for v30 release
+	git checkout 25d5c2a6fd7fd0faa6a354cda4ca1a103ee184b1 || fail "Checkout" # version with i686-w64-mingw32, waiting for v30 release
 
 	export PATH="${HOME}/wrapped:${PATH}"
 
@@ -92,22 +91,21 @@ printf "\n%s\n" "WRAPPING makensis localy in $(pwd)"
 	echo "\$REAL \$@" >> "makensis_wrapped"
 	chmod +x "makensis_wrapped"
 
-
 	printf "\n\nPreparing to makensis in PWD=$PWD\n\n"
 	cp "$galaxy42_dir/contrib/nsis-installer-windows/plugins/NSIS_Service_Lib/servicelib.nsh" ./ || fail "copy nsis plugin here for use"
 	printf "\n\nRunning makensis in PWD=$PWD\n\n"
 	set -x
 
-	# generate file list that will be pushed to installer.nsi file 
+	# generate file list that will be pushed to installer.nsi file
 	"${SCRIPT_DIR}/bin/generate_nsis_filelist.sh" > tmp.out
 	sed -i '/START_FILES/r tmp.out' "${SCRIPT_DIR}/installer.nsi"
 	rm tmp.out
 
 	# download openvpn installer
-	URL="https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.2-I601.exe"
+	URL="https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.4-I601.exe"
 	wget "$URL" -P "${SCRIPT_DIR}" --no-check-certificate || fail "Can not download $URL"
-	echo "78de440bbef035cad396012e175e3fb8de4f303da0dbff4a0c071a7ae6b002610527e42601ee6c211a26d9cc6536aaf694fcdf2f9154d1db14b6f8b2d6f36de0 ${SCRIPT_DIR}/openvpn-install-2.4.2-I601.exe" | sha512sum -c || fail "The checksum was unexpected! This can be download problem, or else some hacking attempt, please verify this!"
-	mv "${SCRIPT_DIR}/openvpn-install-2.4.2-I601.exe" /home/ubuntu/build/galaxy42/contrib/nsis-installer-windows/bin/noarch/ || fail "moving openvpn-install-2.4.2-I601.exe"
+	echo "2ba52477b898663b3d88594baab145725fb327644a5a95317a176ba2c4a0fcf946c082eaaff094afcb9bc049a8b4d7ed8a9317f79d5bf04a81778c55a5adde39 ${SCRIPT_DIR}/openvpn-install-2.4.4-I601.exe" | sha512sum -c || fail "The checksum was unexpected! This can be download problem, or else some hacking attempt, please verify this!"
+	mv "${SCRIPT_DIR}/openvpn-install-2.4.4-I601.exe" /home/ubuntu/build/galaxy42/contrib/nsis-installer-windows/bin/noarch/ || fail "moving openvpn-install-2.4.4-I601.exe"
 
 	# use wrapped
 	./makensis_wrapped "$galaxy42_dir/contrib/nsis-installer-windows/installer.nsi" || fail "Makensis of our project failed"
@@ -116,4 +114,3 @@ popd
 
 # copy installer to gitian out dir (where can be accessed by host)
 cp "$galaxy42_dir/contrib/nsis-installer-windows/galaxy42_installer.exe" "/home/ubuntu/out" || fail "copy windows installer to 'out'"
-

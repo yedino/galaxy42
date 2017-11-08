@@ -26,9 +26,16 @@
 
 #include <utils/privileges.hpp> // to drop/verify before main loop
 
-constexpr int cfg_jobs_tuntap_threads = 4;
+// constexpr int cfg_jobs_tuntap_threads = 4;
+
+
+void asiotest();
 
 void c_galaxysrv::main_loop() {
+
+	asiotest();
+
+#if 0
 	_goal("\n\nMain loop (new loop)\n\n");
 
 	my_cap::verify_privileges_are_as_for_mainloop(); // confirm we are secured for the main loop
@@ -128,14 +135,17 @@ void c_galaxysrv::main_loop() {
 					size_t packet_max = cfg_max_mtu;
 					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
 
+					_dbg1("Prepare tuntap read result");
 					c_tuntap_read_result tuntap_result( // will store here result
 						weld.m_buf.get_chunk( weld.m_bufWrite , packet_max) // find empty chunk, will return it as result
 					);
 
 					// *** block here and read from tuntap ***
+					_dbg1("Tuntap - do the read...");
 					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
 						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
 						tuntap_result.src_hip, tuntap_result.dst_hip);
+					_dbg1("Read tuntap merit=" << read_size_merit);
 					if (read_size_merit == 0) _throw_error_runtime("Empty tun read");
 
 					// adjust down size to actually used part of buffer
@@ -213,6 +223,22 @@ void c_galaxysrv::main_loop() {
 
 					// what cable address to send to:
 					c_cable_base_addr const & peer_one_addr = UsePtr( m_peer.at(0)->m_reference.cable_addr.at(0) );
+					// TODO @rob: make full verification for different address prefixes like fd43
+					auto check_ipv6_prefix = [this](const c_haship_addr &addr) {
+						if (addr.at(0) != m_my_hip_prefix.at(0)) return false;
+						if (addr.at(1) != m_my_hip_prefix.at(1)) return false;
+						return true;
+					}; // lambda
+
+					const bool good_src_ipv6_prefix = check_ipv6_prefix(src_hip);
+					const bool good_dst_ipv6_prefix = check_ipv6_prefix(dst_hip);
+					if (!good_src_ipv6_prefix) {
+						_info("Bad packet src prefix");
+						continue;
+					} else if (!good_dst_ipv6_prefix) {
+						_info("Bad packet dst prefix");
+						continue;
+					}
 
 					bool fwok = true;
 					if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
@@ -256,6 +282,8 @@ void c_galaxysrv::main_loop() {
 	}
 	_fact("After joining all threads");
 	_goal("All threads joined, count=" << threads.size());
+#endif
+
 }
 
 void c_galaxysrv::start_exit() {
@@ -274,11 +302,12 @@ uint16_t c_galaxysrv::get_tuntap_mtu_current() const {
 }
 
 void c_galaxysrv::init_tuntap() {
-	m_tuntap.set_tun_parameters(get_my_hip(), 16, this->get_tuntap_mtu_default());
+	assert(m_prefix_len != -1);
+	m_tuntap.set_tun_parameters(get_my_hip(), m_prefix_len, this->get_tuntap_mtu_default());
 }
 
 // my key @new
-void c_galaxysrv::configure_mykey() {
+void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -292,6 +321,7 @@ void c_galaxysrv::configure_mykey() {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	my_IDI->set_ipv6_prefix(ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting our address HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
@@ -356,6 +386,8 @@ void c_galaxysrv::configure_mykey() {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
+	m_my_hip_prefix.at(0) = m_my_hip.at(0);
+	m_my_hip_prefix.at(1) = m_my_hip.at(1);
 }
 
 c_haship_addr c_galaxysrv::get_my_hip() const {
@@ -391,6 +423,10 @@ std::string c_galaxysrv::program_action_gen_key_simple() {
 	auto output_file = IDI_name;
 	generate_crypto::create_keys(output_file, keys, true); // ***
 	return IDI_name;
+}
+
+void c_galaxysrv::set_prefix_len(int prefix_len) {
+	m_prefix_len = prefix_len;
 }
 
 void c_galaxysrv::program_action_gen_key(const boost::program_options::variables_map & argm) {

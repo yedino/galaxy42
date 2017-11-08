@@ -126,7 +126,7 @@ const char * g_demoname_default = "route_dij";
 
 #include "utils/privileges.hpp"
 #include <boost/any.hpp>
-
+#include <galaxysrv_peers.hpp>
 
 //const char * g_the_disclaimer =
 //"*** WARNING: This is a work in progress, do NOT use this code, it has bugs, vulns, and 'typpos' everywhere! ***"; // XXX
@@ -368,19 +368,26 @@ c_tunnel_use::c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 
 using namespace std; // XXX move to implementations, not to header-files later, if splitting cpp/hpp
 
+t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
+{
+	size_t pos1 = simple.find('-');
+	if (pos1 == std::string::npos) throw std::out_of_range("");
+	string part_pip = simple.substr(0,pos1);
+	string part_hip = simple.substr(pos1+1);
+	_info("Peer pip="<<part_pip<<" hip="<<part_hip);
+	auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
+	_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
+	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
+}
+
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
-		size_t pos1 = simple.find('-');
-		if (pos1 == std::string::npos) throw std::out_of_range("");
-		string part_pip = simple.substr(0,pos1);
-		string part_hip = simple.substr(pos1+1);
-		_info("Peer pip="<<part_pip<<" hip="<<part_hip);
-		auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
-		_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
-		this->add_peer( t_peering_reference( ip_pair.first, ip_pair.second , part_hip ) );
+		t_peering_reference peering_ref = parse_peer_simplestring(simple);
+		add_peer(peering_ref);
+		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &e) {
 //		_erro("Adding peer from simplereference failed (exception): " << e.what());
@@ -388,7 +395,84 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
 		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+	}
+}
 
+void c_tunserver::add_peer_simplestring_new_format(const string &simple)
+{
+	try {
+		c_galaxysrv_peers::t_peering_reference_parse parse = c_galaxysrv_peers::parse_peer_reference(simple); // partially parsed
+		_check_input(parse.first.size() > 0);
+		_check_input(parse.second.size() > 0);
+		std::string cable = parse.second[0];
+		// udp:192.166.218.58:19042
+		auto begin = cable.find(':');
+		_check_input(begin != std::string::npos);
+		std::string ipv4_with_port = cable.substr(begin+1);
+		auto end = ipv4_with_port.find(':');
+		_check_input(end != std::string::npos);
+		std::string ipv4 = ipv4_with_port.substr(0, end);
+		t_peering_reference peering_ref(ipv4, parse.first[0]);
+		add_peer(peering_ref);
+		delete_peer_from_black_list(peering_ref.haship_addr);
+	}
+	catch (const std::exception &) {
+		throw err_check_input("Bad peer new format");
+	}
+}
+
+bool c_tunserver::delete_peer(const c_haship_addr &hip)
+{
+	_mark("delete_peer (delete only!) " << hip);
+	{
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
+		auto iter = m_peer.find(hip);
+		if (iter != m_peer.end()) {
+			m_peer.erase(iter);
+			return true;
+		}
+		return false;
+	}
+}
+
+void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
+{
+	_mark("delete peer from black list (delete only!) " << hip);
+	{
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
+		auto iter = m_peer_black_list.find(hip);
+		if (iter != m_peer_black_list.end())
+			m_peer_black_list.erase(iter);
+	}
+}
+
+bool c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
+{
+	_dbg1("Deleting peer from simplestring=" << simple);
+	try {
+		c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), simple);
+		bool peer_deleted = delete_peer(hip);
+		if (is_banned)
+			add_peer_to_black_list(hip);
+		return peer_deleted;
+	}
+	catch (const std::exception &e) {
+		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
+		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+	}
+}
+
+void c_tunserver::delete_all_peers(bool is_banned)
+{
+	_mark("delete all peers (delete only!) ");
+	{
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
+		if (is_banned)
+		{
+			for( auto &peer : m_peer)
+				m_peer_black_list.emplace(peer.first);
+		}
+		m_peer.clear();
 	}
 }
 
@@ -400,6 +484,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_tun_header_offset_ipv6(0)
 	,m_rpc_server(rpc_port)
 	,m_port(port)
+	,m_unban_if_banned(true)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
 {
@@ -409,6 +494,33 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("peer_list", [this](const std::string &input_json) {
 		return rpc_peer_list(input_json);
+	});
+	m_rpc_server.add_rpc_function("sending_test", [this](const std::string &input_json) {
+		return rpc_sending_test(input_json);
+	});
+	m_rpc_server.add_rpc_function("add_peer", [this](const std::string &input_json) {
+		return rpc_add_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("delete_peer", [this](const std::string &input_json) {
+		return rpc_delete_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("delete_all_peers", [this](const std::string &input_json) {
+		return rpc_delete_all_peers(input_json);
+	});
+	m_rpc_server.add_rpc_function("ban_peer", [this](const std::string &input_json) {
+		return rpc_ban_peer(input_json);
+	});
+	m_rpc_server.add_rpc_function("ban_all_peers", [this](const std::string &input_json) {
+		return rpc_ban_all_peers(input_json);
+	});
+	m_rpc_server.add_rpc_function("get_galaxy_ipv6", [this](const std::string &input_json) {
+		return rpc_get_galaxy_ipv6(input_json);
+	});
+	m_rpc_server.add_rpc_function("get_galaxy_new_format_reference", [this](const std::string &input_json) {
+		return rpc_get_galaxy_invitation(input_json);
+	});
+	m_rpc_server.add_rpc_function("hello", [this](const std::string &input_json) {
+		return rpc_hello(input_json);
 	});
 }
 
@@ -447,12 +559,12 @@ string c_tunserver::get_my_ipv6_nice() const {
 
 
 int c_tunserver::get_my_stats_peers_known_count() const {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	return m_peer.size();
 }
 
 // my key @deprecated (newloop)
-void c_tunserver::configure_mykey() {
+void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -467,6 +579,8 @@ void c_tunserver::configure_mykey() {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	//my_IDI->set_ipv6_prefix(ipv6_prefix);
+	my_IDI->set_ipv6_prefix(m_ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
@@ -497,6 +611,7 @@ void c_tunserver::configure_mykey() {
 
 	// save signature and IDI publickey in tunserver
 	m_my_IDI_pub = my_IDI->m_pub;
+	m_my_IDI_pub.set_ipv6_prefix(m_ipv6_prefix);
 	m_IDI_IDC_sig = IDC_IDI_signature;
 
 	// remove IDP from RAM
@@ -521,16 +636,28 @@ void c_tunserver::configure_mykey() {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
+	m_my_IDC.set_ipv6_prefix(m_ipv6_prefix);
 }
 
 // add peer
-void c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
+bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
 	_mark("add_peer (add only!) " << peer_ref );
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
-		LockGuard<Mutex> lg(m_peer_mutex);
-		m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
+		auto ret_pair = m_peer.emplace( std::make_pair( peer_ref.haship_addr ,  std::move(peering_ptr) ) );
+		return ret_pair.second;
+	}
+}
+
+void c_tunserver::add_peer_to_black_list(const c_haship_addr &hip)
+{
+	_mark("add_peer to black list (add only!) " << hip );
+	// key is unique in map
+	{
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
+		m_peer_black_list.emplace(std::move(hip));
 	}
 }
 
@@ -551,7 +678,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 	// Adding new peer peering{ peering-addr=192.168.1.108:9042 hip=hip:fd42e5ca4e2acd1354355e4e45bfe4da pub=(null)} with pubkey=pub:41:[G,M,K,a,o,0x1,e,0x1 ... w,0xF0=240,),0x1F=31]
 
 	{ // lock
-		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 
 		try {
 			_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
@@ -559,11 +686,14 @@ unique_ptr<c_haship_pubkey> && pubkey)
 
 		auto find = m_peer.find( peer_hip );
 		if (find == m_peer.end()) { // no such peer yet
-			auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
-			_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
-			peering_ptr->set_pubkey(std::move(pubkey));
-			_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
-			m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+			auto iter = m_peer_black_list.find( peer_hip );
+			if (iter == m_peer_black_list.end()) { // no such peer on black list yet
+				auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
+				_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
+				peering_ptr->set_pubkey(std::move(pubkey));
+				_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
+				m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
+			}
 		} else { // update existing
 			auto & peering_ptr = find->second;
 			peering_ptr->update_last_ping_time();
@@ -592,7 +722,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
 	c_haship_addr hip( c_haship_addr::tag_constr_by_addr_bin() , pubkey.get_ipv6_string_bin() );
-
 	auto find = m_tunnel.find(hip);
 	if (find == m_tunnel.end()) { // we don't have tunnel to him yet
 		_info("Creating a CT to HIP=" << hip);
@@ -619,12 +748,12 @@ void c_tunserver::prepare_socket() {
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
-		assert(address[1] == 0x42);
+//		assert(address[1] == 0x42);
 
 		_fact("Will configure the tun device");
 		try {
 			m_tun_device.init();
-			m_tun_device.set_ipv6_address(address, 16);
+			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
 			_fact("Done init of event manager - for this tuntap");
@@ -716,7 +845,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 }
 
 void c_tunserver::peering_ping_all_peers() {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto now = std::chrono::steady_clock::now();
 	_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
@@ -757,7 +886,7 @@ void c_tunserver::peering_ping_all_peers() {
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
 	_info("Sending a COMMAND to peers:");
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -766,9 +895,12 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 }
 
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto peer_iter = m_peer.find(addr);
-	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
+	if (peer_iter == m_peer.end()) {
+		_dbg4("this HIP is not in peers");
+		throw expected_not_found();
+	}
 	c_peering & peer = * peer_iter->second;
 	if (require_pubkey) {
 		if (! peer.is_pubkey()) _throw_error( expected_not_found_missing_pubkey() );
@@ -777,7 +909,7 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 }
 
 void c_tunserver::debug_peers() {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	if (!m_peer.size()) _fact("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
@@ -793,6 +925,7 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
 	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
+	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	if (m_peer.size() == 0) {
 		_warn("I have no peers, I can not route anywhere.");
 		return false;
@@ -804,7 +937,6 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 
 	// find c_peering to send to // TODO(r) this functionallity will be soon
 	// doubled with the route search in m_routing_manager below, remove it then
-	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
 	auto peer_it = m_peer.find(next_hip);
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
@@ -861,7 +993,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 }
 
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
-	LockGuard<Mutex> lg(m_peer_mutex);
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
 	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
@@ -890,21 +1022,22 @@ bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_ex
 	return true;
 }
 
-string c_tunserver::rpc_ping(const string &input_json) {
+nlohmann::json c_tunserver::rpc_ping(const string &input_json) {
 	_UNUSED(input_json); // TODO?
 	//Json::Value input(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "ping";
 	ret["msg"] = "pong";
-	return ret.dump();
+	ret["state"] = "ok";
+	return ret;
 }
 
-string c_tunserver::rpc_peer_list(const string &input_json) {
+nlohmann::json c_tunserver::rpc_peer_list(const string &input_json) {
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
-	UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
+	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	for (const auto &peer : m_peer) {
 		std::ostringstream oss;
 		oss << peer.second->get_pip();
@@ -922,10 +1055,200 @@ string c_tunserver::rpc_peer_list(const string &input_json) {
 	}
 	lg.unlock();
 	ret["cmd"] = "peer_list";
-	ret["msg"] = refs;
-	return ret.dump();
+	ret["peers"] = refs;
+	ret["msg"] = "ok:";
+	ret["state"] = "ok";
+	return ret;
 }
 
+nlohmann::json c_tunserver::rpc_sending_test(const string &input_json) {
+	auto input = nlohmann::json::parse(input_json);
+	auto packet_size = input["size"].get<size_t>();
+	auto packet_count = input["count"].get<size_t>();
+	c_peering_udp my_peer(t_peering_reference("127.0.0.1", m_port, m_my_hip.get_hip_as_string(true)), m_udp_device);
+	std::vector<char> packet(packet_size);
+	antinet_crypto::t_crypto_nonce nonce;
+	const auto time_start = std::chrono::steady_clock::now();
+	for (size_t i = 0; i < packet_count; i++) {
+		my_peer.send_data_udp(packet.data(), packet.size(), m_udp_device.get_socket(), m_my_hip, m_my_hip, 3, nonce);
+	}
+	const auto time_stop = std::chrono::steady_clock::now();
+	auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_stop - time_start).count();
+	nlohmann::json ret;
+	ret["cmd"] = "sending_test";
+	ret["time_ms"] = time_ms;
+	ret["speed_mbps"] = ((packet_size * packet_count) / (time_ms / 1000.)) / (1024. * 1024.);
+	ret["msg"] = "ok:";
+	ret["state"] = "ok";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_add_peer(const string &input_json) {
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	auto format = input["format"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "add_peer";
+	auto can_i_add_peer = [this](const c_haship_addr &hip) {
+		if (m_unban_if_banned) return true; // I can always add peer
+		bool is_peer_on_black_list = peer_on_black_list(hip);
+		if (is_peer_on_black_list) return false;
+		else return false;
+	}; // lambda
+
+	c_haship_addr hip;
+	try {
+		if (format == "0.1") {
+			hip = parse_peer_simplestring(peer).haship_addr;
+		}
+		else if (format == "1.0") {
+			size_t at_position = peer.find('@');
+			if (at_position == std::string::npos) throw std::invalid_argument("@ character not found");
+			auto hip_str = peer;
+			hip_str.erase(at_position);
+			hip = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), hip_str);
+		}
+		else throw std::invalid_argument("Bad format");
+
+		if (can_i_add_peer(hip)) { // peer on black list
+			if (format == "0.1") add_peer_simplestring(peer);
+			else if (format == "1.0") add_peer_simplestring_new_format(peer);
+			ret["msg"] = "ok: Peer added";
+			ret["state"] = "ok";
+		} else {
+			ret["msg"] = "failed: peer is banned and you said to not unban him";
+			ret["state"] = "blocked";
+		}
+
+	} catch(const std::exception &) {
+		ret["msg"] = "fail: Bad peer format";
+		ret["state"] = "error";
+	}
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_delete_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "delete_peer";
+	try{
+		bool peer_deleted = delete_peer_simplestring(peer, false);
+		if (peer_deleted) {
+			ret["msg"] = "ok: Peer deleted";
+			ret["state"] = "ok";
+		} else {
+			ret["msg"] = "ok: Peer not found";
+			ret["state"] = "nothing_done";
+		}
+	} catch(const std::invalid_argument &) {
+		ret["msg"] = "fail: Bad peer format";
+		ret["state"] = "error";
+	}
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_delete_all_peers(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "delete_all_peers";
+	delete_all_peers(false);
+	ret["msg"] = "ok: All peers deleted";
+	ret["state"] = "ok";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_ban_peer(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto peer = input["peer"].get<std::string>();
+	nlohmann::json ret;
+	ret["cmd"] = "ban_peer";
+	c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), peer);
+	try {
+		if (peer_on_black_list(hip)) {
+			ret["msg"] = "nothing done, peer is banned";
+			ret["state"] = "nothing_done";
+		} else {
+			delete_peer_simplestring(peer, true);
+			ret["msg"] = "ok: Peer banned";
+			ret["state"] = "ok";
+		}
+	} catch(const std::invalid_argument &) {
+		ret["msg"] = "fail: Bad peer format";
+		ret["state"] = "error";
+	}
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_ban_list(const string &input_json) {
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
+	ret["peers"] = m_peer_black_list;
+	lg.unlock();
+	ret["cmd"] = "ban_list";
+	ret["msg"] = "ok";
+	ret["state"] = "ok";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_ban_all_peers(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "ban_all_peers";
+	delete_all_peers(true);
+	ret["msg"] = "ok: All peers banned";
+	ret["state"] = "ok";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "get_galaxy_ipv6";
+	ret["ipv6"] = get_my_ipv6_nice();
+	ret["msg"] = "ok:";
+	ret["state"] = "ok";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
+{
+	auto input = nlohmann::json::parse(input_json);
+	auto ipv4_list = input["msg"].get<std::vector<std::string> >();
+	nlohmann::json ret;
+	ret["cmd"] = "get_galaxy_invitation";
+	ostringstream oss;
+	oss << get_my_ipv6_nice();
+	for (auto ipv4 : ipv4_list) {
+		oss << "@(udp:" << ipv4 << ':' << get_my_port() << ')';
+	}
+	ret["inv"] = oss.str();
+	ret["msg"] = "ok:";
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_hello(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "hello";
+	ret["state"] = "ok";
+	return ret;
+}
+
+bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
+	LockGuard<Mutex> lg(m_peer_etc_mutex);
+	auto it = m_peer_black_list.find(hip); // check if peer is on balck list
+	if (it != m_peer_black_list.end()) // peer on black list
+		return true;
+	return false;
+}
 
 void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
@@ -952,7 +1275,7 @@ void c_tunserver::event_loop(int time) {
 
 	bool was_connected=true;
 	{
-		LockGuard<Mutex> lg(m_peer_mutex);
+		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		if (! m_peer.size()) {
 			was_connected=false;
 			ui::action_info_ok(mo_file_reader::gettext("L_wait_for_connect"));
@@ -977,7 +1300,7 @@ void c_tunserver::event_loop(int time) {
 		 // std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was needeed to avoid any self-DoS in case of TTL bugs
 
 		if (!was_connected) {
-			UniqueLockGuardRW<Mutex> lg(m_peer_mutex);
+			UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 			if (m_peer.size()) { // event: conntected now
 				lg.unlock();
 				was_connected=true;
@@ -1047,11 +1370,6 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
-				try{
-					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
-				}catch(std::out_of_range&){
-					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-				}
 
 			} else {
 				_info("Using CT tunnel to send our own data");
@@ -1071,11 +1389,6 @@ void c_tunserver::event_loop(int time) {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
-				try{
-					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
-				}catch(std::out_of_range&){
-					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-				}
 			}
 			if (!was_anything_sent_from_TUN) {
 				ui::action_info_ok("Ok, we sent a packet of data from our computer through virtual network, sending seems to work.");
@@ -1087,7 +1400,6 @@ void c_tunserver::event_loop(int time) {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
-            //find_peer_by_sender_peering_addr( sender_pip ).get_stats().update_read_stats(size_read);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_note("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
@@ -1251,11 +1563,6 @@ void c_tunserver::event_loop(int time) {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
-					try{
-						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
-					}catch(std::out_of_range&){
-						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-					}
 #endif
 				}
 
@@ -1280,6 +1587,7 @@ void c_tunserver::event_loop(int time) {
 			try {
 				antinet_crypto::c_multikeys_pub his_IDI;
 				his_IDI.load_from_bin(bin_his_IDI_pub.bytes);
+				his_IDI.set_ipv6_prefix(m_ipv6_prefix);
 				antinet_crypto::c_multisign his_IDI_IDC_sig;
 				his_IDI_IDC_sig.load_from_bin(bin_his_IDI_IDC_sig.bytes);
 				antinet_crypto::c_multikeys_pub::multi_sign_verify(his_IDI_IDC_sig, bin_his_IDC_pub.bytes, his_IDI);
@@ -1287,6 +1595,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
 					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey->set_ipv6_prefix(m_ipv6_prefix);
 					_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
@@ -1295,6 +1604,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add node
 					c_haship_pubkey his_pubkey;
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( his_pubkey );
 				}
 			} catch (std::invalid_argument &) {
@@ -1354,15 +1664,9 @@ void c_tunserver::event_loop(int time) {
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
-                        //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 						_dbg1("send route response to " << sender_pip);
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
-						try{
-							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
-						}catch(std::out_of_range&){
-							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-						}
                         _note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
@@ -1403,6 +1707,7 @@ void c_tunserver::event_loop(int time) {
 					_info("GOT CORRECT REPLY - USING IT");
 
 					_warn("Cool, we got there a pubkey.");
+					pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( pubkey );
 
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost , pubkey );
@@ -1583,6 +1888,14 @@ void c_tunserver::enable_remove_peers() {
 void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
 	_info("set peer remove timeout " << timeout_seconds);
 	peer_timeout = std::chrono::seconds(timeout_seconds);
+}
+
+void c_tunserver::set_prefix_len(int prefix) {
+	m_prefix_len = prefix;
+}
+
+void c_tunserver::set_prefix(const string &prefix) {
+	m_ipv6_prefix = prefix;
 }
 
 // ------------------------------------------------------------------

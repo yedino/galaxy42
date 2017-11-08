@@ -10,6 +10,18 @@ Intended for:
 + packagers, maintainers of this project
 + power users building own versions or modding this project
 
+# Basic environment setup
+
+Run ./install.sh and set up the tools.
+
+As developer, you might add to ~/.bashrc lines to choose clang++ as compiler, or to choose given version of it,
+and line to wrap in ccache the compiler for fast recompile.
+E.g. add to ~/.bashrc :
+```
+export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang++-4.0 -E"
+export CC="ccache $CC" ; export CXX="ccache $CXX" ; export CPP="ccache $CPP"
+```
+
 # Debugging
 
 Run program (e.g. ./tunserver.elf) with option --d for debug.
@@ -58,13 +70,14 @@ and then dies.
 
 A: Program using TSAN can not be run in valgrind, use ccmake to disable TSAN flags and rebuild - when you want to run in valgrind.
 
-
 # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
 # Summary for every developer!
 
 Know the Dictionary (see below) and always use that (in code, doc, materials, bugtrackers).
 Know the Editor (below).
+
+Know the Code Style - see example in .cpp file: [[.//style_example.cpp]] (src/style_example.cpp).
 
 Use ./menu
 Possibly use [../doc/cmdline/](../doc/cmdline/) file to just use `make run`.
@@ -113,8 +126,6 @@ catch(const ex_type & ex) {}
 
 UNUSED(x); DEAD_RETURN();
 ```
-
-
 
 ```cpp
 _dbg4(X) // unorganized "removed" debug
@@ -320,7 +331,6 @@ and this throws proper tuntap_error*
 
 `[[maindoc]]` - main documentation for network protocol
 
-
 tun from tuntap - are the IP data
 tap from tuntap - are the ethernet data, including usually IP data after ethernet header
 
@@ -334,7 +344,6 @@ ipv6-merit: currently = ipv6-noaddr; Data that are are part of IPv6 and are not 
 weld: array of ipv6-merit, that are all from same src, and to same dst
 e.g. ipv6-merit are joined into a weld by the original sender, delivered e2e, and then separated by final recipient.
 they are e2e encrypted and authenticated by src to dst.
-
 
 ```
 
@@ -435,7 +444,6 @@ Does Bag need Dst (finall destination) info? No, because when Bag is handed to y
 agreement number (path number) and that implies the final destination e.g. Z.
 Data-hash is it needed? Not now, we assume it would be...
 
-
 Sidenotes:
 **1** though, the Authorization e2e must be for each bag,
 so that the finall recipient can check for each Bag is it correct - to confirm payment,
@@ -465,10 +473,8 @@ tuntap-header, ethernet-header <======================== ipv6 packet ===========
 [.......................................] (src,dst) <--- 2 buffers, one constant size
 ^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
 
-
 <================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
 <================== ipv6-merit  ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
-
 
 <============== ipv6-merit ============> <=ipv6-merit=>
 
@@ -500,7 +506,6 @@ E.g. sending merits of sizes: 160, 255, 60000, 65535, 99015, 3735928559, 160, th
 So:
 0x07 0x00 0xA0 0x00 0xFF 0xEA 0x60 0xFF 0xFF 0x00 0x00   0x00 0x01 0x82 0xC7 0x00 0x00   0xDE 0xAD 0xBE 0xEF 0x00 0xA0
 ..................................................................................
-
 
 Now zoom-out :
 
@@ -552,7 +557,6 @@ bcd for weld_50123 part 5/5, entier weld_50124, for weld_50125 part 1/3
 ddd for weld_50125 part 2/3
 ddd for weld_50125 part 3/3
 
-
 [shred-header][shred-data]
 [shred-header][shred-data]
 [shred-header][shred-data]
@@ -566,7 +570,6 @@ or else:
     1 byte - weld-shred-count,
 
 So shred-header has variable size: 1, or 4, 6 byte.
-
 
 add hashes to each weld (each can do it for his own, in parallel) :
 <=weld dst1=>+H <=weld dst3=>+H <!weld dst1 via-me!>+H   <--- via peer8
@@ -602,13 +605,9 @@ peer8 routes to dst1, dst2, dst3, dst4
 
 		CMD HH, p2p-auth;                                   c2          c3      c1       c4           various cables, but to peer8
 
-
-
 cart - shreds
 
-
 ```
-
 
 ## Developing translations
 
@@ -689,21 +688,60 @@ At the moment test suite includes:
 
 ## Our naming (in Galaxy42, Antinet, Yedino)
 
-* SIOM - `Service_IO Manager` - `asio::service_io` manager, see `asio_ioservice_manager.cpp`
+* Node - is instance of Yedino program. Usually it sends data as Yedino-P2P network, in order to allow secure end-to-end connections into other Nodes.
 
-* Hash-Node (or just "Node") - is some sort of computer system that has a Hash-IP, and usually is connected with it to some network.
-For Galaxy42, a Node will be any computer running the Galaxy42 client program.
-One computer can run several nodes at once, using e.g. network name-spaces. And that all can be run at once few times on one physical computer with help of e.g. virtual machines.
-But usually for simple use, one computer runs one Galaxy42 client program and is therefor an Hash-Node.
+* Yedino-P2P is the network protocol (secure, by default encrypted) that transports data between Yedino Nodes.
+It uses own port by default UDP 9042, can work over LAN, Internet and others.
 
-* Hash-IP or "Hash-IP address" - is a virtual IP address, that is based upon a **cryptographic hash** and is derived from some **public key**.
-Use of given Hash-IP as owner of this address (treceiving data addressed to this IP, or sending data from this IP) demands access to the associated **IP-Key-Secret**.
-Hash-IP is a **globally-unique IP** address - where can choose to be the only owner of it, and no one else have such IP even globally (though given address can potentially
-be multi-homed or shared across many users, but this is their decission).
-(This assumes that all works as expected and the used Hash function is strong enough to avoid any collisions).
+* Yedino-Virtual-IP (shortcut "Y-IP) - is the IP address that is owned by Node and that is given to virtual network card created by Node.
+This virtual IP address, that is based upon a **cryptographic hash** and is derived from some **public key**.
+Use of given Yedino-Virtual-IP as owner of this address (receiving data addressed to this IP, or sending data from this IP) requires access to the associated **IP-Key-Secret**
+which makes it secure (authenticated).
+This IP is also a **globally-unique IP** address - no other Node will have such IP even globally.
 
-* Mapped-IP - is an IP that is owned by you but that is guaranteed only in given Hash-VPN.
+* P2P-Addr - are the addresses (e.g. IP address) of underlying existing network on top of which we can build Yedino-P2P connections.
+* P2P-IP is more specific an IP address, e.g. over UDP protocol.
+
+* peer (verb) - Connect as my Peer (will send/receive Yedino-P2P data over existing regular-internet or LAN as configured to this Node)
+* Peer (noun) - Node that will send/receive Yedino packets directly from/to me
+
+* Invite - is text code that allows to connect to given Node as to Peer (to peer it).
+* Public-invite - is the short comfortable Invite. It is less private in hiding your  (some other users will see e.g. your peering IP - for example some 3rd-party Seed servers can see it)
+* Full-invite - is the long, more robust and more private (but less comfortable) version of Invite.
+It lists usually all network IPs and ports of the Node.
+If you will keep this information private then no one except Nodes you give it to will see it. E.g. it is NOT published into 3rd-party Seed servers.
+
+Suggested use in GUI/UI:
+
+"connect Peer"
+"my Full-invite"
+"my Public-invite"
+"paste invite" (paste invite given to you from the other Node)
+
+fd42 , fd43 - Yedino subnet
+fd42 - Yedino main-net
+fd44:a00a - Yedino private-net "A00A"
+fd44:a777 - Yedino private-net "A777"
+
+"allow-endpoint" (verb)  - Allow to connect into my virtIP as endpoint (send/receive data into my local servers running here)
+"allowed-endpoint" (noun)
+
+"Allow peering strangers" - all Nodes, even not added by you as Peers, can route Yedino-P2P traffic through you by default.
+Info: They can connect as your Peer (but this does NOT mean they access you as endpoint, that is another setting).
+
+"Allow endpoint connections for strangers" - all Endpoints (all Nodes) can by default access your local servers running on this computer.
+Info: all Endpoints (all Nodes, as well the Peers and others too) even not white-listed by you, are by default seen as allowed-endpoint, so they can send/receive data into my local servers running here.
+
+* Mapped-IP - (todo) is an IP that is owned by you but that is guaranteed only in given Hash-VPN.
 It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918) by admin of such Hash-VPN.
+
+* IP-Key-Secret - is the cryptographical **private key** that you use to have ownership of given Hash-IP.
+
+* IP-Key-Public - is the cryptographical **public key** that you use to have ownership of given Hash-IP.
+
+Technical details naming:
+
+* SIOM - `Service_IO Manager` - `asio::service_io` manager, see `asio_ioservice_manager.cpp`
 
 * Hash-Net - is some network of Nodes connecting to each other through each-other Hash-IP. It usually forms either Hash-VPN or Hash-Mesh.
  * Hash-Mesh - is kind of Hash-Net, where every Node can join. Usually it is desirable that such mesh can reach every other existing Hash-Mesh.
@@ -711,10 +749,6 @@ It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918
  (e.g. an admin of VPN, who assigns Mapped-IP to avoid collisions). Usually it is desirable that such mesh will NOT be used by
  any other, unauthorized Nodes.
  * Hash-VPN-1to1, or (preferred) "1to1-VPN" - is Hash-VPN in which there are only (up to) 2 Nodes connecting to each-other.
-
-* IP-Key-Secret - is the cryptographical **private key** that you use to have ownership of given Hash-IP.
-
-* IP-Key-Public - is the cryptographical **public key** that you use to have ownership of given Hash-IP.
 
 For more of technical names, see also source code file: [crypto.hpp](../src/crypto/crypto.hpp)
 
@@ -818,3 +852,10 @@ it can even cut away the "header" of armmsg
 TODO verify this with example GUI code.
 
 ```
+
+# cooperation
+Here we list some of changes/fixes proposed by us or developed here, that were later merged into other projects (e.g. into upstream projects, so we can switch to connecting them by submodule from their master instead of our fork)
+* backward-cpp PR https://github.com/bombela/backward-cpp/pull/63 git rev 7430bea233bb56edd7dd0154f0a56870d905cb0e
+* backward-cpp PR https://github.com/bombela/backward-cpp/pull/66 git rev 89b77f96b92cb808a9a52afd9138afccf93898d4
+* gitian-builder PR https://github.com/devrandom/gitian-builder/pull/130 git rev 0db6c052004c51a3f163048fe2a207af0854b78e
+* nsis PR https://github.com/kichik/nsis/pull/5 git rev a177b621001fa4ef8f6f14721c5b57ee0c2affd5

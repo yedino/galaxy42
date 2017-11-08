@@ -391,6 +391,7 @@ include_directories( build_extra )
 
 ########################### SOURCE FILES ###########################
 include_directories( src/ )
+include_directories( src-tools/netmodel/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
@@ -400,6 +401,7 @@ file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/style_example.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/g42-main.cpp)
 
 if(APPLE)
@@ -407,6 +409,9 @@ if(APPLE)
 elseif(NOT WIN32)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
+
+file(GLOB SOURCES_GROUP_TOOLS_NETMODEL src-tools/netmodel/*.cpp src-tools/netmodel/*/*.cpp
+)
 
 if(WIN32 OR CYGWIN OR MINGW)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/windows-service-wrapper)
@@ -422,10 +427,14 @@ endif()
 file(GLOB SOURCES_GROUP_RPC src/rpc/*.cpp)
 list(REMOVE_ITEM SOURCES_GROUP_RPC ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_sender.cpp)
 
-message(STATUS "Sorting sources (from GLOB)")
+file(GLOB SOURCES_API_GALAXY src/apigalaxy/*)
+
+message(STATUS "Sorting sources (from GLOB) - must be sorted for Gitian to be deterministic")
 list(SORT SOURCES_GROUP_TUNSERVER)
+list(SORT SOURCES_GROUP_TOOLS_NETMODEL)
 list(SORT SOURCES_GROUP_CRYPTO)
 list(SORT SOURCES_GROUP_RPC)
+list(SORT SOURCES_API_GALAXY)
 
 include_directories(../antinet/src/antinet_sim/)
 
@@ -454,7 +463,9 @@ endif ()
 ######################################################################
 
 ########################### TARGETS ###########################
-add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_library(apigalaxy ${SOURCES_API_GALAXY})
+
+add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 if (NOT MSVC) #TODO
 	cotire(tunserver.elf)
 endif()
@@ -463,7 +474,7 @@ set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
 	${LIB_OPTIONAL_CAPNG}
-	${MINGW_LIBRARIES} ${MSVC_LIRARIES}
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES} apigalaxy
 )
 
 target_link_libraries(tunserver.elf
@@ -478,7 +489,7 @@ target_link_libraries(tunserver.elf
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
 
-add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
+add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
 target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
 target_link_libraries(unittests.elf
 	${LIBS_COMMON}
@@ -494,7 +505,7 @@ target_link_libraries(unittests.elf
 
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
-add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 target_link_libraries(performancetests.elf
 	${LIBS_COMMON})
 
@@ -532,7 +543,7 @@ add_custom_target(Debug
 if(NOT MINGW AND NOT WIN32)
 
 	add_custom_target(run
-			COMMAND "${CMAKE_SOURCE_DIR}/rundevel.sh"
+			COMMAND "${CMAKE_BINARY_DIR}/rundevel.sh"
 			DEPENDS ./tunserver.elf
 			DEPENDS unittests.elf
 			WORKING_DIRECTORY ./)
@@ -543,13 +554,16 @@ if(NOT MINGW AND NOT WIN32)
 		COMMAND rm -f "./nocap-tunserver.elf"
 		COMMAND chmod g-wx,o-wx tunserver.elf
 		COMMAND cp tunserver.elf nocap-tunserver.elf
+		# remove and copy again scripts: run
 		COMMAND rm -f "./rundevel.sh"
-		COMMAND cp "${CMAKE_SOURCE_DIR}/rundevel.sh" "./" || echo skip
+		COMMAND cp "${CMAKE_SOURCE_DIR}/src/scripts/run/rundevel.sh" "${CMAKE_BINARY_DIR}/" || echo "Can not copy file"
+		# remove and copy again scripts: qa/run-safe
+		# remove here all files copied [[list_qa_run_safe_files]]
 		COMMAND rm -f "./run-safe-mem"
 		COMMAND rm -f "./run-safe-thread-ub"
 		COMMAND rm -f "./valgrind_log_watch"
 		COMMAND rm -f "./valgrind_with_log_kill"
-		COMMAND cp "${CMAKE_SOURCE_DIR}/qa/run-safe/*" "./" || echo skip
+		COMMAND cp "${CMAKE_SOURCE_DIR}/qa/run-safe/*" "${CMAKE_BINARY_DIR}/" || echo skip
 
 		WORKING_DIRECTORY ./)
 
