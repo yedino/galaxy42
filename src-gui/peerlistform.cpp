@@ -16,9 +16,7 @@ PeerListForm::PeerListForm( QWidget *parent ) :
     ui->setupUi( this );
     peersModel * model = new peersModel( this );
     ui->listView->setModel( model );
-//    model->sort( peersModel::Columns::name );
     m_model = model;
-//    m_model->sort();
     m_model->sort((int)peersModel::Columns::status);
 }
 
@@ -38,18 +36,21 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
 
     m_index = QModelIndex();
     if ( ui->listView->currentIndex().isValid() ) {
-        m_index = ui->listView->currentIndex();
+//        m_index = ui->listView->currentIndex();
+        m_index = getCurrentSelection();
+//        if(!m_index.isValid()) return;
     }
 
+
     QPoint global_pos = event->globalPos();
-    QAction* add_action = new QAction(QIcon(":add"), tr( "add" ),ui->listView );
-    QAction* remove_action = new QAction( QIcon(":delete"), tr("remove" ),ui->listView );
-    QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "remove all" ),ui->listView );
-    QAction* send_massage = new QAction( tr( "send messsage" ),ui->listView );
-    QAction* ping_action = new QAction( tr( "ping" ),ui->listView );
-    QAction* find_action = new QAction( tr( "discovery peer" ),ui->listView );
-    QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "ban" ),ui->listView );
-    QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("ban all" ),ui->listView );
+    QAction* add_action = new QAction(QIcon(":add"), tr( "Add peer" ),ui->listView );
+    QAction* remove_action = new QAction( QIcon(":delete"), tr("Remove peer" ),ui->listView );
+    QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "Remove all peers" ),ui->listView );
+    QAction* send_massage = new QAction( tr( "Send messsage to peer" ),ui->listView );
+    QAction* ping_action = new QAction( tr( "Ping" ),ui->listView );
+    QAction* find_action = new QAction( tr( "Discovery peer" ),ui->listView );
+    QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "Ban peer" ),ui->listView );
+    QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("Ban all peers" ),ui->listView );
 
     connect( add_action, SIGNAL( triggered( bool ) ), this, SLOT( addActionSlot( bool ) ) );
     connect( ban_action,SIGNAL( triggered( bool ) ), this, SLOT( banActionSlot( bool ) ) );
@@ -65,8 +66,8 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     menu.addAction( add_action );
     if( m_index.isValid() ) {
         menu.addAction( remove_action );
+        menu.addAction( remove_all_action );
     }
-    menu.addAction( remove_all_action );
 
     if(m_index.isValid() ) {
         menu.addAction( send_massage );
@@ -77,9 +78,9 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
 
     if(m_index.isValid() ) {
         menu.addAction( ban_action );
+        menu.addAction( ban_all_action );
     }
-    menu.addAction( ban_all_action );
-
+    ui->listView->clearSelection();
     menu.exec( global_pos );
 
 }
@@ -129,6 +130,7 @@ void PeerListForm::banActionSlot( bool )
 void PeerListForm::removeActionSlot( bool )
 {
     qDebug()<<"remove peer";
+    m_index =getCurrentSelection();
     if( m_index.isValid() ) {
         QModelIndex work_index = m_index.sibling( m_index.row(),(int)peersModel::Columns::vip );
         QString vip = m_model->data( work_index ).toString();
@@ -194,6 +196,7 @@ void PeerListForm::onPeerRemoved( const QString &vip )
         MeshPeer peer;
         peer.setVip( vip );
         m_model->confirmDeletePeer( peer );
+        ui->listView->clearSelection();
     } catch( std::exception &e ) {
         qDebug()<<e.what();
     }
@@ -208,6 +211,7 @@ void PeerListForm::addPeer( const MeshPeer & peer )
 void PeerListForm::banAllSlot( bool )
 {
     m_model->banAllPeers();
+    m_index =QModelIndex();
     emit banAll();
 }
 
@@ -215,6 +219,8 @@ void PeerListForm::deleteAllSlot( bool )
 {
 //    m_model->removeAll();
     m_model->deletaAllPeers();
+    m_index = QModelIndex();
+    ui->listView->clearSelection();
     emit deleteAll();
 }
 
@@ -225,6 +231,25 @@ void PeerListForm::on_pushButton_clicked()
 
 void PeerListForm::on_pushButton_2_clicked()
 {
-        m_index = ui->listView->currentIndex();
-        if(m_index.isValid()) removeActionSlot(true);
+    removeActionSlot(true);
+}
+
+
+QModelIndex PeerListForm::getCurrentSelection() const
+{
+    auto model = ui->listView->selectionModel();
+
+    if( !model->hasSelection() ){
+        return QModelIndex();
+    }
+
+    auto indexes = model->selectedIndexes();
+//    ui->listView->clearSelection();
+    if(indexes.size()>0){
+        if(indexes.at(0).isValid())
+            return indexes.at(0);
+        else return QModelIndex();
+
+    }else return QModelIndex();
+
 }
