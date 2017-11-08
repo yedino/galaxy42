@@ -45,10 +45,10 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     QPoint global_pos = event->globalPos();
     QAction* add_action = new QAction(QIcon(":add"), tr( "Add peer" ),ui->listView );
     QAction* remove_action = new QAction( QIcon(":delete"), tr("Remove peer" ),ui->listView );
-    QAction *remove_all_action = new QAction(QIcon(":remove"), tr( "Remove all peers" ),ui->listView );
-    QAction* send_massage = new QAction( tr( "Send messsage to peer" ),ui->listView );
+    QAction *remove_all_action = new QAction(QIcon(":group-delete"), tr( "Remove all peers" ),ui->listView );
+    QAction* send_massage = new QAction(QIcon(":letter"), tr( "Send messsage to peer" ),ui->listView );
     QAction* ping_action = new QAction( tr( "Ping" ),ui->listView );
-    QAction* find_action = new QAction( tr( "Discovery peer" ),ui->listView );
+    QAction* find_action = new QAction(QIcon(":search"), tr( "Discovery peer" ),ui->listView );
     QAction* ban_action = new QAction(QIcon(":ladybird"), tr( "Ban peer" ),ui->listView );
     QAction* ban_all_action  =new QAction(QIcon(":ladybird"), tr("Ban all peers" ),ui->listView );
 
