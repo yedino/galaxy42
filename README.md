@@ -68,9 +68,11 @@ For more details, including correct naming and **glossary**, and advanced techni
  * Basic GUI works, but is for testing from source code (is not connected to build system).
   * Connecting to RPC (not encrypted yet!).
   * Adding peers.
-* Creating netmodel (not ready yet).
- * Multi-thread.
+* Creating netmodel.
+ * Multi-thread netmodel.
+ * Multi-thread isolated crypto tests.
 * Creating utils to test network speed.
+ * Sender program, with remote RPC.
 * Deps
  * Updated external libraries.
 * Fixes
