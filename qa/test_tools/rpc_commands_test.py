@@ -29,6 +29,7 @@ rpc_commands['ban_peer'] = '{"cmd":"ban_peer", "peer":"' + peer.split('-')[1] + 
 rpc_commands['delete_all_peers'] = '{"cmd":"delete_all_peers", "state":"ok"}'
 rpc_commands['ban_all_peers'] = '{"cmd":"ban_all_peers", "state":"ok"}'
 rpc_commands['peer_list'] = '{"cmd":"peer_list","msg":"[]", "state":"ok"}'
+rpc_commands['exit'] = '{"cmd":"exit"}'
 
 def _ok(output):
     return '\033[92m{}\033[0m'.format(output)
@@ -67,11 +68,9 @@ def send_rpc_command(rpc_command):
     """
     Send rpc_command (string) to galaxy rpc server using python libs.
     """
-    print('Sending RPC command:', rpc_command)
+    print('Sending RPC command:', rpc_command, ', message:', rpc_commands[rpc_command])
     buff_size = 256*256
     msg = rpc_commands[rpc_command]
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((rpc_server, rpc_port))
     secret = bytes([0x42]*32)
     sing = hmac.new(secret, msg.encode(), hashlib.sha512).digest()
     s.send(bytes([len(msg)//256, len(msg) % 256]))
@@ -79,7 +78,6 @@ def send_rpc_command(rpc_command):
     s.send(sing)
     r = s.recv(buff_size)
     data_length = int.from_bytes(r[:2], byteorder='big')
-    s.close()
     r_sign = hmac.new(secret, r[2:data_length+2], hashlib.sha512).digest()
     if not hmac.compare_digest(r_sign, r[data_length+2:]):
         print(_fail('Response authentication fail'))
@@ -89,6 +87,8 @@ def send_rpc_command(rpc_command):
 if __name__ == "__main__":
     run_galaxy()
     time.sleep(3)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((rpc_server, rpc_port))
     if ping(peer.split('-')[1]):
         print(_ok('Ping working. It is OK'))
     else:
@@ -125,3 +125,15 @@ if __name__ == "__main__":
     else:
         print(_fail('Ping not working. add_peer command not working. It is BAD!!!'))
         sys.exit()
+    print('Response:', send_rpc_command('exit'))
+    if ping(peer.split('-')[1]):
+        print(_fail('Ping working. exit command not working. It is BAD!!!'))
+        sys.exit()
+    else:
+        print(_ok('Ping not working. add_peer command seems working. It is OK'))
+    try:
+        print('Response:', send_rpc_command('peer_list'))
+    except BrokenPipeError as ex:
+        print(ex)
+        print(_ok('Broken pipe. Tcp connection closed. It is OK'))
+    s.close()
