@@ -140,7 +140,7 @@ void MainWindow::on_connectButton_clicked() {
 
     if( ! isWorking() ) {
         QErrorMessage message( this );
-        message.showMessage( tr( "can't connect to node" ) );
+        message.showMessage( tr( "Can't connect to node." ) );
         message.exec();
         return;
     }
@@ -151,7 +151,7 @@ void MainWindow::connectToNet( QString net_id )
 {
     if( ! isWorking() ) {
         QErrorMessage message( this );
-        message.showMessage( tr( "can't connect to node" ) );
+        message.showMessage( tr( "Can't connect to node." ) );
         message.exec();
         return;
     }
@@ -326,7 +326,7 @@ void MainWindow::onAllowFriend( bool val )
     Q_UNUSED(val)
     if( ! isWorking() ) {
         QErrorMessage message( this );
-        message.showMessage( tr( "can't connect to node" ) );
+        message.showMessage( tr( "Can't connect to node." ) );
         message.exec();
         return;
     }
@@ -339,7 +339,7 @@ void MainWindow::onAllowPeer( bool val )
     Q_UNUSED(val);
     if( ! isWorking() ) {
         QErrorMessage message( this );
-        message.showMessage( tr( "can't connect to node" ) );
+        message.showMessage( tr( "Can't connect to node." ) );
         message.exec();
         return;
     }
@@ -493,11 +493,11 @@ void MainWindow::onNetConnected( bool val )
     isWorking();
     if( !val ) {
         QErrorMessage message( this );
-        message.showMessage( tr( "can't connect to node. check File ->settings" ) );
+        message.showMessage( tr( "Can't connect to node. Check File ->settings" ) );
         message.exec();
     } else {
         QMessageBox msg( this );
-        msg.setText( "connected to node" );
+        msg.setText( "Connected to node." );
         msg.exec();
     }
 }

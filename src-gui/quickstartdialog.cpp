@@ -86,14 +86,14 @@ void quickStartDialog::on_QrZoomButton_clicked()
 
 void quickStartDialog::on_whatIsVipBtn_clicked()
 {
-    QMessageBox box(QMessageBox::Information,"what's up doc tip","this is your virtual Ip");
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is your virtual IP.");
     box.exec();
 }
 
 void quickStartDialog::on_whatisFullInviteBtn_clicked()
 {
 
-    QMessageBox box(QMessageBox::Information,"what's up doc tip","this is your full invite address. You can generete QR code with it or copy/paste it manualy");
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is your full invite address.\n You can generete QR code with it or copy/paste it manualy.");
     box.exec();
 }
 
@@ -101,6 +101,6 @@ void quickStartDialog::on_whatisFullInviteBtn_clicked()
 void quickStartDialog::on_whatisPasteInv_clicked()
 {
 
-    QMessageBox box(QMessageBox::Information,"what's up doc tip","this is place to insert full invite from your friend. You scan it from QR code or set it manualy");
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is place to insert full invite from your friend. You scan it from QR code or set it manualy.");
     box.exec();
 }
