@@ -46,10 +46,10 @@
           <string>Add peer buttno</string>
          </property>
          <property name="statusTip">
-          <string/>
+          <string>Add peer</string>
          </property>
          <property name="whatsThis">
-          <string>Add peer button</string>
+          <string>Add peer</string>
          </property>
          <property name="text">
           <string/>
@@ -66,7 +66,10 @@
           <string>remove peer button</string>
          </property>
          <property name="statusTip">
-          <string>remove peer button</string>
+          <string>Remove peer</string>
+         </property>
+         <property name="whatsThis">
+          <string>Remove peer</string>
          </property>
          <property name="text">
           <string/>
