@@ -222,7 +222,7 @@ void handler_receive(const e_algo_receive algo_step, const boost::system::error_
 	c_inbuf_tab & inbuf_tab, size_t inbuf_nr,
 	std::mutex & mutex_handlerflow_socket)
 {
-	if (!! ec) {
+        if (!! ec) {		//converting to bool
 		_note("Handler hit error, ec="<<ec.message());
 		return;
 	}

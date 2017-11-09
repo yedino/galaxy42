@@ -35,7 +35,6 @@ MainWindow::MainWindow( QWidget *parent ) :
     connect( ui->quickStart, SIGNAL( allowFriend( bool ) ),this,SLOT( onAllowFriend( bool ) ) );
     connect( ui->quickStart, SIGNAL( allowStranger( bool ) ),this,SLOT( onAllowPeer( bool ) ) );
 
-
     connect( ui->peerListWidget_2,SIGNAL( addPeer( QString ) ),this,SLOT( onAddPeer( QString ) ) );
     connect( ui->peerListWidget_2,SIGNAL( removePeer( QString ) ),this,SLOT( onRemovePeer( QString ) ) );
     connect( ui->peerListWidget_2,SIGNAL( banPeer( QString ) ),this,SLOT( onBanPeer( QString ) ) );

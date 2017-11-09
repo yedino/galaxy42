@@ -67,9 +67,7 @@ QString PeerEditDialog::createInvitation()
     QString vip = ui->VipEdit->text();
 
     if( ip.size() > 0 ) {
-        QHostAddress addr;
-
-        if( !addr.setAddress(ip) || addr.protocol() != QAbstractSocket::IPv4Protocol ) {
+        if(!isIpv4(ip)) {
                 QMessageBox box(tr("IP is improper"),
                                 tr("IP is improper"),
                                 QMessageBox::Warning,
@@ -145,13 +143,19 @@ QString PeerEditDialog::getInvitation()
 bool PeerEditDialog::isIpv4(const QString &str)
 {
     QStringList lst = str.split(".");
-    if(str.size() != 4) {
+    if(lst.size() != 4) {
         return false;
     }
-    for (auto &i:lst){
-        if (i.toUInt()<0 || i.toUInt()>127){
 
+    for (auto &i:lst){
+        if(i.isEmpty()){
+            return false;
         }
+        bool ok;
+        if (i.toUInt(&ok)>255){
+            return false;
+        }
+        if(!ok) return false;
     }
     return true;
 
@@ -159,6 +163,6 @@ bool PeerEditDialog::isIpv4(const QString &str)
 
 bool PeerEditDialog::isIpv6(const QString &str)
 {
-    return false;
+     return QHostAddress( str ).protocol() == QAbstractSocket::IPv6Protocol ;
 }
 

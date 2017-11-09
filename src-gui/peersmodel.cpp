@@ -241,6 +241,7 @@ MeshPeer* peersModel::findPeer( const MeshPeer& peer )
         if( it->getVip() == peer.getVip() ) return it;
     }
     throw std::runtime_error ( tr( "can't find peer" ).toStdString() );
+    return nullptr;
 }
 
 
@@ -262,6 +263,7 @@ MeshPeer* peersModel::findPeer( QString value,Columns col )
     }
 
     throw std::runtime_error ( tr( "can't find peer" ).toStdString() );
+    return nullptr;
 }
 
 QModelIndex peersModel::findIndex( const QString& value, Columns col )

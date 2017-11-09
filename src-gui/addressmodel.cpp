@@ -50,6 +50,7 @@ QVariant addressModel::headerData(int section, Qt::Orientation orientation, int 
     }else {//! @todo implement some to nice look to decoration role
         return QVariant();
     }
+    return QVariant();
 
     // FIXME: Implement me!
 }

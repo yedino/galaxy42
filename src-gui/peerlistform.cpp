@@ -41,7 +41,6 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
 //        if(!m_index.isValid()) return;
     }
 
-
     QPoint global_pos = event->globalPos();
     QAction* add_action = new QAction(QIcon(":add"), tr( "Add peer" ),ui->listView );
     QAction* remove_action = new QAction( QIcon(":delete"), tr("Remove peer" ),ui->listView );
@@ -82,7 +81,6 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     }
     ui->listView->clearSelection();
     menu.exec( global_pos );
-
 }
 
 void PeerListForm::sendMessageActionSlot( bool )
@@ -94,10 +92,6 @@ void PeerListForm::addActionSlot( bool )
 {
     qDebug()<<"add peer";
 
-//    if( m_index.isValid() ) {
-//        QString vip = m_model->data( m_index.sibling( m_index.row(),peersModel::invitation ) ).toString();
-//        emit ( addPeer( vip ) );
-//    } else {
         PeerEditDialog dlg;
         dlg.exec();
         QString invitation = dlg.getInvitation();
@@ -114,7 +108,6 @@ void PeerListForm::addActionSlot( bool )
         emit ( addPeer( invitation ) );
 
     m_model->sort(static_cast <int >(peersModel::Columns::status));
-//    }
 }
 
 void PeerListForm::banActionSlot( bool )
@@ -218,6 +211,18 @@ void PeerListForm::banAllSlot( bool )
 void PeerListForm::deleteAllSlot( bool )
 {
 //    m_model->removeAll();
+    QMessageBox mb(tr("Remove All "),
+                          tr("Remove all perrs ?"),
+                          QMessageBox::Question,
+                          QMessageBox::Yes | QMessageBox::Default,
+                          QMessageBox::No | QMessageBox::Escape,
+                          QMessageBox::NoButton);
+           if ( mb.exec() == QMessageBox::No ) {
+                ui->listView->clearSelection();
+                m_index = QModelIndex();
+                return;
+           }
+
     m_model->deletaAllPeers();
     m_index = QModelIndex();
     ui->listView->clearSelection();
@@ -244,7 +249,6 @@ QModelIndex PeerListForm::getCurrentSelection() const
     }
 
     auto indexes = model->selectedIndexes();
-//    ui->listView->clearSelection();
     if(indexes.size()>0){
         if(indexes.at(0).isValid())
             return indexes.at(0);
