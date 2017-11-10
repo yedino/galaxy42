@@ -27,8 +27,11 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
+#include "../src/tuntap/fake_tun/c_fake_tun.hpp"
+#include "../src/tuntap/linux/c_tuntap_linux_obj.hpp"
 
 #include "crypto_bench/sodium_tests.hpp"
+#include <tuntap/linux/c_tuntap_linux_obj.hpp>
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -979,6 +982,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	const int cfg_tuntap_ios = func_cmdline("tuntap_ios"); // use ios for tuntap sockets: -1=use first one from general/wire ios;
 	const int cfg_tuntap_ios_threads_per_one = func_cmdline("tuntap_ios_thr"); // for each ios of tuntap (if any ios are created for tuntap) how many threads to .run it in
+	const bool cfg_tuntap_use_real_tun = func_cmdline("tuntap_use_real"); // if true real tuntap is used
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
 
@@ -1268,7 +1272,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	// sockets for (fake-)TUN connections:
-	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> tuntap_socket;
+/*	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> tuntap_socket;
 	for (int nr_sock=0; nr_sock<cfg_num_socket_tuntap; ++nr_sock) {
 		int port_nr = cfg_port_faketuntap;
 		if (cfg_port_multiport) port_nr += nr_sock;
@@ -1296,8 +1300,22 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
 		thesocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , port_nr ) );
-	}
+	}*/
 
+	std::unique_ptr<c_tuntap_base_obj> tuntap;
+	if (cfg_tuntap_use_real_tun) {
+		_info("Create real TUN/TAP");
+		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
+		std::array<unsigned char, IPV6_LEN> tuntap_address;
+		tuntap_address.fill(0x11);
+		tuntap_address.at(0) = 0xfd;
+		const int prefix_len = 16;
+		const uint32_t mtu = 9000; // TODO set this using option
+		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
+	} else {
+		_info("Create fake TUN/TAP");
+		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
+	}
 	// sockets for wire p2p connections:
 	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> wire_socket;
 	c_inbuf_tab inbuf_tab(cfg_num_inbuf);
@@ -1347,7 +1365,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		std::thread thr = std::thread(
-			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, cfg_size_tuntap_maxread]()
+			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, cfg_size_tuntap_maxread, &tuntap]()
 			{
 				++g_running_tuntap_jobs;
 				int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
@@ -1401,7 +1419,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}; // send the full weld
 
 				while (!g_atomic_exit) {
-					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
+//					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
 					_note("TUNTAP reading");
 
 					size_t found_ix=0;
@@ -1436,20 +1454,21 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					size_t receive_size = found_weld.space_left();
 					assert(receive_size>0);
 					void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
+					unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
 					assert(buf_ptr);
 					auto buf_asio = asio::buffer( buf_ptr , receive_size );
 
 					try {
-						_dbg4("TUNTAP read, on tuntap_socket_nr="<<tuntap_socket_nr<<" socket="<<addrvoid(one_socket)<<" "
+						_dbg4("TUNTAP read "
 							<<"into weld "<<found_ix<<" "
 							<< "buffer size is: " << asio::buffer_size( buf_asio ) << " buf_ptr="<<buf_ptr);
-						asio::ip::udp::endpoint ep;
+//						asio::ip::udp::endpoint ep;
 
 						// [asioflow] read *** blocking
-						auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
+						//auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
+						auto read_size = size_t { tuntap->read_from_tun(recv_buff_ptr, receive_size) };
 
-						_dbg4("TUNTAP ***BLOCKING READ DONE*** socket="<<tuntap_socket_nr<<": got data from ep="<<ep<<" read_size="<<read_size
-						<<" weld "<<found_ix<<"\n\n");
+						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << " weld " << found_ix << "\n\n");
 
 						// process data, and un-reserve it so that others can add more to it
 						{ // lock
@@ -1543,23 +1562,25 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Join stop thread");
 	thread_stop.join();
 
-	_goal("Stopping tuntap threads - unblocking them with some self-sent data");
-	while (g_running_tuntap_jobs>0) {
-		_note("Sending data to unblock...");
+	if (!cfg_tuntap_use_real_tun) {
+		_goal("Stopping tuntap threads - unblocking them with some self-sent data");
+		while (g_running_tuntap_jobs>0) {
+			_note("Sending data to unblock...");
 
-		asio::io_service ios_local;
-		auto & one_ios = ios_local;
+			asio::io_service ios_local;
+			auto & one_ios = ios_local;
 
-		asio::ip::udp::socket socket_local(one_ios);
-		boost::asio::ip::udp::socket & thesocket = socket_local;
-		thesocket.open( asio::ip::udp::v4() );
-		unsigned char data[1]; data[0]=0;
-		auto buff = asio::buffer( reinterpret_cast<void*>(&data[0]), 1 );
-		auto dst = asio::ip::udp::endpoint( asio::ip::address::from_string("127.0.0.1") , cfg_port_faketuntap  );
-		_note("Sending to dst=" << dst);
-		thesocket.send_to( buff , dst );
+			asio::ip::udp::socket socket_local(one_ios);
+			boost::asio::ip::udp::socket & thesocket = socket_local;
+			thesocket.open( asio::ip::udp::v4() );
+			unsigned char data[1]; data[0]=0;
+			auto buff = asio::buffer( reinterpret_cast<void*>(&data[0]), 1 );
+			auto dst = asio::ip::udp::endpoint( asio::ip::address::from_string("127.0.0.1") , cfg_port_faketuntap  );
+			_note("Sending to dst=" << dst);
+			thesocket.send_to( buff , dst );
 
-		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+			std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+		}
 	}
 	_goal("Join tuntap flow threads");
 	for (auto & thr : tuntap_flow) { thr.join(); }
