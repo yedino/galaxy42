@@ -667,7 +667,7 @@ enum class e_crypto_test {
 	encrypt_salsa20 = -12,
 	decrypt_salsa20 = -13,
 	makebox_encrypt_xsalsa20_auth_poly1305 = -14,
-	openbox_decrypt_xsalsa20_auth_poly1305 = -15,
+	openbox_decrypt_xsalsa20_veri_poly1305 = -15,
 	encrypt_chacha20 = -16,
 	decrypt_chacha20 = -17,
 	veri_and_auth_poly1305 = -20,
@@ -777,8 +777,8 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			c_crypto_benchloop<decltype(crypto_func_makebox),false,1> benchloop(crypto_func_makebox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
-		case e_crypto_test::openbox_decrypt_xsalsa20_auth_poly1305:	{
-			func_name = "openbox_decrypt_xsalsa20_auth_poly1305";
+		case e_crypto_test::openbox_decrypt_xsalsa20_veri_poly1305:	{
+			func_name = "openbox_decrypt_xsalsa20_veri_poly1305";
 			msg_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
 			two_buf.resize(msg_size, 0x00);
 			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
@@ -881,12 +881,12 @@ void cryptotest_main(std::vector<std::string> options) {
 
 	std::set<e_crypto_test> range_crypto_op; // which crypto tests to run
 	if (crypto_op == e_crypto_test::all) { // special case - many crypto_op to test
-		// TODO: foreach enum
+		range_crypto_op.insert(e_crypto_test::veri_poly1305);
 		range_crypto_op.insert(e_crypto_test::auth_poly1305);
 		range_crypto_op.insert(e_crypto_test::encrypt_salsa20);
 		range_crypto_op.insert(e_crypto_test::decrypt_salsa20);
 		range_crypto_op.insert(e_crypto_test::makebox_encrypt_xsalsa20_auth_poly1305);
-		range_crypto_op.insert(e_crypto_test::openbox_decrypt_xsalsa20_auth_poly1305);
+		range_crypto_op.insert(e_crypto_test::openbox_decrypt_xsalsa20_veri_poly1305);
 		range_crypto_op.insert(e_crypto_test::encrypt_chacha20);
 		range_crypto_op.insert(e_crypto_test::decrypt_chacha20);
 		range_crypto_op.insert(e_crypto_test::veri_and_auth_poly1305);
