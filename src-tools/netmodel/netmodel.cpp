@@ -139,8 +139,9 @@ std::atomic<int> g_running_tuntap_jobs;
 
 std::atomic<long int> g_state_tuntap2wire_started;
 std::atomic<long int> g_state_tuntap_fullbuf;
-c_timerfoo g_state_tuntap2wire_in_handler1(0);
-c_timerfoo g_state_tuntap2wire_in_handler2(0);
+c_timerfoo g_state_tuntap2wire_in_handler1(5);
+c_timerfoo g_state_tuntap2wire_in_handler2(5);
+c_timerfoo g_speed_tuntap_read(5);
 
 // ============================================================================
 // Wire
@@ -1214,19 +1215,24 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}
 
 				g_speed_wire_recv.step();
-//				g_state_tuntap2wire_in_handler1.step();
-//				g_state_tuntap2wire_in_handler2.step();
+				g_state_tuntap2wire_in_handler1.step();
+				g_state_tuntap2wire_in_handler2.step();
+				g_speed_tuntap_read.step();
 
 				// [counter] read
 				std::ostringstream oss;
 				oss << "Loop. ";
-				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+//				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
 				oss << "; ";
 				oss << "Tuntap: ";
 				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
 //				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
 //				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
 				oss <<" fullBuf="<<g_state_tuntap_fullbuf.load(std::memory_order_relaxed)<<" ";
+				//oss << " read speed={"<<g_speed_tuntap_read.get_speed()<<"Mbps} ";
+				oss << g_speed_tuntap_read.get_info();
 				oss << "; ";
 
 				oss << "Welds: ";
@@ -1310,7 +1316,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap_address.fill(0x11);
 		tuntap_address.at(0) = 0xfd;
 		const int prefix_len = 16;
-		const uint32_t mtu = 9000; // TODO set this using option
+		const uint32_t mtu = 65000;
 		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
 	} else {
 		_info("Create fake TUN/TAP");
@@ -1467,6 +1473,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						// [asioflow] read *** blocking
 						//auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
 						auto read_size = size_t { tuntap->read_from_tun(recv_buff_ptr, receive_size) };
+						g_speed_tuntap_read.add(1, read_size);
 
 						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << " weld " << found_ix << "\n\n");
 
