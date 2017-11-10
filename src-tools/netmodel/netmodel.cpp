@@ -678,6 +678,11 @@ enum class e_crypto_test {
 	all = -100
 };
 
+enum class e_weld_type {
+	global_weld_list,
+	local_thread_buffer
+};
+
 void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
 	const size_t msg_size = param_msg_size;
@@ -1430,8 +1435,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 					size_t found_ix=0;
 					bool found_any=false;
-
-					{ // lock to find and reserve buffer a weld
+					//e_weld_type weld_type = e_weld_type::local_thread_buffer;
+					e_weld_type weld_type = e_weld_type::global_weld_list;
+					if (weld_type == e_weld_type::global_weld_list) {
+						// lock to find and reserve buffer a weld
 						std::lock_guard<std::mutex> lg(welds_mutex);
 
 						for (size_t i=0; i<welds.size(); ++i) {
@@ -1461,6 +1468,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					assert(receive_size>0);
 					void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
 					unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
+					thread_local std::array<unsigned char, 10000> tl_buf_tmp;
 					assert(buf_ptr);
 					auto buf_asio = asio::buffer( buf_ptr , receive_size );
 
@@ -1472,13 +1480,19 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 						// [asioflow] read *** blocking
 						//auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
-						auto read_size = size_t { tuntap->read_from_tun(recv_buff_ptr, receive_size) };
-						g_speed_tuntap_read.add(1, read_size);
+						size_t read_size = 0;
+						if (weld_type == e_weld_type::global_weld_list)
+							read_size = size_t { tuntap->read_from_tun(recv_buff_ptr, receive_size) };
+						else if (weld_type == e_weld_type::local_thread_buffer)
+							read_size = size_t { tuntap->read_from_tun(&tl_buf_tmp[0], tl_buf_tmp.size()) };
+						else std::abort(); // other options not implemented yet
 
+						g_speed_tuntap_read.add(1, read_size);
 						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << " weld " << found_ix << "\n\n");
 
 						// process data, and un-reserve it so that others can add more to it
-						{ // lock
+						if (weld_type == e_weld_type::global_weld_list) {
+							// lock
 							std::lock_guard<std::mutex> lg(welds_mutex);
 							c_weld & the_weld = welds.at(found_ix); // optimize: no need for mutex for this one
 							the_weld.add_fragment(read_size);
