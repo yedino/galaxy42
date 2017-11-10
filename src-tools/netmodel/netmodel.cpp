@@ -19,6 +19,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <chrono>
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 
 #include <algorithm>
 
@@ -1198,7 +1199,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// --- welds var ---
 	vector<c_weld> welds;
-	std::mutex welds_mutex;
+	std::shared_timed_mutex welds_mutex;
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
@@ -1242,7 +1243,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 				oss << "Welds: ";
 				{
-					std::lock_guard<std::mutex> lg(welds_mutex);
+					std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 					for (const auto & weld : welds) {
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
@@ -1365,7 +1366,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// ---> tuntap: blocking version seems faster <---
 
 	{
-		std::lock_guard<std::mutex> lg(welds_mutex);
+		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
 		for (int i=0; i<cfg_num_weld_tuntap; ++i) welds.push_back( c_weld() );
 	}
 
@@ -1414,7 +1415,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 											<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
 										);
 										g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
-										std::lock_guard<std::mutex> lg(welds_mutex); // lock
+										std::shared_lock<std::shared_timed_mutex> lg(welds_mutex); // lock
 										auto & weld = welds.at(send_weld_nr);
 										weld.clear();
 									}
@@ -1439,7 +1440,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					e_weld_type weld_type = e_weld_type::global_weld_list;
 					if (weld_type == e_weld_type::global_weld_list) {
 						// lock to find and reserve buffer a weld
-						std::lock_guard<std::mutex> lg(welds_mutex);
+						std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 
 						for (size_t i=0; i<welds.size(); ++i) {
 							if (! welds.at(i).m_reserved) {
@@ -1493,7 +1494,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						// process data, and un-reserve it so that others can add more to it
 						if (weld_type == e_weld_type::global_weld_list) {
 							// lock
-							std::lock_guard<std::mutex> lg(welds_mutex);
+							std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 							c_weld & the_weld = welds.at(found_ix); // optimize: no need for mutex for this one
 							the_weld.add_fragment(read_size);
 
