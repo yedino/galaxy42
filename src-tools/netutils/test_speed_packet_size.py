@@ -11,7 +11,7 @@ import signal
 import threading
 from subprocess import check_output, DEVNULL, Popen
 
-PASSWORD = 'lovecraft_freaks_racetrack' # TODO move to runtime
+PASSWORD = ''
 
 # 1. Computer R1 will spam us. This computer must have running sender-programs in remote mode (waiting on different port numbers for RPC)
 # 2. We start local receiver program (netmodel), and tell remote sender(s) to spam us
@@ -40,7 +40,7 @@ def run_recv_program():
 
 def rpc_test_remote_one_sender(thread_nr, size,  this_target_ip, this_target_port, rpc_ip, rpc_port ):
     # for each RPC remote sending program:
-    thread_name = "[RCP request thread #" + str(thread_nr) + "]"; 
+    thread_name = "[RCP request thread #" + str(thread_nr) + "]";
     # print(thread_name + " thread started");
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # RPC socket
     print ( "RPC: ip=" + rpc_ip + " port=" + str(rpc_port) )
@@ -60,7 +60,7 @@ def rpc_test_remote_one_sender(thread_nr, size,  this_target_ip, this_target_por
 
 def rpc_test_remote_all(size, cmd_original):
     # help='my_p2p_addr:port,rpc:rpc_port');
-    
+
     cmdP = [] # parsed command
 
     for ix,cmd in enumerate(cmd_original):
@@ -87,7 +87,7 @@ def rpc_test_remote_all(size, cmd_original):
             while (cmdP[back][e][p] == wildcard):
               back=back-1
             cmdP[ix][e][p] = cmdP[back][e][p]
-          
+
     print("\nParsed:\n")
     print(cmdP)
 
@@ -103,7 +103,7 @@ def rpc_test_remote_all(size, cmd_original):
         args=(i, size,  cmd[0][0], int(cmd[0][1]), cmd[1][0], int(cmd[1][1])  )
       )
 	    thr.start()
-	    thread_table.append(thr)	
+	    thread_table.append(thr)
 
     for i in range(0, thread_count):
 	    #print( "joining thread " + str(i))
@@ -124,7 +124,8 @@ def parse_args():
                                                      'of packet\n Before run script you have to build '
                                                      'program first')
     arg_parser.add_argument('--cmd', action='append', type=str, required=True,
-    	help='my_p2p_addr:port,rpc:rpc_port');
+			help='my_p2p_addr:port,rpc:rpc_port');
+    arg_parser.add_argument('--passwd', type=str, required=True, help='The RPC password that you set on the remote sender programs')
 
     # arg_parser.add_argument('--rpc', type=str, required=True, help='address (or many addresses separated with comma "," character) ipv4 of RPC sender to connect to (the asio send tool waiting for remote command)')
     # arg_parser.add_argument('--rpc_port_base', type=int, default=RPC_TCP_PORT_BASE, help='TCP port number (for RPC, see --rpc)')
@@ -139,6 +140,7 @@ def myrange(low,high,mod):
 
 if __name__ == "__main__":
     args = parse_args()
+    PASSWORD = args.passwd
     # sizes = sorted(  set(list(range(64, 2000, 16)) + list(range(2000, 9500, 64)))  )
     # sizes = sorted(set(list(range(64, 9500, 64))))
     sizes = sorted(set(
