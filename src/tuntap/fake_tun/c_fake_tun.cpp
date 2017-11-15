@@ -9,7 +9,9 @@ c_fake_tun::c_fake_tun(
 :
 	m_socket(io_service)
 {
-	auto listen_endpoint = udp::endpoint(address_v4::from_string(listen_ipv4_address), listen_port);
+	auto listen_address = address_v4::from_string(listen_ipv4_address);
+	udp::endpoint listen_endpoint(listen_address, listen_port);
+	m_socket.open(udp::v4());
 	m_socket.bind(listen_endpoint);
 }
 
