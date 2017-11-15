@@ -1436,7 +1436,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 					size_t found_ix=0;
 					bool found_any=false;
-					//e_weld_type weld_type = e_weld_type::local_thread_buffer;
+//					e_weld_type weld_type = e_weld_type::local_thread_buffer;
 					e_weld_type weld_type = e_weld_type::global_weld_list;
 					if (weld_type == e_weld_type::global_weld_list) {
 						// lock to find and reserve buffer a weld
@@ -1456,7 +1456,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 							weld.m_reserved=true; // we are using it now
 						}
 						else {
-							_dbg4("No free tuntap buffers! - fullbuffer!");
+							_note("No free tuntap buffers! - fullbuffer!");
 							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
 							func_send_weld(0); // TODO choose weld
 							// forced send
@@ -1469,7 +1469,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					assert(receive_size>0);
 					void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
 					unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
-					thread_local std::array<unsigned char, 10000> tl_buf_tmp;
+					thread_local std::vector<unsigned char> tl_buf_tmp(100*1024*1024);
 					assert(buf_ptr);
 					auto buf_asio = asio::buffer( buf_ptr , receive_size );
 
