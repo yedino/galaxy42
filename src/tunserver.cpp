@@ -564,7 +564,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 }
 
 // my key @deprecated (newloop)
-void c_tunserver::configure_mykey() {
+void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -579,6 +579,8 @@ void c_tunserver::configure_mykey() {
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
 	my_IDI = std::make_unique<antinet_crypto::c_multikeys_PAIR>();
+	//my_IDI->set_ipv6_prefix(ipv6_prefix);
+	my_IDI->set_ipv6_prefix(m_ipv6_prefix);
 	my_IDI->datastore_load_PRV_and_pub(IDI_name);
 	// getting HIP from IDI
 	auto IDI_ip_bin = my_IDI->get_ipv6_string_bin() ;
@@ -609,6 +611,7 @@ void c_tunserver::configure_mykey() {
 
 	// save signature and IDI publickey in tunserver
 	m_my_IDI_pub = my_IDI->m_pub;
+	m_my_IDI_pub.set_ipv6_prefix(m_ipv6_prefix);
 	m_IDI_IDC_sig = IDC_IDI_signature;
 
 	// remove IDP from RAM
@@ -633,6 +636,7 @@ void c_tunserver::configure_mykey() {
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
+	m_my_IDC.set_ipv6_prefix(m_ipv6_prefix);
 }
 
 // add peer
@@ -718,7 +722,6 @@ void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
 	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
 	c_haship_addr hip( c_haship_addr::tag_constr_by_addr_bin() , pubkey.get_ipv6_string_bin() );
-
 	auto find = m_tunnel.find(hip);
 	if (find == m_tunnel.end()) { // we don't have tunnel to him yet
 		_info("Creating a CT to HIP=" << hip);
@@ -745,12 +748,12 @@ void c_tunserver::prepare_socket() {
 		// TODO: check if there is no race condition / correct ownership of the tun, that the m_tun_fd opened above is...
 		// ...to the device to which we are setting IP address here:
 		assert(address[0] == 0xFD);
-		assert(address[1] == 0x42);
+//		assert(address[1] == 0x42);
 
 		_fact("Will configure the tun device");
 		try {
 			m_tun_device.init();
-			m_tun_device.set_ipv6_address(address, 16);
+			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
 			_fact("Done init of event manager - for this tuntap");
@@ -894,7 +897,10 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto peer_iter = m_peer.find(addr);
-	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
+	if (peer_iter == m_peer.end()) {
+		_dbg4("this HIP is not in peers");
+		throw expected_not_found();
+	}
 	c_peering & peer = * peer_iter->second;
 	if (require_pubkey) {
 		if (! peer.is_pubkey()) _throw_error( expected_not_found_missing_pubkey() );
@@ -1364,12 +1370,6 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
-				try{
-					LockGuard<Mutex> lg(m_peer_etc_mutex);
-					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
-				}catch(std::out_of_range&){
-					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-				}
 
 			} else {
 				_info("Using CT tunnel to send our own data");
@@ -1389,12 +1389,6 @@ void c_tunserver::event_loop(int time) {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
-				try{
-					LockGuard<Mutex> lg(m_peer_etc_mutex);
-					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
-				}catch(std::out_of_range&){
-					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-				}
 			}
 			if (!was_anything_sent_from_TUN) {
 				ui::action_info_ok("Ok, we sent a packet of data from our computer through virtual network, sending seems to work.");
@@ -1406,7 +1400,6 @@ void c_tunserver::event_loop(int time) {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
-            //find_peer_by_sender_peering_addr( sender_pip ).get_stats().update_read_stats(size_read);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_note("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
@@ -1570,12 +1563,6 @@ void c_tunserver::event_loop(int time) {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
-					try{
-						LockGuard<Mutex> lg(m_peer_etc_mutex);
-						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
-					}catch(std::out_of_range&){
-						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-					}
 #endif
 				}
 
@@ -1600,6 +1587,7 @@ void c_tunserver::event_loop(int time) {
 			try {
 				antinet_crypto::c_multikeys_pub his_IDI;
 				his_IDI.load_from_bin(bin_his_IDI_pub.bytes);
+				his_IDI.set_ipv6_prefix(m_ipv6_prefix);
 				antinet_crypto::c_multisign his_IDI_IDC_sig;
 				his_IDI_IDC_sig.load_from_bin(bin_his_IDI_IDC_sig.bytes);
 				antinet_crypto::c_multikeys_pub::multi_sign_verify(his_IDI_IDC_sig, bin_his_IDC_pub.bytes, his_IDI);
@@ -1607,6 +1595,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add peer
 					auto his_pubkey = make_unique<c_haship_pubkey>();
 					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey->set_ipv6_prefix(m_ipv6_prefix);
 					_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
@@ -1615,6 +1604,7 @@ void c_tunserver::event_loop(int time) {
 				{ // add node
 					c_haship_pubkey his_pubkey;
 					his_pubkey.load_from_bin( bin_his_IDI_pub.bytes );
+					his_pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( his_pubkey );
 				}
 			} catch (std::invalid_argument &) {
@@ -1674,16 +1664,9 @@ void c_tunserver::event_loop(int time) {
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
-                        //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 						_dbg1("send route response to " << sender_pip);
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
-						try{
-							LockGuard<Mutex> lg(m_peer_etc_mutex);
-							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
-						}catch(std::out_of_range&){
-							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-						}
                         _note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
@@ -1724,6 +1707,7 @@ void c_tunserver::event_loop(int time) {
 					_info("GOT CORRECT REPLY - USING IT");
 
 					_warn("Cool, we got there a pubkey.");
+					pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( pubkey );
 
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost , pubkey );
@@ -1904,6 +1888,14 @@ void c_tunserver::enable_remove_peers() {
 void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
 	_info("set peer remove timeout " << timeout_seconds);
 	peer_timeout = std::chrono::seconds(timeout_seconds);
+}
+
+void c_tunserver::set_prefix_len(int prefix) {
+	m_prefix_len = prefix;
+}
+
+void c_tunserver::set_prefix(const string &prefix) {
+	m_ipv6_prefix = prefix;
 }
 
 // ------------------------------------------------------------------
