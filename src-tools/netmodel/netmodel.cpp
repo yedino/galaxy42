@@ -1458,7 +1458,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						else {
 							_note("No free tuntap buffers! - fullbuffer!");
 							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
-							func_send_weld(0); // TODO choose weld
+							//func_send_weld(0); // TODO choose weld
 							// forced send
 							continue ; // <---
 						}
