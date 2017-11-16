@@ -1253,6 +1253,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					_note("Exit flag is set, exiting loop and will stop program");
 					break;
 				}
+
+				static std::once_flag flag;
+				std::call_once(flag, []{std::cout << "Speed sended via wire\n";});
+				std::cout << g_state_tuntap2wire_in_handler2.get_speed() << std::endl;
 			}
 
 			/*
