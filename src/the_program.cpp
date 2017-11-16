@@ -36,7 +36,7 @@ void c_the_program::startup_version() {
 	_fact( "" ); // newline
 	_fact( "Start... " << ver_str );
 	#ifdef TOOLS_ARE_BROKEN
-		_warn("Warning, [broken-tools] it seems this program was built with partially broken tools/libraries "
+		_clue("[broken-tools] it seems this program was built with partially broken tools/libraries "
 			"(details are shown when building, e.g. by cmake/ccmake)");
 	#endif
 }

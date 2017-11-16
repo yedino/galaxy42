@@ -1,0 +1,31 @@
+
+
+---------------------
+Checking started on: [2017-10-24 12:00] (UTC)
+Checking done on:    [                ] (UTC)
+
+[x] We pick our own code in version without known security issues
+
+[x] sodiumpp submodule and upstream tracking !
+[x] nlohmann_json submodule
+[x] backward-cpp submodule
+[x] cotire submodule
+[x] googletest submodule
+[x] cjdns/netplatform upstream tracking ! --- checked (rfree) yesterday, imported fixes
+[-] libqt5 library release for Linux
+[-] libqt5 library release for Windows (mingw)
+[-] libqt5 library release for Macosxupstream
+[x] libz wget download
+[x] nsis wget download
+
+For windows gitian build we also depend on:
+[-] {outdated! now we take it from system installation of crosscompiler in Gitian!},
+was: DLL libraries from Cygwin/Mingw, see contrib/nsis-installer-windows/bin - check for updates!
+[x] OpenVPN installer is downloaded and added into installer. Please make sure its version (and file hash) is up-to-date,
+    see script `contrib/nsis-installer-windows/galaxy-windows-installer` + file `contrib/nsis-installer-windows/installer.nsi`
+[x] We also use custom Gitian project (git submodule), see `https://github.com/yedino/gitian-builder.git` from `./build-gitian` --- they accept out PR so we checkout to upstream project
+
+For macosx Gitian we also depend on:
+[ ] macosx SDK
+[x] cpio program `contrib/macdeploy/build-cpio.sh` - `https://ftp.gnu.org/gnu/cpio/cpio-2.12.tar.gz`
+---------------------
