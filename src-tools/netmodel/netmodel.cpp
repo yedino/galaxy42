@@ -1394,12 +1394,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						<<" via wire_socket_nr="<<wire_socket_nr);
 
 					// [thread] this is SAFE probably, as we read-only access the peer_pegs (that is not changing)
-					asio::ip::udp::endpoint peer_peg = peer_pegs.at(0);
+					asio::ip::udp::endpoint &peer_peg = peer_pegs.at(0);
 
 					auto & mysocket = wire_socket.at(wire_socket_nr);
 					mysocket.get_strand().post(
 						// mysocket.wrap(
-							[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, peer_peg]() {
+							[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg]() {
 								auto & weld = welds.at(send_weld_nr);
 								size_t send_size = weld.m_pos;
 
