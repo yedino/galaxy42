@@ -12,6 +12,9 @@ class MeshPeer : public QObject
     QString m_vip;
     QString m_net_name;
 
+    int m_ip_port;
+    int m_vip_port;
+
 public:
 
     enum class COMMANDSTATUS {
@@ -22,7 +25,6 @@ public:
         timeout,		//timeot of command
         fail			//failed to execute
     } comm_status;
-
 
     enum class STATUS {
         defalut = 0,	//unknown status -propably error
@@ -119,6 +121,11 @@ public:
 
     std::string serialize() const;
     void deserialize(const std::string& serilized_obj);
+
+    inline int getPort() const{return m_ip_port;}
+    inline int getVipPort() const {return m_vip_port;}
+    inline void setPort(int port){m_ip_port = port;}
+    inline void setVipPort(int port){m_vip_port = port;}
 
 };
 
