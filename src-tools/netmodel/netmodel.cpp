@@ -19,6 +19,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <chrono>
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 
 #include <algorithm>
 
@@ -27,8 +28,11 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
+#include "../src/tuntap/fake_tun/c_fake_tun.hpp"
+#include "../src/tuntap/linux/c_tuntap_linux_obj.hpp"
 
 #include "crypto_bench/sodium_tests.hpp"
+#include <tuntap/linux/c_tuntap_linux_obj.hpp>
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -137,8 +141,9 @@ std::atomic<int> g_running_tuntap_jobs;
 
 std::atomic<long int> g_state_tuntap2wire_started;
 std::atomic<long int> g_state_tuntap_fullbuf;
-c_timerfoo g_state_tuntap2wire_in_handler1(0);
-c_timerfoo g_state_tuntap2wire_in_handler2(0);
+c_timerfoo g_state_tuntap2wire_in_handler1(5);
+c_timerfoo g_state_tuntap2wire_in_handler2(5);
+c_timerfoo g_speed_tuntap_read(5);
 
 // ============================================================================
 // Wire
@@ -675,6 +680,11 @@ enum class e_crypto_test {
 	all = -100
 };
 
+enum class e_weld_type {
+	global_weld_list,
+	local_thread_buffer
+};
+
 void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
 	constexpr size_t key_max_size = std::max(
@@ -986,6 +996,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	const int cfg_tuntap_ios = func_cmdline("tuntap_ios"); // use ios for tuntap sockets: -1=use first one from general/wire ios;
 	const int cfg_tuntap_ios_threads_per_one = func_cmdline("tuntap_ios_thr"); // for each ios of tuntap (if any ios are created for tuntap) how many threads to .run it in
+	const bool cfg_tuntap_use_real_tun = func_cmdline("tuntap_use_real"); // if true real tuntap is used
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
 
@@ -1195,7 +1206,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// --- welds var ---
 	vector<c_weld> welds;
-	std::mutex welds_mutex;
+	std::shared_timed_mutex welds_mutex;
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
@@ -1217,24 +1228,29 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}
 
 				g_speed_wire_recv.step();
-//				g_state_tuntap2wire_in_handler1.step();
-//				g_state_tuntap2wire_in_handler2.step();
+				g_state_tuntap2wire_in_handler1.step();
+				g_state_tuntap2wire_in_handler2.step();
+				g_speed_tuntap_read.step();
 
 				// [counter] read
 				std::ostringstream oss;
 				oss << "Loop. ";
-				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+//				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
 				oss << "; ";
 				oss << "Tuntap: ";
 				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
 //				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
 //				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
 				oss <<" fullBuf="<<g_state_tuntap_fullbuf.load(std::memory_order_relaxed)<<" ";
+				//oss << " read speed={"<<g_speed_tuntap_read.get_speed()<<"Mbps} ";
+				oss << g_speed_tuntap_read.get_info();
 				oss << "; ";
 
 				oss << "Welds: ";
 				{
-					std::lock_guard<std::mutex> lg(welds_mutex);
+					std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 					for (const auto & weld : welds) {
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
@@ -1244,6 +1260,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					_note("Exit flag is set, exiting loop and will stop program");
 					break;
 				}
+
+				static std::once_flag flag;
+				std::call_once(flag, []{std::cout << "Speed sended via wire\n";});
+				std::cout << g_state_tuntap2wire_in_handler2.get_speed() << std::endl;
 			}
 
 			/*
@@ -1275,7 +1295,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	// sockets for (fake-)TUN connections:
-	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> tuntap_socket;
+/*	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> tuntap_socket;
 	for (int nr_sock=0; nr_sock<cfg_num_socket_tuntap; ++nr_sock) {
 		int port_nr = cfg_port_faketuntap;
 		if (cfg_port_multiport) port_nr += nr_sock;
@@ -1303,8 +1323,22 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
 		thesocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , port_nr ) );
-	}
+	}*/
 
+	std::unique_ptr<c_tuntap_base_obj> tuntap;
+	if (cfg_tuntap_use_real_tun) {
+		_info("Create real TUN/TAP");
+		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
+		std::array<unsigned char, IPV6_LEN> tuntap_address;
+		tuntap_address.fill(0x11);
+		tuntap_address.at(0) = 0xfd;
+		const int prefix_len = 16;
+		const uint32_t mtu = 65000;
+		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
+	} else {
+		_info("Create fake TUN/TAP");
+		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
+	}
 	// sockets for wire p2p connections:
 	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> wire_socket;
 	c_inbuf_tab inbuf_tab(cfg_num_inbuf);
@@ -1343,7 +1377,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// ---> tuntap: blocking version seems faster <---
 
 	{
-		std::lock_guard<std::mutex> lg(welds_mutex);
+		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
 		for (int i=0; i<cfg_num_weld_tuntap; ++i) welds.push_back( c_weld() );
 	}
 
@@ -1354,7 +1388,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		std::thread thr = std::thread(
-			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, cfg_size_tuntap_maxread]()
+			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, cfg_size_tuntap_maxread, &tuntap]()
 			{
 				++g_running_tuntap_jobs;
 				int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
@@ -1367,12 +1401,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						<<" via wire_socket_nr="<<wire_socket_nr);
 
 					// [thread] this is SAFE probably, as we read-only access the peer_pegs (that is not changing)
-					asio::ip::udp::endpoint peer_peg = peer_pegs.at(0);
+					asio::ip::udp::endpoint &peer_peg = peer_pegs.at(0);
 
 					auto & mysocket = wire_socket.at(wire_socket_nr);
 					mysocket.get_strand().post(
 						// mysocket.wrap(
-							[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, peer_peg]() {
+							[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg]() {
 								auto & weld = welds.at(send_weld_nr);
 								size_t send_size = weld.m_pos;
 
@@ -1392,7 +1426,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 											<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
 										);
 										g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
-										std::lock_guard<std::mutex> lg(welds_mutex); // lock
+										std::shared_lock<std::shared_timed_mutex> lg(welds_mutex); // lock
 										auto & weld = welds.at(send_weld_nr);
 										weld.clear();
 									}
@@ -1408,14 +1442,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}; // send the full weld
 
 				while (!g_atomic_exit) {
-					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
+//					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
 					_note("TUNTAP reading");
 
 					size_t found_ix=0;
 					bool found_any=false;
-
-					{ // lock to find and reserve buffer a weld
-						std::lock_guard<std::mutex> lg(welds_mutex);
+//					e_weld_type weld_type = e_weld_type::local_thread_buffer;
+					e_weld_type weld_type = e_weld_type::global_weld_list;
+					if (weld_type == e_weld_type::global_weld_list) {
+						// lock to find and reserve buffer a weld
+						std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 
 						for (size_t i=0; i<welds.size(); ++i) {
 							if (! welds.at(i).m_reserved) {
@@ -1431,9 +1467,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 							weld.m_reserved=true; // we are using it now
 						}
 						else {
-							_dbg4("No free tuntap buffers! - fullbuffer!");
+							_note("No free tuntap buffers! - fullbuffer!");
 							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
-							func_send_weld(0); // TODO choose weld
+							//func_send_weld(0); // TODO choose weld
 							// forced send
 							continue ; // <---
 						}
@@ -1443,24 +1479,33 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					size_t receive_size = found_weld.space_left();
 					assert(receive_size>0);
 					void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
+					unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
+					thread_local std::vector<unsigned char> tl_buf_tmp(100*1024*1024);
 					assert(buf_ptr);
 					auto buf_asio = asio::buffer( buf_ptr , receive_size );
 
 					try {
-						_dbg4("TUNTAP read, on tuntap_socket_nr="<<tuntap_socket_nr<<" socket="<<addrvoid(one_socket)<<" "
+						_dbg4("TUNTAP read "
 							<<"into weld "<<found_ix<<" "
 							<< "buffer size is: " << asio::buffer_size( buf_asio ) << " buf_ptr="<<buf_ptr);
-						asio::ip::udp::endpoint ep;
+//						asio::ip::udp::endpoint ep;
 
 						// [asioflow] read *** blocking
-						auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
+						//auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
+						size_t read_size = 0;
+						if (weld_type == e_weld_type::global_weld_list)
+							read_size = size_t { tuntap->read_from_tun(recv_buff_ptr, receive_size) };
+						else if (weld_type == e_weld_type::local_thread_buffer)
+							read_size = size_t { tuntap->read_from_tun(&tl_buf_tmp[0], tl_buf_tmp.size()) };
+						else std::abort(); // other options not implemented yet
 
-						_dbg4("TUNTAP ***BLOCKING READ DONE*** socket="<<tuntap_socket_nr<<": got data from ep="<<ep<<" read_size="<<read_size
-						<<" weld "<<found_ix<<"\n\n");
+						g_speed_tuntap_read.add(1, read_size);
+						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << " weld " << found_ix << "\n\n");
 
 						// process data, and un-reserve it so that others can add more to it
-						{ // lock
-							std::lock_guard<std::mutex> lg(welds_mutex);
+						if (weld_type == e_weld_type::global_weld_list) {
+							// lock
+							std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 							c_weld & the_weld = welds.at(found_ix); // optimize: no need for mutex for this one
 							the_weld.add_fragment(read_size);
 
@@ -1550,23 +1595,25 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Join stop thread");
 	thread_stop.join();
 
-	_goal("Stopping tuntap threads - unblocking them with some self-sent data");
-	while (g_running_tuntap_jobs>0) {
-		_note("Sending data to unblock...");
+	if (!cfg_tuntap_use_real_tun) {
+		_goal("Stopping tuntap threads - unblocking them with some self-sent data");
+		while (g_running_tuntap_jobs>0) {
+			_note("Sending data to unblock...");
 
-		asio::io_service ios_local;
-		auto & one_ios = ios_local;
+			asio::io_service ios_local;
+			auto & one_ios = ios_local;
 
-		asio::ip::udp::socket socket_local(one_ios);
-		boost::asio::ip::udp::socket & thesocket = socket_local;
-		thesocket.open( asio::ip::udp::v4() );
-		unsigned char data[1]; data[0]=0;
-		auto buff = asio::buffer( reinterpret_cast<void*>(&data[0]), 1 );
-		auto dst = asio::ip::udp::endpoint( asio::ip::address::from_string("127.0.0.1") , cfg_port_faketuntap  );
-		_note("Sending to dst=" << dst);
-		thesocket.send_to( buff , dst );
+			asio::ip::udp::socket socket_local(one_ios);
+			boost::asio::ip::udp::socket & thesocket = socket_local;
+			thesocket.open( asio::ip::udp::v4() );
+			unsigned char data[1]; data[0]=0;
+			auto buff = asio::buffer( reinterpret_cast<void*>(&data[0]), 1 );
+			auto dst = asio::ip::udp::endpoint( asio::ip::address::from_string("127.0.0.1") , cfg_port_faketuntap  );
+			_note("Sending to dst=" << dst);
+			thesocket.send_to( buff , dst );
 
-		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+			std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+		}
 	}
 	_goal("Join tuntap flow threads");
 	for (auto & thr : tuntap_flow) { thr.join(); }
