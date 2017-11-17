@@ -39,11 +39,11 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
         ord = std::make_unique <addPeerOrder>( msg,this );
     } else if( inputOrder.get_cmd() == "delete_peer" ) {
         ord = std::make_unique <deletePeerOrder>( msg,this );
-    } else if( inputOrder.get_cmd() == "delete_all_peer" ) {
+    } else if( inputOrder.get_cmd() == "delete_all_peers" ) {
         ord = std::make_unique <deleteAllPeersOrder>( msg );
     } else if( inputOrder.get_cmd() == "ban_peer" ) {
         ord = std::make_unique<banPeerOrder>( msg,this );
-    } else if( inputOrder.get_cmd() == "ban_all_peer" ) {
+    } else if( inputOrder.get_cmd() == "ban_all_peers" ) {
         ord = std::make_unique <banAllOrder>( msg );
     } else if( inputOrder.get_cmd() == "get_galaxy_ipv6" ) {
         ord = std::make_unique <basicOrder>( msg );
@@ -51,6 +51,8 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
         ord = std::make_unique <getGalaxyOrder>( msg );
     } else if( inputOrder.get_cmd() == "hello" ) {
         ord = std::make_unique<getClientName>( msg,this );
+    }else if (inputOrder.get_cmd() =="server_msg"){
+        ord = std::make_unique<serverMsg>(msg);
     } else {
         qDebug()<<"unknown command";
         return;

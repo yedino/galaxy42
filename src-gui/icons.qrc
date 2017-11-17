@@ -17,5 +17,9 @@
         <file alias="status-busy">../recources/gui/icons/Status-Busy.png</file>
         <file alias="status-offline">../recources/gui/icons/Status-Offline.png</file>
         <file alias="status-online">../recources/gui/icons/Status-Online.png</file>
-    </qresource>
+        <file alias="question">../recources/gui/icons/Question.png</file>
+        <file alias="search">../recources/gui/icons/Magnifier.png</file>
+        <file alias="letter">../recources/gui/icons/Script-Edit.png</file>
+        <file alias="group-delete">../recources/gui/icons/Group-Delete.png</file>
+        </qresource>
 </RCC>

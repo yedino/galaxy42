@@ -521,7 +521,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("hello", [this](const std::string &input_json) {
 		return rpc_hello(input_json);
-	});
+    });
 }
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
