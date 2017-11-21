@@ -131,7 +131,6 @@ class with_strand {
 
 int g_stage_sleep_time = 0; ///< sleep between stages of startup, was used to debug some race conditions
 
-
 // ============================================================================
 
 c_timerfoo g_speed_wire_recv(30); // global counter
@@ -457,7 +456,6 @@ struct t_crypt_opt {
 	void calculate();
 };
 
-
 void t_crypt_opt::calculate() {
 	if (threads == -1) {
 		threads = std::thread::hardware_concurrency();
@@ -649,7 +647,6 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 	} // sample
 	return mediana( result_sample );
 }
-
 
 template<typename F, bool allow_mt, size_t max_threads_count>
 double
@@ -1333,7 +1330,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap_address.fill(0x11);
 		tuntap_address.at(0) = 0xfd;
 		const int prefix_len = 16;
-		const uint32_t mtu = 65000;
+		const uint32_t mtu = 65535;
 		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
 	} else {
 		_info("Create fake TUN/TAP");

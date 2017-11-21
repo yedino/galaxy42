@@ -17,7 +17,7 @@ int main( int size, char** args) {
 	}else{
 	        packet_size =1500;
 	}
-	if(packet_size>9000) {
+	if(packet_size>65535) {
 	        std::cout<<"packet is to big"<<"\n";
 		return 0;
 	}
