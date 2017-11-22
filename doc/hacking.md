@@ -70,7 +70,6 @@ and then dies.
 
 A: Program using TSAN can not be run in valgrind, use ccmake to disable TSAN flags and rebuild - when you want to run in valgrind.
 
-
 # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
 # Summary for every developer!
@@ -127,8 +126,6 @@ catch(const ex_type & ex) {}
 
 UNUSED(x); DEAD_RETURN();
 ```
-
-
 
 ```cpp
 _dbg4(X) // unorganized "removed" debug
@@ -334,7 +331,6 @@ and this throws proper tuntap_error*
 
 `[[maindoc]]` - main documentation for network protocol
 
-
 tun from tuntap - are the IP data
 tap from tuntap - are the ethernet data, including usually IP data after ethernet header
 
@@ -348,7 +344,6 @@ ipv6-merit: currently = ipv6-noaddr; Data that are are part of IPv6 and are not 
 weld: array of ipv6-merit, that are all from same src, and to same dst
 e.g. ipv6-merit are joined into a weld by the original sender, delivered e2e, and then separated by final recipient.
 they are e2e encrypted and authenticated by src to dst.
-
 
 ```
 
@@ -449,7 +444,6 @@ Does Bag need Dst (finall destination) info? No, because when Bag is handed to y
 agreement number (path number) and that implies the final destination e.g. Z.
 Data-hash is it needed? Not now, we assume it would be...
 
-
 Sidenotes:
 **1** though, the Authorization e2e must be for each bag,
 so that the finall recipient can check for each Bag is it correct - to confirm payment,
@@ -479,10 +473,8 @@ tuntap-header, ethernet-header <======================== ipv6 packet ===========
 [.......................................] (src,dst) <--- 2 buffers, one constant size
 ^--- this is returned by our code src/tuntap/* - read_from_tun_separated_addresses()
 
-
 <================== ipv6-noaddr ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
 <================== ipv6-merit  ========> (src,dst) - c_tuntap_base_obj::read_from_tun_separated_addresses()
-
 
 <============== ipv6-merit ============> <=ipv6-merit=>
 
@@ -514,7 +506,6 @@ E.g. sending merits of sizes: 160, 255, 60000, 65535, 99015, 3735928559, 160, th
 So:
 0x07 0x00 0xA0 0x00 0xFF 0xEA 0x60 0xFF 0xFF 0x00 0x00   0x00 0x01 0x82 0xC7 0x00 0x00   0xDE 0xAD 0xBE 0xEF 0x00 0xA0
 ..................................................................................
-
 
 Now zoom-out :
 
@@ -566,7 +557,6 @@ bcd for weld_50123 part 5/5, entier weld_50124, for weld_50125 part 1/3
 ddd for weld_50125 part 2/3
 ddd for weld_50125 part 3/3
 
-
 [shred-header][shred-data]
 [shred-header][shred-data]
 [shred-header][shred-data]
@@ -580,7 +570,6 @@ or else:
     1 byte - weld-shred-count,
 
 So shred-header has variable size: 1, or 4, 6 byte.
-
 
 add hashes to each weld (each can do it for his own, in parallel) :
 <=weld dst1=>+H <=weld dst3=>+H <!weld dst1 via-me!>+H   <--- via peer8
@@ -616,13 +605,9 @@ peer8 routes to dst1, dst2, dst3, dst4
 
 		CMD HH, p2p-auth;                                   c2          c3      c1       c4           various cables, but to peer8
 
-
-
 cart - shreds
 
-
 ```
-
 
 ## Developing translations
 
@@ -747,7 +732,6 @@ Info: They can connect as your Peer (but this does NOT mean they access you as e
 "Allow endpoint connections for strangers" - all Endpoints (all Nodes) can by default access your local servers running on this computer.
 Info: all Endpoints (all Nodes, as well the Peers and others too) even not white-listed by you, are by default seen as allowed-endpoint, so they can send/receive data into my local servers running here.
 
-
 * Mapped-IP - (todo) is an IP that is owned by you but that is guaranteed only in given Hash-VPN.
 It is usually created by mapping e.g. from Hash-IP to some private IPv4 (RFC1918) by admin of such Hash-VPN.
 
@@ -868,3 +852,10 @@ it can even cut away the "header" of armmsg
 TODO verify this with example GUI code.
 
 ```
+
+# cooperation
+Here we list some of changes/fixes proposed by us or developed here, that were later merged into other projects (e.g. into upstream projects, so we can switch to connecting them by submodule from their master instead of our fork)
+* backward-cpp PR https://github.com/bombela/backward-cpp/pull/63 git rev 7430bea233bb56edd7dd0154f0a56870d905cb0e
+* backward-cpp PR https://github.com/bombela/backward-cpp/pull/66 git rev 89b77f96b92cb808a9a52afd9138afccf93898d4
+* gitian-builder PR https://github.com/devrandom/gitian-builder/pull/130 git rev 0db6c052004c51a3f163048fe2a207af0854b78e
+* nsis PR https://github.com/kichik/nsis/pull/5 git rev a177b621001fa4ef8f6f14721c5b57ee0c2affd5
