@@ -1407,125 +1407,127 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
+		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex](int send_weld_nr) { // lambda
+			int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
+			// select wire
+			int wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
+			++my_random;
+			_dbg4("TUNTAP sending out the data from tuntap socket="<<tuntap_socket_nr
+				<<" via wire_socket_nr="<<wire_socket_nr);
+
+			// [thread] this is SAFE probably, as we read-only access the peer_pegs (that is not changing)
+			asio::ip::udp::endpoint &peer_peg = peer_pegs.at(0);
+
+			auto & mysocket = wire_socket.at(wire_socket_nr);
+			mysocket.get_strand().post(
+				// mysocket.wrap(
+					[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg]() {
+						auto & weld = welds.at(send_weld_nr);
+						size_t send_size = weld.m_pos;
+
+						_dbg4("TUNTAP-WIRE handler1 (in strand). TUNTAP->WIRE will be now sent."
+							<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr);
+						g_state_tuntap2wire_in_handler1.add(1, send_size); // [counter]
+
+						auto & wire = wire_socket.at(wire_socket_nr);
+						auto send_buf_asio = asio::buffer( weld.addr_all() , send_size );
+
+						wire.get_unsafe_assume_in_strand().get().async_send_to(
+							send_buf_asio,
+							peer_peg,
+							[send_weld_nr, wire_socket_nr, &welds, &welds_mutex](const boost::system::error_code & ec, std::size_t bytes_transferred)
+							{
+								_dbg4("TUNTAP-WIRE handler2 (sent done). ec="<<ec.message()<<"."
+									<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
+								);
+								g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
+								std::shared_lock<std::shared_timed_mutex> lg(welds_mutex); // lock
+								auto & weld = welds.at(send_weld_nr);
+								weld.clear();
+							}
+						); // asio send
+						_dbg4("TUNTAP-WIRE handler1 (in strand) - ok STARTED the handler2. Socket "<<wire_socket_nr<<" weld " <<wire_socket_nr << " - ASYNC STARTED");
+					} // delayed TUNTAP->WIRE
+				// ) // wrap
+			); // start(post) handler: TUNTAP->WIRE start
+
+			_dbg4("TUNTAP-WIRE posted: weld=" << wire_socket_nr << " to P2P socket="<<wire_socket_nr);
+			g_state_tuntap2wire_started.fetch_add(std::memory_order_relaxed);
+
+		}; // send the full weld
+
+		auto get_tun_input_buffer = [&welds, &welds_mutex](){
+			size_t found_ix=0;
+			bool found_any=false;
+//					e_weld_type weld_type = e_weld_type::local_thread_buffer;
+			e_weld_type weld_type = e_weld_type::global_weld_list;
+			if (weld_type == e_weld_type::global_weld_list) {
+				// lock to find and reserve buffer a weld
+				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+
+				for (size_t i=0; i<welds.size(); ++i) {
+					if (! welds.at(i).m_reserved) {
+						if (welds.at(i).space_left() >= size_tuntap_maxread) {
+							found_ix=i; found_any=true;
+							break;
+						}
+					}
+				}
+
+				if (found_any) {
+					auto & weld = welds.at(found_ix);
+					weld.m_reserved=true; // we are using it now
+				}
+				else {
+					_note("No free tuntap buffers! - fullbuffer!");
+					g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
+					//func_send_weld(0); // TODO choose weld
+					// forced send
+					return std::make_tuple<void *, size_t, size_t>(nullptr, 0, -1); // empty buffer
+//					return asio::mutable_buffers_1(asio::mutable_buffer()); // <= empty buffer
+				}
+			} // lock operations on welds
+
+			auto & found_weld = welds.at(found_ix);
+			size_t receive_size = found_weld.space_left();
+			assert(receive_size>0);
+			void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
+			unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
+			assert(buf_ptr);
+			_dbg4("TUNTAP read "
+				<< "into weld "<< found_ix << " "
+				<< "buffer size is: " << receive_size << " buf_ptr=" << buf_ptr);
+			return std::make_tuple( buf_ptr , receive_size, found_ix);
+		};
+
 		std::thread thr = std::thread(
-			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap]()
+			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap, func_send_weld, get_tun_input_buffer]()
 			{
 				++g_running_tuntap_jobs;
-				int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
 
-				auto func_send_weld = [&my_random, tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex](int send_weld_nr) { // lambda
-					// select wire
-					int wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
-					++my_random;
-					_dbg4("TUNTAP sending out the data from tuntap socket="<<tuntap_socket_nr
-						<<" via wire_socket_nr="<<wire_socket_nr);
-
-					// [thread] this is SAFE probably, as we read-only access the peer_pegs (that is not changing)
-					asio::ip::udp::endpoint &peer_peg = peer_pegs.at(0);
-
-					auto & mysocket = wire_socket.at(wire_socket_nr);
-					mysocket.get_strand().post(
-						// mysocket.wrap(
-							[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg]() {
-								auto & weld = welds.at(send_weld_nr);
-								size_t send_size = weld.m_pos;
-
-								_dbg4("TUNTAP-WIRE handler1 (in strand). TUNTAP->WIRE will be now sent."
-									<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr);
-								g_state_tuntap2wire_in_handler1.add(1, send_size); // [counter]
-
-								auto & wire = wire_socket.at(wire_socket_nr);
-								auto send_buf_asio = asio::buffer( weld.addr_all() , send_size );
-
-								wire.get_unsafe_assume_in_strand().get().async_send_to(
-									send_buf_asio,
-									peer_peg,
-									[send_weld_nr, wire_socket_nr, &welds, &welds_mutex](const boost::system::error_code & ec, std::size_t bytes_transferred)
-									{
-										_dbg4("TUNTAP-WIRE handler2 (sent done). ec="<<ec.message()<<"."
-											<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
-										);
-										g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
-										std::shared_lock<std::shared_timed_mutex> lg(welds_mutex); // lock
-										auto & weld = welds.at(send_weld_nr);
-										weld.clear();
-									}
-								); // asio send
-								_dbg4("TUNTAP-WIRE handler1 (in strand) - ok STARTED the handler2. Socket "<<wire_socket_nr<<" weld " <<wire_socket_nr << " - ASYNC STARTED");
-							} // delayed TUNTAP->WIRE
-						// ) // wrap
-					); // start(post) handler: TUNTAP->WIRE start
-
-					_dbg4("TUNTAP-WIRE posted: weld=" << wire_socket_nr << " to P2P socket="<<wire_socket_nr);
-					g_state_tuntap2wire_started.fetch_add(std::memory_order_relaxed);
-
-				}; // send the full weld
 
 				while (!g_atomic_exit) {
 //					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
 					_note("TUNTAP reading");
 
-					size_t found_ix=0;
-					bool found_any=false;
-//					e_weld_type weld_type = e_weld_type::local_thread_buffer;
-					e_weld_type weld_type = e_weld_type::global_weld_list;
-					if (weld_type == e_weld_type::global_weld_list) {
-						// lock to find and reserve buffer a weld
-						std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
-
-						for (size_t i=0; i<welds.size(); ++i) {
-							if (! welds.at(i).m_reserved) {
-								if (welds.at(i).space_left() >= size_tuntap_maxread) {
-									found_ix=i; found_any=true;
-									break;
-								}
-							}
-						}
-
-						if (found_any) {
-							auto & weld = welds.at(found_ix);
-							weld.m_reserved=true; // we are using it now
-						}
-						else {
-							_note("No free tuntap buffers! - fullbuffer!");
-							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
-							//func_send_weld(0); // TODO choose weld
-							// forced send
-							continue ; // <---
-						}
-					} // lock operations on welds
-
-					auto & found_weld = welds.at(found_ix);
-					size_t receive_size = found_weld.space_left();
-					assert(receive_size>0);
-					void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
-					unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
-					thread_local std::vector<unsigned char> tl_buf_tmp(100*1024*1024);
-					assert(buf_ptr);
-					auto buf_asio = asio::buffer( buf_ptr , receive_size );
-
 					try {
-						_dbg4("TUNTAP read "
-							<<"into weld "<<found_ix<<" "
-							<< "buffer size is: " << asio::buffer_size( buf_asio ) << " buf_ptr="<<buf_ptr);
+
 //						asio::ip::udp::endpoint ep;
 
 						// [asioflow] read *** blocking
-						//auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
-						size_t read_size = 0;
-						if (weld_type == e_weld_type::global_weld_list)
-							read_size = size_t { tuntap->read_from_tun(recv_buff_ptr, receive_size) };
-						else if (weld_type == e_weld_type::local_thread_buffer)
-							read_size = size_t { tuntap->read_from_tun(&tl_buf_tmp[0], tl_buf_tmp.size()) };
-						else std::abort(); // other options not implemented yet
+//						if (!cfg_tuntap_async) {
+							void *recv_buff_ptr;
+							size_t receive_size, found_ix;
+							std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+							if (!recv_buff_ptr) continue;
+							size_t read_size = 0;
+							read_size = size_t { tuntap->read_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size) };
 
-						g_speed_tuntap_read.add(1, read_size);
-						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << " weld " << found_ix << "\n\n");
+							g_speed_tuntap_read.add(1, read_size);
+							_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << "\n\n");
 
-						// process data, and un-reserve it so that others can add more to it
-						if (weld_type == e_weld_type::global_weld_list) {
+							// process data, and un-reserve it so that others can add more to it
 							send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
-						}
 
 					}
 					catch (std::exception &ex) {
@@ -1542,7 +1544,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 				--g_running_tuntap_jobs;
 			} // the lambda
-		);
+		); // thread constructor
 
 		tuntap_flow.push_back( std::move(thr) );
 
