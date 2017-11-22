@@ -126,6 +126,8 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 	gen.push_bytes_n( crypto_box_NONCEBYTES , nonce_used.get().to_binary() ); // TODO avoid conversion/copy
 	gen.push_varstring( std::string(data, data+data_size)  ); // TODO view_string
 
+	get_stats().update_sent_stats(data_size);
+
 /*
 	// TODONOW turn off this crypto (unless leave here for peer-to-peer auth only)
 	static unsigned char generated_shared_key[crypto_generichash_BYTES] = {43, 124, 179, 100, 186, 41, 101, 94, 81, 131, 17,
