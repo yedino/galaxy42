@@ -1344,7 +1344,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		thesocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , port_nr ) );
 	}*/
 
+	std::mutex tuntap_mutex;
 	std::unique_ptr<c_tuntap_base_obj> tuntap;
+	// tuntap_mutex is not needed in creation
 	if (cfg_tuntap_use_real_tun) {
 		_info("Create real TUN/TAP");
 		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
@@ -1501,7 +1503,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		};
 
 		std::thread thr = std::thread(
-			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap, func_send_weld, get_tun_input_buffer]()
+			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap, &tuntap_mutex, func_send_weld, get_tun_input_buffer]()
 			{
 				++g_running_tuntap_jobs;
 
@@ -1515,19 +1517,21 @@ void asiotest_udpserv(std::vector<std::string> options) {
 //						asio::ip::udp::endpoint ep;
 
 						// [asioflow] read *** blocking
-//						if (!cfg_tuntap_async) {
-							void *recv_buff_ptr;
-							size_t receive_size, found_ix;
-							std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
-							if (!recv_buff_ptr) continue;
-							size_t read_size = 0;
+						void *recv_buff_ptr;
+						size_t receive_size, found_ix;
+						std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+						if (!recv_buff_ptr) continue;
+						size_t read_size = 0;
+						{
+							std::lock_guard<std::mutex> lg(tuntap_mutex);
 							read_size = size_t { tuntap->read_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size) };
+						}
 
-							g_speed_tuntap_read.add(1, read_size);
-							_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << "\n\n");
+						g_speed_tuntap_read.add(1, read_size);
+						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << "\n\n");
 
-							// process data, and un-reserve it so that others can add more to it
-							send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
+						// process data, and un-reserve it so that others can add more to it
+						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
 
 					}
 					catch (std::exception &ex) {
@@ -1546,7 +1550,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			} // the lambda
 		); // thread constructor
 
-		tuntap_flow.push_back( std::move(thr) );
+		if (cfg_tuntap_async) {}
+		else {
+			tuntap_flow.push_back( std::move(thr) );
+		}
 
 	};
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
