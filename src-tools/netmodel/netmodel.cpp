@@ -7,7 +7,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 -----------
 
 */
-
+#include "netmodel.hpp"
 #include <iostream>
 #include <iomanip>
 #include <thread>
@@ -70,6 +70,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 namespace n_netmodel {
 
 bool g_debug = false;
+int bench_opt_mem_crypto_optimalization_barrier;
 
 using namespace boost;
 using std::vector;
@@ -129,7 +130,6 @@ class with_strand {
 };
 
 int g_stage_sleep_time = 0; ///< sleep between stages of startup, was used to debug some race conditions
-
 
 // ============================================================================
 
@@ -456,7 +456,6 @@ struct t_crypt_opt {
 	void calculate();
 };
 
-
 void t_crypt_opt::calculate() {
 	if (threads == -1) {
 		threads = std::thread::hardware_concurrency();
@@ -649,7 +648,6 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 	return mediana( result_sample );
 }
 
-
 template<typename F, bool allow_mt, size_t max_threads_count>
 double
 c_crypto_benchloop<F, allow_mt, max_threads_count>
@@ -686,61 +684,76 @@ enum class e_weld_type {
 
 void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
-	const size_t msg_size = param_msg_size;
-	std::vector<unsigned char> msg_buf;
-	std::vector<unsigned char> two_buf;
-	std::vector<unsigned char> key_buf;
-	std::vector<unsigned char> keyB_buf; // the other buffer, used in eg packet forwarding (verify, auth to other key)
-
-	size_t nonce_max_size = std::max(
+	constexpr size_t key_max_size = std::max(
+		std::max( crypto_onetimeauth_KEYBYTES, crypto_stream_chacha20_KEYBYTES ) ,
+		std::max(crypto_stream_chacha20_KEYBYTES, crypto_secretbox_KEYBYTES)
+	);
+	constexpr size_t nonce_max_size = std::max(
 		std::max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
 		crypto_stream_chacha20_NONCEBYTES
 	);
+	const size_t msg_size = param_msg_size;
+	std::vector<unsigned char> msg_buf;
+	std::vector<unsigned char> two_buf;
+	std::vector<unsigned char> key_buf(key_max_size, 0xfd);
+	std::vector<unsigned char> keyB_buf(key_max_size, 0xfa); // the other buffer, used in eg packet forwarding (verify, auth to other key)
+
 	const std::vector<unsigned char> nonce_buf( nonce_max_size , 0x00);
 
 	auto crypto_func_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&msg_buf[0]);
 		crypto_onetimeauth( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_veri = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0])) nothing();
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_veri_and_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, &  key_buf[0])) nothing(); // verify incoming
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 		// assume it was ok
 		crypto_onetimeauth       ( & two_buf[0], & msg_buf[0], msg_size, & keyB_buf[0]); // auth to other peer (keyB)
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/advanced/salsa20.html
 	auto crypto_func_encr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_decr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
 		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/advanced/chacha20.html
 	auto crypto_func_encr_chacha = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_stream_chacha20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_decr_chacha = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
 		UNUSED(keyB_buf);
 		crypto_stream_chacha20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/secret-key_cryptography/authenticated_encryption.html
 	auto crypto_func_makebox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_secretbox_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_openbox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0==crypto_secretbox_open_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0])) nothing();
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	double speed_gbps = 0;
@@ -751,7 +764,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -759,7 +771,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "veri_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -767,7 +778,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "encrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr),false,1> benchloop(crypto_func_encr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -775,7 +785,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "decrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr),false,1> benchloop(crypto_func_decr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -783,7 +792,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "makebox_encrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_makebox),false,1> benchloop(crypto_func_makebox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -791,7 +799,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "openbox_decrypt_xsalsa20_veri_poly1305";
 			msg_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_openbox),false,1> benchloop(crypto_func_openbox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -799,7 +806,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "encrypt_chacha20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr_chacha),false,1> benchloop(crypto_func_encr_chacha);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -807,7 +813,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "decrypt_chacha20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr_chacha),false,1> benchloop(crypto_func_decr_chacha);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -815,8 +820,6 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "veri_and_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
-			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
-			keyB_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri_and_auth),false,1> benchloop(crypto_func_veri_and_auth);
 			speed_gbps = benchloop.run_test_4buf(bench_opt, msg_buf, two_buf, key_buf, keyB_buf);
 		}	break;
@@ -842,6 +845,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	bench_opt.loops = func_cmdline_def("loops", bench_opt_def.loops);
 	bench_opt.samples = func_cmdline_def("samples", bench_opt_def.samples);
 	bench_opt.threads = func_cmdline_def("thr", bench_opt_def.samples);
+	bench_opt_mem_crypto_optimalization_barrier = func_cmdline_def("crypt_optim_barr", 0); // 0 is optimalization barrier is disabled
 	bench_opt.calculate(); // ***
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
@@ -1354,7 +1358,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap_address.fill(0x11);
 		tuntap_address.at(0) = 0xfd;
 		const int prefix_len = 16;
-		const uint32_t mtu = 65000;
+		const uint32_t mtu = 65535;
 		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
 	} else {
 		_info("Create fake TUN/TAP");
@@ -1662,6 +1666,10 @@ int netmodel_main(int argc, const char **argv) {
 
 	_goal("Normal exit of netmodel");
 	return 0;
+}
+
+void escape(void* p) {
+	asm volatile("" : : "g"(p) : "memory");
 }
 
 } // namespace n_netmodel
