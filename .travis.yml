@@ -43,7 +43,7 @@ before_install:
 
 install:
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-5" CC="gcc-5"  ; fi
-  - if [[ "$CC" == "clang" ]]; then export CXX="clang++-4.0" CC="clang-4.0"  ; fi
+  - if [[ "$CC" == "clang" ]]; then export CXX="clang++" CC="clang"  ; fi
   - echo "PATH=${PATH}"
   - echo "CC=${CC}, $(which ${CC})"
   - echo "CXX=${CXX}, $(which ${CXX})"
@@ -71,12 +71,12 @@ matrix:
         compiler: gcc
 
       - os: linux
-        env: EXTLEVEL=0
+        env: EXTLEVEL=0 COMPILER_NAME=clang CC=clang-4.0 CXX=clang++-4.0
         compiler: clang
 
       - os: osx
         osx_image: xcode8.2
-        env: EXTLEVEL=0
+        env: EXTLEVEL=0 COMPILER_NAME=clang CC=clang-4.0 CXX=clang++-4.0
         compiler: clang
 
       - os: osx
@@ -124,4 +124,3 @@ notifications:
   #recipients:
   #  - one@example.com
   #  - other@example.com
-
