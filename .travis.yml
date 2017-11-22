@@ -71,12 +71,12 @@ matrix:
         compiler: gcc
 
       - os: linux
-        env: EXTLEVEL=0 COMPILER_NAME=clang CC=clang-4.0 CXX=clang++-4.0
+        env: EXTLEVEL=0
         compiler: clang
 
       - os: osx
         osx_image: xcode8.2
-        env: EXTLEVEL=0 COMPILER_NAME=clang CC=clang-4.0 CXX=clang++-4.0
+        env: EXTLEVEL=0
         compiler: clang
 
       - os: osx
