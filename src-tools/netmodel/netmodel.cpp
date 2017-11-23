@@ -1506,57 +1506,77 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			return std::make_tuple( buf_ptr , receive_size, found_ix);
 		};
 
-		std::thread thr = std::thread(
-			[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap, &tuntap_mutex, func_send_weld, get_tun_input_buffer]()
-			{
-				++g_running_tuntap_jobs;
+		if (!cfg_tuntap_async) {
+			std::thread thr = std::thread(
+				[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap, &tuntap_mutex, func_send_weld, get_tun_input_buffer]()
+				{
+					++g_running_tuntap_jobs;
 
 
-				while (!g_atomic_exit) {
-//					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
-					_note("TUNTAP reading");
+					while (!g_atomic_exit) {
+	//					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
+						_note("TUNTAP reading");
 
-					try {
+						try {
 
-//						asio::ip::udp::endpoint ep;
+	//						asio::ip::udp::endpoint ep;
 
-						// [asioflow] read *** blocking
+							// [asioflow] read *** blocking
+							void *recv_buff_ptr;
+							size_t receive_size, found_ix;
+							std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+							if (!recv_buff_ptr) continue;
+							size_t read_size = 0;
+							{
+								std::lock_guard<std::mutex> lg(tuntap_mutex);
+								read_size = size_t { tuntap->read_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size) };
+							}
+
+							g_speed_tuntap_read.add(1, read_size);
+							_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << "\n\n");
+
+							// process data, and un-reserve it so that others can add more to it
+							send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
+
+						}
+						catch (std::exception &ex) {
+							_erro("Error in TUNTAP lambda: "<<ex.what());
+							std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+						}
+						catch (...) {
+							_erro("Error in TUNTAP lambda - unknown");
+							std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+						}
+
+						// process the TUN read data TODO
+					} // loop forever
+
+					--g_running_tuntap_jobs;
+				} // the lambda
+			); // thread constructor
+			tuntap_flow.push_back( std::move(thr) );
+		} else { // tuntap async
+			void *recv_buff_ptr;
+			size_t receive_size, found_ix;
+			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+			c_tuntap_base_obj::read_handler read_handler =
+				[&welds, &welds_mutex, found_ix, func_send_weld, &read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
+						g_speed_tuntap_read.add(1, read_size);
+						_dbg4("TUNTAP ***ASYNC READ DONE***  read_size="<< read_size << "\n\n");
+						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
+						if (ec) {
+							_erro("asio error " << ec.message());
+							return;
+						}
+						// continue reading
 						void *recv_buff_ptr;
 						size_t receive_size, found_ix;
 						std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
-						if (!recv_buff_ptr) continue;
-						size_t read_size = 0;
-						{
-							std::lock_guard<std::mutex> lg(tuntap_mutex);
-							read_size = size_t { tuntap->read_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size) };
-						}
-
-						g_speed_tuntap_read.add(1, read_size);
-						_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << "\n\n");
-
-						// process data, and un-reserve it so that others can add more to it
-						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
-
-					}
-					catch (std::exception &ex) {
-						_erro("Error in TUNTAP lambda: "<<ex.what());
-						std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
-					}
-					catch (...) {
-						_erro("Error in TUNTAP lambda - unknown");
-						std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
-					}
-
-					// process the TUN read data TODO
-				} // loop forever
-
-				--g_running_tuntap_jobs;
-			} // the lambda
-		); // thread constructor
-
-		if (cfg_tuntap_async) {}
-		else {
-			tuntap_flow.push_back( std::move(thr) );
+						std::lock_guard<std::mutex> lg(tuntap_mutex);
+						tuntap->async_receive_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size, read_handler);
+				}; // read handler lambda
+			std::lock_guard<std::mutex> lg(tuntap_mutex);
+			tuntap->async_receive_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size, read_handler);
 		}
 
 	};
