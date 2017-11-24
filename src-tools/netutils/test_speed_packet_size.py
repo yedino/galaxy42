@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Run program with --help for usage
+
 import sys
 import subprocess
 import socket
@@ -21,7 +23,6 @@ PASSWORD = ''
 RPC_TCP_PORT_BASE = 9011 # the remote sender-program(s) that are waiting for RPC command to start spamming us: base port (increasing for each next program if several are available)
 LOCAL_P2P_PORT = 9000 # on which port is our receiver program listening for the P2P flood
 TEST_TIME_IN_SEC = 10 # how long 1 test should take
-#TEST_TIME_IN_SEC = 20
 MESSAGE = '{} SEND {} {} 999000 foo {} -1 {} -1\n'
 PROGRAM_NETMODEL = '../../build/tunserver.elf'
 PROGRAM_NETMODEL_ARGS = [PROGRAM_NETMODEL, '--mode-bench', '192.168.1.107', '2121', 'crypto=0', 'wire_buf=100', 'wire_sock=1',
@@ -68,7 +69,7 @@ def rpc_test_remote_all(size, cmd_original):
       data = [ ['x','x'] , ['x','x'] ]
 
       for i in range(0,2):
-        if parts[i]=='sameend':
+        if parts[i]=='sameboth':
           data[i][0]='sameip'
           data[i][1]='sameport'
         else:
@@ -124,13 +125,13 @@ def parse_args():
                                                      'of packet\n Before run script you have to build '
                                                      'program first')
     arg_parser.add_argument('--cmd', action='append', type=str, required=True,
-			help='my_p2p_addr:port,rpc:rpc_port');
+			help='my_p2p_addr:port,rpc:rpc_port ; example "10.0.0.1:7000,192.168.1.5:9000" and then --cmd "sameboth,sameip:9001" '
+			'This means: spam me on IP 10.0.0.1:7000, and this RPC request is sent to 192.168.1.5 on port 9000 and 9001 ; '
+		  'This option can be given several times on cmd line, each time you give "endpoint1,endpoint2" ; '
+			'The endpoint is in form of "ip:port" ; Instead of given endpoint you can write "sameboth" or "sameip:sameport" then IP, PORT or both are copied from preceding --cmd option ; '
+			)
     arg_parser.add_argument('--passwd', type=str, required=True, help='The RPC password that you set on the remote sender programs')
 
-    # arg_parser.add_argument('--rpc', type=str, required=True, help='address (or many addresses separated with comma "," character) ipv4 of RPC sender to connect to (the asio send tool waiting for remote command)')
-    # arg_parser.add_argument('--rpc_port_base', type=int, default=RPC_TCP_PORT_BASE, help='TCP port number (for RPC, see --rpc)')
-    # arg_parser.add_argument('--my_p2p_ip', type=str, required=True, help='my address ipv4 (that will be spammed)')
-    # arg_parser.add_argument('--my_p2p_port', '--port', type=int, default=LOCAL_P2P_PORT, help='my UDP port number of asio server (that will be spammed)')
     return arg_parser.parse_args()
 
 def myrange(low,high,mod):
