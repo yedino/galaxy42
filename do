@@ -208,12 +208,18 @@ if [[ $OSTYPE == "linux-gnu" ]]; then
 		# if ubuntu main version is older/equal than 14
 		if (( $ubuntu_ver <= 14 )); then
 			if [ -z "$CC" ] || [ -z "$CXX" ]; then
+				if [ -z "$CC" ] && [ -z "$CXX" ]; then
+					echo "(Ok all compilers set)"
+				else
+					echo "Error: either set, or unset, all of following env variables: CC, CXX"
+					exit 1
+				fi
 				echo "Setting manually newer compiler for ubuntu <= 14"
 				echo "Which gcc-5, g++-5: "
 				w_gcc=$(which gcc-5) || true
 				w_gpp=$(which g++-5) || true
 				if [[ -z "$w_gcc" ]] || [[ -z "$w_gpp" ]]; then
-					echo "Can't found g++/gcc in version 5. Aborting"
+					echo "Can't find g++/gcc in version 5. Aborting"
 					echo "Required dependencies can be installed using install.sh script"
 					exit 1
 				fi
