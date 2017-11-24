@@ -928,7 +928,7 @@ constexpr int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
 static constexpr size_t fragment_pos_max=32;
 
 struct c_weld {
-	unsigned char m_buf[cfg_size_tuntap_buf];
+	unsigned char m_buf[cfg_size_tuntap_buf + crypto_secretbox_MACBYTES];
 
 	uint16_t m_fragment_pos[fragment_pos_max]; ///< positions of ends fragments,
 	/// as constant-size array, with separate index in it
@@ -1407,13 +1407,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	}
 
 	vector<std::thread> tuntap_flow;
+	vector<unsigned char> nonce_buf(crypto_secretbox_NONCEBYTES, 0x00);
+	vector<unsigned char> key_buf(crypto_secretbox_KEYBYTES, 0xfd);
 
 	// tuntap: DO WORK
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
 		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
 		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
-		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex](int send_weld_nr) { // lambda
+		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex, &key_buf
+		                      , &nonce_buf](int send_weld_nr) { // lambda
 			int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
 			// select wire
 			int wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
@@ -1427,7 +1430,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			auto & mysocket = wire_socket.at(wire_socket_nr);
 			mysocket.get_strand().post(
 				// mysocket.wrap(
-					[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg]() {
+					[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg, &key_buf, &nonce_buf]() {
 						auto & weld = welds.at(send_weld_nr);
 						size_t send_size = weld.m_pos;
 
@@ -1436,6 +1439,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						g_state_tuntap2wire_in_handler1.add(1, send_size); // [counter]
 
 						auto & wire = wire_socket.at(wire_socket_nr);
+
+						if (static_cast<e_crypto_test>(cfg_test_crypto_task) == e_crypto_test::makebox_encrypt_xsalsa20_auth_poly1305 ) {
+							crypto_secretbox_easy( weld.addr_all(), weld.addr_all(), send_size, & nonce_buf[0], & key_buf[0]);
+							send_size += crypto_secretbox_MACBYTES;
+						}
+
 						auto send_buf_asio = asio::buffer( weld.addr_all() , send_size );
 
 						wire.get_unsafe_assume_in_strand().get().async_send_to(
