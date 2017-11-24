@@ -16,7 +16,7 @@ TMP_FILE = '/tmp/tuntap_test.txt'
 RECEIVER = '../../build/tunserver.elf'
 RECEIVER_ARGS = [RECEIVER, '--mode-bench', '192.168.1.107', '2121', 'crypto=0', 'wire_buf=100', 'wire_sock=1',
                 'wire_ios=1', 'wire_ios_thr=2', 'tuntap_sock=1', 'tuntap_ios=1', 'tuntap_weld_sleep=1', 'tuntap_block',
-                'mt_strand', 'mport', 'tuntap_use_real=1']
+                'mt_strand', 'mport', 'tuntap_use_real=1', 'tuntap_async=0']
 SENDER = '../netutils/asio_send_block_ipv6/asio_send_block_ipv6'
 
 def run_receiver(stdout_file, number_of_welds, number_of_threads):
