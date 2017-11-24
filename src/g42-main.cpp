@@ -310,13 +310,6 @@ int main(int argc, const char **argv) { // the main() function
 		return 0;
 	}
 
-	if ( remove_and_count(argt,"--mode-bench") ) {
-		c_string_string_Cstyle args_cstyle( argt_exec , argt );
-		const int again_argc = args_cstyle.get_argc();
-		const char ** again_argv = args_cstyle.get_argv();
-		return n_netmodel::netmodel_main( again_argc , again_argv );
-	}
-
 	enum class t_program_type {
 		e_program_type_tunserver = 1,
 		e_program_type_newloop = 100,
@@ -351,6 +344,13 @@ int main(int argc, const char **argv) { // the main() function
 
 	g_dbg_level = 60;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
+
+	if ( remove_and_count(argt,"--mode-bench") ) {
+		c_string_string_Cstyle args_cstyle( argt_exec , argt );
+		const int again_argc = args_cstyle.get_argc();
+		const char ** again_argv = args_cstyle.get_argv();
+		return n_netmodel::netmodel_main( again_argc , again_argv );
+	}
 
 	my_cap::drop_root(remove_and_count(argt, "--home-env" )); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
 
