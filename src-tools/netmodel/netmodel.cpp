@@ -928,6 +928,10 @@ constexpr int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
 static constexpr size_t fragment_pos_max=32;
 
 struct c_weld {
+private:
+	mutable std::unique_ptr<std::shared_timed_mutex> m_mutex_ptr;
+public:
+
 	unsigned char m_buf[cfg_size_tuntap_buf + crypto_secretbox_MACBYTES];
 
 	uint16_t m_fragment_pos[fragment_pos_max]; ///< positions of ends fragments,
@@ -939,8 +943,19 @@ struct c_weld {
 	size_t m_pos; ///< if ==0, then nothing yet is written; If ==10 then 0..9 is written, 10..end is free
 	bool m_reserved; ///< do some thread now read this now?
 
-	c_weld() { clear(); }
+	c_weld()
+	:
+	m_mutex_ptr(std::make_unique<std::shared_timed_mutex>())
+	{
+		clear();
+	}
+
+	c_weld(const c_weld &) = delete;
+	c_weld(c_weld &&) = default;
+	c_weld& operator=(const c_weld &) = delete;
+	c_weld& operator=(c_weld &&) = default;
 	void clear() {
+		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
 		m_reserved=false;
 		m_pos=0;
 		m_fragment_pos_ix=0;
@@ -952,11 +967,14 @@ struct c_weld {
 		// e.g. buf=10 (array is 0..9), m_pos=0 (nothing used), size=10 -> allowed
 		assert(size <= cfg_size_tuntap_buf - m_pos);
 
+		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
 		m_pos += size;
 		m_fragment_pos[ m_fragment_pos_ix ] = m_pos;
 		++m_fragment_pos_ix;
 	}
+
 	size_t space_left() const {
+		std::shared_lock<std::shared_timed_mutex> lg(*m_mutex_ptr);
 		if (m_fragment_pos_ix>=fragment_pos_max) return 0; // can not add anything since no place to store indexes
 		return cfg_size_tuntap_buf - m_pos;
 	}
@@ -1403,7 +1421,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	{
 		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
-		for (int i=0; i<cfg_num_weld_tuntap; ++i) welds.push_back( c_weld() );
+		welds.resize(cfg_num_weld_tuntap);
 	}
 
 	vector<std::thread> tuntap_flow;
@@ -1478,7 +1496,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			e_weld_type weld_type = e_weld_type::global_weld_list;
 			if (weld_type == e_weld_type::global_weld_list) {
 				// lock to find and reserve buffer a weld
-				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+//				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+				std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
 
 				for (size_t i=0; i<welds.size(); ++i) {
 					if (! welds.at(i).m_reserved) {
