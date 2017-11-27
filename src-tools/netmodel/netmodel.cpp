@@ -1414,9 +1414,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
 		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex](int send_weld_nr) { // lambda
-			int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
+			size_t my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
 			// select wire
-			int wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
+			size_t wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
 			++my_random;
 			_dbg4("TUNTAP sending out the data from tuntap socket="<<tuntap_socket_nr
 				<<" via wire_socket_nr="<<wire_socket_nr);
@@ -1560,7 +1560,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			size_t receive_size, found_ix;
 			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
 			c_tuntap_base_obj::read_handler read_handler =
-				[&welds, &welds_mutex, found_ix, func_send_weld, &read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
+				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
 						g_speed_tuntap_read.add(1, read_size);
 						_dbg4("TUNTAP ***ASYNC READ DONE***  read_size="<< read_size << "\n\n");
 						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
