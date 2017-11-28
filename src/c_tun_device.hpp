@@ -44,6 +44,27 @@ class c_tun_device {
 
 };
 
+#ifdef __FreeBSD__
+
+class c_tun_device_freebsd final : public c_tun_device {
+	public:
+    friend class c_event_manager_linux; // for io_service etc?
+
+		c_tun_device_linux(){;}
+		virtual void init(){} override; ///< call before use
+
+		void set_ipv6_address
+			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override{};
+		void set_mtu(uint32_t mtu) override;
+		bool incomming_message_form_tun() override{return false;};
+		size_t read_from_tun(void *buf, size_t count) override{return 0;}
+		size_t write_to_tun(void *buf, size_t count) override{return 0};
+
+		virtual int get_tun_fd() const override{return 0;};
+
+
+#enif
+
 #ifdef __linux__
 
 class c_tun_device_linux final : public c_tun_device {

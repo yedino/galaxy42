@@ -14,6 +14,8 @@ class c_event_manager {
 		virtual void init()=0; ///< call this to finish init of the object
 };
 
+
+
 #ifdef __linux__
 class c_tun_device_linux;
 class c_udp_wrapper_linux;
@@ -37,7 +39,7 @@ class c_event_manager_linux final : public c_event_manager {
 };
 
 // __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__) ||defined(__MACH__)
+#elif defined(_WIN32) || defined(__CYGWIN__) ||defined(__MACH__) || defined(__FreeBSD__)
 
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
@@ -50,6 +52,8 @@ class c_event_manager_linux final : public c_event_manager {
 class c_tun_device_windows;
 #elif defined(__MACH__)
 class c_tun_device_apple;
+#elif defined(__FreeBSD__)
+class c_tun_device_freebsd;
 #endif
 class c_udp_wrapper_asio;
 
