@@ -3,7 +3,6 @@
 
 #include <QAbstractItemModel>
 #include <QList>
-
 #include "meshpeer.h"
 
 
@@ -62,11 +61,19 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
+    void addPeer(MeshPeer* peer);
+    void addPeers(QList<MeshPeer*> peers);
+
 private:
+
+    QVariant getData(const QModelIndex& index) const;
+    QVariant getDecorator(const QModelIndex& index) const;
+    QVariant getEditor(const QModelIndex& index) const;
+
+    void setValue(ColumnRoles role,int row,const QVariant& value);
 
     QList<MeshPeer*> m_peers;
     QList<ColumnRoles> m_enabled_columns;
-
 
 };
 

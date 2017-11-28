@@ -2,6 +2,7 @@
 #define MESHPEER_H
 
 #include <QObject>
+#include <json.hpp>
 
 class MeshPeer : public QObject
 {
@@ -127,6 +128,7 @@ public:
     inline void setPort(int port){m_ip_port = port;}
     inline void setVipPort(int port){m_vip_port = port;}
 
+    void deserialize(const nlohmann::json &serialized_obj);
 };
 
 #endif // MESHPEER_H
