@@ -45,7 +45,8 @@ SOURCES += \
     nodecontrolerdialog.cpp \
     statusform.cpp \
     processrunner.cpp \
-    addressmodel.cpp
+    addressmodel.cpp \
+    addressbookform.cpp
 
 
 HEADERS += \
@@ -74,7 +75,8 @@ HEADERS += \
     nodecontrolerdialog.h \
     statusform.h \
     processrunner.h \
-    addressmodel.h
+    addressmodel.h \
+    addressbookform.h
 
 FORMS += \
     mainwindow.ui \
@@ -90,6 +92,7 @@ FORMS += \
         addpeerdialog.ui \
     nodecontrolerdialog.ui \
     statusform.ui \
+    addressbookform.ui \
     addressbookform.ui
 
 

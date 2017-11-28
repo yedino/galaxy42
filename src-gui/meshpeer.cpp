@@ -41,10 +41,32 @@ std::string MeshPeer::serialize() const
     return j.dump();
 }
 
+void MeshPeer::deserialize(const nlohmann::json & serialized_obj)
+{
+    std::string obj_name = j.at( "obj" ).get<std::string>();
+    if( obj_name != "MeshPeer" ) {
+        throw std::runtime_error ( tr( "can't deserialize error" ).toStdString() );
+    }
+
+    try {
+        m_name = QString::fromStdString( j.at( "name" ).get<std::string>() );
+        m_ip = QString::fromStdString( j.at( "ip" ).get<std::string>() );
+        m_vip = QString::fromStdString( j.at( "vip" ).get<std::string>() );
+        m_ip_port = j.at("ip_port").get<int>();
+        m_vip_port = j.at("vip_port").get<int>();
+        source = static_cast<MeshPeer::SOURCE>(j.at("source").get<int>());
+    } catch ( std::exception &e ) {
+        qDebug()<<"problem while deserialize"<< e.what();
+    }
+    return;
+
+}
+
 void MeshPeer::deserialize( const std::string &serilized_obj )
 {
     nlohmann::json j = nlohmann::json::parse( serilized_obj );
-
+    deserialize(j);
+/*
     std::string obj_name = j.at( "obj" ).get<std::string>();
     if( obj_name != "MeshPeer" ) {
         throw std::runtime_error ( tr( "can't deserialize error" ).toStdString() );
@@ -61,4 +83,5 @@ void MeshPeer::deserialize( const std::string &serilized_obj )
         qDebug()<<"problem while deserialize"<< e.what();
     }
     return;
+    */
 }

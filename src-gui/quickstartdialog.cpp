@@ -101,6 +101,6 @@ void quickStartDialog::on_whatisFullInviteBtn_clicked()
 void quickStartDialog::on_whatisPasteInv_clicked()
 {
 
-    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is place to insert full invite from your friend. You scan it from QR code or set it manualy.");
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is place to insert full invite from your friend.\n You scan it from QR code or set it manualy.");
     box.exec();
 }

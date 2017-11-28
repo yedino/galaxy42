@@ -72,7 +72,9 @@
              <item>
               <widget class="QLineEdit" name="vipEdit">
                <property name="toolTip">
-                <string>Filed with your IP v6 - copy and paste it in &quot;paste invite&quot; field in your's friends computer to connect with him</string>
+                <string>Filed with your IP v6 
+copy and paste it in &quot;paste invite&quot; field 
+ in your's friends computer to connect with him</string>
                </property>
                <property name="statusTip">
                 <string>my  ip v6 address</string>
@@ -165,7 +167,8 @@
                 <string>IP v6 and IP v4 of node where you want to connect</string>
                </property>
                <property name="whatsThis">
-                <string>IP v6 and IP v4 of node where you want to connect</string>
+                <string>IP v6 and IP v4 of node where
+ you want to connect</string>
                </property>
               </widget>
              </item>
@@ -302,10 +305,11 @@
                 <string>IP v6 and IP v4 of this node - place in &quot;Paste invate&quot; field if you want to connect to </string>
                </property>
                <property name="statusTip">
-                <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+                <string>IP v6 and IP v4 of this node \n necessery to connect to this node</string>
                </property>
                <property name="whatsThis">
-                <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+                <string>IP v6 and IP v4 of this node 
+ necessery to connect to this node</string>
                </property>
                <property name="text">
                 <string/>
