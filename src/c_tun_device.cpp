@@ -618,7 +618,7 @@ void c_tun_device_apple::handle_read(const boost::system::error_code &error, siz
 void c_tun_device_apple::set_ipv6_address
         (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
     assert(binary_address[0] == 0xFD);
-    assert(binary_address[1] == 0x42);
+    //assert(binary_address[1] == 0x42);
     Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address, prefixLen, Sockaddr_AF_INET6);
 }
 
