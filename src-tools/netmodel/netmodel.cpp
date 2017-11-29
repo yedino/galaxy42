@@ -831,7 +831,7 @@ void cryptotest_main(std::vector<std::string> options) {
 
 	bench_opt.loops = func_cmdline_def("loops", bench_opt_def.loops);
 	bench_opt.samples = func_cmdline_def("samples", bench_opt_def.samples);
-	bench_opt.threads = func_cmdline_def("thr", bench_opt_def.samples);
+	bench_opt.threads = func_cmdline_def("thr", 1);
 	bench_opt.calculate(); // ***
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
