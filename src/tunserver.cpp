@@ -380,6 +380,12 @@ t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
 	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
 }
 
+void c_tunserver::exit_tunserver()
+{
+	_mark("Exiting tunserver");
+	is_exiting=true;
+}
+
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
@@ -521,7 +527,10 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("hello", [this](const std::string &input_json) {
 		return rpc_hello(input_json);
-    });
+	});
+	m_rpc_server.add_rpc_function("exit", [this](const std::string &input_json) {
+		return rpc_exit(input_json);
+	});
 }
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
@@ -1242,6 +1251,16 @@ nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 	return ret;
 }
 
+nlohmann::json c_tunserver::rpc_exit(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "exit";
+	ret["state"] = "ok";
+	exit_tunserver();
+	return ret;
+}
+
 bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto it = m_peer_black_list.find(hip); // check if peer is on balck list
@@ -1293,6 +1312,8 @@ void c_tunserver::event_loop(int time) {
 
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+
+		if (is_exiting) break;
 
 		try { // ---
 
