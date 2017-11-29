@@ -24,12 +24,33 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="toolTip">
+        <string>List of current peers</string>
+       </property>
+       <property name="whatsThis">
+        <string>list of current peers</string>
+       </property>
+       <property name="gridSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
       </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QPushButton" name="pushButton">
+         <property name="toolTip">
+          <string>Add peer buttno</string>
+         </property>
+         <property name="statusTip">
+          <string>Add peer</string>
+         </property>
+         <property name="whatsThis">
+          <string>Add peer</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -41,6 +62,15 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_2">
+         <property name="toolTip">
+          <string>remove peer button</string>
+         </property>
+         <property name="statusTip">
+          <string>Remove peer</string>
+         </property>
+         <property name="whatsThis">
+          <string>Remove peer</string>
+         </property>
          <property name="text">
           <string/>
          </property>
