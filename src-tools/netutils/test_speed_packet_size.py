@@ -62,7 +62,7 @@ def rpc_test_remote_all(size, cmd_original):
     cmdP = [] # parsed command
 
     for ix,cmd in enumerate(cmd_original):
-      print ("Parsing spam command '" + cmd + "' (on ix=" + str(ix))
+      print ("Parsing spam command '" + cmd + "' (on ix=" + str(ix) +")")
       parts = cmd.split(',')
       data = [ ['x','x'] , ['x','x'] ]
 
@@ -150,11 +150,11 @@ if __name__ == "__main__":
 
     if ranges >= 5 :
         rtab=(512, 2048)
-        if (args.ranges >= 10): rtab=(128,512)
-        if (args.ranges >= 20): rtab=(32,64)
-        if (args.ranges >= 25): rtab=(8,16)
-        if (args.ranges >= 30): rtab=(4,4)
         if (args.ranges >= 100): rtab=(1,1)
+        elif (args.ranges >= 30): rtab=(4,4)
+        elif (args.ranges >= 25): rtab=(8,16)
+        elif (args.ranges >= 20): rtab=(32,64)
+        elif (args.ranges >= 10): rtab=(128,512)
         sizes += myrange(64,  2000, rtab[0]);
         sizes += myrange(2000,9200, rtab[1]);
 
