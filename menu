@@ -63,18 +63,18 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"d10"       "Build: with ./do extlevel 10"  \
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
 	"d30"       "Build: with ./do extlevel 30 - slow! insecure!"  \
-	"-" "" \
+	"-" "--- Benchmarks ---" \
+	"ball"      "Benchmarks: run all" \
 	"-" "--- Gitian ---" \
-	"glf"       "Build: Gitian for Linux (fast)"  \
-	"gwf"       "Build: Gitian for Windows (fast)"  \
-	"-" "" \
 	"gli"       "Build: Gitian for Linux (image) - slow!"  \
 	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
 	"gai"       "Build: Gitian for all (image) - slow!"  \
 	"-" "" \
+	"glf"       "Build: Gitian for Linux (fast)"  \
+	"gwf"       "Build: Gitian for Windows (fast)"  \
+	"-" "" \
 	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
 	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
-	"-" "" \
 	"-" "--- Language ---" \
 	"lc"        "Language: update: re-COMPILE .po --> .mo" \
 	"lui"       "Language: update: Scripts: INSTALLER" \
@@ -106,6 +106,8 @@ response_menu_task="$response"
 
 
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
+	echo "" ; echo "Running menu command '$item'." ; echo ""
+
 	case "$item" in
 		i)
 			if [[ $EUID -ne 0 ]]; then
@@ -123,6 +125,10 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		r)
 			cd build || abdialog_fail "Can not enter build directory. Build the project first"
 			./rundevel.sh
+		;;
+
+		ball)
+			src-tools/netutils/allbench.sh
 		;;
 
 		d)
