@@ -87,7 +87,7 @@ void StatusForm::onGetSessionId()
 {
     ui->statusInycator->setChecked( true );
     ui->statusInycator->setStatusTip( tr( "got rpc id" ) );
-    ui->statusInycator->setText( tr( "All Ok" ) );
+    ui->statusInycator->setText( tr( "RPC connected" ) );
     m_is_working = true;
     emit netConnect( m_is_working );
 }

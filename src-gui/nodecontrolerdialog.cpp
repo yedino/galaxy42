@@ -34,17 +34,17 @@ NodeControlerDialog::~NodeControlerDialog()
 
 void NodeControlerDialog::confirmAddPeer( const QString& vip )
 {
-
+    Q_UNUSED(vip)
 }
 
 void NodeControlerDialog::confirmRemovePeer( const QString& vip )
 {
-
+    Q_UNUSED(vip)
 }
 
 void NodeControlerDialog::confirmBanPeer( const QString &vip )
 {
-
+    Q_UNUSED(vip)
 }
 
 void NodeControlerDialog::onAddPeer( QString peer_str )
@@ -85,6 +85,6 @@ void NodeControlerDialog::onBanPeer( QString peer_str )
 
 void NodeControlerDialog::onNewPeerList( const QStringList &peerList )
 {
-
+    Q_UNUSED(peerList)
 }
 

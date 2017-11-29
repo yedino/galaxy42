@@ -2,6 +2,7 @@
 #include <QColor>
 #include <QIcon>
 #include <QBrush>
+#include <QMessageBox>
 
 #include "peersmodel.h"
 
@@ -41,15 +42,17 @@ QVariant peersModel::data( const QModelIndex &index, int role ) const
 
     if( role == Qt::DisplayRole ) {
 
-        switch ( index.column() ) {
-        case name:
+        switch ( static_cast <Columns>(index.column()) ) {
+        case Columns::name:
             return m_peers_list.at( index.row() )->getName();
-        case ip:
+        case Columns::ip:
             return m_peers_list.at( index.row() )->getIp();
-        case vip:
+        case Columns::vip:
             return m_peers_list.at( index.row() )->getVip();
-        case invitation:
+        case Columns::invitation:
             return m_peers_list.at( index.row() )->getInvitation();
+        case Columns::status:
+            return static_cast<int>(m_peers_list.at(index.row() )->status);
         default:
             return QVariant();
             break;
@@ -108,7 +111,9 @@ void peersModel::addPeer( QString serialized_peer )
                 peer->status = MeshPeer::STATUS::connected;
                 peer->comm_status = MeshPeer::COMMANDSTATUS::sended;
 //               peer->comm_status = MeshPeer::acknowled;
-                qDebug()<<"added peer";
+//                qDebug()<<"added peer";
+                QMessageBox box(QMessageBox::Icon::Warning,"Peer add","Peer already exist");
+                box.exec();
                 return;
             }
         }
@@ -236,6 +241,7 @@ MeshPeer* peersModel::findPeer( const MeshPeer& peer )
         if( it->getVip() == peer.getVip() ) return it;
     }
     throw std::runtime_error ( tr( "can't find peer" ).toStdString() );
+    return nullptr;
 }
 
 
@@ -252,18 +258,18 @@ void  peersModel::deleteOldList()
 
 MeshPeer* peersModel::findPeer( QString value,Columns col )
 {
-    MeshPeer *peer;
     for( int i=0; i < m_peers_list.size() ; ++i ) {
-        if( data( index( i,col ) ).toString() == value ) return m_peers_list.at( i );
+        if( data( index( i,static_cast <int >( col) ) ).toString() == value ) return m_peers_list.at( i );
     }
 
     throw std::runtime_error ( tr( "can't find peer" ).toStdString() );
+    return nullptr;
 }
 
 QModelIndex peersModel::findIndex( const QString& value, Columns col )
 {
     for ( int i=0 ; i < m_peers_list.size(); ++i ) {
-        QModelIndex idx = index( i,col );
+        QModelIndex idx = index( i,static_cast <int >( col) );
         if( data( idx ).toString() == value ) return idx;
     }
     return QModelIndex();
@@ -272,6 +278,11 @@ QModelIndex peersModel::findIndex( const QString& value, Columns col )
 
 void peersModel::deletaAllPeers()
 {
+    if(m_peers_list.size() == 0){
+        qDebug()<<"nothing to remove";
+        return;
+    }
+
     beginRemoveRows( index( 0 ),0,m_peers_list.size()-1 );
     foreach ( auto it, m_peers_list ) {
         delete it;
@@ -290,10 +301,10 @@ void peersModel::banAllPeers()
 
 void  peersModel::startActionOnIndex(const QModelIndex &index)
 {
-    try{
+    try {
         size_t i = index.row();
         m_peers_list.at(i)->comm_status = MeshPeer::COMMANDSTATUS::sended;
-    }catch(std::exception &e){
+    } catch(std::exception &e) {
         qDebug()<<e.what();
     }
 }

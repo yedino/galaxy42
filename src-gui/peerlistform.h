@@ -66,6 +66,7 @@ private slots:
 
 private:
     Ui::PeerListForm *ui;
+    QModelIndex getCurrentSelection() const;
 };
 
 #endif // PEERLISTFORM_H
