@@ -28,7 +28,7 @@ popd || fail "popd $installer_bin_dir dir"
 rm -rf zlib
 git clone https://github.com/madler/zlib || fail "git clone"
 pushd zlib || fail
-	git checkout v1.2.8 || fail "git checkout"
+	git checkout v1.2.11 || fail "git checkout"
 
 	confirm_gitver=$(git log --format='%H' -1)
 	expected_gitrev='cacf7f1d4e3d44d871b605da3b647f07d718623f'
