@@ -33,7 +33,17 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 	FRIEND_TEST(tuntap, async_receive_from_tun);
 	FRIEND_TEST(tuntap, set_tun_parameters);
 	public:
+#ifdef USE_MOCK
+		using stream_type = mock::mock_posix_stream_descriptor;
+		using sys_functions_wrapper = testing::NiceMock<mock::mock_tuntap_system_functions>;
+#else
+		using stream_type = boost::asio::posix::stream_descriptor;
+		using sys_functions_wrapper = c_tuntap_system_functions;
+#endif
+
 		c_tuntap_linux_obj(); ///< construct this object, throws if error
+		c_tuntap_linux_obj(boost::asio::io_service &io_service);
+
 
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 		size_t send_to_tun_separated_addresses(const unsigned char * const data, size_t size,
@@ -46,17 +56,11 @@ class c_tuntap_linux_obj final : public c_tuntap_base_obj {
 		void async_receive_from_tun(unsigned char * const data, size_t size, const read_handler & handler) override;
 		void set_tun_parameters
 			(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) override;
+		stream_type &get_native_asio_object();
 
 	private:
 		const int m_tun_fd; ///< the unix file descriptor. -1 is closed (this should not happen in correct object)
 		boost::asio::io_service m_io_service;
-#ifdef USE_MOCK
-		using stream_type = mock::mock_posix_stream_descriptor;
-		using sys_functions_wrapper = testing::NiceMock<mock::mock_tuntap_system_functions>;
-#else
-		using stream_type = boost::asio::posix::stream_descriptor;
-		using sys_functions_wrapper = c_tuntap_system_functions;
-#endif
 		stream_type m_tun_stream;
 		sys_functions_wrapper sys_fun;
 };

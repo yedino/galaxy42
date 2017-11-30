@@ -44,6 +44,21 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	_goal("tuntap is opened correctly");
 }
 
+// TODO: code duplication !!!
+c_tuntap_linux_obj::c_tuntap_linux_obj(boost::asio::io_service &io_service) :
+	m_tun_fd(open("/dev/net/tun", O_RDWR)),
+	m_io_service(), // will be not used, TODO
+	m_tun_stream(io_service, m_tun_fd)
+{
+	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+	_try_sys(m_tun_fd != -1);
+	_check_sys(m_tun_stream.is_open());
+	try {
+		//set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
+	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
+	_goal("tuntap is opened correctly");
+}
+
 size_t c_tuntap_linux_obj::send_to_tun(const unsigned char *data, size_t size) {
 	try {
 		return m_tun_stream.write_some(boost::asio::buffer(data, size));
@@ -125,6 +140,10 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
 	_goal("Configuring tuntap options - done");
+}
+
+c_tuntap_linux_obj::stream_type &c_tuntap_linux_obj::get_native_asio_object() {
+	return m_tun_stream;
 }
 
 #endif // ANTINET_linux
