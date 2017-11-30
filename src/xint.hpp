@@ -77,9 +77,6 @@ using t_int_representing_float =
 	>
 ;
 
-// TODO move to lib
-template<class T> constexpr T constexpr_max(T const & a, T const & b) { return (a>b) ? a : b; }
-
 template<typename P, typename Q>
 using t_bigger_of_two_cpp_int =	boost::multiprecision::number<
 		boost::multiprecision::cpp_int_backend<
