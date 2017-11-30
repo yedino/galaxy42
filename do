@@ -193,7 +193,7 @@ COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || fail "Buildin
 
 [ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
 if [[ $OSTYPE == "linux-gnu" ]]; then
-	source gettext.sh || fail "Gettext is not installed, please install it."
+	source gettext.sh || fail "Gettext (or sudo) is not installed, please install them (e.g. apt-get install sudo gettext)"
 
 	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
 		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
