@@ -18,7 +18,7 @@ quickStartDialog::quickStartDialog( QWidget *parent ) :
 void quickStartDialog::setIps( const QString &ip,const QString &invitation )
 {
     qDebug()<<"set invitations";
-
+    Q_UNUSED(ip)
     QString vip = IpReader::readVipFromInvitation( invitation );
     ui->vipEdit->setText( vip );
     ui->myInviteEdit->setText( invitation );
@@ -82,4 +82,25 @@ void quickStartDialog::on_QrZoomButton_clicked()
 //    ui->QrZoomButton->setIcon(); //setting new icons
     QrDialog dlg( qr_code );
     dlg.exec();
+}
+
+void quickStartDialog::on_whatIsVipBtn_clicked()
+{
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is your virtual IP.");
+    box.exec();
+}
+
+void quickStartDialog::on_whatisFullInviteBtn_clicked()
+{
+
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is your full invite address.\n You can generete QR code with it or copy/paste it manualy.");
+    box.exec();
+}
+
+
+void quickStartDialog::on_whatisPasteInv_clicked()
+{
+
+    QMessageBox box(QMessageBox::Information,"What's up doc tip","This is place to insert full invite from your friend. You scan it from QR code or set it manualy.");
+    box.exec();
 }

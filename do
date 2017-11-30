@@ -95,7 +95,6 @@ function thread_setting {
 	fi
 }
 
-
 function clean_previous_build {
 	make clean || { echo "(can not make clean - but this is probably normal at first run)" ; }
 	rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but this is probably normal at first run)" ; }
@@ -190,7 +189,6 @@ echo "===================================================================="
 echo "===================================================================="
 echo ""
 
-
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || fail "Building extra libraries failed"
 
 [ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
@@ -209,17 +207,25 @@ if [[ $OSTYPE == "linux-gnu" ]]; then
 		ubuntu_ver=$( echo "${platforminfo[only_verid]}" | cut -d'.' -f1)
 		# if ubuntu main version is older/equal than 14
 		if (( $ubuntu_ver <= 14 )); then
-			echo "Setting manually newer compiler for ubuntu <= 14"
-			echo "Which gcc-5, g++-5: "
-			w_gcc=$(which gcc-5) || true
-			w_gpp=$(which g++-5) || true
-			if [[ -z "$w_gcc" ]] || [[ -z "$w_gpp" ]]; then
-				echo "Can't found g++/gcc in version 5. Aborting"
-				echo "Required dependencies can be installed using install.sh script"
-				exit 1
+			if [ -z "$CC" ] || [ -z "$CXX" ]; then
+				if [ -z "$CC" ] && [ -z "$CXX" ]; then
+					echo "(Ok all compilers set)"
+				else
+					echo "Error: either set, or unset, all of following env variables: CC, CXX"
+					exit 1
+				fi
+				echo "Setting manually newer compiler for ubuntu <= 14"
+				echo "Which gcc-5, g++-5: "
+				w_gcc=$(which gcc-5) || true
+				w_gpp=$(which g++-5) || true
+				if [[ -z "$w_gcc" ]] || [[ -z "$w_gpp" ]]; then
+					echo "Can't find g++/gcc in version 5. Aborting"
+					echo "Required dependencies can be installed using install.sh script"
+					exit 1
+				fi
+				export CC=gcc-5
+				export CXX=g++-5
 			fi
-			export CC=gcc-5
-			export CXX=g++-5
 		fi
 	fi
 
@@ -262,7 +268,6 @@ pushd $dir_build
 	set +x
 	# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
-
 	set -x
 	ln -s "$dir_base_of_source"/share share || echo "Link already exists"
 
@@ -271,4 +276,3 @@ pushd $dir_build
 
 	set +x
 popd
-

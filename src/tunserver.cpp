@@ -380,6 +380,12 @@ t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
 	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
 }
 
+void c_tunserver::exit_tunserver()
+{
+	_mark("Exiting tunserver");
+	is_exiting=true;
+}
+
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
 	_dbg1("Adding peer from simplestring=" << simple);
@@ -521,6 +527,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("hello", [this](const std::string &input_json) {
 		return rpc_hello(input_json);
+	});
+	m_rpc_server.add_rpc_function("exit", [this](const std::string &input_json) {
+		return rpc_exit(input_json);
 	});
 }
 
@@ -897,7 +906,10 @@ void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin
 const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool require_pubkey ) {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto peer_iter = m_peer.find(addr);
-	if (peer_iter == m_peer.end()) _throw_error( expected_not_found() );
+	if (peer_iter == m_peer.end()) {
+		_dbg4("this HIP is not in peers");
+		throw expected_not_found();
+	}
 	c_peering & peer = * peer_iter->second;
 	if (require_pubkey) {
 		if (! peer.is_pubkey()) _throw_error( expected_not_found_missing_pubkey() );
@@ -1239,6 +1251,16 @@ nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 	return ret;
 }
 
+nlohmann::json c_tunserver::rpc_exit(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "exit";
+	ret["state"] = "ok";
+	exit_tunserver();
+	return ret;
+}
+
 bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto it = m_peer_black_list.find(hip); // check if peer is on balck list
@@ -1290,6 +1312,8 @@ void c_tunserver::event_loop(int time) {
 
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+
+		if (is_exiting) break;
 
 		try { // ---
 
@@ -1367,12 +1391,6 @@ void c_tunserver::event_loop(int time) {
 					data_route_ttl
 					,antinet_crypto::t_crypto_nonce()
 				); // push the tunneled data to where they belong
-				try{
-					LockGuard<Mutex> lg(m_peer_etc_mutex);
-					m_peer.at(dst_hip)->get_stats().update_sent_stats(dump.size());
-				}catch(std::out_of_range&){
-					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-				}
 
 			} else {
 				_info("Using CT tunnel to send our own data");
@@ -1392,12 +1410,6 @@ void c_tunserver::event_loop(int time) {
 					c_routing_manager::c_route_reason( c_haship_addr() , c_routing_manager::e_search_mode_route_own_packet),
 					data_route_ttl, nonce_used
 				); // push the tunneled data to where they belong
-				try{
-					LockGuard<Mutex> lg(m_peer_etc_mutex);
-					m_peer.at(dst_hip)->get_stats().update_sent_stats(data_encrypted.size());
-				}catch(std::out_of_range&){
-					_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-				}
 			}
 			if (!was_anything_sent_from_TUN) {
 				ui::action_info_ok("Ok, we sent a packet of data from our computer through virtual network, sending seems to work.");
@@ -1409,7 +1421,6 @@ void c_tunserver::event_loop(int time) {
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
-            //find_peer_by_sender_peering_addr( sender_pip ).get_stats().update_read_stats(size_read);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
 			_note("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
@@ -1573,12 +1584,6 @@ void c_tunserver::event_loop(int time) {
 						data_route_ttl,
 						nonce_used // forward the nonce for blob
 					); // push the tunneled data to where they belong // reinterpret char-signess
-					try{
-						LockGuard<Mutex> lg(m_peer_etc_mutex);
-						m_peer.at(dst_hip)->get_stats().update_sent_stats(blob.size());
-					}catch(std::out_of_range&){
-						_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-					}
 #endif
 				}
 
@@ -1680,16 +1685,9 @@ void c_tunserver::event_loop(int time) {
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
-                        //sender_as_peering_ptr->get_stats().update_sent_stats(data.size());
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 						_dbg1("send route response to " << sender_pip);
 						_dbg1("sender HIP " << sender_as_peering.get_hip());
-						try{
-							LockGuard<Mutex> lg(m_peer_etc_mutex);
-							m_peer.at(sender_as_peering.get_hip())->get_stats().update_sent_stats(data.size());
-						}catch(std::out_of_range&){
-							_warn("We can not update statistics (you can ignore this warning in future). Probably: peer not in m_peer");
-						}
                         _note("Send the route reply");
 					} catch(...) {
 						_info("Can not yet reply to that route query.");
