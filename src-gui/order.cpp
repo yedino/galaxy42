@@ -121,6 +121,7 @@ void peerListOrder::execute( MainWindow &main_window )
 
 getGalaxyOrder::getGalaxyOrder( const RpcId &id, const std::vector<std::string> &ipv4_list )
 {
+    Q_UNUSED(id)
     m_cmd ="get_galaxy_new_format_reference";
     m_msg_array = ipv4_list;
 }
@@ -260,9 +261,11 @@ std::string banPeerOrder::get_str() const
 
 void banPeerOrder::execute( MainWindow &main_window )
 {
+
     try {
-        std::string peer = getPeerName();
+        QString peer = QString::fromStdString(getPeerName());
 //        main_window.onBanBeer(peer);
+        main_window.onPeerBanned(peer);
     } catch ( std::exception &e ) {
         qDebug()<<e.what();
     }
@@ -271,7 +274,7 @@ void banPeerOrder::execute( MainWindow &main_window )
 
 banAllOrder::banAllOrder( const RpcId& id ): order( id )
 {
-    m_cmd = "ban_all_peer";
+    m_cmd = "ban_all_peers";
 }
 
 banAllOrder::banAllOrder( const std::string &json_str ): order( json_str )
@@ -293,6 +296,13 @@ void banAllOrder::execute( MainWindow &main_window )
     } else {
         main_window.addDebugInfo( QString::fromStdString( m_msg ) );
     }
+}
+
+
+std::string banAllOrder::get_str() const
+{
+    nlohmann::json j{{"cmd", m_cmd}, {"state",m_state},{"id",m_id}};
+    return j.dump();
 }
 
 deletePeerOrder::deletePeerOrder( const RpcId& id,const MeshPeer &peer )
@@ -349,7 +359,7 @@ std::string deletePeerOrder::get_str() const
 
 deleteAllPeersOrder::deleteAllPeersOrder( const RpcId& id ):order( id )
 {
-    m_cmd = "delete_all_peer";
+    m_cmd = "delete_all_peers";
     m_state = "ok";
 }
 
@@ -361,6 +371,12 @@ void deleteAllPeersOrder::execute( MainWindow &main_window )
         main_window.addDebugInfo( QString::fromStdString( m_msg ) );
     }
     return;
+}
+
+std::string deleteAllPeersOrder::get_str() const
+{
+    nlohmann::json j{{"cmd", m_cmd}, {"state",m_state},{"id",m_id}};
+    return j.dump();
 }
 
 
@@ -424,8 +440,7 @@ std::string order::getPeerName()
 
     auto ord_ptr =  m_executor->getOrder( QString::fromStdString( m_re ) );
     auto ord = ord_ptr.get();
-    addPeerOrder* add_ord = dynamic_cast<addPeerOrder*>( ord );
-    return add_ord->m_peer;
+    return ord->m_peer;
 
 }
 
@@ -461,3 +476,24 @@ void getClientName::execute( MainWindow & )
         qDebug()<< "can't get name ";
     }
 }
+
+serverMsg::serverMsg(const std::string &json_str)
+{
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_msg = j["msg"];
+        m_lvl = j["lvl"];
+
+    } catch (std::exception &e) {
+        qDebug()<<e.what();
+    }
+}
+
+
+void serverMsg::execute(MainWindow &)
+{
+    qDebug()<<QString::fromStdString(m_state) <<" "<< QString::fromStdString(m_lvl)<<" "<<QString::fromStdString(m_msg);
+    //!@todo use app debug system while exists
+}
+

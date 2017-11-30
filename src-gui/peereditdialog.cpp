@@ -1,4 +1,5 @@
 #include <QHostAddress>
+#include <QMessageBox>
 
 #include "meshpeer.h"
 #include "peereditdialog.h"
@@ -66,8 +67,15 @@ QString PeerEditDialog::createInvitation()
     QString vip = ui->VipEdit->text();
 
     if( ip.size() > 0 ) {
-        if( QHostAddress( ip ).protocol() != QAbstractSocket::IPv4Protocol ) {
+        if(!isIpv4(ip)) {
+                QMessageBox box(tr("IP is improper"),
+                                tr("IP is improper"),
+                                QMessageBox::Warning,
+                                QMessageBox::Ok,
+                                QMessageBox::Escape,
+                                QMessageBox::NoButton);
             qDebug()<<"ip is improper";
+            box.exec();
             ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
@@ -76,9 +84,15 @@ QString PeerEditDialog::createInvitation()
         return QString ();
     }
 
-    if( vip>0 ) {
+    if( vip.size()>0 ) {
         if( QHostAddress( vip ).protocol() != QAbstractSocket::IPv6Protocol ) {
-            qDebug()<<"vip is improper";
+
+            QMessageBox box(tr("VIP is improper"),tr("VIP is improper"),
+                                QMessageBox::Warning,
+                                QMessageBox::Ok,
+                                QMessageBox::Escape,
+                                QMessageBox::NoButton);
+            box.exec();
             ui->buttonBox->button( ui->buttonBox->Ok )->setEnabled( false );
             return QString();
         }
@@ -124,3 +138,31 @@ QString PeerEditDialog::getInvitation()
 {
     return createInvitation();
 }
+
+
+bool PeerEditDialog::isIpv4(const QString &str)
+{
+    QStringList lst = str.split(".");
+    if(lst.size() != 4) {
+        return false;
+    }
+
+    for (auto &i:lst){
+        if(i.isEmpty()){
+            return false;
+        }
+        bool ok;
+        if (i.toUInt(&ok)>255){
+            return false;
+        }
+        if(!ok) return false;
+    }
+    return true;
+
+}
+
+bool PeerEditDialog::isIpv6(const QString &str)
+{
+     return QHostAddress( str ).protocol() == QAbstractSocket::IPv6Protocol ;
+}
+
