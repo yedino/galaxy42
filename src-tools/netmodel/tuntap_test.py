@@ -96,5 +96,5 @@ if __name__ == "__main__":
                 for thread in threads:
                     try:
                       single_test(file, size, weld, thread)
-                    except:
+                    except ZeroDivisionError:
                       print(_fail("SOMETHING IS WRONG!!!!!!!!"))
