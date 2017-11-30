@@ -316,6 +316,7 @@ class c_tunserver : public c_galaxy_node {
 		std::map< c_haship_addr, unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
 
 		bool enable_remove=false; // if false then just count, do not remove
+		bool is_exiting=false; // if true exiting from main loop
 		std::chrono::seconds peer_timeout;
 
 //		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
@@ -365,6 +366,7 @@ class c_tunserver : public c_galaxy_node {
 		nlohmann::json rpc_get_galaxy_ipv6(const std::string &input_json);
 		nlohmann::json rpc_get_galaxy_invitation(const std::string &input_json);
 		nlohmann::json rpc_hello(const std::string &input_json);
+		nlohmann::json rpc_exit(const std::string &input_json);
 		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
 
 		int m_port;
@@ -373,6 +375,7 @@ class c_tunserver : public c_galaxy_node {
 
 		const bool m_option_insecure_cap; ///< should we do insecure cap (e.g. do NOT drop the capabilities); tests/debug
 		t_peering_reference parse_peer_simplestring(const string& simple);
+		void exit_tunserver();
 };
 
 // ------------------------------------------------------------------

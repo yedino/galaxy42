@@ -10,7 +10,7 @@ class peersModel : public QAbstractListModel
     QList<MeshPeer*> m_peers_list;
 
 public:
-    enum Columns{
+    enum class Columns{
         name = 0,
         ip,
         vip,

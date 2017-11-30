@@ -269,10 +269,13 @@ Optionally, following marking of leave-block instructions (to be used especially
 Recommended vimrc settings to use if that is your editor:
 
 ```vim
+" --- yedino vim settings ---
+:syntax on
+
+:set smartindent
 :set noexpandtab
 :set copyindent
 :set smarttab
-:set smartindent
 :set softtabstop=0
 :set shiftwidth=2
 :set tabstop=2
@@ -282,6 +285,36 @@ iabbrev !!= // =================================================================
 iabbrev !!- // -------------------------------------------------------------------
 iabbrev !!r return ; // <=== return
 iabbrev !!b break ; // <=== break
+
+function MyModePython()
+	" Python specific settings.
+	setlocal tabstop=4
+	setlocal shiftwidth=4
+	setlocal expandtab
+	setlocal autoindent
+	setlocal formatoptions=croql
+	" set foldmethod=indent
+	let python_highlight_all=1
+	let b:extra_whitespace_before = matchadd('ExtraWhitespaceBefore', '^\t\+')
+endfunction
+
+function MyBufLeave()
+	if (exists('b:extra_whitespace_before'))
+		:call matchdelete(b:extra_whitespace_before)
+		unlet b:extra_whitespace_before
+	endif
+endfunction
+
+autocmd Filetype python call MyModePython()
+autocmd BufLeave * call MyBufLeave()
+
+" unwanted whitespaces
+highlight ExtraWhitespace ctermbg=red guibg=red
+highlight ExtraWhitespaceBefore ctermbg=white guibg=white
+autocmd ColorScheme * highlight ExtraWhitespace ctermbg=red guibg=red
+let w:extra_whitespace = matchadd('ExtraWhitespace', '\s\+\%#\@<!$')
+
+" ------
 ```
 
 ## Developing and code details

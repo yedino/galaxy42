@@ -131,6 +131,7 @@ class with_strand {
 
 int g_stage_sleep_time = 0; ///< sleep between stages of startup, was used to debug some race conditions
 
+
 // ============================================================================
 
 c_timerfoo g_speed_wire_recv(30); // global counter
@@ -457,6 +458,7 @@ struct t_crypt_opt {
 	void calculate();
 };
 
+
 void t_crypt_opt::calculate() {
 	if (threads == -1) {
 		threads = std::thread::hardware_concurrency();
@@ -649,6 +651,7 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 	return mediana( result_sample );
 }
 
+
 template<typename F, bool allow_mt, size_t max_threads_count>
 double
 c_crypto_benchloop<F, allow_mt, max_threads_count>
@@ -696,8 +699,8 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 	const size_t msg_size = param_msg_size;
 	std::vector<unsigned char> msg_buf;
 	std::vector<unsigned char> two_buf;
-	std::vector<unsigned char> key_buf(key_max_size, 0xfd);
-	std::vector<unsigned char> keyB_buf(key_max_size, 0xfa); // the other buffer, used in eg packet forwarding (verify, auth to other key)
+	std::vector<unsigned char> key_buf;
+	std::vector<unsigned char> keyB_buf; // the other buffer, used in eg packet forwarding (verify, auth to other key)
 
 	const std::vector<unsigned char> nonce_buf( nonce_max_size , 0x00);
 
@@ -765,6 +768,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -772,6 +776,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "veri_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -779,6 +784,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "encrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr),false,1> benchloop(crypto_func_encr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -786,6 +792,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "decrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr),false,1> benchloop(crypto_func_decr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -793,6 +800,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "makebox_encrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_makebox),false,1> benchloop(crypto_func_makebox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -800,6 +808,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "openbox_decrypt_xsalsa20_veri_poly1305";
 			msg_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_openbox),false,1> benchloop(crypto_func_openbox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -807,6 +816,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "encrypt_chacha20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr_chacha),false,1> benchloop(crypto_func_encr_chacha);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -814,6 +824,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "decrypt_chacha20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr_chacha),false,1> benchloop(crypto_func_decr_chacha);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -821,6 +832,8 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "veri_and_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
+			keyB_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri_and_auth),false,1> benchloop(crypto_func_veri_and_auth);
 			speed_gbps = benchloop.run_test_4buf(bench_opt, msg_buf, two_buf, key_buf, keyB_buf);
 		}	break;
@@ -934,6 +947,8 @@ constexpr int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
 static constexpr size_t fragment_pos_max=32;
 
 struct c_weld {
+	mutable std::unique_ptr<std::shared_timed_mutex> m_mutex_ptr;
+
 	unsigned char m_buf[cfg_size_tuntap_buf + crypto_secretbox_MACBYTES];
 
 	uint16_t m_fragment_pos[fragment_pos_max]; ///< positions of ends fragments,
@@ -945,8 +960,19 @@ struct c_weld {
 	size_t m_pos; ///< if ==0, then nothing yet is written; If ==10 then 0..9 is written, 10..end is free
 	bool m_reserved; ///< do some thread now read this now?
 
-	c_weld() { clear(); }
+	c_weld()
+	:
+	m_mutex_ptr(std::make_unique<std::shared_timed_mutex>())
+	{
+		clear();
+	}
+
+	c_weld(const c_weld &) = delete;
+	c_weld(c_weld &&) = default;
+	c_weld& operator=(const c_weld &) = delete;
+	c_weld& operator=(c_weld &&) = default;
 	void clear() {
+		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
 		m_reserved=false;
 		m_pos=0;
 		m_fragment_pos_ix=0;
@@ -958,11 +984,14 @@ struct c_weld {
 		// e.g. buf=10 (array is 0..9), m_pos=0 (nothing used), size=10 -> allowed
 		assert(size <= cfg_size_tuntap_buf - m_pos);
 
+		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
 		m_pos += size;
 		m_fragment_pos[ m_fragment_pos_ix ] = m_pos;
 		++m_fragment_pos_ix;
 	}
+
 	size_t space_left() const {
+		std::shared_lock<std::shared_timed_mutex> lg(*m_mutex_ptr);
 		if (m_fragment_pos_ix>=fragment_pos_max) return 0; // can not add anything since no place to store indexes
 		return cfg_size_tuntap_buf - m_pos;
 	}
@@ -987,6 +1016,7 @@ void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_m
 	}
 	else { // do not send. weld extended with data
 		_dbg4("Removing reservation on weld " << found_ix);
+		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
 		the_weld.m_reserved=false;
 	}
 	// lock to un-reserve
@@ -1232,7 +1262,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 
-
 	// --- welds var ---
 	vector<c_weld> welds;
 	std::shared_timed_mutex welds_mutex;
@@ -1281,6 +1310,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				{
 					std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 					for (const auto & weld : welds) {
+						std::shared_lock<std::shared_timed_mutex> lg(*weld.m_mutex_ptr);
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
 				}
@@ -1370,6 +1400,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_info("Create fake TUN/TAP");
 		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
 	}
+
 	// sockets for wire p2p connections:
 	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> wire_socket;
 	c_inbuf_tab inbuf_tab(cfg_num_inbuf);
@@ -1409,7 +1440,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	{
 		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
-		for (int i=0; i<cfg_num_weld_tuntap; ++i) welds.push_back( c_weld() );
+		welds.resize(cfg_num_weld_tuntap);
 	}
 
 	vector<std::thread> tuntap_flow;
@@ -1423,9 +1454,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
 		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex, &key_buf
 		                      , &nonce_buf](int send_weld_nr) { // lambda
-			int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
+			size_t my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
 			// select wire
-			int wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
+			size_t wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
 			++my_random;
 			_dbg4("TUNTAP sending out the data from tuntap socket="<<tuntap_socket_nr
 				<<" via wire_socket_nr="<<wire_socket_nr);
@@ -1484,7 +1515,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			e_weld_type weld_type = e_weld_type::global_weld_list;
 			if (weld_type == e_weld_type::global_weld_list) {
 				// lock to find and reserve buffer a weld
-				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+//				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+				std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
 
 				for (size_t i=0; i<welds.size(); ++i) {
 					if (! welds.at(i).m_reserved) {
@@ -1575,7 +1607,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			size_t receive_size, found_ix;
 			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
 			c_tuntap_base_obj::read_handler read_handler =
-				[&welds, &welds_mutex, found_ix, func_send_weld, &read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
+				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
 						g_speed_tuntap_read.add(1, read_size);
 						_dbg4("TUNTAP ***ASYNC READ DONE***  read_size="<< read_size << "\n\n");
 						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);

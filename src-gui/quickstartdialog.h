@@ -65,6 +65,12 @@ private slots:
     void on_QrScanButton_clicked();
     void on_QrZoomButton_clicked();
 
+    void on_whatIsVipBtn_clicked();
+
+    void on_whatisFullInviteBtn_clicked();
+
+    void on_whatisPasteInv_clicked();
+
 private:
     Ui::quickStartDialog *ui;
 };
