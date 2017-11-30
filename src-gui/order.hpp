@@ -160,6 +160,7 @@ public:
     banAllOrder(const RpcId& Id);
     banAllOrder(const std::string &json_str);
     void execute(MainWindow &main_window);
+    std::string get_str() const;
 
 protected:
 
@@ -190,6 +191,7 @@ public:
     }
 
     void execute(MainWindow &main_window);
+    std::string get_str() const;
 protected:
 
 };
@@ -247,6 +249,19 @@ public:
 
 protected:
     commandExecutor* m_executor;
+};
+
+
+class serverMsg final:public order
+{
+public:
+    serverMsg(const std::string &json_str);
+    void execute(MainWindow &main_window);
+
+protected:
+    std::string m_lvl;
+private:
+    std::string get_str() const{return std::string();}
 };
 
 

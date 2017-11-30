@@ -193,6 +193,12 @@ is it signed by person allowed to sign-commits this times, and does everything m
 Script that can help speed up this process is being written, e.g. one good version of it is:
 `sha512 3ed9cf88d3d78ced3a7326a05bc954695cb36b5802abca309745196bfe498e679a2f91c1df3e4ffcef852e3a203406959d565f5e78a8364d0438e99a6e9a7ad0 ` of file `antinet/tools/git_pretty_signature.py` in project Antinet. (New versions will be better, though review the code before runnig it anyway).
 
+### Tasks
+
+Running benchmarks:
+Use ./menu 
+See [[src-tools/netutils/README-bench.txt]] for details.
+
 ### Organizations and projects
 
 * Galaxy42 - the main network routing.

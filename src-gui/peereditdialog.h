@@ -25,6 +25,9 @@ public:
 signals:
     void editPeer(QString);
 
+protected:
+    bool isIpv6(const QString &str);
+    bool isIpv4(const QString &str);
 private slots:
     void on_QrScanButton_clicked();
 
