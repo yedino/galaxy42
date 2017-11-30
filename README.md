@@ -63,7 +63,7 @@ For more details, including correct naming and **glossary**, and advanced techni
 
 ### Version v0.3.3a (pre-alpha)
 
-* Summary: multi-threading tools, tests, network model, utils; RPC commands, and GUI.
+* Summary: multi-threading tools, tests, network model, utils; RPC commands, and GUI, fixes.
 * GUI.
  * Basic GUI works, but is for testing from source code (is not connected to build system).
   * Connecting to RPC (not encrypted yet!).
@@ -78,6 +78,11 @@ For more details, including correct naming and **glossary**, and advanced techni
 * Fixes
  * Possible race in RPC, in 13f3eaf0d73f3e48db3892bf11d4956f67a4cd1f
  * Fix building in build/ or in top-dir, with proper copy of some files, see 6e3a3a75ac758eb1886b0c026d67ecd16064d75f
+ * Working --set-prefix (to build oldnet)
+* Bench / netmodel
+ * starting on medium level tests (python, gnuplot)
+ * starting high-level big test
+ * many tests added (only-crypto, and various wire-tun-crypto tests)
 * Code
  * Affinity mini lib.
  * Fixed some C++ warnings.
