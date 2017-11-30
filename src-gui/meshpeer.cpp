@@ -43,23 +43,23 @@ std::string MeshPeer::serialize() const
 
 void MeshPeer::deserialize(const nlohmann::json & serialized_obj)
 {
-    std::string obj_name = j.at( "obj" ).get<std::string>();
+
+    std::string obj_name = serialized_obj.at( "obj" ).get<std::string>();
     if( obj_name != "MeshPeer" ) {
         throw std::runtime_error ( tr( "can't deserialize error" ).toStdString() );
     }
 
     try {
-        m_name = QString::fromStdString( j.at( "name" ).get<std::string>() );
-        m_ip = QString::fromStdString( j.at( "ip" ).get<std::string>() );
-        m_vip = QString::fromStdString( j.at( "vip" ).get<std::string>() );
-        m_ip_port = j.at("ip_port").get<int>();
-        m_vip_port = j.at("vip_port").get<int>();
-        source = static_cast<MeshPeer::SOURCE>(j.at("source").get<int>());
+        m_name = QString::fromStdString( serialized_obj.at( "name" ).get<std::string>() );
+        m_ip = QString::fromStdString( serialized_obj.at( "ip" ).get<std::string>() );
+        m_vip = QString::fromStdString( serialized_obj.at( "vip" ).get<std::string>() );
+        m_ip_port = serialized_obj.at("ip_port").get<int>();
+        m_vip_port = serialized_obj.at("vip_port").get<int>();
+        source = static_cast<MeshPeer::SOURCE>(serialized_obj.at("source").get<int>());
     } catch ( std::exception &e ) {
         qDebug()<<"problem while deserialize"<< e.what();
     }
     return;
-
 }
 
 void MeshPeer::deserialize( const std::string &serilized_obj )
