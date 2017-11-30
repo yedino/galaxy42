@@ -62,6 +62,7 @@ class c_rpc_server final {
 				c_session(c_session &&) = delete;
 				c_session & operator = (c_session && other) = delete;
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
+				void send_response(nlohmann::json json_response);
 			private:
 				std::list<c_session>::iterator m_iterator_in_session_list; // needed for delete_me()
 				c_rpc_server *m_rpc_server_ptr; // needed for delete_me()

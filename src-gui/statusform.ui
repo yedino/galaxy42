@@ -42,7 +42,7 @@
      <item>
       <widget class="QPushButton" name="pushButton">
        <property name="text">
-        <string>reconnect</string>
+        <string>Reconnect</string>
        </property>
       </widget>
      </item>

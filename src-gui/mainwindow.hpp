@@ -42,6 +42,7 @@ public:
     void startNewCrpcConnection(const QString &host, uint port);
 
     StatusForm *GetStatusObject();
+    void onPeerBanned(const QString &vip);
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
@@ -56,7 +57,7 @@ public slots:
 
     void addDebugInfo(const QString &str);
 
-    void onBanBeer(const QString &vip);		//! slot of ban one peer
+    void onBanPeer(const QString &vip);		//! slot of ban one peer
     void onRemovePeer(const QString &vip);		//! slot of remove one peer
     void onAddPeer(const QString &vip);		//! slot of add peer
     void onSendMessage(const QString &vip,const QString &msg);	//! slot that sended message (no rpc command now - so not working)

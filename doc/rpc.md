@@ -79,3 +79,8 @@ Authenticator is a 64 octets of HMAC-SHA-512. Data is in raw format generated i.
   Request: {"cmd":"hello"}
   Response: {"cmd":"hello","id":"<session-id>-srv<response-id>","state":"ok"}
   ```
+* Exit
+  ```
+  Request: {"cmd":"exit"}
+  Response: {"cmd":"exit","id":"<session-id>-srv<response-id>","state":"ok"}
+  ```
