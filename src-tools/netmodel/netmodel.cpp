@@ -131,6 +131,7 @@ class with_strand {
 
 int g_stage_sleep_time = 0; ///< sleep between stages of startup, was used to debug some race conditions
 
+
 // ============================================================================
 
 c_timerfoo g_speed_wire_recv(30); // global counter
@@ -453,8 +454,10 @@ struct t_crypt_opt {
 
 	int threads=-1; ///< how many threads to use. -1 means autodetect number of cores
 
+	t_crypt_opt() { }
 	void calculate();
 };
+
 
 void t_crypt_opt::calculate() {
 	if (threads == -1) {
@@ -648,6 +651,7 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 	return mediana( result_sample );
 }
 
+
 template<typename F, bool allow_mt, size_t max_threads_count>
 double
 c_crypto_benchloop<F, allow_mt, max_threads_count>
@@ -695,8 +699,8 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 	const size_t msg_size = param_msg_size;
 	std::vector<unsigned char> msg_buf;
 	std::vector<unsigned char> two_buf;
-	std::vector<unsigned char> key_buf(key_max_size, 0xfd);
-	std::vector<unsigned char> keyB_buf(key_max_size, 0xfa); // the other buffer, used in eg packet forwarding (verify, auth to other key)
+	std::vector<unsigned char> key_buf;
+	std::vector<unsigned char> keyB_buf; // the other buffer, used in eg packet forwarding (verify, auth to other key)
 
 	const std::vector<unsigned char> nonce_buf( nonce_max_size , 0x00);
 
@@ -764,6 +768,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_auth),false,1> benchloop(crypto_func_auth);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -771,6 +776,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "veri_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri),false,1> benchloop(crypto_func_veri);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -778,6 +784,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "encrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr),false,1> benchloop(crypto_func_encr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -785,6 +792,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "decrypt_salsa20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr),false,1> benchloop(crypto_func_decr);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -792,6 +800,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "makebox_encrypt_xsalsa20_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_makebox),false,1> benchloop(crypto_func_makebox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -799,6 +808,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "openbox_decrypt_xsalsa20_veri_poly1305";
 			msg_buf.resize(msg_size + crypto_secretbox_MACBYTES, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_openbox),false,1> benchloop(crypto_func_openbox);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -806,6 +816,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "encrypt_chacha20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_encr_chacha),false,1> benchloop(crypto_func_encr_chacha);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		} break;
@@ -813,6 +824,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "decrypt_chacha20";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(msg_size, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_decr_chacha),false,1> benchloop(crypto_func_decr_chacha);
 			speed_gbps = benchloop.run_test_3buf(bench_opt, msg_buf, two_buf, key_buf);
 		}	break;
@@ -820,13 +832,20 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 			func_name = "veri_and_auth_poly1305";
 			msg_buf.resize(msg_size, 0x00);
 			two_buf.resize(crypto_onetimeauth_BYTES, 0x00);
+			key_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
+			keyB_buf.resize(crypto_onetimeauth_KEYBYTES, 0xfd);
 			c_crypto_benchloop<decltype(crypto_func_veri_and_auth),false,1> benchloop(crypto_func_veri_and_auth);
 			speed_gbps = benchloop.run_test_4buf(bench_opt, msg_buf, two_buf, key_buf, keyB_buf);
 		}	break;
 		default: throw std::invalid_argument("Unknown crypto_op (enum)");
 	}
-	std::cout << "Testing " << func_name << " msg_size_bytes: " << msg_size << " Speed_in_Gbit_per_sec: " << speed_gbps
-		<< " threads: " << bench_opt.threads << std::endl; // output result
+	std::cout
+		<< "Testing: " << func_name
+		<< " msg_size_bytes: " << msg_size
+		<< " Speed_in_Gbit_per_sec: " << speed_gbps
+		<< " threads: " << bench_opt.threads
+		<< " crypto_nr: " << static_cast<int>(crypto_op)
+		<< std::endl; // output result
 }
 
 void cryptotest_main(std::vector<std::string> options) {
@@ -1244,7 +1263,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 
-
 	// --- welds var ---
 	vector<c_weld> welds;
 	std::shared_timed_mutex welds_mutex;
@@ -1382,6 +1400,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_info("Create fake TUN/TAP");
 		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
 	}
+
 	// sockets for wire p2p connections:
 	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> wire_socket;
 	c_inbuf_tab inbuf_tab(cfg_num_inbuf);

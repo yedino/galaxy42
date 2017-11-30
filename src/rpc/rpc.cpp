@@ -46,6 +46,16 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 }
 
 c_rpc_server::~c_rpc_server() {
+	nlohmann::json json_response;
+	json_response["cmd"] = "exit";
+	json_response["state"] = "ok";
+	{
+		LockGuard<Mutex> lg(m_session_vector_mutex);
+		for (auto& session : m_session_list)
+		{
+			session.send_response(json_response);
+		}
+	}
 	dbg("rpc server destructor");
 	m_io_service.stop();
 	dbg("io service stopped, join thread");
@@ -205,26 +215,10 @@ void c_rpc_server::c_session::delete_me() {
 	m_rpc_server_ptr->remove_session_from_vector(m_iterator_in_session_list);
 }
 
-void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
+void c_rpc_server::c_session::send_response(nlohmann::json json_response)
+{
 	try {
-		nlohmann::json j = nlohmann::json::parse(input_message);
-                const std::string cmd_name = j["cmd"];//.begin().value();
-                dbg("cmd name " << cmd_name);
-		// calling rpc function
-		nlohmann::json json_response;
-		{
-			LockGuard<Mutex> lg(m_rpc_server_ptr->m_rpc_functions_map_mutex);
-			json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
-		}
-		json_response["id"] = get_command_id();
-
-		if(j.find("id")!= j.end()) {
-		        json_response["re"] = j["id"];
-		}
-
 		const std::string response = json_response.dump();
-
-		// serialize response
 		assert(response.size() <= std::numeric_limits<uint16_t>::max());
 		uint16_t size = static_cast<uint16_t>(response.size());
 		m_write_data.resize(size + 2); ///< 2 first bytes for size
@@ -250,6 +244,31 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 			[this](const boost::system::error_code& error, std::size_t bytes_transferred) {
 				write_handler(error, bytes_transferred);
 		});
+	}
+	catch (const std::exception &e) {
+		_erro( "exception in execute_rpc_command " << e.what() );
+		_erro( "close connection\n" );
+		delete_me();
+		return;
+	}
+}
+
+void c_rpc_server::c_session::execute_rpc_command(const std::string &input_message) {
+	try {
+		nlohmann::json j = nlohmann::json::parse(input_message);
+                const std::string cmd_name = j["cmd"];//.begin().value();
+                dbg("cmd name " << cmd_name);
+		// calling rpc function
+		nlohmann::json json_response;
+		{
+			LockGuard<Mutex> lg(m_rpc_server_ptr->m_rpc_functions_map_mutex);
+			json_response = m_rpc_server_ptr->m_rpc_functions_map.at(cmd_name)(input_message);
+		}
+		json_response["id"] = get_command_id();
+		if (j.find("id")!= j.end()) {
+			json_response["re"] = j["id"];
+		}
+		send_response(json_response);
 	}
 	catch (const std::exception &e) {
 		_erro( "exception in execute_rpc_command " << e.what() );
