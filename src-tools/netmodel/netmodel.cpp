@@ -947,9 +947,7 @@ constexpr int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
 static constexpr size_t fragment_pos_max=32;
 
 struct c_weld {
-private:
 	mutable std::unique_ptr<std::shared_timed_mutex> m_mutex_ptr;
-public:
 
 	unsigned char m_buf[cfg_size_tuntap_buf + crypto_secretbox_MACBYTES];
 
@@ -1018,6 +1016,7 @@ void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_m
 	}
 	else { // do not send. weld extended with data
 		_dbg4("Removing reservation on weld " << found_ix);
+		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
 		the_weld.m_reserved=false;
 	}
 	// lock to un-reserve
@@ -1311,6 +1310,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				{
 					std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 					for (const auto & weld : welds) {
+						std::shared_lock<std::shared_timed_mutex> lg(*weld.m_mutex_ptr);
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
 				}
