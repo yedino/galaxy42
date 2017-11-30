@@ -7,7 +7,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 -----------
 
 */
-
+#include "netmodel.hpp"
 #include <iostream>
 #include <iomanip>
 #include <thread>
@@ -19,6 +19,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include <chrono>
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 
 #include <algorithm>
 
@@ -27,8 +28,11 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
+#include "../src/tuntap/fake_tun/c_fake_tun.hpp"
+#include "../src/tuntap/linux/c_tuntap_linux_obj.hpp"
 
 #include "crypto_bench/sodium_tests.hpp"
+#include <tuntap/linux/c_tuntap_linux_obj.hpp>
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -66,6 +70,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 namespace n_netmodel {
 
 bool g_debug = false;
+int bench_opt_mem_crypto_optimalization_barrier;
 
 using namespace boost;
 using std::vector;
@@ -136,8 +141,9 @@ std::atomic<int> g_running_tuntap_jobs;
 
 std::atomic<long int> g_state_tuntap2wire_started;
 std::atomic<long int> g_state_tuntap_fullbuf;
-c_timerfoo g_state_tuntap2wire_in_handler1(0);
-c_timerfoo g_state_tuntap2wire_in_handler2(0);
+c_timerfoo g_state_tuntap2wire_in_handler1(5);
+c_timerfoo g_state_tuntap2wire_in_handler2(5);
+c_timerfoo g_speed_tuntap_read(5);
 
 // ============================================================================
 // Wire
@@ -675,63 +681,83 @@ enum class e_crypto_test {
 	all = -100
 };
 
+enum class e_weld_type {
+	global_weld_list,
+	local_thread_buffer
+};
+
 void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
+	constexpr size_t key_max_size = std::max(
+		std::max( crypto_onetimeauth_KEYBYTES, crypto_stream_chacha20_KEYBYTES ) ,
+		std::max(crypto_stream_chacha20_KEYBYTES, crypto_secretbox_KEYBYTES)
+	);
+	constexpr size_t nonce_max_size = std::max(
+		std::max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
+		crypto_stream_chacha20_NONCEBYTES
+	);
 	const size_t msg_size = param_msg_size;
 	std::vector<unsigned char> msg_buf;
 	std::vector<unsigned char> two_buf;
 	std::vector<unsigned char> key_buf;
 	std::vector<unsigned char> keyB_buf; // the other buffer, used in eg packet forwarding (verify, auth to other key)
 
-	size_t nonce_max_size = std::max(
-		std::max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
-		crypto_stream_chacha20_NONCEBYTES
-	);
 	const std::vector<unsigned char> nonce_buf( nonce_max_size , 0x00);
 
 	auto crypto_func_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&msg_buf[0]);
 		crypto_onetimeauth( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_veri = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0])) nothing();
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_veri_and_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, &  key_buf[0])) nothing(); // verify incoming
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 		// assume it was ok
 		crypto_onetimeauth       ( & two_buf[0], & msg_buf[0], msg_size, & keyB_buf[0]); // auth to other peer (keyB)
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/advanced/salsa20.html
 	auto crypto_func_encr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_decr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
 		UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/advanced/chacha20.html
 	auto crypto_func_encr_chacha = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_stream_chacha20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_decr_chacha = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
 		UNUSED(keyB_buf);
 		crypto_stream_chacha20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/secret-key_cryptography/authenticated_encryption.html
 	auto crypto_func_makebox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		crypto_secretbox_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_openbox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
 		UNUSED(keyB_buf);
 		if (0==crypto_secretbox_open_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0])) nothing();
+		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	double speed_gbps = 0;
@@ -837,7 +863,8 @@ void cryptotest_main(std::vector<std::string> options) {
 
 	bench_opt.loops = func_cmdline_def("loops", bench_opt_def.loops);
 	bench_opt.samples = func_cmdline_def("samples", bench_opt_def.samples);
-	bench_opt.threads = func_cmdline_def("thr", 1);
+	bench_opt.threads = func_cmdline_def("thr", bench_opt_def.samples);
+	bench_opt_mem_crypto_optimalization_barrier = func_cmdline_def("crypt_optim_barr", 0); // 0 is optimalization barrier is disabled
 	bench_opt.calculate(); // ***
 	int opt_range_kind = func_cmdline_def("range",2); // predefined range pack
 	int opt_range_one  = func_cmdline_def("rangeone",-1); // test just one value instead of testing range of values
@@ -913,6 +940,88 @@ void cryptotest_main(std::vector<std::string> options) {
 	}
 }
 
+// --- tuntap classes / data ---
+static constexpr int cfg_size_tuntap_maxread=9000;
+constexpr int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
+
+static constexpr size_t fragment_pos_max=32;
+
+struct c_weld {
+	mutable std::unique_ptr<std::shared_timed_mutex> m_mutex_ptr;
+
+	unsigned char m_buf[cfg_size_tuntap_buf + crypto_secretbox_MACBYTES];
+
+	uint16_t m_fragment_pos[fragment_pos_max]; ///< positions of ends fragments,
+	/// as constant-size array, with separate index in it
+	/// if array has values {5,10,11} then fragments are ranges: [0..4], [5..9], [10]
+
+	uint16_t m_fragment_pos_ix; ///< index in above array
+
+	size_t m_pos; ///< if ==0, then nothing yet is written; If ==10 then 0..9 is written, 10..end is free
+	bool m_reserved; ///< do some thread now read this now?
+
+	c_weld()
+	:
+	m_mutex_ptr(std::make_unique<std::shared_timed_mutex>())
+	{
+		clear();
+	}
+
+	c_weld(const c_weld &) = delete;
+	c_weld(c_weld &&) = default;
+	c_weld& operator=(const c_weld &) = delete;
+	c_weld& operator=(c_weld &&) = default;
+	void clear() {
+		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
+		m_reserved=false;
+		m_pos=0;
+		m_fragment_pos_ix=0;
+	}
+
+	void add_fragment(uint16_t size) {
+		assert(m_fragment_pos_ix < fragment_pos_max); // can not add anything since no place to store indexes
+
+		// e.g. buf=10 (array is 0..9), m_pos=0 (nothing used), size=10 -> allowed
+		assert(size <= cfg_size_tuntap_buf - m_pos);
+
+		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
+		m_pos += size;
+		m_fragment_pos[ m_fragment_pos_ix ] = m_pos;
+		++m_fragment_pos_ix;
+	}
+
+	size_t space_left() const {
+		std::shared_lock<std::shared_timed_mutex> lg(*m_mutex_ptr);
+		if (m_fragment_pos_ix>=fragment_pos_max) return 0; // can not add anything since no place to store indexes
+		return cfg_size_tuntap_buf - m_pos;
+	}
+	unsigned char * addr_at_pos() { return & m_buf[m_pos]; }
+	unsigned char * addr_all() { return & m_buf[0]; }
+};
+
+// process data, and un-reserve it so that others can add more to it
+template <typename F>
+void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_mutex, size_t found_ix, size_t read_size, F &func_send_weld) {
+	// lock
+	std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+	c_weld & the_weld = welds.at(found_ix); // optimize: no need for mutex for this one
+	the_weld.add_fragment(read_size);
+
+	bool should_send = ! (the_weld.space_left() >= cfg_size_tuntap_maxread) ;
+	_dbg1("TUNTAP (weld "<<found_ix<<") decided to: " << (should_send ? "SEND-NOW" : "not-send-yet")
+		<< " space left " << the_weld.space_left() << " vs needed space " << cfg_size_tuntap_maxread);
+
+	if (should_send) { // almost full -> so we send
+		func_send_weld(found_ix);
+	}
+	else { // do not send. weld extended with data
+		_dbg4("Removing reservation on weld " << found_ix);
+		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+		the_weld.m_reserved=false;
+	}
+	// lock to un-reserve
+}
+
 void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Starting " << __func__ << " with " << options.size() << " arguments");
 	for (const auto & arg: options) _note("Arg: ["<<arg<<"]");
@@ -985,6 +1094,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	const int cfg_tuntap_ios = func_cmdline("tuntap_ios"); // use ios for tuntap sockets: -1=use first one from general/wire ios;
 	const int cfg_tuntap_ios_threads_per_one = func_cmdline("tuntap_ios_thr"); // for each ios of tuntap (if any ios are created for tuntap) how many threads to .run it in
+	const bool cfg_tuntap_use_real_tun = func_cmdline("tuntap_use_real"); // if true real tuntap is used
+	const bool cfg_tuntap_async = func_cmdline("tuntap_async");
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
 
@@ -1150,51 +1261,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("All ios run are running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
-	// --- tuntap classes / data ---
-	const int cfg_size_tuntap_maxread=9000;
-	const int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
-
-	static const size_t fragment_pos_max=32;
-	struct c_weld {
-		unsigned char m_buf[cfg_size_tuntap_buf];
-
-		uint16_t m_fragment_pos[fragment_pos_max]; ///< positions of ends fragments,
-		/// as constant-size array, with separate index in it
-		/// if array has values {5,10,11} then fragments are ranges: [0..4], [5..9], [10]
-
-		uint16_t m_fragment_pos_ix; ///< index in above array
-
-		size_t m_pos; ///< if ==0, then nothing yet is written; If ==10 then 0..9 is written, 10..end is free
-		bool m_reserved; ///< do some thread now read this now?
-
-		c_weld() { clear(); }
-		void clear() {
-			m_reserved=false;
-			m_pos=0;
-			m_fragment_pos_ix=0;
-		}
-
-		void add_fragment(uint16_t size) {
-			assert(m_fragment_pos_ix < fragment_pos_max); // can not add anything since no place to store indexes
-
-			// e.g. buf=10 (array is 0..9), m_pos=0 (nothing used), size=10 -> allowed
-			assert(size <= cfg_size_tuntap_buf - m_pos);
-
-			m_pos += size;
-			m_fragment_pos[ m_fragment_pos_ix ] = m_pos;
-			++m_fragment_pos_ix;
-		}
-		size_t space_left() const {
-			if (m_fragment_pos_ix>=fragment_pos_max) return 0; // can not add anything since no place to store indexes
-			return cfg_size_tuntap_buf - m_pos;
-		}
-		unsigned char * addr_at_pos() { return & m_buf[m_pos]; }
-		unsigned char * addr_all() { return & m_buf[0]; }
-	};
 
 	// --- welds var ---
 	vector<c_weld> welds;
-	std::mutex welds_mutex;
+	std::shared_timed_mutex welds_mutex;
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
@@ -1216,25 +1286,31 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				}
 
 				g_speed_wire_recv.step();
-//				g_state_tuntap2wire_in_handler1.step();
-//				g_state_tuntap2wire_in_handler2.step();
+				g_state_tuntap2wire_in_handler1.step();
+				g_state_tuntap2wire_in_handler2.step();
+				g_speed_tuntap_read.step();
 
 				// [counter] read
 				std::ostringstream oss;
 				oss << "Loop. ";
-				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+//				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
 				oss << "; ";
 				oss << "Tuntap: ";
 				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
 //				oss << "h1={"<<g_state_tuntap2wire_in_handler1<<"} ";
 //				oss <<" h2={"<<g_state_tuntap2wire_in_handler2<<"} ";
 				oss <<" fullBuf="<<g_state_tuntap_fullbuf.load(std::memory_order_relaxed)<<" ";
+				//oss << " read speed={"<<g_speed_tuntap_read.get_speed()<<"Mbps} ";
+				oss << g_speed_tuntap_read.get_info();
 				oss << "; ";
 
 				oss << "Welds: ";
 				{
-					std::lock_guard<std::mutex> lg(welds_mutex);
+					std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
 					for (const auto & weld : welds) {
+						std::shared_lock<std::shared_timed_mutex> lg(*weld.m_mutex_ptr);
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
 				}
@@ -1243,6 +1319,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					_note("Exit flag is set, exiting loop and will stop program");
 					break;
 				}
+
+				static std::once_flag flag;
+				std::call_once(flag, []{std::cout << "Speed sended via wire\n";});
+				std::cout << g_state_tuntap2wire_in_handler2.get_speed() << std::endl;
 			}
 
 			/*
@@ -1274,7 +1354,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	// sockets for (fake-)TUN connections:
-	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> tuntap_socket;
+/*	vector<with_strand<ThreadObject<asio::ip::udp::socket>>> tuntap_socket;
 	for (int nr_sock=0; nr_sock<cfg_num_socket_tuntap; ++nr_sock) {
 		int port_nr = cfg_port_faketuntap;
 		if (cfg_port_multiport) port_nr += nr_sock;
@@ -1302,6 +1382,23 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
 		thesocket.bind( asio::ip::udp::endpoint( asio::ip::address_v4::any() , port_nr ) );
+	}*/
+
+	std::mutex tuntap_mutex;
+	std::unique_ptr<c_tuntap_base_obj> tuntap;
+	// tuntap_mutex is not needed in creation
+	if (cfg_tuntap_use_real_tun) {
+		_info("Create real TUN/TAP");
+		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
+		std::array<unsigned char, IPV6_LEN> tuntap_address;
+		tuntap_address.fill(0x11);
+		tuntap_address.at(0) = 0xfd;
+		const int prefix_len = 16;
+		const uint32_t mtu = 65535;
+		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
+	} else {
+		_info("Create fake TUN/TAP");
+		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
 	}
 
 	// sockets for wire p2p connections:
@@ -1342,158 +1439,192 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// ---> tuntap: blocking version seems faster <---
 
 	{
-		std::lock_guard<std::mutex> lg(welds_mutex);
-		for (int i=0; i<cfg_num_weld_tuntap; ++i) welds.push_back( c_weld() );
+		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+		welds.resize(cfg_num_weld_tuntap);
 	}
 
 	vector<std::thread> tuntap_flow;
+	vector<unsigned char> nonce_buf(crypto_secretbox_NONCEBYTES, 0x00);
+	vector<unsigned char> key_buf(crypto_secretbox_KEYBYTES, 0xfd);
 
 	// tuntap: DO WORK
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
 		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
-		std::thread thr = std::thread(
-			[tuntap_socket_nr, &tuntap_socket, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, cfg_size_tuntap_maxread]()
-			{
-				++g_running_tuntap_jobs;
-				int my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
+		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
+		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex, &key_buf
+		                      , &nonce_buf](int send_weld_nr) { // lambda
+			size_t my_random = (tuntap_socket_nr*437213)%38132 + std::rand();
+			// select wire
+			size_t wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
+			++my_random;
+			_dbg4("TUNTAP sending out the data from tuntap socket="<<tuntap_socket_nr
+				<<" via wire_socket_nr="<<wire_socket_nr);
 
-				auto func_send_weld = [&my_random, tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex](int send_weld_nr) { // lambda
-					// select wire
-					int wire_socket_nr = ((my_random*4823)%4913) % wire_socket.size(); // TODO better pseudo-random
-					++my_random;
-					_dbg4("TUNTAP sending out the data from tuntap socket="<<tuntap_socket_nr
-						<<" via wire_socket_nr="<<wire_socket_nr);
+			// [thread] this is SAFE probably, as we read-only access the peer_pegs (that is not changing)
+			asio::ip::udp::endpoint &peer_peg = peer_pegs.at(0);
 
-					// [thread] this is SAFE probably, as we read-only access the peer_pegs (that is not changing)
-					asio::ip::udp::endpoint peer_peg = peer_pegs.at(0);
+			auto & mysocket = wire_socket.at(wire_socket_nr);
+			mysocket.get_strand().post(
+				// mysocket.wrap(
+					[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, &peer_peg, &key_buf, &nonce_buf]() {
+						auto & weld = welds.at(send_weld_nr);
+						size_t send_size = weld.m_pos;
 
-					auto & mysocket = wire_socket.at(wire_socket_nr);
-					mysocket.get_strand().post(
-						// mysocket.wrap(
-							[wire_socket_nr, &wire_socket, &welds, &welds_mutex, send_weld_nr, peer_peg]() {
+						_dbg4("TUNTAP-WIRE handler1 (in strand). TUNTAP->WIRE will be now sent."
+							<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr);
+						g_state_tuntap2wire_in_handler1.add(1, send_size); // [counter]
+
+						auto & wire = wire_socket.at(wire_socket_nr);
+
+						if (static_cast<e_crypto_test>(cfg_test_crypto_task) == e_crypto_test::makebox_encrypt_xsalsa20_auth_poly1305 ) {
+							crypto_secretbox_easy( weld.addr_all(), weld.addr_all(), send_size, & nonce_buf[0], & key_buf[0]);
+							send_size += crypto_secretbox_MACBYTES;
+						}
+
+						auto send_buf_asio = asio::buffer( weld.addr_all() , send_size );
+
+						wire.get_unsafe_assume_in_strand().get().async_send_to(
+							send_buf_asio,
+							peer_peg,
+							[send_weld_nr, wire_socket_nr, &welds, &welds_mutex](const boost::system::error_code & ec, std::size_t bytes_transferred)
+							{
+								_dbg4("TUNTAP-WIRE handler2 (sent done). ec="<<ec.message()<<"."
+									<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
+								);
+								g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
+								std::shared_lock<std::shared_timed_mutex> lg(welds_mutex); // lock
 								auto & weld = welds.at(send_weld_nr);
-								size_t send_size = weld.m_pos;
-
-								_dbg4("TUNTAP-WIRE handler1 (in strand). TUNTAP->WIRE will be now sent."
-									<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr);
-								g_state_tuntap2wire_in_handler1.add(1, send_size); // [counter]
-
-								auto & wire = wire_socket.at(wire_socket_nr);
-								auto send_buf_asio = asio::buffer( weld.addr_all() , send_size );
-
-								wire.get_unsafe_assume_in_strand().get().async_send_to(
-									send_buf_asio,
-									peer_peg,
-									[send_weld_nr, wire_socket_nr, &welds, &welds_mutex](const boost::system::error_code & ec, std::size_t bytes_transferred)
-									{
-										_dbg4("TUNTAP-WIRE handler2 (sent done). ec="<<ec.message()<<"."
-											<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
-										);
-										g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
-										std::lock_guard<std::mutex> lg(welds_mutex); // lock
-										auto & weld = welds.at(send_weld_nr);
-										weld.clear();
-									}
-								); // asio send
-								_dbg4("TUNTAP-WIRE handler1 (in strand) - ok STARTED the handler2. Socket "<<wire_socket_nr<<" weld " <<wire_socket_nr << " - ASYNC STARTED");
-							} // delayed TUNTAP->WIRE
-						// ) // wrap
-					); // start(post) handler: TUNTAP->WIRE start
-
-					_dbg4("TUNTAP-WIRE posted: weld=" << wire_socket_nr << " to P2P socket="<<wire_socket_nr);
-					g_state_tuntap2wire_started.fetch_add(std::memory_order_relaxed);
-
-				}; // send the full weld
-
-				while (!g_atomic_exit) {
-					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
-					_note("TUNTAP reading");
-
-					size_t found_ix=0;
-					bool found_any=false;
-
-					{ // lock to find and reserve buffer a weld
-						std::lock_guard<std::mutex> lg(welds_mutex);
-
-						for (size_t i=0; i<welds.size(); ++i) {
-							if (! welds.at(i).m_reserved) {
-								if (welds.at(i).space_left() >= cfg_size_tuntap_maxread) {
-									found_ix=i; found_any=true;
-									break;
-								}
+								weld.clear();
 							}
+						); // asio send
+						_dbg4("TUNTAP-WIRE handler1 (in strand) - ok STARTED the handler2. Socket "<<wire_socket_nr<<" weld " <<wire_socket_nr << " - ASYNC STARTED");
+					} // delayed TUNTAP->WIRE
+				// ) // wrap
+			); // start(post) handler: TUNTAP->WIRE start
+
+			_dbg4("TUNTAP-WIRE posted: weld=" << wire_socket_nr << " to P2P socket="<<wire_socket_nr);
+			g_state_tuntap2wire_started.fetch_add(std::memory_order_relaxed);
+
+		}; // send the full weld
+
+		auto get_tun_input_buffer = [&welds, &welds_mutex](){
+			size_t found_ix=0;
+			bool found_any=false;
+//					e_weld_type weld_type = e_weld_type::local_thread_buffer;
+			e_weld_type weld_type = e_weld_type::global_weld_list;
+			if (weld_type == e_weld_type::global_weld_list) {
+				// lock to find and reserve buffer a weld
+//				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+				std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+
+				for (size_t i=0; i<welds.size(); ++i) {
+					if (! welds.at(i).m_reserved) {
+						if (welds.at(i).space_left() >= size_tuntap_maxread) {
+							found_ix=i; found_any=true;
+							break;
+						}
+					}
+				}
+
+				if (found_any) {
+					auto & weld = welds.at(found_ix);
+					weld.m_reserved=true; // we are using it now
+				}
+				else {
+					_note("No free tuntap buffers! - fullbuffer!");
+					g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
+					//func_send_weld(0); // TODO choose weld
+					// forced send
+					return std::make_tuple<void *, size_t, size_t>(nullptr, 0, -1); // empty buffer
+//					return asio::mutable_buffers_1(asio::mutable_buffer()); // <= empty buffer
+				}
+			} // lock operations on welds
+
+			auto & found_weld = welds.at(found_ix);
+			size_t receive_size = found_weld.space_left();
+			assert(receive_size>0);
+			void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
+			unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
+			assert(buf_ptr);
+			_dbg4("TUNTAP read "
+				<< "into weld "<< found_ix << " "
+				<< "buffer size is: " << receive_size << " buf_ptr=" << buf_ptr);
+			return std::make_tuple( buf_ptr , receive_size, found_ix);
+		};
+
+		if (!cfg_tuntap_async) {
+			std::thread thr = std::thread(
+				[tuntap_socket_nr, &welds, &welds_mutex, &wire_socket, &peer_pegs, cfg_tuntap_buf_sleep, size_tuntap_maxread, &tuntap, &tuntap_mutex, func_send_weld, get_tun_input_buffer]()
+				{
+					++g_running_tuntap_jobs;
+
+
+					while (!g_atomic_exit) {
+	//					auto & one_socket = tuntap_socket.at(tuntap_socket_nr);
+						_note("TUNTAP reading");
+
+						try {
+
+	//						asio::ip::udp::endpoint ep;
+
+							// [asioflow] read *** blocking
+							void *recv_buff_ptr;
+							size_t receive_size, found_ix;
+							std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+							if (!recv_buff_ptr) continue;
+							size_t read_size = 0;
+							{
+								std::lock_guard<std::mutex> lg(tuntap_mutex);
+								read_size = size_t { tuntap->read_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size) };
+							}
+
+							g_speed_tuntap_read.add(1, read_size);
+							_dbg4("TUNTAP ***BLOCKING READ DONE***  read_size="<< read_size << "\n\n");
+
+							// process data, and un-reserve it so that others can add more to it
+							send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
+
+						}
+						catch (std::exception &ex) {
+							_erro("Error in TUNTAP lambda: "<<ex.what());
+							std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+						}
+						catch (...) {
+							_erro("Error in TUNTAP lambda - unknown");
+							std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
 						}
 
-						if (found_any) {
-							auto & weld = welds.at(found_ix);
-							weld.m_reserved=true; // we are using it now
+						// process the TUN read data TODO
+					} // loop forever
+
+					--g_running_tuntap_jobs;
+				} // the lambda
+			); // thread constructor
+			tuntap_flow.push_back( std::move(thr) );
+		} else { // tuntap async
+			void *recv_buff_ptr;
+			size_t receive_size, found_ix;
+			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+			c_tuntap_base_obj::read_handler read_handler =
+				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
+						g_speed_tuntap_read.add(1, read_size);
+						_dbg4("TUNTAP ***ASYNC READ DONE***  read_size="<< read_size << "\n\n");
+						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
+						if (ec) {
+							_erro("asio error " << ec.message());
+							return;
 						}
-						else {
-							_dbg4("No free tuntap buffers! - fullbuffer!");
-							g_state_tuntap_fullbuf.fetch_add(std::memory_order_relaxed);
-							func_send_weld(0); // TODO choose weld
-							// forced send
-							continue ; // <---
-						}
-					} // lock operations on welds
-
-					auto & found_weld = welds.at(found_ix);
-					size_t receive_size = found_weld.space_left();
-					assert(receive_size>0);
-					void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
-					assert(buf_ptr);
-					auto buf_asio = asio::buffer( buf_ptr , receive_size );
-
-					try {
-						_dbg4("TUNTAP read, on tuntap_socket_nr="<<tuntap_socket_nr<<" socket="<<addrvoid(one_socket)<<" "
-							<<"into weld "<<found_ix<<" "
-							<< "buffer size is: " << asio::buffer_size( buf_asio ) << " buf_ptr="<<buf_ptr);
-						asio::ip::udp::endpoint ep;
-
-						// [asioflow] read *** blocking
-						auto read_size = size_t { one_socket.get_unsafe_assume_in_strand().get().receive_from(buf_asio, ep) };
-
-						_dbg4("TUNTAP ***BLOCKING READ DONE*** socket="<<tuntap_socket_nr<<": got data from ep="<<ep<<" read_size="<<read_size
-						<<" weld "<<found_ix<<"\n\n");
-
-						// process data, and un-reserve it so that others can add more to it
-						{ // lock
-							std::lock_guard<std::mutex> lg(welds_mutex);
-							c_weld & the_weld = welds.at(found_ix); // optimize: no need for mutex for this one
-							the_weld.add_fragment(read_size);
-
-							bool should_send = ! (the_weld.space_left() >= cfg_size_tuntap_maxread) ;
-							_dbg1("TUNTAP (weld "<<found_ix<<") decided to: " << (should_send ? "SEND-NOW" : "not-send-yet")
-								<< " space left " << the_weld.space_left() << " vs needed space " << cfg_size_tuntap_maxread);
-
-							if (should_send) { // almost full -> so we send
-								func_send_weld(found_ix);
-							}
-							else { // do not send. weld extended with data
-								_dbg4("Removing reservation on weld " << found_ix);
-								the_weld.m_reserved=false;
-							}
-						} // lock to un-reserve
-
-					}
-					catch (std::exception &ex) {
-						_erro("Error in TUNTAP lambda: "<<ex.what());
-						std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
-					}
-					catch (...) {
-						_erro("Error in TUNTAP lambda - unknown");
-						std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
-					}
-
-					// process the TUN read data TODO
-				} // loop forever
-
-				--g_running_tuntap_jobs;
-			} // the lambda
-		);
-
-		tuntap_flow.push_back( std::move(thr) );
+						// continue reading
+						void *recv_buff_ptr;
+						size_t receive_size, found_ix;
+						std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+						std::lock_guard<std::mutex> lg(tuntap_mutex);
+						tuntap->async_receive_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size, read_handler);
+				}; // read handler lambda
+			std::lock_guard<std::mutex> lg(tuntap_mutex);
+			tuntap->async_receive_from_tun(static_cast<unsigned char *>(recv_buff_ptr), receive_size, read_handler);
+		}
 
 	};
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
@@ -1549,23 +1680,25 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("Join stop thread");
 	thread_stop.join();
 
-	_goal("Stopping tuntap threads - unblocking them with some self-sent data");
-	while (g_running_tuntap_jobs>0) {
-		_note("Sending data to unblock...");
+	if (!cfg_tuntap_use_real_tun) {
+		_goal("Stopping tuntap threads - unblocking them with some self-sent data");
+		while (g_running_tuntap_jobs>0) {
+			_note("Sending data to unblock...");
 
-		asio::io_service ios_local;
-		auto & one_ios = ios_local;
+			asio::io_service ios_local;
+			auto & one_ios = ios_local;
 
-		asio::ip::udp::socket socket_local(one_ios);
-		boost::asio::ip::udp::socket & thesocket = socket_local;
-		thesocket.open( asio::ip::udp::v4() );
-		unsigned char data[1]; data[0]=0;
-		auto buff = asio::buffer( reinterpret_cast<void*>(&data[0]), 1 );
-		auto dst = asio::ip::udp::endpoint( asio::ip::address::from_string("127.0.0.1") , cfg_port_faketuntap  );
-		_note("Sending to dst=" << dst);
-		thesocket.send_to( buff , dst );
+			asio::ip::udp::socket socket_local(one_ios);
+			boost::asio::ip::udp::socket & thesocket = socket_local;
+			thesocket.open( asio::ip::udp::v4() );
+			unsigned char data[1]; data[0]=0;
+			auto buff = asio::buffer( reinterpret_cast<void*>(&data[0]), 1 );
+			auto dst = asio::ip::udp::endpoint( asio::ip::address::from_string("127.0.0.1") , cfg_port_faketuntap  );
+			_note("Sending to dst=" << dst);
+			thesocket.send_to( buff , dst );
 
-		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+			std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+		}
 	}
 	_goal("Join tuntap flow threads");
 	for (auto & thr : tuntap_flow) { thr.join(); }
@@ -1600,6 +1733,10 @@ int netmodel_main(int argc, const char **argv) {
 
 	_goal("Normal exit of netmodel");
 	return 0;
+}
+
+void escape(void* p) {
+	asm volatile("" : : "g"(p) : "memory");
 }
 
 } // namespace n_netmodel
