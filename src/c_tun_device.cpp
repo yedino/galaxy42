@@ -335,6 +335,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		key_wrapped.close();
 		throw e;
 	}
+	_dbg1("found " << subkeys_vector.size() << " reg keys");
 	key_wrapped.close();
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
@@ -456,7 +457,6 @@ HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
-	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("CreateFileW error, last error " + std::to_string(GetLastError()));
 	return handle;
 }
 
