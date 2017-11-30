@@ -31,6 +31,8 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include "../src/tuntap/fake_tun/c_fake_tun.hpp"
 #include "../src/tuntap/linux/c_tuntap_linux_obj.hpp"
 
+#include "../src/stdplus/fixcpp14.hpp"
+
 #include "crypto_bench/sodium_tests.hpp"
 #include <tuntap/linux/c_tuntap_linux_obj.hpp>
 
@@ -688,12 +690,12 @@ enum class e_weld_type {
 
 void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
-	constexpr size_t key_max_size = std::max(
-		std::max( crypto_onetimeauth_KEYBYTES, crypto_stream_chacha20_KEYBYTES ) ,
-		std::max(crypto_stream_chacha20_KEYBYTES, crypto_secretbox_KEYBYTES)
+	constexpr size_t key_max_size = stdplus::constexpr_max(
+		stdplus::constexpr_max( crypto_onetimeauth_KEYBYTES, crypto_stream_chacha20_KEYBYTES ) ,
+		stdplus::constexpr_max(crypto_stream_chacha20_KEYBYTES, crypto_secretbox_KEYBYTES)
 	);
-	constexpr size_t nonce_max_size = std::max(
-		std::max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
+	constexpr size_t nonce_max_size = stdplus::constexpr_max(
+		stdplus::constexpr_max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
 		crypto_stream_chacha20_NONCEBYTES
 	);
 	const size_t msg_size = param_msg_size;
