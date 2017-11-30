@@ -128,7 +128,9 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 		;;
 
 		ball)
-			src-tools/netutils/allbench.sh
+			cd src-tools/netutils/
+			# src-tools/netutils/allbench.sh
+			./allbench.sh
 		;;
 
 		d)
