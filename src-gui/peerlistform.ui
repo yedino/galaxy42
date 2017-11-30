@@ -30,10 +30,19 @@
        <property name="whatsThis">
         <string>list of current peers</string>
        </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::CurrentChanged</set>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <property name="resizeMode">
+        <enum>QListView::Adjust</enum>
+       </property>
        <property name="gridSize">
         <size>
-         <width>20</width>
-         <height>20</height>
+         <width>25</width>
+         <height>25</height>
         </size>
        </property>
       </widget>

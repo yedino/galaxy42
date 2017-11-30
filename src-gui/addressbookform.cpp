@@ -1,10 +1,9 @@
 #include <QByteArray>
-
+#include <QDebug>
 
 
 #include "addressbookform.h"
 #include "ui_addressbookform.h"
-
 
 #include "meshpeer.h"
 
@@ -29,12 +28,11 @@ void addressBookForm::loadPeersFromFiles(const QString &file_name)
     }
     std::string data = file.readAll().toStdString();
     nlohmann::json json_list = nlohmann::json::parse(data);
-    for (auto it :json_list){
-        if(it.at("obj")==MeshPeer) {
+    for (auto it :json_list) {
+        if(it.at("obj")== "MeshPeer" ) {
 
         }
     }
-
 }
 
 void addressBookForm::savePeersToFile(const QString &file_name)

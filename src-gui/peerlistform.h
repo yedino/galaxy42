@@ -30,6 +30,8 @@ public:
 
     void onPeerBanned(const QString &vip);
     void onPeerAdded(const QString &vip);
+    bool peerExist(const QString& vip){return m_model->peerExist(vip);}
+
 public slots:
 
     void addActionSlot(bool);
