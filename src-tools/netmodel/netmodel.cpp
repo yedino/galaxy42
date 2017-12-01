@@ -1018,7 +1018,7 @@ void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_m
 	}
 	else { // do not send. weld extended with data
 		_dbg4("Removing reservation on weld " << found_ix);
-		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+		std::lock_guard<std::shared_timed_mutex> lg(*the_weld.m_mutex_ptr);
 		the_weld.m_reserved=false;
 	}
 	// lock to un-reserve
@@ -1391,7 +1391,13 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// tuntap_mutex is not needed in creation
 	if (cfg_tuntap_use_real_tun) {
 		_info("Create real TUN/TAP");
+#ifdef ANTINET_linux
 		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
+#elif defined ANTINET_windows
+		tuntap = std::make_unique<c_tuntap_windows_obj>(*ios_tuntap.at(0));
+#elif defined ANTINET_maxos
+		tuntap = std::make_unique<c_tuntap_macos_obj>(*ios_tuntap.at(0));
+#endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
 		tuntap_address.fill(0x11);
 		tuntap_address.at(0) = 0xfd;
