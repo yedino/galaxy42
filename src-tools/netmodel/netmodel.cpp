@@ -1018,7 +1018,7 @@ void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_m
 	}
 	else { // do not send. weld extended with data
 		_dbg4("Removing reservation on weld " << found_ix);
-		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+		std::lock_guard<std::shared_timed_mutex> lg(*the_weld.m_mutex_ptr);
 		the_weld.m_reserved=false;
 	}
 	// lock to un-reserve
