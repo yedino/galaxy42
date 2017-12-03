@@ -28,13 +28,12 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include "../src/stdplus/affinity.hpp"
 
 #include "../src-tools/tools_helper.hpp"
-#include "../src/tuntap/fake_tun/c_fake_tun.hpp"
-#include "../src/tuntap/linux/c_tuntap_linux_obj.hpp"
 
 #include "../src/stdplus/fixcpp14.hpp"
 
 #include "crypto_bench/sodium_tests.hpp"
-#include <tuntap/linux/c_tuntap_linux_obj.hpp>
+
+#include <tuntap/tuntap-all.hpp>
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -1393,9 +1392,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		_info("Create real TUN/TAP");
 #ifdef ANTINET_linux
 		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
-#elif defined ANTINET_windows
+#elif defined (ANTINET_windows)
 		tuntap = std::make_unique<c_tuntap_windows_obj>(*ios_tuntap.at(0));
-#elif defined ANTINET_maxos
+#elif defined (ANTINET_macosx)
 		tuntap = std::make_unique<c_tuntap_macos_obj>(*ios_tuntap.at(0));
 #endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
