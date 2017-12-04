@@ -37,6 +37,7 @@
 #include "c_udp_wrapper.hpp"
 #include "c_event_manager.hpp"
 #include <ctime>
+#include <json.hpp>
 #ifdef HTTP_DBG
 #include "httpdbg/httpdbg-server.hpp"
 #endif
@@ -188,7 +189,7 @@ class c_tunserver : public c_galaxy_node {
 		void set_desc(shared_ptr< boost::program_options::options_description > desc);
 		void set_argm(shared_ptr< boost::program_options::variables_map > argm);
 
-		void configure_mykey(); ///<  load my (this node's) keypair
+		void configure_mykey(const std::string &ipv6_prefix); ///<  load my (this node's) keypair
 		void run(int time = 0); ///< run the main loop
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
@@ -203,8 +204,14 @@ class c_tunserver : public c_galaxy_node {
 		string get_my_ipv6_nice() const; ///< returns the main HIP IPv6 of this node in a nice format (e.g. hexdot)
 		int get_my_stats_peers_known_count() const; ///< get the number of currently known peers, for information
 
-		void add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference)
+		bool add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference), @returns true if peer added or false if peer already exists
+		void add_peer_to_black_list(const c_haship_addr & hip); ///< add this to black list
 		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		void add_peer_simplestring_new_format(const string & simple); ///< add this as peer, from a simple string new format
+		bool delete_peer(const c_haship_addr &hip); ///< delete this as peer, @return true if peer deleted, false if peer not found
+		void delete_peer_from_black_list(const c_haship_addr & hip); ///< delete this from black list
+		bool delete_peer_simplestring(const string & simple, bool is_banned); ///< delete this as peer, from a simple string if is_banned==true also add peer to black list
+		void delete_all_peers(bool is_banned); ///< delete all peers if is_banned=true also add peer to black list
 		///! add this user (or append existing user) with his actuall public key data
 		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
@@ -229,6 +236,8 @@ class c_tunserver : public c_galaxy_node {
 		int get_ip_protocol_number(const std::string& data) const;
 		void enable_remove_peers();
 		void set_remove_peer_tometout(unsigned int timeout_seconds);
+		void set_prefix_len(int prefix);
+		void set_prefix(const std::string &prefix);
 
 	protected:
 		void prepare_socket(); ///< make sure that the lower level members of handling the socket are ready to run
@@ -258,6 +267,8 @@ class c_tunserver : public c_galaxy_node {
 		Mutex & get_my_mutex() const; ///< [thread] get lock guard on this
 		friend class c_httpdbg_raport; ///< this is authorized to read my data for debug. but [thread] lock access first!!!
         #endif
+		int m_prefix_len;
+		std::string m_ipv6_prefix; // i.e. "fd42"
 	private:
         #ifdef HTTP_DBG
 		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
@@ -289,9 +300,10 @@ class c_tunserver : public c_galaxy_node {
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		typedef std::map< c_haship_addr, unique_ptr<c_peering> > t_peers_by_haship; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
-		t_peers_by_haship m_peer; ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_mutex!
-		mutable Mutex m_peer_mutex;
+		using t_peers_by_haship = std::map< c_haship_addr, unique_ptr<c_peering> >; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
+		mutable Mutex m_peer_etc_mutex; ///< one mutex protects m_peer and m_peer_black_list for avoid possible deadlocks
+		t_peers_by_haship m_peer GUARDED_BY(m_peer_etc_mutex); ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_etc_mutex!
+		std::set<c_haship_addr> m_peer_black_list GUARDED_BY(m_peer_etc_mutex); ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_etc_mutex!
 
 		t_peers_by_haship m_nodes; ///< all the nodes that I know about to some degree
 
@@ -304,6 +316,7 @@ class c_tunserver : public c_galaxy_node {
 		std::map< c_haship_addr, unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
 
 		bool enable_remove=false; // if false then just count, do not remove
+		bool is_exiting=false; // if true exiting from main loop
 		std::chrono::seconds peer_timeout;
 
 //		c_haship_pubkey m_haship_pubkey; ///< pubkey of my IP
@@ -341,12 +354,28 @@ class c_tunserver : public c_galaxy_node {
 
 
 		c_rpc_server m_rpc_server;
-		std::string rpc_ping(const std::string &input_json);
-		std::string rpc_peer_list(const std::string &input_json);
+		nlohmann::json rpc_ping(const std::string &input_json);
+		nlohmann::json rpc_peer_list(const std::string &input_json);
+		nlohmann::json rpc_sending_test(const std::string &input_json);
+		nlohmann::json rpc_add_peer(const std::string &input_json);
+		nlohmann::json rpc_delete_peer(const std::string &input_json);
+		nlohmann::json rpc_delete_all_peers(const std::string &input_json);
+		nlohmann::json rpc_ban_peer(const std::string &input_json);
+		nlohmann::json rpc_ban_list(const std::string &input_json);
+		nlohmann::json rpc_ban_all_peers(const std::string &input_json);
+		nlohmann::json rpc_get_galaxy_ipv6(const std::string &input_json);
+		nlohmann::json rpc_get_galaxy_invitation(const std::string &input_json);
+		nlohmann::json rpc_hello(const std::string &input_json);
+		nlohmann::json rpc_exit(const std::string &input_json);
+		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
+
 		int m_port;
+		std::atomic<bool> m_unban_if_banned; ///< if false rpc_add_peer not works for peers on balck list
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
 
 		const bool m_option_insecure_cap; ///< should we do insecure cap (e.g. do NOT drop the capabilities); tests/debug
+		t_peering_reference parse_peer_simplestring(const string& simple);
+		void exit_tunserver();
 };
 
 // ------------------------------------------------------------------

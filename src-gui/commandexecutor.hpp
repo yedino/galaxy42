@@ -7,43 +7,46 @@
 #include <QTimer>
 #include <vector>
 
-#include "../depends/json/src/json.hpp"
+//#include "../depends/json/src/json.hpp"
+#include "order.hpp"
+#include "commandsender.h"
 
-class order final {
-public:
-		enum class e_type {
-			PING,
-			PEER_LIST
-		};
-	order(const std::string &json_str);
-	order(e_type cmd);
-	std::string get_str() const;
-	std::string get_cmd() const;
-	std::string get_msg() const;
-	std::vector<std::string> get_msg_array() const;
-
-private:
-	std::string m_cmd;
-	std::string m_msg;
-	std::vector<std::string> m_msg_array;
-};
 
 class MainWindow;
+
 class netClient;
+class order;
+class CommandSender;
 
 class commandExecutor final : public QObject {
 		Q_OBJECT
-	public:
+    public:
 		static std::shared_ptr<commandExecutor> construct(std::shared_ptr<MainWindow> window);
-		void parseAndExecMsg(const std::string &msg); ///< parse network msg
+        void parseAndExecMsg(const std::string &msg); ///< parse network msg
 		void sendNetRequest(const order &ord); ///< send order via network
 		void startConnect(const QHostAddress &address, uint16_t port);
 
-		commandExecutor(std::shared_ptr<MainWindow> window);
-	private:
-		std::weak_ptr<MainWindow> m_main_window;
-		std::shared_ptr<netClient> m_net_client;
-		std::unique_ptr<QTimer> m_timer;
+        commandExecutor(std::shared_ptr<MainWindow> window);
+        commandExecutor(MainWindow* win);
+
+        void setSender(CommandSender *sender);
+        void setSenderRpcName(const QString&name);
+
+        std::shared_ptr<order> getOrder(const QString& rpc_id);
+        void resetConnection();
+signals:
+
+    void Connected();
+    void Disconnected();
+    void ConnectionError();
+    void GetSesionId();
+    void ErrorOccured(QString err);
+
+private:
+        MainWindow* m_main_window;
+        netClient* m_net_client;
+        std::unique_ptr<QTimer> m_timer;
+        CommandSender* m_sender = nullptr;
 	private slots:
 		void timer_slot();
 };
