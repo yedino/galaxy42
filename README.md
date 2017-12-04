@@ -68,6 +68,7 @@ For more details, including correct naming and **glossary**, and advanced techni
  * Basic GUI works, but is for testing from source code (is not connected to build system).
   * Connecting to RPC (not encrypted yet!).
   * Adding peers.
+  * work started on address book
 * Creating netmodel.
  * Multi-thread netmodel.
  * Multi-thread isolated crypto tests.
@@ -83,6 +84,8 @@ For more details, including correct naming and **glossary**, and advanced techni
  * starting on medium level tests (python, gnuplot)
  * starting high-level big test
  * many tests added (only-crypto, and various wire-tun-crypto tests)
+* Porting
+ * Started BSD/FreeBSD port (tuntap stump)
 * Code
  * Affinity mini lib.
  * Fixed some C++ warnings.
