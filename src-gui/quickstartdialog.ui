@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>465</width>
-    <height>293</height>
+    <height>297</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,7 +31,7 @@
         <x>0</x>
         <y>0</y>
         <width>445</width>
-        <height>273</height>
+        <height>277</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -186,6 +186,9 @@ copy and paste it in &quot;paste invite&quot; field
                <property name="whatsThis">
                 <string>IP v6 and IP v4 of node where
  you want to connect</string>
+               </property>
+               <property name="maxLength">
+                <number>128</number>
                </property>
               </widget>
              </item>
