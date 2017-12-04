@@ -6,7 +6,9 @@
 TunTapRunner::TunTapRunner(QObject *parent) : QObject(parent)
 {
 
-    QString tunserver_path = "C:\\Users\\nautic\\galaxy42\\win_startscript.bat";
+//    QString script_path = "C:\\Users\\nautic\\galaxy42\\win_startscript.bat";
+    QString script_path = "C:\\Users\\nautic\\galaxy42\\build-simpleGui-Desktop_Qt_5_9_1_MinGW_32bit-Debug\\build\\debug\\getadmin.vbs";
+    QString tunserver_path = "C:\\Users\\nautic\\galaxy42\\tunserver.elf.exe";
 
     connect(&m_tuntap_process,SIGNAL(errorOccurred(QProcess::ProcessError error)),this,SLOT(onError(QProcess::ProcessError)));
     connect(&m_tuntap_process,SIGNAL(finished(int exitCode, QProcess::ExitStatus exitStatus)),this,SLOT(onFinished(int,QProcess::ExitStatus)));
@@ -15,8 +17,9 @@ TunTapRunner::TunTapRunner(QObject *parent) : QObject(parent)
     connect(&m_tuntap_process,SIGNAL(started()),this,SLOT(onReadyReadStandardOutput()));
     connect(&m_tuntap_process,SIGNAL(stateChanged(QProcess::ProcessState newState)),this,SLOT(onStateChanged(QProcess::ProcessState newState)));
 
-    system(tunserver_path.toStdString().c_str());
-//    m_tuntap_process.execute(tunserver_path);
+//ShellExecute(NULL, "open",tunserver_path.toStdString().c_str() , NULL, NULL, SW_SHOWNORMAL);
+//    system(tunserver_path.toStdString().c_str());
+    m_tuntap_process.execute(script_path,QStringList{tunserver_path});
 //    m_tuntap_process.execute(tunserver_path);
 }
 

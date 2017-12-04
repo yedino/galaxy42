@@ -63,7 +63,7 @@ class c_tun_device_freebsd final : public c_tun_device {
 		virtual int get_tun_fd() const override{return 0;};
 
 
-#enif
+#endif
 
 #ifdef __linux__
 

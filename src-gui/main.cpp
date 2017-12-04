@@ -11,12 +11,12 @@ int main( int argc, char *argv[] ) {
     }
 //    TunTapRunner runer;
 
-
     QCoreApplication::setOrganizationName( "Tigusoft" );
     QCoreApplication::setOrganizationDomain( "https://github.com/yedino/galaxy42" );
     QCoreApplication::setApplicationName( "galaxy-gui" );
 
     QApplication a( argc, argv );
+
 //	std::shared_ptr<MainWindow> w = MainWindow::create_shared_ptr();
 //    MainWindow *w = new MainWindow(&a);
 //    w->show();
