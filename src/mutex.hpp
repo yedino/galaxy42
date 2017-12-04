@@ -1,6 +1,7 @@
 #pragma once
-#include<platform.hpp>
-#include<mutex>
+#include <platform.hpp>
+#include <mutex>
+#include <shared_mutex>
 
 /**
  * This is the header needed to use "Thread Safety Analysis" of clang.
