@@ -46,7 +46,8 @@ SOURCES += \
     statusform.cpp \
     processrunner.cpp \
     addressmodel.cpp \
-    addressbookform.cpp
+    addressbookform.cpp \
+    tuntaprunner.cpp
 
 
 HEADERS += \
@@ -76,7 +77,8 @@ HEADERS += \
     statusform.h \
     processrunner.h \
     addressmodel.h \
-    addressbookform.h
+    addressbookform.h \
+    tuntaprunner.h
 
 FORMS += \
     mainwindow.ui \
