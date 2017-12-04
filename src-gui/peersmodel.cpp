@@ -100,6 +100,15 @@ QVariant peersModel::data( const QModelIndex &index, int role ) const
     return QVariant();
 }
 
+
+bool peersModel::peerExist(const QString &vip)
+{
+    for (auto it :m_peers_list){
+        if(it->getVip() == vip) return true;
+    }
+    return false;
+}
+
 void peersModel::addPeer( QString serialized_peer )
 {
     MeshPeer *peer;
