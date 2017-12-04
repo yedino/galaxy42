@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>459</width>
-    <height>273</height>
+    <width>465</width>
+    <height>297</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -30,8 +30,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>422</width>
-        <height>271</height>
+        <width>445</width>
+        <height>277</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -72,7 +72,9 @@
              <item>
               <widget class="QLineEdit" name="vipEdit">
                <property name="toolTip">
-                <string>Filed with your IP v6 - copy and paste it in &quot;paste invite&quot; field in your's friends computer to connect with him</string>
+                <string>Filed with your IP v6 
+copy and paste it in &quot;paste invite&quot; field 
+ in your's friends computer to connect with him</string>
                </property>
                <property name="statusTip">
                 <string>my  ip v6 address</string>
@@ -94,27 +96,44 @@
             </layout>
            </item>
            <item>
-            <widget class="QPushButton" name="wwwButton">
-             <property name="minimumSize">
-              <size>
-               <width>71</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>71</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>www</string>
-             </property>
-             <property name="icon">
-              <iconset resource="icons.qrc">
-               <normaloff>:/globe-model</normaloff>:/globe-model</iconset>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <spacer name="verticalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="wwwButton">
+               <property name="minimumSize">
+                <size>
+                 <width>71</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>71</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>www</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/globe-model</normaloff>:/globe-model</iconset>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
@@ -165,30 +184,51 @@
                 <string>IP v6 and IP v4 of node where you want to connect</string>
                </property>
                <property name="whatsThis">
-                <string>IP v6 and IP v4 of node where you want to connect</string>
+                <string>IP v6 and IP v4 of node where
+ you want to connect</string>
+               </property>
+               <property name="maxLength">
+                <number>128</number>
                </property>
               </widget>
              </item>
             </layout>
            </item>
            <item>
-            <widget class="QPushButton" name="QrScanButton">
-             <property name="minimumSize">
-              <size>
-               <width>71</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>71</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Scan QR</string>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <spacer name="verticalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="QrScanButton">
+               <property name="minimumSize">
+                <size>
+                 <width>71</width>
+                 <height>20</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>71</width>
+                 <height>20</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Scan QR</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
@@ -302,10 +342,11 @@
                 <string>IP v6 and IP v4 of this node - place in &quot;Paste invate&quot; field if you want to connect to </string>
                </property>
                <property name="statusTip">
-                <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+                <string>IP v6 and IP v4 of this node \n necessery to connect to this node</string>
                </property>
                <property name="whatsThis">
-                <string>IP v6 and IP v4 of this node - necessery to connect to this node</string>
+                <string>IP v6 and IP v4 of this node 
+ necessery to connect to this node</string>
                </property>
                <property name="text">
                 <string/>
