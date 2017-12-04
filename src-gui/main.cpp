@@ -2,12 +2,15 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <sodium.h>
+#include <tuntaprunner.h>
 
 int main( int argc, char *argv[] ) {
     if ( sodium_init() == -1 ) {
         qDebug() << "sodium init error";
         return 1;
     }
+//    TunTapRunner runer;
+
 
     QCoreApplication::setOrganizationName( "Tigusoft" );
     QCoreApplication::setOrganizationDomain( "https://github.com/yedino/galaxy42" );

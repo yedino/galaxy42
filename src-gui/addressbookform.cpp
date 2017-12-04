@@ -1,6 +1,6 @@
 #include <QByteArray>
 #include <QDebug>
-
+#include <QFile>
 
 #include "addressbookform.h"
 #include "ui_addressbookform.h"
