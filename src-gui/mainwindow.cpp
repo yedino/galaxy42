@@ -161,6 +161,14 @@ void MainWindow::connectToNet( QString net_id )
         MeshPeer peer;
         peer.setName( "quick add" );
         peer.setInvitation( net_id );
+        if(ui->peerListWidget_2->peerExist(peer.getVip())){
+            QMessageBox box;
+            box.setText(QString("peer with V IP")+ peer.getVip() +" exists");
+            box.exec();
+            return ;
+        }
+
+
         m_sender->sendCommand( CommandSender::orderType::ADDPEER,peer );
 
     } catch( std::exception &e ) {

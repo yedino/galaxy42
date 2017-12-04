@@ -35,6 +35,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QModelIndex findIndex(const QString &value, Columns col);
 
+    bool peerExist(const QString &vip);
 public slots:
     void addPeer(QString serialized_peer);
     void addPeer(const MeshPeer &peer);

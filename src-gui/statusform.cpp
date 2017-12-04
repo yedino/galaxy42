@@ -56,7 +56,7 @@ void StatusForm::onConnectionSuccess()
 
     if( m_is_working ) {
         m_is_working = false;
-        emit netConnect( false );
+//        emit netConnect( false );
     }
 }
 
@@ -101,5 +101,6 @@ void StatusForm::on_pushButton_clicked()
 
     m_executor->resetConnection();
     m_is_working = false;
-    emit netConnect( m_is_working );
+//    emit netConnect( m_is_working );
 }
+

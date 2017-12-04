@@ -11,6 +11,8 @@ class c_tuntap_macosx_obj final : public c_tuntap_base_obj {
 	public:
 		c_tuntap_macosx_obj(); ///< construct this object, throws if error
 
+		c_tuntap_macosx_obj(boost::asio::io_service &io_service);
+
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 
 		size_t send_to_tun_separated_addresses(const unsigned char * const data, size_t size,
