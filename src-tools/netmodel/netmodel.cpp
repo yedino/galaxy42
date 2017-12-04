@@ -948,7 +948,7 @@ constexpr int cfg_size_tuntap_buf=cfg_size_tuntap_maxread * 2;
 static constexpr size_t fragment_pos_max=32;
 
 struct c_weld {
-	mutable std::unique_ptr<std::shared_timed_mutex> m_mutex_ptr;
+	mutable std::unique_ptr<MutexShared> m_mutex_ptr;
 
 	unsigned char m_buf[cfg_size_tuntap_buf + crypto_secretbox_MACBYTES];
 
@@ -963,7 +963,7 @@ struct c_weld {
 
 	c_weld()
 	:
-	m_mutex_ptr(std::make_unique<std::shared_timed_mutex>())
+	m_mutex_ptr(std::make_unique<MutexShared>())
 	{
 		clear();
 	}
@@ -973,7 +973,7 @@ struct c_weld {
 	c_weld& operator=(const c_weld &) = delete;
 	c_weld& operator=(c_weld &&) = default;
 	void clear() {
-		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
+		std::lock_guard<MutexShared> lg(*m_mutex_ptr);
 		m_reserved=false;
 		m_pos=0;
 		m_fragment_pos_ix=0;
@@ -985,14 +985,14 @@ struct c_weld {
 		// e.g. buf=10 (array is 0..9), m_pos=0 (nothing used), size=10 -> allowed
 		assert(size <= cfg_size_tuntap_buf - m_pos);
 
-		std::lock_guard<std::shared_timed_mutex> lg(*m_mutex_ptr);
+		std::lock_guard<MutexShared> lg(*m_mutex_ptr);
 		m_pos += size;
 		m_fragment_pos[ m_fragment_pos_ix ] = m_pos;
 		++m_fragment_pos_ix;
 	}
 
 	size_t space_left() const {
-		std::shared_lock<std::shared_timed_mutex> lg(*m_mutex_ptr);
+		std::shared_lock<MutexShared> lg(*m_mutex_ptr);
 		if (m_fragment_pos_ix>=fragment_pos_max) return 0; // can not add anything since no place to store indexes
 		return cfg_size_tuntap_buf - m_pos;
 	}
@@ -1002,9 +1002,9 @@ struct c_weld {
 
 // process data, and un-reserve it so that others can add more to it
 template <typename F>
-void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_mutex, size_t found_ix, size_t read_size, F &func_send_weld) {
+void send_to_global_weld(vector<c_weld> &welds, MutexShared &welds_mutex, size_t found_ix, size_t read_size, F &func_send_weld) {
 	// lock
-	std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+	std::shared_lock<MutexShared> lg(welds_mutex);
 	c_weld & the_weld = welds.at(found_ix); // optimize: no need for mutex for this one
 	the_weld.add_fragment(read_size);
 
@@ -1017,7 +1017,7 @@ void send_to_global_weld(vector<c_weld> &welds, std::shared_timed_mutex &welds_m
 	}
 	else { // do not send. weld extended with data
 		_dbg4("Removing reservation on weld " << found_ix);
-		std::lock_guard<std::shared_timed_mutex> lg(*the_weld.m_mutex_ptr);
+		std::lock_guard<MutexShared> lg(*the_weld.m_mutex_ptr);
 		the_weld.m_reserved=false;
 	}
 	// lock to un-reserve
@@ -1265,7 +1265,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// --- welds var ---
 	vector<c_weld> welds;
-	std::shared_timed_mutex welds_mutex;
+	MutexShared welds_mutex;
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
@@ -1309,9 +1309,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 				oss << "Welds: ";
 				{
-					std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
+					std::shared_lock<MutexShared> lg(welds_mutex);
 					for (const auto & weld : welds) {
-						std::shared_lock<std::shared_timed_mutex> lg(*weld.m_mutex_ptr);
+						std::shared_lock<MutexShared> lg(*weld.m_mutex_ptr);
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
 				}
@@ -1395,7 +1395,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 #elif defined (ANTINET_windows)
 		tuntap = std::make_unique<c_tuntap_windows_obj>(*ios_tuntap.at(0));
 #elif defined (ANTINET_macosx)
-		tuntap = std::make_unique<c_tuntap_macos_obj>(*ios_tuntap.at(0));
+		tuntap = std::make_unique<c_tuntap_macosx_obj>(*ios_tuntap.at(0));
 #endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
 		tuntap_address.fill(0x11);
@@ -1446,7 +1446,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// ---> tuntap: blocking version seems faster <---
 
 	{
-		std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+		std::lock_guard<MutexShared> lg(welds_mutex);
 		welds.resize(cfg_num_weld_tuntap);
 	}
 
@@ -1500,7 +1500,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 									<< " weld="<<send_weld_nr<<" wire-socket="<<wire_socket_nr
 								);
 								g_state_tuntap2wire_in_handler2.add(1, bytes_transferred);
-								std::shared_lock<std::shared_timed_mutex> lg(welds_mutex); // lock
+								std::shared_lock<MutexShared> lg(welds_mutex); // lock
 								auto & weld = welds.at(send_weld_nr);
 								weld.clear();
 							}
@@ -1522,8 +1522,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			e_weld_type weld_type = e_weld_type::global_weld_list;
 			if (weld_type == e_weld_type::global_weld_list) {
 				// lock to find and reserve buffer a weld
-//				std::shared_lock<std::shared_timed_mutex> lg(welds_mutex);
-				std::lock_guard<std::shared_timed_mutex> lg(welds_mutex);
+//				std::shared_lock<MutexShared> lg(welds_mutex);
+				std::lock_guard<MutexShared> lg(welds_mutex);
 
 				for (size_t i=0; i<welds.size(); ++i) {
 					if (! welds.at(i).m_reserved) {
