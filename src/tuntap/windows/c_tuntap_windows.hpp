@@ -17,6 +17,7 @@ class c_is_user_admin {
 class c_tuntap_windows_obj final : public c_tuntap_base_obj, c_is_user_admin {
 	public:
 		c_tuntap_windows_obj();
+		c_tuntap_windows_obj(boost::asio::io_service &io_service);
 		size_t send_to_tun(const unsigned char *data, size_t size) override;
 
 		size_t send_to_tun_separated_addresses(const unsigned char * const data, size_t size,
