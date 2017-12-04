@@ -69,6 +69,19 @@ c_tuntap_windows_obj::c_tuntap_windows_obj()
 	_check_sys(m_stream_handle.is_open());
 }
 
+// TODO: code duplication
+c_tuntap_windows_obj::c_tuntap_windows_obj(boost::asio::io_service &io_service)
+:
+	m_register_tun_path(),
+	m_guid(get_device_guid()),
+	m_handle(get_device_handle()),
+	m_mac_address(get_mac(m_handle)),
+	m_ioservice(), // not used in thi case
+	m_stream_handle(io_service, m_handle)
+{
+	_check_sys(m_stream_handle.is_open());
+}
+
 size_t c_tuntap_windows_obj::send_to_tun(const unsigned char *data, size_t size) {
 	std::array<unsigned char, 14 + 40 + 65535> output_buffer = { // eth header + ipv6 header + max ipv6 payload
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC
