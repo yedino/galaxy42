@@ -1515,7 +1515,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 		}; // send the full weld
 
-		auto get_tun_input_buffer = [&welds, &welds_mutex](){
+		auto get_tun_input_buffer = [&welds, &welds_mutex, size_tuntap_maxread](){
 			size_t found_ix=0;
 			bool found_any=false;
 //					e_weld_type weld_type = e_weld_type::local_thread_buffer;
@@ -1743,7 +1743,11 @@ int netmodel_main(int argc, const char **argv) {
 }
 
 void escape(void* p) {
+#if defined (__clang__) || defined (__GNUC__) || defined (__GNUG__)
 	asm volatile("" : : "g"(p) : "memory");
+#else
+	// TODO: MSVC optimalization barrier
+#endif
 }
 
 } // namespace n_netmodel
