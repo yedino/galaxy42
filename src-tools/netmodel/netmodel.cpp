@@ -1405,7 +1405,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
 	} else {
 		_info("Create fake TUN/TAP");
-		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
+		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", cfg_port_faketuntap);
 	}
 
 	// sockets for wire p2p connections:
