@@ -6,6 +6,8 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QErrorMessage>
+#include <QDir>
+
 
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
@@ -17,16 +19,16 @@
 #include "quickstartdialog.h"
 #include "nodecontrolerdialog.h"
 #include "statusform.h"
+#include "tunserver_process.hpp"
+
 
 MainWindow::MainWindow( QWidget *parent ) :
     QMainWindow( parent ),
-    ui( new Ui::MainWindow ),
-    m_tun_process( std::make_unique<tunserverProcess>() )
+    ui( new Ui::MainWindow )
 {
+    runTunTap();
     ui->setupUi( this );
-
     ui->peerListWidget_2->setMainWindow( this );
-
     QString ip = getLocalIps().at( 0 );
     QString vip = getLocalVips().at( 0 ).split( '%' ).at( 0 );
     ui->quickStart->setIps( ip,vip );
@@ -50,11 +52,14 @@ MainWindow::MainWindow( QWidget *parent ) :
     loadSettings();
 
     ui->statusBar->addPermanentWidget( m_status_form );
-
     connect( m_status_form,SIGNAL( netConnect( bool ) ),this,SLOT( onNetConnected( bool ) ) );
 
     m_status_form->setExecutor( m_cmd_exec );
     isWorking();
+
+
+    m_tun_process = std::make_unique<tunserverProcess>();
+
 }
 
 
@@ -167,7 +172,6 @@ void MainWindow::connectToNet( QString net_id )
             box.exec();
             return ;
         }
-
 
         m_sender->sendCommand( CommandSender::orderType::ADDPEER,peer );
 
@@ -320,7 +324,7 @@ void MainWindow::initSettings()
 
     setings.beginGroup( "rpcConnection" );
     setings.setValue( "connectionsNum","1" );		// no of known nodes
-    setings.setValue( "Ip","127.0.0.1" );				// Ip of rpc node
+    setings.setValue( "Ip","127.0.0.1" );			// Ip of rpc node
     setings.setValue( "port","42000" );				// port of rpc node
     setings.endGroup();
 
@@ -510,8 +514,29 @@ void MainWindow::onNetConnected( bool val )
     }
 }
 
-
 void MainWindow::onDeletePeer( QString &vip )
 {
     ui->peerListWidget_2->onPeerRemoved(vip);
+}
+
+void MainWindow::runTunTap()
+{
+    QSettings settings;
+
+    QString tuntap_path = settings.value("tuntap_path").toString();
+    QString program 	= settings.value("tuntap_name").toString();
+    QString sudo_script = settings.value("sudo_script").toString();
+
+    if(tuntap_path.size() == 0) {
+        settings.setValue("tuntap_path","c:/tunserver-bin");
+        settings.setValue("tuntap_name","tunserver.elf.exe");
+        settings.setValue("sudo_script","win_startscript.bat");
+        tuntap_path = "c:/tunserver-bin";
+        program = "tunserver.elf.exe";
+        sudo_script = "win_startscript.bat";
+    }
+
+    QString program_pth = tuntap_path+"/"+program;
+    QString script_path= tuntap_path+"/"+sudo_script;
+    m_tuntap_runner = new TunTapRunner(this,program_pth,script_path);
 }
