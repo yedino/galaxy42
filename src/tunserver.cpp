@@ -488,7 +488,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_udp_device(port)
 	,m_event_manager(m_tun_device, m_udp_device)
 	,m_tun_header_offset_ipv6(0)
-	,m_rpc_server(rpc_port)
+	,m_rpc_server(early_argm.at("rpc-listen-address").as<std::string>(), rpc_port)
 	,m_port(port)
 	,m_unban_if_banned(true)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
