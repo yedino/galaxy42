@@ -4,8 +4,7 @@
 bitcoin_node_cli::bitcoin_node_cli(const std::string &ip_address, unsigned short port)
 :
 	m_io_service(),
-	m_btc_rpc_endpoint(boost::asio::ip::address_v4::from_string(ip_address), port),
-	m_socket(m_io_service)
+	m_btc_rpc_endpoint(boost::asio::ip::address_v4::from_string(ip_address), port)
 {
 }
 
@@ -21,10 +20,11 @@ uint32_t bitcoin_node_cli::get_balance() {
 		get_balance_request += R"({"method":"getbalance","params":["*",0],"id":1})";
 		get_balance_request += "\n";
 
-		m_socket.connect(m_btc_rpc_endpoint);
-		m_socket.send(boost::asio::buffer(get_balance_request));
+		boost::asio::ip::tcp::socket socket(m_io_service);
+		socket.connect(m_btc_rpc_endpoint);
+		socket.send(boost::asio::buffer(get_balance_request));
 		std::string receive_buffer(1024, '\0');
-		size_t readed_bytes = m_socket.receive(boost::asio::buffer(&receive_buffer[0], receive_buffer.size()));
+		size_t readed_bytes = socket.receive(boost::asio::buffer(&receive_buffer[0], receive_buffer.size()));
 
 		receive_buffer.resize(readed_bytes);
 		auto it = std::find(receive_buffer.begin(), receive_buffer.end(), '{'); // find begin of json data
