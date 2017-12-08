@@ -63,6 +63,7 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     QMenu menu;
 
     menu.addAction( add_action );
+
     if( m_index.isValid() ) {
         menu.addAction( remove_action );
         menu.addAction( remove_all_action );
@@ -73,7 +74,6 @@ void PeerListForm::contextMenuEvent( QContextMenuEvent *event )
     }
 
     menu.addAction( find_action );
-
 
     if(m_index.isValid() ) {
         menu.addAction( ban_action );
@@ -112,10 +112,24 @@ void PeerListForm::addActionSlot( bool )
 
 void PeerListForm::banActionSlot( bool )
 {
+    if(!m_index.isValid()){
+        return;
+    }
+
     qDebug()<<"ban peer";
     QString vip = m_model->data( m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip ) ) ).toString();
-    m_model->startActionOnIndex(m_index);
-//    m_model->ac;
+    QMessageBox box(QMessageBox::Question,tr("confirm baning peer"),tr("Are you sure ,you want delete ban this peer?")
+                    , QMessageBox::Yes|QMessageBox::No);
+
+
+    if(box.exec() == QMessageBox::No){
+        return;
+    }
+
+    if(m_index.isValid()){
+        m_model->startActionOnIndex(m_index);
+    }
+        //    m_model->ac;
     onPeerBanned(vip);			//!@todo on peer banned
     emit ( banPeer( vip ) );
 }
@@ -123,7 +137,18 @@ void PeerListForm::banActionSlot( bool )
 void PeerListForm::removeActionSlot( bool )
 {
     qDebug()<<"remove peer";
+
+
+
     m_index =getCurrentSelection();
+
+    QMessageBox box(QMessageBox::Question,tr("Confirm removing peer"),tr("Are you sure ,you want to remove peers")
+                    , QMessageBox::Yes|QMessageBox::No);
+
+    if(box.exec() == QMessageBox::No){
+        return;
+    }
+
     if( m_index.isValid() ) {
         QModelIndex work_index = m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip) );
         QString vip = m_model->data( work_index ).toString();
@@ -137,6 +162,9 @@ void PeerListForm::pingActionSlot( bool )
 {
     qDebug()<<"ping peer";
 
+
+    if(!m_index.isValid()) return;
+
     QString vip = m_model->data( m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip) ) ).toString();
     emit ( pingPeer( vip ) );
 
@@ -149,6 +177,9 @@ peersModel* PeerListForm::getModel()
 
 void PeerListForm::findActionSlot( bool )
 {
+    if(!m_index.isValid()){
+        return;
+    }
     QString vip = m_model->data( m_index.sibling( m_index.row(),static_cast <int >(peersModel::Columns::vip ) ) ).toString();
     emit( findPeer( vip ) );
 }
@@ -203,6 +234,15 @@ void PeerListForm::addPeer( const MeshPeer & peer )
 
 void PeerListForm::banAllSlot( bool )
 {
+
+    QMessageBox box(QMessageBox::Question,tr("Confirm banning peers"),tr("Are you sure ,you want to Ban all peers?")
+                    , QMessageBox::Yes|QMessageBox::No);
+
+
+    if(box.exec() == QMessageBox::No){
+        return;
+    }
+
     m_model->banAllPeers();
     m_index =QModelIndex();
     emit banAll();
@@ -210,6 +250,15 @@ void PeerListForm::banAllSlot( bool )
 
 void PeerListForm::deleteAllSlot( bool )
 {
+
+    QMessageBox box(QMessageBox::Question,tr("confirm removing peers"),tr("Are you sure ,you want to remove all peers?")
+                    , QMessageBox::Yes|QMessageBox::No);
+
+
+    if(box.exec() == QMessageBox::No){
+        return;
+    }
+
 //    m_model->removeAll();
     QMessageBox mb(tr("Remove All "),
                           tr("Remove all perrs ?"),
