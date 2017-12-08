@@ -1,9 +1,6 @@
-
-
 #include "order.hpp"
 #include "mainwindow.hpp"
 #include "nodecontrolerdialog.h"
-
 
 std::string setIps::get_str() const
 {
@@ -249,7 +246,6 @@ banPeerOrder::banPeerOrder( const std::string &json_str,commandExecutor* exec ):
     } catch( std::exception &e ) {
         qDebug()<<"ban peers parse error"<<json_str.c_str();
     }
-
 }
 
 std::string banPeerOrder::get_str() const
@@ -261,7 +257,6 @@ std::string banPeerOrder::get_str() const
 
 void banPeerOrder::execute( MainWindow &main_window )
 {
-
     try {
         QString peer = QString::fromStdString(getPeerName());
 //        main_window.onBanBeer(peer);
