@@ -38,6 +38,7 @@ class c_rpc_server final {
 		 * @param function must be thread safe(will be called from another thread)
 		 */
 		void add_rpc_function(const std::string &rpc_function_name, std::function<nlohmann::json(const std::string &)> &&function);
+
 	private:
 		class c_session;
 		boost::asio::io_service m_io_service;
@@ -50,6 +51,8 @@ class c_rpc_server final {
 		std::map<std::string, std::function<nlohmann::json(const std::string)>> m_rpc_functions_map GUARDED_BY(m_rpc_functions_map_mutex);
 		std::array<unsigned char, crypto_auth_hmacsha512_KEYBYTES> m_hmac_key; ///< for hmac authentication key, shold be loaded from conf file TODO
 		xint m_session_counter = 0;
+
+		void rpc_start(bool network_listen, const std::string &listen_address, const unsigned short port); ///< actually start
 
 		void accept_handler(const boost::system::error_code &error);
 		void remove_session_from_vector(std::list<c_session>::iterator it);
@@ -64,6 +67,7 @@ class c_rpc_server final {
 				c_session & operator = (c_session && other) = delete;
 				void set_iterator_in_session_list(std::list<c_session>::iterator it);
 				void send_response(nlohmann::json json_response);
+
 			private:
 				std::list<c_session>::iterator m_iterator_in_session_list; // needed for delete_me()
 				c_rpc_server *m_rpc_server_ptr; // needed for delete_me()
