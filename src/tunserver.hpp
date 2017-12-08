@@ -24,6 +24,7 @@
 
 #include "crypto/crypto.hpp" // for tests
 #include "rpc/rpc.hpp"
+#include "bitcoin_node_cli.hpp"
 
 #include "trivialserialize.hpp"
 #include "galaxy_debug.hpp"
@@ -352,7 +353,7 @@ class c_tunserver : public c_galaxy_node {
 		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
 
 
-
+		bitcoin_node_cli m_bitcoin_node_cli;
 		c_rpc_server m_rpc_server;
 		nlohmann::json rpc_ping(const std::string &input_json);
 		nlohmann::json rpc_peer_list(const std::string &input_json);
@@ -367,6 +368,7 @@ class c_tunserver : public c_galaxy_node {
 		nlohmann::json rpc_get_galaxy_invitation(const std::string &input_json);
 		nlohmann::json rpc_hello(const std::string &input_json);
 		nlohmann::json rpc_exit(const std::string &input_json);
+		nlohmann::json rpc_get_status(const std::string &input_json);
 		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
 
 		int m_port;
