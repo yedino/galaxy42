@@ -5,7 +5,7 @@
 
 class bitcoin_node_cli final {
 	public:
-		bitcoin_node_cli(const std::string &ip_address, unsigned short port);
+		bitcoin_node_cli(const std::string &ip_address="127.0.0.1", unsigned short port=18332);
 		uint32_t get_balance();
 	private:
 		boost::asio::io_service m_io_service;
