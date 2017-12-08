@@ -39,13 +39,14 @@ uint32_t bitcoin_node_cli::get_balance() {
 		0x4e, 0x54, 0x51, 0x77, 0x4e, 0x6d, 0x4e, 0x68,
 		0x0d, 0x0a, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
 		0x74, 0x2d, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68,
-		0x3a, 0x20, 0x34, 0x33, 0x0d, 0x0a, 0x0d, 0x0a,
+		0x3a, 0x20, 0x34, 0x38, 0x0d, 0x0a, 0x0d, 0x0a,
 		0x7b, 0x22, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
 		0x22, 0x3a, 0x22, 0x67, 0x65, 0x74, 0x62, 0x61,
 		0x6c, 0x61, 0x6e, 0x63, 0x65, 0x22, 0x2c, 0x22,
 		0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x3a,
-		0x5b, 0x5d, 0x2c, 0x22, 0x69, 0x64, 0x22, 0x3a,
-		0x31, 0x7d, 0x0a};
+		0x5b, 0x22, 0x2a, 0x22, 0x2c, 0x30, 0x5d, 0x2c,
+		0x22, 0x69, 0x64, 0x22, 0x3a, 0x31, 0x7d, 0x0a};
+
 
 		m_socket.connect(m_btc_rpc_endpoint);
 		m_socket.send(boost::asio::buffer(get_balance_request));
@@ -56,14 +57,29 @@ uint32_t bitcoin_node_cli::get_balance() {
 		auto it = std::find(receive_buffer.begin(), receive_buffer.end(), '{'); // find begin of json data
 		receive_buffer.erase(receive_buffer.begin(), it); // remove http POST data
 		_mark(receive_buffer);
-		const std::string btc_amount_str = receive_buffer.substr(10, 11);
+
+		// remove other json fields
+		receive_buffer.erase(receive_buffer.begin()); // remove first '{'
+		auto pos = receive_buffer.find(R"("result":)"); // find "result":
+		if (pos == std::string::npos) return 0;
+		receive_buffer.erase(pos, std::string(R"("result":)").size()); // remove "result":
+		it = std::find_if(receive_buffer.begin(), receive_buffer.end(),
+		                  [](unsigned char c) {
+		                  		if(c == '.' || std::isdigit(c)) return false;
+		                  		return true;
+		                  }
+		);
+		receive_buffer.erase(it, receive_buffer.end());
+		const std::string btc_amount_str = receive_buffer;
+
 		_mark("btc_amount_str " << btc_amount_str);
-		std::stringstream ss(btc_amount_str);
+		std::stringstream ss;
+		ss << std::setprecision(20) << btc_amount_str;
 		double btc_amount;
 		ss >> btc_amount;
 
 		return btc_amount * 10'000'000. ; // return balance in satoshi
-	} catch (const std::exception &e){
+	} catch (const std::exception &e) {
 		_erro(e.what());
 		abort();
 		return 0;
