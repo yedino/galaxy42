@@ -12,7 +12,7 @@ class TunTapRunner : public QObject
     void stopTunserver();
 
 public:
-    explicit TunTapRunner(QObject *parent = nullptr);
+    explicit TunTapRunner(QObject *parent,const QString& tunserver_path,const QString& script_path);
 
     void restartTunserver(QString tunserver_path ="");
 
