@@ -494,8 +494,6 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
 {
-	_mark ("btc result: " << m_bitcoin_node_cli.get_balance());
-	std::abort();
 	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
