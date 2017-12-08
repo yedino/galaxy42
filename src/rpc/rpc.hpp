@@ -26,6 +26,7 @@
  */
 class c_rpc_server final {
 	public:
+		c_rpc_server(const std::string &listen_address, const unsigned short port);
 		c_rpc_server(const unsigned short port);
 		c_rpc_server(const c_rpc_server &) = delete;
 		c_rpc_server & operator = (const c_rpc_server &) = delete;

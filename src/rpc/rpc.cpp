@@ -10,10 +10,10 @@
 #define dbg(X) _info("RPC: " << X);
 //#define _dbg(X) std::cout << "RPC: " << X << std::endl;
 
-c_rpc_server::c_rpc_server(const unsigned short port)
+c_rpc_server::c_rpc_server(const std::string &listen_address, const unsigned short port)
 :
 	m_io_service(),
-	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string("127.0.0.1"), port)),
+	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(listen_address), port)),
 	m_socket(m_io_service),
 	m_thread(),
 	m_hmac_key()
@@ -24,6 +24,8 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 		accept_handler(error);
 	});
 	dbg("Starting RPC server thread");
+	dbg("listen on address: " << listen_address);
+	dbg("port: " << port);
 	m_thread = std::thread([this]() {
 		dbg("RPC thread start");
 		try {
@@ -43,6 +45,12 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 
 		dbg("RPC thread stop");
 	}); // lambda
+}
+
+c_rpc_server::c_rpc_server(const unsigned short port)
+:
+	c_rpc_server("127.0.0.1", port)
+{
 }
 
 c_rpc_server::~c_rpc_server() {
