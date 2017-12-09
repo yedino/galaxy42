@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "rpc.hpp"
 #include "../trivialserialize.hpp"
@@ -10,29 +10,39 @@
 #define dbg(X) _info("RPC: " << X);
 //#define _dbg(X) std::cout << "RPC: " << X << std::endl;
 
-c_rpc_server::c_rpc_server(const unsigned short port)
+c_rpc_server::c_rpc_server(const std::string &listen_address, const unsigned short port)
 :
 	m_io_service(),
-	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string("127.0.0.1"), port)),
+	m_acceptor(m_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(listen_address), port)),
 	m_socket(m_io_service),
 	m_thread(),
 	m_hmac_key()
 {
 	m_hmac_key.fill(0x42); // TODO load this from conf file
-	// start waiting for new connection
-	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
-		accept_handler(error);
-	});
-	dbg("Starting RPC server thread");
+	this->rpc_start( port != 0 , listen_address, port);
+};
+
+void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_address, const unsigned short port) {
+	if (network_listen) {
+		// start waiting for new connection
+		_note("Starting RPC server listening on address="<<listen_address<<" port="<<port);
+		m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
+			this->accept_handler(error);
+		});
+	}
+	else _warn("RPC server started, but not listening on network");
+
+	_fact("Starting RPC thread");
 	m_thread = std::thread([this]() {
-		dbg("RPC thread start");
+		dbg("RPC thread start (inside)");
 		try {
 			boost::system::error_code ec;
 			dbg("io_service run");
 			m_io_service.run(ec);
 			dbg("end of io_service run");
-			if (ec)
+			if (ec) {
 				dbg("error code " << ec.message());
+			}
 			dbg("io_service reset");
 			m_io_service.reset();
 		} catch (const std::exception &e) {
@@ -43,6 +53,12 @@ c_rpc_server::c_rpc_server(const unsigned short port)
 
 		dbg("RPC thread stop");
 	}); // lambda
+}
+
+c_rpc_server::c_rpc_server(const unsigned short port)
+:
+	c_rpc_server("127.0.0.1", port)
+{
 }
 
 c_rpc_server::~c_rpc_server() {
