@@ -8,6 +8,8 @@ Noting them here to not forget and keep track.
 
 - PR 323, a5072877d8420ca382001a852174168a940932dd, (SIOM) - windows builds are broken (no socketopt) - need to fix this by using cancelio family of functions instead. Was merged to dev to not block development.
 
+- bitcoin RPC works requires review, and protestion against malicious input
+
 === important ===
 
 - PR 320 was merged without full review (as we need to use this threads now already). It needs at least more comments in few places. Notify @rfree with the review to sign-on the review, before deleting this item.

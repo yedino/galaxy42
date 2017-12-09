@@ -69,11 +69,14 @@ For more details, including correct naming and **glossary**, and advanced techni
   * Connecting to RPC (not encrypted yet!).
   * Adding peers.
   * work started on address book
+  * started work on showing coin address ballance from RPC (might not work now!)
 * Creating netmodel.
  * Multi-thread netmodel.
  * Multi-thread isolated crypto tests.
 * Creating utils to test network speed.
  * Sender program, with remote RPC.
+* Tokens
+ * Started simple example of checking ballance (via RPC) of bitcoind.
 * Deps
  * Updated external libraries.
 * Fixes
