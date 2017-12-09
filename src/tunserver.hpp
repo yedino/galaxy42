@@ -269,7 +269,13 @@ class c_tunserver : public c_galaxy_node {
         #endif
 		int m_prefix_len;
 		std::string m_ipv6_prefix; // i.e. "fd42"
+
+
 	private:
+
+		static bool check_arg_bool(const string arg_name, const boost::program_options::variables_map & early_argm, bool default_val);
+		static std::string check_arg_string(const string arg_name, const boost::program_options::variables_map & early_argm, const std::string & default_val);
+
         #ifdef HTTP_DBG
 		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
         #endif
@@ -279,7 +285,7 @@ class c_tunserver : public c_galaxy_node {
 		c_tun_device_linux m_tun_device;
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
-                #elif defined(_WIN32) || defined(__CYGWIN__)
+		#elif defined(_WIN32) || defined(__CYGWIN__)
 		c_tun_device_windows m_tun_device;
 		c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
