@@ -28,7 +28,8 @@ public:
         BANPEER,
         DELETEALL,
         BANALL,
-        GETNAME
+        GETNAME,
+        GET_STATUS
     };
 
     explicit CommandSender(commandExecutor* comm_exec,QObject *parent = nullptr);

@@ -1,6 +1,9 @@
+#include <QDebug>
+
 #include "order.hpp"
 #include "mainwindow.hpp"
 #include "nodecontrolerdialog.h"
+
 
 std::string setIps::get_str() const
 {
@@ -40,10 +43,16 @@ void setIps::execute( MainWindow &main_window )
 
 basicOrder::basicOrder( const std::string &json_str ): order( json_str )
 {
-    using nlohmann::json;
-    json j = json::parse( json_str );
-    m_cmd = j["cmd"];
-    m_state = j["state"];
+    try{
+        using nlohmann::json;
+        json j = json::parse( json_str );
+        m_cmd = j["cmd"];
+        m_state = j["state"];
+    }catch(std::exception &e){
+        qDebug()<<"can't parse answer";
+        m_cmd = "unknown";
+        m_state ="err";
+    }
 }
 
 pingOrder::pingOrder( const RpcId& id ):order( id )
@@ -491,4 +500,32 @@ void serverMsg::execute(MainWindow &)
     qDebug()<<QString::fromStdString(m_state) <<" "<< QString::fromStdString(m_lvl)<<" "<<QString::fromStdString(m_msg);
     //!@todo use app debug system while exists
 }
+
+
+statusOrder::statusOrder(const std::string &json_str,commandExecutor *executor)
+{
+    if(executor == nullptr){
+        throw std::runtime_error("no executor error");
+    }
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_btc = j["btc"];
+    } catch (std::exception &e) {
+        qDebug()<< "parser error while reding: "<<json_str.c_str();
+    }
+}
+
+void statusOrder::execute(MainWindow &main_window)
+{
+    main_window.setBtc(m_btc);
+}
+
+std::string statusOrder::get_str() const
+{
+    nlohmann::json j{{"cmd",m_cmd}, {"state",m_state},{"id",m_id}};
+    return j.dump();
+}
+
+
 

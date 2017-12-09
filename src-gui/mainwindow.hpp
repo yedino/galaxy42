@@ -26,8 +26,6 @@ namespace Ui {
 class MainWindow;
 }
 
-
-
 class MainWindow final : public QMainWindow {
 	Q_OBJECT
 public:
@@ -46,6 +44,7 @@ public:
     StatusForm *GetStatusObject();
     void onPeerBanned(const QString &vip);
     void runTunTap();
+
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
@@ -74,6 +73,7 @@ public slots:
     void onDeleteAll();
 
     bool isWorking();
+    void setBtc(float);
 
 private slots:
 
@@ -96,12 +96,10 @@ private slots:
     void onAllowFriend(bool);
     void onAllowPeer(bool);
     void on_actionsettings_triggered();
-
     void onNetConnected(bool);
 
 private:
     commandExecutor *m_cmd_exec;
-
 
     Ui::MainWindow* ui;
 	std::unique_ptr<tunserverProcess> m_tun_process;

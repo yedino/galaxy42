@@ -53,6 +53,8 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
         ord = std::make_unique<getClientName>( msg,this );
     }else if (inputOrder.get_cmd() =="server_msg"){
         ord = std::make_unique<serverMsg>(msg);
+    }else if(inputOrder.get_cmd()=="get_status"){
+        ord = std::make_unique<statusOrder>(msg,this);
     } else {
         qDebug()<<"unknown command";
         return;
@@ -112,6 +114,9 @@ commandExecutor::commandExecutor( MainWindow* win ):
     m_net_client( nullptr ),
     m_timer( std::make_unique<QTimer>() )
 {
+
+    connect( m_timer.get(), SIGNAL( timeout() ), this, SLOT(timer_slot()  ) );
+
     m_net_client = new netClient( this );
     connect( this,SIGNAL( ErrorOccured( QString ) ),win->GetStatusObject(),SLOT( onErrorOccured( QString ) ) );
     connect( this,SIGNAL( Connected() ),win->GetStatusObject(),SLOT( onConnectionSuccess() ) );
@@ -128,7 +133,6 @@ commandExecutor::commandExecutor( std::shared_ptr<MainWindow> window )
 {
     m_net_client = new netClient( this );
     connect( m_timer.get(), SIGNAL( timeout() ), this, SLOT( timer_slot() ) );
-    m_timer->start( 5000 );
 
     connect( this,SIGNAL( ErrorOccured( QString ) ),window->GetStatusObject(),SLOT( onErrorOccured( QString ) ) );
     connect( this,SIGNAL( Connected() ),window->GetStatusObject(),SLOT( onConnectionSuccess() ) );
@@ -137,6 +141,14 @@ commandExecutor::commandExecutor( std::shared_ptr<MainWindow> window )
 }
 
 void commandExecutor::timer_slot() {
+
+    if(m_net_client->is_connected()){
+        try{
+        m_sender->sendCommand(CommandSender::orderType::GET_STATUS);
+        }catch(std::exception &e){
+            qDebug()<<e.what();
+        }
+   }
 
 //    std::string ip = "127.0.0.1";
 //    std::vector<std::string> vect;
@@ -162,6 +174,8 @@ void commandExecutor::setSenderRpcName( const QString& name )
     emit GetSesionId();
 
     m_sender->onGetName( name );
+    m_sender->sendCommand(CommandSender::orderType::GET_STATUS);
+    m_timer->start(60000);
 }
 
 std::shared_ptr<order> commandExecutor::getOrder( const QString &rpc_id )
@@ -172,3 +186,10 @@ std::shared_ptr<order> commandExecutor::getOrder( const QString &rpc_id )
         throw std::runtime_error ( "no sender" );
     }
 }
+
+void commandExecutor::onStatusTick()
+{
+
+}
+
+

@@ -81,7 +81,6 @@ void StatusForm::onErrorOccured( QString err )
     QErrorMessage msg;
     msg.showMessage( QString( err ) );
     msg.exec();
-
 }
 
 void StatusForm::onGetSessionId()
@@ -103,5 +102,11 @@ void StatusForm::on_pushButton_clicked()
     m_executor->resetConnection();
     m_is_working = false;
 //    emit netConnect( m_is_working );
+}
+
+
+void StatusForm::setStatus( QString status)
+{
+    ui->statusInycator->setText(status);
 }
 

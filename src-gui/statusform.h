@@ -27,6 +27,7 @@ public slots:
     void onLostConnection();
     void onGetSessionId();
     bool isWorking();
+    void setStatus(QString status);
 
 signals:
     void netConnect(bool);
