@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "rpc.hpp"
 #include "../trivialserialize.hpp"
@@ -19,22 +19,30 @@ c_rpc_server::c_rpc_server(const std::string &listen_address, const unsigned sho
 	m_hmac_key()
 {
 	m_hmac_key.fill(0x42); // TODO load this from conf file
-	// start waiting for new connection
-	m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
-		accept_handler(error);
-	});
-	dbg("Starting RPC server thread");
-	dbg("listen on address: " << listen_address);
-	dbg("port: " << port);
+	this->rpc_start( port != 0 , listen_address, port);
+};
+
+void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_address, const unsigned short port) {
+	if (network_listen) {
+		// start waiting for new connection
+		_note("Starting RPC server listening on address="<<listen_address<<" port="<<port);
+		m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
+			this->accept_handler(error);
+		});
+	}
+	else _warn("RPC server started, but not listening on network");
+
+	_fact("Starting RPC thread");
 	m_thread = std::thread([this]() {
-		dbg("RPC thread start");
+		dbg("RPC thread start (inside)");
 		try {
 			boost::system::error_code ec;
 			dbg("io_service run");
 			m_io_service.run(ec);
 			dbg("end of io_service run");
-			if (ec)
+			if (ec) {
 				dbg("error code " << ec.message());
+			}
 			dbg("io_service reset");
 			m_io_service.reset();
 		} catch (const std::exception &e) {
