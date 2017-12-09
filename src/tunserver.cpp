@@ -549,7 +549,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("exit", [this](const std::string &input_json) {
 		return rpc_exit(input_json);
 	});
-}
+	m_rpc_server.add_rpc_function("get_status", [this](const std::string &input_json) {
+		return rpc_get_status(input_json);
+	});}
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
 	boost::program_options::variables_map early_argm;
@@ -1276,6 +1278,16 @@ nlohmann::json c_tunserver::rpc_exit(const string &input_json)
 	ret["cmd"] = "exit";
 	ret["state"] = "ok";
 	exit_tunserver();
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "get_status";
+	ret["state"] = "ok";
+	ret["btc"] = m_bitcoin_node_cli.get_balance();
 	return ret;
 }
 
