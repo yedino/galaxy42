@@ -37,7 +37,7 @@ c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 }
 
 void c_udp_wrapper_linux::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
-	if (m_disabled) { _dbg4("disabled socket"); }
+	if (m_disabled) { _dbg4("disabled socket"); return; }
 	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
 	sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
 }
