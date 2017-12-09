@@ -119,7 +119,7 @@ size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_si
 }
 
 void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, size_t bytes_transferred) {
-	if (m_disabled) { _dbg4("disabled socket"); return 0 ; }
+	if (m_disabled) { _dbg4("disabled socket"); return ; }
 //	std::cout << "udp read handle" << std::endl;
 //	std::cout << "readed " << bytes_transferred << " bytes" << std::endl;
 	if (error && (error.value() != 10061)) { // http://stackoverflow.com/a/16763404
