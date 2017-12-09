@@ -36,9 +36,10 @@ void StatusForm::onTickTimmer()
 
 void StatusForm::onReConnectTimmer()
 {
-    ui->statusInycator->setChecked( false );
+//    ui->statusInycator->setChecked( false );
     ui->statusInycator->setText( tr( "connecting..." ) );
     ui->statusInycator->setStatusTip( tr( "connecting..." ) );
+
 }
 
 void StatusForm::onReConnect()
@@ -50,7 +51,7 @@ void StatusForm::onReConnect()
 void StatusForm::onConnectionSuccess()
 {
     // ustaw stan na wlaczony
-    ui->statusInycator->setChecked( true );
+//    ui->statusInycator->setChecked( true );
     ui->statusInycator->setStatusTip( tr( "connected - no rpc server detecected" ) );
     ui->statusInycator->setText( tr( "connected - no node" ) );
 
@@ -66,7 +67,7 @@ void StatusForm::onLostConnection()
     QErrorMessage msg ;
     msg.showMessage( QString( tr( "connection lost" ) ) );
     ui->statusInycator->setStatusTip( tr( "disconnected" ) );
-    ui->statusInycator->setChecked( false );
+//    ui->statusInycator->setChecked( false );
     ui->statusInycator->setText( tr( "disconnected" ) );
 
     if( m_is_working ) {
@@ -85,7 +86,7 @@ void StatusForm::onErrorOccured( QString err )
 
 void StatusForm::onGetSessionId()
 {
-    ui->statusInycator->setChecked( true );
+//    ui->statusInycator->setChecked( true );
     ui->statusInycator->setStatusTip( tr( "got rpc id" ) );
     ui->statusInycator->setText( tr( "RPC connected" ) );
     m_is_working = true;

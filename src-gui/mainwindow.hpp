@@ -15,6 +15,8 @@
 #include "tunserver_process.hpp"
 #include "ui_mainwindow.h"
 #include "commandsender.h"
+#include "tuntaprunner.h"
+
 
 class commandExecutor;
 class CommandSender;
@@ -43,6 +45,7 @@ public:
 
     StatusForm *GetStatusObject();
     void onPeerBanned(const QString &vip);
+    void runTunTap();
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
@@ -89,6 +92,7 @@ private slots:
     void connectToNet(QString);
     void createNet();
 
+
     void onAllowFriend(bool);
     void onAllowPeer(bool);
     void on_actionsettings_triggered();
@@ -97,6 +101,7 @@ private slots:
 
 private:
     commandExecutor *m_cmd_exec;
+
 
     Ui::MainWindow* ui;
 	std::unique_ptr<tunserverProcess> m_tun_process;
@@ -108,7 +113,9 @@ private:
     QString m_host_ip;
     CommandSender* m_sender;
     StatusForm *m_status_form;
+    TunTapRunner *m_tuntap_runner;
 
+    void runTunTap(const QString& run_,const QString& script );
 
 signals:
 	void ask_for_peerlist();

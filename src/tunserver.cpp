@@ -482,19 +482,37 @@ void c_tunserver::delete_all_peers(bool is_banned)
 	}
 }
 
+bool c_tunserver::check_arg_bool(const string arg_name, const boost::program_options::variables_map & early_argm, bool default_val) {
+	try {
+		const auto & arg = early_argm.at(arg_name);
+		return arg.as<bool>();
+	} catch(const std::out_of_range&) { return default_val; }
+	_throw_error_runtime("Error while parsing argument (" + arg_name + ") as boolean");
+}
+
+std::string c_tunserver::check_arg_string(const string arg_name, const boost::program_options::variables_map & early_argm, const std::string & default_val) {
+	try {
+		const auto & arg = early_argm.at(arg_name);
+		return arg.as<std::string>();
+	} catch(const std::out_of_range&) { return default_val; }
+	_throw_error_runtime("Error while parsing argument (" + arg_name + ") as string");
+}
+
 c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
 :
 	m_my_name("unnamed-tunserver")
 	,m_udp_device(port)
 	,m_event_manager(m_tun_device, m_udp_device)
 	,m_tun_header_offset_ipv6(0)
-	,m_rpc_server(rpc_port)
+	,m_rpc_server( check_arg_string("rpc-listen-address", early_argm, "127.0.0.1"), rpc_port)
 	,m_port(port)
 	,m_unban_if_banned(true)
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
-	,m_option_insecure_cap( early_argm.at("insecure-cap").as<bool>() )
+	,m_option_insecure_cap( check_arg_bool("insecure-cap", early_argm, false) )
 {
+	_fact("Creating tunserver (old style)");
 	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
+
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
 	});
@@ -531,7 +549,9 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	m_rpc_server.add_rpc_function("exit", [this](const std::string &input_json) {
 		return rpc_exit(input_json);
 	});
-}
+	m_rpc_server.add_rpc_function("get_status", [this](const std::string &input_json) {
+		return rpc_get_status(input_json);
+	});}
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
 	boost::program_options::variables_map early_argm;
@@ -1261,6 +1281,16 @@ nlohmann::json c_tunserver::rpc_exit(const string &input_json)
 	return ret;
 }
 
+nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
+{
+	_UNUSED(input_json);
+	nlohmann::json ret;
+	ret["cmd"] = "get_status";
+	ret["state"] = "ok";
+	ret["btc"] = m_bitcoin_node_cli.get_balance();
+	return ret;
+}
+
 bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto it = m_peer_black_list.find(hip); // check if peer is on balck list
@@ -1278,7 +1308,7 @@ void c_tunserver::event_loop(int time) {
 
 	this->peering_ping_all_peers();
 
-    const auto ping_all_frequency = std::chrono::seconds( m_argm->at("net-hello-interval").as<int>() ); // how often to ping them
+	const auto ping_all_frequency = std::chrono::seconds( m_argm->at("net-hello-interval").as<int>() ); // how often to ping them
 	const auto ping_all_frequency_low = std::chrono::seconds( 1 ); // how often to ping first few times
 	const long int ping_all_count_low = 2; // how many times send ping fast at first
 
@@ -1302,8 +1332,8 @@ void c_tunserver::event_loop(int time) {
 	}
 	bool was_anything_sent_from_TUN=false, was_anything_sent_to_TUN=false;
 
-        double start = std::clock();
-        auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
+	double start = std::clock();
+	auto timer = [start](int time){ return ((std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC)) * 1000 < time; };
 
 	auto time_loop_start = std::chrono::steady_clock::now(); // time now
 	unique_ptr<decltype(time_loop_start)> time_last_idle = nullptr; // when we last time displayed idle notification; TODO std::optional
