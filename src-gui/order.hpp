@@ -1,6 +1,8 @@
 #ifndef ORDER_HPP
 #define ORDER_HPP
 
+#include<stdint.h>
+
 #include <json.hpp>
 #include "meshpeer.h"
 #include "commandsender.h"
@@ -264,5 +266,28 @@ private:
     std::string get_str() const{return std::string();}
 };
 
+class statusOrder final:public order
+{
+public:
+
+    statusOrder(const RpcId& Id)
+    {
+        try{
+            m_cmd ="get_status";
+            m_state = "ok";
+            m_id = Id.m_id;
+        }catch(std::exception &e){
+        }
+    }
+
+    statusOrder(const std::string &json_str,commandExecutor *executor);
+    void execute(MainWindow &main_window);
+
+    std::string get_str() const;
+
+private:
+
+    int32_t m_btc;
+};
 
 #endif // ORDER_HPP

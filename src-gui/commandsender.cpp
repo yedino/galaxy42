@@ -49,6 +49,7 @@ void CommandSender::sendCommand( CommandSender::orderType type )
 {
     if( m_wait_name_flag && type != orderType::GETNAME ) {
         throw std::runtime_error ( tr( "can't send msg while witing for rpc name of client" ).toStdString() );
+//        return;
     }
 
     try {
@@ -83,6 +84,9 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
         break;
     case orderType::GETNAME:
         ord = std::make_shared<getClientName> ();
+        break;
+    case orderType::GET_STATUS:
+        ord = std::make_shared<statusOrder>(m_counter.getRpcId());
         break;
     default:
         throw std::runtime_error ( tr( "improper number of parameters for this function" ).toStdString() );

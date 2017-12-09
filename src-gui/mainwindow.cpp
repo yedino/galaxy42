@@ -536,7 +536,21 @@ void MainWindow::runTunTap()
         sudo_script = "win_startscript.bat";
     }
 
+#ifdef WINNT
     QString program_pth = tuntap_path+"/"+program;
     QString script_path= tuntap_path+"/"+sudo_script;
+#elif
+    QString program_pth = tuntap_path+"/"+program;
+    QString script_path = sudo_script;
+#endif
+
+
     m_tuntap_runner = new TunTapRunner(this,program_pth,script_path);
 }
+
+
+void MainWindow::setBtc(float btc)
+{
+    m_status_form->setStatus(QString (tr("avaible founds:") + QString::number(btc)+" BTC"));
+}
+
