@@ -5,6 +5,8 @@
 #include <QListWidget>
 #include <QTcpSocket>
 #include <QVector>
+#include <QtMultimedia/QSound>
+
 #include <memory>
 #include <utility>
 
@@ -112,6 +114,8 @@ private:
     CommandSender* m_sender;
     StatusForm *m_status_form;
     TunTapRunner *m_tuntap_runner;
+
+    float m_last_btc_value;
 
     void runTunTap(const QString& run_,const QString& script );
 

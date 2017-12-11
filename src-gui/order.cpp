@@ -448,14 +448,15 @@ std::string order::getPeerName()
 
 }
 
-
-
 getClientName::getClientName( const std::string &json_str,commandExecutor *executor )
 {
     try {
         nlohmann::json j = nlohmann::json::parse( json_str );
         m_state = j["state"];
         m_id = j["id"];
+        if(m_state == "ok") {
+            m_account = j["account_address"];
+        }
         m_executor = executor;
     } catch( std::exception &e ) {
         qDebug()<<e.what();
@@ -494,13 +495,11 @@ serverMsg::serverMsg(const std::string &json_str)
     }
 }
 
-
 void serverMsg::execute(MainWindow &)
 {
     qDebug()<<QString::fromStdString(m_state) <<" "<< QString::fromStdString(m_lvl)<<" "<<QString::fromStdString(m_msg);
     //!@todo use app debug system while exists
 }
-
 
 statusOrder::statusOrder(const std::string &json_str,commandExecutor *executor)
 {
@@ -510,15 +509,61 @@ statusOrder::statusOrder(const std::string &json_str,commandExecutor *executor)
     try{
         nlohmann::json j = nlohmann::json::parse( json_str );
         m_state = j["state"];
-        m_btc = j["btc"];
+        m_shitoshi = j["btc"];
     } catch (std::exception &e) {
         qDebug()<< "parser error while reding: "<<json_str.c_str();
     }
 }
 
+void payOrder::execute(MainWindow &main_window)
+{
+    std::string name = getPeerName();	//only for clear from list
+//    __UNUSED_PARAM(name);
+
+    if(m_state != "ok") {
+        qDebug()<<"failure while pay: "<<name.c_str();
+        return;
+    }
+    return;
+}
+
+std::string payOrder::get_str() const
+{
+    nlohmann::json j{{"cmd",m_cmd}, {"state",m_state},{"id",m_id},{"btc",m_shitoshi},{"peer",m_peer}};
+    return j.dump();
+}
+
+payOrder::payOrder(const std::string &json_str,commandExecutor *executor) {
+    m_executor = executor;
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_id = j["id"];
+
+        if(m_state == "error"){
+            m_msg = j["msg"];
+            m_shitoshi = 0;
+        }else{
+            m_shitoshi = j["btc"];
+        }
+
+    }catch(std::exception& e ) {
+        qDebug()<<"can't parse json";
+    }
+}
+
+payOrder::payOrder(const RpcId& id,const MeshPeer &peer ,int shitoshi)
+{
+    m_cmd = "pay";
+    m_id = id.m_id;
+    m_peer = peer.getVip().toStdString();
+    m_shitoshi = shitoshi;
+}
+
 void statusOrder::execute(MainWindow &main_window)
 {
-    main_window.setBtc(m_btc);
+    if(m_state == "ok") main_window.setBtc(m_shitoshi);
+//    else main_window.setDebugInfo(m_msg);
 }
 
 std::string statusOrder::get_str() const
@@ -528,4 +573,34 @@ std::string statusOrder::get_str() const
 }
 
 
+setAccountOrder::setAccountOrder(const RpcId& id,const MeshPeer &peer )
+{
+    m_cmd = "set_account";
+    m_id = id.m_id;
+    m_state = "ok";
+    m_peer = peer.getVip().toStdString();
+    m_account = peer.getAccount().toStdString();
+}
 
+setAccountOrder::setAccountOrder(const std::string &json_str,commandExecutor *executor)
+{
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_account = j["account"];
+        m_id = j["id"];
+    }catch(std::exception &e){
+        return;
+    }
+}
+
+void setAccountOrder::execute(MainWindow &main_window)
+{
+     m_peer = getPeerName();
+}
+
+std::string setAccountOrder::get_str() const
+{
+    nlohmann::json j{{"cmd",m_cmd}, {"state",m_state}, {"id",m_id},{"peer",m_peer} ,{"account",m_account}};
+    return j.dump();
+}

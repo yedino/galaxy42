@@ -55,6 +55,10 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
         ord = std::make_unique<serverMsg>(msg);
     }else if(inputOrder.get_cmd()=="get_status"){
         ord = std::make_unique<statusOrder>(msg,this);
+    }else if(inputOrder.get_cmd()=="pay"){
+        ord = std::make_unique<payOrder>(msg,this);
+    }else if(inputOrder.get_cmd()=="set_account"){
+        ord = std::make_unique<setAccountOrder>(msg,this);
     } else {
         qDebug()<<"unknown command";
         return;

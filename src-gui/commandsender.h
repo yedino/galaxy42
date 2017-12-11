@@ -29,7 +29,9 @@ public:
         DELETEALL,
         BANALL,
         GETNAME,
-        GET_STATUS
+        GET_STATUS,
+        PAY,
+        SET_ACCOUNT
     };
 
     explicit CommandSender(commandExecutor* comm_exec,QObject *parent = nullptr);

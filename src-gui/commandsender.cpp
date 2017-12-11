@@ -104,13 +104,19 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
     case orderType::ADDPEER:
         ord = std::make_shared<addPeerOrder> ( m_counter.getRpcId(),peer );
         break;
-
     case orderType::DELETEPEER:
         ord = std::make_shared<deletePeerOrder> ( m_counter.getRpcId(),peer );
         break;
-
     case orderType::BANPEER:
         ord = std::make_shared<banPeerOrder> ( m_counter.getRpcId(),peer );
+        break;
+    case orderType::PAY:{
+        uint32_t pay = peer.getToPay();
+        ord = std::make_shared<payOrder> ( m_counter.getRpcId(),peer ,pay);
+        }
+        break;
+    case orderType::SET_ACCOUNT:
+        ord = std::make_shared<setAccountOrder> ( m_counter.getRpcId(),peer );
         break;
     default:
         throw std::runtime_error ( tr( "can't create order with this params list" ).toStdString() );
