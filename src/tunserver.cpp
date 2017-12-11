@@ -1292,6 +1292,7 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 	} catch (const std::exception &e) {
 		ret["state"] = "error";
 		ret["msg"] = e.what();
+		_warn("rpc_get_status error: " << e.what());
 	}
 	return ret;
 }
