@@ -1286,8 +1286,13 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_status";
-	ret["state"] = "ok";
-	ret["btc"] = m_bitcoin_node_cli.get_balance();
+	try {
+		ret["state"] = "ok";
+		ret["btc"] = m_bitcoin_node_cli.get_balance();
+	} catch (const std::exception &e) {
+		ret["state"] = "error";
+		ret["msg"] = e.what();
+	}
 	return ret;
 }
 
