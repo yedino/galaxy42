@@ -1267,7 +1267,13 @@ nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "hello";
-	ret["state"] = "ok";
+	try {
+		ret["state"] = "ok";
+		ret["account_address"] = m_bitcoin_node_cli.get_new_address();
+	} catch (const std::exception &e) {
+		ret["state"] = "error";
+		ret["msg"] = e.what();
+	}
 	return ret;
 }
 
