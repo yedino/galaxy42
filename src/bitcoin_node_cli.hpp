@@ -10,10 +10,12 @@ class bitcoin_node_cli final {
 		 * @brief get_balance this funstion is thread safe
 		 * @return amount of BTC (in satoshi)
 		 */
-		uint32_t get_balance();
+		uint32_t get_balance() const;
 	private:
-		boost::asio::io_service m_io_service;
+		mutable boost::asio::io_service m_io_service;
 		const boost::asio::ip::tcp::endpoint m_btc_rpc_endpoint;
+		std::string generate_request_prototype() const;
+		std::string send_request_and_get_response(const std::string &request) const;
 };
 
 #endif // BITCOIN_NODE_CLI_HPP
