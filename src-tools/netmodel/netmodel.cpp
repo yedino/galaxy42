@@ -689,10 +689,12 @@ enum class e_weld_type {
 
 void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_crypt_opt bench_opt)
 {
+	/*
 	constexpr size_t key_max_size = stdplus::constexpr_max(
 		stdplus::constexpr_max( crypto_onetimeauth_KEYBYTES, crypto_stream_chacha20_KEYBYTES ) ,
 		stdplus::constexpr_max(crypto_stream_chacha20_KEYBYTES, crypto_secretbox_KEYBYTES)
 	);
+	*/
 	constexpr size_t nonce_max_size = stdplus::constexpr_max(
 		stdplus::constexpr_max( crypto_stream_salsa20_NONCEBYTES , crypto_secretbox_NONCEBYTES ) ,
 		crypto_stream_chacha20_NONCEBYTES
@@ -1552,7 +1554,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			size_t receive_size = found_weld.space_left();
 			assert(receive_size>0);
 			void * buf_ptr = reinterpret_cast<void*>(found_weld.addr_at_pos());
-			unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
+			// unsigned char * const recv_buff_ptr = found_weld.addr_at_pos();
 			assert(buf_ptr);
 			_dbg4("TUNTAP read "
 				<< "into weld "<< found_ix << " "
@@ -1614,7 +1616,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			size_t receive_size, found_ix;
 			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
 			c_tuntap_base_obj::read_handler read_handler =
-				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer](const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec) {
+				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
+				(const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec)
+				{
+					_UNUSED(buf);
 						g_speed_tuntap_read.add(1, read_size);
 						_dbg4("TUNTAP ***ASYNC READ DONE***  read_size="<< read_size << "\n\n");
 						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);
