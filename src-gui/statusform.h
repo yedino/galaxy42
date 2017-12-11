@@ -37,6 +37,7 @@ private slots:
 
 private:
 
+
     commandExecutor *m_executor = nullptr;
     QTimer m_timer;
     QTimer m_reconnectTimer;
