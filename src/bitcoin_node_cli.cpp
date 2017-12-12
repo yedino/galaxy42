@@ -1,4 +1,5 @@
 #include "bitcoin_node_cli.hpp"
+#include <clocale>
 #include <json.hpp>
 
 bitcoin_node_cli::bitcoin_node_cli(const std::string &ip_address, unsigned short port)
