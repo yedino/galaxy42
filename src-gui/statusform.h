@@ -27,6 +27,7 @@ public slots:
     void onLostConnection();
     void onGetSessionId();
     bool isWorking();
+    void setStatus(QString status);
 
 signals:
     void netConnect(bool);
@@ -35,6 +36,7 @@ private slots:
     void on_pushButton_clicked();
 
 private:
+
 
     commandExecutor *m_executor = nullptr;
     QTimer m_timer;

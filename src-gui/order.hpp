@@ -1,6 +1,8 @@
 #ifndef ORDER_HPP
 #define ORDER_HPP
 
+#include<stdint.h>
+
 #include <json.hpp>
 #include "meshpeer.h"
 #include "commandsender.h"
@@ -249,6 +251,7 @@ public:
 
 protected:
     commandExecutor* m_executor;
+    std::string m_account;
 };
 
 
@@ -264,5 +267,55 @@ private:
     std::string get_str() const{return std::string();}
 };
 
+
+class setAccountOrder final:public order
+{
+public:
+    setAccountOrder(const RpcId& id,const MeshPeer &peer );
+    setAccountOrder(const std::string &json_str,commandExecutor *executor);
+    void execute(MainWindow &main_window);
+    std::string get_str() const ;
+private:
+    std::string m_account;
+};
+
+
+class payOrder final :public order
+{
+public:
+    payOrder(const RpcId& id,const MeshPeer &peer ,int shitoshi =0);
+    payOrder(const std::string &json_str,commandExecutor *executor);
+    void execute(MainWindow &main_window);
+    std::string get_str() const ;
+private:
+
+    uint32_t m_shitoshi;
+
+};
+
+
+class statusOrder final:public order
+{
+public:
+
+    statusOrder(const RpcId& Id)
+    {
+        try{
+            m_cmd ="get_status";
+            m_state = "ok";
+            m_id = Id.m_id;
+        }catch(std::exception &e){
+        }
+    }
+
+    statusOrder(const std::string &json_str,commandExecutor *executor);
+    void execute(MainWindow &main_window);
+
+    std::string get_str() const;
+
+private:
+
+    int32_t m_shitoshi;
+};
 
 #endif // ORDER_HPP
