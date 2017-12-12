@@ -29,6 +29,9 @@ MainWindow::MainWindow( QWidget *parent ) :
     runTunTap();
     ui->setupUi( this );
     ui->peerListWidget_2->setMainWindow( this );
+
+
+
     QString ip = getLocalIps().at( 0 );
     QString vip = getLocalVips().at( 0 ).split( '%' ).at( 0 );
     ui->quickStart->setIps( ip,vip );
@@ -59,6 +62,10 @@ MainWindow::MainWindow( QWidget *parent ) :
 
 
     m_tun_process = std::make_unique<tunserverProcess>();
+
+    QSound sound(":/sound");
+    sound.play();
+
 
 }
 
@@ -536,7 +543,25 @@ void MainWindow::runTunTap()
         sudo_script = "win_startscript.bat";
     }
 
+#ifdef WINNT
     QString program_pth = tuntap_path+"/"+program;
     QString script_path= tuntap_path+"/"+sudo_script;
+#elif
+    QString program_pth = tuntap_path+"/"+program;
+    QString script_path = sudo_script;
+#endif
+
+
     m_tuntap_runner = new TunTapRunner(this,program_pth,script_path);
 }
+
+
+void MainWindow::setBtc(float btc)
+{
+    if(btc != m_last_btc_value){
+        QSound sound(":/sound");
+        sound.play();
+        m_status_form->setStatus(QString (tr("avaible founds:") + QString::number(btc/1e8)+" BTC"));
+    }
+}
+
