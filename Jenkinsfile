@@ -139,6 +139,20 @@ def native_mac(git_url, branch) {
 		             		value: "$branch" ] ]
 }
 
+def native_gui(git_url, branch) {
+	build job: 'galaxy42_gui',
+		parameters: [	[$class: 'NodeParameterValue',
+		             		name: 'Multinode',
+		             		labels: ['gui'],
+		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_repository_url',
+		             		value: "$git_url" ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_branch',
+		             		value: "$branch" ] ]
+}
+
 // build trigger - checking changes every 5 min
 properties([pipelineTriggers([  [$class: 'GitHubPushTrigger'],
                                 [$class: "SCMTrigger", scmpoll_spec: "H/5 * * * *"]
@@ -153,6 +167,8 @@ node('master') {
 	def build_native_windows_mingw64 = true
 	def build_native_windows_msvc = true
 	def build_native_mac = true
+
+	def build_native_gui = true
 
 	def should_run_unit_test = true
 	def should_run_integration_test = true
@@ -218,6 +234,13 @@ node('master') {
 			if(build_native_mac) {
 				stage('mac') {
 					native_mac(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
+			}
+		},
+		gui: {
+			if(build_native_gui) {
+				stage('gui') {
+					native_gui(GIT_REPOSITORY_URL,GIT_BRANCH)
 				}
 			}
 		}
