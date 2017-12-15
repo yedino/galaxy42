@@ -29,6 +29,7 @@ public slots:
     bool isWorking();
     void setStatus(QString status);
 
+    void setDebugInfo(const QString &str);
 signals:
     void netConnect(bool);
 
