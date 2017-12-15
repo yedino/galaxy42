@@ -34,6 +34,8 @@ class commandExecutor final : public QObject {
 
         std::shared_ptr<order> getOrder(const QString& rpc_id);
         void resetConnection();
+
+        void onStatusTick();
 signals:
 
     void Connected();

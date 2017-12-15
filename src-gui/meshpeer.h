@@ -12,6 +12,9 @@ class MeshPeer : public QObject
     QString m_ip;
     QString m_vip;
     QString m_net_name;
+    QString m_account;
+
+    int m_to_pay;
 
     int m_ip_port;
     int m_vip_port;
@@ -61,6 +64,12 @@ public:
      * @return user name
      */
     inline QString getName() const {return m_name;}
+
+    /**
+     * @brief getAccount return bitcoin account of user
+     * @return account addres
+     */
+    inline QString getAccount() const {return m_account;}
 
     /**
      * @brief setIP check and sets ip of user - if improper throw exception
@@ -127,6 +136,9 @@ public:
     inline int getVipPort() const {return m_vip_port;}
     inline void setPort(int port){m_ip_port = port;}
     inline void setVipPort(int port){m_vip_port = port;}
+
+    void setToPay(uint32_t satoshi);
+    uint32_t getToPay() const{return m_to_pay;}
 
     void deserialize(const nlohmann::json &serialized_obj);
 };
