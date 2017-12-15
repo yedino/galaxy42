@@ -69,6 +69,11 @@ MainWindow::MainWindow( QWidget *parent ) :
 
 }
 
+void MainWindow::setDebugInfo(const QString &str)
+{
+    m_status_form->setDebugInfo(str);
+//   ui-> setDebugInfo(const QString &str);
+}
 
 void MainWindow::startNewCrpcConnection( const QString &host,uint port )//!@todo move to statusForm
 {
@@ -546,7 +551,7 @@ void MainWindow::runTunTap()
 #ifdef WINNT
     QString program_pth = tuntap_path+"/"+program;
     QString script_path= tuntap_path+"/"+sudo_script;
-#elif
+#else
     QString program_pth = tuntap_path+"/"+program;
     QString script_path = sudo_script;
 #endif
@@ -556,12 +561,15 @@ void MainWindow::runTunTap()
 }
 
 
-void MainWindow::setBtc(float btc)
+void MainWindow::setBtc(uint64_t btc)
 {
     if(btc != m_last_btc_value){
         QSound sound(":/sound");
         sound.play();
-        m_status_form->setStatus(QString (tr("avaible founds:") + QString::number(btc/1e8)+" BTC"));
+        m_status_form->setStatus(QString (tr("avaible founds:") +
+                                          QString::number(int(btc/1e8))+"."
+                                          +QString::number(int(btc)%int(1e8))
+                                          +" BTC"));
     }
 }
 

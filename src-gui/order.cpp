@@ -522,8 +522,11 @@ void payOrder::execute(MainWindow &main_window)
 
     if(m_state != "ok") {
         qDebug()<<"failure while pay: "<<name.c_str();
+
+        main_window.setDebugInfo("can't execute");
         return;
     }
+
     return;
 }
 
