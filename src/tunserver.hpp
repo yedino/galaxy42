@@ -375,6 +375,7 @@ class c_tunserver : public c_galaxy_node {
 		nlohmann::json rpc_hello(const std::string &input_json);
 		nlohmann::json rpc_exit(const std::string &input_json);
 		nlohmann::json rpc_get_status(const std::string &input_json);
+		nlohmann::json rpc_btc_get_address(const std::string &input_json);
 		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
 
 		int m_port;
