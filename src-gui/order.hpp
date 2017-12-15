@@ -308,7 +308,7 @@ public:
 
 private:
 
-    int32_t m_shitoshi;
+    int32_t m_satoshi;
 };
 
 #endif // ORDER_HPP

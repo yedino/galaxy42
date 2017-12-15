@@ -137,7 +137,7 @@ public:
     inline void setPort(int port){m_ip_port = port;}
     inline void setVipPort(int port){m_vip_port = port;}
 
-    void setToPay(uint32_t shitoshi);
+    void setToPay(uint32_t satoshi);
     uint32_t getToPay() const{return m_to_pay;}
 
     void deserialize(const nlohmann::json &serialized_obj);
