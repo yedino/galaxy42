@@ -75,7 +75,9 @@ public slots:
     void onDeleteAll();
 
     bool isWorking();
-    void setBtc(float);
+    void setBtc(uint64_t btc);
+
+    void setDebugInfo(const QString &str);
 
 private slots:
 
@@ -115,7 +117,7 @@ private:
     StatusForm *m_status_form;
     TunTapRunner *m_tuntap_runner;
 
-    float m_last_btc_value;
+    uint64_t m_last_btc_value;
 
     void runTunTap(const QString& run_,const QString& script );
 
