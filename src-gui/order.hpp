@@ -289,7 +289,7 @@ public:
     std::string get_str() const ;
 private:
 
-    uint32_t m_shitoshi;
+    uint32_t m_satoshi;
 
 };
 
@@ -298,15 +298,8 @@ class statusOrder final:public order
 {
 public:
 
-    statusOrder(const RpcId& Id)
-    {
-        try{
-            m_cmd ="get_status";
-            m_state = "ok";
-            m_id = Id.m_id;
-        }catch(std::exception &e){
-        }
-    }
+    statusOrder(const RpcId& Id);
+
 
     statusOrder(const std::string &json_str,commandExecutor *executor);
     void execute(MainWindow &main_window);
