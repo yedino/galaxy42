@@ -1074,18 +1074,19 @@ nlohmann::json c_tunserver::rpc_peer_list(const string &input_json) {
 	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	for (const auto &peer : m_peer) {
 		std::ostringstream oss;
-		oss << peer.second->get_pip();
-		oss << "-";
 		auto hip = peer.second->get_hip();
 		for (size_t i = 0; i < hip.size(); i+=2) {
 			uint16_t block = 0;
 			block = hip[i] << 8;
 			block += hip[i+1];
-			oss << std::hex << block << ":";
+			oss << std::hex << block;
 		}
 		oss << std::dec;
+		oss << "@(udp:";
+		oss << peer.second->get_pip(); // ipv4:port
+		oss << ")";
+
 		refs.emplace_back(oss.str());
-		refs.back().erase(refs.back().end() - 1); // remove last character (':')
 	}
 	lg.unlock();
 	ret["cmd"] = "peer_list";
