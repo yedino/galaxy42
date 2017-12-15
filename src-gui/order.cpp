@@ -509,7 +509,7 @@ statusOrder::statusOrder(const std::string &json_str,commandExecutor *executor)
     try{
         nlohmann::json j = nlohmann::json::parse( json_str );
         m_state = j["state"];
-        m_shitoshi = j["btc"];
+        m_satoshi = j["btc"];
     } catch (std::exception &e) {
         qDebug()<< "parser error while reding: "<<json_str.c_str();
     }
@@ -522,14 +522,17 @@ void payOrder::execute(MainWindow &main_window)
 
     if(m_state != "ok") {
         qDebug()<<"failure while pay: "<<name.c_str();
+
+        main_window.setDebugInfo("can't execute");
         return;
     }
+
     return;
 }
 
 std::string payOrder::get_str() const
 {
-    nlohmann::json j{{"cmd",m_cmd}, {"state",m_state},{"id",m_id},{"btc",m_shitoshi},{"peer",m_peer}};
+    nlohmann::json j{{"cmd",m_cmd}, {"state",m_state},{"id",m_id},{"btc",m_satoshi},{"peer",m_peer}};
     return j.dump();
 }
 
@@ -542,9 +545,9 @@ payOrder::payOrder(const std::string &json_str,commandExecutor *executor) {
 
         if(m_state == "error"){
             m_msg = j["msg"];
-            m_shitoshi = 0;
+            m_satoshi = 0;
         }else{
-            m_shitoshi = j["btc"];
+            m_satoshi = j["btc"];
         }
 
     }catch(std::exception& e ) {
@@ -552,17 +555,17 @@ payOrder::payOrder(const std::string &json_str,commandExecutor *executor) {
     }
 }
 
-payOrder::payOrder(const RpcId& id,const MeshPeer &peer ,int shitoshi)
+payOrder::payOrder(const RpcId& id,const MeshPeer &peer ,int satoshi)
 {
     m_cmd = "pay";
     m_id = id.m_id;
     m_peer = peer.getVip().toStdString();
-    m_shitoshi = shitoshi;
+    m_satoshi = satoshi;
 }
 
 void statusOrder::execute(MainWindow &main_window)
 {
-    if(m_state == "ok") main_window.setBtc(m_shitoshi);
+    if(m_state == "ok") main_window.setBtc(m_satoshi);
 //    else main_window.setDebugInfo(m_msg);
 }
 
@@ -590,6 +593,7 @@ setAccountOrder::setAccountOrder(const std::string &json_str,commandExecutor *ex
         m_account = j["account"];
         m_id = j["id"];
     }catch(std::exception &e){
+        qDebug()<<e.what();
         return;
     }
 }
@@ -604,3 +608,17 @@ std::string setAccountOrder::get_str() const
     nlohmann::json j{{"cmd",m_cmd}, {"state",m_state}, {"id",m_id},{"peer",m_peer} ,{"account",m_account}};
     return j.dump();
 }
+
+
+statusOrder::statusOrder(const RpcId& Id)
+{
+    try{
+        m_cmd ="get_status";
+        m_state = "ok";
+        m_id = Id.m_id;
+    }catch(std::exception &e){
+        qDebug()<<e.what();
+    }
+}
+
+

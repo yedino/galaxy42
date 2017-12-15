@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="sound">../../../../donkey.wav</file>
+        <file>../recources/gui/sounds/donkey.wav</file>
     </qresource>
 </RCC>

@@ -92,6 +92,11 @@ void StatusForm::onGetSessionId()
     emit netConnect( m_is_working );
 }
 
+void StatusForm::setDebugInfo(const QString& str)
+{
+    ui->statusInycator->setText(str);
+}
+
 void StatusForm::on_pushButton_clicked()
 {
     if( ! m_executor ) {
