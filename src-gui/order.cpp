@@ -509,7 +509,7 @@ statusOrder::statusOrder(const std::string &json_str,commandExecutor *executor)
     try{
         nlohmann::json j = nlohmann::json::parse( json_str );
         m_state = j["state"];
-        m_shitoshi = j["btc"];
+        m_satoshi = j["btc"];
     } catch (std::exception &e) {
         qDebug()<< "parser error while reding: "<<json_str.c_str();
     }
@@ -555,17 +555,17 @@ payOrder::payOrder(const std::string &json_str,commandExecutor *executor) {
     }
 }
 
-payOrder::payOrder(const RpcId& id,const MeshPeer &peer ,int shitoshi)
+payOrder::payOrder(const RpcId& id,const MeshPeer &peer ,int satoshi)
 {
     m_cmd = "pay";
     m_id = id.m_id;
     m_peer = peer.getVip().toStdString();
-    m_satoshi = shitoshi;
+    m_satoshi = satoshi;
 }
 
 void statusOrder::execute(MainWindow &main_window)
 {
-    if(m_state == "ok") main_window.setBtc(m_shitoshi);
+    if(m_state == "ok") main_window.setBtc(m_satoshi);
 //    else main_window.setDebugInfo(m_msg);
 }
 
