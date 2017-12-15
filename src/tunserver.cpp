@@ -510,6 +510,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 	,m_option_insecure_cap( check_arg_bool("insecure-cap", early_argm, false) )
 {
+//	std::cout << m_bitcoin_node_cli.get_balance() << std::endl; std::abort(); // XXX
 	_fact("Creating tunserver (old style)");
 	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 
@@ -551,7 +552,11 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("get_status", [this](const std::string &input_json) {
 		return rpc_get_status(input_json);
-	});}
+	});
+	m_rpc_server.add_rpc_function("get_btc_address", [this](const std::string &input_json) {
+		return rpc_btc_get_address(input_json);
+	});
+}
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
 	boost::program_options::variables_map early_argm;
@@ -1269,7 +1274,6 @@ nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 	ret["cmd"] = "hello";
 	try {
 		ret["state"] = "ok";
-		ret["account_address"] = m_bitcoin_node_cli.get_new_address();
 	} catch (const std::exception &e) {
 		ret["state"] = "error";
 		ret["msg"] = e.what();
@@ -1299,6 +1303,21 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 		ret["state"] = "error";
 		ret["msg"] = e.what();
 		_warn("rpc_get_status error: " << e.what());
+	}
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_btc_get_address(const string &input_json)
+{
+	nlohmann::json ret;
+	ret["cmd"] = "get_btc_address";
+	try {
+		ret["state"] = "ok";
+		ret["address"] = m_bitcoin_node_cli.get_new_address();
+	} catch (const std::exception &e) {
+		ret["state"] = "error";
+		ret["msg"] = e.what();
+		_warn("rpc_btc_get_address error: " << e.what());
 	}
 	return ret;
 }
