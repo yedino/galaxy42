@@ -2,6 +2,30 @@
 #include <clocale>
 #include <json.hpp>
 
+c_curl_ptr::c_curl_ptr()
+:	m_ptr(nullptr)
+{
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		throw std::runtime_error("curl_global_init error");
+	}
+	m_ptr = curl_easy_init();
+	if (m_ptr == nullptr) {
+		throw std::runtime_error("CURL init error");
+	}
+}
+
+c_curl_ptr::~c_curl_ptr() {
+	curl_easy_cleanup(m_ptr);
+	curl_global_cleanup();
+}
+
+CURL *c_curl_ptr::get_raw_ptr() const {
+	return m_ptr;
+}
+
+//////////////////////////////////////////////////////
+
 bitcoin_node_cli::bitcoin_node_cli(const std::string &ip_address, unsigned short port)
 :
 	m_io_service(),
@@ -12,7 +36,6 @@ bitcoin_node_cli::bitcoin_node_cli(const std::string &ip_address, unsigned short
 uint32_t bitcoin_node_cli::get_balance() const {
 	const std::string get_balance_request = [this] {
 		std::string get_balance_request = generate_request_prototype();
-		//get_balance_request += "Authorization: Basic X19jb29raWVfXzowMmNmYzBlYjE2YWU1OTQzMDIxMWVlZTc0NTc0NGVhNTVkZTk4MjM2ZDkzNTU2YzE5MGMxNzEyNjgyNTQwNmNh\r\n";
 		get_balance_request += "Authorization: Basic X19jb29raWVfXzoyNzYxMTIwMDU1ZWM0ZDBhYTQ0NTQwOGQ2OGJkYzcwOGZhZTk3ODYzN2E4MTU0MDk0NTViY2JjNTdmZTY3ZWUw\r\n";
 		get_balance_request += "Content-Length: 48\r\n\r\n";
 		get_balance_request += R"({"method":"getbalance","params":["*",0],"id":1})";
@@ -32,6 +55,7 @@ uint32_t bitcoin_node_cli::get_balance() const {
 }
 
 std::string bitcoin_node_cli::get_new_address() const {
+//	return "n44v5cnbKWdYc4WNcQrK9ziddCjWhQPffy===TEST ADDRESS===";
 	const std::string request = [this] {
 		std::string request = generate_request_prototype();
 		request += "Authorization: Basic X19jb29raWVfXzoyNzYxMTIwMDU1ZWM0ZDBhYTQ0NTQwOGQ2OGJkYzcwOGZhZTk3ODYzN2E4MTU0MDk0NTViY2JjNTdmZTY3ZWUw\r\n";

@@ -475,7 +475,7 @@ set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
 	${LIB_OPTIONAL_CAPNG}
-	${MINGW_LIBRARIES} ${MSVC_LIRARIES} apigalaxy
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES} apigalaxy curl
 )
 
 target_link_libraries(tunserver.elf
