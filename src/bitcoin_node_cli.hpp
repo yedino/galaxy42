@@ -3,6 +3,18 @@
 
 #include <libs0.hpp>
 #include <boost/asio.hpp>
+#include <curl/curl.h>
+
+class c_curl_ptr final {
+	public:
+		c_curl_ptr();
+		~c_curl_ptr();
+		CURL *get_raw_ptr() const;
+	private:
+		CURL *m_ptr;
+};
+
+//////////////////////////////////////////////////////
 
 class bitcoin_node_cli final {
 	public:
