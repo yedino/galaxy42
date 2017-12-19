@@ -4,6 +4,7 @@
 #include <libs0.hpp>
 #include <boost/asio.hpp>
 #include <curl/curl.h>
+#include <mutex>
 
 class c_curl_ptr final {
 	public:
@@ -12,6 +13,7 @@ class c_curl_ptr final {
 		CURL *get_raw_ptr() const;
 	private:
 		CURL *m_ptr;
+		static std::once_flag s_curl_init_flag;
 };
 
 //////////////////////////////////////////////////////
@@ -31,11 +33,9 @@ class bitcoin_node_cli final {
 		 */
 		std::string get_new_address() const;
 	private:
-		mutable boost::asio::io_service m_io_service;
-		const boost::asio::ip::tcp::endpoint m_btc_rpc_endpoint;
-		std::string generate_request_prototype() const;
+		const std::string m_rpc_http_address; // i.e. http://127.0.0.1:18332 for localhost testnet
 		std::string send_request_and_get_response(const std::string &request) const;
-		void remove_POST_data(std::string &data_with_POST) const;
+		static size_t write_cb (void *ptr, size_t size, size_t nmemb, std::string *str);
 };
 
 #endif // BITCOIN_NODE_CLI_HPP
