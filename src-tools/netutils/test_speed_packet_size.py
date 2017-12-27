@@ -29,6 +29,10 @@ OUTPUT_FILE = 'speed_results.txt'
 
 RPC_BUFFER_SIZE = 1024 # for RPC text, e.g. when reading reply
 
+def myprint(s):
+    print("[python test] " + str(s))
+
+
 def run_recv_program():
     print('Running netmodel program with command: ', ' '.join(PROGRAM_NETMODEL_ARGS))
     ret = Popen(PROGRAM_NETMODEL_ARGS, stderr=DEVNULL, stdout=DEVNULL)
@@ -36,24 +40,31 @@ def run_recv_program():
     return ret
 
 
-def rpc_test_remote_one_sender(thread_nr, size,  this_target_ip, this_target_port, rpc_ip, rpc_port ):
+def rpc_test_remote_one_sender(thread_nr, size,  this_target_ip, this_target_port, rpc_ip, rpc_port, worker_result, worker_index ):
     # for each RPC remote sending program:
     thread_name = "[RCP request thread #" + str(thread_nr) + "]";
-    # print(thread_name + " thread started");
+    # myprint(thread_name + " thread started");
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # RPC socket
-    print ( "RPC: ip=" + rpc_ip + " port=" + str(rpc_port) )
-    s.connect( (rpc_ip, rpc_port) )
+    myprint ( "RPC: ip=" + rpc_ip + " port=" + str(rpc_port) )
+    try:
+        s.connect( (rpc_ip, rpc_port) )
+    except ConnectionRefusedError:
+        myprint("ERROR: can not connect to RPC on " + rpc_ip + ":" + str(rpc_port))
+        worker_result[ worker_index ] = 'error'
+        return
+
     msg = MESSAGE_TEMPLATE.format(PASSWORD, this_target_ip, this_target_port, size, TEST_TIME_IN_SEC)
-    print(thread_name + " will send command [" + msg.rstrip() + '] to ' + rpc_ip + ':' + str(rpc_port))
+    myprint(thread_name + " will send command [" + msg.rstrip() + '] to ' + rpc_ip + ':' + str(rpc_port))
     s.send(msg.encode())
     data = s.recv(RPC_BUFFER_SIZE) # he should reply that he started
-    # print(thread_name + " RPC replied (start?) : [" + data.decode('utf-8') + "]" )
+    # myprint(thread_name + " RPC replied (start?) : [" + data.decode('utf-8') + "]" )
     # time.sleep(TEST_TIME_IN_SEC)
     data = s.recv(RPC_BUFFER_SIZE)
-    # print(thread_name + " RPC replied (end?) : [" + data.decode('utf-8') + "]" )
+    # myprint(thread_name + " RPC replied (end?) : [" + data.decode('utf-8') + "]" )
     s.close()
-    print(thread_name + " RPC connection ended");
+    myprint(thread_name + " RPC connection ended");
     # recv_process.kill()
+    worker_result[ worker_index ] = 'done'
 
 
 def rpc_test_remote_all(size, cmd_original):
@@ -62,7 +73,7 @@ def rpc_test_remote_all(size, cmd_original):
     cmdP = [] # parsed command
 
     for ix,cmd in enumerate(cmd_original):
-      print ("Parsing spam command '" + cmd + "' (on ix=" + str(ix) +")")
+      myprint ("Parsing spam command '" + cmd + "' (on ix=" + str(ix) +")")
       parts = cmd.split(',')
       data = [ ['x','x'] , ['x','x'] ]
 
@@ -75,7 +86,7 @@ def rpc_test_remote_all(size, cmd_original):
            data[i][1] = parts[i].split(':')[1]
       cmdP.append(data)
 
-    # print(cmdP)
+    # myprint(cmdP)
 
     for ix,cmd in enumerate(cmdP):
       for e in range(0,2): # e = endpoint 0 (e.g. taget) or endpoint 1 (e.g. rpc)
@@ -87,35 +98,43 @@ def rpc_test_remote_all(size, cmd_original):
               back=back-1
             cmdP[ix][e][p] = cmdP[back][e][p]
 
-    print("\nParsed:\n")
-    print(cmdP)
+    myprint("\nParsed:\n")
+    myprint(cmdP)
 
     thread_count = len(cmdP)
     thread_table = []
 
     recv_process = run_recv_program() # start local reciving program
 
+    worker_result = ['new'] * thread_count
     for i in range(0, thread_count ):
         cmd = cmdP[i]
         thr = threading.Thread(
-        target=rpc_test_remote_one_sender,
-        args=(i, size,  cmd[0][0], int(cmd[0][1]), cmd[1][0], int(cmd[1][1])  )
-      )
+            target=rpc_test_remote_one_sender,
+            args=(i, size,  cmd[0][0], int(cmd[0][1]), cmd[1][0], int(cmd[1][1]) , worker_result, i  )
+        )
         thr.start()
         thread_table.append(thr)
 
     for i in range(0, thread_count):
-        #print( "joining thread " + str(i))
+        #myprint( "joining thread " + str(i))
         thread_table[i].join()
 
-    print("All " + str(thread_count) + " RPC client(s) done, sending is done.\n")
+    if 'done' not in worker_result:
+        myprint("ERROR: Worker(s) failed")
+        return False
+
+    myprint("All " + str(thread_count) + " RPC client(s) done, sending is done.\n")
     recv_process.send_signal(signal.SIGINT)
 
     time.sleep(1)
+    result=False
     with open('/tmp/result.txt') as f:
         result = f.read()
-        print(result)
-        return result # data.decode('utf-8')
+        myprint(result)
+
+    myprint("All " + str(thread_count) + " RPC client(s) done - all done here")
+    return result
 
 
 def parse_args():
@@ -140,9 +159,8 @@ def myrange(low,high,mod):
     return range(low2, high2, mod)
 
 
-if __name__ == "__main__":
-    print("\nPython Script: Starting the wire/packet-size tests.")
-    print("Python Script: run me with option --h to see help.\n")
+def the_main
+    myprint("Starting the wire/packet-size tests. (run me with option --h to see help)");
     args = parse_args()
     PASSWORD = args.passwd
     ranges = args.ranges
@@ -160,15 +178,23 @@ if __name__ == "__main__":
 
     sizes = list( reversed( sorted( sizes ) ) )
 
-    print("\n\nWill test sizes: ")
-    print(sizes)
-    print("\n\n")
+    myprint("Will test sizes:")
+    myprint(sizes)
+    myprint("")
 
     with open(OUTPUT_FILE, 'a') as file:
         for i in sizes:
             response = rpc_test_remote_all(i, args.cmd)
+            if (response == False):
+                os._exit(1)
             file.write(str(i))
             file.write('\t')
             file.write(response)
             file.write('\n')
+
+    myprint("All done")
+
+
+if __name__ == "__main__":
+    the_main
 

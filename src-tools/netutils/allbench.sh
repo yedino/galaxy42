@@ -16,22 +16,28 @@ cd "$cd_to" || { echo "Can not cd into my script dir [$cd_to]" ; exit 1 ; }
 bundle_dir="${PWD}/${relative_top}"
 [ -r "${bundle_dir}toplevel" ] || { echo "Can't find 'toplevel' using bundle_dir=[$bundle_dir]"; exit 1; }
 source "${bundle_dir}share/script/lib/fail.sh" || { echo "Can not load lib (in $0)"; exit 1 ; }
+source "${bundle_dir}share/script/lib/simple-status.sh" || fail "Can not load lib";
 echo "OK, working in bundle_dir [$bundle_dir]"
 
-exit
+status_title "Will start all tests"
+
+[[ -z "$YEDINO_BENCH_CONFIGURED" ]] && fail "Please configure your system for automatic benchmarks, see file allbench.txt"
 
 echo "This will be running all bench tests"
 
-echo "RPC password will be: $YEDINO_BENCH_RPC_PASS1"
+echo "RPC password will be: [$YEDINO_BENCH_RPC_PASS1] (without the brackets)"
 
-echo "System info..."
+echo "System info...:"
 source ./getinfo.sh
 echo ""
 
 echo "Will run tests on ($cpu_all_2)"
 
-./test_speed_packet_size.py --cmd $YEDINO_BENCH_SELF_FAST_WIRE_IP1:9000,$YEDINO_BENCH_PEER_FAST_RPC_IP:9011 --cmd sameboth,sameip:9012 --cmd $YEDINO_BENCH_SELF_FAST_WIRE_IP2:9000,sameip:9013 --cmd sameboth,sameip:9014  --ranges 2  --passwd $YEDINO_BENCH_RPC_PASS1
+this_test="Fast_wire"
+status_title "Test: $this_test"
+./test_speed_packet_size.py --cmd $YEDINO_BENCH_SELF_FAST_WIRE_IP1:9000,$YEDINO_BENCH_PEER_FAST_RPC_IP:9011 --cmd sameboth,sameip:9012 --cmd $YEDINO_BENCH_SELF_FAST_WIRE_IP2:9000,sameip:9013 --cmd sameboth,sameip:9014  --ranges 2  --passwd $YEDINO_BENCH_RPC_PASS1 || fail "Test failed (test: $this_test)"
 
-echo "All tests done"
+
+echo "All tests done in $my_src"
 
 
