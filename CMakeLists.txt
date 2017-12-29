@@ -75,7 +75,6 @@ if(BUILD_STATIC_TUNSERVER)
 	if(MSVC)
 		set(STATIC_FLAGS "")
 	else()
-		# set(STATIC_FLAGS "-fPIC -fPIE -Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
 		set(STATIC_FLAGS "-fPIC -fPIE -static-libstdc++ -lpthread")
 	endif()
 endif()
@@ -160,7 +159,6 @@ if (BUILD_STATIC_TUNSERVER)
 	set (Boost_USE_STATIC_RUNTIME ON)
 	set (Boost_USE_STATIC_LIBS ON)
 	set (Boost_USE_DEBUG_RUNTIME OFF)
-	set (sodium_USE_STATIC_LIBS ON)
 endif()
 
 if (MSVC)
@@ -290,6 +288,9 @@ else()
 endif()
 
 ########################### SODIUM ###########################
+if (BUILD_STATIC_TUNSERVER)
+	set (sodium_USE_STATIC_LIBS ON)
+endif()
 find_package(Sodium)
 link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/) # for gitian build
 
@@ -305,7 +306,11 @@ if (NOT SODIUM_FOUND)
 endif()
 
 include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
-if(CYGWIN)
+
+if(BUILD_STATIC_TUNSERVER)
+	set(PTHREAD_LIB "pthread")
+	set(SODIUM_LIB "${SODIUM_LIBRARY}")
+elseif(CYGWIN)
 	set(SODIUM_LIB "sodium")
 elseif(MSVC OR MINGW)
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
