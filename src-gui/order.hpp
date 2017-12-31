@@ -283,7 +283,7 @@ private:
 class payOrder final :public order
 {
 public:
-    payOrder(const RpcId& id,const MeshPeer &peer ,int shitoshi =0);
+    payOrder(const RpcId& id,const MeshPeer &peer ,int satoshi =0);
     payOrder(const std::string &json_str,commandExecutor *executor);
     void execute(MainWindow &main_window);
     std::string get_str() const ;

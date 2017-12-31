@@ -36,9 +36,9 @@ void StatusForm::onTickTimmer()
 
 void StatusForm::onReConnectTimmer()
 {
-//    ui->statusInycator->setChecked( false );
-    ui->statusInycator->setText( tr( "connecting..." ) );
-    ui->statusInycator->setStatusTip( tr( "connecting..." ) );
+//    ui->statusIndicator->setChecked( false );
+    ui->statusIndicator->setText( tr( "connecting..." ) );
+    ui->statusIndicator->setStatusTip( tr( "connecting..." ) );
 
 }
 
@@ -51,9 +51,9 @@ void StatusForm::onReConnect()
 void StatusForm::onConnectionSuccess()
 {
     // ustaw stan na wlaczony
-//    ui->statusInycator->setChecked( true );
-    ui->statusInycator->setStatusTip( tr( "connected - no rpc server detecected" ) );
-    ui->statusInycator->setText( tr( "connected - no node" ) );
+//    ui->statusIndicator->setChecked( true );
+    ui->statusIndicator->setStatusTip( tr( "connected - no rpc server detecected" ) );
+    ui->statusIndicator->setText( tr( "connected - no node" ) );
 
     if( m_is_working ) {
         m_is_working = false;
@@ -66,9 +66,9 @@ void StatusForm::onLostConnection()
 
     QErrorMessage msg ;
     msg.showMessage( QString( tr( "connection lost" ) ) );
-    ui->statusInycator->setStatusTip( tr( "disconnected" ) );
-//    ui->statusInycator->setChecked( false );
-    ui->statusInycator->setText( tr( "disconnected" ) );
+    ui->statusIndicator->setStatusTip( tr( "disconnected" ) );
+//    ui->statusIndicator->setChecked( false );
+    ui->statusIndicator->setText( tr( "disconnected" ) );
 
     if( m_is_working ) {
         m_is_working = false;
@@ -85,16 +85,16 @@ void StatusForm::onErrorOccured( QString err )
 
 void StatusForm::onGetSessionId()
 {
-//    ui->statusInycator->setChecked( true );
-    ui->statusInycator->setStatusTip( tr( "got rpc id" ) );
-    ui->statusInycator->setText( tr( "RPC connected" ) );
+//    ui->statusIndicator->setChecked( true );
+    ui->statusIndicator->setStatusTip( tr( "got rpc id" ) );
+    ui->statusIndicator->setText( tr( "RPC connected" ) );
     m_is_working = true;
     emit netConnect( m_is_working );
 }
 
 void StatusForm::setDebugInfo(const QString& str)
 {
-    ui->statusInycator->setText(str);
+    ui->statusIndicator->setText(str);
 }
 
 void StatusForm::on_pushButton_clicked()
@@ -112,6 +112,6 @@ void StatusForm::on_pushButton_clicked()
 
 void StatusForm::setStatus( QString status)
 {
-    ui->statusInycator->setText(status);
+    ui->statusIndicator->setText(status);
 }
 

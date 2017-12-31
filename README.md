@@ -64,6 +64,10 @@ For more details, including correct naming and **glossary**, and advanced techni
 ### Version v0.3.3a (pre-alpha)
 
 * Summary: multi-threading tools, tests, network model, utils; RPC commands, and GUI, fixes.
+* Draft of Bitcoin RPC interaction (do NOT use for anything other then testnet!!).
+  * RPC commands for Bitcoin: `get_status` `pay` `set_account`.
+  * GUI: RPC connect timeout changes, more errors supported.
+  * GUI: text for Bitcoin status/ballance; Audio sound.
 * GUI.
  * Basic GUI works, but is for testing from source code (is not connected to build system).
   * Connecting to RPC (not encrypted yet!).
@@ -89,6 +93,7 @@ For more details, including correct naming and **glossary**, and advanced techni
  * many tests added (only-crypto, and various wire-tun-crypto tests)
 * Porting
  * Started BSD/FreeBSD port (tuntap stump)
+ * Jenkins: build Macosx and GUI.
 * Code
  * Affinity mini lib.
  * Fixed some C++ warnings.
