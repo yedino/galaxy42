@@ -2,6 +2,7 @@
 #define BITCOIN_NODE_CLI_HPP
 
 #include <libs0.hpp>
+#include <boost/asio.hpp>
 
 class bitcoin_node_cli final {
 	public:
