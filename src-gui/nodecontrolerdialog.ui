@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NodeControlerDialog</class>
+ <widget class="QDialog" name="NodeControlerDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>584</width>
+    <height>475</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QDockWidget" name="peerListDock">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>0</y>
+     <width>171</width>
+     <height>461</height>
+    </rect>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Peer List</string>
+   </property>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="PeerListForm" name="peerListWidget" native="true"/>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="quickStartDock">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>0</y>
+     <width>401</width>
+     <height>301</height>
+    </rect>
+   </property>
+   <property name="windowTitle">
+    <string>Quick start</string>
+   </property>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <widget class="quickStartDialog" name="quickStartWigget" native="true">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>9</y>
+       <width>371</width>
+       <height>261</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>300</y>
+     <width>371</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <property name="windowTitle">
+    <string>Debug</string>
+   </property>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <widget class="QListWidget" name="debugLst">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>351</width>
+       <height>111</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PeerListForm</class>
+   <extends>QWidget</extends>
+   <header location="global">peerlistform.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>quickStartDialog</class>
+   <extends>QWidget</extends>
+   <header location="global">quickstartdialog.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

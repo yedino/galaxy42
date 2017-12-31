@@ -74,7 +74,7 @@ void c_tun_device_linux::set_ipv6_address
 	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
 
 	assert(binary_address[0] == 0xFD);
-	assert(binary_address[1] == 0x42);
+//	assert(binary_address[1] == 0x42);
 	_fact("Setting IP address");
 	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address, prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);
@@ -335,6 +335,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		key_wrapped.close();
 		throw e;
 	}
+	_dbg1("found " << subkeys_vector.size() << " reg keys");
 	key_wrapped.close();
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
@@ -456,7 +457,6 @@ HANDLE c_tun_device_windows::open_tun_device(const std::wstring &guid) {
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
 		0);
-	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("CreateFileW error, last error " + std::to_string(GetLastError()));
 	return handle;
 }
 
@@ -618,7 +618,7 @@ void c_tun_device_apple::handle_read(const boost::system::error_code &error, siz
 void c_tun_device_apple::set_ipv6_address
         (const std::array<uint8_t, 16> &binary_address, int prefixLen) {
     assert(binary_address[0] == 0xFD);
-    assert(binary_address[1] == 0x42);
+    //assert(binary_address[1] == 0x42);
     Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address, prefixLen, Sockaddr_AF_INET6);
 }
 

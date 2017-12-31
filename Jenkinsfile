@@ -101,7 +101,7 @@ def run_memory_test(git_url, branch) {
 	build job: 'g42_safe-memory',
 		parameters: [	[$class: 'NodeParameterValue',
 		             		name: 'MemTest',
-		             		labels: ['allow_clang_sanitizer'],
+		             		labels: ['allow_memtest'],
 		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
 		             	[$class: 'StringParameterValue',
 		             		name: 'git_repository_url',
@@ -115,7 +115,35 @@ def run_thread_ub_test(git_url, branch) {
 	build job: 'g42_safe-thread-ub',
 		parameters: [	[$class: 'NodeParameterValue',
 		             		name: 'ThubTest',
-		             		labels: ['allow_clang_sanitizer'],
+		             		labels: ['allow_thread_ub_test'],
+		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_repository_url',
+		             		value: "$git_url" ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_branch',
+		             		value: "$branch" ] ]
+}
+
+def native_mac(git_url, branch) {
+	build job: 'galaxy42_mac_native',
+		parameters: [	[$class: 'NodeParameterValue',
+		             		name: 'Multinode',
+		             		labels: ['mac_native'],
+		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_repository_url',
+		             		value: "$git_url" ],
+		             	[$class: 'StringParameterValue',
+		             		name: 'git_branch',
+		             		value: "$branch" ] ]
+}
+
+def native_gui(git_url, branch) {
+	build job: 'galaxy42_gui',
+		parameters: [	[$class: 'NodeParameterValue',
+		             		name: 'Multinode',
+		             		labels: ['gui'],
 		             		nodeEligibility: [$class: 'AllNodeEligibility'] ],
 		             	[$class: 'StringParameterValue',
 		             		name: 'git_repository_url',
@@ -132,11 +160,15 @@ properties([pipelineTriggers([  [$class: 'GitHubPushTrigger'],
           ])
 
 node('master') {
+	properties([disableConcurrentBuilds()])
 
 	def build_native_linux = true
 	def build_native_windows_mingw32 = true
 	def build_native_windows_mingw64 = true
 	def build_native_windows_msvc = true
+	def build_native_mac = true
+
+	def build_native_gui = true
 
 	def should_run_unit_test = true
 	def should_run_integration_test = true
@@ -195,6 +227,20 @@ node('master') {
 			if(build_native_windows_msvc) {
 				stage('windows_MSVC') {
 					native_windows_msvc(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
+			}
+		},
+		mac: {
+			if(build_native_mac) {
+				stage('mac') {
+					native_mac(GIT_REPOSITORY_URL,GIT_BRANCH)
+				}
+			}
+		},
+		gui: {
+			if(build_native_gui) {
+				stage('gui') {
+					native_gui(GIT_REPOSITORY_URL,GIT_BRANCH)
 				}
 			}
 		}

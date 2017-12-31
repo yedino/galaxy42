@@ -8,7 +8,7 @@
 
 c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
                                              m_io_service(),
-                                             m_tun_stream(m_io_service, m_tun_fd) {
+											 m_tun_stream(m_io_service, m_tun_fd) {
 
 	_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
 	_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
@@ -17,6 +17,20 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
 	_check_sys(m_tun_stream.is_open());
 	_goal("Tuntap opened correctly");
 }
+
+// TODO code duplication
+c_tuntap_macosx_obj::c_tuntap_macosx_obj(boost::asio::io_service &io_service)
+:
+	m_tun_fd(create_tun_fd()),
+	m_io_service(),
+	m_tun_stream(io_service, m_tun_fd)
+{
+	_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
+	_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
+
+	_try_sys(m_tun_fd != -1);
+	_check_sys(m_tun_stream.is_open());
+	_goal("Tuntap opened correctly");}
 
 size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) {
 	std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};

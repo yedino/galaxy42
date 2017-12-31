@@ -21,9 +21,6 @@
 [submodule "cotire"]
 	path = depends/cotire
 	url = https://github.com/sakra/cotire
-[submodule "depends/CTPL"]
-	path = depends/CTPL
-	url = https://github.com/vit-vit/CTPL.git
 [submodule "depends/backward-cpp"]
 	path = depends/backward-cpp
-	url = https://github.com/yedino/backward-cpp
+	url = https://github.com/bombela/backward-cpp

@@ -106,6 +106,6 @@ c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) {
 
 bool addr_is_galaxy(c_haship_addr addr) {
 	if (addr.at(0) != 0xFD) return false;
-	if (addr.at(1) != 0x42) return false;
+//	if (addr.at(1) != 0x42) return false;
 	return true;
 }

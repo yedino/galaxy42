@@ -74,7 +74,7 @@ void c_multisign::add_signature(t_crypto_system_type crypto_type, const string &
 std::vector<string> c_multisign::get_signature_vec(t_crypto_system_type crypto_type) const {
 	std::vector<std::string> signatures_vec;
 	for (size_t i = 0; i < get_count_keys_in_system(crypto_type); ++i) {
-		signatures_vec.emplace_back(std::move(get_signature(crypto_type, i)));
+		signatures_vec.emplace_back(get_signature(crypto_type, i));
 	}
 	return signatures_vec;
 }
@@ -135,12 +135,12 @@ void c_multisign::load_from_bin(const string &data) {
 // c_multikeys_pub
 
 c_multikeys_pub::c_multikeys_pub()
-	: c_multikeys_general<c_crypto_system::t_pubkey>( e_crypto_use_open )
+: c_multikeys_general<c_crypto_system::t_pubkey>( e_crypto_use_open )
 { }
 
 string c_multikeys_pub::get_ipv6_string_bin() const {
 	string hash = get_hash();
-	string_as_hex prefix_hex( "fd42" );
+	string_as_hex prefix_hex( m_ipv6_prefix );
 	string_as_bin prefix_bin( prefix_hex );
 	// still discussion how to generate address regarding number of bruteforce cost to it TODO
 
@@ -247,6 +247,10 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 		}
 		multi_sign_verify(all_signatures.get_signature_vec(sys_enum), msg, pubkeys, sys_enum);
 	}
+}
+
+void c_multikeys_pub::set_ipv6_prefix(const std::string &prefix) {
+	m_ipv6_prefix = prefix;
 }
 
 // ==================================================================
@@ -560,6 +564,10 @@ void c_multikeys_PAIR::add_public_and_PRIVATE(t_crypto_system_type crypto_type,
 
 const c_multikeys_pub & c_multikeys_PAIR::read_pub() const {
 	return m_pub;
+}
+
+void c_multikeys_PAIR::set_ipv6_prefix(const std::string &prefix) {
+	m_pub.set_ipv6_prefix(prefix);
 }
 
 

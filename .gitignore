@@ -3,6 +3,13 @@
 build/
 build-*/
 
+# some scripts copied to build directory. need to ignore them if someone does "make" in top dir instead in build/
+./rundevel.sh
+./run-safe-mem
+./run-safe-thread-ub
+./valgrind_log_watch
+./valgrind_with_log_kill
+
 # temporary var files, including created by running-in-place program
 # especially for developer tools, script
 vartmp/
@@ -48,3 +55,5 @@ CMakeLists.txt.user
 # produced by CMake/Cotire
 *cotire.cmake
 
+# hiden files
+.*

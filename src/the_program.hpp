@@ -60,8 +60,8 @@ class c_the_program {
 
 		/// Debug options for the program
 		///@{
-		int config_default_basic_dbg_level = 60; // [debug] level default
-		int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
+		static constexpr int config_default_basic_dbg_level = 60; // [debug] level default
+		static constexpr int config_default_incrased_dbg_level = 20; // [debug] early-debug level if user used --d
 		///@}
 
 		string config_default_myname;
