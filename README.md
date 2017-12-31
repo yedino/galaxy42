@@ -97,6 +97,9 @@ For more details, including correct naming and **glossary**, and advanced techni
 * Code
  * Affinity mini lib.
  * Fixed some C++ warnings.
+* Last release of 2017 year.
+ * In memory of our small friend who kept us company (bitcoin, antinet); Lila (2010-2017).
+ * We wish everyone a Marry Christmas, and happy end of 2017 year.
 
 Older release notes are in [Changelog.md](Changelog.md).
 
