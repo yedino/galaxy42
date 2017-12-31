@@ -8,13 +8,19 @@ function fail() { myprint "$(tput setab 1)Error $*" ; exit 1 ; }
 
 readonly program_for_flags="./nocap-tunserver.elf"
 program_to_run="MAIN"
-[[ -z ${1+x} ]] || program_to_run="$1"
+[[ -z ${1+x} ]] || {
+	program_to_run="$1"
+	shift
+}
 [[ "$program_to_run" == "MAIN" ]] && program_to_run="./nocap-tunserver.elf"
 [[ "$program_to_run" == "TESTS" ]] && program_to_run="./nocap-unittests.elf"
-myprint "Will run program ($program_to_run) with SAFE THREADS, and SAFE MISC UB (INCLUDING OVERFLOWS) OPTIONS"
+[[ ! -x "$program_to_run" ]] && { myprint "$(tput setab 3)Can not run program ($program_to_run).
+To this script ($0) provide (as 1st command line argument) the name of program to run (after you build it),
+or word 'MAIN' or word 'TEST'." ; exit 1 ; }
+myprint "Will run program ($program_to_run) to test SAFE MEMORY"
 
 myprint "Asking program ($program_for_flags) what flags / compilation flavour was used here."
-${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags)."; }
+${program_for_flags} --print-flags-flavour > /dev/null || { myprint "Can not run program to test flags ($program_for_flags) - is program built?."; }
 
 checks_enabled=0 # count checks we will enable
 checks_existing=0 # count how many checks we could have run
@@ -24,6 +30,8 @@ flagname="valgrind_memory_is_possible"
 ${program_for_flags} --print-flags-flavour | grep "$flagname" || {
 	myprint "$(tput setab 1)Program to test flags ($program_for_flags) warned us that project is built with wrong flags for this test"
 	myprint "$(tput setab 1)...see documentation how to configure program for this. (search name '$flagname')"
+	myprint "$(tput setab 1)...e.g. it is impossible to at once use this tool,
+and at same time have program configured with TSAN (THREAD SANITIZER in ccmake)."
 	exit 1 # <--- EXIT, giving up
 }
 # else, continue:

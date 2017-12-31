@@ -22,6 +22,7 @@
 
 #include "httpdbg/httpdbg-server.hpp"
 #include <ctime>
+#include <mutex.hpp>
 
 using boost::asio::ip::tcp;
 
@@ -108,6 +109,7 @@ ostringstream& c_httpdbg_raport::generate_current_date(ostringstream& out){
 }
 
 ostringstream& c_httpdbg_raport::generate_table_of_peers(ostringstream& out, string &url){
+	LockGuard<Mutex> lg(m_target.m_peer_etc_mutex);
 	if(url.size()!=32)
 	{
 		out << "<table><tr font-weight='bold'><th>Server name</th><th>Server hip</th></tr><tr><td>";
@@ -198,6 +200,7 @@ ostringstream& c_httpdbg_raport::generate_table_of_tunnels(ostringstream& out, s
 
 string c_httpdbg_raport::get_data(){
 	string data = "";
+	LockGuard<Mutex> lg(m_target.m_peer_etc_mutex);
 	for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
 	{
 		string hip = it->first.get_hip_as_string(false);
@@ -209,6 +212,7 @@ string c_httpdbg_raport::get_data(){
 
 string c_httpdbg_raport::get_charts(string &url){
 	string charts = "";
+	LockGuard<Mutex> lg(m_target.m_peer_etc_mutex);
 	for(auto it = m_target.m_peer.begin(); it != m_target.m_peer.end(); it++)
 	{
 		string hip = it->first.get_hip_as_string(false);
@@ -221,7 +225,7 @@ string c_httpdbg_raport::generate(string url) {
 	ostringstream out;
 	generate_current_date(out);
 
-	Lock_guard<Mutex> lg( m_target.get_my_mutex() );
+	LockGuard<Mutex> lg( m_target.get_my_mutex() );
 
 	generate_table_of_peers(out, url);
 	generate_table_of_tunnels(out, url);

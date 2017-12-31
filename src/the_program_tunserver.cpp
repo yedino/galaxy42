@@ -54,6 +54,7 @@ void c_the_program_tunserver::options_create_desc() {
 											+ " (like memcheck1)").c_str())
 
                     ("d", mo_file_reader::gettext("L_what_d_do").c_str())
+                    ("dlevel", po::value<int>()->default_value(-1), mo_file_reader::gettext("L_option_dlevel").c_str())
 
                     ("quiet", mo_file_reader::gettext("L_what_quiet_do").c_str())
 
@@ -80,9 +81,13 @@ void c_the_program_tunserver::options_create_desc() {
                         ("net-hello-interval", po::value<int>()->default_value(3), mo_file_reader::gettext("L_what_netHelloInterval_do").c_str())
                         ("port", po::value<int>()->default_value(9042), mo_file_reader::gettext("L_port_do").c_str())
                         ("rpc-port", po::value<int>()->default_value(42000), mo_file_reader::gettext("L_rpcPort_do").c_str())
+                        ("rpc-listen-address", po::value<std::string>()->default_value("127.0.0.1"), mo_file_reader::gettext("L_rpcListenAddress_do").c_str())
                     ("remove-peers", po::value<bool>()->default_value(false), mo_file_reader::gettext("L_remove_peers_do").c_str())
                     ("remove-peers-timeout", po::value<unsigned int>()->default_value(30), mo_file_reader::gettext("L_remove_peers_timeout_do").c_str())
 										("home-env", mo_file_reader::gettext("L_what_home-env_option_do").c_str())
+
+                     ("set-prefix", po::value<std::string>()->default_value("fd42"), mo_file_reader::gettext("L_setThePrefix").c_str())
+//                     ("mask-len", po::value<unsigned short>()->default_value(16), mo_file_reader::gettext("L_setMaskLength").c_str())
 
 
 			#if EXTLEVEL_IS_PREVIEW
@@ -247,12 +252,20 @@ int c_the_program_tunserver::main_execution() {
 			_clue("After devel/demo BoostPO code");
 
 			// --- debug level for main program ---
+			_clue("Setting debug level (main loop - old loop)");
 			bool is_debug=false;
 			if (argm.count("debug") || argm.count("d")) is_debug=true;
 			_note("Will we keep debug: is_debug="<<is_debug);
 
 			g_dbg_level_set(config_default_basic_dbg_level, "For normal program run");
 			if (is_debug) g_dbg_level_set(10,"For debug program run");
+			if (argm.count("dlevel")) {
+				auto dlevel = int{  argm.at("dlevel").as<int>()  };
+				if (dlevel != -1) {
+					_note("Option --dlevel sets new level type: " << dlevel);
+					g_dbg_level_set( dlevel , "Set by --dlevel" );
+				}
+			}
 			if (argm.count("quiet") || argm.count("q")) g_dbg_level_set(200,"For quiet program run", true);
 			_note("BoostPO after parsing debug");
 
@@ -495,12 +508,28 @@ int c_the_program_tunserver::main_execution() {
 				_info("Can not load keys list or IDI configuration");
 				have_keys_configured=0;
 			}
-
+			const std::string ipv6_prefix = [this, &myserver] {
+				std::string ret = m_argm.at("set-prefix").as<std::string>();
+				_check_input(ret.size() == 4);
+				std::transform(ret.cbegin(), ret.cend(), ret.begin(),
+					[](unsigned char c){return std::tolower(c);}
+				);
+				_check_input(ret.at(0) == 'f');
+				_check_input(ret.at(1) == 'd');
+				_check_input(ret.at(2) == '4');
+				if (ret.at(3) == '2') myserver.set_prefix_len(16);
+				else if (ret.at(3) == '3') myserver.set_prefix_len(16);
+				else if (ret.at(3) == '4') throw std::invalid_argument("address reserved");
+				else if (ret.at(3) == '5') throw std::invalid_argument("address reserved");
+				else throw std::invalid_argument("address not supported");
+				return ret;
+			}(); // lambda
+			myserver.set_prefix(ipv6_prefix);
 			if (have_keys_configured) {
 				bool ok=false;
 
 				try {
-					myserver.configure_mykey();
+					myserver.configure_mykey(ipv6_prefix);
 					ok=true;
 				} catch UI_CATCH("Loading your key");
 
@@ -520,7 +549,7 @@ int c_the_program_tunserver::main_execution() {
 					const string IDI_name = myserver.program_action_gen_key_simple();
 					myserver.program_action_set_IDI(IDI_name);
 					ui::action_info_ok("Your new keys are created.");
-					myserver.configure_mykey();
+					myserver.configure_mykey(ipv6_prefix);
 					ui::action_info_ok("Your new keys are ready to use.");
 				};
 				UI_EXECUTE_OR_EXIT( step_make_default_keys );

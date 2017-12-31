@@ -1,5 +1,7 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 #pragma once
+
+#define ANTINET_PART_OF_YEDINO 1 // this source project is Yedino
 
 // thread_safe_public_myself
 // thread_safe
@@ -72,7 +74,7 @@ std::string project_version_info();
 
 constexpr int project_version_number_major{0};
 constexpr int project_version_number_minor{3};
-constexpr int project_version_number_sub{2};
-constexpr char project_version_number_patch{'b'};
-constexpr int project_version_number_progress{2};
+constexpr int project_version_number_sub{3};
+constexpr char project_version_number_patch{'a'};
+constexpr int project_version_number_progress{4};
 

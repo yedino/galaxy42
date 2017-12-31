@@ -8,7 +8,7 @@ function fail() {
 	exit 1
 }
 
-default_peer1="192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"
+default_peer1="194.28.50.88:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5"
 peer1_reference="${test_galaxy_peer1:-$default_peer1}"
 
 target_program_path="../../../../build/" # where is our binary
@@ -61,6 +61,9 @@ trap script_cleanup_pid EXIT
 kill -0 "$myserver_pid" || fail "Server is not alive at PID $myserver_pid"
 
 # --- server probably is alive now, at that PID
+
+echo "Waiting for galaxy connect"
+sleep 5
 
 echo "Starting the test:"
 

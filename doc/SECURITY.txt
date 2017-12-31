@@ -2,40 +2,104 @@
 - We developers should do following checks
 - And you (end-user) can verify it on your own too!
 
-Check this projects for security updates:
+Source of dependency:
 
-NATIVE_SYS = (if you built program nativly) This given system-wide library is taken from your OS.
-Lib version: depends on distro. Not controlloed by us (developers of Galaxy42).
-Keep your OS updated, and rebuild the program when ever any dependency of it is updated or changes.
+| library          | Linux     | Lin. Gitian | Win. Mingw | Win. Gitian | Win. MSVC | Macosx     | Mac. Gitian |
+|------------------|-----------|-------------|------------|-------------|-----------|------------|-------------|
+| libstd++/libc    | sys       | sys-Gitian  | sys-cygwin | sys-Gitian  | sys       | sys        | sys-Gitian  |
+| boost            | sys       | sys-Gitian  | sys-cygwin | ext/git     | sys       | sys-Gitian |             |
+| sodium           | sys       | sys-Gitian  | sys-cygwin | ext/git     | sys       | sys-Gitian |             |
+| sodiumpp         | fork/subm | fork/subm   | fork/subm  | fork/subm   | fork/subm | fork/subm  | fork/subm   |
+| nlohmann_json    | ext/subm  | ext/subm    | ext/subm   | ext/subm    | sudmod    | ext/subm   | ext/subm    |
+| backward-cpp     | ext/subm  | ext/subm    | ext/subm   | ext/subm    | ext/subm  | ext/subm   | ext/subm    |
+| cotire           | ext/subm  | ext/subm    | ext/subm   | ext/subm    | ext/subm  | ext/subm   | ext/subm    |
+| googletest       | ext/subm  | ext/subm    | ext/subm   | ext/subm    | ext/subm  | ext/subm   | ext/subm    |
+| ntru-crypto [NO] | ext/subm  | ext/subm    | ext/subm   | ext/subm    | ext/subm  | ext/subm   | ext/subm    |
+| SIDH        [NO] | ext/subm  | ext/subm    | ext/subm   | ext/subm    | ext/subm  | ext/subm   | ext/subm    |
+| cjdns/netplatf.  | fork/copy | fork/copy   | rewritten  | rewritten   | rewritten | fork/copy  | fork/copy   |
+| libz             | -         | -           | -          | sys+ext/wget| -         | -          | -           |
+| nsis util        | -         | -           | -          | ext/wget    | sys       | -          | -           |
+| libqt5           | sys       |(sys-Gitian) | sys/qtcreat| sys+ext/wget| -         | sys/brew   | sys+ext/wget|
 
-NATIVE_INCODE = (if you built program nativly) This given library is included in build process of our program
-(e.g. git downloaded / wget downloaded, and then built as part of our ./do cmake make etc).
-Lib version: controlled by us (developers of Galaxy42) - included in our source code (e.g. git submodule or wget with version).
-We will release new version of this project. You must download the new version and build it again, so that it will be build using
-the upgraded library.
+We must track following dependencies, this is a form for checking them;
 
-GITIAN_WIN_INCODE    = when building in Gitian, for Windows, then this library is taken as INCODE (see above).
-GITIAN_WIN_SYS       = when building in Gitian, for Windows, then this library is taken as SYS (see above).
-GITIAN_LINUX_SYS     = when building in Gitian, for Linux, then this library is taken as SYS (see above).
-GITIAN_LINUX_INCODE  = when building in Gitian, for Linux, then this library is taken as INCODE (see above).
 
-- libstd++     : NATIVE_SYS, GITIAN_WIN_SYS, GITIAN_LINUX_SYS
-- libc         : NATIVE_SYS, GITIAN_WIN_SYS, GITIAN_LINUX_SYS
-- other standard c libs - native.
+Copy this text into SECURITY-this-release.txt (and commit an not-checked version), then commit checked ([x]) version,
 
-- lib boost    : NATIVE_SYS, GITIAN_WIN_INCODE, GITIAN_LINUX_SYS
-- lib sodium   : NATIVE_SYS, GITIAN_WIN_INCODE, GITIAN_LINUX_SYS
-- lib sodiumpp : NATIVE_INCODE, GITIAN_WIN_INCODE, GITIAN_LINUX_INCODE
-- lib jsoncpp  : NATIVE_INCODE, GITIAN_WIN_INCODE, GITIAN_LINUX_INCODE
+---------------------
+Checking started on: [                ] (UTC)
+Checking done on:    [                ] (UTC)
 
-- nsis program : GITIAN_WIN_INCODE
+[ ] We pick our own code in version without known security issues
 
-- libz - used to build nsis program (above). Maybe is delivered to finall install.exe ??
+[ ] sodiumpp submodule and upstream tracking !
+[ ] nlohmann_json submodule
+[ ] backward-cpp submodule
+[ ] cotire submodule
+[ ] googletest submodule
+[ ] cjdns/netplatform upstream tracking !
+[ ] libqt5 library release for Linux
+[ ] libqt5 library release for Windows (mingw)
+[ ] libqt5 library release for Macosxupstream
+[ ] libz wget download
+[ ] nsis wget download
 
 For windows gitian build we also depend on:
-- DLL libraries from Cygwin/Mingw, see contrib/nsis-installer-windows/bin - check for updates!
-- OpenVPN installer is downloaded and added into installer. Please make sure its version (and file hash) is up-to-date, in script contrib/nsis-installer-windows/galaxy-windows-installer + in file contrib/nsis-installer-windows/installer.nsi
-- We also use custom Gitian project (git submodule).
+[ ] {outdated! now we take it from system installation of crosscompiler in Gitian!},
+was: DLL libraries from Cygwin/Mingw, see contrib/nsis-installer-windows/bin - check for updates!
+[ ] OpenVPN installer is downloaded and added into installer. Please make sure its version (and file hash) is up-to-date,
+    see script `contrib/nsis-installer-windows/galaxy-windows-installer` + file `contrib/nsis-installer-windows/installer.nsi`
+[ ] We also use custom Gitian project (git submodule), see `https://github.com/yedino/gitian-builder.git` from `./build-gitian`
+
+For macosx Gitian we also depend on:
+[ ] macosx SDK
+[ ] cpio program `contrib/macdeploy/build-cpio.sh` - `https://ftp.gnu.org/gnu/cpio/cpio-2.12.tar.gz`
+---------------------
+
+Legend used in table:
+* [NO] - this code is not supported, no need to track it (e.g. code use is disabled)
+* ext/git - external code, we download it via git and build it (we should check git checksum)
+* ext/wget - external code, we download it via wget or other http, and build it (we should check file checksum)
+* fork - we base on external upstream project, and we apply custom changes to it. we MUST track upstream for security fixes
+* fork/copy - as above, the source code is copied and is part of our main repository with all the source code
+* fork/subm - as above, the source code is attached as a git submodule
+* rewritten - we rewritten the code, instead of just forking it, based on some extenal ideas/examples
+* tool-sys - This is a tool, that we need to run, and we take it from system.
+* sys-Gitian - we take it from system on the Gitian environment (e.g. the Ubuntu Xenial; see details below)
+
+Details:
+
+* Sys-Gitian (for Windows target)
+The Gitian platform (e.g. Ubuntu), provides cross-compiler suite, that includes C++ compiler and libstd++
+then we take it's libraries; e.g. we take it's .dll file and copy it and pack with program (NSIS installer)
+for example look in `contrib/nsis-installer-windows/bin/download.sh`, we take file as:
+`takedll x86 /usr/lib/gcc/i686-w64-mingw32/5.3-posix/libstdc++-6.dll`
+
+* sys-Gitian (for Macosx target)
+The Gitian platform (e.g. Ubuntu), provides cross-compiler suite, that includes C++ compiler and libstd++
+(also some files are from macosx SDK package, that is installed into Gitian as part of the Gitian process)
+some of this libs are linked statically,
+others are copied as `.dylib` files, see `contrib/macdeploy/build-dmg.sh`
+
+* sys-Gitian (for Linux target)
+The Gitian platform (e.g. Ubuntu), provides native-compiler suite, that includes C++ compiler and libstd++
+also other libraries are taken from system libraries.
+They are linked in statically,
+others are copied as `.so`a file, see ``.
+
+* libz - (zlib1g-dev) we need this dev lib to be in system because we rebuild NSIS on Gitian from source-code
+(afair to fix it to be deterministic).
+
+* libqt - [work in progress], we build it as native: on Linux from repo, on Windows - qtcreator (mingw),
+on Macosx - qtcreator (in brew?). Gitian process is not ready, but we plan: for Linux target: take system (Gitian) libs,
+for Windows target tell crosscompiler/qmake to use locally installed/unpacked qt...windows.zip, same on macosx.
+Windows/MSVC native is not planned currently (could be used by switching compiler in QTcreator probably).
+E.g. downloads from:
+https://www1.qt.io/download-open-source/?hsCtaTracking=f977210e-de67-475f-a32b-65cec207fd03%7Cd62710cd-e1db-46aa-8d4d-2f1c1ffdacea#section-2
+http://download.qt.io/official_releases/qt/5.9/5.9.2/qt-opensource-linux-x64-5.9.2.run
+http://download.qt.io/official_releases/qt/5.9/5.9.2/qt-opensource-mac-x64-5.9.2.dmg
+http://download.qt.io/official_releases/qt/5.9/5.9.2/qt-opensource-windows-x86-5.9.2.exe
+(and updated versions)
 
 =============================
 Sanitiziers

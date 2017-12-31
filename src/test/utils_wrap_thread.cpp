@@ -34,6 +34,7 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 			 wrap_thread(std::chrono::seconds(2), [&](){
 					while(!endflag) {
 						int volatile x=1,y=2; x=y; // to not have thread that never makes progress
+						if (x==y) { }
 					}
 			} );
 			vec.at(1) = std::move(mythread) ;
@@ -128,17 +129,29 @@ TEST(utils_wrap_thread, crossover_timelimit) {
 	, ""); // catch std::abort
 }
 
-TEST(utils_wrap_thread, assign_to_myself_not_possible) {
+// as function so that we can use pragma macros here, not inside EXPECT_DEATH() macro
+void test_utils_wrap_thread_assign_to_myself_not_possible() {
 	using namespace std::chrono_literals;
 
-	EXPECT_DEATH({
-		{
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wall"
+			// "-Wself-move"
+
 			// 1 second limit, 10 second sleep
 			wrap_thread not_possible(1s,[](){ std::this_thread::sleep_for(10s); });
+
 			not_possible = std::move(not_possible);
+
+			#pragma GCC diagnostic pop
 
 			wrap_thread not_possible2(1s,[](){ std::this_thread::sleep_for(10s); });
 			not_possible=std::move(not_possible2);
+}
+
+TEST(utils_wrap_thread, assign_to_myself_not_possible) {
+	EXPECT_DEATH({
+		{
+			test_utils_wrap_thread_assign_to_myself_not_possible();
 		}
 	}
 	, ""); // catch std::abort
@@ -147,7 +160,10 @@ TEST(utils_wrap_thread, assign_to_myself_not_possible) {
 TEST(utils_wrap_thread, assign_to_myself_possible) {
 	using namespace std::chrono_literals;
 	wrap_thread possible(3s,[](){ std::this_thread::sleep_for(1s); });
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wall"
 	possible = std::move(possible);
+			#pragma GCC diagnostic pop
 
 	wrap_thread possible2(3s,[](){ std::this_thread::sleep_for(1s); });
 	possible=std::move(possible2);
