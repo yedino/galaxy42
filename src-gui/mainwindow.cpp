@@ -29,6 +29,9 @@ MainWindow::MainWindow( QWidget *parent ) :
     runTunTap();
     ui->setupUi( this );
     ui->peerListWidget_2->setMainWindow( this );
+
+
+
     QString ip = getLocalIps().at( 0 );
     QString vip = getLocalVips().at( 0 ).split( '%' ).at( 0 );
     ui->quickStart->setIps( ip,vip );
@@ -60,8 +63,17 @@ MainWindow::MainWindow( QWidget *parent ) :
 
     m_tun_process = std::make_unique<tunserverProcess>();
 
+    QSound sound(":/sound");
+    sound.play();
+
+
 }
 
+void MainWindow::setDebugInfo(const QString &str)
+{
+    m_status_form->setDebugInfo(str);
+//   ui-> setDebugInfo(const QString &str);
+}
 
 void MainWindow::startNewCrpcConnection( const QString &host,uint port )//!@todo move to statusForm
 {
@@ -536,7 +548,28 @@ void MainWindow::runTunTap()
         sudo_script = "win_startscript.bat";
     }
 
+#ifdef WINNT
     QString program_pth = tuntap_path+"/"+program;
     QString script_path= tuntap_path+"/"+sudo_script;
+#else
+    QString program_pth = tuntap_path+"/"+program;
+    QString script_path = sudo_script;
+#endif
+
+
     m_tuntap_runner = new TunTapRunner(this,program_pth,script_path);
 }
+
+
+void MainWindow::setBtc(uint64_t btc)
+{
+    if(btc != m_last_btc_value){
+        QSound sound(":/sound");
+        sound.play();
+        m_status_form->setStatus(QString (tr("avaible founds:") +
+                                          QString::number(int(btc/1e8))+"."
+                                          +QString::number(int(btc)%int(1e8))
+                                          +" BTC"));
+    }
+}
+
