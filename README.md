@@ -64,6 +64,9 @@ For more details, including correct naming and **glossary**, and advanced techni
 ### Version v0.3.3a (pre-alpha)
 
 * Summary: multi-threading tools, tests, network model, utils; RPC commands, and GUI, fixes.
+* Warnings:
+  * Macosx Gitian process is not working in this release (fix in next one).
+  * Do not use Bitcoin support, nor GUI, it's just an experiment.
 * Draft of Bitcoin RPC interaction (do NOT use for anything other then testnet!!).
   * RPC commands for Bitcoin: `get_status` `pay` `set_account`.
   * GUI: RPC connect timeout changes, more errors supported.
