@@ -185,7 +185,7 @@ void peersModel::confirmAddPeer( const MeshPeer& peer )
         auto pp = findPeer( peer );
         pp->status = MeshPeer::STATUS::connected;
         pp->comm_status = MeshPeer::COMMANDSTATUS::acknowled;
-
+        emit dataChanged(index(0,0),index(m_peers_list.size()-1,0));									//!@todo check the minimal size of change
     } catch( std::runtime_error &e ) {
         qDebug()<<e.what();
         beginInsertRows( createIndex( m_peers_list.size(),0 ),m_peers_list.size(),m_peers_list.size()+1 );
@@ -238,7 +238,7 @@ void peersModel::updatePeerList( QList<MeshPeer*> new_list )
         it->comm_status = MeshPeer::COMMANDSTATUS::acknowled;
     }
 
-    beginInsertRows( createIndex( 0,0 ),0,new_list.size() );
+    beginInsertRows( createIndex( 0,0 ),0,new_list.size()-1 );
     m_peers_list = new_list;
     endInsertRows();
 }

@@ -49,6 +49,7 @@ void CommandSender::sendCommand( CommandSender::orderType type )
 {
     if( m_wait_name_flag && type != orderType::GETNAME ) {
         throw std::runtime_error ( tr( "can't send msg while witing for rpc name of client" ).toStdString() );
+//        return;
     }
 
     try {
@@ -84,6 +85,9 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
     case orderType::GETNAME:
         ord = std::make_shared<getClientName> ();
         break;
+    case orderType::GET_STATUS:
+        ord = std::make_shared<statusOrder>(m_counter.getRpcId());
+        break;
     default:
         throw std::runtime_error ( tr( "improper number of parameters for this function" ).toStdString() );
         break;
@@ -100,13 +104,19 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
     case orderType::ADDPEER:
         ord = std::make_shared<addPeerOrder> ( m_counter.getRpcId(),peer );
         break;
-
     case orderType::DELETEPEER:
         ord = std::make_shared<deletePeerOrder> ( m_counter.getRpcId(),peer );
         break;
-
     case orderType::BANPEER:
         ord = std::make_shared<banPeerOrder> ( m_counter.getRpcId(),peer );
+        break;
+    case orderType::PAY:{
+        uint32_t pay = peer.getToPay();
+        ord = std::make_shared<payOrder> ( m_counter.getRpcId(),peer ,pay);
+        }
+        break;
+    case orderType::SET_ACCOUNT:
+        ord = std::make_shared<setAccountOrder> ( m_counter.getRpcId(),peer );
         break;
     default:
         throw std::runtime_error ( tr( "can't create order with this params list" ).toStdString() );
