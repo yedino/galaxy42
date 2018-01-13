@@ -1430,7 +1430,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		// if (nr_sock==0) addr_listen = asio::ip::address::from_string("192.168.113.16");
 		// if (nr_sock==1) addr_listen = asio::ip::address::from_string("192.168.1.102");
 		_mark("Using special addressing (TEST!)"); // XXX TODO
-		_mark("Listen on: " << addr_listen);
+		_mark("Listen on: " << addr_listen << " port " << port_nr);
 
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));

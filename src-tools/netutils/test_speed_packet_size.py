@@ -12,7 +12,10 @@ import signal
 import threading
 from subprocess import check_output, DEVNULL, Popen
 
-PASSWORD = ''
+my_script_name = os.path.basename( os.path.realpath( sys.argv[0] ) )
+
+PASSWORD=''
+
 
 # 1. Computer R1 will spam us. This computer must have running sender-programs in remote mode (waiting on different port numbers for RPC)
 # 2. We start local receiver program (netmodel), and tell remote sender(s) to spam us
@@ -24,23 +27,29 @@ MESSAGE_TEMPLATE = '{} SEND {} {} 999000 foo {} -1 {} -1\n'
 PROGRAM_NETMODEL = '../../build/tunserver.elf'
 PROGRAM_NETMODEL_ARGS = [PROGRAM_NETMODEL, '--mode-bench', '192.168.1.107', '2121', 'crypto=0', 'wire_buf=100', 'wire_sock=1',
                 'wire_ios=1', 'wire_ios_thr=2', 'tuntap_weld=1', 'tuntap_sock=1', 'tuntap_ios=1', 'tuntap_ios_thr=1',
-                'tuntap_weld_sleep=1', 'tuntap_block', 'mt_strand', 'mport']
+                'tuntap_weld_sleep=1', 'tuntap_block', 'mt_strand', 'mport',
+                'tuntap_use_real=1', 'tuntap_async=1'
+                ]
 OUTPUT_FILE = 'speed_results.txt'
 
 RPC_BUFFER_SIZE = 1024 # for RPC text, e.g. when reading reply
 
 def myprint(s):
-    print("[python test] " + str(s))
+    print("[python " + my_script_name + " ] " + str(s))
 
 
 def run_recv_program():
     print('Running netmodel program with command: ', ' '.join(PROGRAM_NETMODEL_ARGS))
-    ret = Popen(PROGRAM_NETMODEL_ARGS, stderr=DEVNULL, stdout=DEVNULL)
+    ret = Popen(PROGRAM_NETMODEL_ARGS) # , stderr=DEVNULL, stdout=DEVNULL)
     time.sleep(1)
     return ret
 
 
 def rpc_test_remote_one_sender(thread_nr, size,  this_target_ip, this_target_port, rpc_ip, rpc_port, worker_result, worker_index ):
+    global PASSWORD
+    if (len(PASSWORD)<1):
+        raise Exception("Password is not set or incorrect (when trying to use it)")
+
     # for each RPC remote sending program:
     thread_name = "[RCP request thread #" + str(thread_nr) + "]";
     # myprint(thread_name + " thread started");
@@ -105,6 +114,7 @@ def rpc_test_remote_all(size, cmd_original):
     thread_table = []
 
     recv_process = run_recv_program() # start local reciving program
+    myprint("Recv process on PID=" + str(recv_process.pid))
 
     worker_result = ['new'] * thread_count
     for i in range(0, thread_count ):
@@ -159,10 +169,16 @@ def myrange(low,high,mod):
     return range(low2, high2, mod)
 
 
-def the_main
-    myprint("Starting the wire/packet-size tests. (run me with option --h to see help)");
+def the_main():
+    global PASSWORD
+
+    myprint("Starting the wire/packet-size tests. (run me with option --help to see help)");
     args = parse_args()
     PASSWORD = args.passwd
+    myprint("Using PASSWORD=[" + PASSWORD + "]")
+    if (len(PASSWORD)<1):
+        raise Exception("Password is not set or incorrect")
+
     ranges = args.ranges
     sizes = list([256,1472,8972])
 
@@ -178,23 +194,37 @@ def the_main
 
     sizes = list( reversed( sorted( sizes ) ) )
 
-    myprint("Will test sizes:")
-    myprint(sizes)
-    myprint("")
+    myprint("Will test sizes: " + str(sizes))
 
-    with open(OUTPUT_FILE, 'a') as file:
-        for i in sizes:
-            response = rpc_test_remote_all(i, args.cmd)
-            if (response == False):
-                os._exit(1)
-            file.write(str(i))
-            file.write('\t')
-            file.write(response)
-            file.write('\n')
+    for i_size in sizes:
+        myprint("Testing size " + str(i_size))
+        try:
+            response = rpc_test_remote_all(i_size, args.cmd)
+        except Exception as e:
+            myprint("Test failed, exception " + str(e))
+            os._exit(1)
+
+        if (response == False):
+            myprint("Test failed")
+            return False
+
+        try:
+            thefilename=OUTPUT_FILE
+            with open(thefilename, 'a') as thefile:
+                thefile.write(str(i_size))
+                thefile.write('\t')
+                thefile.write(response)
+                thefile.write('\n')
+                myprint("Saved results to file " + thefilename + " (result is: " + str(result))
+        except Exception as e:
+            myprint("Saving results to file failed!");
+            os._exit(1)
 
     myprint("All done")
 
 
 if __name__ == "__main__":
-    the_main
+    all_ok = the_main()
+    if (all_ok != True):
+        os._exit(1)
 
