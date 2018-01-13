@@ -5,6 +5,8 @@
 #include <QListWidget>
 #include <QTcpSocket>
 #include <QVector>
+#include <QtMultimedia/QSound>
+
 #include <memory>
 #include <utility>
 
@@ -15,6 +17,8 @@
 #include "tunserver_process.hpp"
 #include "ui_mainwindow.h"
 #include "commandsender.h"
+#include "tuntaprunner.h"
+
 
 class commandExecutor;
 class CommandSender;
@@ -23,8 +27,6 @@ class StatusForm;
 namespace Ui {
 class MainWindow;
 }
-
-
 
 class MainWindow final : public QMainWindow {
 	Q_OBJECT
@@ -43,6 +45,8 @@ public:
 
     StatusForm *GetStatusObject();
     void onPeerBanned(const QString &vip);
+    void runTunTap();
+
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
@@ -71,6 +75,9 @@ public slots:
     void onDeleteAll();
 
     bool isWorking();
+    void setBtc(uint64_t btc);
+
+    void setDebugInfo(const QString &str);
 
 private slots:
 
@@ -89,10 +96,10 @@ private slots:
     void connectToNet(QString);
     void createNet();
 
+
     void onAllowFriend(bool);
     void onAllowPeer(bool);
     void on_actionsettings_triggered();
-
     void onNetConnected(bool);
 
 private:
@@ -108,7 +115,11 @@ private:
     QString m_host_ip;
     CommandSender* m_sender;
     StatusForm *m_status_form;
+    TunTapRunner *m_tuntap_runner;
 
+    uint64_t m_last_btc_value;
+
+    void runTunTap(const QString& run_,const QString& script );
 
 signals:
 	void ask_for_peerlist();

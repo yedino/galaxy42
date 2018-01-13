@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network multimedia
+MOBILITY += multimedia
 greaterThan(QT_MAJOR_VERSION, 4.8): QT += widgets
 
 QMAKE_CC = gcc
@@ -148,5 +149,6 @@ TRANSLATIONS = hellotr_pl.ts
 
 
 RESOURCES += \
-    icons.qrc
+    icons.qrc \
+    sounds.qrc
 

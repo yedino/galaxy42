@@ -9,7 +9,7 @@ int main( int argc, char *argv[] ) {
         qDebug() << "sodium init error";
         return 1;
     }
-//    TunTapRunner runer;
+
 
     QCoreApplication::setOrganizationName( "Tigusoft" );
     QCoreApplication::setOrganizationDomain( "https://github.com/yedino/galaxy42" );
