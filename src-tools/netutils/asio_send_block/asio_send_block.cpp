@@ -306,17 +306,20 @@ int c_maintask::run(int argc, const char * argv[])
 	_info("Starting the sending run");
 
 	if (argc < 3) {
+		_warn("Too few options");
 		print_usage();
 		print_help_sendcommand();
 		return 1;
 	}
+	_info("Parsing (start)");
 	host = argv[1];
 	port = argv[2];
 	speed = std::stoi(argv[3]);
 	burst = 50;
 
 	interactive=true;
-	count_infinite=false; // infinute count sends forever
+	count_infinite=false; // infinite count sends forever
+	_info("Parsing (start)");
 
 	if (argc >= 2+3+1) {
 		interactive=false;
@@ -469,9 +472,11 @@ int main(int argc, const char * argv[]) {
 	}
 
 	if (run_remote) {
+		_info("Will run remote");
 		return maintask.run_remote(argc,argv);
 	}
 	else {
+		_info("Will run (normal, not remote)");
 		return maintask.run(argc,argv);
 	}
 }
