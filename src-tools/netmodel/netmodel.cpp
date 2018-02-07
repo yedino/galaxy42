@@ -1433,11 +1433,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 //		_mark("Listen on: " << addr_listen << " port " << port_nr);
 
 		using namespace boost::asio::ip;
-		thesocket = udp::socket (io_service, udp::endpoint(udp::v4(), port_nr));
+		using namespace boost::asio;
+		//thesocket = udp::socket (io_service, udp::endpoint(udp::v4(), port_nr)); // ?
 
-//		thesocket.open( asio::ip::udp::v4() );
+		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-//		thesocket.bind( asio::ip::udp::endpoint( addr_listen , port_nr ) );
+		thesocket.bind( asio::ip::udp::endpoint( addr_listen , port_nr ) );
 	}
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
