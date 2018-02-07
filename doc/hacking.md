@@ -18,9 +18,15 @@ As developer, you might add to ~/.bashrc lines to choose clang++ as compiler, or
 and line to wrap in ccache the compiler for fast recompile.
 E.g. add to ~/.bashrc :
 ```
-export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang++-4.0 -E"
+# pick one of:
+export CC="gcc" ; export CXX="g++" ; export CPP="gcc -E"
+export CC="clang" ; export CXX="clang++" ; export CPP="clang -E"
+export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang-4.0 -E"
+# enable this also, if you have ccache:
 export CC="ccache $CC" ; export CXX="ccache $CXX" ; export CPP="ccache $CPP"
 ```
+
+And reload it (in bash) do `source ~/.bashrc` (or start new shell).
 
 # Debugging
 
