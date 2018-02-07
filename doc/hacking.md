@@ -25,7 +25,7 @@ export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang-4.0 -E"
 # enable this also, if you have ccache:
 export CC="ccache $CC" ; export CXX="ccache $CXX" ; export CPP="ccache $CPP"
 # set this to number of CPU cores, but limit for free RAM, 0.5 GB RAM per thread (for Yedino) :
-THREADS=6
+export THREADS=6
 ```
 
 And reload it (in bash) do `source ~/.bashrc` (or start new shell).
