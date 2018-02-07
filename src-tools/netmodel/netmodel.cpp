@@ -1619,8 +1619,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			void *recv_buff_ptr;
 			size_t receive_size, found_ix;
 			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+			// TODO is this nice/correct? lambda takes reference to self:
 			c_tuntap_base_obj::read_handler read_handler =
-				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
+				[&welds, &welds_mutex, found_ix, func_send_weld, & read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
 				(const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec)
 				{
 					_UNUSED(buf);
