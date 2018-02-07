@@ -86,6 +86,7 @@ function platform_recognize {
 }
 
 function thread_setting {
+	echo "Detecting threads setting... (can be configured in system as THREADS=N where N is a number)"
 	if [[ -z ${THREADS+x} ]]
 	then
 		echo "THREADS variable is not set, will use default (THREADS=1)"
@@ -276,3 +277,6 @@ pushd $dir_build
 
 	set +x
 popd
+
+
+echo "Script ./do finished. Was working with THREADS=$THREADS"
