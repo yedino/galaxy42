@@ -9,8 +9,9 @@
 #include <thread>
 #include <functional>
 
-#define _warn(X) { std::cerr << __LINE__ << " Warning: " << X << std::endl; }
+#define _warn(X) { std::cerr << __LINE__ << " WARNING: " << X << std::endl; }
 #define _info(X) { std::cerr << __LINE__ << " Info: " << X << std::endl; }
+#define _dbg1(X) { std::cerr << __LINE__ << " Dbg : " << X << std::endl; }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +312,7 @@ int c_maintask::run(int argc, const char * argv[])
 		print_help_sendcommand();
 		return 1;
 	}
-	_info("Parsing (start)");
+	_dbg1("Parsing (start)");
 	host = argv[1];
 	port = argv[2];
 	speed = std::stoi(argv[3]);
@@ -319,9 +320,10 @@ int c_maintask::run(int argc, const char * argv[])
 
 	interactive=true;
 	count_infinite=false; // infinite count sends forever
-	_info("Parsing (start)");
+	_dbg1("Parsing (after first)");
 
 	if (argc >= 2+3+1) {
+		_dbg1("Parsing (long)");
 		interactive=false;
 		message = argv[4];
 		bytes = std::stoi(argv[5]);
