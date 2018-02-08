@@ -1053,7 +1053,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	for (const string & arg : options) mycmdline.add(arg);
 	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
 	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
-	auto func_cmdline_str = [&mycmdline](const string &name, string &def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
+	auto func_cmdline_str = [&mycmdline](const string &name, const string &def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
 
 
 	const int cfg_num_inbuf = func_cmdline("wire_buf"); // e.g. 32 ; this is also the number of flows (wire/p2p connections)
