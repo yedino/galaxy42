@@ -1245,7 +1245,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			);
 			ios_wire_thread.push_back( std::move( thread_run ) );
 		}
-	}
+        }
 	_note("WIRE: ios threads are running.");
 
 	vector<std::thread> ios_tuntap_thread;
@@ -1278,12 +1278,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
-	std::thread thread_stop(
-        [&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout,&cfg_stats_format] {
+        std::thread thread_stop(
+                    [&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout,&cfg_stats_format] {
 
 			std::vector<double> speed_tab;
 
-			auto run_time_start = std::chrono::steady_clock::now(); 
+			auto run_time_start = std::chrono::steady_clock::now();
 
 			for (long int sample=0; true; ++sample) {
 				std::this_thread::sleep_for( std::chrono::milliseconds(500) );
@@ -1305,13 +1305,13 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				oss << "Loop. ";
 
 
-                if(cfg_stats_format.find('w')!=string::npos){
-                    oss << "Wire: RECV={" << g_speed_wire_recv << "} ";
-                }
-                if(cfg_stats_format.find('t')!=string::npos){
-                    oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
-                    oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
-                }
+                                if(cfg_stats_format.find('w')!=string::npos){
+                                    oss << "Wire: RECV={" << g_speed_wire_recv << "} ";
+                                }
+                                if(cfg_stats_format.find('t')!=string::npos){
+                                    oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+                                    oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
+                                }
 
 				oss << "; ";
 				oss << "Tuntap: ";
