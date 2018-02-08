@@ -1297,9 +1297,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				// [counter] read
 				std::ostringstream oss;
 				oss << "Loop. ";
-//				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
-				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
-				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
+                                oss << "Wire: RECV={" << g_speed_wire_recv << "}";
+//				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+//				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
 				oss << "; ";
 				oss << "Tuntap: ";
 				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
