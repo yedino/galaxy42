@@ -1052,8 +1052,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	t_mycmdline mycmdline;
 	for (const string & arg : options) mycmdline.add(arg);
 	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
-	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
-    auto func_cmdline_str = [&mycmdline](const string &name, string def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
+	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ; 
+	auto func_cmdline_str = [&mycmdline](const string &name, string def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
 
 
 	const int cfg_num_inbuf = func_cmdline("wire_buf"); // e.g. 32 ; this is also the number of flows (wire/p2p connections)
@@ -1102,9 +1102,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const int cfg_tuntap_ios_threads_per_one = func_cmdline("tuntap_ios_thr"); // for each ios of tuntap (if any ios are created for tuntap) how many threads to .run it in
 	const bool cfg_tuntap_use_real_tun = func_cmdline("tuntap_use_real"); // if true real tuntap is used
 	const bool cfg_tuntap_async = func_cmdline("tuntap_async");
-
-    const string cfg_stats_format = func_cmdline_str("stats_format", std::string(""));
-    _mark("stats_format configuration: \"" << cfg_stats_format);
+	const string cfg_stats_format = func_cmdline_str("stats_format", std::string(""));
+	_mark("stats_format configuration: \"" << cfg_stats_format);
 
 
 
@@ -1305,8 +1304,6 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				std::ostringstream oss;
 				oss << "Loop. ";
 
-               // std::size_t find_w = cfg_stats_format.find('w');
-               // std::size_t find_t = cfg_stats_format.find('t');
 
                 if(cfg_stats_format.find('w')!=string::npos){
                     oss << "Wire: RECV={" << g_speed_wire_recv << "} ";
