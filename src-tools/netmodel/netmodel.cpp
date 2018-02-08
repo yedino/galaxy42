@@ -583,6 +583,7 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 				mutable // to modify copied buffers
 				-> void
 			{
+				_UNUSED(worker_nr);
 				try {
 					t_bytes local_msg_buf  = msg_buf;
 					t_bytes local_two_buf  = two_buf;
@@ -1407,7 +1408,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
 	} else {
 		_info("Create fake TUN/TAP");
-		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
+		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", cfg_port_faketuntap);
 	}
 
 	// sockets for wire p2p connections:
@@ -1425,12 +1426,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		socket_array.push_back( with_strand<ThreadObject<boost::asio::ip::udp::socket>>(*one_ios, *one_ios) );
 		boost::asio::ip::udp::socket & thesocket = socket_array.back().get_unsafe_assume_in_strand().get();
 
-		auto addr_listen = asio::ip::address::from_string("0.0.0.0");
+		auto addr_listen = asio::ip::address_v4::any(); // ::from_string("0.0.0.0"); // ?
 		// asio::ip::address_v4::any();
 		// if (nr_sock==0) addr_listen = asio::ip::address::from_string("192.168.113.16");
 		// if (nr_sock==1) addr_listen = asio::ip::address::from_string("192.168.1.102");
-		_mark("Using special addressing (TEST!)"); // XXX TODO
-		_mark("Listen on: " << addr_listen);
+//		_mark("Using special addressing (TEST!)"); // XXX TODO
+//		_mark("Listen on: " << addr_listen << " port " << port_nr);
+
+		using namespace boost::asio::ip;
+		using namespace boost::asio;
+		//thesocket = udp::socket (io_service, udp::endpoint(udp::v4(), port_nr)); // ?
 
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
@@ -1615,8 +1620,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			void *recv_buff_ptr;
 			size_t receive_size, found_ix;
 			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+			// TODO is this nice/correct? lambda takes reference to self:
 			c_tuntap_base_obj::read_handler read_handler =
-				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
+				[&welds, &welds_mutex, found_ix, func_send_weld, & read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
 				(const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec)
 				{
 					_UNUSED(buf);
