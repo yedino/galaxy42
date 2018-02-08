@@ -1238,9 +1238,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					while (!g_atomic_exit) {
 						ios_wire.at( ios_nr )->run(); // <=== this blocks, for entire main loop, and runs (async) handlers here
 						_note("WIRE: ios worker run (ios_thread="<<ios_thread<<" on ios_nr=" << ios_nr <<") is done... will restat?");
-						std::this_thread::sleep_for( std::chrono::milliseconds(100) );
-					}
-					_note("WIRE:ios (wire) worker run (ios_thread="<<ios_thread<<") - COMPLETE");
+                                                std::this_thread::sleep_for( std::chrono::milliseconds(100) );
+                                        }
+                                        _note("WIRE:ios (wire) worker run (ios_thread="<<ios_thread<<") - COMPLETE");
 				}
 			);
 			ios_wire_thread.push_back( std::move( thread_run ) );
