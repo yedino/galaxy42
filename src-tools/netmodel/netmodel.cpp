@@ -1052,7 +1052,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	t_mycmdline mycmdline;
 	for (const string & arg : options) mycmdline.add(arg);
 	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
-	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ; 
+	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
 	auto func_cmdline_str = [&mycmdline](const string &name, string &def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
 
 
@@ -1283,7 +1283,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 			std::vector<double> speed_tab;
 
-			auto run_time_start = std::chrono::steady_clock::now();
+			auto run_time_start = std::chrono::steady_clock::now(); 
 
 			for (long int sample=0; true; ++sample) {
 				std::this_thread::sleep_for( std::chrono::milliseconds(500) );
