@@ -108,6 +108,7 @@ response_menu_task="$response"
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	echo "" ; echo "Running menu command '$item'." ; echo ""
 
+	set -x
 	case "$item" in
 		i)
 			if [[ $EUID -ne 0 ]]; then
@@ -268,9 +269,10 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 
 	esac
 done
+set +x
 
 printf "\n\n\n"
-printf "End of the developer menu program."
+printf "End of the developer menu program ($0)."
 printf "\n\n"
 
 

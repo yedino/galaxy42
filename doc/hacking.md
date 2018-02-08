@@ -16,10 +16,32 @@ Run ./install.sh and set up the tools.
 
 As developer, you might add to ~/.bashrc lines to choose clang++ as compiler, or to choose given version of it,
 and line to wrap in ccache the compiler for fast recompile.
-E.g. add to ~/.bashrc :
+
+E.g. add to ~/.bashrc following options,
+and *reload it* (in bash) do `source ~/.bashrc` (or start new shell).
+
+Compile options in bashrc:
+
 ```
-export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang++-4.0 -E"
+# pick one of:
+export CC="gcc" ; export CXX="g++" ; export CPP="gcc -E"
+export CC="clang" ; export CXX="clang++" ; export CPP="clang -E"
+export CC="clang-4.0" ; export CXX="clang++-4.0" ; export CPP="clang-4.0 -E"
+# enable this also, if you have ccache:
 export CC="ccache $CC" ; export CXX="ccache $CXX" ; export CPP="ccache $CPP"
+# set this to number of CPU cores, but limit for free RAM, 0.5 GB RAM per thread (for Yedino) :
+export THREADS=6
+```
+
+Aliases for GIT (and then use this command instead, like `GLOG`).
+
+```
+alias GLOL='git log --oneline --graph --decorate --all'
+alias GLOG='git log --show-signature --stat'
+alias GF='git fetch --all'
+
+alias GM='git fetch --all ; git merge --ff-only'
+alias Gm='git merge --ff-only'
 ```
 
 # Debugging

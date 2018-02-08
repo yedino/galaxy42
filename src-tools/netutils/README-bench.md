@@ -11,7 +11,26 @@ Needed source:
 
 # Configuration
 
-Example ~/.bashrc
+Example `/.bashrc` to configure e.g. helpers.
+
+We assume helpers (computers that will run other side of tests) are configured on IPs:
+
+* helper-fast - computer with fast wire (fiber)
+* * 192.168.1.66 is his normal LAN IP (for accepting RPC commands)
+* * 192.168.113.x (e.g. .32) is this helper's IP on his first fast (fiber)
+* * 192.168.114.x (e.g. .32) is this helper's IP on his second fast (fiber)
+
+* helper-normal - computer with regular connection to you, can be same LAN as the one used for RPC
+* * 192.168.1.108 is his normal LAN IP (for accepting RPC commands, and for sending spam on)
+
+* This computer where you run tests is connected
+* * to LAN: you are in LAN on IP 192.168.1.108
+* * to fast (fiber) with helper-fast: his fiber 1 connects to you and your side is 182.168.113.16
+* * to fast (fiber) with helper-fast: his fiber 2 connects to you and your side is 182.168.114.16
+
+If not then edit following IPs.
+
+You should also change below example *secret password* "..PASS.." to other value (security).
 
 ```
 
@@ -37,6 +56,9 @@ YEDINO_BENCH_RPC_PASS1='nektargruszkawilliams' # set this password on all comput
 # High level
 
 There will be one big script to run all other tests and graph the results and all.
+
+Script is now WIP, run it via
+`./menu ball`
 
 ---
 
