@@ -41,7 +41,6 @@ uint32_t bitcoin_node_cli::get_balance() const {
 	const std::string receive_data = send_request_and_get_response(request);
 	_mark("Receive data " << receive_data);
 
-	std::setlocale(LC_ALL, "en_US.UTF-8");
 	nlohmann::json json = nlohmann::json::parse(receive_data.c_str());
 	double btc_amount = json.at("result").get<double>();
 	return btc_amount * 100'000'000. ; // return balance in satoshi

@@ -304,6 +304,8 @@ int main(int argc, const char **argv) { // the main() function
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
+	std::setlocale(LC_ALL, "en_US.UTF-8");
+
 
 	if (contains_value(argt,"--print-flags-flavour")) {
 		main_print_flavour();
