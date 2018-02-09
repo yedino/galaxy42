@@ -30,7 +30,10 @@ echo "OK, working in PWD=[$PWD] with bundle_dir=[$bundle_dir]"
 
 status_title "Will start all tests"
 
-[[ -z "$YEDINO_BENCH_CONFIGURED" ]] && fail "Please configure your system for automatic benchmarks, see file allbench.txt"
+[[ -z "$YEDINO_BENCH_CONFIGURED" ]] && {
+	manfn="${bundle_dir}./src-tools/netutils/README-bench.md"
+	fail "Please configure your system for automatic benchmarks, see file README-bench.md ($manfn)"
+}
 
 echo "This will be running all bench tests"
 
@@ -45,7 +48,7 @@ echo "Will run tests on ($cpu_all_2)"
 status_hints_start
 echo "Make sure, that following programs are run on helper-fast computer: (see doc $readme_bench)"
 for port in $port1 $port2 $port3 $port4 ; do
-	echo './asio_send_block remote ' $YEDINO_BENCH_PEER_FAST_RPC_IP ' ' $port '  0.0.0.0       $((5*24*60*60))  $YEDINO_BENCH_RPC_PASS1'
+	echo './asio_send_block remote ' $YEDINO_BENCH_PEER_FAST_RPC_IP ' ' $port '  0.0.0.0       $((5*24*60*60))  "$YEDINO_BENCH_RPC_PASS1"'
 done
 echo "And configure there password (as you have here, probably in your ~/.bashrc)"
 status_hints_end
