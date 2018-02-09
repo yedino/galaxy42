@@ -80,6 +80,8 @@ class c_timerfoo {
 		std::string get_info() const ;
 		void print_info(std::ostream & ostr) const ;
 
+		void save_to_file(std::ofstream & data_file) const; ///< saves the main timer to a data-file (e.g. for parsing with other tools)
+
 		void step(); ///< one step of the cycle
 		void calc_speed_now();
 		double get_speed() const;
@@ -261,15 +263,20 @@ void c_timerfoo::print_info(std::ostream & ostr) const {
 
 		<< " Mb/s" ;
 	ostr << " ";
-
-	std::ofstream result_file("/tmp/result.txt");
-	if (result_file.is_open())
-	{
-		result_file << m_total_speed_bytes;
-		result_file.close();
-	}
 	if (detail>=1) { ostr << std::setw(6) << current_count << " p "; }
 	ostr << std::setw(4) << m_speed_pck_now << " Mp/s" ;
+}
+
+void c_timerfoo::save_to_file(std::ofstream & data_file) const { ///< saves the main timer to a data-file (e.g. for parsing with other tools)
+	if (data_file.is_open()) {
+		data_file << m_total_speed_bytes << std::endl;
+		if ( ! data_file.good() ) {
+			std::cerr << "Warning (" << __FILE__ << ") saving to data file failed.";
+		}
+	}
+	else {
+		std::cerr << "Warning (" << __FILE__ << ")  data file is not open (for saving).";
+	}
 }
 
 std::ostream & operator<<(std::ostream & ostr, c_timerfoo & timer) {

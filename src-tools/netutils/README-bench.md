@@ -28,26 +28,27 @@ We assume helpers (computers that will run other side of tests) are configured o
 * * to fast (fiber) with helper-fast: his fiber 1 connects to you and your side is 182.168.113.16
 * * to fast (fiber) with helper-fast: his fiber 2 connects to you and your side is 182.168.114.16
 
-If not then edit following IPs.
+If not then **edit following IPs** (You should also change below example **secret password** "..PASS.." to other text for security).
 
-You should also change below example *secret password* "..PASS.." to other value (security).
+Put this (with above changed) into ~/.bashrc (and reload/restart console)
 
 ```
 
 ### PUBLIC configuration of yedino
+export YEDINO_BENCH_CONFIGURED="yes" # set this to yes.
 # normal LAN
-YEDINO_BENCH_PEER_NORM_RPC_IP='192.168.1.66'  # peer that can spam you, over normal LAN - his RPC IP
-YEDINO_BENCH_SELF_NORM_WIRE_IP='192.168.1.101' # your IP on the normal LAN, that will be target of the spam
+export YEDINO_BENCH_PEER_NORM_RPC_IP='192.168.1.66'  # peer that can spam you, over normal LAN - his RPC IP
+export YEDINO_BENCH_SELF_NORM_WIRE_IP='192.168.1.101' # your IP on the normal LAN, that will be target of the spam
 # faster LAN - eg 10 Gbps
-YEDINO_BENCH_PEER_FAST_RPC_IP='192.168.1.66'   # peer that can spam you, over 10Gigabit LAN - his RPC IP
-YEDINO_BENCH_SELF_FAST_WIRE_IP1='192.168.113.16' # your IP on 10Gigabit LAN, that will be target of the spam, IP 1
-YEDINO_BENCH_SELF_FAST_WIRE_IP2='192.168.114.16' # your IP on 10Gigabit LAN, that will be target of the spam, IP 2
+export YEDINO_BENCH_PEER_FAST_RPC_IP='192.168.1.66'   # peer that can spam you, over 10Gigabit LAN - his RPC IP
+export YEDINO_BENCH_SELF_FAST_WIRE_IP1='192.168.113.16' # your IP on 10Gigabit LAN, that will be target of the spam, IP 1
+export YEDINO_BENCH_SELF_FAST_WIRE_IP2='192.168.114.16' # your IP on 10Gigabit LAN, that will be target of the spam, IP 2
 # other peer to whom you will forward received data
-YEDINO_BENCH_OTHER_WIRE_IP='192.168.1.108'      # other peer, to which you will send some data in some tests
-YEDINO_BENCH_RPC_PASS1='' # set this password on all computers participating in network lan tests
+export YEDINO_BENCH_OTHER_WIRE_IP='192.168.1.108'      # other peer, to which you will send some data in some tests
+export YEDINO_BENCH_RPC_PASS1='' # set this password on all computers participating in network lan tests
 
 ### SECRET configuration of yedino
-YEDINO_BENCH_RPC_PASS1='nektargruszkawilliams' # set this password on all computers participating in network lan tests
+export YEDINO_BENCH_RPC_PASS1='nektargruszkawilliams' # set this password on all computers participating in network lan tests
 
 
 ```
