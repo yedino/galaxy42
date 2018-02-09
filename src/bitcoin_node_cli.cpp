@@ -1,5 +1,4 @@
 #include "bitcoin_node_cli.hpp"
-#include <clocale>
 #include <json.hpp>
 
 std::once_flag c_curl_ptr::s_curl_init_flag;
