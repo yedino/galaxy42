@@ -68,6 +68,17 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #define addrvoid(X) ( static_cast<const void*>( & (X) ) )
 
+
+unique_ptr<std::ofstream> open_out_file_checked(const std::string & name) {
+	_mark("Opening out file: [" << name << "]");
+	auto the_file = make_unique<std::ofstream>(name.c_str());
+	if (! the_file->good()) {
+		_erro("Can not open file: [" << name << "]");
+		throw std::runtime_error("Can not open out file");
+	}
+	return the_file;
+}
+
 namespace n_netmodel {
 
 bool g_debug = false;
@@ -1053,7 +1064,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	for (const string & arg : options) mycmdline.add(arg);
 	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
 	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
-	auto func_cmdline_str = [&mycmdline](const string &name, string &def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
+	auto func_cmdline_str = [&mycmdline](const string &name, const string &def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
 
 
 	const int cfg_num_inbuf = func_cmdline("wire_buf"); // e.g. 32 ; this is also the number of flows (wire/p2p connections)
@@ -1105,6 +1116,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const string cfg_stats_format = func_cmdline_str("stats_format",string(""));
 	_mark("stats_format configuration: [" << cfg_stats_format<<"]");
 
+	const string cfg_data_fileprefix = func_cmdline_str("data_prefix", string("/tmp/netmodel_")); // e.g. /tmp/netmodel_speed_wire.txt
+	_mark("Will save data to file prefix: [" << cfg_data_fileprefix << "]");
 
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
@@ -1271,6 +1284,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("All ios run are running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
+	auto data_file_wire   = open_out_file_checked(cfg_data_fileprefix + "speed_wire.txt");
+	auto data_file_tuntap = open_out_file_checked(cfg_data_fileprefix + "speed_tuntap.txt");
 
 	// --- welds var ---
 	vector<c_weld> welds;
@@ -1278,8 +1293,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
-        std::thread thread_stop(
-                    [&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout,&cfg_stats_format] {
+
+	std::thread thread_stop(
+		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout , & cfg_stats_format,
+		& data_file_wire, & data_file_tuntap
+		]
+	{
 
 			std::vector<double> speed_tab;
 
@@ -1305,13 +1324,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				oss << "Loop. ";
 
 
-                                if(cfg_stats_format.find('w')!=string::npos){
-                                    oss << "Wire: RECV={" << g_speed_wire_recv << "} ";
-                                }
-                                if(cfg_stats_format.find('t')!=string::npos){
-                                    oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
-                                    oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
-                                }
+			if(cfg_stats_format.find('w')!=string::npos){
+					oss << "Wire: RECV={" << g_speed_wire_recv << "} ";
+			}
+			if(cfg_stats_format.find('t')!=string::npos){
+					oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+					oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
+			}
+
+			g_speed_wire_recv.save_to_file( *data_file_wire );
+			g_speed_tuntap_read.save_to_file( *data_file_tuntap ); // ? not sure if this is ok. --rfree
 
 				oss << "; ";
 				oss << "Tuntap: ";

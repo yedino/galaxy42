@@ -25,12 +25,15 @@ PASSWORD=''
 TEST_TIME_IN_SEC = 10 # how long 1 test should take
 MESSAGE_TEMPLATE = '{} SEND {} {} 999000 foo {} -1 {} -1\n'
 PROGRAM_NETMODEL = '../../build/tunserver.elf'
+PROGRAM_RESULT_PREFIX = "/tmp/netmodel_"
 PROGRAM_NETMODEL_ARGS = [PROGRAM_NETMODEL, '--mode-bench', '192.168.1.107', '2121', 'crypto=0', 'wire_buf=100', 'wire_sock=1',
                 'wire_ios=1', 'wire_ios_thr=2', 'tuntap_weld=1', 'tuntap_sock=1', 'tuntap_ios=1', 'tuntap_ios_thr=1',
                 'tuntap_weld_sleep=1', 'tuntap_block', 'mt_strand', 'mport',
-                'tuntap_use_real=1', 'tuntap_async=1'
+                'tuntap_use_real=1', 'tuntap_async=1', 'stats_format=w',
+                'data_prefix='+PROGRAM_RESULT_PREFIX,
                 ]
 OUTPUT_FILE = 'speed_results.txt'
+
 
 RPC_BUFFER_SIZE = 1024 # for RPC text, e.g. when reading reply
 
@@ -139,9 +142,14 @@ def rpc_test_remote_all(size, cmd_original):
 
     time.sleep(1)
     result=False
-    with open('/tmp/result.txt') as f:
-        result = f.read()
-        myprint(result)
+    fn = PROGRAM_RESULT_PREFIX + 'speed_wire.txt'
+    myprint("Reading results from file [" + fn + "]")
+    with open(fn) as fh:
+        for line in fh:
+            pass
+        last = line
+        result = last.strip()
+        myprint("Read result from the low-level test program: [" + result + "]")
 
     myprint("All " + str(thread_count) + " RPC client(s) done - all done here")
     return result
@@ -179,6 +187,11 @@ def the_main():
     if (len(PASSWORD)<1):
         raise Exception("Password is not set or incorrect")
 
+
+    thefilename=OUTPUT_FILE
+    myprint("Will save results to file ["+thefilename+"]")
+    os.remove(thefilename)
+
     ranges = args.ranges
     sizes = list([256,1472,8972])
 
@@ -200,6 +213,7 @@ def the_main():
         myprint("Testing size " + str(i_size))
         try:
             response = rpc_test_remote_all(i_size, args.cmd)
+            myprint("Got speed: " + response)
         except Exception as e:
             myprint("Test failed, exception " + str(e))
             os._exit(1)
@@ -210,21 +224,25 @@ def the_main():
 
         try:
             thefilename=OUTPUT_FILE
+            myprint("Saving speed results to file "+thefilename)
             with open(thefilename, 'a') as thefile:
                 thefile.write(str(i_size))
                 thefile.write('\t')
                 thefile.write(response)
                 thefile.write('\n')
-                myprint("Saved results to file " + thefilename + " (result is: " + str(result))
+                myprint("Saved results to file [" + os.getcwd() + '/' + thefilename + "] "
+                    +"(result is: " + str(response) + " for packet size " + str(i_size) + " )")
         except Exception as e:
-            myprint("Saving results to file failed!");
+            myprint("Saving results to file failed (" + str(e) + ")!");
             os._exit(1)
 
     myprint("All done")
+    return True
 
 
 if __name__ == "__main__":
     all_ok = the_main()
     if (all_ok != True):
+        myprint("the_main returned error.")
         os._exit(1)
 
