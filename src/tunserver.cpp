@@ -1343,6 +1343,7 @@ void c_tunserver::event_loop(int time) {
 
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+		UNUSED(anything_happened);
 
 		if (is_exiting) break;
 
