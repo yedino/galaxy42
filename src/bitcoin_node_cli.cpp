@@ -6,12 +6,6 @@ std::once_flag c_curl_ptr::s_curl_init_flag;
 c_curl_ptr::c_curl_ptr()
 :	m_ptr(nullptr)
 {
-	std::call_once(s_curl_init_flag, []{
-		CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-		if(res != CURLE_OK) {
-			throw std::runtime_error("curl_global_init error");
-		}
-	});
 	m_ptr = curl_easy_init();
 	if (m_ptr == nullptr) {
 		throw std::runtime_error("CURL init error");

@@ -1,5 +1,6 @@
 // Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include <clocale>
+#include <curl/curl.h>
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
@@ -305,6 +306,13 @@ int main(int argc, const char **argv) { // the main() function
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
 	std::setlocale(LC_ALL, "en_US.UTF-8");
+
+	std::call_once(c_curl_ptr::s_curl_init_flag, []{
+		CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+		if(res != CURLE_OK) {
+			throw std::runtime_error("curl_global_init error");
+		}
+	});
 
 
 	if (contains_value(argt,"--print-flags-flavour")) {
