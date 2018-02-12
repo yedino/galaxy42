@@ -9,8 +9,9 @@
 #include <thread>
 #include <functional>
 
-#define _warn(X) { std::cerr << __LINE__ << " Warning: " << X << std::endl; }
+#define _warn(X) { std::cerr << __LINE__ << " WARNING: " << X << std::endl; }
 #define _info(X) { std::cerr << __LINE__ << " Info: " << X << std::endl; }
+#define _dbg1(X) { std::cerr << __LINE__ << " Dbg : " << X << std::endl; }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,19 +307,23 @@ int c_maintask::run(int argc, const char * argv[])
 	_info("Starting the sending run");
 
 	if (argc < 3) {
+		_warn("Too few options");
 		print_usage();
 		print_help_sendcommand();
 		return 1;
 	}
+	_dbg1("Parsing (start)");
 	host = argv[1];
 	port = argv[2];
 	speed = std::stoi(argv[3]);
 	burst = 50;
 
 	interactive=true;
-	count_infinite=false; // infinute count sends forever
+	count_infinite=false; // infinite count sends forever
+	_dbg1("Parsing (after first)");
 
 	if (argc >= 2+3+1) {
+		_dbg1("Parsing (long)");
 		interactive=false;
 		message = argv[4];
 		bytes = std::stoi(argv[5]);
@@ -469,9 +474,11 @@ int main(int argc, const char * argv[]) {
 	}
 
 	if (run_remote) {
+		_info("Will run remote");
 		return maintask.run_remote(argc,argv);
 	}
 	else {
+		_info("Will run (normal, not remote)");
 		return maintask.run(argc,argv);
 	}
 }

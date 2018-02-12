@@ -599,6 +599,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 
 // my key @deprecated (newloop)
 void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
+	UNUSED(ipv6_prefix);
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 

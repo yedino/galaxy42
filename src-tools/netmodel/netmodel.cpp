@@ -68,6 +68,17 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #define addrvoid(X) ( static_cast<const void*>( & (X) ) )
 
+
+unique_ptr<std::ofstream> open_out_file_checked(const std::string & name) {
+	_mark("Opening out file: [" << name << "]");
+	auto the_file = make_unique<std::ofstream>(name.c_str());
+	if (! the_file->good()) {
+		_erro("Can not open file: [" << name << "]");
+		throw std::runtime_error("Can not open out file");
+	}
+	return the_file;
+}
+
 namespace n_netmodel {
 
 bool g_debug = false;
@@ -583,6 +594,7 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 				mutable // to modify copied buffers
 				-> void
 			{
+				_UNUSED(worker_nr);
 				try {
 					t_bytes local_msg_buf  = msg_buf;
 					t_bytes local_two_buf  = two_buf;
@@ -1052,6 +1064,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	for (const string & arg : options) mycmdline.add(arg);
 	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
 	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
+	auto func_cmdline_str = [&mycmdline](const string &name, const string &def) -> string { return get_from_cmdline(name,mycmdline,def); } ;
+
 
 	const int cfg_num_inbuf = func_cmdline("wire_buf"); // e.g. 32 ; this is also the number of flows (wire/p2p connections)
 	const int cfg_num_socket_wire = func_cmdline("wire_sock"); // 2 ; number of sockets - wire (p2p)
@@ -1099,6 +1113,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const int cfg_tuntap_ios_threads_per_one = func_cmdline("tuntap_ios_thr"); // for each ios of tuntap (if any ios are created for tuntap) how many threads to .run it in
 	const bool cfg_tuntap_use_real_tun = func_cmdline("tuntap_use_real"); // if true real tuntap is used
 	const bool cfg_tuntap_async = func_cmdline("tuntap_async");
+	const string cfg_stats_format = func_cmdline_str("stats_format",string(""));
+	_mark("stats_format configuration: [" << cfg_stats_format<<"]");
+
+	const string cfg_data_fileprefix = func_cmdline_str("data_prefix", string("/tmp/netmodel_")); // e.g. /tmp/netmodel_speed_wire.txt
+	_mark("Will save data to file prefix: [" << cfg_data_fileprefix << "]");
+
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
 
@@ -1231,14 +1251,14 @@ void asiotest_udpserv(std::vector<std::string> options) {
 					while (!g_atomic_exit) {
 						ios_wire.at( ios_nr )->run(); // <=== this blocks, for entire main loop, and runs (async) handlers here
 						_note("WIRE: ios worker run (ios_thread="<<ios_thread<<" on ios_nr=" << ios_nr <<") is done... will restat?");
-						std::this_thread::sleep_for( std::chrono::milliseconds(100) );
-					}
-					_note("WIRE:ios (wire) worker run (ios_thread="<<ios_thread<<") - COMPLETE");
+                                                std::this_thread::sleep_for( std::chrono::milliseconds(100) );
+                                        }
+                                        _note("WIRE:ios (wire) worker run (ios_thread="<<ios_thread<<") - COMPLETE");
 				}
 			);
 			ios_wire_thread.push_back( std::move( thread_run ) );
 		}
-	}
+        }
 	_note("WIRE: ios threads are running.");
 
 	vector<std::thread> ios_tuntap_thread;
@@ -1264,6 +1284,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	_goal("All ios run are running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
+	auto data_file_wire   = open_out_file_checked(cfg_data_fileprefix + "speed_wire.txt");
+	auto data_file_tuntap = open_out_file_checked(cfg_data_fileprefix + "speed_tuntap.txt");
 
 	// --- welds var ---
 	vector<c_weld> welds;
@@ -1271,8 +1293,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	// stop / show stats
 	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
+
 	std::thread thread_stop(
-		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout] {
+		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout , & cfg_stats_format,
+		& data_file_wire, & data_file_tuntap
+		]
+	{
 
 			std::vector<double> speed_tab;
 
@@ -1296,9 +1322,19 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				// [counter] read
 				std::ostringstream oss;
 				oss << "Loop. ";
-//				oss << "Wire: RECV={" << g_speed_wire_recv << "}";
-				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
-				oss << "Wire: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
+
+
+			if(cfg_stats_format.find('w')!=string::npos){
+					oss << "Wire: RECV={" << g_speed_wire_recv << "} ";
+			}
+			if(cfg_stats_format.find('t')!=string::npos){
+					oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler1.get_speed() << "Mbps} ";
+					oss << "Tuntap: RECV={" << g_state_tuntap2wire_in_handler2.get_speed() << "Mbps} ";
+			}
+
+			g_speed_wire_recv.save_to_file( *data_file_wire );
+			g_speed_tuntap_read.save_to_file( *data_file_tuntap ); // ? not sure if this is ok. --rfree
+
 				oss << "; ";
 				oss << "Tuntap: ";
 				oss << "start="<<g_state_tuntap2wire_started.load(std::memory_order_relaxed)<<' ';
@@ -1407,7 +1443,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap->set_tun_parameters(tuntap_address, prefix_len, mtu);
 	} else {
 		_info("Create fake TUN/TAP");
-		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", 10000);
+		tuntap = std::make_unique<c_fake_tun>(*ios_tuntap.at(0), "0.0.0.0", cfg_port_faketuntap);
 	}
 
 	// sockets for wire p2p connections:
@@ -1425,12 +1461,16 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		socket_array.push_back( with_strand<ThreadObject<boost::asio::ip::udp::socket>>(*one_ios, *one_ios) );
 		boost::asio::ip::udp::socket & thesocket = socket_array.back().get_unsafe_assume_in_strand().get();
 
-		auto addr_listen = asio::ip::address::from_string("0.0.0.0");
+		auto addr_listen = asio::ip::address_v4::any(); // ::from_string("0.0.0.0"); // ?
 		// asio::ip::address_v4::any();
 		// if (nr_sock==0) addr_listen = asio::ip::address::from_string("192.168.113.16");
 		// if (nr_sock==1) addr_listen = asio::ip::address::from_string("192.168.1.102");
-		_mark("Using special addressing (TEST!)"); // XXX TODO
-		_mark("Listen on: " << addr_listen);
+//		_mark("Using special addressing (TEST!)"); // XXX TODO
+//		_mark("Listen on: " << addr_listen << " port " << port_nr);
+
+		using namespace boost::asio::ip;
+		using namespace boost::asio;
+		//thesocket = udp::socket (io_service, udp::endpoint(udp::v4(), port_nr)); // ?
 
 		thesocket.open( asio::ip::udp::v4() );
 		// thesocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
@@ -1615,8 +1655,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			void *recv_buff_ptr;
 			size_t receive_size, found_ix;
 			std::tie(recv_buff_ptr, receive_size, found_ix) = get_tun_input_buffer();
+			// TODO is this nice/correct? lambda takes reference to self:
 			c_tuntap_base_obj::read_handler read_handler =
-				[&welds, &welds_mutex, found_ix, func_send_weld, read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
+				[&welds, &welds_mutex, found_ix, func_send_weld, & read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
 				(const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec)
 				{
 					_UNUSED(buf);
