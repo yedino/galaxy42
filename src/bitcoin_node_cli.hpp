@@ -11,9 +11,7 @@ class c_curl_ptr final {
 		c_curl_ptr();
 		~c_curl_ptr();
 		CURL *get_raw_ptr() const;
-
 		static std::once_flag s_curl_init_flag;
-
 	private:
 		CURL *m_ptr;
 };
