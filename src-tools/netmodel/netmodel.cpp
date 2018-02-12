@@ -34,6 +34,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #include "crypto_bench/sodium_tests.hpp"
 
 #include <tuntap/tuntap-all.hpp>
+#include "stdplus/eint.hpp"
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -588,7 +589,7 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 				bench_opt, // read this options
 				& worker_result // write result here
 				// start barier:
-				,worker_nr , & worker_ready_cv, & worker_ready_countdown, & worker_ready_mu,
+				, & worker_ready_cv, & worker_ready_countdown, & worker_ready_mu,
 				& worker_start_cv, & worker_start_flag, & worker_start_mu
 				]( const decltype(this) my_this, uint32_t worker_nr ) // access this to call some thread-safe methods
 				mutable // to modify copied buffers
@@ -676,8 +677,8 @@ c_crypto_benchloop<F, allow_mt, max_threads_count>
 }
 
 void nothing() { // TODO
-	thread_local volatile bool x;
-	x=1;
+//	thread_local volatile bool x;
+//	x=1;
 
 }
 
@@ -1569,7 +1570,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 				for (size_t i=0; i<welds.size(); ++i) {
 					if (! welds.at(i).m_reserved) {
-						if (welds.at(i).space_left() >= size_tuntap_maxread) {
+						if (!stdplus::eint::eint_less(welds.at(i).space_left(), size_tuntap_maxread)) {
 							found_ix=i; found_any=true;
 							break;
 						}

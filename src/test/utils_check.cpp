@@ -427,7 +427,7 @@ TEST(utils_check, reasonable_size_containers_test) {
 		std::multimap<char, std::array<long double, 100u> > too_big_map_by_size;
 		for(size_t i=0; i<size; i++)
 		{
-			too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{}));
+			too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{0}));
 		}
 		EXPECT_THROW(reasonable_size(too_big_map_by_size), err_check_input);
 	}
@@ -436,7 +436,7 @@ TEST(utils_check, reasonable_size_containers_test) {
 		std::multimap<char, std::array<long double, 100u> > not_too_big_map_by_size;
 		for(size_t i=0; i<size; i++)
 		{
-			not_too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{}));
+			not_too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{0}));
 		}
 		EXPECT_NO_THROW(reasonable_size(not_too_big_map_by_size));
 	}
