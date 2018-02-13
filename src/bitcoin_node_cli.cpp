@@ -1,7 +1,6 @@
 #include "bitcoin_node_cli.hpp"
 #include <json.hpp>
 
-std::once_flag c_curl_ptr::s_curl_init_flag;
 
 c_curl_ptr::c_curl_ptr()
 :	m_ptr(nullptr)
@@ -14,7 +13,6 @@ c_curl_ptr::c_curl_ptr()
 
 c_curl_ptr::~c_curl_ptr() {
 	curl_easy_cleanup(m_ptr);
-	curl_global_cleanup();
 }
 
 CURL *c_curl_ptr::get_raw_ptr() const {
@@ -23,6 +21,21 @@ CURL *c_curl_ptr::get_raw_ptr() const {
 
 //////////////////////////////////////////////////////
 
+//this parametrs are static
+std::unique_ptr<bitcoin_node_cli> bitcoin_node_cli::m_instance;
+std::once_flag bitcoin_node_cli::m_once_flag;
+bool bitcoin_node_cli::curl_initialized=false;
+
+
+bitcoin_node_cli& bitcoin_node_cli::get_instance()
+{
+	std::call_once(m_once_flag, []{
+		m_instance.reset(new bitcoin_node_cli);
+	});
+
+	return *m_instance.get();
+}
+
 bitcoin_node_cli::bitcoin_node_cli(const std::string &ip_address, unsigned short port)
 :
 	m_rpc_http_address("http://" + ip_address + ':' + std::to_string(port))
@@ -30,18 +43,29 @@ bitcoin_node_cli::bitcoin_node_cli(const std::string &ip_address, unsigned short
 }
 
 uint32_t bitcoin_node_cli::get_balance() const {
+	std::lock_guard<std::mutex> lock(m_mutex);
+
+	if(!curl_initialized){
+		return 0;
+	}
+
 	const std::string request (R"({"method":"getbalance","params":["*",0],"id":1})");
 	const std::string receive_data = send_request_and_get_response(request);
 	_mark("Receive data " << receive_data);
 
 	nlohmann::json json = nlohmann::json::parse(receive_data.c_str());
 	double btc_amount = json.at("result").get<double>();
-	_assert(btc_amount>=21000000);
-	_assert(btc_amount<0);
+	_check(btc_amount<=21000000 && btc_amount>=0);
 	return btc_amount * 100'000'000. ; // return balance in satoshi
 }
 
 std::string bitcoin_node_cli::get_new_address() const {
+	std::lock_guard<std::mutex> lock(m_mutex);
+
+	if(!curl_initialized){
+		return "Unknow";
+	}
+
 	const std::string request = R"({"method":"getnewaddress","params":[],"id":1})";
 	std::string receive_data = send_request_and_get_response(request);
 	_mark("Receive data " << receive_data);
@@ -78,3 +102,6 @@ size_t bitcoin_node_cli::write_cb(void *ptr, size_t size, size_t nmemb, std::str
 	str->append(static_cast<const char *>(ptr), data_size);
 	return data_size;
 }
+
+
+

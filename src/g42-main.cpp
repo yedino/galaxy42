@@ -305,14 +305,22 @@ int main(int argc, const char **argv) { // the main() function
 	vector<string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
-	std::setlocale(LC_ALL, "en_US.UTF-8");
 
-	std::call_once(c_curl_ptr::s_curl_init_flag, []{
-		CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-		if(res != CURLE_OK) {
-			throw std::runtime_error("curl_global_init error");
-		}
-	});
+	try{
+		std::setlocale(LC_ALL, "en_US.UTF-8");
+	}catch (...){
+		std::cerr<<"Error: setlocale."<<std::endl;
+	}
+
+	// This code MUST be 1-thread and very early in main
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		bitcoin_node_cli::curl_initialized=false;
+		std::cerr<<"Error: lib curl init."<<std::endl;
+	}
+	else{
+		bitcoin_node_cli::curl_initialized=true;
+	}
 
 
 	if (contains_value(argt,"--print-flags-flavour")) {
@@ -385,6 +393,8 @@ int main(int argc, const char **argv) { // the main() function
 	the_program->options_parse_first();
 	the_program->options_multioptions();
 	the_program->options_done();
+
+	curl_global_cleanup();
 
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->options_commands_run();

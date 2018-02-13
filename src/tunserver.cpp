@@ -1300,7 +1300,7 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 	ret["cmd"] = "get_status";
 	try {
 		ret["state"] = "ok";
-		ret["btc"] = m_bitcoin_node_cli.get_balance();
+		ret["btc"] = bitcoin_node_cli::get_instance().get_balance();
 	} catch (const std::exception &e) {
 		ret["state"] = "error";
 		ret["msg"] = e.what();
@@ -1315,7 +1315,7 @@ nlohmann::json c_tunserver::rpc_btc_get_address(const string &input_json)
 	ret["cmd"] = "get_btc_address";
 	try {
 		ret["state"] = "ok";
-		ret["address"] = m_bitcoin_node_cli.get_new_address();
+		ret["address"] = bitcoin_node_cli::get_instance().get_new_address();
 	} catch (const std::exception &e) {
 		ret["state"] = "error";
 		ret["msg"] = e.what();
