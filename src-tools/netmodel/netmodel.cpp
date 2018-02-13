@@ -595,7 +595,6 @@ double c_crypto_benchloop<F, allow_mt, max_threads_count>
 				mutable // to modify copied buffers
 				-> void
 			{
-				_UNUSED(worker_nr);
 				try {
 					t_bytes local_msg_buf  = msg_buf;
 					t_bytes local_two_buf  = two_buf;
