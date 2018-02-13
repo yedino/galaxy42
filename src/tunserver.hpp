@@ -359,7 +359,6 @@ class c_tunserver : public c_galaxy_node {
 		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
 
 
-		bitcoin_node_cli m_bitcoin_node_cli;
 		c_rpc_server m_rpc_server;
 		nlohmann::json rpc_ping(const std::string &input_json);
 		nlohmann::json rpc_peer_list(const std::string &input_json);
