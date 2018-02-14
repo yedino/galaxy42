@@ -394,40 +394,42 @@ int main(int argc, const char **argv) { // the main() function
 	the_program->options_multioptions();
 	the_program->options_done();
 
-	curl_global_cleanup();
-
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->options_commands_run();
 		if (done) return ret;
 	}
 
 	int exit_code=1;
+	bool exception_catched = true;
 	try {
 
 		exit_code = the_program->main_execution(); // <---
+		exception_catched = false;
 
 	} // try running server
 	catch(const ui::exception_error_exit &) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
-		return 1;
+		exit_code = 1;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(const std::exception& e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(...) {
 		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
-		return 3;
+		exit_code = 3;
 	}
-	_note(mo_file_reader::gettext("L_exit_no_error")); return 0;
+	if( !exception_catched )
+		_note(mo_file_reader::gettext("L_exit_no_error"));
 
-  return exit_code;
+	curl_global_cleanup();
+	return exit_code;
 }
 
