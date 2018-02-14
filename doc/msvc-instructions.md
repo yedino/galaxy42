@@ -20,6 +20,18 @@ $ cd galaxy42
 $ git submodule update --init
 ```
 
+### Compile libcurl.lib
+
+clone repository form:
+git clone https://github/curl.curl.git
+
+use Native Tools Command Promount for VS 2017
+go to containing folder
+run script buildconf.bat
+cd winbuild
+nmake /f Makefile.vc mode=dll MACHINE=x86 DEBUG=yes
+
+
 ### MSVC:
 Creating project for Visual Studo (.sln and .vcxproj's) using Cmake-GUI
 
@@ -37,13 +49,16 @@ __Open CMake-gui:__
 __Set cmake variables:__
 
 - Click "Add Entry"
-- "Name": BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR
+- "Name": BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR ,CURL_INCLUDE_DIRS, CURL_LIBRARIES
 - "Type": PATH
 - "Value":
 	- for SODIUM_ROOT_DIR: full path to directory, where you install/unpack "Libsodium Releases"
 	- for BOOST_ROOT: full path to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4"
 	- for BOOST_LIBRARYDIR: go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4", open folder (lib32-msvc-14.0/lib64-msvc-14.1 or similar) complies with your system version (x32 or x64) and copy path
-
+	- for CURL_INCLUDE_DIRS: go to directory, where you compiled libcurl/build/include
+	- for CURL_LIBRARIES:go to directory, where you compiled libcurl/build/lib
+	
+	
 ```
 click configure
 * for 32-bit build choose Visual Studio 15 2017
@@ -110,6 +125,11 @@ __Possible errors:__
 - Right mouse button (on "tunserver.elf" in Solution Explorer section) -> Build
 - Copy dll library files to binary directory
 
+	for adding new libraries open:
+	tunserver.elf >properties >C++ >Additional include dirs >[path for your includes]
+								>Linker>General>Additional Library Directories >[path for your *.lib]
+								>Linker>Input>Additional>Dependencies>[concrete files of your libraries]
+
 	For solutions configuration Debug
 ```
 boost_date_time-vc141-mt-gd-1_64.dll
@@ -117,6 +137,7 @@ boost_filesystem-vc141-mt-gd-1_64.dll
 boost_locale-vc141-mt-gd-1_64.dll
 boost_system-vc141-mt-gd-1_64.dll
 libsodium.dll
+libcurl.dll
 ```
 	For solutions configuration Release
 ```
@@ -125,6 +146,7 @@ boost_filesystem-vc141-mt-1_64.dll
 boost_locale-vc141-mt-1_64.dll
 boost_system-vc141-mt-1_64.dll
 libsodium.dll
+libcurl.dll
 ```
 
 __Possible errors:__
