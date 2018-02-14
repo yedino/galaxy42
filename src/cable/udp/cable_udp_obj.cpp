@@ -152,7 +152,7 @@ bool c_cable_udp::has_separate_rw() const noexcept { ///< do we use separate rea
 		case (t_multisocket_kind::separate_rw): return false; break;
 		default: break;
 	}
-	_assert_throw(true);
+	_check(false);
 	return false;
 }
 
