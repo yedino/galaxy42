@@ -55,7 +55,7 @@ std::string get_security_info(bool verbose) noexcept {
 		return oss.str();
 	} catch(...) {
 		_erro("Unexpected error");
-		throw; // trying to rethrow, will cause abort probably (if noexcept)
+		_check_abort(0); // trying to rethrow, will cause abort probably (if noexcept)
 	}
 }
 

@@ -152,16 +152,16 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 // -------------------------------------------------------------------
 
 /// err_check_prog?
-#define _check(X) do { if(!(X)) { _throw_error( err_check_prog( #X ) );  } } while(0)
+#define _check(X) do { if(!(X)) { _throw_error_or_abort( err_check_prog( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user if false
-#define _check_user(X) do { if(!(X)) { _throw_error( err_check_user( #X ) );  } } while(0)
+#define _check_user(X) do { if(!(X)) { _throw_error_or_abort( err_check_user( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_input if false
-#define _check_input(X) do { if(!(X)) { _throw_error( err_check_input( #X ) );  } } while(0)
+#define _check_input(X) do { if(!(X)) { _throw_error_or_abort( err_check_input( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys if false
-#define _check_sys(X) do { if(!(X)) { _throw_error( err_check_sys( #X ) );  } } while(0)
+#define _check_sys(X) do { if(!(X)) { _throw_error_or_abort( err_check_sys( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern if false
-#define _check_extern(X) do { if(!(X)) { _throw_error( err_check_extern( #X ) );  } } while(0)
+#define _check_extern(X) do { if(!(X)) { _throw_error_or_abort( err_check_extern( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user_soft if false
 #define _try_user(X) do { if(!(X)) { _throw_error( err_check_user_soft( #X ) );  } } while(0)
@@ -220,7 +220,7 @@ template<typename TC> class c_ig final {
 					_erro("Pre-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					throw;
+					_check_abort(0);
 				}
 			}
 		}
@@ -233,7 +233,7 @@ template<typename TC> class c_ig final {
 					_erro("Post-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					throw;
+					_check_abort(0);
 				}
 			}
 		}

@@ -173,6 +173,23 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 		<< "."); \
 		throw except_var; } while(0)
 
+template <class T>
+void throw_or_abort(const T & ex) {
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wterminate"
+#endif
+	throw ex;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+}
+
+#define _throw_error_or_abort( EXCEPT ) do { auto except_var = (EXCEPT);  \
+	_warn( "Except: " << except_var.what() \
+		<< "."); \
+		throw_or_abort (except_var); } while(0)
+
 #define _throw_error_runtime( MSG ) _throw_error( std::runtime_error( MSG ) )
 
 namespace ui { class exception_error_exit; }
