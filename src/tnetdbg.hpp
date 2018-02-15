@@ -176,12 +176,16 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 template <class T>
 void throw_or_abort(const T & ex) {
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wterminate"
+    #if __GNUC_PREREQ(6,0)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wterminate"
+    #endif
 #endif
 	throw ex;
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
+    #if __GNUC_PREREQ(6,0)
+        #pragma GCC diagnostic pop
+    #endif
 #endif
 }
 
