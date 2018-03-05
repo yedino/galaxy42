@@ -29,6 +29,7 @@ std::string errno_to_string(int errno_copy) {
 		( (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE ) \
 		||  ( defined(__MACH__) ) \
 		||  ( defined(_WIN32) || defined(__CYGWIN__) ) \
+		||  ( defined(OPEN_WRT) ) \
 	)
 		// for linux in XSI mode
 		// for mac os x
