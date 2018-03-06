@@ -25,6 +25,7 @@ std::string errno_to_string(int errno_copy) {
 	char buf[buflen];
 	std::memset(buf, 0, buflen); // extra guarantee no memleak
 
+	/// Flag "OPEN_WRT" above, can be set by OpenWrt build script (see doc/build-openwrt.md or similar if interested)
 	#if ( \
 		( (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE ) \
 		||  ( defined(__MACH__) ) \

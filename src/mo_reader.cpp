@@ -81,6 +81,7 @@ std::string mo_file_reader::gettext(const std::string &original_string) {
 	}
 }
 
+/// This function reads 4-byte integer, in little-endian encoding. (this is encoding we use in Yedino/Galaxy42 project)
 uint32_t mo_file_reader::read_section() {
 	std::array<unsigned char, 4> buffer;
 	m_ifstream.read(reinterpret_cast<char *>(&buffer[0]), buffer.size());
@@ -99,7 +100,11 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 	if (lang_env.size() >= 2 && std::islower(lang_env.at(0)) && std::islower(lang_env.at(1)))
 		return lang_env.substr(0, 2); // return first 2 characters (i.e. "pl" for "pl_PL.UTF-8")
 	std::string locale = setlocale(LC_CTYPE, "");
-	if (locale == "C" || (locale.size() > 1 && locale[0] == 'C' && locale[1] == '.')) locale = "en"; // default language
+	bool local_C_subtype = false; // locale name like "C.UTF-8"
+	if (locale.size() >= 2) {
+		if ( (locale.at(0)=='C') && (locale.at(1) == '.') ) local_C_subtype=true;
+	}
+	if ( (locale == "C") || local_C_subtype) locale = "en"; // default language
 	return locale;
 #else
 	char lang[3]; // ISO 639-1 == two-letter codes
