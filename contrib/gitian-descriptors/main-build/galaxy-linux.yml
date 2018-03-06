@@ -21,6 +21,7 @@ packages:
 - "gettext" # for msgfmt and other advanced tools to compile language .po to .mo
 - "libdw-dev" # lib required by backward-cpp - for printing stack trace
 - "libcap-ng-dev"
+- "libcurl4-openssl-dev"
 reference_datetime: "2016-08-01 00:00:00"
 remotes:
 - "dir": "galaxy42"
