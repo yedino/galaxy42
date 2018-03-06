@@ -46,7 +46,7 @@ uint32_t bitcoin_node_cli::get_balance() const {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	if(!curl_initialized){
-		throw std::runtime_error("in get balance isn't curl_initialized");
+		throw std::runtime_error("Error: curl is not initialized - in get balance");
 	}
 
 	const std::string request (R"({"method":"getbalance","params":["*",0],"id":1})");
@@ -64,7 +64,7 @@ std::string bitcoin_node_cli::get_new_address() const {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	if(!curl_initialized){
-		throw std::runtime_error("in get new address isn't curl_initialized");
+		throw std::runtime_error("Error: curl is not initialized - in get new address");
 	}
 
 	const std::string request = R"({"method":"getnewaddress","params":[],"id":1})";
