@@ -307,7 +307,8 @@ int main(int argc, const char **argv) { // the main() function
 	bool early_debug = contains_value(argt, "--d");
 
 	try{
-		std::setlocale(LC_ALL, "en_US.UTF-8");
+		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
+		if (result == nullptr) throw;
 	}catch (...){
 		std::cerr<<"Error: setlocale."<<std::endl;
 	}
@@ -426,10 +427,18 @@ int main(int argc, const char **argv) { // the main() function
 		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
 		exit_code = 3;
 	}
-	if( !exception_catched )
-		_note(mo_file_reader::gettext("L_exit_no_error"));
+
+	try {
+		if( !exception_catched )
+			_note(mo_file_reader::gettext("L_exit_no_error"));
+	}
+	catch(...) {
+		std::cerr<<"(Error in printing previous error)";
+	}
 
 	curl_global_cleanup();
+	bitcoin_node_cli::curl_initialized=false;
+
 	return exit_code;
 }
 
