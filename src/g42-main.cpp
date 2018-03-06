@@ -1,5 +1,6 @@
 // Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
-
+#include <clocale>
+#include <curl/curl.h>
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
@@ -305,6 +306,24 @@ int main(int argc, const char **argv) { // the main() function
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
 
+	try{
+		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
+		if (result == nullptr) throw;
+	}catch (...){
+		std::cerr<<"Error: setlocale."<<std::endl;
+	}
+
+	// This code MUST be 1-thread and very early in main
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		bitcoin_node_cli::curl_initialized=false;
+		std::cerr<<"Error: lib curl init."<<std::endl;
+	}
+	else{
+		bitcoin_node_cli::curl_initialized=true;
+	}
+
+
 	if (contains_value(argt,"--print-flags-flavour")) {
 		main_print_flavour();
 		return 0;
@@ -382,32 +401,44 @@ int main(int argc, const char **argv) { // the main() function
 	}
 
 	int exit_code=1;
+	bool exception_catched = true;
 	try {
 
 		exit_code = the_program->main_execution(); // <---
+		exception_catched = false;
 
 	} // try running server
 	catch(const ui::exception_error_exit &) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
-		return 1;
+		exit_code = 1;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(const std::exception& e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(...) {
 		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
-		return 3;
+		exit_code = 3;
 	}
-	_note(mo_file_reader::gettext("L_exit_no_error")); return 0;
 
-  return exit_code;
+	try {
+		if( !exception_catched )
+			_note(mo_file_reader::gettext("L_exit_no_error"));
+	}
+	catch(...) {
+		std::cerr<<"(Error in printing previous error)";
+	}
+
+	curl_global_cleanup();
+	bitcoin_node_cli::curl_initialized=false;
+
+	return exit_code;
 }
 

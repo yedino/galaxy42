@@ -144,7 +144,7 @@ function install_for_build() {
 		fi
 
 
-		install_packages g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext
+		install_packages g++ build-essential libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libsodium-dev gettext libcurl4-openssl-dev
 		install_packages libboost-locale-dev libboost-date-time-dev libdw-dev libboost-thread-dev
 		install_packages libcap-ng-dev
 	elif (("platforminfo[is_family_redhat]")) ; then
