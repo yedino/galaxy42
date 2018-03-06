@@ -151,16 +151,16 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 
 // -------------------------------------------------------------------
 
-/// err_check_prog?
+// This macros can throw - BUT ALSO CAN ABORT - if used in noexcept function
 #define _check(X) do { if(!(X)) { _throw_error_or_abort( err_check_prog( #X ) );  } } while(0)
 
-/// Macro that checks arg X, throws err_check_user if false
+/// Macro that checks arg X, throws err_check_user if false - BUT ALSO CAN ABORT - if used in noexcept function
 #define _check_user(X) do { if(!(X)) { _throw_error_or_abort( err_check_user( #X ) );  } } while(0)
-/// Macro that checks arg X, throws err_check_input if false
+/// Macro that checks arg X, throws err_check_input if false - BUT ALSO CAN ABORT - if used in noexcept function
 #define _check_input(X) do { if(!(X)) { _throw_error_or_abort( err_check_input( #X ) );  } } while(0)
-/// Macro that checks arg X, throws err_check_sys if false
+/// Macro that checks arg X, throws err_check_sys if false - BUT ALSO CAN ABORT - if used in noexcept function
 #define _check_sys(X) do { if(!(X)) { _throw_error_or_abort( err_check_sys( #X ) );  } } while(0)
-/// Macro that checks arg X, throws err_check_extern if false
+/// Macro that checks arg X, throws err_check_extern if false - BUT ALSO CAN ABORT - if used in noexcept function
 #define _check_extern(X) do { if(!(X)) { _throw_error_or_abort( err_check_extern( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user_soft if false
@@ -220,7 +220,7 @@ template<typename TC> class c_ig final {
 					_erro("Pre-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					_check_abort(0);
+					_check_abort(false);
 				}
 			}
 		}
@@ -233,7 +233,7 @@ template<typename TC> class c_ig final {
 					_erro("Post-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					_check_abort(0);
+					_check_abort(false);
 				}
 			}
 		}
