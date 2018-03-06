@@ -82,11 +82,11 @@ std::string mo_file_reader::gettext(const std::string &original_string) {
 }
 
 uint32_t mo_file_reader::read_section() {
-	std::array<char, 4> buffer;
-	m_ifstream.read(&buffer[0], buffer.size());
+	std::array<unsigned char, 4> buffer;
+	m_ifstream.read(reinterpret_cast<char *>(&buffer[0]), buffer.size());
 	uint32_t ret = 0;
 	static_assert(sizeof(ret) == sizeof(char) * 4, "");
-	std::memcpy(&ret, &buffer[0], buffer.size());
+	ret = (buffer[0]<<0) + (buffer[1]<<8) + (buffer[2]<<16) + (buffer[3]<<24);
 	return ret;
 }
 
@@ -99,7 +99,7 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 	if (lang_env.size() >= 2 && std::islower(lang_env.at(0)) && std::islower(lang_env.at(1)))
 		return lang_env.substr(0, 2); // return first 2 characters (i.e. "pl" for "pl_PL.UTF-8")
 	std::string locale = setlocale(LC_CTYPE, "");
-	if (locale == "C") locale = "en"; // default language
+	if (locale == "C" || (locale.size() > 1 && locale[0] == 'C' && locale[1] == '.')) locale = "en"; // default language
 	return locale;
 #else
 	char lang[3]; // ISO 639-1 == two-letter codes
