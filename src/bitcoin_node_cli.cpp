@@ -46,7 +46,7 @@ uint32_t bitcoin_node_cli::get_balance() const {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	if(!curl_initialized){
-		return 0;
+		throw std::runtime_error("in get balance isn't curl_initialized");
 	}
 
 	const std::string request (R"({"method":"getbalance","params":["*",0],"id":1})");
@@ -55,7 +55,8 @@ uint32_t bitcoin_node_cli::get_balance() const {
 
 	nlohmann::json json = nlohmann::json::parse(receive_data.c_str());
 	double btc_amount = json.at("result").get<double>();
-	_check(btc_amount<=21000000 && btc_amount>=0);
+	_check(btc_amount<=21000000);
+	_check(btc_amount>=0);
 	return btc_amount * 100'000'000. ; // return balance in satoshi
 }
 
@@ -63,7 +64,7 @@ std::string bitcoin_node_cli::get_new_address() const {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	if(!curl_initialized){
-		return "Unknow";
+		throw std::runtime_error("in get new address isn't curl_initialized");
 	}
 
 	const std::string request = R"({"method":"getnewaddress","params":[],"id":1})";
