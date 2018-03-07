@@ -56,7 +56,12 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"i"         "Install ./install.sh (with --sudo if not root)"  \
 	"icfg"      "Install rundevel configure (e.g. default commandline for rundevel.sh)" \
 	"d"         "Build: with ./do"  \
-	"r"         "Run the program (in build/ directory - in devel mode)"  \
+	"-" "" \
+	"rn"         "Run the program - normal mode"  \
+	"rnl"        "Run the program - normal mode, language select"  \
+	"rd"         "Run the program - developer mode"  \
+	"rdl"        "Run the program - developer mode, language select"  \
+	"-" "" \
 	"rh"        "Read (edit) doc/hacking" \
 	"rm"        "Read (edit) main README" \
 	"-" "" \
@@ -97,6 +102,29 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 
 fi
 
+return_lang=""
+
+function menu_language() {
+	# [[marker_list_of_languages]]
+	lang_response=$( abdialog  --menu  "$(eval_gettext "language")" "$dialog_h" "$dialog_w" "$dialog_h2"  \
+		"empty"         "(empty string)"  \
+		"C"         "C"  \
+		"C.UTF-8"         "C UTF-8"  \
+		"pl_PL.UTF-8"         "PL"  \
+		"en_US.UTF-8"         "EN"  \
+		"uk_UK.UTF-8"         "UK"  \
+		"ru_RU.UTF-8"         "RU"  \
+		"de_DE.UTF-8"         "DE"  \
+		"en"         "invalid"  \
+		"en_XX.UTF-8"         "invalid"  \
+		"xx_XX.UTF-8"         "Invalid"  \
+		2>&1 >/dev/tty ) || abdialog_exit
+	[[ -z "$lang_response" ]] && exit 1
+	return_lang="$lang_response"
+	[[ "$lang_response" == "empty" ]] && return_lang=""
+	return 0
+}
+
 #"gaf"        "Build Gitian for all (fast)"  \
 
 
@@ -108,7 +136,7 @@ response_menu_task="$response"
 read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 	echo "" ; echo "Running menu command '$item'." ; echo ""
 
-	set -x
+	#set -x
 	case "$item" in
 		i)
 			if [[ $EUID -ne 0 ]]; then
@@ -123,9 +151,30 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			./install-one.sh
 		;;
 
-		r)
+		rn)
+			cd build || abdialog_fail "Can not enter build directory. Build the project first"
+			./tunserver.elf
+		;;
+
+		rd)
 			cd build || abdialog_fail "Can not enter build directory. Build the project first"
 			./rundevel.sh
+		;;
+
+		rnl)
+			cd build || abdialog_fail "Can not enter build directory. Build the project first"
+			menu_language || exit
+			lang="$return_lang"
+			echo -e "\n\n\nWill set language: [$lang]\n\n\n"
+			LANG="$lang" LANGUAGE=  LC_ALL= ./rundevel.sh
+		;;
+
+		rdl)
+			cd build || abdialog_fail "Can not enter build directory. Build the project first"
+			menu_language || exit
+			lang="$return_lang"
+			echo -e "\n\n\nWill set language: [$lang]\n\n\n"
+			LANG="$lang" LANGUAGE=  LC_ALL= ./rundevel.sh
 		;;
 
 		ball)

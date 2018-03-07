@@ -63,6 +63,8 @@ std::tuple<bool,int> c_the_program::program_startup_special() {
 }
 
 void c_the_program::startup_data_dir() {
+	std::cerr << "Start: " << __func__ << std::endl;
+	_fact("in " << __func__);
 	bool found=false;
 	try
 	{
@@ -71,35 +73,24 @@ void c_the_program::startup_data_dir() {
 		// e.g. /home/rafalcode/work/galaxy42/    - because it contains:
 		//      /home/rafalcode/work/galaxy42/share/locale/en/LC_MESSAGES/galaxy42_main.mo
 
-		// we could normalize the path... but this could trigger more problems maybe with encoding of string.
-		auto dir_normalize = [](std::string path) -> std::string {
-			return path; // nothing for now. TODO (would be nicer to not display "//home/.." in this tests below
-		};
-
+		_fact("Current path [" << b_fs::current_path() << "]");
 		b_fs::path cwd_full_boost( b_fs::current_path() );
-		string cwd_full = dir_normalize( b_fs::absolute( cwd_full_boost ) .string() );
+		auto cwd_full = b_fs::canonical( b_fs::absolute( cwd_full_boost ) );
 		// string cwd_full = b_fs::lexically_norma( b_fs::absolute( cwd_full_boost ) ).string();
 
 		b_fs::path selfpath = "";
-		// += cwd_full_boost;
-		// selfpath += "/";
 		selfpath += argt_exec; // (to include any extra path to binary) file name will be removed below leaving just path
-		_fact("selfpath (2) = [" << selfpath << "]");
+		//_fact("selfpath (2) = [" << selfpath << "]");
 		b_fs::path selfdir_boost = selfpath.remove_filename();
-		string selfdir = dir_normalize( b_fs::absolute( selfdir_boost ) .string() ); // "/home/foo/."
+		auto selfdir = b_fs::canonical( b_fs::absolute( selfdir_boost  ));
 		_fact("selfdir = [" << selfdir << "]");
-		// selfpath (2) = ["./tunserver.elf"]
-		// selfdir = [/home/rafalcode/work/galaxy42/build/.]
-
-
-
 
 		std::cerr << "Start... [" << cwd_full << "] (cwd) " << std::endl;
 		std::cerr << "Start... [" << selfdir << "] (exec) " << std::endl;
 
 		vector<string> data_dir_possible;
-		data_dir_possible.push_back(cwd_full);
-		data_dir_possible.push_back(selfdir);
+		data_dir_possible.push_back(cwd_full.string());
+		data_dir_possible.push_back(selfdir.string());
 
 		#if defined(__MACH__)
 			// TODO when macosx .dmg fully works (when Gitian on macosx works)
