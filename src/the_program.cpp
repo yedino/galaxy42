@@ -6,6 +6,11 @@
 #include <boost/filesystem.hpp>
 #include "glue_sodiumpp_crypto.hpp"
 
+#include <clocale>
+#include <curl/curl.h>
+
+#include "bitcoin_node_cli.hpp"
+
 void c_the_program::take_args(int argc, const char **argv) {
 	if (argc>0) argt_exec=argv[0]; else argt_exec="";
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
@@ -78,12 +83,19 @@ void c_the_program::startup_data_dir() {
 		b_fs::path selfpath = "";
 		// += cwd_full_boost;
 		// selfpath += "/";
-		selfpath += argt_exec; // hmm, what? --rafal
+		selfpath += argt_exec; // (to include any extra path to binary) file name will be removed below leaving just path
+		_fact("selfpath (2) = [" << selfpath << "]");
 		b_fs::path selfdir_boost = selfpath.remove_filename();
-		string selfdir = dir_normalize( b_fs::absolute( selfdir_boost ) .string() );
+		string selfdir = dir_normalize( b_fs::absolute( selfdir_boost ) .string() ); // "/home/foo/."
+		_fact("selfdir = [" << selfdir << "]");
+		// selfpath (2) = ["./tunserver.elf"]
+		// selfdir = [/home/rafalcode/work/galaxy42/build/.]
 
-//		cerr << "Start... [" << cwd_full << "] (cwd) " << endl;
-//		cerr << "Start... [" << selfdir << "] (exec) " << endl;
+
+
+
+		std::cerr << "Start... [" << cwd_full << "] (cwd) " << std::endl;
+		std::cerr << "Start... [" << selfdir << "] (exec) " << std::endl;
 
 		vector<string> data_dir_possible;
 		data_dir_possible.push_back(cwd_full);
@@ -102,14 +114,14 @@ void c_the_program::startup_data_dir() {
 		for (auto && dir : data_dir_possible) {
 			string testname = dir;
 			testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
-			_fact( "Test: [" << testname << "]... " << std::flush );
+			_fact( "Test: [" << testname << "]... " );
 			ifstream filetest( testname.c_str() );
 			if (filetest.good()) {
 				m_install_dir_base = dir;
 				found=true;
-				_fact(" OK! " );
+				_fact("OK ");
 				break;
-			} else _fact( "" );
+			}
 		}
 	} catch(std::exception & ex) {
 			_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
@@ -122,10 +134,26 @@ void c_the_program::startup_data_dir() {
 	_fact( "Lang: [" << m_install_dir_share_locale << "]" );
 }
 
-void c_the_program::startup_locales() {
+void c_the_program::startup_locales_early() {
+	try {
+		const char * const result = std::setlocale(LC_ALL, "C"); // save to char* instead duplicate to string, so that we can test it versus NULL
+		if (result == nullptr) throw std::runtime_error("Can not set locale");
+	} catch (...) {
+		std::cerr << "Error: setlocale" << std::endl;
+	}
+}
+
+
+void c_the_program::startup_locales_later() {
 	setlocale(LC_ALL,"");
 
-/*	boost::locale::generator gen;
+/*
+
+This was an old attempt to just use normal gettext and locale,
+but it was not working on some platforms (afair MSVC) ; by @rob ? --rfree
+Leaving as documentation/example
+
+	boost::locale::generator gen;
 	// Specify location of dictionaries
 	gen.add_messages_path(m_install_dir_share_locale);
 	gen.add_messages_domain("galaxy42_main");
@@ -139,7 +167,7 @@ void c_the_program::startup_locales() {
 	}
 	std::locale::global(gen(locale_name));
 	//std::locale::global(gen("pl_PL.UTF-8")); // OK
-	//std::locale::global(gen("Polish_Poland.UTF-8")); // not works
+	//std::locale::global(gen("Polish_Poland.UTF-8")); // does not work
 	std::cout.imbue(std::locale());
 	std::cerr.imbue(std::locale());
 	// Using mo_file_reader::gettext:
@@ -150,7 +178,7 @@ void c_the_program::startup_locales() {
 */
 	try {
 		mo_file_reader mo_reader;
-		_fact("Adding MO for" << m_install_dir_share_locale);
+		_fact("Adding MO for shared dir [" << m_install_dir_share_locale << "]");
 		mo_reader.add_messages_dir(m_install_dir_share_locale);
 		mo_reader.add_mo_filename(std::string("galaxy42_main"));
 		mo_reader.read_file();
@@ -161,7 +189,6 @@ void c_the_program::startup_locales() {
 	_fact( std::string(80,'=') << std::endl << mo_file_reader::gettext("L_warning_work_in_progres") << std::endl );
 	_fact( mo_file_reader::gettext("L_program_is_pre_pre_alpha") );
 	_fact( mo_file_reader::gettext("L_program_is_copyrighted") );
-	_fact( "" );
 
 //	const std::string m_install_dir_share_locale="share/locale"; // for now, for running in place
 //	setlocale(LC_ALL,"");
@@ -170,6 +197,18 @@ void c_the_program::startup_locales() {
 	// Using mo_file_reader::gettext:
 //	std::cerr << mo_reader::mo_file_reader::gettext("L_program_is_pre_pre_alpha") << std::endl;
 //	std::cerr << mo_reader::mo_file_reader::gettext("L_program_is_copyrighted") << std::endl;
+}
+
+void c_the_program::startup_curl() {
+	// This curl init code MUST be 1-thread and very early in main
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		bitcoin_node_cli::curl_initialized=false;
+		std::cerr<<"Error: lib curl init."<<std::endl;
+	}
+	else{
+		bitcoin_node_cli::curl_initialized=true;
+	}
 }
 
 void c_the_program::init_library_sodium() {

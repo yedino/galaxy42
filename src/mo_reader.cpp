@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "mo_reader.hpp"
 #include <cstring>
@@ -16,15 +16,19 @@ std::map<std::string, std::string> mo_file_reader::m_translation_map;
 #endif
 
 void mo_file_reader::read_file() {
-	const std::string filename = m_messages_dir + "/" + get_system_lang_short_name() + "/LC_MESSAGES/" + m_mo_filename;
+	std::string locale_lang_short_name =get_system_lang_short_name();
+	std::cerr << "Reading translations for locale short=[" << locale_lang_short_name << "]" << std::endl;
+	const std::string filename = m_messages_dir + "/" + locale_lang_short_name + "/LC_MESSAGES/" + m_mo_filename;
 	m_ifstream.open(filename, std::ios::in | std::ios::binary);
 	if (!m_ifstream.is_open()) throw std::runtime_error("mo file open error, filename: " + filename);
 
 	uint32_t magic_number = read_section();
-	if (magic_number == 0xde120495)
-		throw std::runtime_error("mo files with this endianness is not supported");
-	if ((magic_number != 0x950412de))
+	if (magic_number == 0xde120495) {
+		throw std::runtime_error("mo files with this endianness is not supported (we use little-endian)");
+	}
+	if ((magic_number != 0x950412de)) {
 		throw std::runtime_error("mo file bad format (wrong magic number)");
+	}
 
 	uint32_t file_format_revision = read_section();
 	uint32_t number_of_strings = read_section();
@@ -95,16 +99,18 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 #ifndef _WIN32
 	char *env = std::getenv("LANG");
 	std::string lang_env;
-	if (env != nullptr)
+	if (env != nullptr) {
 		lang_env = std::getenv("LANG");
-	if (lang_env.size() >= 2 && std::islower(lang_env.at(0)) && std::islower(lang_env.at(1)))
-		return lang_env.substr(0, 2); // return first 2 characters (i.e. "pl" for "pl_PL.UTF-8")
-	std::string locale = setlocale(LC_CTYPE, "");
-	bool local_C_subtype = false; // locale name like "C.UTF-8"
-	if (locale.size() >= 2) {
-		if ( (locale.at(0)=='C') && (locale.at(1) == '.') ) local_C_subtype=true;
 	}
-	if ( (locale == "C") || local_C_subtype) locale = "en"; // default language
+	if (lang_env.size() >= 2 && std::islower(lang_env.at(0)) && std::islower(lang_env.at(1))) {
+		return lang_env.substr(0, 2); // return first 2 characters (i.e. "pl" for "pl_PL.UTF-8")
+	}
+	std::string locale = setlocale(LC_CTYPE, NULL); // just query the locale, without changing it
+	bool locale_C_subtype = false; // locale name like "C.UTF-8"
+	if (locale.size() >= 2) {
+		if ( (locale.at(0)=='C') && (locale.at(1) == '.') ) locale_C_subtype=true;
+	}
+	if ( (locale == "C") || locale_C_subtype) locale = "en"; // default language
 	return locale;
 #else
 	char lang[3]; // ISO 639-1 == two-letter codes
@@ -118,3 +124,4 @@ std::string mo_file_reader::get_system_lang_short_name() const {
 	return std::string(lang);
 #endif
 }
+
