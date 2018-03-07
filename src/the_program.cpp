@@ -136,7 +136,28 @@ void c_the_program::startup_locales_early() {
 
 
 void c_the_program::startup_locales_later() {
-	setlocale(LC_ALL,"");
+	{
+		_fact("Locale switch to user...");
+		const char * const locale_ptr = setlocale(LC_ALL,"");
+		string locale_str( locale_ptr ); // copy the c-string while it's valid!
+		if (locale_ptr == nullptr) {
+			_fact("Locale switch to user: error... will use C locale");
+			const char * const locale_fix_ptr = setlocale(LC_ALL,"C");
+			if (locale_fix_ptr == nullptr) throw std::runtime_error("Can not set user locale, and also can not switch to safe C locale.");
+		} else {
+			_fact("Locale switch to user: OK. Old locale: [" << locale_str << "]");
+		}
+	}
+
+	{
+		const char * const locale_ptr = setlocale(LC_ALL,"");
+		string locale_str( locale_ptr ); // copy the c-string while it's valid!
+		if (locale_ptr == nullptr) { // should be unused since above checks
+			_fact("Locale switch to user: error (and can not fix it)");
+			throw std::runtime_error("Can not set user locale (nor fix it)");
+		}
+		_fact("Using locale: [" << locale_str << "]");
+	}
 
 /*
 
