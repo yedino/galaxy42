@@ -22,11 +22,12 @@ export TEXTDOMAIN="galaxy42_installer"
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
 source "${dir_base_of_source}share/script/lib/need-lang.sh"
 init_lang
-echo "after init.................."
 
 language_test="$(eval_gettext "L_language")"
-echo -e "\n\n\nLanguage test: $language_test\n\n"
-if [[ '$1' == "--test-lang" ]] ; then exit 0 ; fi
+test2="$(eval_gettext "L_TEST_LANG")"
+test3="$(eval_gettext "L_TEST_LANG_short")"
+echo -e "\n\n\nLanguage test: $language_test $test2 $test3\n\n"
+if [[ "$1" == "--test-lang" ]] ; then exit 0 ; fi
 
 programname="Galaxy42" # shellcheck disable=SC2034
 

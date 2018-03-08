@@ -5,7 +5,7 @@ source gettext.sh || { echo "Gettext is not installed, please install it." ; exi
 source "${dir_base_of_source}share/script/need_translations.sh"
 
 function init_lang() {
-	echo "init_lang()..."
+	#echo "init_lang()..."
 	supported_lang=(en_US.UTF-8 pl_PL.UTF-8 uk_UA.UTF-8 ru_RU.UTF-8 de_DE.UTF-8)
 	lang_default='en_US.UTF-8'
 
@@ -28,7 +28,7 @@ function init_lang() {
 		LANGUAGE=""
 		echo  "lang changed to default: [$lang]"
 	fi
-	echo "init_lang()... DONE"
+	#echo "init_lang()... DONE"
 	echo "init_lang (final) - lang=[$lang] from LANG=($LANG) LANGUAGE=($LANGUAGE) LC_ALL=($LC_ALL)"
 }
 
