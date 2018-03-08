@@ -155,7 +155,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 // ============================================================================
 
 
-/***
+/**
  * @brief Loads name of demo from demo.conf.
  * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
  * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
@@ -199,7 +199,7 @@ void test_lang_optional() {
 	*/
 }
 
-/***
+/**
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test

@@ -16,11 +16,11 @@ class invalid_argument_in_version : public std::invalid_argument {
 };
 
 
-/***
+/**
  * @file Sets various project-wide settings, e.g. compilation flags, e.g. EXTLEVEL
 */
 
-/***
+/**
  * @name EXTLEVEL_* sets do we want preview/experimental code. Use this as in #if EXTLEVEL_IS_PREVIEW ... #endif
  * @{
 */
@@ -49,7 +49,7 @@ class invalid_argument_in_version : public std::invalid_argument {
 #endif
 
 
-/***
+/**
  * @name ENABLE_* flags - copy them from the ones set by CMake. This also allows us to add doxygen for them
  * @{
 */

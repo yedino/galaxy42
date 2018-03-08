@@ -14,12 +14,12 @@ static const bool little_edian = [] {
 
 // Here we build ethernet frame template (level 2) as in https://en.wikipedia.org/wiki/Ethernet_frame#Ethernet_II
 std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = {
-	//*** ethernet header ***//
+	//=== ethernet header ===//
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination MAC will be set later
 	0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, // source MAC always the same, only this seems to work; Tested 0xFD 00 ... 00 it does not work
 	0x86, 0xDD, 	// EtherType 0x86DD == IPv6 (https://en.wikipedia.org/wiki/EtherType)
 
-	//*** ipv6 header ***//
+	//=== ipv6 header ===//
 	0x60, 0x00, 0x00, 0x00, // flow label
 	0x00, 0x28, // payload len, TODO current value is from wireshark
 	0x3A, // next header 56 == ICMPv6
@@ -29,7 +29,7 @@ std::array<unsigned char, 94> c_ndp::m_generate_neighbor_advertisement_packet = 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // destination ipv6 address (filled later in the code using this packet-template)
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-	//*** icmpv6 ***//
+	//=== icmpv6 ===//
 	// Below we have the body of NDP-reply, as in: https://tools.ietf.org/html/rfc4861#section-4.4
 	0x88, // type 136 (Neighbor Advertisement) https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol_version_6
 	0x00, // code
@@ -61,7 +61,7 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement(const std::array<
 	std::array<uint8_t, 94> return_packet;
 	const uint8_t * const input_src_mac_address = &neighbor_solicitation_packet.front() + 6;
 
-	//*** ethernet header ***//
+	//=== ethernet header ===//
 	auto it = return_packet.begin(); // points to destination MAC
 	for (int i = 0; i < 6; ++i) { // destination MAC
 		*it = *(input_src_mac_address + i);
@@ -77,7 +77,7 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement(const std::array<
 	*it = 0x86; ++it;
 	*it = 0xDD; ++it;
 
-	//*** ipv6 header ***//
+	//=== ipv6 header ===//
 	// flow label
 	*it = 0x60; ++it;
 	*it = 0x00; ++it;
@@ -103,7 +103,7 @@ std::array<uint8_t, 94> c_ndp::generate_neighbor_advertisement(const std::array<
 		*it = *(input_source_ipv6_address + i);
 		++it;
 	}
-	//*** icmpv6 ***//
+	//=== icmpv6 ===//
 	*it = 136; ++it; // type 136 (Neighbor Advertisement)
 	*it = 0; ++it; // code
 	// checksum

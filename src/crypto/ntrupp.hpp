@@ -63,7 +63,7 @@ ntru_crypto_ntru_encrypt(
 	uint8_t        *ct);             //    out - address for ciphertext
 */
 
-/***
+/**
  * Encrypt plain text for given pubkey.
  */
 template<class T>
