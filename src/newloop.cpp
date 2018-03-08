@@ -118,8 +118,8 @@ class c_netchunk {
 */
 // -------------------------------------------------------------------
 
-/***
-	@brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
+/**
+ * @brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
 */
 /*class c_netbuf {
 	public:

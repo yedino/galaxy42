@@ -50,7 +50,7 @@ extern const char * g_demoname_default;
 
 // ------------------------------------------------------------------
 
-/***
+/**
   @brief interface for object that can act as p2p node
 */
 class c_galaxy_node {
@@ -75,10 +75,10 @@ class expected_not_found_missing_pubkey : public stdplus::expected_exception {
 
 // ------------------------------------------------------------------
 
-/***
-@brief Use this to get information about route. It resp.: returns, stores and searches the information.
-- m_search - pathes we now look for
-- m_route_nexthop - known pathes
+/**
+ * @brief Use this to get information about route. It resp.: returns, stores and searches the information.
+ * - m_search - pathes we now look for
+ * - m_route_nexthop - known pathes
 */
 class c_routing_manager { ///< holds knowledge about routes, and searches for new ones
 	public: // TODO(r) make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;

@@ -189,7 +189,7 @@ void throw_or_abort(const T & ex) {
 #endif
 }
 
-/***
+/**
 *	This function tries to throw, BUT ALSO it is O.K. with possible ABORT, due to noexcept on the function we are in
 *	it exists to e.g. silence some compilers warning about possible throw inside noexcept - we know, and we are o.k. with it turning into abort
 *	use it in macros that should try to throw but abort if throwing is not possible
