@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-17 14:31+0000\n"
+"POT-Creation-Date: 2018-03-08 12:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -294,5 +294,14 @@ msgstr ""
 msgid "L_install_option_sudo_cap_allow_title"
 msgstr ""
 
+#, sh-format
 msgid "L_install_option_sudo_cap_allow"
+msgstr ""
+
+#, sh-format
+msgid "L_TEST_LANG"
+msgstr ""
+
+#, sh-format
+msgid "L_TEST_LANG_short"
 msgstr ""
