@@ -166,7 +166,7 @@ read -r -a tab <<< "$response_menu_task" ; for item in "${tab[@]}" ; do
 			menu_language || exit
 			lang="$return_lang"
 			echo -e "\n\n\nWill set language: [$lang]\n\n\n"
-			LANG="$lang" LANGUAGE=  LC_ALL= ./rundevel.sh
+			LANG="$lang" LANGUAGE=  LC_ALL= ./tunserver.elf
 		;;
 
 		rdl)
