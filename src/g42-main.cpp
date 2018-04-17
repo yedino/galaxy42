@@ -306,9 +306,15 @@ int main(int argc, const char **argv) { // the main() function
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
 
+	if (contains_value(argt,"--print-flags-flavour")) {
+		main_print_flavour();
+		return 0;
+	}
+
+
 	try{
 		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
-		if (result == nullptr) throw;
+		if (result == nullptr) throw std::runtime_error("Can not set locale (first)");
 	}catch (...){
 		std::cerr<<"Error: setlocale."<<std::endl;
 	}
@@ -322,13 +328,7 @@ int main(int argc, const char **argv) { // the main() function
 	else{
 		bitcoin_node_cli::curl_initialized=true;
 	}
-
-
-	if (contains_value(argt,"--print-flags-flavour")) {
-		main_print_flavour();
-		return 0;
-	}
-
+	
 	enum class t_program_type {
 		e_program_type_tunserver = 1,
 		e_program_type_newloop = 100,
