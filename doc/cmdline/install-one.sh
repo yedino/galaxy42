@@ -1,5 +1,5 @@
 #!/bin/bash
-# (C) 2017 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
+# (C) 2018 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
 
 dir_base_of_source="../../" # path to reach the root of source code (from starting location of this script)
 
