@@ -3,7 +3,7 @@
 # It allows to build&install the programs of this project,
 # and also it allows to configure all developer tools.
 #
-# (C) 2016 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
+# (C) 2018 Yedino team, on BSD 2-clause licence and also licences on same licence as Galaxy main project (you can pick)
 #
 
 #
