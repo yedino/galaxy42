@@ -275,9 +275,10 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 /**
  * Purpose of this function is to print some compilation "flavour" flags, e.g. is this a TSAN build or not.
- * @warning This function is run instead of normal body of main(), therefore the main() must exit after calling it,
- * and this function is free to not use our special conventions, e.g. it is free to directly use std::cout instead setting up
- * our debug/console tools. (Also it does not expect any such normal tools to be set up for it).
+ * @warning This function must be called from main(), very early (before other output or setting i/o)
+ * and the caller should exit immediatelly after,
+ * because this function uses normal conventions (e.g. of using std::cout) instead following ones from program/project
+ * (e.g. it does not use program/project debug/console tools).
  */
 void main_print_flavour() {
 	auto & out = std::cout; // we can directly use std::cout, in this special function
