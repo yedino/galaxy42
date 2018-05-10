@@ -1,6 +1,8 @@
 #include "tuntap_base.hpp"
 #include "libs0.hpp"
 
+#include "platform.hpp"
+
 #include "utils/boost_asio_helper.hpp"
 
 std::string NetPlatform_error_code_to_string(int err) {
@@ -56,6 +58,10 @@ void Wrap_NetPlatform_addAddress(const char *interfaceName,
 	                           << " family " << addrFam
 	                           << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
+        NUNUSED(interfaceName);
+        NUNUSED(address);
+        NUNUSED(prefixLen);
+        NUNUSED(addrFam);
 	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
@@ -68,6 +74,8 @@ void Wrap_NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
 	_goal("MTU value " << mtu << " set on interface " << interfaceName
 		  << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
+        NUNUSED(interfaceName);
+        NUNUSED(mtu);
 	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }

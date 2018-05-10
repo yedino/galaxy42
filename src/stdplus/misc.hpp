@@ -93,7 +93,7 @@ std::string STR(const T & obj) { ///< stringify any object
 template <typename TE, typename TI>
 TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std::is_integral<TI>::value>::type* = 0)
 {
-	using namespace std::string_literals;
+	using namespace std;
 
 	static_assert( std::is_enum<TE>::value , "Must be an enum type (defined enum)");
 
@@ -102,15 +102,15 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 	// on conversion error, throw exception of given type from ex_type::value_type, and add additional info #why
 	// TODO pass here const auto & to ex_type
 	auto handle_error = [&](const std::string & why, auto ex_type) {
-		if (expected_bad) throw expected_not_found();
-		std::string msg = "Can not convert integer value "s + STR(val_int) + " ("s + typeid(TI).name() + ")"s
-			+ " to enum of type "s + typeid(TE).name() + " "s
-			+ ": "s + why + "."s
-			+ " (and you wanted strict matching of enum type to be hard exception)"s;
-		using t_ex = typename decltype(ex_type)::value_type;
-		_dbg5("Exception type to throw is: " << typeid(t_ex).name());
-		t_ex ex(msg);
-		_throw_error(ex);
+		//if (expected_bad) throw expected_not_found();
+		//std::string msg = std::string("Can not convert integer value ") + STR(val_int) + std::string(" (") + typeid(TI).name() + std::string(")")
+		//	+ std::string(" to enum of type ") + typeid(TE).name() + std::string(" ")
+		//	+ std::string(": ") + why + std::string(".")
+		//	+ std::string(" (and you wanted strict matching of enum type to be hard exception)");
+		//using t_ex = typename decltype(ex_type)::value_type;
+		//_dbg5("Exception type to throw is: " << typeid(t_ex).name());
+		//t_ex ex(msg);
+		//_throw_error(ex);
 	};
 
 	try {
@@ -119,8 +119,8 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 		if (! enum_is_valid_value(the_enum) ) handle_error("No such value defined in enum", std::vector<std::invalid_argument>() );
 		return the_enum; // <=== return
 	} catch(const boost::numeric::bad_numeric_cast &) {
-		handle_error("Given integer value can not be expressed in enum underlying type "s
-			+ " ("s + typeid(underlying_type).name()+")", std::vector<std::overflow_error>() );
+		handle_error(std::string("Given integer value can not be expressed in enum underlying type ")
+			+ std::string(" (") + typeid(underlying_type).name() + std::string(")"), std::vector<std::overflow_error>() );
 	}
 
 	DEAD_RETURN();

@@ -8,6 +8,7 @@
 #include "c_event_manager.hpp"
 #include <chrono>
 
+#include "platform.hpp"
 #include "error_subtype.hpp"
 #include "syserror_use.hpp"
 
@@ -61,11 +62,27 @@ class c_tun_device_freebsd final : public c_tun_device {
 		size_t write_to_tun(void *buf, size_t count) override{return 0};
 
 		virtual int get_tun_fd() const override{return 0;};
+}
 
+#elif defined(__NetBSD__)
 
-#endif
+class c_tun_device_netbsd final : public c_tun_device {
+	public:
+                friend class c_event_manager_linux; // for io_service etc?
 
-#ifdef __linux__
+		c_tun_device_netbsd();
+		virtual void init(); ///< call before use
+
+		void set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+		void set_mtu(uint32_t mtu) override;
+		bool incomming_message_form_tun() override;
+		size_t read_from_tun(void *buf, size_t count) override;
+		size_t write_to_tun(void *buf, size_t count) override;
+
+		virtual int get_tun_fd() const override;
+                boost::asio::io_service m_ioservice;
+};
+#elif defined(__linux__)
 
 class c_tun_device_linux final : public c_tun_device {
 	public:
@@ -200,7 +217,7 @@ class c_tun_device_empty final : public c_tun_device {
 		void set_mtu(uint32_t mtu) override;
 		bool incomming_message_form_tun() override;
 		size_t read_from_tun(void *buf, size_t count) override;
-		size_t write_to_tun(const void *buf, size_t count) override;
+		//size_t write_to_tun(const void *buf, size_t count) override;
 };
 
 // else

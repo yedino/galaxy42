@@ -666,6 +666,18 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
     return write_bytes;
 }
 // __MACH__
+#elif defined(__NetBSD__)
+
+c_tun_device_netbsd::c_tun_device_netbsd() { }
+void c_tun_device_netbsd::init() { }
+void c_tun_device_netbsd::set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) { NUNUSED(binary_address); NUNUSED(prefixLen); }
+void c_tun_device_netbsd::set_mtu(uint32_t mtu) { NUNUSED(mtu); }
+bool c_tun_device_netbsd::incomming_message_form_tun() { return false; }
+size_t c_tun_device_netbsd::read_from_tun(void *buf, size_t count) { NUNUSED(buf); NUNUSED(count); return 0; }
+size_t c_tun_device_netbsd::write_to_tun(void *buf, size_t count) { NUNUSED(buf); NUNUSED(count); return 0; }
+
+int c_tun_device_netbsd::get_tun_fd() const { return 0; }
+
 #else
 
 c_tun_device_empty::c_tun_device_empty() { }

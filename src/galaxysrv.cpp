@@ -17,6 +17,7 @@
 #include "tuntap/base/tuntap_base.hpp"
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
+#include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
 
 #include <boost/filesystem.hpp> // for flag-file
 #include <ipv6.hpp>
@@ -28,9 +29,11 @@
 
 // constexpr int cfg_jobs_tuntap_threads = 4;
 
-
 void asiotest();
 
+c_galaxysrv::c_galaxysrv() { }
+c_galaxysrv::~c_galaxysrv() { }
+                
 void c_galaxysrv::main_loop() {
 
 	asiotest();
@@ -293,7 +296,7 @@ void c_galaxysrv::start_exit() {
 	_goal("Start exiting - ok");
 }
 
-uint16_t c_galaxysrv::get_tuntap_mtu_default() const {
+uint32_t c_galaxysrv::get_tuntap_mtu_default() const {
 	return 16*1024;
 }
 
@@ -303,7 +306,7 @@ uint16_t c_galaxysrv::get_tuntap_mtu_current() const {
 
 void c_galaxysrv::init_tuntap() {
 	assert(m_prefix_len != -1);
-	m_tuntap.set_tun_parameters(get_my_hip(), m_prefix_len, this->get_tuntap_mtu_default());
+	//m_tuntap.set_tun_parameters(get_my_hip(), m_prefix_len, this->get_tuntap_mtu_default());
 }
 
 // my key @new

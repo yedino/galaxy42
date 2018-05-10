@@ -24,6 +24,10 @@
 
 	#define stdplus_platform_macosx
 
+#elif defined(__NetBSD__)
+
+        #define stdplus_platform_netbsd
+
 #else
 
 	#error Platform is not supported

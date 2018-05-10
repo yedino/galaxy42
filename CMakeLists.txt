@@ -202,6 +202,10 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}")
+
+set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -L/home/kedzior/boost/lib -L/usr/pkg/lib")
+
 if (CMAKE_VERSION VERSION_LESS 3.1)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
 endif()
@@ -396,7 +400,7 @@ include_directories( src-tools/netmodel/ )
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
 file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/*
-	src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/* src/tuntap/fake_tun/*
+	src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/* src/tuntap/fake_tun/* src/tuntap/netbsd/*
 	src/test/special_behaviour/*
 )
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
@@ -456,7 +460,7 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 set(LIB_OPTIONAL_CAPNG "")
 if (UNIX AND NOT CYGWIN AND NOT APPLE)
-	set(LIB_OPTIONAL_CAPNG "cap-ng")
+	#set(LIB_OPTIONAL_CAPNG "cap-ng")
 endif ()
 
 ######################################################################

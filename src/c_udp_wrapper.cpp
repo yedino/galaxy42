@@ -1,6 +1,6 @@
 #include "c_udp_wrapper.hpp"
 #include "tnetdbg.hpp"
-
+#include "c_ip46_addr.hpp"
 
 c_udp_wrapper::c_udp_wrapper()
 	: m_disabled(false)
@@ -69,7 +69,6 @@ int c_udp_wrapper_linux::get_socket() {
 // __linux__
 #elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 
-
 #include <boost/bind.hpp>
 #if defined (__MINGW32__)
 	#undef _assert
@@ -132,6 +131,66 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 }
 
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#elif defined(__NetBSD__)
+
+#include <boost/bind.hpp>
+
+c_udp_wrapper_asio::c_udp_wrapper_asio(const int listen_port)
+:
+	m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), listen_port)),
+	m_bytes_readed(0)
+{
+	_fact("udp wrapper constructor, listen port " << listen_port);
+	if (listen_port==0) {
+		m_disabled=true;
+		_warn("Socket is disabled, listen_port="<<listen_port);
+		return;
+	}
+	//m_socket.async_receive_from(boost::asio::buffer(m_buffer),
+	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
+			boost::bind(&c_udp_wrapper_asio::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
+void c_udp_wrapper_asio::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
+	if (m_disabled) { _dbg4("disabled socket"); return ; }
+//	std::cout << "send udp packet, size " << size_of_data << std::endl;
+	_dbg1("udp sending data to [" << dst_address << "]" << " size [" << size_of_data << "]");
+	m_socket.send_to( // blocks
+			boost::asio::buffer(data, size_of_data),
+			boost::asio::ip::udp::endpoint(dst_address.get_address(), dst_address.get_assigned_port())
+	);
+}
+
+size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
+	if (m_disabled) { _dbg4("disabled socket"); return 0 ; }
+	//std::cout << "udp receive data" << std::endl;
+    if (m_bytes_readed > 0) { // readed data in m_buffer
+		if (m_bytes_readed > data_buf_size) throw std::runtime_error("undersized buffer");
+//		std::copy_n(m_buffer.begin(), m_bytes_readed, data_buf);
+		std::copy_n(&m_buffer[0], m_bytes_readed, reinterpret_cast<uint8_t *>(data_buf));
+		size_t ret = m_bytes_readed;
+		from_address.set_address(m_sender_endpoint.address());
+		from_address.set_port(m_sender_endpoint.port());
+		_dbg1("udp recieving data from [" << from_address << "]");
+		m_bytes_readed = 0;
+		return ret;
+	}
+	return 0;
+}
+
+void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, size_t bytes_transferred) {
+	if (m_disabled) { _dbg4("disabled socket"); return ; }
+//	std::cout << "udp read handle" << std::endl;
+//	std::cout << "readed " << bytes_transferred << " bytes" << std::endl;
+	if (error && (error.value() != 10061)) { // http://stackoverflow.com/a/16763404
+		_warn("UDP read error: " << error.message() << " value " << error.value());
+	}
+//	assert(m_bytes_readed == 0);
+	m_bytes_readed = bytes_transferred;
+	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
+			boost::bind(&c_udp_wrapper_asio::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
 #else
 
 c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port) {

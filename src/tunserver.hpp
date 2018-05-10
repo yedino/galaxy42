@@ -294,7 +294,11 @@ class c_tunserver : public c_galaxy_node {
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#else
+                #elif defined(__NetBSD__)
+                c_tun_device_netbsd m_tun_device;
+		c_udp_wrapper_asio m_udp_device;
+		c_event_manager_asio m_event_manager;
+                #else
 		c_tun_device_empty m_tun_device;
 		c_udp_wrapper_empty m_udp_device;
 		c_event_manager_empty m_event_manager;
@@ -302,7 +306,7 @@ class c_tunserver : public c_galaxy_node {
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
-        shared_ptr< boost::program_options::variables_map > m_argm;
+                shared_ptr< boost::program_options::variables_map > m_argm;
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input

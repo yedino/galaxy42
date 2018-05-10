@@ -2,6 +2,8 @@
 
 #include <climits> // for CHAR_BITS
 
+#undef _GLIBCXX_USE_FLOAT128
+
 // test for little/big edian is in src/c_ndp.cpp
 
 // any errors about not-returning value from non-void function, will be hard errors,
@@ -41,6 +43,11 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 #elif (__MACH__)
 	#define ANTINET_macosx
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
+#elif defined(__NetBSD__)
+        #define NetBSD 1
+        #define NUNUSED(x) (void)x
+        /* Define if __float128 is supported on this host. */
+        
 #else
 	#error Platform is not supported
 #endif

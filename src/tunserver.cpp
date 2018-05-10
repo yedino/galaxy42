@@ -86,7 +86,7 @@ const char * g_demoname_default = "route_dij";
 #include "counter.hpp"
 #include "generate_crypto.hpp"
 
-
+#include "platform.hpp"
 
 #ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include "../depends/cjdns-code/NetPlatform.h" // from cjdns
@@ -596,7 +596,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
-
+        NUNUSED(ipv6_prefix);
 	// getting IDC
 	std::string IDI_name;
 	try {
@@ -837,7 +837,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	if(buff_size < pos_src+len_src) throw std::runtime_error("undersized buffer");
 	if(buff_size < pos_dst+len_dst) throw std::runtime_error("undersized buffer");
 	// valid: reading pos_src up to +len_src, and same for dst
-
+        NUNUSED(buff);
 #ifdef __linux__
 
 	char ipv6_str[INET6_ADDRSTRLEN]; // for string e.g. "fd42:ffaa:..."
@@ -868,6 +868,18 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#elif defined(__NetBSD__)
+        using namespace boost::asio;
+	ip::address_v6::bytes_type ip_bytes;
+	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
+	ip::address_v6 ip6_addr(ip_bytes);
+	_dbg1("src ipv6_str " << ip6_addr);
+	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
+
+	std::copy_n(buff + pos_dst, ip_bytes.size(), ip_bytes.begin());
+	ip6_addr = ip::address_v6(ip_bytes);
+	_dbg1("dst ipv6_str " << ip6_addr);
+	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 #endif
 
 	return std::make_pair( ret_src , ret_dst );

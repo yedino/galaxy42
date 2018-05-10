@@ -103,6 +103,12 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio 
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
 { }
+#elif defined(__NetBSD__)
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio &udp_wrapper)
+:
+	c_peering(ref),
+	m_udp_wrapper(udp_wrapper)
+{ }
 #endif
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {

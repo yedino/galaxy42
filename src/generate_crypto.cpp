@@ -35,13 +35,17 @@ void generate_crypto::crypto_sign(const std::string &filename, e_crypto_strength
 		keypair.generate(antinet_crypto::e_crypto_system_type_Ed25519, 1);
 		keypair.generate(antinet_crypto::e_crypto_system_type_SIDH, 1);
 		keypair.generate(antinet_crypto::e_crypto_system_type_NTRU_sign, 1);
+                break;
 	case e_crypto_strength::high:
 		keypair.generate(antinet_crypto::e_crypto_system_type_SIDH, 1);
+                break;
 	case e_crypto_strength::normal:
 	case e_crypto_strength::fast:
 		keypair.generate(antinet_crypto::e_crypto_system_type_NTRU_sign, 1);
+                break;
 	case e_crypto_strength::lowest:
 		keypair.generate(antinet_crypto::e_crypto_system_type_Ed25519, 1);
+                break;
 	}
 	keypair.datastore_save_PRV_and_pub(filename);
 }
@@ -55,13 +59,17 @@ void generate_crypto::crypto_exchange(const std::string &filename, e_crypto_stre
 		keypair.generate(antinet_crypto::e_crypto_system_type_X25519, 1);
 		keypair.generate(antinet_crypto::e_crypto_system_type_SIDH, 1);
 		keypair.generate(antinet_crypto::e_crypto_system_type_NTRU_EES439EP1, 1);
+                break;
 	case e_crypto_strength::high:
 		keypair.generate(antinet_crypto::e_crypto_system_type_SIDH, 1);
+                break;
 	case e_crypto_strength::normal:
 	case e_crypto_strength::fast:
 		keypair.generate(antinet_crypto::e_crypto_system_type_NTRU_EES439EP1, 1);
+                break;
 	case e_crypto_strength::lowest:
 		keypair.generate(antinet_crypto::e_crypto_system_type_X25519, 1);
+                break;
 	}
 	keypair.datastore_save_PRV_and_pub(filename);
 }

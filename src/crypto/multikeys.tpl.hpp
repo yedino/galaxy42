@@ -220,6 +220,7 @@ void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool over
 		case e_crypto_use_signature: {
 			_note("Save this as signature");
 			datastore::save_string(e_datastore_galaxy_sig, fname, serialized_data, overwrite);
+                        break;
 		  }
 		case e_crypto_use_secret: {
 			_note("Save this as PRIVATE key!!!");

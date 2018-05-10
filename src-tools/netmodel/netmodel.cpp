@@ -665,8 +665,7 @@ c_crypto_benchloop<F, allow_mt, max_threads_count>
 
 void nothing() { // TODO
 	thread_local volatile bool x;
-	x=1;
-
+	UNUSED(x); //x=1;
 }
 
 enum class e_crypto_test {
@@ -1460,7 +1459,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
 		_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
-		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
+		constexpr size_t size_tuntap_maxread = cfg_size_tuntap_maxread;
 		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex, &key_buf
 		                      , &nonce_buf](int send_weld_nr) { // lambda
 			size_t my_random = (tuntap_socket_nr*437213)%38132 + std::rand();

@@ -20,7 +20,7 @@ c_rpc_server::c_rpc_server(const std::string &listen_address, const unsigned sho
 {
 	m_hmac_key.fill(0x42); // TODO load this from conf file
 	this->rpc_start( port != 0 , listen_address, port);
-};
+}
 
 void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_address, const unsigned short port) {
 	if (network_listen) {

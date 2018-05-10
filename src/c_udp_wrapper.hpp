@@ -64,6 +64,29 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 };
 
 //  __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#elif defined (__NetBSD__)
+
+#include <array>
+#include <boost/asio.hpp>
+
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
+class c_udp_wrapper_asio final : public c_udp_wrapper {
+        friend class c_event_manager_asio;
+	public:
+		c_udp_wrapper_asio(const int listen_port);
+		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
+		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
+		int get_socket() { return -1; } // TODO remove this
+	private:
+		boost::asio::io_service m_io_service; // TODO use ioservice from event manager
+		boost::asio::ip::udp::socket m_socket;
+		std::array<uint8_t, 65527> m_buffer; // max udp packet data
+		size_t m_bytes_readed;
+		boost::asio::ip::udp::endpoint m_sender_endpoint;
+
+		void read_handle(const boost::system::error_code& error, size_t bytes_transferred);
+};
+
 #else
 
 #warning "using c_udp_wrapper_empty = It will not work (it's just a stump)!"

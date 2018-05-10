@@ -105,6 +105,51 @@ class c_ip46_addr {
 };
 
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+
+#elif defined(__NetBSD__)
+
+#include <boost/asio/ip/address.hpp>
+#include <ostream>
+#include <netinet/in.h>
+#include <netinet6/in6.h>
+
+class c_ip46_addr {
+	public:
+		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type
+		c_ip46_addr();
+		///! Constructs, from ip_addr in format hexdotip e.g.: fd42:ae11:f636:86:5:1:e5c4:d
+		c_ip46_addr(const std::string &ip_addr, int port = 9042);
+		t_tag get_ip_type() const;
+		friend std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr);
+		bool operator==(const c_ip46_addr &rhs) const;
+		bool operator<(const c_ip46_addr &rhs) const;
+		int get_assigned_port() const;
+		boost::asio::ip::address get_address() const;
+		void set_address(const boost::asio::ip::address &address);
+		void set_port(int new_port);
+                void set_ip4(sockaddr_in);
+                void set_ip6(sockaddr_in6);
+                sockaddr_in get_ip4() const;
+                sockaddr_in6 get_ip6() const;
+                c_ip46_addr any_on_port(int port);
+                c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
+                c_ip46_addr create_ipv6(const std::string &ipv6_str, int port);
+                bool is_ipv4(const std::string &ipstr);
+
+	private:
+                struct t_ip_data {
+			union { ///< the address is either:
+				sockaddr_in in4;
+				sockaddr_in6 in6;
+			};
+		};
+
+		t_ip_data m_ip_data; ///< current ip either ipv4, or ipv6, including the port too
+		boost::asio::ip::address m_address;
+		int m_port = 9042;
+                t_tag m_tag;
+};
+
 #endif
 
 

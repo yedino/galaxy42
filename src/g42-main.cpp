@@ -1,5 +1,6 @@
 // Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
+#include "platform.hpp"
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
