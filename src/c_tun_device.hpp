@@ -11,6 +11,7 @@
 #include "platform.hpp"
 #include "error_subtype.hpp"
 #include "syserror_use.hpp"
+#include <boost/asio.hpp>
 
 /// @thread
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
@@ -67,10 +68,12 @@ class c_tun_device_freebsd final : public c_tun_device {
 #elif defined(__NetBSD__)
 
 class c_tun_device_netbsd final : public c_tun_device {
+    using stream_type = boost::asio::posix::stream_descriptor;
 	public:
                 friend class c_event_manager_linux; // for io_service etc?
 
 		c_tun_device_netbsd();
+                ~c_tun_device_netbsd();
 		virtual void init(); ///< call before use
 
 		void set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
@@ -81,7 +84,75 @@ class c_tun_device_netbsd final : public c_tun_device {
 
 		virtual int get_tun_fd() const override;
                 boost::asio::io_service m_ioservice;
+                stream_type m_tun_stream;
+        protected:
+                int m_tun_fd = -1;
+                static inline int
+                netbsd_modify_read_write_return(u_int32_t len) {
+                    if (len > 0) {
+                        return len > sizeof(u_int32_t) ? len - sizeof(u_int32_t) : 0;
+                    } else {
+                        return len;
+                    }
+                }
+
+                int
+                write_tun(int tun0, void *buf, int len)
+                {
+                    u_int32_t type;
+                    struct iovec iv[2];
+
+                    type = htonl(AF_INET6);
+
+                    iv[0].iov_base = (char *)&type;
+                    iv[0].iov_len = sizeof(type);
+                    iv[1].iov_base = buf;
+                    iv[1].iov_len = len;
+
+                    return netbsd_modify_read_write_return(writev(tun0, iv, 2));
+                }
+
+                int
+                read_tun(int tun0, void *buf, int len)
+                {
+                    u_int32_t type;
+                    struct iovec iv[2];
+
+                    iv[0].iov_base = (char *)&type;
+                    iv[0].iov_len = sizeof(type);
+                    iv[1].iov_base = buf;
+                    iv[1].iov_len = len;
+
+                    return netbsd_modify_read_write_return(readv(tun0, iv, 2));
+                }
+                // end: from openvpn tun
+
+                int
+                ipv6_mask(struct in6_addr *mask, int len) {
+                    // /netbsd-current/external/bsd/dhcpcd/dist/src/ipv6.c
+                    static const unsigned char masks[NBBY] = { 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
+                    int bytes, bits, i;
+
+                    if (len < 0 || len > 128) {
+                        errno = EINVAL;
+                        return -1;
+                    }
+
+                    memset(mask, 0, sizeof(*mask));
+                    bytes = len / NBBY;
+                    bits = len % NBBY;
+                    for (i = 0; i < bytes; i++)
+                        mask->s6_addr[i] = 0xff;
+                    if (bits) {
+                        /* Coverify false positive.
+                        * bytelen cannot be 16 if bitlen is non zero */
+                        /* coverity[overrun-local] */
+                        mask->s6_addr[bytes] = masks[bits - 1];
+                    }
+                    return 0;
+                }
 };
+
 #elif defined(__linux__)
 
 class c_tun_device_linux final : public c_tun_device {

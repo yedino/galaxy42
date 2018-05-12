@@ -12,6 +12,13 @@
 // for NetPlatform utils - temporary solution
 #include "tuntap/base/tuntap_base.hpp"
 
+#if defined(__NetBSD__)
+#include <sys/socket.h>
+#include <net/if_tun.h>
+#include <netinet6/in6_var.h>
+#include <netinet6/nd6.h>
+#include <stdexcept>
+#endif
 
 c_tun_device::c_tun_device()
  :
@@ -668,15 +675,179 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
 // __MACH__
 #elif defined(__NetBSD__)
 
-c_tun_device_netbsd::c_tun_device_netbsd() { }
-void c_tun_device_netbsd::init() { }
-void c_tun_device_netbsd::set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) { NUNUSED(binary_address); NUNUSED(prefixLen); }
-void c_tun_device_netbsd::set_mtu(uint32_t mtu) { NUNUSED(mtu); }
-bool c_tun_device_netbsd::incomming_message_form_tun() { return false; }
-size_t c_tun_device_netbsd::read_from_tun(void *buf, size_t count) { NUNUSED(buf); NUNUSED(count); return 0; }
-size_t c_tun_device_netbsd::write_to_tun(void *buf, size_t count) { NUNUSED(buf); NUNUSED(count); return 0; }
+c_tun_device_netbsd::c_tun_device_netbsd() :
+	m_ioservice(),
+	m_tun_stream(m_ioservice, m_tun_fd)
+{
+    try {
+        int sock;
+        uint16_t scope;
 
-int c_tun_device_netbsd::get_tun_fd() const { return 0; }
+        // previous tun ??
+        scope = htons((uint16_t)if_nametoindex(IFNAME));
+        if(scope > 0) {
+            _warnn(IFNAME " exists");
+            //_throw_error( std::runtime_error("First destroy previous " IFNAME) );
+            sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+            struct ifreq interface;
+            memset(&interface, 0, sizeof(struct ifreq));
+            strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); /* if name */
+            if(ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
+                _erron("SIOCIFDESTROY");
+            }
+            _goal("Previous " IFNAME " destroyed.");
+        }
+        m_tun_fd = open("/dev/" IFNAME, O_RDWR);
+        _goal("Opening " IFNAME);
+    } catch(...) {
+        _warnn("First destroy previous " IFNAME);
+    }
+    
+}
+
+c_tun_device_netbsd::~c_tun_device_netbsd()
+{
+    _goal("Closing " IFNAME);
+    close(m_tun_fd);
+    
+}
+
+void c_tun_device_netbsd::init() 
+{ 
+    int i;
+    
+    _goal("Set flags: IFF_POINTOPOINT|IFF_MULTICAST");
+    i = IFF_POINTOPOINT|IFF_MULTICAST;
+    /* multicast on */
+    if(ioctl(m_tun_fd, TUNSIFMODE, &i) == -1) {
+        _warnn("ioctl TUNSIFMODE problem");
+        throw std::runtime_error(std::string("ioctl TUNSIFMODE problem"));
+    }
+    
+    _goal("Set flags: TUNSLMODE");
+    i = 0;
+    /* link layer mode off */
+    if(ioctl(m_tun_fd, TUNSLMODE, &i) == -1) {
+        _warnn("ioctl TUNSLMODE problem");
+        throw std::runtime_error(std::string("ioctl TUNSLMODE problem"));
+    }
+    
+    _goal("Set flags: TUNSIFHEAD");
+    i = 1;
+    /* multi-af mode on */
+    if(ioctl(m_tun_fd, TUNSIFHEAD, &i) == -1) {
+        _warnn("ioctl TUNSIFHEAD problem");
+        throw std::runtime_error(std::string("ioctl TUNSIFHEAD problem"));
+    }
+}
+
+void c_tun_device_netbsd::set_ipv6_address(
+    const std::array<uint8_t, 16> &binary_address, 
+    int prefixLen
+) {
+    int sock, inetret;
+    uint16_t scope;
+    
+    _goal("Create socket ...");
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    
+    struct in6_aliasreq ifa6;
+    memset(&ifa6, 0, sizeof(struct in6_aliasreq));
+    
+    strncpy(ifa6.ifra_name, IFNAME, sizeof(ifa6.ifra_name)); /* if name */
+    
+    // convert addr6
+    char *baData = (char *)malloc(binary_address.size());
+    for(size_t index = 0; index < binary_address.size(); index++) {
+        baData[index] = binary_address.at(index);
+    }
+        
+    ifa6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
+    ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
+    
+    _goal("Setting addresses " << std::string(baData) << "/" << prefixLen);
+    // address
+    ifa6.ifra_addr.sin6_family = AF_INET6;
+    ifa6.ifra_addr.sin6_len = sizeof(struct sockaddr_in6);
+    // dont convert, only copy addr6
+    //inetret = inet_pton(AF_INET6, (const char *)baData, &ifa6.ifra_addr.sin6_addr);
+    size_t toCopy = sizeof(ifa6.ifra_addr.sin6_addr);
+    assert(baData[0] == 0xFD);
+    memcpy(&ifa6.ifra_addr.sin6_addr, baData, toCopy);
+    //if(inetret == -1) {
+    //    perror("inet_pton: addr");
+    //}
+    
+    // destination address
+    //ifa6.ifra_dstaddr.sin6_family = AF_INET6;
+    //ifa6.ifra_dstaddr.sin6_len = sizeof(struct sockaddr_in6);
+    //inetret = inet_pton(AF_INET6, "fe80::02", &ifa6.ifra_dstaddr.sin6_addr);
+    //if(inetret == -1) {
+    //    perror("inet_pton: dstaddr");
+    //}
+    
+    // netmask - prefixlen
+    ifa6.ifra_prefixmask.sin6_family = AF_INET6;
+    ifa6.ifra_prefixmask.sin6_len = sizeof(struct sockaddr_in6);
+    ipv6_mask(&ifa6.ifra_prefixmask.sin6_addr, prefixLen);
+    
+    // scope id in address
+    scope = htons((uint16_t)if_nametoindex(IFNAME));
+    struct in6_addr *s6a1 = &ifa6.ifra_addr.sin6_addr;
+    memcpy(&s6a1[2], &scope, sizeof(uint16_t));
+    ifa6.ifra_addr.sin6_scope_id = 0;
+    
+    // call add address
+    if(ioctl(sock, SIOCAIFADDR_IN6, &ifa6) == -1) {
+        _erron("SIOCAIFADDR_IN6");
+    }
+    
+    m_ip6_ok=true;
+    _goal("IP address is fully configured");
+}
+
+void c_tun_device_netbsd::set_mtu(
+    uint32_t mtu
+) { 
+    NUNUSED(mtu); 
+}
+
+bool c_tun_device_netbsd::incomming_message_form_tun() 
+{ 
+    return false; 
+}
+
+size_t c_tun_device_netbsd::read_from_tun(
+    void *buf, 
+    size_t count
+) { 
+    int rret = read_tun(m_tun_fd, buf, count);
+    if(rret == -1) {
+        perror("read_tun");
+    } else {
+        _goal("Read from " IFNAME);
+        return rret;
+    }
+    return 0;
+}
+
+size_t c_tun_device_netbsd::write_to_tun(
+    void *buf, 
+    size_t count
+) { 
+    int wret = write_tun(m_tun_fd, buf, count);
+    if(wret == -1) {
+        perror("write_tun");
+    } else {
+        _goal("Write to " IFNAME);
+        return wret;
+    }
+    return 0;
+}
+
+int c_tun_device_netbsd::get_tun_fd() const { 
+    return m_tun_fd;
+}
 
 #else
 

@@ -46,8 +46,7 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 #elif defined(__NetBSD__)
         #define NetBSD 1
         #define NUNUSED(x) (void)x
-        /* Define if __float128 is supported on this host. */
-        
+        #define IFNAME "tun0"
 #else
 	#error Platform is not supported
 #endif
