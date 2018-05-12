@@ -83,10 +83,12 @@ class c_tun_device_netbsd final : public c_tun_device {
 		size_t write_to_tun(void *buf, size_t count) override;
 
 		virtual int get_tun_fd() const override;
+                
+                int m_tun_fd = -1;
+                size_t m_readed_bytes;
                 boost::asio::io_service m_ioservice;
                 stream_type m_tun_stream;
-        protected:
-                int m_tun_fd = -1;
+                
                 static inline int
                 netbsd_modify_read_write_return(u_int32_t len) {
                     if (len > 0) {

@@ -13,6 +13,7 @@
 #include "tuntap/base/tuntap_base.hpp"
 
 #if defined(__NetBSD__)
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if_tun.h>
 #include <netinet6/in6_var.h>
@@ -698,6 +699,10 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
             _goal("Previous " IFNAME " destroyed.");
         }
         m_tun_fd = open("/dev/" IFNAME, O_RDWR);
+        if(m_tun_fd == -1) {
+            _warnn(__func__);
+            throw std::runtime_error(std::string("Problem with open " IFNAME));
+        }
         _goal("Opening " IFNAME);
     } catch(...) {
         _warnn("First destroy previous " IFNAME);
@@ -745,11 +750,15 @@ void c_tun_device_netbsd::set_ipv6_address(
     const std::array<uint8_t, 16> &binary_address, 
     int prefixLen
 ) {
-    int sock, inetret;
+    int sock;
     uint16_t scope;
     
     _goal("Create socket ...");
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    if(sock == -1) {
+        _warnn(__func__);
+        throw std::runtime_error(std::string("Socket create problem"));
+    }
     
     struct in6_aliasreq ifa6;
     memset(&ifa6, 0, sizeof(struct in6_aliasreq));
@@ -765,14 +774,19 @@ void c_tun_device_netbsd::set_ipv6_address(
     ifa6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
     ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
     
-    _goal("Setting addresses " << std::string(baData) << "/" << prefixLen);
+    
+    char temp[128];
+    _goal("Setting addresses " \
+            << std::string(inet_ntop(AF_INET6, baData, temp, 128)) \
+            << "/" \
+            << prefixLen);
     // address
     ifa6.ifra_addr.sin6_family = AF_INET6;
     ifa6.ifra_addr.sin6_len = sizeof(struct sockaddr_in6);
     // dont convert, only copy addr6
     //inetret = inet_pton(AF_INET6, (const char *)baData, &ifa6.ifra_addr.sin6_addr);
     size_t toCopy = sizeof(ifa6.ifra_addr.sin6_addr);
-    assert(baData[0] == 0xFD);
+    //assert(baData[0] == 0xFD);
     memcpy(&ifa6.ifra_addr.sin6_addr, baData, toCopy);
     //if(inetret == -1) {
     //    perror("inet_pton: addr");
@@ -804,17 +818,40 @@ void c_tun_device_netbsd::set_ipv6_address(
     
     m_ip6_ok=true;
     _goal("IP address is fully configured");
+    close(sock);
 }
 
 void c_tun_device_netbsd::set_mtu(
     uint32_t mtu
-) { 
-    NUNUSED(mtu); 
+) {
+    int sock;
+    struct ifreq interface;
+    
+    memset(&interface, 0, sizeof(struct ifreq));
+    
+    _goal("Create socket ...");
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    if(sock == -1) {
+        _warnn(__func__);
+        throw std::runtime_error(std::string("Socket create problem"));
+    }
+    
+    strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); /* if name */
+    interface.ifr_ifru.ifru_mtu = mtu;
+    
+    _goal("Setting MTU on " << IFNAME << " to " << mtu);
+    if(ioctl(sock, SIOCSIFMTU, &interface) == -1) {
+        _erron("SIOCSIFMTU");
+    }
+    
+    close(sock);
 }
 
 bool c_tun_device_netbsd::incomming_message_form_tun() 
-{ 
-    return false; 
+{
+    m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
+    if (m_readed_bytes > 0) return true;
+    return false;
 }
 
 size_t c_tun_device_netbsd::read_from_tun(
