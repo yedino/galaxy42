@@ -502,6 +502,3 @@ c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
 */
 
 #endif
-
-
-

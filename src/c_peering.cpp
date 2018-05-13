@@ -177,8 +177,8 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
 	_info("Send to peer (COMMAND): command="<<enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
 	string_as_bin raw;
-    raw.bytes += c_protocol::current_version;
-    raw.bytes += enum_to_int_safe<unsigned char>(cmd);
+        raw.bytes += c_protocol::current_version;
+        raw.bytes += enum_to_int_safe<unsigned char>(cmd);
 	raw.bytes += bin.bytes;
 	this->send_data_RAW_udp(raw.bytes.c_str(), raw.bytes.size(), udp_socket);
 }
@@ -196,7 +196,7 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 		break;
 		case c_ip46_addr::t_tag::tag_ipv6 : {
 			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
-		}
+                }
 		break;
 		default: {
 			std::ostringstream oss; oss << m_peering_addr; // TODO

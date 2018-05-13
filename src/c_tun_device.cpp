@@ -681,23 +681,24 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
 	m_tun_stream(m_ioservice, m_tun_fd)
 {
     try {
-        int sock;
-        uint16_t scope;
+        
+        /* uint16_t scope;
 
         // previous tun ??
         scope = htons((uint16_t)if_nametoindex(IFNAME));
-        if(scope > 0) {
+        if(scope > 0) { // XXX: uncomment in  future
+            int sock;
             _warnn(IFNAME " exists");
             //_throw_error( std::runtime_error("First destroy previous " IFNAME) );
-            sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+            sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
             struct ifreq interface;
             memset(&interface, 0, sizeof(struct ifreq));
-            strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); /* if name */
+            strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); // if name
             if(ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
                 _erron("SIOCIFDESTROY");
             }
             _goal("Previous " IFNAME " destroyed.");
-        }
+        } */
         m_tun_fd = open("/dev/" IFNAME, O_RDWR);
         if(m_tun_fd == -1) {
             _warnn(__func__);
@@ -725,24 +726,21 @@ void c_tun_device_netbsd::init()
     i = IFF_POINTOPOINT|IFF_MULTICAST;
     /* multicast on */
     if(ioctl(m_tun_fd, TUNSIFMODE, &i) == -1) {
-        _warnn("ioctl TUNSIFMODE problem");
-        throw std::runtime_error(std::string("ioctl TUNSIFMODE problem"));
+        _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFMODE problem") );
     }
     
     _goal("Set flags: TUNSLMODE");
     i = 0;
     /* link layer mode off */
     if(ioctl(m_tun_fd, TUNSLMODE, &i) == -1) {
-        _warnn("ioctl TUNSLMODE problem");
-        throw std::runtime_error(std::string("ioctl TUNSLMODE problem"));
+        _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSLMODE problem") );
     }
     
     _goal("Set flags: TUNSIFHEAD");
     i = 1;
     /* multi-af mode on */
     if(ioctl(m_tun_fd, TUNSIFHEAD, &i) == -1) {
-        _warnn("ioctl TUNSIFHEAD problem");
-        throw std::runtime_error(std::string("ioctl TUNSIFHEAD problem"));
+        _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFHEAD problem") );
     }
 }
 
@@ -773,7 +771,6 @@ void c_tun_device_netbsd::set_ipv6_address(
         
     ifa6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
     ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
-    
     
     char temp[128];
     _goal("Setting addresses " \

@@ -124,7 +124,7 @@ c_event_manager_asio::c_event_manager_asio(c_tun_device_netbsd &tun_device, c_ud
 }
 
 void c_event_manager_asio::init() {
-	#if defined(__MACH__)
+	#if !defined(__MACH__)
 		m_tun_fd = m_tun_device.get().get_tun_fd();
 		_goal("Event manager will watch tuntap fd " << m_tun_fd);
 		if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));

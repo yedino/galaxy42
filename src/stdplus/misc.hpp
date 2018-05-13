@@ -102,15 +102,15 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 	// on conversion error, throw exception of given type from ex_type::value_type, and add additional info #why
 	// TODO pass here const auto & to ex_type
 	auto handle_error = [&](const std::string & why, auto ex_type) {
-		//if (expected_bad) throw expected_not_found();
-		//std::string msg = std::string("Can not convert integer value ") + STR(val_int) + std::string(" (") + typeid(TI).name() + std::string(")")
-		//	+ std::string(" to enum of type ") + typeid(TE).name() + std::string(" ")
-		//	+ std::string(": ") + why + std::string(".")
-		//	+ std::string(" (and you wanted strict matching of enum type to be hard exception)");
-		//using t_ex = typename decltype(ex_type)::value_type;
-		//_dbg5("Exception type to throw is: " << typeid(t_ex).name());
-		//t_ex ex(msg);
-		//_throw_error(ex);
+		if (expected_bad) throw expected_not_found();
+		std::string msg = std::string("Can not convert integer value ") + STR(val_int) + std::string(" (") + typeid(TI).name() + std::string(")")
+			+ std::string(" to enum of type ") + typeid(TE).name() + std::string(" ")
+			+ std::string(": ") + why + std::string(".")
+			+ std::string(" (and you wanted strict matching of enum type to be hard exception)");
+		using t_ex = typename decltype(ex_type)::value_type;
+		_dbg5("Exception type to throw is: " << typeid(t_ex).name());
+		t_ex ex(msg);
+		_throw_error(ex);
 	};
 
 	try {

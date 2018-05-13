@@ -233,7 +233,7 @@ template<typename TC> class c_ig final {
 					_erro("Post-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					throw;
+					//throw;
 				}
 			}
 		}

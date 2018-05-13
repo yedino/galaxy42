@@ -780,7 +780,7 @@ void c_tunserver::prepare_socket() {
 //		assert(address[1] == 0x42);
 
 		_fact("Will configure the tun device");
-		try {
+		try { // XXX: set tun dev
 			m_tun_device.init();
 			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
