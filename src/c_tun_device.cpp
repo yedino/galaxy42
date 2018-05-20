@@ -680,35 +680,48 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
 	m_ioservice(),
 	m_tun_stream(m_ioservice, m_tun_fd)
 {
-    try {
-        
-        /* uint16_t scope;
+    uint16_t scope;
 
-        // previous tun ??
-        scope = htons((uint16_t)if_nametoindex(IFNAME));
-        if(scope > 0) { // XXX: uncomment in  future
-            int sock;
-            _warnn(IFNAME " exists");
-            //_throw_error( std::runtime_error("First destroy previous " IFNAME) );
-            sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
-            struct ifreq interface;
-            memset(&interface, 0, sizeof(struct ifreq));
-            strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); // if name
-            if(ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
-                _erron("SIOCIFDESTROY");
-            }
+    // previous tun ??
+    scope = htons((uint16_t)if_nametoindex(IFNAME));
+    if(scope > 0) { // XXX: uncomment in  future
+        int sock;
+        _warnn(IFNAME " exists");
+        //_throw_error( std::runtime_error("First destroy previous " IFNAME) );
+        sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
+        struct ifreq interface;
+        memset(&interface, 0, sizeof(struct ifreq));
+        strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); // if name
+        if(ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
+            std::stringstream errorstring;
+            char *serr = strerror(errno);
+            errorstring<<"SIOCIFDESTROY : "<<serr;
+            _erro(errorstring.str());
+            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+        } else {
             _goal("Previous " IFNAME " destroyed.");
-        } */
-        m_tun_fd = open("/dev/" IFNAME, O_RDWR);
-        if(m_tun_fd == -1) {
-            _warnn(__func__);
-            throw std::runtime_error(std::string("Problem with open " IFNAME));
         }
-        _goal("Opening " IFNAME);
-    } catch(...) {
-        _warnn("First destroy previous " IFNAME);
     }
-    
+    m_tun_fd = open("/dev/" IFNAME, O_RDWR);
+    if(m_tun_fd == -1) {
+        char *serr = strerror(errno);
+        std::stringstream errorstring;
+        errorstring<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+        switch(errno) {
+            case EBUSY:
+                errorstring<<"Maybe some process run in system ?";
+                break;
+            case EACCES:
+                errorstring<<"Maybe process must run with root privileges ?";
+                break;
+            default:
+                errorstring<<"Please describe errno "<<errno;
+        }
+        _warnn(errorstring.str());
+        _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+    } else {
+        _goal("Opened " IFNAME);
+    }
 }
 
 c_tun_device_netbsd::~c_tun_device_netbsd()
@@ -855,7 +868,8 @@ size_t c_tun_device_netbsd::read_from_tun(
     void *buf, 
     size_t count
 ) { 
-    int rret = read_tun(m_tun_fd, buf, count);
+    //int rret = read_tun(m_tun_fd, buf, count);
+    int rret = read(m_tun_fd, buf, count);
     if(rret == -1) {
         perror("read_tun");
     } else {
@@ -869,7 +883,8 @@ size_t c_tun_device_netbsd::write_to_tun(
     void *buf, 
     size_t count
 ) { 
-    int wret = write_tun(m_tun_fd, buf, count);
+    //int wret = write_tun(m_tun_fd, buf, count);
+    int wret = write(m_tun_fd, buf, count);
     if(wret == -1) {
         perror("write_tun");
     } else {

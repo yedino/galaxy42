@@ -160,7 +160,7 @@ void c_event_manager_asio::wait_for_event() {
 }
 
 bool c_event_manager_asio::receive_udp_paket() {
-	// if (m_udp_event) std::cout << "get udp packet" << std::endl;
+	if (m_udp_event) std::cout << "get udp packet" << std::endl;
 	return m_udp_event;
 }
 

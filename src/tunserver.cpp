@@ -1483,8 +1483,8 @@ void c_tunserver::event_loop(int time) {
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
 				_info("We recognize the sender, as: " << sender_as_peering);
-                sender_as_peering.get_stats().update_read_stats(size_read);
-                sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
+                                sender_as_peering.get_stats().update_read_stats(size_read);
+                                sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
 			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << enum_to_int(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
@@ -1808,7 +1808,7 @@ void c_tunserver::event_loop(int time) {
 		}
 		catch (tuntap_error_devtun &e) {
 			_erro(e.what());
-			_warn("Trying restar tun/tap device ...");
+			_warn("Trying restart tun/tap device ...");
 			try{
 				prepare_socket();
 			}catch(ui::exception_error_exit){}

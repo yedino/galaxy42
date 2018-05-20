@@ -264,7 +264,9 @@ void c_ip46_addr::set_port(int new_port) {
 c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
 
 c_ip46_addr::t_tag c_ip46_addr::get_ip_type() const {
-	return m_tag;
+	if (m_address.is_v4()) return t_tag::tag_ipv4;
+	else if (m_address.is_v6()) return t_tag::tag_ipv6;
+	else return t_tag::tag_none;
 }
 
 c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) {
@@ -334,9 +336,9 @@ c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
 }
 
 int c_ip46_addr::get_assigned_port() const {
-	if (m_tag == tag_ipv4) {
+	if (m_tag == t_tag::tag_ipv4) {
 		return ntohs(m_ip_data.in4.sin_port);
-	} else if (m_tag == tag_ipv6) {
+	} else if (m_tag == t_tag::tag_ipv6) {
 		return ntohs(m_ip_data.in6.sin6_port);
 	}
 	//assert(false && "c_ip46_addr has bad ip type (can not return it's port)");
@@ -364,7 +366,6 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	}
 	_assert(false);
 }
-
 
 ostream & operator<<(ostream &out, const c_ip46_addr& addr) {
 	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
@@ -453,52 +454,5 @@ void c_ip46_addr::set_address(const boost::asio::ip::address &address) {
 void c_ip46_addr::set_port(int new_port) {
 	m_port = new_port;
 }
-
-/*
-bool c_ip46_addr::is_ipv4(const string &ipstr) {
-	as_zerofill< addrinfo > hint;
-	struct addrinfo *result = nullptr;
-	hint.ai_family = PF_UNSPEC;
-	hint.ai_flags = AI_NUMERICHOST;
-
-	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
-	if (ret) _throw_error( invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
-	if (!result) _throw_error( invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
-	auto result_deleter = [&](struct addrinfo *result){ if (!result) _throw_error(runtime_error("NULL in freeaddrinfo")); freeaddrinfo(result); };
-	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
-
-	if(result_ptr->ai_family == AF_INET) {
-		return true;
-	}
-	else if (result_ptr->ai_family == AF_INET6) {
-		return false;
-	}
-	_assert(false);
-}
-*/
-
-/*
-c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
-	as_zerofill< sockaddr_in > addr_in;
-	addr_in.sin_family = AF_INET;
-	inet_pton(AF_INET, ipv4_str.c_str(), &(addr_in.sin_addr));
-	addr_in.sin_port = htons(port);
-	c_ip46_addr ret;
-	ret.set_ip4(addr_in);
-	return ret;
-}
-*/
-
-/*
-c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
-	as_zerofill <sockaddr_in6> addr_in6;
-	addr_in6.sin6_family = AF_INET6;
-	inet_pton(AF_INET6, ipv6_str.c_str(), &(addr_in6.sin6_addr));
-	addr_in6.sin6_port = htons(port);
-	c_ip46_addr ret;
-	ret.set_ip6(addr_in6);
-	return ret;
-}
-*/
 
 #endif
