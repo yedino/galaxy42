@@ -368,20 +368,20 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 }
 
 ostream & operator<<(ostream &out, const c_ip46_addr& addr) {
-	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
+	if (addr.get_ip_type() == c_ip46_addr::tag_ipv4) {
 		char addr_str[INET_ADDRSTRLEN];
 		auto ip4_address = addr.get_ip4();
 		inet_ntop(AF_INET, &ip4_address.sin_addr, addr_str, INET_ADDRSTRLEN);
-		out << addr_str << ":" << addr.get_assigned_port();
+		out << "[in4] " << addr_str << ":" << addr.get_assigned_port();
 	}
-	else if (addr.m_tag == c_ip46_addr::tag_ipv6) {
+	else if (addr.get_ip_type() == c_ip46_addr::tag_ipv6) {
 		char addr_str[INET6_ADDRSTRLEN];
 		auto ip6_address = addr.get_ip6();
 		inet_ntop(AF_INET6, &ip6_address.sin6_addr, addr_str, INET6_ADDRSTRLEN);
-		out << "[" << addr_str << "]:" << addr.get_assigned_port();
+		out << "[in6] " << addr_str << ":" << addr.get_assigned_port();
 	}
 	else {
-		out << "none";
+		out << "[none] IP type not recognized";
 	}
 	return out;
 }

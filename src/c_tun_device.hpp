@@ -70,7 +70,7 @@ class c_tun_device_freebsd final : public c_tun_device {
 class c_tun_device_netbsd final : public c_tun_device {
     using stream_type = boost::asio::posix::stream_descriptor;
 	public:
-                friend class c_event_manager_linux; // for io_service etc?
+                friend class c_event_manager_netbsd; // for io_service etc?
 
 		c_tun_device_netbsd();
                 ~c_tun_device_netbsd();

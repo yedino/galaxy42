@@ -909,7 +909,7 @@ void c_tunserver::peering_ping_all_peers() {
 		<< count_removed << " inactive peer(s), time="<<now);
 	}
 
-	_info("Sending ping to all peers (count=" << m_peer.size() << ")");
+	_info("Sending ping to all peers (count=" << m_peer.size() << ")"); // XXX: fuckoffhere?
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -921,7 +921,8 @@ void c_tunserver::peering_ping_all_peers() {
 		gen.push_varstring( m_IDI_IDC_sig.serialize_bin());
 		string_as_bin cmd_data( gen.str_move() );
 		// TODONOW
-		peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_public_hi, cmd_data, m_udp_device.get_socket());
+                int socket = m_udp_device.get_socket();
+		peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_public_hi, cmd_data, socket);
 	}
 }
 
@@ -1404,6 +1405,7 @@ void c_tunserver::event_loop(int time) {
 		// ^--- or not fully checked. need scoring system anyway
 
 		if (m_event_manager.get_tun_packet()) { // get packet from tun
+                        _info("m_event_manager.get_tun_packet()");
 			anything_happened=true;
 			std::vector<int8_t> tun_read_buff(buf_size);
 			auto size_read = m_tun_device.read_from_tun(&tun_read_buff[0], tun_read_buff.size());
@@ -1458,7 +1460,8 @@ void c_tunserver::event_loop(int time) {
 				was_anything_sent_from_TUN=true;
 			}
 		}
-		else if(m_event_manager.receive_udp_paket()) { // data incoming on peer (UDP) - will route it or send to our TUN
+		else if(m_event_manager.receive_udp_packet()) { // data incoming on peer (UDP) - will route it or send to our TUN
+                        _info("m_event_manager.receive_udp_packet()");
 			anything_happened=true;
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 
@@ -1586,7 +1589,7 @@ void c_tunserver::event_loop(int time) {
 								throw std::runtime_error("crypto authentification of source IP failed");
 							}
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
-							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
+							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size()); // XXX
 							_assert_throw( (write_bytes == tundata.size()) );
 
 						}

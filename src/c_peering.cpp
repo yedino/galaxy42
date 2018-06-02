@@ -104,7 +104,7 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio 
 	m_udp_wrapper(udp_wrapper)
 { }
 #elif defined(__NetBSD__)
-c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio &udp_wrapper)
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_netbsd &udp_wrapper)
 :
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
@@ -188,7 +188,7 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 	_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
 		", RAW-DATA: " << to_debug_b(std::string(data,data_size)) );
 
-	//#ifdef __linux__
+	//#ifdef __linux__ // XXX: fuckoff here??!?!
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
 			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);

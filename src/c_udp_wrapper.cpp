@@ -133,6 +133,92 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 #elif defined(__NetBSD__)
 
+c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
+:
+	m_socket(socket(AF_INET, SOCK_RAW, 0))
+{
+        //int state = 1;
+        //setsockopt(m_socket, 0, IP_HDRINCL, &state, sizeof(state));
+	_note("Creating udp wrapper (old-style)");
+	if (listen_port==0) {
+		m_disabled=true;
+		_warn("Socket is disabled, listen_port="<<listen_port);
+		return;
+	}
+	_assert(m_socket >= 0);
+        c_ip46_addr anyport;
+	c_ip46_addr address_for_sock = anyport.any_on_port(listen_port);
+	int bind_result = -1;
+	if (address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv4) {
+		sockaddr_in addr4 = address_for_sock.get_ip4();
+		_note("Binding 4");
+		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
+	}
+	else if(address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv6) {
+		sockaddr_in6 addr6 = address_for_sock.get_ip6();
+		_note("Binding 6");
+		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
+	}
+        struct ifreq ifr;
+        memset (&ifr, 0, sizeof (ifr));
+        snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", IFNAME);
+        if (ioctl (m_socket, SIOCGIFINDEX, &ifr) < 0) {
+            std::stringstream errorstring;
+            char *serr = strerror(errno);
+            errorstring<<"SIOCGIFINDEX : "<<serr;
+            _erro(errorstring.str());
+            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+        } else {
+            _dbg5("SIOCGIFINDEX : " << ifr.ifr_ifindex);
+        }
+        if(bind_result == -1) {
+            char *serr = strerror(errno);
+            std::stringstream errorstring;
+            errorstring<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            switch(errno) {
+                case EINVAL:
+                    errorstring<<"You have invalid argument in bind()";
+                    break;
+                default:
+                    errorstring<<"Please describe errno "<<errno;
+            }
+            _warnn(errorstring.str());
+            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+        }
+	_assert( bind_result >= 0 ); // TODO change to except
+	_assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
+}
+
+void c_udp_wrapper_netbsd::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
+	if (m_disabled) { _dbg4("disabled socket"); return; }
+	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
+	sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
+}
+
+size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
+	if (m_disabled) { _dbg4("disabled socket"); return 0; }
+	sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
+	socklen_t from_addr_raw_size = sizeof(from_addr_raw); // ^ size of it
+	auto size_read = recvfrom(m_socket, data_buf, data_buf_size, 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
+	if (from_addr_raw_size == sizeof(sockaddr_in6)) { // the message arrive from IP pasted into sockaddr_in6 format
+		_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
+		// trivial
+	}
+	else if (from_addr_raw_size == sizeof(sockaddr_in)) { // the message arrive from IP pasted into sockaddr_in (ipv4) format
+		sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
+		from_address.set_ip4(addr);
+	} else {
+		_throw_error( std::runtime_error("Data arrived from unknown socket address type") );
+	}
+	return size_read;
+}
+
+int c_udp_wrapper_netbsd::get_socket() {
+	if (m_disabled) { _dbg4("disabled socket"); return 0 ; }
+	return m_socket;
+}
+
+#if 0
 #include <boost/bind.hpp>
 
 c_udp_wrapper_asio::c_udp_wrapper_asio(const int listen_port)
@@ -151,20 +237,43 @@ c_udp_wrapper_asio::c_udp_wrapper_asio(const int listen_port)
 			boost::bind(&c_udp_wrapper_asio::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-void c_udp_wrapper_asio::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
+void c_udp_wrapper_asio::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) { // XXX
 	if (m_disabled) { _dbg4("disabled socket"); return ; }
-//	std::cout << "send udp packet, size " << size_of_data << std::endl;
-	_dbg1("udp sending data to [" << dst_address << "]" << " size [" << size_of_data << "]");
-	m_socket.send_to( // blocks
+	_dbg1("udp sending data to " << dst_address << " [size:" << size_of_data << "]");
+        m_socket.send_to( // blocks
 			boost::asio::buffer(data, size_of_data),
 			boost::asio::ip::udp::endpoint(dst_address.get_address(), dst_address.get_assigned_port())
 	);
 }
 
-size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
-	if (m_disabled) { _dbg4("disabled socket"); return 0 ; }
+size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) { // XXX
+        if (m_disabled) { _dbg4("disabled socket"); return 0; }
+	//auto size_read = recvfrom(, data_buf, data_buf_size, 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
+	auto buffer = boost::asio::buffer(data_buf, data_buf_size);
+        boost::asio::ip::udp::endpoint sender_endpoint;
+        std::size_t size_read = m_socket.receive_from(buffer, sender_endpoint);
+        const boost::asio::ip::address adr = sender_endpoint.address();
+        boost::asio::ip::address_v4 a4;
+        boost::asio::ip::address_v6 a6;
+        if(adr.is_v4()) {
+            a4 = adr.to_v4();
+            uint32_t uia = a4.to_uint();
+            sockaddr_in from_addr_raw;
+            memcpy(&from_addr_raw.sin_addr, &uia, sizeof(struct in_addr));
+            sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
+            from_address.set_ip4(addr);
+        } else if(adr.is_v6()) {
+            a6 = adr.to_v6();
+            _erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
+            // trivial
+        } else {
+            _throw_error( std::runtime_error("Data arrived from unknown socket address type") );
+        }
+	return size_read;	
+    
+        /* if (m_disabled) { _dbg4("disabled socket"); return 0 ; }
 	//std::cout << "udp receive data" << std::endl;
-    if (m_bytes_readed > 0) { // readed data in m_buffer
+        if (m_bytes_readed > 0) { // readed data in m_buffer
 		if (m_bytes_readed > data_buf_size) throw std::runtime_error("undersized buffer");
 //		std::copy_n(m_buffer.begin(), m_bytes_readed, data_buf);
 		std::copy_n(&m_buffer[0], m_bytes_readed, reinterpret_cast<uint8_t *>(data_buf));
@@ -175,7 +284,7 @@ size_t c_udp_wrapper_asio::receive_data(void *data_buf, const size_t data_buf_si
 		m_bytes_readed = 0;
 		return ret;
 	}
-	return 0;
+	return 0; */
 }
 
 void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, size_t bytes_transferred) {
@@ -190,6 +299,7 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
 			boost::bind(&c_udp_wrapper_asio::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
+#endif
 
 #else
 

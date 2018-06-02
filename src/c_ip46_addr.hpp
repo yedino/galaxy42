@@ -135,7 +135,7 @@ class c_ip46_addr {
                 c_ip46_addr create_ipv4(const std::string &ipv4_str, int port);
                 c_ip46_addr create_ipv6(const std::string &ipv6_str, int port);
                 bool is_ipv4(const std::string &ipstr);
-
+                
 	private:
                 struct t_ip_data {
 			union { ///< the address is either:
