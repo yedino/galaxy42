@@ -135,7 +135,7 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 
 c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
 :
-	m_socket(socket(AF_INET, SOCK_RAW, 0))
+	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
 {
         //int state = 1;
         //setsockopt(m_socket, 0, IP_HDRINCL, &state, sizeof(state));
@@ -192,7 +192,20 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
 void c_udp_wrapper_netbsd::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
 	if (m_disabled) { _dbg4("disabled socket"); return; }
 	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
-	sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
+	ssize_t sto = sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
+        if(sto == -1) {
+            char *serr = strerror(errno);
+            std::stringstream errorstring;
+            errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            switch(errno) {
+                
+                default:
+                    errorstring<<"Please describe errno "<<errno;
+            }
+            _warnn(errorstring.str());
+        } else {
+            _info(__func__<<" sended "<<sto<<" bytes");
+        }
 }
 
 size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
@@ -200,6 +213,19 @@ size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_
 	sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
 	socklen_t from_addr_raw_size = sizeof(from_addr_raw); // ^ size of it
 	auto size_read = recvfrom(m_socket, data_buf, data_buf_size, 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
+        if(size_read == -1) {
+            char *serr = strerror(errno);
+            std::stringstream errorstring;
+            errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            switch(errno) {
+                
+                default:
+                    errorstring<<"Please describe errno "<<errno;
+            }
+            _warnn(errorstring.str());
+        } else {
+            _info(__func__<<" receive "<<size_read<<" bytes");
+        }
 	if (from_addr_raw_size == sizeof(sockaddr_in6)) { // the message arrive from IP pasted into sockaddr_in6 format
 		_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
 		// trivial

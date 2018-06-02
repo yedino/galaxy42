@@ -34,16 +34,13 @@ class c_tun_device {
 		virtual void set_mtu(uint32_t mtu) = 0; ///< sets MTU. first use set_ipv6_address
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
-
                 virtual size_t write_to_tun(void *buf, size_t count) = 0;
-
 		virtual int get_tun_fd() const; ///< for POSIX-like systems, returns int fd of the tuntap file, e.g. for select()'ing it
 
-    protected:
-        typedef std::chrono::system_clock time;
-        static const int number_of_tested_cards = 100;
-        static const int cards_testing_time = 5;
-
+        protected:
+            typedef std::chrono::system_clock time;
+            static const int number_of_tested_cards = 100;
+            static const int cards_testing_time = 5;
 };
 
 #ifdef __FreeBSD__
@@ -127,7 +124,6 @@ class c_tun_device_netbsd final : public c_tun_device {
 
                     return netbsd_modify_read_write_return(readv(tun0, iv, 2));
                 }
-                // end: from openvpn tun
 
                 int
                 ipv6_mask(struct in6_addr *mask, int len) {

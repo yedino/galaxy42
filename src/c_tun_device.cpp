@@ -757,8 +757,7 @@ void c_tun_device_netbsd::init()
     _dbg1("Prolog at " << __func__);
     int i;
     
-    //i = IFF_POINTOPOINT|IFF_MULTICAST;
-    i = IFF_BROADCAST|IFF_MULTICAST;
+    i = IFF_POINTOPOINT|IFF_MULTICAST;
     /* multicast on */
     if(ioctl(m_tun_fd, TUNSIFMODE, &i) == -1) {
         _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFMODE problem") );
@@ -766,7 +765,7 @@ void c_tun_device_netbsd::init()
         _goal("Set flags: TUNSIFMODE : " << i);
     }
     
-    i = 0;
+    i = 1;
     /* link layer mode off */
     if(ioctl(m_tun_fd, TUNSLMODE, &i) == -1) {
         _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSLMODE problem") );
@@ -901,9 +900,10 @@ size_t c_tun_device_netbsd::read_from_tun(
     size_t count
 ) {
     _dbg1("Prolog at " << __func__);
+    memset(buf, 0, count);
     int rret = read_tun(m_tun_fd, buf, count);
     //int rret = read(m_tun_fd, buf, count);
-    if(rret == -1) {
+    if(rret < 0) {
         perror("read_tun");
     } else {
         _goal("Read from " IFNAME);
@@ -919,7 +919,7 @@ size_t c_tun_device_netbsd::write_to_tun(
     _dbg1("Prolog at " << __func__);
     int wret = write_tun(m_tun_fd, buf, count);
     //int wret = write(m_tun_fd, buf, count);
-    if(wret == -1) {
+    if(wret < 0) {
         perror("write_tun");
     } else {
         _goal("Write to " IFNAME);
