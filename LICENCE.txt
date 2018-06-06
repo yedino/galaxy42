@@ -2,7 +2,7 @@
 
 The code and files in this directory (but with exception of code from other
 sources, read the code carefully and look for more LICENCE/LICENSE files)
-are now Copyrighted (C) 2015-2016 by the Yedino,
+are now Copyrighted (C) 2015-2018 by the Yedino,
 they are licensed hereby as GPL version 3 with following exception:
 IMPORTANT:
 this code at discretion of the Yedino may be re-licensed by releasing
