@@ -259,6 +259,17 @@ we're bussy), see contact information in the main README.md of this project.
 Install-code is the installer `./install.sh` that you run from place where you have (ready - e.g. unpacked, or better: downloaded from git with `git clone`)
 source code of this project. (Remember to check git-tag signature and/or write down and compare with others git revision hash - to confirm git downloaded legitimate version of code).
 
+
+## Language and translations
+
+### Working with translations
+
+Provide translations by editing the .po files, best by using `./menu rnl` / `./menu rdl` where possible.
+
+Test the installer script, and the main program, in various languages, by using `./menu` l... commands.
+
+To do it by hand instead (possible outdated) try:
+
 To test installer for other languages and conditions you can use combinations of settings. Possible conditions:
 - force to use dialog, or whiptail. Other test: run on system with just one or both installed (dialog should be preffered)
 - force a language.
@@ -274,6 +285,31 @@ FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh
 # as non-root user, but allowed to "sudo" into needed commands especially the package manager:
 FORCE_DIALOG=dialog LANGUAGE=pl ./install.sh --sudo
 ```
+
+### How languages work
+
+#### How languages work in main program
+
+We set locale early,
+try to set user's locale,
+but fallback when it's wrong (TODO incomplete - sometimes boost locale fails, while setlocale works, as boost needs actually correct locale).
+
+Then instead of using normal gettext, we implemented own moreader library to use instead `gettext()` function.
+
+#### How languages work in scripts
+
+Script should do same what `./install` does on top, e.g. currently it is loading `share/script/lib/need-lang.sh` calling `init_lang`
+(first before it setting proper `TEXTDOMAIN=` and `TEXTDOMAINDIR=` in script).
+
+And should also use proper `./menu` commands to test in various langauges the installer, and to enter edit mode to edit `.po` files and recompile them.
+
+#### Compilation / build / release
+
+Some scripts might partially recompile po to mo to use translations in them (e.g. ./install script).
+
+As for releasable code, the main mo files for main program are built.
+
+They are packed into the release (by Gitian code and/or by do).
 
 ## Editor
 

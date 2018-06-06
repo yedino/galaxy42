@@ -102,7 +102,7 @@ void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it)
 	m_session_list.erase(it);
 }
 
-/*************************************************************************************/
+// ==================================================================
 
 c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr,
                                    boost::asio::ip::tcp::socket &&socket,

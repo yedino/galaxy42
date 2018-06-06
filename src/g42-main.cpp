@@ -1,6 +1,4 @@
 // Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
-#include <clocale>
-#include <curl/curl.h>
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
@@ -9,6 +7,8 @@
 #include "utils/capmodpp.hpp" // to capture it's exceptions
 
 #include "../src-tools/netmodel/netmodel.hpp"
+
+bool run_mode_developer_main(boost::program_options::variables_map & argm);
 
 namespace developer_tests {
 
@@ -155,7 +155,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 // ============================================================================
 
 
-/***
+/**
  * @brief Loads name of demo from demo.conf.
  * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
  * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
@@ -199,7 +199,7 @@ void test_lang_optional() {
 	*/
 }
 
-/***
+/**
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test
@@ -297,8 +297,10 @@ void main_print_flavour() {
 	out <<  ( valgrind_memory_is_possible ? "valgrind_memory_is_possible" : "(valgrind NOT possible)" ) << std::endl;
 }
 
-int main(int argc, const char **argv) { // the main() function
 
+
+
+int main(int argc, const char **argv) { // the main() function
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
 	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
@@ -308,7 +310,7 @@ int main(int argc, const char **argv) { // the main() function
 
 	if (contains_value(argt,"--print-flags-flavour")) {
 		main_print_flavour();
-		return 0;
+		return 0; // <--- exit
 	}
 
 
@@ -328,7 +330,7 @@ int main(int argc, const char **argv) { // the main() function
 	else{
 		bitcoin_node_cli::curl_initialized=true;
 	}
-	
+
 	enum class t_program_type {
 		e_program_type_tunserver = 1,
 		e_program_type_newloop = 100,
@@ -359,7 +361,12 @@ int main(int argc, const char **argv) { // the main() function
 
 	the_program->take_args(argt_exec , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
+	the_program->startup_locales_early();
+	the_program->startup_data_dir();
+	the_program->startup_curl();
 	the_program->startup_version();
+	the_program->startup_locales_later();
+	the_program->init_library_sodium();
 
 	g_dbg_level = 60;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
@@ -379,15 +386,10 @@ int main(int argc, const char **argv) { // the main() function
 	// and we expect to have no exploitable code in this short code to setup console and show version
 	// (especially as none of it depends on user provided inputs)
 
-	the_program->startup_data_dir();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();
 		if (done) return ret;
 	}
-	the_program->startup_locales();
-
-
-	the_program->init_library_sodium();
 
 	the_program->options_create_desc();
 
