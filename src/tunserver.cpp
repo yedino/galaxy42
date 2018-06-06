@@ -1,7 +1,7 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 /**
-Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
+Copyrighted (C) 2018, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
 

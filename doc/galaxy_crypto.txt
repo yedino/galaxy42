@@ -1,5 +1,5 @@
 
-(C) 2016 Antinet.org Team
+(C) 2018 Antinet.org Team
 
 All this text is copyrighted as part of Antinet project (e.g.:GPLv3, but see Antinet project licence).
 
