@@ -282,7 +282,7 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
  */
 void main_print_flavour() {
 	auto & out = std::cout; // we can directly use std::cout, in this special function
-	out << "# Flavour defines:" << std::endl;
+	out << "# Flavour:" << std::endl;
 	bool valgrind_memory_is_possible = true; // do conditions allow us to run in valgrind, e.g. TSAN maps too much memory so then =false
 	#if FLAVOUR_TSAN_FULL
 		valgrind_memory_is_possible = false;
@@ -301,7 +301,7 @@ void main_print_flavour() {
 
 
 
-int main(int argc, const char **argv) { // the main() function
+int main(int argc, const char * const * argv) { // the main() function
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
 	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
