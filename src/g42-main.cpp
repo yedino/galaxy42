@@ -313,6 +313,24 @@ int main(int argc, const char **argv) { // the main() function
 		return 0; // <--- exit
 	}
 
+
+	try{
+		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
+		if (result == nullptr) throw std::runtime_error("Can not set locale (first)");
+	}catch (...){
+		std::cerr<<"Error: setlocale."<<std::endl;
+	}
+
+	// This code MUST be 1-thread and very early in main
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		bitcoin_node_cli::curl_initialized=false;
+		std::cerr<<"Error: lib curl init."<<std::endl;
+	}
+	else{
+		bitcoin_node_cli::curl_initialized=true;
+	}
+
 	enum class t_program_type {
 		e_program_type_tunserver = 1,
 		e_program_type_newloop = 100,
