@@ -17,17 +17,17 @@ dir_base_of_source="./" # path to reach the root of source code (from starting l
 
 echo "Starting installer..."
 
-source "${dir_base_of_source}share/script/need_translations.sh"
-
-source gettext.sh || { echo "Gettext is not installed, please install it." ; exit 1 ; }
-export TEXTDOMAIN="galaxy42_installer"
 # share/locale/pl/LC_MESSAGES/galaxy42_installer.mo
+export TEXTDOMAIN="galaxy42_installer"
 export TEXTDOMAINDIR="${dir_base_of_source}share/locale/"
+source "${dir_base_of_source}share/script/lib/need-lang.sh"
+init_lang
 
-echo "LANG=($LANG) LANGUAGE=($LANGUAGE) LC_ALL=($LC_ALL) - Language of your OS"
 language_test="$(eval_gettext "L_language")"
-echo -e "\n\n\n\n\nLanguage test: $language_test\n"
-if [[ '$1' == "--test-lang" ]] ; then exit 0 ; fi
+test2="$(eval_gettext "L_TEST_LANG")"
+test3="$(eval_gettext "L_TEST_LANG_short")"
+echo -e "\n\n\nLanguage test: $language_test $test2 $test3\n\n"
+if [[ "$1" == "--test-lang" ]] ; then exit 0 ; fi
 
 programname="Galaxy42" # shellcheck disable=SC2034
 

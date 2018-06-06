@@ -123,7 +123,7 @@ using namespace stdplus;
 // ==================================================================
 
 // --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
-/***
+/**
  * type that is a size_t, but can be with error-signaling value e.g. -1, otherwise it is valid.
  * the caller MUST check the returned value against size_t_is() before using it
  */
@@ -133,7 +133,7 @@ inline size_t_maybe size_t_invalid() { ///< returns a size_t that means "invalid
 	return static_cast<size_t>( -1 );
 }
 
-/***
+/**
  * returns if given size_t is correct, or is it the invalid value
 */
 inline bool size_t_is_ok(size_t x) {
