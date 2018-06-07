@@ -139,8 +139,6 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
 {
-        //int state = 1;
-        //setsockopt(m_socket, 0, IP_HDRINCL, &state, sizeof(state));
 	_note("Creating udp wrapper (old-style)");
 	if (listen_port==0) {
 		m_disabled=true;

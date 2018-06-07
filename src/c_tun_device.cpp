@@ -687,14 +687,13 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
 
     // previous tun ??
     scope = htons((uint16_t)if_nametoindex(IFNAME));
-    if(scope > 0) { // XXX: uncomment in  future
+    if(scope > 0) {
         int sock;
         _warnn(IFNAME " exists");
-        //_throw_error( std::runtime_error("First destroy previous " IFNAME) );
-        sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
+        sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
         struct ifreq interface;
         memset(&interface, 0, sizeof(struct ifreq));
-        strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); // if name
+        strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name));
         if(ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
             std::stringstream errorstring;
             char *serr = strerror(errno);
@@ -731,17 +730,17 @@ c_tun_device_netbsd::~c_tun_device_netbsd()
 {
     _goal("Closing " IFNAME);
     close(m_tun_fd);
+    
     // XXX: duplicate code
     uint16_t scope;
     scope = htons((uint16_t)if_nametoindex(IFNAME));
     if(scope > 0) { // XXX: uncomment in  future
         int sock;
         _warnn(IFNAME " exists");
-        //_throw_error( std::runtime_error("First destroy previous " IFNAME) );
-        sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
+        sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
         struct ifreq interface;
         memset(&interface, 0, sizeof(struct ifreq));
-        strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); // if name
+        strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name));
         if(ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
             std::stringstream errorstring;
             char *serr = strerror(errno);
@@ -793,7 +792,7 @@ void c_tun_device_netbsd::set_ipv6_address(
     uint16_t scope;
     
     _goal("Create socket ...");
-    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
     if(sock == -1) {
         _warnn(__func__);
         throw std::runtime_error(std::string("Socket create problem"));
@@ -802,7 +801,7 @@ void c_tun_device_netbsd::set_ipv6_address(
     struct in6_aliasreq ifa6;
     memset(&ifa6, 0, sizeof(struct in6_aliasreq));
     
-    strncpy(ifa6.ifra_name, IFNAME, sizeof(ifa6.ifra_name)); /* if name */
+    strncpy(ifa6.ifra_name, IFNAME, sizeof(ifa6.ifra_name));
     
     // convert addr6
     char *baData = (char *)malloc(binary_address.size());
@@ -818,26 +817,13 @@ void c_tun_device_netbsd::set_ipv6_address(
             << std::string(inet_ntop(AF_INET6, baData, temp, 128)) \
             << "/" \
             << prefixLen);
+    
     // address
     ifa6.ifra_addr.sin6_family = AF_INET6;
     ifa6.ifra_addr.sin6_len = sizeof(struct sockaddr_in6);
-    // dont convert, only copy addr6
-    //inetret = inet_pton(AF_INET6, (const char *)baData, &ifa6.ifra_addr.sin6_addr);
     size_t toCopy = sizeof(ifa6.ifra_addr.sin6_addr);
-    //assert(baData[0] == 0xFD);
     memcpy(&ifa6.ifra_addr.sin6_addr, baData, toCopy);
-    //if(inetret == -1) {
-    //    perror("inet_pton: addr");
-    //}
-    
-    // destination address
-    //ifa6.ifra_dstaddr.sin6_family = AF_INET6;
-    //ifa6.ifra_dstaddr.sin6_len = sizeof(struct sockaddr_in6);
-    //inetret = inet_pton(AF_INET6, "fe80::02", &ifa6.ifra_dstaddr.sin6_addr);
-    //if(inetret == -1) {
-    //    perror("inet_pton: dstaddr");
-    //}
-    
+
     // netmask - prefixlen
     ifa6.ifra_prefixmask.sin6_family = AF_INET6;
     ifa6.ifra_prefixmask.sin6_len = sizeof(struct sockaddr_in6);
@@ -856,6 +842,7 @@ void c_tun_device_netbsd::set_ipv6_address(
     
     m_ip6_ok=true;
     _goal("IP address is fully configured");
+    
     close(sock);
 }
 
@@ -869,18 +856,18 @@ void c_tun_device_netbsd::set_mtu(
     memset(&interface, 0, sizeof(struct ifreq));
     
     _goal("Create socket ...");
-    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
     if(sock == -1) {
         _warnn(__func__);
         throw std::runtime_error(std::string("Socket create problem"));
     }
     
-    strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name)); /* if name */
+    strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name));
     interface.ifr_ifru.ifru_mtu = mtu;
     
     _goal("Setting MTU on " << IFNAME << " to " << mtu);
     if(ioctl(sock, SIOCSIFMTU, &interface) == -1) {
-        _erron("SIOCSIFMTU");
+	_erron("SIOCSIFMTU");
     }
     
     close(sock);
@@ -904,7 +891,6 @@ size_t c_tun_device_netbsd::read_from_tun(
     _dbg1("Prolog at " << __func__);
     memset(buf, 0, count);
     int rret = read_tun(m_tun_fd, buf, count);
-    //int rret = read(m_tun_fd, buf, count);
     if(rret < 0) {
         perror("read_tun");
     } else {
@@ -920,7 +906,6 @@ size_t c_tun_device_netbsd::write_to_tun(
 ) {
     _dbg1("Prolog at " << __func__);
     int wret = write_tun(m_tun_fd, buf, count);
-    //int wret = write(m_tun_fd, buf, count);
     if(wret < 0) {
         perror("write_tun");
     } else {
