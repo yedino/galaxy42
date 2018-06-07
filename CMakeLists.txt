@@ -326,7 +326,7 @@ if(CURL_ROOT_DIR)
 	list( APPEND CMAKE_LIBRARY_PATH "${CURL_ROOT_DIR}/lib")
 endif()
 
-find_package(curl REQUIRED)
+find_package(CURL REQUIRED)
 if (NOT CURL_FOUND)
 	if (MSVC)
 		message(STATUS "Add following argument for cmake:")
