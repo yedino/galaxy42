@@ -1442,8 +1442,8 @@ void c_tunserver::event_loop(int time) {
 			std::vector<int8_t> tun_read_buff(buf_size);
 			auto size_read = m_tun_device.read_from_tun(&tun_read_buff[0], tun_read_buff.size());
 			std::string tunBuffer(reinterpret_cast<char *>(&tun_read_buff[0]),size_read);
-			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << to_debug(tunBuffer, e_debug_style_big) << "]");			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
-
+			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << to_debug(tunBuffer, e_debug_style_big) << "]");
+			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 			c_haship_addr src_hip, dst_hip;
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<const char *>(&tun_read_buff[0]), size_read);
 			// TODO warn if src_hip is not our hip
