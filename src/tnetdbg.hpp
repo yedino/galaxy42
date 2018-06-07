@@ -173,6 +173,11 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 		<< "."); \
 		throw except_var; } while(0)
 
+#if defined(__NetBSD__)
+#include <sys/cdefs.h>
+#define __GNUC_PREREQ __GNUC_PREREQ__
+#endif
+
 template <class T>
 void throw_or_abort(const T & ex) {
 #if defined(__GNUC__) && !defined(__clang__)

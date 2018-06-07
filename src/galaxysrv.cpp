@@ -17,6 +17,7 @@
 #include "tuntap/base/tuntap_base.hpp"
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
+#include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
 
 #include <boost/filesystem.hpp> // for flag-file
 #include <ipv6.hpp>
@@ -28,6 +29,8 @@
 
 // constexpr int cfg_jobs_tuntap_threads = 4;
 
+c_galaxysrv::c_galaxysrv() { }
+c_galaxysrv::~c_galaxysrv() { }
 
 void asiotest();
 

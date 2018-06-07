@@ -294,6 +294,10 @@ class c_tunserver : public c_galaxy_node {
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
+                #elif defined(__NetBSD__)
+                c_tun_device_netbsd m_tun_device;
+		c_udp_wrapper_netbsd m_udp_device;
+		c_event_manager_netbsd m_event_manager;
 		#else
 		c_tun_device_empty m_tun_device;
 		c_udp_wrapper_empty m_udp_device;

@@ -41,6 +41,10 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 #elif (__MACH__)
 	#define ANTINET_macosx
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
+#elif defined(__NetBSD__)
+        #define NetBSD 1
+        #define NUNUSED(x) (void)x 
+        #define IFNAME "tun0"
 #else
 	#error Platform is not supported
 #endif

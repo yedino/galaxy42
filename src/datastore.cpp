@@ -262,7 +262,19 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	GetModuleFileNameW(hModule, &path[0], path.size());
 	auto pos = path.find_last_of(L"\\");
 	path.erase(pos);
-	b_fs::path user_home(path);
+	b_fs::path user_home(path);        
+#elif defined(__NetBSD__)
+     b_fs::path user_home;
+	if (home_dir.size()==0) {
+		const char *home_env = getenv("HOME");
+		if (home_env == nullptr) {
+			// we want to read home directory from env but HOME env is not set
+			throw std::runtime_error("We cannot read HOME env");
+		}
+		user_home = b_fs::path(home_env);
+	} else {
+		user_home = b_fs::path(home_dir);
+	} 
 #endif
 	static bool first_run = true;
 	if(first_run) {
