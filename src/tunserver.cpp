@@ -1,7 +1,7 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 /**
-Copyrighted (C) 2016, GPL v3 Licence (may include also other code)
+Copyrighted (C) 2018, GPL v3 Licence (may include also other code)
 See LICENCE.txt
 */
 
@@ -510,6 +510,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_supported_ip_protocols{eIPv6_TCP, eIPv6_UDP, eIPv6_ICMP}
 	,m_option_insecure_cap( check_arg_bool("insecure-cap", early_argm, false) )
 {
+//	std::cout << m_bitcoin_node_cli.get_balance() << std::endl; std::abort(); // XXX
 	_fact("Creating tunserver (old style)");
 	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
 
@@ -551,7 +552,11 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	});
 	m_rpc_server.add_rpc_function("get_status", [this](const std::string &input_json) {
 		return rpc_get_status(input_json);
-	});}
+	});
+	m_rpc_server.add_rpc_function("get_btc_address", [this](const std::string &input_json) {
+		return rpc_btc_get_address(input_json);
+	});
+}
 
 boost::program_options::variables_map c_tunserver::get_default_early_argm() {
 	boost::program_options::variables_map early_argm;
@@ -594,6 +599,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 
 // my key @deprecated (newloop)
 void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
+	UNUSED(ipv6_prefix);
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
         NUNUSED(ipv6_prefix);
@@ -1082,18 +1088,19 @@ nlohmann::json c_tunserver::rpc_peer_list(const string &input_json) {
 	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	for (const auto &peer : m_peer) {
 		std::ostringstream oss;
-		oss << peer.second->get_pip();
-		oss << "-";
 		auto hip = peer.second->get_hip();
 		for (size_t i = 0; i < hip.size(); i+=2) {
 			uint16_t block = 0;
 			block = hip[i] << 8;
 			block += hip[i+1];
-			oss << std::hex << block << ":";
+			oss << std::hex << block;
 		}
 		oss << std::dec;
+		oss << "@(udp:";
+		oss << peer.second->get_pip(); // ipv4:port
+		oss << ")";
+
 		refs.emplace_back(oss.str());
-		refs.back().erase(refs.back().end() - 1); // remove last character (':')
 	}
 	lg.unlock();
 	ret["cmd"] = "peer_list";
@@ -1280,7 +1287,12 @@ nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "hello";
-	ret["state"] = "ok";
+	try {
+		ret["state"] = "ok";
+	} catch (const std::exception &e) {
+		ret["state"] = "error";
+		ret["msg"] = e.what();
+	}
 	return ret;
 }
 
@@ -1299,8 +1311,29 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 	_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_status";
-	ret["state"] = "ok";
-	ret["btc"] = m_bitcoin_node_cli.get_balance();
+	try {
+		ret["state"] = "ok";
+		ret["btc"] = bitcoin_node_cli::get_instance().get_balance();
+	} catch (const std::exception &e) {
+		ret["state"] = "error";
+		ret["msg"] = e.what();
+		_warn("rpc_get_status error: " << e.what());
+	}
+	return ret;
+}
+
+nlohmann::json c_tunserver::rpc_btc_get_address(const string &input_json)
+{
+	nlohmann::json ret;
+	ret["cmd"] = "get_btc_address";
+	try {
+		ret["state"] = "ok";
+		ret["address"] = bitcoin_node_cli::get_instance().get_new_address();
+	} catch (const std::exception &e) {
+		ret["state"] = "error";
+		ret["msg"] = e.what();
+		_warn("rpc_btc_get_address error: " << e.what());
+	}
 	return ret;
 }
 
@@ -1355,6 +1388,7 @@ void c_tunserver::event_loop(int time) {
 
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
+		UNUSED(anything_happened);
 
 		if (is_exiting) break;
 

@@ -1,5 +1,5 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
 
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "platform.hpp"
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
@@ -9,6 +9,8 @@
 #include "utils/capmodpp.hpp" // to capture it's exceptions
 
 #include "../src-tools/netmodel/netmodel.hpp"
+
+bool run_mode_developer_main(boost::program_options::variables_map & argm);
 
 namespace developer_tests {
 
@@ -155,7 +157,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 // ============================================================================
 
 
-/***
+/**
  * @brief Loads name of demo from demo.conf.
  * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
  * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
@@ -199,7 +201,7 @@ void test_lang_optional() {
 	*/
 }
 
-/***
+/**
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test
@@ -275,13 +277,14 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 /**
  * Purpose of this function is to print some compilation "flavour" flags, e.g. is this a TSAN build or not.
- * @warning This function is run instead of normal body of main(), therefore the main() must exit after calling it,
- * and this function is free to not use our special conventions, e.g. it is free to directly use std::cout instead setting up
- * our debug/console tools. (Also it does not expect any such normal tools to be set up for it).
+ * @warning This function must be called from main(), very early (before other output or setting i/o)
+ * and the caller should exit immediatelly after,
+ * because this function uses normal conventions (e.g. of using std::cout) instead following ones from program/project
+ * (e.g. it does not use program/project debug/console tools).
  */
 void main_print_flavour() {
 	auto & out = std::cout; // we can directly use std::cout, in this special function
-	out << "# Flavour defines:" << std::endl;
+	out << "# Flavour:" << std::endl;
 	bool valgrind_memory_is_possible = true; // do conditions allow us to run in valgrind, e.g. TSAN maps too much memory so then =false
 	#if FLAVOUR_TSAN_FULL
 		valgrind_memory_is_possible = false;
@@ -297,8 +300,10 @@ void main_print_flavour() {
 	out <<  ( valgrind_memory_is_possible ? "valgrind_memory_is_possible" : "(valgrind NOT possible)" ) << std::endl;
 }
 
-int main(int argc, const char **argv) { // the main() function
 
+
+
+int main(int argc, const char * const * argv) { // the main() function
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
 	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
@@ -308,7 +313,25 @@ int main(int argc, const char **argv) { // the main() function
 
 	if (contains_value(argt,"--print-flags-flavour")) {
 		main_print_flavour();
-		return 0;
+		return 0; // <--- exit
+	}
+
+
+	try{
+		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
+		if (result == nullptr) throw std::runtime_error("Can not set locale (first)");
+	}catch (...){
+		std::cerr<<"Error: setlocale."<<std::endl;
+	}
+
+	// This code MUST be 1-thread and very early in main
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		bitcoin_node_cli::curl_initialized=false;
+		std::cerr<<"Error: lib curl init."<<std::endl;
+	}
+	else{
+		bitcoin_node_cli::curl_initialized=true;
 	}
 
 	enum class t_program_type {
@@ -341,7 +364,12 @@ int main(int argc, const char **argv) { // the main() function
 
 	the_program->take_args(argt_exec , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
+	the_program->startup_locales_early();
+	the_program->startup_data_dir();
+	the_program->startup_curl();
 	the_program->startup_version();
+	the_program->startup_locales_later();
+	the_program->init_library_sodium();
 
 	g_dbg_level = 60;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
@@ -361,15 +389,10 @@ int main(int argc, const char **argv) { // the main() function
 	// and we expect to have no exploitable code in this short code to setup console and show version
 	// (especially as none of it depends on user provided inputs)
 
-	the_program->startup_data_dir();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();
 		if (done) return ret;
 	}
-	the_program->startup_locales();
-
-
-	the_program->init_library_sodium();
 
 	the_program->options_create_desc();
 
@@ -383,32 +406,44 @@ int main(int argc, const char **argv) { // the main() function
 	}
 
 	int exit_code=1;
+	bool exception_catched = true;
 	try {
 
 		exit_code = the_program->main_execution(); // <---
+		exception_catched = false;
 
 	} // try running server
 	catch(const ui::exception_error_exit &) {
 		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
-		return 1;
+		exit_code = 1;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(const std::exception& e) {
 		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(...) {
 		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
-		return 3;
+		exit_code = 3;
 	}
-	_note(mo_file_reader::gettext("L_exit_no_error")); return 0;
 
-  return exit_code;
+	try {
+		if( !exception_catched )
+			_note(mo_file_reader::gettext("L_exit_no_error"));
+	}
+	catch(...) {
+		std::cerr<<"(Error in printing previous error)";
+	}
+
+	curl_global_cleanup();
+	bitcoin_node_cli::curl_initialized=false;
+
+	return exit_code;
 }
 

@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 #ifndef C_TNETDBG_HPP
@@ -172,6 +172,32 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
+
+template <class T>
+void throw_or_abort(const T & ex) {
+#if defined(__GNUC__) && !defined(__clang__)
+    #if __GNUC_PREREQ(6,0)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wterminate"
+    #endif
+#endif
+	throw ex;
+#if defined(__GNUC__) && !defined(__clang__)
+    #if __GNUC_PREREQ(6,0)
+        #pragma GCC diagnostic pop
+    #endif
+#endif
+}
+
+/**
+*	This function tries to throw, BUT ALSO it is O.K. with possible ABORT, due to noexcept on the function we are in
+*	it exists to e.g. silence some compilers warning about possible throw inside noexcept - we know, and we are o.k. with it turning into abort
+*	use it in macros that should try to throw but abort if throwing is not possible
+*/
+#define _throw_error_or_abort( EXCEPT ) do { auto except_var = (EXCEPT);  \
+	_warn( "Except: " << except_var.what() \
+		<< "."); \
+		throw_or_abort (except_var); } while(0)
 
 #define _throw_error_runtime( MSG ) _throw_error( std::runtime_error( MSG ) )
 

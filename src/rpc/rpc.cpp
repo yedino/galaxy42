@@ -35,8 +35,8 @@ void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_addr
 	_fact("Starting RPC thread");
 	m_thread = std::thread([this]() {
 		dbg("RPC thread start (inside)");
+		boost::system::error_code ec;
 		try {
-			boost::system::error_code ec;
 			dbg("io_service run");
 			m_io_service.run(ec);
 			dbg("end of io_service run");
@@ -46,7 +46,7 @@ void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_addr
 			dbg("io_service reset");
 			m_io_service.reset();
 		} catch (const std::exception &e) {
-			dbg("io_service exception" << e.what());
+			dbg("io_service exception " << e.what());
 		} catch (...) {
 			dbg("catch unhandled exception");
 		}
@@ -102,7 +102,7 @@ void c_rpc_server::remove_session_from_vector(std::list<c_session>::iterator it)
 	m_session_list.erase(it);
 }
 
-/*************************************************************************************/
+// ==================================================================
 
 c_rpc_server::c_session::c_session(c_rpc_server *rpc_server_ptr,
                                    boost::asio::ip::tcp::socket &&socket,
@@ -224,7 +224,8 @@ std::string c_rpc_server::c_session::get_command_id()
 
 void c_rpc_server::c_session::delete_me() {
 	if (m_socket.is_open()) {
-		m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+		boost::system::error_code ec;
+		m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 		m_socket.cancel();
 		m_socket.close();
 	}

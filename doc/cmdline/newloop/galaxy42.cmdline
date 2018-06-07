@@ -1,5 +1,7 @@
 --newloop
 --peer
+172.86.120.144:9042-fd42:2574:bcac:fc0f:b311:518d:45a8:6fea
+--peer
 fd42:f6c4:9d19:f128:30df:b289:aef0:25f5,score=-300
 --peer
 fd42::25f5,friend,score=10000,prio=10@(udp:76.31.171.15:9042)

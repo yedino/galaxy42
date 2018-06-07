@@ -86,6 +86,7 @@ function platform_recognize {
 }
 
 function thread_setting {
+	echo "Detecting threads setting... (can be configured in system as THREADS=N where N is a number)"
 	if [[ -z ${THREADS+x} ]]
 	then
 		echo "THREADS variable is not set, will use default (THREADS=1)"
@@ -269,10 +270,15 @@ pushd $dir_build
 	# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
 	set -x
-	ln -s "$dir_base_of_source"/share share || echo "Link already exists"
+	if [[ ! -e "./share" ]] ; then
+		ln -s "$dir_base_of_source/share" "./" || echo "Link already exists"
+	fi
 
 	make -j"${THREADS}" \
 		|| fail "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md"
 
 	set +x
 popd
+
+
+echo "Script ./do finished. Was working with THREADS=$THREADS"

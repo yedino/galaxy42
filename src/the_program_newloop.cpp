@@ -24,7 +24,7 @@
 	#include "httpdbg/httpdbg-server.hpp"
 #endif
 
-#include "galaxysrv.hpp" // ***
+#include "galaxysrv.hpp" // <---
 #include "galaxysrv_peers.hpp" // e.g. for help
 
 // delete this block later:

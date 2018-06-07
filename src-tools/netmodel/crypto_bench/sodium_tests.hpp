@@ -11,7 +11,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <stdplus/affinity.hpp>
-
+#include <functional>
 
 
 template<typename F, size_t max_buff_size = 65536, size_t max_threads_count = 16>
