@@ -1,6 +1,7 @@
 #ifndef C_TUNTAP_NETBSD_OBJ_HPP
 #define C_TUNTAP_NETBSD_OBJ_HPP
 
+#if defined(__NetBSD__)
 #include <platform.hpp>
 #include <boost/asio.hpp>
 #include <libs0.hpp>
@@ -172,5 +173,6 @@ class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
             sys_functions_wrapper               sys_fun;
             c_tun_device_netbsd                 tundn;
 };
+#endif
 
 #endif /* C_TUNTAP_NETBSD_OBJ_HPP */

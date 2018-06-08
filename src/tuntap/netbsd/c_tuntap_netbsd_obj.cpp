@@ -1,3 +1,4 @@
+#if defined(__NetBSD__)
 #include "c_tuntap_netbsd_obj.hpp"
 
 /////////////////////////////////////////////////////////////////////
@@ -117,3 +118,4 @@ void c_tuntap_netbsd_obj::set_tun_parameters(const std::array<unsigned char, IPV
     m_tun_stream.assign(m_tun_fd);
     _goal("Configuring tuntap options - done");
 }
+#endif
