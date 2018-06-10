@@ -20,6 +20,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
 include(cotire)
 
+include(CMakeDetermineSystem)
+
+message(STATUS "Build on system type : '${CMAKE_SYSTEM_NAME}'")
+
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 #	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
@@ -463,7 +467,10 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 set(LIB_OPTIONAL_CAPNG "")
 if (UNIX AND NOT CYGWIN AND NOT APPLE)
     if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	set(LIB_OPTIONAL_CAPNG "cap-ng")
+        message(STATUS "CAP-NG on Linux is ON")
+        set(LIB_OPTIONAL_CAPNG "cap-ng")
+    else()
+        message(STATUS "CAP-NG not supported on '${CMAKE_SYSTEM_NAME}'")
     endif()
 endif ()
 
