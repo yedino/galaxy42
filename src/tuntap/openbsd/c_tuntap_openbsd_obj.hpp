@@ -1,6 +1,7 @@
 #ifndef C_TUNTAP_OPENBSD_OBJ_HPP
 #define C_TUNTAP_OPENBSD_OBJ_HPP
 
+#if defined(__OpenBSD__)
 #include <platform.hpp>
 #include <boost/asio.hpp>
 #include <libs0.hpp>
@@ -167,5 +168,6 @@ private:
     sys_functions_wrapper sys_fun;
     c_tun_device_openbsd tundn;
 };
+#endif
 
 #endif /* C_TUNTAP_OPENBSD_OBJ_HPP */

@@ -36,7 +36,7 @@ void c_event_manager_linux::wait_for_event() {
 	_assert(select_result >= 0);
 }
 
-bool c_event_manager_linux::receive_udp_paket() {
+bool c_event_manager_linux::receive_udp_packet() {
 	return FD_ISSET(m_udp_socket, &m_fd_set_data);
 }
 
@@ -96,7 +96,7 @@ void c_event_manager_asio::wait_for_event() {
 	}
 }
 
-bool c_event_manager_asio::receive_udp_paket() {
+bool c_event_manager_asio::receive_udp_packet() {
 	// if (m_udp_event) std::cout << "get udp packet" << std::endl;
 	return m_udp_event;
 }
@@ -158,6 +158,6 @@ c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_devic
 	_UNUSED(udp_wrapper);
 }
 void c_event_manager_empty::wait_for_event() { }
-bool c_event_manager_empty::receive_udp_paket() { return false; }
+bool c_event_manager_empty::receive_udp_packet() { return false; }
 bool c_event_manager_empty::get_tun_packet() { return false; }
 #endif

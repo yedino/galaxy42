@@ -2,6 +2,7 @@
 
 /////////////////////////////////////////////////////////////////////
 
+#if defined(__OpenBSD__)
 c_tuntap_openbsd_obj::c_tuntap_openbsd_obj() :
 m_tun_fd(open("/dev/" IFNAME, O_RDWR)),
 m_io_service(),
@@ -117,3 +118,4 @@ void c_tuntap_openbsd_obj::set_tun_parameters(const std::array<unsigned char, IP
     _goal("Configuring tuntap options - done");
 
 }
+#endif
