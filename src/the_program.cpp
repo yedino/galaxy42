@@ -22,6 +22,13 @@ void c_the_program::startup_console_first() {
 
 /// Show program version
 void c_the_program::startup_version() {
+// https://stackoverflow.com/questions/5438482/getting-the-current-time-as-a-yyyy-mm-dd-hh-mm-ss-string
+        std::time_t rawtime;
+        char buffer_datetime [80];
+        std::time(&rawtime);
+        std::tm* timeinfo = std::localtime(&rawtime);
+        std::strftime(buffer_datetime,80,"%Y-%m-%d %H:%M:%S",timeinfo);
+        
 	ostringstream oss; oss << "ver. "
 		<< project_version_number_major << "."
 		<< project_version_number_minor << "."
@@ -35,6 +42,8 @@ void c_the_program::startup_version() {
 	string ver_str = oss.str();
 	_fact( "" ); // newline
 	_fact( "Start... " << ver_str );
+	_fact( "Server starts working on DATETIME: " << buffer_datetime << " [OpenBSD]" );
+        _fact( "" ); // newline
 	#ifdef TOOLS_ARE_BROKEN
 		_clue("[broken-tools] it seems this program was built with partially broken tools/libraries "
 			"(details are shown when building, e.g. by cmake/ccmake)");

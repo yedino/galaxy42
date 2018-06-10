@@ -282,19 +282,27 @@ class c_tunserver : public c_galaxy_node {
         #endif
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
-		#ifdef __linux__
+                #if defined(__linux__)
 		c_tun_device_linux m_tun_device;
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
-		#elif defined(_WIN32) || defined(__CYGWIN__)
+                #endif
+		#if defined(_WIN32) || defined(__CYGWIN__)
 		c_tun_device_windows m_tun_device;
 		c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#elif defined(__MACH__)
+                #endif
+		#if defined(__MACH__)
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#else
+                #endif
+                #if defined (__OpenBSD__)
+                c_tun_device_openbsd m_tun_device;
+		c_udp_wrapper_openbsd m_udp_device;
+		c_event_manager_openbsd m_event_manager;
+                #endif
+		#if defined (EMPTY)
 		c_tun_device_empty m_tun_device;
 		c_udp_wrapper_empty m_udp_device;
 		c_event_manager_empty m_event_manager;

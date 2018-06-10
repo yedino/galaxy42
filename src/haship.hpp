@@ -28,7 +28,11 @@ namespace g_ipv6_rfc {
 // use: g_ipv6_rfc::header_position_of_src
 
 namespace g_tuntap {
-	constexpr unsigned char header_position_of_ipv6 = 4;
+#if defined (__OpenBSD__)
+    constexpr unsigned char header_position_of_ipv6 = 0;
+#else
+    constexpr unsigned char header_position_of_ipv6 = 4;
+#endif
 }
 // use: g_tuntap::header_position_of_ipv6
 

@@ -14,37 +14,49 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 // see also stdplus/platform.hpp
 
 // in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
-#if __linux__
+#if defined(__linux__)
 	#define ANTINET_linux
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
-#elif defined(_WIN32) || defined(__CYGWIN__)
+#endif
+
+#if defined(_WIN32) || defined(__CYGWIN__)
 	#if defined (__MINGW32__)
 		#define ATTR_NODISCARD __attribute__((warn_unused_result))
 	#else // MSVC
 		#define ATTR_NODISCARD _Check_return_
 	#endif
+
 	#define ANTINET_windows
+
 	#if defined(__CYGWIN__)
 		//http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio/using.html
 		#ifndef __USE_W32_SOCKETS
 			#define __USE_W32_SOCKETS
 		#endif
 	#endif
+
 	#include <string>
 	std::wstring cstring_to_wstring(const char *cstr);
+        
 	// inspiration:
 	// http://stackoverflow.com/questions/17258029/c-setenv-undefined-identifier-in-visual-studio/23616164#23616164
 	int setenv(const char *name, const char *value, int overwrite);
-
 	int unsetenv(const char *name);
-
-#elif (__MACH__)
+#endif
+        
+#if defined(__MACH__)
 	#define ANTINET_macosx
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
-#else
-	#error Platform is not supported
 #endif
 
+#if defined(__OpenBSD__)
+        #define OpenBSD 1
+        #define IFNAME "tun0"
+#endif
+
+#if defined(EMPTY)
+	#error Platform is not supported
+#endif
 
 // ===========================================================================================================
 
