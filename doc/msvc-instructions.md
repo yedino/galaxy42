@@ -50,15 +50,13 @@ __Open CMake-gui:__
 __Set cmake variables:__
 
 - Click "Add Entry"
-- "Name": BOOST_ROOT, BOOST_LIBRARYDIR, SODIUM_ROOT_DIR ,CURL_INCLUDE_DIRS, CURL_LIBRARIES
+- "Name": BOOST_ROOT, SODIUM_ROOT_DIR, CURL_ROOT_DIR
 - "Type": PATH
 - "Value":
 	- for SODIUM_ROOT_DIR: full path to directory, where you install/unpack "Libsodium Releases"
 	- for BOOST_ROOT: full path to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4"
-	- for BOOST_LIBRARYDIR: go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4", open folder (lib32-msvc-14.0/lib64-msvc-14.1 or similar) complies with your system version (x32 or x64) and copy path
-	- for CURL_INCLUDE_DIRS: go to directory, where you compiled (i.e)builds/libcurl-vc-x86-debug-dll-ipv6-sspi-winssl/include
-	- for CURL_LIBRARIES:go to directory, where you compiled )builds/libcurl-vc-x86-debug-dll-ipv6-sspi-winssl/lib
-	
+	- for BOOST_LIBRARYDIR: (optional: Preferred library directory) go to directory, where you install/unpack "Prebuild Boost Binaries For Windows v.1.6.4", open folder (lib32-msvc-14.0/lib64-msvc-14.1 or similar) complies with your system version (x32 or x64) and copy path
+	- for CURL_ROOT_DIR: go to directory, where you compiled (i.e)builds/libcurl-vc-x86-debug-dll-ipv6-sspi-winssl
 	
 ```
 click configure
