@@ -24,7 +24,7 @@ echo "---------------------------------------------------------------"
 
 echo "Downloading (git submodule) now:"
 echo "Security: relax, this downloads are always validated by strong cryptographic checksum as git uses, e.g. SHA1 :)";
-echo "PLEASE WAIT..."
+echo "PLEASE WAIT... downloading from git"
 
 set -x
 

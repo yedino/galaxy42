@@ -101,20 +101,39 @@ function clean_previous_build {
 	rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but this is probably normal at first run)" ; }
 }
 
+
+
+### start of main script
+
+readonly dir_base_of_source="$(readlink -e ./)"
+[ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
+
+# import fail function
+. "${dir_base_of_source}"/share/script/lib/fail.sh || echo "Failed to, uhm, load the fail.sh library"
+
 echo ""
 echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
 echo ""
 
-prepare_languages
+echo "--- basic init of libs and env  ---"
 
 platform_recognize
 echo "Recognized platform: $platform"
-readonly dir_base_of_source="$(readlink -e ./)"
+
+prepare_languages
+
+if [[ $OSTYPE == "linux-gnu" ]]; then
+	source gettext.sh || fail "Gettext (or sudo) is not installed, please install them (e.g. apt-get install sudo gettext)"
+
+	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+
+	init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+	if (( ! platforminfo[family_detected] )) ; then printf "Warning: %s\n" "$(gettext "error_init_platforminfo_unknown")" ; fi
+fi
 
 thread_setting
-# import fail function
-. "${dir_base_of_source}"/share/script/lib/fail.sh
 
 clean_previous_build
 
@@ -192,16 +211,7 @@ echo ""
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || fail "Building extra libraries failed"
 
-[ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
 if [[ $OSTYPE == "linux-gnu" ]]; then
-	source gettext.sh || fail "Gettext (or sudo) is not installed, please install them (e.g. apt-get install sudo gettext)"
-
-	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
-
-	init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
-	if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
-
 	# setting newer CC CXX for older ubuntu
 	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
 		# get ubuntu main version e.g. "14" from "ubuntu_14.04"

@@ -71,6 +71,7 @@ function init_platforminfo() {
 		fi
 	fi
 	platforminfo[idver]="${platforminfo[id]}_${platforminfo[only_verid]}"
+	echo "Utils detect platforminfo: idver=${platforminfo[idver]}"
 
 	platforminfo[is_sudo]=$(platforminfo_check_program 'sudo') # can we use sudo if we are not running as root
 	platforminfo[is_now_root]=0
@@ -149,7 +150,7 @@ function init_platforminfo() {
 		# TODO provide a test here
 	fi
 
-	if (( ! "$family_detected" )) ; then printf "%s\n" "Warning: detect does not recognize this OS/platform type that is used here (IdVer=$platforminfo['idver'])." ; fi ;
+	if (( ! "$family_detected" )) ; then printf "%s\n" "Warning: detect does not recognize this OS/platform type that is used here (IdVer=${platforminfo['idver']})." ; fi ;
 	platforminfo[family_detected]="$family_detected" # yes or no
 
 	# printf "DETECTED item=${platforminfo_packager_checkinstalled_cmd[@]}\n"  #XXX
