@@ -100,7 +100,6 @@ extern std::recursive_mutex g_dbg_mutex;
 	write_to_console(_dbg_oss.str()); } while(0)
 #define pfp_fact(X) pfp_fact_level(100, 30, X)
 #define pfp_goal(X) pfp_fact_level(150, 30, X)
-#undef _pfp_fact_level
 
 auto constexpr debug_config_warn_backtrace_level = 8; ///< the backtrace level used for _warn
 auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level used for _erro
