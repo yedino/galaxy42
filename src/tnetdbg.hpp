@@ -13,6 +13,21 @@
 
 #include <mutex>
 
+/**
+
+Reserved names (in C++)
+
+- the identifiers with a double underscore anywhere are reserved;
+- the identifiers that begin with an underscore followed by an uppercase letter are reserved;
+- the identifiers that begin with an underscore are reserved in the global namespace.
+
+we use prefix "pfp_" as in:
+
+pfp_assert()
+pfp_info()
+
+*/
+
 
 /// Current debug level. Plase change it only using g_dbg_level_set().
 extern unsigned char g_dbg_level;
