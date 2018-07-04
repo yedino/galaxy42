@@ -56,7 +56,7 @@ function usage {
 	usage_main
 }
 
-function platform_recognize {
+function platform_recognize_simple {
 	uname -a # show info
 	if [[ -n $(uname -a | grep "GNU/Linux") ]]
 	then
@@ -78,6 +78,7 @@ function platform_recognize {
 		# readlink on OSX have different behavior than in GNU
 		# to get same behavior we could use greadlink from coreutils package
 		# brew install coreutils
+		hash greadlink || fail "Can not find/user program greadlink, please instll it (e.g. from brew)"
 		shopt -s expand_aliases
 		alias readlink="greadlink"
 	else
@@ -105,6 +106,9 @@ function clean_previous_build {
 
 ### start of main script
 
+platform_recognize_simple # very early e.g. to fix readlink
+echo "Recognized platform: $platform"
+
 readonly dir_base_of_source="$(readlink -e ./)"
 [ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
 
@@ -118,8 +122,6 @@ echo ""
 
 echo "--- basic init of libs and env  ---"
 
-platform_recognize
-echo "Recognized platform: $platform"
 
 prepare_languages
 
