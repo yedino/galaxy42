@@ -74,28 +74,28 @@ void write_to_console(const std::string& obj);
 
 extern std::recursive_mutex g_dbg_mutex;
 
-#define DBGLOCK std::lock_guard<std::recursive_mutex> dbg_lock( g_dbg_mutex );
-#define DBGLVL(N) if (!(N>=g_dbg_level)) break
+#define pfp_DBGLOCK std::lock_guard<std::recursive_mutex> dbg_lock( g_dbg_mutex );
+#define pfp_DBGLVL(N) if (!(N>=g_dbg_level)) break
 
 #define _main_dbg(X) { std::ostringstream _dbg_oss; _dbg_oss << X; write_to_console(_dbg_oss.str()); }
 
 #define pfp_dbg5(X) do { } while(0)
-#define pfp_dbg4(X) do { DBGLOCK DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define pfp_dbg3(X) do { DBGLOCK DBGLVL( 10); _main_dbg("\033[37mdbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define pfp_dbg2(X) do { DBGLOCK DBGLVL( 20); _main_dbg("\033[37mdbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define pfp_dbg1(X) do { DBGLOCK DBGLVL( 30); _main_dbg("\033[97mdbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define pfp_info(X) do { DBGLOCK DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
-#define pfp_note(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\033[36mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
-#define pfp_clue(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define pfp_dbg4(X) do { pfp_DBGLOCK pfp_DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_dbg3(X) do { pfp_DBGLOCK pfp_DBGLVL( 10); _main_dbg("\033[37mdbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_dbg2(X) do { pfp_DBGLOCK pfp_DBGLVL( 20); _main_dbg("\033[37mdbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_dbg1(X) do { pfp_DBGLOCK pfp_DBGLVL( 30); _main_dbg("\033[97mdbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_info(X) do { pfp_DBGLOCK pfp_DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define pfp_note(X) do { pfp_DBGLOCK pfp_DBGLVL( 50); _main_dbg("\033[36mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define pfp_clue(X) do { pfp_DBGLOCK pfp_DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
 #define pfp_fact_level(LVL_MAIN, LVL_EXTRA, X) \
-	do { DBGLOCK; \
-	DBGLVL(LVL_MAIN); \
+	do { pfp_DBGLOCK; \
+	pfp_DBGLVL(LVL_MAIN); \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[92m"; \
 	_dbg_oss<< X; \
 	do { \
-		DBGLVL(LVL_EXTRA); _dbg_oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
+		pfp_DBGLVL(LVL_EXTRA); _dbg_oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	_dbg_oss << "\033[0m" << ::std::endl; \
 	write_to_console(_dbg_oss.str()); } while(0)
 #define pfp_fact(X) pfp_fact_level(100, 30, X)
@@ -106,8 +106,8 @@ auto constexpr debug_config_warn_backtrace_level = 8; ///< the backtrace level u
 auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level used for _erro
 
 #define pfp_warn(X) \
-	do { DBGLOCK; \
-	DBGLVL(100); \
+	do { pfp_DBGLOCK; \
+	pfp_DBGLVL(100); \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[93m"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ( "WARN:" ) << _my__FILE__ << ':' << __LINE__ << " " << X << "\033[0m" << ::std::endl; \
@@ -120,8 +120,8 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl;
 
 #define pfp_erro(X) \
-	do { DBGLOCK; \
-	DBGLVL(200); \
+	do { pfp_DBGLOCK; \
+	pfp_DBGLVL(200); \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[91m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'!'; _dbg_oss<<::std::endl; \
 	_dbg_oss<< ("ERROR:") << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
@@ -133,8 +133,8 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 } while(0)
 
 #define pfp_mark(X) \
-	do { DBGLOCK; \
-	DBGLVL(150); \
+	do { pfp_DBGLOCK; \
+	pfp_DBGLVL(150); \
 	std::ostringstream _dbg_oss; \
 	_dbg_oss<<"\033[95m\n"; for (int i=0; i<70; ++i) _dbg_oss<<'='; _dbg_oss<<::std::endl; \
 	_dbg_oss<<"MARK* " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl; \
