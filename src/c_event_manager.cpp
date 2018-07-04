@@ -29,12 +29,12 @@ void c_event_manager_linux::wait_for_event() {
 	FD_SET(m_udp_socket, &m_fd_set_data);
 	FD_SET(m_tun_fd, &m_fd_set_data);
 	auto fd_max = std::max(m_tun_fd, m_udp_socket);
-	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
-	_assert(fd_max >= 1);
+	pfp_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
+	pfp_assert(fd_max >= 1);
 	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
 	_dbg1("Selecting for fd_max="<<fd_max);
 	auto select_result = select( fd_max+1, &m_fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
-	_assert(select_result >= 0);
+	pfp_assert(select_result >= 0);
 
 }
 

@@ -19,7 +19,7 @@ c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 		_warn("Socket is disabled, listen_port="<<listen_port);
 		return;
 	}
-	_assert(m_socket >= 0);
+	pfp_assert(m_socket >= 0);
 	c_ip46_addr address_for_sock = c_ip46_addr::any_on_port(listen_port);
 	int bind_result = -1;
 	if (address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv4) {
@@ -32,8 +32,8 @@ c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 		_note("Binding");
 		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
 	}
-	_assert( bind_result >= 0 ); // TODO change to except
-	_assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
+	pfp_assert( bind_result >= 0 ); // TODO change to except
+	pfp_assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
 }
 
 void c_udp_wrapper_linux::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {

@@ -31,26 +31,26 @@ c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) {
 }
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
-	_assert(in4.sin_family == AF_INET);
+	pfp_assert(in4.sin_family == AF_INET);
 	m_tag = tag_ipv4;
 	this->m_ip_data.in4 = in4;
 }
 void c_ip46_addr::set_ip6(sockaddr_in6 in6) {
-	_assert(in6.sin6_family == AF_INET6);
+	pfp_assert(in6.sin6_family == AF_INET6);
 	m_tag = tag_ipv6;
 	this->m_ip_data.in6 = in6;
 }
 
 sockaddr_in  c_ip46_addr::get_ip4() const {
-	_assert(m_tag == tag_ipv4);
+	pfp_assert(m_tag == tag_ipv4);
 	auto ret = this->m_ip_data.in4;
-	_assert(ret.sin_family == AF_INET);
+	pfp_assert(ret.sin_family == AF_INET);
 	return ret;
 }
 sockaddr_in6 c_ip46_addr::get_ip6() const {
-	_assert(m_tag == tag_ipv6);
+	pfp_assert(m_tag == tag_ipv6);
 	auto ret = this->m_ip_data.in6;
-	_assert(ret.sin6_family == AF_INET6);
+	pfp_assert(ret.sin6_family == AF_INET6);
 	return ret;
 }
 
@@ -115,7 +115,7 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	else if (result_ptr->ai_family == AF_INET6) {
 		return false;
 	}
-	_assert(false);
+	pfp_assert(false);
 }
 
 
@@ -149,12 +149,12 @@ bool c_ip46_addr::operator==(const c_ip46_addr &rhs) const {
 		return false;
 	}
 	if (this->m_tag == t_tag::tag_ipv4) {
-		_assert(rhs.m_tag == t_tag::tag_ipv4); // to be sure both this and rhs union data can be accessed as ipv4
+		pfp_assert(rhs.m_tag == t_tag::tag_ipv4); // to be sure both this and rhs union data can be accessed as ipv4
 		return (!memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr)))
 			&& (this->get_assigned_port() == rhs.get_assigned_port());
 	}
 	if (this->m_tag == t_tag::tag_ipv6) {
-		_assert(rhs.m_tag == t_tag::tag_ipv6); // to be sure both this and rhs union data can be accessed as ipv6
+		pfp_assert(rhs.m_tag == t_tag::tag_ipv6); // to be sure both this and rhs union data can be accessed as ipv6
 		return !memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in6_addr))
 			&& (this->get_assigned_port() == rhs.get_assigned_port());
 	}
@@ -179,14 +179,14 @@ bool c_ip46_addr::operator<(const c_ip46_addr &rhs) const {
 	}
 
 	if (this->m_tag == t_tag::tag_ipv4) {
-		_assert(rhs.m_tag == t_tag::tag_ipv4); // to be sure both this and rhs union data can be accessed as ipv4
+		pfp_assert(rhs.m_tag == t_tag::tag_ipv4); // to be sure both this and rhs union data can be accessed as ipv4
 		auto cmp = memcmp(&this->m_ip_data.in4.sin_addr, &rhs.m_ip_data.in4.sin_addr, sizeof(in_addr));
 		if (cmp<0) return true;
 		if (cmp>0) return false;
 		return this->get_assigned_port() < rhs.get_assigned_port();
 	}
 	else if (this->m_tag == t_tag::tag_ipv6) {
-		_assert(rhs.m_tag == t_tag::tag_ipv6); // to be sure both this and rhs union data can be accessed as ipv6
+		pfp_assert(rhs.m_tag == t_tag::tag_ipv6); // to be sure both this and rhs union data can be accessed as ipv6
 		auto cmp = memcmp(&this->m_ip_data.in6.sin6_addr, &rhs.m_ip_data.in6.sin6_addr, sizeof(in_addr));
 		if (cmp<0) return true;
 		if (cmp>0) return false;
