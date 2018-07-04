@@ -262,18 +262,18 @@ throw _except( std::logic_error("foo")) ;
 
 std::string debug_this();
 
-#define _dbg5n(X) ;
-#define _dbg4n(X) pfp_dbg4(debug_this() << X)
-#define _dbg3n(X) pfp_dbg3(debug_this() << X)
-#define _dbg2n(X) pfp_dbg2(debug_this() << X)
-#define _dbg1n(X) pfp_dbg1(debug_this() << X)
-#define _infon(X) pfp_info(debug_this() << X)
-#define _noten(X) pfp_note(debug_this() << X)
-#define _cluen(X) pfp_clue(debug_this() << X)
-#define _factn(X) pfp_fact(debug_this() << X)
-#define _warnn(X) pfp_warn(debug_this() << X)
-#define _erron(X) pfp_erro(debug_this() << X)
-#define _markn(X) pfp_mark(debug_this() << X)
+#define pfp_dbg5n(X) ;
+#define pfp_dbg4n(X) pfp_dbg4(debug_this() << X)
+#define pfp_dbg3n(X) pfp_dbg3(debug_this() << X)
+#define pfp_dbg2n(X) pfp_dbg2(debug_this() << X)
+#define pfp_dbg1n(X) pfp_dbg1(debug_this() << X)
+#define pfp_infon(X) pfp_info(debug_this() << X)
+#define pfp_noten(X) pfp_note(debug_this() << X)
+#define pfp_cluen(X) pfp_clue(debug_this() << X)
+#define pfp_factn(X) pfp_fact(debug_this() << X)
+#define pfp_warnn(X) pfp_warn(debug_this() << X)
+#define pfp_erron(X) pfp_erro(debug_this() << X)
+#define pfp_markn(X) pfp_mark(debug_this() << X)
 
 std::string to_string(const std::wstring &input); // TODO
 

@@ -110,7 +110,7 @@ c_stream::c_stream(bool side_initiator, const string& m_nicename)
 	m_unboxer( nullptr ),
 	m_nicename(m_nicename)
 {
-	_dbg2n("created");
+	pfp_dbg2n("created");
 }
 
 std::string c_stream::debug_this() const {
@@ -138,7 +138,7 @@ std::string c_stream::box(const std::string & msg, t_crypto_nonce & nonce) {
 	auto & cb = UsePtr(m_boxer); // my crypto (un)boxer
 	const auto N = cb.get_nonce(); // nonce (before operation) - just for debug
 	const auto ret = cb.box(msg,nonce).to_binary(); // btw, nonce variable is updated here too
-	_dbg1n(
+	pfp_dbg1n(
 		"Encrypt N="<<show_nice_nonce(N)<<"(auto)"
 		<<" text " << to_debug(msg) << " ---> " << to_debug(ret)
 		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
@@ -156,7 +156,7 @@ std::string c_stream::unbox(const std::string & msg, t_crypto_nonce nonce, bool 
 	const auto N = force_nonce ? nonce : cb.get_nonce(); // nonce (before operation)
 	try {
 		auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary) , N);
-		_dbg1n(
+		pfp_dbg1n(
 			"Decrypt N="<<show_nice_nonce(N)<<(force_nonce ? "(given)":"(auto)")
 			<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
 			<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
@@ -179,7 +179,7 @@ t_crypto_system_count c_stream::get_cryptolists_count_for_KCTf() const {
 void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 	bool will_new_id)
 {
-	_noten("EXCHANGE START");
+	pfp_noten("EXCHANGE START");
 	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
@@ -188,14 +188,14 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart)
 {
-	_noten("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
+	pfp_noten("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
 	m_KCT = calculate_KCT( ID_self , ID_them, true, packetstart );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
 
 void c_stream::create_boxer_with_K() {
-	_noten("Got stream K = " << to_debug_locked(m_KCT));
+	pfp_noten("Got stream K = " << to_debug_locked(m_KCT));
 	sodiumpp::encoded_bytes nonce_zero =
 		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
 	;
@@ -511,10 +511,10 @@ const string& nicename)
 	: m_side_initiator(true),
 	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
-	_noten("Alice? Creating the crypto tunnel (we are initiator)");
+	pfp_noten("Alice? Creating the crypto tunnel (we are initiator)");
 	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator, m_nicename+"-CTab"); // TODONOW
 	UsePtr(m_stream_crypto_ab).exchange_start( self, them , true );
-	_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
+	pfp_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
