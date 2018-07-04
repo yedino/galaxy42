@@ -203,7 +203,7 @@ t_inbuf & c_inbuf_tab::get(size_t ix) {
 void handler_signal_term(const boost::system::error_code& error , int signal_number)
 {
 	pfp_goal("Signal! (control-C?) " << signal_number);
-	UNUSED(error);
+	pfp_UNUSED(error);
 	g_atomic_exit = true;
 }
 // ==================================================================
@@ -720,18 +720,18 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 	const std::vector<unsigned char> nonce_buf( nonce_max_size , 0x00);
 
 	auto crypto_func_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&msg_buf[0]);
 		crypto_onetimeauth( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0]);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_veri = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, & key_buf[0])) nothing();
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_veri_and_auth = [msg_size](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		if (0 != crypto_onetimeauth_verify( & two_buf[0], & msg_buf[0], msg_size, &  key_buf[0])) nothing(); // verify incoming
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 		// assume it was ok
@@ -741,36 +741,36 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 
 	// https://download.libsodium.org/doc/advanced/salsa20.html
 	auto crypto_func_encr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_decr = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		crypto_stream_salsa20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/advanced/chacha20.html
 	auto crypto_func_encr_chacha = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		crypto_stream_chacha20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_decr_chacha = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) { // yeap it's identical to encrypt
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		crypto_stream_chacha20_xor( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 
 	// https://download.libsodium.org/doc/secret-key_cryptography/authenticated_encryption.html
 	auto crypto_func_makebox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		crypto_secretbox_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0]);
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
 	auto crypto_func_openbox = [msg_size, & nonce_buf](t_bytes & msg_buf, t_bytes & two_buf, t_bytes & key_buf, t_bytes & keyB_buf) {
-		UNUSED(keyB_buf);
+		pfp_UNUSED(keyB_buf);
 		if (0==crypto_secretbox_open_easy( & two_buf[0], & msg_buf[0], msg_size, & nonce_buf[0], & key_buf[0])) nothing();
 		if (bench_opt_mem_crypto_optimalization_barrier) escape(&two_buf[0]);
 	};
@@ -874,7 +874,7 @@ void cryptotest_main(std::vector<std::string> options) {
 	for (const string & arg : options) mycmdline.add(arg);
 	auto func_cmdline = [&mycmdline](const string &name) -> int { return get_from_cmdline(name,mycmdline); } ;
 	auto func_cmdline_def = [&mycmdline](const string &name, int def) -> int { return get_from_cmdline(name,mycmdline,def); } ;
-	UNUSED(func_cmdline);
+	pfp_UNUSED(func_cmdline);
 
 	bench_opt.loops = func_cmdline_def("loops", bench_opt_def.loops);
 	bench_opt.samples = func_cmdline_def("samples", bench_opt_def.samples);

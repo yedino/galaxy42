@@ -161,7 +161,6 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 
 
 // TODO this is not really "debug", move to other file
-#define pfp_UNUSED(x) (void)(x)
 
 #define pfp_NOTREADY() do { pfp_erro("This code is not implemented yet! in "<<__FUNCTION__);\
 	throw std::runtime_error("Code not implemented yet! In: " + std::string(__FUNCTION__)); } while(0)

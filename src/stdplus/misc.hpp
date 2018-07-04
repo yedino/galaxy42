@@ -201,7 +201,7 @@ std::string to_debug(const T & X, t_debug_style style=e_debug_style_object
 		std::is_same<  typename std::iterator_traits<T>::iterator_category , std::random_access_iterator_tag	 >
 	::value >::type * = 0)
 {
-	UNUSED(style);
+	pfp_UNUSED(style);
 	std::ostringstream oss;
 	oss << "iter("<<iterator_to_voidptr(X)<<")";
 	return oss.str();

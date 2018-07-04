@@ -1,6 +1,7 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "my_tests_lib.hpp"
+#include "utils/unused.hpp"
 
 TestsEnvReseter::TestsEnvReseter() : m_count_tests_skipped(0) { }
 

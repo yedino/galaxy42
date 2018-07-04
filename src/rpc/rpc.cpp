@@ -190,7 +190,7 @@ void c_rpc_server::c_session::read_handler_hmac(const boost::system::error_code 
 }
 
 void c_rpc_server::c_session::write_handler(const boost::system::error_code &error, std::size_t bytes_transferred) {
-	UNUSED(bytes_transferred);
+	pfp_UNUSED(bytes_transferred);
 	try {
 		if (error) {
 			dbg("asio error " << error.message());

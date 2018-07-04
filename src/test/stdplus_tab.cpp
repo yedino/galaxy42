@@ -55,7 +55,7 @@ void testcase_vectorlike_offset2(size_t size1, size_t size2, size_t n, size_t of
 	stdplus::copy_safe_apart(n, tab1, tab2, off1, off2);
 	for (size_t i=0; i<size1; ++i) { t_value iv = static_cast<t_value>(i);  EXPECT_EQ( tab1.at(i) , test1+iv ); } // source is unchanged
 	for (size_t i=0; i<off2; ++i) { t_value iv = static_cast<t_value>(i);  EXPECT_EQ( tab2.at(i) , test2+iv ); } // dest part before - is unchanged
-	for (size_t i=off2; i<n; ++i) { t_value iv = static_cast<t_value>(i);  EXPECT_EQ( tab2.at(i) , tab1.at(i-off2+off1) );  UNUSED(iv); } // dest overwritten
+	for (size_t i=off2; i<n; ++i) { t_value iv = static_cast<t_value>(i);  EXPECT_EQ( tab2.at(i) , tab1.at(i-off2+off1) );  pfp_UNUSED(iv); } // dest overwritten
 	for (size_t i=off2+n; i<size2; ++i) { t_value iv = static_cast<t_value>(i);  EXPECT_EQ( tab2.at(i) , test2+iv ); } // dest part after - is unchanged
 }
 

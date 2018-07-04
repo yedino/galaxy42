@@ -14,7 +14,7 @@
 template<int n> bool volatile_always_true() { volatile int x=n; volatile int y=x; return (x==y); }
 
 /// @brief This macro will silence warnings about given variable being unused
-#define UNUSED(expr) do { (void)(expr); } while (0)
+#define pfp_UNUSED(expr) do { (void)(expr); } while (0)
 
 /** @brief This macro could be placed at end of function to guarantee that in unexpected case where that code is reached,
  * the program will abort (instead e.g. UB of returning without return expression from a non-void function).

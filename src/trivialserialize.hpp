@@ -190,7 +190,7 @@ class generator final {
  */
 template <typename T>
 void obj_serialize(const T & data, trivialserialize::generator & gen) {
-	UNUSED(data); UNUSED(gen);
+	pfp_UNUSED(data); pfp_UNUSED(gen);
 	static_assert(templated_always_false<T>, // check with idiom_error_on_instantize
 		"To use this type in serialization, implement specialized template<> serialize(..) for it.");
 	assert(false);
@@ -203,7 +203,7 @@ void obj_serialize(const T & data, trivialserialize::generator & gen) {
 class parser; // needs the forward declaration if placed here
 template <typename T>
 T obj_deserialize(trivialserialize::parser & parser) {
-	UNUSED(parser);
+	pfp_UNUSED(parser);
 	static_assert(templated_always_false<T>, // check with idiom_error_on_instantize
 		"To use this type in deserialization, implement specialized template<> obj_deserialize(..) for it.");
 	assert(false);
@@ -288,7 +288,7 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 }
 
 template <int S, typename T> void generator::push_integer_s(T value) {
-	UNUSED(value); TODOCODE;
+	pfp_UNUSED(value); TODOCODE;
 }
 
 template <int S> void generator::push_bytes_sizeoctets(const std::string & data, size_t max_size_for_assert) {
