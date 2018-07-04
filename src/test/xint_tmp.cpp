@@ -24,12 +24,12 @@ TEST(xint_tmp, safe_create_float1) {
 
 TEST(xint_tmp, check_size_of_various_types) {
 	typedef float T;
-	_dbg1(std::numeric_limits<T>::max());
-	_dbg1(std::numeric_limits<T>::digits);
-	_dbg1(std::numeric_limits<T>::max_exponent);
+	pfp_dbg1(std::numeric_limits<T>::max());
+	pfp_dbg1(std::numeric_limits<T>::digits);
+	pfp_dbg1(std::numeric_limits<T>::max_exponent);
 
 	T obj( std::numeric_limits<T>::max() );
-	_info("obj as float: " << obj);
+	pfp_info("obj as float: " << obj);
 
 	typedef boost::multiprecision::number<
 		boost::multiprecision::cpp_int_backend<
@@ -40,11 +40,11 @@ TEST(xint_tmp, check_size_of_various_types) {
 	T_as_int;
 
 	T_as_int as_int(obj);
-	_info("obj as int: " << as_int);
+	pfp_info("obj as int: " << as_int);
 	T back(as_int);
-	_info("obj bask as float: " << back);
+	pfp_info("obj bask as float: " << back);
 	auto diff = obj-back;
-	_note("DIFF: " << diff);
+	pfp_note("DIFF: " << diff);
 	EXPECT_EQ(diff,0);
 }
 

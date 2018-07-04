@@ -35,13 +35,13 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	m_io_service(),
 	m_tun_stream(m_io_service, m_tun_fd)
 {
-	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
 	try {
 		//set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
-	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
-	_goal("tuntap is opened correctly");
+	} catch(const std::exception &ex) { pfp_warn("Can not set timtout for tuntap: " << ex.what()); }
+	pfp_goal("tuntap is opened correctly");
 }
 
 // TODO: code duplication !!!
@@ -50,20 +50,20 @@ c_tuntap_linux_obj::c_tuntap_linux_obj(boost::asio::io_service &io_service) :
 	m_io_service(), // will be not used, TODO
 	m_tun_stream(io_service, m_tun_fd)
 {
-	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
 	try {
 		//set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
-	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
-	_goal("tuntap is opened correctly");
+	} catch(const std::exception &ex) { pfp_warn("Can not set timtout for tuntap: " << ex.what()); }
+	pfp_goal("tuntap is opened correctly");
 }
 
 size_t c_tuntap_linux_obj::send_to_tun(const unsigned char *data, size_t size) {
 	try {
 		return m_tun_stream.write_some(boost::asio::buffer(data, size));
     } catch (const std::exception &e) {
-        _warn(e.what());
+        pfp_warn(e.what());
 		return 0; // error
 	}
 }
@@ -85,7 +85,7 @@ size_t c_tuntap_linux_obj::read_from_tun(unsigned char *const data, size_t size)
 	try {
 		return m_tun_stream.read_some(boost::asio::buffer(data, size));
     } catch (const std::exception &e) {
-        _warn(e.what());
+        pfp_warn(e.what());
         return 0; // error
 	}
 }
@@ -104,7 +104,7 @@ size_t c_tuntap_linux_obj::read_from_tun_separated_addresses(unsigned char *cons
 	try {
 		return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
     } catch (const std::exception &e) {
-        _warn(e.what());
+        pfp_warn(e.what());
         return 0;
 	}
 }
@@ -124,7 +124,7 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6
                                             uint32_t mtu) {
 
 	c_haship_addr address(c_haship_addr::tag_constr_by_array_uchar(), binary_address);
-	_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
+	pfp_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
 	as_zerofill< ifreq > ifr; // the if request
 	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
@@ -139,7 +139,7 @@ void c_tuntap_linux_obj::set_tun_parameters(const std::array<unsigned char, IPV6
 	if (err.my_code != 0) throw std::runtime_error("NetPlatform_setMTU error");
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
-	_goal("Configuring tuntap options - done");
+	pfp_goal("Configuring tuntap options - done");
 }
 
 c_tuntap_linux_obj::stream_type &c_tuntap_linux_obj::get_native_asio_object() {

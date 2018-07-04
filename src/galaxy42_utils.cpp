@@ -25,11 +25,11 @@ std::pair<std::string, int> tunserver_utils::parse_ip_string(const std::string &
 	if (ip.size()<(1+1)*4) _throw_error(runtime_error(join_string_sep("Invalid (too small) IP size (ip part)",ip.size())));
 	std::string port = ip_string.substr(pos+1);
 	if (ip.size()<1) _throw_error(runtime_error(join_string_sep("Invalid (too small) IP size (port part)", port.size())));
-	_dbg1("Parsing IP as strings: " << ip <<  " port string: " << port);
+	pfp_dbg1("Parsing IP as strings: " << ip <<  " port string: " << port);
 	int port_int = std::stoi(port);
 	if (port_int<=0) _throw_error(runtime_error(join_string_sep("Invalid port", port_int)));
 	if (port_int>65535) _throw_error(runtime_error(join_string_sep("Invalid port", port_int)));
-	_info("Parsing IP as strings: " << ip <<  " port int: " << port_int);
+	pfp_info("Parsing IP as strings: " << ip <<  " port int: " << port_int);
 
 	// tests with boost:
 	// validate ipv4

@@ -54,22 +54,22 @@ TEST(the_program_new_loop, fake_kernel) {
 	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
 	c_netbuf buf(200);
-	_note("buf: " << make_report(buf,20) );
+	pfp_note("buf: " << make_report(buf,20) );
 
 	if (false) {
 		g_dbg_level_set(100, "Test data only");
 		for(;;) {
 			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size() );
 			 c_netchunk chunk( buf.data() , read );
-			_note("chunk: " << make_report(chunk,20) );
+			pfp_note("chunk: " << make_report(chunk,20) );
 			 std::cout << to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) << std::endl;
 		}
 	} else {
 		for(int cycle=0; cycle<10; ++cycle) {
 			size_t read = tuntap_reader.readtun( reinterpret_cast<char*>( buf.data() ) , buf.size()-crypto_box_MACBYTES);
 			c_netchunk chunk( buf.data() , read );
-			_note("chunk: " << make_report(chunk,20) );
-			_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
+			pfp_note("chunk: " << make_report(chunk,20) );
+			pfp_dbg3( to_debug( std::string(buf.data() , buf.data()+read) , e_debug_style_buf ) );
 			crypto.cryptobox_encrypt(chunk.data(), read, nonce, crypto.get_my_public_key());
 			// TODO incr nonce
 			UsePtr(cable).send_to( UsePtr(peer_addr) , chunk.data() , chunk.size() );

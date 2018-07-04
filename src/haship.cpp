@@ -19,14 +19,14 @@ c_haship_addr::c_haship_addr()
 c_haship_addr::c_haship_addr(tag_constr_by_hash_of_pubkey, const c_haship_pubkey & pubkey)
 	 : std::array<unsigned char, g_haship_addr_size>({{}})
 {
-	_info("Creating HIP from pubkey: " << pubkey);
+	pfp_info("Creating HIP from pubkey: " << pubkey);
 
 	string addr = pubkey.get_ipv6_string_bin();
 	for (size_t i=0; i<16; ++i) at(i) = addr.at(i);
 }
 
 c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_string) {
-	_dbg3("parsing ip addr_string=" << addr_string);
+	pfp_dbg3("parsing ip addr_string=" << addr_string);
 	// use boost asio for parsing
 	boost::asio::ip::address_v6 asio_addr_v6;
 	try {
@@ -40,8 +40,8 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 	} catch (boost::exception &err) {
 		_throw_error(std::invalid_argument("The IP address looks invalid ["+addr_string+"]"));
 	}
-	_dbg4("Parsed string addr=" << asio_addr_v6.to_string());
-	_dbg4("Parsed bytes addr=" << *this);
+	pfp_dbg4("Parsed string addr=" << asio_addr_v6.to_string());
+	pfp_dbg4("Parsed bytes addr=" << *this);
 }
 
 c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
@@ -97,9 +97,9 @@ ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	r
 c_haship_pubkey::c_haship_pubkey() { }
 
 c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) {
-	_mark("Loadig pubkey from: " << ::to_debug(input) );
+	pfp_mark("Loadig pubkey from: " << ::to_debug(input) );
 	this->load_from_bin(input.bytes);
-	_mark("After loading: " << (*this) );
+	pfp_mark("After loading: " << (*this) );
 	//for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
 //	for(auto v : input.bytes) at(
 }

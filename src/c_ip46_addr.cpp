@@ -27,7 +27,7 @@ c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) {
 	} else {
 		(*this) = create_ipv6(ip_addr, port);
 	}
-	_dbg1("Parsing ip46 from string ["<<ip_addr<<"], with port=" << port << "] created: " << (*this));
+	pfp_dbg1("Parsing ip46 from string ["<<ip_addr<<"], with port=" << port << "] created: " << (*this));
 }
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
@@ -92,7 +92,7 @@ int c_ip46_addr::get_assigned_port() const {
 		return ntohs(m_ip_data.in6.sin6_port);
 	}
 	//assert(false && "c_ip46_addr has bad ip type (can not return it's port)");
-	_warn("Trying to read port on invalid address");
+	pfp_warn("Trying to read port on invalid address");
 	return 0;
 }
 
@@ -225,7 +225,7 @@ std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr_46) {
 	}
 	else {
 		out << addr.to_string() << ":" << addr_46.m_port;
-		if (! addr.is_v4()) _warn("Unknown IP type, not v4 not v6: " << addr.to_string());
+		if (! addr.is_v4()) pfp_warn("Unknown IP type, not v4 not v6: " << addr.to_string());
 	}
 	return out;
 }

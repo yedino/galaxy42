@@ -259,7 +259,7 @@ int c_httpdbg_server::run(){
 	}
 	catch (const exception& e)
 	{
-		_erro( "Exception: " << e.what() );
+		pfp_erro( "Exception: " << e.what() );
 	}
 	return 0;
 }
@@ -271,7 +271,7 @@ void c_httpdbg_server::stop(){
 	}
 	catch (const exception& e)
 	{
-		_erro( "Exception: " << e.what());
+		pfp_erro( "Exception: " << e.what());
 	}
 }
 

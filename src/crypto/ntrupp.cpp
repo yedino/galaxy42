@@ -72,17 +72,17 @@ DRBG_HANDLE get_DRBG(size_t size) {
 	auto found = drbg_tab.find(size);
 	if (found == drbg_tab.end()) { // not created yet
 		try {
-			_note("Creating DRBG for size=" << size);
+			pfp_note("Creating DRBG for size=" << size);
 			DRBG_HANDLE newone;
 			NTRU_DRBG_exec_or_throw(
 						ntru_crypto_drbg_instantiate(size, nullptr, 0, get_entropy, &newone)
 						,"random init"
 						);
 			drbg_tab[ size ] = newone;
-			_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
+			pfp_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
 			return newone;
 		} catch(...) {
-			_erro("Can not init DRBG! (exception)");
+			pfp_erro("Can not init DRBG! (exception)");
 			throw;
 		}
 	} // not found

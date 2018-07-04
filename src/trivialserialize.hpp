@@ -420,21 +420,21 @@ vector<T> parser::pop_vector_object() {
 template <typename TKey, typename TVal>
 map<TKey,TVal> parser::pop_map_object() {
 	bool dbg=0;
-	if (dbg) _dbg1("Reading map");
+	if (dbg) pfp_dbg1("Reading map");
 
 	map<TKey,TVal> ret;
 	const auto size = pop_integer_uvarint();
-	if (dbg) _dbg1("Reading map size="<<size);
+	if (dbg) pfp_dbg1("Reading map size="<<size);
 	assert(size <= std::numeric_limits<uint64_t>::max());
 	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) {
-		if (dbg) _dbg1("Reading i=" << i);
+		if (dbg) pfp_dbg1("Reading i=" << i);
 		TKey key = pop_object<TKey>();
 		TVal value = pop_object<TVal>();
 
 		auto size_old = ret.size();
 		auto found = ret.find(key);
 		if (found != ret.end()) _throw_error( format_error_read_badformat() ); // there was already such key
-		if (dbg) _dbg1("Inserting");
+		if (dbg) pfp_dbg1("Inserting");
 		ret.emplace(std::move(key), std::move(value));
 		if (ret.size() != size_old+1) _throw_error( format_error_read_badformat() ); // the insert failed apparently
 	}

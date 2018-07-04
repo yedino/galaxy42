@@ -7,7 +7,7 @@
 
 #include <libs0.hpp>
 
-#define dbg(X) _info("RPC: " << X);
+#define dbg(X) pfp_info("RPC: " << X);
 //#define _dbg(X) std::cout << "RPC: " << X << std::endl;
 
 c_rpc_server::c_rpc_server(const std::string &listen_address, const unsigned short port)
@@ -25,14 +25,14 @@ c_rpc_server::c_rpc_server(const std::string &listen_address, const unsigned sho
 void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_address, const unsigned short port) {
 	if (network_listen) {
 		// start waiting for new connection
-		_note("Starting RPC server listening on address="<<listen_address<<" port="<<port);
+		pfp_note("Starting RPC server listening on address="<<listen_address<<" port="<<port);
 		m_acceptor.async_accept(m_socket, [this](boost::system::error_code error) {
 			this->accept_handler(error);
 		});
 	}
-	else _warn("RPC server started, but not listening on network");
+	else pfp_warn("RPC server started, but not listening on network");
 
-	_fact("Starting RPC thread");
+	pfp_fact("Starting RPC thread");
 	m_thread = std::thread([this]() {
 		dbg("RPC thread start (inside)");
 		boost::system::error_code ec;
@@ -174,7 +174,7 @@ void c_rpc_server::c_session::read_handler_hmac(const boost::system::error_code 
 	                                        m_hmac_key.data()
 	);
 	if (ret == -1) {
-		_warn("hmac authentication error");
+		pfp_warn("hmac authentication error");
 		delete_me();
 		return;
 	}
@@ -182,8 +182,8 @@ void c_rpc_server::c_session::read_handler_hmac(const boost::system::error_code 
 	try {
 		execute_rpc_command(m_received_data);
 	} catch (const std::exception &e) {
-		_erro( "exception read_handler " << e.what());
-		_erro( "close connection\n" );
+		pfp_erro( "exception read_handler " << e.what());
+		pfp_erro( "close connection\n" );
 		delete_me();
 		return;
 	}
@@ -204,8 +204,8 @@ void c_rpc_server::c_session::write_handler(const boost::system::error_code &err
 		});
 	}
 	catch (const std::exception &e) {
-		_erro( "exception in write_handler " << e.what() );
-		_erro( "close connection\n" );
+		pfp_erro( "exception in write_handler " << e.what() );
+		pfp_erro( "close connection\n" );
 		delete_me();
 		return;
 	}
@@ -263,8 +263,8 @@ void c_rpc_server::c_session::send_response(nlohmann::json json_response)
 		});
 	}
 	catch (const std::exception &e) {
-		_erro( "exception in execute_rpc_command " << e.what() );
-		_erro( "close connection\n" );
+		pfp_erro( "exception in execute_rpc_command " << e.what() );
+		pfp_erro( "close connection\n" );
 		delete_me();
 		return;
 	}
@@ -288,8 +288,8 @@ void c_rpc_server::c_session::execute_rpc_command(const std::string &input_messa
 		send_response(json_response);
 	}
 	catch (const std::exception &e) {
-		_erro( "exception in execute_rpc_command " << e.what() );
-		_erro( "close connection\n" );
+		pfp_erro( "exception in execute_rpc_command " << e.what() );
+		pfp_erro( "close connection\n" );
 		delete_me();
 		return;
 	}

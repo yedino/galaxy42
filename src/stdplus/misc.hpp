@@ -108,7 +108,7 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 			+ ": "s + why + "."s
 			+ " (and you wanted strict matching of enum type to be hard exception)"s;
 		using t_ex = typename decltype(ex_type)::value_type;
-		_dbg5("Exception type to throw is: " << typeid(t_ex).name());
+		pfp_dbg5("Exception type to throw is: " << typeid(t_ex).name());
 		t_ex ex(msg);
 		_throw_error(ex);
 	};
@@ -222,7 +222,7 @@ bool iterator_less(T1 iter1, T2 iter2) {
 template <typename T1, typename T2>
 bool iterator_less_equal(T1 iter1, T2 iter2) {
 	bool ret = std::less_equal<const void*>()( iterator_to_voidptr(iter1), iterator_to_voidptr(iter2) );
-	_dbg5("Compare<= says: " << iterator_to_voidptr(iter1) << ( ret ? "  IS<= " : " NOT<= " ) << iterator_to_voidptr(iter2)  );
+	pfp_dbg5("Compare<= says: " << iterator_to_voidptr(iter1) << ( ret ? "  IS<= " : " NOT<= " ) << iterator_to_voidptr(iter2)  );
 	return ret;
 }
 
@@ -277,7 +277,7 @@ template <typename TIn, typename TOut> bool test_ranges_overlap_inclusive_noempt
  * must be valid
  */
 template <typename TIn, typename TOut> void copy_iter_and_check_no_overlap(TIn first, TIn last, TOut d_first, size_t size) {
-	_dbg5("copy first="<<to_debug(first)<<" last="<<to_debug(last)<<" d_first="<<to_debug(d_first)<<" size="<<size);
+	pfp_dbg5("copy first="<<to_debug(first)<<" last="<<to_debug(last)<<" d_first="<<to_debug(d_first)<<" size="<<size);
 	_check_abort( iterator_less_equal( first, last ) );
 	_check_abort( size > 0 );
 	_check_input( ! test_ranges_overlap_inclusive_noempty(first, last, d_first, d_first+size-1) ); // overlap?

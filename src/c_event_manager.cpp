@@ -17,12 +17,12 @@ c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_devic
 void c_event_manager_linux::init() {
 	m_tun_fd = m_tun_device.get().get_tun_fd();
 	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
-	_goal("Event manager will watch tuntap fd " << m_tun_fd);
+	pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 }
 
 void c_event_manager_linux::wait_for_event() {
 
-	_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
+	pfp_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
 	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
@@ -32,7 +32,7 @@ void c_event_manager_linux::wait_for_event() {
 	pfp_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	pfp_assert(fd_max >= 1);
 	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
-	_dbg1("Selecting for fd_max="<<fd_max);
+	pfp_dbg1("Selecting for fd_max="<<fd_max);
 	auto select_result = select( fd_max+1, &m_fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
 	pfp_assert(select_result >= 0);
 
@@ -66,10 +66,10 @@ c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_u
 void c_event_manager_asio::init() {
 	#if defined(__MACH__)
 		m_tun_fd = m_tun_device.get().get_tun_fd();
-		_goal("Event manager will watch tuntap fd " << m_tun_fd);
+		pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 		if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
 	#else
-		_goal("Event manager will not watch tuntap using fd on this Operating System");
+		pfp_goal("Event manager will not watch tuntap using fd on this Operating System");
 	#endif
 }
 

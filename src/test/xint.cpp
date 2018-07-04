@@ -42,8 +42,8 @@ uint8_t  get8u()  { return std::numeric_limits< uint8_t>::max(); }
  int16_t get16s() { return std::numeric_limits< int16_t>::max(); }
  int8_t  get8s()  { return std::numeric_limits<  int8_t>::max(); }
 
-void use64u(uint64_t val) { _dbg3("Got: " << val ); }
-void use8u(uint8_t val) { _dbg3("Got: " << static_cast<int>(val) ); }
+void use64u(uint64_t val) { pfp_dbg3("Got: " << val ); }
+void use8u(uint8_t val) { pfp_dbg3("Got: " << static_cast<int>(val) ); }
 
 } // namespace n_testfunc
 
@@ -54,7 +54,7 @@ void use8u(uint8_t val) { _dbg3("Got: " << static_cast<int>(val) ); }
 TEST(xint, xint_range_and_size) {
 	g_dbg_level_set(200,"Debug turn off in test");
 	xint64 xi;
-	_mark( "size of: "<<sizeof(xi)<<" range: "
+	pfp_mark( "size of: "<<sizeof(xi)<<" range: "
 		<< '[' << std::numeric_limits<decltype(xi)>::min() << "..."
 		<< std::numeric_limits<decltype(xi)>::max() << ']' );
 }
@@ -109,10 +109,10 @@ TEST(xint, narrowing_func_call_int_FIX_xint) {
 /// func should return a value that overflows when incremented; but can withstand -= 10.
 template<typename TInt, typename TFunc>
 void mix_with_lesssafe_type(const TFunc & func) {
-	_mark("TInt="<<typeid(TInt).name()<<" for func returning:" << show_int(func()));
+	pfp_mark("TInt="<<typeid(TInt).name()<<" for func returning:" << show_int(func()));
 	EXPECT_NO_THROW( {
 		TInt x = func();
-		_mark("After creation from func, x="<<x);
+		pfp_mark("After creation from func, x="<<x);
 		x -= 10; // so it will be in-range even after the following line:
 		TInt y = x + 10;
 		UNUSED(x); UNUSED(y);
@@ -365,7 +365,7 @@ TEST(xint,normal_use_op4assign_loop) {
 		tab.erase(last, tab.end());
 	}
 
-	_note("Tab of numbers size: "<<tab.size());
+	pfp_note("Tab of numbers size: "<<tab.size());
 
 	long count_fitting=0, count_xflov=0; // count operations that fit, and operations that would over/under-flow
 
@@ -392,14 +392,14 @@ TEST(xint,normal_use_op4assign_loop) {
 				t_correct_int c_ok; \
 				if (operation_is_valid) { c_ok = a_ok OPERATOR b_ok; } else c_ok=-1; \
 				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
-					_dbg2("Should be ok a="<<a<<" b="<<b); \
+					pfp_dbg2("Should be ok a="<<a<<" b="<<b); \
 					++count_fitting; \
 					c = a OPERATOR b; \
 					EXPECT_EQ(c, c_ok); \
 				} \
 				else { \
 					++count_xflov; \
-					_dbg2("Should fail a="<<a<<" b="<<b); \
+					pfp_dbg2("Should fail a="<<a<<" b="<<b); \
 					EXPECT_THROW( { c = a OPERATOR b; } , std::runtime_error ); \
 				} \
 				} while(0)
@@ -417,14 +417,14 @@ TEST(xint,normal_use_op4assign_loop) {
 				t_correct_int c_ok; \
 				if (operation_is_valid) { c_ok = a_ok;  c_ok OPERATOR b_ok; } else c_ok=-1; \
 				if (overflow_impossible_in_assign(c,c_ok) && operation_is_valid) { \
-					_dbg2("Should be ok a="<<a<<" b="<<b); \
+					pfp_dbg2("Should be ok a="<<a<<" b="<<b); \
 					++count_fitting; \
 					c = a;  c OPERATOR b; \
 					EXPECT_EQ(c, c_ok); \
 				} \
 				else { \
 					++count_xflov; \
-					_dbg2("Should fail a="<<a<<" b="<<b); \
+					pfp_dbg2("Should fail a="<<a<<" b="<<b); \
 					EXPECT_THROW( { c = a;  c OPERATOR b; } , std::runtime_error ); \
 				} \
 				} while(0)
@@ -438,9 +438,9 @@ TEST(xint,normal_use_op4assign_loop) {
 			} // fitting initial values
 		}
 	}
-	_note("Over/under-flow count: " << count_xflov);
+	pfp_note("Over/under-flow count: " << count_xflov);
 	EXPECT_GT(count_xflov, 248);
-	_note("Normal operation count: " << count_fitting);
+	pfp_note("Normal operation count: " << count_fitting);
 	EXPECT_GT(count_fitting, 16393);
 
 }
@@ -481,11 +481,11 @@ void math_tests_overflow_incr(T_INT val) {
 		a++;
 	} ;
 
-	_note("Will increment first time: " << a << " (a_corr="<<a_corr<<")" );
+	pfp_note("Will increment first time: " << a << " (a_corr="<<a_corr<<")" );
 	EXPECT_NO_THROW( func() );
 	EXPECT_EQ(a,a_corr); // this should fit for given starting val
 	// next icrement is problematic:
-	_note("Will increment again: " << a );
+	pfp_note("Will increment again: " << a );
 	if (safetype) { EXPECT_THROW( func() , std::runtime_error ); }
 	else { // should not fit for given val
 		// test nothing for unsafe types, as the test would cause a real UB to happen
@@ -657,7 +657,7 @@ TEST(xint, range_u_to_sizet) {
 }
 
 void someint(long long int x) {
-	_mark("someint got: " << x);
+	pfp_mark("someint got: " << x);
 }
 
 template <typename T>

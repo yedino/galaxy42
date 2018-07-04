@@ -3,7 +3,7 @@
 c_tuntap_fake_kernel::c_tuntap_fake_kernel()
 	: m_readtun_nr(0)
 {
-	_note("Preparing fake kernel tuntap");
+	pfp_note("Preparing fake kernel tuntap");
 	for (int nr=0; nr<4; ++nr) m_data.push_back( make_example(nr) );
 }
 
@@ -28,7 +28,7 @@ std::string c_tuntap_fake_kernel::make_example(int nr) {
 		if ((i%3)==2) c = '_';// char((nr%20) + 'a');
 		data += c;
 	}
-	_info("Example data from TUN will be: " << data);
+	pfp_info("Example data from TUN will be: " << data);
 	return data;
 }
 
@@ -36,7 +36,7 @@ size_t c_tuntap_fake_kernel::readtun( char * buf , size_t bufsize ) { // semanti
 	//	[thread_safe]
 
 	int readnr = m_readtun_nr++;
-	_dbg2("readtun, read#="<< readnr);
+	pfp_dbg2("readtun, read#="<< readnr);
 	std::string & this_pattern = m_data.at(readnr % m_data.size()) ;
 	auto size_full = this_pattern.size();
 	_check(size_full <= bufsize); // we must fit in buffer
@@ -66,7 +66,7 @@ size_t c_tuntap_fake_kernel::readtun( char * buf , size_t bufsize ) { // semanti
 c_tuntap_fake::c_tuntap_fake( c_tuntap_fake_kernel & kernel )
 	: m_kernel( kernel )
 {
-	_info("Created tuntap reader, from fake kernel device at " << reinterpret_cast<void*>(&kernel) );
+	pfp_info("Created tuntap reader, from fake kernel device at " << reinterpret_cast<void*>(&kernel) );
 }
 
 size_t c_tuntap_fake::readtun( char * buf , size_t bufsize ) {

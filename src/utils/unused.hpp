@@ -21,7 +21,7 @@ template<int n> bool volatile_always_true() { volatile int x=n; volatile int y=x
  * Compiler can not prove that this code will always abort here, therefore this should not stop compiler
  * from issuing warnings about function possibly reaching end without return.
  */
-#define DEAD_RETURN_MAYBE() do { if (volatile_always_true<0>()) { _erro("Reached unexpected end of function (DEAD_RETURN), aborting.");  std::abort(); } } while (0)
+#define DEAD_RETURN_MAYBE() do { if (volatile_always_true<0>()) { pfp_erro("Reached unexpected end of function (DEAD_RETURN), aborting.");  std::abort(); } } while (0)
 
 /**
  * @brief much like #DEAD_RETURN it will abort if program reaches this spot (usually at very end of function returning non-void),
@@ -29,11 +29,11 @@ template<int n> bool volatile_always_true() { volatile int x=n; volatile int y=x
  * so it quiets the compiler warning about this mistake.
  * @warning Use only if you are sure that this code is unreachable, because it silences warnings; still it will not cause an UB if it was reachable after all.
  */
-#define DEAD_RETURN() do { { _erro("Reached unexpected end of function (DEAD_RETURN), aborting.");  std::abort(); } } while (0)
+#define DEAD_RETURN() do { { pfp_erro("Reached unexpected end of function (DEAD_RETURN), aborting.");  std::abort(); } } while (0)
 
 #define TODOCODE { std::stringstream oss; oss<<"Trying to use a not implemented/TODO code, in " \
-<<__func__<<" (line "<<__LINE__<<")"; \
-_erro(oss.str()); \
-throw std::runtime_error(oss.str()); \
+	<<__func__<<" (line "<<__LINE__<<")"; \
+	pfp_erro(oss.str()); \
+	throw std::runtime_error(oss.str()); \
 } while(0)
 

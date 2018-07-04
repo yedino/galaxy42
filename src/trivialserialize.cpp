@@ -209,7 +209,7 @@ void parser::debug() const {
 			else { oss<<"(END)"; break; }
 	}
 
-	_info("Parser " << (void*)this << oss.str());
+	pfp_info("Parser " << (void*)this << oss.str());
 }
 
 

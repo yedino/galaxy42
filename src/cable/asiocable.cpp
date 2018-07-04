@@ -15,9 +15,9 @@ boost::asio::io_service & c_asiocable::get_io_service() noexcept {
 }
 
 void c_asiocable::stop_threadsafe() {
-	_info("Stopping cable");
+	pfp_info("Stopping cable");
 	c_someio::stop_threadsafe();
-	_info("Cable ASIO - will also stop his io_service");
+	pfp_info("Cable ASIO - will also stop his io_service");
 	m_io_service.stop(); // this is thread-safe function
 }
 

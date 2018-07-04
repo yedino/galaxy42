@@ -43,7 +43,7 @@ unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & 
 		}
 	}
 	catch (const std::exception &e) {
-		// _erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what()); // show this on higher level
+		// pfp_erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what()); // show this on higher level
 		const string msg = mo_file_reader::gettext("L_bad_peer_format") + " "s + e.what();
 		_throw_error( err_check_input(msg.c_str())  );
 	}

@@ -156,7 +156,7 @@ class safer_int {
 			std::is_integral<U>::value && std::is_fundamental<U>::value  >::type* = nullptr>
 		safer_int(U obj) : xi(obj)
 		{
-			// _warn("Creating from INT, type=" << typeid(U).name() << " value=" << obj );
+			// pfp_warn("Creating from INT, type=" << typeid(U).name() << " value=" << obj );
 			// TODO numeric_cast
 		}
 

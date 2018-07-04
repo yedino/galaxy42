@@ -26,7 +26,7 @@ void TestsEnvReseter::OnTestProgramEnd(const ::testing::UnitTest& unit_test) {
 	if (skipped>0) {
 		std::cout << banner_skip() << " Tests skipped: " << skipped
 		<< "." << std::endl;
-		_warn("Skipped some tests.");
+		pfp_warn("Skipped some tests.");
 	}
 	else std::cout << "(No tests were skipped, this is good)" << std::endl;
 

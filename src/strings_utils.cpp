@@ -86,7 +86,7 @@ try {
 
 	size_t pos=0, out=0; // position of input, and output
 	for( ; pos<es ; pos+=2, ++out) {
-		// _info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
+		// pfp_info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
 		// "02" -> cl="2" ch="0"
 		//  "2" -> cl="2" ch="0"
 		char cl,ch;
@@ -102,7 +102,7 @@ try {
 	}
 
 	assert( out == retsize ); // all expected positions of data allocated above in .resize() were written
-} catch(std::exception &e) { _erro("Failed to parse string [" << encoded.data <<"]"); _throw_error_rethrow(  ); }
+} catch(std::exception &e) { pfp_erro("Failed to parse string [" << encoded.data <<"]"); _throw_error_rethrow(  ); }
 }
 
 string_as_bin & string_as_bin::operator+=( const string_as_bin & other ) {

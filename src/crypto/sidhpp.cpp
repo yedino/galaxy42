@@ -35,16 +35,16 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 				reinterpret_cast<unsigned char *>(&public_key_a[0]),
 				curveIsogeny);
 			if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("private key generate error (A)") );
-			_info("private key a " << to_debug_locked(private_key_a));
+			pfp_info("private key a " << to_debug_locked(private_key_a));
 			status = KeyGeneration_B(
 				reinterpret_cast<unsigned char*>(&private_key_b[0]),
 				reinterpret_cast<unsigned char *>(&public_key_b[0]),
 				curveIsogeny);
 			if (status != CRYPTO_SUCCESS) _throw_error( std::runtime_error("private key generate error (B)") );
-			_info("private key b " << to_debug_locked(private_key_b));
+			pfp_info("private key b " << to_debug_locked(private_key_b));
 
 			// check keys valid
-			//_info("SIDH validate...");
+			//pfp_info("SIDH validate...");
 			bool valid_pub_key = false;
 			status = Validate_PKA(
 			reinterpret_cast<unsigned char *>(&public_key_a[0]),
@@ -74,13 +74,13 @@ std::pair<sodiumpp::locked_string, std::string> sidhpp::generate_keypair()
 		sodiumpp::locked_string private_key_main(2 * private_key_len);
 		std::copy_n(private_key_a.begin(), private_key_len, private_key_main.begin());
 		std::copy_n(private_key_b.begin(), private_key_len, private_key_main.begin() + private_key_len);
-		_info("private_key_main " << to_debug_locked(private_key_main));
+		pfp_info("private_key_main " << to_debug_locked(private_key_main));
 		std::string public_key_main = public_key_a + public_key_b;
 		return std::make_pair(std::move(private_key_main), std::move(public_key_main));
 }
 
 sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &key_self_PRV, const std::string &key_self_pub, const std::string &them_public_key) {
-		_dbg1("secret_agreement");
+		pfp_dbg1("secret_agreement");
 		string them_public_key_a = them_public_key.substr(0, them_public_key.size()/2);
 		string them_public_key_b = them_public_key.substr(key_self_pub.size()/2);
 		assert( key_self_pub.size() == them_public_key.size());
@@ -94,10 +94,10 @@ sodiumpp::locked_string sidhpp::secret_agreement(const sodiumpp::locked_string &
 		std::copy_n(key_self_PRV.begin(), key_self_PRV.size()/2, key_self_PRV_a.begin());
 		auto pos_iterator = key_self_PRV.begin() + (key_self_PRV.size() / 2);
 		std::copy_n(pos_iterator, key_self_PRV_b.size(), key_self_PRV_b.begin());
-		_info("my private keys");
-		_info("private key main " << to_debug_locked(key_self_PRV));
-		_info("private key a " << to_debug_locked(key_self_PRV_a));
-		_info("private key b " << to_debug_locked(key_self_PRV_b));
+		pfp_info("my private keys");
+		pfp_info("private key main " << to_debug_locked(key_self_PRV));
+		pfp_info("private key a " << to_debug_locked(key_self_PRV_a));
+		pfp_info("private key b " << to_debug_locked(key_self_PRV_b));
 
 		// TODO(rob) make this size-calculations more explained; are they correctd?
 		// XXX TODO(rob) there was memory out-of-bounds in demo of SIDH by MS it seems. --rafal

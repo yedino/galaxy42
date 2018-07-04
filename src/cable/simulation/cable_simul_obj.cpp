@@ -18,14 +18,14 @@ c_cable_simul_obj::~c_cable_simul_obj() {
 }
 
 void c_cable_simul_obj::stop_threadsafe() {
-	_info("Stopping simulation card");
+	pfp_info("Stopping simulation card");
 }
 
 void c_cable_simul_obj::send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) {
 	_check(size>=1);
 
 	auto uuid = (dynamic_cast<const c_cable_simul_addr &>(dest)).get_addr();
-	_info("Tranport send to " << uuid << " data: " <<  to_debug( std::string(data , data+size) , e_debug_style_buf ) );
+	pfp_info("Tranport send to " << uuid << " data: " <<  to_debug( std::string(data , data+size) , e_debug_style_buf ) );
 
 	volatile unsigned char fake;
 	size_t pos=0;

@@ -148,8 +148,8 @@ namespace developer_tests {
 bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 	UNUSED(argm);
 
-	_mark("Tests of string encoding");
-	_warn("Test needs rewritting");
+	pfp_mark("Tests of string encoding");
+	pfp_warn("Test needs rewritting");
 	return false;
 }
 
@@ -176,7 +176,7 @@ std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::t_search
 		case c_routing_manager::e_search_mode_route_other_packet: return ostr<<"route_OTHER";
 		case c_routing_manager::e_search_mode_help_find: return ostr<<"help_FIND";
 	}
-	_warn("Unknown reason"); return ostr<<"???";
+	pfp_warn("Unknown reason"); return ostr<<"???";
 }
 
 std::ostream & operator<<(std::ostream & ostr, const c_routing_manager::c_route_info & obj) {
@@ -220,28 +220,28 @@ void c_routing_manager::c_route_search::add_request(c_routing_manager::c_route_r
 	auto found = m_request.find( reason );
 	if (found == m_request.end()) { // new reason for search
 		c_route_reason_detail reason_detail( std::chrono::steady_clock::now() , ttl );
-		_info("Adding new reason for search: " << reason << " details: " << reason_detail);
+		pfp_info("Adding new reason for search: " << reason << " details: " << reason_detail);
 		m_request.emplace(reason, reason_detail);
 	}
 	else {
 		auto & detail = found->second;
-		_info("Updating reason of search: " << reason << " old detail: " << detail );
+		pfp_info("Updating reason of search: " << reason << " old detail: " << detail );
 		detail.m_when = std::chrono::steady_clock::now();
 		detail.m_ttl = std::max( detail.m_ttl , ttl ); // use the bigger TTL [confroute]
-		_info("Updating reason of search: " << reason << " new detail: " << detail );
+		pfp_info("Updating reason of search: " << reason << " new detail: " << detail );
 	}
 
 	// update this search'es goal TTL
 	// TODO(r)-refact: this could be factored into some generic: set_highest() , with optional debug too
 	auto ttl_old = this->m_ttl_should_use;
 	this->m_ttl_should_use = std::max( this->m_ttl_should_use , ttl);
-	if (ttl_old != this->m_ttl_should_use) _info("Updated this search TTL to " << this->m_ttl_should_use << " from " << ttl_old);
+	if (ttl_old != this->m_ttl_should_use) pfp_info("Updated this search TTL to " << this->m_ttl_should_use << " from " << ttl_old);
 }
 
 c_routing_manager::c_route_reason::c_route_reason(c_haship_addr his_addr, t_search_mode mode)
 	: m_his_addr(his_addr), m_search_mode(mode)
 {
-	_info("NEW reason: "<< (*this));
+	pfp_info("NEW reason: "<< (*this));
 }
 
 bool c_routing_manager::c_route_reason::operator<(const c_route_reason &other) const {
@@ -258,60 +258,60 @@ c_routing_manager::c_route_search::c_route_search(c_haship_addr addr, int basic_
 	: m_addr(addr), m_ever(false), m_ask_time(), m_ttl_used(0), m_ttl_should_use(5)
 {
 	UNUSED(basic_ttl); // TODO or use it as m_ttl_should_use?
-	_info("NEW router SEARCH: " << (*this));
+	pfp_info("NEW router SEARCH: " << (*this));
 }
 
 const c_routing_manager::c_route_info & c_routing_manager::add_route_info_and_return(c_haship_addr target, c_route_info route_info) {
 	// TODO(r): refactor out the create-or-update idiom
 	auto it = m_route_nexthop.find( target );
 	if (it == m_route_nexthop.end()) { // new one
-		_info("This is NEW route information." << route_info);
+		pfp_info("This is NEW route information." << route_info);
 		auto new_obj = make_unique<c_route_info>( route_info ); // TODO(rob): std::move it here - optimization?
 		auto emplace = m_route_nexthop.emplace( std::move(target) , std::move(new_obj) );
 		assert(emplace.second == true); // inserted new
 		return * emplace.first->second; // reference to object stored in member we own
 	} else {
-		_info("This is UPDATED route information." << route_info);
+		pfp_info("This is UPDATED route information." << route_info);
 		// TODO(r) TODONEXT pick optimal path?
 		return * it->second;
 	}
 }
 
 const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_search(c_galaxy_node & galaxy_node, c_haship_addr dst, c_routing_manager::c_route_reason reason, bool start_search , int search_ttl) {
-	_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
+	pfp_info("ROUTING-MANAGER: find: " << dst << ", for reason: " << reason );
 
 	try {
 		const auto & peer = galaxy_node.get_peer_with_hip(dst,false); // no need for PK now, caller will do this on his own usually
-		_info("We have that peer directly: " << peer );
+		pfp_info("We have that peer directly: " << peer );
 		const int cost = 1; // direct peer. In future we can add connection cost or take into account congestion/lag...
 		const auto peer_pub_ptr = peer.get_pub();
 		if (!peer_pub_ptr) _throw_error( std::runtime_error("This peer has no pubkey yet.") );
 		c_route_info route_info( peer.get_hip() , cost , * peer_pub_ptr );
-		_info("Direct route: " << route_info);
+		pfp_info("Direct route: " << route_info);
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
 		return route_info_ref_we_own; // <--- return direct
 	}
-	catch(expected_not_found_missing_pubkey) { _dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); } 
-	catch(expected_not_found) { _dbg1("We do not have that dst="<<dst<<" in peers at all"); } // not found in direct peers
+	catch(expected_not_found_missing_pubkey) { pfp_dbg1("We LACK PUBLIC KEY for peer dst="<<dst<<" (but we have him besides that)"); } 
+	catch(expected_not_found) { pfp_dbg1("We do not have that dst="<<dst<<" in peers at all"); } // not found in direct peers
 
 	auto found = m_route_nexthop.find( dst ); // <--- search what we know
 	if (found != m_route_nexthop.end()) { // found
 		const auto & route = found->second;
-		_info("ROUTING-MANAGER: found route: " << (*route));
+		pfp_info("ROUTING-MANAGER: found route: " << (*route));
 		return *route; // <--- warning: refrerence to this-owned object that is easily invalidatd
 	}
 	else { // don't have a planned route to him
 		if (!start_search) {
-			_info("No route, but we also so not want to search for it.");
+			pfp_info("No route, but we also so not want to search for it.");
 			_throw_error( std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst)) );
 		}
 		else {
-			_info("Route not found, we will be searching");
+			pfp_info("Route not found, we will be searching");
 			bool created_now=false;
 			auto search_iter = m_search.find(dst);
 			if (search_iter == m_search.end()) {
 				created_now=true;
-				_info("STARTED SEARCH (created brand new search record) for route to dst="<<dst);
+				pfp_info("STARTED SEARCH (created brand new search record) for route to dst="<<dst);
 				auto new_search = make_unique<c_route_search>(dst, search_ttl); // start a new search, at this TTL
 				new_search->add_request( reason , search_ttl ); // add a first reason (it also sets TTL)
 				auto search_emplace = m_search.emplace( std::move(dst) , std::move(new_search) );
@@ -320,19 +320,19 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 				search_iter = search_emplace.first; // save here the result
 			}
 			else {
-				_info("STARTED SEARCH (updated an existing search) for this to dst="<<dst);
+				pfp_info("STARTED SEARCH (updated an existing search) for this to dst="<<dst);
 				search_iter->second->add_request( reason , search_ttl ); // add reason (can increase TTL)
 			}
 			auto & search_obj = search_iter->second; // search exists now (new or updated)
 			if (created_now) search_obj->execute( galaxy_node ); // ***
 		}
 	}
-	_note("NO ROUTE");
+	pfp_note("NO ROUTE");
 	_throw_error( std::runtime_error("NO ROUTE known (at current time) to dst=" + STR(dst)) );
 }
 
 void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) {
-	_info("Sending QUERY for HIP, with m_ttl_should_use=" << m_ttl_should_use);
+	pfp_info("Sending QUERY for HIP, with m_ttl_should_use=" << m_ttl_should_use);
 	string_as_bin data; // [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 
 	data += string_as_bin(m_addr);
@@ -374,21 +374,21 @@ t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
 	if (pos1 == std::string::npos) throw std::out_of_range("");
 	string part_pip = simple.substr(0,pos1);
 	string part_hip = simple.substr(pos1+1);
-	_info("Peer pip="<<part_pip<<" hip="<<part_hip);
+	pfp_info("Peer pip="<<part_pip<<" hip="<<part_hip);
 	auto ip_pair = tunserver_utils::parse_ip_string(part_pip);
-	_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
+	pfp_note("Physical IP: address=" << ip_pair.first << " port=" << ip_pair.second);
 	return t_peering_reference( ip_pair.first, ip_pair.second , part_hip );
 }
 
 void c_tunserver::exit_tunserver()
 {
-	_mark("Exiting tunserver");
+	pfp_mark("Exiting tunserver");
 	is_exiting=true;
 }
 
 void c_tunserver::add_peer_simplestring(const string & simple) {
 	// TODO delete_newloop
-	_dbg1("Adding peer from simplestring=" << simple);
+	pfp_dbg1("Adding peer from simplestring=" << simple);
 	// "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"
 	try {
 		t_peering_reference peering_ref = parse_peer_simplestring(simple);
@@ -396,8 +396,8 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 		delete_peer_from_black_list(peering_ref.haship_addr);
 	}
 	catch (const std::exception &e) {
-//		_erro("Adding peer from simplereference failed (exception): " << e.what());
-                _erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what());
+//		pfp_erro("Adding peer from simplereference failed (exception): " << e.what());
+                pfp_erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what());
 
 //                _throw_error( std::invalid_argument("Bad peer format") );
 		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
@@ -429,7 +429,7 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 
 bool c_tunserver::delete_peer(const c_haship_addr &hip)
 {
-	_mark("delete_peer (delete only!) " << hip);
+	pfp_mark("delete_peer (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto iter = m_peer.find(hip);
@@ -443,7 +443,7 @@ bool c_tunserver::delete_peer(const c_haship_addr &hip)
 
 void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
 {
-	_mark("delete peer from black list (delete only!) " << hip);
+	pfp_mark("delete peer from black list (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto iter = m_peer_black_list.find(hip);
@@ -454,7 +454,7 @@ void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
 
 bool c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
 {
-	_dbg1("Deleting peer from simplestring=" << simple);
+	pfp_dbg1("Deleting peer from simplestring=" << simple);
 	try {
 		c_haship_addr hip(c_haship_addr::tag_constr_by_addr_dot(), simple);
 		bool peer_deleted = delete_peer(hip);
@@ -463,14 +463,14 @@ bool c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
 		return peer_deleted;
 	}
 	catch (const std::exception &e) {
-		_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
+		pfp_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
 		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 	}
 }
 
 void c_tunserver::delete_all_peers(bool is_banned)
 {
-	_mark("delete all peers (delete only!) ");
+	pfp_mark("delete all peers (delete only!) ");
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		if (is_banned)
@@ -511,8 +511,8 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_option_insecure_cap( check_arg_bool("insecure-cap", early_argm, false) )
 {
 //	std::cout << m_bitcoin_node_cli.get_balance() << std::endl; std::abort(); // XXX
-	_fact("Creating tunserver (old style)");
-	if (m_option_insecure_cap) _warn("INSECURE OPTION is active: m_option_insecure_cap");
+	pfp_fact("Creating tunserver (old style)");
+	if (m_option_insecure_cap) pfp_warn("INSECURE OPTION is active: m_option_insecure_cap");
 
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
 		return rpc_ping(input_json);
@@ -581,7 +581,7 @@ void c_tunserver::set_argm(shared_ptr< boost::program_options::variables_map > a
   _check( m_option_insecure_cap == UsePtr(m_argm).at("insecure-cap").as<bool>() ); // should not change (e.g. vs ctor early_argm)
 }
 
-void c_tunserver::set_my_name(const string & name) {  m_my_name = name; _note("This node is now named: " << m_my_name);  }
+void c_tunserver::set_my_name(const string & name) {  m_my_name = name; pfp_note("This node is now named: " << m_my_name);  }
 
 const antinet_crypto::c_multikeys_pub & c_tunserver::read_my_IDP_pub() const {
 	return m_my_IDI_pub;
@@ -608,7 +608,7 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	try {
 		IDI_name = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 	} catch (std::invalid_argument &err) {
-		_dbg2("IDI is not set");
+		pfp_dbg2("IDI is not set");
 		_throw_error( std::runtime_error("IDI is not set") );
 	}
 
@@ -632,8 +632,8 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	catch UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
 
 	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_ip_hexdot );
-	_info("IDI IPv6: " << IDI_ip_hexdot);
-	_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
+	pfp_info("IDI IPv6: " << IDI_ip_hexdot);
+	pfp_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
 	// creating IDC for this session
 	antinet_crypto::c_multikeys_PAIR my_IDC;
 	my_IDC.generate(antinet_crypto::e_crypto_system_type_X25519,1);
@@ -666,8 +666,8 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 	catch UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
 
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_ip_hexdot );
-	_info("IDC IPv6: " << IDC_ip_hexdot);
-	_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
+	pfp_info("IDC IPv6: " << IDC_ip_hexdot);
+	pfp_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;
@@ -676,7 +676,7 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 
 // add peer
 bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
-	_mark("add_peer (add only!) " << peer_ref );
+	pfp_mark("add_peer (add only!) " << peer_ref );
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
@@ -688,7 +688,7 @@ bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 
 void c_tunserver::add_peer_to_black_list(const c_haship_addr &hip)
 {
-	_mark("add_peer to black list (add only!) " << hip );
+	pfp_mark("add_peer to black list (add only!) " << hip );
 	// key is unique in map
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
@@ -700,7 +700,7 @@ void c_tunserver::add_peer_append_pubkey(const t_peering_reference & peer_ref,
 unique_ptr<c_haship_pubkey> && pubkey)
 {
 	auto peer_hip =  peer_ref.haship_addr;
-	_dbg1("Update (or add) peer reference for hip="<<peer_hip<< " , reference=" << peer_ref << ", pubkey=" << (*pubkey));
+	pfp_dbg1("Update (or add) peer reference for hip="<<peer_hip<< " , reference=" << peer_ref << ", pubkey=" << (*pubkey));
 	{
 		// auto hip_from_pubkey = pubkey->get_ipv6_string_hexdot(); // re-confirm there that the haship matches the pubkey, just to be sure:
 		c_haship_addr hip_from_pubkey( c_haship_addr::tag_constr_by_hash_of_pubkey() , *pubkey );
@@ -716,17 +716,17 @@ unique_ptr<c_haship_pubkey> && pubkey)
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 
 		try {
-			_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
-		} catch(...) { _warn("This peer is not yet in map"); }
+			pfp_dbg2("We have him ALREADY in map: " << to_debug( m_peer.at( peer_hip ) ) );
+		} catch(...) { pfp_warn("This peer is not yet in map"); }
 
 		auto find = m_peer.find( peer_hip );
 		if (find == m_peer.end()) { // no such peer yet
 			auto iter = m_peer_black_list.find( peer_hip );
 			if (iter == m_peer_black_list.end()) { // no such peer on black list yet
 				auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
-				_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
+				pfp_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
 				peering_ptr->set_pubkey(std::move(pubkey));
-				_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
+				pfp_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
 				m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
 			}
 		} else { // update existing
@@ -736,17 +736,17 @@ unique_ptr<c_haship_pubkey> && pubkey)
 			const auto & new_pip = peer_ref.peering_addr;
 			peering_ptr->set_pubkey(std::move(pubkey)); // append the pubkey!
 			if (old_pip == new_pip) {
-				_info("This peer indexed by hip="<<peer_hip<<" has unchanged IP "<< new_pip);
+				pfp_info("This peer indexed by hip="<<peer_hip<<" has unchanged IP "<< new_pip);
 			}
 			else {
-				_fact("This peer indexed by hip="<<peer_hip<<" CHANGES IP (physical), from " << old_pip << " to " << new_pip);
+				pfp_fact("This peer indexed by hip="<<peer_hip<<" CHANGES IP (physical), from " << old_pip << " to " << new_pip);
 				peering_ptr->set_pip( new_pip );
 			}
 		}
 
 		try {
-			_dbg2("As result, after adding/appending peer, we have him in map: " << to_debug( m_peer.at( peer_hip ) ) );
-		} catch(...) { _erro("Failed to display the added peer"); throw ; }
+			pfp_dbg2("As result, after adding/appending peer, we have him in map: " << to_debug( m_peer.at( peer_hip ) ) );
+		} catch(...) { pfp_erro("Failed to display the added peer"); throw ; }
 
 	} // lock
 
@@ -755,16 +755,16 @@ unique_ptr<c_haship_pubkey> && pubkey)
 
 void c_tunserver::add_tunnel_to_pubkey(const c_haship_pubkey & pubkey)
 {
-	_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
+	pfp_dbg1("add pubkey: " << pubkey.get_ipv6_string_hexdot());
 	c_haship_addr hip( c_haship_addr::tag_constr_by_addr_bin() , pubkey.get_ipv6_string_bin() );
 	auto find = m_tunnel.find(hip);
 	if (find == m_tunnel.end()) { // we don't have tunnel to him yet
-		_info("Creating a CT to HIP=" << hip);
+		pfp_info("Creating a CT to HIP=" << hip);
 		// TODO nicer name?
 		auto ct = make_unique< c_tunnel_use >( m_my_IDC , pubkey , "Tunnel" );
 		m_tunnel[ hip ] = std::move(ct);
 	} else {
-		_dbg2("Tunnel already is created for HIP="<<hip);
+		pfp_dbg2("Tunnel already is created for HIP="<<hip);
 	}
 
 }
@@ -785,13 +785,13 @@ void c_tunserver::prepare_socket() {
 		assert(address[0] == 0xFD);
 //		assert(address[1] == 0x42);
 
-		_fact("Will configure the tun device");
+		pfp_fact("Will configure the tun device");
 		try {
 			m_tun_device.init();
 			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
-			_fact("Done init of event manager - for this tuntap");
+			pfp_fact("Done init of event manager - for this tuntap");
 			m_event_manager.init(); // because now we have the tuntap fully ready (with the fd)
 		}
 		catch (tuntap_error_devtun &ex) { ui::action_error_exit("Problem with setup of virtual card (tun/tap) with accessing tun/tap driver-file; "s + ex.what()); }
@@ -800,7 +800,7 @@ void c_tunserver::prepare_socket() {
 		catch (tuntap_error &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap); "s + ex.what()); }
 		catch (std::exception &ex) { ui::action_error_exit("Unknon problem (std::exception) with setup of virtual card (tun/tap) "s + ex.what()); }
 		catch (...) { ui::action_error_exit("Unknon problem (unknown exception type) with setup of virtual card (tun/tap)."); }
-		_goal("Tun device seems fully configured");
+		pfp_goal("Tun device seems fully configured");
 	}
 
 	#ifdef __linux__
@@ -815,7 +815,7 @@ void c_tunserver::prepare_socket() {
 
 #ifdef __linux__
 void c_tunserver::wait_for_fd_event() { // wait for fd event
-	_info("Selecting");
+	pfp_info("Selecting");
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_udp_device.get_socket(), &m_fd_set_data);
@@ -849,13 +849,13 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	char ipv6_str[INET6_ADDRSTRLEN]; // for string e.g. "fd42:ffaa:..."
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_src, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 8 is source addr, from ipv6 RFC
-	_dbg1("src ipv6_str " << ipv6_str);
+	pfp_dbg1("src ipv6_str " << ipv6_str);
 	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ipv6_str);
 	// TODONOW^ this works fine?
 
 	memset(ipv6_str, 0, INET6_ADDRSTRLEN);
 	inet_ntop(AF_INET6, buff + pos_dst, ipv6_str, INET6_ADDRSTRLEN); // ipv6 octets from 24 is destination addr, from
-	_dbg1("dst ipv6_str " << ipv6_str);
+	pfp_dbg1("dst ipv6_str " << ipv6_str);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ipv6_str);
 	// TODONOW^ this works fine?
 
@@ -865,12 +865,12 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	ip::address_v6::bytes_type ip_bytes;
 	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
 	ip::address_v6 ip6_addr(ip_bytes);
-	_dbg1("src ipv6_str " << ip6_addr);
+	pfp_dbg1("src ipv6_str " << ip6_addr);
 	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 
 	std::copy_n(buff + pos_dst, ip_bytes.size(), ip_bytes.begin());
 	ip6_addr = ip::address_v6(ip_bytes);
-	_dbg1("dst ipv6_str " << ip6_addr);
+	pfp_dbg1("dst ipv6_str " << ip6_addr);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
@@ -882,16 +882,16 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 void c_tunserver::peering_ping_all_peers() {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto now = std::chrono::steady_clock::now();
-	_dbg2("Remove inactive peers, time="<<now);
+	pfp_dbg2("Remove inactive peers, time="<<now);
 	size_t count_removed=0; // how many we removed
 	if (enable_remove) {
 		for (auto it = m_peer.begin(), it_end = m_peer.end(); it != it_end;) {
 			auto last_ping_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - it->second->get_last_ping_time()); //< seconds after the last
 			if (last_ping_seconds > peer_timeout) {
-				_note("removing peer " << it->first.get_hip_as_string(true));
+				pfp_note("removing peer " << it->first.get_hip_as_string(true));
 				it = m_peer.erase(it);
 				it_end = m_peer.end();
-				_dbg1("after erase");
+				pfp_dbg1("after erase");
 				++count_removed;
 			} else {
 				++ it;
@@ -899,11 +899,11 @@ void c_tunserver::peering_ping_all_peers() {
 		}
 	}
 	if (count_removed) {
-		_mark( (enable_remove ? "Removed actually" : "Would remove (but disabled)")
+		pfp_mark( (enable_remove ? "Removed actually" : "Would remove (but disabled)")
 		<< count_removed << " inactive peer(s), time="<<now);
 	}
 
-	_info("Sending ping to all peers (count=" << m_peer.size() << ")");
+	pfp_info("Sending ping to all peers (count=" << m_peer.size() << ")");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
@@ -920,7 +920,7 @@ void c_tunserver::peering_ping_all_peers() {
 }
 
 void c_tunserver::nodep2p_foreach_cmd(c_protocol::t_proto_cmd cmd, string_as_bin data) {
-	_info("Sending a COMMAND to peers:");
+	pfp_info("Sending a COMMAND to peers:");
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
@@ -933,7 +933,7 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	auto peer_iter = m_peer.find(addr);
 	if (peer_iter == m_peer.end()) {
-		_dbg4("this HIP is not in peers");
+		pfp_dbg4("this HIP is not in peers");
 		throw expected_not_found();
 	}
 	c_peering & peer = * peer_iter->second;
@@ -945,10 +945,10 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 
 void c_tunserver::debug_peers() {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
-	if (!m_peer.size()) _fact("You have no peers currently.");
+	if (!m_peer.size()) pfp_fact("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_fact("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
+		pfp_fact("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -959,10 +959,10 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 	c_routing_manager::c_route_reason reason,
 	int recurse_level, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
-	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
+	if (data_route_ttl<=0) { pfp_warn("TTL expended. NOT routing.");	return false;	}
 	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	if (m_peer.size() == 0) {
-		_warn("I have no peers, I can not route anywhere.");
+		pfp_warn("I have no peers, I can not route anywhere.");
 		return false;
 	}
 
@@ -976,29 +976,29 @@ bool c_tunserver::route_tun_data_to_its_destination_detail(t_route_method method
 
 	if (peer_it == m_peer.end()) { // not a direct peer!
 		lg.unlock();
-		_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
+		pfp_info("ROUTE: can not find in direct peers next_hip="<<next_hip);
 		if (recurse_level>1) {
-			_warn("DROP: Recursion level too big in choosing peer");
+			pfp_warn("DROP: Recursion level too big in choosing peer");
 			return false; // <---
 		}
 
 		c_haship_addr via_hip;
 		try {
-			_info("Trying to find a route to it");
+			pfp_info("Trying to find a route to it");
 			const int default_ttl = c_protocol::ttl_max_accepted; // for this case [confroute]
 			const auto & route = m_routing_manager.get_route_or_maybe_search(*this, next_hip , reason , true, default_ttl);
-			_info("Found route: " << route);
+			pfp_info("Found route: " << route);
 			via_hip = route.m_nexthop;
-		} catch(...) { _info("ROUTE MANAGER: can not find route at all"); return false; }
-		_info("Route found via hip: via_hip = " << via_hip);
+		} catch(...) { pfp_info("ROUTE MANAGER: can not find route at all"); return false; }
+		pfp_info("Route found via hip: via_hip = " << via_hip);
 		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
 			src_hip, dst_hip, via_hip, reason, recurse_level+1, data_route_ttl, nonce_used);
-		if (!ok) { _info("Routing failed"); return false; } // <---
-		_info("Routing seems to succeed");
+		if (!ok) { pfp_info("Routing failed"); return false; } // <---
+		pfp_info("Routing seems to succeed");
 	}
 	else { // next_hip is a direct peer, send to it:
 		auto & target_peer = peer_it->second;
-		_info("ROUTE-PEER (found the goal in direct peer) selected peerig next hop is: " << (*target_peer) );
+		pfp_info("ROUTE-PEER (found the goal in direct peer) selected peerig next hop is: " << (*target_peer) );
 		auto peer_udp = unique_cast_ptr<c_peering_udp>( target_peer ); // upcast to UDP peer derived
 		lg.unlock();
 		// send it on wire:
@@ -1012,18 +1012,18 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 	c_haship_addr src_hip, c_haship_addr dst_hip,
 	c_routing_manager::c_route_reason reason, int data_route_ttl, antinet_crypto::t_crypto_nonce nonce_used)
 {
-	if (data_route_ttl<=0) { _warn("TTL expended. NOT routing.");	return false;	}
+	if (data_route_ttl<=0) { pfp_warn("TTL expended. NOT routing.");	return false;	}
 	try {
-		_info("Sending data between end2end " << src_hip <<"--->" << dst_hip);
+		pfp_info("Sending data between end2end " << src_hip <<"--->" << dst_hip);
 		bool ok = this->route_tun_data_to_its_destination_detail(method, buff, buff_size,
 			src_hip, dst_hip, dst_hip, reason, 0, data_route_ttl, nonce_used);
-		if (!ok) { _info("Routing/sending failed (top level)"); return false; }
+		if (!ok) { pfp_info("Routing/sending failed (top level)"); return false; }
 	} catch(std::exception &e) {
-		_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
+		pfp_warn("Can not send to peer, because:" << e.what()); // TODO more info (which peer, addr, number)
 	} catch(...) {
-		_warn("Can not send to peer (unknown)"); // TODO more info (which peer, addr, number)
+		pfp_warn("Can not send to peer (unknown)"); // TODO more info (which peer, addr, number)
 	}
-	_info("Routing/sending OK (top level)");
+	pfp_info("Routing/sending OK (top level)");
 	return true;
 }
 
@@ -1304,7 +1304,7 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 	} catch (const std::exception &e) {
 		ret["state"] = "error";
 		ret["msg"] = e.what();
-		_warn("rpc_get_status error: " << e.what());
+		pfp_warn("rpc_get_status error: " << e.what());
 	}
 	return ret;
 }
@@ -1319,7 +1319,7 @@ nlohmann::json c_tunserver::rpc_btc_get_address(const string &input_json)
 	} catch (const std::exception &e) {
 		ret["state"] = "error";
 		ret["msg"] = e.what();
-		_warn("rpc_btc_get_address error: " << e.what());
+		pfp_warn("rpc_btc_get_address error: " << e.what());
 	}
 	return ret;
 }
@@ -1335,7 +1335,7 @@ bool c_tunserver::peer_on_black_list(const c_haship_addr &hip) {
 void c_tunserver::event_loop(int time) {
 //	const char * g_the_disclaimer = gettext("L_warning_work_in_progress");
 
-	_info("Entering the event loop");
+	pfp_info("Entering the event loop");
 	c_counter counter(2,true);
 	c_counter counter_big(10,false);
 
@@ -1400,7 +1400,7 @@ void c_tunserver::event_loop(int time) {
 			auto freq = ping_all_frequency;
 			if (ping_all_count < ping_all_count_low) freq = ping_all_frequency_low;
 			if (time_now > ping_all_time_last + freq ) {
-				_note("It's time to ping all peers again (at auto-pinging time frequency=" << std::chrono::duration_cast<std::chrono::seconds>(freq).count() << " seconds)");
+				pfp_note("It's time to ping all peers again (at auto-pinging time frequency=" << std::chrono::duration_cast<std::chrono::seconds>(freq).count() << " seconds)");
 				peering_ping_all_peers(); // TODO(r) later ping only peers that need that
 				ping_all_time_last = std::chrono::steady_clock::now();
 				++ping_all_count;
@@ -1416,7 +1416,7 @@ void c_tunserver::event_loop(int time) {
 		/*if (anything_happened || 1) {
 			debug_peers();
 			string xx(10,'-');
-			_info('\n' << xx << node_title_bar << xx << "\n\n");
+			pfp_info('\n' << xx << node_title_bar << xx << "\n\n");
 		} // --- print your name ---
 		*/
 
@@ -1429,7 +1429,7 @@ void c_tunserver::event_loop(int time) {
 			anything_happened=true;
 			std::vector<int8_t> tun_read_buff(buf_size);
 			auto size_read = m_tun_device.read_from_tun(&tun_read_buff[0], tun_read_buff.size());
-			_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(reinterpret_cast<char *>(&tun_read_buff[0]),size_read)<<"]");
+			pfp_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(reinterpret_cast<char *>(&tun_read_buff[0]),size_read)<<"]");
 			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
 			c_haship_addr src_hip, dst_hip;
@@ -1437,16 +1437,16 @@ void c_tunserver::event_loop(int time) {
 			// TODO warn if src_hip is not our hip
 
 			if (!addr_is_galaxy(dst_hip)) {
-				_dbg3("Got data for strange dst_hip="<<dst_hip);
+				pfp_dbg3("Got data for strange dst_hip="<<dst_hip);
 				continue; // !
 			}
 
 			auto find_tunnel = m_tunnel.find( dst_hip ); // find end2end tunnel
 			if (find_tunnel == m_tunnel.end()) {
-				_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
+				pfp_warn("end2end tunnel does not exist, can not send OUR data from TUN to dst_hip="<<dst_hip);
 
 				std::string dump; // just to trigger a search (for path - and btw for the pubkey!)
-				_note("GET KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY - will look for key for " << dst_hip << " so we can SEND THERE");
+				pfp_note("GET KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY - will look for key for " << dst_hip << " so we can SEND THERE");
 				this->route_tun_data_to_its_destination_top(
 					e_route_method_from_me,
 					dump.c_str(), dump.size(),
@@ -1457,7 +1457,7 @@ void c_tunserver::event_loop(int time) {
 				); // push the tunneled data to where they belong
 
 			} else {
-				_info("Using CT tunnel to send our own data");
+				pfp_info("Using CT tunnel to send our own data");
 				auto & ct = * find_tunnel->second;
 				antinet_crypto::t_crypto_nonce nonce_used;
 
@@ -1487,11 +1487,11 @@ void c_tunserver::event_loop(int time) {
 			size_t size_read = m_udp_device.receive_data(buf, sizeof(buf), sender_pip);
 			if (size_read == 0) continue; // XXX ignore empty packets
 
-			_note("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
+			pfp_note("UDP Socket read from direct sender_pip = " << sender_pip <<", size " << size_read << " bytes: " << string_as_dbg( string_as_bin(buf,size_read)).get());
 			// ------------------------------------
 
 			// parse version and command:
-			if (! (size_read >= 2) ) { _warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
+			if (! (size_read >= 2) ) { pfp_warn("INVALIDA DATA, size_read="<<size_read); continue; } // !
 			assert( size_read >= 2 ); // buf: reads from position 0..1 are asserted as valid now
 
 			int proto_version = static_cast<int>( static_cast<unsigned char>(buf[0]) );
@@ -1504,15 +1504,15 @@ void c_tunserver::event_loop(int time) {
 			c_peering * sender_as_peering_ptr  = nullptr; // TODO(r)-security review usage of this, and is it needed
 			if (! c_protocol::command_is_valid_from_unknown_peer( cmd )) {
 				c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
-				_info("We recognize the sender, as: " << sender_as_peering);
+				pfp_info("We recognize the sender, as: " << sender_as_peering);
                 sender_as_peering.get_stats().update_read_stats(size_read);
                 sender_hip = sender_as_peering.get_hip(); // this is not yet confirmed/authenticated(!)
 				sender_as_peering_ptr = & sender_as_peering; // pointer to owned-by-us m_peer[] element. But can be invalidated, use with care! TODO(r) check this TODO(r) cast style
 			}
-			_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << enum_to_int(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
+			pfp_info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Command: " << enum_to_int(cmd) << " from peering ip = " << sender_pip << " -> peer HIP=" << sender_hip);
 
 			if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) { // [protocol] tunneled data
-				_dbg1("Tunneled data");
+				pfp_dbg1("Tunneled data");
 
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() , buf, size_read );
 				parser.skip_bytes_n(2);
@@ -1520,11 +1520,11 @@ void c_tunserver::event_loop(int time) {
 				c_haship_addr dst_hip(c_haship_addr::tag_constr_by_addr_bin() , parser.pop_bytes_n(g_ipv6_rfc::length_of_addr) );
 				int requested_ttl = parser.pop_byte_u(); // the TTL of data that we are asked to forward
 				string nonce_used_raw = parser.pop_bytes_n( crypto_box_NONCEBYTES );
-				_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
+				pfp_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
 				antinet_crypto::t_crypto_nonce nonce_used(
 					sodiumpp::encoded_bytes(nonce_used_raw , sodiumpp::encoding::binary)
 				);
-				_info("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
+				pfp_info("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
 				string blob =	parser.pop_varstring(); // TODO view-string
 
 /*
@@ -1552,14 +1552,14 @@ void c_tunserver::event_loop(int time) {
 					additional_data, additional_data_len,
 					nonce, generated_shared_key);
 				if (r == -1) {
-					_warn("Crypto verification failed!!!");
+					pfp_warn("Crypto verification failed!!!");
 	//				continue; // skip this packet (main loop) // TODO
 				}
 
 				// TODO(r) factor out "reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len"
 
 				// reinterpret for debug
-				_info("UDP received, with cleartext:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
+				pfp_info("UDP received, with cleartext:" << decrypted_buf_len << " bytes: [" << string( reinterpret_cast<char*>(decrypted_buf.get()), decrypted_buf_len)<<"]" );
 
 				// can't wait till C++17 then with http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
 				// auto { src_hip, dst_hip } = parse_tun_ip_src_dst(.....);
@@ -1569,14 +1569,14 @@ void c_tunserver::event_loop(int time) {
 
 				// TODONOW optimize? make sure the proper binary format is cached:
 				if (dst_hip == m_my_hip) { // received data addresses to us as finall destination:
-					_note("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
+					pfp_note("UDP data is addressed to us as finall dst, sending it to TUN (after decryption) blob="<<to_debug(blob));
 
 					auto find_tunnel = m_tunnel.find( src_hip ); // find end2end tunnel
 					if (find_tunnel == m_tunnel.end()) {
-						_warn("end2end tunnel does not exist, can not DECRYPT this data for us (yet?)...");
+						pfp_warn("end2end tunnel does not exist, can not DECRYPT this data for us (yet?)...");
 
 						std::string dump; // just to trigger a search (for path - and btw for the pubkey!)
-						_note("GET KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY - will look for key for "
+						pfp_note("GET KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY - will look for key for "
 							<< dst_hip << " so we can READ DATA from there");
 						this->route_tun_data_to_its_destination_top(
 							e_route_method_from_me,
@@ -1588,23 +1588,23 @@ void c_tunserver::event_loop(int time) {
 						);
 
 					} else {
-						_note("Using CT tunnel to decrypt data for us");
+						pfp_note("Using CT tunnel to decrypt data for us");
 						auto & ct = * find_tunnel->second;
 						auto tundata = ct.unbox_ab( blob , nonce_used );
 
 
-						_note("<<<====== TUN INPUT: " << to_debug(tundata));
+						pfp_note("<<<====== TUN INPUT: " << to_debug(tundata));
 						if (check_ip_protocol(tundata)) {
 							// add TUN header
 							const unsigned char tun_header[] = {0x00, 0x00, 0x86, 0xDD};
 							tundata.insert(g_ipv6_rfc::header_position_of_dst, reinterpret_cast<const char *>(dst_hip.data()), dst_hip.size());
 
 /*							if (!check_packet_destination_address(dst_hip, tundata)) {
-								_warn("crypto authentification of destination IP failed");
+								pfp_warn("crypto authentification of destination IP failed");
 								throw std::runtime_error("crypto authentification of destination IP failed");
 							}*/
 							if (!check_packet_source_address(src_hip, tundata)) {
-								_warn("crypto authentification of source IP failed");
+								pfp_warn("crypto authentification of source IP failed");
 								throw std::runtime_error("crypto authentification of source IP failed");
 							}
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
@@ -1613,7 +1613,7 @@ void c_tunserver::event_loop(int time) {
 
 						}
 						else
-							_warn("IP protocol number " << get_ip_protocol_number(tundata) << " not supported.");
+							pfp_warn("IP protocol number " << get_ip_protocol_number(tundata) << " not supported.");
 
 					} // we have CT
 
@@ -1628,14 +1628,14 @@ void c_tunserver::event_loop(int time) {
 					auto data_route_ttl = requested_ttl - 1;
 					const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 					if (data_route_ttl > limit_incoming_ttl) {
-						_warn("We were requested to route (data) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
+						pfp_warn("We were requested to route (data) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 						data_route_ttl=limit_incoming_ttl;
 					}
 
-					_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
+					pfp_info("RRRRRRRRRRRRRRRRRRRRRRRRRRR UDP data is addressed to someone-else as finall dst, ROUTING it, at data_route_ttl="<<data_route_ttl);
 					if (sender_as_peering_ptr != nullptr) {
 						if (sender_as_peering_ptr->get_limit_points() < 0) {
-							_dbg1("drop packet (in ROUTING) because points");
+							pfp_dbg1("drop packet (in ROUTING) because points");
 							continue;
 						}
 						// sender_as_peering_ptr->decrement_limit_points();
@@ -1653,7 +1653,7 @@ void c_tunserver::event_loop(int time) {
 
 			} // e_proto_cmd_tunneled_data
 			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_public_hi) { // [protocol]
-				_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
+				pfp_note("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh --> Command HI received");
 				size_t offset1=2; assert( size_read >= offset1); // skip CMD headers (TODO instead use one parser)
 
 				trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_buffer_valid() ,
@@ -1665,9 +1665,9 @@ void c_tunserver::event_loop(int time) {
 				string_as_bin bin_his_IDI_pub( parser.pop_varstring() ); // PARSE
 				string_as_bin bin_his_IDI_IDC_sig( parser.pop_varstring() ); // PARSE
 
-				_info("We received IDC pubkey=" << to_debug( bin_his_IDC_pub ) );
-				_info("We received IDI pubkey=" << to_debug( bin_his_IDI_pub ) );
-				_info("We received IDI --> IDC signature=" << to_debug( bin_his_IDI_IDC_sig ) );
+				pfp_info("We received IDC pubkey=" << to_debug( bin_his_IDC_pub ) );
+				pfp_info("We received IDI pubkey=" << to_debug( bin_his_IDI_pub ) );
+				pfp_info("We received IDI --> IDC signature=" << to_debug( bin_his_IDI_IDC_sig ) );
 
 			try {
 				antinet_crypto::c_multikeys_pub his_IDI;
@@ -1681,7 +1681,7 @@ void c_tunserver::event_loop(int time) {
 					auto his_pubkey = make_unique<c_haship_pubkey>();
 					his_pubkey->load_from_bin( bin_his_IDI_pub.bytes );
 					his_pubkey->set_ipv6_prefix(m_ipv6_prefix);
-					_info("Parsed pubkey into: " << his_pubkey->to_debug());
+					pfp_info("Parsed pubkey into: " << his_pubkey->to_debug());
 					t_peering_reference his_ref( sender_pip , his_pubkey->get_ipv6_string_hexdot() );
 					add_peer_append_pubkey( his_ref , std::move( his_pubkey ) );
 				}
@@ -1693,11 +1693,11 @@ void c_tunserver::event_loop(int time) {
 					add_tunnel_to_pubkey( his_pubkey );
 				}
 			} catch (std::invalid_argument &) {
-				_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
+				pfp_warn("Fail to verificate his IDC, probably bad public keys or signatures!!!");
 			}
 			}
 			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_findhip_query) { // [protocol]
-				_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
+				pfp_warn("QQQQQQQQQQQQQQQQQQQQQQQ - we are QUERIED to find HIP");
 				// [protocol] for search query - format is: HIP_BINARY;TTL_BINARY;
 				size_t offset1=2; assert( size_read >= offset1);  string_as_bin cmd_data( buf+offset1 , size_read-offset1); // buf -> bin for comfortable use
 
@@ -1714,20 +1714,20 @@ void c_tunserver::event_loop(int time) {
 				auto data_route_ttl = requested_ttl - 1;
 				const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 				if (data_route_ttl > limit_incoming_ttl) {
-					_info("We were requested to route (help search route) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
+					pfp_info("We were requested to route (help search route) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
                     UNUSED(data_route_ttl); // TODO is it should be used?
                 }
 
-				_info("We received request for HIP=" << string_as_hex( bin_hip ) << " = " << requested_hip << " and TTL=" << requested_ttl );
+				pfp_info("We received request for HIP=" << string_as_hex( bin_hip ) << " = " << requested_hip << " and TTL=" << requested_ttl );
 				if (requested_ttl < 1) {
-					_info("Too low TTL, dropping the request");
+					pfp_info("Too low TTL, dropping the request");
 				} else {
 					c_routing_manager::c_route_reason reason( sender_hip , c_routing_manager::e_search_mode_help_find );
 					try {
-						_note("Searching for the route he asks about");
+						pfp_note("Searching for the route he asks about");
 						const auto & route = m_routing_manager.get_route_or_maybe_search(*this, requested_hip , reason , true, requested_ttl - 1);
-						_note("We found the route thas he asks about, as: " << route);
+						pfp_note("We found the route thas he asks about, as: " << route);
 
 						const int reply_ttl = requested_ttl; // will reply as much as needed
 
@@ -1744,24 +1744,24 @@ void c_tunserver::event_loop(int time) {
 
 						auto data = gen.str();
 
-						_info("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD Will send data to sender_as_peering_ptr="
+						pfp_info("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD Will send data to sender_as_peering_ptr="
 							<< sender_as_peering_ptr
 							<< " data: " << to_debug_b( data ) );
 						auto peer_udp = dynamic_cast<c_peering_udp*>( sender_as_peering_ptr ); // upcast to UDP peer derived
 						peer_udp->send_data_udp_cmd(c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply, string_as_bin(data), m_udp_device.get_socket()); // <---
 						c_peering & sender_as_peering = find_peer_by_sender_peering_addr( sender_pip ); // warn: returned value depends on m_peer[], do not invalidate that!!!
-						_dbg1("send route response to " << sender_pip);
-						_dbg1("sender HIP " << sender_as_peering.get_hip());
-                        _note("Send the route reply");
+						pfp_dbg1("send route response to " << sender_pip);
+						pfp_dbg1("sender HIP " << sender_as_peering.get_hip());
+                        pfp_note("Send the route reply");
 					} catch(...) {
-						_info("Can not yet reply to that route query.");
+						pfp_info("Can not yet reply to that route query.");
 						// a background should be running in background usually
 					}
 				}
 
 			}
 			else if (cmd == c_protocol::t_proto_cmd::e_proto_cmd_findhip_reply) { // [protocol]
-				_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+				pfp_warn("ROUTE GOT REPLY ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
 				// TODO-NOW format with hip etc
 				// TODO-NOW here we will parse pubkey probably
 
@@ -1777,40 +1777,40 @@ void c_tunserver::event_loop(int time) {
 				parser.pop_byte_skip(';');
 				c_haship_pubkey pubkey; pubkey.load_from_bin( parser.pop_varstring() );
 				parser.pop_byte_skip(';');
-				_info("We have a TTL reply: ttl="<<given_ttl<<" goal="<<given_goal_hip<<" cost="<<given_cost);
+				pfp_info("We have a TTL reply: ttl="<<given_ttl<<" goal="<<given_goal_hip<<" cost="<<given_cost);
 
 				auto data_route_ttl = given_ttl - 1;
 				const int limit_incoming_ttl = c_protocol::ttl_max_accepted;
 				if (data_route_ttl > limit_incoming_ttl) {
-					_info("Got command at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
+					pfp_info("Got command at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
 				}
 
 				if (given_ttl < 1) {
-					_info("Too low TTL, dropping the request");
+					pfp_info("Too low TTL, dropping the request");
 				} else {
-					_info("GOT CORRECT REPLY - USING IT");
+					pfp_info("GOT CORRECT REPLY - USING IT");
 
-					_warn("Cool, we got there a pubkey.");
+					pfp_warn("Cool, we got there a pubkey.");
 					pubkey.set_ipv6_prefix(m_ipv6_prefix);
 					add_tunnel_to_pubkey( pubkey );
 
 					c_routing_manager::c_route_info route_info( sender_hip , given_cost , pubkey );
-					_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
+					pfp_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
 					// store it, so that we own this object:
 					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info );
 					UNUSED(route_info_ref_we_own); // TODO TODONOW and reply to others who asked us
 				}
 			}
 			else {
-				_warn("??????????????????? Unknown protocol command, cmd=" << enum_to_int(cmd));
+				pfp_warn("??????????????????? Unknown protocol command, cmd=" << enum_to_int(cmd));
 				continue; // skip this packet (main loop)
 			}
 			// ------------------------------------
 
 		} // event: udp
 		else {
-			_dbg3("No event/idle");
+			pfp_dbg3("No event/idle");
 		} // event: idle / nothing happened
 
 
@@ -1822,23 +1822,23 @@ void c_tunserver::event_loop(int time) {
 
 			if (doit) {
 				time_last_idle = make_unique<decltype(time_now)>( time_now );
-				_fact("Status: " << node_title_bar);
+				pfp_fact("Status: " << node_title_bar);
 				debug_peers();
 			}
 		}
 
 		}
 		catch (tuntap_error_devtun &e) {
-			_erro(e.what());
-			_warn("Trying restar tun/tap device ...");
+			pfp_erro(e.what());
+			pfp_warn("Trying restar tun/tap device ...");
 			try{
 				prepare_socket();
 			}catch(ui::exception_error_exit){}
 		}catch (std::exception &e) {
-			_warn("### !!! ### Parsing network data caused an exception: " << e.what());
+			pfp_warn("### !!! ### Parsing network data caused an exception: " << e.what());
 		}
 		catch (...) {
-			_erro("### !!! ### Parsing network data caused unknown exception type.");
+			pfp_erro("### !!! ### Parsing network data caused unknown exception type.");
 		}
 
 // stats-TODO(r) counters
@@ -1849,23 +1849,23 @@ void c_tunserver::event_loop(int time) {
 }
 
 void c_tunserver::run(int time) {
-	_goal(mo_file_reader::gettext("L_starting_TUN"));
+	pfp_goal(mo_file_reader::gettext("L_starting_TUN"));
 
 	{
-		_fact("Will now prepare socket");
+		pfp_fact("Will now prepare socket");
 		prepare_socket();
 		if (!m_option_insecure_cap) {
 			my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
-		} else _warn("NOT dropping CAP capability (program options?)");
+		} else pfp_warn("NOT dropping CAP capability (program options?)");
 	}
 
 	{
 		if (!m_option_insecure_cap) {
 			my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
-		} else _warn("NOT dropping CAP capability (program options?)");
-		_fact("Will now enter main event loop");
+		} else pfp_warn("NOT dropping CAP capability (program options?)");
+		pfp_fact("Will now enter main event loop");
 		event_loop(time);
-		_fact("After main event loop");
+		pfp_fact("After main event loop");
 	}
 }
 
@@ -1873,8 +1873,8 @@ void c_tunserver::run(int time) {
 // ----------------------------------------------------------------------------
 // @deprecated
 void c_tunserver::program_action_set_IDI(const string & keyname) {
-	_note("Action: set IDI");
-	_info("Setting the name of IDI key to: " << keyname);
+	pfp_note("Action: set IDI");
+	pfp_info("Setting the name of IDI key to: " << keyname);
 	auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
 	auto keys = datastore::get_file_list(keys_path);
 	bool found = false;
@@ -1885,9 +1885,9 @@ void c_tunserver::program_action_set_IDI(const string & keyname) {
 		if (keyname == act) {	found = true;	break; }
 	}
 	if (found == false) {
-		_erro("Can't find key (" << keyname << ") in your key list, so can't set it as IDI.");
+		pfp_erro("Can't find key (" << keyname << ") in your key list, so can't set it as IDI.");
 	}
-	_info("Key found ("<< keyname <<") and set as IDI");
+	pfp_info("Key found ("<< keyname <<") and set as IDI");
 	datastore::save_string(e_datastore_galaxy_instalation_key_conf,"IDI", keyname, true);
 }
 
@@ -1906,7 +1906,7 @@ std::string c_tunserver::program_action_gen_key_simple() {
 
 // @deprecated
 void c_tunserver::program_action_gen_key(const boost::program_options::variables_map & argm) {
-	_note("Action: gen key");
+	pfp_note("Action: gen key");
 	if (!argm.count("key-type")) {
 		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
 	}
@@ -1914,18 +1914,18 @@ void c_tunserver::program_action_gen_key(const boost::program_options::variables
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
 	auto arguments = argm["key-type"].as<std::vector<std::string>>();
 	for (auto argument : arguments) {
-		_dbg1("parse argument " << argument);
+		pfp_dbg1("parse argument " << argument);
 		std::replace(argument.begin(), argument.end(), ':', ' ');
 		std::istringstream iss(argument);
 		std::string str;
 		iss >> str;
-		_dbg1("type = " << str);
+		pfp_dbg1("type = " << str);
 		antinet_crypto::t_crypto_system_type type = antinet_crypto::t_crypto_system_type_from_string(str);
 		iss >> str;
 		assert(str[0] == 'x');
 		str.erase(str.begin());
 		int number_of_keys = std::stoi(str);
-		_dbg1("number_of_keys" << number_of_keys);
+		pfp_dbg1("number_of_keys" << number_of_keys);
 		keys.emplace_back(std::make_pair(type, number_of_keys));
 	}
 
@@ -1966,12 +1966,12 @@ int c_tunserver::get_ip_protocol_number(const std::string& data) const{
 }
 
 void c_tunserver::enable_remove_peers() {
-	_dbg2("enable remove peers");
+	pfp_dbg2("enable remove peers");
 	enable_remove = true;
 }
 
 void c_tunserver::set_remove_peer_tometout(unsigned int timeout_seconds) {
-	_info("set peer remove timeout " << timeout_seconds);
+	pfp_info("set peer remove timeout " << timeout_seconds);
 	peer_timeout = std::chrono::seconds(timeout_seconds);
 }
 

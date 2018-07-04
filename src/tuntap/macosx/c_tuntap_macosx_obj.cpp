@@ -10,12 +10,12 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
                                              m_io_service(),
 											 m_tun_stream(m_io_service, m_tun_fd) {
 
-	_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
-	_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
+	pfp_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
 
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
-	_goal("Tuntap opened correctly");
+	pfp_goal("Tuntap opened correctly");
 }
 
 // TODO code duplication
@@ -25,12 +25,12 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj(boost::asio::io_service &io_service)
 	m_io_service(),
 	m_tun_stream(io_service, m_tun_fd)
 {
-	_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
-	_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
+	pfp_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
 
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
-	_goal("Tuntap opened correctly");}
+	pfp_goal("Tuntap opened correctly");}
 
 size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) {
 	std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};
@@ -124,14 +124,14 @@ void c_tuntap_macosx_obj::set_tun_parameters(const std::array<unsigned char, IPV
                                              uint32_t mtu) {
 
 	c_haship_addr address(c_haship_addr::tag_constr_by_array_uchar(), binary_address);
-	_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
+	pfp_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
 
 	set_ipv6_address(binary_address, prefix_len);
 	set_mtu(mtu);
 
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
-	_goal("Configuring tuntap options - done");
+	pfp_goal("Configuring tuntap options - done");
 }
 
 int c_tuntap_macosx_obj::create_tun_fd() {
@@ -168,7 +168,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	// connect to first not used tun
 	int tested_card_counter = 0;
 	auto t0 = std::chrono::system_clock::now();
-	_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
+	pfp_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
 	while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
 		auto int_s = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - t0).count();
 		if (tested_card_counter++ > number_of_tested_cards)
@@ -178,10 +178,10 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 			_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
 		++addr_ctl.sc_unit;
 	}
-	_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+	pfp_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
 	m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
-	_dbg1("interface name " << m_ifr_name);
+	pfp_dbg1("interface name " << m_ifr_name);
 	return tun_fd;
 }
 
@@ -190,14 +190,14 @@ void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &
 
 	_check_input(binary_address[0] == 0xFD);
 	_check_input(binary_address[1] == 0x42);
-	_dbg1("set ip addres for interface name " << m_ifr_name);
+	pfp_dbg1("set ip addres for interface name " << m_ifr_name);
 	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address, prefixLen, Sockaddr_AF_INET6);
 }
 
 void c_tuntap_macosx_obj::set_mtu(uint32_t mtu) {
-	_fact("Setting MTU="<<mtu);
+	pfp_fact("Setting MTU="<<mtu);
 	const auto name = m_ifr_name.c_str();
-	_fact("Setting MTU="<<mtu<<" on card: " << name);
+	pfp_fact("Setting MTU="<<mtu<<" on card: " << name);
 	t_syserr error = NetPlatform_setMTU(name, mtu);
 	if (error.my_code != 0)
 		_throw_error_runtime("set MTU error: " + errno_to_string(error.errno_copy));
