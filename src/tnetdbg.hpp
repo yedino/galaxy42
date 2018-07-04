@@ -175,7 +175,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 
 //        pfp_warn("Going to throw exception. What: " << except_var.what()
 // this one is unused; leaving for translators if used again later.
-#define _unused_throw_error_msg \
+#define pfp_unused_throw_error_msg \
 	pfp_warn( mo_file_reader::gettext("L_what_exception_program_throw") << ": " << except_var.what() \
 
 // TODO-r-deprecate: ?
