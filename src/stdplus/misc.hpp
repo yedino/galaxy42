@@ -123,7 +123,7 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 			+ " ("s + typeid(underlying_type).name()+")", std::vector<std::overflow_error>() );
 	}
 
-	DEAD_RETURN();
+	pfp_DEAD_RETURN();
 }
 
 /**
