@@ -222,7 +222,7 @@ void c_the_program_newloop::programtask_load_my_keys() {
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
 					);
-					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
+					pfp_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
 				pfp_fact( "You have no ID keys yet - so will create new keys for you." );
@@ -331,7 +331,7 @@ std::tuple<bool,int> c_the_program_newloop::base_options_commands_run() {
 		string help_cmd;
 		try {
 			help_cmd = m_argm.at("helptopic").as<string>();
-		} catch(...) { _throw_error_runtime("--helptopic option can not be read"); }
+		} catch(...) { pfp_throw_error_runtime("--helptopic option can not be read"); }
 		return programtask_help(help_cmd);
 	}
 
@@ -339,7 +339,7 @@ std::tuple<bool,int> c_the_program_newloop::base_options_commands_run() {
 		string help_cmd;
 		try {
 			help_cmd = m_argm.at("help").as<string>();
-		} catch(...) { _throw_error_runtime("--help option can not be read"); }
+		} catch(...) { pfp_throw_error_runtime("--help option can not be read"); }
 		return c_the_program_tunserver::base_options_commands_run(); ///< basic commands, e.g. with basic --help
 	}
 	return std::tuple<bool,int>(false,0);

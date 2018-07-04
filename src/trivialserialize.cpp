@@ -94,8 +94,8 @@ parser::parser( tag_caller_must_keep_this_buffer_valid, const char * buf , size_
 { }
 
 unsigned char parser::pop_byte_u() {
-	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() );
-	if (! ((m_data_end - m_data_now) >= 1) ) _throw_error( format_error_read() );
+	if (! (m_data_now < m_data_end) ) pfp_throw_error( format_error_read() );
+	if (! ((m_data_end - m_data_now) >= 1) ) pfp_throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	unsigned char c = static_cast<unsigned char>(*m_data_now);
 	++m_data_now;
@@ -103,8 +103,8 @@ unsigned char parser::pop_byte_u() {
 }
 
 signed char parser::pop_byte_s() {
-	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() );
-	if (! ((m_data_end - m_data_now) >= 1) ) _throw_error( format_error_read() );
+	if (! (m_data_now < m_data_end) ) pfp_throw_error( format_error_read() );
+	if (! ((m_data_end - m_data_now) >= 1) ) pfp_throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	signed char c = *m_data_now;
 	++m_data_now;
@@ -116,16 +116,16 @@ void parser::pop_byte_skip(char c) { // read expected character (e.g. a delimite
 	unsigned char expected = static_cast<unsigned char>(c);
 	if (was != expected) {
 		--m_data_now;
-		_throw_error( format_error_read_delimiter() );
+		pfp_throw_error( format_error_read_delimiter() );
 	}
 }
 
 std::string parser::pop_bytes_n(size_t size) {
 	if (!size) return string("");
-	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() ); // we run outside of string
+	if (! (m_data_now < m_data_end) ) pfp_throw_error( format_error_read() ); // we run outside of string
 	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
 	// and we are sure that this ptrdiff > 0 because of earlier above condition
-	if (! (   static_cast<size_t>(m_data_end - m_data_now) >= size) ) _throw_error( format_error_read() );
+	if (! (   static_cast<size_t>(m_data_end - m_data_now) >= size) ) pfp_throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	auto from = m_data_now;
@@ -135,10 +135,10 @@ std::string parser::pop_bytes_n(size_t size) {
 
 void parser::skip_bytes_n(size_t size) {
 	if (!size) return;
-	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() ); // we run outside of string
+	if (! (m_data_now < m_data_end) ) pfp_throw_error( format_error_read() ); // we run outside of string
 	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
 	// and we are sure that this ptrdiff > 0 because of earlier above condition
-	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) _throw_error( format_error_read() );
+	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) pfp_throw_error( format_error_read() );
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );
 	assert( (m_data_now + size <= m_data_end) );
 	// auto from = m_data_now;
@@ -147,10 +147,10 @@ void parser::skip_bytes_n(size_t size) {
 
 
 void parser::pop_bytes_n_into_buff(size_t size, char * buff) {
-	if (! (m_data_now < m_data_end) ) _throw_error( format_error_read() ); // we run outside of string
+	if (! (m_data_now < m_data_end) ) pfp_throw_error( format_error_read() ); // we run outside of string
 	// casting below is ok, because std::ptrdiff_t is 64 bits signed value, and size_t is 64 bits unsigned value.
 	// and we are sure that this ptrdiff > 0 because of earlier above condition
-	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) _throw_error( format_error_read() );
+	if (! ( static_cast<size_t>(m_data_end - m_data_now) >= size) ) pfp_throw_error( format_error_read() );
 	assert(buff!=nullptr);
 
 	assert( (m_data_now < m_data_end) && (m_data_now >= m_data_begin) );

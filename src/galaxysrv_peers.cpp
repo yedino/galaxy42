@@ -158,7 +158,7 @@ unique_ptr<t_peer_reference_newloop> c_galaxysrv_peers::parse_peer_simplestring(
 			reference->hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , id);
 		} catch(const std::invalid_argument &ex) {
 			const string msg = "Invalid HIP address="s + id + " ("s + ex.what() + ")"s;
-			_throw_error( err_check_input(msg.c_str()) );
+			pfp_throw_error( err_check_input(msg.c_str()) );
 		}
 	} else {
 		pfp_dbg1("There is NO ID in that reference (anyone?)");

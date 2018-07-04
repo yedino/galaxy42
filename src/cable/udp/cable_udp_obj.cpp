@@ -190,7 +190,7 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_so
 	auto ret_errno = errno;
 	if (ret != 0) {
 		pfp_warn("Can not set timeout on sys_handler="<<sys_handler<<" ret="<<ret<<" errno="<<ret_errno);
-		_throw_error_runtime("Can not set timeout on sys_handler");
+		pfp_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
 
@@ -203,7 +203,7 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_so
 	if (ret != 0) {
 		int ret_errno = WSAGetLastError();
 		pfp_warn("Can not set timeout on sys_handler" << " ret=" << ret << " WSAGetLastError=" << ret_errno);
-		_throw_error_runtime("Can not set timeout on sys_handler");
+		pfp_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
 #else

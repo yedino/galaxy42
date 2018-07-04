@@ -55,7 +55,7 @@ void c_json_genconf::generate_galaxy_conf(const std::string &filename) {
 		conf_file << "}\n";
 		conf_file.close();
 	} else {
-		_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 	}
 }
 
@@ -76,7 +76,7 @@ void c_json_genconf::generate_authpass_conf(const std::string &filename) {
 		conf_file << "}\n";
 		conf_file.close();
 	} else {
-		_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 	}
 }
 
@@ -104,6 +104,6 @@ void c_json_genconf::generate_connectto_conf(const std::string &filename) {
 		conf_file << "}\n";
 		conf_file.close();
 	} else {
-		_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 	}
 }

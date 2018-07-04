@@ -49,7 +49,7 @@ void c_auth_password_load::get_auth_passwords (std::vector<t_auth_password> &aut
 			i++;
 		}
 	} else {
-		_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
+		pfp_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
 	}
 }
 
@@ -89,7 +89,7 @@ void c_connect_to_load::get_peers(std::vector<t_peering_reference> &peer_refs) {
 			}
 		}
 	} else {
-		_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
+		pfp_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
 	}
 }
 
@@ -129,7 +129,7 @@ t_my_keypair c_galaxyconf_load::my_keypair_load() {
 	json mypub_obj = m_json.at("myself-public");
 
 	if( !mypub_obj.is_object() ) {
-		_throw_error( std::invalid_argument("Bad format of myself-public section in confuguration file.") );
+		pfp_throw_error( std::invalid_argument("Bad format of myself-public section in confuguration file.") );
 	}
 
 	std::string public_key = mypub_obj.at("publicKey").get<std::string>();
@@ -151,7 +151,7 @@ void c_galaxyconf_load::auth_password_load() {
 			}
 		}
 	} else {
-		_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
+		pfp_throw_error( std::invalid_argument("Bad format of authorizedPasswords in " + m_filename + " file") );
 	}
 }
 
@@ -169,6 +169,6 @@ void c_galaxyconf_load::connect_to_load() {
 			}
 		}
 	} else {
-		_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
+		pfp_throw_error( std::invalid_argument("Bad format of connectTo in " + m_filename + " file") );
 	}
 }

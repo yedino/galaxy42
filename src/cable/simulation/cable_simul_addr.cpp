@@ -19,6 +19,6 @@ signed char c_cable_simul_addr::compare_same_class(const c_cable_base_addr & oth
 		if ((this->m_addr) < (other_obj.m_addr)) return -1;
 		if ((this->m_addr) > (other_obj.m_addr)) return +1;
 		return 0;
-	} catch(const std::bad_cast &) { _throw_error_runtime("Can not compare addresses, it is other class"); }
+	} catch(const std::bad_cast &) { pfp_throw_error_runtime("Can not compare addresses, it is other class"); }
 }
 

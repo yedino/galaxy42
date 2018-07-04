@@ -184,7 +184,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
-#define _throw_error( EXCEPT ) do { auto except_var = (EXCEPT);  \
+#define pfp_throw_error( EXCEPT ) do { auto except_var = (EXCEPT);  \
 	pfp_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
@@ -210,12 +210,12 @@ void throw_or_abort(const T & ex) {
 *	it exists to e.g. silence some compilers warning about possible throw inside noexcept - we know, and we are o.k. with it turning into abort
 *	use it in macros that should try to throw but abort if throwing is not possible
 */
-#define _throw_error_or_abort( EXCEPT ) do { auto except_var = (EXCEPT);  \
+#define pfp_throw_error_or_abort( EXCEPT ) do { auto except_var = (EXCEPT);  \
 	pfp_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw_or_abort (except_var); } while(0)
 
-#define _throw_error_runtime( MSG ) _throw_error( std::runtime_error( MSG ) )
+#define pfp_throw_error_runtime( MSG ) pfp_throw_error( std::runtime_error( MSG ) )
 
 namespace ui { class exception_error_exit; }
 
@@ -227,7 +227,7 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 		<< "."); \
 		throw except_var; } while(0)
 
-#define _throw_error_rethrow( ) do { \
+#define pfp_throw_error_rethrow( ) do { \
 	pfp_warn("re-throw"); \
 		throw ; } while(0)
 
@@ -237,7 +237,7 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 	if (!(COND)) { \
 		std::ostringstream _dbg_oss; \
 		_dbg_oss << "Assert-throw failed: " << "" # COND ; \
-		_throw_error( std::runtime_error(_dbg_oss.str()) ); \
+		pfp_throw_error( std::runtime_error(_dbg_oss.str()) ); \
 		}\
 	} while(0)
 

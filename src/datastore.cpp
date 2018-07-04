@@ -16,7 +16,7 @@ void datastore::save_string(t_datastore file_type,
 							  bool overwrite) {
 
 	if (filename == "") {
-		_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
 	}
 
 	b_fs::path file_with_path;
@@ -28,7 +28,7 @@ void datastore::save_string(t_datastore file_type,
 		if (file.is_open()) {
 			file << data;
 		} else {
-			_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+			pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 		}
 		file.close();
 		pfp_dbg2("Successfully saved string to:" << b_fs::canonical(file_with_path).string());
@@ -40,7 +40,7 @@ void datastore::save_string(t_datastore file_type,
 		}
 		else pfp_dbg1("Fail to save string");
 	}
-	catch(...) { _throw_error(std::runtime_error("Failed to save string")); }
+	catch(...) { pfp_throw_error(std::runtime_error("Failed to save string")); }
 }
 
 void datastore::save_string_mlocked(t_datastore file_type,
@@ -49,7 +49,7 @@ void datastore::save_string_mlocked(t_datastore file_type,
 									  bool overwrite) {
 
 	if (filename == "") {
-		_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
 	}
 
 	b_fs::path file_with_path;
@@ -73,7 +73,7 @@ void datastore::save_string_mlocked(t_datastore file_type,
 		}
 		else pfp_dbg1("Fail to save mlocked string");
 	}
-	catch(...) { _throw_error(std::runtime_error("Failed to save mlocked string")); }
+	catch(...) { pfp_throw_error(std::runtime_error("Failed to save mlocked string")); }
 }
 
 std::string datastore::load_string(const std::string &filename, t_datastore file_type) {
@@ -94,7 +94,7 @@ std::string datastore::load_string(t_datastore file_type,
 		pfp_dbg2("Loading file path: " << b_fs::canonical(file_with_path).string());
 
 		if (!is_file_ok(file_with_path)) {
-			_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
+			pfp_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
 		} else {
 			b_fs::ifstream ifs(file_with_path, std::ios::in | std::ios::binary);
 			content.assign( (std::istreambuf_iterator<char>(ifs) ),
@@ -105,10 +105,10 @@ std::string datastore::load_string(t_datastore file_type,
 		file_with_path_str = b_fs::canonical(file_with_path).string();
 	} catch (expected_not_found &) {
 		pfp_warn("File: [" << filename << "] not found");
-		_throw_error( expected_not_found() );
+		pfp_throw_error( expected_not_found() );
 	} catch (b_fs::filesystem_error & err) {
 		pfp_erro("Fail to load file [" << filename << "] : " << err.what());
-		_throw_error( std::invalid_argument(err.what()) );
+		pfp_throw_error( std::invalid_argument(err.what()) );
 	}
 
 	pfp_dbg2("Successfully loaded string from:" << file_with_path_str);
@@ -122,13 +122,13 @@ sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 		FILE * f_ptr;
 		b_fs::path file_with_path = get_full_path(file_type, filename);
 		if (!is_file_ok(file_with_path)) {
-			_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
+			pfp_throw_error( std::invalid_argument("Fail to open file for read: " + filename) );
 		}
 
 		f_ptr = std::fopen(b_fs::canonical(file_with_path).string().data(), "rb");
 
 		if (f_ptr == NULL){
-			_throw_error( std::invalid_argument("Fail to open mlocked file for read: " + filename) );
+			pfp_throw_error( std::invalid_argument("Fail to open mlocked file for read: " + filename) );
 		}
 
 		std::fseek(f_ptr, 0L, SEEK_END);
@@ -143,7 +143,7 @@ sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 			std::string err_msg = "Fail to read all content of file: " + filename;
 			err_msg += " read: [" + std::to_string(byte_read);
 			err_msg += "] bytes of [" + std::to_string(content_size) + "]";
-			_throw_error( std::invalid_argument(err_msg) );
+			pfp_throw_error( std::invalid_argument(err_msg) );
 		}
 		std::fclose(f_ptr);
 
@@ -151,10 +151,10 @@ sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
 		return content;
 	} catch (expected_not_found &) {
 		pfp_warn("File: [" << filename << "] not found");
-		_throw_error( expected_not_found() );
+		pfp_throw_error( expected_not_found() );
 	} catch (b_fs::filesystem_error & err) {
 		pfp_erro("Fail to load file [" << filename << "] : " << err.what());
-		_throw_error( std::invalid_argument(err.what()) );
+		pfp_throw_error( std::invalid_argument(err.what()) );
 	}
 }
 
@@ -324,7 +324,7 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 
 		if (!is_file_ok(file_with_path)) {
 			std::string err_msg(__func__ + std::string(mo_file_reader::gettext("l_fail_create_empty_file")));
-			_throw_error( std::invalid_argument(err_msg) );
+			pfp_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		if(is_file_ok(file_with_path) && !b_fs::is_empty(file_with_path) &&  !overwrite) {
@@ -334,7 +334,7 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 								+ std::string(" [")
 								+ std::to_string(overwrite)
 								+ std::string("]"));
-			_throw_error( overwrite_error(err_msg) );
+			pfp_throw_error( overwrite_error(err_msg) );
 		}
 
 		// TODO perrmisions
@@ -360,7 +360,7 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 
 	} catch (b_fs::filesystem_error & err) {
 		pfp_erro("Can not prepare dir: " << err.what());
-		_throw_error_rethrow( );
+		pfp_throw_error_rethrow( );
 	}
 	return file_with_path;
 }

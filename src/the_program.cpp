@@ -227,7 +227,7 @@ void c_the_program::init_library_sodium() {
 	pfp_fact(mo_file_reader::gettext("L_starting_lib_libsodium"));
 
 	if (sodium_init() == -1) {
-		_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
+		pfp_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
 	}
 	pfp_info(mo_file_reader::gettext("L_libsodium_ready"));
 }

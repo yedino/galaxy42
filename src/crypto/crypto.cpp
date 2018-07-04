@@ -282,12 +282,12 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 	t_kexasym kexasym_passencr_received; // as above, but the ones I received from initiator
 
 	if (m_side_initiator) {
-		if (packetstart.size()) _throw_error( std::invalid_argument("Invalid use of CT: initiator mode, but not-empty packetstarter") );
+		if (packetstart.size()) pfp_throw_error( std::invalid_argument("Invalid use of CT: initiator mode, but not-empty packetstarter") );
 	}
 	else {
 		pfp_dbg1("Parsing packetstart " << to_debug(packetstart));
 		// I am respondent
-		if (! packetstart.size()) _throw_error( std::invalid_argument("Invalid use of CT: not-initiator mode, but empty packetstarter") );
+		if (! packetstart.size()) pfp_throw_error( std::invalid_argument("Invalid use of CT: not-initiator mode, but empty packetstarter") );
 
 		// TODO-speed: change to zerocopy view strings (after implemented in trivialserialize)
 		string packetstart_kexasym = parse_packetstart_kexasym(packetstart);
@@ -615,7 +615,7 @@ std::string c_crypto_tunnel::unbox_ab(const std::string & msg, t_crypto_nonce no
 
 void c_crypto_tunnel::create_IDe() {
 	pfp_dbg3("Creating IDe");
-	if (m_IDe) _throw_error( std::runtime_error("Tried to create IDe again, on a CT that already has one created.") );
+	if (m_IDe) pfp_throw_error( std::runtime_error("Tried to create IDe again, on a CT that already has one created.") );
 	//m_IDe = make_unique<c_multikeys_PAIR>();
 	//m_IDe->generate( UsePtr(m_stream_crypto_ab).get_cryptolists_count_for_KCTf() );
 	m_IDe = UsePtr( m_stream_crypto_ab ).create_IDe( true );
@@ -700,7 +700,7 @@ void test_string_lock() {
 	vec.push_back(s);
 	vec.push_back(s);
 	vec.push_back(s);
-	if (vec.at(2).get_string() != "TestString") _throw_error( std::runtime_error("Test failed - vector of locked strings") );
+	if (vec.at(2).get_string() != "TestString") pfp_throw_error( std::runtime_error("Test failed - vector of locked strings") );
 //	return;
 }
 
@@ -750,7 +750,7 @@ void test_crypto() {
 		pfp_note("Serialize save/load test: serialized key to: " << to_debug(keypubA_serialized));
 		if (keypubA.get_hash() == keypubA_restored.get_hash()) {
 			pfp_info("Seems to match");
-		} else _throw_error( std::runtime_error("Test failed serialize save/load") );
+		} else pfp_throw_error( std::runtime_error("Test failed serialize save/load") );
 	}
 
 

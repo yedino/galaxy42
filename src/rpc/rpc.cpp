@@ -249,7 +249,7 @@ void c_rpc_server::c_session::send_response(nlohmann::json json_response)
 		dbg(m_write_data);
 		std::array<unsigned char, crypto_auth_hmacsha512_BYTES> hash;
 		int ret = crypto_auth_hmacsha512(hash.data(), reinterpret_cast<unsigned char *>(&m_write_data.at(2)), size, m_rpc_server_ptr->m_hmac_key.data());
-		if (ret != 0) _throw_error(std::runtime_error("crypto_auth_hmacsha512 error"));
+		if (ret != 0) pfp_throw_error(std::runtime_error("crypto_auth_hmacsha512 error"));
 		dbg("hmac");
 		//for (const auto & byte : hash) std::cout << std::hex << "0x" << static_cast<int>(byte) << " ";
 		//std::cout << std::dec << std::endl;

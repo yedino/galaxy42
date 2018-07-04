@@ -539,7 +539,7 @@ int c_the_program_tunserver::main_execution() {
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
 					);
-					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
+					pfp_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
 				pfp_fact( "You have no ID keys yet - so will create new keys for you." );

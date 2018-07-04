@@ -25,7 +25,7 @@ c_tun_device::c_tun_device()
 void c_tun_device::init() { }
 
 int c_tun_device::get_tun_fd() const {
-	_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
+	pfp_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
 }
 
 
@@ -49,7 +49,7 @@ c_tun_device_linux::c_tun_device_linux()
 }
 
 int c_tun_device_linux::get_tun_fd() const {
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
 	return m_tun_fd;
 }
 
@@ -59,7 +59,7 @@ void c_tun_device_linux::init()
 	pfp_goal("Opening TUN file (Linux driver) " << fd_fname);
 	m_tun_fd = open(fd_fname, O_RDWR);
 	int err = errno;
-	if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+	if (m_tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 	pfp_goal("TUN file opened as fd " << m_tun_fd);
 }
 
@@ -71,7 +71,7 @@ void c_tun_device_linux::set_ipv6_address
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	int err = errno;
-	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
+	if (errcode_ioctl < 0) pfp_throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
 
 	assert(binary_address[0] == 0xFD);
 //	assert(binary_address[1] == 0x42);
@@ -106,14 +106,14 @@ size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO thro
 	pfp_info("Reading from tuntap");
 	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
 	pfp_info("Reading from tuntap - ret="<<ret);
-	if (ret == -1) _throw_error( std::runtime_error("Read from tun error") );
+	if (ret == -1) pfp_throw_error( std::runtime_error("Read from tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
 size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
-	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
+	if (ret == -1) pfp_throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
@@ -490,7 +490,7 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 	catch (const std::runtime_error &e) {
 		m_readed_bytes = 0;
 		pfp_erro("Problem with the TUN/TAP parser" << e.what());
-		_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
+		pfp_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
 	}
 
 	// continue reading
@@ -559,14 +559,14 @@ void c_tun_device_apple::init()
 }
 
 int c_tun_device_apple::get_tun_fd() const {
-    if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+    if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
     return m_tun_fd;
 }
 
 int c_tun_device_apple::create_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
     int err=errno;
-    if (tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+    if (tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
     // get ctl_id
     ctl_info info;
@@ -576,7 +576,7 @@ int c_tun_device_apple::create_tun_fd() {
     if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
         int err = errno;
         close(tun_fd);
-        _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+        pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
     }
 
     // connect to tun
@@ -593,9 +593,9 @@ int c_tun_device_apple::create_tun_fd() {
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
         auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
         if (tested_card_counter++ > number_of_tested_cards)
-            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
+            pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
         if (int_s >= cards_testing_time)
-            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
+            pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
     pfp_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);

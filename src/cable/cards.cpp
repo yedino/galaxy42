@@ -29,7 +29,7 @@ unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector 
 		default:
 		break;
 	}
-	_throw_error_runtime("unsupported cable kind");
+	pfp_throw_error_runtime("unsupported cable kind");
 }
 
 shared_ptr<c_asioservice_manager_base> &c_cable_cards::get_asioservice() {

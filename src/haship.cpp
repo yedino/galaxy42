@@ -38,7 +38,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 			this->at(i) = asio_addr_bytes.at(i);
 		}
 	} catch (boost::exception &err) {
-		_throw_error(std::invalid_argument("The IP address looks invalid ["+addr_string+"]"));
+		pfp_throw_error(std::invalid_argument("The IP address looks invalid ["+addr_string+"]"));
 	}
 	pfp_dbg4("Parsed string addr=" << asio_addr_v6.to_string());
 	pfp_dbg4("Parsed bytes addr=" << *this);
@@ -47,7 +47,7 @@ c_haship_addr::c_haship_addr(tag_constr_by_addr_dot, const t_ipv6dot & addr_stri
 c_haship_addr::c_haship_addr(tag_constr_by_addr_bin, const t_ipv6bin & data ) {
 	if (! ( this->size() == data.size() ) ) {
 		ostringstream oss; oss << "Trying to set hip address from binary data " << to_debug_b(data);
-		_throw_error( std::runtime_error(oss.str()) );
+		pfp_throw_error( std::runtime_error(oss.str()) );
 	}
 	for (size_t i=0; i<this->size(); ++i) this->at(i) = data.at(i);
 }

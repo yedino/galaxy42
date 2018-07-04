@@ -27,14 +27,14 @@ unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & 
 				return std::make_unique<c_cable_udp_addr>(part2);
 			}
 			else if(part1=="tcp") {
-				_throw_error( std::invalid_argument("TCP addresses not yet implemented"));
+				pfp_throw_error( std::invalid_argument("TCP addresses not yet implemented"));
 			}
 			else if(part1=="shm") {
 				auto iter = find_if(part2.begin(), part2.end(), [](char c) { return !isalnum(static_cast<int>(c)); });
 				if( iter == part2.end() )
 					return std::make_unique<cable_shm_addr>(part2);
 				else
-					_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+					pfp_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 			}
 			else // try if is udp (format 192.166.218.58:9042)
 			{
@@ -45,7 +45,7 @@ unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & 
 	catch (const std::exception &e) {
 		// pfp_erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what()); // show this on higher level
 		const string msg = mo_file_reader::gettext("L_bad_peer_format") + " "s + e.what();
-		_throw_error( err_check_input(msg.c_str())  );
+		pfp_throw_error( err_check_input(msg.c_str())  );
 	}
 
 	unique_ptr<c_cable_base_addr> x;

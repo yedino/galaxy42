@@ -21,7 +21,7 @@ void c_someio::close_all_tuntap_operations(t_native_tuntap_handler tuntap_handle
 	BOOL ret = CancelIoEx(tuntap_handler, nullptr);
 	if (ret == 0) {
 		pfp_warn("Can not cancel tuntap operations, GetLastError=" << GetLastError());
-		_throw_error_runtime("Can not cancel tuntap operations");
+		pfp_throw_error_runtime("Can not cancel tuntap operations");
 	}
 }
 #endif

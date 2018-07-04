@@ -137,7 +137,7 @@ const char * g_demoname_default = "route_dij";
 
 void error(const std::string & msg) {
 	std::cout << "Error: " << msg << std::endl;
-	_throw_error( std::runtime_error(msg) );
+	pfp_throw_error( std::runtime_error(msg) );
 }
 
 // ------------------------------------------------------------------
@@ -285,7 +285,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		pfp_info("We have that peer directly: " << peer );
 		const int cost = 1; // direct peer. In future we can add connection cost or take into account congestion/lag...
 		const auto peer_pub_ptr = peer.get_pub();
-		if (!peer_pub_ptr) _throw_error( std::runtime_error("This peer has no pubkey yet.") );
+		if (!peer_pub_ptr) pfp_throw_error( std::runtime_error("This peer has no pubkey yet.") );
 		c_route_info route_info( peer.get_hip() , cost , * peer_pub_ptr );
 		pfp_info("Direct route: " << route_info);
 		const auto & route_info_ref_we_own = this -> add_route_info_and_return( dst , route_info ); // store it, so that we own this object
@@ -303,7 +303,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 	else { // don't have a planned route to him
 		if (!start_search) {
 			pfp_info("No route, but we also so not want to search for it.");
-			_throw_error( std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst)) );
+			pfp_throw_error( std::runtime_error("no route known (and we do NOT WANT TO search) to dst=" + STR(dst)) );
 		}
 		else {
 			pfp_info("Route not found, we will be searching");
@@ -328,7 +328,7 @@ const c_routing_manager::c_route_info & c_routing_manager::get_route_or_maybe_se
 		}
 	}
 	pfp_note("NO ROUTE");
-	_throw_error( std::runtime_error("NO ROUTE known (at current time) to dst=" + STR(dst)) );
+	pfp_throw_error( std::runtime_error("NO ROUTE known (at current time) to dst=" + STR(dst)) );
 }
 
 void  c_routing_manager::c_route_search::execute( c_galaxy_node & galaxy_node ) {
@@ -399,8 +399,8 @@ void c_tunserver::add_peer_simplestring(const string & simple) {
 //		pfp_erro("Adding peer from simplereference failed (exception): " << e.what());
                 pfp_erro(mo_file_reader::gettext("L_failed_adding_peer_simple_reference") << e.what());
 
-//                _throw_error( std::invalid_argument("Bad peer format") );
-		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+//                pfp_throw_error( std::invalid_argument("Bad peer format") );
+		pfp_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 	}
 }
 
@@ -464,7 +464,7 @@ bool c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
 	}
 	catch (const std::exception &e) {
 		pfp_erro(mo_file_reader::gettext("L_failed_deleting_peer_simple_reference") << e.what());
-		_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
+		pfp_throw_error( std::invalid_argument(mo_file_reader::gettext("L_bad_peer_format")) );
 	}
 }
 
@@ -487,7 +487,7 @@ bool c_tunserver::check_arg_bool(const string arg_name, const boost::program_opt
 		const auto & arg = early_argm.at(arg_name);
 		return arg.as<bool>();
 	} catch(const std::out_of_range&) { return default_val; }
-	_throw_error_runtime("Error while parsing argument (" + arg_name + ") as boolean");
+	pfp_throw_error_runtime("Error while parsing argument (" + arg_name + ") as boolean");
 }
 
 std::string c_tunserver::check_arg_string(const string arg_name, const boost::program_options::variables_map & early_argm, const std::string & default_val) {
@@ -495,7 +495,7 @@ std::string c_tunserver::check_arg_string(const string arg_name, const boost::pr
 		const auto & arg = early_argm.at(arg_name);
 		return arg.as<std::string>();
 	} catch(const std::out_of_range&) { return default_val; }
-	_throw_error_runtime("Error while parsing argument (" + arg_name + ") as string");
+	pfp_throw_error_runtime("Error while parsing argument (" + arg_name + ") as string");
 }
 
 c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::variables_map & early_argm)
@@ -609,7 +609,7 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 		IDI_name = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 	} catch (std::invalid_argument &err) {
 		pfp_dbg2("IDI is not set");
-		_throw_error( std::runtime_error("IDI is not set") );
+		pfp_throw_error( std::runtime_error("IDI is not set") );
 	}
 
 	std::unique_ptr<antinet_crypto::c_multikeys_PAIR> my_IDI;
@@ -706,7 +706,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 		c_haship_addr hip_from_pubkey( c_haship_addr::tag_constr_by_hash_of_pubkey() , *pubkey );
 
 		if (hip_from_pubkey != peer_ref.haship_addr) {
-			_throw_error(runtime_error(join_string_sep("Pubkey",*pubkey," has hip not matching reference",peer_ref)));
+			pfp_throw_error(runtime_error(join_string_sep("Pubkey",*pubkey," has hip not matching reference",peer_ref)));
 		}
 	}
 
@@ -938,7 +938,7 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 	}
 	c_peering & peer = * peer_iter->second;
 	if (require_pubkey) {
-		if (! peer.is_pubkey()) _throw_error( expected_not_found_missing_pubkey() );
+		if (! peer.is_pubkey()) pfp_throw_error( expected_not_found_missing_pubkey() );
 	}
 	return peer;
 }
@@ -1030,7 +1030,7 @@ bool c_tunserver::route_tun_data_to_its_destination_top(t_route_method method,
 c_peering & c_tunserver::find_peer_by_sender_peering_addr( c_ip46_addr ip ) const {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
 	for(auto & v : m_peer) { if ((v.second->get_pip() == ip) && (v.second->get_pip().get_assigned_port() == ip.get_assigned_port())) return * v.second.get(); }
-	_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
+	pfp_throw_error( std::runtime_error("We do not know a peer with such IP=" + STR(ip)) );
 }
 
 bool c_tunserver::check_packet_destination_address(const std::array<uint8_t, 16> &address_expected, const string &packet) {
@@ -1660,7 +1660,7 @@ void c_tunserver::event_loop(int time) {
 					buf+offset1 , size_read-offset1);
 
 				// TODONOW: size of pubkey is different, use serialize
-				// if (cmd_data.bytes.at(pos1)!=';') _throw_error( std::runtime_error("Invalid protocol format, missing coma") ); // [protocol]
+				// if (cmd_data.bytes.at(pos1)!=';') pfp_throw_error( std::runtime_error("Invalid protocol format, missing coma") ); // [protocol]
 				string_as_bin bin_his_IDC_pub( parser.pop_varstring() ); // PARSE
 				string_as_bin bin_his_IDI_pub( parser.pop_varstring() ); // PARSE
 				string_as_bin bin_his_IDI_IDC_sig( parser.pop_varstring() ); // PARSE
@@ -1703,7 +1703,7 @@ void c_tunserver::event_loop(int time) {
 
 				auto pos1 = cmd_data.bytes.find_first_of(';',offset1); // [protocol] size of HIP is dynamic  TODO(r)-ERROR XXX ';' is not escaped! will cause mistaken protocol errors
 				decltype (pos1) size_hip = g_haship_addr_size; // possible size of HIP if ipv6
-				if ((pos1==string::npos) || (pos1 != size_hip)) _throw_error( std::runtime_error("Invalid protocol format, wrong size of HIP field") );
+				if ((pos1==string::npos) || (pos1 != size_hip)) pfp_throw_error( std::runtime_error("Invalid protocol format, wrong size of HIP field") );
 
 				string_as_bin bin_hip( cmd_data.bytes.substr(0,pos1) );
 				c_haship_addr requested_hip( c_haship_addr::tag_constr_by_addr_bin(), bin_hip.bytes ); // *
@@ -1908,7 +1908,7 @@ std::string c_tunserver::program_action_gen_key_simple() {
 void c_tunserver::program_action_gen_key(const boost::program_options::variables_map & argm) {
 	pfp_note("Action: gen key");
 	if (!argm.count("key-type")) {
-		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
+		pfp_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
 	}
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
@@ -1937,7 +1937,7 @@ void c_tunserver::program_action_gen_key(const boost::program_options::variables
 		output_file = argm["new-key-file"].as<std::string>();
 		generate_crypto::create_keys(output_file, keys, false); // ***
 	} else {
-		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
+		pfp_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
 // ----------------------------------------------------------------------------

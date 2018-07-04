@@ -110,7 +110,7 @@ TE int_to_enum(TI val_int, bool expected_bad=false, typename std::enable_if<std:
 		using t_ex = typename decltype(ex_type)::value_type;
 		pfp_dbg5("Exception type to throw is: " << typeid(t_ex).name());
 		t_ex ex(msg);
-		_throw_error(ex);
+		pfp_throw_error(ex);
 	};
 
 	try {

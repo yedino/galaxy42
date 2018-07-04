@@ -146,7 +146,7 @@ void c_galaxysrv::main_loop() {
 						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
 						tuntap_result.src_hip, tuntap_result.dst_hip);
 					pfp_dbg1("Read tuntap merit=" << read_size_merit);
-					if (read_size_merit == 0) _throw_error_runtime("Empty tun read");
+					if (read_size_merit == 0) pfp_throw_error_runtime("Empty tun read");
 
 					// adjust down size to actually used part of buffer
 					tuntap_result.chunk.shrink_to( read_size_merit );
@@ -155,7 +155,7 @@ void c_galaxysrv::main_loop() {
 					size_t read_ipv6size = ipv6_size_entireip_from_header( tuntap_result.chunk.to_tab_view() );
 					size_t read_ipv6size_merit{ eint_minus( read_ipv6size , size_removed_from_merit ) };
 					if (read_ipv6size_merit != read_size_merit) {
-						_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
+						pfp_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
 						"tuntap driver", read_size_merit));
 					}
 					pfp_info(my_name() + "TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
@@ -432,7 +432,7 @@ void c_galaxysrv::set_prefix_len(int prefix_len) {
 void c_galaxysrv::program_action_gen_key(const boost::program_options::variables_map & argm) {
 	pfp_note("Action: gen key");
 	if (!argm.count("key-type")) {
-		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
+		pfp_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
 	}
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
@@ -461,7 +461,7 @@ void c_galaxysrv::program_action_gen_key(const boost::program_options::variables
 		output_file = argm["new-key-file"].as<std::string>();
 		generate_crypto::create_keys(output_file, keys, false); // ***
 	} else {
-		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
+		pfp_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
 

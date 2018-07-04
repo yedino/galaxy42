@@ -60,7 +60,7 @@ t_rawcaps read_slash_proc_rights() {
 					std::istringstream iss(data);
 					iss >> std::hex >> data_int;
 					bool ok = ( (!iss.fail()) && (iss.eof()) );
-					if (!ok) _throw_error_runtime("Can not parse Caps (from thefile "s + thefilename + ") - the line is: ["s + line + "]"s );
+					if (!ok) pfp_throw_error_runtime("Can not parse Caps (from thefile "s + thefilename + ") - the line is: ["s + line + "]"s );
 					caps.emplace(name,data_int); // insert new element
 				} // name
 			} // sep

@@ -173,11 +173,11 @@ class safer_int {
 
 			auto xi_max = std::numeric_limits<T>::max() ;
 			T_big xi_max_big( xi_max );
-			if (obj_big > xi_max_big) { _throw_error( boost::numeric::bad_numeric_cast() ); }
+			if (obj_big > xi_max_big) { pfp_throw_error( boost::numeric::bad_numeric_cast() ); }
 
 			auto xi_min = std::numeric_limits<T>::min() ;
 			T_big xi_min_big( xi_min );
-			if (obj_big < xi_min_big) { _throw_error( boost::numeric::bad_numeric_cast() ); }
+			if (obj_big < xi_min_big) { pfp_throw_error( boost::numeric::bad_numeric_cast() ); }
 
 			xi = static_cast<T>(obj);
 		}

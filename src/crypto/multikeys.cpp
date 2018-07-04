@@ -198,7 +198,7 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 				try {
 					sodiumpp::crypto_sign_verify_detached(signs.at(i), msg, pubkey);
 				} catch (const sodiumpp::crypto_error &err) {
-					_throw_error(std::invalid_argument(err.what()));
+					pfp_throw_error(std::invalid_argument(err.what()));
 				}
 			}
 			break;
@@ -208,15 +208,15 @@ void c_multikeys_pub::multi_sign_verify(const std::vector<string> &signs,
 			for(size_t i = 0; i < amount_of_pubkeys; ++i) {
 				std::string pubkey = pubkeys.get_public(sign_type,i);
 				if (!ntrupp::verify(signs.at(i), msg, pubkey)) {
-					_throw_error( std::invalid_argument("Ntru sign verify: fail") );
+					pfp_throw_error( std::invalid_argument("Ntru sign verify: fail") );
 				}
 			}
 			#else
-				_throw_error( invalid_argument_in_version("NTru signature (verify) not enabled") );
+				pfp_throw_error( invalid_argument_in_version("NTru signature (verify) not enabled") );
 			#endif
 			break;
 		}
-		default: _throw_error( std::invalid_argument("sign type not supported") );
+		default: pfp_throw_error( std::invalid_argument("sign type not supported") );
 	}
 }
 
@@ -225,7 +225,7 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 										 const c_multikeys_pub &pubkeys) {
 
 	if (all_signatures.get_count_of_systems() != pubkeys.get_count_of_systems()) {
-		_throw_error( std::invalid_argument("count of systems in c_multikeypub and c_multisign different!") );
+		pfp_throw_error( std::invalid_argument("count of systems in c_multikeypub and c_multisign different!") );
 	}
 
 	for (size_t sys=0; sys < all_signatures.get_count_of_systems(); ++sys) {
@@ -238,7 +238,7 @@ void c_multikeys_pub::multi_sign_verify(const c_multisign &all_signatures,
 			std::string err_msg = "count of keys system [";
 			err_msg += t_crypto_system_type_to_name(sys_enum);
 			err_msg += "] in c_multikeypub and c_multisign different!";
-			_throw_error( std::invalid_argument(err_msg) );
+			pfp_throw_error( std::invalid_argument(err_msg) );
 		}
 
 		// crypto systems allowed for signing
@@ -318,11 +318,11 @@ std::vector<string> c_multikeys_PRV::multi_sign(const string &msg, t_crypto_syst
 					signatures.emplace_back(std::move(sign));
 				}
 			#else
-				_throw_error( invalid_argument_in_version("NTru signature (signing) not enabled") );
+				pfp_throw_error( invalid_argument_in_version("NTru signature (signing) not enabled") );
 			#endif
 			break;
 		}
-		default: _throw_error( std::runtime_error("sign type not supported") );
+		default: pfp_throw_error( std::runtime_error("sign type not supported") );
 	}
 
 	return signatures;
@@ -439,7 +439,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_encry
 		assert(keypair.second.size() == 609);
 		return keypair;
 	#else
-		_throw_error( invalid_argument_in_version("NTru encryption (keygen) not enabled") );
+		pfp_throw_error( invalid_argument_in_version("NTru encryption (keygen) not enabled") );
 	#endif
 }
 
@@ -450,7 +450,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_nrtu_sign_
 		assert(keypair.second.size() == 6158);
 		return keypair;
 	#else
-		_throw_error( invalid_argument_in_version("NTru signature (keygen) not enabled") );
+		pfp_throw_error( invalid_argument_in_version("NTru signature (keygen) not enabled") );
 	#endif
 }
 
@@ -458,7 +458,7 @@ std::pair<sodiumpp::locked_string, string> c_multikeys_PAIR::generate_sidh_key_p
 	#if ENABLE_CRYPTO_SIDH
 	return sidhpp::generate_keypair();
 	#else
-		_throw_error( invalid_argument_in_version("SIDH (keypair gen) not enabled") );
+		pfp_throw_error( invalid_argument_in_version("SIDH (keypair gen) not enabled") );
 	#endif
 }
 
@@ -524,7 +524,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 					this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 				}
 			#else
-				_throw_error( invalid_argument_in_version("SIDH (generate) not enabled") );
+				pfp_throw_error( invalid_argument_in_version("SIDH (generate) not enabled") );
 			#endif
 			break;
 		}
@@ -537,7 +537,7 @@ void c_multikeys_PAIR::generate(t_crypto_system_type crypto_system_type, int cou
 					this->add_public_and_PRIVATE( crypto_system_type , keypair.second , keypair.first );
 				}
 			#else
-				_throw_error( invalid_argument_in_version("SIDH (generate) not enabled") );
+				pfp_throw_error( invalid_argument_in_version("SIDH (generate) not enabled") );
 			#endif
 			break;
 		} // case

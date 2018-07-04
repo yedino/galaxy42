@@ -54,7 +54,7 @@ c_is_user_admin::c_is_user_admin() {
 		}
 		FreeSid(AdministratorsGroup);
 	}
-	if (!b) _throw_error_runtime("Administrator permissions required");
+	if (!b) pfp_throw_error_runtime("Administrator permissions required");
 }
 
 c_tuntap_windows_obj::c_tuntap_windows_obj()

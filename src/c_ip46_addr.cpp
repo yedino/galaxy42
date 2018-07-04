@@ -104,9 +104,9 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	hint.ai_flags = AI_NUMERICHOST;
 
 	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
-	if (ret) _throw_error( invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
-	if (!result) _throw_error( invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
-	auto result_deleter = [&](struct addrinfo *result){ if (!result) _throw_error(runtime_error("NULL in freeaddrinfo")); freeaddrinfo(result); };
+	if (ret) pfp_throw_error( invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
+	if (!result) pfp_throw_error( invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
+	auto result_deleter = [&](struct addrinfo *result){ if (!result) pfp_throw_error(runtime_error("NULL in freeaddrinfo")); freeaddrinfo(result); };
 	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
 
 	if(result_ptr->ai_family == AF_INET) {
@@ -140,10 +140,10 @@ ostream & operator<<(ostream &out, const c_ip46_addr& addr) {
 
 bool c_ip46_addr::operator==(const c_ip46_addr &rhs) const {
 	if (this->m_tag == t_tag::tag_none) {
-		_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
+		pfp_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
 	}
 	if (rhs.m_tag == t_tag::tag_none) {
-		_throw_error( std::invalid_argument("rhs: m_tag == tag_none") );
+		pfp_throw_error( std::invalid_argument("rhs: m_tag == tag_none") );
 	}
 	if (this->m_tag != rhs.m_tag) {
 		return false;
@@ -159,17 +159,17 @@ bool c_ip46_addr::operator==(const c_ip46_addr &rhs) const {
 			&& (this->get_assigned_port() == rhs.get_assigned_port());
 	}
 	else {
-		_throw_error(std::runtime_error("Unknown IP type"));
+		pfp_throw_error(std::runtime_error("Unknown IP type"));
 		return false;
 	}
 }
 
 bool c_ip46_addr::operator<(const c_ip46_addr &rhs) const {
 	if (this->m_tag == t_tag::tag_none) {
-		_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
+		pfp_throw_error( std::invalid_argument("lhs: m_tag == tag_none") );
 	}
 	if (rhs.m_tag == t_tag::tag_none) {
-		_throw_error( std::invalid_argument("rhs: m_tag == tag_none") );
+		pfp_throw_error( std::invalid_argument("rhs: m_tag == tag_none") );
 	}
 	if (this->m_tag == t_tag::tag_ipv4 && rhs.m_tag == t_tag::tag_ipv6) {
 		return true;

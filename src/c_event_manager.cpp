@@ -16,14 +16,14 @@ c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_devic
 
 void c_event_manager_linux::init() {
 	m_tun_fd = m_tun_device.get().get_tun_fd();
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
 	pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 }
 
 void c_event_manager_linux::wait_for_event() {
 
 	pfp_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_udp_socket, &m_fd_set_data);
@@ -67,7 +67,7 @@ void c_event_manager_asio::init() {
 	#if defined(__MACH__)
 		m_tun_fd = m_tun_device.get().get_tun_fd();
 		pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
-		if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
+		if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
 	#else
 		pfp_goal("Event manager will not watch tuntap using fd on this Operating System");
 	#endif

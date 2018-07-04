@@ -152,25 +152,25 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 // -------------------------------------------------------------------
 
 // This macros can throw - BUT ALSO CAN ABORT - if used in noexcept function
-#define _check(X) do { if(!(X)) { _throw_error_or_abort( err_check_prog( #X ) );  } } while(0)
+#define _check(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_prog( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user if false - BUT ALSO CAN ABORT - if used in noexcept function
-#define _check_user(X) do { if(!(X)) { _throw_error_or_abort( err_check_user( #X ) );  } } while(0)
+#define _check_user(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_user( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_input if false - BUT ALSO CAN ABORT - if used in noexcept function
-#define _check_input(X) do { if(!(X)) { _throw_error_or_abort( err_check_input( #X ) );  } } while(0)
+#define _check_input(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_input( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys if false - BUT ALSO CAN ABORT - if used in noexcept function
-#define _check_sys(X) do { if(!(X)) { _throw_error_or_abort( err_check_sys( #X ) );  } } while(0)
+#define _check_sys(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_sys( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern if false - BUT ALSO CAN ABORT - if used in noexcept function
-#define _check_extern(X) do { if(!(X)) { _throw_error_or_abort( err_check_extern( #X ) );  } } while(0)
+#define _check_extern(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_extern( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user_soft if false
-#define _try_user(X) do { if(!(X)) { _throw_error( err_check_user_soft( #X ) );  } } while(0)
+#define _try_user(X) do { if(!(X)) { pfp_throw_error( err_check_user_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_input_soft if false
-#define _try_input(X) do { if(!(X)) { _throw_error( err_check_input_soft( #X ) );  } } while(0)
+#define _try_input(X) do { if(!(X)) { pfp_throw_error( err_check_input_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys_soft if false
-#define _try_sys(X) do { if(!(X)) { _throw_error( err_check_sys_soft( #X ) );  } } while(0)
+#define _try_sys(X) do { if(!(X)) { pfp_throw_error( err_check_sys_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern_soft if false
-#define _try_extern(X) do { if(!(X)) { _throw_error( err_check_extern_soft( #X ) );  } } while(0)
+#define _try_extern(X) do { if(!(X)) { pfp_throw_error( err_check_extern_soft( #X ) );  } } while(0)
 
 
 // always abort - for serious errors
