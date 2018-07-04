@@ -35,6 +35,7 @@ if(WIN32 OR CYGWIN)
 	add_definitions(-DWINVER=0x0601)
 	add_definitions(-D_WIN32_WINNT=0x0601)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	add_definitions(-DNOMINMAX)
 endif()
 
 ########################### GENERAL ############################
@@ -75,7 +76,7 @@ if(BUILD_STATIC_TUNSERVER)
 	if(MSVC)
 		set(STATIC_FLAGS "")
 	else()
-		set(STATIC_FLAGS "-fPIC -fPIE -Wl,--whole-archive -static -lpthread -Wl,--no-whole-archive")
+		set(STATIC_FLAGS "-fPIC -fPIE -static-libstdc++ -lpthread")
 	endif()
 endif()
 ########################### EXTLEVEL OPTIONS ###########################
@@ -151,7 +152,6 @@ endif()
 # to decide on flags to use.
 # (E.g. some buggy libraries will cause us to remove UBSAN or some other checks)
 
-
 ########################### BOOST ###########################
 ### boost - part 1 - just check version and decide does it affect our flags
 set (Boost_USE_MULTITHREADED ON)
@@ -159,7 +159,6 @@ if (BUILD_STATIC_TUNSERVER)
 	set (Boost_USE_STATIC_RUNTIME ON)
 	set (Boost_USE_STATIC_LIBS ON)
 	set (Boost_USE_DEBUG_RUNTIME OFF)
-	set (sodium_USE_STATIC_LIBS ON)
 endif()
 
 if (MSVC)
@@ -289,8 +288,11 @@ else()
 endif()
 
 ########################### SODIUM ###########################
+if (BUILD_STATIC_TUNSERVER)
+	set (sodium_USE_STATIC_LIBS ON)
+endif()
 find_package(Sodium)
-link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/) # for gitian build
+#link_directories(/home/ubuntu/build/libsodium/libsodium-osx/lib/) # for gitian build
 
 if (NOT SODIUM_FOUND)
 	message("\nSODIUM NOT FOUND!")
@@ -304,7 +306,11 @@ if (NOT SODIUM_FOUND)
 endif()
 
 include_directories(SYSTEM ${SODIUM_INCLUDE_DIR})
-if(CYGWIN)
+
+if(BUILD_STATIC_TUNSERVER)
+	set(PTHREAD_LIB "pthread")
+	set(SODIUM_LIB "${SODIUM_LIBRARY}")
+elseif(CYGWIN)
 	set(SODIUM_LIB "sodium")
 elseif(MSVC OR MINGW)
 	set(SODIUM_LIB "${SODIUM_LIBRARY}")
@@ -313,6 +319,27 @@ else()
 	set(PTHREAD_LIB "pthread")
 	set(SODIUM_LIB "sodium")
 endif()
+
+########################### CURL ###########################
+if(CURL_ROOT_DIR)
+	list( APPEND CMAKE_INCLUDE_PATH "${CURL_ROOT_DIR}/include")
+	list( APPEND CMAKE_LIBRARY_PATH "${CURL_ROOT_DIR}/lib")
+endif()
+
+find_package(CURL REQUIRED)
+if (NOT CURL_FOUND)
+	if (MSVC)
+		message(STATUS "Add following argument for cmake:")
+		message(STATUS "    \"-DCURL_ROOT_DIR=path\to\curl/\"\n\n")
+	endif()
+	message(FATAL_ERROR "CURL REQUIRED AND NOT FOUND, NOW STOPPING")
+else()
+	if(${CURL_VERSION_STRING})
+		message(STATUS "Curl version: " ${CURL_VERSION_STRING})
+	endif()
+endif()
+include_directories(SYSTEM ${CURL_INCLUDE_DIRS})
+set(CURL_LIB "${CURL_LIBRARIES}")
 
 #add local gtest
 if (MSVC)
@@ -475,7 +502,7 @@ set(LIBS_COMMON
 	${Boost_LIBRARIES} ${BOOST_LOCALE_LINK_LIB} ${BOOST_THREAD_LINK_LIB}
 	${PTHREAD_LIB} sodiumpp ${SODIUM_LIB} ${LIBS_OPTIONAL_CRYPTO_clean}
 	${LIB_OPTIONAL_CAPNG}
-	${MINGW_LIBRARIES} ${MSVC_LIRARIES} apigalaxy
+	${MINGW_LIBRARIES} ${MSVC_LIRARIES} apigalaxy ${CURL_LIB}
 )
 
 target_link_libraries(tunserver.elf

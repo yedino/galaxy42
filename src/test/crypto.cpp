@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
@@ -90,7 +90,7 @@ TEST(crypto, aeshash_not_repeating_state_nor_password) {
 */
 
 TEST(crypto, aeshash_start_and_get_same_passwords) {
-	_warn("Need to write again AESHASH / rachet"); // TODO
+	pfp_warn("Need to write again AESHASH / rachet"); // TODO
 	/*
 	c_symhash_state symhash( string_as_bin(string_as_hex("6a6b")).bytes ); // "jk"
 	string_as_hex p(( string_as_bin( symhash.get_password() ) ));
@@ -260,7 +260,7 @@ TEST(crypto, ntrupp_sign) {
 	std::string signature;
 
 	signature = ntrupp::sign(msg, keypair.first);	// keys for encrypt ...
-	_info("Signature: " << to_debug(signature, e_debug_style_crypto_devel ));
+	pfp_info("Signature: " << to_debug(signature, e_debug_style_crypto_devel ));
 
 	EXPECT_TRUE(ntrupp::verify(signature, msg, keypair.second));
 }
@@ -306,7 +306,7 @@ TEST(crypto, multi_sign) {
 
 	antinet_crypto::c_multisign multi_signature = antinet_crypto::c_multisign();
 
-	_dbg1("multi sign : start signing \"mgs to sign\"");
+	pfp_dbg1("multi sign : start signing \"mgs to sign\"");
 	multi_signature = Alice.multi_sign(msg_to_sign);
 
 	// printing signatures:
@@ -335,7 +335,7 @@ TEST(crypto, ipv6_hexdot) {
 		antinet_crypto::c_multikeys_PAIR Alice;
 		Alice.generate(antinet_crypto::e_crypto_system_type_X25519,1);
 
-		_info("IPv6: " << Alice.get_ipv6_string_hexdot());
+		pfp_info("IPv6: " << Alice.get_ipv6_string_hexdot());
 	}
 }
 
@@ -432,7 +432,7 @@ void unittest_create_cryptolink(const int number_of_test, int level, int packet_
 		}
 #endif
 
-		if (level>=0) _dbg2("Advanced crypto tests enabled");
+		if (level>=0) pfp_dbg2("Advanced crypto tests enabled");
 
 		c_multikeys_pub keypubA = keypairA.m_pub;
 		c_multikeys_pub keypubB = keypairB.m_pub;
@@ -451,7 +451,7 @@ void unittest_create_cryptolink(const int number_of_test, int level, int packet_
 			t_crypto_nonce nonce2_used; // nonce nr 2: only to encrypt Bob->Alice here
 
 			auto msg1_encrypted = AliceCT.box(msg1, nonce1_used);
-			_mark("this test, packet_nr="<<packet_nr<<" nonce1_used="<<nonce1_used);
+			pfp_mark("this test, packet_nr="<<packet_nr<<" nonce1_used="<<nonce1_used);
 			ASSERT_NE(msg1, msg1_encrypted);
 			auto msg1_decrypted = BobCT.unbox(msg1_encrypted, nonce1_used);
 			ASSERT_EQ(msg1, msg1_decrypted);

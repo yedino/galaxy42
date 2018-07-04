@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 #ifndef LIBS0_HPP
@@ -123,7 +123,7 @@ using namespace stdplus;
 // ==================================================================
 
 // --- TODO https://h.mantis.antinet.org/view.php?id=37 ---
-/***
+/**
  * type that is a size_t, but can be with error-signaling value e.g. -1, otherwise it is valid.
  * the caller MUST check the returned value against size_t_is() before using it
  */
@@ -133,7 +133,7 @@ inline size_t_maybe size_t_invalid() { ///< returns a size_t that means "invalid
 	return static_cast<size_t>( -1 );
 }
 
-/***
+/**
  * returns if given size_t is correct, or is it the invalid value
 */
 inline bool size_t_is_ok(size_t x) {
@@ -146,7 +146,7 @@ inline bool size_t_is_ok(size_t x) {
 /*
 template <typename T> const T & PTR_assert(const T & ptr, const char *func) {
 	if (!(ptr!=nullptr)) {
-		_erro("NULL pointer used! from func="<<func);
+		pfp_erro("NULL pointer used! from func="<<func);
         throw std::invalid_argument("Null pointer");
         //std::abort();
 		//assert(ptr!=nullptr);

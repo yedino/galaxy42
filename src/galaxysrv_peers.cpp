@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "galaxysrv_peers.hpp"
 #include "libs1.hpp"
@@ -63,7 +63,7 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 	const string literal_anyone = "anyone";
 	reasonable_size(simple);
 
-	_note("Parsing: "<<simple);
+	pfp_note("Parsing: "<<simple);
 	_check_input(simple.size()>=3); // some reasonable sized not-empty string
 
 	size_t pos1 = simple.find(separator); // was there any "@"
@@ -103,16 +103,16 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 		_check_input(simple.at(pos1+0)==separator);  // theck the '@' out of "@(" that we just found
 		_check_input(simple.at(pos1+1)==group_open); // theck the '(' out of "@(" that we just found
 		size_t posB = pos1+2; // begin, poiting after "@("
-		_info(join_string_sep(posB," < ",size));
+		pfp_info(join_string_sep(posB," < ",size));
 		while (posB < size_before) {
 			auto posX = simple.find(group_close,posB); // find ")"
-			_dbg3("posX=" << posX << " posB="<<posB);
+			pfp_dbg3("posX=" << posX << " posB="<<posB);
 			if (posX == string::npos) {
-				_info("Hit end because posX="<<posX);
+				pfp_info("Hit end because posX="<<posX);
 				posX = size_before;
 			}
 			string partX = simple.substr(posB, posX-posB);
-			_dbg3("posX=" << posX << " posB="<<posB<<" given " <<partX);
+			pfp_dbg3("posX=" << posX << " posB="<<posB<<" given " <<partX);
 			// make sure this part does not contain ( or ), e.g. "CABLE(" as result of parsing "VIRTUAL@(CABLE(CABLE)"
 			_check_input( string::npos == partX.find(group_open) );
 			_check_input( string::npos == partX.find(group_close) );
@@ -135,7 +135,7 @@ c_galaxysrv_peers::t_peering_reference_parse c_galaxysrv_peers::parse_peer_refer
 
 void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
 	_check(ref.get());
-	_note("Adding peer: "); // TODO << *ref );
+	pfp_note("Adding peer: "); // TODO << *ref );
 
 	auto peer = make_unique<c_peer_connection>( std::move( *ref ) );
 	m_peer.push_back( std::move( peer ) );
@@ -143,7 +143,7 @@ void c_galaxysrv_peers::add_peer(unique_ptr<t_peer_reference_newloop> && ref) {
 
 unique_ptr<t_peer_reference_newloop> c_galaxysrv_peers::parse_peer_simplestring(const string & simple) {
 	t_peering_reference_parse parse = parse_peer_reference(simple); // partially parsed
-	_dbg1("Done the parse itself");
+	pfp_dbg1("Done the parse itself");
 	bool id_anyone=true;
 	string id;
 	const auto & cables = parse.second;
@@ -151,25 +151,25 @@ unique_ptr<t_peer_reference_newloop> c_galaxysrv_peers::parse_peer_simplestring(
 	auto reference = make_unique<t_peer_reference_newloop>();
 
 	if (parse.first.size()==1) { // there was 1 ID parsed
-		_dbg1("There is some ID in that reference.");
+		pfp_dbg1("There is some ID in that reference.");
 		id_anyone=false;
 		id = parse.first.at(0);
 		try {
 			reference->hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , id);
 		} catch(const std::invalid_argument &ex) {
 			const string msg = "Invalid HIP address="s + id + " ("s + ex.what() + ")"s;
-			_throw_error( err_check_input(msg.c_str()) );
+			pfp_throw_error( err_check_input(msg.c_str()) );
 		}
 	} else {
-		_dbg1("There is NO ID in that reference (anyone?)");
+		pfp_dbg1("There is NO ID in that reference (anyone?)");
 		id_anyone=true;
 		_check(parse.first.size() == 0); // else there was no ID parsed
 		reference->hip = c_haship_addr::make_empty(); // clear it to be sure
 	}
-	_note(join_string_sep( id_anyone?"anyone":"id" , id ) );
-	_note("Cables: " << cables.size());
+	pfp_note(join_string_sep( id_anyone?"anyone":"id" , id ) );
+	pfp_note("Cables: " << cables.size());
 	for(const auto & cablestr : cables) {
-		_note("Cable: " << cablestr); // cablestr like udp:192.168.1.107:9042
+		pfp_note("Cable: " << cablestr); // cablestr like udp:192.168.1.107:9042
 		// this really converts the string with IP, into the parsed IP (parsed cable address):
 		unique_ptr<c_cable_base_addr> cable_addr = c_cable_base_addr::cable_make_addr( cablestr ); // *** <---
 		reference->cable_addr.push_back( std::move(cable_addr) );
@@ -178,7 +178,7 @@ unique_ptr<t_peer_reference_newloop> c_galaxysrv_peers::parse_peer_simplestring(
 }
 
 void c_galaxysrv_peers::add_peer_simplestring(const string & simple) {
-	_clue("Adding peer from simplestring=" << simple);
+	pfp_clue("Adding peer from simplestring=" << simple);
 	auto reference = parse_peer_simplestring( simple );
 	this->add_peer( std::move( reference ) ); // ***
 }

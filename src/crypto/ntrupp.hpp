@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 
@@ -63,7 +63,7 @@ ntru_crypto_ntru_encrypt(
 	uint8_t        *ct);             //    out - address for ciphertext
 */
 
-/***
+/**
  * Encrypt plain text for given pubkey.
  */
 template<class T>

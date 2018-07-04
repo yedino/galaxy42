@@ -9,7 +9,7 @@ std::string to_string(const t_cable_kind & obj) {
 		case (t_cable_kind::kind_udp):  return "udp"s;  break;
 		default: break;
 	}
-	_throw_error_runtime("Unknown cable_kind object (in print)");
+	pfp_throw_error_runtime("Unknown cable_kind object (in print)");
 }
 
 std::ostream & operator<<(std::ostream & ostr, const t_cable_kind & obj) {

@@ -54,24 +54,24 @@ std::string get_security_info(bool verbose) noexcept {
 		}
 		return oss.str();
 	} catch(...) {
-		_erro("Unexpected error");
-		throw; // trying to rethrow, will cause abort probably (if noexcept)
+		pfp_erro("Unexpected error");
+		_check_abort(false); // trying to rethrow, will cause abort probably (if noexcept)
 	}
 }
 
 
 void print_security_info() {
-	_mark("Security info: " << get_security_info() );
+	pfp_mark("Security info: " << get_security_info() );
 }
 
 /**
  * Applies a CAPs change given in #change, can do debug before/after.
  */
 static void security_apply_cap_change(const capmodpp::cap_statechange_full & change) {
-	_note("Caps (before): " << get_security_info(true) );
-	_clue("Caps (will apply): " << change);
+	pfp_note("Caps (before): " << get_security_info(true) );
+	pfp_clue("Caps (will apply): " << change);
 	change.security_apply_now();
-	_note("Caps (after):  " << get_security_info(true) );
+	pfp_note("Caps (after):  " << get_security_info(true) );
 }
 #endif
 
@@ -79,17 +79,17 @@ static bool do_we_need_to_change_uid_or_gid() {
 	#ifdef ANTINET_linux
 	uid_t uid = getuid();
 	uid_t euid = geteuid();
-	_note("uid="<<uid<<" euid="<<geteuid());
+	pfp_note("uid="<<uid<<" euid="<<geteuid());
 	if (uid != euid) {
 		// see @warnings in .hpp
-		_erro("UID is different then EUID, is this program set chmod SUID? This is not supported currently. Aborting.");
+		pfp_erro("UID is different then EUID, is this program set chmod SUID? This is not supported currently. Aborting.");
 		std::abort(); // ! something is meesed up with security
 	}
 	if (euid==0) return true;
 	if (uid==0) return true;
 	return false;
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 		return false;
 	#endif
 }
@@ -103,53 +103,53 @@ static bool do_we_need_to_change_uid_or_gid() {
  * if root is successfully dropped else empty string).
  */
 static t_changes_from_sudo security_drop_root_from_sudo() {
-	_fact("Dropping root (if we are root)");
+	pfp_fact("Dropping root (if we are root)");
 	t_changes_from_sudo changes;
 
 	#ifdef ANTINET_linux
 	if ( ! do_we_need_to_change_uid_or_gid()) {
-		_note("We are not root anyway");
+		pfp_note("We are not root anyway");
 		changes.m_home_dir = ""; // for now, set the default behaviour of datastore
 		return changes;
 	} // not root
 
-	_clue("Yes, will change UID/GID");
-	_note("Caps (when changing user): " << get_security_info() );
+	pfp_clue("Yes, will change UID/GID");
+	pfp_note("Caps (when changing user): " << get_security_info() );
 
 	const char* sudo_user_env = std::getenv("SUDO_USER");
 	if (sudo_user_env == nullptr) throw std::runtime_error("SUDO_USER env is not set") ; // get env error
 	std::string sudo_user_name(sudo_user_env);
-	_info("sudo user is " << sudo_user_env);
+	pfp_info("sudo user is " << sudo_user_env);
 	struct passwd *pw = getpwnam(sudo_user_name.c_str());
 	if (pw == nullptr) {
-		_fact("getpwnam error");
+		pfp_fact("getpwnam error");
 		throw std::system_error(std::error_code(errno, std::system_category()));
 	}
 	uid_t normal_user_uid = pw->pw_uid;
 	gid_t normal_user_gid = pw->pw_gid;
 	if (normal_user_uid == 0) throw std::runtime_error("The sudo was called by root");
-	_fact("try to change uid to " << normal_user_uid);
-	_fact("try to change gid to " << normal_user_gid);
+	pfp_fact("try to change uid to " << normal_user_uid);
+	pfp_fact("try to change gid to " << normal_user_gid);
 
 	capmodpp::secure_capng_get_caps_process(); // causes libng to initialize, if not already
 	int ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
 	// TODO bounding set is NOT cleared!
 
 	if (ret != 0) {
-		_erro("capng_change_id error: " << ret);
+		pfp_erro("capng_change_id error: " << ret);
 		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));
 	}
-	_fact("UID/GID change done");
-	_note("Caps (after changing user): " << get_security_info() );
+	pfp_fact("UID/GID change done");
+	pfp_note("Caps (after changing user): " << get_security_info() );
 
 	if (pw->pw_dir != nullptr)
 		changes.m_home_dir = pw->pw_dir;
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 	#endif
 
 	if (do_we_need_to_change_uid_or_gid()) {
-		_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
+		pfp_erro("Something is wrong, we tried to remove root UID/GID but stil it is not done. Aborting.");
 		std::abort();
 	}
 	return changes;
@@ -157,7 +157,7 @@ static t_changes_from_sudo security_drop_root_from_sudo() {
 
 void drop_privileges_on_startup() {
 	#ifdef ANTINET_linux
-	_fact("Dropping privileges - on startup");
+	pfp_fact("Dropping privileges - on startup");
 
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
@@ -167,7 +167,7 @@ void drop_privileges_on_startup() {
 
 	if (do_we_need_to_change_uid_or_gid()) {
 		// to drop root. is this really needed like that? needs more review.
-		_fact("Leaving SETUID/SETGID (and PCAP) caps, to allow droping root UID later");
+		pfp_fact("Leaving SETUID/SETGID (and PCAP) caps, to allow droping root UID later");
 		change.set_given_cap("SETUID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETGID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETPCAP", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
@@ -176,14 +176,14 @@ void drop_privileges_on_startup() {
 
 	security_apply_cap_change(change);
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 	#endif
 }
 
 
 void drop_privileges_after_tuntap() {
 	#ifdef ANTINET_linux
-	_fact("Dropping privileges - after tuntap");
+	pfp_fact("Dropping privileges - after tuntap");
 
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
@@ -194,54 +194,54 @@ void drop_privileges_after_tuntap() {
 	security_apply_cap_change(change);
 
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 	#endif
 }
 
 void drop_privileges_before_mainloop() {
 	#ifdef ANTINET_linux
-	_fact("Dropping privileges - before mainloop");
+	pfp_fact("Dropping privileges - before mainloop");
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
 	security_apply_cap_change(change);
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 	#endif
 }
 
 void verify_privileges_are_as_for_mainloop() {
 	try {
 	#ifdef ANTINET_linux
-	_goal("Verifying privileges are dropped - before entering the main loop");
+	pfp_goal("Verifying privileges are dropped - before entering the main loop");
 
 	try {
 		bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);
 		if (have_any_cap) {
-			_erro("We still have some CAP capability - when we expected to have none by now. Aborting.");
+			pfp_erro("We still have some CAP capability - when we expected to have none by now. Aborting.");
 			std::abort(); // <=== abort because security error
 		}
-	} catch(...) { _warn("Can not check cap"); throw ; }
+	} catch(...) { pfp_warn("Can not check cap"); throw ; }
 
 	try {
 		if (do_we_need_to_change_uid_or_gid()) {
-			_erro("We still have some UID/GID as root - when we expected to have none by now. Aborting.");
+			pfp_erro("We still have some UID/GID as root - when we expected to have none by now. Aborting.");
 			std::abort(); // <=== abort because security error
 		}
-	} catch(...) { _warn("Can not check uid/gid"); throw ; }
+	} catch(...) { pfp_warn("Can not check uid/gid"); throw ; }
 
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 	#endif
 	}
 	catch(const std::exception & ex) {
-		_erro("Error: " << ex.what());
+		pfp_erro("Error: " << ex.what());
 		throw ;
 	}
 	catch(...) {
-		_erro("Error (unknown type)");
+		pfp_erro("Error (unknown type)");
 		throw ;
 	}
-	_fact("Security: privilages seem correct");
+	pfp_fact("Security: privilages seem correct");
 }
 
 
@@ -253,11 +253,11 @@ void drop_root(bool home_always_env) {
 	} catch (const std::system_error &) {
 		throw;
 	} catch (const std::runtime_error &e) {
-		_erro("Can not drop privileges to a regular user. We suggest to instead from a regular user call our program with sudo, and not run it directly as root");
-		_erro(e.what());
+		pfp_erro("Can not drop privileges to a regular user. We suggest to instead from a regular user call our program with sudo, and not run it directly as root");
+		pfp_erro(e.what());
 	}
 	#else
-		_note("This security operation is not available on this system, ignoring");
+		pfp_note("This security operation is not available on this system, ignoring");
 	#endif
 	if (home_always_env) {
 		datastore::set_home(std::string());

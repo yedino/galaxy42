@@ -18,14 +18,14 @@ c_cable_simul_obj::~c_cable_simul_obj() {
 }
 
 void c_cable_simul_obj::stop_threadsafe() {
-	_info("Stopping simulation card");
+	pfp_info("Stopping simulation card");
 }
 
 void c_cable_simul_obj::send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) {
 	_check(size>=1);
 
 	auto uuid = (dynamic_cast<const c_cable_simul_addr &>(dest)).get_addr();
-	_info("Tranport send to " << uuid << " data: " <<  to_debug( std::string(data , data+size) , e_debug_style_buf ) );
+	pfp_info("Tranport send to " << uuid << " data: " <<  to_debug( std::string(data , data+size) , e_debug_style_buf ) );
 
 	volatile unsigned char fake;
 	size_t pos=0;
@@ -36,24 +36,24 @@ void c_cable_simul_obj::send_to(const c_cable_base_addr & dest, const unsigned c
 }
 
 void c_cable_simul_obj::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
-	_UNUSED(dest); _UNUSED(data); _UNUSED(size); _UNUSED(handler);
-	_NOTREADY();
+	pfp_UNUSED(dest); pfp_UNUSED(data); pfp_UNUSED(size); pfp_UNUSED(handler);
+	pfp_NOTREADY();
 }
 
 size_t c_cable_simul_obj::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
-	_UNUSED(source); _UNUSED(data); _UNUSED(size);
-	_NOTREADY();
+	pfp_UNUSED(source); pfp_UNUSED(data); pfp_UNUSED(size);
+	pfp_NOTREADY();
 	return 0;
 }
 
 void c_cable_simul_obj::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
-	_UNUSED(data); _UNUSED(size); _UNUSED(handler);
-	_NOTREADY();
+	pfp_UNUSED(data); pfp_UNUSED(size); pfp_UNUSED(handler);
+	pfp_NOTREADY();
 }
 
 void c_cable_simul_obj::listen_on(c_cable_base_addr &local_address) {
-	_UNUSED(local_address);
-	_NOTREADY();
+	pfp_UNUSED(local_address);
+	pfp_NOTREADY();
 }
 
 

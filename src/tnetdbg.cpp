@@ -1,6 +1,7 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "tnetdbg.hpp"
+#include "utils/unused.hpp"
 
 #include <cstring>
 
@@ -80,7 +81,7 @@ void g_dbg_level_set(int level, std::string why, int quiet, int quiet_from_now_o
 	if (quiet_from_now_on!=-1) { // change future reporting of level change
 		if (be_quiet_about_dbg_level_changes != quiet_from_now_on) {
 			auto tmp = g_dbg_level;  g_dbg_level=1; // show this one thing always:
-			_mark("From now on will: " << (quiet_from_now_on ? "be quiet about" : "report") << " changes of debug level");
+			pfp_mark("From now on will: " << (quiet_from_now_on ? "be quiet about" : "report") << " changes of debug level");
 			g_dbg_level = tmp;
 			be_quiet_about_dbg_level_changes = quiet_from_now_on;
 		}
@@ -90,7 +91,7 @@ void g_dbg_level_set(int level, std::string why, int quiet, int quiet_from_now_o
 		bool more_debug = level < g_dbg_level;
 		if ( more_debug) g_dbg_level = level; // increase before printing
 		if (!quiet) {
-			_mark("Setting debug level to " << static_cast<int>(level) << " because: " << why);
+			pfp_mark("Setting debug level to " << static_cast<int>(level) << " because: " << why);
 		}
 		if (!more_debug) g_dbg_level = level; // increase after printing
 	}
@@ -115,7 +116,7 @@ const char * dbg__FILE__(const char * name) {
 
 
 void must_be_exception_type_error_exit(const ui::exception_error_exit &x)
-{ _UNUSED(x); }
+{ pfp_UNUSED(x); }
 
 std::string debug_this() {
 	return "(global) ";

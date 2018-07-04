@@ -1,5 +1,10 @@
 Translations on Cygwin (Windows)
 
+(2017-03-08: now it is best to just translate on Linux, using ./menu - probably no need to do it on Windows/Cygwin?
+--rafal)
+
+See doc/hacking.md
+
 
 -To recompile *.po to *.mo
 	Run

@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "../project.hpp"
 
@@ -25,12 +25,12 @@ namespace ntrupp {
 
 void NTRU_DRBG_exec_or_throw( uint32_t errcode , const std::string &info="") {
 	if (errcode != DRBG_OK)
-		_throw_error( std::runtime_error(info + " , error code: " + std::to_string(errcode)) );
+		pfp_throw_error( std::runtime_error(info + " , error code: " + std::to_string(errcode)) );
 }
 
 void NTRU_exec_or_throw( uint32_t errcode , const std::string &info="") {
 	if (errcode != NTRU_OK)
-		_throw_error( std::runtime_error(info + " , error code: " + std::to_string(errcode)) );
+		pfp_throw_error( std::runtime_error(info + " , error code: " + std::to_string(errcode)) );
 }
 
 uint8_t get_entropy(ENTROPY_CMD cmd, uint8_t *out) {
@@ -72,17 +72,17 @@ DRBG_HANDLE get_DRBG(size_t size) {
 	auto found = drbg_tab.find(size);
 	if (found == drbg_tab.end()) { // not created yet
 		try {
-			_note("Creating DRBG for size=" << size);
+			pfp_note("Creating DRBG for size=" << size);
 			DRBG_HANDLE newone;
 			NTRU_DRBG_exec_or_throw(
 						ntru_crypto_drbg_instantiate(size, nullptr, 0, get_entropy, &newone)
 						,"random init"
 						);
 			drbg_tab[ size ] = newone;
-			_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
+			pfp_note("Creating DRBG for size=" << size << " - ready, as drgb handler=" << newone);
 			return newone;
 		} catch(...) {
-			_erro("Can not init DRBG! (exception)");
+			pfp_erro("Can not init DRBG! (exception)");
 			throw;
 		}
 	} // not found
@@ -95,7 +95,7 @@ DRBG_HANDLE get_DRBG(size_t size) {
 std::pair<sodiumpp::locked_string, std::string> generate_encrypt_keypair() {
 
 	if(ntt_setup() == -1) {
-		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
+		pfp_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	// generate key pair
@@ -141,7 +141,7 @@ std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
 	int64_t * const public_key_ptr = reinterpret_cast<int64_t * const>(&public_key[0]);
 
 	if(ntt_setup() == -1) {
-		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
+		pfp_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	gen_key(private_key_ptr);
@@ -161,7 +161,7 @@ std::pair<sodiumpp::locked_string, std::string> generate_sign_keypair() {
 std::string sign(const std::string &msg, const sodiumpp::locked_string &private_key) {
 
 	if(ntt_setup() == -1) {
-		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
+		pfp_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	int64_t z[PASS_N];
@@ -189,7 +189,7 @@ std::string sign(const std::string &msg, const sodiumpp::locked_string &private_
 bool verify(const std::string &sign, const std::string &msg, const std::string &public_key) {
 
 	if(ntt_setup() == -1) {
-		_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
+		pfp_throw_error( std::runtime_error("ERROR: Could not initialize FFTW. Bad wisdom?") );
 	}
 
 	trivialserialize::parser parser(trivialserialize::parser::tag_caller_must_keep_this_string_valid(), public_key);

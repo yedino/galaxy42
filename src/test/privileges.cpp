@@ -42,9 +42,9 @@ t_rawcaps read_slash_proc_rights() {
 	while (thefile.good()) {
 		string line="";
 		std::getline(thefile,line);
-		_dbg3("line: "<<line);
+		pfp_dbg3("line: "<<line);
 		if (line.find("Cap")==0) {
-			_dbg2("has cap");
+			pfp_dbg2("has cap");
 			string sep=":\t";
 			size_t space_pos=line.find(sep);
 			if (space_pos != string::npos) {
@@ -60,13 +60,13 @@ t_rawcaps read_slash_proc_rights() {
 					std::istringstream iss(data);
 					iss >> std::hex >> data_int;
 					bool ok = ( (!iss.fail()) && (iss.eof()) );
-					if (!ok) _throw_error_runtime("Can not parse Caps (from thefile "s + thefilename + ") - the line is: ["s + line + "]"s );
+					if (!ok) pfp_throw_error_runtime("Can not parse Caps (from thefile "s + thefilename + ") - the line is: ["s + line + "]"s );
 					caps.emplace(name,data_int); // insert new element
 				} // name
 			} // sep
 		} // Cap
 	} // loop all lines of status
-	_dbg1("Read caps from "<<thefilename<<" - size: " << caps.size());
+	pfp_dbg1("Read caps from "<<thefilename<<" - size: " << caps.size());
 	return caps;
 }
 
@@ -98,17 +98,17 @@ TEST( privileges , name_and_capnr_conversions ) {
 
 TEST( privileges , create_print_capmodpp ) {
 	capmodpp::cap_state_map state_map1;
-	_note("State map empty: " << state_map1 );
+	pfp_note("State map empty: " << state_map1 );
 
 	auto slashproc1 = detail::read_slash_proc_rights();
-	for (const auto & item : slashproc1) _note(item.first << " = " << std::hex << item.second);
+	for (const auto & item : slashproc1) pfp_note(item.first << " = " << std::hex << item.second);
 	// state at start:
 	// TODO: this test can change one day
 	EXPECT_EQ( slashproc1.at("CapEff")  ,  0x0000000000001000 );
 	EXPECT_EQ( slashproc1.at("CapPrm")  ,  0x0000000000001000 );
 
 	capmodpp::cap_state_map state_map2 = capmodpp::read_process_caps();
-	_note("State map loaded:" << state_map2);
+	pfp_note("State map loaded:" << state_map2);
 }
 
 // g_dbg_level_set(0,"writting a test",false);
@@ -116,7 +116,7 @@ TEST( privileges , create_print_capmodpp ) {
 TEST( privileges , drop_one_cap ) {
 	// our lib reads state:
 	capmodpp::cap_state_map state_map = capmodpp::read_process_caps();
-	_note("State map before: " << state_map );
+	pfp_note("State map before: " << state_map );
   // we have that needed cap:
 	EXPECT_EQ( state_map.state.at( capmodpp::cap_name_to_nr("NET_ADMIN") ).permit , capmodpp::cap_perm::yes );
 	// example cap we will not have
@@ -134,13 +134,13 @@ TEST( privileges , drop_one_cap ) {
 		.set( capmodpp::cap_area_type::inherit , capmodpp::cap_permchange::disable )
 	;
 	*/
-	_mark("Will apply change:" << change);
+	pfp_mark("Will apply change:" << change);
 
 	change.security_apply_now(); // apply this to process
 
   // removed:
 	capmodpp::cap_state_map state_map2 = capmodpp::read_process_caps();
-	_note("State map after: " << state_map2 );
+	pfp_note("State map after: " << state_map2 );
 
 	EXPECT_EQ( state_map2.state.at( capmodpp::cap_name_to_nr("NET_ADMIN") ).eff ,    capmodpp::cap_perm::no );
 	EXPECT_EQ( state_map2.state.at( capmodpp::cap_name_to_nr("NET_ADMIN") ).permit , capmodpp::cap_perm::no );
@@ -162,7 +162,7 @@ TEST( privileges , drop_all_cap_except_one ) {
 
 	// our lib reads state:
 	capmodpp::cap_state_map state_map = capmodpp::read_process_caps();
-	_note("State map before: " << state_map );
+	pfp_note("State map before: " << state_map );
   // we have that needed cap:
 	EXPECT_EQ( state_map.state.at( capmodpp::cap_name_to_nr("NET_ADMIN") ).permit , capmodpp::cap_perm::yes );
 	// example cap we will not have
@@ -179,13 +179,13 @@ TEST( privileges , drop_all_cap_except_one ) {
 		.set( capmodpp::cap_area_type::permit , capmodpp::cap_permchange::disable )
 		.set( capmodpp::cap_area_type::inherit , capmodpp::cap_permchange::disable )
 	;
-	_mark("Will apply change:" << change);
+	pfp_mark("Will apply change:" << change);
 
 	change.security_apply_now(); // apply this to process
 
   // removed:
 	capmodpp::cap_state_map state_map2 = capmodpp::read_process_caps();
-	_note("State map after: " << state_map2 );
+	pfp_note("State map after: " << state_map2 );
 
 	EXPECT_EQ( state_map2.state.at( capmodpp::cap_name_to_nr("NET_ADMIN") ).eff ,    capmodpp::cap_perm::yes );
 	EXPECT_EQ( state_map2.state.at( capmodpp::cap_name_to_nr("NET_ADMIN") ).permit , capmodpp::cap_perm::yes );

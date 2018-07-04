@@ -301,7 +301,7 @@ TEST(cable_udp, async_receive_from) {
 	read_handler handler_error = [&](const unsigned char *buff, std::size_t size, c_card_selector_base &selector) {
 		EXPECT_EQ(buff, buffer.data());
 		EXPECT_EQ(size, 0U);
-		_UNUSED(selector);
+		pfp_UNUSED(selector);
 	};
 
 	// read with error
@@ -310,7 +310,7 @@ TEST(cable_udp, async_receive_from) {
 			[&](const boost::asio::mutable_buffer &buff,
 			   boost::asio::ip::udp::endpoint &endpoint,
 			   std::function<void(const boost::system::error_code&, size_t)> handler) {
-					_UNUSED(buff); _UNUSED(endpoint);
+					pfp_UNUSED(buff); pfp_UNUSED(endpoint);
 					boost::system::error_code error_code(boost::asio::error::eof);
 					// add handler to io_service
 					io_service.post([=]{handler(error_code, 0);});

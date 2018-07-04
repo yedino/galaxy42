@@ -59,11 +59,11 @@ c_netbuf::c_netbuf(size_t size)
 : m_data(nullptr), m_size(0)
 {
 	try { // we must make sure m_data is deleted, because we do not use unique_ptr here
-		_dbg2("allocating");
+		pfp_dbg2("allocating");
 		m_data = new t_element[size]; // fast new - no initialization of data
 		// m_data = make_unique<t_element[]>(size);
 		m_size = size;
-		_dbg1( make_report(*this,10) );
+		pfp_dbg1( make_report(*this,10) );
 	} catch(...) {
 		clear();
 		throw ;
@@ -75,7 +75,7 @@ c_netbuf::~c_netbuf() {
 }
 
 void c_netbuf::clear() {
-	_dbg1("dealloc: " << make_report(*this,10) );
+	pfp_dbg1("dealloc: " << make_report(*this,10) );
 	if (m_data) {
 		delete[] m_data;
 		m_data=nullptr;

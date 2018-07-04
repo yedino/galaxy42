@@ -54,7 +54,7 @@ c_is_user_admin::c_is_user_admin() {
 		}
 		FreeSid(AdministratorsGroup);
 	}
-	if (!b) _throw_error_runtime("Administrator permissions required");
+	if (!b) pfp_throw_error_runtime("Administrator permissions required");
 }
 
 c_tuntap_windows_obj::c_tuntap_windows_obj()
@@ -129,14 +129,14 @@ size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
 }
 
 void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, size_t size, const c_tuntap_base_obj::read_handler &handler) {
-	_NOTREADY();
+	pfp_NOTREADY();
 }
 
 void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) {
-	_fact("Setting IPv6 address, prefixLen=" << prefix_len);
+	pfp_fact("Setting IPv6 address, prefixLen=" << prefix_len);
 	std::wstring human_name = get_human_name(m_guid);
 	NET_LUID luid = get_luid(human_name);
-	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
+	pfp_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
 
 	// remove old address
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814508(v=vs.85).aspx
@@ -146,9 +146,9 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	_check_sys(status == NO_ERROR);
 	static_assert(std::numeric_limits<decltype(table->NumEntries)>::max() <= std::numeric_limits<size_t>::max(), "");
 	for (size_t i = 0; i < static_cast<size_t>(table->NumEntries); ++i) {
-		_info("Removing old addresses, i=" << i);
+		pfp_info("Removing old addresses, i=" << i);
 		if (table->Table[i].InterfaceLuid.Value == luid.Value) { // check if iface LUID == TAP LUID
-			_info("Removing old addresses, entry i=" << i << " - will remove");
+			pfp_info("Removing old addresses, entry i=" << i << " - will remove");
 			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814405(v=vs.85).aspx
 			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				FreeMibTable(table);
@@ -159,7 +159,7 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	FreeMibTable(table);
 
 	// set new address
-	_fact("Setting new IP address");
+	pfp_fact("Setting new IP address");
 	// https://msdn.microsoft.com/pl-pl/library/windows/desktop/aa814507(v=vs.85).aspx
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
@@ -175,11 +175,11 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefix_len;
 
-	_fact("Creating unicast IP");
+	pfp_fact("Creating unicast IP");
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814401(v=vs.85).aspx
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
-	_goal("Created unicast IP, status=" << status);
+	pfp_goal("Created unicast IP, status=" << status);
 	set_mtu(mtu);
 }
 
@@ -209,7 +209,7 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 	DWORD cchValue = max_value_name;
 
 	// Get the class name and the value count.
-	_fact("Query windows registry for infokeys");
+	pfp_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -226,10 +226,10 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 								 // Enumerate the subkeys, until RegEnumKeyEx fails.
 	if (retCode != ERROR_SUCCESS) throw std::runtime_error("RegQueryInfoKey error, error code " + std::to_string(GetLastError()));
 	if (cSubKeys > 0) {
-		_fact("Number of subkeys: " << cSubKeys);
+		pfp_fact("Number of subkeys: " << cSubKeys);
 
 		for (DWORD i = 0; i < cSubKeys; i++) {
-			_dbg1("Add subkey " << i);
+			pfp_dbg1("Add subkey " << i);
 			cbName = mex_key_length;
 			retCode = RegEnumKeyEx(hKey, i,
 				achKey,
@@ -251,11 +251,11 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 }
 
 std::wstring c_tuntap_windows_obj::get_device_guid() {
-	_dbg1("strat get_device_guid");
+	pfp_dbg1("strat get_device_guid");
 	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
 	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
-	_fact("Looking for device guid" << to_string(adapterKey));
+	pfp_fact("Looking for device guid" << to_string(adapterKey));
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -273,7 +273,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
-		_fact(to_string(subkey_reg_path));
+		pfp_fact(to_string(subkey_reg_path));
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
 		// get ComponentId field
@@ -292,7 +292,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 		std::wstring netCfgInstanceId;
 		try {
 			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP, substr throws std::out_of_range
-				_note(to_string(subkey_reg_path));
+				pfp_note(to_string(subkey_reg_path));
 				m_register_tun_path = std::move(subkey_reg_path);
 				size = 256;
 				netCfgInstanceId.resize(size, '\0');
@@ -303,36 +303,36 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 				status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 				if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 				netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
-				_note(to_string(netCfgInstanceId));
+				pfp_note(to_string(netCfgInstanceId));
 				HANDLE handle = open_tun_device(netCfgInstanceId);
 				if (handle == INVALID_HANDLE_VALUE) continue;
 				else {
 					BOOL ret = CloseHandle(handle);
 					if (ret == 0) throw std::runtime_error("CloseHandle error, " + std::to_string(GetLastError()));
 				}
-				_dbg1("end of get_device_guid");
+				pfp_dbg1("end of get_device_guid");
 				return netCfgInstanceId;
 			}
 		}
 		catch (const std::out_of_range &e) {
-			_warn(std::string("register value processing error ") + e.what());
-			_note("componentId = " + to_string(componentId));
-			_note("netCfgInstanceId " + to_string(netCfgInstanceId));
+			pfp_warn(std::string("register value processing error ") + e.what());
+			pfp_note("componentId = " + to_string(componentId));
+			pfp_note("netCfgInstanceId " + to_string(netCfgInstanceId));
 		}
 	}
-	_erro("Can not find device in windows registry");
+	pfp_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
 std::wstring c_tuntap_windows_obj::get_human_name(const std::wstring &guid) {
-	_dbg1("start get_human_name");
+	pfp_dbg1("start get_human_name");
 	_check_extern(!guid.empty());
 	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
 	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
 	std::wstring connectionKey = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 	connectionKey += guid;
 	connectionKey += L"\\Connection";
-	_note("connectionKey " << to_string(connectionKey));
+	pfp_note("connectionKey " << to_string(connectionKey));
 	LONG status = 1;
 	HKEY key_tmp = nullptr;
 	DWORD size = 256;
@@ -351,7 +351,7 @@ std::wstring c_tuntap_windows_obj::get_human_name(const std::wstring &guid) {
 }
 
 NET_LUID c_tuntap_windows_obj::get_luid(const std::wstring &human_name) {
-	_dbg1("start get_luid");
+	pfp_dbg1("start get_luid");
 	NET_LUID ret;
 	NETIO_STATUS status = ConvertInterfaceAliasToLuid(human_name.c_str(), &ret);
 	if (status != ERROR_SUCCESS) throw std::runtime_error("ConvertInterfaceAliasToLuid error, error code " + std::to_string(GetLastError()));
@@ -359,7 +359,7 @@ NET_LUID c_tuntap_windows_obj::get_luid(const std::wstring &human_name) {
 }
 
 HANDLE c_tuntap_windows_obj::get_device_handle() {
-	_dbg1("start get_device_handle");
+	pfp_dbg1("start get_device_handle");
 	HANDLE handle = open_tun_device(m_guid);
 	if (handle == INVALID_HANDLE_VALUE) throw std::runtime_error("invalid handle");
 	// get version
@@ -388,7 +388,7 @@ HANDLE c_tuntap_windows_obj::get_device_handle() {
 }
 
 HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) noexcept {
-	_dbg1("start open_tun_device");
+	pfp_dbg1("start open_tun_device");
 	std::wstring tun_filename;
 	tun_filename += L"\\\\.\\Global\\";
 	tun_filename += guid;
@@ -405,13 +405,13 @@ HANDLE c_tuntap_windows_obj::open_tun_device(const std::wstring &guid) noexcept 
 }
 
 std::array<uint8_t, c_tuntap_windows_obj::mac_address_size> c_tuntap_windows_obj::get_mac(HANDLE handle) {
-	_dbg1("start get_mac");
+	pfp_dbg1("start get_mac");
 	std::array<uint8_t, mac_address_size> mac_address;
 	DWORD mac_size = 0;
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
 	if (bret == 0) throw std::runtime_error("DeviceIoControl error, last error " + std::to_string(GetLastError()));
 	_check(mac_size == mac_address.size());
-	_fact("tun device MAC address");
+	pfp_fact("tun device MAC address");
 	for (const auto i : mac_address)
 		std::cout << std::hex << static_cast<int>(i) << " ";
 	std::cout << std::dec << std::endl;
@@ -419,8 +419,8 @@ std::array<uint8_t, c_tuntap_windows_obj::mac_address_size> c_tuntap_windows_obj
 }
 
 void c_tuntap_windows_obj::set_mtu(uint32_t mtu) {
-	_note("set MTU to " << mtu);
-	_dbg1("register path " << to_string(m_register_tun_path));
+	pfp_note("set MTU to " << mtu);
+	pfp_dbg1("register path " << to_string(m_register_tun_path));
 	LONG status = 1;
 	HKEY key = nullptr;
 	_check(!m_register_tun_path.empty());

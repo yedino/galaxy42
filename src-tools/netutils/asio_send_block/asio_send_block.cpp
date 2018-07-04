@@ -9,8 +9,9 @@
 #include <thread>
 #include <functional>
 
-#define _warn(X) { std::cerr << __LINE__ << " Warning: " << X << std::endl; }
-#define _info(X) { std::cerr << __LINE__ << " Info: " << X << std::endl; }
+#define pfp_warn(X) { std::cerr << __LINE__ << " WARNING: " << X << std::endl; }
+#define pfp_info(X) { std::cerr << __LINE__ << " Info: " << X << std::endl; }
+#define pfp_dbg1(X) { std::cerr << __LINE__ << " Dbg : " << X << std::endl; }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +37,7 @@ c_rpc::c_rpc(std::function<void(const std::string &)> f, unsigned int timeout_mi
 	m_input_buffer(),
 	m_stop_point(std::chrono::steady_clock::now() + std::chrono::minutes(timeout_minutes))
 {
-	_info("Starting RPC server with max timeout_minutes=" << timeout_minutes);
+	pfp_info("Starting RPC server with max timeout_minutes=" << timeout_minutes);
 }
 
 bool c_rpc::rpc_time_limit_hit() const {
@@ -51,23 +52,23 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 
 	while (true) {
 		std::cout << "\n\n\n";
-		_info("Will wait for connection on " << listen_address << ":" << port);
+		pfp_info("Will wait for connection on " << listen_address << ":" << port);
 
-		if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
+		if (this->rpc_time_limit_hit()) { pfp_info("RPC time limit hit!");  return; }
 		acceptor.accept(m_socket); // blocks
 		c_raii_guard raii_socket{ [this](){ this->m_socket.close(); } };
 
-		if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
+		if (this->rpc_time_limit_hit()) { pfp_info("RPC time limit hit!");  return; }
 
 		boost::asio::ip::tcp::endpoint local_endpoint, remote_endpoint;
 		local_endpoint = m_socket.local_endpoint();
 		remote_endpoint = m_socket.remote_endpoint();
 
-		_info("Got connection to RPC, from: " << remote_endpoint << " to our local endpoint " << local_endpoint);
+		pfp_info("Got connection to RPC, from: " << remote_endpoint << " to our local endpoint " << local_endpoint);
 
 		if ( rpc_authorized_ip != boost::asio::ip::address_v4::any() ) {
 			if (rpc_authorized_ip != remote_endpoint.address()) {
-				_warn("IP is not authorized! Allowed is: " << rpc_authorized_ip << " instead of " << remote_endpoint);
+				pfp_warn("IP is not authorized! Allowed is: " << rpc_authorized_ip << " instead of " << remote_endpoint);
 				continue ; // <--- !
 			}
 		}
@@ -85,14 +86,14 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 		const std::string ok_message = "DONE\n";
 		try {
 			while (true) { // for each command in one TCP connection
-				if (this->rpc_time_limit_hit()) { _info("RPC time limit hit!");  return; }
+				if (this->rpc_time_limit_hit()) { pfp_info("RPC time limit hit!");  return; }
 				std::cout << "\n\n";
-				_info("RPC command read...");
+				pfp_info("RPC command read...");
 				boost::asio::streambuf input_stream;
 				boost::asio::read_until(m_socket, input_stream, '\n');
 				std::istream istream(&input_stream);
 				std::getline(istream, m_input_buffer);
-				_info("RPC command read...: [" << m_input_buffer << "]");
+				pfp_info("RPC command read...: [" << m_input_buffer << "]");
 				boost::asio::write(m_socket, boost::asio::buffer("START\n"));
 
 				m_rpc_fun(m_input_buffer); // ***
@@ -100,7 +101,7 @@ void c_rpc::start_listen(boost::asio::ip::address_v4 listen_address, unsigned sh
 				boost::asio::write(m_socket, boost::asio::buffer(ok_message));
 			}
 		} catch(const std::exception & ex) {
-			_info("RPC session/TCP ended with exception: " << ex.what());
+			pfp_info("RPC session/TCP ended with exception: " << ex.what());
 		}
 
 	}
@@ -245,7 +246,7 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 		args.erase( args.begin() , args.begin()+2 );
 
 	} catch(const std::exception &ex) {
-		_warn("Can not parse RPC: " << ex.what() << " rpc was [" << rpc_cmd << "]");
+		pfp_warn("Can not parse RPC: " << ex.what() << " rpc was [" << rpc_cmd << "]");
 		throw ;
 	}
 
@@ -254,7 +255,7 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 	size_t argc = args.size();
 	std::vector<const char*> argv( argc , nullptr );
 	for (size_t i=0; i<argc; ++i) argv[i] = args.at(i).c_str(); // ! points to memory owned by strings in vector args!
-	for (size_t i=0; i<argc; ++i) _info("argv["<<i<<"] = [" << argv[i] << "]");
+	for (size_t i=0; i<argc; ++i) pfp_info("argv["<<i<<"] = [" << argv[i] << "]");
 	std::string error_msg="(no error)";
 	try {
 
@@ -263,7 +264,7 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 
 	} catch (const std::exception & ex) {
 		error_msg = ex.what();
-		_warn("Exception while tryint to execute RPC command: " << error_msg);
+		pfp_warn("Exception while tryint to execute RPC command: " << error_msg);
 	}
 
 	std::cout << "RPC command DONE      : [" << rpc_cmd << "]" << std::endl;
@@ -271,18 +272,18 @@ std::string c_maintask::run_rpc_command_string(const std::string & rpc_cmd) {
 }
 
 int c_maintask::run_remote(int argc, const char * argv[]) {
-	_info("Starting remote server");
+	pfp_info("Starting remote server");
 	if (argc < 7) { print_usage(); return 1; }
 
 	this->m_rpc_password = argv[6];
-	_info("RPC password has length: " << this->m_rpc_password.size());
+	pfp_info("RPC password has length: " << this->m_rpc_password.size());
 
 	c_rpc rpc([this](const std::string &rpc_data) {
-			_info("rpc data [" << rpc_data << "]\n\n");
+			pfp_info("rpc data [" << rpc_data << "]\n\n");
 			try {
 				run_rpc_command_string(rpc_data);
 			} catch(const std::exception &ex) {
-				_info("RPC request failed [" << ex.what() << ")");
+				pfp_info("RPC request failed [" << ex.what() << ")");
 			}
 		},
 		std::stoi(argv[5]) // timeout
@@ -291,11 +292,11 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 	boost::asio::ip::address_v4 rpc_listen_address = boost::asio::ip::address_v4::from_string(argv[2]);
 	unsigned short rpc_port = std::stoi(argv[3]);
 	boost::asio::ip::address_v4 rpc_authorized_ip = boost::asio::ip::address_v4::from_string(argv[4]);
-	_info( "any : " << boost::asio::ip::address_v4::any() );
-	_info("RPC will listen on: " << rpc_listen_address << ":" << rpc_port
+	pfp_info( "any : " << boost::asio::ip::address_v4::any() );
+	pfp_info("RPC will listen on: " << rpc_listen_address << ":" << rpc_port
 		<< " and will allow connections from: "
 		<< rpc_authorized_ip << (rpc_authorized_ip==boost::asio::ip::address_v4::any() ? "(any)" : ""));
-	_info("You can use following RPC commands:");
+	pfp_info("You can use following RPC commands:");
 	this->print_usage_rpc_cmd();
 	rpc.start_listen(rpc_listen_address, rpc_port, rpc_authorized_ip); // blocks
 	return 0;
@@ -303,22 +304,26 @@ int c_maintask::run_remote(int argc, const char * argv[]) {
 
 int c_maintask::run(int argc, const char * argv[])
 {
-	_info("Starting the sending run");
+	pfp_info("Starting the sending run");
 
 	if (argc < 3) {
+		pfp_warn("Too few options");
 		print_usage();
 		print_help_sendcommand();
 		return 1;
 	}
+	pfp_dbg1("Parsing (start)");
 	host = argv[1];
 	port = argv[2];
 	speed = std::stoi(argv[3]);
 	burst = 50;
 
 	interactive=true;
-	count_infinite=false; // infinute count sends forever
+	count_infinite=false; // infinite count sends forever
+	pfp_dbg1("Parsing (after first)");
 
 	if (argc >= 2+3+1) {
+		pfp_dbg1("Parsing (long)");
 		interactive=false;
 		message = argv[4];
 		bytes = std::stoi(argv[5]);
@@ -441,13 +446,13 @@ int c_maintask::run(int argc, const char * argv[])
 				;
 
 				if (limit_time_sec > 0) {
-					if (time_now >= limit_time_timepoint) { _info("Time limit reached, exiting");
+					if (time_now >= limit_time_timepoint) { pfp_info("Time limit reached, exiting");
 						break;
 					}
 				}
 				if (limit_data_gb > 0)  {
 					if (size_sent >= (limit_data_gb*1024*1024*1024)) {
-						_info("Size limit reached, exiting");
+						pfp_info("Size limit reached, exiting");
 						break;
 					}
 				}
@@ -469,9 +474,11 @@ int main(int argc, const char * argv[]) {
 	}
 
 	if (run_remote) {
+		pfp_info("Will run remote");
 		return maintask.run_remote(argc,argv);
 	}
 	else {
+		pfp_info("Will run (normal, not remote)");
 		return maintask.run(argc,argv);
 	}
 }

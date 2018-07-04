@@ -151,45 +151,45 @@ class err_check_extern_soft final : public err_check_extern, public err_check_so
 
 // -------------------------------------------------------------------
 
-/// err_check_prog?
-#define _check(X) do { if(!(X)) { _throw_error( err_check_prog( #X ) );  } } while(0)
+// This macros can throw - BUT ALSO CAN ABORT - if used in noexcept function
+#define _check(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_prog( #X ) );  } } while(0)
 
-/// Macro that checks arg X, throws err_check_user if false
-#define _check_user(X) do { if(!(X)) { _throw_error( err_check_user( #X ) );  } } while(0)
-/// Macro that checks arg X, throws err_check_input if false
-#define _check_input(X) do { if(!(X)) { _throw_error( err_check_input( #X ) );  } } while(0)
-/// Macro that checks arg X, throws err_check_sys if false
-#define _check_sys(X) do { if(!(X)) { _throw_error( err_check_sys( #X ) );  } } while(0)
-/// Macro that checks arg X, throws err_check_extern if false
-#define _check_extern(X) do { if(!(X)) { _throw_error( err_check_extern( #X ) );  } } while(0)
+/// Macro that checks arg X, throws err_check_user if false - BUT ALSO CAN ABORT - if used in noexcept function
+#define _check_user(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_user( #X ) );  } } while(0)
+/// Macro that checks arg X, throws err_check_input if false - BUT ALSO CAN ABORT - if used in noexcept function
+#define _check_input(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_input( #X ) );  } } while(0)
+/// Macro that checks arg X, throws err_check_sys if false - BUT ALSO CAN ABORT - if used in noexcept function
+#define _check_sys(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_sys( #X ) );  } } while(0)
+/// Macro that checks arg X, throws err_check_extern if false - BUT ALSO CAN ABORT - if used in noexcept function
+#define _check_extern(X) do { if(!(X)) { pfp_throw_error_or_abort( err_check_extern( #X ) );  } } while(0)
 
 /// Macro that checks arg X, throws err_check_user_soft if false
-#define _try_user(X) do { if(!(X)) { _throw_error( err_check_user_soft( #X ) );  } } while(0)
+#define _try_user(X) do { if(!(X)) { pfp_throw_error( err_check_user_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_input_soft if false
-#define _try_input(X) do { if(!(X)) { _throw_error( err_check_input_soft( #X ) );  } } while(0)
+#define _try_input(X) do { if(!(X)) { pfp_throw_error( err_check_input_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_sys_soft if false
-#define _try_sys(X) do { if(!(X)) { _throw_error( err_check_sys_soft( #X ) );  } } while(0)
+#define _try_sys(X) do { if(!(X)) { pfp_throw_error( err_check_sys_soft( #X ) );  } } while(0)
 /// Macro that checks arg X, throws err_check_extern_soft if false
-#define _try_extern(X) do { if(!(X)) { _throw_error( err_check_extern_soft( #X ) );  } } while(0)
+#define _try_extern(X) do { if(!(X)) { pfp_throw_error( err_check_extern_soft( #X ) );  } } while(0)
 
 
 // always abort - for serious errors
 #define _check_abort(X) do { if (!(X)) { \
-	_erro("Assertation failed, will abort: (" << #X << ")" << _my__FILE__ << ':' << __LINE__); \
+	pfp_erro("Assertation failed, will abort: (" << #X << ")" << _my__FILE__ << ':' << __LINE__); \
 	::std::abort(); } \
 } while(0)
 
 // -------------------------------------------------------------------
 
 template<class T> T& _UsePtr(const std::shared_ptr<T> & ptr, int line, const char* file) {
-	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+	if (!ptr) { pfp_erro("Failed pointer, for " << file << ":" << line);
 		std::abort();
 	}
 	return *ptr;
 }
 
 template<class T> T& _UsePtr(const std::unique_ptr<T> & ptr, int line, const char* file) {
-	if (!ptr) { _erro("Failed pointer, for " << file << ":" << line);
+	if (!ptr) { pfp_erro("Failed pointer, for " << file << ":" << line);
 		std::abort();
 	}
 	return *ptr;
@@ -212,15 +212,15 @@ template<typename TC> class c_ig final {
 		c_ig(const TC & thisobj, t_invariant_place place, int fromline, const char* fromfile)
 		: m_thisobj(thisobj), m_place(place), m_fromline(fromline), m_fromfile(fromfile)
 		{
-			if (!fromfile) { _erro("Invalid fromfile used in debug."); fromfile="(unknown source file)"; }
+			if (!fromfile) { pfp_erro("Invalid fromfile used in debug."); fromfile="(unknown source file)"; }
 			if ( (place==e_invariant_place_both) || (place==e_invariant_place_pre) ) {
 				try {
 					m_thisobj.Precond();
 				} catch(...) {
-					_erro("Pre-condition check caused error, for precondition from: "
+					pfp_erro("Pre-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					throw;
+					_check_abort(false);
 				}
 			}
 		}
@@ -230,10 +230,10 @@ template<typename TC> class c_ig final {
 				try {
 					m_thisobj.Postcond();
 				} catch(...) {
-					_erro("Post-condition check caused error, for precondition from: "
+					pfp_erro("Post-condition check caused error, for precondition from: "
 						<< m_fromfile << ":" << m_fromline
 					);
-					throw;
+					_check_abort(false);
 				}
 			}
 		}
@@ -291,13 +291,13 @@ void reasonable_size(const std::string & obj); ///< will throw if string is unre
 template<typename T> void reasonable_size(const T & obj) { ///< will throw if this some container is too big, see #reasonable
 	const size_t elements = obj.size();
 	if (! (elements < reasonable_size_limit_elements_divided_warn) ) {
-		_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: elemens="<<elements);
+		pfp_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: elemens="<<elements);
 	}
 	_check_input(elements <= reasonable_size_limit_elements_divided_max);
 
 	const size_t bytes = elements * sizeof(typename T::value_type);
 	if (! (bytes < reasonable_size_limit_bytes_divided_warn) ) {
-		_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: bytes="<<bytes);
+		pfp_warn("Object @"<<static_cast<const void*>(&obj)<<" starts to get too big: bytes="<<bytes);
 	}
 	_check_input(bytes <= reasonable_size_limit_bytes_divided_max);
 }
