@@ -3,6 +3,7 @@
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
 #include "utils/privileges.hpp"
+#include <clocale>
 
 #include "utils/capmodpp.hpp" // to capture it's exceptions
 
