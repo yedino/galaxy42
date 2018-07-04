@@ -74,7 +74,7 @@ void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned ch
 		m_write_socket.async_send_to(boost::asio::buffer(data, size), destination_endpoint,
 			// handler cannot be moved in lambda capture list (MSVC compilation problems)
 			[handler, data](const boost::system::error_code& error, std::size_t bytes_transferred) {
-				_UNUSED(error); // ignore error because bytes_transferred == 0
+				pfp_UNUSED(error); // ignore error because bytes_transferred == 0
 				handler(data, bytes_transferred); // will be called after data write
 			} // lambda
 		);
@@ -104,7 +104,7 @@ size_t c_cable_udp::receive_from(c_card_selector_base &source, unsigned char *co
 size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
 	pfp_dbg3("Receive (blocking) UDP");
 	try {
-		_UNUSED(dynamic_cast<c_cable_udp_addr&>(source)); // check type
+		pfp_UNUSED(dynamic_cast<c_cable_udp_addr&>(source)); // check type
 		udp::endpoint their_ep; // needed for asio function
 		size_t readed_bytes = (has_separate_rw() ? m_read_socket : m_write_socket).receive_from(boost::asio::buffer(data, size), their_ep);
 		c_cable_udp_addr their_ep_addr( their_ep );
@@ -135,7 +135,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 		[this, handler, data, endpoint_iterator]
 		(const boost::system::error_code& error, std::size_t bytes_transferred)
 		{
-			_UNUSED(error); // captured handler should by always called, if error bytes_transferred == 0 so ignore error variable
+			pfp_UNUSED(error); // captured handler should by always called, if error bytes_transferred == 0 so ignore error variable
 			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *endpoint_iterator );
 			UniqueLockGuardRW<Mutex>lock(m_enpoint_list_mutex);
 			m_endpoint_list.erase(endpoint_iterator);

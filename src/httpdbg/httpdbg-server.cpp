@@ -46,7 +46,7 @@ void session::do_read()
 
 void session::do_write(size_t length)
 {
-	_UNUSED(length);
+	pfp_UNUSED(length);
 	auto self(shared_from_this());
 
 	c_httpdbg_raport raport( tunserver_ );

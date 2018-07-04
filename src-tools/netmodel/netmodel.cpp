@@ -1660,7 +1660,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				[&welds, &welds_mutex, found_ix, func_send_weld, & read_handler, &tuntap, &tuntap_mutex, get_tun_input_buffer]
 				(const unsigned char *buf, std::size_t read_size, const boost::system::error_code &ec)
 				{
-					_UNUSED(buf);
+					pfp_UNUSED(buf);
 						g_speed_tuntap_read.add(1, read_size);
 						pfp_dbg4("TUNTAP ***ASYNC READ DONE***  read_size="<< read_size << "\n\n");
 						send_to_global_weld(welds, welds_mutex, found_ix, read_size, func_send_weld);

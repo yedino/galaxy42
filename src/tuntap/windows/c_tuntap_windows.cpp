@@ -129,7 +129,7 @@ size_t c_tuntap_windows_obj::read_from_tun_separated_addresses(
 }
 
 void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, size_t size, const c_tuntap_base_obj::read_handler &handler) {
-	_NOTREADY();
+	pfp_NOTREADY();
 }
 
 void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) {

@@ -31,7 +31,7 @@ void addr_is_same(string s1, vector<string> s2tab) {
 void addr_is_invalid(string s1) {
 	auto fun1 = [=]() {
 		auto a1 = c_haship_addr(c_haship_addr::tag_constr_by_addr_dot(), s1);
-		_UNUSED(a1);
+		pfp_UNUSED(a1);
 	};
 	EXPECT_THROW( fun1() , std::invalid_argument);
 }

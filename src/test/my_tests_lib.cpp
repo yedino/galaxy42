@@ -12,14 +12,14 @@ std::string banner_skip() {
 
 // Called before a test starts.
 void TestsEnvReseter::OnTestStart(const ::testing::TestInfo& test_info) {
-	_UNUSED(test_info);
+	pfp_UNUSED(test_info);
 	g_dbg_level_set(150, "Be quiet during tests", true, true);
 	// test_info.test_case_name(), test_info.name());
 }
 
 // Fired after all test activities have ended.
 void TestsEnvReseter::OnTestProgramEnd(const ::testing::UnitTest& unit_test) {
-	_UNUSED(unit_test);
+	pfp_UNUSED(unit_test);
 	g_dbg_level_set(40, "Show again some debug after the tests");
 
 	auto skipped = instance().m_count_tests_skipped;

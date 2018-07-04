@@ -671,13 +671,13 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
 c_tun_device_empty::c_tun_device_empty() { }
 
 void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
-	_UNUSED(binary_address);
-	_UNUSED(prefixLen);
+	pfp_UNUSED(binary_address);
+	pfp_UNUSED(prefixLen);
 }
 
 void c_tun_device_empty::set_mtu(uint32_t mtu) {
 	pfp_warn("Called set_mtu on empty device");
-	_UNUSED(mtu);
+	pfp_UNUSED(mtu);
 }
 
 bool c_tun_device_empty::incomming_message_form_tun() {
@@ -685,14 +685,14 @@ bool c_tun_device_empty::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_empty::read_from_tun(void *buf, size_t count) {
-	_UNUSED(buf);
-	_UNUSED(count);
+	pfp_UNUSED(buf);
+	pfp_UNUSED(count);
 	return 0;
 }
 
 size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
-	_UNUSED(buf);
-	_UNUSED(count);
+	pfp_UNUSED(buf);
+	pfp_UNUSED(count);
 	return 0;
 }
 

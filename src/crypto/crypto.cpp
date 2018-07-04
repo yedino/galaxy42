@@ -260,7 +260,7 @@ bool c_stream::calculate_nonce_odd(const c_multikeys_PAIR & self,  const c_multi
 
 t_crypto_system_type c_stream::get_system_type() const
 {
-	_NOTREADY();
+	pfp_NOTREADY();
 	//return t_crypto_system_type(0);
 }
 

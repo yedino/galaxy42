@@ -162,12 +162,12 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 
 
 // TODO this is not really "debug", move to other file
-#define _UNUSED(x) (void)(x)
+#define pfp_UNUSED(x) (void)(x)
 
-#define _NOTREADY() do { pfp_erro("This code is not implemented yet! in "<<__FUNCTION__);\
+#define pfp_NOTREADY() do { pfp_erro("This code is not implemented yet! in "<<__FUNCTION__);\
 	throw std::runtime_error("Code not implemented yet! In: " + std::string(__FUNCTION__)); } while(0)
 
-#define _NOTREADY_warn() do { pfp_warn("This code is not implemented yet! in "<<__FUNCTION__);\
+#define pfp_NOTREADY_warn() do { pfp_warn("This code is not implemented yet! in "<<__FUNCTION__);\
 	} while(0)
 
 // this assert could be helpful, maybe use in release
@@ -179,7 +179,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	pfp_warn( mo_file_reader::gettext("L_what_exception_program_throw") << ": " << except_var.what() \
 
 // TODO-r-deprecate: ?
-#define _throw_error_detail( EXCEPT , MSG ) do { auto except_var = (EXCEPT);  \
+#define pfp_throw_error_detail( EXCEPT , MSG ) do { auto except_var = (EXCEPT);  \
 	pfp_warn( "Except: " << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
