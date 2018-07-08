@@ -56,11 +56,11 @@ int c_tun_device_linux::get_tun_fd() const {
 void c_tun_device_linux::init()
 {
 	const char *fd_fname = "/dev/net/tun";
-	_goal("Opening TUN file (Linux driver) " << fd_fname);
+	pfp_goal("Opening TUN file (Linux driver) " << fd_fname);
 	m_tun_fd = open(fd_fname, O_RDWR);
 	int err = errno;
 	if (m_tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
-	_goal("TUN file opened as fd " << m_tun_fd);
+	pfp_goal("TUN file opened as fd " << m_tun_fd);
 }
 
 void c_tun_device_linux::set_ipv6_address
@@ -80,7 +80,7 @@ void c_tun_device_linux::set_ipv6_address
 	m_ifr_name = std::string(ifr.ifr_name);
 	pfp_note("Configured network IP for " << ifr.ifr_name);
 	m_ip6_ok=true;
-	_goal("IP address is fully configured");
+	pfp_goal("IP address is fully configured");
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
@@ -88,7 +88,7 @@ void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	const auto name = m_ifr_name.c_str();
 	_fact("Setting MTU="<<mtu<<" on card: " << name);
 	Wrap_NetPlatform_setMTU(name,mtu);
-	_goal("MTU configured to " << mtu << " on card " << name);
+	pfp_goal("MTU configured to " << mtu << " on card " << name);
 }
 
 bool c_tun_device_linux::incomming_message_form_tun() {
@@ -215,7 +215,7 @@ void c_tun_device_windows::set_ipv6_address
 	_fact("Creating unicast IP");
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
-	_goal("Created unicast IP, status=" << status);
+	pfp_goal("Created unicast IP, status=" << status);
 }
 
 bool c_tun_device_windows::incomming_message_form_tun() {
@@ -598,7 +598,7 @@ int c_tun_device_apple::create_tun_fd() {
             pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
-    _goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+    pfp_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
     m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;

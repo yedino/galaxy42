@@ -266,7 +266,7 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 #endif
 	static bool first_run = true;
 	if(first_run) {
-		_goal(mo_file_reader::gettext("L_get_home_directory: ") << " "<< user_home.c_str());
+		pfp_goal(mo_file_reader::gettext("L_get_home_directory: ") << " "<< user_home.c_str());
 		first_run = false;
 	} else
 		pfp_info("Get home directory: "<< user_home.c_str());

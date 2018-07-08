@@ -168,8 +168,8 @@ void c_cable_udp::listen_on(const c_card_selector & local_address) {
 		pfp_info("Endpoint created: " << local_endpoint);
 		pfp_info("Binding...");
 		( m_read_socket ).bind(local_endpoint);
-		_goal("Listening on " << local_endpoint );
-	} else _goal("The write socket already is binded (as host-address) - it is listening");
+		pfp_goal("Listening on " << local_endpoint );
+	} else pfp_goal("The write socket already is binded (as host-address) - it is listening");
 }
 
 void c_cable_udp::set_sockopt_timeout(std::chrono::microseconds timeout) {

@@ -179,7 +179,7 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814401(v=vs.85).aspx
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
-	_goal("Created unicast IP, status=" << status);
+	pfp_goal("Created unicast IP, status=" << status);
 	set_mtu(mtu);
 }
 

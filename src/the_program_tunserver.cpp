@@ -611,10 +611,10 @@ int c_the_program_tunserver::main_execution() {
 
 		pfp_note(mo_file_reader::gettext("L_starting_main_server"));
 		_check(m_myserver_ptr);
-		_goal("My server: calling run");
+		pfp_goal("My server: calling run");
 		m_myserver_ptr->run(); // <--- ENTERING THE MAIN LOOP (old loop) ***
 
-		_goal("My server: returned");
+		pfp_goal("My server: returned");
 		pfp_note(mo_file_reader::gettext("L_main_server_ended"));
 
 		#ifdef HTTP_DBG
@@ -623,7 +623,7 @@ int c_the_program_tunserver::main_execution() {
 			pfp_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
 	#endif
 
-	_goal("Exiting normally the main part of program");
+	pfp_goal("Exiting normally the main part of program");
 	return 0;
 }
 

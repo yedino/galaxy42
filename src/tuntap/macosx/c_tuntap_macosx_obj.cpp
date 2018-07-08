@@ -15,7 +15,7 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
 
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
-	_goal("Tuntap opened correctly");
+	pfp_goal("Tuntap opened correctly");
 }
 
 // TODO code duplication
@@ -30,7 +30,7 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj(boost::asio::io_service &io_service)
 
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
-	_goal("Tuntap opened correctly");}
+	pfp_goal("Tuntap opened correctly");}
 
 size_t c_tuntap_macosx_obj::send_to_tun(const unsigned char *data, size_t size) {
 	std::array<unsigned char, 4> tun_header = {{0x00, 0x00, 0x00, 0x1E}};
@@ -124,14 +124,14 @@ void c_tuntap_macosx_obj::set_tun_parameters(const std::array<unsigned char, IPV
                                              uint32_t mtu) {
 
 	c_haship_addr address(c_haship_addr::tag_constr_by_array_uchar(), binary_address);
-	_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
+	pfp_goal("Configuring tuntap options: IP address: " << address << "/" << prefix_len << " MTU=" << mtu);
 
 	set_ipv6_address(binary_address, prefix_len);
 	set_mtu(mtu);
 
 	m_tun_stream.release();
 	m_tun_stream.assign(m_tun_fd);
-	_goal("Configuring tuntap options - done");
+	pfp_goal("Configuring tuntap options - done");
 }
 
 int c_tuntap_macosx_obj::create_tun_fd() {
@@ -178,7 +178,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 			pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
 		++addr_ctl.sc_unit;
 	}
-	_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+	pfp_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
 	m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
 	pfp_dbg1("interface name " << m_ifr_name);

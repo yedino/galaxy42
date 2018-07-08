@@ -17,7 +17,7 @@ c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_devic
 void c_event_manager_linux::init() {
 	m_tun_fd = m_tun_device.get().get_tun_fd();
 	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
-	_goal("Event manager will watch tuntap fd " << m_tun_fd);
+	pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 }
 
 void c_event_manager_linux::wait_for_event() {
@@ -66,10 +66,10 @@ c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_u
 void c_event_manager_asio::init() {
 	#if defined(__MACH__)
 		m_tun_fd = m_tun_device.get().get_tun_fd();
-		_goal("Event manager will watch tuntap fd " << m_tun_fd);
+		pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 		if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
 	#else
-		_goal("Event manager will not watch tuntap using fd on this Operating System");
+		pfp_goal("Event manager will not watch tuntap using fd on this Operating System");
 	#endif
 }
 

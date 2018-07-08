@@ -800,7 +800,7 @@ void c_tunserver::prepare_socket() {
 		catch (tuntap_error &ex) { ui::action_error_exit("General problem with setup of virtual card (tun/tap); "s + ex.what()); }
 		catch (std::exception &ex) { ui::action_error_exit("Unknon problem (std::exception) with setup of virtual card (tun/tap) "s + ex.what()); }
 		catch (...) { ui::action_error_exit("Unknon problem (unknown exception type) with setup of virtual card (tun/tap)."); }
-		_goal("Tun device seems fully configured");
+		pfp_goal("Tun device seems fully configured");
 	}
 
 	#ifdef __linux__
@@ -1849,7 +1849,7 @@ void c_tunserver::event_loop(int time) {
 }
 
 void c_tunserver::run(int time) {
-	_goal(mo_file_reader::gettext("L_starting_TUN"));
+	pfp_goal(mo_file_reader::gettext("L_starting_TUN"));
 
 	{
 		_fact("Will now prepare socket");

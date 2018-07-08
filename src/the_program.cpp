@@ -235,7 +235,7 @@ void c_the_program::init_library_sodium() {
 void c_the_program::options_create_desc() { }
 
 void c_the_program::options_parse_first() {
-	_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
+	pfp_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
 	for (const auto & str : argt)
 	{
 		_fact("commandline option: " << str << " ;");
@@ -251,7 +251,7 @@ void c_the_program::options_parse_first() {
 
 	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // *** parse commandline, and store result
 	pfp_dbg1( "Parsing with options: " << *m_boostPO_desc );
-	_goal("BoostPO parsed argm size=" << m_argm.size());
+	pfp_goal("BoostPO parsed argm size=" << m_argm.size());
 	for(auto &arg: m_argm) pfp_info("Argument in argm: " << arg.first );
 }
 

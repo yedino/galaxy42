@@ -36,7 +36,7 @@ void c_galaxysrv::main_loop() {
 	asiotest();
 
 #if 0
-	_goal("\n\nMain loop (new loop)\n\n");
+	pfp_goal("\n\nMain loop (new loop)\n\n");
 
 	my_cap::verify_privileges_are_as_for_mainloop(); // confirm we are secured for the main loop
 
@@ -84,7 +84,7 @@ void c_galaxysrv::main_loop() {
 			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
 			m_cable_cards.get(lg).get_card(listen1_selector).listen_on(listen1_selector);
 		}
-		_goal("Listening on " << listen1_selector );
+		pfp_goal("Listening on " << listen1_selector );
 		return listen1_selector;
 	} ();
 
@@ -272,7 +272,7 @@ void c_galaxysrv::main_loop() {
 	}
 	threads.push_back( make_unique<std::thread>( loop_cableread ) );
 
-	_goal("All threads started, count=" << threads.size());
+	pfp_goal("All threads started, count=" << threads.size());
 
 	_fact("Joining all threads");
 	for(auto & thr : threads) {
@@ -281,16 +281,16 @@ void c_galaxysrv::main_loop() {
 		pfp_note("Joining thread - done");
 	}
 	_fact("After joining all threads");
-	_goal("All threads joined, count=" << threads.size());
+	pfp_goal("All threads joined, count=" << threads.size());
 #endif
 
 }
 
 void c_galaxysrv::start_exit() {
-	_goal("Start exiting");
+	pfp_goal("Start exiting");
 	m_exiting=1;
 	m_cable_cards.use_RW( [](auto & obj_cards) { obj_cards.stop_threadsafe(); } );
-	_goal("Start exiting - ok");
+	pfp_goal("Start exiting - ok");
 }
 
 uint16_t c_galaxysrv::get_tuntap_mtu_default() const {
@@ -380,9 +380,9 @@ void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	pfp_info("IDC IPv6: " << IDC_ip_hexdot);
 	pfp_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
 	pfp_note("Your temporary, current crypto key (IDC) is: " << IDC_ip_hexdot << " (this is just for information)");
-	_goal("Your permanent IPv6 address (IDI) is: " << IDI_ip_hexdot << " - others can connect to this IP address to reach you");
+	pfp_goal("Your permanent IPv6 address (IDI) is: " << IDI_ip_hexdot << " - others can connect to this IP address to reach you");
 	string IDI_as_url = "http://" + IDI_ip_hexdot ;
-	_goal("For example your web page would be at: " << IDI_as_url );
+	pfp_goal("For example your web page would be at: " << IDI_as_url );
 	// now we can use hash ip from IDI and IDC for encryption
 	m_my_hip = IDI_hip;
 	m_my_IDC = my_IDC;

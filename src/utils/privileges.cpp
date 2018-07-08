@@ -212,7 +212,7 @@ void drop_privileges_before_mainloop() {
 void verify_privileges_are_as_for_mainloop() {
 	try {
 	#ifdef ANTINET_linux
-	_goal("Verifying privileges are dropped - before entering the main loop");
+	pfp_goal("Verifying privileges are dropped - before entering the main loop");
 
 	try {
 		bool have_any_cap = (capmodpp::secure_capng_have_capabilities(CAPNG_SELECT_CAPS) > CAPNG_NONE);

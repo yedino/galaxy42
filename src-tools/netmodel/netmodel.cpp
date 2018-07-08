@@ -53,7 +53,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #define pfp_erro(X) { print_debug("\n\n@@@@@@ ERRROR: " << X << "\n\n" ); }
 #define _mark(X) { print_debug(    "###### " << X ); }
-#define _goal(X) { print_debug(    "------ " << X ); }
+#define pfp_goal(X) { print_debug(    "------ " << X ); }
 
 #define UsePtr(X) (* (X) )
 
@@ -202,7 +202,7 @@ t_inbuf & c_inbuf_tab::get(size_t ix) {
 
 void handler_signal_term(const boost::system::error_code& error , int signal_number)
 {
-	_goal("Signal! (control-C?) " << signal_number);
+	pfp_goal("Signal! (control-C?) " << signal_number);
 	UNUSED(error);
 	g_atomic_exit = true;
 }
@@ -864,7 +864,7 @@ void cryptotest_mesure_one(e_crypto_test crypto_op, uint32_t param_msg_size, t_c
 }
 
 void cryptotest_main(std::vector<std::string> options) {
-	_goal("Testing crypto");
+	pfp_goal("Testing crypto");
 	// https://download.libsodium.org/doc/advanced/poly1305.html
 
 	t_crypt_opt bench_opt;
@@ -941,9 +941,9 @@ void cryptotest_main(std::vector<std::string> options) {
 	}
 	else range_crypto_op.insert( crypto_op ); // one op given by it's number
 
-	_goal("Will test various msg-size, count: " << range_msgsize.size() );
-	_goal("Will test various thread-count, count: " << range_threadcount.size() );
-	_goal("Will test various crypto_op, count: " << range_crypto_op.size() );
+	pfp_goal("Will test various msg-size, count: " << range_msgsize.size() );
+	pfp_goal("Will test various thread-count, count: " << range_threadcount.size() );
+	pfp_goal("Will test various crypto_op, count: " << range_crypto_op.size() );
 
 	for(auto thr : range_threadcount) {
 		pfp_clue("For thread count: " << thr);
@@ -1038,7 +1038,7 @@ void send_to_global_weld(vector<c_weld> &welds, MutexShared &welds_mutex, size_t
 }
 
 void asiotest_udpserv(std::vector<std::string> options) {
-	_goal("Starting " << __func__ << " with " << options.size() << " arguments");
+	pfp_goal("Starting " << __func__ << " with " << options.size() << " arguments");
 	for (const auto & arg: options) pfp_note("Arg: ["<<arg<<"]");
 	// the main "loop"
 
@@ -1130,12 +1130,12 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	{
 		auto opt_addr = options.at(0);
 		auto opt_port = options.at(1);
-		_goal("Peer address ["<<opt_addr<<"] and prot ["<<opt_port<<"]");
+		pfp_goal("Peer address ["<<opt_addr<<"] and prot ["<<opt_port<<"]");
 		peer_pegs.emplace_back(
 			asio::ip::address_v4::from_string(opt_addr) ,
 			safe_atoi(opt_port));
 	}
-	_goal("Got peer(s) " << peer_pegs.size());
+	pfp_goal("Got peer(s) " << peer_pegs.size());
 
 	bool tuntap_set=false;
 	bool cfg_tuntap_blocking=false;
@@ -1170,7 +1170,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		}
 	}
 
-	_goal("Parsing options done");
+	pfp_goal("Parsing options done");
 
 	auto func_show_summary = [&]() {
 		std::ostringstream oss;
@@ -1197,11 +1197,11 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			<< "    send out endpoint data from TUN: YES, to peers: ";
 		for (const auto &peg : peer_pegs) oss << peg << " ";
 		oss << endl;
-		_goal(oss.str());
+		pfp_goal(oss.str());
 	};
 	func_show_summary();
 
-	_goal("Starting test. Crypto task: "<<cfg_test_crypto_task);
+	pfp_goal("Starting test. Crypto task: "<<cfg_test_crypto_task);
 
 	pfp_note("Create ios (general)");
 	asio::io_service ios_general;
@@ -1211,7 +1211,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::vector<std::unique_ptr<asio::io_service>> ios_wire;
 	std::vector<std::unique_ptr<asio::io_service::work>> ios_wire_work;
 	for (int i=0; i<cfg_num_ios; ++i) {
-		_goal("Creating ios (WIRE) nr "<<i);
+		pfp_goal("Creating ios (WIRE) nr "<<i);
 		ios_wire.emplace_back( std::make_unique<asio::io_service>() );
 		ios_wire_work.emplace_back( std::make_unique<asio::io_service::work>( * ios_wire.back() ) );
 	}
@@ -1220,7 +1220,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	std::vector<std::unique_ptr<asio::io_service>> ios_tuntap;
 	std::vector<std::unique_ptr<asio::io_service::work>> ios_tuntap_work;
 	for (int i=0; i<cfg_tuntap_ios; ++i) {
-		_goal("Creating ios (TUNTAP) nr "<<i);
+		pfp_goal("Creating ios (TUNTAP) nr "<<i);
 		ios_tuntap.emplace_back( std::make_unique<asio::io_service>() );
 		ios_tuntap_work.emplace_back( std::make_unique<asio::io_service::work>( * ios_tuntap.back() ) );
 	}
@@ -1235,7 +1235,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	for (int ios_nr = 0; ios_nr < cfg_num_ios; ++ios_nr) {
 		for (int ios_thread=0; ios_thread<cfg_num_thread_per_ios; ++ios_thread) {
 			int cpu_nr = container_get_or_default( cfg_wire_ios_cpu , ios_thread , -1 );
-			_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread
+			pfp_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread
 				<< " cpu=" << cpu_nr << " --- cpu ---");
 
 			std::thread thread_run(
@@ -1264,7 +1264,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	vector<std::thread> ios_tuntap_thread;
 	for (int ios_nr = 0; ios_nr < cfg_tuntap_ios; ++ios_nr) {
 		for (int ios_thread=0; ios_thread<cfg_tuntap_ios_threads_per_one; ++ios_thread) {
-			_goal("TUNTAP: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread);
+			pfp_goal("TUNTAP: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread);
 			std::thread thread_run(
 				[&ios_tuntap, ios_thread, ios_nr] {
 					while (!g_atomic_exit) {
@@ -1281,7 +1281,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	pfp_note("TUNTAP: ios threads are running.");
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
-	_goal("All ios run are running");
+	pfp_goal("All ios run are running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	auto data_file_wire   = open_out_file_checked(cfg_data_fileprefix + "speed_wire.txt");
@@ -1292,7 +1292,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	MutexShared welds_mutex;
 
 	// stop / show stats
-	_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
+	pfp_goal("The stop (and stats) thread"); // exit flag --> ios.stop()
 
 	std::thread thread_stop(
 		[&ios_general,&ios_wire,&ios_tuntap, &ios_general_work, &ios_wire_work, &ios_tuntap_work, &welds, &welds_mutex, &cfg_run_timeout , & cfg_stats_format,
@@ -1353,7 +1353,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 						oss << "[" << weld.space_left() << " " << (weld.m_reserved ? "RESE" : "idle") << "]";
 					}
 				}
-				_goal(oss.str());
+				pfp_goal(oss.str());
 				if (g_atomic_exit) {
 					pfp_note("Exit flag is set, exiting loop and will stop program");
 					break;
@@ -1366,7 +1366,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 			/*
 			// do we need to stop work while we have ios stop?
-			_goal("Exit: so will stop work...");
+			pfp_goal("Exit: so will stop work...");
 			// .reset resets the pointer, resulting in calling destructor on work, so work ends (and ios can exit)
 			// thread safe, no one else accesses this work objects - [TODO] except for the init code, sync with it?
 			for (auto & one_work : ios_wire_work) one_work.reset();
@@ -1374,7 +1374,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			{ auto & one_work = ios_general_work; one_work.reset(); }
 			*/
 
-			_goal("Exit: so will stop ios...");
+			pfp_goal("Exit: so will stop ios...");
 			// using ios->stop - is thread safe, asio::io_service is TS for most functions
 			for (auto & one_ios : ios_wire) {
 				one_ios->stop();
@@ -1389,7 +1389,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	);
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
-	_goal("Stop threat running");
+	pfp_goal("Stop threat running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	// sockets for (fake-)TUN connections:
@@ -1478,7 +1478,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	}
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
-	_goal("TUNTAP and WIRE sockets are ready");
+	pfp_goal("TUNTAP and WIRE sockets are ready");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	asio::ip::udp::endpoint remote_ep;
@@ -1681,7 +1681,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 
 	};
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
-	_goal("TUNTAP workflows are running");
+	pfp_goal("TUNTAP workflows are running");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	// wire P2P: add first work - handler-flow
@@ -1689,7 +1689,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		assert(inbuf_nr >= 0);
 		assert(socket_nr_raw >= 0);
 		int socket_nr = socket_nr_raw % wire_socket.size(); // spread it (rotate)
-		_goal("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
+		pfp_goal("Creating workflow: buf="<<inbuf_nr<<" socket="<<socket_nr);
 
 		auto inbuf_asio = asio::buffer( inbuf_tab.addr(inbuf_nr) , t_inbuf::size() );
 		pfp_dbg1("buffer size is: " << asio::buffer_size( inbuf_asio ) );
@@ -1724,17 +1724,17 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	}
 
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
-	_goal("All started");
+	pfp_goal("All started");
 	std::this_thread::sleep_for( std::chrono::milliseconds(g_stage_sleep_time) );
 
 	func_show_summary();
 
-	_goal("Waiting for all threads to end");
-	_goal("Join stop thread");
+	pfp_goal("Waiting for all threads to end");
+	pfp_goal("Join stop thread");
 	thread_stop.join();
 
 	if (!cfg_tuntap_use_real_tun) {
-		_goal("Stopping tuntap threads - unblocking them with some self-sent data");
+		pfp_goal("Stopping tuntap threads - unblocking them with some self-sent data");
 		while (g_running_tuntap_jobs>0) {
 			pfp_note("Sending data to unblock...");
 
@@ -1753,28 +1753,28 @@ void asiotest_udpserv(std::vector<std::string> options) {
 			std::this_thread::sleep_for( std::chrono::milliseconds(10) );
 		}
 	}
-	_goal("Join tuntap flow threads");
+	pfp_goal("Join tuntap flow threads");
 	for (auto & thr : tuntap_flow) { thr.join(); }
 
-	_goal("Join wire ios threads");
+	pfp_goal("Join wire ios threads");
 	for (auto & thr : ios_wire_thread ) { thr.join(); }
-	_goal("Join tuntap ios threads");
+	pfp_goal("Join tuntap ios threads");
 	for (auto & thr : ios_tuntap_thread ) { thr.join(); }
-	_goal("Join general ios threads");
+	pfp_goal("Join general ios threads");
 	{ auto & thr = ios_general_thread; thr.join(); }
 
-	_goal("All threads done");
+	pfp_goal("All threads done");
 }
 
 int netmodel_main(int argc, const char **argv) {
-	_goal("Entering the network model");
+	pfp_goal("Entering the network model");
 	crypto::init();
 	std::vector< std::string> options;
 	for (int i=1; i<argc; ++i) options.push_back(argv[i]);
 	enum class t_testmode { e_testmode_net, e_testmode_crypto } testmode = t_testmode::e_testmode_net;
 	for (const string & arg : options) if ((arg=="dbg")||(arg=="debug")||(arg=="d")) g_debug = true;
 	for (const string & arg : options) if ((arg=="onlycrypto")) testmode = t_testmode::e_testmode_crypto;
-	_goal("Starting netmodel");
+	pfp_goal("Starting netmodel");
 	switch (testmode) {
 		case t_testmode::e_testmode_net:
 			asiotest_udpserv(options);
@@ -1784,7 +1784,7 @@ int netmodel_main(int argc, const char **argv) {
 		break;
 	}
 
-	_goal("Normal exit of netmodel");
+	pfp_goal("Normal exit of netmodel");
 	return 0;
 }
 
@@ -1802,7 +1802,7 @@ void escape(void* p) {
 
 #else
 int main(int argc, const char **argv) {
-	_goal("Starting the network model tool (stand alone program)");
+	pfp_goal("Starting the network model tool (stand alone program)");
 	std::srand( time(nullptr) );
 	return n_netmodel::netmodel_main(argc,argv);
 }

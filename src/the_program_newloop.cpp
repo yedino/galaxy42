@@ -250,7 +250,7 @@ int c_the_program_newloop::run_special() {
 	bool tainted=false;
 	auto maybe_run_special = [&](const string & name, auto & func, bool do_taint) {
 		if (m_argm.at(name).as<bool>()) {
-			_goal("Run test: "<<name);
+			pfp_goal("Run test: "<<name);
 			if (do_taint) tainted=true;
 			func();
 		} else pfp_info("NOT running test "<<name);
@@ -261,7 +261,7 @@ int c_the_program_newloop::run_special() {
 	maybe_run_special("special-memcheck1", n_special_behaviour::example_memcheck_1, true);
 	maybe_run_special("special-memcheck2", n_special_behaviour::example_memcheck_2, true);
 	if (tainted) {
-		_goal("After executing above tests, now the program is tainted, and must exit.");
+		pfp_goal("After executing above tests, now the program is tainted, and must exit.");
 		return 2; // exit code
 	}
 	return 0;
@@ -316,10 +316,10 @@ std::tuple<bool,int> c_the_program_newloop::programtask_help(const string & topi
 	pfp_info("Showing help for topic: " << topic);
 	std::tuple<bool,int> ret_ok(true,0), ret_bad(false,1);
 	if (topic=="peer") {
-		_goal("Information about the peer format:");
+		pfp_goal("Information about the peer format:");
 		std::ostringstream oss;
 		c_galaxysrv_peers::help_peer_ref(oss);
-		_goal( oss.str() );
+		pfp_goal( oss.str() );
 		return ret_ok;
 	}
 	return ret_bad;
