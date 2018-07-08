@@ -75,7 +75,7 @@ void c_tun_device_linux::set_ipv6_address
 
 	assert(binary_address[0] == 0xFD);
 //	assert(binary_address[1] == 0x42);
-	_fact("Setting IP address");
+	pfp_fact("Setting IP address");
 	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address, prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);
 	pfp_note("Configured network IP for " << ifr.ifr_name);
@@ -86,7 +86,7 @@ void c_tun_device_linux::set_ipv6_address
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
 	const auto name = m_ifr_name.c_str();
-	_fact("Setting MTU="<<mtu<<" on card: " << name);
+	pfp_fact("Setting MTU="<<mtu<<" on card: " << name);
 	Wrap_NetPlatform_setMTU(name,mtu);
 	pfp_goal("MTU configured to " << mtu << " on card " << name);
 }
@@ -154,22 +154,22 @@ c_tun_device_windows::c_tun_device_windows()
 	m_stream_handle_ptr(),
 	m_mac_address()
 {
-	_fact("Creating the windows device class (in ctor, before init)");
+	pfp_fact("Creating the windows device class (in ctor, before init)");
 }
 
 
 void c_tun_device_windows::init() {
-	_fact("Creating TUN/TAP (windows version)");
+	pfp_fact("Creating TUN/TAP (windows version)");
 
 	m_guid = get_device_guid();
-	_fact("GUID " << to_string(m_guid));
+	pfp_fact("GUID " << to_string(m_guid));
 	m_handle = get_device_handle();
 	m_stream_handle_ptr = std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle);
 	m_mac_address = get_mac(m_handle);
 
 	m_buffer.fill(0);
 	if (!m_stream_handle_ptr->is_open()) throw std::runtime_error("TUN/TAP stream handle open error");
-	_fact("Start reading from TUN");
+	pfp_fact("Start reading from TUN");
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
@@ -177,10 +177,10 @@ void c_tun_device_windows::init() {
 void c_tun_device_windows::set_ipv6_address
 	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
 {
-	_fact("Setting IPv6 address, prefixLen="<<prefixLen);
+	pfp_fact("Setting IPv6 address, prefixLen="<<prefixLen);
 	std::wstring human_name = get_human_name(m_guid);
 	NET_LUID luid = get_luid(human_name);
-	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
+	pfp_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
 	// remove old address
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
 	NETIOAPI_API status = GetUnicastIpAddressTable(AF_INET6, &table);
@@ -198,7 +198,7 @@ void c_tun_device_windows::set_ipv6_address
 	FreeMibTable(table);
 
 	// set new address
-	_fact("Setting new IP address");
+	pfp_fact("Setting new IP address");
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -212,7 +212,7 @@ void c_tun_device_windows::set_ipv6_address
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
 
-	_fact("Creating unicast IP");
+	pfp_fact("Creating unicast IP");
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
 	pfp_goal("Created unicast IP, status=" << status);
@@ -283,7 +283,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	DWORD cchValue = MAX_VALUE_NAME;
 
 	// Get the class name and the value count.
-	_fact("Query windows registry for infokeys");
+	pfp_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -300,7 +300,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 								 // Enumerate the subkeys, until RegEnumKeyEx fails.
 	if (retCode != ERROR_SUCCESS) throw std::runtime_error("RegQueryInfoKey error, error code " + std::to_string(GetLastError()));
 	if (cSubKeys > 0) {
-		_fact("Number of subkeys: " << cSubKeys);
+		pfp_fact("Number of subkeys: " << cSubKeys);
 
 		for (DWORD i = 0; i < cSubKeys; i++) {
 			pfp_dbg1("Add subkey " << i);
@@ -322,7 +322,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 
 std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
-	_fact("Looking for device guid" << to_string(adapterKey));
+	pfp_fact("Looking for device guid" << to_string(adapterKey));
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -340,7 +340,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
-		_fact(to_string(subkey_reg_path));
+		pfp_fact(to_string(subkey_reg_path));
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
 		// get ComponentId field
@@ -466,7 +466,7 @@ std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
 	if (bret == 0) throw std::runtime_error("DeviceIoControl error, last error " + std::to_string(GetLastError()));
 	assert(mac_size == mac_address.size());
-	_fact("tun device MAC address");
+	pfp_fact("tun device MAC address");
 	for (const auto i : mac_address)
 		std::cout << std::hex << static_cast<int>(i) << " ";
 	std::cout << std::dec << std::endl;
@@ -544,14 +544,14 @@ c_tun_device_apple::c_tun_device_apple() :
 
 void c_tun_device_apple::init()
 {
-    _fact("Creating the MAC OS X device class (in ctor, before init)");
+    pfp_fact("Creating the MAC OS X device class (in ctor, before init)");
     m_tun_fd = create_tun_fd();
-    _fact("TUN file descriptor " << m_tun_fd);
+    pfp_fact("TUN file descriptor " << m_tun_fd);
     m_stream_handle_ptr = std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd);
     if (!m_stream_handle_ptr->is_open()) throw std::runtime_error("TUN/TAP stream handle open error");
     assert(m_stream_handle_ptr->is_open());
     m_buffer.fill(0);
-    _fact("Start reading from TUN");
+    pfp_fact("Start reading from TUN");
     m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
         [this](const boost::system::error_code &error, size_t length) {
             handle_read(error, length);
@@ -589,7 +589,7 @@ int c_tun_device_apple::create_tun_fd() {
     // connect to first not used tun
     int tested_card_counter = 0;
     auto t0 = time::now();
-    _fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
+    pfp_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
         auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
         if (tested_card_counter++ > number_of_tested_cards)
@@ -623,9 +623,9 @@ void c_tun_device_apple::set_ipv6_address
 }
 
 void c_tun_device_apple::set_mtu(uint32_t mtu) {
-    _fact("Setting MTU="<<mtu);
+    pfp_fact("Setting MTU="<<mtu);
     const auto name = m_ifr_name.c_str();
-    _fact("Setting MTU="<<mtu<<" on card: " << name);
+    pfp_fact("Setting MTU="<<mtu<<" on card: " << name);
     t_syserr error = NetPlatform_setMTU(name, mtu);
     if (error.my_code != 0)
         throw std::runtime_error("set MTU error: " + errno_to_string(error.errno_copy));

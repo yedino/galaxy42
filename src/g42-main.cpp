@@ -28,7 +28,7 @@ struct t_peer_cmdline_ref {
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
-        _fact( mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr );
+        pfp_fact( mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr );
 
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
 
@@ -71,7 +71,7 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 //	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-        _fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
+        pfp_fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
 
 	if (my_nr == 1) add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
 	if (my_nr == 2) add_program_option_vector_strings(argm, "peer", "192.168.1.62:9042-fd42:ae11:f636:8636:ae76:acf5:e5c4:dae1");
@@ -106,7 +106,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 //	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-        _fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
+        pfp_fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
 
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
@@ -166,17 +166,17 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	try {
 		ifstream democonf_file(democonf_fn);
 //		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
-                if (! democonf_file.good()) { _fact( mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
+                if (! democonf_file.good()) { pfp_fact( mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
 		string line="";
 		getline(democonf_file,line);
 //		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
-                if (! democonf_file.good()) { _fact( mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
+                if (! democonf_file.good()) { pfp_fact( mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
 		ret = line.substr( string("demo=").size() );
 	} catch(...) { }
 //	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
-        _fact( mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret );
+        pfp_fact( mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret );
 
 	return ret;
 }
@@ -207,7 +207,7 @@ void test_lang_optional() {
 */
 bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 //	std::cerr << "Running in developer/demo mode." << std::endl;
-        _fact( mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl );
+        pfp_fact( mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl );
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
@@ -233,8 +233,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("help",					"Help msg");
 
 	if ((demoname=="help")||(demoname=="list")) {
-		_fact( "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:" );
-		_fact( desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" ); // TODO(janusz)
+		pfp_fact( "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:" );
+		pfp_fact( desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" ); // TODO(janusz)
 		return false;
 	}
 
@@ -243,7 +243,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname=="hardcoded") demoname = demoname_default;
 
 	pfp_note("Demo name selected: [" << demoname << "]");
-	_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
+	pfp_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
 		<< std::string(70,'=')<<"\n" );
 
 	if (demoname=="lang_optional") { test_lang_optional();  return false; }
@@ -264,7 +264,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 
 bool run_mode_developer(boost::program_options::variables_map & argm) {
 	auto ret = run_mode_developer_main(argm);
-	_fact( std::string(70,'=')<<"\n" );
+	pfp_fact( std::string(70,'=')<<"\n" );
 	return ret;
 }
 

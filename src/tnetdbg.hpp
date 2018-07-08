@@ -73,7 +73,7 @@ extern std::recursive_mutex g_dbg_mutex;
 #define pfp_note(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\033[36mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 #define pfp_clue(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
-#define _fact_level(LVL_MAIN, LVL_EXTRA, X) \
+#define pfp_fact_level(LVL_MAIN, LVL_EXTRA, X) \
 	do { DBGLOCK; \
 	DBGLVL(LVL_MAIN); \
 	std::ostringstream _dbg_oss; \
@@ -83,8 +83,8 @@ extern std::recursive_mutex g_dbg_mutex;
 		DBGLVL(LVL_EXTRA); _dbg_oss << " (msg from " << _my__FILE__ << ':' << __LINE__ << ")"; } while(0); \
 	_dbg_oss << "\033[0m" << ::std::endl; \
 	write_to_console(_dbg_oss.str()); } while(0)
-#define _fact(X) _fact_level(100, 30, X)
-#define pfp_goal(X) _fact_level(150, 30, X)
+#define pfp_fact(X) pfp_fact_level(100, 30, X)
+#define pfp_goal(X) pfp_fact_level(150, 30, X)
 
 auto constexpr debug_config_warn_backtrace_level = 8; ///< the backtrace level used for pfp_warn
 auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level used for pfp_erro
@@ -136,7 +136,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 #define pfp_info(X) do {} while(0)
 #define pfp_note(X) do {} while(0)
 #define pfp_clue(X) do {} while(0)
-#define _fact(X) do {} while(0)
+#define pfp_fact(X) do {} while(0)
 #define pfp_goal(X) do {} while(0)
 #define pfp_warn(X) do {} while(0)
 #define pfp_erro(X) do {} while(0)
@@ -256,7 +256,7 @@ std::string debug_this();
 #define pfp_infon(X) pfp_info(debug_this() << X)
 #define pfp_noten(X) pfp_note(debug_this() << X)
 #define pfp_cluen(X) pfp_clue(debug_this() << X)
-#define _factn(X) _fact(debug_this() << X)
+#define pfp_factn(X) pfp_fact(debug_this() << X)
 #define pfp_warnn(X) pfp_warn(debug_this() << X)
 #define pfp_erron(X) pfp_erro(debug_this() << X)
 #define pfp_markn(X) pfp_mark(debug_this() << X)

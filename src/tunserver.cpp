@@ -511,7 +511,7 @@ c_tunserver::c_tunserver(int port, int rpc_port, const boost::program_options::v
 	,m_option_insecure_cap( check_arg_bool("insecure-cap", early_argm, false) )
 {
 //	std::cout << m_bitcoin_node_cli.get_balance() << std::endl; std::abort(); // XXX
-	_fact("Creating tunserver (old style)");
+	pfp_fact("Creating tunserver (old style)");
 	if (m_option_insecure_cap) pfp_warn("INSECURE OPTION is active: m_option_insecure_cap");
 
 	m_rpc_server.add_rpc_function("ping", [this](const std::string &input_json) {
@@ -724,9 +724,9 @@ unique_ptr<c_haship_pubkey> && pubkey)
 			auto iter = m_peer_black_list.find( peer_hip );
 			if (iter == m_peer_black_list.end()) { // no such peer on black list yet
 				auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
-				_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
+				pfp_fact("Adding NEW peer " << peer_ref << " with pubkey=" << (*pubkey));
 				peering_ptr->set_pubkey(std::move(pubkey));
-				_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
+				pfp_fact("Adding NEW peer reference: " << to_debug(peering_ptr));
 				m_peer.emplace( std::make_pair( peer_hip ,  std::move(peering_ptr) ) );
 			}
 		} else { // update existing
@@ -739,7 +739,7 @@ unique_ptr<c_haship_pubkey> && pubkey)
 				pfp_info("This peer indexed by hip="<<peer_hip<<" has unchanged IP "<< new_pip);
 			}
 			else {
-				_fact("This peer indexed by hip="<<peer_hip<<" CHANGES IP (physical), from " << old_pip << " to " << new_pip);
+				pfp_fact("This peer indexed by hip="<<peer_hip<<" CHANGES IP (physical), from " << old_pip << " to " << new_pip);
 				peering_ptr->set_pip( new_pip );
 			}
 		}
@@ -785,13 +785,13 @@ void c_tunserver::prepare_socket() {
 		assert(address[0] == 0xFD);
 //		assert(address[1] == 0x42);
 
-		_fact("Will configure the tun device");
+		pfp_fact("Will configure the tun device");
 		try {
 			m_tun_device.init();
 			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
-			_fact("Done init of event manager - for this tuntap");
+			pfp_fact("Done init of event manager - for this tuntap");
 			m_event_manager.init(); // because now we have the tuntap fully ready (with the fd)
 		}
 		catch (tuntap_error_devtun &ex) { ui::action_error_exit("Problem with setup of virtual card (tun/tap) with accessing tun/tap driver-file; "s + ex.what()); }
@@ -945,10 +945,10 @@ const c_peering & c_tunserver::get_peer_with_hip( c_haship_addr addr , bool requ
 
 void c_tunserver::debug_peers() {
 	LockGuard<Mutex> lg(m_peer_etc_mutex);
-	if (!m_peer.size()) _fact("You have no peers currently.");
+	if (!m_peer.size()) pfp_fact("You have no peers currently.");
 	for(auto & v : m_peer) { // to each peer
 		auto & target_peer = v.second;
-		_fact("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
+		pfp_fact("  * Known peer on key [ " << v.first << " ] => " << (* target_peer) );
 	}
 }
 
@@ -1822,7 +1822,7 @@ void c_tunserver::event_loop(int time) {
 
 			if (doit) {
 				time_last_idle = make_unique<decltype(time_now)>( time_now );
-				_fact("Status: " << node_title_bar);
+				pfp_fact("Status: " << node_title_bar);
 				debug_peers();
 			}
 		}
@@ -1852,7 +1852,7 @@ void c_tunserver::run(int time) {
 	pfp_goal(mo_file_reader::gettext("L_starting_TUN"));
 
 	{
-		_fact("Will now prepare socket");
+		pfp_fact("Will now prepare socket");
 		prepare_socket();
 		if (!m_option_insecure_cap) {
 			my_cap::drop_privileges_after_tuntap(); // [security] ok we're done tuntap
@@ -1863,9 +1863,9 @@ void c_tunserver::run(int time) {
 		if (!m_option_insecure_cap) {
 			my_cap::drop_privileges_before_mainloop(); // [security] we do not need special privileges since we enter main loop now
 		} else pfp_warn("NOT dropping CAP capability (program options?)");
-		_fact("Will now enter main event loop");
+		pfp_fact("Will now enter main event loop");
 		event_loop(time);
-		_fact("After main event loop");
+		pfp_fact("After main event loop");
 	}
 }
 

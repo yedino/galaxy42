@@ -55,7 +55,7 @@ size_t performance_arithmetic_test_case(const size_t m, const size_t n) {
 }
 
 void performance_division_test() {
-	_fact("[ RUN         ] xint.performance_division_test");
+	pfp_fact("[ RUN         ] xint.performance_division_test");
 	auto t1 = std::chrono::steady_clock::now();
 	size_t tab_m_size = 1000;
 	size_t tab_n_size = tab_m_size;
@@ -110,11 +110,11 @@ void performance_division_test() {
 
 	auto t2 = std::chrono::steady_clock::now();
 	auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-	_fact("[    FINISHED ] xint.performance_division_test (" << time_ms << " ms)");
+	pfp_fact("[    FINISHED ] xint.performance_division_test (" << time_ms << " ms)");
 }
 
 void performance_arithmetic_test() {
-	_fact("[ RUN         ] xint.performance_arithmetic_test");
+	pfp_fact("[ RUN         ] xint.performance_arithmetic_test");
 	auto t1 = std::chrono::steady_clock::now();
 	size_t tab_m_size = 100;
 	size_t tab_n_size = tab_m_size;
@@ -169,7 +169,7 @@ void performance_arithmetic_test() {
 
 	auto t2 = std::chrono::steady_clock::now();
 	auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-	_fact("[    FINISHED ] xint.performance_arithmetic_test (" << time_ms << " ms)");
+	pfp_fact("[    FINISHED ] xint.performance_arithmetic_test (" << time_ms << " ms)");
 }
 
 int main(){

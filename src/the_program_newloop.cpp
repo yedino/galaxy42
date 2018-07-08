@@ -217,15 +217,15 @@ void c_the_program_newloop::programtask_load_my_keys() {
 				} catch UI_CATCH("Loading your key");
 
 				if (!ok) {
-					_fact( "You seem to already have your hash-IP key, but I can not load it." );
-					_fact( "Hint:\n"
+					pfp_fact( "You seem to already have your hash-IP key, but I can not load it." );
+					pfp_fact( "Hint:\n"
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
 					);
 					pfp_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
-				_fact( "You have no ID keys yet - so will create new keys for you." );
+				pfp_fact( "You have no ID keys yet - so will create new keys for you." );
 
 				auto step_make_default_keys = [&]() {
 					ui::action_info_ok("Generating your new keys.");

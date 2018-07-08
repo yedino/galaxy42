@@ -80,7 +80,7 @@ c_udp_wrapper_asio::c_udp_wrapper_asio(const int listen_port)
 	m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), listen_port)),
 	m_bytes_readed(0)
 {
-	_fact("udp wrapper constructor, listen port " << listen_port);
+	pfp_fact("udp wrapper constructor, listen port " << listen_port);
 	if (listen_port==0) {
 		m_disabled=true;
 		pfp_warn("Socket is disabled, listen_port="<<listen_port);

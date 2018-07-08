@@ -35,7 +35,7 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	m_io_service(),
 	m_tun_stream(m_io_service, m_tun_fd)
 {
-	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
 	try {
@@ -50,7 +50,7 @@ c_tuntap_linux_obj::c_tuntap_linux_obj(boost::asio::io_service &io_service) :
 	m_io_service(), // will be not used, TODO
 	m_tun_stream(io_service, m_tun_fd)
 {
-	_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
 	try {

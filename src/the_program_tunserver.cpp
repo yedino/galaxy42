@@ -218,8 +218,8 @@ void c_the_program_tunserver::options_multioptions() {
 std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 	const auto & argm = m_argm;
 	if (argm.count("help")) { // usage
-		_fact( *m_boostPO_desc );
-		_fact( std::endl << project_version_info() );
+		pfp_fact( *m_boostPO_desc );
+		pfp_fact( std::endl << project_version_info() );
 		return std::tuple<bool,int>(true,0);
 	}
 	return std::tuple<bool,int>(false,0);
@@ -237,7 +237,7 @@ int c_the_program_tunserver::main_execution() {
 			const auto & argm = m_argm;
 
 			_check_user(argm.count("port") && argm.count("rpc-port"));
-			_fact("Will create a server");
+			pfp_fact("Will create a server");
 			// *** creating the server object ***
 			m_myserver_ptr = std::make_unique<c_tunserver>(
 				argm.at("port").as<int>(),
@@ -305,13 +305,13 @@ int c_the_program_tunserver::main_execution() {
 
 				}
 //				std::cout << "Your key list:" << std::endl;
-                _fact( mo_file_reader::gettext("L_your_key_list") );
+                pfp_fact( mo_file_reader::gettext("L_your_key_list") );
 
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
 					std::string actual_key = key_name.substr(0,pos);
-					_fact( actual_key << (IDI_key == actual_key ? " * IDI" : "") );
+					pfp_fact( actual_key << (IDI_key == actual_key ? " * IDI" : "") );
 				}
 				return 0;
 			}
@@ -534,15 +534,15 @@ int c_the_program_tunserver::main_execution() {
 				} catch UI_CATCH("Loading your key");
 
 				if (!ok) {
-					_fact( "You seem to already have your hash-IP key, but I can not load it." );
-					_fact( "Hint:\n"
+					pfp_fact( "You seem to already have your hash-IP key, but I can not load it." );
+					pfp_fact( "Hint:\n"
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
 					);
 					pfp_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
-				_fact( "You have no ID keys yet - so will create new keys for you." );
+				pfp_fact( "You have no ID keys yet - so will create new keys for you." );
 
 				auto step_make_default_keys = [&]()	{
 					ui::action_info_ok("Generating your new keys.");

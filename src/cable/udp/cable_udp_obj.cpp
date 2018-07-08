@@ -162,7 +162,7 @@ t_multisocket_kind c_cable_udp::default_multisocket_kind() {
 
 
 void c_cable_udp::listen_on(const c_card_selector & local_address) {
-	_fact("Listen on " << local_address );
+	pfp_fact("Listen on " << local_address );
 	if (has_separate_rw()) {
 		udp::endpoint local_endpoint = (dynamic_cast<const c_cable_udp_addr &>(local_address.get_my_addr())).get_addr();
 		pfp_info("Endpoint created: " << local_endpoint);

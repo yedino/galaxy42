@@ -133,10 +133,10 @@ void c_tuntap_windows_obj::async_receive_from_tun(unsigned char *const data, siz
 }
 
 void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address, int prefix_len, uint32_t mtu) {
-	_fact("Setting IPv6 address, prefixLen=" << prefix_len);
+	pfp_fact("Setting IPv6 address, prefixLen=" << prefix_len);
 	std::wstring human_name = get_human_name(m_guid);
 	NET_LUID luid = get_luid(human_name);
-	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
+	pfp_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
 
 	// remove old address
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814508(v=vs.85).aspx
@@ -159,7 +159,7 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	FreeMibTable(table);
 
 	// set new address
-	_fact("Setting new IP address");
+	pfp_fact("Setting new IP address");
 	// https://msdn.microsoft.com/pl-pl/library/windows/desktop/aa814507(v=vs.85).aspx
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
@@ -175,7 +175,7 @@ void c_tuntap_windows_obj::set_tun_parameters(const std::array<unsigned char, IP
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefix_len;
 
-	_fact("Creating unicast IP");
+	pfp_fact("Creating unicast IP");
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa814401(v=vs.85).aspx
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
@@ -209,7 +209,7 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 	DWORD cchValue = max_value_name;
 
 	// Get the class name and the value count.
-	_fact("Query windows registry for infokeys");
+	pfp_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -226,7 +226,7 @@ std::vector<std::wstring> c_tuntap_windows_obj::get_subkeys(HKEY hKey) {
 								 // Enumerate the subkeys, until RegEnumKeyEx fails.
 	if (retCode != ERROR_SUCCESS) throw std::runtime_error("RegQueryInfoKey error, error code " + std::to_string(GetLastError()));
 	if (cSubKeys > 0) {
-		_fact("Number of subkeys: " << cSubKeys);
+		pfp_fact("Number of subkeys: " << cSubKeys);
 
 		for (DWORD i = 0; i < cSubKeys; i++) {
 			pfp_dbg1("Add subkey " << i);
@@ -255,7 +255,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 	// Network Adapter == 4d36e972-e325-11ce-bfc1-08002be10318
 	// https://msdn.microsoft.com/en-us/library/windows/hardware/ff553426(v=vs.85).aspx
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
-	_fact("Looking for device guid" << to_string(adapterKey));
+	pfp_fact("Looking for device guid" << to_string(adapterKey));
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -273,7 +273,7 @@ std::wstring c_tuntap_windows_obj::get_device_guid() {
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
-		_fact(to_string(subkey_reg_path));
+		pfp_fact(to_string(subkey_reg_path));
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
 		// get ComponentId field
@@ -411,7 +411,7 @@ std::array<uint8_t, c_tuntap_windows_obj::mac_address_size> c_tuntap_windows_obj
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
 	if (bret == 0) throw std::runtime_error("DeviceIoControl error, last error " + std::to_string(GetLastError()));
 	_check(mac_size == mac_address.size());
-	_fact("tun device MAC address");
+	pfp_fact("tun device MAC address");
 	for (const auto i : mac_address)
 		std::cout << std::hex << static_cast<int>(i) << " ";
 	std::cout << std::dec << std::endl;

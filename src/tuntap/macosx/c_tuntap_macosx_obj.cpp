@@ -10,8 +10,8 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj() : m_tun_fd(create_tun_fd()),
                                              m_io_service(),
 											 m_tun_stream(m_io_service, m_tun_fd) {
 
-	_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
-	_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
+	pfp_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
 
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
@@ -25,8 +25,8 @@ c_tuntap_macosx_obj::c_tuntap_macosx_obj(boost::asio::io_service &io_service)
 	m_io_service(),
 	m_tun_stream(io_service, m_tun_fd)
 {
-	_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
-	_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
+	pfp_fact("Creating the MAC OS X tuntap_obj class (in ctor)");
+	pfp_fact("Tuntap opened with m_tun_fd=" << m_tun_fd);
 
 	_try_sys(m_tun_fd != -1);
 	_check_sys(m_tun_stream.is_open());
@@ -168,7 +168,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	// connect to first not used tun
 	int tested_card_counter = 0;
 	auto t0 = std::chrono::system_clock::now();
-	_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
+	pfp_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
 	while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
 		auto int_s = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - t0).count();
 		if (tested_card_counter++ > number_of_tested_cards)
@@ -195,9 +195,9 @@ void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &
 }
 
 void c_tuntap_macosx_obj::set_mtu(uint32_t mtu) {
-	_fact("Setting MTU="<<mtu);
+	pfp_fact("Setting MTU="<<mtu);
 	const auto name = m_ifr_name.c_str();
-	_fact("Setting MTU="<<mtu<<" on card: " << name);
+	pfp_fact("Setting MTU="<<mtu<<" on card: " << name);
 	t_syserr error = NetPlatform_setMTU(name, mtu);
 	if (error.my_code != 0)
 		pfp_throw_error_runtime("set MTU error: " + errno_to_string(error.errno_copy));

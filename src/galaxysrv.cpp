@@ -61,7 +61,7 @@ void c_galaxysrv::main_loop() {
 
 	auto loop_exitwait = [&]() {
 		string stopflag_name="/tmp/stop1";
-		_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
+		pfp_fact("Running loop, create file " << stopflag_name << " to stop this loop.");
 		boost::filesystem::remove( boost::filesystem::path(stopflag_name) );
 		try {
 			while (!m_exiting) {
@@ -74,12 +74,12 @@ void c_galaxysrv::main_loop() {
 	}; // lambda exitwait
 
 	c_card_selector listen1_selector = [this]() -> auto {
-		_fact("Starting to listen");
+		pfp_fact("Starting to listen");
 		// start listener:
 		boost::asio::ip::udp::endpoint listen1_ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // our local IP
 		unique_ptr<c_cable_udp_addr> listen1 = make_unique<c_cable_udp_addr>( listen1_ep );
 		c_card_selector listen1_selector( std::move(listen1) ); // will send from this my-address, to this peer
-		_fact("Listen on " << listen1_selector );
+		pfp_fact("Listen on " << listen1_selector );
 		{
 			UniqueLockGuardRW<MutexShared> lg( m_cable_cards.get_mutex() );
 			m_cable_cards.get(lg).get_card(listen1_selector).listen_on(listen1_selector);
@@ -274,13 +274,13 @@ void c_galaxysrv::main_loop() {
 
 	pfp_goal("All threads started, count=" << threads.size());
 
-	_fact("Joining all threads");
+	pfp_fact("Joining all threads");
 	for(auto & thr : threads) {
 		pfp_note("Joining thread");
 		thr->join();
 		pfp_note("Joining thread - done");
 	}
-	_fact("After joining all threads");
+	pfp_fact("After joining all threads");
 	pfp_goal("All threads joined, count=" << threads.size());
 #endif
 

@@ -103,7 +103,7 @@ static bool do_we_need_to_change_uid_or_gid() {
  * if root is successfully dropped else empty string).
  */
 static t_changes_from_sudo security_drop_root_from_sudo() {
-	_fact("Dropping root (if we are root)");
+	pfp_fact("Dropping root (if we are root)");
 	t_changes_from_sudo changes;
 
 	#ifdef ANTINET_linux
@@ -122,14 +122,14 @@ static t_changes_from_sudo security_drop_root_from_sudo() {
 	pfp_info("sudo user is " << sudo_user_env);
 	struct passwd *pw = getpwnam(sudo_user_name.c_str());
 	if (pw == nullptr) {
-		_fact("getpwnam error");
+		pfp_fact("getpwnam error");
 		throw std::system_error(std::error_code(errno, std::system_category()));
 	}
 	uid_t normal_user_uid = pw->pw_uid;
 	gid_t normal_user_gid = pw->pw_gid;
 	if (normal_user_uid == 0) throw std::runtime_error("The sudo was called by root");
-	_fact("try to change uid to " << normal_user_uid);
-	_fact("try to change gid to " << normal_user_gid);
+	pfp_fact("try to change uid to " << normal_user_uid);
+	pfp_fact("try to change gid to " << normal_user_gid);
 
 	capmodpp::secure_capng_get_caps_process(); // causes libng to initialize, if not already
 	int ret = capng_change_id(normal_user_uid, normal_user_gid, static_cast<capng_flags_t>(CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING));
@@ -139,7 +139,7 @@ static t_changes_from_sudo security_drop_root_from_sudo() {
 		pfp_erro("capng_change_id error: " << ret);
 		throw std::system_error(std::error_code(), "capng_change_id error, return value: " + std::to_string(ret));
 	}
-	_fact("UID/GID change done");
+	pfp_fact("UID/GID change done");
 	pfp_note("Caps (after changing user): " << get_security_info() );
 
 	if (pw->pw_dir != nullptr)
@@ -157,7 +157,7 @@ static t_changes_from_sudo security_drop_root_from_sudo() {
 
 void drop_privileges_on_startup() {
 	#ifdef ANTINET_linux
-	_fact("Dropping privileges - on startup");
+	pfp_fact("Dropping privileges - on startup");
 
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
@@ -167,7 +167,7 @@ void drop_privileges_on_startup() {
 
 	if (do_we_need_to_change_uid_or_gid()) {
 		// to drop root. is this really needed like that? needs more review.
-		_fact("Leaving SETUID/SETGID (and PCAP) caps, to allow droping root UID later");
+		pfp_fact("Leaving SETUID/SETGID (and PCAP) caps, to allow droping root UID later");
 		change.set_given_cap("SETUID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETGID", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
 		change.set_given_cap("SETPCAP", {capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
@@ -183,7 +183,7 @@ void drop_privileges_on_startup() {
 
 void drop_privileges_after_tuntap() {
 	#ifdef ANTINET_linux
-	_fact("Dropping privileges - after tuntap");
+	pfp_fact("Dropping privileges - after tuntap");
 
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_unchanged, capmodpp::v_permit_unchanged, capmodpp::v_inherit_unchanged});
@@ -200,7 +200,7 @@ void drop_privileges_after_tuntap() {
 
 void drop_privileges_before_mainloop() {
 	#ifdef ANTINET_linux
-	_fact("Dropping privileges - before mainloop");
+	pfp_fact("Dropping privileges - before mainloop");
 	capmodpp::cap_statechange_full change;
 	change.set_all_others({capmodpp::v_eff_disable, capmodpp::v_permit_disable, capmodpp::v_inherit_disable});
 	security_apply_cap_change(change);
@@ -241,7 +241,7 @@ void verify_privileges_are_as_for_mainloop() {
 		pfp_erro("Error (unknown type)");
 		throw ;
 	}
-	_fact("Security: privilages seem correct");
+	pfp_fact("Security: privilages seem correct");
 }
 
 

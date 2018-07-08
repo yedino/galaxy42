@@ -32,7 +32,7 @@ void c_rpc_server::rpc_start(bool network_listen, const std::string &listen_addr
 	}
 	else pfp_warn("RPC server started, but not listening on network");
 
-	_fact("Starting RPC thread");
+	pfp_fact("Starting RPC thread");
 	m_thread = std::thread([this]() {
 		dbg("RPC thread start (inside)");
 		boost::system::error_code ec;

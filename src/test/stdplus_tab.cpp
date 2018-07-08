@@ -122,7 +122,7 @@ void tests_loop() {
 			}
 		}
 	}
-	_fact("Executed tests count: " << test_count );
+	pfp_fact("Executed tests count: " << test_count );
 }
 
 TEST(stdplus_tab, loop_vector) {
