@@ -10,6 +10,6 @@
 
 void asiotest()
 {
-	_erro("This test is empty");
+	pfp_erro("This test is empty");
 }
 

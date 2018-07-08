@@ -118,7 +118,7 @@ void test_create_cryptolink(const int number_of_test, int level) {
 		}
 #endif
 
-		if (level>=0) _dbg2("Advanced crypto tests enabled");
+		if (level>=0) pfp_dbg2("Advanced crypto tests enabled");
 
 		c_multikeys_pub keypubA = keypairA.m_pub;
 		c_multikeys_pub keypubB = keypairB.m_pub;
@@ -140,22 +140,22 @@ void test_create_cryptolink(const int number_of_test, int level) {
 }
 
 void c_the_program_newloop::use_options_peerref() {
-	_note("Configuring my peers references (keys):");
+	pfp_note("Configuring my peers references (keys):");
 	try {
 		vector<string> peers_cmdline;
 		if(m_argm.count("peer")) {
 			try {
 				peers_cmdline = m_argm["peer"].as<vector<string>>();
 			} catch(boost::bad_any_cast &err) {
-			_warn(err.what());
+			pfp_warn(err.what());
 			}
 		}
 		for (const string & peer_ref : peers_cmdline) {
-			_info( peer_ref  );
+			pfp_info( peer_ref  );
 			UsePtr(pimpl->server).add_peer_simplestring( peer_ref );
 		}
 	} catch(const std::exception &err) {
-		_warn(err.what());
+		pfp_warn(err.what());
 		ui::action_error_exit(mo_file_reader::gettext("L_wrong_peer_typo"));
 	}
 }
@@ -164,7 +164,7 @@ void c_the_program_newloop::use_options_peerref() {
 void c_the_program_newloop::programtask_load_my_keys() {
 // ------------------------------------------------------------------
 // @new - now in newloop new galaxysrv
-			_info("Configuring my own reference (keys):");
+			pfp_info("Configuring my own reference (keys):");
 
 			bool have_keys_configured=false;
 			try {
@@ -179,15 +179,15 @@ void c_the_program_newloop::programtask_load_my_keys() {
 					if (conf_IDI_ok) {
 						have_keys_configured = true;
 					} else {
-						_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
-						_warn("If this warn still occurs, make sure you have backup of your keys");
+						pfp_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
+						pfp_warn("If this warn still occurs, make sure you have backup of your keys");
 						UsePtr(pimpl->server).program_action_set_IDI("IDI");
 						have_keys_configured = true;
 					}
 				}
 
 			} catch(...) {
-				_info("Can not load keys list or IDI configuration");
+				pfp_info("Can not load keys list or IDI configuration");
 				have_keys_configured=0;
 			}
 
@@ -217,15 +217,15 @@ void c_the_program_newloop::programtask_load_my_keys() {
 				} catch UI_CATCH("Loading your key");
 
 				if (!ok) {
-					_fact( "You seem to already have your hash-IP key, but I can not load it." );
-					_fact( "Hint:\n"
+					pfp_fact( "You seem to already have your hash-IP key, but I can not load it." );
+					pfp_fact( "Hint:\n"
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
 					);
-					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
+					pfp_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
-				_fact( "You have no ID keys yet - so will create new keys for you." );
+				pfp_fact( "You have no ID keys yet - so will create new keys for you." );
 
 				auto step_make_default_keys = [&]() {
 					ui::action_info_ok("Generating your new keys.");
@@ -250,10 +250,10 @@ int c_the_program_newloop::run_special() {
 	bool tainted=false;
 	auto maybe_run_special = [&](const string & name, auto & func, bool do_taint) {
 		if (m_argm.at(name).as<bool>()) {
-			_goal("Run test: "<<name);
+			pfp_goal("Run test: "<<name);
 			if (do_taint) tainted=true;
 			func();
-		} else _info("NOT running test "<<name);
+		} else pfp_info("NOT running test "<<name);
 	};
 	maybe_run_special("special-warn1", n_special_behaviour::example_warn_1, false);
 	maybe_run_special("special-ubsan1", n_special_behaviour::example_ubsan_1, true);
@@ -261,7 +261,7 @@ int c_the_program_newloop::run_special() {
 	maybe_run_special("special-memcheck1", n_special_behaviour::example_memcheck_1, true);
 	maybe_run_special("special-memcheck2", n_special_behaviour::example_memcheck_2, true);
 	if (tainted) {
-		_goal("After executing above tests, now the program is tainted, and must exit.");
+		pfp_goal("After executing above tests, now the program is tainted, and must exit.");
 		return 2; // exit code
 	}
 	return 0;
@@ -269,19 +269,19 @@ int c_the_program_newloop::run_special() {
 
 int c_the_program_newloop::main_execution() {
 	PROGRAM_SECTION_TITLE;
-	_mark("newloop main_execution");
+	pfp_mark("newloop main_execution");
 
-	_clue("Setting debug level (main loop - new loop)");
+	pfp_clue("Setting debug level (main loop - new loop)");
 	bool is_debug=false;
 	if (m_argm.count("debug") || m_argm.count("d")) is_debug=true;
-	_note("Will we keep debug: is_debug="<<is_debug);
+	pfp_note("Will we keep debug: is_debug="<<is_debug);
 
 	g_dbg_level_set(config_default_basic_dbg_level, "For normal program run");
 	if (is_debug) g_dbg_level_set(10,"For debug program run");
 	if (m_argm.count("dlevel")) {
 		auto dlevel = int{  m_argm.at("dlevel").as<int>()  };
 		if (dlevel != -1) {
-			_note("Option --dlevel sets new level type: " << dlevel);
+			pfp_note("Option --dlevel sets new level type: " << dlevel);
 			g_dbg_level_set( dlevel , "Set by --dlevel" );
 		}
 	}
@@ -306,20 +306,20 @@ int c_the_program_newloop::main_execution() {
 
 	pimpl->server->main_loop();
 
-	_mark("newloop main_execution - DONE");
+	pfp_mark("newloop main_execution - DONE");
 
 	//	newloop_main( argt );
 	return 0;
 }
 
 std::tuple<bool,int> c_the_program_newloop::programtask_help(const string & topic) {
-	_info("Showing help for topic: " << topic);
+	pfp_info("Showing help for topic: " << topic);
 	std::tuple<bool,int> ret_ok(true,0), ret_bad(false,1);
 	if (topic=="peer") {
-		_goal("Information about the peer format:");
+		pfp_goal("Information about the peer format:");
 		std::ostringstream oss;
 		c_galaxysrv_peers::help_peer_ref(oss);
-		_goal( oss.str() );
+		pfp_goal( oss.str() );
 		return ret_ok;
 	}
 	return ret_bad;
@@ -327,11 +327,11 @@ std::tuple<bool,int> c_the_program_newloop::programtask_help(const string & topi
 
 std::tuple<bool,int> c_the_program_newloop::base_options_commands_run() {
 	if (m_argm.count("helptopic")) {
-		_note("there is a helptopic");
+		pfp_note("there is a helptopic");
 		string help_cmd;
 		try {
 			help_cmd = m_argm.at("helptopic").as<string>();
-		} catch(...) { _throw_error_runtime("--helptopic option can not be read"); }
+		} catch(...) { pfp_throw_error_runtime("--helptopic option can not be read"); }
 		return programtask_help(help_cmd);
 	}
 
@@ -339,7 +339,7 @@ std::tuple<bool,int> c_the_program_newloop::base_options_commands_run() {
 		string help_cmd;
 		try {
 			help_cmd = m_argm.at("help").as<string>();
-		} catch(...) { _throw_error_runtime("--help option can not be read"); }
+		} catch(...) { pfp_throw_error_runtime("--help option can not be read"); }
 		return c_the_program_tunserver::base_options_commands_run(); ///< basic commands, e.g. with basic --help
 	}
 	return std::tuple<bool,int>(false,0);

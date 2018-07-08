@@ -14,7 +14,7 @@ string_as_hex::string_as_hex(const string_as_bin & in) {
 	size_t in_size = in.bytes.size();
 	size_t size_mul = 2; // how much will the string expand
 	size_t in_size_max1 = ( std::numeric_limits<decltype(in_size)>::max() / size_mul ) ; // it will expand e.g. x2 (that is not entire limit yet)
-	_UNUSED(in_size_max1);
+	pfp_UNUSED(in_size_max1);
 	assert( in_size < in_size_max1 );
 	assert( in_size < (in_size_max1-1) ); // make sure no issue with ending C-string NULL
 	size_t retsize = in_size*size_mul; // this will be size of output
@@ -44,17 +44,17 @@ bool operator==( const string_as_hex &a, const string_as_hex &b) {
 unsigned char int2hexchar(unsigned char i) {
 	if (i<=9) return '0'+i;
 	if (i<=15) return 'a'+(i-10);
-	_throw_error( std::invalid_argument(  string("Invalid hex value:")+std::to_string(i) ) );
+	pfp_throw_error( std::invalid_argument(  string("Invalid hex value:")+std::to_string(i) ) );
 }
 
 unsigned char hexchar2int(char c) {
 	if ((c>='0')&&(c<='9')) return static_cast<unsigned char>(c-'0');
 	if ((c>='a')&&(c<='f')) return static_cast<unsigned char>(c-'a' +10);
-	_throw_error( std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  ) );
+	pfp_throw_error( std::invalid_argument(  string("Invalid character (")+string(1,c)+string(") in parsing hex number")  ) );
 }
 
 unsigned char doublehexchar2int(string s) {
-	if (s.size()!=2) _throw_error( std::invalid_argument("Invalid double-hex string: '"+s+"'") );
+	if (s.size()!=2) pfp_throw_error( std::invalid_argument("Invalid double-hex string: '"+s+"'") );
 	char h = s.at(0);
 	char l = s.at(1);
 	return hexchar2int(h)*16 + hexchar2int(l);
@@ -86,7 +86,7 @@ try {
 
 	size_t pos=0, out=0; // position of input, and output
 	for( ; pos<es ; pos+=2, ++out) {
-		// _info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
+		// pfp_info("pos="<<pos<<" out="<<out<<" encoded="<<encoded.data);
 		// "02" -> cl="2" ch="0"
 		//  "2" -> cl="2" ch="0"
 		char cl,ch;
@@ -102,7 +102,7 @@ try {
 	}
 
 	assert( out == retsize ); // all expected positions of data allocated above in .resize() were written
-} catch(std::exception &e) { _erro("Failed to parse string [" << encoded.data <<"]"); _throw_error_rethrow(  ); }
+} catch(std::exception &e) { pfp_erro("Failed to parse string [" << encoded.data <<"]"); pfp_throw_error_rethrow(  ); }
 }
 
 string_as_bin & string_as_bin::operator+=( const string_as_bin & other ) {

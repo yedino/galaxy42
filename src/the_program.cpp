@@ -38,10 +38,10 @@ void c_the_program::startup_version() {
 		#endif
 		;
 	string ver_str = oss.str();
-	_fact( "" ); // newline
-	_fact( "Start... " << ver_str );
+	pfp_fact( "" ); // newline
+	pfp_fact( "Start... " << ver_str );
 	#ifdef TOOLS_ARE_BROKEN
-		_clue("[broken-tools] it seems this program was built with partially broken tools/libraries "
+		pfp_clue("[broken-tools] it seems this program was built with partially broken tools/libraries "
 			"(details are shown when building, e.g. by cmake/ccmake)");
 	#endif
 }
@@ -64,7 +64,7 @@ std::tuple<bool,int> c_the_program::program_startup_special() {
 
 void c_the_program::startup_data_dir() {
 	std::cerr << "Start: " << __func__ << std::endl;
-	_fact("in " << __func__);
+	pfp_fact("in " << __func__);
 	bool found=false;
 	try
 	{
@@ -73,17 +73,17 @@ void c_the_program::startup_data_dir() {
 		// e.g. /home/rafalcode/work/galaxy42/    - because it contains:
 		//      /home/rafalcode/work/galaxy42/share/locale/en/LC_MESSAGES/galaxy42_main.mo
 
-		_fact("Current path [" << b_fs::current_path() << "]");
+		pfp_fact("Current path [" << b_fs::current_path() << "]");
 		b_fs::path cwd_full_boost( b_fs::current_path() );
 		auto cwd_full = b_fs::canonical( b_fs::absolute( cwd_full_boost ) );
 		// string cwd_full = b_fs::lexically_norma( b_fs::absolute( cwd_full_boost ) ).string();
 
 		b_fs::path selfpath = "";
 		selfpath += argt_exec; // (to include any extra path to binary) file name will be removed below leaving just path
-		//_fact("selfpath (2) = [" << selfpath << "]");
+		//pfp_fact("selfpath (2) = [" << selfpath << "]");
 		b_fs::path selfdir_boost = selfpath.remove_filename();
 		auto selfdir = b_fs::canonical( b_fs::absolute( selfdir_boost  ));
-		_fact("selfdir = [" << selfdir << "]");
+		pfp_fact("selfdir = [" << selfdir << "]");
 
 		std::cerr << "Start... [" << cwd_full << "] (cwd) " << std::endl;
 		std::cerr << "Start... [" << selfdir << "] (exec) " << std::endl;
@@ -105,24 +105,24 @@ void c_the_program::startup_data_dir() {
 		for (auto && dir : data_dir_possible) {
 			string testname = dir;
 			testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
-			_fact( "Test: [" << testname << "]... " );
+			pfp_fact( "Test: [" << testname << "]... " );
 			ifstream filetest( testname.c_str() );
 			if (filetest.good()) {
 				m_install_dir_base = dir;
 				found=true;
-				_fact("OK ");
+				pfp_fact("OK ");
 				break;
 			}
 		}
 	} catch(std::exception & ex) {
-			_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
+			pfp_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
 	}
 
-	if (!found) _fact( "Can not find language data files." );
+	if (!found) pfp_fact( "Can not find language data files." );
 
-	_fact( "Data: [" << m_install_dir_base << "]" );
+	pfp_fact( "Data: [" << m_install_dir_base << "]" );
 	m_install_dir_share_locale = m_install_dir_base + "/share/locale";
-	_fact( "Lang: [" << m_install_dir_share_locale << "]" );
+	pfp_fact( "Lang: [" << m_install_dir_share_locale << "]" );
 }
 
 void c_the_program::startup_locales_early() {
@@ -137,15 +137,15 @@ void c_the_program::startup_locales_early() {
 
 void c_the_program::startup_locales_later() {
 	{
-		_fact("Locale switch to user...");
+		pfp_fact("Locale switch to user...");
 		const char * const locale_ptr = setlocale(LC_ALL,"");
 		string locale_str( locale_ptr ); // copy the c-string while it's valid!
 		if (locale_ptr == nullptr) {
-			_fact("Locale switch to user: error... will use C locale");
+			pfp_fact("Locale switch to user: error... will use C locale");
 			const char * const locale_fix_ptr = setlocale(LC_ALL,"C");
 			if (locale_fix_ptr == nullptr) throw std::runtime_error("Can not set user locale, and also can not switch to safe C locale.");
 		} else {
-			_fact("Locale switch to user: OK. Old locale: [" << locale_str << "]");
+			pfp_fact("Locale switch to user: OK. Old locale: [" << locale_str << "]");
 		}
 	}
 
@@ -153,10 +153,10 @@ void c_the_program::startup_locales_later() {
 		const char * const locale_ptr = setlocale(LC_ALL,"");
 		string locale_str( locale_ptr ); // copy the c-string while it's valid!
 		if (locale_ptr == nullptr) { // should be unused since above checks
-			_fact("Locale switch to user: error (and can not fix it)");
+			pfp_fact("Locale switch to user: error (and can not fix it)");
 			throw std::runtime_error("Can not set user locale (nor fix it)");
 		}
-		_fact("Using locale: [" << locale_str << "]");
+		pfp_fact("Using locale: [" << locale_str << "]");
 	}
 
 /*
@@ -190,17 +190,17 @@ Leaving as documentation/example
 */
 	try {
 		mo_file_reader mo_reader;
-		_fact("Adding MO for shared dir [" << m_install_dir_share_locale << "]");
+		pfp_fact("Adding MO for shared dir [" << m_install_dir_share_locale << "]");
 		mo_reader.add_messages_dir(m_install_dir_share_locale);
 		mo_reader.add_mo_filename(std::string("galaxy42_main"));
 		mo_reader.read_file();
 	} catch (const std::exception &e) {
-		_erro( "mo file open error: " << e.what() );
+		pfp_erro( "mo file open error: " << e.what() );
 	}
 
-	_fact( std::string(80,'=') << std::endl << mo_file_reader::gettext("L_warning_work_in_progres") << std::endl );
-	_fact( mo_file_reader::gettext("L_program_is_pre_pre_alpha") );
-	_fact( mo_file_reader::gettext("L_program_is_copyrighted") );
+	pfp_fact( std::string(80,'=') << std::endl << mo_file_reader::gettext("L_warning_work_in_progres") << std::endl );
+	pfp_fact( mo_file_reader::gettext("L_program_is_pre_pre_alpha") );
+	pfp_fact( mo_file_reader::gettext("L_program_is_copyrighted") );
 
 //	const std::string m_install_dir_share_locale="share/locale"; // for now, for running in place
 //	setlocale(LC_ALL,"");
@@ -224,22 +224,22 @@ void c_the_program::startup_curl() {
 }
 
 void c_the_program::init_library_sodium() {
-	_fact(mo_file_reader::gettext("L_starting_lib_libsodium"));
+	pfp_fact(mo_file_reader::gettext("L_starting_lib_libsodium"));
 
 	if (sodium_init() == -1) {
-		_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
+		pfp_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
 	}
-	_info(mo_file_reader::gettext("L_libsodium_ready"));
+	pfp_info(mo_file_reader::gettext("L_libsodium_ready"));
 }
 
 void c_the_program::options_create_desc() { }
 
 void c_the_program::options_parse_first() {
-	_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
+	pfp_goal("Will parse commandline, got args count: " << argt.size() << " and exec="<<argt_exec );
 	for (const auto & str : argt)
 	{
-		_fact("commandline option: " << str << " ;");
-		if (str.size() == 0) _warn("Empty commandline arg");
+		pfp_fact("commandline option: " << str << " ;");
+		if (str.size() == 0) pfp_warn("Empty commandline arg");
 	}
 	_check(m_boostPO_desc);
 	namespace po = boost::program_options;
@@ -250,9 +250,9 @@ void c_the_program::options_parse_first() {
 	const char ** argv = args_cstyle.get_argv();
 
 	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // *** parse commandline, and store result
-	_dbg1( "Parsing with options: " << *m_boostPO_desc );
-	_goal("BoostPO parsed argm size=" << m_argm.size());
-	for(auto &arg: m_argm) _info("Argument in argm: " << arg.first );
+	pfp_dbg1( "Parsing with options: " << *m_boostPO_desc );
+	pfp_goal("BoostPO parsed argm size=" << m_argm.size());
+	for(auto &arg: m_argm) pfp_info("Argument in argm: " << arg.first );
 }
 
 void c_the_program::options_multioptions() { }
@@ -270,7 +270,7 @@ void c_the_program::options_done() {
 			// === argm now can contain options added/modified by developer mode ===
 			namespace po = boost::program_options;
 			po::notify(m_argm);  // !
-			_note("After BoostPO notify");
+			pfp_note("After BoostPO notify");
 
 	for (const auto & opt : m_argm) {
 		ostringstream oss ; oss << "commandline option (parsed by boost PO): " << opt.first << " = ";
@@ -286,7 +286,7 @@ void c_the_program::options_done() {
 
 		if (!converted) oss << "(other type)";
 		oss << " ;";
-		_note(oss.str());
+		pfp_note(oss.str());
 	}
 }
 

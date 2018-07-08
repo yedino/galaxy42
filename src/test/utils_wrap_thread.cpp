@@ -25,10 +25,10 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 	// in the temporary - we would have created std::thread( {some..work..in..lanbda} )
 	// and the thread would keep running since the exception would end function before thread is joined
 	std::atomic<bool> endflag{false};
-	_info("Thread will start now");
+	pfp_info("Thread will start now");
 
 	auto example_function_causing_abort = [&]() {
-		_info("Starting the bad function that should crash (abort)");
+		pfp_info("Starting the bad function that should crash (abort)");
 		try {
 			auto mythread =
 			 wrap_thread(std::chrono::seconds(2), [&](){
@@ -38,15 +38,15 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 					}
 			} );
 			vec.at(1) = std::move(mythread) ;
-			_erro("This code should not be reached (above the function at() should throw");
+			pfp_erro("This code should not be reached (above the function at() should throw");
 			bool joined = vec.at(1).try_join( std::chrono::seconds(5) ); // trying to join for few seconds
-			_erro("This unreachable code, has joined=" << joined);
+			pfp_erro("This unreachable code, has joined=" << joined);
 		}
 		catch(const std::out_of_range &) {
-			_erro("As expected, the code thrown... though we will not reach this place here, since the destructor of now detached thread will abort program.");
+			pfp_erro("As expected, the code thrown... though we will not reach this place here, since the destructor of now detached thread will abort program.");
 			FAIL(); // unreachable
 		}
-		_erro("Should not reach this place");
+		pfp_erro("Should not reach this place");
 		FAIL(); // unreachable
 	};
 
@@ -62,13 +62,13 @@ TEST(utils_wrap_thread, thread_at_throws_in_middle_of_move) {
 }
 
 void fun0() {
-	_info("fun0");
+	pfp_info("fun0");
 }
 void fun1(int i) {
-	_info("fun1 arg: " << i);
+	pfp_info("fun1 arg: " << i);
 }
 void fun2(int i, int j) {
-	_info("fun2 args: " << i << ',' << j);
+	pfp_info("fun2 args: " << i << ',' << j);
 }
 
 TEST(utils_wrap_thread, different_construct) {

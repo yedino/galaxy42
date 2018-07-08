@@ -19,7 +19,7 @@ c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, con
 	#endif
 {
 	#ifdef ANTINET_socket_use_two_and_reuse
-		_note("Will set socket reuse");
+		pfp_note("Will set socket reuse");
 		boost::asio::socket_base::reuse_address option(true);
 		m_write_socket.set_option(option); // not so important when we have just 1 socket
 		// if faliture throws boost::system::system_error(child class of std::runtime_error)
@@ -31,63 +31,63 @@ c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, con
 	if (!m_read_socket.is_open())
 	#endif
 		throw std::runtime_error("UDP socket not open");
-	_note("Created UDP card: \n"
+	pfp_note("Created UDP card: \n"
 		<< "  Read socket:  open="<< m_read_socket.is_open() << " native="<<m_read_socket.native_handle() << "\n"
 		<< "  Write socket: open="<< m_write_socket.is_open() << " native="<<m_write_socket.native_handle());
 }
 
 void c_cable_udp::send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) {
-	_dbg3("Seding (blocking) UDP size=" << size << " dest=" << dest);
+	pfp_dbg3("Seding (blocking) UDP size=" << size << " dest=" << dest);
 	try {
 		// convert into udp::endpoint
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
-		_dbg4("UDP to " << destination_endpoint);
+		pfp_dbg4("UDP to " << destination_endpoint);
 		m_write_socket.send_to(boost::asio::buffer(data, size), destination_endpoint);
 	} catch (const std::bad_cast &) { // can be throw by dynamic_cast
 		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
-		_warn("Can not send UDP");
+		pfp_warn("Can not send UDP");
 		throw;
 	}
 }
 
 void c_cable_udp::send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) {
-	_dbg3("Seding (blocking) UDP, buffers count = " << buffers.size() << " dest = " << dest);
+	pfp_dbg3("Seding (blocking) UDP, buffers count = " << buffers.size() << " dest = " << dest);
 	try {
 		// convert into udp::endpoint
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
-		_dbg4("UDP to " << destination_endpoint);
+		pfp_dbg4("UDP to " << destination_endpoint);
 		m_write_socket.send_to(buffers, destination_endpoint);
 	} catch (const std::bad_cast &) { // can be throw by dynamic_cast
 		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
-		_warn("Can not send UDP");
+		pfp_warn("Can not send UDP");
 		throw;
 	}
 }
 
 void c_cable_udp::async_send_to(const c_cable_base_addr &dest, const unsigned char *data, size_t size, write_handler handler) {
-	_dbg3("Seding (asyncblocking) UDP size=" << size << " dest=" << dest);
+	pfp_dbg3("Seding (asyncblocking) UDP size=" << size << " dest=" << dest);
 	try {
 		// convert into udp::endpoint
 		udp::endpoint destination_endpoint = dynamic_cast<const c_cable_udp_addr &>(dest).get_addr();
 		m_write_socket.async_send_to(boost::asio::buffer(data, size), destination_endpoint,
 			// handler cannot be moved in lambda capture list (MSVC compilation problems)
 			[handler, data](const boost::system::error_code& error, std::size_t bytes_transferred) {
-				_UNUSED(error); // ignore error because bytes_transferred == 0
+				pfp_UNUSED(error); // ignore error because bytes_transferred == 0
 				handler(data, bytes_transferred); // will be called after data write
 			} // lambda
 		);
 	} catch (const std::bad_cast &) { // can be throw by dynamic_cast
 		throw std::invalid_argument("bad dest parameter type");
 	} catch(...) {
-		_warn("Can not send UDP");
+		pfp_warn("Can not send UDP");
 		throw;
 	}
 }
 
 size_t c_cable_udp::receive_from(c_card_selector_base &source, unsigned char *const data, size_t size) {
-	_dbg3("Receive (blocking) UDP");
+	pfp_dbg3("Receive (blocking) UDP");
 	try {
 		udp::endpoint their_ep; // needed for asio function
 		// read data from one of sockets
@@ -96,15 +96,15 @@ size_t c_cable_udp::receive_from(c_card_selector_base &source, unsigned char *co
 		dynamic_cast<t_selector_type&>(source) = t_selector_type( std::move( their_ep_cable ) ); // write into out reference
 		return readed_bytes;
 	} catch(...) {
-		_warn("Can not receive UDP");
+		pfp_warn("Can not receive UDP");
 		throw;
 	}
 }
 
 size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const data, size_t size) {
-	_dbg3("Receive (blocking) UDP");
+	pfp_dbg3("Receive (blocking) UDP");
 	try {
-		_UNUSED(dynamic_cast<c_cable_udp_addr&>(source)); // check type
+		pfp_UNUSED(dynamic_cast<c_cable_udp_addr&>(source)); // check type
 		udp::endpoint their_ep; // needed for asio function
 		size_t readed_bytes = (has_separate_rw() ? m_read_socket : m_write_socket).receive_from(boost::asio::buffer(data, size), their_ep);
 		c_cable_udp_addr their_ep_addr( their_ep );
@@ -113,13 +113,13 @@ size_t c_cable_udp::receive_from(c_cable_base_addr &source, unsigned char *const
 	} catch (const std::bad_cast &) { // can be throw by dynamic_cast
 		throw std::invalid_argument("bad dest parameter type");
 	} catch ( ... ) {
-		_warn("Can not receive UDP");
+		pfp_warn("Can not receive UDP");
 		throw;
 	}
 }
 
 void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, read_handler handler) {
-	_dbg3("Receive (asyn) UDP");
+	pfp_dbg3("Receive (asyn) UDP");
 
 	// endpoint_iterator is iterator to last element in m_endpoint_list
 	// iterator must be valid until the handler is called
@@ -135,7 +135,7 @@ void c_cable_udp::async_receive_from(unsigned char *const data, size_t size, rea
 		[this, handler, data, endpoint_iterator]
 		(const boost::system::error_code& error, std::size_t bytes_transferred)
 		{
-			_UNUSED(error); // captured handler should by always called, if error bytes_transferred == 0 so ignore error variable
+			pfp_UNUSED(error); // captured handler should by always called, if error bytes_transferred == 0 so ignore error variable
 			std::unique_ptr<c_cable_base_addr> source_addr_cable = std::make_unique<c_cable_udp_addr>( *endpoint_iterator );
 			UniqueLockGuardRW<Mutex>lock(m_enpoint_list_mutex);
 			m_endpoint_list.erase(endpoint_iterator);
@@ -162,14 +162,14 @@ t_multisocket_kind c_cable_udp::default_multisocket_kind() {
 
 
 void c_cable_udp::listen_on(const c_card_selector & local_address) {
-	_fact("Listen on " << local_address );
+	pfp_fact("Listen on " << local_address );
 	if (has_separate_rw()) {
 		udp::endpoint local_endpoint = (dynamic_cast<const c_cable_udp_addr &>(local_address.get_my_addr())).get_addr();
-		_info("Endpoint created: " << local_endpoint);
-		_info("Binding...");
+		pfp_info("Endpoint created: " << local_endpoint);
+		pfp_info("Binding...");
 		( m_read_socket ).bind(local_endpoint);
-		_goal("Listening on " << local_endpoint );
-	} else _goal("The write socket already is binded (as host-address) - it is listening");
+		pfp_goal("Listening on " << local_endpoint );
+	} else pfp_goal("The write socket already is binded (as host-address) - it is listening");
 }
 
 void c_cable_udp::set_sockopt_timeout(std::chrono::microseconds timeout) {
@@ -185,12 +185,12 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_so
 	struct timeval timespec;
 	timespec.tv_sec  = us / (1000*1000);
 	timespec.tv_usec = us % (1000*1000);
-	_dbg1("Setting timeout on system handler="<<sys_handler<<" to seconds " << timespec.tv_sec << " + " << timespec.tv_usec << " micro");
+	pfp_dbg1("Setting timeout on system handler="<<sys_handler<<" to seconds " << timespec.tv_sec << " + " << timespec.tv_usec << " micro");
 	int ret = setsockopt( sys_handler , SOL_SOCKET, SO_RCVTIMEO, static_cast<void*>(&timespec), sizeof(timespec) );
 	auto ret_errno = errno;
 	if (ret != 0) {
-		_warn("Can not set timeout on sys_handler="<<sys_handler<<" ret="<<ret<<" errno="<<ret_errno);
-		_throw_error_runtime("Can not set timeout on sys_handler");
+		pfp_warn("Can not set timeout on sys_handler="<<sys_handler<<" ret="<<ret<<" errno="<<ret_errno);
+		pfp_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
 
@@ -202,8 +202,8 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_so
 	int ret = setsockopt( sys_handler , SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&ms_dword), sizeof(ms_dword) );
 	if (ret != 0) {
 		int ret_errno = WSAGetLastError();
-		_warn("Can not set timeout on sys_handler" << " ret=" << ret << " WSAGetLastError=" << ret_errno);
-		_throw_error_runtime("Can not set timeout on sys_handler");
+		pfp_warn("Can not set timeout on sys_handler" << " ret=" << ret << " WSAGetLastError=" << ret_errno);
+		pfp_throw_error_runtime("Can not set timeout on sys_handler");
 	}
 }
 #else
@@ -211,17 +211,17 @@ void c_cable_udp::set_timeout_for_socket(std::chrono::microseconds timeout, t_so
 #endif
 
 void c_cable_udp::stop_threadsafe() {
-	_note("Stoping socket");
+	pfp_note("Stoping socket");
 
 	boost::system::error_code ec;
 
 	if (has_separate_rw()) {
 		m_read_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
-		_dbg1("Shutdown ec="<<ec);
+		pfp_dbg1("Shutdown ec="<<ec);
 		m_read_socket.close();
 	}
 
 	m_write_socket.shutdown( boost::asio::ip::udp::socket::shutdown_both , ec);
-	_dbg1("Shutdown ec="<<ec);
+	pfp_dbg1("Shutdown ec="<<ec);
 	m_write_socket.close();
 }

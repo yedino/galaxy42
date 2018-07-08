@@ -110,7 +110,7 @@ std::string time_utils::get_zone_utc_offset(const boost::posix_time::ptime& utc_
 
 	// set variable zone
 	auto err = setenv("TZ", zone.c_str(), 1);
-	if(err) _warn("Could not set TZ variable, time/date shown may be incorrect");
+	if(err) pfp_warn("Could not set TZ variable, time/date shown may be incorrect");
 
 	tzset();
 

@@ -9,7 +9,7 @@
 TEST(c_ip46_addr, compare_same) {
 	c_ip46_addr addr1a( "192.168.1.2" , 9042 );
 	c_ip46_addr addr1b( "192.168.1.2" , 9042 );
-	_mark(addr1a);
+	pfp_mark(addr1a);
 
 	EXPECT_EQ(addr1a, addr1b);
 }
@@ -40,7 +40,7 @@ TEST(c_ip46_addr, compare_sort) {
 	for (auto port:someports) tab.push_back( c_ip46_addr( "200.168.200.200" , port ) );
 	for (auto port:someports) tab.push_back( c_ip46_addr( "255.255.255.255" , port ) );
 
-	_info("Testing IPs count: " << tab.size());
+	pfp_info("Testing IPs count: " << tab.size());
 
 	for (size_t i=0; i<tab.size(); ++i) {
 		EXPECT_TRUE(tab.at(i) == tab.at(i));

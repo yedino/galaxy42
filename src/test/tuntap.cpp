@@ -43,7 +43,7 @@ TEST(tuntap, send_to_tun_with_error) {
 		[](const boost::asio::const_buffers_1 &buffers) -> size_t {
 			// write_some can throw
 			// http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio/reference/posix__basic_stream_descriptor/write_some/overload1.html
-			_UNUSED(buffers);
+			pfp_UNUSED(buffers);
 			throw boost::system::system_error(boost::asio::error::eof);
 	}));
 
@@ -97,7 +97,7 @@ TEST(tuntap, send_to_tun_seperated) {
 
 	EXPECT_CALL(tuntap.m_tun_stream, write_some(_, _)).WillOnce(testing::Invoke(
 		[](std::array<boost::asio::const_buffer, 4> &buf ,boost::system::error_code &err) -> size_t {
-			_UNUSED(err);
+			pfp_UNUSED(err);
 			return boost::asio::buffer_size(buf);
 		}
 	));
@@ -109,7 +109,7 @@ TEST(tuntap, send_to_tun_seperated) {
 	// write with error
 	EXPECT_CALL(tuntap.m_tun_stream, write_some(_, _)).WillOnce(testing::Invoke(
 		[](std::array<boost::asio::const_buffer, 4> &buf ,boost::system::error_code &err) -> size_t {
-			_UNUSED(buf);
+			pfp_UNUSED(buf);
 			err = boost::asio::error::eof; // some error
 			return 0;
 		}
@@ -133,7 +133,7 @@ TEST(tuntap, read_from_tun) {
 	};
 	auto error_process =
 	[](const boost::asio::mutable_buffers_1 &buf) -> size_t {
-		_UNUSED(buf);
+		pfp_UNUSED(buf);
 		throw boost::system::system_error(boost::asio::error::eof);
 	};
 	EXPECT_CALL(tuntap.m_tun_stream, read_some(An<const boost::asio::mutable_buffers_1 &>()))
@@ -178,7 +178,7 @@ TEST(tuntap, read_from_tun_separated_addresses) {
 	};
 	auto error_process =
 	[](const std::array<boost::asio::mutable_buffer, 4> &bufs) -> size_t {
-		_UNUSED(bufs);
+		pfp_UNUSED(bufs);
 		throw boost::system::system_error(boost::asio::error::eof);
 	};
 

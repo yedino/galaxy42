@@ -6,9 +6,9 @@
 TEST(utility, parse_ip_number) {
 	// g_dbg_level_set(20, "start test");
 
-	_info("Starting test");
+	pfp_info("Starting test");
 	auto args = c_tunserver::get_default_early_argm();
-	_info("Spawning server");
+	pfp_info("Spawning server");
 	c_tunserver myserver(0, 0, args);
 
 	EXPECT_NO_THROW(myserver.add_peer_simplestring("192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b"));

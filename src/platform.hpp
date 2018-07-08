@@ -5,7 +5,7 @@
 // test for little/big edian is in src/c_ndp.cpp
 
 // any errors about not-returning value from non-void function, will be hard errors,
-// you can quiet them e.g. using DEAD_RETURN();
+// you can quiet them e.g. using pfp_DEAD_RETURN();
 #pragma GCC diagnostic error "-Wreturn-type"
 
 static_assert( CHAR_BIT == 8 , "This code requires CHAR_BIT == 8.");
