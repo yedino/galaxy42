@@ -55,7 +55,7 @@ void c_galaxysrv::main_loop() {
 			c_weld new_weld(cfg_weld_memsize);
 			m_welds.push_back( std::move( new_weld  ) );
 		}
-		_mark("Allocations done");
+		pfp_mark("Allocations done");
 		pfp_note("Allocated " << m_welds.size() << " welds");
 	}
 
@@ -267,7 +267,7 @@ void c_galaxysrv::main_loop() {
 	threads.push_back( make_unique<std::thread>( loop_exitwait ) );
 
 	for (int i=0; i<cfg_jobs_tuntap_threads; ++i) {
-		_mark("Starting tuntap thread #" << i);
+		pfp_mark("Starting tuntap thread #" << i);
 		threads.push_back( make_unique<std::thread>( loop_tunread , i ) );
 	}
 	threads.push_back( make_unique<std::thread>( loop_cableread ) );

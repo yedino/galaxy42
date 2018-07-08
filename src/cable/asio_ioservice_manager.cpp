@@ -63,7 +63,7 @@ void c_asioservice_manager::resize_to_at_least(size_t size_) {
 		m_size = (i+1); // we increment by one our size, for run_ioservice()
 		run_ioservice(i); // m_ioservice_array is resized, and the others are NOT yet
 	}
-	//_mark( "m_size=" << m_size << " size_" << size_ );
+	//pfp_mark( "m_size=" << m_size << " size_" << size_ );
 	_check( m_size == size_ );
 	pfp_note("Resizing done: size_=" << size_ << " now m_size="<<m_size
 		<< "; other arrays: ..._threads=" << m_ioservice_threads.size() << " ..._works=" << m_ioservice_idle_works.size() );
@@ -82,7 +82,7 @@ size_t c_asioservice_manager::capacity() const noexcept {
 }
 
 boost::asio::io_service &c_asioservice_manager::get_next_ioservice() {
-	_mark("Requesting next SIO from SIOM");
+	pfp_mark("Requesting next SIO from SIOM");
 	guard_LOCK(m_mutex);
 	guard_inv;
 

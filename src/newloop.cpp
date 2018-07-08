@@ -70,7 +70,7 @@ void test_debug_check() {
 	image_ui(120); // soft
 	image_ui(70); // hard - unexpected, anything above 30 is bad on size*size condition
 	image_ui(1); // hard - unexpected small size*size
-	_mark("More tests");
+	pfp_mark("More tests");
 
 	// regarding system errors:
 	image_ui(10,"/mount/z"); // soft system

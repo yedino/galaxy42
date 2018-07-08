@@ -134,7 +134,7 @@ TEST( privileges , drop_one_cap ) {
 		.set( capmodpp::cap_area_type::inherit , capmodpp::cap_permchange::disable )
 	;
 	*/
-	_mark("Will apply change:" << change);
+	pfp_mark("Will apply change:" << change);
 
 	change.security_apply_now(); // apply this to process
 
@@ -179,7 +179,7 @@ TEST( privileges , drop_all_cap_except_one ) {
 		.set( capmodpp::cap_area_type::permit , capmodpp::cap_permchange::disable )
 		.set( capmodpp::cap_area_type::inherit , capmodpp::cap_permchange::disable )
 	;
-	_mark("Will apply change:" << change);
+	pfp_mark("Will apply change:" << change);
 
 	change.security_apply_now(); // apply this to process
 

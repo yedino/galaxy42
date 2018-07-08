@@ -48,11 +48,11 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 #define pfp_dbg4(X) {if(0) { print_debug(X); } }
 #define pfp_dbg1(X) {if(0)pfp_dbg4(X);}
 #define pfp_note(X) {if(0)pfp_dbg4(X);}
-#define _mark(X) {if(0)pfp_dbg4(X);}
+#define pfp_mark(X) {if(0)pfp_dbg4(X);}
 #endif
 
 #define pfp_erro(X) { print_debug("\n\n@@@@@@ ERRROR: " << X << "\n\n" ); }
-#define _mark(X) { print_debug(    "###### " << X ); }
+#define pfp_mark(X) { print_debug(    "###### " << X ); }
 #define pfp_goal(X) { print_debug(    "------ " << X ); }
 
 #define UsePtr(X) (* (X) )
@@ -71,7 +71,7 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 
 unique_ptr<std::ofstream> open_out_file_checked(const std::string & name) {
-	_mark("Opening out file: [" << name << "]");
+	pfp_mark("Opening out file: [" << name << "]");
 	auto the_file = make_unique<std::ofstream>(name.c_str());
 	if (! the_file->good()) {
 		pfp_erro("Can not open file: [" << name << "]");
@@ -1076,23 +1076,23 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	[&mycmdline]() {
 		vector<int> ret;
 		string choice = get_from_cmdline("wire_cpu", mycmdline, std::string(""));
-		_mark("cpu configuration: \"" << choice << "\"");
+		pfp_mark("cpu configuration: \"" << choice << "\"");
 		auto the_size = choice.size();
 		if (the_size<1) return ret;
 		// --- size>1 ---
 		size_t pos1=0;
 		while (true) {
-			// _mark("parse, pos1="<<pos1);
+			// pfp_mark("parse, pos1="<<pos1);
 			size_t pos2 = choice.find(',', pos1);
 			if (pos2 == string::npos) pos2=choice.size();
-			// _mark("parse, pos2="<<pos2);
+			// pfp_mark("parse, pos2="<<pos2);
 
 			string cpu_str = choice.substr(pos1,pos2-pos1);
-			// _mark("cpu_str=\""<<cpu_str<<"\"");
+			// pfp_mark("cpu_str=\""<<cpu_str<<"\"");
 			ret.push_back( safe_atoi( cpu_str ) );
 			if ( pos2 >= (the_size-1) ) break;
 			pos1=pos2+1;
-			// _mark(cpu_str);
+			// pfp_mark(cpu_str);
 		}
 		return ret;
 	} ();
@@ -1114,10 +1114,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	const bool cfg_tuntap_use_real_tun = func_cmdline("tuntap_use_real"); // if true real tuntap is used
 	const bool cfg_tuntap_async = func_cmdline("tuntap_async");
 	const string cfg_stats_format = func_cmdline_str("stats_format",string(""));
-	_mark("stats_format configuration: [" << cfg_stats_format<<"]");
+	pfp_mark("stats_format configuration: [" << cfg_stats_format<<"]");
 
 	const string cfg_data_fileprefix = func_cmdline_str("data_prefix", string("/tmp/netmodel_")); // e.g. /tmp/netmodel_speed_wire.txt
-	_mark("Will save data to file prefix: [" << cfg_data_fileprefix << "]");
+	pfp_mark("Will save data to file prefix: [" << cfg_data_fileprefix << "]");
 
 
 	cfg_tuntap_buf_sleep = func_cmdline("tuntap_weld_sleep");
@@ -1310,7 +1310,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				auto run_time_now = std::chrono::steady_clock::now();
 				int run_time_ellapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time_start - run_time_now).count();
 				if ( run_time_ellapsed_sec > cfg_run_timeout) {
-					_mark("Test will end now, time allapsed: " << run_time_ellapsed_sec);
+					pfp_mark("Test will end now, time allapsed: " << run_time_ellapsed_sec);
 					g_atomic_exit = true;
 				}
 
@@ -1465,8 +1465,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		// asio::ip::address_v4::any();
 		// if (nr_sock==0) addr_listen = asio::ip::address::from_string("192.168.113.16");
 		// if (nr_sock==1) addr_listen = asio::ip::address::from_string("192.168.1.102");
-//		_mark("Using special addressing (TEST!)"); // XXX TODO
-//		_mark("Listen on: " << addr_listen << " port " << port_nr);
+//		pfp_mark("Using special addressing (TEST!)"); // XXX TODO
+//		pfp_mark("Listen on: " << addr_listen << " port " << port_nr);
 
 		using namespace boost::asio::ip;
 		using namespace boost::asio;

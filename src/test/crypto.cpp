@@ -451,7 +451,7 @@ void unittest_create_cryptolink(const int number_of_test, int level, int packet_
 			t_crypto_nonce nonce2_used; // nonce nr 2: only to encrypt Bob->Alice here
 
 			auto msg1_encrypted = AliceCT.box(msg1, nonce1_used);
-			_mark("this test, packet_nr="<<packet_nr<<" nonce1_used="<<nonce1_used);
+			pfp_mark("this test, packet_nr="<<packet_nr<<" nonce1_used="<<nonce1_used);
 			ASSERT_NE(msg1, msg1_encrypted);
 			auto msg1_decrypted = BobCT.unbox(msg1_encrypted, nonce1_used);
 			ASSERT_EQ(msg1, msg1_decrypted);

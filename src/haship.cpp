@@ -97,9 +97,9 @@ ostream& operator<<(ostream &ostr, const c_haship_pubkey & v) {	v.print(ostr);	r
 c_haship_pubkey::c_haship_pubkey() { }
 
 c_haship_pubkey::c_haship_pubkey( const string_as_bin & input ) {
-	_mark("Loadig pubkey from: " << ::to_debug(input) );
+	pfp_mark("Loadig pubkey from: " << ::to_debug(input) );
 	this->load_from_bin(input.bytes);
-	_mark("After loading: " << (*this) );
+	pfp_mark("After loading: " << (*this) );
 	//for(size_t i=0; i<input.bytes.size(); ++i) at(i) = input.bytes.at(i);
 //	for(auto v : input.bytes) at(
 }

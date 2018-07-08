@@ -227,7 +227,7 @@ std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 
 int c_the_program_tunserver::main_execution() {
 	PROGRAM_SECTION_TITLE;
-	_mark("Main execution of the old-loop");
+	pfp_mark("Main execution of the old-loop");
 
 	pfp_warn("Remember, that this old-loop code is NOT secured as new-loop code, e.g. is not droping CAP/root privileges!");
 	{ using namespace std::chrono_literals;	std::this_thread::sleep_for(1s); }

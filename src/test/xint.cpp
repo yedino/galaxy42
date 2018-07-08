@@ -54,7 +54,7 @@ void use8u(uint8_t val) { pfp_dbg3("Got: " << static_cast<int>(val) ); }
 TEST(xint, xint_range_and_size) {
 	g_dbg_level_set(200,"Debug turn off in test");
 	xint64 xi;
-	_mark( "size of: "<<sizeof(xi)<<" range: "
+	pfp_mark( "size of: "<<sizeof(xi)<<" range: "
 		<< '[' << std::numeric_limits<decltype(xi)>::min() << "..."
 		<< std::numeric_limits<decltype(xi)>::max() << ']' );
 }
@@ -109,10 +109,10 @@ TEST(xint, narrowing_func_call_int_FIX_xint) {
 /// func should return a value that overflows when incremented; but can withstand -= 10.
 template<typename TInt, typename TFunc>
 void mix_with_lesssafe_type(const TFunc & func) {
-	_mark("TInt="<<typeid(TInt).name()<<" for func returning:" << show_int(func()));
+	pfp_mark("TInt="<<typeid(TInt).name()<<" for func returning:" << show_int(func()));
 	EXPECT_NO_THROW( {
 		TInt x = func();
-		_mark("After creation from func, x="<<x);
+		pfp_mark("After creation from func, x="<<x);
 		x -= 10; // so it will be in-range even after the following line:
 		TInt y = x + 10;
 		UNUSED(x); UNUSED(y);
@@ -657,7 +657,7 @@ TEST(xint, range_u_to_sizet) {
 }
 
 void someint(long long int x) {
-	_mark("someint got: " << x);
+	pfp_mark("someint got: " << x);
 }
 
 template <typename T>

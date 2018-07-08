@@ -62,49 +62,49 @@ void performance_division_test() {
 
 	size_t xint64_time_ms =	performance_division_test_case<xint64>(tab_m_size, tab_n_size);
 	size_t int64_t_time_ms = performance_division_test_case<int64_t>(tab_m_size, tab_n_size);
-	_mark("xint64 is " << static_cast<double>(xint64_time_ms)/int64_t_time_ms << " times slower than int64_t");
+	pfp_mark("xint64 is " << static_cast<double>(xint64_time_ms)/int64_t_time_ms << " times slower than int64_t");
 	pfp_note("xint64 test time in ms: " << xint64_time_ms);
 	pfp_note("int64_t test time in ms: " << int64_t_time_ms);
 
 	size_t xint64u_time_ms = performance_division_test_case<xint64u>(tab_m_size, tab_n_size);
 	size_t uint64_t_time_ms = performance_division_test_case<uint64_t>(tab_m_size, tab_n_size);
-	_mark("xint64u is " << static_cast<double>(xint64u_time_ms)/uint64_t_time_ms << " times slower than uint64_t");
+	pfp_mark("xint64u is " << static_cast<double>(xint64u_time_ms)/uint64_t_time_ms << " times slower than uint64_t");
 	pfp_note("xint64u test time in ms: " << xint64u_time_ms);
 	pfp_note("uint64_t test time in ms: " << uint64_t_time_ms);
 
 	size_t xint32_time_ms = performance_division_test_case<xint32>(tab_m_size, tab_n_size);
 	size_t int32_t_time_ms = performance_division_test_case<int32_t>(tab_m_size, tab_n_size);
-	_mark("xint32 is " << static_cast<double>(xint32_time_ms)/int32_t_time_ms << " times slower than int32_t");
+	pfp_mark("xint32 is " << static_cast<double>(xint32_time_ms)/int32_t_time_ms << " times slower than int32_t");
 	pfp_note("xint32 test time in ms: " << xint32_time_ms);
 	pfp_note("int32_t test time in ms: " << int32_t_time_ms);
 
 	size_t xint32u_time_ms = performance_division_test_case<xint32u>(tab_m_size, tab_n_size);
 	size_t uint32_t_time_ms = performance_division_test_case<uint32_t>(tab_m_size, tab_n_size);
-	_mark("xint32u is " << static_cast<double>(xint32u_time_ms)/uint32_t_time_ms << " times slower than uint32_t");
+	pfp_mark("xint32u is " << static_cast<double>(xint32u_time_ms)/uint32_t_time_ms << " times slower than uint32_t");
 	pfp_note("xint32u test time in ms: " << xint32u_time_ms);
 	pfp_note("uint32_t test time in ms: " << uint32_t_time_ms);
 
 	size_t xint16_time_ms = performance_division_test_case<xint16>(tab_m_size, tab_n_size);
 	size_t int16_t_time_ms = performance_division_test_case<int16_t>(tab_m_size, tab_n_size);
-	_mark("xint16 is " << static_cast<double>(xint16_time_ms)/int16_t_time_ms << " times slower than int16_t");
+	pfp_mark("xint16 is " << static_cast<double>(xint16_time_ms)/int16_t_time_ms << " times slower than int16_t");
 	pfp_note("xint16 test time in ms: " << xint16_time_ms);
 	pfp_note("int16_t test time in ms: " << int16_t_time_ms);
 
 	size_t xint16u_time_ms = performance_division_test_case<xint16u>(tab_m_size, tab_n_size);
 	size_t uint16_t_time_ms = performance_division_test_case<uint16_t>(tab_m_size, tab_n_size);
-	_mark("xint16u is " << static_cast<double>(xint16u_time_ms)/uint16_t_time_ms << " times slower than uint16_t");
+	pfp_mark("xint16u is " << static_cast<double>(xint16u_time_ms)/uint16_t_time_ms << " times slower than uint16_t");
 	pfp_note("xint16u test time in ms: " << xint16u_time_ms);
 	pfp_note("uint16_t test time in ms: " << uint16_t_time_ms);
 
 	size_t xint8_time_ms = performance_division_test_case<xint8>(tab_m_size, tab_n_size);
 	size_t int8_t_time_ms = performance_division_test_case<int8_t>(tab_m_size, tab_n_size);
-	_mark("xint8 is " << static_cast<double>(xint8_time_ms)/int8_t_time_ms << " times slower than int8_t");
+	pfp_mark("xint8 is " << static_cast<double>(xint8_time_ms)/int8_t_time_ms << " times slower than int8_t");
 	pfp_note("xint8 test time in ms: " << xint8_time_ms);
 	pfp_note("int8_t test time in ms: " << int8_t_time_ms);
 
 	size_t xint8u_time_ms = performance_division_test_case<xint8u>(tab_m_size, tab_n_size);
 	size_t uint8_t_time_ms = performance_division_test_case<uint8_t>(tab_m_size, tab_n_size);
-	_mark("xint8u is " << static_cast<double>(xint8u_time_ms)/uint8_t_time_ms << " times slower than uint8_t");
+	pfp_mark("xint8u is " << static_cast<double>(xint8u_time_ms)/uint8_t_time_ms << " times slower than uint8_t");
 	pfp_note("xint8u test time in ms: " << xint8u_time_ms);
 	pfp_note("uint8_t test time in ms: " << uint8_t_time_ms);
 
@@ -121,49 +121,49 @@ void performance_arithmetic_test() {
 
 	size_t xint64_time_ms =	performance_arithmetic_test_case<xint64>(tab_m_size, tab_n_size);
 	size_t int64_t_time_ms = performance_arithmetic_test_case<int64_t>(tab_m_size, tab_n_size);
-	_mark("xint64 is " << static_cast<double>(xint64_time_ms)/int64_t_time_ms << " times slower than int64_t");
+	pfp_mark("xint64 is " << static_cast<double>(xint64_time_ms)/int64_t_time_ms << " times slower than int64_t");
 	pfp_note("xint64 test time in ms: " << xint64_time_ms);
 	pfp_note("int64_t test time in ms: " << int64_t_time_ms);
 
 	size_t xint64u_time_ms = performance_arithmetic_test_case<xint64u>(tab_m_size, tab_n_size);
 	size_t uint64_t_time_ms = performance_arithmetic_test_case<uint64_t>(tab_m_size, tab_n_size);
-	_mark("xint64u is " << static_cast<double>(xint64u_time_ms)/uint64_t_time_ms << " times slower than uint64_t");
+	pfp_mark("xint64u is " << static_cast<double>(xint64u_time_ms)/uint64_t_time_ms << " times slower than uint64_t");
 	pfp_note("xint64u test time in ms: " << xint64u_time_ms);
 	pfp_note("uint64_t test time in ms: " << uint64_t_time_ms);
 
 	size_t xint32_time_ms = performance_arithmetic_test_case<xint32>(tab_m_size, tab_n_size);
 	size_t int32_t_time_ms = performance_arithmetic_test_case<int32_t>(tab_m_size, tab_n_size);
-	_mark("xint32 is " << static_cast<double>(xint32_time_ms)/int32_t_time_ms << " times slower than int32_t");
+	pfp_mark("xint32 is " << static_cast<double>(xint32_time_ms)/int32_t_time_ms << " times slower than int32_t");
 	pfp_note("xint32 test time in ms: " << xint32_time_ms);
 	pfp_note("int32_t test time in ms: " << int32_t_time_ms);
 
 	size_t xint32u_time_ms = performance_arithmetic_test_case<xint32u>(tab_m_size, tab_n_size);
 	size_t uint32_t_time_ms = performance_arithmetic_test_case<uint32_t>(tab_m_size, tab_n_size);
-	_mark("xint32u is " << static_cast<double>(xint32u_time_ms)/uint32_t_time_ms << " times slower than uint32_t");
+	pfp_mark("xint32u is " << static_cast<double>(xint32u_time_ms)/uint32_t_time_ms << " times slower than uint32_t");
 	pfp_note("xint32u test time in ms: " << xint32u_time_ms);
 	pfp_note("uint32_t test time in ms: " << uint32_t_time_ms);
 
 	size_t xint16_time_ms = performance_arithmetic_test_case<xint16>(tab_m_size, tab_n_size);
 	size_t int16_t_time_ms = performance_arithmetic_test_case<int16_t>(tab_m_size, tab_n_size);
-	_mark("xint16 is " << static_cast<double>(xint16_time_ms)/int16_t_time_ms << " times slower than int16_t");
+	pfp_mark("xint16 is " << static_cast<double>(xint16_time_ms)/int16_t_time_ms << " times slower than int16_t");
 	pfp_note("xint16 test time in ms: " << xint16_time_ms);
 	pfp_note("int16_t test time in ms: " << int16_t_time_ms);
 
 	size_t xint16u_time_ms = performance_arithmetic_test_case<xint16u>(tab_m_size, tab_n_size);
 	size_t uint16_t_time_ms = performance_arithmetic_test_case<uint16_t>(tab_m_size, tab_n_size);
-	_mark("xint16u is " << static_cast<double>(xint16u_time_ms)/uint16_t_time_ms << " times slower than uint16_t");
+	pfp_mark("xint16u is " << static_cast<double>(xint16u_time_ms)/uint16_t_time_ms << " times slower than uint16_t");
 	pfp_note("xint16u test time in ms: " << xint16u_time_ms);
 	pfp_note("uint16_t test time in ms: " << uint16_t_time_ms);
 
 	size_t xint8_time_ms = performance_arithmetic_test_case<xint8>(tab_m_size, tab_n_size);
 	size_t int8_t_time_ms = performance_arithmetic_test_case<int8_t>(tab_m_size, tab_n_size);
-	_mark("xint8 is " << static_cast<double>(xint8_time_ms)/int8_t_time_ms << " times slower than int8_t");
+	pfp_mark("xint8 is " << static_cast<double>(xint8_time_ms)/int8_t_time_ms << " times slower than int8_t");
 	pfp_note("xint8 test time in ms: " << xint8_time_ms);
 	pfp_note("int8_t test time in ms: " << int8_t_time_ms);
 
 	size_t xint8u_time_ms = performance_arithmetic_test_case<xint8u>(tab_m_size, tab_n_size);
 	size_t uint8_t_time_ms = performance_arithmetic_test_case<uint8_t>(tab_m_size, tab_n_size);
-	_mark("xint8u is " << static_cast<double>(xint8u_time_ms)/uint8_t_time_ms << " times slower than uint8_t");
+	pfp_mark("xint8u is " << static_cast<double>(xint8u_time_ms)/uint8_t_time_ms << " times slower than uint8_t");
 	pfp_note("xint8u test time in ms: " << xint8u_time_ms);
 	pfp_note("uint8_t test time in ms: " << uint8_t_time_ms);
 

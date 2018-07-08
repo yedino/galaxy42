@@ -148,7 +148,7 @@ namespace developer_tests {
 bool wip_strings_encoding(boost::program_options::variables_map & argm) {
 	UNUSED(argm);
 
-	_mark("Tests of string encoding");
+	pfp_mark("Tests of string encoding");
 	pfp_warn("Test needs rewritting");
 	return false;
 }
@@ -382,7 +382,7 @@ t_peering_reference c_tunserver::parse_peer_simplestring(const string& simple)
 
 void c_tunserver::exit_tunserver()
 {
-	_mark("Exiting tunserver");
+	pfp_mark("Exiting tunserver");
 	is_exiting=true;
 }
 
@@ -429,7 +429,7 @@ void c_tunserver::add_peer_simplestring_new_format(const string &simple)
 
 bool c_tunserver::delete_peer(const c_haship_addr &hip)
 {
-	_mark("delete_peer (delete only!) " << hip);
+	pfp_mark("delete_peer (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto iter = m_peer.find(hip);
@@ -443,7 +443,7 @@ bool c_tunserver::delete_peer(const c_haship_addr &hip)
 
 void c_tunserver::delete_peer_from_black_list(const c_haship_addr &hip)
 {
-	_mark("delete peer from black list (delete only!) " << hip);
+	pfp_mark("delete peer from black list (delete only!) " << hip);
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		auto iter = m_peer_black_list.find(hip);
@@ -470,7 +470,7 @@ bool c_tunserver::delete_peer_simplestring(const string &simple, bool is_banned)
 
 void c_tunserver::delete_all_peers(bool is_banned)
 {
-	_mark("delete all peers (delete only!) ");
+	pfp_mark("delete all peers (delete only!) ");
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
 		if (is_banned)
@@ -676,7 +676,7 @@ void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
 
 // add peer
 bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this as peer
-	_mark("add_peer (add only!) " << peer_ref );
+	pfp_mark("add_peer (add only!) " << peer_ref );
 	auto peering_ptr = make_unique<c_peering_udp>(peer_ref, m_udp_device);
 	// key is unique in map
 	{
@@ -688,7 +688,7 @@ bool c_tunserver::add_peer(const t_peering_reference & peer_ref) { ///< add this
 
 void c_tunserver::add_peer_to_black_list(const c_haship_addr &hip)
 {
-	_mark("add_peer to black list (add only!) " << hip );
+	pfp_mark("add_peer to black list (add only!) " << hip );
 	// key is unique in map
 	{
 		LockGuard<Mutex> lg(m_peer_etc_mutex);
@@ -899,7 +899,7 @@ void c_tunserver::peering_ping_all_peers() {
 		}
 	}
 	if (count_removed) {
-		_mark( (enable_remove ? "Removed actually" : "Would remove (but disabled)")
+		pfp_mark( (enable_remove ? "Removed actually" : "Would remove (but disabled)")
 		<< count_removed << " inactive peer(s), time="<<now);
 	}
 

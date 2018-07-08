@@ -9,7 +9,7 @@
 TEST(c_ip46_addr, compare_same) {
 	c_ip46_addr addr1a( "192.168.1.2" , 9042 );
 	c_ip46_addr addr1b( "192.168.1.2" , 9042 );
-	_mark(addr1a);
+	pfp_mark(addr1a);
 
 	EXPECT_EQ(addr1a, addr1b);
 }

@@ -61,7 +61,7 @@ std::string get_security_info(bool verbose) noexcept {
 
 
 void print_security_info() {
-	_mark("Security info: " << get_security_info() );
+	pfp_mark("Security info: " << get_security_info() );
 }
 
 /**

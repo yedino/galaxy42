@@ -269,7 +269,7 @@ int c_the_program_newloop::run_special() {
 
 int c_the_program_newloop::main_execution() {
 	PROGRAM_SECTION_TITLE;
-	_mark("newloop main_execution");
+	pfp_mark("newloop main_execution");
 
 	pfp_clue("Setting debug level (main loop - new loop)");
 	bool is_debug=false;
@@ -306,7 +306,7 @@ int c_the_program_newloop::main_execution() {
 
 	pimpl->server->main_loop();
 
-	_mark("newloop main_execution - DONE");
+	pfp_mark("newloop main_execution - DONE");
 
 	//	newloop_main( argt );
 	return 0;

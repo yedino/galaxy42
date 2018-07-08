@@ -51,7 +51,7 @@ uint32_t bitcoin_node_cli::get_balance() const {
 
 	const std::string request (R"({"method":"getbalance","params":["*",0],"id":1})");
 	const std::string receive_data = send_request_and_get_response(request);
-	_mark("Receive data " << receive_data);
+	pfp_mark("Receive data " << receive_data);
 
 	nlohmann::json json = nlohmann::json::parse(receive_data.c_str());
 	double btc_amount = json.at("result").get<double>();
@@ -69,7 +69,7 @@ std::string bitcoin_node_cli::get_new_address() const {
 
 	const std::string request = R"({"method":"getnewaddress","params":[],"id":1})";
 	std::string receive_data = send_request_and_get_response(request);
-	_mark("Receive data " << receive_data);
+	pfp_mark("Receive data " << receive_data);
 
 	nlohmann::json json = nlohmann::json::parse(receive_data);
 	return json.at("result").get<std::string>();

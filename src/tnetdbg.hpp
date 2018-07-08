@@ -116,7 +116,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	write_to_console(_dbg_oss.str());\
 } while(0)
 
-#define _mark(X) \
+#define pfp_mark(X) \
 	do { DBGLOCK; \
 	DBGLVL(150); \
 	std::ostringstream _dbg_oss; \
@@ -140,7 +140,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 #define pfp_goal(X) do {} while(0)
 #define pfp_warn(X) do {} while(0)
 #define pfp_erro(X) do {} while(0)
-#define _mark(X) do {} while(0)
+#define pfp_mark(X) do {} while(0)
 
 #endif
 
@@ -259,7 +259,7 @@ std::string debug_this();
 #define _factn(X) _fact(debug_this() << X)
 #define pfp_warnn(X) pfp_warn(debug_this() << X)
 #define pfp_erron(X) pfp_erro(debug_this() << X)
-#define _markn(X) _mark(debug_this() << X)
+#define pfp_markn(X) pfp_mark(debug_this() << X)
 
 std::string to_string(const std::wstring &input); // TODO
 

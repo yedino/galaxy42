@@ -38,8 +38,8 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	// each connect to node .1., except the node 1 that connects to .2."
 	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62");
 
-//	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
-        _mark(mo_file_reader::gettext("L_devel_adding_peer_with_args") << "ip=" << peer_ip << " pub=" << peer_pub );
+//	pfp_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+        pfp_mark(mo_file_reader::gettext("L_devel_adding_peer_with_args") << "ip=" << peer_ip << " pub=" << peer_pub );
 
 	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));

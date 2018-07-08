@@ -545,7 +545,7 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 	m_stream_crypto_final->set_packetstart_IDe_from( * m_IDe ); // finall stream will send our IDe in packetstarter
 
 	pfp_dbg4("Bob? created packet starter for CTe...");
-//	_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
+//	pfp_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
 	pfp_note("Bob? Creating the crypto tunnel (we are respondent) - DONE");
 }
 
@@ -665,7 +665,7 @@ bool alltests() {
 
 
 void test_string_lock() {
-	_mark("Testing locked string operations");
+	pfp_mark("Testing locked string operations");
 	{
 		locked_string a(3);
 		assert(a.size() == 3);
@@ -712,7 +712,7 @@ void test_crypto() {
 
 
 	// Alice: IDC
-	_mark("Create IDC for ALICE");
+	pfp_mark("Create IDC for ALICE");
 	c_multikeys_PAIR keypairA;
 	keypairA.generate(e_crypto_system_type_X25519,2);
 
@@ -730,7 +730,7 @@ void test_crypto() {
 	}
 
 	// Bob: IDC
-	_mark("Create IDC for BOB");
+	pfp_mark("Create IDC for BOB");
 	c_multikeys_PAIR keypairB;
 	keypairB.generate(e_crypto_system_type_X25519,0);
 
@@ -758,7 +758,7 @@ void test_crypto() {
 	// test seding messages in CT sessions
 
 	for (int ib=0; ib<1; ++ib) {
-		_mark("Starting new conversation (new CT) - number " << ib);
+		pfp_mark("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
 		pfp_note("Alice CT:");
@@ -774,7 +774,7 @@ void test_crypto() {
 
 		AliceCT.create_CTf(packetstart_2); // A<<<---
 
-		_mark("Prepared tunnels (KCTf from KCTab)");
+		pfp_mark("Prepared tunnels (KCTf from KCTab)");
 
 		//c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
 		//c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
@@ -800,7 +800,7 @@ void test_crypto() {
 
 
 /*
-		_mark("Preparing for ephemeral KEX:");
+		pfp_mark("Preparing for ephemeral KEX:");
 		pfp_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
 		pfp_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
 
@@ -919,13 +919,13 @@ map_size
 
 #endif
 
-	_mark("Testing crypto - unittests");
+	pfp_mark("Testing crypto - unittests");
 	if (! unittest::alltests() ) {
 		pfp_erro("Unit tests failed!");
 		return ;
 	}
 
-	_mark("Testing crypto - more");
+	pfp_mark("Testing crypto - more");
 
 	#define SHOW pfp_info( string_as_dbg( string_as_bin( symhash.get_password() ) ).get() );
 
@@ -952,7 +952,7 @@ map_size
 }
 
 void generate_keypairs_benchmark(const size_t seconds_for_test_case) {
-	_mark("test_crypto_benchmark");
+	pfp_mark("test_crypto_benchmark");
 
 	// X25519
 	size_t generated_keys_x25519 = 0;
