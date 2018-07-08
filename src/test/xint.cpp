@@ -115,12 +115,12 @@ void mix_with_lesssafe_type(const TFunc & func) {
 		pfp_mark("After creation from func, x="<<x);
 		x -= 10; // so it will be in-range even after the following line:
 		TInt y = x + 10;
-		UNUSED(x); UNUSED(y);
+		pfpUNUSED(x); pfpUNUSED(y);
 	});
 	EXPECT_THROW( {
 		TInt x = func();
 		TInt y = x + 10; // overflows
-		UNUSED(x); UNUSED(y);
+		pfpUNUSED(x); pfpUNUSED(y);
 	} , std::overflow_error );
 }
 
@@ -154,7 +154,7 @@ TEST(xint, mix_with_lesssafe_increment_signed) {
 TEST(xint, comparsions_int_OP_xint) {
 	int  A1i=100, A2i=100, Zi=200; // integers: A1,A2 are same;  Z is bigger
 	xint A1x=100, A2x=100, Zx=200; // same but as xint
-	UNUSED(A2i);
+	pfpUNUSED(A2i);
 	// int @@ xint
 	EXPECT_TRUE ( A1i <  Zx  );
 	EXPECT_FALSE( A1i <  A2x );
@@ -182,7 +182,7 @@ TEST(xint,normal_use_init) {
 	EXPECT_NO_THROW( a=0; );
 	EXPECT_NO_THROW( a=1; );
 	EXPECT_NO_THROW( a=100; );
-	UNUSED(a);
+	pfpUNUSED(a);
 }
 
 TEST(xint,normal_use_ostring) {
@@ -312,7 +312,7 @@ TEST(xint,can_assign_xint_to_signed) {
 	EXPECT_TRUE( overflow_impossible_in_assign(a, -128));
 	EXPECT_TRUE( overflow_impossible_in_assign(a, std::numeric_limits<uint64_t>::min()) + 1 ); // +1 because of...
 	//... the "-128" limitation of xint (see xint header)
-	UNUSED(a);
+	pfpUNUSED(a);
 }
 
 TEST(xint,can_assign_uxint) {
@@ -640,20 +640,20 @@ TEST(xint, range_u_to_sizet) {
 	size_t sm = maxnui;
 	xintu a = s1;
 	xint as = maxni;
-	UNUSED(a);
-	UNUSED(as);
-	EXPECT_THROW( { xintu x = xintu(s1)+xintu(s2)+xintu(s3)+xintu(s4); UNUSED(x); } , std::runtime_error );
+	pfpUNUSED(a);
+	pfpUNUSED(as);
+	EXPECT_THROW( { xintu x = xintu(s1)+xintu(s2)+xintu(s3)+xintu(s4); pfpUNUSED(x); } , std::runtime_error );
 	{               xintu x = xintu(s1)+xintu(s2)+xintu(s3);  EXPECT_EQ(x,sm); }
-	EXPECT_THROW( { xintu x = xintu(s1)+xintu(tab10.size())+xintu(s4); UNUSED(x); } , std::runtime_error );
-	EXPECT_THROW( { xintu x = xintu(s1)+xintu(tab10.size())+1-1+1; UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xintu(s1)+xintu(tab10.size())+xintu(s4); pfpUNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xintu(s1)+xintu(tab10.size())+1-1+1; pfpUNUSED(x); } , std::runtime_error );
 	{               xintu x = xintu(s1)+xintu(tab10.size());  EXPECT_EQ(x,sm); }
 
-	EXPECT_THROW( { xintu x = xintu(tabBig.size()) * xintu(tabBig.size()) * xintu(tabBig.size()); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xintu(tabBig.size()) * xintu(tabBig.size()) * xintu(tabBig.size()); pfpUNUSED(x); } , std::runtime_error );
 	//                              tabBig.size()  *       tabBig.size()
-	EXPECT_THROW( { xintu x = xsize(tabBig) * xsize(tabBig) * xsize(tabBig); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xsize(tabBig) * xsize(tabBig) * xsize(tabBig); pfpUNUSED(x); } , std::runtime_error );
 
 	long int time_dell = 100000000000;
-	EXPECT_THROW( { xintu x = xsize(tabBig) * xintu(1000000) * xintu(time_dell); UNUSED(x); } , std::runtime_error );
+	EXPECT_THROW( { xintu x = xsize(tabBig) * xintu(1000000) * xintu(time_dell); pfpUNUSED(x); } , std::runtime_error );
 }
 
 void someint(long long int x) {
@@ -674,33 +674,33 @@ TEST(xint, range_b_to_sizet) {
 	// size_t sm = 0xFFFFFFFFFFFFFFFF;
 	xintbigu points = s1, value=5000;
 	points *= value;
-	EXPECT_THROW( { xintu points_size( points ); size_t s( points_size ); UNUSED(s); }  , std::runtime_error );
+	EXPECT_THROW( { xintu points_size( points ); size_t s( points_size ); pfpUNUSED(s); }  , std::runtime_error );
 	              { xintu points_size( points/value ); size_t s( points_size ); EXPECT_EQ(s,s1); }
 
-	EXPECT_THROW( { size_t s( points ); UNUSED(s); }  , std::runtime_error );
-	              { size_t s( points/value ); UNUSED(s); }
+	EXPECT_THROW( { size_t s( points ); pfpUNUSED(s); }  , std::runtime_error );
+	              { size_t s( points/value ); pfpUNUSED(s); }
 
-	EXPECT_THROW( { size_t s( xsize(tabBig)*xsize(tabBig)*xsize(tabBig) ); UNUSED(s); }  , std::runtime_error );
-	              { size_t s( xsize(tabBig)*xsize(tabBig) ); UNUSED(s); }
+	EXPECT_THROW( { size_t s( xsize(tabBig)*xsize(tabBig)*xsize(tabBig) ); pfpUNUSED(s); }  , std::runtime_error );
+	              { size_t s( xsize(tabBig)*xsize(tabBig) ); pfpUNUSED(s); }
 }
 
 TEST(xint, safe_create_float1) {
 	auto func = [](bool negative) { float a=10000, b=10000000000, c=100000000;
 		if (negative) a = -a;
-		xint bonus(a*b*c); UNUSED(bonus);	} ;
+		xint bonus(a*b*c); pfpUNUSED(bonus);	} ;
 	EXPECT_THROW( func(true)  , std::runtime_error );
 	EXPECT_THROW( func(false)  , boost::numeric::bad_numeric_cast );
 }
 TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 	auto func = [](bool negative) { float a=10000, b=10000000000, c=100000000;
 		if (negative) a = -a;
-		xint bonus = a*b*c; UNUSED(bonus);	} ;
+		xint bonus = a*b*c; pfpUNUSED(bonus);	} ;
 	EXPECT_THROW( func(true)  , std::runtime_error );
 	EXPECT_THROW( func(false)  , boost::numeric::bad_numeric_cast );
 }
 /*TEST(xint, safe_create_float_assign) {
 	auto func = []() { float a=10000, b=10000000000, c=100000000;
-		xint bonus;  bonus = a*b*c; UNUSED(bonus);	} ;
+		xint bonus;  bonus = a*b*c; pfpUNUSED(bonus);	} ;
 	EXPECT_THROW( func()  , boost::numeric::bad_numeric_cast );
 }*/
 
@@ -708,21 +708,21 @@ TEST(xint, safe_create_float2) { // obviously the same, other syntax as example
 TEST(xint, safe_create_xint) {
 	auto func = [](bool negative) { xint a=10000, b=10000000000, c=100000000;
 		if (negative) a = -a;
-		xint bonus(a*b*c*c*c); UNUSED(bonus);	} ;
+		xint bonus(a*b*c*c*c); pfpUNUSED(bonus);	} ;
 		EXPECT_THROW( func(true)  , std::runtime_error );
 		EXPECT_THROW( func(false)  , std::runtime_error );
 }
 TEST(xint, safe_create_xint2) { // obviously the same, other syntax as example
 	auto func = [](bool negative) { xint a=10000, b=10000000000, c=100000000;
 		if (negative) a = -a;
-		xint bonus = a*b*c*c*c; UNUSED(bonus);	} ;
+		xint bonus = a*b*c*c*c; pfpUNUSED(bonus);	} ;
 	EXPECT_THROW( func(true)  , std::runtime_error );
 	EXPECT_THROW( func(false)  , std::runtime_error );
 }
 TEST(xint, safe_create_xint_assign) {
 	auto func = [](bool negative) { xint a=10000, b=10000000000, c=100000000;
 		if (negative) a = -a;
-		xint bonus;  bonus = a*b*c*c*c; UNUSED(bonus);	} ;
+		xint bonus;  bonus = a*b*c*c*c; pfpUNUSED(bonus);	} ;
 	EXPECT_THROW( func(true)  , std::runtime_error );
 	EXPECT_THROW( func(false)  , std::runtime_error );
 }

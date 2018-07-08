@@ -43,7 +43,7 @@ void c_peering::print(ostream & ostr) const {
 }
 
 void c_peering::send_data(const char * data, size_t data_size) {
-	UNUSED(data); UNUSED(data_size);
+	pfpUNUSED(data); pfpUNUSED(data_size);
 	pfp_throw_error( std::runtime_error("Used abstract send_data() that does nothing") );
 }
 
@@ -106,7 +106,7 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio 
 #endif
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
-	UNUSED(data); UNUSED(data_size);
+	pfpUNUSED(data); pfpUNUSED(data_size);
 	pfp_throw_error( std::runtime_error("Use send_data_udp") );
 }
 

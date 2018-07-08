@@ -176,7 +176,7 @@ void c_the_program_tunserver::options_multioptions() {
 	// option help is handled elsewhere
 
 	const auto & argm = m_argm;
-	UNUSED(argm);
+	pfpUNUSED(argm);
 
 			#if EXTLEVEL_IS_PREVIEW
 			pfp_info("BoostPO Will parse demo/devel options");
