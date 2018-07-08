@@ -62,8 +62,8 @@ void add_program_option_vector_strings(boost::program_options::variables_map & a
 		old_peer.push_back(value_to_append);
 		argm.insert( std::make_pair(name , po::variable_value( old_peer , false )) );
 	}
-//	_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
-        _info(mo_file_reader::gettext("L_program_option_added") << name << mo_file_reader::gettext("L_option_now_size") << argm.at(name).as<vector<string>>().size() );
+//	pfp_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
+        pfp_info(mo_file_reader::gettext("L_program_option_added") << name << mo_file_reader::gettext("L_option_now_size") << argm.at(name).as<vector<string>>().size() );
 
 }
 
@@ -81,23 +81,23 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 
 bool demo_sodiumpp_nonce_bug() {
 	{
-		_warn("test");
+		pfp_warn("test");
 
 				string nonce_used_raw(24,0);
 				nonce_used_raw.at(23)=6;
 
-				_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
+				pfp_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
 				antinet_crypto::t_crypto_nonce nonce_used(
 					sodiumpp::encoded_bytes(nonce_used_raw , sodiumpp::encoding::binary)
 				);
 				auto x = nonce_used;
-				_warn("copy ok");
+				pfp_warn("copy ok");
 				auto y = nonce_used.get();
-				_warn("get ok");
+				pfp_warn("get ok");
 
-				_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
+				pfp_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
 
-				_warn("OK?");
+				pfp_warn("OK?");
 				return false;
 	}
 }
@@ -129,25 +129,25 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	*/
 
 	for (int peer_nr : peer_to_peer.at(my_nr)) { // for me, add the --peer refrence of all peers that I should peer into:
-//		_info("I connect into demo peer number: " << peer_nr);
-                _info(mo_file_reader::gettext("L_connect_into_demo_peer_nr") << peer_nr);
+//		pfp_info("I connect into demo peer number: " << peer_nr);
+                pfp_info(mo_file_reader::gettext("L_connect_into_demo_peer_nr") << peer_nr);
 
 		add_program_option_vector_strings(argm, "peer", peer_cmd_map.at(peer_nr));
 	}
 
-//	_warn("Remember to set proper HOME with your key pair!");
-        _warn(mo_file_reader::gettext("L_remember_set_proper_home"));
+//	pfp_warn("Remember to set proper HOME with your key pair!");
+        pfp_warn(mo_file_reader::gettext("L_remember_set_proper_home"));
 
 	argm.at("myname") = po::variable_value( "testnode-" + std::to_string(my_nr) , false );
 
 /* TODO(r) bug#m153
 	boost::any boostany = argm.at("peer");
-	_erro("PEER = " << boostany);
+	pfp_erro("PEER = " << boostany);
 	try { auto vvv = boost::any_cast<vector<string>>( argm.at("peer") ); }
-	catch(...) { _warn("EXCEPT"); }
-	_warn("after");
+	catch(...) { pfp_warn("EXCEPT"); }
+	pfp_warn("after");
 */
-	// _note("Done dev setup, runnig as: " << to_debug(argm));
+	// pfp_note("Done dev setup, runnig as: " << to_debug(argm));
 	return true;
 }
 
@@ -182,21 +182,21 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 }
 
 bool test_foo() {
-	_info("TEST FOO");
+	pfp_info("TEST FOO");
 	return false;
 }
 
 bool test_bar() {
-	_info("TEST BAR");
+	pfp_info("TEST BAR");
 	return false;
 }
 
 void test_lang_optional() {
 	/* this fails on boost from debian 7
 	boost::optional<float> x = boost::none;
-	if (x) _info("too early: " << *x );
+	if (x) pfp_info("too early: " << *x );
 	x = 3.14;
-	if (x) _info("and now: " << x.value() );
+	if (x) pfp_info("and now: " << x.value() );
 	*/
 }
 
@@ -211,7 +211,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
-	_note("Demoname (from program options command line) is:" << demoname);
+	pfp_note("Demoname (from program options command line) is:" << demoname);
 
 	namespace po = boost::program_options;
 	po::options_description desc("Possible demos");
@@ -242,7 +242,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname_loaded != "default") demoname = demoname_loaded;
 	if (demoname=="hardcoded") demoname = demoname_default;
 
-	_note("Demo name selected: [" << demoname << "]");
+	pfp_note("Demo name selected: [" << demoname << "]");
 	_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
 		<< std::string(70,'=')<<"\n" );
 
@@ -258,7 +258,7 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	//if (demoname=="rpc") { rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
-	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
+	pfp_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;
 }
 
@@ -413,28 +413,28 @@ int main(int argc, const char * const * argv) { // the main() function
 
 	} // try running server
 	catch(const ui::exception_error_exit &) {
-		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
+		pfp_erro( mo_file_reader::gettext("L_exiting_explained_above") );
 		exit_code = 1;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
-		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+		pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		exit_code = 2;
 	}
 	catch(const std::exception& e) {
-		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+		pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
 		exit_code = 2;
 	}
 	catch(...) {
-		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
+		pfp_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
 		exit_code = 3;
 	}
 
 	try {
 		if( !exception_catched )
-			_note(mo_file_reader::gettext("L_exit_no_error"));
+			pfp_note(mo_file_reader::gettext("L_exit_no_error"));
 	}
 	catch(...) {
 		std::cerr<<"(Error in printing previous error)";

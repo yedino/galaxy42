@@ -26,7 +26,7 @@ void action_error_exit(const string &info) {
 }
 
 void action_info_ok(const string &info) {
-	_note("OK: " << info);
+	pfp_note("OK: " << info);
 	cout << "OK: " << info << endl;
 }
 
@@ -36,8 +36,8 @@ void show_error_exception_show_what(const std::string &during_action, const std:
 }
 
 void show_error_exception(const string &during_action, const std::exception &e) { ///< Inform user about caught exception
-//	_info("Exception caught: during_action=["<<during_action<<"], what="<<e.what());
-        _info(mo_file_reader::gettext("L_exception_during_action")<<during_action<<mo_file_reader::gettext("L_what_exception")<<e.what());
+//	pfp_info("Exception caught: during_action=["<<during_action<<"], what="<<e.what());
+        pfp_info(mo_file_reader::gettext("L_exception_during_action")<<during_action<<mo_file_reader::gettext("L_what_exception")<<e.what());
 
 	string what = e.what();
 //	if (!what.size()) what="(No additional information about this exception, it was empty)";
@@ -50,8 +50,8 @@ void show_error_exception(const string &during_action, const std::exception &e) 
 }
 
 void show_error_exception_unknown(const string &during_action) { ///< Inform user about caught exception of unknown type
-//	_info("Exception caught: during_action=["<<during_action<<"] " << "(Type of exception is unknown)");
-        _info(mo_file_reader::gettext("L_exception_during_action")<<during_action<<"] " << mo_file_reader::gettext("L_unknown_exception"));
+//	pfp_info("Exception caught: during_action=["<<during_action<<"] " << "(Type of exception is unknown)");
+        pfp_info(mo_file_reader::gettext("L_exception_during_action")<<during_action<<"] " << mo_file_reader::gettext("L_unknown_exception"));
 
 //	show_error_exception_show_what(during_action, "(Type of exception is unknown)");
         show_error_exception_show_what(during_action, mo_file_reader::gettext("L_unknown_exception"));

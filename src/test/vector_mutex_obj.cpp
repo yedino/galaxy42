@@ -63,7 +63,7 @@ TEST(vector_mutexed_obj_test, run_on_matching_test) {
 			vec.run_on_matching<int, decltype(test), decltype(run)>(test, run, 1);
 		}catch(const error_no_match_found& ex)
 		{
-			_erro(ex.what() << " Object:" << static_cast<int>(i));
+			pfp_erro(ex.what() << " Object:" << static_cast<int>(i));
 		}
 	}
 }

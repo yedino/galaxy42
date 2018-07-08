@@ -23,7 +23,7 @@ TEST(stdplus_tab, helper_overlap) {
 
 template <class TAB1, class TAB2>
 void testcase_vectorlike_copyall(size_t n) {
-	_info("Test for n="<<n);
+	pfp_info("Test for n="<<n);
 	TAB1 tab1;
 	for (size_t i=0; i<n; ++i) tab1.push_back(1000+i);
 
@@ -38,12 +38,12 @@ void testcase_vectorlike_copyall(size_t n) {
 		++it1;
 		++it2;
 	}
-	_info("Test for n="<<n<<" done ");
+	pfp_info("Test for n="<<n<<" done ");
 }
 
 template <class TAB1, class TAB2>
 void testcase_vectorlike_offset2(size_t size1, size_t size2, size_t n, size_t off1, size_t off2) {
-	_info("Test size1="<<std::setw(4)<<size1<<" size2="<<size2<<" n="<<n<<" off1="<<off1<<" off2="<<off2);
+	pfp_info("Test size1="<<std::setw(4)<<size1<<" size2="<<size2<<" n="<<n<<" off1="<<off1<<" off2="<<off2);
 	TAB1 tab1;
 	typedef typename TAB1::value_type t_value;
 	const t_value test1=1000, test2=2000; // test values

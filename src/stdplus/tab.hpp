@@ -60,7 +60,7 @@ If other conditions are not meet (e.g. offset is bigger then size) function can 
 */
 template <class T1, class T2>
 typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst, size_t offset_src=0, size_t offset_dst=0) {
-	_dbg5("copy (tab) n="<<n);
+	pfp_dbg5("copy (tab) n="<<n);
 	if (n<1) return tab_dst.begin();
 
 	// could write both blocks below with lambda, in C++17TODO when decomposition declarations is available
@@ -70,7 +70,7 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 	_check_input( offset_src < tab_src.size() );
 	_check_input( n <= tab_src.size() - offset_src ); // subtracting offset_src is valid since above
 	auto src_rl = tab_src.begin() + offset_src + n -1; // range last
-	_dbg5("Source     range src_rb="<<to_debug(src_rb)<<" ... src_rl="<<to_debug(src_rl));
+	pfp_dbg5("Source     range src_rb="<<to_debug(src_rb)<<" ... src_rl="<<to_debug(src_rl));
 	_check_abort( src_rl <= tab_src.end() );
 
 	// dest
@@ -78,15 +78,15 @@ typename T2::iterator copy_safe_apart(size_t n, const T1 & tab_src, T2 & tab_dst
 	_check_input( offset_dst < tab_dst.size() );
 	_check_input( n <= tab_dst.size() - offset_dst ); // subtracting offset_dst is valid since above
 	auto dst_rl = tab_dst.begin() + offset_dst + n -1; // range last
-	_dbg5("Destintion range dst_rb="<<to_debug(dst_rb)<<" ... dst_rl="<<to_debug(dst_rl));
+	pfp_dbg5("Destintion range dst_rb="<<to_debug(dst_rb)<<" ... dst_rl="<<to_debug(dst_rl));
 	_check_abort( dst_rl <= tab_dst.end() );
 
 	bool overlap = test_ranges_overlap_inclusive_noempty(src_rb, src_rl,  dst_rb, dst_rl);
-	_dbg5("overlap=" << overlap);
+	pfp_dbg5("overlap=" << overlap);
 	_check_input(!overlap);
 
 	copy_iter_and_check_no_overlap( src_rb, src_rl,  dst_rb, n );
-	_dbg5("Copy done.");
+	pfp_dbg5("Copy done.");
 
 	return dst_rb;
 }

@@ -19,7 +19,7 @@ t_peering_reference::t_peering_reference(const c_ip46_addr & peering_addr, const
 	peering_addr( peering_addr )
 	,haship_addr( c_haship_addr::tag_constr_by_addr_dot() , peering_hip  )
 {
-	_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << " on port="
+	pfp_info("peering REFERENCE created, now peering_addr=" << this->peering_addr << " on port="
 		  << peering_addr.get_assigned_port() << ", and this is: " << (*this) );
 }
 
@@ -44,7 +44,7 @@ void c_peering::print(ostream & ostr) const {
 
 void c_peering::send_data(const char * data, size_t data_size) {
 	UNUSED(data); UNUSED(data_size);
-	_throw_error( std::runtime_error("Used abstract send_data() that does nothing") );
+	pfp_throw_error( std::runtime_error("Used abstract send_data() that does nothing") );
 }
 
 ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
@@ -107,7 +107,7 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio 
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
 	UNUSED(data); UNUSED(data_size);
-	_throw_error( std::runtime_error("Use send_data_udp") );
+	pfp_throw_error( std::runtime_error("Use send_data_udp") );
 }
 
 
@@ -115,7 +115,7 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 
 void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_socket,
 	c_haship_addr src_hip, c_haship_addr dst_hip, int ttl, antinet_crypto::t_crypto_nonce nonce_used) {
-	_info("Send to peer (tunneled data) data: " << string_as_dbg(data,data_size).get() ); // TODO .get
+	pfp_info("Send to peer (tunneled data) data: " << string_as_dbg(data,data_size).get() ); // TODO .get
 
 	trivialserialize::generator gen(data_size + 50);
 	gen.push_byte_u( c_protocol::current_version );
@@ -169,7 +169,7 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 }
 
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
-	_info("Send to peer (COMMAND): command="<<enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
+	pfp_info("Send to peer (COMMAND): command="<<enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
 	string_as_bin raw;
     raw.bytes += c_protocol::current_version;
     raw.bytes += enum_to_int_safe<unsigned char>(cmd);
@@ -179,7 +179,7 @@ void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_
 
 void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int udp_socket) {
 	_UNUSED(udp_socket);
-	_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
+	pfp_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
 		", RAW-DATA: " << to_debug_b(std::string(data,data_size)) );
 
 	//#ifdef __linux__
@@ -194,7 +194,7 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 		break;
 		default: {
 			std::ostringstream oss; oss << m_peering_addr; // TODO
-			_throw_error( std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
+			pfp_throw_error( std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
 		}
 	}
 	//#endif

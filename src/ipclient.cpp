@@ -80,7 +80,7 @@ void c_ipbench::configure(const std::vector<std::string> & args) {
 	string protocol_name = args.at(3);
 	if (protocol_name=="ipv6") m_target_is_ipv6=1;
 	else if (protocol_name=="ipv4") m_target_is_ipv6=0;
-	else _throw_error( std::invalid_argument( string("Bad protocol name '")
+	else pfp_throw_error( std::invalid_argument( string("Bad protocol name '")
 		+ protocol_name + "', use instead name: 'ipv6' or 'ipv4'") );
 
 	m_target_is_ipv6 = args.at(2).c_str();
@@ -91,7 +91,7 @@ void c_ipbench::configure(const std::vector<std::string> & args) {
 void c_ipbench::prepare_socket() {
 	if (! m_target_is_ipv6) { // ipv4
 		m_sock = socket(AF_INET, SOCK_DGRAM, 0);
-		if (m_sock<0) _throw_error( std::runtime_error("Can not create socket") );
+		if (m_sock<0) pfp_throw_error( std::runtime_error("Can not create socket") );
 		m_sockaddr4.sin_family = AF_INET;
 		m_sockaddr4.sin_port = htons( m_target_port );
 
@@ -106,7 +106,7 @@ void c_ipbench::prepare_socket() {
 	}
 	else { // ipv6
 		m_sock = socket(AF_INET6, SOCK_DGRAM, 0);
-		if (m_sock<0) _throw_error( std::runtime_error("Can not create socket") );
+		if (m_sock<0) pfp_throw_error( std::runtime_error("Can not create socket") );
 		m_sockaddr6.sin6_family = AF_INET6;
 		m_sockaddr6.sin6_port = htons( m_target_port );
 
@@ -127,7 +127,7 @@ void c_ipbench::event_loop() {
 		sockaddr * addr_ptr = reinterpret_cast<sockaddr*>(sockaddr6_ptr); // guaranteed by Linux. TODO
 		auto sent = sendto(m_sock, static_cast<void*>(buffer.data()), buffer.size(),  0,
 			addr_ptr,	sizeof(m_sockaddr6));
-		if (sent<0) _throw_error( std::runtime_error("Sent failed") );
+		if (sent<0) pfp_throw_error( std::runtime_error("Sent failed") );
 
 		counter.tick(sent, std::cout);
 		counter_big.tick(sent, std::cout);

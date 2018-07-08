@@ -75,7 +75,7 @@ void c_multicryptostrings<TKey>::update_hash() const {
 			// vector<string> fingerprints;
 			for (const auto pk : pubkeys_of_this_system) {
 				auto h = Hash1( pk );
-				_dbg1("fingerprint: pk -> h: " << ::to_debug(pk) << " -> " << ::to_debug(h));
+				pfp_dbg1("fingerprint: pk -> h: " << ::to_debug(pk) << " -> " << ::to_debug(h));
 				using namespace string_binary_op;
 				fpr_accum = fpr_accum ^ h;
 				//fingerprints.push_back(h);
@@ -99,11 +99,11 @@ void c_multicryptostrings<TKey>::set_hash_dirty() {
 template <typename TKey>
 void c_multicryptostrings<TKey>::add_key(t_crypto_system_type type, const t_key & pubkey) {
 	auto & sys_vector = m_cryptolists_general.at( type );
-	//_note("ADD KEY: size before: " << sys_vector.size());
+	//pfp_note("ADD KEY: size before: " << sys_vector.size());
 	sys_vector.push_back( pubkey );
-	//_note("ADD KEY: size after: " << sys_vector.size());
-	//_note("ADD KEY: RESULT IS: " << to_debug(serialize_bin()));
-	//_note("ADD KEY: THE newest element IS: " << to_debug_locked_maybe( sys_vector.at( sys_vector.size()-1 )  ));
+	//pfp_note("ADD KEY: size after: " << sys_vector.size());
+	//pfp_note("ADD KEY: RESULT IS: " << to_debug(serialize_bin()));
+	//pfp_note("ADD KEY: THE newest element IS: " << to_debug_locked_maybe( sys_vector.at( sys_vector.size()-1 )  ));
 }
 
 template <typename TKey>
@@ -183,7 +183,7 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 	if (magic_crypto_use != m_crypto_use) {
 		std::ostringstream oss;
 		oss<<"Format error: crypto_use was=" << ::to_debug(magic_crypto_use) << " but we expected=" << m_crypto_use;
-		_throw_error( std::runtime_error(oss.str()) );
+		pfp_throw_error( std::runtime_error(oss.str()) );
 	}
 
 	if (magic_version == 'a') {
@@ -191,13 +191,13 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 		assert( map_size <= 100 ); // TODO(serialize_parser_assert)
 		for (size_t map_i=0; map_i<map_size; ++map_i) {
 			auto sys_id = t_crypto_system_type_from_ID(  parser.pop_integer_uvarint() );
-			_info("sys_id=" << sys_id);
+			pfp_info("sys_id=" << sys_id);
 			auto sys_keys = parser.pop_vector_object<TKey>(); // <--- load vector of all keys of this system
 			// TODO(r) asert sys_id is a normal expected crypto key type
 			this->m_cryptolists_general.at( sys_id ) = sys_keys;
 		}
-		if (!parser.is_end()) _throw_error( std::runtime_error("Format incorrect: extra elements at end") );
-	}	else _throw_error( trivialserialize::format_error_read_invalid_version() );
+		if (!parser.is_end()) pfp_throw_error( std::runtime_error("Format incorrect: extra elements at end") );
+	}	else pfp_throw_error( trivialserialize::format_error_read_invalid_version() );
 	// TODO(r) check that numbers are sorted and not-repeating; extent exceptions type to report details of problem
 	set_hash_dirty();
 }
@@ -205,31 +205,31 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 template <typename TKey>
 void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool overwrite) const {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
-	_note("Saving key to fname="<<fname);
+	pfp_note("Saving key to fname="<<fname);
 
 	std::string serialized_data = serialize_bin();
-	_info("Serialized to: " << to_debug_locked_maybe(serialized_data));
+	pfp_info("Serialized to: " << to_debug_locked_maybe(serialized_data));
 
 	switch(m_crypto_use) {
 		case e_crypto_use_open: {
-			_note("Save this as public key");
+			pfp_note("Save this as public key");
 			datastore::save_string(e_datastore_galaxy_pub, fname, serialized_data, overwrite);
 
 			break;
 		}
 		case e_crypto_use_signature: {
-			_note("Save this as signature");
+			pfp_note("Save this as signature");
 			datastore::save_string(e_datastore_galaxy_sig, fname, serialized_data, overwrite);
 		  }
 		case e_crypto_use_secret: {
-			_note("Save this as PRIVATE key!!!");
+			pfp_note("Save this as PRIVATE key!!!");
 			locked_string data(serialized_data);
 			datastore::save_string_mlocked(e_datastore_galaxy_wallet_PRV, fname, data, overwrite);
 
 			break;
 		}
 		default:
-			_throw_error( std::runtime_error("Can not handle this crypto_use") );
+			pfp_throw_error( std::runtime_error("Can not handle this crypto_use") );
 	}
 }
 
@@ -240,33 +240,33 @@ void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
 
 	switch(m_crypto_use) {
 		case e_crypto_use_open: {
-			_note("Load this as public key");
+			pfp_note("Load this as public key");
 			data = datastore::load_string(e_datastore_galaxy_pub, fname);
 			clear();
-			_info("Loading: reading now");
+			pfp_info("Loading: reading now");
 			load_from_bin(data);
 			break;
 		}
 		case e_crypto_use_secret: {
-			_note("Load this as PRIVATE key!!!");
+			pfp_note("Load this as PRIVATE key!!!");
 			buff_safe = datastore::load_string_mlocked(e_datastore_galaxy_wallet_PRV, fname);
 			clear();
-			_info("Loading: reading now");
+			pfp_info("Loading: reading now");
 			load_from_bin(buff_safe.get_string());
 			break;
 		}
 		case e_crypto_use_signature: {
-			_note("Load this as signature");
+			pfp_note("Load this as signature");
 			data = datastore::load_string(e_datastore_galaxy_sig, fname);
 			clear();
-			_info("Loading: reading now");
+			pfp_info("Loading: reading now");
 			load_from_bin(data);
 			break;
 		}
 		default:
-			_throw_error( std::runtime_error("Can not handle this crypto_use") );
+			pfp_throw_error( std::runtime_error("Can not handle this crypto_use") );
 	}
-	_info("Loading: done, debug: " << to_debug_locked_maybe(serialize_bin()));
+	pfp_info("Loading: done, debug: " << to_debug_locked_maybe(serialize_bin()));
 }
 
 template <typename TKey>

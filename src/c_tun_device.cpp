@@ -18,14 +18,14 @@ c_tun_device::c_tun_device()
  m_ifr_name(""),
  m_ip6_ok(false)
 {
-	_note("Creating new general TUN device class");
+	pfp_note("Creating new general TUN device class");
 }
 
 
 void c_tun_device::init() { }
 
 int c_tun_device::get_tun_fd() const {
-	_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
+	pfp_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
 }
 
 
@@ -45,11 +45,11 @@ c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(-1)
 {
-	_note("Creating new linu TUN device class");
+	pfp_note("Creating new linu TUN device class");
 }
 
 int c_tun_device_linux::get_tun_fd() const {
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
 	return m_tun_fd;
 }
 
@@ -59,7 +59,7 @@ void c_tun_device_linux::init()
 	_goal("Opening TUN file (Linux driver) " << fd_fname);
 	m_tun_fd = open(fd_fname, O_RDWR);
 	int err = errno;
-	if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+	if (m_tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 	_goal("TUN file opened as fd " << m_tun_fd);
 }
 
@@ -71,14 +71,14 @@ void c_tun_device_linux::set_ipv6_address
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	int err = errno;
-	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
+	if (errcode_ioctl < 0) pfp_throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
 
 	assert(binary_address[0] == 0xFD);
 //	assert(binary_address[1] == 0x42);
 	_fact("Setting IP address");
 	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address, prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);
-	_note("Configured network IP for " << ifr.ifr_name);
+	pfp_note("Configured network IP for " << ifr.ifr_name);
 	m_ip6_ok=true;
 	_goal("IP address is fully configured");
 }
@@ -103,17 +103,17 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO throw if error
-	_info("Reading from tuntap");
+	pfp_info("Reading from tuntap");
 	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
-	_info("Reading from tuntap - ret="<<ret);
-	if (ret == -1) _throw_error( std::runtime_error("Read from tun error") );
+	pfp_info("Reading from tuntap - ret="<<ret);
+	if (ret == -1) pfp_throw_error( std::runtime_error("Read from tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
 size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
-	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
+	if (ret == -1) pfp_throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
@@ -186,9 +186,9 @@ void c_tun_device_windows::set_ipv6_address
 	NETIOAPI_API status = GetUnicastIpAddressTable(AF_INET6, &table);
 	if (status != NO_ERROR) throw std::runtime_error("GetUnicastIpAddressTable error, code");
 	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
-		_info("Removing old addresses, i="<<i);
+		pfp_info("Removing old addresses, i="<<i);
 		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
-		_info("Removing old addresses, entry i="<<i<<" - will remove");
+		pfp_info("Removing old addresses, entry i="<<i<<" - will remove");
 			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				FreeMibTable(table);
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
@@ -238,7 +238,7 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 }
 
 size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
-	_dbg4("write to tun " << count << " bytes");
+	pfp_dbg4("write to tun " << count << " bytes");
 	const size_t eth_header_size = 14;
 	const size_t eth_offset = 4;
 	std::vector<uint8_t> eth_frame(eth_header_size + count - eth_offset, 0);
@@ -303,7 +303,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 		_fact("Number of subkeys: " << cSubKeys);
 
 		for (DWORD i = 0; i < cSubKeys; i++) {
-			_dbg1("Add subkey " << i);
+			pfp_dbg1("Add subkey " << i);
 			cbName = MAX_KEY_LENGTH;
 			retCode = RegEnumKeyEx(hKey, i,
 				achKey,
@@ -335,7 +335,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		key_wrapped.close();
 		throw e;
 	}
-	_dbg1("found " << subkeys_vector.size() << " reg keys");
+	pfp_dbg1("found " << subkeys_vector.size() << " reg keys");
 	key_wrapped.close();
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
@@ -357,7 +357,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		std::wstring netCfgInstanceId;
 		try {
 			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
-				_note(to_string(subkey_reg_path));
+				pfp_note(to_string(subkey_reg_path));
 				size = 256;
 				netCfgInstanceId.resize(size, '\0');
 				// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
@@ -365,7 +365,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 				status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 				if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 				netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
-				_note(to_string(netCfgInstanceId));
+				pfp_note(to_string(netCfgInstanceId));
 				key_wrapped.close();
 				HANDLE handle = open_tun_device(netCfgInstanceId);
 				if (handle == INVALID_HANDLE_VALUE) continue;
@@ -376,13 +376,13 @@ std::wstring c_tun_device_windows::get_device_guid() {
 				return netCfgInstanceId;
 			}
 		} catch (const std::out_of_range &e) {
-			_warn(std::string("register value processing error ") + e.what());
-			_note("componentId = " + to_string(componentId));
-			_note("netCfgInstanceId " + to_string(netCfgInstanceId));
+			pfp_warn(std::string("register value processing error ") + e.what());
+			pfp_note("componentId = " + to_string(componentId));
+			pfp_note("netCfgInstanceId " + to_string(netCfgInstanceId));
 		}
 		key_wrapped.close();
 	}
-	_erro("Can not find device in windows registry");
+	pfp_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
@@ -391,7 +391,7 @@ std::wstring c_tun_device_windows::get_human_name(const std::wstring &guid) {
 	std::wstring connectionKey = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 	connectionKey += guid;
 	connectionKey += L"\\Connection";
-	_note("connectionKey " << to_string(connectionKey));
+	pfp_note("connectionKey " << to_string(connectionKey));
 	LONG status = 1;
 	HKEY key_tmp = nullptr;
 	DWORD size = 256;
@@ -489,8 +489,8 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 	}
 	catch (const std::runtime_error &e) {
 		m_readed_bytes = 0;
-		_erro("Problem with the TUN/TAP parser" << e.what());
-		_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
+		pfp_erro("Problem with the TUN/TAP parser" << e.what());
+		pfp_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
 	}
 
 	// continue reading
@@ -559,14 +559,14 @@ void c_tun_device_apple::init()
 }
 
 int c_tun_device_apple::get_tun_fd() const {
-    if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+    if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
     return m_tun_fd;
 }
 
 int c_tun_device_apple::create_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
     int err=errno;
-    if (tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+    if (tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
     // get ctl_id
     ctl_info info;
@@ -576,7 +576,7 @@ int c_tun_device_apple::create_tun_fd() {
     if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
         int err = errno;
         close(tun_fd);
-        _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+        pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
     }
 
     // connect to tun
@@ -593,9 +593,9 @@ int c_tun_device_apple::create_tun_fd() {
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
         auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
         if (tested_card_counter++ > number_of_tested_cards)
-            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
+            pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
         if (int_s >= cards_testing_time)
-            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
+            pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
     _goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
@@ -676,7 +676,7 @@ void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_
 }
 
 void c_tun_device_empty::set_mtu(uint32_t mtu) {
-	_warn("Called set_mtu on empty device");
+	pfp_warn("Called set_mtu on empty device");
 	_UNUSED(mtu);
 }
 

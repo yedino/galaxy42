@@ -138,7 +138,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
 	int err=errno;
 	if (tun_fd < 0)
-		_throw_error_sub(tuntap_error_devtun,
+		pfp_throw_error_sub(tuntap_error_devtun,
 		                 NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
 	// get ctl_id
@@ -153,7 +153,7 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
 		int err = errno;
 		close(tun_fd);
-		_throw_error_sub(tuntap_error_devtun,
+		pfp_throw_error_sub(tuntap_error_devtun,
 		                 NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 	}
 
@@ -172,16 +172,16 @@ int c_tuntap_macosx_obj::create_tun_fd() {
 	while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
 		auto int_s = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - t0).count();
 		if (tested_card_counter++ > number_of_tested_cards)
-			_throw_error_sub(tuntap_error_devtun,
+			pfp_throw_error_sub(tuntap_error_devtun,
 			                 mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
 		if (int_s >= cards_testing_time)
-			_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
+			pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
 		++addr_ctl.sc_unit;
 	}
 	_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
 	m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
-	_dbg1("interface name " << m_ifr_name);
+	pfp_dbg1("interface name " << m_ifr_name);
 	return tun_fd;
 }
 
@@ -190,7 +190,7 @@ void c_tuntap_macosx_obj::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &
 
 	_check_input(binary_address[0] == 0xFD);
 	_check_input(binary_address[1] == 0x42);
-	_dbg1("set ip addres for interface name " << m_ifr_name);
+	pfp_dbg1("set ip addres for interface name " << m_ifr_name);
 	Wrap_NetPlatform_addAddress(m_ifr_name.c_str(), binary_address, prefixLen, Sockaddr_AF_INET6);
 }
 
@@ -200,7 +200,7 @@ void c_tuntap_macosx_obj::set_mtu(uint32_t mtu) {
 	_fact("Setting MTU="<<mtu<<" on card: " << name);
 	t_syserr error = NetPlatform_setMTU(name, mtu);
 	if (error.my_code != 0)
-		_throw_error_runtime("set MTU error: " + errno_to_string(error.errno_copy));
+		pfp_throw_error_runtime("set MTU error: " + errno_to_string(error.errno_copy));
 }
 
 #endif // ANTINET_macosx

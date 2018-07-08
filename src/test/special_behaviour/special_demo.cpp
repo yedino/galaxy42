@@ -10,7 +10,7 @@
 namespace n_special_behaviour {
 
 void example_warn_1() {
-	_warn("Example warning printed out");
+	pfp_warn("Example warning printed out");
 }
 
 void example_memcheck_1() { // to test valgrind detection of errors

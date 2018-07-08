@@ -270,9 +270,9 @@ template <int S, typename T> void generator::push_integer_u(T value) {
 	static_assert( S<=8 , "S must be <= 8");
 
 	if (S==8) {
-		if ( value >= 0xFFFFFFFFFFFFFFFF ) _throw_error( format_error_write_value_too_big() );
+		if ( value >= 0xFFFFFFFFFFFFFFFF ) pfp_throw_error( format_error_write_value_too_big() );
 	} else {
-		if ( value >= get_max_value_of_S_octet_uint<S>() ) _throw_error( format_error_write_value_too_big() );
+		if ( value >= get_max_value_of_S_octet_uint<S>() ) pfp_throw_error( format_error_write_value_too_big() );
 	}
 
 	// TODO use proper type, depending on S
@@ -420,25 +420,25 @@ vector<T> parser::pop_vector_object() {
 template <typename TKey, typename TVal>
 map<TKey,TVal> parser::pop_map_object() {
 	bool dbg=0;
-	if (dbg) _dbg1("Reading map");
+	if (dbg) pfp_dbg1("Reading map");
 
 	map<TKey,TVal> ret;
 	const auto size = pop_integer_uvarint();
-	if (dbg) _dbg1("Reading map size="<<size);
+	if (dbg) pfp_dbg1("Reading map size="<<size);
 	assert(size <= std::numeric_limits<uint64_t>::max());
 	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) {
-		if (dbg) _dbg1("Reading i=" << i);
+		if (dbg) pfp_dbg1("Reading i=" << i);
 		TKey key = pop_object<TKey>();
 		TVal value = pop_object<TVal>();
 
 		auto size_old = ret.size();
 		auto found = ret.find(key);
-		if (found != ret.end()) _throw_error( format_error_read_badformat() ); // there was already such key
-		if (dbg) _dbg1("Inserting");
+		if (found != ret.end()) pfp_throw_error( format_error_read_badformat() ); // there was already such key
+		if (dbg) pfp_dbg1("Inserting");
 		ret.emplace(std::move(key), std::move(value));
-		if (ret.size() != size_old+1) _throw_error( format_error_read_badformat() ); // the insert failed apparently
+		if (ret.size() != size_old+1) pfp_throw_error( format_error_read_badformat() ); // the insert failed apparently
 	}
-	if (ret.size() != size) _throw_error( format_error_read_badformat() ); // the resulting size somehow was different then expected
+	if (ret.size() != size) pfp_throw_error( format_error_read_badformat() ); // the resulting size somehow was different then expected
 	return ret;
 }
 
@@ -463,7 +463,7 @@ template <int S, typename T> T parser::pop_integer_u() {
 }
 
 template <int S, typename T> T parser::pop_integer_s() {
-	_throw_error( std::runtime_error("Not implemented yet") );
+	pfp_throw_error( std::runtime_error("Not implemented yet") );
 }
 
 

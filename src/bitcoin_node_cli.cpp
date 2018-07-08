@@ -91,7 +91,7 @@ std::string bitcoin_node_cli::send_request_and_get_response(const std::string &r
 
 	CURLcode ret_code = curl_easy_perform(curl.get_raw_ptr());
 	if(ret_code != CURLE_OK) {
-		_warn("curl_easy_perform() failed: " << curl_easy_strerror(ret_code));
+		pfp_warn("curl_easy_perform() failed: " << curl_easy_strerror(ret_code));
 		throw std::runtime_error("curl_easy_perform() failed: "s + curl_easy_strerror(ret_code));
 	}
 	return receive_data;

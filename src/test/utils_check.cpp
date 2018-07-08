@@ -34,7 +34,7 @@ what_happened start_me(orders order) {
 	std::vector<float> vec(100);
 	if (order == orders::do_bad_array_index) ix=99999;
 	auto val = vec.at(ix);
-	_dbg4(val);
+	pfp_dbg4(val);
 
 	bool file_opened=true;
 	if (order == orders::do_bad_soft_sys) file_opened=false;
@@ -69,7 +69,7 @@ what_happened	typical_main_program(orders order) {
 		catch(const err_check_soft &ex) {
 			happened = what_happened::got_soft_error_some_type;
 		}
-		_dbg3("Ok program worked");
+		pfp_dbg3("Ok program worked");
 		return happened; // program worked despite expected soft problems
 	}
 	catch(const std::exception &) { happened = what_happened::got_std_exception; }

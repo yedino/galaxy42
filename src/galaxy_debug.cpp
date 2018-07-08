@@ -23,25 +23,25 @@ void test_debug1_a_string(const string & input) {
 	sodiumpp::locked_string sl(s);
 
 
-	_note("string: " << ::to_debug(s));
-	_info("string: " << antinet_crypto::to_debug_locked_maybe(s));
-	_info("string locked: " << antinet_crypto::to_debug_locked(sl));
-	_info("string locked: " << antinet_crypto::to_debug_locked_maybe(sl));
+	pfp_note("string: " << ::to_debug(s));
+	pfp_info("string: " << antinet_crypto::to_debug_locked_maybe(s));
+	pfp_info("string locked: " << antinet_crypto::to_debug_locked(sl));
+	pfp_info("string locked: " << antinet_crypto::to_debug_locked_maybe(sl));
 
 
-	_info("string: " << ::to_debug(s,e_debug_style_crypto_devel));
-	_info("string: " << antinet_crypto::to_debug_locked_maybe(s));
-	_info("string locked: " << antinet_crypto::to_debug_locked(sl));
-	_info("string locked: " << antinet_crypto::to_debug_locked_maybe(sl));
+	pfp_info("string: " << ::to_debug(s,e_debug_style_crypto_devel));
+	pfp_info("string: " << antinet_crypto::to_debug_locked_maybe(s));
+	pfp_info("string locked: " << antinet_crypto::to_debug_locked(sl));
+	pfp_info("string locked: " << antinet_crypto::to_debug_locked_maybe(sl));
 
 }
 
 
 void test_debug1() {
-	_dbg3("dbg3");
-	_dbg2("dbg2");
-	_dbg1("dbg1");
-	_info("info");
+	pfp_dbg3("dbg3");
+	pfp_dbg2("dbg2");
+	pfp_dbg1("dbg1");
+	pfp_info("info");
 	test_debug1_a_string("foo\001\002\003bar");
 	test_debug1_a_string("foo\001\002\003baz");
 	test_debug1_a_string("foo\001\002\003baraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");

@@ -41,7 +41,7 @@ void c_the_program::startup_version() {
 	_fact( "" ); // newline
 	_fact( "Start... " << ver_str );
 	#ifdef TOOLS_ARE_BROKEN
-		_clue("[broken-tools] it seems this program was built with partially broken tools/libraries "
+		pfp_clue("[broken-tools] it seems this program was built with partially broken tools/libraries "
 			"(details are shown when building, e.g. by cmake/ccmake)");
 	#endif
 }
@@ -115,7 +115,7 @@ void c_the_program::startup_data_dir() {
 			}
 		}
 	} catch(std::exception & ex) {
-			_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
+			pfp_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
 	}
 
 	if (!found) _fact( "Can not find language data files." );
@@ -195,7 +195,7 @@ Leaving as documentation/example
 		mo_reader.add_mo_filename(std::string("galaxy42_main"));
 		mo_reader.read_file();
 	} catch (const std::exception &e) {
-		_erro( "mo file open error: " << e.what() );
+		pfp_erro( "mo file open error: " << e.what() );
 	}
 
 	_fact( std::string(80,'=') << std::endl << mo_file_reader::gettext("L_warning_work_in_progres") << std::endl );
@@ -227,9 +227,9 @@ void c_the_program::init_library_sodium() {
 	_fact(mo_file_reader::gettext("L_starting_lib_libsodium"));
 
 	if (sodium_init() == -1) {
-		_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
+		pfp_throw_error( std::runtime_error(mo_file_reader::gettext("L_lisodium_init_err")) );
 	}
-	_info(mo_file_reader::gettext("L_libsodium_ready"));
+	pfp_info(mo_file_reader::gettext("L_libsodium_ready"));
 }
 
 void c_the_program::options_create_desc() { }
@@ -239,7 +239,7 @@ void c_the_program::options_parse_first() {
 	for (const auto & str : argt)
 	{
 		_fact("commandline option: " << str << " ;");
-		if (str.size() == 0) _warn("Empty commandline arg");
+		if (str.size() == 0) pfp_warn("Empty commandline arg");
 	}
 	_check(m_boostPO_desc);
 	namespace po = boost::program_options;
@@ -250,9 +250,9 @@ void c_the_program::options_parse_first() {
 	const char ** argv = args_cstyle.get_argv();
 
 	po::store(po::parse_command_line(argc, argv, *m_boostPO_desc) , m_argm); // *** parse commandline, and store result
-	_dbg1( "Parsing with options: " << *m_boostPO_desc );
+	pfp_dbg1( "Parsing with options: " << *m_boostPO_desc );
 	_goal("BoostPO parsed argm size=" << m_argm.size());
-	for(auto &arg: m_argm) _info("Argument in argm: " << arg.first );
+	for(auto &arg: m_argm) pfp_info("Argument in argm: " << arg.first );
 }
 
 void c_the_program::options_multioptions() { }
@@ -270,7 +270,7 @@ void c_the_program::options_done() {
 			// === argm now can contain options added/modified by developer mode ===
 			namespace po = boost::program_options;
 			po::notify(m_argm);  // !
-			_note("After BoostPO notify");
+			pfp_note("After BoostPO notify");
 
 	for (const auto & opt : m_argm) {
 		ostringstream oss ; oss << "commandline option (parsed by boost PO): " << opt.first << " = ";
@@ -286,7 +286,7 @@ void c_the_program::options_done() {
 
 		if (!converted) oss << "(other type)";
 		oss << " ;";
-		_note(oss.str());
+		pfp_note(oss.str());
 	}
 }
 

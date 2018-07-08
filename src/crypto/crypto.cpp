@@ -75,13 +75,13 @@ t_crypto_system_type c_symhash_state::get_system_type() const { return e_crypto_
 c_symhash_state::c_symhash_state( t_hash initial_state )
 	: m_state( initial_state )
 {
-//	_info("Initial state: " << m_state);
-//	_info("Initial state dbg: " << string_as_dbg(m_state).get() );
+//	pfp_info("Initial state: " << m_state);
+//	pfp_info("Initial state dbg: " << string_as_dbg(m_state).get() );
 }
 
 void c_symhash_state::next_state( t_hash additional_secret_material ) {
 	m_state = Hash1( Hash1( m_state ) + additional_secret_material );
-	//_info("State:" << m_state.bytes);
+	//pfp_info("State:" << m_state.bytes);
 	++m_number;
 }
 
@@ -110,7 +110,7 @@ c_stream::c_stream(bool side_initiator, const string& m_nicename)
 	m_unboxer( nullptr ),
 	m_nicename(m_nicename)
 {
-	_dbg2n("created");
+	pfp_dbg2n("created");
 }
 
 std::string c_stream::debug_this() const {
@@ -138,7 +138,7 @@ std::string c_stream::box(const std::string & msg, t_crypto_nonce & nonce) {
 	auto & cb = UsePtr(m_boxer); // my crypto (un)boxer
 	const auto N = cb.get_nonce(); // nonce (before operation) - just for debug
 	const auto ret = cb.box(msg,nonce).to_binary(); // btw, nonce variable is updated here too
-	_dbg1n(
+	pfp_dbg1n(
 		"Encrypt N="<<show_nice_nonce(N)<<"(auto)"
 		<<" text " << to_debug(msg) << " ---> " << to_debug(ret)
 		<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
@@ -156,13 +156,13 @@ std::string c_stream::unbox(const std::string & msg, t_crypto_nonce nonce, bool 
 	const auto N = force_nonce ? nonce : cb.get_nonce(); // nonce (before operation)
 	try {
 		auto ret = cb.unbox(sodiumpp::encoded_bytes(msg , sodiumpp::encoding::binary) , N);
-		_dbg1n(
+		pfp_dbg1n(
 			"Decrypt N="<<show_nice_nonce(N)<<(force_nonce ? "(given)":"(auto)")
 			<<" text " << to_debug(ret) << " <--- " << to_debug(msg)
 			<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
 		return ret;
 	} catch(const std::exception &e) {
-		_erro("Crypto failed to unbox: " << e.what() << " during: "
+		pfp_erro("Crypto failed to unbox: " << e.what() << " during: "
 			<< "Decrypt N="<<show_nice_nonce(N)
 			<<" text " << "???" << " <--- " << to_debug(msg)
 			<<" K=" << to_debug_locked( cb.get_secret_PRIVATE_key()));
@@ -179,7 +179,7 @@ t_crypto_system_count c_stream::get_cryptolists_count_for_KCTf() const {
 void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 	bool will_new_id)
 {
-	_noten("EXCHANGE START");
+	pfp_noten("EXCHANGE START");
 	m_KCT = calculate_KCT( ID_self , ID_them, will_new_id, "" );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
@@ -188,36 +188,36 @@ void c_stream::exchange_start(const c_multikeys_PAIR & ID_self,  const c_multike
 void c_stream::exchange_done(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
 			const std::string & packetstart)
 {
-	_noten("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
+	pfp_noten("EXCHANGE DONE, packetstart=" << to_debug(packetstart));
 	m_KCT = calculate_KCT( ID_self , ID_them, true, packetstart );
 	m_nonce_odd = calculate_nonce_odd( ID_self, ID_them );
 	create_boxer_with_K();
 }
 
 void c_stream::create_boxer_with_K() {
-	_noten("Got stream K = " << to_debug_locked(m_KCT));
+	pfp_noten("Got stream K = " << to_debug_locked(m_KCT));
 	sodiumpp::encoded_bytes nonce_zero =
 		sodiumpp::encoded_bytes( string( t_crypto_nonce::constantbytes , char(0)), sodiumpp::encoding::binary)
 	;
 	m_boxer   = make_unique<t_boxer>  ( sodiumpp::boxer_base::boxer_type_shared_key(),   m_nonce_odd, m_KCT, nonce_zero );
 	m_unboxer = make_unique<t_unboxer>( sodiumpp::boxer_base::boxer_type_shared_key(), ! m_nonce_odd, m_KCT, nonce_zero );
-	_note("EXCHANGE start:: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
+	pfp_note("EXCHANGE start:: Stream Crypto prepared with m_nonce_odd=" << m_nonce_odd
 		<< " and m_KCT=" << to_debug_locked( m_KCT )
 		);
-	_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(UsePtr(m_boxer).get_nonce().get().to_binary()));
-	_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(UsePtr(m_unboxer).get_nonce().get().to_binary()));
+	pfp_dbg1("EXCHANGE start: created boxer   with nonce=" << to_debug(UsePtr(m_boxer).get_nonce().get().to_binary()));
+	pfp_dbg1("EXCHANGE start: created unboxer with nonce=" << to_debug(UsePtr(m_unboxer).get_nonce().get().to_binary()));
 	assert(m_boxer); assert(m_unboxer);
 }
 
 std::string c_stream::generate_packetstart(c_stream & stream_to_encrypt_with) const {
 	trivialserialize::generator gen( m_packetstart_kexasym.size() + m_packetstart_IDe.size() + 20);
-	_note("MAKING packetstart: m_packetstart_kexasym = " << to_debug(m_packetstart_kexasym));
+	pfp_note("MAKING packetstart: m_packetstart_kexasym = " << to_debug(m_packetstart_kexasym));
 	gen.push_varstring( m_packetstart_kexasym );
 
-	_note("MAKING packetstart: m_packetstart_IDe = " << to_debug(m_packetstart_IDe));
+	pfp_note("MAKING packetstart: m_packetstart_IDe = " << to_debug(m_packetstart_IDe));
 	t_crypto_nonce nonce_used;
 	string packetstart_IDe_via_CT = stream_to_encrypt_with.box( m_packetstart_IDe , nonce_used );
-	_note("MAKING packetstart: packetstart_IDe_via_CT = " << to_debug(packetstart_IDe_via_CT));
+	pfp_note("MAKING packetstart: packetstart_IDe_via_CT = " << to_debug(packetstart_IDe_via_CT));
 	gen.push_varstring( packetstart_IDe_via_CT );
 	return gen.str();
 }
@@ -233,18 +233,18 @@ string c_stream::parse_packetstart_IDe(const string & data) const {
 	parser.skip_varstring(); // 1
 	auto data_encr = parser.pop_varstring(); // 2
 	auto data_decr = m_unboxer->unbox( sodiumpp::encoded_bytes(data_encr,sodiumpp::encoding::binary ));
-	_info("Reading packetstart IDe, encr: " << to_debug(data_encr));
-	_info("Reading packetstart IDe, decr: " << to_debug(data_decr));
+	pfp_info("Reading packetstart IDe, encr: " << to_debug(data_encr));
+	pfp_info("Reading packetstart IDe, decr: " << to_debug(data_decr));
 	return data_decr;
 }
 
 
 unique_ptr<c_multikeys_PAIR> c_stream::create_IDe(bool will_asymkex) {
-	_note("CREATING IDe (for my Tunnel probably)");
+	pfp_note("CREATING IDe (for my Tunnel probably)");
 	unique_ptr<c_multikeys_PAIR> IDe = make_unique< c_multikeys_PAIR >();
 	IDe -> generate( m_cryptolists_count , will_asymkex );
 	m_packetstart_IDe = IDe->read_pub().serialize_bin(); // TODO(r) this should be all moved outside
-	_dbg1("Created my IDe, ready to send it as: " << to_debug(m_packetstart_IDe) );
+	pfp_dbg1("Created my IDe, ready to send it as: " << to_debug(m_packetstart_IDe) );
 	return IDe;
 }
 
@@ -282,16 +282,16 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 	t_kexasym kexasym_passencr_received; // as above, but the ones I received from initiator
 
 	if (m_side_initiator) {
-		if (packetstart.size()) _throw_error( std::invalid_argument("Invalid use of CT: initiator mode, but not-empty packetstarter") );
+		if (packetstart.size()) pfp_throw_error( std::invalid_argument("Invalid use of CT: initiator mode, but not-empty packetstarter") );
 	}
 	else {
-		_dbg1("Parsing packetstart " << to_debug(packetstart));
+		pfp_dbg1("Parsing packetstart " << to_debug(packetstart));
 		// I am respondent
-		if (! packetstart.size()) _throw_error( std::invalid_argument("Invalid use of CT: not-initiator mode, but empty packetstarter") );
+		if (! packetstart.size()) pfp_throw_error( std::invalid_argument("Invalid use of CT: not-initiator mode, but empty packetstarter") );
 
 		// TODO-speed: change to zerocopy view strings (after implemented in trivialserialize)
 		string packetstart_kexasym = parse_packetstart_kexasym(packetstart);
-		_dbg1("Parsing packetstart_kexasym " << to_debug(packetstart_kexasym));
+		pfp_dbg1("Parsing packetstart_kexasym " << to_debug(packetstart_kexasym));
 		trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() , packetstart_kexasym );
 		kexasym_passencr_received = parser.pop_map_object<t_kexasym::key_type , t_kexasym::mapped_type>();
 	}
@@ -324,34 +324,34 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 		if (!( (key_count_a>0) && (key_count_b>0) )) continue ; // !
 
 		auto sys_id = t_crypto_system_type_to_ID(sys_enum); // ID (e.g. char) of this crypto system
-		_info("sys_id=" << sys_id);
+		pfp_info("sys_id=" << sys_id);
 
 		if (should_count) m_cryptolists_count.at(sys) = 1; // count that we use this cryptosystem
 
 		if (sys == e_crypto_system_type_X25519) {
-			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+			pfp_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
 				auto keynr_a = keynr_i % key_count_a;
 				auto keynr_b = keynr_i % key_count_b;
-				_info("kex " << keynr_a << " " << keynr_b);
+				pfp_info("kex " << keynr_a << " " << keynr_b);
 
 				auto const key_A_pub = self_pub.get_public (sys_enum, keynr_a);
 				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
 				auto const key_B_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
 
-				_note("Keys:");
-				_info(to_debug_locked_maybe(key_A_pub));
-				_info(to_debug_locked_maybe(key_A_PRV));
-				_info(to_debug_locked_maybe(key_B_pub));
+				pfp_note("Keys:");
+				pfp_info(to_debug_locked_maybe(key_A_pub));
+				pfp_info(to_debug_locked_maybe(key_A_PRV));
+				pfp_info(to_debug_locked_maybe(key_B_pub));
 
 				using namespace string_binary_op; // operator^
 
 				// a raw key from DH exchange. NOT SECURE yet (uneven distribution), fixed below
 				locked_string k_dh_raw( sodiumpp::key_agreement_locked( key_A_PRV, key_B_pub ) ); // *** DH key agreement (part1)
-				_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // _info( XVAR(k_dh_raw ) );
+				pfp_info("k_dh_raw = " << to_debug_locked(k_dh_raw) ); // pfp_info( XVAR(k_dh_raw ) );
 
 				locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
 				Hash1_PRV(
@@ -359,17 +359,17 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 					^	Hash1( key_A_pub )
 					^ Hash1( key_B_pub )
 				);
-				_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
+				pfp_info("k_dh_agreed = " << to_debug_locked(k_dh_agreed) );
 
 				KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
-				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
+				pfp_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 		} // X25519
 
 
 		if (sys == e_crypto_system_type_NTRU_EES439EP1) {
 			#if ENABLE_CRYPTO_NTRU
-			_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys_enum)
+			pfp_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys_enum)
 				<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
 
 			for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
@@ -378,7 +378,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 				// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
 				auto keynr_a = keynr_i % key_count_a;
 				auto keynr_b = keynr_i % key_count_b;
-				_info("kex " << keynr_a << " " << keynr_b);
+				pfp_info("kex " << keynr_a << " " << keynr_b);
 
 				auto const key_A_pub = self_pub.get_public (sys_enum, keynr_a);
 				auto const key_A_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
@@ -393,10 +393,10 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 						= sodiumpp::randombytes_locked(random_len); // <--- generate password
 
 					// encrypt
-					_dbg1("NTru password GENERATED: " << to_debug_locked(password_cleartext));
-					_dbg2("NTru to pubkey " << to_debug(key_B_pub));
+					pfp_dbg1("NTru password GENERATED: " << to_debug_locked(password_cleartext));
+					pfp_dbg2("NTru to pubkey " << to_debug(key_B_pub));
 					string password_encrypted = ntrupp::encrypt(password_cleartext.get_string(), key_B_pub);
-					_dbg1("random data encrypted as: " << to_debug(password_encrypted));
+					pfp_dbg1("random data encrypted as: " << to_debug(password_encrypted));
 
 					kexasym_passencr_tosend[sys_id].push_back(password_encrypted); // store encrypted to send to Bob
 
@@ -407,15 +407,15 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 						^	Hash1( key_A_pub )
 						^ Hash1( key_B_pub )
 					);
-					_info("k_dh_agreed = " << t_crypto_system_type_to_name(sys_enum) << ": " << to_debug_locked(k_dh_agreed) );
+					pfp_info("k_dh_agreed = " << t_crypto_system_type_to_name(sys_enum) << ": " << to_debug_locked(k_dh_agreed) );
 
 					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 				}
 				else { // they encrypted rand data to me, I need to decrypt:
 					string & encrypted = kexasym_passencr_received.at(sys_id).at(pass_nr);
-					_info("Opening NTru KEX: from encrypted=" << to_debug(encrypted));
+					pfp_info("Opening NTru KEX: from encrypted=" << to_debug(encrypted));
 					sodiumpp::locked_string decrypted = ntrupp::decrypt<sodiumpp::locked_string>(encrypted, key_A_PRV);
-					_info("Opening NTru KEX: from decrypted=" << to_debug_locked(decrypted));
+					pfp_info("Opening NTru KEX: from decrypted=" << to_debug_locked(decrypted));
 
 					// TODO double code
 					locked_string k_dh_agreed = // the fully agreed key, that is secure result of DH
@@ -424,28 +424,28 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 						^	Hash1( key_A_pub )
 						^ Hash1( key_B_pub )
 					);
-					_info("k_dh_agreed = " << t_crypto_system_type_to_name(sys_enum) << ": " << to_debug_locked(k_dh_agreed) );
+					pfp_info("k_dh_agreed = " << t_crypto_system_type_to_name(sys_enum) << ": " << to_debug_locked(k_dh_agreed) );
 
 					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 
 				}
-				_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
+				pfp_info("KCT_accum = " <<  to_debug_locked( KCT_accum ) );
 			}
 			#else
-				_dbg1("Warning: key type is not supported (NTru)");
+				pfp_dbg1("Warning: key type is not supported (NTru)");
 			#endif
 		} // NTRU_EES439EP1
 
 
 		if (sys == e_crypto_system_type_SIDH) {
 			#if ENABLE_CRYPTO_SIDH
-				_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
+				pfp_info("Will do kex in sys="<<t_crypto_system_type_to_name(sys)
 					<<" between key counts: " << key_count_a << " -VS- " << key_count_b );
 				for (decltype(key_count_bigger) keynr_i=0; keynr_i<key_count_bigger; ++keynr_i) {
 					// if we run out of keys then wrap them around. this happens if e.g. we (self) have more keys then them
 					auto keynr_a = keynr_i % key_count_a;
 					auto keynr_b = keynr_i % key_count_b;
-					_info("kex " << keynr_a << " " << keynr_b);
+					pfp_info("kex " << keynr_a << " " << keynr_b);
 					auto const key_self_pub = self_pub.get_public (sys_enum, keynr_a);
 					auto const key_self_PRV = self_PRV.get_PRIVATE(sys_enum, keynr_a);
 					auto const key_them_pub = them_pub.get_public (sys_enum, keynr_b); // number b!
@@ -458,21 +458,21 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 						Hash1_PRV( dh_secret) // agreed-shared-key, hashed (it should include A+B parts of SIDH)
 						^ Hash1( key_self_pub )	^	Hash1( key_them_pub ) // and hash of public keys too
 					); // and all of this hashed once more
-					_info("SIDH secret key: " << to_debug_locked(k_dh_agreed));
+					pfp_info("SIDH secret key: " << to_debug_locked(k_dh_agreed));
 
 					KCT_accum = KCT_accum ^ k_dh_agreed; // join this fully agreed key, with other keys
 
 					// key agreement
 				}
 			#else
-				_dbg1("Warning: key type is not supported (SIDH)");
+				pfp_dbg1("Warning: key type is not supported (SIDH)");
 			#endif
 		} // SIDH
 
 	}
 
 	t_hash_PRV KCT_ready_full = Hash1_PRV( KCT_accum );
-	_info("KCT_ready_full = " << to_debug_locked( KCT_ready_full ) );
+	pfp_info("KCT_ready_full = " << to_debug_locked( KCT_ready_full ) );
 	assert( KCT_ready_full.size() >= crypto_secretbox_KEYBYTES ); // assert that we can in fact narrow the hash
 
 	locked_string KCT_ready = substr( KCT_ready_full , crypto_secretbox_KEYBYTES); // narrow it to length of symmetrical key
@@ -480,9 +480,9 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 	trivialserialize::generator gen(1000);
 	gen.push_map_object( kexasym_passencr_tosend );
 	m_packetstart_kexasym = gen.str();
-	_note("KCT created packetstart_kexasym: " << to_debug(m_packetstart_kexasym) );
+	pfp_note("KCT created packetstart_kexasym: " << to_debug(m_packetstart_kexasym) );
 
-	_note("KCT ready exchanged: " << to_debug_locked( KCT_ready ) );
+	pfp_note("KCT ready exchanged: " << to_debug_locked( KCT_ready ) );
 	return KCT_ready;
 } // calculate_KCT
 
@@ -511,10 +511,10 @@ const string& nicename)
 	: m_side_initiator(true),
 	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
-	_noten("Alice? Creating the crypto tunnel (we are initiator)");
+	pfp_noten("Alice? Creating the crypto tunnel (we are initiator)");
 	m_stream_crypto_ab = make_unique<c_stream>(m_side_initiator, m_nicename+"-CTab"); // TODONOW
 	UsePtr(m_stream_crypto_ab).exchange_start( self, them , true );
-	_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
+	pfp_noten("Alice? Creating the crypto tunnel (we are initiator) - DONE");
 }
 
 c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikeys_pub & them,
@@ -522,31 +522,31 @@ c_crypto_tunnel::c_crypto_tunnel(const c_multikeys_PAIR & self, const c_multikey
 	: m_side_initiator(false),
 	m_IDe(nullptr), m_stream_crypto_ab(nullptr), m_stream_crypto_final(nullptr), m_nicename(nicename)
 {
-	_note("Bob? Creating the crypto tunnel (we are respondent)");
+	pfp_note("Bob? Creating the crypto tunnel (we are respondent)");
 	m_stream_crypto_ab = make_unique<c_stream>(false, nicename+"-CTab");
 	UsePtr(m_stream_crypto_ab).exchange_done( self, them , packetstart ); // exchange for IDC is ready
-	_info("Ok exchange for AB is finalized");
+	pfp_info("Ok exchange for AB is finalized");
 
-	_note("Bob? Ok created our IDe...");
+	pfp_note("Bob? Ok created our IDe...");
 	this->create_IDe(); // here, because we counted keys from AB above
-	_note("Bob? Ok created our IDe - DONE");
+	pfp_note("Bob? Ok created our IDe - DONE");
 
 	// exchange for IDe is ready here:
-	_note("Bob? Ok creating final stream");
+	pfp_note("Bob? Ok creating final stream");
 	m_stream_crypto_final = make_unique<c_stream>(true, m_nicename+"-CTf"); // I am initiator for CTe
 
 	c_multikeys_pub them_IDe;
 	them_IDe.load_from_bin( m_stream_crypto_ab->parse_packetstart_IDe( packetstart ) );
-	_info("Bob? From packetstart got IDe: " << them_IDe.to_debug() );
+	pfp_info("Bob? From packetstart got IDe: " << them_IDe.to_debug() );
 	m_stream_crypto_final->exchange_start( * this->m_IDe , them_IDe
 		, true // there is no "CTee" ... uhh nope? TODO-now
 		); // no packetstart - I am initiator of CTe
 
 	m_stream_crypto_final->set_packetstart_IDe_from( * m_IDe ); // finall stream will send our IDe in packetstarter
 
-	_dbg4("Bob? created packet starter for CTe...");
+	pfp_dbg4("Bob? created packet starter for CTe...");
 //	_mark("Bob? created packet starter for CTe : " << to_debug((m_stream_crypto_final)->generate_packetstart()));
-	_note("Bob? Creating the crypto tunnel (we are respondent) - DONE");
+	pfp_note("Bob? Creating the crypto tunnel (we are respondent) - DONE");
 }
 
 // ---
@@ -556,12 +556,12 @@ std::string c_crypto_tunnel::debug_this() const {
 }
 
 void c_crypto_tunnel::create_CTf(const string & packetstart) {
-	_info("Alice? Creating CTf from packetstart="<<to_debug(packetstart));
+	pfp_info("Alice? Creating CTf from packetstart="<<to_debug(packetstart));
 	c_multikeys_pub them_IDe;
 	them_IDe.load_from_bin( UsePtr(m_stream_crypto_ab).parse_packetstart_IDe(packetstart) );
 	m_stream_crypto_final = make_unique<c_stream>(false, m_nicename+"-CTf"); // I am not initiator of this return-stream CTe
 	m_stream_crypto_final -> exchange_done( * this->m_IDe , them_IDe , packetstart);
-	_info("Alice? Creating CTf - done");
+	pfp_info("Alice? Creating CTf - done");
 }
 
 // ------------------------------------------------------------------
@@ -614,14 +614,14 @@ std::string c_crypto_tunnel::unbox_ab(const std::string & msg, t_crypto_nonce no
 // : c_stream(IDC_self, IDC_them, rand_ntru_data, std::vector<std::string>()) // TODOdel
 
 void c_crypto_tunnel::create_IDe() {
-	_dbg3("Creating IDe");
-	if (m_IDe) _throw_error( std::runtime_error("Tried to create IDe again, on a CT that already has one created.") );
+	pfp_dbg3("Creating IDe");
+	if (m_IDe) pfp_throw_error( std::runtime_error("Tried to create IDe again, on a CT that already has one created.") );
 	//m_IDe = make_unique<c_multikeys_PAIR>();
 	//m_IDe->generate( UsePtr(m_stream_crypto_ab).get_cryptolists_count_for_KCTf() );
 	m_IDe = UsePtr( m_stream_crypto_ab ).create_IDe( true );
-	_info("My IDe:");
+	pfp_info("My IDe:");
 	m_IDe->debug();
-	_dbg2("Creating IDe - DONE");
+	pfp_dbg2("Creating IDe - DONE");
 }
 
 
@@ -638,8 +638,8 @@ namespace unittest {
 // This will be probably removed soon from here - thugh it's a place to very quickly run some tests
 // while you develop them
 
-#define UTASSERT(X) do { if (!(X)) { _warn("Unit test failed!"); return false; } } while(0)
-#define UTEQ(X,Y) do { if (!(X == Y)) { _warn("Unit test failed! Values differ: actuall=[" << X << "] vs expected=["<<Y<<"]" ); return false; } } while(0)
+#define UTASSERT(X) do { if (!(X)) { pfp_warn("Unit test failed!"); return false; } } while(0)
+#define UTEQ(X,Y) do { if (!(X == Y)) { pfp_warn("Unit test failed! Values differ: actuall=[" << X << "] vs expected=["<<Y<<"]" ); return false; } } while(0)
 
 class c_symhash_state__tests_with_private_access {
 	public:
@@ -700,7 +700,7 @@ void test_string_lock() {
 	vec.push_back(s);
 	vec.push_back(s);
 	vec.push_back(s);
-	if (vec.at(2).get_string() != "TestString") _throw_error( std::runtime_error("Test failed - vector of locked strings") );
+	if (vec.at(2).get_string() != "TestString") pfp_throw_error( std::runtime_error("Test failed - vector of locked strings") );
 //	return;
 }
 
@@ -719,7 +719,7 @@ void test_crypto() {
 	keypairA.generate(e_crypto_system_type_Ed25519,2);
 //	keypairA.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 //	keypairA.generate(e_crypto_system_type_SIDH, 1);
-	_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string_hex()));
+	pfp_note("ALICE has IPv6: " << to_debug(keypairA.get_ipv6_string_hex()));
 	if (0) {
 		keypairA.datastore_save_PRV_and_pub("alice.key");
 		keypairA.datastore_save_PRV_and_pub("alice2.key");
@@ -737,7 +737,7 @@ void test_crypto() {
 	keypairB.generate(e_crypto_system_type_Ed25519,5);
 	keypairB.generate(e_crypto_system_type_NTRU_EES439EP1,1);
 	keypairB.generate(e_crypto_system_type_SIDH, 1);
-	_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string_hex()));
+	pfp_note("BOB has IPv6: " << to_debug(keypairB.get_ipv6_string_hex()));
 
 	c_multikeys_pub keypubA = keypairA.m_pub;
 	c_multikeys_pub keypubB = keypairB.m_pub;
@@ -747,10 +747,10 @@ void test_crypto() {
 		string keypubA_serialized = keypubA.serialize_bin();
 		c_multikeys_pub keypubA_restored;
 		keypubA_restored.load_from_bin( keypubA_serialized );
-		_note("Serialize save/load test: serialized key to: " << to_debug(keypubA_serialized));
+		pfp_note("Serialize save/load test: serialized key to: " << to_debug(keypubA_serialized));
 		if (keypubA.get_hash() == keypubA_restored.get_hash()) {
-			_info("Seems to match");
-		} else _throw_error( std::runtime_error("Test failed serialize save/load") );
+			pfp_info("Seems to match");
+		} else pfp_throw_error( std::runtime_error("Test failed serialize save/load") );
 	}
 
 
@@ -761,13 +761,13 @@ void test_crypto() {
 		_mark("Starting new conversation (new CT) - number " << ib);
 
 		// Create CT (e.g. CTE?) - that has KCT
-		_note("Alice CT:");
+		pfp_note("Alice CT:");
 		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice"); // start, has KCT_ab
 		AliceCT.create_IDe();
 		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
-		_info("SEND packetstart to Bob: " << to_debug(packetstart_1));
+		pfp_info("SEND packetstart to Bob: " << to_debug(packetstart_1));
 
-		_note("Bob CT:");
+		pfp_note("Bob CT:");
 		// B<<<---
 		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby"); // start -> has
 		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
@@ -779,18 +779,18 @@ void test_crypto() {
 		//c_multikeys_pub keypairA_IDe_pub = AliceCT.get_IDe().m_pub;
 		//c_multikeys_pub keypairB_IDe_pub = BobCT  .get_IDe().m_pub;
 
-		//_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
+		//pfp_warn("WARNING: KCTab - this code is NOT SECURE [also] because it uses SAME NONCE in each dialog, "
 		//	"so each CT between given Alice and Bob will have same crypto key which is not secure!!!");
 		for (int ia=0; ia<10; ++ia) {
-			_note("Loop number: " << ia);
+			pfp_note("Loop number: " << ia);
 			t_crypto_nonce nonce_used;
 			auto msg1s = AliceCT.box("Hello", nonce_used);
 			auto msg1r = BobCT.unbox(msg1s, nonce_used);
-			//_note("Message: [" << msg1r << "] from: " << to_debug(msg1s));
+			//pfp_note("Message: [" << msg1r << "] from: " << to_debug(msg1s));
 
 			auto msg2s = BobCT.box("Hello", nonce_used);
 			auto msg2r = AliceCT.unbox(msg2s, nonce_used);
-			//_note("Message: [" << msg2r << "] from: " << to_debug(msg2s));
+			//pfp_note("Message: [" << msg2r << "] from: " << to_debug(msg2s));
 		}
 	}
 
@@ -801,8 +801,8 @@ void test_crypto() {
 
 /*
 		_mark("Preparing for ephemeral KEX:");
-		_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
-		_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
+		pfp_note( to_debug( keypairA_IDe_pub.serialize_bin() ) );
+		pfp_note( to_debug( keypairB_IDe_pub.serialize_bin() ) );
 
 		AliceCT.create_CTf( keypairB_IDe_pub );
 		BobCT  .create_CTf( keypairA_IDe_pub );
@@ -832,7 +832,7 @@ void test_crypto() {
 	std::string Alice_dh_shared = sodiumpp::crypto_scalarmult(Alice_dh_sk, Bob_dh_pk);
 	std::string Bob_dh_shared = sodiumpp::crypto_scalarmult(Bob_dh_sk, Alice_dh_pk);
 	// TODO use generic hash
-	if (Alice_dh_shared == Bob_dh_shared) _note("DH shared - OK"); else _erro("key exchange error");
+	if (Alice_dh_shared == Bob_dh_shared) pfp_note("DH shared - OK"); else pfp_erro("key exchange error");
 
 	sodiumpp::nonce<crypto_box_NONCEBYTES> nonce;
 
@@ -841,7 +841,7 @@ void test_crypto() {
 	// Alice prepare boxer
 	// and xor pubkey_alice xor pubkey_bob TODO? (hash distribution)
 	string Alice_dh_key = crypto_system.Hash1( Alice_dh_shared ).substr(0,crypto_secretbox_KEYBYTES);
-	_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
+	pfp_note("Alice encrypts with: " << string_as_dbg(string_as_bin(Alice_dh_key)).get());
 	assert( Alice_dh_pk != Bob_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	typedef sodiumpp::nonce64 t_crypto_nonce;
 	using sodiumpp::boxer_base;
@@ -852,8 +852,8 @@ void test_crypto() {
 	);
 
 	sodiumpp::unboxer< t_crypto_nonce > Alice_unboxer( boxer_base::boxer_type_shared_key() , ! (Alice_dh_pk > Bob_dh_pk) , sodiumpp::encoded_bytes(Alice_dh_key, sodiumpp::encoding::binary) );
-	_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce().get().bytes)).get());
-	_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce_constant().bytes)).get());
+	pfp_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce().get().bytes)).get());
+	pfp_note("Alice boxer nonce: " << string_as_dbg(string_as_bin(Alice_boxer.get_nonce_constant().bytes)).get());
 
 	auto nonce_constant = Alice_boxer.get_nonce_constant();
 
@@ -864,8 +864,8 @@ void test_crypto() {
 	auto msg_send = string{"Hello-world"};
 	auto cypher = Alice_boxer.box(msg_send);
 
-	_info("send: " << msg_send );
-	_info("cyph: " << cypher.to_binary() );
+	pfp_info("send: " << msg_send );
+	pfp_info("cyph: " << cypher.to_binary() );
 
 
 	// alice generate packet:
@@ -878,19 +878,19 @@ void test_crypto() {
 
 	const auto & packet = gen.str();
 map_size
-	_info("Network packet:" << packet);
+	pfp_info("Network packet:" << packet);
 	trivialserialize::parser parser( trivialserialize::parser::tag_caller_must_keep_this_string_valid() ,
 		packet // !! do not change this while parser exists
 	);
 	const string Bob_nonce_constant_str = parser.pop_bytes_n(16);
-	_info("Parsed: nonce const " << Bob_nonce_constant_str);
+	pfp_info("Parsed: nonce const " << Bob_nonce_constant_str);
 	// t_crypto_nonce Bob_nonce_constant( sodiumpp::encoded_bytes( Bob_nonce_constant_str , sodiumpp::encoding::binary ));
 	const string Bob_cyphertext = parser.pop_bytes_sizeoctets<1>();
-	_info("Parsed: cypher " << Bob_cyphertext);
+	pfp_info("Parsed: cypher " << Bob_cyphertext);
 
 	// Bob  prepare boxer:
 	string Bob_dh_key = crypto_system.Hash1( Bob_dh_shared).substr(0,crypto_secretbox_KEYBYTES);
-	_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
+	pfp_note("Bob decrypts with: " << string_as_dbg(string_as_bin(Bob_dh_key)).get());
 	assert( Bob_dh_key != Alice_dh_pk ); // to avoid any tricks in this corner case when someone sends us back our pubkey
 	//string decrypt = sodiumpp::crypto_secretbox_open(encrypt, nonce.get().bytes, Bob_dh_key);
 	sodiumpp::boxer< t_crypto_nonce > Bob_boxer  ( boxer_base::boxer_type_shared_key() , (Bob_dh_pk > Alice_dh_pk) , sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary ) );
@@ -901,19 +901,19 @@ map_size
 		sodiumpp::encoded_bytes(Bob_dh_key, sodiumpp::encoding::binary),
 	  sodiumpp::encoded_bytes( Bob_nonce_constant_str , sodiumpp::encoding::binary)
 	);
-	_note("Bob unboxer nonce: " << string_as_dbg(string_as_bin(Bob_unboxer.get_nonce().get().bytes)).get());
+	pfp_note("Bob unboxer nonce: " << string_as_dbg(string_as_bin(Bob_unboxer.get_nonce().get().bytes)).get());
 
 	try {
 		auto msg_recived = Bob_unboxer.unbox( sodiumpp::encoded_bytes(Bob_cyphertext,  sodiumpp::encoding::binary)  );
-		_info("reci: " << msg_recived );
+		pfp_info("reci: " << msg_recived );
 	} catch(const std::exception &e) {
-		_erro("Failed: " << e.what());
+		pfp_erro("Failed: " << e.what());
 	}
 
-//	if (safe_string_cmp(app_msg,decrypt)) _note("Encrypted message - OK "); else _erro("Msg decoded differs!");
-//	if (! safe_string_cmp(encrypt,decrypt)) _note("It is encrypted  - OK"); else _erro("Not encrypted?!");
+//	if (safe_string_cmp(app_msg,decrypt)) pfp_note("Encrypted message - OK "); else pfp_erro("Msg decoded differs!");
+//	if (! safe_string_cmp(encrypt,decrypt)) pfp_note("It is encrypted  - OK"); else pfp_erro("Not encrypted?!");
 
-	// XXX _note("Encrypted as:" << sodiumpp::bin2hex(encrypt));
+	// XXX pfp_note("Encrypted as:" << sodiumpp::bin2hex(encrypt));
 
 	return;
 
@@ -921,13 +921,13 @@ map_size
 
 	_mark("Testing crypto - unittests");
 	if (! unittest::alltests() ) {
-		_erro("Unit tests failed!");
+		pfp_erro("Unit tests failed!");
 		return ;
 	}
 
 	_mark("Testing crypto - more");
 
-	#define SHOW _info( string_as_dbg( string_as_bin( symhash.get_password() ) ).get() );
+	#define SHOW pfp_info( string_as_dbg( string_as_bin( symhash.get_password() ) ).get() );
 
 	c_symhash_state symhash( string_as_hex("6a6b").get() ); // "jk"
 	SHOW;
@@ -1005,25 +1005,25 @@ void generate_keypairs_benchmark(const size_t seconds_for_test_case) {
 	unsigned int sidh_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop_point - start_point).count();
 
 
-	_info("X25519");
-	_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
-	_info(static_cast<double>(generated_keys_x25519) / x25519_ms * 1000 << " key pairs per second");
+	pfp_info("X25519");
+	pfp_info("Generated " << generated_keys_x25519 << " in " << x25519_ms << " ms");
+	pfp_info(static_cast<double>(generated_keys_x25519) / x25519_ms * 1000 << " key pairs per second");
 
-	_info("ed25519");
-	_info("Generated " << generated_keys_ed25519 << " in " << ed25519_ms << " ms");
-	_info(static_cast<double>(generated_keys_ed25519) / ed25519_ms * 1000 << " key pairs per second");
+	pfp_info("ed25519");
+	pfp_info("Generated " << generated_keys_ed25519 << " in " << ed25519_ms << " ms");
+	pfp_info(static_cast<double>(generated_keys_ed25519) / ed25519_ms * 1000 << " key pairs per second");
 
-	_info("NTRU encrypt");
-	_info("Generated " << generated_keys_ntru_encrypt << " in " << ntru_ms_encrypt << " ms");
-	_info(static_cast<double>(generated_keys_ntru_encrypt) / ntru_ms_encrypt * 1000 << " key pairs per second");
+	pfp_info("NTRU encrypt");
+	pfp_info("Generated " << generated_keys_ntru_encrypt << " in " << ntru_ms_encrypt << " ms");
+	pfp_info(static_cast<double>(generated_keys_ntru_encrypt) / ntru_ms_encrypt * 1000 << " key pairs per second");
 
-	_info("NTRU sign");
-	_info("Generated " << generated_keys_ntru_sign << " in " << ntru_ms_sign << " ms");
-	_info(static_cast<double>(generated_keys_ntru_sign) / ntru_ms_sign * 1000 << " key pairs per second");
+	pfp_info("NTRU sign");
+	pfp_info("Generated " << generated_keys_ntru_sign << " in " << ntru_ms_sign << " ms");
+	pfp_info(static_cast<double>(generated_keys_ntru_sign) / ntru_ms_sign * 1000 << " key pairs per second");
 
-	_info("SIDH");
-	_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
-	_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
+	pfp_info("SIDH");
+	pfp_info("Generated " << generated_keys_sidh << " in " << sidh_ms << " ms");
+	pfp_info(static_cast<double>(generated_keys_sidh) / sidh_ms * 1000 << " key pairs per second");
 
 }
 

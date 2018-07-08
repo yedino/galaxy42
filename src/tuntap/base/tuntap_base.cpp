@@ -49,14 +49,14 @@ void Wrap_NetPlatform_addAddress(const char *interfaceName,
 	                                           << " addrFam=" << addrFam);
 
 	t_syserr syserr = NetPlatform_addAddress(interfaceName, address.data(), prefixLen, addrFam);
-	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
+	if (syserr.my_code < 0) pfp_throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string(syserr) );
 	_goal("IP address set as " << addr_asio_ipv6
 	                           << " prefix=" << prefixLen
 	                           << " on interface " << interfaceName
 	                           << " family " << addrFam
 	                           << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
-	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
+	pfp_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
 
@@ -64,11 +64,11 @@ void Wrap_NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
 #if ( defined(__linux__) || defined(__CYGWIN__) ) || defined(__MACH__)
 	_fact("Setting MTU on interfaceName="<<interfaceName<<" mtu="<<mtu);
 	t_syserr syserr = NetPlatform_setMTU(interfaceName, mtu);
-	if (syserr.my_code < 0) _throw_error_sub( tuntap_error_mtu , NetPlatform_syserr_to_string(syserr) );
+	if (syserr.my_code < 0) pfp_throw_error_sub( tuntap_error_mtu , NetPlatform_syserr_to_string(syserr) );
 	_goal("MTU value " << mtu << " set on interface " << interfaceName
 		  << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
-	_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
+	pfp_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
 

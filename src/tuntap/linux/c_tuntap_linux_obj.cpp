@@ -40,7 +40,7 @@ c_tuntap_linux_obj::c_tuntap_linux_obj() :
 	_check_sys(m_tun_stream.is_open());
 	try {
 		//set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
-	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
+	} catch(const std::exception &ex) { pfp_warn("Can not set timtout for tuntap: " << ex.what()); }
 	_goal("tuntap is opened correctly");
 }
 
@@ -55,7 +55,7 @@ c_tuntap_linux_obj::c_tuntap_linux_obj(boost::asio::io_service &io_service) :
 	_check_sys(m_tun_stream.is_open());
 	try {
 		//set_sockopt_timeout( m_tun_stream.native_handle() , sockopt_timeout_get_default() );
-	} catch(const std::exception &ex) { _warn("Can not set timtout for tuntap: " << ex.what()); }
+	} catch(const std::exception &ex) { pfp_warn("Can not set timtout for tuntap: " << ex.what()); }
 	_goal("tuntap is opened correctly");
 }
 
@@ -63,7 +63,7 @@ size_t c_tuntap_linux_obj::send_to_tun(const unsigned char *data, size_t size) {
 	try {
 		return m_tun_stream.write_some(boost::asio::buffer(data, size));
     } catch (const std::exception &e) {
-        _warn(e.what());
+        pfp_warn(e.what());
 		return 0; // error
 	}
 }
@@ -85,7 +85,7 @@ size_t c_tuntap_linux_obj::read_from_tun(unsigned char *const data, size_t size)
 	try {
 		return m_tun_stream.read_some(boost::asio::buffer(data, size));
     } catch (const std::exception &e) {
-        _warn(e.what());
+        pfp_warn(e.what());
         return 0; // error
 	}
 }
@@ -104,7 +104,7 @@ size_t c_tuntap_linux_obj::read_from_tun_separated_addresses(unsigned char *cons
 	try {
 		return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
     } catch (const std::exception &e) {
-        _warn(e.what());
+        pfp_warn(e.what());
         return 0;
 	}
 }

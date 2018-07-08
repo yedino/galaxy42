@@ -45,18 +45,18 @@ void c_galaxysrv::main_loop() {
 //	unique_ptr<c_cable_base_addr> peer_addr = make_unique<c_cable_simul_addr>( world->generate_simul_cable() );
 
 	// ===========================================================================================================
-	_clue("Allocating in main loop");
+	pfp_clue("Allocating in main loop");
 	size_t cfg_max_mtu = this->get_tuntap_mtu_current();
 	size_t cfg_num_welds = 8;
 	size_t cfg_weld_memsize = cfg_max_mtu * 3;
 	{
 		for (size_t i=0; i<cfg_num_welds; ++i) {
-			_info("Creating weld #" << i);
+			pfp_info("Creating weld #" << i);
 			c_weld new_weld(cfg_weld_memsize);
 			m_welds.push_back( std::move( new_weld  ) );
 		}
 		_mark("Allocations done");
-		_note("Allocated " << m_welds.size() << " welds");
+		pfp_note("Allocated " << m_welds.size() << " welds");
 	}
 
 	auto loop_exitwait = [&]() {
@@ -69,7 +69,7 @@ void c_galaxysrv::main_loop() {
 				std::this_thread::sleep_for( std::chrono::milliseconds(50) );
 			}
 		}
-		catch (...) { _warn("The exitwait loop failed"); }
+		catch (...) { pfp_warn("The exitwait loop failed"); }
 		this->start_exit(); // TODO-thread
 	}; // lambda exitwait
 
@@ -96,7 +96,7 @@ void c_galaxysrv::main_loop() {
 		};
 
 		try {
-			_clue(my_name() + " starting");
+			pfp_clue(my_name() + " starting");
 
 			boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), get_default_galaxy_port()); // select our local source IP to use (and port)
 			unique_ptr<c_cable_udp_addr> my_localhost = make_unique<c_cable_udp_addr>( ep );
@@ -105,7 +105,7 @@ void c_galaxysrv::main_loop() {
 
 			while (!m_exiting) {
 			try {
-				_dbg2(my_name() + "Reading TUN...");
+				pfp_dbg2(my_name() + "Reading TUN...");
 
 				struct c_tuntap_read_result final {
 					c_tuntap_read_result() = default;
@@ -122,7 +122,7 @@ void c_galaxysrv::main_loop() {
 				auto func_find =
 					[=](const c_weld & weld) {
 						auto free_size = weld.get_free_size();
-						_info("TESTING the weld "<<static_cast<const void*>(&weld)<<": free_size="<<free_size);
+						pfp_info("TESTING the weld "<<static_cast<const void*>(&weld)<<": free_size="<<free_size);
 						if (free_size >= cfg_max_mtu) return true;
 						return false;
 					}
@@ -130,23 +130,23 @@ void c_galaxysrv::main_loop() {
 
 				auto func_use = [=](c_weld & weld) -> c_tuntap_read_result {
 					// receive the data into some part of the selected weld's buffer
-					_note("USING the weld "<<static_cast<const void*>(&weld)<<" for tuntap read");
+					pfp_note("USING the weld "<<static_cast<const void*>(&weld)<<" for tuntap read");
 
 					size_t packet_max = cfg_max_mtu;
 					size_t old_buffWrite = weld.m_bufWrite; // old write position in chunk, before we reserve
 
-					_dbg1("Prepare tuntap read result");
+					pfp_dbg1("Prepare tuntap read result");
 					c_tuntap_read_result tuntap_result( // will store here result
 						weld.m_buf.get_chunk( weld.m_bufWrite , packet_max) // find empty chunk, will return it as result
 					);
 
 					// *** block here and read from tuntap ***
-					_dbg1("Tuntap - do the read...");
+					pfp_dbg1("Tuntap - do the read...");
 					size_t read_size_merit = m_tuntap.read_from_tun_separated_addresses(
 						tuntap_result.chunk.data(), tuntap_result.chunk.size(),
 						tuntap_result.src_hip, tuntap_result.dst_hip);
-					_dbg1("Read tuntap merit=" << read_size_merit);
-					if (read_size_merit == 0) _throw_error_runtime("Empty tun read");
+					pfp_dbg1("Read tuntap merit=" << read_size_merit);
+					if (read_size_merit == 0) pfp_throw_error_runtime("Empty tun read");
 
 					// adjust down size to actually used part of buffer
 					tuntap_result.chunk.shrink_to( read_size_merit );
@@ -155,10 +155,10 @@ void c_galaxysrv::main_loop() {
 					size_t read_ipv6size = ipv6_size_entireip_from_header( tuntap_result.chunk.to_tab_view() );
 					size_t read_ipv6size_merit{ eint_minus( read_ipv6size , size_removed_from_merit ) };
 					if (read_ipv6size_merit != read_size_merit) {
-						_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
+						pfp_throw_error_runtime(join_string_sep("Invalid packet size: ipv6 headers:",read_ipv6size_merit,
 						"tuntap driver", read_size_merit));
 					}
-					_info(my_name() + "TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
+					pfp_info(my_name() + "TUN read: " << "src=" << tuntap_result.src_hip << " " << "dst=" << tuntap_result.dst_hip
 						<< " TUN data: " << make_report(tuntap_result.chunk,20));
 					return tuntap_result;
 				};
@@ -190,14 +190,14 @@ void c_galaxysrv::main_loop() {
 				};
 				door.send_to( UsePtr(peer_one_addr) , buffers);
 
-			} catch (const std::runtime_error &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
-			} catch (const std::exception &e) { _warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
+			} catch (const std::runtime_error &e) { pfp_warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
+			} catch (const std::exception &e) { pfp_warn("Thread lambda (for tunread) got exception (but we can continue) - " << e.what());
 				throw;
 			}
 			} // loop
-			_note(my_name() + "Loop done - tun read");
-		} catch (const std::exception &e) { _erro(my_name() + "Thread lambda (for tunread) got exception and EXITED - " << e.what()); }
-		catch(...) { _warn(my_name() + "Thread-lambda (for tunread) got exception"); }
+			pfp_note(my_name() + "Loop done - tun read");
+		} catch (const std::exception &e) { pfp_erro(my_name() + "Thread lambda (for tunread) got exception and EXITED - " << e.what()); }
+		catch(...) { pfp_warn(my_name() + "Thread-lambda (for tunread) got exception"); }
 	}; // lambda tunread
 
 	auto loop_cableread = [&]() {
@@ -205,7 +205,7 @@ void c_galaxysrv::main_loop() {
 			c_netbuf buf(9000);
 			while (!m_exiting) {
 				try{
-					_dbg3("Reading cables...");
+					pfp_dbg3("Reading cables...");
 					c_card_selector his_door; // in c++17 instead, use "tie" with decomposition declaration
 
 					// TODO@rfree TODO NOW XXX - lock cables like in vector_mutexed_obj, this lock it too wide:
@@ -233,10 +233,10 @@ void c_galaxysrv::main_loop() {
 					const bool good_src_ipv6_prefix = check_ipv6_prefix(src_hip);
 					const bool good_dst_ipv6_prefix = check_ipv6_prefix(dst_hip);
 					if (!good_src_ipv6_prefix) {
-						_info("Bad packet src prefix");
+						pfp_info("Bad packet src prefix");
 						continue;
 					} else if (!good_dst_ipv6_prefix) {
-						_info("Bad packet dst prefix");
+						pfp_info("Bad packet dst prefix");
 						continue;
 					}
 
@@ -244,21 +244,21 @@ void c_galaxysrv::main_loop() {
 					if ( peer_one_addr != his_door.get_my_addr() ) fwok=false;
 
 					if (fwok) {
-						_info("CABLE read, from " << his_door << make_report(chunk,20));
+						pfp_info("CABLE read, from " << his_door << make_report(chunk,20));
 						size_t offset = sizeof(cmd) + 2*g_ipv6_rfc::length_of_addr;
 						m_tuntap.send_to_tun_separated_addresses(chunk.data() + offset, chunk.size() - offset, src_hip, dst_hip);
-						_info("Sent to tuntap");
+						pfp_info("Sent to tuntap");
 					} else {
-						_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
+						pfp_info("Ignoring packet from unexpected peer " << his_door << ", we wanted data from " << peer_one_addr );
 					}
 				}
-				catch(const std::exception & ex) { _warn("Cannot handle this packet. Exception: " << ex.what()); }
-				catch(...) { _warn("Cannot handle this packet. Unknown exception"); }
+				catch(const std::exception & ex) { pfp_warn("Cannot handle this packet. Exception: " << ex.what()); }
+				catch(...) { pfp_warn("Cannot handle this packet. Unknown exception"); }
 			} // loop
-			_note("Loop done - cable reader");
+			pfp_note("Loop done - cable reader");
 		}
-		catch(const std::exception & ex) { _warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
-		catch(...) { _warn("Thread-lambda loop_cableread got exception"); }
+		catch(const std::exception & ex) { pfp_warn("Thread-lambda loop_cableread got exception: " << ex.what()); }
+		catch(...) { pfp_warn("Thread-lambda loop_cableread got exception"); }
 	}; // lambda cableread
 
 	std::vector<unique_ptr<std::thread>> threads;
@@ -276,9 +276,9 @@ void c_galaxysrv::main_loop() {
 
 	_fact("Joining all threads");
 	for(auto & thr : threads) {
-		_note("Joining thread");
+		pfp_note("Joining thread");
 		thr->join();
-		_note("Joining thread - done");
+		pfp_note("Joining thread - done");
 	}
 	_fact("After joining all threads");
 	_goal("All threads joined, count=" << threads.size());
@@ -315,7 +315,7 @@ void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	try {
 		IDI_name = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 	} catch (const std::invalid_argument &ex) {
-		_info( join_string_sep("Can not find existing IDI",ex.what()) );
+		pfp_info( join_string_sep("Can not find existing IDI",ex.what()) );
 		throw stdplus::expected_not_found(); /// key doesn't exist at all then
 	}
 
@@ -340,8 +340,8 @@ void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	} catch UI_CATCH_RETHROW("Testing your Hash-IP (IDI)");
 
 	c_haship_addr IDI_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDI_ip_hexdot );
-	_info("IDI IPv6: " << IDI_ip_hexdot);
-	_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
+	pfp_info("IDI IPv6: " << IDI_ip_hexdot);
+	pfp_dbg1("IDI IPv6: " << IDI_hip << " (other var type)");
 
 	// creating IDC for this session
 	antinet_crypto::c_multikeys_PAIR my_IDC;
@@ -377,9 +377,9 @@ void c_galaxysrv::configure_mykey(const std::string &ipv6_prefix) {
 	} catch UI_CATCH_RETHROW("Testing your Hash-IP (IDC)");
 
 	c_haship_addr IDC_hip = c_haship_addr( c_haship_addr::tag_constr_by_addr_dot() , IDC_ip_hexdot );
-	_info("IDC IPv6: " << IDC_ip_hexdot);
-	_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
-	_note("Your temporary, current crypto key (IDC) is: " << IDC_ip_hexdot << " (this is just for information)");
+	pfp_info("IDC IPv6: " << IDC_ip_hexdot);
+	pfp_dbg1("IDC IPv6: " << IDC_hip << " (other var type)");
+	pfp_note("Your temporary, current crypto key (IDC) is: " << IDC_ip_hexdot << " (this is just for information)");
 	_goal("Your permanent IPv6 address (IDI) is: " << IDI_ip_hexdot << " - others can connect to this IP address to reach you");
 	string IDI_as_url = "http://" + IDI_ip_hexdot ;
 	_goal("For example your web page would be at: " << IDI_as_url );
@@ -395,8 +395,8 @@ c_haship_addr c_galaxysrv::get_my_hip() const {
 }
 
 void c_galaxysrv::program_action_set_IDI(const string & keyname) {
-	_note("Action: set IDI");
-	_info("Setting the name of IDI key to: " << keyname);
+	pfp_note("Action: set IDI");
+	pfp_info("Setting the name of IDI key to: " << keyname);
 	auto keys_path = datastore::get_parent_path(e_datastore_galaxy_wallet_PRV,"");
 	auto keys = datastore::get_file_list(keys_path);
 	bool found = false;
@@ -407,9 +407,9 @@ void c_galaxysrv::program_action_set_IDI(const string & keyname) {
 		if (keyname == act) {	found = true;	break; }
 	}
 	if (found == false) {
-		_erro("Can't find key (" << keyname << ") in your key list, so can't set it as IDI.");
+		pfp_erro("Can't find key (" << keyname << ") in your key list, so can't set it as IDI.");
 	}
-	_info("Key found ("<< keyname <<") and set as IDI");
+	pfp_info("Key found ("<< keyname <<") and set as IDI");
 	datastore::save_string(e_datastore_galaxy_instalation_key_conf,"IDI", keyname, true);
 }
 
@@ -430,26 +430,26 @@ void c_galaxysrv::set_prefix_len(int prefix_len) {
 }
 
 void c_galaxysrv::program_action_gen_key(const boost::program_options::variables_map & argm) {
-	_note("Action: gen key");
+	pfp_note("Action: gen key");
 	if (!argm.count("key-type")) {
-		_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
+		pfp_throw_error( std::invalid_argument("--key-type option is required for --gen-key") );
 	}
 
 	std::vector<std::pair<antinet_crypto::t_crypto_system_type,int>> keys;
 	auto arguments = argm["key-type"].as<std::vector<std::string>>();
 	for (auto argument : arguments) {
-		_dbg1("parse argument " << argument);
+		pfp_dbg1("parse argument " << argument);
 		std::replace(argument.begin(), argument.end(), ':', ' ');
 		std::istringstream iss(argument);
 		std::string str;
 		iss >> str;
-		_dbg1("type = " << str);
+		pfp_dbg1("type = " << str);
 		antinet_crypto::t_crypto_system_type type = antinet_crypto::t_crypto_system_type_from_string(str);
 		iss >> str;
 		assert(str[0] == 'x');
 		str.erase(str.begin());
 		int number_of_keys = std::stoi(str);
-		_dbg1("number_of_keys" << number_of_keys);
+		pfp_dbg1("number_of_keys" << number_of_keys);
 		keys.emplace_back(std::make_pair(type, number_of_keys));
 	}
 
@@ -461,7 +461,7 @@ void c_galaxysrv::program_action_gen_key(const boost::program_options::variables
 		output_file = argm["new-key-file"].as<std::string>();
 		generate_crypto::create_keys(output_file, keys, false); // ***
 	} else {
-		_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
+		pfp_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
 

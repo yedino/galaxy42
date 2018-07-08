@@ -14,7 +14,7 @@ void c_json_genconf::genconf() {
 void c_json_genconf::generate_galaxy_conf(const std::string &filename) {
 	std::ofstream conf_file (filename, std::ios::out | std::ios::binary);
 	if(conf_file.is_open()) {
-		_info("Generating main configuration file: " << filename);
+		pfp_info("Generating main configuration file: " << filename);
 
 		conf_file << "{\n";
 		conf_file << "\t// Your private key - the private key should be at bottom of this file.\n";
@@ -55,14 +55,14 @@ void c_json_genconf::generate_galaxy_conf(const std::string &filename) {
 		conf_file << "}\n";
 		conf_file.close();
 	} else {
-		_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 	}
 }
 
 void c_json_genconf::generate_authpass_conf(const std::string &filename) {
 	std::ofstream conf_file (filename, std::ios::out | std::ios::binary);
 	if(conf_file.is_open()) {
-		_info("Generating authorized passwords configuration file: " << filename);
+		pfp_info("Generating authorized passwords configuration file: " << filename);
 
 		conf_file << "{\n";
 		conf_file << "\t\"authorizedPasswords\" : [\n";
@@ -76,14 +76,14 @@ void c_json_genconf::generate_authpass_conf(const std::string &filename) {
 		conf_file << "}\n";
 		conf_file.close();
 	} else {
-		_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 	}
 }
 
 void c_json_genconf::generate_connectto_conf(const std::string &filename) {
 	std::ofstream conf_file (filename, std::ios::out | std::ios::binary);
 	if(conf_file.is_open()) {
-		_info("Generating peer references -- connnet to configuration file: " << filename);
+		pfp_info("Generating peer references -- connnet to configuration file: " << filename);
 
 		conf_file << "{\n";
 		conf_file << "\t\"connectTo\" : {\n";
@@ -104,6 +104,6 @@ void c_json_genconf::generate_connectto_conf(const std::string &filename) {
 		conf_file << "}\n";
 		conf_file.close();
 	} else {
-		_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
+		pfp_throw_error( std::invalid_argument("Fail to open file for write: " + filename) );
 	}
 }

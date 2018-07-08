@@ -64,14 +64,14 @@ extern std::recursive_mutex g_dbg_mutex;
 
 #define _main_dbg(X) { std::ostringstream _dbg_oss; _dbg_oss << X; write_to_console(_dbg_oss.str()); }
 
-#define _dbg5(X) do { } while(0)
-#define _dbg4(X) do { DBGLOCK DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define _dbg3(X) do { DBGLOCK DBGLVL( 10); _main_dbg("\033[37mdbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define _dbg2(X) do { DBGLOCK DBGLVL( 20); _main_dbg("\033[37mdbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define _dbg1(X) do { DBGLOCK DBGLVL( 30); _main_dbg("\033[97mdbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
-#define _info(X) do { DBGLOCK DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
-#define _note(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\033[36mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
-#define _clue(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define pfp_dbg5(X) do { } while(0)
+#define pfp_dbg4(X) do { DBGLOCK DBGLVL(  5); _main_dbg("\033[90mdbg4: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_dbg3(X) do { DBGLOCK DBGLVL( 10); _main_dbg("\033[37mdbg3: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_dbg2(X) do { DBGLOCK DBGLVL( 20); _main_dbg("\033[37mdbg2: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_dbg1(X) do { DBGLOCK DBGLVL( 30); _main_dbg("\033[97mdbg1: " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl);} while(0)
+#define pfp_info(X) do { DBGLOCK DBGLVL( 40); _main_dbg("\033[94minfo: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define pfp_note(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\033[36mnote: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
+#define pfp_clue(X) do { DBGLOCK DBGLVL( 50); _main_dbg("\n\033[96mclue: " << _my__FILE__ << ':' << __LINE__ << " " << X  << "\033[0m" << ::std::endl);} while(0)
 
 #define _fact_level(LVL_MAIN, LVL_EXTRA, X) \
 	do { DBGLOCK; \
@@ -86,10 +86,10 @@ extern std::recursive_mutex g_dbg_mutex;
 #define _fact(X) _fact_level(100, 30, X)
 #define _goal(X) _fact_level(150, 30, X)
 
-auto constexpr debug_config_warn_backtrace_level = 8; ///< the backtrace level used for _warn
-auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level used for _erro
+auto constexpr debug_config_warn_backtrace_level = 8; ///< the backtrace level used for pfp_warn
+auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level used for pfp_erro
 
-#define _warn(X) \
+#define pfp_warn(X) \
 	do { DBGLOCK; \
 	DBGLVL(100); \
 	std::ostringstream _dbg_oss; \
@@ -103,7 +103,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 /// red code
 //        ::std::cerr<<"ERROR! " << _my__FILE__ << ':' << __LINE__ << " " << X << ::std::endl;
 
-#define _erro(X) \
+#define pfp_erro(X) \
 	do { DBGLOCK; \
 	DBGLVL(200); \
 	std::ostringstream _dbg_oss; \
@@ -128,18 +128,18 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 
 #else
 
-#define _dbg5(X) do {} while(0)
-#define _dbg4(X) do {} while(0)
-#define _dbg3(X) do {} while(0)
-#define _dbg2(X) do {} while(0)
-#define _dbg1(X) do {} while(0)
-#define _info(X) do {} while(0)
-#define _note(X) do {} while(0)
-#define _clue(X) do {} while(0)
+#define pfp_dbg5(X) do {} while(0)
+#define pfp_dbg4(X) do {} while(0)
+#define pfp_dbg3(X) do {} while(0)
+#define pfp_dbg2(X) do {} while(0)
+#define pfp_dbg1(X) do {} while(0)
+#define pfp_info(X) do {} while(0)
+#define pfp_note(X) do {} while(0)
+#define pfp_clue(X) do {} while(0)
 #define _fact(X) do {} while(0)
 #define _goal(X) do {} while(0)
-#define _warn(X) do {} while(0)
-#define _erro(X) do {} while(0)
+#define pfp_warn(X) do {} while(0)
+#define pfp_erro(X) do {} while(0)
 #define _mark(X) do {} while(0)
 
 #endif
@@ -148,28 +148,28 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 // TODO this is not really "debug", move to other file
 #define _UNUSED(x) (void)(x)
 
-#define _NOTREADY() do { _erro("This code is not implemented yet! in "<<__FUNCTION__);\
+#define _NOTREADY() do { pfp_erro("This code is not implemented yet! in "<<__FUNCTION__);\
 	throw std::runtime_error("Code not implemented yet! In: " + std::string(__FUNCTION__)); } while(0)
 
-#define _NOTREADY_warn() do { _warn("This code is not implemented yet! in "<<__FUNCTION__);\
+#define _NOTREADY_warn() do { pfp_warn("This code is not implemented yet! in "<<__FUNCTION__);\
 	} while(0)
 
 // this assert could be helpful, maybe use in release
-#define _assert(X) do { if (!(X)) { _erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
+#define _assert(X) do { if (!(X)) { pfp_erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
-//        _warn("Going to throw exception. What: " << except_var.what()
+//        pfp_warn("Going to throw exception. What: " << except_var.what()
 // this one is unused; leaving for translators if used again later.
-#define _unused_throw_error_msg \
-	_warn( mo_file_reader::gettext("L_what_exception_program_throw") << ": " << except_var.what() \
+#define pfp_unused_throw_error_msg \
+	pfp_warn( mo_file_reader::gettext("L_what_exception_program_throw") << ": " << except_var.what() \
 
 // TODO-r-deprecate: ?
-#define _throw_error_detail( EXCEPT , MSG ) do { auto except_var = (EXCEPT);  \
-	_warn( "Except: " << except_var.what() \
+#define pfp_throw_error_detail( EXCEPT , MSG ) do { auto except_var = (EXCEPT);  \
+	pfp_warn( "Except: " << except_var.what() \
 		<< "; Details:" << MSG); \
 		throw except_var; } while(0)
 
-#define _throw_error( EXCEPT ) do { auto except_var = (EXCEPT);  \
-	_warn( "Except: " << except_var.what() \
+#define pfp_throw_error( EXCEPT ) do { auto except_var = (EXCEPT);  \
+	pfp_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 
@@ -194,12 +194,12 @@ void throw_or_abort(const T & ex) {
 *	it exists to e.g. silence some compilers warning about possible throw inside noexcept - we know, and we are o.k. with it turning into abort
 *	use it in macros that should try to throw but abort if throwing is not possible
 */
-#define _throw_error_or_abort( EXCEPT ) do { auto except_var = (EXCEPT);  \
-	_warn( "Except: " << except_var.what() \
+#define pfp_throw_error_or_abort( EXCEPT ) do { auto except_var = (EXCEPT);  \
+	pfp_warn( "Except: " << except_var.what() \
 		<< "."); \
 		throw_or_abort (except_var); } while(0)
 
-#define _throw_error_runtime( MSG ) _throw_error( std::runtime_error( MSG ) )
+#define pfp_throw_error_runtime( MSG ) pfp_throw_error( std::runtime_error( MSG ) )
 
 namespace ui { class exception_error_exit; }
 
@@ -207,12 +207,12 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 
 #define _throw_exit( EXCEPT ) do { auto except_var = (EXCEPT);  \
 	must_be_exception_type_error_exit(except_var); /* assert (in compile time) that EXCEPT is of proper exception type */ \
-	_warn("Going to throw exception (for EXIT) What: " << except_var.what() \
+	pfp_warn("Going to throw exception (for EXIT) What: " << except_var.what() \
 		<< "."); \
 		throw except_var; } while(0)
 
-#define _throw_error_rethrow( ) do { \
-	_warn("re-throw"); \
+#define pfp_throw_error_rethrow( ) do { \
+	pfp_warn("re-throw"); \
 		throw ; } while(0)
 
 
@@ -221,7 +221,7 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 	if (!(COND)) { \
 		std::ostringstream _dbg_oss; \
 		_dbg_oss << "Assert-throw failed: " << "" # COND ; \
-		_throw_error( std::runtime_error(_dbg_oss.str()) ); \
+		pfp_throw_error( std::runtime_error(_dbg_oss.str()) ); \
 		}\
 	} while(0)
 
@@ -249,16 +249,16 @@ throw _except( std::logic_error("foo")) ;
 std::string debug_this();
 
 #define _dbg5n(X) ;
-#define _dbg4n(X) _dbg4(debug_this() << X)
-#define _dbg3n(X) _dbg3(debug_this() << X)
-#define _dbg2n(X) _dbg2(debug_this() << X)
-#define _dbg1n(X) _dbg1(debug_this() << X)
-#define _infon(X) _info(debug_this() << X)
-#define _noten(X) _note(debug_this() << X)
-#define _cluen(X) _clue(debug_this() << X)
+#define pfp_dbg4n(X) pfp_dbg4(debug_this() << X)
+#define pfp_dbg3n(X) pfp_dbg3(debug_this() << X)
+#define pfp_dbg2n(X) pfp_dbg2(debug_this() << X)
+#define pfp_dbg1n(X) pfp_dbg1(debug_this() << X)
+#define pfp_infon(X) pfp_info(debug_this() << X)
+#define pfp_noten(X) pfp_note(debug_this() << X)
+#define pfp_cluen(X) pfp_clue(debug_this() << X)
 #define _factn(X) _fact(debug_this() << X)
-#define _warnn(X) _warn(debug_this() << X)
-#define _erron(X) _erro(debug_this() << X)
+#define pfp_warnn(X) pfp_warn(debug_this() << X)
+#define pfp_erron(X) pfp_erro(debug_this() << X)
 #define _markn(X) _mark(debug_this() << X)
 
 std::string to_string(const std::wstring &input); // TODO

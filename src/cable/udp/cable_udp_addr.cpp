@@ -16,14 +16,14 @@ c_cable_udp_addr::c_cable_udp_addr(const std::string &ip_string)
 		parsed = tunserver_utils::parse_ip_string(ip_string);
 	} catch (const std::invalid_argument & ex) {
 		const string msg = "Can not parse IP string="s + ip_string + ", ("s + ex.what() +")"s;
-		_throw_error( err_check_input( msg.c_str() ));
+		pfp_throw_error( err_check_input( msg.c_str() ));
 	}
 	try {
 		udp::endpoint endpoint(address::from_string(parsed.first), static_cast<unsigned short>(parsed.second));
 		m_addr = endpoint;
 	} catch (const boost::system::error_code & ex) {
 		const string msg = "Bad endpoint="s + ip_string + ", ("s + ex.message() +")"s;
-		_throw_error( err_check_input( msg.c_str() ));
+		pfp_throw_error( err_check_input( msg.c_str() ));
 	}
 }
 
@@ -39,7 +39,7 @@ signed char c_cable_udp_addr::compare_same_class(const c_cable_base_addr & other
 		if ((this->m_addr) < (other_obj.m_addr)) return -1;
 		if ((this->m_addr) > (other_obj.m_addr)) return +1;
 		return 0;
-	} catch(const std::bad_cast &) { _throw_error_runtime("Can not compare addresses, it is other class"); }
+	} catch(const std::bad_cast &) { pfp_throw_error_runtime("Can not compare addresses, it is other class"); }
 }
 
 void c_cable_udp_addr::print(std::ostream &ostr) const {

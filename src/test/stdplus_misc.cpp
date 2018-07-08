@@ -191,7 +191,7 @@ inline bool enum_is_valid_value(t_vehicle value) {
 }
 
 void fun_taking_short(short int s) {
-	_info("short: " << s);
+	pfp_info("short: " << s);
 }
 
 TEST(stdplus_misc, function_int_to_enum) {
@@ -205,9 +205,9 @@ TEST(stdplus_misc, function_int_to_enum) {
 	// int3 = enum_to_int( myvalue ) ; // warning only
 	fun_taking_short( enum_to_int( t_vehicle::ship ) );
 	// fun_taking_short( enum_to_int<short int>( t_vehicle::ship ) ); // warning
-	_info(int1);
-	// _info(int2);
-	// _info(int3);
+	pfp_info(int1);
+	// pfp_info(int2);
+	// pfp_info(int3);
 
 }
 
