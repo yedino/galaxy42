@@ -1058,7 +1058,7 @@ bool c_tunserver::check_packet_address(const std::array<uint8_t, 16> &address_ex
 }
 
 nlohmann::json c_tunserver::rpc_ping(const string &input_json) {
-	_UNUSED(input_json); // TODO?
+	pfp_UNUSED(input_json); // TODO?
 	//Json::Value input(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "ping";
@@ -1068,7 +1068,7 @@ nlohmann::json c_tunserver::rpc_ping(const string &input_json) {
 }
 
 nlohmann::json c_tunserver::rpc_peer_list(const string &input_json) {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	std::vector<std::string> refs;
 	// ipv4:port-ipv6
@@ -1187,7 +1187,7 @@ nlohmann::json c_tunserver::rpc_delete_peer(const string &input_json)
 
 nlohmann::json c_tunserver::rpc_delete_all_peers(const string &input_json)
 {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "delete_all_peers";
 	delete_all_peers(false);
@@ -1220,7 +1220,7 @@ nlohmann::json c_tunserver::rpc_ban_peer(const string &input_json)
 }
 
 nlohmann::json c_tunserver::rpc_ban_list(const string &input_json) {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	UniqueLockGuardRW<Mutex> lg(m_peer_etc_mutex);
 	ret["peers"] = m_peer_black_list;
@@ -1233,7 +1233,7 @@ nlohmann::json c_tunserver::rpc_ban_list(const string &input_json) {
 
 nlohmann::json c_tunserver::rpc_ban_all_peers(const string &input_json)
 {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "ban_all_peers";
 	delete_all_peers(true);
@@ -1244,7 +1244,7 @@ nlohmann::json c_tunserver::rpc_ban_all_peers(const string &input_json)
 
 nlohmann::json c_tunserver::rpc_get_galaxy_ipv6(const string &input_json)
 {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_galaxy_ipv6";
 	ret["ipv6"] = get_my_ipv6_nice();
@@ -1271,7 +1271,7 @@ nlohmann::json c_tunserver::rpc_get_galaxy_invitation(const string &input_json)
 
 nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "hello";
 	try {
@@ -1285,7 +1285,7 @@ nlohmann::json c_tunserver::rpc_hello(const string &input_json)
 
 nlohmann::json c_tunserver::rpc_exit(const string &input_json)
 {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "exit";
 	ret["state"] = "ok";
@@ -1295,7 +1295,7 @@ nlohmann::json c_tunserver::rpc_exit(const string &input_json)
 
 nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 {
-	_UNUSED(input_json);
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_status";
 	try {

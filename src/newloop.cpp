@@ -255,8 +255,8 @@ c_netbuf_circle::c_netbuf_circle() {
 // -------------------------------------------------------------------
 
 void read_from_tun(c_netbuf & entire_buf , size_t buf_) {
-	_UNUSED( entire_buf );
-	_UNUSED( buf_ );
+	pfp_UNUSED( entire_buf );
+	pfp_UNUSED( buf_ );
 }
 
 int get_tun_inbuf_size() { // the inbuffer used to read from TUN; each tun-reader thread has own inbuf.
@@ -272,7 +272,7 @@ int get_mts(cable_id t) { // maximum cable size
 // http://stackoverflow.com/questions/15219984/using-vectorchar-as-a-buffer-without-initializing-it-on-resize/15220853#15220853
 
 int newloop_main(const vector<string> &argt) {
-	_UNUSED(argt);
+	pfp_UNUSED(argt);
 
 	return 0;
 }

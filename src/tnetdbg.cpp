@@ -115,7 +115,7 @@ const char * dbg__FILE__(const char * name) {
 
 
 void must_be_exception_type_error_exit(const ui::exception_error_exit &x)
-{ _UNUSED(x); }
+{ pfp_UNUSED(x); }
 
 std::string debug_this() {
 	return "(global) ";

@@ -31,11 +31,11 @@ inline bool enum_is_valid_value(t_color_components value) {
 TEST(stdplus_misc, function_enum_to_int__enumclass) {
 	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
 
-	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(0);  _UNUSED(color); } );
-	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(2);  _UNUSED(color); } );
-	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(-666);  _UNUSED(color); } );
-	for (int i=0; i<=7; ++i) EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(i);  _UNUSED(color); } );
-	for (int i=9; i<=300; ++i) EXPECT_THROW( { auto color = int_to_enum<t_color_components>(i);  _UNUSED(color); } , std::exception ); // no such base colors
+	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(0);  pfp_UNUSED(color); } );
+	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(2);  pfp_UNUSED(color); } );
+	EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(-666);  pfp_UNUSED(color); } );
+	for (int i=0; i<=7; ++i) EXPECT_NO_THROW( { auto color = int_to_enum<t_color_components>(i);  pfp_UNUSED(color); } );
+	for (int i=9; i<=300; ++i) EXPECT_THROW( { auto color = int_to_enum<t_color_components>(i);  pfp_UNUSED(color); } , std::exception ); // no such base colors
 }
 
 // ===========================================================================================================
@@ -56,10 +56,10 @@ inline bool enum_is_valid_value(t_gender value) {
 TEST(stdplus_misc, function_enum_to_int) {
 	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
 
-	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(0);	_UNUSED(gender); } );
-	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(1);	_UNUSED(gender); } );
-	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(35500000);	_UNUSED(gender); } );
-	EXPECT_THROW( { auto gender = int_to_enum<t_gender>(3);  _UNUSED(gender); } , std::exception ); // there is no gender number 3
+	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(0);	pfp_UNUSED(gender); } );
+	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(1);	pfp_UNUSED(gender); } );
+	EXPECT_NO_THROW( { auto gender = int_to_enum<t_gender>(35500000);	pfp_UNUSED(gender); } );
+	EXPECT_THROW( { auto gender = int_to_enum<t_gender>(3);  pfp_UNUSED(gender); } , std::exception ); // there is no gender number 3
 }
 
 // ===========================================================================================================
@@ -78,8 +78,8 @@ inline bool enum_is_valid_value(t_contact value) {
 }
 
 TEST(stdplus_misc, function_enum_to_int__exception_type_overflow_or_invalid) {
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>(3);  _UNUSED(en); } , std::invalid_argument );
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>(300);  _UNUSED(en); } , std::overflow_error ); // value wraps
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(3);  pfp_UNUSED(en); } , std::invalid_argument );
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(300);  pfp_UNUSED(en); } , std::overflow_error ); // value wraps
 }
 
 TEST(stdplus_misc, function_enum_to_int__enumclass_match_after_conversion) {
@@ -94,20 +94,20 @@ TEST(stdplus_misc, function_enum_to_int__enumclass_match_after_conversion) {
 TEST(stdplus_misc, function_enum_to_int__enumclass_with_holes) {
 	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
 
-	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(0);  _UNUSED(en); } );
-	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(1);  _UNUSED(en); } );
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>(2);  _UNUSED(en); } , std::exception );
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>(3);  _UNUSED(en); } , std::exception );
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>(4);  _UNUSED(en); } , std::exception );
-	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(5);  _UNUSED(en); } );
-	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(6);  _UNUSED(en); } );
+	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(0);  pfp_UNUSED(en); } );
+	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(1);  pfp_UNUSED(en); } );
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(2);  pfp_UNUSED(en); } , std::exception );
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(3);  pfp_UNUSED(en); } , std::exception );
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>(4);  pfp_UNUSED(en); } , std::exception );
+	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(5);  pfp_UNUSED(en); } );
+	EXPECT_NO_THROW( { auto en = int_to_enum<t_contact>(6);  pfp_UNUSED(en); } );
 }
 
 TEST(stdplus_misc, function_enum_to_int__enumclass_overflow) {
 	g_dbg_level_set(150, "reduce warnings spam from tests (int_to_enum etc)");
 
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>( 0+256 );  _UNUSED(en); } , std::exception ); // wrap-around back to valid
-	EXPECT_THROW( { auto en = int_to_enum<t_contact>( -1 );  _UNUSED(en); } , std::exception ); // wrap  of unsigned
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>( 0+256 );  pfp_UNUSED(en); } , std::exception ); // wrap-around back to valid
+	EXPECT_THROW( { auto en = int_to_enum<t_contact>( -1 );  pfp_UNUSED(en); } , std::exception ); // wrap  of unsigned
 
 	std::set<int> values;
 	auto vmax = std::numeric_limits<int>::max();
@@ -119,7 +119,7 @@ TEST(stdplus_misc, function_enum_to_int__enumclass_overflow) {
 
 	for (auto i:values) {
 		if ( (i==0) || (i==1) || (i==5) || (i==6) ) continue;
-		EXPECT_THROW( { auto en = int_to_enum<t_contact>( i );  _UNUSED(en); } , std::exception );
+		EXPECT_THROW( { auto en = int_to_enum<t_contact>( i );  pfp_UNUSED(en); } , std::exception );
 	}
 }
 

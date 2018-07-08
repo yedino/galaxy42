@@ -116,8 +116,8 @@ bool c_event_manager_asio::get_tun_packet() {
 #else
 
 c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_device, const c_udp_wrapper_empty &udp_wrapper) {
-	_UNUSED(tun_device);
-	_UNUSED(udp_wrapper);
+	pfp_UNUSED(tun_device);
+	pfp_UNUSED(udp_wrapper);
 }
 
 void c_event_manager_empty::wait_for_event() { }
