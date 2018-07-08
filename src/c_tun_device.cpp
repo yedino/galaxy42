@@ -97,7 +97,7 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 	FD_SET(m_tun_fd, &fd_set_data);
 	timeval timeout { 0 , 500 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
 	auto select_result = select( m_tun_fd+1, &fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
-	_assert(select_result >= 0);
+	pfp_assert(select_result >= 0);
 	if (FD_ISSET(m_tun_fd, &fd_set_data)) return true;
 	else return false;
 }
@@ -141,7 +141,7 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 #define TAP_IOCTL_SET_MEDIA_STATUS		TAP_CONTROL_CODE (6, METHOD_BUFFERED)
 
 #if defined (__MINGW32__)
-	#undef _assert
+	#undef pfp_assert
 #endif
 
 c_tun_device_windows::c_tun_device_windows()

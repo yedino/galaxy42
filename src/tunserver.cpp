@@ -804,7 +804,7 @@ void c_tunserver::prepare_socket() {
 	}
 
 	#ifdef __linux__
-		_assert(m_udp_device.get_socket() >= 0);
+		pfp_assert(m_udp_device.get_socket() >= 0);
 	#endif
 
 	ui::action_info_ok("Started virtual network card interface (TUN)"
@@ -821,13 +821,13 @@ void c_tunserver::wait_for_fd_event() { // wait for fd event
 	FD_SET(m_udp_device.get_socket(), &m_fd_set_data);
 
 	auto fd_max = m_udp_device.get_socket(); // = std::max(m_tun_fd, m_udp_device.get_socket());
-	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
-	_assert(fd_max >= 1);
+	pfp_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
+	pfp_assert(fd_max >= 1);
 
 	timeval timeout { 0 , 500 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
 
 	auto select_result = select( fd_max+1, &m_fd_set_data, NULL, NULL, & timeout); // <--- blocks
-	_assert(select_result >= 0);
+	pfp_assert(select_result >= 0);
 }
 #else
 	//void c_tunserver::prepare_socket(){}
@@ -1609,7 +1609,7 @@ void c_tunserver::event_loop(int time) {
 							}
 							tundata.insert(0, reinterpret_cast<const char*>(tun_header), g_tuntap::header_position_of_ipv6);
 							auto write_bytes = m_tun_device.write_to_tun(&tundata[0], tundata.size());
-							_assert_throw( (write_bytes == tundata.size()) );
+							pfp_assert_throw( (write_bytes == tundata.size()) );
 
 						}
 						else

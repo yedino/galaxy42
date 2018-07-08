@@ -155,7 +155,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	} while(0)
 
 // this assert could be helpful, maybe use in release
-#define _assert(X) do { if (!(X)) { pfp_erro("Assertation failed (_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
+#define pfp_assert(X) do { if (!(X)) { pfp_erro("Assertation failed (pfp_assert) at " << _my__FILE__ << ':' << __LINE__); ::std::abort(); }  } while(0)
 
 //        pfp_warn("Going to throw exception. What: " << except_var.what()
 // this one is unused; leaving for translators if used again later.
@@ -217,7 +217,7 @@ void must_be_exception_type_error_exit(const ui::exception_error_exit &x);
 
 
 // TODO-r-deprecate:
-#define _assert_throw(COND) do { \
+#define pfp_assert_throw(COND) do { \
 	if (!(COND)) { \
 		std::ostringstream _dbg_oss; \
 		_dbg_oss << "Assert-throw failed: " << "" # COND ; \

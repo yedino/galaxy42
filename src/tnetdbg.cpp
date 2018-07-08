@@ -15,7 +15,7 @@ std::recursive_mutex g_dbg_mutex; // (extern)
 //#include <winbase.h>
 //#include <wincon.h>
 #include <stringapiset.h>
-#undef _assert
+#undef pfp_assert
 #include <cstring>
 
 void set_windows_console_utf8(HANDLE console_handle) {
