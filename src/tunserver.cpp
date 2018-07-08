@@ -146,7 +146,7 @@ void error(const std::string & msg) {
 namespace developer_tests {
 
 bool wip_strings_encoding(boost::program_options::variables_map & argm) {
-	pfpUNUSED(argm);
+	pfp_UNUSED(argm);
 
 	pfp_mark("Tests of string encoding");
 	pfp_warn("Test needs rewritting");
@@ -257,7 +257,7 @@ bool c_routing_manager::c_route_reason::operator==(const c_route_reason &other) 
 c_routing_manager::c_route_search::c_route_search(c_haship_addr addr, int basic_ttl)
 	: m_addr(addr), m_ever(false), m_ask_time(), m_ttl_used(0), m_ttl_should_use(5)
 {
-	pfpUNUSED(basic_ttl); // TODO or use it as m_ttl_should_use?
+	pfp_UNUSED(basic_ttl); // TODO or use it as m_ttl_should_use?
 	pfp_info("NEW router SEARCH: " << (*this));
 }
 
@@ -599,7 +599,7 @@ int c_tunserver::get_my_stats_peers_known_count() const {
 
 // my key @deprecated (newloop)
 void c_tunserver::configure_mykey(const std::string &ipv6_prefix) {
-	pfpUNUSED(ipv6_prefix);
+	pfp_UNUSED(ipv6_prefix);
 	// creating new IDC from existing IDI // this should be separated
 	//and should include all chain IDP->IDM->IDI etc.  sign and verification
 
@@ -1375,7 +1375,7 @@ void c_tunserver::event_loop(int time) {
 
 	while (time ? timer(time) : true) {
 		bool anything_happened{false}; // in given loop iteration, for e.g. debug
-		pfpUNUSED(anything_happened);
+		pfp_UNUSED(anything_happened);
 
 		if (is_exiting) break;
 
@@ -1716,7 +1716,7 @@ void c_tunserver::event_loop(int time) {
 				if (data_route_ttl > limit_incoming_ttl) {
 					pfp_info("We were requested to route (help search route) at high TTL (rude) by peer " << sender_hip <<  " - so reducing it.");
 					data_route_ttl=limit_incoming_ttl;
-                    pfpUNUSED(data_route_ttl); // TODO is it should be used?
+                    pfp_UNUSED(data_route_ttl); // TODO is it should be used?
                 }
 
 				pfp_info("We received request for HIP=" << string_as_hex( bin_hip ) << " = " << requested_hip << " and TTL=" << requested_ttl );
@@ -1799,7 +1799,7 @@ void c_tunserver::event_loop(int time) {
 					pfp_info("rrrrrrrrrrrrrrrrrrr route known thanks to peer help:" << route_info);
 					// store it, so that we own this object:
 					const auto & route_info_ref_we_own = m_routing_manager.add_route_info_and_return( given_goal_hip , route_info );
-					pfpUNUSED(route_info_ref_we_own); // TODO TODONOW and reply to others who asked us
+					pfp_UNUSED(route_info_ref_we_own); // TODO TODONOW and reply to others who asked us
 				}
 			}
 			else {

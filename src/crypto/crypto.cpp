@@ -268,7 +268,7 @@ c_crypto_system::t_symkey c_stream::calculate_KCT
 (const c_multikeys_PAIR & self, const c_multikeys_pub & them , bool will_new_id
 , const std::string & packetstart )
 {
-	pfpUNUSED(packetstart);
+	pfp_UNUSED(packetstart);
 	//assert( self.m_pub.get_count_of_systems() == them.m_pub.get_count_keys_in_system() );
 	assert(self.m_PRV.get_count_of_systems() == them.get_count_of_systems());
 	// TODO assert self priv == them priv;
