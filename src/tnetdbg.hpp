@@ -187,6 +187,12 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 		<< "."); \
 		throw except_var; } while(0)
 
+#ifndef __GNUC_PREREQ
+	#if defined(__MINGW32__)
+		#define __GNUC_PREREQ(major, minor)       __MINGW_GNUC_PREREQ(major, minor)
+	#endif
+#endif // __GNUC_PREREQ
+
 template <class T>
 void throw_or_abort(const T & ex) {
 #if defined(__GNUC__) && !defined(__clang__)
