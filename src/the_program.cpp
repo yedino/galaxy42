@@ -7,7 +7,11 @@
 #include "glue_sodiumpp_crypto.hpp"
 
 #include <clocale>
-#include <curl/curl.h>
+
+
+#ifdef ENABLE_LIB_CURL
+	#include <curl/curl.h>
+#endif
 
 #include "bitcoin_node_cli.hpp"
 
@@ -212,6 +216,7 @@ Leaving as documentation/example
 }
 
 void c_the_program::startup_curl() {
+	#ifdef ENABLE_LIB_CURL
 	// This curl init code MUST be 1-thread and very early in main
 	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
 	if(res != CURLE_OK) {
@@ -221,6 +226,10 @@ void c_the_program::startup_curl() {
 	else{
 		bitcoin_node_cli::curl_initialized=true;
 	}
+	#else
+		// initialize of the fake curl that does nothing
+		bitcoin_node_cli::curl_initialized=true;
+	#endif
 }
 
 void c_the_program::init_library_sodium() {
