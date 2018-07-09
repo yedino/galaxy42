@@ -2,6 +2,7 @@
 #include <json.hpp>
 
 
+#ifdef ENABLE_LIB_CURL
 c_curl_ptr::c_curl_ptr()
 :	m_ptr(nullptr)
 {
@@ -18,6 +19,8 @@ c_curl_ptr::~c_curl_ptr() {
 CURL *c_curl_ptr::get_raw_ptr() const {
 	return m_ptr;
 }
+
+#endif
 
 //////////////////////////////////////////////////////
 
@@ -76,6 +79,7 @@ std::string bitcoin_node_cli::get_new_address() const {
 }
 
 std::string bitcoin_node_cli::send_request_and_get_response(const std::string &request) const {
+#ifdef ENABLE_LIB_CURL
 	c_curl_ptr curl;
 	curl_easy_setopt(curl.get_raw_ptr(), CURLOPT_URL, m_rpc_http_address.c_str());
 
@@ -95,6 +99,10 @@ std::string bitcoin_node_cli::send_request_and_get_response(const std::string &r
 		throw std::runtime_error("curl_easy_perform() failed: "s + curl_easy_strerror(ret_code));
 	}
 	return receive_data;
+#else
+	pfp_warn("Curl is disabled, can not query bitcoin in this program version.");
+	throw std::runtime_error("Curl is disabled (used for bitcoin)");
+#endif
 }
 
 size_t bitcoin_node_cli::write_cb(void *ptr, size_t size, size_t nmemb, std::string *str) {

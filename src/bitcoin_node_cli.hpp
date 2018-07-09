@@ -3,9 +3,14 @@
 
 #include <libs0.hpp>
 #include <boost/asio.hpp>
-#include <curl/curl.h>
 #include <mutex>
 
+#ifdef ENABLE_LIB_CURL
+	#include <curl/curl.h>
+#endif
+
+
+#ifdef ENABLE_LIB_CURL
 class c_curl_ptr final {
 	public:
 		c_curl_ptr();
@@ -14,6 +19,7 @@ class c_curl_ptr final {
 	private:
 		CURL *m_ptr;
 };
+#endif
 
 //////////////////////////////////////////////////////
 
