@@ -198,6 +198,18 @@ endif()
 ########################### COMPILER FLAGS ###########################
 ######################################################################
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
+		message(FATAL_ERROR "GCC version must be at least 4.9!")
+	endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5)
+		message(FATAL_ERROR "Clang version must be at least 3.5!")
+	endif()
+else()
+	message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang and GCC.")
+endif()
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -559,7 +571,7 @@ if (TOOLS_ARE_BROKEN)
 	add_definitions(-DTOOLS_ARE_BROKEN=1)
 endif()
 
-message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID} (Ver. ${CMAKE_CXX_COMPILER_VERSION})")
 message(STATUS "C Flags:                       ${CMAKE_C_FLAGS}")
 message(STATUS "C++ Flags:                     ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ link flags:                ${CMAKE_CXX_LINK_FLAGS}")
