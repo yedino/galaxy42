@@ -1,4 +1,4 @@
-# Galaxy42 - deterministic builds guidance for developers
+# Galaxy42 - deterministic builds info for developers
 
 ## Important scripts / structure of builds
 
