@@ -419,6 +419,7 @@ function pfp_util_estimate_make_threads() {
 		memavaiable=`echo "${memavaiable}/1024" | bc`
 		num_cores=`cat /proc/cpuinfo | grep processor | wc -l`
 		num_threads_from_ram=`echo "${memavaiable}/${mem_per_thread}" | bc`
+		num_cores=`expr ${num_cores} + 1`
 		if [ ${num_threads_from_ram} -ge 1 ];
 		then
 			if [ ${num_threads_from_ram} -gt ${num_cores} ];
