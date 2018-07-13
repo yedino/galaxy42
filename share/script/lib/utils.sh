@@ -409,6 +409,23 @@ function platforminfo_set_mountflags() {
 	return 1
 }
 
+function pfp_util_estimate_make_threads() {
+	if [[ -r /proc/meminfo ]];
+	then
+		memperthread=$1
+		memavaiable=`cat /proc/meminfo | grep 'MemAvailable' | awk -F " " '{print $2}'`
+		memavaiable=`echo "${memavaiable}/1024" | bc`
+		numcpu=`cat /proc/cpuinfo | grep processor | wc -l`
+		num_threads_from_ram=`echo "${memavaiable}/${memperthread}" | bc`
 
-
+		if [ ${num_threads_from_ram} -gt ${numcpu} ];
+		then
+			export THREADS=${numcpu}
+		else
+			export THREADS=${num_threads_from_ram}
+		fi
+	else
+		export THREADS=1
+	fi
+}
 
