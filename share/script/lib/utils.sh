@@ -409,23 +409,31 @@ function platforminfo_set_mountflags() {
 	return 1
 }
 
+# parameter is megabytes per thread
 function pfp_util_estimate_make_threads() {
 	if [[ -r /proc/meminfo ]];
 	then
-		memperthread=$1
+        	local threads
+		mem_per_thread=$1
 		memavaiable=`cat /proc/meminfo | grep 'MemAvailable' | awk -F " " '{print $2}'`
 		memavaiable=`echo "${memavaiable}/1024" | bc`
-		numcpu=`cat /proc/cpuinfo | grep processor | wc -l`
-		num_threads_from_ram=`echo "${memavaiable}/${memperthread}" | bc`
-
-		if [ ${num_threads_from_ram} -gt ${numcpu} ];
+		num_cores=`cat /proc/cpuinfo | grep processor | wc -l`
+		num_threads_from_ram=`echo "${memavaiable}/${mem_per_thread}" | bc`
+		if [ ${num_threads_from_ram} -ge 1 ];
 		then
-			export THREADS=${numcpu}
-		else
-			export THREADS=${num_threads_from_ram}
+			if [ ${num_threads_from_ram} -gt ${num_cores} ];
+			then
+                		echo "Limiting number of threads due to CPU cores, from ${num_threads_from_ram} to ${num_cores} (memory per thread needed is assumed: ${mem_per_thread} MB)" 
+				threads=${num_cores}
+			else
+                		echo "Limiting number of threads due to ${num_threads_from_ram} (memory per thread needed is assumed: ${mem_per_thread} MB)"
+				threads=${num_threads_from_ram}
+			fi
 		fi
+		
 	else
-		export THREADS=1
+		threads=1
 	fi
+	export THREADS=${threads}
 }
 
