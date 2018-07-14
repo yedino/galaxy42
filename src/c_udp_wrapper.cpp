@@ -139,24 +139,24 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
 {
-	_note("Creating udp wrapper (old-style)");
+	pfp_note("Creating udp wrapper (old-style)");
 	if (listen_port==0) {
 		m_disabled=true;
-		_warn("Socket is disabled, listen_port="<<listen_port);
+		pfp_warn("Socket is disabled, listen_port="<<listen_port);
 		return;
 	}
-	_assert(m_socket >= 0);
+	assert(m_socket >= 0);
         c_ip46_addr anyport;
 	c_ip46_addr address_for_sock = anyport.any_on_port(listen_port);
 	int bind_result = -1;
 	if (address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv4) {
 		sockaddr_in addr4 = address_for_sock.get_ip4();
-		_note("Binding 4");
+		pfp_note("Binding 4");
 		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr4), sizeof(addr4));  // reinterpret allowed by Linux specs
 	}
 	else if(address_for_sock.get_ip_type() == c_ip46_addr::t_tag::tag_ipv6) {
 		sockaddr_in6 addr6 = address_for_sock.get_ip6();
-		_note("Binding 6");
+		pfp_note("Binding 6");
 		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
 	}
         struct ifreq ifr;
@@ -166,10 +166,10 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
             std::stringstream errorstring;
             char *serr = strerror(errno);
             errorstring<<"SIOCGIFINDEX : "<<serr;
-            _erro(errorstring.str());
-            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+            pfp_erro(errorstring.str());
+            pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         } else {
-            _dbg5("SIOCGIFINDEX : " << ifr.ifr_ifindex);
+            pfp_dbg5n("SIOCGIFINDEX : " << ifr.ifr_ifindex);
         }
         if(bind_result == -1) {
             char *serr = strerror(errno);
@@ -182,34 +182,33 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
                 default:
                     errorstring<<"Please describe errno "<<errno;
             }
-            _warnn(errorstring.str());
-            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+            pfp_warnn(errorstring.str());
+            pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         }
-	_assert( bind_result >= 0 ); // TODO change to except
-	_assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
+	assert( bind_result >= 0 ); // TODO change to except
+	assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
 }
 
 void c_udp_wrapper_netbsd::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
-	if (m_disabled) { _dbg4("disabled socket"); return; }
+	if (m_disabled) { pfp_dbg4n("disabled socket"); return; }
 	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
 	ssize_t sto = sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
         if(sto == -1) {
             char *serr = strerror(errno);
             std::stringstream errorstring;
-           errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
             switch(errno) {
-                
                 default:
                     errorstring<<"Please describe errno "<<errno;
             }
-            _warnn(errorstring.str());
+            pfp_warnn(errorstring.str());
         } else {
-            _info(__func__<<" sended "<<sto<<" bytes");
+            pfp_info(__func__<<" sended "<<sto<<" bytes");
         }
 }
 
 size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
-	if (m_disabled) { _dbg4("disabled socket"); return 0; }
+	if (m_disabled) { pfp_dbg4n("disabled socket"); return 0; }
 	sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
 	socklen_t from_addr_raw_size = sizeof(from_addr_raw); // ^ size of it
 	auto size_read = recvfrom(m_socket, data_buf, data_buf_size, 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
@@ -218,29 +217,28 @@ size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_
             std::stringstream errorstring;
             errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
             switch(errno) {
-                
                 default:
                     errorstring<<"Please describe errno "<<errno;
             }
-            _warnn(errorstring.str());
+            pfp_warnn(errorstring.str());
         } else {
-            _info(__func__<<" receive "<<size_read<<" bytes");
+            pfp_info(__func__<<" receive "<<size_read<<" bytes");
         }
 	if (from_addr_raw_size == sizeof(sockaddr_in6)) { // the message arrive from IP pasted into sockaddr_in6 format
-		_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
+		pfp_erro("NOT IMPLEMENTED yet - recognizing IP of ipv6 peer"); // peeripv6-TODO(r)(easy)
 		// trivial
 	}
 	else if (from_addr_raw_size == sizeof(sockaddr_in)) { // the message arrive from IP pasted into sockaddr_in (ipv4) format
 		sockaddr_in addr = * reinterpret_cast<sockaddr_in*>(& from_addr_raw); // mem-cast-TODO(p) confirm reinterpret
 		from_address.set_ip4(addr);
 	} else {
-		_throw_error( std::runtime_error("Data arrived from unknown socket address type") );
+		pfp_throw_error( std::runtime_error("Data arrived from unknown socket address type") );
 	}
 	return size_read;
 }
 
 int c_udp_wrapper_netbsd::get_socket() {
-	if (m_disabled) { _dbg4("disabled socket"); return 0 ; }
+	if (m_disabled) { pfp_dbg4n("disabled socket"); return 0 ; }
 	return m_socket;
 }
 

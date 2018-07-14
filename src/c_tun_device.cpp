@@ -682,14 +682,14 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
 	m_ioservice(),
 	m_tun_stream(m_ioservice, m_tun_fd)
 {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     uint16_t scope;
 
     // previous tun ??
     scope = htons((uint16_t)if_nametoindex(IFNAME));
     if(scope > 0) {
         int sock;
-        _warnn(IFNAME " exists");
+        pfp_warnn(IFNAME " exists");
         sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
         struct ifreq interface;
         memset(&interface, 0, sizeof(struct ifreq));
@@ -698,10 +698,10 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
             std::stringstream errorstring;
             char *serr = strerror(errno);
             errorstring<<"SIOCIFDESTROY : "<<serr;
-            _erro(errorstring.str());
-            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+            pfp_erron(errorstring.str());
+            pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         } else {
-            _goal("Previous " IFNAME " destroyed.");
+            pfp_goal("Previous " IFNAME " destroyed.");
         }
     }
     m_tun_fd = open("/dev/" IFNAME, O_RDWR);
@@ -719,16 +719,16 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
             default:
                 errorstring<<"Please describe errno "<<errno;
         }
-        _warnn(errorstring.str());
-        _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+        pfp_warnn(errorstring.str());
+        pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
     } else {
-        _goal("Opened " IFNAME);
+        pfp_goal("Opened " IFNAME);
     }
 }
 
 c_tun_device_netbsd::~c_tun_device_netbsd()
 {
-    _goal("Closing " IFNAME);
+    pfp_goal("Closing " IFNAME);
     close(m_tun_fd);
     
     // XXX: duplicate code
@@ -736,7 +736,7 @@ c_tun_device_netbsd::~c_tun_device_netbsd()
     scope = htons((uint16_t)if_nametoindex(IFNAME));
     if(scope > 0) { // XXX: uncomment in  future
         int sock;
-        _warnn(IFNAME " exists");
+        pfp_warnn(IFNAME " exists");
         sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
         struct ifreq interface;
         memset(&interface, 0, sizeof(struct ifreq));
@@ -745,41 +745,41 @@ c_tun_device_netbsd::~c_tun_device_netbsd()
             std::stringstream errorstring;
             char *serr = strerror(errno);
             errorstring<<"SIOCIFDESTROY : "<<serr;
-            _erro(errorstring.str());
-            _throw_error_sub( tuntap_error_devtun , errorstring.str() );
+            pfp_erron(errorstring.str());
+            pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         } else {
-            _goal("Previous " IFNAME " destroyed.");
+            pfp_goal("Previous " IFNAME " destroyed.");
         }
     }
 }
 
 void c_tun_device_netbsd::init() 
 {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     int i;
     
     i = IFF_POINTOPOINT|IFF_MULTICAST;
     /* multicast on */
     if(ioctl(m_tun_fd, TUNSIFMODE, &i) == -1) {
-        _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFMODE problem") );
+        pfp_throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFMODE problem") );
     } else {
-        _goal("Set flags: TUNSIFMODE : " << i);
+        pfp_goal("Set flags: TUNSIFMODE : " << i);
     }
     
     i = 1;
     /* link layer mode off */
     if(ioctl(m_tun_fd, TUNSLMODE, &i) == -1) {
-        _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSLMODE problem") );
+        pfp_throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSLMODE problem") );
     } else {
-        _goal("Set flags: TUNSLMODE : " << i);
+        pfp_goal("Set flags: TUNSLMODE : " << i);
     }
     
     i = 1;
     /* multi-af mode on */
     if(ioctl(m_tun_fd, TUNSIFHEAD, &i) == -1) {
-        _throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFHEAD problem") );
+        pfp_throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFHEAD problem") );
     } else {
-        _goal("Set flags: TUNSIFHEAD : " << i);
+        pfp_goal("Set flags: TUNSIFHEAD : " << i);
     }
 }
 
@@ -787,14 +787,14 @@ void c_tun_device_netbsd::set_ipv6_address(
     const std::array<uint8_t, 16> &binary_address, 
     int prefixLen
 ) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     int sock;
     uint16_t scope;
     
-    _goal("Create socket ...");
+    pfp_goal("Create socket ...");
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
     if(sock == -1) {
-        _warnn(__func__);
+        pfp_warnn(__func__);
         throw std::runtime_error(std::string("Socket create problem"));
     }
     
@@ -813,7 +813,7 @@ void c_tun_device_netbsd::set_ipv6_address(
     ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
     
     char temp[128];
-    _goal("Setting addresses " \
+    pfp_goal("Setting addresses " \
             << std::string(inet_ntop(AF_INET6, baData, temp, 128)) \
             << "/" \
             << prefixLen);
@@ -837,11 +837,11 @@ void c_tun_device_netbsd::set_ipv6_address(
     
     // call add address
     if(ioctl(sock, SIOCAIFADDR_IN6, &ifa6) == -1) {
-        _erron("SIOCAIFADDR_IN6");
+        pfp_erron("SIOCAIFADDR_IN6");
     }
     
     m_ip6_ok=true;
-    _goal("IP address is fully configured");
+    pfp_goal("IP address is fully configured");
     
     close(sock);
 }
@@ -849,25 +849,25 @@ void c_tun_device_netbsd::set_ipv6_address(
 void c_tun_device_netbsd::set_mtu(
     uint32_t mtu
 ) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     int sock;
     struct ifreq interface;
     
     memset(&interface, 0, sizeof(struct ifreq));
     
-    _goal("Create socket ...");
+    pfp_goal("Create socket ...");
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
     if(sock == -1) {
-        _warnn(__func__);
+        pfp_warnn(__func__);
         throw std::runtime_error(std::string("Socket create problem"));
     }
     
     strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name));
     interface.ifr_ifru.ifru_mtu = mtu;
     
-    _goal("Setting MTU on " << IFNAME << " to " << mtu);
+    pfp_goal("Setting MTU on " << IFNAME << " to " << mtu);
     if(ioctl(sock, SIOCSIFMTU, &interface) == -1) {
-	_erron("SIOCSIFMTU");
+	pfp_erron("SIOCSIFMTU");
     }
     
     close(sock);
@@ -875,10 +875,10 @@ void c_tun_device_netbsd::set_mtu(
 
 bool c_tun_device_netbsd::incomming_message_form_tun() 
 {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
     if (m_readed_bytes > 0) {
-        _dbg1("At " << __func__ << ": we have " << m_readed_bytes << " bytes");
+        pfp_dbg1n("At " << __func__ << ": we have " << m_readed_bytes << " bytes");
         return true;
     } else 
         return false;
@@ -888,13 +888,13 @@ size_t c_tun_device_netbsd::read_from_tun(
     void *buf, 
     size_t count
 ) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     memset(buf, 0, count);
     int rret = read_tun(m_tun_fd, buf, count);
     if(rret < 0) {
         perror("read_tun");
     } else {
-        _goal("Read from " IFNAME);
+        pfp_goal("Read from " IFNAME);
         return rret;
     }
     return 0;
@@ -904,19 +904,19 @@ size_t c_tun_device_netbsd::write_to_tun(
     void *buf, 
     size_t count
 ) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     int wret = write_tun(m_tun_fd, buf, count);
     if(wret < 0) {
         perror("write_tun");
     } else {
-        _goal("Write to " IFNAME);
+        pfp_goal("Write to " IFNAME);
         return wret;
     }
     return 0;
 }
 
 int c_tun_device_netbsd::get_tun_fd() const {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     return m_tun_fd;
 }
 #else

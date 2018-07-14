@@ -879,12 +879,12 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	ip::address_v6::bytes_type ip_bytes;
 	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
 	ip::address_v6 ip6_addr(ip_bytes);
-	_dbg1("src ipv6_str " << ip6_addr);
+	pfp_dbg1n("src ipv6_str " << ip6_addr);
 	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 
 	std::copy_n(buff + pos_dst, ip_bytes.size(), ip_bytes.begin());
 	ip6_addr = ip::address_v6(ip_bytes);
-	_dbg1("dst ipv6_str " << ip6_addr);
+	pfp_dbg1n("dst ipv6_str " << ip6_addr);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());	
 #endif
 

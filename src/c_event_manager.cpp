@@ -123,24 +123,24 @@ c_event_manager_netbsd::c_event_manager_netbsd(const c_tun_device_netbsd &tun_de
 
 void c_event_manager_netbsd::init() {
 	m_tun_fd = m_tun_device.get().get_tun_fd();
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
-	_goal("Event manager will watch tuntap fd " << m_tun_fd);
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
+	pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 }
 
 void c_event_manager_netbsd::wait_for_event() {
-	_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
+	pfp_dbg3n("Selecting. m_tun_fd="<<m_tun_fd);
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_udp_socket, &m_fd_set_data);
 	FD_SET(m_tun_fd, &m_fd_set_data);
 	auto fd_max = std::max(m_tun_fd, m_udp_socket);
-	_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
-	_assert(fd_max >= 1);
+	assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
+	assert(fd_max >= 1);
 	timeval timeout { 3 , 0 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
-	_dbg1("Selecting for fd_max="<<fd_max);
+	pfp_dbg1n("Selecting for fd_max="<<fd_max);
 	auto select_result = select( fd_max+1, &m_fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
-	_assert(select_result >= 0);
+	assert(select_result >= 0);
 }
 
 bool c_event_manager_netbsd::receive_udp_packet() {
