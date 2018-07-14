@@ -37,6 +37,7 @@
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
 #include "tuntap/macosx/c_tuntap_macosx_obj.hpp"
+#include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
 
 #include "tunserver.hpp" // delete?
 

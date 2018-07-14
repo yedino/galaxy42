@@ -1434,6 +1434,8 @@ void asiotest_udpserv(std::vector<std::string> options) {
 		tuntap = std::make_unique<c_tuntap_windows_obj>(*ios_tuntap.at(0));
 #elif defined (ANTINET_macosx)
 		tuntap = std::make_unique<c_tuntap_macosx_obj>(*ios_tuntap.at(0));
+#elif defined (__NetBSD__)
+		tuntap = std::make_unique<c_tuntap_netbsd_obj>(*ios_tuntap.at(0));
 #endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
 		tuntap_address.fill(0x11);

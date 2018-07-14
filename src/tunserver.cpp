@@ -86,7 +86,7 @@ const char * g_demoname_default = "route_dij";
 #include "counter.hpp"
 #include "generate_crypto.hpp"
 
-
+#include "platform.hpp"
 
 #ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include "../depends/cjdns-code/NetPlatform.h" // from cjdns
@@ -874,6 +874,18 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#elif defined(__NetBSD__)
+        using namespace boost::asio;
+	ip::address_v6::bytes_type ip_bytes;
+	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
+	ip::address_v6 ip6_addr(ip_bytes);
+	_dbg1("src ipv6_str " << ip6_addr);
+	c_haship_addr ret_src(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
+
+	std::copy_n(buff + pos_dst, ip_bytes.size(), ip_bytes.begin());
+	ip6_addr = ip::address_v6(ip_bytes);
+	_dbg1("dst ipv6_str " << ip6_addr);
+	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());	
 #endif
 
 	return std::make_pair( ret_src , ret_dst );
@@ -1430,8 +1442,8 @@ void c_tunserver::event_loop(int time) {
 			std::vector<int8_t> tun_read_buff(buf_size);
 			auto size_read = m_tun_device.read_from_tun(&tun_read_buff[0], tun_read_buff.size());
 			pfp_info("TTTTTTTTTTTTTTTTTTTTTTTTTT ###### ------> TUN read " << size_read << " bytes: [" << string(reinterpret_cast<char *>(&tun_read_buff[0]),size_read)<<"]");
-			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 
+			const int data_route_ttl = 5; // we want to ask others with this TTL to route data sent actually by our programs
 			c_haship_addr src_hip, dst_hip;
 			std::tie(src_hip, dst_hip) = parse_tun_ip_src_dst(reinterpret_cast<const char *>(&tun_read_buff[0]), size_read);
 			// TODO warn if src_hip is not our hip
@@ -1480,7 +1492,7 @@ void c_tunserver::event_loop(int time) {
 				was_anything_sent_from_TUN=true;
 			}
 		}
-		else if(m_event_manager.receive_udp_paket()) { // data incoming on peer (UDP) - will route it or send to our TUN
+		else if(m_event_manager.receive_udp_packet()) { // data incoming on peer (UDP) - will route it or send to our TUN
 			anything_happened=true;
 			c_ip46_addr sender_pip; // peer-IP of peer who sent it
 

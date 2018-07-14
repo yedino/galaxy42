@@ -191,6 +191,10 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	#if defined(__MINGW32__)
 		#define __GNUC_PREREQ(major, minor)       __MINGW_GNUC_PREREQ(major, minor)
 	#endif
+        #if defined(__NetBSD__)
+                #include <sys/cdefs.h>
+                #define __GNUC_PREREQ __GNUC_PREREQ__
+        #endif
 #endif // __GNUC_PREREQ
 
 template <class T>

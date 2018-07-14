@@ -43,6 +43,7 @@
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"
 #include "tuntap/macosx/c_tuntap_macosx_obj.hpp"
+#include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
 
 #include "platform.hpp"
 
@@ -52,8 +53,8 @@
 /// @owner magaNet_user
 class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e, c_galaxysrv_engine {
 	public:
-		c_galaxysrv()=default;
-		virtual ~c_galaxysrv()=default;
+		c_galaxysrv();
+		virtual ~c_galaxysrv();
 
 		/// load my (this node's) keypair from it's default store (e.g. config files)
 		/// if your files seem to not be yet created, then throws expected_not_found
@@ -103,6 +104,8 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 			c_tuntap_windows_obj m_tuntap;
 		#elif defined(ANTINET_macosx)
 			c_tuntap_macosx_obj m_tuntap;
+                #elif defined(__NetBSD__)
+                        c_tuntap_netbsd_obj m_tuntap;
 		#else
 			#error "This platform is not supported"
 		#endif

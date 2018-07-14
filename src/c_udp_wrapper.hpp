@@ -64,6 +64,20 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 };
 
 //  __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
+#elif defined (__NetBSD__)
+
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
+class c_udp_wrapper_netbsd final : public c_udp_wrapper {
+	friend class c_event_manager_netbsd;
+	public:
+		c_udp_wrapper_netbsd(const int listen_port);
+		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
+		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
+		int get_socket(); // TODO remove this
+
+	private:
+		const int m_socket;
+};
 #else
 
 #warning "using c_udp_wrapper_empty = It will not work (it's just a stump)!"
