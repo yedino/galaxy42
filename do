@@ -56,7 +56,7 @@ function usage {
 	usage_main
 }
 
-function platform_recognize {
+function platform_recognize_simple {
 	uname -a # show info
 	if [[ -n $(uname -a | grep "GNU/Linux") ]]
 	then
@@ -78,6 +78,7 @@ function platform_recognize {
 		# readlink on OSX have different behavior than in GNU
 		# to get same behavior we could use greadlink from coreutils package
 		# brew install coreutils
+		hash greadlink || fail "Can not find/user program greadlink, please instll it (e.g. from brew)"
 		shopt -s expand_aliases
 		alias readlink="greadlink"
 	else
@@ -86,6 +87,7 @@ function platform_recognize {
 }
 
 function thread_setting {
+	echo "Detecting threads setting... (can be configured in system as THREADS=N where N is a number)"
 	if [[ -z ${THREADS+x} ]]
 	then
 		echo "THREADS variable is not set, will use default (THREADS=1)"
@@ -100,20 +102,40 @@ function clean_previous_build {
 	rm -rf CMakeCache.txt CMakeFiles/ || { echo "(can not remove cmake cache - but this is probably normal at first run)" ; }
 }
 
+
+
+### start of main script
+
+platform_recognize_simple # very early e.g. to fix readlink
+echo "Recognized platform: $platform"
+
+readonly dir_base_of_source="$(readlink -e ./)"
+[ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
+
+# import fail function
+. "${dir_base_of_source}"/share/script/lib/fail.sh || echo "Failed to, uhm, load the fail.sh library"
+
 echo ""
 echo "------------------------------------------"
 echo "The 'do' script - that builds this project"
 echo ""
 
+echo "--- basic init of libs and env  ---"
+
+
 prepare_languages
 
-platform_recognize
-echo "Recognized platform: $platform"
-readonly dir_base_of_source="$(readlink -e ./)"
+if [[ $OSTYPE == "linux-gnu" ]]; then
+	source gettext.sh || fail "Gettext (or sudo) is not installed, please install them (e.g. apt-get install sudo gettext)"
+
+	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
+		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
+
+	init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
+	if (( ! platforminfo[family_detected] )) ; then printf "Warning: %s\n" "$(gettext "error_init_platforminfo_unknown")" ; fi
+fi
 
 thread_setting
-# import fail function
-. "${dir_base_of_source}"/share/script/lib/fail.sh
 
 clean_previous_build
 
@@ -191,16 +213,7 @@ echo ""
 
 COVERAGE="$COVERAGE" EXTLEVEL="$EXTLEVEL" ./build-extra-libs.sh || fail "Building extra libraries failed"
 
-[ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
 if [[ $OSTYPE == "linux-gnu" ]]; then
-	source gettext.sh || fail "Gettext (or sudo) is not installed, please install them (e.g. apt-get install sudo gettext)"
-
-	lib='utils.sh'; source "${dir_base_of_source}/share/script/lib/${lib}" || {\
-		eval_gettext "Can not find script library $lib (dir_base_of_source=$dir_base_of_source)" ; exit 1; }
-
-	init_platforminfo || { printf "%s\n" "$(gettext "error_init_platforminfo")" ; exit 1; }
-	if (( ! platforminfo[family_detected] )) ; then printf "%s\n" "$(gettext "error_init_platforminfo_unknown")" ; exit 1 ; fi
-
 	# setting newer CC CXX for older ubuntu
 	if [[ "${platforminfo[distro]}" == "ubuntu" ]]; then
 		# get ubuntu main version e.g. "14" from "ubuntu_14.04"
@@ -269,10 +282,15 @@ pushd $dir_build
 	# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
 	set -x
-	ln -s "$dir_base_of_source"/share share || echo "Link already exists"
+	if [[ ! -e "./share" ]] ; then
+		ln -s "$dir_base_of_source/share" "./" || echo "Link already exists"
+	fi
 
 	make -j"${THREADS}" \
 		|| fail "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md"
 
 	set +x
 popd
+
+
+echo "Script ./do finished. Was working with THREADS=$THREADS"

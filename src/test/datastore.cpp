@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "gtest/gtest.h"
 #include "../datastore.hpp"
@@ -8,7 +8,7 @@
 
 TEST(datastore, custom_string_save) {
 
-	_dbg2("datastore tests");
+	pfp_dbg2("datastore tests");
 }
 
 TEST(datastore, prepare_path) {
@@ -16,16 +16,16 @@ TEST(datastore, prepare_path) {
 	const char *home_env_value = getenv("HOME");
 	if (home_env_value) {
 		std::string home(getenv("HOME"));
-		_dbg2("Home dir: " << home);
+		pfp_dbg2("Home dir: " << home);
 	} else {
-		_dbg2("env read error");
+		pfp_dbg2("env read error");
 	}
 
 	b_fs::path PRV_dir = datastore::create_path_for(e_datastore_galaxy_wallet_PRV, "bannedname!_key");
-	_dbg2(PRV_dir);
+	pfp_dbg2(PRV_dir);
 
 	b_fs::path PRV_full = datastore::prepare_path_for_write(e_datastore_galaxy_wallet_PRV, "bannedname!_key", true);
-	_dbg2(PRV_full);
+	pfp_dbg2(PRV_full);
 
 	datastore::save_string(e_datastore_galaxy_wallet_PRV, "bannedname!_key", "priv data01", true);
 	// try to overvrite path for PRV key
@@ -37,10 +37,10 @@ TEST(datastore, prepare_path) {
 	ASSERT_TRUE(datastore::remove(PRV_full.string()));
 
 	b_fs::path pub_dir = datastore::create_path_for(e_datastore_galaxy_pub, "bannedname!_key");
-	_dbg2(pub_dir);
+	pfp_dbg2(pub_dir);
 
 	b_fs::path pub_full = datastore::prepare_path_for_write(e_datastore_galaxy_pub, "bannedname!_key", true);
-	_dbg2(pub_full);
+	pfp_dbg2(pub_full);
 
 	// removing
 	ASSERT_TRUE(datastore::remove(pub_full.string()));
@@ -99,9 +99,9 @@ TEST(datastore, file_list_sig) {
 	auto sig_path = datastore::get_parent_path(e_datastore_galaxy_sig,"");
 	auto signatures = datastore::get_file_list(sig_path);
 
-	_dbg1("TEST file list:");
+	pfp_dbg1("TEST file list:");
 	for(auto &a : signatures) {
-		_dbg1(a);
+		pfp_dbg1(a);
 	}
 	// cleaning
 	ASSERT_TRUE(datastore::remove(e_datastore_galaxy_sig, sig1));

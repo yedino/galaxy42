@@ -10,7 +10,7 @@ typedef string cable_id; // name next hop
 typedef string hip_id; // name end src/dst
 
 void	image(int size) {
-	_info("image size="<<size);
+	pfp_info("image size="<<size);
 	_try_user(size < 100);
 
 	auto size2 = size * size;
@@ -18,7 +18,7 @@ void	image(int size) {
 	_check_user( size2 >= 4 );
 	auto mem1 = new int[ size ];
 	auto mem2 = new int[ size2 ];
-	_dbg1( (void*)mem1 << " " << (void*)mem2 << " " << size2 );
+	pfp_dbg1( (void*)mem1 << " " << (void*)mem2 << " " << size2 );
 }
 
 void connect_peer(bool good_version, bool good_data) {
@@ -26,16 +26,16 @@ void connect_peer(bool good_version, bool good_data) {
 		_try_extern(good_version == true);
 		_check_extern(good_data == false);
 	}
-	catch(err_check_user & ex) { _erro("User (not-fixed):" << ex.what()); }
-	catch(err_check_base & ex) { _erro("Check (not-fixed):" << ex.what()); }
-	catch(std::runtime_error & ex) { _erro("Runtime:" << ex.what()); }
-	catch(std::bad_alloc & ex) { _erro("Bad alloc:" << ex.what()); }
-	catch(std::exception & ex) { _erro("Exception:" << ex.what()); }
-	catch(...) { _erro("Exception of unknown type"); }
+	catch(err_check_user & ex) { pfp_erro("User (not-fixed):" << ex.what()); }
+	catch(err_check_base & ex) { pfp_erro("Check (not-fixed):" << ex.what()); }
+	catch(std::runtime_error & ex) { pfp_erro("Runtime:" << ex.what()); }
+	catch(std::bad_alloc & ex) { pfp_erro("Bad alloc:" << ex.what()); }
+	catch(std::exception & ex) { pfp_erro("Exception:" << ex.what()); }
+	catch(...) { pfp_erro("Exception of unknown type"); }
 }
 
 void image_ui(int size, string dir="/tmp", string fname="/tmp/data") {
-	_info("For size=" << size);
+	pfp_info("For size=" << size);
 	try {
 		bool done=false; int trynr=0;
 		while (!done) {
@@ -46,20 +46,20 @@ void image_ui(int size, string dir="/tmp", string fname="/tmp/data") {
 				done=true;
 			}
 			catch(err_check_soft & ex) {
-				_warn("Soft:" << ex.what_soft());
+				pfp_warn("Soft:" << ex.what_soft());
 				++trynr;
 				if (trynr>3) throw;
-				_note("Will retry...");
+				pfp_note("Will retry...");
 				if (size>20) size -= 5; // maybe the size is too big, try to fix that
 			}
 		}
 	}
-	catch(err_check_user & ex) { _erro("User (not-fixed):" << ex.what()); }
-	catch(err_check_base & ex) { _erro("Check (not-fixed):" << ex.what()); }
-	catch(std::runtime_error & ex) { _erro("Runtime:" << ex.what()); }
-	catch(std::bad_alloc & ex) { _erro("Bad alloc:" << ex.what()); }
-	catch(std::exception & ex) { _erro("Exception:" << ex.what()); }
-	catch(...) { _erro("Exception of unknown type"); }
+	catch(err_check_user & ex) { pfp_erro("User (not-fixed):" << ex.what()); }
+	catch(err_check_base & ex) { pfp_erro("Check (not-fixed):" << ex.what()); }
+	catch(std::runtime_error & ex) { pfp_erro("Runtime:" << ex.what()); }
+	catch(std::bad_alloc & ex) { pfp_erro("Bad alloc:" << ex.what()); }
+	catch(std::exception & ex) { pfp_erro("Exception:" << ex.what()); }
+	catch(...) { pfp_erro("Exception of unknown type"); }
 }
 
 void test_debug_check() {
@@ -70,7 +70,7 @@ void test_debug_check() {
 	image_ui(120); // soft
 	image_ui(70); // hard - unexpected, anything above 30 is bad on size*size condition
 	image_ui(1); // hard - unexpected small size*size
-	_mark("More tests");
+	pfp_mark("More tests");
 
 	// regarding system errors:
 	image_ui(10,"/mount/z"); // soft system
@@ -118,8 +118,8 @@ class c_netchunk {
 */
 // -------------------------------------------------------------------
 
-/***
-	@brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
+/**
+ * @brief Gives you a buffer of continous memory of type ::t_element (octet - unsigned char) with minimal API
 */
 /*class c_netbuf {
 	public:
@@ -139,7 +139,7 @@ class c_netchunk {
 };
 
 c_netbuf::c_netbuf(size_t size) : m_data(size) {
-	_dbg1( make_report(*this,10) );
+	pfp_dbg1( make_report(*this,10) );
 }
 
 size_t c_netbuf::size() const {	return m_data.size(); }
@@ -255,8 +255,8 @@ c_netbuf_circle::c_netbuf_circle() {
 // -------------------------------------------------------------------
 
 void read_from_tun(c_netbuf & entire_buf , size_t buf_) {
-	_UNUSED( entire_buf );
-	_UNUSED( buf_ );
+	pfp_UNUSED( entire_buf );
+	pfp_UNUSED( buf_ );
 }
 
 int get_tun_inbuf_size() { // the inbuffer used to read from TUN; each tun-reader thread has own inbuf.
@@ -272,7 +272,7 @@ int get_mts(cable_id t) { // maximum cable size
 // http://stackoverflow.com/questions/15219984/using-vectorchar-as-a-buffer-without-initializing-it-on-resize/15220853#15220853
 
 int newloop_main(const vector<string> &argt) {
-	_UNUSED(argt);
+	pfp_UNUSED(argt);
 
 	return 0;
 }

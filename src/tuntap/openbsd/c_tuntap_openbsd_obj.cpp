@@ -7,12 +7,12 @@ c_tuntap_openbsd_obj::c_tuntap_openbsd_obj() :
 m_tun_fd(open("/dev/" IFNAME, O_RDWR)),
 m_io_service(),
 m_tun_stream(m_io_service, m_tun_fd) {
-    _dbg1(__func__ << " Tuntap " << IFNAME << " opened at " << m_tun_fd << " descriptor");
+    pfp_dbg1n(__func__ << " Tuntap " << IFNAME << " opened at " << m_tun_fd << " descriptor");
 
-    _fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+    pfp_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
     _try_sys(m_tun_fd != -1);
     _check_sys(m_tun_stream.is_open());
-    _goal("tuntap is opened correctly");
+    pfp_goal("tuntap is opened correctly");
 }
 
 c_tuntap_openbsd_obj::c_tuntap_openbsd_obj(boost::asio::io_service &io_service) :
@@ -21,14 +21,14 @@ m_io_service(),
 m_tun_stream(io_service, m_tun_fd) {
     // c_tuntap_linux_obj.cpp: 47-60
 
-    _fact("tuntap opened with m_tun_fd=" << m_tun_fd);
+    pfp_fact("tuntap opened with m_tun_fd=" << m_tun_fd);
     _try_sys(m_tun_fd != -1);
     _check_sys(m_tun_stream.is_open());
-    _goal("tuntap is opened correctly");
+    pfp_goal("tuntap is opened correctly");
 }
 
 c_tuntap_openbsd_obj::~c_tuntap_openbsd_obj() {
-    _goal("Close " IFNAME);
+    pfp_goal("Close " IFNAME);
     close(m_tun_fd);
 }
 
@@ -39,7 +39,7 @@ size_t c_tuntap_openbsd_obj::send_to_tun(
     try {
 	return m_tun_stream.write_some(boost::asio::buffer(data, size));
     } catch (const std::exception &e) {
-	_warn(e.what());
+	pfp_warn(e.what());
 	return 0; // error
     }
 }
@@ -67,7 +67,7 @@ size_t c_tuntap_openbsd_obj::read_from_tun(
     try {
 	return m_tun_stream.read_some(boost::asio::buffer(data, size));
     } catch (const std::exception &e) {
-	_warn(e.what());
+	pfp_warn(e.what());
 	return 0; // error
     }
 }
@@ -89,7 +89,7 @@ size_t c_tuntap_openbsd_obj::read_from_tun_separated_addresses(
     try {
 	return m_tun_stream.read_some(buffers) - src_binary_address.size() - dst_binary_address.size();
     } catch (const std::exception &e) {
-	_warn(e.what());
+	pfp_warn(e.what());
 	return 0;
     }
 }
@@ -115,7 +115,7 @@ void c_tuntap_openbsd_obj::set_tun_parameters(const std::array<unsigned char, IP
 
     m_tun_stream.release();
     m_tun_stream.assign(m_tun_fd);
-    _goal("Configuring tuntap options - done");
+    pfp_goal("Configuring tuntap options - done");
 
 }
 #endif

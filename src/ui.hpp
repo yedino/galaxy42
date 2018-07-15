@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 #ifndef include_ui_hpp
@@ -40,11 +40,11 @@ void show_error_exception_unknown(const string &during_action); ///< Inform user
 // first catch is removed here, so that caller must use it in his syntax
 #define _UI_CATCH_ADVANCED(DURING_ACTION, RETHROW) \
 	(std::exception &e) {\
-		_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
+		pfp_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"], what="<<e.what());\
 		ui::show_error_exception(DURING_ACTION, e); \
 		if (RETHROW) throw; } \
 	catch(...) { \
-		_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"] (unknown exception type)"); \
+		pfp_erro("Exception caught: DURING_ACTION=["<<DURING_ACTION<<"] (unknown exception type)"); \
 		ui::show_error_exception_unknown(DURING_ACTION); \
 		if (RETHROW) throw; \
 	}

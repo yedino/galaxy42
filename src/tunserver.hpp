@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 
@@ -50,7 +50,7 @@ extern const char * g_demoname_default;
 
 // ------------------------------------------------------------------
 
-/***
+/**
   @brief interface for object that can act as p2p node
 */
 class c_galaxy_node {
@@ -75,10 +75,10 @@ class expected_not_found_missing_pubkey : public stdplus::expected_exception {
 
 // ------------------------------------------------------------------
 
-/***
-@brief Use this to get information about route. It resp.: returns, stores and searches the information.
-- m_search - pathes we now look for
-- m_route_nexthop - known pathes
+/**
+ * @brief Use this to get information about route. It resp.: returns, stores and searches the information.
+ * - m_search - pathes we now look for
+ * - m_route_nexthop - known pathes
 */
 class c_routing_manager { ///< holds knowledge about routes, and searches for new ones
 	public: // TODO(r) make it private, when possible - e.g. when all operator<< are changed to public: print(ostream&) const;
@@ -367,7 +367,6 @@ class c_tunserver : public c_galaxy_node {
 		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
 
 
-		bitcoin_node_cli m_bitcoin_node_cli;
 		c_rpc_server m_rpc_server;
 		nlohmann::json rpc_ping(const std::string &input_json);
 		nlohmann::json rpc_peer_list(const std::string &input_json);
@@ -383,6 +382,7 @@ class c_tunserver : public c_galaxy_node {
 		nlohmann::json rpc_hello(const std::string &input_json);
 		nlohmann::json rpc_exit(const std::string &input_json);
 		nlohmann::json rpc_get_status(const std::string &input_json);
+		nlohmann::json rpc_btc_get_address(const std::string &input_json);
 		bool peer_on_black_list(const c_haship_addr &hip); ///< @returns true if peer is on black list
 
 		int m_port;

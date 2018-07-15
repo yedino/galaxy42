@@ -34,7 +34,7 @@ what_happened start_me(orders order) {
 	std::vector<float> vec(100);
 	if (order == orders::do_bad_array_index) ix=99999;
 	auto val = vec.at(ix);
-	_dbg4(val);
+	pfp_dbg4(val);
 
 	bool file_opened=true;
 	if (order == orders::do_bad_soft_sys) file_opened=false;
@@ -69,7 +69,7 @@ what_happened	typical_main_program(orders order) {
 		catch(const err_check_soft &ex) {
 			happened = what_happened::got_soft_error_some_type;
 		}
-		_dbg3("Ok program worked");
+		pfp_dbg3("Ok program worked");
 		return happened; // program worked despite expected soft problems
 	}
 	catch(const std::exception &) { happened = what_happened::got_std_exception; }
@@ -427,7 +427,7 @@ TEST(utils_check, reasonable_size_containers_test) {
 		std::multimap<char, std::array<long double, 100u> > too_big_map_by_size;
 		for(size_t i=0; i<size; i++)
 		{
-			too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{}));
+			too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{{0}}));
 		}
 		EXPECT_THROW(reasonable_size(too_big_map_by_size), err_check_input);
 	}
@@ -436,7 +436,7 @@ TEST(utils_check, reasonable_size_containers_test) {
 		std::multimap<char, std::array<long double, 100u> > not_too_big_map_by_size;
 		for(size_t i=0; i<size; i++)
 		{
-			not_too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{}));
+			not_too_big_map_by_size.insert(std::make_pair('a', std::array<long double, 100u>{{0}}));
 		}
 		EXPECT_NO_THROW(reasonable_size(not_too_big_map_by_size));
 	}

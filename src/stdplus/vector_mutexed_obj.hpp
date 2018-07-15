@@ -126,29 +126,29 @@ TRet vector_mutexed_obj<TObj>::run_on(size_t ix, TFun & fun) {
 template <typename TObj>
 template <typename TRet, typename TFunTest, typename TFunRun>
 TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fun_run, size_t limit_matched) {
-	_dbg2("Start of func...");
+	pfp_dbg2("Start of func...");
 	size_t so_far=0; // how many objects matched so far
 	bool is_not_enough = false;
 
 	{
-		_dbg4("Taking first RO lock");
-		_dbg3("Taking first RO lock");
-		_dbg2("Taking first RO lock");
+		pfp_dbg4("Taking first RO lock");
+		pfp_dbg3("Taking first RO lock");
+		pfp_dbg2("Taking first RO lock");
 		UniqueLockGuardRO<MutexShared> lg_all(m_mutex_all);
-		_dbg3("Size of container m_data: " << m_data.size());
+		pfp_dbg3("Size of container m_data: " << m_data.size());
 		for (auto iter = m_data.begin(); iter<m_data.end(); ++iter) {
 			t_one_with_mutex & one_object_with_mutex = * iter->get();
 			const TObj * obj_ro = nullptr; // pointer instead ref - because we access it in both blocks of lock-guard/RAII
 			bool matched=false;
 			{ // RO look and test one object
 				// auto lg_one_RO( one_object_with_mutex.get_lock_RO() ); // lock RO for test
-				_dbg3("will test object...");
+				pfp_dbg3("will test object...");
 				UniqueLockGuardRO<MutexShared> lg_one_RO( one_object_with_mutex.get_mutex() ); // lock RO for test
 
 				obj_ro = & one_object_with_mutex.get( lg_one_RO );
-				_dbg3("will test object at " << static_cast<const void*>(obj_ro) << "...");
+				pfp_dbg3("will test object at " << static_cast<const void*>(obj_ro) << "...");
 				matched = fun_test( *obj_ro ); // <--- run the test
-				_dbg3("will test object at " << static_cast<const void*>(obj_ro) << "... matched=" << matched);
+				pfp_dbg3("will test object at " << static_cast<const void*>(obj_ro) << "... matched=" << matched);
 				// unlock the one object
 			}
 
@@ -157,17 +157,17 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 			if (matched) { // test succeeded - use the object
 				// auto lg_one_RW( one_object_with_mutex.get_lock_RW() ); // lock RW this time // XXX TRY
 				UniqueLockGuardRW<MutexShared> lg_one_RW( one_object_with_mutex.get_mutex() ); // lock RW this time
-				_dbg3("will test AGAIN object at " << static_cast<const void*>(obj_ro) << "...");
+				pfp_dbg3("will test AGAIN object at " << static_cast<const void*>(obj_ro) << "...");
 				bool matched_again = fun_test( *obj_ro ); // <--- run the test, AGAIN, it could have change while not locked
-				_dbg3("will test object at " << static_cast<const void*>(obj_ro) << "... matched_again=" << matched_again);
+				pfp_dbg3("will test object at " << static_cast<const void*>(obj_ro) << "... matched_again=" << matched_again);
 				if (matched_again) { // really matched - we know this since we took EXCLUSIVE RW lock, so it must be true still
 					TObj & obj_rw = one_object_with_mutex.get( lg_one_RW );
 					++so_far;
 					if (so_far >= limit_matched) {
-						_dbg2("running (and returning) on object: " << static_cast<const void*>( & obj_rw));
+						pfp_dbg2("running (and returning) on object: " << static_cast<const void*>( & obj_rw));
 						return fun_run( obj_rw ); // <--- run the modifier (and return, it's the last one)
 					} else {
-						_dbg2("running on object: " << static_cast<const void*>( & obj_rw));
+						pfp_dbg2("running on object: " << static_cast<const void*>( & obj_rw));
 						fun_run( obj_rw ); // <--- run the modifier
 						is_not_enough = true;
 					}
@@ -176,13 +176,13 @@ TRet vector_mutexed_obj<TObj>::run_on_matching(TFunTest & fun_test, TFunRun & fu
 			}
 		} // test all objects in loop
 		if (is_not_enough) {
-			_dbg2("End of func - not enough match");
+			pfp_dbg2("End of func - not enough match");
 			throw error_not_enough_match_found();
 		}
 		// unlocking container
 	} // access container
 
-	_dbg2("End of func - no match");
+	pfp_dbg2("End of func - no match");
 	throw error_no_match_found();
 }
 

@@ -46,7 +46,7 @@ void session::do_read()
 
 void session::do_write(size_t length)
 {
-	_UNUSED(length);
+	pfp_UNUSED(length);
 	auto self(shared_from_this());
 
 	c_httpdbg_raport raport( tunserver_ );
@@ -259,7 +259,7 @@ int c_httpdbg_server::run(){
 	}
 	catch (const exception& e)
 	{
-		_erro( "Exception: " << e.what() );
+		pfp_erro( "Exception: " << e.what() );
 	}
 	return 0;
 }
@@ -271,7 +271,7 @@ void c_httpdbg_server::stop(){
 	}
 	catch (const exception& e)
 	{
-		_erro( "Exception: " << e.what());
+		pfp_erro( "Exception: " << e.what());
 	}
 }
 

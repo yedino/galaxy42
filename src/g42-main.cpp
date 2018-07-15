@@ -1,13 +1,15 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
-
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
 #include "utils/privileges.hpp"
+#include <clocale>
 
 #include "utils/capmodpp.hpp" // to capture it's exceptions
 
 #include "../src-tools/netmodel/netmodel.hpp"
+
+bool run_mode_developer_main(boost::program_options::variables_map & argm);
 
 namespace developer_tests {
 
@@ -26,7 +28,7 @@ struct t_peer_cmdline_ref {
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int node_nr = argm["develnum"].as<int>();  assert( (node_nr>=1) && (node_nr<=254) );
-        _fact( mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr );
+        pfp_fact( mo_file_reader::gettext("L_running_devel_as_node_nr") << node_nr );
 
 	// string peer_ip = string("192.168.") + std::to_string(node_nr) + string(".62");
 
@@ -36,8 +38,8 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 	// each connect to node .1., except the node 1 that connects to .2."
 	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62");
 
-//	_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
-        _mark(mo_file_reader::gettext("L_devel_adding_peer_with_args") << "ip=" << peer_ip << " pub=" << peer_pub );
+//	pfp_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
+        pfp_mark(mo_file_reader::gettext("L_devel_adding_peer_with_args") << "ip=" << peer_ip << " pub=" << peer_pub );
 
 	// argm.insert(std::make_pair("K", po::variable_value( int(node_nr) , false )));
 	argm.insert(std::make_pair("peerip", po::variable_value( peer_ip , false )));
@@ -60,8 +62,8 @@ void add_program_option_vector_strings(boost::program_options::variables_map & a
 		old_peer.push_back(value_to_append);
 		argm.insert( std::make_pair(name , po::variable_value( old_peer , false )) );
 	}
-//	_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
-        _info(mo_file_reader::gettext("L_program_option_added") << name << mo_file_reader::gettext("L_option_now_size") << argm.at(name).as<vector<string>>().size() );
+//	pfp_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
+        pfp_info(mo_file_reader::gettext("L_program_option_added") << name << mo_file_reader::gettext("L_option_now_size") << argm.at(name).as<vector<string>>().size() );
 
 }
 
@@ -69,7 +71,7 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 //	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-        _fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
+        pfp_fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
 
 	if (my_nr == 1) add_program_option_vector_strings(argm, "peer", "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b");
 	if (my_nr == 2) add_program_option_vector_strings(argm, "peer", "192.168.1.62:9042-fd42:ae11:f636:8636:ae76:acf5:e5c4:dae1");
@@ -79,23 +81,23 @@ bool wip_galaxy_route_pair(boost::program_options::variables_map & argm) {
 
 bool demo_sodiumpp_nonce_bug() {
 	{
-		_warn("test");
+		pfp_warn("test");
 
 				string nonce_used_raw(24,0);
 				nonce_used_raw.at(23)=6;
 
-				_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
+				pfp_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
 				antinet_crypto::t_crypto_nonce nonce_used(
 					sodiumpp::encoded_bytes(nonce_used_raw , sodiumpp::encoding::binary)
 				);
 				auto x = nonce_used;
-				_warn("copy ok");
+				pfp_warn("copy ok");
 				auto y = nonce_used.get();
-				_warn("get ok");
+				pfp_warn("get ok");
 
-				_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
+				pfp_warn("Received NONCE=" << antinet_crypto::show_nice_nonce(nonce_used) );
 
-				_warn("OK?");
+				pfp_warn("OK?");
 				return false;
 	}
 }
@@ -104,7 +106,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	namespace po = boost::program_options;
 	const int my_nr = argm["develnum"].as<int>();  assert( (my_nr>=1) && (my_nr<=254) ); // number of my node
 //	std::cerr << "Running in developer mode - as my_nr=" << my_nr << std::endl;
-        _fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
+        pfp_fact( mo_file_reader::gettext("L_devel_mode_as_nr") << my_nr );
 
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
@@ -127,25 +129,25 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 	*/
 
 	for (int peer_nr : peer_to_peer.at(my_nr)) { // for me, add the --peer refrence of all peers that I should peer into:
-//		_info("I connect into demo peer number: " << peer_nr);
-                _info(mo_file_reader::gettext("L_connect_into_demo_peer_nr") << peer_nr);
+//		pfp_info("I connect into demo peer number: " << peer_nr);
+                pfp_info(mo_file_reader::gettext("L_connect_into_demo_peer_nr") << peer_nr);
 
 		add_program_option_vector_strings(argm, "peer", peer_cmd_map.at(peer_nr));
 	}
 
-//	_warn("Remember to set proper HOME with your key pair!");
-        _warn(mo_file_reader::gettext("L_remember_set_proper_home"));
+//	pfp_warn("Remember to set proper HOME with your key pair!");
+        pfp_warn(mo_file_reader::gettext("L_remember_set_proper_home"));
 
 	argm.at("myname") = po::variable_value( "testnode-" + std::to_string(my_nr) , false );
 
 /* TODO(r) bug#m153
 	boost::any boostany = argm.at("peer");
-	_erro("PEER = " << boostany);
+	pfp_erro("PEER = " << boostany);
 	try { auto vvv = boost::any_cast<vector<string>>( argm.at("peer") ); }
-	catch(...) { _warn("EXCEPT"); }
-	_warn("after");
+	catch(...) { pfp_warn("EXCEPT"); }
+	pfp_warn("after");
 */
-	// _note("Done dev setup, runnig as: " << to_debug(argm));
+	// pfp_note("Done dev setup, runnig as: " << to_debug(argm));
 	return true;
 }
 
@@ -154,7 +156,7 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 // ============================================================================
 
 
-/***
+/**
  * @brief Loads name of demo from demo.conf.
  * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
  * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
@@ -164,52 +166,52 @@ string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
 	try {
 		ifstream democonf_file(democonf_fn);
 //		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
-                if (! democonf_file.good()) { _fact( mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
+                if (! democonf_file.good()) { pfp_fact( mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
 		string line="";
 		getline(democonf_file,line);
 //		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
-                if (! democonf_file.good()) { _fact( mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
+                if (! democonf_file.good()) { pfp_fact( mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
 		ret = line.substr( string("demo=").size() );
 	} catch(...) { }
 //	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
-        _fact( mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret );
+        pfp_fact( mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret );
 
 	return ret;
 }
 
 bool test_foo() {
-	_info("TEST FOO");
+	pfp_info("TEST FOO");
 	return false;
 }
 
 bool test_bar() {
-	_info("TEST BAR");
+	pfp_info("TEST BAR");
 	return false;
 }
 
 void test_lang_optional() {
 	/* this fails on boost from debian 7
 	boost::optional<float> x = boost::none;
-	if (x) _info("too early: " << *x );
+	if (x) pfp_info("too early: " << *x );
 	x = 3.14;
-	if (x) _info("and now: " << x.value() );
+	if (x) pfp_info("and now: " << x.value() );
 	*/
 }
 
-/***
+/**
 @brief Run the main developer test in this code version (e.g. on this code branch / git branch)
 @param argm - map with program options, it CAN BE MODIFIED here, e.g. the test can be to set some options and let the program continue
 @return false if the program should quit after this test
 */
 bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 //	std::cerr << "Running in developer/demo mode." << std::endl;
-        _fact( mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl );
+        pfp_fact( mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl );
 
 	const string demoname_default = g_demoname_default;
 	auto demoname = argm["develdemo"].as<string>();
-	_note("Demoname (from program options command line) is:" << demoname);
+	pfp_note("Demoname (from program options command line) is:" << demoname);
 
 	namespace po = boost::program_options;
 	po::options_description desc("Possible demos");
@@ -231,8 +233,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 					("help",					"Help msg");
 
 	if ((demoname=="help")||(demoname=="list")) {
-		_fact( "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:" );
-		_fact( desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" ); // TODO(janusz)
+		pfp_fact( "\nAvailable options for --demo NAME (or --devel --develdemo NAME) are following:" );
+		pfp_fact( desc << "\nChoose one of them as the NAME. But type it without the leading -- [TODO]" ); // TODO(janusz)
 		return false;
 	}
 
@@ -240,8 +242,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	if (demoname_loaded != "default") demoname = demoname_loaded;
 	if (demoname=="hardcoded") demoname = demoname_default;
 
-	_note("Demo name selected: [" << demoname << "]");
-	_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
+	pfp_note("Demo name selected: [" << demoname << "]");
+	pfp_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
 		<< std::string(70,'=')<<"\n" );
 
 	if (demoname=="lang_optional") { test_lang_optional();  return false; }
@@ -256,13 +258,13 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 	//if (demoname=="rpc") { rpc_demo(); return false; }
 	if (demoname=="debug") { unittest::test_debug1(); return false; }
 
-	_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
+	pfp_warn("Unknown Demo option ["<<demoname<<"] try giving other name, e.g. run program with --develdemo");
 	return false;
 }
 
 bool run_mode_developer(boost::program_options::variables_map & argm) {
 	auto ret = run_mode_developer_main(argm);
-	_fact( std::string(70,'=')<<"\n" );
+	pfp_fact( std::string(70,'=')<<"\n" );
 	return ret;
 }
 
@@ -274,13 +276,14 @@ bool run_mode_developer(boost::program_options::variables_map & argm) {
 
 /**
  * Purpose of this function is to print some compilation "flavour" flags, e.g. is this a TSAN build or not.
- * @warning This function is run instead of normal body of main(), therefore the main() must exit after calling it,
- * and this function is free to not use our special conventions, e.g. it is free to directly use std::cout instead setting up
- * our debug/console tools. (Also it does not expect any such normal tools to be set up for it).
+ * @warning This function must be called from main(), very early (before other output or setting i/o)
+ * and the caller should exit immediatelly after,
+ * because this function uses normal conventions (e.g. of using std::cout) instead following ones from program/project
+ * (e.g. it does not use program/project debug/console tools).
  */
 void main_print_flavour() {
 	auto & out = std::cout; // we can directly use std::cout, in this special function
-	out << "# Flavour defines:" << std::endl;
+	out << "# Flavour:" << std::endl;
 	bool valgrind_memory_is_possible = true; // do conditions allow us to run in valgrind, e.g. TSAN maps too much memory so then =false
 	#if FLAVOUR_TSAN_FULL
 		valgrind_memory_is_possible = false;
@@ -296,8 +299,10 @@ void main_print_flavour() {
 	out <<  ( valgrind_memory_is_possible ? "valgrind_memory_is_possible" : "(valgrind NOT possible)" ) << std::endl;
 }
 
-int main(int argc, const char **argv) { // the main() function
 
+
+
+int main(int argc, const char * const * argv) { // the main() function
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
 	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
@@ -307,8 +312,30 @@ int main(int argc, const char **argv) { // the main() function
 
 	if (contains_value(argt,"--print-flags-flavour")) {
 		main_print_flavour();
-		return 0;
+		return 0; // <--- exit
 	}
+
+
+	try{
+		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
+		if (result == nullptr) throw std::runtime_error("Can not set locale (first)");
+	}catch (...){
+		std::cerr<<"Error: setlocale."<<std::endl;
+	}
+
+	// This code MUST be 1-thread and very early in main
+	#ifdef ENABLE_LIB_CURL
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if(res != CURLE_OK) {
+		bitcoin_node_cli::curl_initialized=false;
+		std::cerr<<"Error: lib curl init."<<std::endl;
+	}
+	else{
+		bitcoin_node_cli::curl_initialized=true;
+	}
+	#else
+		std::cerr<<"Warning: lib curl is disabled."<<std::endl;
+	#endif
 
 	enum class t_program_type {
 		e_program_type_tunserver = 1,
@@ -340,7 +367,12 @@ int main(int argc, const char **argv) { // the main() function
 
 	the_program->take_args(argt_exec , argt); // takes again args, with removed special early args
 	the_program->startup_console_first();
+	the_program->startup_locales_early();
+	the_program->startup_data_dir();
+	the_program->startup_curl();
 	the_program->startup_version();
+	the_program->startup_locales_later();
+	the_program->init_library_sodium();
 
 	g_dbg_level = 60;
 	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
@@ -360,15 +392,10 @@ int main(int argc, const char **argv) { // the main() function
 	// and we expect to have no exploitable code in this short code to setup console and show version
 	// (especially as none of it depends on user provided inputs)
 
-	the_program->startup_data_dir();
 	{
 		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();
 		if (done) return ret;
 	}
-	the_program->startup_locales();
-
-
-	the_program->init_library_sodium();
 
 	the_program->options_create_desc();
 
@@ -382,32 +409,46 @@ int main(int argc, const char **argv) { // the main() function
 	}
 
 	int exit_code=1;
+	bool exception_catched = true;
 	try {
 
 		exit_code = the_program->main_execution(); // <---
+		exception_catched = false;
 
 	} // try running server
 	catch(const ui::exception_error_exit &) {
-		_erro( mo_file_reader::gettext("L_exiting_explained_above") );
-		return 1;
+		pfp_erro( mo_file_reader::gettext("L_exiting_explained_above") );
+		exit_code = 1;
 	}
 	catch(const capmodpp::capmodpp_error & e) {
-		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+		pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< "(capmodpp_error) "
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(const std::exception& e) {
-		_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+		pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
 			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		return 2;
+		exit_code = 2;
 	}
 	catch(...) {
-		_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
-		return 3;
+		pfp_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
+		exit_code = 3;
 	}
-	_note(mo_file_reader::gettext("L_exit_no_error")); return 0;
 
-  return exit_code;
+	try {
+		if( !exception_catched )
+			pfp_note(mo_file_reader::gettext("L_exit_no_error"));
+	}
+	catch(...) {
+		std::cerr<<"(Error in printing previous error)";
+	}
+
+	#ifdef ENABLE_LIB_CURL
+		curl_global_cleanup();
+	#endif
+	bitcoin_node_cli::curl_initialized=false;
+
+	return exit_code;
 }
 

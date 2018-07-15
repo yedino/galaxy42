@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 #ifndef glue_sodiumpp_crypto
@@ -19,7 +19,7 @@ std::string show_nice_nonce(const sodiumpp::nonce<sequentialbytes> & thenonce) {
 	auto str_size = str.size();
 	if (!(str_size<1024)) {
 		// TODOthrow
-		_erro("Strange size of (entire) nonce (size=" << str_size << ")");
+		pfp_erro("Strange size of (entire) nonce (size=" << str_size << ")");
 		assert(false);
 	}
 
@@ -35,7 +35,7 @@ std::string show_nice_nonce(const sodiumpp::nonce<sequentialbytes> & thenonce) {
 	uint64_t ev=0; // the value at end
 	for (size_t i=pos; i<str_size; ++i) {
 		if (ev >= std::numeric_limits<int>::max() / 256) { // about to overflow at next <<8
-			_erro("Strange large value of nonce, stopped at ev="<<ev<<" at i="<<i);
+			pfp_erro("Strange large value of nonce, stopped at ev="<<ev<<" at i="<<i);
 			return "(error)";
 		}
 		ev = (ev<<8) + static_cast<unsigned char>(str.at(i));

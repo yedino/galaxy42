@@ -29,5 +29,5 @@ class tuntap_error_ip     : public tuntap_error {};
 class tuntap_error_mtu    : public tuntap_error {};
 
 // throw runtime_error_subtype::make_subtype<tuntap_error_devtun>(".....")
-#define _throw_error_sub(TYPE, MSG) do { _throw_error( runtime_error_subtype::make_subtype<TYPE>(MSG) ); } while(0)
+#define pfp_throw_error_sub(TYPE, MSG) do { pfp_throw_error( runtime_error_subtype::make_subtype<TYPE>(MSG) ); } while(0)
 

@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2017 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 #pragma once
 
 #define ANTINET_PART_OF_YEDINO 1 // this source project is Yedino
@@ -16,11 +16,11 @@ class invalid_argument_in_version : public std::invalid_argument {
 };
 
 
-/***
+/**
  * @file Sets various project-wide settings, e.g. compilation flags, e.g. EXTLEVEL
 */
 
-/***
+/**
  * @name EXTLEVEL_* sets do we want preview/experimental code. Use this as in #if EXTLEVEL_IS_PREVIEW ... #endif
  * @{
 */
@@ -49,7 +49,7 @@ class invalid_argument_in_version : public std::invalid_argument {
 #endif
 
 
-/***
+/**
  * @name ENABLE_* flags - copy them from the ones set by CMake. This also allows us to add doxygen for them
  * @{
 */

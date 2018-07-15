@@ -166,7 +166,7 @@ void c_the_program_tunserver::options_create_desc() {
 
 			;
 
-        _note(mo_file_reader::gettext("L_parse_program_option"));
+        pfp_note(mo_file_reader::gettext("L_parse_program_option"));
 
 }
 
@@ -176,10 +176,10 @@ void c_the_program_tunserver::options_multioptions() {
 	// option help is handled elsewhere
 
 	const auto & argm = m_argm;
-	UNUSED(argm);
+	pfp_UNUSED(argm);
 
 			#if EXTLEVEL_IS_PREVIEW
-			_info("BoostPO Will parse demo/devel options");
+			pfp_info("BoostPO Will parse demo/devel options");
 
 			{ // Convert shortcut options:  "--demo foo"   ----->   "--devel --develdemo foo"
 				auto opt_demo = argm["demo"].as<string>();
@@ -187,8 +187,8 @@ void c_the_program_tunserver::options_multioptions() {
 //					g_dbg_level_set(10,"Running in demo mode");
                                         g_dbg_level_set(10,"Running in demo mode");
 
-//					_info("The demo command line option is given:" << opt_demo);
-                                        _info("The demo command line option is given:" << opt_demo);
+//					pfp_info("The demo command line option is given:" << opt_demo);
+                                        pfp_info("The demo command line option is given:" << opt_demo);
 
 					// argm.insert(std::make_pair("develdemo", po::variable_value( opt_demo , false ))); // --devel --develdemo foo
 					argm.at("develdemo") = po::variable_value( opt_demo , false );
@@ -200,7 +200,7 @@ void c_the_program_tunserver::options_multioptions() {
 			if (argm.count("devel")) { // can also set up additional options
 				try {
 					g_dbg_level_set(10,"Running in devel mode");
-					_info("The devel mode is active");
+					pfp_info("The devel mode is active");
 
 					bool should_continue = run_mode_developer(argm);
 					if (!should_continue) return 0;
@@ -218,8 +218,8 @@ void c_the_program_tunserver::options_multioptions() {
 std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 	const auto & argm = m_argm;
 	if (argm.count("help")) { // usage
-		_fact( *m_boostPO_desc );
-		_fact( std::endl << project_version_info() );
+		pfp_fact( *m_boostPO_desc );
+		pfp_fact( std::endl << project_version_info() );
 		return std::tuple<bool,int>(true,0);
 	}
 	return std::tuple<bool,int>(false,0);
@@ -227,9 +227,9 @@ std::tuple<bool,int> c_the_program_tunserver::base_options_commands_run() {
 
 int c_the_program_tunserver::main_execution() {
 	PROGRAM_SECTION_TITLE;
-	_mark("Main execution of the old-loop");
+	pfp_mark("Main execution of the old-loop");
 
-	_warn("Remember, that this old-loop code is NOT secured as new-loop code, e.g. is not droping CAP/root privileges!");
+	pfp_warn("Remember, that this old-loop code is NOT secured as new-loop code, e.g. is not droping CAP/root privileges!");
 	{ using namespace std::chrono_literals;	std::this_thread::sleep_for(1s); }
 	// ^ sleep to let user see this message clearly.
 
@@ -237,7 +237,7 @@ int c_the_program_tunserver::main_execution() {
 			const auto & argm = m_argm;
 
 			_check_user(argm.count("port") && argm.count("rpc-port"));
-			_fact("Will create a server");
+			pfp_fact("Will create a server");
 			// *** creating the server object ***
 			m_myserver_ptr = std::make_unique<c_tunserver>(
 				argm.at("port").as<int>(),
@@ -249,30 +249,30 @@ int c_the_program_tunserver::main_execution() {
 			auto& myserver = * m_myserver_ptr;
 			myserver.set_desc(m_boostPO_desc);
 
-			_clue("After devel/demo BoostPO code");
+			pfp_clue("After devel/demo BoostPO code");
 
 			// --- debug level for main program ---
-			_clue("Setting debug level (main loop - old loop)");
+			pfp_clue("Setting debug level (main loop - old loop)");
 			bool is_debug=false;
 			if (argm.count("debug") || argm.count("d")) is_debug=true;
-			_note("Will we keep debug: is_debug="<<is_debug);
+			pfp_note("Will we keep debug: is_debug="<<is_debug);
 
 			g_dbg_level_set(config_default_basic_dbg_level, "For normal program run");
 			if (is_debug) g_dbg_level_set(10,"For debug program run");
 			if (argm.count("dlevel")) {
 				auto dlevel = int{  argm.at("dlevel").as<int>()  };
 				if (dlevel != -1) {
-					_note("Option --dlevel sets new level type: " << dlevel);
+					pfp_note("Option --dlevel sets new level type: " << dlevel);
 					g_dbg_level_set( dlevel , "Set by --dlevel" );
 				}
 			}
 			if (argm.count("quiet") || argm.count("q")) g_dbg_level_set(200,"For quiet program run", true);
-			_note("BoostPO after parsing debug");
+			pfp_note("BoostPO after parsing debug");
 
 
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("set-IDI")) {
-                    if (!argm.count("my-key")) { _erro( mo_file_reader::gettext("L_setIDI_require_myKey") );       return 1;       }
+                    if (!argm.count("my-key")) { pfp_erro( mo_file_reader::gettext("L_setIDI_require_myKey") );       return 1;       }
 
 				auto name = argm["my-key"].as<std::string>();
 				myserver.program_action_set_IDI(name);
@@ -280,17 +280,17 @@ int c_the_program_tunserver::main_execution() {
 			}
 			#endif
 
-			_note("BoostPO before info");
+			pfp_note("BoostPO before info");
 			if (argm.count("info")) {
 				if (!argm.count("my-key")) {
-                    _erro( mo_file_reader::gettext("L_info_require_myKey") );
+                    pfp_erro( mo_file_reader::gettext("L_info_require_myKey") );
 
 					return 1;
 				}
 				auto name = argm["my-key"].as<std::string>();
 				antinet_crypto::c_multikeys_pub keys;
 				keys.datastore_load(name);
-				_info(keys.to_debug());
+				pfp_info(keys.to_debug());
 				return 0;
 			}
 
@@ -301,17 +301,17 @@ int c_the_program_tunserver::main_execution() {
 			try {
 				IDI_key = datastore::load_string(e_datastore_galaxy_instalation_key_conf, "IDI");
 			} catch (std::invalid_argument &err) {
-                    _dbg2(mo_file_reader::gettext("L_IDI_not_set_err"));
+                    pfp_dbg2(mo_file_reader::gettext("L_IDI_not_set_err"));
 
 				}
 //				std::cout << "Your key list:" << std::endl;
-                _fact( mo_file_reader::gettext("L_your_key_list") );
+                pfp_fact( mo_file_reader::gettext("L_your_key_list") );
 
 				for(auto &key_name : keys) {
 					//remove .PRV extension
 					size_t pos = key_name.find(".PRV");
 					std::string actual_key = key_name.substr(0,pos);
-					_fact( actual_key << (IDI_key == actual_key ? " * IDI" : "") );
+					pfp_fact( actual_key << (IDI_key == actual_key ? " * IDI" : "") );
 				}
 				return 0;
 			}
@@ -351,7 +351,7 @@ int c_the_program_tunserver::main_execution() {
 					signing_key.load_from_bin(key_data.get_string());
 
 				} else {
-					_erro("--my-key or --my-key-file option is required for --sign");
+					pfp_erro("--my-key or --my-key-file option is required for --sign");
 					return 1;
 				}
 
@@ -376,13 +376,13 @@ int c_the_program_tunserver::main_execution() {
 					datastore::save_string(e_datastore_local_path, to_sign_file+".sig", sign.serialize_bin(), true);
 
 				} else {
-					_erro("-sign-key, sign-key-file or -sign-data-file option is required for --sign");
+					pfp_erro("-sign-key, sign-key-file or -sign-data-file option is required for --sign");
 					return 1;
 				}
 				return 0;
 			}
 
-			_dbg1("BoostPO before verify");
+			pfp_dbg1("BoostPO before verify");
 			if(argm.count("verify")) {
 
 				antinet_crypto::c_multikeys_pub trusted_key;
@@ -397,7 +397,7 @@ int c_the_program_tunserver::main_execution() {
 					trusted_key.load_from_bin(key_data);
 
 				} else {
-					_erro("--trusted-key or --trusted-key-file option is required for --verify");
+					pfp_erro("--trusted-key or --trusted-key-file option is required for --verify");
 					return 1;
 				}
 
@@ -440,22 +440,22 @@ int c_the_program_tunserver::main_execution() {
 					if(!extern_signature)
 						load_signature(e_datastore_local_path, signature_file);
 				} else {
-					_erro("-toverify-key, toverify-key-file or -sign-data-file option is required for --sign");
+					pfp_erro("-toverify-key, toverify-key-file or -sign-data-file option is required for --sign");
 					return 1;
 				}
 
 			try {
 				antinet_crypto::c_multikeys_pub::multi_sign_verify(signature,to_verify,trusted_key);
 			} catch (std::invalid_argument &err) {
-				_dbg2("Signature verification: fail");
+				pfp_dbg2("Signature verification: fail");
 				return 1;
 			}
-				_dbg2("Verify Success");
+				pfp_dbg2("Verify Success");
 				return 0;
 			}
 			#endif
 
-			_dbg1("BoostPO before config");
+			pfp_dbg1("BoostPO before config");
 			#if EXTLEVEL_IS_PREVIEW
 			if (argm.count("gen-config")) {
 				c_json_genconf::genconf();
@@ -463,17 +463,17 @@ int c_the_program_tunserver::main_execution() {
 
 			if (!(argm.count("no-config"))) {
 				// loading peers from configuration file (default from galaxy.conf)
-				_info("No no-config, will load config");
+				pfp_info("No no-config, will load config");
 				std::string conf = argm["config"].as<std::string>();
 				c_galaxyconf_load galaxyconf(conf);
 				auto peer_refs = galaxyconf.get_peer_references();
-				_info("Will add peer(s) from config file, count: " << peer_refs.size());
+				pfp_info("Will add peer(s) from config file, count: " << peer_refs.size());
 				for(auto &ref : peer_refs) {
 					myserver.add_peer(ref);
 				}
 			}
 			#endif
-			_dbg1("BoostPO after config");
+			pfp_dbg1("BoostPO after config");
 
 			// ------------------------------------------------------------------
 			// end of options
@@ -482,7 +482,7 @@ int c_the_program_tunserver::main_execution() {
 
 // ------------------------------------------------------------------
 // deprecated - now in newloop new galaxysrv
-			_info("Configuring my own reference (keys):");
+			pfp_info("Configuring my own reference (keys):");
 
 			bool have_keys_configured=false;
 			try {
@@ -497,15 +497,15 @@ int c_the_program_tunserver::main_execution() {
 					if (conf_IDI_ok) {
 						have_keys_configured = true;
 					} else {
-						_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
-						_warn("If this warn still occurs, make sure you have backup of your keys");
+						pfp_warn("You have keys, but not IDI configured. Trying to make default IDI of your keys ...");
+						pfp_warn("If this warn still occurs, make sure you have backup of your keys");
 						myserver.program_action_set_IDI("IDI");
 						have_keys_configured = true;
 					}
 				}
 
 			} catch(...) {
-				_info("Can not load keys list or IDI configuration");
+				pfp_info("Can not load keys list or IDI configuration");
 				have_keys_configured=0;
 			}
 			const std::string ipv6_prefix = [this, &myserver] {
@@ -534,15 +534,15 @@ int c_the_program_tunserver::main_execution() {
 				} catch UI_CATCH("Loading your key");
 
 				if (!ok) {
-					_fact( "You seem to already have your hash-IP key, but I can not load it." );
-					_fact( "Hint:\n"
+					pfp_fact( "You seem to already have your hash-IP key, but I can not load it." );
+					pfp_fact( "Hint:\n"
 						<< "You might want to move elsewhere current keys and create new keys (but your virtual-IP address will change!)"
 						<< "Or maybe instead try other version of this program, that can load this key."
 					);
-					_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
+					pfp_throw_error( ui::exception_error_exit("There is existing IP-key but can not load it.") ); // <--- exit
 				}
 			} else {
-				_fact( "You have no ID keys yet - so will create new keys for you." );
+				pfp_fact( "You have no ID keys yet - so will create new keys for you." );
 
 				auto step_make_default_keys = [&]()	{
 					ui::action_info_ok("Generating your new keys.");
@@ -565,7 +565,7 @@ int c_the_program_tunserver::main_execution() {
 						myserver.set_my_name(my_name);
 						ui::action_info_ok(mo_file_reader::gettext("L_your_haship_address") + myserver.get_my_ipv6_nice());
 
-			_info("Configuring my peers references (keys):");
+			pfp_info("Configuring my peers references (keys):");
 			try {
 				vector<string> peers_cmdline;
 				try { peers_cmdline = argm["peer"].as<vector<string>>(); } catch(...) { }
@@ -590,40 +590,40 @@ int c_the_program_tunserver::main_execution() {
 		} // try parsing
 		catch(ui::exception_error_exit) {
 //			std::cerr << "Exiting program now, as explained above..." << std::endl;
-                        _erro( mo_file_reader::gettext("L_exit_from_connect") );
+                        pfp_erro( mo_file_reader::gettext("L_exit_from_connect") );
 			return 1;
 		}
 		catch(boost::program_options::error& e) {
-			_erro( mo_file_reader::gettext("L_option_error") << e.what() << std::endl );
-			_erro( *m_boostPO_desc );
+			pfp_erro( mo_file_reader::gettext("L_option_error") << e.what() << std::endl );
+			pfp_erro( *m_boostPO_desc );
 			return 1;
 		}
 
-    _note(mo_file_reader::gettext("L_all_preparations_done"));
+    pfp_note(mo_file_reader::gettext("L_all_preparations_done"));
 
 		#ifdef HTTP_DBG
-			_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
+			pfp_note(mo_file_reader::gettext("L_starting_httpdbg_server"));
 			c_httpdbg_server httpdbg_server(m_http_dbg_port, *m_myserver_ptr);
 			std::thread httpdbg_thread( [& httpdbg_server]() {
 				httpdbg_server.run();
 			}	);
 		#endif
 
-		_note(mo_file_reader::gettext("L_starting_main_server"));
+		pfp_note(mo_file_reader::gettext("L_starting_main_server"));
 		_check(m_myserver_ptr);
-		_goal("My server: calling run");
+		pfp_goal("My server: calling run");
 		m_myserver_ptr->run(); // <--- ENTERING THE MAIN LOOP (old loop) ***
 
-		_goal("My server: returned");
-		_note(mo_file_reader::gettext("L_main_server_ended"));
+		pfp_goal("My server: returned");
+		pfp_note(mo_file_reader::gettext("L_main_server_ended"));
 
 		#ifdef HTTP_DBG
 			httpdbg_server.stop();
 			httpdbg_thread.join(); // <-- for (also) making sure that main_httpdbg() will die before myserver will die
-			_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
+			pfp_note(mo_file_reader::gettext("L_httpdbg_server_ended"));
 	#endif
 
-	_goal("Exiting normally the main part of program");
+	pfp_goal("Exiting normally the main part of program");
 	return 0;
 }
 

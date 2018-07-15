@@ -25,9 +25,9 @@ public:
     ~c_tuntap_system_functions() = default;
 
     int ioctl(int fd, unsigned long request, void *ifreq) override {
-        _UNUSED(fd);
-        _UNUSED(request);
-        _UNUSED(ifreq);
+        pfp_UNUSED(fd);
+        pfp_UNUSED(request);
+        pfp_UNUSED(ifreq);
         return 0;
     };
 
@@ -35,17 +35,17 @@ public:
             const uint8_t* address,
             int prefixLen,
             int addrFam) override {
-        _UNUSED(interfaceName);
-        _UNUSED(address);
-        _UNUSED(prefixLen);
-        _UNUSED(addrFam);
+        pfp_UNUSED(interfaceName);
+        pfp_UNUSED(address);
+        pfp_UNUSED(prefixLen);
+        pfp_UNUSED(addrFam);
         return {0, 0};
     };
 
     t_syserr NetPlatform_setMTU(const char* interfaceName,
             uint32_t mtu) override {
-        _UNUSED(interfaceName);
-        _UNUSED(mtu);
+        pfp_UNUSED(interfaceName);
+        pfp_UNUSED(mtu);
         return {0, 0};
     };
 };

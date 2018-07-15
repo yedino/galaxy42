@@ -7,7 +7,7 @@ c_someio::c_someio()
 { }
 
 void c_someio::stop_threadsafe() {
-	_info("someio sets m_stop");
+	pfp_info("someio sets m_stop");
 	m_stop=true;
 }
 
@@ -20,8 +20,8 @@ void c_someio::close_all_tuntap_operations(t_native_tuntap_handler tuntap_handle
 	// CancelIoEx doc https://msdn.microsoft.com/en-us/library/windows/desktop/aa363792(v=vs.85).aspx
 	BOOL ret = CancelIoEx(tuntap_handler, nullptr);
 	if (ret == 0) {
-		_warn("Can not cancel tuntap operations, GetLastError=" << GetLastError());
-		_throw_error_runtime("Can not cancel tuntap operations");
+		pfp_warn("Can not cancel tuntap operations, GetLastError=" << GetLastError());
+		pfp_throw_error_runtime("Can not cancel tuntap operations");
 	}
 }
 #endif

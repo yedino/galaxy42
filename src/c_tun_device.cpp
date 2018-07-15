@@ -1,4 +1,4 @@
-// Copyrighted (C) 2015-2016 Antinet.org team, see file LICENCE-by-Antinet.txt
+// Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "c_tun_device.hpp"
 #include "libs0.hpp"
 #include "tnetdbg.hpp"
@@ -26,14 +26,14 @@ c_tun_device::c_tun_device()
  m_ifr_name(""),
  m_ip6_ok(false)
 {
-	_note("Creating new general TUN device class");
+	pfp_note("Creating new general TUN device class");
 }
 
 
 void c_tun_device::init() { }
 
 int c_tun_device::get_tun_fd() const {
-	_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
+	pfp_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
 }
 
 
@@ -52,22 +52,22 @@ c_tun_device_linux::c_tun_device_linux()
 :
 	m_tun_fd(-1)
 {
-	_note("Creating new linu TUN device class");
+	pfp_note("Creating new linu TUN device class");
 }
 
 int c_tun_device_linux::get_tun_fd() const {
-	if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
 	return m_tun_fd;
 }
 
 void c_tun_device_linux::init()
 {
 	const char *fd_fname = "/dev/net/tun";
-	_goal("Opening TUN file (Linux driver) " << fd_fname);
+	pfp_goal("Opening TUN file (Linux driver) " << fd_fname);
 	m_tun_fd = open(fd_fname, O_RDWR);
 	int err = errno;
-	if (m_tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
-	_goal("TUN file opened as fd " << m_tun_fd);
+	if (m_tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+	pfp_goal("TUN file opened as fd " << m_tun_fd);
 }
 
 void c_tun_device_linux::set_ipv6_address
@@ -78,24 +78,24 @@ void c_tun_device_linux::set_ipv6_address
 	strncpy(ifr.ifr_name, "galaxy%d", IFNAMSIZ);
 	auto errcode_ioctl =  ioctl(m_tun_fd, TUNSETIFF, static_cast<void *>(&ifr));
 	int err = errno;
-	if (errcode_ioctl < 0) _throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
+	if (errcode_ioctl < 0) pfp_throw_error_sub( tuntap_error_ip , NetPlatform_syserr_to_string({e_netplatform_err_ioctl, err}) );
 
 	assert(binary_address[0] == 0xFD);
 //	assert(binary_address[1] == 0x42);
-	_fact("Setting IP address");
+	pfp_fact("Setting IP address");
 	Wrap_NetPlatform_addAddress(ifr.ifr_name, binary_address, prefixLen, Sockaddr_AF_INET6);
 	m_ifr_name = std::string(ifr.ifr_name);
-	_note("Configured network IP for " << ifr.ifr_name);
+	pfp_note("Configured network IP for " << ifr.ifr_name);
 	m_ip6_ok=true;
-	_goal("IP address is fully configured");
+	pfp_goal("IP address is fully configured");
 }
 
 void c_tun_device_linux::set_mtu(uint32_t mtu) {
 	if (!m_ip6_ok) throw std::runtime_error("Can not set MTU - card not configured (ipv6)");
 	const auto name = m_ifr_name.c_str();
-	_fact("Setting MTU="<<mtu<<" on card: " << name);
+	pfp_fact("Setting MTU="<<mtu<<" on card: " << name);
 	Wrap_NetPlatform_setMTU(name,mtu);
-	_goal("MTU configured to " << mtu << " on card " << name);
+	pfp_goal("MTU configured to " << mtu << " on card " << name);
 }
 
 bool c_tun_device_linux::incomming_message_form_tun() {
@@ -104,23 +104,23 @@ bool c_tun_device_linux::incomming_message_form_tun() {
 	FD_SET(m_tun_fd, &fd_set_data);
 	timeval timeout { 0 , 500 }; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/systime.h.html
 	auto select_result = select( m_tun_fd+1, &fd_set_data, nullptr, nullptr, & timeout); // <--- blocks
-	_assert(select_result >= 0);
+	pfp_assert(select_result >= 0);
 	if (FD_ISSET(m_tun_fd, &fd_set_data)) return true;
 	else return false;
 }
 
 size_t c_tun_device_linux::read_from_tun(void *buf, size_t count) { // TODO throw if error
-	_info("Reading from tuntap");
+	pfp_info("Reading from tuntap");
 	ssize_t ret = read(m_tun_fd, buf, count); // <-- read data from TUN
-	_info("Reading from tuntap - ret="<<ret);
-	if (ret == -1) _throw_error( std::runtime_error("Read from tun error") );
+	pfp_info("Reading from tuntap - ret="<<ret);
+	if (ret == -1) pfp_throw_error( std::runtime_error("Read from tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
 
 size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw if error
 	auto ret = write(m_tun_fd, buf, count);
-	if (ret == -1) _throw_error( std::runtime_error("Write to tun error") );
+	if (ret == -1) pfp_throw_error( std::runtime_error("Write to tun error") );
 	assert (ret >= 0);
 	return static_cast<size_t>(ret);
 }
@@ -161,22 +161,22 @@ c_tun_device_windows::c_tun_device_windows()
 	m_stream_handle_ptr(),
 	m_mac_address()
 {
-	_fact("Creating the windows device class (in ctor, before init)");
+	pfp_fact("Creating the windows device class (in ctor, before init)");
 }
 
 
 void c_tun_device_windows::init() {
-	_fact("Creating TUN/TAP (windows version)");
+	pfp_fact("Creating TUN/TAP (windows version)");
 
 	m_guid = get_device_guid();
-	_fact("GUID " << to_string(m_guid));
+	pfp_fact("GUID " << to_string(m_guid));
 	m_handle = get_device_handle();
 	m_stream_handle_ptr = std::make_unique<boost::asio::windows::stream_handle>(m_ioservice, m_handle);
 	m_mac_address = get_mac(m_handle);
 
 	m_buffer.fill(0);
 	if (!m_stream_handle_ptr->is_open()) throw std::runtime_error("TUN/TAP stream handle open error");
-	_fact("Start reading from TUN");
+	pfp_fact("Start reading from TUN");
 	m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&c_tun_device_windows::handle_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
@@ -184,18 +184,18 @@ void c_tun_device_windows::init() {
 void c_tun_device_windows::set_ipv6_address
 	(const std::array<uint8_t, 16> &binary_address, int prefixLen)
 {
-	_fact("Setting IPv6 address, prefixLen="<<prefixLen);
+	pfp_fact("Setting IPv6 address, prefixLen="<<prefixLen);
 	std::wstring human_name = get_human_name(m_guid);
 	NET_LUID luid = get_luid(human_name);
-	_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
+	pfp_fact("Setting address on human_name " << to_string(human_name));// << " luid=" << to_string(luid));
 	// remove old address
 	MIB_UNICASTIPADDRESS_TABLE *table = nullptr;
 	NETIOAPI_API status = GetUnicastIpAddressTable(AF_INET6, &table);
 	if (status != NO_ERROR) throw std::runtime_error("GetUnicastIpAddressTable error, code");
 	for (int i = 0; i < static_cast<int>(table->NumEntries); ++i) {
-		_info("Removing old addresses, i="<<i);
+		pfp_info("Removing old addresses, i="<<i);
 		if (table->Table[i].InterfaceLuid.Value == luid.Value) {
-		_info("Removing old addresses, entry i="<<i<<" - will remove");
+		pfp_info("Removing old addresses, entry i="<<i<<" - will remove");
 			if (DeleteUnicastIpAddressEntry(&table->Table[i]) != NO_ERROR) {
 				FreeMibTable(table);
 				throw std::runtime_error("DeleteUnicastIpAddressEntry error");
@@ -205,7 +205,7 @@ void c_tun_device_windows::set_ipv6_address
 	FreeMibTable(table);
 
 	// set new address
-	_fact("Setting new IP address");
+	pfp_fact("Setting new IP address");
 	MIB_UNICASTIPADDRESS_ROW iprow;
 	std::memset(&iprow, 0, sizeof(iprow));
 	iprow.PrefixOrigin = IpPrefixOriginUnchanged;
@@ -219,10 +219,10 @@ void c_tun_device_windows::set_ipv6_address
 	std::memcpy(&iprow.Address.Ipv6.sin6_addr, binary_address.data(), binary_address.size());
 	iprow.OnLinkPrefixLength = prefixLen;
 
-	_fact("Creating unicast IP");
+	pfp_fact("Creating unicast IP");
 	status = CreateUnicastIpAddressEntry(&iprow);
 	if (status != NO_ERROR) throw std::runtime_error("CreateUnicastIpAddressEntry error");
-	_goal("Created unicast IP, status=" << status);
+	pfp_goal("Created unicast IP, status=" << status);
 }
 
 bool c_tun_device_windows::incomming_message_form_tun() {
@@ -245,7 +245,7 @@ size_t c_tun_device_windows::read_from_tun(void *buf, size_t count) {
 }
 
 size_t c_tun_device_windows::write_to_tun(void *buf, size_t count) {
-	_dbg4("write to tun " << count << " bytes");
+	pfp_dbg4("write to tun " << count << " bytes");
 	const size_t eth_header_size = 14;
 	const size_t eth_offset = 4;
 	std::vector<uint8_t> eth_frame(eth_header_size + count - eth_offset, 0);
@@ -290,7 +290,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 	DWORD cchValue = MAX_VALUE_NAME;
 
 	// Get the class name and the value count.
-	_fact("Query windows registry for infokeys");
+	pfp_fact("Query windows registry for infokeys");
 	retCode = RegQueryInfoKey(
 		hKey,                    // key handle
 		achClass,                // buffer for class name
@@ -307,10 +307,10 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 								 // Enumerate the subkeys, until RegEnumKeyEx fails.
 	if (retCode != ERROR_SUCCESS) throw std::runtime_error("RegQueryInfoKey error, error code " + std::to_string(GetLastError()));
 	if (cSubKeys > 0) {
-		_fact("Number of subkeys: " << cSubKeys);
+		pfp_fact("Number of subkeys: " << cSubKeys);
 
 		for (DWORD i = 0; i < cSubKeys; i++) {
-			_dbg1("Add subkey " << i);
+			pfp_dbg1("Add subkey " << i);
 			cbName = MAX_KEY_LENGTH;
 			retCode = RegEnumKeyEx(hKey, i,
 				achKey,
@@ -329,7 +329,7 @@ std::vector<std::wstring> c_tun_device_windows::get_subkeys(HKEY hKey) {
 
 std::wstring c_tun_device_windows::get_device_guid() {
 	const std::wstring adapterKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}";
-	_fact("Looking for device guid" << to_string(adapterKey));
+	pfp_fact("Looking for device guid" << to_string(adapterKey));
 	LONG status = 1;
 	HKEY key = nullptr;
 	status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, adapterKey.c_str(), 0, KEY_READ, &key);
@@ -342,12 +342,12 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		key_wrapped.close();
 		throw e;
 	}
-	_dbg1("found " << subkeys_vector.size() << " reg keys");
+	pfp_dbg1("found " << subkeys_vector.size() << " reg keys");
 	key_wrapped.close();
 	for (const auto & subkey : subkeys_vector) { // foreach sub key
 		if (subkey == L"Properties") continue;
 		std::wstring subkey_reg_path = adapterKey + L"\\" + subkey;
-		_fact(to_string(subkey_reg_path));
+		pfp_fact(to_string(subkey_reg_path));
 		status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey_reg_path.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (status != ERROR_SUCCESS) throw std::runtime_error("RegOpenKeyEx error, error code " + std::to_string(status));
 		// get ComponentId field
@@ -364,7 +364,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 		std::wstring netCfgInstanceId;
 		try {
 			if (componentId.substr(0, 8) == L"root\\tap" || componentId.substr(0, 3) == L"tap") { // found TAP
-				_note(to_string(subkey_reg_path));
+				pfp_note(to_string(subkey_reg_path));
 				size = 256;
 				netCfgInstanceId.resize(size, '\0');
 				// this reinterpret_cast is not UB(3.10.10) because LPBYTE == unsigned char *
@@ -372,7 +372,7 @@ std::wstring c_tun_device_windows::get_device_guid() {
 				status = RegQueryValueExW(key_wrapped.get(), L"NetCfgInstanceId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&netCfgInstanceId[0]), &size);
 				if (status != ERROR_SUCCESS) throw std::runtime_error("RegQueryValueEx error, error code " + std::to_string(GetLastError()));
 				netCfgInstanceId.erase(size / sizeof(wchar_t) - 1); // remove '\0'
-				_note(to_string(netCfgInstanceId));
+				pfp_note(to_string(netCfgInstanceId));
 				key_wrapped.close();
 				HANDLE handle = open_tun_device(netCfgInstanceId);
 				if (handle == INVALID_HANDLE_VALUE) continue;
@@ -383,13 +383,13 @@ std::wstring c_tun_device_windows::get_device_guid() {
 				return netCfgInstanceId;
 			}
 		} catch (const std::out_of_range &e) {
-			_warn(std::string("register value processing error ") + e.what());
-			_note("componentId = " + to_string(componentId));
-			_note("netCfgInstanceId " + to_string(netCfgInstanceId));
+			pfp_warn(std::string("register value processing error ") + e.what());
+			pfp_note("componentId = " + to_string(componentId));
+			pfp_note("netCfgInstanceId " + to_string(netCfgInstanceId));
 		}
 		key_wrapped.close();
 	}
-	_erro("Can not find device in windows registry");
+	pfp_erro("Can not find device in windows registry");
 	throw std::runtime_error("Device not found");
 }
 
@@ -398,7 +398,7 @@ std::wstring c_tun_device_windows::get_human_name(const std::wstring &guid) {
 	std::wstring connectionKey = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 	connectionKey += guid;
 	connectionKey += L"\\Connection";
-	_note("connectionKey " << to_string(connectionKey));
+	pfp_note("connectionKey " << to_string(connectionKey));
 	LONG status = 1;
 	HKEY key_tmp = nullptr;
 	DWORD size = 256;
@@ -473,7 +473,7 @@ std::array<uint8_t, 6> c_tun_device_windows::get_mac(HANDLE handle) {
 	BOOL bret = DeviceIoControl(handle, TAP_IOCTL_GET_MAC, &mac_address.front(), mac_address.size(), &mac_address.front(), mac_address.size(), &mac_size, nullptr);
 	if (bret == 0) throw std::runtime_error("DeviceIoControl error, last error " + std::to_string(GetLastError()));
 	assert(mac_size == mac_address.size());
-	_fact("tun device MAC address");
+	pfp_fact("tun device MAC address");
 	for (const auto i : mac_address)
 		std::cout << std::hex << static_cast<int>(i) << " ";
 	std::cout << std::dec << std::endl;
@@ -496,8 +496,8 @@ void c_tun_device_windows::handle_read(const boost::system::error_code& error, s
 	}
 	catch (const std::runtime_error &e) {
 		m_readed_bytes = 0;
-		_erro("Problem with the TUN/TAP parser" << e.what());
-		_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
+		pfp_erro("Problem with the TUN/TAP parser" << e.what());
+		pfp_throw_error_sub( tuntap_error_devtun, "Problem with TUN/TAP device");
 	}
 
 	// continue reading
@@ -552,14 +552,14 @@ c_tun_device_apple::c_tun_device_apple() :
 
 void c_tun_device_apple::init()
 {
-    _fact("Creating the MAC OS X device class (in ctor, before init)");
+    pfp_fact("Creating the MAC OS X device class (in ctor, before init)");
     m_tun_fd = create_tun_fd();
-    _fact("TUN file descriptor " << m_tun_fd);
+    pfp_fact("TUN file descriptor " << m_tun_fd);
     m_stream_handle_ptr = std::make_unique<boost::asio::posix::stream_descriptor>(m_ioservice, m_tun_fd);
     if (!m_stream_handle_ptr->is_open()) throw std::runtime_error("TUN/TAP stream handle open error");
     assert(m_stream_handle_ptr->is_open());
     m_buffer.fill(0);
-    _fact("Start reading from TUN");
+    pfp_fact("Start reading from TUN");
     m_stream_handle_ptr->async_read_some(boost::asio::buffer(m_buffer),
         [this](const boost::system::error_code &error, size_t length) {
             handle_read(error, length);
@@ -567,14 +567,14 @@ void c_tun_device_apple::init()
 }
 
 int c_tun_device_apple::get_tun_fd() const {
-    if (m_tun_fd<0) _throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
+    if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Using not ready (m_tun_fd) tuntap device"));
     return m_tun_fd;
 }
 
 int c_tun_device_apple::create_tun_fd() {
     int tun_fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
     int err=errno;
-    if (tun_fd < 0) _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+    if (tun_fd < 0) pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
 
     // get ctl_id
     ctl_info info;
@@ -584,7 +584,7 @@ int c_tun_device_apple::create_tun_fd() {
     if (ioctl(tun_fd,CTLIOCGINFO, &info) < 0) { // errno
         int err = errno;
         close(tun_fd);
-        _throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
+        pfp_throw_error_sub( tuntap_error_devtun , NetPlatform_syserr_to_string({e_netplatform_err_open_fd, err}) );
     }
 
     // connect to tun
@@ -597,16 +597,16 @@ int c_tun_device_apple::create_tun_fd() {
     // connect to first not used tun
     int tested_card_counter = 0;
     auto t0 = time::now();
-    _fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
+    pfp_fact(mo_file_reader::gettext("L_searching_for_virtual_card"));
     while (connect(tun_fd, reinterpret_cast<sockaddr *>(&addr_ctl), sizeof(addr_ctl)) < 0) {
         auto int_s = std::chrono::duration_cast<std::chrono::seconds>(time::now() - t0).count();
         if (tested_card_counter++ > number_of_tested_cards)
-            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
+            pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_max_number_of_tested_cards_limit_reached"));
         if (int_s >= cards_testing_time)
-            _throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
+            pfp_throw_error_sub( tuntap_error_devtun, mo_file_reader::gettext("L_connection_to_tun_timeout"));
         ++addr_ctl.sc_unit;
     }
-    _goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
+    pfp_goal(mo_file_reader::gettext("L_found_virtual_card_at_slot") << ' ' << tested_card_counter);
 
     m_ifr_name = "utun" + std::to_string(addr_ctl.sc_unit - 1);
     return tun_fd;
@@ -631,9 +631,9 @@ void c_tun_device_apple::set_ipv6_address
 }
 
 void c_tun_device_apple::set_mtu(uint32_t mtu) {
-    _fact("Setting MTU="<<mtu);
+    pfp_fact("Setting MTU="<<mtu);
     const auto name = m_ifr_name.c_str();
-    _fact("Setting MTU="<<mtu<<" on card: " << name);
+    pfp_fact("Setting MTU="<<mtu<<" on card: " << name);
     t_syserr error = NetPlatform_setMTU(name, mtu);
     if (error.my_code != 0)
         throw std::runtime_error("set MTU error: " + errno_to_string(error.errno_copy));
@@ -680,14 +680,14 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
 c_tun_device_openbsd::c_tun_device_openbsd() :
 m_ioservice(),
 m_tun_stream(m_ioservice, m_tun_fd) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     uint16_t scope;
 
     // previous tun ??
     scope = htons((uint16_t) if_nametoindex(IFNAME));
     if (scope > 0) { // XXX: uncomment in  future
 	int sock;
-	_warnn(IFNAME " exists");
+	pfp_warnn(IFNAME " exists");
 	//_throw_error( std::runtime_error("First destroy previous " IFNAME) );
 	sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
 	struct ifreq interface;
@@ -697,10 +697,10 @@ m_tun_stream(m_ioservice, m_tun_fd) {
 	    std::stringstream errorstring;
 	    char *serr = strerror(errno);
 	    errorstring << "SIOCIFDESTROY : " << serr;
-	    _erro(errorstring.str());
-	    _throw_error_sub(tuntap_error_devtun, errorstring.str());
+	    pfp_erro(errorstring.str());
+	    pfp_throw_error_sub(tuntap_error_devtun, errorstring.str());
 	} else {
-	    _goal("Previous " IFNAME " destroyed.");
+	    pfp_goal("Previous " IFNAME " destroyed.");
 	}
     }
     m_tun_fd = open("/dev/" IFNAME, O_RDWR);
@@ -718,22 +718,22 @@ m_tun_stream(m_ioservice, m_tun_fd) {
 	    default:
 		errorstring << "Please describe errno " << errno;
 	}
-	_warnn(errorstring.str());
-	_throw_error_sub(tuntap_error_devtun, errorstring.str());
+	pfp_warnn(errorstring.str());
+	pfp_throw_error_sub(tuntap_error_devtun, errorstring.str());
     } else {
-	_goal("Opened " IFNAME);
+	pfp_goal("Opened " IFNAME);
     }
 }
 
 c_tun_device_openbsd::~c_tun_device_openbsd() {
-    _goal("Closing " IFNAME);
+    pfp_goal("Closing " IFNAME);
     close(m_tun_fd);
     // XXX: duplicate code
     uint16_t scope;
     scope = htons((uint16_t) if_nametoindex(IFNAME));
     if (scope > 0) { // XXX: uncomment in  future
 	int sock;
-	_warnn(IFNAME " exists");
+	pfp_warnn(IFNAME " exists");
 	//_throw_error( std::runtime_error("First destroy previous " IFNAME) );
 	sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
 	struct ifreq interface;
@@ -743,21 +743,21 @@ c_tun_device_openbsd::~c_tun_device_openbsd() {
 	    std::stringstream errorstring;
 	    char *serr = strerror(errno);
 	    errorstring << "SIOCIFDESTROY : " << serr;
-	    _erro(errorstring.str());
-	    _throw_error_sub(tuntap_error_devtun, errorstring.str());
+	    pfp_erro(errorstring.str());
+	    pfp_throw_error_sub(tuntap_error_devtun, errorstring.str());
 	} else {
-	    _goal("Previous " IFNAME " destroyed.");
+	    pfp_goal("Previous " IFNAME " destroyed.");
 	}
     }
 }
 
 void c_tun_device_openbsd::init() {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
 
     struct tuninfo info;
     
     if (ioctl(m_tun_fd, TUNGIFINFO, &info) < 0) {
-	_erron("Can't get interface info");
+	pfp_erron("Can't get interface info");
     }
     
     #ifdef IFF_MULTICAST
@@ -765,7 +765,7 @@ void c_tun_device_openbsd::init() {
     #endif
 
     if (ioctl(m_tun_fd, TUNSIFINFO, &info) < 0) {
-	_erron( "Can't set interface info");
+	pfp_erron( "Can't set interface info");
     }
 }
 
@@ -773,14 +773,14 @@ void c_tun_device_openbsd::set_ipv6_address(
 	const std::array<uint8_t, 16> &binary_address,
 	int prefixLen
 	) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1("Prolog at " << __func__);
     int sock;
     uint16_t scope;
 
-    _goal("Create socket ...");
+    pfp_goal("Create socket ...");
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
     if (sock == -1) {
-	_warnn(__func__);
+	pfp_warnn(__func__);
 	throw std::runtime_error(std::string("Socket create problem"));
     }
 
@@ -799,7 +799,7 @@ void c_tun_device_openbsd::set_ipv6_address(
     ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
 
     char temp[128];
-    _goal("Setting addresses " \
+    pfp_goal("Setting addresses " \
             << std::string(inet_ntop(AF_INET6, baData, temp, 128)) \
             << "/" \
             << prefixLen);
@@ -836,46 +836,46 @@ void c_tun_device_openbsd::set_ipv6_address(
 
     // call add address
     if (ioctl(sock, SIOCAIFADDR_IN6, &ifa6) == -1) {
-	_erron("SIOCAIFADDR_IN6");
+	pfp_erron("SIOCAIFADDR_IN6");
     }
 
     m_ip6_ok = true;
-    _goal("IP address is fully configured");
+    pfp_goal("IP address is fully configured");
     close(sock);
 }
 
 void c_tun_device_openbsd::set_mtu(
     uint32_t mtu
     ) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     int sock;
     struct ifreq interface;
 
     memset(&interface, 0, sizeof (struct ifreq));
 
-    _goal("Create socket ...");
+    pfp_goal("Create socket ...");
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
     if (sock == -1) {
-	_warnn(__func__);
+	pfp_warnn(__func__);
 	throw std::runtime_error(std::string("Socket create problem"));
     }
 
     strncpy(interface.ifr_name, IFNAME, sizeof (interface.ifr_name)); /* if name */
     interface.ifr_ifru.ifru_metric = mtu;
 
-    _goal("Setting MTU on " << IFNAME << " to " << mtu);
+    pfp_goal("Setting MTU on " << IFNAME << " to " << mtu);
     if (ioctl(sock, SIOCSIFMTU, &interface) == -1) {
-	_erron("SIOCSIFMTU");
+	pfp_erron("SIOCSIFMTU");
     }
 
     close(sock);
 }
     
 bool c_tun_device_openbsd::incomming_message_form_tun() {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
     if (m_readed_bytes > 0) {
-	_dbg1("At " << __func__ << ": we have " << m_readed_bytes << " bytes");
+	pfp_dbg1n("At " << __func__ << ": we have " << m_readed_bytes << " bytes");
 	return true;
     } else
 	return false;
@@ -885,14 +885,14 @@ size_t c_tun_device_openbsd::read_from_tun(
 	void *buf,
 	size_t count
 	) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     memset(buf, 0, count);
     int rret = read_tun(m_tun_fd, buf, count);
     //int rret = read(m_tun_fd, buf, count);
     if (rret < 0) {
 	perror("read_tun");
     } else {
-	_goal("Read from " IFNAME);
+	pfp_goal("Read from " IFNAME);
 	return rret;
     }
     return 0;
@@ -902,20 +902,20 @@ size_t c_tun_device_openbsd::write_to_tun(
 	void *buf,
 	size_t count
 	) {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     int wret = write_tun(m_tun_fd, buf, count);
     //int wret = write(m_tun_fd, buf, count);
     if (wret < 0) {
 	perror("write_tun");
     } else {
-	_goal("Write to " IFNAME);
+	pfp_goal("Write to " IFNAME);
 	return wret;
     }
     return 0;
 }
 
 int c_tun_device_openbsd::get_tun_fd() const {
-    _dbg1("Prolog at " << __func__);
+    pfp_dbg1n("Prolog at " << __func__);
     return m_tun_fd;
 }
 #endif
@@ -924,13 +924,13 @@ int c_tun_device_openbsd::get_tun_fd() const {
 c_tun_device_empty::c_tun_device_empty() { }
 
 void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
-	_UNUSED(binary_address);
-	_UNUSED(prefixLen);
+	pfp_UNUSED(binary_address);
+	pfp_UNUSED(prefixLen);
 }
 
 void c_tun_device_empty::set_mtu(uint32_t mtu) {
-	_warn("Called set_mtu on empty device");
-	_UNUSED(mtu);
+	pfp_warn("Called set_mtu on empty device");
+	pfp_UNUSED(mtu);
 }
 
 bool c_tun_device_empty::incomming_message_form_tun() {
@@ -938,14 +938,14 @@ bool c_tun_device_empty::incomming_message_form_tun() {
 }
 
 size_t c_tun_device_empty::read_from_tun(void *buf, size_t count) {
-	_UNUSED(buf);
-	_UNUSED(count);
+	pfp_UNUSED(buf);
+	pfp_UNUSED(count);
 	return 0;
 }
 
 size_t c_tun_device_empty::write_to_tun(const void *buf, size_t count) {
-	_UNUSED(buf);
-	_UNUSED(count);
+	pfp_UNUSED(buf);
+	pfp_UNUSED(count);
 	return 0;
 }
 
