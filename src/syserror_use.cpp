@@ -62,7 +62,9 @@ std::string errno_to_string(int errno_copy) {
 		strerror_r(errno_copy, buf, buflen);
 		buf[buflen-1]=0;
 		std::string ret(buf);
-	#else
+	#endif
+
+	#if EMPTY
 		// char *strerror_r(int errnum, char *buf, size_t buflen);  /* GNU-specific */
 		char * result = strerror_r(errno_copy, buf, buflen);
 		// result can point to our buf, or to some other (and immutable) string
